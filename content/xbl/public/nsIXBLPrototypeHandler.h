@@ -46,6 +46,8 @@
 #ifndef nsIXBLPrototypeHandler_h__
 #define nsIXBLPrototypeHandler_h__
 
+#include "nsAReadableString.h"
+
 class nsIContent;
 class nsIDOMEvent;
 class nsIDOMMouseEvent;
@@ -67,6 +69,9 @@ public:
   NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult) = 0;
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult) = 0;
+  NS_IMETHOD SetHandlerText(const nsAReadableString& aText) = 0;
+
+  NS_IMETHOD GetPhase(PRUint8* aPhase) = 0;
 
   NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aRec)=0;
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aRec)=0;
@@ -81,6 +86,14 @@ public:
 };
 
 extern nsresult
-NS_NewXBLPrototypeHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);
+NS_NewXBLPrototypeHandler(nsAReadableString* aEvent, nsAReadableString* aPhase,
+                          nsAReadableString* aAction, nsAReadableString* aCommand,
+                          nsAReadableString* aKeyCode, nsAReadableString* aCharCode,
+                          nsAReadableString* aModifiers, nsAReadableString* aButton,
+                          nsAReadableString* aClickCount,
+                          nsIXBLPrototypeHandler** aResult);
+
+extern nsresult
+NS_NewXULKeyHandler(nsIContent* aHandlerElement, nsIXBLPrototypeHandler** aResult);
 
 #endif // nsIXBLPrototypeHandler_h__

@@ -719,7 +719,8 @@ nsDocument::StartDocumentLoad(const char* aCommand,
                               nsILoadGroup* aLoadGroup,
                               nsISupports* aContainer,
                               nsIStreamListener **aDocListener,
-                              PRBool aReset)
+                              PRBool aReset,
+                              nsIContentSink* aSink)
 {
   nsresult rv = NS_OK;
   if (aReset)
@@ -3267,7 +3268,6 @@ PRBool  nsDocument::InternalRegisterCompileEventHandler(JSContext* aContext, jsv
   return PR_TRUE;
 }
 #endif
-
 
 NS_IMETHODIMP
 nsDocument::SaveFile( nsIURI*           aLocation,

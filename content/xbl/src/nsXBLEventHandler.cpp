@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLPrototypeHandler.h"
 #include "nsXBLEventHandler.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -75,16 +75,7 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMScrollListener.h"
 #include "nsIDOMFormListener.h"
-
-PRUint32 nsXBLEventHandler::gRefCnt = 0;
-nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kCharCodeAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kKeyAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kActionAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kCommandAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kClickCountAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kButtonAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kModifiersAtom = nsnull;
+#include "nsXBLAtoms.h"
 
 nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandler)
 {
@@ -92,32 +83,10 @@ nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBL
   mEventReceiver = aEventReceiver;
   mProtoHandler = aHandler;
   mNextHandler = nsnull;
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kKeyCodeAtom = NS_NewAtom("keycode");
-    kKeyAtom = NS_NewAtom("key");
-    kCharCodeAtom = NS_NewAtom("charcode");
-    kModifiersAtom = NS_NewAtom("modifiers");
-    kActionAtom = NS_NewAtom("action");
-    kCommandAtom = NS_NewAtom("command");
-    kClickCountAtom = NS_NewAtom("clickcount");
-    kButtonAtom = NS_NewAtom("button");
-  }
 }
 
 nsXBLEventHandler::~nsXBLEventHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kKeyAtom);
-    NS_RELEASE(kKeyCodeAtom);
-    NS_RELEASE(kCharCodeAtom);
-    NS_RELEASE(kModifiersAtom);
-    NS_RELEASE(kActionAtom);
-    NS_RELEASE(kCommandAtom);
-    NS_RELEASE(kButtonAtom);
-    NS_RELEASE(kClickCountAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsXBLEventHandler, nsISupports)
@@ -135,21 +104,13 @@ nsXBLEventHandler::RemoveEventHandlers()
   nsCOMPtr<nsIAtom> eventName;
   mProtoHandler->GetEventName(getter_AddRefs(eventName));
 
-  nsCOMPtr<nsIContent> handlerElement;
-  mProtoHandler->GetHandlerElement(getter_AddRefs(handlerElement));
-  mProtoHandler = nsnull;
-  if (!handlerElement)
-    return;
-  
-  PRBool useCapture = PR_FALSE;
-  nsAutoString capturer;
-  handlerElement->GetAttr(kNameSpaceID_None, nsXBLBinding::kPhaseAtom, capturer);
-  if (capturer == NS_LITERAL_STRING("capturing"))
-    useCapture = PR_TRUE;
-
   nsAutoString type;
-  handlerElement->GetAttr(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
- 
+  eventName->ToString(type);
+  
+  PRUint8 phase;
+  mProtoHandler->GetPhase(&phase);
+  PRBool useCapture = (phase == NS_PHASE_CAPTURING);
+  
   PRBool found = PR_FALSE;
   nsIID iid;
   nsXBLBinding::GetEventHandlerIID(eventName, &iid, &found);

@@ -52,6 +52,7 @@
 #include "nsIPrintContext.h"
 #include "nsTextTransformer.h"
 
+#include "nsXBLAtoms.h"     // to addref/release table
 #include "nsHTMLAtoms.h"    // to addref/release table
 #include "nsLayoutAtoms.h"  // to addref/release table
 #include "nsCSSKeywords.h"  // to addref/release table
@@ -100,6 +101,7 @@ Initialize(nsIModule* self)
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsHTMLAtoms::AddRefAtoms();
+  nsXBLAtoms::AddRefAtoms();
   nsLayoutAtoms::AddRefAtoms();
 #ifdef INCLUDE_XUL
   nsXULAtoms::AddRefAtoms();
@@ -142,6 +144,7 @@ Shutdown(nsIModule* self)
   nsCSSKeywords::ReleaseTable();
   nsCSSAtoms::ReleaseAtoms();
   nsHTMLAtoms::ReleaseAtoms();
+  nsXBLAtoms::ReleaseAtoms();
   nsLayoutAtoms::ReleaseAtoms();
 
 #ifdef INCLUDE_XUL

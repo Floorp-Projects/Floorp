@@ -148,30 +148,12 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
 {
   nsCOMPtr<nsIXBLPrototypeBinding> binding;
   aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
-  if (!binding) {
-    nsCOMPtr<nsIDocument> doc;
-    aInfo->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIContent> root;
-    doc->GetRootContent(getter_AddRefs(root));
-    if (root) { // no root, no handlers. don't crash please.
-      PRInt32 childCount;
-      root->ChildCount(childCount);
-      for (PRInt32 i = 0; i < childCount; i++) {
-        nsCOMPtr<nsIContent> child;
-        root->ChildAt(i, *getter_AddRefs(child));
-        nsAutoString id;
-        child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
-        if (id.EqualsWithConversion(PromiseFlatCString(aRef).get())) {
-          NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
-          aInfo->SetPrototypeBinding(aRef, binding);
-          break;
-        }
-      }
-    }
-  }
+  
+  NS_ASSERTION(binding, "No binding found for the XBL window key handler.");
+  if (!binding)
+    return;
 
-  if (binding)
-    binding->GetPrototypeHandlers(aResult); // Addref happens here.
+  binding->GetPrototypeHandlers(aResult); // Addref happens here.
 } // GetHandlers
 
 void
@@ -318,7 +300,8 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
         }
       }
 
-      commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
+      if (commandElt)
+        commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
       if (!disabled.Equals(NS_LITERAL_STRING("true"))) {
         nsCOMPtr<nsIDOMEventReceiver> rec = mReceiver;
         if (mElement)

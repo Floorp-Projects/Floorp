@@ -80,6 +80,7 @@ class nsISupportsArray;
 class nsIScriptLoader;
 class nsString;
 class nsIFocusController;
+class nsIContentSink;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -109,7 +110,8 @@ public:
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener,
-                               PRBool aReset) = 0;
+                               PRBool aReset,
+                               nsIContentSink* aSink = nsnull) = 0;
 
   NS_IMETHOD StopDocumentLoad() = 0;
 

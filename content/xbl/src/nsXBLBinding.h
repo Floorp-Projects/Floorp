@@ -135,31 +135,6 @@ public:
 // Static members
   static PRUint32 gRefCnt;
   
-  static nsIAtom* kXULTemplateAtom;
-  static nsIAtom* kXULObservesAtom;
-
-  static nsIAtom* kContentAtom;
-  static nsIAtom* kImplementationAtom;
-  static nsIAtom* kHandlersAtom;
-  static nsIAtom* kExcludesAtom;
-  static nsIAtom* kIncludesAtom;
-  static nsIAtom* kInheritsAtom;
-  static nsIAtom* kEventAtom;
-  static nsIAtom* kPhaseAtom;
-  static nsIAtom* kExtendsAtom;
-  static nsIAtom* kChildrenAtom;
-  static nsIAtom* kMethodAtom;
-  static nsIAtom* kParameterAtom;
-  static nsIAtom* kBodyAtom;
-  static nsIAtom* kOnSetAtom;
-  static nsIAtom* kOnGetAtom;
-  static nsIAtom* kGetterAtom;
-  static nsIAtom* kSetterAtom;
-  static nsIAtom* kActionAtom;
-  static nsIAtom* kNameAtom;
-  static nsIAtom* kReadOnlyAtom;
-  static nsIAtom* kAttachToAtom;
-  
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
     const char*  mAttributeName;

@@ -88,11 +88,14 @@
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMContextMenuListener.h"
 
+#include "nsXBLAtoms.h"
+#include "nsXULAtoms.h"
+
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
 
-#include "nsIXBLPrototypeHandler.h"
 #include "nsIXBLPrototypeProperty.h"
+#include "nsXBLPrototypeHandler.h"
 
 #include "nsXBLKeyHandler.h"
 #include "nsXBLFocusHandler.h"
@@ -163,30 +166,6 @@ nsXBLJSClass::Destroy()
 // Static initialization
 PRUint32 nsXBLBinding::gRefCnt = 0;
  
-nsIAtom* nsXBLBinding::kXULTemplateAtom = nsnull;
-nsIAtom* nsXBLBinding::kXULObservesAtom = nsnull;
-
-nsIAtom* nsXBLBinding::kContentAtom = nsnull;
-nsIAtom* nsXBLBinding::kImplementationAtom = nsnull;
-nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
-nsIAtom* nsXBLBinding::kExcludesAtom = nsnull;
-nsIAtom* nsXBLBinding::kIncludesAtom = nsnull;
-nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
-nsIAtom* nsXBLBinding::kEventAtom = nsnull;
-nsIAtom* nsXBLBinding::kPhaseAtom = nsnull;
-nsIAtom* nsXBLBinding::kExtendsAtom = nsnull;
-nsIAtom* nsXBLBinding::kActionAtom = nsnull;
-nsIAtom* nsXBLBinding::kMethodAtom = nsnull;
-nsIAtom* nsXBLBinding::kParameterAtom = nsnull;
-nsIAtom* nsXBLBinding::kBodyAtom = nsnull;
-nsIAtom* nsXBLBinding::kOnSetAtom = nsnull;
-nsIAtom* nsXBLBinding::kOnGetAtom = nsnull;
-nsIAtom* nsXBLBinding::kGetterAtom = nsnull;
-nsIAtom* nsXBLBinding::kSetterAtom = nsnull;
-nsIAtom* nsXBLBinding::kNameAtom = nsnull;
-nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
-nsIAtom* nsXBLBinding::kAttachToAtom = nsnull;
-
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
     { "click",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
@@ -270,30 +249,6 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
   //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
-    kXULTemplateAtom = NS_NewAtom("template");
-    kXULObservesAtom = NS_NewAtom("observes");
-
-    kContentAtom = NS_NewAtom("content");
-    kImplementationAtom = NS_NewAtom("implementation");
-    kHandlersAtom = NS_NewAtom("handlers");
-    kExcludesAtom = NS_NewAtom("excludes");
-    kIncludesAtom = NS_NewAtom("includes");
-    kInheritsAtom = NS_NewAtom("inherits");
-    kEventAtom = NS_NewAtom("event");
-    kPhaseAtom = NS_NewAtom("phase");
-    kExtendsAtom = NS_NewAtom("extends");
-    kActionAtom = NS_NewAtom("action");
-    kMethodAtom = NS_NewAtom("method");
-    kParameterAtom = NS_NewAtom("parameter");
-    kBodyAtom = NS_NewAtom("body");
-    kOnSetAtom = NS_NewAtom("onset");
-    kOnGetAtom = NS_NewAtom("onget");
-    kGetterAtom = NS_NewAtom("getter");
-    kSetterAtom = NS_NewAtom("setter");    
-    kNameAtom = NS_NewAtom("name");
-    kReadOnlyAtom = NS_NewAtom("readonly");
-    kAttachToAtom = NS_NewAtom("attachto");
-    
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
       entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
@@ -311,30 +266,6 @@ nsXBLBinding::~nsXBLBinding(void)
   //  printf("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 0) {
-    NS_RELEASE(kXULTemplateAtom);
-    NS_RELEASE(kXULObservesAtom);
-
-    NS_RELEASE(kContentAtom);
-    NS_RELEASE(kImplementationAtom);
-    NS_RELEASE(kHandlersAtom);
-    NS_RELEASE(kExcludesAtom);
-    NS_RELEASE(kIncludesAtom);
-    NS_RELEASE(kInheritsAtom);
-    NS_RELEASE(kEventAtom);
-    NS_RELEASE(kPhaseAtom);
-    NS_RELEASE(kExtendsAtom);
-    NS_RELEASE(kActionAtom);
-    NS_RELEASE(kMethodAtom);
-    NS_RELEASE(kParameterAtom);
-    NS_RELEASE(kBodyAtom);
-    NS_RELEASE(kOnSetAtom);
-    NS_RELEASE(kOnGetAtom);
-    NS_RELEASE(kGetterAtom);
-    NS_RELEASE(kSetterAtom);
-    NS_RELEASE(kNameAtom);
-    NS_RELEASE(kReadOnlyAtom);
-    NS_RELEASE(kAttachToAtom);
-    
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
       NS_IF_RELEASE(entry->mAttributeAtom);
@@ -678,7 +609,7 @@ nsXBLBinding::GenerateAnonymousContent()
 {
   // Fetch the content element for this binding.
   nsCOMPtr<nsIContent> content;
-  GetImmediateChild(kContentAtom, getter_AddRefs(content));
+  GetImmediateChild(nsXBLAtoms::content, getter_AddRefs(content));
 
   if (!content) {
     // We have no anonymous content.
@@ -700,7 +631,7 @@ nsXBLBinding::GenerateAnonymousContent()
 #ifdef DEBUG
   // See if there's an includes attribute.
   nsAutoString includes;
-  content->GetAttr(kNameSpaceID_None, kIncludesAtom, includes);
+  content->GetAttr(kNameSpaceID_None, nsXBLAtoms::includes, includes);
   if (!includes.IsEmpty()) {
     nsCAutoString id;
     mPrototypeBinding->GetID(id);
@@ -743,7 +674,7 @@ nsXBLBinding::GenerateAnonymousContent()
         childContent = do_QueryInterface(node);
         nsCOMPtr<nsIAtom> tag;
         childContent->GetTag(*getter_AddRefs(tag));
-        if (tag.get() != kXULObservesAtom && tag.get() != kXULTemplateAtom) {
+        if (tag != nsXULAtoms::observes && tag != nsXULAtoms::templateAtom) {
           hasContent = PR_FALSE;
           break;
         }
@@ -824,7 +755,7 @@ nsXBLBinding::GenerateAnonymousContent()
                 // should be thrown out.  Special-case template and observes.
                 nsCOMPtr<nsIAtom> tag;
                 childContent->GetTag(*getter_AddRefs(tag));
-                if (tag.get() != kXULObservesAtom && tag.get() != kXULTemplateAtom) {
+                if (tag != nsXULAtoms::observes && tag != nsXULAtoms::templateAtom) {
                   // Kill all anonymous content.
                   mContent = nsnull;
                   bindingManager->SetContentListFor(mBoundElement, nsnull);
@@ -879,7 +810,7 @@ nsXBLBinding::GenerateAnonymousContent()
   for (PRInt32 i = 0; i < length; ++i) {
     content->GetAttrNameAt(i, namespaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
 
-    if (name.get() != kIncludesAtom) {
+    if (name != nsXBLAtoms::includes) {
       nsAutoString value;
       mBoundElement->GetAttr(namespaceID, name, value);
       if (value.IsEmpty()) {
@@ -915,11 +846,7 @@ nsXBLBinding::InstallEventHandlers()
     nsXBLEventHandler* currHandler = nsnull;
 
     while (curr) {
-      nsCOMPtr<nsIContent> child;
-      curr->GetHandlerElement(getter_AddRefs(child));
-
-      // Fetch the type attribute.
-      // XXX Deal with a comma-separated list of types
+      // Fetch the event type.
       nsCOMPtr<nsIAtom> eventAtom;
       curr->GetEventName(getter_AddRefs(eventAtom));
 
@@ -956,12 +883,10 @@ nsXBLBinding::InstallEventHandlers()
         */
 
         // Figure out if we're using capturing or not.
-        PRBool useCapture = PR_FALSE;
-        nsAutoString capturer;
-        child->GetAttr(kNameSpaceID_None, kPhaseAtom, capturer);
-        if (capturer == NS_LITERAL_STRING("capturing"))
-          useCapture = PR_TRUE;
-
+        PRUint8 phase;
+        curr->GetPhase(&phase);
+        PRBool useCapture = (phase == NS_PHASE_CAPTURING);
+        
         // Create a new nsXBLEventHandler.
         nsXBLEventHandler* handler = nsnull;
         
@@ -1037,11 +962,8 @@ nsXBLBinding::InstallEventHandlers()
         }
         else {
           NS_WARNING("***** Non-compliant XBL event listener attached! *****");
-          nsAutoString value;
-          child->GetAttr(kNameSpaceID_None, kActionAtom, value);
-          if (value.IsEmpty())
-            GetTextData(child, value);
-          AddScriptEventListener(mBoundElement, eventAtom, value);
+          // XXX Need to get the event text from the prototype handler!
+          //AddScriptEventListener(mBoundElement, eventAtom, value);
         }
 
         // We chain all our event handlers together for easy
@@ -1191,7 +1113,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
       nsCOMPtr<nsIContent> interfaceElement;
-      GetImmediateChild(kImplementationAtom, getter_AddRefs(interfaceElement));
+      GetImmediateChild(nsXBLAtoms::implementation, getter_AddRefs(interfaceElement));
 
       if (interfaceElement) { 
         nsCOMPtr<nsIScriptGlobalObject> global;
@@ -1480,7 +1402,7 @@ nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
     binding->ChildAt(i, *getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(*getter_AddRefs(tag));
-    if (aTag == tag.get()) {
+    if (aTag == tag) {
       *aResult = child;
       NS_ADDREF(*aResult);
       return;

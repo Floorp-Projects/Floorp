@@ -162,6 +162,7 @@ public:
   NS_IMETHOD ExecuteDetachedHandlers()=0;
 
   NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)=0;
+  NS_IMETHOD RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)=0;
   NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)=0;
 
   NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener) = 0;

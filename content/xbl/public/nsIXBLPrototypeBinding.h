@@ -126,6 +126,8 @@ public:
   NS_IMETHOD AddResourceListener(nsIContent* aBoundElement)=0;
 
   NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult)=0;
+
+  NS_IMETHOD Initialize()=0;
 };
 
 extern nsresult

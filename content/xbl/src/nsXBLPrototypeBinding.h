@@ -129,32 +129,16 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsICSSLoaderO
 
   NS_IMETHOD GetConstructor(nsIXBLPrototypeHandler** aResult) { *aResult = mConstructor; NS_IF_ADDREF(*aResult); return NS_OK; };
 
+  NS_IMETHOD Initialize();
+
 public:
-  nsXBLPrototypeBinding(const nsAReadableCString& aRef, nsIXBLDocumentInfo* aInfo);
+  nsXBLPrototypeBinding(const nsAReadableCString& aRef, nsIXBLDocumentInfo* aInfo, nsIContent* aElement);
   virtual ~nsXBLPrototypeBinding();
 
-  void Initialize(nsIContent * aElement, nsIXBLDocumentInfo* aInfo);
-
+  
 // Static members
   static PRUint32 gRefCnt;
-  static nsIAtom* kInheritStyleAtom;
-  static nsIAtom* kHandlersAtom;
-  static nsIAtom* kChildrenAtom;
-  static nsIAtom* kIncludesAtom;
-  static nsIAtom* kContentAtom;
-  static nsIAtom* kResourcesAtom;
-  static nsIAtom* kResourceAtom;
-  static nsIAtom* kStyleSheetAtom;
-  static nsIAtom* kSrcAtom;
-  static nsIAtom* kInheritsAtom;
-  static nsIAtom* kHTMLAtom;
-  static nsIAtom* kValueAtom;
-  static nsIAtom* kXBLTextAtom;
-  static nsIAtom* kConstructorAtom;
-  static nsIAtom* kDestructorAtom;
-  static nsIAtom* kImplementationAtom;
-  static nsIAtom* kImplementsAtom;
-
+ 
   static nsFixedSizeAllocator* kAttrPool;
   static nsFixedSizeAllocator* kInsPool;
 
@@ -165,7 +149,7 @@ public:
                       nsIContent* aTemplChild, nsIContent** aCopyResult);
 
 protected:  
-  void ConstructHandlers();
+  void BuildConstructorAndDestructor();
   void ConstructProperties();
   void ConstructAttributeTable(nsIContent* aElement);
   void ConstructInsertionTable(nsIContent* aElement);

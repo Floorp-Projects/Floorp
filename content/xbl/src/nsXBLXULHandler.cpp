@@ -63,6 +63,7 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
+#include "nsXBLAtoms.h"
 
 PRUint32 nsXBLXULHandler::gRefCnt = 0;
 nsIAtom* nsXBLXULHandler::kPopupShowingAtom = nsnull;
@@ -113,7 +114,7 @@ nsresult nsXBLXULHandler::Command(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIAtom> eventName;
   mProtoHandler->GetEventName(getter_AddRefs(eventName));
 
-  if (eventName.get() != nsXBLPrototypeHandler::kCommandAtom)
+  if (eventName.get() != nsXBLAtoms::command)
     return NS_OK;
 
   mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
