@@ -19,3 +19,4 @@ TestPerf
 TestIDN
 TestURLParser
 TestStandardURL
+TestUpload
