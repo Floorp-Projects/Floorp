@@ -338,7 +338,8 @@ nsZipFindEnd(ns_zip_t *zip, char *endbuf)
     for (off = len; off > mark; ) {
 	long n = min(off - mark, INBUFSIZ);
 	memcpy(buf + n, buf, SIGSIZ);
-	if (PR_Seek(zip->fd, off -= n, PR_SEEK_SET) == -1) {
+	off -= n;
+	if (PR_Seek(zip->fd, (PRInt32) off, PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
@@ -478,7 +479,7 @@ ns_zip_initReader(ns_zip_t *zip)
 	return PR_FALSE;
     }
     /* Seek to first CEN header */
-    if (PR_Seek(zip->fd, zip->cenoff, PR_SEEK_SET) == -1) {
+    if (PR_Seek(zip->fd, (PRInt32) (zip->cenoff), PR_SEEK_SET) == -1) {
 #if !defined(XP_PC) || defined(_WIN32)
 	/*
 	 * perror is not defined for win16
