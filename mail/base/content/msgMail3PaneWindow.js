@@ -696,11 +696,16 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
   gCurrentPaneConfig = paneConfig; 
 }
 
-const MailPaneConfigObserver = {
+const MailPrefObserver = {
   observe: function(subject, topic, prefName) {
     // verify that we're changing the mail pane config pref
     if (topic == "nsPref:changed")
-      UpdateMailPaneConfig(true);
+    {
+      if (prefName == "mail.pane_config.dynamic")
+        UpdateMailPaneConfig(true);
+      else if (prefName == "mail.showFolderPaneColumns")
+        UpdateFolderColumnVisibility();
+    }
   }
 };
 
@@ -717,7 +722,9 @@ function OnLoadMessenger()
 function delayedOnLoadMessenger()
 {
   pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  pref.addObserver("mail.pane_config.dynamic", MailPaneConfigObserver, false);
+  pref.addObserver("mail.pane_config.dynamic", MailPrefObserver, false);
+  pref.addObserver("mail.showFolderPaneColumns", MailPrefObserver, false);
+
   AddMailOfflineObserver();
   CreateMailWindowGlobals();
   verifyAccounts(null);
@@ -776,7 +783,8 @@ function OnUnloadMessenger()
 {
   accountManager.removeIncomingServerListener(gThreePaneIncomingServerListener);
   pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  pref.removeObserver("mail.pane_config.dynamic", MailPaneConfigObserver);
+  pref.removeObserver("mail.pane_config.dynamic", MailPrefObserver);
+  pref.removeObserver("mail.showFolderPaneColumns", MailPrefObserver);
 
   // FIX ME - later we will be able to use onload from the overlay
   OnUnloadMsgHeaderPane();
@@ -959,11 +967,12 @@ function OnFolderUnreadColAttrModified(event)
     }
 }
 
-function OnLoadFolderPane()
+function UpdateFolderColumnVisibility()
 {
     var folderNameCol = document.getElementById("folderNameCol");
     var showColumns = pref.getBoolPref("mail.showFolderPaneColumns");
-    var folderUnreadCol = document.getElementById("folderUnreadCol");
+    var folderUnreadCol = document.getElementById("folderUnreadCol"); 
+    var folderColumnLabel = document.getElementById("folderColumnLabel");
     if (!showColumns)
     {
       var folderTotalCol = document.getElementById("folderTotalCol");
@@ -971,12 +980,13 @@ function OnLoadFolderPane()
       folderUnreadCol.setAttribute("hidden", "true");
       folderTotalCol.setAttribute("hidden", "true");
       folderSizeCol.setAttribute("hidden", "true");
+      folderNameCol.removeAttribute("label");
     }
     else
     {
-      var folderColumnLabel = document.getElementById("folderColumnLabel");
       folderNameCol.setAttribute("label", folderColumnLabel.value);
     }
+
     folderNameCol.setAttribute("hideheader", showColumns ? "false" : "true");
     var folderPaneHeader = document.getElementById("folderPaneHeader");
     folderPaneHeader.setAttribute("hidden", showColumns ? "true" : "false");
@@ -988,7 +998,12 @@ function OnLoadFolderPane()
         var folderNameCell = document.getElementById("folderNameCell");
         folderNameCell.setAttribute("label", "?folderTreeSimpleName");
     }
+} 
 
+function OnLoadFolderPane()
+{
+    UpdateFolderColumnVisibility();
+    var folderUnreadCol = document.getElementById("folderUnreadCol");
     folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
 
     //Add folderDataSource and accountManagerDataSource to folderPane
