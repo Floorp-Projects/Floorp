@@ -156,7 +156,34 @@ nsXPConnect::WrapJS(nsIJSContext* aJSContext,
                      REFNSIID aIID,
                      nsIXPConnectWrappedJS** aWrapper)
 {
-    // XXX implement...
+    NS_PRECONDITION(aJSContext,"bad param");
+    NS_PRECONDITION(aJSObj,"bad param");
+    NS_PRECONDITION(aWrapper,"bad param");
+
+    *aWrapper = NULL;
+
+    JSObject* jsobj;
+    if(NS_FAILED(aJSObj->GetNative(&jsobj)) || !jsobj)
+    {
+        NS_ASSERTION(0, "bad nsIJSObject*");
+        return NS_ERROR_FAILURE;
+    }
+
+    JSContext* cx;
+    if(NS_FAILED(aJSContext->GetNative(&cx)))
+        return NS_ERROR_FAILURE;
+
+    XPCContext* xpcc = GetContext(cx);
+    if(!xpcc)
+        return NS_ERROR_FAILURE;
+
+    nsXPCWrappedJS* wrapper =
+        nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, jsobj, aIID);
+
+    if(!wrapper)
+        return NS_ERROR_FAILURE;
+
+    *aWrapper = wrapper;
     return NS_OK;
 }
 
@@ -213,5 +240,8 @@ nsXPConnect::GetNativeOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect()
 {
+    // temp test...
+//    nsXPCWrappedJS* p = new nsXPCWrappedJS();
+//    p->Stub5();
     return nsXPConnect::GetXPConnect();
 }

@@ -46,9 +46,10 @@ nsInterfaceInfo::nsInterfaceInfo(REFNSIID aIID, const char* aName,
     mMethodCount = 4;
     mMethods = new nsXPCMethodInfo[4];
 
-    nsXPCParamInfo* params = new nsXPCParamInfo[2];
+    nsXPCParamInfo* params = new nsXPCParamInfo[3];
     params[0] = nsXPCParamInfo(nsXPCParamInfo::IS_IN, nsXPCType::T_I32);
     params[1] = nsXPCParamInfo(nsXPCParamInfo::IS_IN, nsXPCType::T_I32);
+    params[2] = nsXPCParamInfo(nsXPCParamInfo::IS_OUT | nsXPCParamInfo::IS_RETVAL, nsXPCType::T_I32);
     nsXPCParamInfo result = nsXPCParamInfo(nsXPCParamInfo::IS_OUT, nsXPCType::T_U32);
 
     // XXX these are bogus declarations - don't call!
@@ -56,7 +57,7 @@ nsInterfaceInfo::nsInterfaceInfo(REFNSIID aIID, const char* aName,
     mMethods[1] = nsXPCMethodInfo(0, "AddRef", 0, NULL, result);
     mMethods[2] = nsXPCMethodInfo(0, "Release", 0, NULL, result);
     // this one should be callable (in test/TestXPC.cpp)
-    mMethods[3] = nsXPCMethodInfo(0, "Test", 2, params, result);
+    mMethods[3] = nsXPCMethodInfo(0, "Test", 3, params, result);
 
     ///////
 

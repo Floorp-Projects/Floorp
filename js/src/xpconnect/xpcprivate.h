@@ -33,6 +33,7 @@
 #include "xpcbogusjs.h"
 #include "xpcbogusii.h"
 
+extern const char* XPC_VAL_STR; // 'val' property name for out params
 
 /***************************************************************************/
 
@@ -84,7 +85,7 @@ private:
     static nsXPConnect*           mSelf;
 };
 
-/*************************/
+/***************************************************************************/
 // XPCContext is mostly a dumb class to hold JSContext specific data and
 // maps that let us find wrappers created for the given JSContext.
 
@@ -125,34 +126,98 @@ private:
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
 };
 
+/***************************************************************************/
+
+// this interfaces exists so we can refcount nsXPCWrappedJSClass
+// {2453EBA0-A9B8-11d2-BA64-00805F8A5DD7}
+#define NS_IXPCONNECT_WRAPPED_JS_CLASS_IID  \
+{ 0x2453eba0, 0xa9b8, 0x11d2,               \
+  { 0xba, 0x64, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
+
+class nsIXPCWrappedJSClass : public nsISupports
+{
+    // no methods
+};
+
+/*************************/
+
+class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
+{
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS;
+public:
+
+    static nsXPCWrappedJSClass* GetNewOrUsedClass(XPCContext* xpcc,
+                                                  REFNSIID aIID);
+    REFNSIID GetIID(){return mIID;}
+    XPCContext*  GetXPCContext() {return mXPCContext;}
+    nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
+
+    static JSBool InitForContext(XPCContext* xpcc);
+    JSBool IsWrappedJS(nsISupports* aPtr);
+
+    nsresult DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
+                                     void** aInstancePtr);
+
+    JSObject* GetRootJSObject(JSObject* aJSObj);
+
+    nsresult CallMethod(nsXPCWrappedJS* wrapper,
+                        const nsXPCMethodInfo* info,
+                        nsXPCMiniVarient* params);
+
+    ~nsXPCWrappedJSClass();
+private:
+    nsXPCWrappedJSClass();   // not implemented
+    nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
+                        nsIInterfaceInfo* aInfo);
+
+    JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
+    JSObject*  CreateIIDJSObject(REFNSIID aIID);
+    JSObject*  NewOutObject();
+
+    JSObject*  CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID);
+
+private:
+    XPCContext* mXPCContext;
+    nsIInterfaceInfo* mInfo;
+    nsIID mIID;
+};
+
 /*************************/
 
 class nsXPCWrappedJS : public nsIXPConnectWrappedJS
 {
-    // our vtbl stubs here...
-
-    // XXX implement...
 public:
-    JSObject* GetJSObject(){return NULL;}
-    nsXPCWrappedJSClass*  GetClass() {return NULL;}
+    NS_DECL_ISUPPORTS;
+    // include our generated vtbl stub declarations
+#include "xpcstubsdecl.inc"
 
-};
+    static nsXPCWrappedJS* GetNewOrUsedWrapper(XPCContext* xpcc,
+                                               JSObject* aJSObj,
+                                               REFNSIID aIID);
 
-class nsXPCWrappedJSClass : public nsISupports
-{
-    // XXX implement...
-public:
+    JSObject* GetJSObject() {return mJSObj;}
+    nsXPCWrappedJSClass*  GetClass() {return mClass;}
+    REFNSIID GetIID() {return GetClass()->GetIID();}
+    nsXPCWrappedJS* GetRootWrapper() {return mRoot;}
 
-    REFNSIID GetIID(){return mIID;}
-    XPCContext*  GetXPCContext() {return mXPCContext;}
+    virtual ~nsXPCWrappedJS();
+private:
+    nsXPCWrappedJS();   // not implemented
+    nsXPCWrappedJS(JSObject* aJSObj,
+                   nsXPCWrappedJSClass* aClass,
+                   nsXPCWrappedJS* root);
+
+    nsXPCWrappedJS* Find(REFNSIID aIID);
 
 private:
-    XPCContext* mXPCContext;
-    nsIID mIID;
-
+    JSObject* mJSObj;
+    nsXPCWrappedJSClass* mClass;
+    nsXPCWrappedJS* mRoot;
+    nsXPCWrappedJS* mNext;
 };
 
-/*************************/
+/***************************************************************************/
 
 // nsXPCWrappedNativeClass maintains an array of these things
 struct XPCNativeMemberDescriptor
@@ -169,14 +234,12 @@ struct XPCNativeMemberDescriptor
     uintN           index; /* in InterfaceInfo for const, method, and get */
     uintN           index2; /* in InterfaceInfo for set */
     MemberCategory  category;
-    uintN           maxParamCount;
-    uintN           maxScratchWordCount;
 
     XPCNativeMemberDescriptor()
-        : invokeFuncObj(NULL), id(0),
-          maxParamCount(-1),
-          maxScratchWordCount(-1){}
+        : invokeFuncObj(NULL), id(0){}
 };
+
+/*************************/
 
 // this interfaces exists just so we can refcount nsXPCWrappedNativeClass
 // {C9E36280-954A-11d2-BA5A-00805F8A5DD7}
@@ -188,6 +251,8 @@ class nsIXPCWrappedNativeClass : public nsISupports
 {
     // no methods
 };
+
+/*************************/
 
 class nsXPCWrappedNativeClass : public nsIXPCWrappedNativeClass
 {
@@ -249,21 +314,6 @@ private:
     const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
     JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
 
-    uintN GetMaxParamCount(const XPCNativeMemberDescriptor* desc)
-    {
-        if(-1 == desc->maxParamCount)
-            SetDescriptorCounts(NS_CONST_CAST(XPCNativeMemberDescriptor*,desc));
-        return desc->maxParamCount;
-    }
-
-    uintN GetMaxScratchWordCount(const XPCNativeMemberDescriptor* desc)
-    {
-        if(-1 == desc->maxScratchWordCount)
-            SetDescriptorCounts(NS_CONST_CAST(XPCNativeMemberDescriptor*,desc));
-        return desc->maxScratchWordCount;
-    }
-
-    void SetDescriptorCounts(XPCNativeMemberDescriptor* desc);
     void ReportError(const XPCNativeMemberDescriptor* desc, const char* msg);
     JSBool BuildMemberDescriptors();
     void  DestroyMemberDescriptors();
@@ -275,6 +325,8 @@ private:
     int mMemberCount;
     XPCNativeMemberDescriptor* mMembers;
 };
+
+/*************************/
 
 class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 {
@@ -288,6 +340,7 @@ public:
     nsISupports* GetNative() {return mObj;}
     JSObject* GetJSObject() {return mJSObj;}
     nsXPCWrappedNativeClass* GetClass() {return mClass;}
+    REFNSIID GetIID() {return GetClass()->GetIID();}
     void JSObjectFinalized();
 
     virtual ~nsXPCWrappedNative();
@@ -307,7 +360,16 @@ private:
     nsXPCWrappedNative* mNext;
 };
 
-/************************************************/
+/***************************************************************************/
+// utility functions
+
+JSBool
+xpc_InitIDClass(XPCContext* xpcc);
+
+JSObject*
+xpc_NewIDObject(JSContext *cx, const nsID& aID);
+
+/***************************************************************************/
 
 // platform specific method invoker
 nsresult

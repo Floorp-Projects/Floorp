@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -20,7 +20,7 @@
 
 #include "xpcprivate.h"
 
-static const char* XPC_VAL_STR = "val";
+const char* XPC_VAL_STR = "val";
 
 NS_IMPL_ISUPPORTS(nsXPCWrappedNativeClass, NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
 
@@ -30,7 +30,7 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
                                           REFNSIID aIID)
 {
     IID2WrappedNativeClassMap* map;
-    nsXPCWrappedNativeClass* clazz;
+    nsXPCWrappedNativeClass* clazz = NULL;
 
     NS_PRECONDITION(xpcc, "bad param");
 
@@ -215,8 +215,9 @@ WrappedNative_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
     case JSTYPE_VOID:
     case JSTYPE_STRING:
-        // XXX get the interface name from the InterfaceInfo
-        *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, "WrappedNative"));
+        // XXX perhaps more expressive toString?
+        *vp = STRING_TO_JSVAL(
+                JS_NewStringCopyZ(cx, wrapper->GetClass()->GetInterfaceName()));
         return JS_TRUE;
 
     case JSTYPE_NUMBER:
@@ -298,51 +299,10 @@ nsXPCWrappedNativeClass::GetInterfaceName() const
     return name;
 }
 
-void
-nsXPCWrappedNativeClass::SetDescriptorCounts(XPCNativeMemberDescriptor* desc)
-{
-    // XXX this is subject to serious improvement!
-    switch(desc->category)
-    {
-    case XPCNativeMemberDescriptor::CONSTANT:
-        NS_ASSERTION(0,"bad call");
-        break;
-    case XPCNativeMemberDescriptor::METHOD:
-    {
-        const nsXPCMethodInfo* info;
-        if(NS_FAILED(mInfo->GetMethodInfo(desc->index, &info)))
-            break;
-
-        uintN scratchWords = 0;
-        for(int i = info->GetParamCount()-1 ; i >= 0; i--)
-        {
-            const nsXPCParamInfo& param = info->GetParam(i);
-            if(param.IsOut())
-            {
-                // XXX what about space for IIDs?
-                scratchWords += param.GetType().WordCount();
-            }
-        }
-        desc->maxParamCount = info->GetParamCount();
-        desc->maxScratchWordCount = scratchWords;
-        break;
-    }
-    case XPCNativeMemberDescriptor::ATTRIB_RO:
-    case XPCNativeMemberDescriptor::ATTRIB_RW:
-        // just set these for the max possible...
-        desc->maxParamCount = 1;
-        desc->maxScratchWordCount = 2;
-        break;
-    default:
-        NS_ASSERTION(0,"bad category");
-        break;
-    }
-}
-
-// Win32 can't handle u64 to double conversion
-#define JAM_DOUBLE_U64(v,d) (d = (jsdouble)(int64)v, DOUBLE_TO_JSVAL(&d))
 #define JAM_DOUBLE(v,d) (d = (jsdouble)v, DOUBLE_TO_JSVAL(&d))
 #define FIT_32(i,d) (INT_FITS_IN_JSVAL(i) ? INT_TO_JSVAL(i) : JAM_DOUBLE(i,d))
+// Win32 can't handle uint64 to double conversion
+#define JAM_DOUBLE_U64(v,d) JAM_DOUBLE(((int64)v),d)
 
 JSBool
 nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
@@ -377,6 +337,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
     case nsXPCType::T_CHAR   : *vp = INT_TO_JSVAL((int32)var.val.c);    break;
     case nsXPCType::T_WCHAR  : *vp = INT_TO_JSVAL((int32)var.val.wc);   break;
     default:
+        // XXX need to support string constants
         NS_ASSERTION(0, "bad type");
         ReportError(desc, "invalid constant type");
     }
@@ -398,43 +359,23 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
                                            JSBool isAttributeSet,
                                            uintN argc, jsval *argv, jsval *vp)
 {
-#define PARAM_COUNT     32
-#define SCRATCH_WORDS   32
+#define PARAM_BUFFER_COUNT     32
 
-    nsXPCVarient paramBuffer[PARAM_COUNT];
-    uint32 scratchBuffer[SCRATCH_WORDS];
+    nsXPCVarient paramBuffer[PARAM_BUFFER_COUNT];
     JSBool retval = JS_FALSE;
 
     nsXPCVarient* dispatchParams = NULL;
-    uint32* scratch = NULL;
-    uint32 scratchIndex = 0;
     JSContext* cx = GetJSContext();
     uint8 i;
     const nsXPCMethodInfo* info;
     uint8 requiredArgs;
     uint8 paramCount;
+    uint8 dispatchParamsInitedCount = 0;
     jsval src;
-    jsdouble num;
     uint8 vtblIndex;
     nsresult invokeResult;
 
-    // setup buffers
-
-    if(GetMaxParamCount(desc) > PARAM_COUNT)
-        dispatchParams = new nsXPCVarient[GetMaxParamCount(desc)];
-    else
-        dispatchParams = paramBuffer;
-
-    if(GetMaxScratchWordCount(desc) > SCRATCH_WORDS)
-        scratch = new uint32[GetMaxScratchWordCount(desc)];
-    else
-        scratch = scratchBuffer;
-    if(!dispatchParams || !scratch)
-    {
-        ReportError(desc, "out of memeory");
-        goto done;
-    }
-
+    *vp = JSVAL_NULL;
     // make sure we have what we need
 
     if(isAttributeSet)
@@ -463,94 +404,312 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         goto done;
     }
 
+    // setup varient array pointer
+    if(paramCount > PARAM_BUFFER_COUNT)
+    {
+        if(!(dispatchParams = new nsXPCVarient[paramCount]))
+        {
+            ReportError(desc, "out of memory");
+            goto done;
+        }
+    }
+    else
+        dispatchParams = paramBuffer;
+
     // iterate through the params doing conversions
     for(i = 0; i < paramCount; i++)
     {
         const nsXPCParamInfo& param = info->GetParam(i);
         const nsXPCType& type = param.GetType();
 
-        nsXPCVarient* dp;
+        nsXPCVarient* dp = &dispatchParams[i];
+        dp->type = type;
+        dp->flags = 0;
+        dp->val.p = NULL;
+        dispatchParamsInitedCount++;
 
-        dispatchParams[i].type = type;
+        // set 'src' to be the object from which we get the value and
+        // prepare for out param
 
         if(param.IsOut())
         {
-            dispatchParams[i].val.p = &scratch[scratchIndex];
-            scratchIndex += type.WordCount();
-            if(!param.IsIn())
-                continue;
-            dp = (nsXPCVarient*)dispatchParams[i].val.p;
-        }
-        else
-            dp = &dispatchParams[i];
+            dp->flags = nsXPCVarient::PTR_IS_DATA;
 
-        // XXX fix this mess...
-
-        if(type & ~nsXPCType::TYPE_MASK)
-        {
-            NS_ASSERTION(0,"not supported");
-            continue;
-        }
-
-        // set 'src' to be the object from which we get the value
-
-        if(param.IsOut() /* implicit && param.IsIn() */ )
-        {
-            if(!JSVAL_IS_OBJECT(argv[i]) ||
-               !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src))
+            // XXX are there no type alignment issues here?
+            if(type & nsXPCType::IS_POINTER)
             {
-                ReportError(desc, "no out val");
+                dp->ptr = &dp->ptr2;
+                dp->ptr2 = &dp->val;
+            }
+            else
+                dp->ptr = &dp->val;
+
+            if(!param.IsRetval() &&
+               (!JSVAL_IS_OBJECT(argv[i]) ||
+                !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src)))
+            {
+                ReportError(desc, "out argument must be object");
                 goto done;
+            }
+            if(!param.IsIn())
+            {
+                // We don't need to convert the jsval.
+
+                // XXX for an out param *I think* I might need to set the flags
+                // to VAL_IS_OWNED (after clearing val.p) if the type is
+                // 'IS_POINTER' because I think the caller may have to take
+                // over ownership of a pointer. But, this depends on the
+                // type of the thing.
+
+                continue;
             }
         }
         else
-            src = argv[i];
-
-        // XXX just ASSUME a number
-
-        if(!JS_ValueToNumber(cx, src, &num))
         {
-            ReportError(desc, "could not convert argument to a number");
-            goto done;
+            if(type & nsXPCType::IS_POINTER)
+            {
+                dp->ptr = &dp->val;
+                dp->flags = nsXPCVarient::PTR_IS_DATA;
+            }
+            src = argv[i];
         }
 
-        switch(type)
+        // do the actual conversion...
+
+        // handle special cases first
+
+        if(type == nsXPCType::T_INTERFACE)
         {
-        case nsXPCType::T_I8     : dp->val.i8  = (int8)    num;  break;
-        case nsXPCType::T_I16    : dp->val.i16 = (int16)   num;  break;
-        case nsXPCType::T_I32    : dp->val.i32 = (int32)   num;  break;
-        case nsXPCType::T_I64    : dp->val.i64 = (int64)   num;  break;
-        case nsXPCType::T_U8     : dp->val.u8  = (uint8)   num;  break;
-        case nsXPCType::T_U16    : dp->val.u16 = (uint16)  num;  break;
-        case nsXPCType::T_U32    : dp->val.u32 = (uint32)  num;  break;
-        case nsXPCType::T_U64    : dp->val.u64 = (uint64)  num;  break;
-        case nsXPCType::T_FLOAT  : dp->val.f   = (float)   num;  break;
-        case nsXPCType::T_DOUBLE : dp->val.d   = (double)  num;  break;
-        case nsXPCType::T_BOOL   : dp->val.b   = (PRBool)  num;  break;
-        case nsXPCType::T_CHAR   : dp->val.c   = (char)    num;  break;
-        case nsXPCType::T_WCHAR  : dp->val.wc  = (wchar_t) num;  break;
-        default:
-            NS_ASSERTION(0, "bad type");
-            ReportError(desc, "could not convert argument to a number");
-            goto done;
+            // XXX implement INTERFACE
+
+            // make sure 'src' is an object
+            // get the nsIInterfaceInfo* from the param and
+            // build a wrapper and then hand over the wrapper.
+            // XXX remember to release the wrapper in cleanup below
+
+            NS_ASSERTION(0,"interface params not supported");
+            continue;
+        }
+        else if(type == nsXPCType::T_INTERFACE_IS)
+        {
+            // XXX implement INTERFACE_IS
+            NS_ASSERTION(0,"interface_is params not supported");
+            continue;
+        }
+        else if(type == nsXPCType::T_STRING)
+        {
+            // XXX implement STRING
+            NS_ASSERTION(0,"string params not supported");
+            continue;
+        }
+        else if(type == nsXPCType::T_P_IID)
+        {
+            // XXX implement IID
+            NS_ASSERTION(0,"iid params not supported");
+            continue;
+        }
+        else if(type == nsXPCType::T_P_VOID)
+        {
+            // XXX implement void*
+            NS_ASSERTION(0,"void* params not supported");
+            continue;
+        }
+        else {
+            int32    ti;
+            uint32   tu;
+            jsdouble td;
+            JSBool   r;
+
+            switch(type & nsXPCType::TYPE_MASK)
+            {
+            case nsXPCType::T_I8     :
+                r = JS_ValueToECMAInt32(cx,src,&ti);
+                dp->val.i8  = (int8) ti;
+                break;
+            case nsXPCType::T_I16    :
+                r = JS_ValueToECMAInt32(cx,src,&ti);
+                dp->val.i16  = (int16) ti;
+                break;
+            case nsXPCType::T_I32    :
+                r = JS_ValueToECMAInt32(cx,src,&dp->val.i32);
+                break;
+            case nsXPCType::T_I64    :
+                if(JSVAL_IS_INT(src))
+                {
+                    r = JS_ValueToECMAInt32(cx,src,&ti);
+                    dp->val.i64 = (int64) ti;
+                }
+                else
+                {
+                    r = JS_ValueToNumber(cx, src, &td);
+                    if(r) dp->val.i64 = (int64) td;
+                }
+                break;
+            case nsXPCType::T_U8     :
+                r = JS_ValueToECMAUint32(cx,src,&tu);
+                dp->val.u8  = (uint8) tu;
+                break;
+            case nsXPCType::T_U16    :
+                r = JS_ValueToECMAUint32(cx,src,&tu);
+                dp->val.u16  = (uint16) tu;
+                break;
+            case nsXPCType::T_U32    :
+                r = JS_ValueToECMAUint32(cx,src,&dp->val.u32);
+                break;
+            case nsXPCType::T_U64    :
+                if(JSVAL_IS_INT(src))
+                {
+                    r = JS_ValueToECMAUint32(cx,src,&tu);
+                    dp->val.i64 = (int64) tu;
+                }
+                else
+                {
+                    r = JS_ValueToNumber(cx, src, &td);
+                    // XXX Win32 can't handle double to uint64 directly
+                    if(r) dp->val.u64 = (uint64)((int64) td);
+                }
+                break;
+            case nsXPCType::T_FLOAT  :
+                r = JS_ValueToNumber(cx, src, &td);
+                if(r) dp->val.f = (float) td;
+                break;
+            case nsXPCType::T_DOUBLE :
+                r = JS_ValueToNumber(cx, src, &dp->val.d);
+                break;
+            case nsXPCType::T_BOOL   :
+                r = JS_ValueToBoolean(cx, src, &dp->val.b);
+                break;
+
+            // XXX should we special case char* and wchar_t* to be strings?
+            case nsXPCType::T_CHAR   :
+            case nsXPCType::T_WCHAR  :
+            default:
+                NS_ASSERTION(0, "bad type");
+                ReportError(desc, "could not convert argument");
+                goto done;
+            }
+            continue;
         }
     }
 
     // do the invoke
-    invokeResult = xpc_InvokeNativeMethod(wrapper->GetNative(),vtblIndex,
+    invokeResult = xpc_InvokeNativeMethod(wrapper->GetNative(), vtblIndex,
                                           paramCount, dispatchParams);
 
+    if(NS_FAILED(invokeResult))
+    {
+        // XXX this (and others!) should throw rather than report error
+        ReportError(desc, "XPCOM object returned failure");
+        goto done;
+    }
 
     // iterate through the params to gather the results
+    for(i = 0; i < paramCount; i++)
+    {
+        const nsXPCParamInfo& param = info->GetParam(i);
+        const nsXPCType& type = param.GetType();
 
-    // set the retval for success
+        nsXPCVarient* dp = &dispatchParams[i];
+        if(param.IsOut())
+        {
+            jsval v;
+            if(type == nsXPCType::T_INTERFACE)
+            {
+                // XXX implement INTERFACE
 
+                // make sure 'src' is an object
+                // get the nsIInterfaceInfo* from the param and
+                // build a wrapper and then hand over the wrapper.
+                // XXX remember to release the wrapper in cleanup below
+
+                NS_ASSERTION(0,"interface params not supported");
+                goto done;
+                continue;
+            }
+            else if(type == nsXPCType::T_INTERFACE_IS)
+            {
+                // XXX implement INTERFACE_IS
+                NS_ASSERTION(0,"interface_is params not supported");
+                continue;
+            }
+            else if(type == nsXPCType::T_STRING)
+            {
+                // XXX implement STRING
+                NS_ASSERTION(0,"string params not supported");
+                continue;
+            }
+            else if(type == nsXPCType::T_P_IID)
+            {
+                // XXX implement IID
+                NS_ASSERTION(0,"iid params not supported");
+                continue;
+            }
+            else if(type == nsXPCType::T_P_VOID)
+            {
+                // XXX implement void*
+                NS_ASSERTION(0,"void* params not supported");
+                continue;
+            }
+            else
+            {
+                jsdouble d;
+                switch(type & nsXPCType::TYPE_MASK)
+                {
+                case nsXPCType::T_I8    :v = INT_TO_JSVAL((int32)dp->val.i8);   break;
+                case nsXPCType::T_I16   :v = INT_TO_JSVAL((int32)dp->val.i16);  break;
+                case nsXPCType::T_I32   :v = FIT_32(dp->val.i32,d);             break;
+                case nsXPCType::T_I64   :v = JAM_DOUBLE(dp->val.i64,d);         break;
+                case nsXPCType::T_U8    :v = INT_TO_JSVAL((int32)dp->val.u8);   break;
+                case nsXPCType::T_U16   :v = INT_TO_JSVAL((int32)dp->val.u16);  break;
+                case nsXPCType::T_U32   :v = FIT_32(dp->val.u32,d);             break;
+                case nsXPCType::T_U64   :v = JAM_DOUBLE_U64(dp->val.u64,d);     break;
+                case nsXPCType::T_FLOAT :v = JAM_DOUBLE(dp->val.f,d);           break;
+                case nsXPCType::T_DOUBLE:v = DOUBLE_TO_JSVAL(&dp->val.d);       break;
+                case nsXPCType::T_BOOL  :v = dp->val.b?JSVAL_TRUE:JSVAL_FALSE;  break;
+                // XXX should we special case char* and wchar_t* to be strings?
+                case nsXPCType::T_CHAR  :/*v = INT_TO_JSVAL((int32)dp->val.c); */   break;
+                case nsXPCType::T_WCHAR :/*v = INT_TO_JSVAL((int32)dp->val.wc);*/   break;
+                default:
+                    // XXX need to support string constants
+                    NS_ASSERTION(0, "bad type");
+                    ReportError(desc, "invalid out type");
+                    goto done;
+                }
+            }
+            if(param.IsRetval())
+                *vp = v;
+            else
+            {
+                // we actually assured this before doing the invoke
+                NS_ASSERTION(JSVAL_IS_OBJECT(argv[i]), "out var is not object");
+                if(!JS_SetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &v))
+                {
+                    ReportError(desc, "Can't set val on out param object");
+                    goto done;
+                }
+            }
+        }
+    }
+    retval = JS_TRUE;
 
 done:
+    // iterate through the params that were init'd (again!) and clean up
+    // any alloc'd stuff and release wrappers of params
+    for(i = 0; i < dispatchParamsInitedCount; i++)
+    {
+        nsXPCVarient* dp = &dispatchParams[i];
+        void* p = dp->val.p;
+        // XXX verify that ALL this this stuff is right
+        if(!p)
+            continue;
+        if(dp->flags & nsXPCVarient::VAL_IS_OWNED)
+            delete [] p;
+        else if(info->GetParam(i).GetType() == nsXPCType::T_INTERFACE)
+            ((nsISupports*)p)->Release();
+    }
+
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
-    if(scratch && scratch != scratchBuffer)
-        delete [] scratch;
     return retval;
 }
 
@@ -848,7 +1007,7 @@ WrappedNative_finalize(JSContext *cx, JSObject *obj)
     wrapper->JSObjectFinalized();
 }
 
-JSObjectOps WrappedNative_ops = {
+static JSObjectOps WrappedNative_ops = {
     /* Mandatory non-null function pointer members. */
     NULL,                       /* newObjectMap */
     NULL,                       /* destroyObjectMap */
@@ -878,7 +1037,7 @@ WrappedNative_getObjectOps(JSContext *cx, JSClass *clazz)
     return &WrappedNative_ops;
 }
 
-JSClass WrappedNative_class = {
+static JSClass WrappedNative_class = {
     "XPCWrappedNative", JSCLASS_HAS_PRIVATE,
     NULL, NULL, NULL, NULL,
     NULL, NULL, WrappedNative_convert, WrappedNative_finalize,
@@ -907,9 +1066,8 @@ nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
 JSObject*
 nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
 {
-    JSContext* cx = GetXPCContext()->GetJSContext();
+    JSContext* cx = GetJSContext();
     JSObject* jsobj = JS_NewObject(cx, &WrappedNative_class, NULL, NULL);
-//                                   GetXPCContext()->GetGlobalObject());
     if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
         return NULL;
     return jsobj;

@@ -15,7 +15,7 @@
 class nsITestXPCFoo : public nsISupports
 {
 public:
-    NS_IMETHOD Test(int p1, int p2) = 0;
+    NS_IMETHOD Test(int p1, int p2, int* retval) = 0;
     NS_IMETHOD Test2() = 0;
 };
 
@@ -33,7 +33,7 @@ public:
 class nsTestXPCFoo : public nsITestXPCFoo2
 {
     NS_DECL_ISUPPORTS;
-    NS_IMETHOD Test(int p1, int p2);
+    NS_IMETHOD Test(int p1, int p2, int* retval);
     NS_IMETHOD Test2();
     nsTestXPCFoo();
 };
@@ -46,9 +46,10 @@ nsresult nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
 }
 
-nsresult nsTestXPCFoo::Test(int p1, int p2)
+nsresult nsTestXPCFoo::Test(int p1, int p2, int* retval)
 {
     printf("nsTestXPCFoo::Test called with p1 = %d and p2 = %d\n", p1, p2);
+    *retval = p1+p2;
     return NS_OK;
 }
 nsresult nsTestXPCFoo::Test2()
@@ -171,15 +172,39 @@ int main()
             JS_SetProperty(cx, glob, "foo", &v);
 
             char* txt[] = {
+                "print('foo = '+foo)",
                 "print('foo.five = '+ foo.five)",
                 "print('foo.six = '+ foo.six)",
                 "print('foo.bogus = '+ foo.bogus)",
-                "foo.Test(10,20)",
+                "print('foo.Test(10,20) returned: '+foo.Test(10,20))",
+                "function Test(p1, p2){print('test called in JS with p1 = '+p1+' and p2 = '+p2);return p1+p2;}",
+                "bar = new Object()",
+                "bar.Test = Test",
+//                "bar.Test(5,7)",
+                "function QI(iid){print('QueryInterface called in JS with iid = '+iid); return  this;}",
+                "bar.QueryInterface = QI",
                 0,
             };
 
             for(char** p = txt; *p; p++)
                 JS_EvaluateScript(cx, glob, *p, strlen(*p), "builtin", 1, &rval);
+
+            if(JS_GetProperty(cx, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
+            {
+                JSObject* bar = JSVAL_TO_OBJECT(v);
+                nsIXPConnectWrappedJS* wrapper;
+                if(NS_SUCCEEDED(xpc->WrapJS(xpccx,
+                                       XPC_NewJSObject(xpccx, JSVAL_TO_OBJECT(v)),
+                                       kIFooIID, &wrapper)))
+                {
+                    nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper;
+                    int result;
+                    ptr->Test(11, 13, &result);
+                    printf("call to ptr->Test returned %d\n", result);
+                    NS_RELEASE(wrapper);
+
+                }
+            }
 
             NS_RELEASE(obj);
             NS_RELEASE(com_obj);
