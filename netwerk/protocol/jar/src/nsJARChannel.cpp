@@ -820,33 +820,6 @@ nsJARChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP
 nsJARChannel::GetOwner(nsISupports* *aOwner)
 {
-    if (!mOwner)
-    {
-        nsCOMPtr<nsIPrincipal> certificate;
-        nsresult rv = mJAR->GetCertificatePrincipal(mJAREntry, 
-                                                    getter_AddRefs(certificate));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        if (certificate)
-        {   // Get the codebase principal
-            NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, 
-                            kScriptSecurityManagerCID, &rv);
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            nsCOMPtr<nsIPrincipal> codebase;
-            rv = secMan->GetCodebasePrincipal(mJARBaseURI, 
-                                              getter_AddRefs(codebase));
-            if (NS_FAILED(rv)) return rv;
-            
-            // Join the certificate and the codebase
-            nsCOMPtr<nsIAggregatePrincipal> agg;
-            agg = do_QueryInterface(certificate, &rv);
-            NS_ASSERTION(NS_SUCCEEDED(rv), 
-                         "Certificate principal is not an aggregate");
-            rv = agg->SetCodebase(codebase);
-            if (NS_FAILED(rv)) return rv;
-            mOwner = do_QueryInterface(agg, &rv);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
     *aOwner = mOwner;
     NS_IF_ADDREF(*aOwner);
     return NS_OK;
@@ -968,6 +941,31 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
         rv = GetContentType(contentType);
         if (NS_FAILED(rv)) return rv;
     }
+
+    //-- Verify signature, if one is present, and set owner accordingly
+    nsCOMPtr<nsIPrincipal> certificate;
+    rv = mJAR->GetCertificatePrincipal(mJAREntry, 
+                                       getter_AddRefs(certificate));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    if (certificate)
+    {   // Get the codebase principal
+        NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, 
+                        kScriptSecurityManagerCID, &rv);
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIPrincipal> codebase;
+        rv = secMan->GetCodebasePrincipal(mJARBaseURI, 
+                                          getter_AddRefs(codebase));
+        if (NS_FAILED(rv)) return rv;
+        
+        // Join the certificate and the codebase
+        nsCOMPtr<nsIAggregatePrincipal> agg;
+        agg = do_QueryInterface(certificate, &rv);
+        rv = agg->SetCodebase(codebase);
+        if (NS_FAILED(rv)) return rv;
+        mOwner = do_QueryInterface(agg, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     return rv;
 }
 
@@ -980,7 +978,6 @@ nsJARChannel::Close(nsresult status)
     nsCOMPtr<nsIZipReaderCache> jarCache;
     rv = mJARProtocolHandler->GetJARCache(getter_AddRefs(jarCache));
     if (NS_FAILED(rv)) return rv; 
-
     rv = jarCache->ReleaseZip(mJAR);
     if (NS_FAILED(rv)) return rv; 
 
@@ -997,7 +994,8 @@ nsJARChannel::GetInputStream(nsIInputStream* *aInputStream)
     PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
            ("nsJarProtocol: GetInputStream jar entry %s", (const char*)jarURLStr));
 #endif
-	return mJAR->GetInputStream(mJAREntry, aInputStream);
+    NS_ENSURE_TRUE(mJAR, NS_ERROR_NULL_POINTER);
+    return mJAR->GetInputStream(mJAREntry, aInputStream);
 }
  
 NS_IMETHODIMP

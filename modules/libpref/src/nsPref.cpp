@@ -1043,6 +1043,33 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
 }
 
 /*
+ * Pref access without security check - these are here to support nsScriptSecurityManager.
+ * Please don't call them from elsewhere.
+ */
+NS_IMETHODIMP nsPref::GetSecBoolPref(const char *pref, PRBool * return_val)
+{
+    return _convertRes(PREF_GetBoolPref(pref, return_val, PR_FALSE));
+}
+
+NS_IMETHODIMP nsPref::CopySecCharPref(const char *pref, char ** return_buf)
+{
+#if defined(DEBUG_tao_)
+    checkPref("CopyCharPref", pref);
+#endif
+    return _convertRes(PREF_CopyCharPref(pref, return_buf, PR_FALSE));
+}
+
+NS_IMETHODIMP nsPref::SetSecCharPref(const char *pref,const char* value)
+{
+    return _convertRes(PREF_SetCharPref(pref, value));
+}
+
+NS_IMETHODIMP nsPref::ClearSecUserPref(const char *pref_name)
+{
+    return _convertRes(PREF_ClearUserPref(pref_name));
+}
+
+/*
  * Pref info
  */
 

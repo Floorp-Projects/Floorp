@@ -103,7 +103,7 @@ public:
 
   // True if the second step of verification (VerifyEntry) 
   // has taken place:
-  PRBool              step2Complete; 
+  PRBool              entryVerified;
   
   // Not signed, valid, or failure code
   PRInt16             status;
@@ -120,7 +120,7 @@ public:
 // nsJARManifestItem constructors and destructor
 //-------------------------------------------------
 nsJARManifestItem::nsJARManifestItem(): mType(JAR_INTERNAL),
-                                        step2Complete(PR_FALSE),
+                                        entryVerified(PR_FALSE),
                                         status(nsIZipReader::NOT_SIGNED),
                                         calculatedSectionDigest(nsnull),
                                         storedEntryDigest(nsnull)
@@ -285,11 +285,19 @@ nsJAR::FindEntries(const char *aPattern, nsISimpleEnumerator **result)
 }
 
 NS_IMETHODIMP
-nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
+nsJAR::GetInputStream(const char* aFilename, nsIInputStream** result)
 {
-  if (!result)
-    return NS_OK;
-  return CreateInputStream(aFilename, PR_TRUE, result);
+  NS_ENSURE_ARG_POINTER(result);
+  nsresult rv;
+  nsJARInputStream* jis = nsnull;
+  rv = nsJARInputStream::Create(nsnull, NS_GET_IID(nsIInputStream), (void**)&jis);
+  if (!jis) return NS_ERROR_FAILURE;
+
+  rv = jis->Init(this, aFilename);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  *result = (nsIInputStream*)jis;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -300,6 +308,18 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     return NS_ERROR_NULL_POINTER;
   *aPrincipal = nsnull;
 
+  //-- Get the signature verifier service
+  nsresult rv;
+  NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+  if (NS_FAILED(rv)) // No signature verifier available
+    return NS_OK;
+
+  //-- Parse the manifest
+  rv = ParseManifest(verifier);
+  if (NS_FAILED(rv)) return rv;
+  if (mGlobalStatus == nsIZipReader::NO_MANIFEST)
+    return NS_OK;
+
   PRInt16 requestedStatus;
   if (aFilename)
   {
@@ -308,26 +328,20 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
     if (!manItem)
       return NS_OK;
-    if (!manItem->step2Complete)
+    //-- Verify the item against the manifest
+    if (!manItem->entryVerified)
     {
-      NS_ASSERTION(manItem->step2Complete, 
-                   "nsJAR: Attempt to get principal before verification.");
-      return NS_ERROR_FAILURE;
+      nsXPIDLCString entryData;
+      PRUint32 entryDataLen;
+      rv = LoadEntry(aFilename, getter_Copies(entryData), &entryDataLen);
+      if (NS_FAILED(rv)) return rv;
+      rv = VerifyEntry(verifier, manItem, entryData, entryDataLen);
+      if (NS_FAILED(rv)) return rv;
     }
     requestedStatus = manItem->status;
   }
   else // User wants identity of signer w/o verifying any entries
-  {
-    if (!mParsedManifest)
-    {
-      nsresult rv;
-      NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
-      if (NS_FAILED(rv)) // No signature verifier available
-        return NS_ERROR_FAILURE;
-      ParseManifest(verifier);
-    }
     requestedStatus = mGlobalStatus;
-  }
 
   if (requestedStatus != nsIZipReader::VALID)
     ReportError(aFilename, requestedStatus);
@@ -339,40 +353,16 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJAR::VerifyExternalData(const char* aFilename, const char* aData, PRUint32 aLen, 
-                          nsIPrincipal** result)
-{
-  if (NS_FAILED(VerifyEntry(aFilename, aData, aLen)))
-    return NS_ERROR_FAILURE;
-  return GetCertificatePrincipal(aFilename, result);
-}
-
 //----------------------------------------------
 // nsJAR private implementation
 //----------------------------------------------
-nsresult nsJAR::CreateInputStream(const char* aFilename, PRBool verify,
-                                  nsIInputStream** result)
-{
-  nsresult rv;
-  nsJARInputStream* jis = nsnull;
-  rv = nsJARInputStream::Create(nsnull, NS_GET_IID(nsIInputStream), (void**)&jis);
-  if (!jis) return NS_ERROR_FAILURE;
-
-  rv = jis->Init(this, aFilename, verify);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  *result = (nsIInputStream*)jis;
-  return NS_OK;
-}
-
 nsresult 
 nsJAR::LoadEntry(const char* aFilename, char** aBuf, PRUint32* aBufLen)
 {
-  //-- Get a stream for reading the manifest file
+  //-- Get a stream for reading the file
   nsresult rv;
   nsCOMPtr<nsIInputStream> manifestStream;
-  rv = CreateInputStream(aFilename, PR_FALSE, getter_AddRefs(manifestStream));
+  rv = GetInputStream(aFilename, getter_AddRefs(manifestStream));
   if (NS_FAILED(rv)) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   
   //-- Read the manifest file into memory
@@ -437,8 +427,6 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   //-- Verification Step 1
   if (mParsedManifest)
     return NS_OK;
-  mParsedManifest = PR_TRUE;   
-
   //-- (1)Manifest (MF) file
   nsresult rv;
   nsCOMPtr<nsISimpleEnumerator> files;
@@ -449,11 +437,21 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   //-- Load the file into memory
   nsCOMPtr<nsJARItem> file;
   rv = files->GetNext(getter_AddRefs(file));
-  if (NS_FAILED(rv) || !file)  return rv;
+  if (NS_FAILED(rv)) return rv;
+  if (!file)
+  {
+    mGlobalStatus = nsIZipReader::NO_MANIFEST;
+    mParsedManifest = PR_TRUE;
+    return NS_OK;
+  }
   PRBool more;
   rv = files->HasMoreElements(&more);
-  if (NS_FAILED(rv))  return rv;
-  if (more) return NS_ERROR_FILE_CORRUPTED; // More than one MF file
+  if (NS_FAILED(rv)) return rv;
+  if (more)
+  {
+    mParsedManifest = PR_TRUE;
+    return NS_ERROR_FILE_CORRUPTED; // More than one MF file
+  }
   nsXPIDLCString manifestFilename;
   rv = file->GetName(getter_Copies(manifestFilename));
   if (!manifestFilename || NS_FAILED(rv)) return rv;
@@ -464,7 +462,6 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   //-- Parse it
   rv = ParseOneFile(verifier, manifestBuffer, JAR_MF);
   if (NS_FAILED(rv)) return rv;
-  DumpMetadata("PM Pass 1 End");
 
   //-- (2)Signature (SF) file
   // If there are multiple signatures, we select one.
@@ -473,7 +470,13 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   if (NS_FAILED(rv)) return rv;
   //-- Get an SF file
   rv = files->GetNext(getter_AddRefs(file));
-  if (NS_FAILED(rv) || !file) return rv;
+  if (NS_FAILED(rv)) return rv;
+  if (!file)
+  {
+    mGlobalStatus = nsIZipReader::NO_MANIFEST;
+    mParsedManifest = PR_TRUE;
+    return NS_OK;
+  }
   rv = file->GetName(getter_Copies(manifestFilename));
   if (NS_FAILED(rv)) return rv;
 
@@ -497,7 +500,12 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
       nsCAutoString tempFilename(sigFilename); tempFilename.Append("RSA", 3);
       rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
     }
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+  {
+    mGlobalStatus = nsIZipReader::NO_MANIFEST;
+    mParsedManifest = PR_TRUE;
+    return NS_OK;
+  }
   
   //-- Verify that the signature file is a valid signature of the SF file
   PRInt32 verifyError;
@@ -516,7 +524,7 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   // if ParseOneFile fails, then it has no effect, and we can safely 
   // continue to the next SF file, or return. 
   ParseOneFile(verifier, manifestBuffer, JAR_SF);
-  DumpMetadata("PM Pass 2 End");
+  mParsedManifest = PR_TRUE;
 
   return NS_OK;
 }
@@ -701,46 +709,28 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
 } //ParseOneFile()
 
 nsresult
-nsJAR::VerifyEntry(const char* aEntryName, const char* aEntryData,
+nsJAR::VerifyEntry(nsISignatureVerifier* verifier,
+                   nsJARManifestItem* aManItem, const char* aEntryData,
                    PRUint32 aLen)
 {
-  nsresult rv;
-  NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
-  if (NS_FAILED(rv)) return NS_OK; // No verifier available; just continue.
-    
-  //-- Verification Step 2
-  // Check that verification is supported and step 1 has been done
-  if (!mParsedManifest)
-    ParseManifest(verifier);
-  NS_ASSERTION(mParsedManifest, 
-               "Verification step 2 called before step 1 complete");
-  if (!mParsedManifest) return NS_ERROR_FAILURE;
-
-  //-- Get the manifest item
-  nsStringKey key(aEntryName);
-  nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
-  if (!manItem)
-    return NS_OK;
-  if (manItem->status == nsIZipReader::VALID)
+  if (aManItem->status == nsIZipReader::VALID)
   {
-    if(!manItem->storedEntryDigest)
+    if(!aManItem->storedEntryDigest)
       // No entry digests in manifest file. Entry is unsigned.
-      manItem->status = nsIZipReader::NOT_SIGNED;
+      aManItem->status = nsIZipReader::NOT_SIGNED;
     else
     { //-- Calculate and compare digests
       char* calculatedEntryDigest;
-      rv = CalculateDigest(verifier, aEntryData, aLen, &calculatedEntryDigest);
+      nsresult rv = CalculateDigest(verifier, aEntryData, aLen, &calculatedEntryDigest);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      if (PL_strcmp(manItem->storedEntryDigest, calculatedEntryDigest) != 0)
-        manItem->status = nsIZipReader::INVALID_ENTRY;
+      if (PL_strcmp(aManItem->storedEntryDigest, calculatedEntryDigest) != 0)
+        aManItem->status = nsIZipReader::INVALID_ENTRY;
       JAR_NULLFREE(calculatedEntryDigest)
-      JAR_NULLFREE(manItem->storedEntryDigest)
+      JAR_NULLFREE(aManItem->storedEntryDigest)
     }
   }
-  if (NS_SUCCEEDED(rv))
-    manItem->step2Complete = PR_TRUE;
-  DumpMetadata("VerifyEntry end");
-  return rv;
+  aManItem->entryVerified = PR_TRUE;
+  return NS_OK;
 }
 
 void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
@@ -864,30 +854,8 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
     {
       nsStringKey* key2 = (nsStringKey*)aKey;
       char* name = key2->GetString().ToNewCString();
-      if (PL_strcmp(name, "") != 0)
-      {
-        printf("------------\nName:%s.\n",name);
-        if (manItem->mPrincipal)
-        {
-          char* toStr;
-          char* caps;
-          manItem->mPrincipal->ToString(&toStr);
-          manItem->mPrincipal->CapabilitiesToString(&caps);
-          printf("Principal: %s.\n Caps: %s.\n", toStr, caps);
-        }
-        else
-          printf("No Principal.\n");
-        printf("step2Complete:%i.\n",manItem->step2Complete);
-        printf("valid:%i.\n",manItem->valid);
-        /*
-        for (PRInt32 x=0; x<JAR_DIGEST_COUNT; x++)
-          printf("calculated section digest:%s.\n",
-                 manItem->calculatedSectionDigests[x]);
-        for (PRInt32 y=0; y<JAR_DIGEST_COUNT; y++)
-          printf("stored entry digest:%s.\n",
-                 manItem->storedEntryDigests[y]);
-        */
-      }
+      if (!(PL_strcmp(name, "") == 0))
+        printf("%s s=%i\n",name, manItem->status);
     }
     return PR_TRUE;
 }
@@ -897,8 +865,17 @@ void nsJAR::DumpMetadata(const char* aMessage)
 {
 #if 0
   printf("### nsJAR::DumpMetadata at %s ###\n", aMessage);
+  if (mPrincipal)
+  {
+    char* toStr;
+    mPrincipal->ToString(&toStr);
+    printf("Principal: %s.\n", toStr);
+    PR_FREEIF(toStr);
+  }
+  else
+    printf("No Principal. \n");
   mManifestData.Enumerate(PrintManItem);
-  printf("########  nsJAR::DumpMetadata End  ############\n");
+  printf("\n");
 #endif
 } 
 
@@ -1120,8 +1097,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
 nsZipReaderCache::nsZipReaderCache()
   : mLock(nsnull),
     mZips((nsHashtableCloneElementFunc)nsZipCacheEntry::Clone, nsnull, nsZipCacheEntry::Delete, nsnull),
-    mFreeCount(0), 
-    mFreeList(nsnull)
+    mFreeList(nsnull),
+    mFreeCount(0)
 {
   NS_INIT_REFCNT();
 }
