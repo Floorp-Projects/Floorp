@@ -54,9 +54,7 @@
           
 		  <html:input style="width:325px;"></html:input>   
 	      
-          <html:a style="position:absolute; direction:rtl; right:3; width:32px; top: 7px;" href="http://www.netscape.com">
-                  <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
-          </html:a>
+          <html:img alt="Throbber!" src="resource:/res/throbber/anims00.gif"/>
     </xul:toolbar>
     
     <xul:toolbar>
