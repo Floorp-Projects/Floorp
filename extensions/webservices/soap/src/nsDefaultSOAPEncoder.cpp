@@ -454,22 +454,23 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
   nsAutoString name;      //  First choose the appropriate name and namespace for the element.
   nsAutoString ns;
   if (aName.IsEmpty()) {  //  We automatically choose appropriate element names where none exist.
+    // The idea here seems to be to walk up the schema hierarcy to
+    // find the base type and use the name of that as the element name.
     ns = gSOAPStrings->kSOAPEncURI;
     nsAutoString currentURI = ns;
-    nsCOMPtr<nsISchemaType>currentType = aSchemaType;
+    nsCOMPtr<nsISchemaType> currentType = aSchemaType;
     while (currentType
-      && !(typeNS.Equals(gSOAPStrings->kXSURI)
-      || typeNS.Equals(gSOAPStrings->kSOAPEncURI))) {
+           && !(currentURI.Equals(gSOAPStrings->kXSURI)
+                || currentURI.Equals(gSOAPStrings->kSOAPEncURI))) {
       nsCOMPtr<nsISchemaType> supertype;
       rc = GetSupertype(aEncoding, currentType, getter_AddRefs(supertype));
       if (NS_FAILED(rc))
         return rc;
       if (!currentType) {
-        currentURI = gSOAPStrings->kXSURI;
         break;
       }
       currentType = supertype;
-      rc = currentType->GetTargetNamespace(typeNS);
+      rc = currentType->GetTargetNamespace(currentURI);
       if (NS_FAILED(rc))
         return rc;
     }
@@ -628,7 +629,8 @@ NS_IMETHODIMP
   return SOAP_EXCEPTION(NS_ERROR_NOT_IMPLEMENTED,"SOAP_NO_ENCODER_FOR_TYPE","The default encoder finds no encoder for specific type");
 }
 
-static nsresult GetNativeType(PRUint16 aType, nsAString & aSchemaNamespaceURI, nsAString & aSchemaType)
+static void
+GetNativeType(PRUint16 aType, nsAString & aSchemaNamespaceURI, nsAString & aSchemaType)
 {
   aSchemaNamespaceURI.Assign(gSOAPStrings->kXSURI);
   switch (aType) {
@@ -694,7 +696,6 @@ static nsresult GetNativeType(PRUint16 aType, nsAString & aSchemaNamespaceURI, n
   default:
     aSchemaType.Assign(gSOAPStrings->kAnySimpleTypeSchemaType);
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -743,9 +744,7 @@ NS_IMETHODIMP
     }
   }
   else {
-    rc = GetNativeType(typevalue, nativeSchemaURI, nativeSchemaType);
-    if (NS_FAILED(rc))
-      return rc;
+    GetNativeType(typevalue, nativeSchemaURI, nativeSchemaType);
   }
 
   nsCOMPtr<nsISOAPEncoder> encoder;
@@ -1365,9 +1364,7 @@ NS_IMETHODIMP
         arrayTypeSchemaURI = gSOAPStrings->kXSURI;
         break;
       default:  //  Everything else can be interpreted correctly
-        rc = GetNativeType(arrayNativeType, arrayTypeSchemaURI, arrayTypeSchemaName);
-        if (NS_FAILED(rc))
-          return rc;
+        GetNativeType(arrayNativeType, arrayTypeSchemaURI, arrayTypeSchemaName);
     }
     nsCOMPtr<nsISchemaCollection> collection;
     nsresult rc =
