@@ -71,6 +71,12 @@ interface nsITimerCallback : nsISupports
 };
 
 
+/**
+ * nsITimer instances must be initialized by calling one of the "init" methods
+ * documented below.  You may also re-initialize an existing instance with new
+ * delay to avoid the overhead of destroying and creating a timer.  It is not
+ * necessary to cancel the timer in that case.
+ */
 [scriptable, uuid(29ee628e-a3ea-471f-965d-dc9f11d1c183)]
 interface nsITimer : nsISupports
 {
@@ -150,8 +156,10 @@ interface nsITimer : nsISupports
                         in unsigned long aType);
 
   /**
-   * Cancellation of timers applies to repeating timers 
-   * (i.e., init()ed with aType=TYPE_REPEATING*).
+   * Cancel the timer.  This method works on all types, not just on repeating
+   * timers -- you might want to cancel a TYPE_ONE_SHOT timer, and even reuse
+   * it by re-initializing it (to avoid object destruction and creation costs
+   * by conserving one timer instance).
    */
   void cancel();
   

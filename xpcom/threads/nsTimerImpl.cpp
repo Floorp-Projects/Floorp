@@ -41,10 +41,10 @@
 
 #include "nsIEventQueue.h"
 
-static TimerThread *gThread = nsnull;
-
-static PRBool gFireOnIdle = PR_FALSE;
-static nsTimerManager* gManager = nsnull;
+static PRInt32          gGenerator = 0;
+static TimerThread*     gThread = nsnull;
+static PRBool           gFireOnIdle = PR_FALSE;
+static nsTimerManager*  gManager = nsnull;
 
 #include "prmem.h"
 #include "prinit.h"
@@ -158,6 +158,8 @@ nsTimerImpl::nsTimerImpl() :
   mFiring(PR_FALSE),
   mArmed(PR_FALSE),
   mCanceled(PR_FALSE),
+  mGeneration(0),
+  mDelay(0),
   mTimeout(0)
 {
   NS_INIT_ISUPPORTS();
@@ -205,6 +207,33 @@ void nsTimerImpl::Shutdown()
 }
 
 
+nsresult nsTimerImpl::InitCommon(PRUint32 aType, PRUint32 aDelay)
+{
+  /**
+   * In case of re-Init, both with and without a preceding Cancel, clear the
+   * mCanceled flag and assign a new mGeneration.  But first, remove any armed
+   * timer from the timer thread's list.
+   *
+   * If we are racing with the timer thread to remove this timer and we lose,
+   * the RemoveTimer call made here will fail to find this timer in the timer
+   * thread's list, and will return false harmlessly.  We test mArmed here to
+   * avoid the small overhead in RemoveTimer of locking the timer thread and
+   * checking its list for this timer.  It's safe to test mArmed even though
+   * it might be cleared on another thread in the next cycle (or even already
+   * be cleared by another CPU whose store hasn't reached our CPU's cache),
+   * because RemoveTimer is idempotent.
+   */
+  if (mArmed)
+    gThread->RemoveTimer(this);
+  mCanceled = PR_FALSE;
+  mGeneration = PR_AtomicIncrement(&gGenerator);
+
+  mType = (PRUint8)aType;
+  SetDelayInternal(aDelay);
+
+  return gThread->AddTimer(this);
+}
+
 NS_IMETHODIMP nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
                                                 void *aClosure,
                                                 PRUint32 aDelay,
@@ -213,16 +242,11 @@ NS_IMETHODIMP nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
   if (!gThread)
     return NS_ERROR_FAILURE;
 
-  mCallback.c = aFunc;
   mCallbackType = CALLBACK_TYPE_FUNC;
-
+  mCallback.c = aFunc;
   mClosure = aClosure;
 
-  mType = (PRUint8)aType;
-
-  SetDelayInternal(aDelay);
-
-  return gThread->AddTimer(this);
+  return InitCommon(aType, aDelay);
 }
 
 NS_IMETHODIMP nsTimerImpl::InitWithCallback(nsITimerCallback *aCallback,
@@ -232,15 +256,11 @@ NS_IMETHODIMP nsTimerImpl::InitWithCallback(nsITimerCallback *aCallback,
   if (!gThread)
     return NS_ERROR_FAILURE;
 
+  mCallbackType = CALLBACK_TYPE_INTERFACE;
   mCallback.i = aCallback;
   NS_ADDREF(mCallback.i);
-  mCallbackType = CALLBACK_TYPE_INTERFACE;
 
-  mType = (PRUint8)aType;
-
-  SetDelayInternal(aDelay);
-
-  return gThread->AddTimer(this);
+  return InitCommon(aType, aDelay);
 }
 
 NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
@@ -250,15 +270,11 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
   if (!gThread)
     return NS_ERROR_FAILURE;
 
-  SetDelayInternal(aDelay);
-
+  mCallbackType = CALLBACK_TYPE_OBSERVER;
   mCallback.o = aObserver;
   NS_ADDREF(mCallback.o);
-  mCallbackType = CALLBACK_TYPE_OBSERVER;
 
-  mType = (PRUint8)aType;
-
-  return gThread->AddTimer(this);
+  return InitCommon(aType, aDelay);
 }
 
 NS_IMETHODIMP nsTimerImpl::Cancel()
@@ -395,45 +411,48 @@ void nsTimerImpl::Fire()
 }
 
 
-struct TimerEventType {
-  PLEvent	e;
-  // arguments follow...
+struct TimerEventType : public PLEvent {
+  PRInt32        mGeneration;
 #ifdef DEBUG_TIMERS
-  PRIntervalTime mInit;
+  PRIntervalTime mInitTime;
 #endif
 };
 
 
 void* handleTimerEvent(TimerEventType* event)
 {
+  nsTimerImpl* timer = NS_STATIC_CAST(nsTimerImpl*, event->owner);
+  if (event->mGeneration != timer->GetGeneration())
+    return nsnull;
+
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
     PRIntervalTime now = PR_IntervalNow();
     PR_LOG(gTimerLog, PR_LOG_DEBUG,
            ("[this=%p] time between PostTimerEvent() and Fire(): %dms\n",
-            event->e.owner, PR_IntervalToMilliseconds(now - event->mInit)));
+            event->owner, PR_IntervalToMilliseconds(now - event->mInitTime)));
   }
 #endif
 
   if (gFireOnIdle) {
     PRBool idle = PR_FALSE;
-    NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->GetIdle(&idle);
+    timer->GetIdle(&idle);
     if (idle) {
       NS_ASSERTION(gManager, "Global Thread Manager is null!");
       if (gManager)
-        gManager->AddIdleTimer(NS_STATIC_CAST(nsTimerImpl*, event->e.owner));
+        gManager->AddIdleTimer(timer);
       return nsnull;
     }
   }
 
-  NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->Fire();
+  timer->Fire();
 
-  return NULL;
+  return nsnull;
 }
 
 void destroyTimerEvent(TimerEventType* event)
 {
-  nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, event->e.owner);
+  nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, event->owner);
   NS_RELEASE(timer);
   PR_DELETE(event);
 }
@@ -446,7 +465,8 @@ void nsTimerImpl::PostTimerEvent()
 
   // construct
   event = PR_NEW(TimerEventType);
-  if (event == NULL) return;
+  if (!event)
+    return;
 
   // initialize
   PL_InitEvent((PLEvent*)event, this,
@@ -454,11 +474,14 @@ void nsTimerImpl::PostTimerEvent()
                (PLDestroyEventProc)destroyTimerEvent);
 
   // Since TimerThread addref'd 'this' for us, we don't need to addref here.
-  // We will release in destroyMyEvent.
+  // We will release in destroyMyEvent.  We do need to copy the generation
+  // number from this timer into the event, so we can avoid firing a timer
+  // that was re-initialized after being canceled.
+  event->mGeneration = mGeneration;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    event->mInit = PR_IntervalNow();
+    event->mInitTime = PR_IntervalNow();
   }
 #endif
 
@@ -481,7 +504,7 @@ void nsTimerImpl::PostTimerEvent()
   if (gThread)
     gThread->mEventQueueService->GetThreadEventQueue(thread, getter_AddRefs(queue));
   if (queue)
-    queue->PostEvent(&event->e);
+    queue->PostEvent(event);
 }
 
 void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
