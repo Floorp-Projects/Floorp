@@ -5515,38 +5515,36 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
                                           PRBool&         aHandled,
                                           nsIContent*     aZombieFocusedContent)
 {
-  // Send this event straight up to the parent pres shell.
+  // Send this events straight up to the parent pres shell.
   // We do this for non-mouse events in zombie documents.
   // That way at least the UI key bindings can work.
+
+  // First, eliminate the focus ring in the current docshell, which 
+  // is  now a zombie. If we key navigate, it won't be within this
+  // docshell, until the newly loading document is displayed.
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   // hold a reference to the ESM across event dispatch
   nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
+
+  esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  esm->SetFocusedContent(nsnull);
+  ContentStatesChanged(mDocument, aZombieFocusedContent,
+                       nsnull, NS_EVENT_STATE_FOCUS);
+
+  // Next, update the display so the old focus ring is no longer visible
+
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
 
-  if (aZombieFocusedContent) {
-    // If sub-content within current document is focused,
-    // eliminate the focus ring, because the current docshell
-    // is now a zombie. If we key navigate, it won't be within this
-    // docshell, until the newly loading document is displayed.
-    // Note: if document itself has focus, leave the focus alone so that 
-    // we don't mess up the "open link in new foreground tab" feature --
-    // there is no focus outline in that case anyway.
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-    esm->SetFocusedContent(nsnull);
-    ContentStatesChanged(mDocument, aZombieFocusedContent,
-                         nsnull, NS_EVENT_STATE_FOCUS);
-    // Update the display so the old focus ring is no longer visible
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    NS_ASSERTION(docShell, "No docshell for container.");
-    nsCOMPtr<nsIContentViewer> contentViewer;
-    docShell->GetContentViewer(getter_AddRefs(contentViewer));
-    if (contentViewer) {
-      nsCOMPtr<nsIContentViewer> zombieViewer;
-      contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-      if (zombieViewer) {
-        zombieViewer->Show();
-      }
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  NS_ASSERTION(docShell, "No docshell for container.");
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (contentViewer) {
+    nsCOMPtr<nsIContentViewer> zombieViewer;
+    contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+    if (zombieViewer) {
+      zombieViewer->Show();
     }
   }
 
