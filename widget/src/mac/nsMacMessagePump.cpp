@@ -47,18 +47,15 @@
 const char SUSPENDRESUMEMESSAGE = 0x01;
 const char MOUSEMOVEDMESSAGE = 0xFA;
 
-//nsWindow* nsMacMessagePump::gCurrentWindow = nsnull;   
-//nsWindow* nsMacMessagePump::gGrabWindow = nsnull;			// need this for grabmouse
+const short	kMinWindowWidth = 300;
+const short kMinWindowHeight = 150;
 
-//static NS_DEFINE_IID(kITEXTWIDGETIID, NS_TEXTFIELD_CID);
 NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
 
 
-bool IsUserWindow ( WindowPtr ) ;
-
 // a small helper routine, inlined for efficiency
-inline
-bool IsUserWindow ( WindowPtr wp )
+bool IsUserWindow(WindowPtr);
+inline bool IsUserWindow(WindowPtr wp)
 {
 	return wp && (::GetWindowKind(wp) >= kApplicationWindowKind);
 }
@@ -264,25 +261,42 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				while (::WaitMouseUp())
 				{
 					LPeriodical::DevoteTimeToRepeaters(anEvent);
+
+					Point origin = {0,0};
+					::LocalToGlobal(&origin);
 					Point newPt;
 					::GetMouse(&newPt);
 					::LocalToGlobal(&newPt);
 					if (::DeltaPoint(oldPt, newPt))
 					{
 						Rect portRect = whichWindow->portRect;
-						short	width = (portRect.right - portRect.left) + (newPt.h - oldPt.h);
-						short	height = (portRect.bottom - portRect.top) + (newPt.v - oldPt.v);
-						
+						short	width = newPt.h - origin.h;
+						short	height = newPt.v - origin.v;
+						if (width < kMinWindowWidth)
+							width = kMinWindowWidth;
+						if (height < kMinWindowHeight)
+							height = kMinWindowHeight;
+
 						oldPt = newPt;
 						::SizeWindow(whichWindow, width, height, true);
 						::DrawGrowIcon(whichWindow);
-						anEvent.where = newPt;	// important!
+
+						anEvent.where.h = width;	// simulate a click in the grow icon
+						anEvent.where.v = height;
+						::LocalToGlobal(&anEvent.where);
 						DispatchOSEventToRaptor(anEvent, whichWindow);
+
+						Boolean					haveEvent;
+						EventRecord			updateEvent;
+						haveEvent = ::WaitNextEvent(updateMask, &updateEvent, 0, nil);
+						if (haveEvent)
+							DoUpdate(updateEvent);
 					}
 				}
 #else
 				Rect sizeRect = (**::GetGrayRgn()).rgnBBox;
-				sizeRect.top = sizeRect.left = 75;
+				sizeRect.top = kMinWindowHeight;
+				sizeRect.left = kMinWindowWidth;
 				long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
 				if (newSize != 0)
 					::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
