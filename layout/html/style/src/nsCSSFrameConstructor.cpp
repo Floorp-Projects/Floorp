@@ -2092,6 +2092,17 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
             NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
             listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
+             // Set initial visibility to hidden for the drop-down list
+             // XXX: This should not be necessary. Need to restructure the combo box as follows:
+             // Derive nsComboboxFrame from nsAreaFrame. Attach the placeholder frame, a label frame and
+             // a button frame. Override reresolve style context and reresolve the style on the ListBox.
+             // The event state manager should then be asked to set active and non-active based on
+             // The mouse click this would get rid of all of the ugly code here. The setting of the active
+             // Should cause re-resolution of the AreaFrame which will re-sync it. KMM.
+            listFrame->ReResolveStyleContext(aPresContext, hiddenPseudoStyle, NS_STYLE_HINT_NONE, nsnull, nsnull);
+            listView->SetVisibility(nsViewVisibility_kHide);
+
+
               // Create a place holder frame for the dropdown list
             nsIFrame* placeholderFrame = nsnull;
             CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,

@@ -694,6 +694,11 @@ NS_IMETHODIMP nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                                    nsGUIEvent*     aEvent,
                                                    nsEventStatus&  aEventStatus)
 {
+  if (aEvent->message == NS_MOUSE_EXIT) {
+    if (mArrowStyle == mBtnPressedStyleContext) {
+      mListControlFrame->CaptureMouseEvents(PR_TRUE);
+    }
+  }
 
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;
@@ -714,10 +719,6 @@ NS_IMETHODIMP nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
     if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
       mArrowStyle = mBtnOutStyleContext;
       nsFormControlHelper::ForceDrawFrame(this);
-      //MouseClicked(&aPresContext);
-
-    } else if (aEvent->message == NS_MOUSE_MOVE) {
-
     } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
       mArrowStyle = mBtnPressedStyleContext;
       nsFormControlHelper::ForceDrawFrame(this);

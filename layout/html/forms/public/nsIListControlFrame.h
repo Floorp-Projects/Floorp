@@ -33,9 +33,7 @@ class nsIContent;
   { 0x8d, 0xcf, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
 
 /** 
-  * nsIListControlFrame is the common interface for frames of form controls. It
-  * provides a uniform way of creating widgets, resizing, and painting.
-  * @see nsLeafFrame and its base classes for more info
+  * nsIListControlFrame is the interface for frame-based listboxes.
   */
 class nsIListControlFrame : public nsISupports {
 
@@ -58,6 +56,13 @@ public:
    *
    */
   NS_IMETHOD AboutToDropDown() = 0;
+
+  /**
+   * Initiates mouse capture for the listbox
+   *
+   */
+  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
+
 
 };
 

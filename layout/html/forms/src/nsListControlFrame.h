@@ -149,10 +149,12 @@ public:
 
   virtual void SetFormFrame(nsFormFrame* aFrame);
 
+ 
   // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedItem(nsString & aStr);
   NS_IMETHOD AboutToDropDown();
+  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
 
   // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
