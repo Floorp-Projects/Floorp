@@ -864,7 +864,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
 
-				shell->RefreshCaret();
+				//shell->RefreshCaret();
 				
 #ifdef SHOW_SELECTION_CURSOR
         aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
@@ -1343,7 +1343,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
         RenderString(aRenderingContext, aStyleContext, aTextStyle,
                      text, textLength, dx, dy, width);
 
-				shell->RefreshCaret();
+				//shell->RefreshCaret();
 
 #ifdef SHOW_SELECTION_CURSOR
 
@@ -1495,7 +1495,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
 
-				shell->RefreshCaret();
+				//shell->RefreshCaret();
 				
 #ifdef SHOW_SELECTION_CURSOR
         aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
@@ -1755,10 +1755,15 @@ TextFrame::SetSelected(nsSelectionStruct *aSelStruct)
       trueEnd = aSelStruct->mStartFrame;
     }
 
-    if (mSelectionOffset != trueBegin || mSelectionEnd != trueEnd) {
+    if (mSelectionOffset != trueBegin || mSelectionEnd != trueEnd)
+    {
+      PRBool	wasCollapsed = (mSelectionOffset == mSelectionEnd);
       mSelectionOffset = trueBegin;
       mSelectionEnd = trueEnd;
-      aSelStruct->mForceRedraw = PR_TRUE;
+    	// XXX when we no longer rely on the blue triangle to show the selection
+    	// position (using the caret instead), then we can uncomment this to reduce
+    	// redrawing. sfraser
+      aSelStruct->mForceRedraw = PR_TRUE;	//!wasCollapsed || (trueBegin != trueEnd);
     }
   }
   return nsFrame::SetSelected(aSelStruct);//this will do the actual
