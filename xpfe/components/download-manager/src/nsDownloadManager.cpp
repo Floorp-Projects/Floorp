@@ -660,10 +660,11 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  // if the window's already open, do nothing (focusing it would be annoying)
   nsCOMPtr<nsIDOMWindowInternal> recentWindow;
   wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(recentWindow));
   if (recentWindow)
-    return recentWindow->Focus();
+    return NS_OK;
 
   // if we ever have the capability to display the UI of third party dl managers,
   // we'll open their UI here instead.
