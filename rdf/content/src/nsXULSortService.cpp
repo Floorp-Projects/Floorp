@@ -559,10 +559,10 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 					if (value == sortResource)
 					{
 						sortColIndex = colIndex;
-						found = PR_TRUE;
 												
 						if (!sortDirection.EqualsIgnoreCase("natural"))
 						{
+							found = PR_TRUE;
 							setFlag = PR_TRUE;
 
 							// secondary sort info is optional
