@@ -79,8 +79,10 @@ nsRegionXlib::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
   r.height = aHeight;
 
   Region nRegion = ::XCreateRegion();
-  ::XUnionRectWithRegion(&r, mRegion, nRegion);
+  Region tRegion = ::XCreateRegion();
+  ::XUnionRectWithRegion(&r, tRegion, nRegion);
   ::XDestroyRegion(mRegion);
+  ::XDestroyRegion(tRegion);
   mRegion = nRegion;
 }
 
