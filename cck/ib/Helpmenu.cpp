@@ -129,7 +129,7 @@ void CreateIspMenu(void)
 			Isp <<"     <NC:prettyName>" << ispPrettyName << "</NC:prettyName>\n";
 			Isp <<"     <NC:hostName>" << ispInServer << "</NC:hostName>\n";
 			Isp <<"     <NC:type>" << serverType << "</NC:type>\n";
-			Isp <<"     <NC:port>" << ispPortNumber << "<NC:port>\n";
+			Isp <<"     <NC:port>" << ispPortNumber << "</NC:port>\n";
 			Isp <<"     <NC:rememberPassword>false</NC:rememberPassword>\n";
 			if (serverType == "pop3")
 			{
@@ -227,7 +227,7 @@ void CreateNewsMenu(void)
 			News <<"     <NC:prettyName>" << newsPrettyName << "</NC:prettyName>\n";
 			News <<"     <NC:hostName>" << newsInServer << "</NC:hostName>\n";
 			News <<"     <NC:type>nntp</NC:type>\n";
-			News <<"     <NC:port>" << newsPortNumber << "<NC:port>\n";
+			News <<"     <NC:port>" << newsPortNumber << "</NC:port>\n";
 			News <<"     <NC:rememberPassword>false</NC:rememberPassword>\n";
 			News <<"    </NC:nsIMsgIncomingServer>\n";
 			News <<"   </NC:incomingServer>\n\n";
