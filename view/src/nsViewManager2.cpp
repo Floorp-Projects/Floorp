@@ -2979,3 +2979,12 @@ nsViewManager2::GetDefaultBackgroundColor(nscolor* aColor)
 	*aColor = 0;
 	return NS_OK;
 }
+
+NS_IMETHODIMP
+nsViewManager2::GetLastUserEventTime(PRUint32& aTime)
+{
+    aTime = 0;
+    return NS_OK;
+}
+
+

@@ -156,9 +156,11 @@ public:
   NS_IMETHOD FlushPendingInvalidates();
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
+  NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
   nsresult ProcessInvalidateEvent();
   static PRInt32 GetViewManagerCount();
   static const nsVoidArray* GetViewManagerArray();
+  static PRUint32 gLastUserEventTime;
 protected:
   virtual ~nsViewManager();
   void ProcessPendingUpdates(nsIView *aView);
