@@ -26,7 +26,7 @@
 
 #ifdef XP_MAC
 #define LOCALE_DLL_NAME "NSLOCALE_DLL"
-#elif defined(NP_WIN)
+#elif defined(XP_PC)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #else
 #define LOCALE_DLL_NAME "libnslocale.so"
@@ -493,128 +493,72 @@ static void TestDateTimeFormat()
   }
 
 
-  PRUnichar dateString[64];
-  PRUint32 length = sizeof(dateString)/sizeof(PRUnichar);
+  nsAutoString dateString;
   nsString locale("en-GB");
   time_t  timetTime;
-  nsString s_print;
 
 
   cout << "Test 2 - FormatTime():\n";
   time( &timetTime );
-  res = t->FormatTime(locale, kDateFormatShort, kTimeFormatSeconds, timetTime, 
-                        dateString, &length);
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
+  res = t->FormatTime(locale, kDateFormatShort, kTimeFormatSeconds, timetTime, dateString);
+  dateString.DebugDump(cout);
 
   cout << "Test 3 - FormatTMTime():\n";
   time_t ltime;
   time( &ltime );
-  length = sizeof(dateString)/sizeof(PRUnichar);
 
   // try (almost) all format combination
-  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNone, localtime( &ltime ), 
-                        dateString, &length);
+  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatNone, kTimeFormatNone:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatNone, kTimeFormatSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNoSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatNone, kTimeFormatNoSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNone, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatLong, kTimeFormatNone:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatLong, kTimeFormatSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNoSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatLong, kTimeFormatNoSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNone, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatShort, kTimeFormatNone:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatShort, kTimeFormatSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatShort, kTimeFormatNoSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNone, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatYearMonth, kTimeFormatNone:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatYearMonth, kTimeFormatSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNoSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatYearMonth, kTimeFormatNoSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNone, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNone, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatNone:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSeconds, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatNoSeconds:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSecondsForce24Hour, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSecondsForce24Hour, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatSecondsForce24Hour:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
-  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour, localtime( &ltime ), 
-                        dateString, &length);
+  dateString.DebugDump(cout);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour, localtime( &ltime ), dateString);
   cout << "kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour:\n";
-  s_print.SetString(dateString, length);
-  s_print.DebugDump(cout);
-  length = sizeof(dateString)/sizeof(PRUnichar);
+  dateString.DebugDump(cout);
 
   res = t->Release();
   
