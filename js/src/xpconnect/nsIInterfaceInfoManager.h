@@ -44,8 +44,19 @@ public:
 
 };
 
+/***************************************************************************/
+// XXX XXX Removed this block and switch XPC_PUBLIC_API to XPT_PUBLIC_API
+//         when this code is moved to libxpt
+#include "jsapi.h"
+#ifdef EXPORT_XPC_API
+#define XPC_PUBLIC_API(t)    JS_EXPORT_API(t)
+#else
+#define XPC_PUBLIC_API(t)    JS_IMPORT_API(t)
+#endif
+/***************************************************************************/
+
 JS_BEGIN_EXTERN_C
-// XXX remove this an use ServiceManager instead
+// XXX remove this and use ServiceManager instead
 XPC_PUBLIC_API(nsIInterfaceInfoManager*)
 XPT_GetInterfaceInfoManager();
 JS_END_EXTERN_C

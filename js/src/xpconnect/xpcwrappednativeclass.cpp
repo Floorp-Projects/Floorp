@@ -46,23 +46,18 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
     }
     else
     {
-        nsXPConnect* xpc;
-        if((xpc = nsXPConnect::GetXPConnect()) != NULL)
+        nsIInterfaceInfoManager* iimgr;
+        if(NULL != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
         {
-            nsIInterfaceInfoManager* iimgr;
-            if((iimgr = xpc->GetInterfaceInfoManager()) != NULL)
+            nsIInterfaceInfo* info;
+            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
-                nsIInterfaceInfo* info;
-                if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
-                {
-                    clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
-                    if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
-                        NS_RELEASE(clazz);  // NULLs out 'clazz'
-                    NS_RELEASE(info);
-                }
-                NS_RELEASE(iimgr);
+                clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
+                if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
+                    NS_RELEASE(clazz);  // NULLs out 'clazz'
+                NS_RELEASE(info);
             }
-            NS_RELEASE(xpc);
+            NS_RELEASE(iimgr);
         }
     }
     return clazz;
@@ -93,16 +88,11 @@ nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
     DestroyMemberDescriptors();
     if(mName)
     {
-        nsXPConnect* xpc;
-        if((xpc = nsXPConnect::GetXPConnect()) != NULL)
+        nsIAllocator* al;
+        if(NULL != (al = nsXPConnect::GetAllocator()))
         {
-            nsIAllocator* al;
-            if((al = xpc->GetAllocator()) != NULL)
-            {
-                al->Free(mName);
-                NS_RELEASE(al);
-            }
-            NS_RELEASE(xpc);
+            al->Free(mName);
+            NS_RELEASE(al);
         }
     }
     NS_RELEASE(mInfo);
@@ -144,8 +134,8 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         if(NS_FAILED(mInfo->GetMethodInfo(i, &info)))
             return JS_FALSE;
 
-        // XX perhaps this should be extended to be 'CanBeReflected()' to
-        // also cover methods with non-complient signatures.
+        // XXX perhaps this should be extended to be 'CanBeReflected()' to
+        // also cover methods with non-compliant signatures.
         if(info->IsHidden())
             continue;
 
@@ -282,7 +272,7 @@ isConstructorID(JSContext *cx, jsid id)
 {
     jsval idval;
     const char *property_name;
-
+    // XXX this could be improved by cacheing the hashed id for "constructor"
     if (JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
         (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {
         if (!strcmp(property_name, "constructor")) {
@@ -386,6 +376,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     nsresult invokeResult;
 
     *vp = JSVAL_NULL;
+
     // make sure we have what we need
 
     if(isAttributeSet)

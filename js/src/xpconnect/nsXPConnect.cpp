@@ -51,6 +51,38 @@ nsXPConnect::GetXPConnect()
     return mSelf;
 }
 
+// static 
+nsIAllocator* 
+nsXPConnect::GetAllocator(nsXPConnect* xpc /*= NULL*/)
+{
+    nsIAllocator* al;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return NULL;
+    if(NULL != (al = xpcl->mAllocator))
+        NS_ADDREF(al);
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return al;
+}
+
+// static 
+nsIInterfaceInfoManager* 
+nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= NULL*/)
+{
+    nsIInterfaceInfoManager* iim;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return NULL;
+    if(NULL != (iim = xpcl->mInterfaceInfoManager))
+        NS_ADDREF(iim);
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return iim;
+}
+
 nsXPConnect::nsXPConnect()
     :   mContextMap(NULL),
         mAllocator(NULL),

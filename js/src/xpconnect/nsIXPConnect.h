@@ -23,6 +23,8 @@
 
 #include "nsISupports.h"
 #include "jsapi.h"
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
 
 /*
  * The linkage of XPC API functions differs depending on whether the file is
@@ -41,42 +43,8 @@
 #define XPC_FRIEND_API(t)    XPC_PUBLIC_API(t)
 #define XPC_FRIEND_DATA(t)   XPC_PUBLIC_DATA(t)
 
-#include "nsIInterfaceInfo.h"
-#include "nsIInterfaceInfoManager.h"
-
-
 // XXX break these up into separate files...
 // XXX declare them in XPIDL :)
-
-/***************************************************************************/
-/***************************************************************************/
-// this is here just for testing...
-
-// {159E36D0-991E-11d2-AC3F-00C09300144B}
-#define NS_ITESTXPC_FOO_IID       \
-{ 0x159e36d0, 0x991e, 0x11d2,   \
-  { 0xac, 0x3f, 0x0, 0xc0, 0x93, 0x0, 0x14, 0x4b } }
-
-class nsITestXPCFoo : public nsISupports
-{
-public:
-    NS_IMETHOD Test(int p1, int p2, int* retval) = 0;
-    NS_IMETHOD Test2() = 0;
-};
-
-// {5F9D20C0-9B6B-11d2-9FFE-000064657374}
-#define NS_ITESTXPC_FOO2_IID       \
-{ 0x5f9d20c0, 0x9b6b, 0x11d2,     \
-  { 0x9f, 0xfe, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-
-class nsITestXPCFoo2 : public nsITestXPCFoo
-{
-public:
-};
-
-/***************************************************************************/
-/***************************************************************************/
-
 
 /***************************************************************************/
 // forward declarations...
@@ -165,7 +133,7 @@ public:
 };
 
 JS_BEGIN_EXTERN_C
-// XXX remove this an use ServiceManager instead
+// XXX remove this and use ServiceManager instead
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect();
 JS_END_EXTERN_C

@@ -18,7 +18,16 @@
 
 /* InterfaceInfo support code - some temporary. */
 
-#include "xpcprivate.h"
+#include <string.h>
+#include <stdlib.h>
+#include "nscore.h"
+#include "nsISupports.h"
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
+#include "xpt_struct.h"
+#include "xpt_cpp.h"
 
 // declare this in the .cpp file for now
 class InterfaceInfoImpl : public nsIInterfaceInfo
@@ -45,10 +54,6 @@ public:
     virtual ~InterfaceInfoImpl();
 
 private:
-    PRBool GetAllocator(nsIAllocator** allocator);
-    void   ReleaseAllocator(nsIAllocator** allocator);
-
-private:
     XPTInterfaceDirectoryEntry* mEntry;
     InterfaceInfoImpl* mParent;
     uint16 mMethodBaseIndex;
@@ -56,8 +61,6 @@ private:
     uint16 mConstantBaseIndex;
     uint16 mConstantCount;
 };
-
-/***************************************************************************/
 
 // declare this in the .cpp file for now
 class InterfaceInfoManagerImpl : public nsIInterfaceInfoManager
@@ -75,6 +78,9 @@ class InterfaceInfoManagerImpl : public nsIInterfaceInfoManager
 public:
     InterfaceInfoManagerImpl();
     ~InterfaceInfoManagerImpl();
+
+    static InterfaceInfoManagerImpl* GetInterfaceInfoManager();
+    static nsIAllocator* GetAllocator(InterfaceInfoManagerImpl* iim = NULL);
 private:
     PRBool BuildInterfaceForEntry(uint16 index);
 
@@ -86,6 +92,7 @@ private:
 
 /***************************************************************************/
 /***************************************************************************/
+/***************************************************************************/
 // hacked hardcoded simulation...
 
 XPTParamDescriptor ResultParam[] = {
@@ -94,7 +101,7 @@ XPTParamDescriptor ResultParam[] = {
 
 XPTParamDescriptor QueryInterfaceParams[2] = {
     {XPT_PD_IN, {TD_PNSIID|XPT_TDP_POINTER|XPT_TDP_REFERENCE,0}},
-    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_PVOID,0}}
+    {XPT_PD_OUT|XPT_PD_RETVAL, {TD_INTERFACE_IS_TYPE,0}}
 };
 
 XPTParamDescriptor TestParams[3] = {
@@ -149,12 +156,12 @@ nsXPTParamInfo::GetInterface() const
 {
     NS_PRECONDITION(GetType() == nsXPTType::T_INTERFACE,"not an interface");
 
-    // not optimal!
-    nsIInterfaceInfoManager* mgr = XPT_GetInterfaceInfoManager();
-    if(!mgr)
+    nsIInterfaceInfoManager* mgr;
+    if(!(mgr = InterfaceInfoManagerImpl::GetInterfaceInfoManager()))
         return NULL;
 
     nsIInterfaceInfo* info;
+    // not optimal!
     mgr->GetInfoForIID(&InterfaceDirectoryEntryTable[type.type.interface].iid,
                        &info);
     NS_RELEASE(mgr);
@@ -169,6 +176,13 @@ NS_IMPL_ISUPPORTS(InterfaceInfoManagerImpl, NS_IINTERFACEINFO_MANAGER_IID)
 XPC_PUBLIC_API(nsIInterfaceInfoManager*)
 XPT_GetInterfaceInfoManager()
 {
+    return InterfaceInfoManagerImpl::GetInterfaceInfoManager();
+}
+
+// static 
+InterfaceInfoManagerImpl* 
+InterfaceInfoManagerImpl::GetInterfaceInfoManager()
+{
     static InterfaceInfoManagerImpl* impl = NULL;
     if(!impl)
     {
@@ -178,7 +192,24 @@ XPT_GetInterfaceInfoManager()
     if(impl)
         NS_ADDREF(impl);
     return impl;
-}
+}        
+
+// static 
+nsIAllocator* 
+InterfaceInfoManagerImpl::GetAllocator(InterfaceInfoManagerImpl* iim /*= NULL*/)
+{
+    nsIAllocator* al;
+    InterfaceInfoManagerImpl* iiml = iim;
+
+    if(!iiml && !(iiml = GetInterfaceInfoManager()))
+        return NULL;
+    if(NULL != (al = iiml->mAllocator))
+        NS_ADDREF(al);
+    if(!iim)
+        NS_RELEASE(iiml);
+    return al;
+}        
+
 
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
@@ -332,35 +363,20 @@ InterfaceInfoImpl::~InterfaceInfoImpl()
         NS_RELEASE(mParent);
 }        
 
-PRBool 
-InterfaceInfoImpl::GetAllocator(nsIAllocator** allocator)
-{
-    return NS_SUCCEEDED(nsServiceManager::GetService(kAllocatorCID,
-                                                kIAllocatorIID,
-                                                (nsISupports **)allocator));
-}        
-void   
-InterfaceInfoImpl::ReleaseAllocator(nsIAllocator** allocator)
-{
-    nsServiceManager::ReleaseService(kAllocatorCID, 
-                                     (nsISupports *)*allocator, NULL);
-    *allocator = NULL;
-}        
-
 NS_IMETHODIMP
 InterfaceInfoImpl::GetName(char** name)
 {
-    nsIAllocator* allocator;
-
     NS_PRECONDITION(name, "bad param");
-    if(GetAllocator(&allocator))
+
+    nsIAllocator* allocator;
+    if(NULL != (allocator = InterfaceInfoManagerImpl::GetAllocator()))
     {
         int len = strlen(mEntry->name)+1;
         char* p = (char*)allocator->Alloc(len);
-        ReleaseAllocator(&allocator);
+        NS_RELEASE(allocator);
         if(p)
         {
-            memcpy(p, &mEntry->name, len);
+            memcpy(p, mEntry->name, len);
             *name = p;
             return NS_OK;
         }
@@ -373,13 +389,13 @@ InterfaceInfoImpl::GetName(char** name)
 NS_IMETHODIMP
 InterfaceInfoImpl::GetIID(nsIID** iid)
 {
-    nsIAllocator* allocator;
-
     NS_PRECONDITION(iid, "bad param");
-    if(GetAllocator(&allocator))
+
+    nsIAllocator* allocator;
+    if(NULL != (allocator = InterfaceInfoManagerImpl::GetAllocator()))
     {
         nsIID* p = (nsIID*)allocator->Alloc(sizeof(nsIID));
-        ReleaseAllocator(&allocator);
+        NS_RELEASE(allocator);
         if(p)
         {
             memcpy(p, &mEntry->iid, sizeof(nsIID));

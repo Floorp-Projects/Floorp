@@ -66,23 +66,12 @@ class nsXPConnect : public nsIXPConnect
     // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
+    static nsIAllocator* GetAllocator(nsXPConnect* xpc = NULL);
+    static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = NULL);
 
     XPCContext*              GetContext(JSContext* cx);
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
-    nsIAllocator*            GetAllocator()
-    {
-        if(mAllocator)
-            NS_ADDREF(mAllocator);
-        return mAllocator;
-    }
-
-    nsIInterfaceInfoManager* GetInterfaceInfoManager()
-    {
-        if(mInterfaceInfoManager)
-            NS_ADDREF(mInterfaceInfoManager);
-        return mInterfaceInfoManager;
-    }
 
     virtual ~nsXPConnect();
 private:

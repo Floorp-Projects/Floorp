@@ -177,7 +177,6 @@ MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
     return arbitrary->DefaultValue(cx, obj, type, vp, wrapper, NULL, retval);
 }                                                             
 
-
 /***************************************************************************/
 
 class nsTestXPCFoo : public nsITestXPCFoo2
