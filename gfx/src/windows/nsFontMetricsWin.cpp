@@ -380,7 +380,7 @@ CheckFontLangGroup(
        NS_ASSERTION(proxy, "cannot get the font package proxy");
        if (proxy) {
          char fontpackageid[256];
-         PR_snprintf(fontpackageid, sizeof(fontpackageid), lang3);
+         PR_snprintf(fontpackageid, sizeof(fontpackageid), "lang:%s", lang3);
          res = proxy->NeedFontPackage(fontpackageid);
          NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
        }
