@@ -56,10 +56,10 @@
  * See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_basics/shell_basics_programming/transferring/clipboard.asp
  */
 #ifndef CFSTR_INETURLA
-#define CFSTR_INETURLA _T("UniformResourceLocator")
+#define CFSTR_INETURLA    "UniformResourceLocator"
 #endif
 #ifndef CFSTR_INETURLW
-#define CFSTR_INETURLW _T("UniformResourceLocatorW")
+#define CFSTR_INETURLW    "UniformResourceLocatorW"
 #endif
 
 class nsVoidArray;
