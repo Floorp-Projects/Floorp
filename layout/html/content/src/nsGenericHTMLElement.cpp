@@ -127,7 +127,7 @@ protected:
   nsIHTMLContent *mContent;
 };
 
-MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration);
+MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
 
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent)
 {

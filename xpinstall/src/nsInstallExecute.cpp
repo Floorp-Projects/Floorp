@@ -40,7 +40,7 @@
 
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
 
-MOZ_DECL_CTOR_COUNTER(nsInstallExecute);
+MOZ_DECL_CTOR_COUNTER(nsInstallExecute)
 
 nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
                                       const nsString& inJarLocation,

@@ -63,7 +63,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 class CSSLoaderImpl;
 
-MOZ_DECL_CTOR_COUNTER(URLKey);
+MOZ_DECL_CTOR_COUNTER(URLKey)
 
 class URLKey: public nsHashKey {
 public:
@@ -174,7 +174,7 @@ public:
 
 NS_IMPL_ISUPPORTS1(SheetLoadData, nsIStreamLoaderObserver);
 
-MOZ_DECL_CTOR_COUNTER(PendingSheetData);
+MOZ_DECL_CTOR_COUNTER(PendingSheetData)
 
 struct PendingSheetData {
   PendingSheetData(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,

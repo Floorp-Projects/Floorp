@@ -24,7 +24,7 @@
 
 #include "xptiprivate.h"
 
-MOZ_DECL_CTOR_COUNTER(xptiTypelibGuts);
+MOZ_DECL_CTOR_COUNTER(xptiTypelibGuts)
 
 xptiTypelibGuts::xptiTypelibGuts(XPTHeader* aHeader)
      :  mHeader(aHeader), 

@@ -32,7 +32,7 @@
 
 // CellData 
 
-MOZ_DECL_CTOR_COUNTER(CellData);
+MOZ_DECL_CTOR_COUNTER(CellData)
 
 CellData::CellData(nsTableCellFrame* aOrigCell)
 {
@@ -45,7 +45,7 @@ CellData::~CellData()
   MOZ_COUNT_DTOR(CellData);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsCellMap);
+MOZ_DECL_CTOR_COUNTER(nsCellMap)
 
 // nsTableCellMap
 

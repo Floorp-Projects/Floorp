@@ -34,7 +34,7 @@
 #include "nsToken.h"
 #include "nsIParser.h"
 
-MOZ_DECL_CTOR_COUNTER(CTokenHandler);
+MOZ_DECL_CTOR_COUNTER(CTokenHandler)
 
 /**
  *  

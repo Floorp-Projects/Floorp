@@ -40,7 +40,7 @@ xpti_CompareIIDs(const void *v1, const void *v2)
     return (PRIntn) ((const nsID*)v1)->Equals(*((const nsID*)v2));        
 }         
 
-MOZ_DECL_CTOR_COUNTER(xptiWorkingSet);
+MOZ_DECL_CTOR_COUNTER(xptiWorkingSet)
 
 xptiWorkingSet::xptiWorkingSet()
     : mFileCount(0),

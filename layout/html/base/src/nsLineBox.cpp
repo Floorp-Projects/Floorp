@@ -36,7 +36,7 @@ static PRInt32 ctorCount;
 PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsLineBox);
+MOZ_DECL_CTOR_COUNTER(nsLineBox)
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   : mFirstChild(aFrame),
@@ -903,7 +903,7 @@ nsFloaterCacheFreeList::Append(nsFloaterCache* aFloater)
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsFloaterCache);
+MOZ_DECL_CTOR_COUNTER(nsFloaterCache)
 
 nsFloaterCache::nsFloaterCache()
   : mPlaceholder(nsnull),

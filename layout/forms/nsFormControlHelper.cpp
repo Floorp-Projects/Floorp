@@ -80,7 +80,7 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 
 
-MOZ_DECL_CTOR_COUNTER(nsFormControlHelper);
+MOZ_DECL_CTOR_COUNTER(nsFormControlHelper)
 
 nsFormControlHelper::nsFormControlHelper()
 {

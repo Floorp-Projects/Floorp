@@ -89,7 +89,7 @@ static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
-MOZ_DECL_CTOR_COUNTER(nsInstallInfo);
+MOZ_DECL_CTOR_COUNTER(nsInstallInfo)
 
 nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              nsIFile*           aFile, 
@@ -126,7 +126,7 @@ static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
 static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
-MOZ_DECL_CTOR_COUNTER(nsInstall);
+MOZ_DECL_CTOR_COUNTER(nsInstall)
 
 nsInstall::nsInstall(nsIZipReader * theJARFile)
 {

@@ -32,7 +32,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 
-MOZ_DECL_CTOR_COUNTER(nsRegisterItem);
+MOZ_DECL_CTOR_COUNTER(nsRegisterItem)
 
 nsRegisterItem:: nsRegisterItem(  nsInstall* inInstall,
                                   nsIFile* chrome,

@@ -36,7 +36,7 @@
  *   Constructors/Destructor
  *----------------------------------------------------------------------*/
 #ifdef MOZILLA_CLIENT
-MOZ_DECL_CTOR_COUNTER(nsAppleSingleDecoder);
+MOZ_DECL_CTOR_COUNTER(nsAppleSingleDecoder)
 #endif
 
 nsAppleSingleDecoder::nsAppleSingleDecoder(FSSpec *inSpec, FSSpec *outSpec)

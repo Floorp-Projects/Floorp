@@ -25,7 +25,7 @@
 #include "nsToken.h"
 #include "prenv.h"  
 
-MOZ_DECL_CTOR_COUNTER(CParserContext);
+MOZ_DECL_CTOR_COUNTER(CParserContext)
 
 /**
  * Your friendly little constructor. Ok, it's not the friendly, but the only guy

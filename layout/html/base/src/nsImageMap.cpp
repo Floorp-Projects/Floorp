@@ -83,7 +83,7 @@ public:
   PRBool mHasFocus;
 };
 
-MOZ_DECL_CTOR_COUNTER(Area);
+MOZ_DECL_CTOR_COUNTER(Area)
 
 Area::Area(nsIContent* aArea,
            PRBool aSuppress, PRBool aHasURL)

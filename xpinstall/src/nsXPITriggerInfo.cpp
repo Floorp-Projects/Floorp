@@ -34,7 +34,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //
 // nsXPITriggerItem
 //
-MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem);
+MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem)
 
 nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName, 
                                     const PRUnichar* aURL, 
@@ -77,7 +77,7 @@ PRBool nsXPITriggerItem::IsRelativeURL()
 // nsXPITriggerInfo
 //
 
-MOZ_DECL_CTOR_COUNTER(nsXPITriggerInfo);
+MOZ_DECL_CTOR_COUNTER(nsXPITriggerInfo)
 
 nsXPITriggerInfo::nsXPITriggerInfo() 
   : mCx(0), mGlobal(JSVAL_NULL), mCbval(JSVAL_NULL)

@@ -69,7 +69,7 @@ PRBool CanAllocate(PRInt32          aType,
 
 /* ---------- BasicTableLayoutStrategy ---------- */
 
-MOZ_DECL_CTOR_COUNTER(BasicTableLayoutStrategy);
+MOZ_DECL_CTOR_COUNTER(BasicTableLayoutStrategy)
 
 
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRBool aIsNavQuirks)

@@ -59,7 +59,7 @@
 
 //#define ENABLE_COUNTERS  // un-comment this to enable counters (bug 15174)
 
-MOZ_DECL_CTOR_COUNTER(SelectorList);
+MOZ_DECL_CTOR_COUNTER(SelectorList)
 
 // e.g. "P B, H1 B { ... }" has a selector list with two elements,
 // each of which has two selectors.

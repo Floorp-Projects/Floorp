@@ -38,7 +38,7 @@
 #include "nsIStyleSet.h"
 
 
-MOZ_DECL_CTOR_COUNTER(HTMLAttribute);
+MOZ_DECL_CTOR_COUNTER(HTMLAttribute)
 
 struct HTMLAttribute {
   HTMLAttribute(void)
@@ -231,7 +231,7 @@ struct HTMLAttribute {
 
 // ----------------
 
-MOZ_DECL_CTOR_COUNTER(nsClassList);
+MOZ_DECL_CTOR_COUNTER(nsClassList)
 
 struct nsClassList {
   nsClassList(nsIAtom* aAtom)

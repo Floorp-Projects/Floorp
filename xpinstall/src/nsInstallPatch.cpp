@@ -66,7 +66,7 @@ static int32   gdiff_validateFile( pDIFFDATA dd, int file );
 static PRBool  su_unbind(char* oldsrc, char* newsrc);
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsInstallPatch);
+MOZ_DECL_CTOR_COUNTER(nsInstallPatch)
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
                                 const nsString& inVRName,

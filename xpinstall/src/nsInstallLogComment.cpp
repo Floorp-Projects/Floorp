@@ -37,7 +37,7 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 
-MOZ_DECL_CTOR_COUNTER(nsInstallLogComment);
+MOZ_DECL_CTOR_COUNTER(nsInstallLogComment)
 
 nsInstallLogComment::nsInstallLogComment( nsInstall* inInstall,
                                           const nsString& inFileOpCommand,

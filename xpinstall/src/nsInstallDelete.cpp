@@ -36,7 +36,7 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 
-MOZ_DECL_CTOR_COUNTER(nsInstallDelete);
+MOZ_DECL_CTOR_COUNTER(nsInstallDelete)
 
 nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
                                   nsInstallFolder* folderSpec,

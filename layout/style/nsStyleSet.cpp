@@ -1528,7 +1528,7 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
 // this is a comprimise between a sorted-list based lookup and a hash-type 
 // lookup which is not possible due to non-guaranteed-unique keys.
 
-MOZ_DECL_CTOR_COUNTER(StyleContextCache);
+MOZ_DECL_CTOR_COUNTER(StyleContextCache)
 
 StyleContextCache::StyleContextCache(void)
 :mHashTable(nsnull, nsnull, HashTableEnumDestroy, nsnull),

@@ -69,7 +69,7 @@ nsDST::NewMemoryArena(PRUint32 aArenaSize)
   return new NodeArena(aArenaSize);
 }
 
-MOZ_DECL_CTOR_COUNTER(NodeArena);
+MOZ_DECL_CTOR_COUNTER(NodeArena)
 
 // Constructor
 nsDST::NodeArena::NodeArena(PRUint32 aArenaSize)
@@ -193,7 +193,7 @@ nsDST::NodeArena::NumArenas() const
 /////////////////////////////////////////////////////////////////////////////
 // Digital search tree for doing a radix-search of pointer-based keys
 
-MOZ_DECL_CTOR_COUNTER(nsDST);
+MOZ_DECL_CTOR_COUNTER(nsDST)
 
 // Constructor
 nsDST::nsDST(NodeArena* aArena, PtrBits aLevelZeroBit)

@@ -1194,7 +1194,7 @@ MakeContentObject(nsHTMLTag aNodeType,
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(SinkContext);
+MOZ_DECL_CTOR_COUNTER(SinkContext)
 
 SinkContext::SinkContext(HTMLContentSink* aSink)
 {

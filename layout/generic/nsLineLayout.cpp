@@ -71,7 +71,7 @@
 #define PLACED_LEFT  0x1
 #define PLACED_RIGHT 0x2
 
-MOZ_DECL_CTOR_COUNTER(nsLineLayout);
+MOZ_DECL_CTOR_COUNTER(nsLineLayout)
 
 nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
                            nsISpaceManager* aSpaceManager,

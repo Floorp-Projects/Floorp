@@ -214,7 +214,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
 // from nsCSecurityContext:
 extern PRUintn tlsIndex3_g;
 
-MOZ_DECL_CTOR_COUNTER(nsCSecurityContext);
+MOZ_DECL_CTOR_COUNTER(nsCSecurityContext)
 
 nsCSecurityContext::nsCSecurityContext(JSContext* cx)
                    : m_pJStoJavaFrame(NULL), m_pJSCX(cx),

@@ -32,7 +32,7 @@
 #define HOVER    "hover"
 #define FOCUS    "focus"
 
-MOZ_DECL_CTOR_COUNTER(nsButtonFrameRenderer);
+MOZ_DECL_CTOR_COUNTER(nsButtonFrameRenderer)
 
 nsButtonFrameRenderer::nsButtonFrameRenderer()
 {
