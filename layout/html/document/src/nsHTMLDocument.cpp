@@ -233,28 +233,22 @@ void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet
   }
 }
 
-nsresult nsHTMLDocument::CreateElement(nsString &aTagName, 
-                                       nsIDOMAttributeList *aAttributes, 
-                                       nsIDOMElement **aElement)
+nsresult
+nsHTMLDocument::CreateElement(nsString& aTagName, 
+                              nsIDOMAttributeList* aAttributes, 
+                              nsIDOMElement** aElement)
 {
-  nsIHTMLContent* container = nsnull;
-  nsAutoString    tmp(aTagName);
-  nsIAtom*        atom;
-  nsresult        rv;
-
-  tmp.ToUpperCase();
-  atom = NS_NewAtom(tmp);
-
-  rv = NS_NewHTMLContainer(&container, atom);
-  if (NS_OK == rv) {
-    rv = container->QueryInterface(kIDOMElementIID, (void**)aElement);
+  nsIHTMLContent* content;
+  nsresult rv = NS_CreateHTMLElement(&content, aTagName);
+  if (NS_OK != rv) {
+    return rv;
   }
-
-  NS_RELEASE(atom);
+  rv = content->QueryInterface(kIDOMElementIID, (void**)aElement);
   return rv;
 }
 
-nsresult nsHTMLDocument::CreateTextNode(nsString &aData, nsIDOMText** aTextNode)
+nsresult
+nsHTMLDocument::CreateTextNode(nsString &aData, nsIDOMText** aTextNode)
 {
   nsIHTMLContent* text = nsnull;
   nsresult        rv = NS_NewHTMLText(&text, aData, aData.Length());
