@@ -56,6 +56,7 @@
 #include "nsIServiceManager.h"
 #include "nsMIMEHeaderParamImpl.h"
 #include "nsReadableUtils.h"
+#include "nsNativeCharsetUtils.h"
 
 // static functions declared below are moved from mailnews/mime/src/comi18n.cpp
   
@@ -92,8 +93,6 @@ nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal,
                               getter_Copies(charset), aLang, getter_Copies(med));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ASSERTION(!aTryLocaleCharset, "aTryLocaleCharset not yet supported !");
-
     // convert to UTF-8 after charset conversion and RFC 2047 decoding 
     // if necessary.
     
@@ -108,14 +107,21 @@ nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal,
           cvtUTF8(do_GetService(NS_UTF8CONVERTERSERVICE_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv) &&
             NS_SUCCEEDED(cvtUTF8->ConvertStringToUTF8(str1, 
-                PromiseFlatCString(aFallbackCharset).get(), PR_FALSE, str2))) 
+                PromiseFlatCString(aFallbackCharset).get(), PR_FALSE, str2))) {
           CopyUTF8toUTF16(str2, aResult);
-        else
-          CopyUTF8toUTF16(str1, aResult);
+          return NS_OK;
+        }
     }
-    else
-        CopyUTF8toUTF16(str1, aResult);
-    return NS_OK;
+
+    if (IsUTF8(str1)) {
+      CopyUTF8toUTF16(str1, aResult);
+      return NS_OK;
+    }
+
+    if (aTryLocaleCharset) 
+      return NS_CopyNativeToUnicode(str1, aResult);
+
+    return NS_ERROR_FAILURE;
 }
 
 // moved almost verbatim from mimehdrs.cpp
