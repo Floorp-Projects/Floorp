@@ -140,7 +140,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIMIMEService.h"
-#include "nsIDownload.h"
+#include "nsITransfer.h"
 
 #include "nsILinkHandler.h"                                                                              
 
@@ -280,7 +280,7 @@ public:
 
     nsCString     m_contentType;    // used only when saving attachment
 
-    nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
+    nsCOMPtr<nsITransfer> mTransfer;
     PRInt32 mProgress;
     PRInt32 mContentLength; 
     PRBool  mCanceled;
@@ -1793,8 +1793,8 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
       // so make an arbitrary decision based on the content length of the attachment
       if (mContentLength != -1 && mContentLength > aBytesDownloaded * 2)
       {
-        nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
-        if (dl && outputFile)
+        nsCOMPtr<nsITransfer> tr = do_CreateInstance("@mozilla.org/download;1", &rv);
+        if (tr && outputFile)
         {
           PRTime timeDownloadStarted = PR_Now();
 
@@ -1803,11 +1803,11 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
 
           nsCOMPtr<nsIURI> url;
           channel->GetURI(getter_AddRefs(url));
-          rv = dl->Init(url, outputURI, nsnull, mimeinfo, timeDownloadStarted, nsnull);
+          rv = tr->Init(url, outputURI, nsnull, mimeinfo, timeDownloadStarted, nsnull);
 
-          dl->SetObserver(this);
+          tr->SetObserver(this);
           // now store the web progresslistener 
-          mWebProgressListener = do_QueryInterface(dl);
+          mTransfer = tr;
         }
       }
 
@@ -1951,11 +1951,11 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
       }
   }
 
-  if(mWebProgressListener)
+  if(mTransfer)
   {
-    mWebProgressListener->OnProgressChange(nsnull, nsnull, mContentLength, mContentLength, mContentLength, mContentLength);
-    mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
-    mWebProgressListener = nsnull; // break any circular dependencies between the progress dialog and use
+    mTransfer->OnProgressChange(nsnull, nsnull, mContentLength, mContentLength, mContentLength, mContentLength);
+    mTransfer->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
+    mTransfer = nsnull; // break any circular dependencies between the progress dialog and use
   }
 
   Release(); // all done kill ourself
@@ -2010,8 +2010,8 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
       }
     }
 
-    if (NS_SUCCEEDED(rv) && mWebProgressListener) // Send progress notification.
-        mWebProgressListener->OnProgressChange(nsnull, request, mProgress, mContentLength, mProgress, mContentLength);
+    if (NS_SUCCEEDED(rv) && mTransfer) // Send progress notification.
+        mTransfer->OnProgressChange(nsnull, request, mProgress, mContentLength, mProgress, mContentLength);
   }
   return rv;
 }

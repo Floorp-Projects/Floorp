@@ -194,8 +194,7 @@ private:
   nsCOMPtr<nsIRDFDataSource> mInner;
 };
 
-class nsDownload : public nsIDownload,
-                   public nsIWebProgressListener
+class nsDownload : public nsIDownload
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -220,6 +219,7 @@ protected:
   nsresult GetDialog(nsIProgressDialog** aDialog);
   nsresult SetPersist(nsIWebBrowserPersist* aPersist);
   nsresult SetTarget(nsIURI* aTarget);
+  nsresult SetDisplayName(const PRUnichar* aDisplayName);
   nsresult SetSource(nsIURI* aSource);
   nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
   nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);

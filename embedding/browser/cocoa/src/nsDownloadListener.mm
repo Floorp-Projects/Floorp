@@ -141,12 +141,6 @@ nsDownloadListener::GetDisplayName(PRUnichar * *aDisplayName)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsDownloadListener::SetDisplayName(const PRUnichar * aDisplayName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* readonly attribute long long startTime; */
 NS_IMETHODIMP
 nsDownloadListener::GetStartTime(PRInt64 *aStartTime)
