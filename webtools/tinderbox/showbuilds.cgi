@@ -462,7 +462,7 @@ sub tree_open {
 
 sub print_javascript {
 
-  print <<"__ENDJS";
+  print <<'__ENDJS';
     <script>
 
     if (parseInt(navigator.appVersion) < 4) {
@@ -574,7 +574,9 @@ sub print_javascript {
       q.document.close();
       return false;
     }
+__ENDJS
 
+  print <<"__ENDJS";
     function js_qr(tree,mindate, maxdate, who) {
       if (tree == 0) {
         return '../bonsai/cvsquery.cgi?module=${cvs_module}'
