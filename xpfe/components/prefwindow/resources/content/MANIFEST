@@ -21,6 +21,7 @@ pref-debug2.xul
 pref-download.xul
 pref-fonts.xul
 pref-fonts.js
+pref-help.js
 pref-history.xul
 pref-languages.xul
 pref-languages-add.xul

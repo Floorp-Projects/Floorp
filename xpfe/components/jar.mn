@@ -22,6 +22,7 @@ comm.jar:
     content/communicator/pref/pref-cache.xul                    (prefwindow/resources/content/pref-cache.xul)
     content/communicator/pref/pref-colors.js                    (prefwindow/resources/content/pref-colors.js)
     content/communicator/pref/pref-colors.xul                   (prefwindow/resources/content/pref-colors.xul)
+    content/communicator/pref/pref-help.js                      (prefwindow/resources/content/pref-help.js)
     content/communicator/pref/pref-themes.xul                   (prefwindow/resources/content/pref-themes.xul)
     content/communicator/pref/pref-themes.js                    (prefwindow/resources/content/pref-themes.js)
     content/communicator/pref/pref-charset.js                   (prefwindow/resources/content/pref-charset.js)
