@@ -1821,7 +1821,7 @@ nsListControlFrame::SyncViewWithFrame()
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
 
   if (visibility != disp->mVisible) {
-    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
+    view->SetVisibility(NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible ?nsViewVisibility_kShow:nsViewVisibility_kHide); 
   }
 
   return NS_OK;

@@ -726,7 +726,7 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
     if (view) {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-      nsViewVisibility newVis = NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow;
+      nsViewVisibility newVis = NS_STYLE_VISIBILITY_VISIBLE == display->mVisible ? nsViewVisibility_kShow : nsViewVisibility_kHide;
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);
@@ -878,7 +878,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;
   GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+  if (NS_STYLE_VISIBILITY_VISIBLE != display->mVisible) {
     view->SetVisibility(nsViewVisibility_kHide);
   }
 
