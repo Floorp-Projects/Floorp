@@ -1634,9 +1634,13 @@ nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
         return NS_ERROR_FAILURE;
 
     jsid idid;
+    uintN attrs = 0;
 
     if(id == rt->GetStringJSVal(XPCJSRuntime::IDX_LAST_RESULT))
+    {
         idid = rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT);
+        attrs = JSPROP_READONLY;
+    }
     else if(id == rt->GetStringJSVal(XPCJSRuntime::IDX_RETURN_CODE))
         idid = rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE);
     else
@@ -1645,9 +1649,7 @@ nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
     *objp = obj;
     *_retval = OBJ_DEFINE_PROPERTY(cx, obj, idid, JSVAL_VOID,
                                    nsnull, nsnull,
-                                   JSPROP_ENUMERATE |
-                                   JSPROP_READONLY |
-                                   JSPROP_PERMANENT,
+                                   JSPROP_ENUMERATE | JSPROP_PERMANENT | attrs,
                                    nsnull);
     return NS_OK;
 }
