@@ -97,6 +97,14 @@ typedef std::basic_string<TCHAR> tstring;
 #include "MozillaBrowser.h"
 #include "WebShellContainer.h"
 
+#ifdef USE_PLUGIN
+#include "nsIFactory.h"
+#include "nsIPlugin.h"
+#include "nsIPluginInstance.h"
+#include "ControlSite.h"
+#include "ActiveXPlugin.h"
+#include "ActiveXPluginInstance.h"
+#endif
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.
