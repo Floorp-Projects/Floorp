@@ -48,12 +48,14 @@
 
   <stringbundle id="bundle_prefutilities" src="chrome://browser/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-extensions.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <vbox flex="1">
     <label value="&extensionTitle.label;"/>
-    
+
     <listbox id="extList" datasources="rdf:chrome" 
           onselect="extensionSelect();" flex="1"
+          ondblclick="if (isValidLeftClick(event,'listitem')) onDoubleClick(event);"
           ref="urn:mozilla:package:root" rows="10">
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
         <rule chrome:extension="true">
@@ -88,6 +90,6 @@
       <button disabled="true" label="&uninstallExtension.label;" oncommand="uninstallExtension();" hidden="true"/>
     </hbox>
   </vbox>
-      
-</page>      
+
+</page>
 
