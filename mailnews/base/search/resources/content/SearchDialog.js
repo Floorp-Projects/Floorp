@@ -142,7 +142,7 @@ function onSearch(event)
                                 gCurrentFolder);
 
     var searchSubfolders = document.getElementById("checkSearchSubFolders").checked;
-	if (searchSubfolders && gCurrentFolder && gCurrentFolder.hasSubFolders)
+	if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer) && gCurrentFolder.hasSubFolders)
 	{
 		var subFolderEnumerator = gCurrentFolder.GetSubFolders();
 		var done = false;
