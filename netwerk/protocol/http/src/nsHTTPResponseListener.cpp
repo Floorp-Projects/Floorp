@@ -1031,8 +1031,11 @@ nsHTTPFinalListener::nsHTTPFinalListener(
     NS_INIT_REFCNT();
 
     mChannel  =  aChannel;
-    aContext  =  aContext;
+    mContext  =  aContext;
     mListener = aListener;
+
+    NS_ASSERTION (aChannel, "HTTPChannel is null.");
+    NS_ADDREF  (mChannel);
 
 }
 
@@ -1040,6 +1043,8 @@ nsHTTPFinalListener::~nsHTTPFinalListener()
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
             ("Deleting nsHTTPFinalListener [this=%x].\n", this));
+
+    NS_IF_RELEASE(mChannel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
