@@ -96,7 +96,7 @@ PRFileDesc* nsFileStreamHelpers::open(
     if (!nspr_modes[ind]) 
         return 0;
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
      // Use the file spec to open the file, because one path can be common to
      // several files on the Macintosh (you can have several volumes with the
      // same name, see).

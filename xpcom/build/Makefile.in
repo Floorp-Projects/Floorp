@@ -38,6 +38,11 @@ EXPORTS		= \
 		nsXPCOM.h \
 		$(NULL)			
 
+# pull in MoreFiles for MacOSX
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+REQUIRES += macmorefiles
+endif
+
 CPPSRCS		= nsXPComInit.cpp
 
 ifdef XPCOM_USE_LEA
@@ -78,6 +83,11 @@ endif
 
 ifdef GC_LEAK_DETECTOR
 EXTRA_DSO_LDOPTS += -lboehm
+endif
+
+# pull in MoreFiles for MacOSX
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+EXTRA_DSO_LDOPTS += $(DEPTH)/dist/lib/libmacmorefiles_s.a
 endif
 
 # Turn off grep filter for .def files

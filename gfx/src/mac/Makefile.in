@@ -62,11 +62,13 @@ CPPSRCS = \
 		nsUnicodeRenderingToolkit.cpp \
 		nsScreenMac.cpp \
 		nsScreenManagerMac.cpp \
+		nsPrintOptionsX.cpp \
 		$(NULL)
+
+#                $(DIST)/lib/libimg_s.a \
 
 EXTRA_DSO_LDOPTS = \
                 $(MKSHLIB_FORCE_ALL) \
-                $(DIST)/lib/libimg_s.a \
                 $(DIST)/lib/libmozutil_s.a \
 		-lgkgfx \
                 $(MKSHLIB_UNFORCE_ALL) \

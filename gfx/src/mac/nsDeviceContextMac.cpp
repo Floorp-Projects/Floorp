@@ -954,10 +954,10 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
 		PRInt32 intVal;
-		if (NS_SUCCEEDED(prefs->GetIntPref("browser.display.screen_resolution", &intVal))) {
+		if (NS_SUCCEEDED(prefs->GetIntPref("browser.display.screen_resolution", &intVal)) && intVal > 0) {
 			mPixelsPerInch = intVal;
 		}
-#if 0
+#ifdef XP_MACOSX
 		else {
 			short hppi, vppi;
 			::ScreenRes(&hppi, &vppi);

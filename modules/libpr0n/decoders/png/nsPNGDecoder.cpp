@@ -191,7 +191,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
    * using educated guesses for display-system exponents; do preferences
    * later */
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
   LUT_exponent = 1.8 / 2.61;
 #elif defined(XP_UNIX)
 # if defined(__sgi)
@@ -378,7 +378,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     switch (format) {
     case gfxIFormats::RGB:
     case gfxIFormats::BGR:
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         cptr = decoder->colorLine;
         for (PRUint32 x=0; x<iwidth; x++) {
           *cptr++ = 0;
@@ -398,7 +398,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
         aptr = decoder->alphaLine;
         memset(aptr, 0, abpr);
         for (PRUint32 x=0; x<iwidth; x++) {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
           *cptr++ = 0;
 #endif
           if (line[3]) {
@@ -428,7 +428,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
         cptr = decoder->colorLine;
         aptr = decoder->alphaLine;
         for (PRUint32 x=0; x<iwidth; x++) {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
           *cptr++ = 0;
 #endif
           *cptr++ = *line++;
@@ -442,7 +442,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       break;
     case gfxIFormats::RGBA:
     case gfxIFormats::BGRA:
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
       {
         cptr = decoder->colorLine;
         aptr = decoder->alphaLine;

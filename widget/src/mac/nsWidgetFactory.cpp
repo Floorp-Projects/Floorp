@@ -88,6 +88,160 @@
 #include "nsBidiKeyboard.h"
 #endif
 
+#ifdef XP_MACOSX
+
+#include "nsIGenericFactory.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
+#if USE_NATIVE_VERSION
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsComboBox)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRadioButton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsListBox)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextAreaWidget)
+#endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBar)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenu)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+#ifdef IBMBIDI
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+#endif
+
+
+#define NS_GENERIC_SCROLLBAR_CONSTRUCTOR(type, isVertical) \
+static NS_IMETHODIMP \
+type ## ScrollbarConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) \
+{ \
+	if (aOuter) return NS_ERROR_NO_AGGREGATION; \
+	if (!aResult) return NS_ERROR_NULL_POINTER; \
+	*aResult = NULL; \
+	nsCOMPtr<nsIScrollbar> scrollbar = new nsScrollbar(isVertical); \
+	if (!scrollbar) return NS_ERROR_OUT_OF_MEMORY; \
+	return scrollbar->QueryInterface(aIID, aResult); \
+}
+
+NS_GENERIC_SCROLLBAR_CONSTRUCTOR(Vertical, PR_TRUE)
+NS_GENERIC_SCROLLBAR_CONSTRUCTOR(Horizontal, PR_FALSE)
+
+static nsModuleComponentInfo components[] =
+{
+	{	"Timer",
+		NS_TIMER_CID,
+		"@mozilla.org/timer;1",
+		nsTimerImplConstructor },
+	{	"nsWindow",
+		NS_WINDOW_CID,
+		"@mozilla.org/widgets/window/mac;1",
+		nsMacWindowConstructor },
+	{	"Popup nsWindow",
+		NS_POPUP_CID,
+		"@mozilla.org/widgets/popup/mac;1",
+		nsMacWindowConstructor },
+	{	"Child nsWindow",
+		NS_CHILD_CID,
+		"@mozilla.org/widgets/childwindow/mac;1",
+		ChildWindowConstructor },
+	{	"Button",
+		NS_BUTTON_CID,
+		"@mozilla.org/widgets/button/mac;1",
+		nsButtonConstructor },
+	{	"File Picker",
+		NS_FILEPICKER_CID,
+		"@mozilla.org/filepicker;1",
+		nsFilePickerConstructor },
+	{	"Horiz Scrollbar",
+		NS_HORZSCROLLBAR_CID,
+		"@mozilla.org/widgets/horizscroll/mac;1",
+		HorizontalScrollbarConstructor },
+	{	"Vert Scrollbar",
+		NS_VERTSCROLLBAR_CID,
+		"@mozilla.org/widgets/vertscroll/mac;1",
+		VerticalScrollbarConstructor },
+	{ 	"Text Field",
+		NS_TEXTFIELD_CID,
+		"@mozilla.org/widgets/textfield/mac;1",
+		nsTextWidgetConstructor },
+	{	"AppShell",
+		NS_APPSHELL_CID,
+		"@mozilla.org/widget/appshell/mac;1",
+		nsAppShellConstructor },
+	{	"Toolkit",
+		NS_TOOLKIT_CID,
+		"@mozilla.org/widget/toolkit/mac;1",
+		nsToolkitConstructor },
+	{	"Look And Feel",
+		NS_LOOKANDFEEL_CID,
+		"@mozilla.org/widget/lookandfeel/mac;1",
+		nsLookAndFeelConstructor },
+	{	"Label",
+		NS_LABEL_CID,
+		"@mozilla.org/widget/label/mac;1",
+		nsLabelConstructor },
+	{	"Menubar",
+		NS_MENUBAR_CID,
+		"@mozilla.org/widget/menubar/mac;1",
+		nsMenuBarConstructor },
+	{	"Menu",
+		NS_MENU_CID,
+		"@mozilla.org/widget/menu/mac;1",
+		nsMenuConstructor },
+	{	"MenuItem",
+		NS_MENUITEM_CID,
+		"@mozilla.org/widget/menuitem/mac;1",
+		nsMenuItemConstructor },
+	{ 	"Sound",
+		NS_SOUND_CID,
+		"@mozilla.org/sound;1",
+		nsSoundConstructor },
+	{	"Transferable",
+		NS_TRANSFERABLE_CID,
+		"@mozilla.org/widget/transferable;1",
+		nsTransferableConstructor },
+	{	"HTML Format Converter",
+		NS_HTMLFORMATCONVERTER_CID,
+		"@mozilla.org/widget/htmlformatconverter/mac;1",
+		nsHTMLFormatConverterConstructor },
+	{	"Clipboard",
+		NS_CLIPBOARD_CID,
+		"@mozilla.org/widget/clipboard;1",
+		nsClipboardConstructor },
+	{	"Clipboard Helper",
+		NS_CLIPBOARDHELPER_CID,
+		"@mozilla.org/widget/clipboardhelper;1",
+		nsClipboardHelperConstructor },
+	{	"Drag Service",
+		NS_DRAGSERVICE_CID,
+		"@mozilla.org/widget/dragservice;1",
+		nsDragServiceConstructor },
+#ifdef IBMBIDI
+		{ "Gtk Bidi Keyboard",
+		NS_BIDIKEYBOARD_CID,
+		"@mozilla.org/widget/bidikeyboard;1",
+		nsBidiKeyboardConstructor },
+#endif // IBMBIDI
+};
+
+NS_IMPL_NSGETMODULE(nsWidgetModule, components)
+
+#else
+
 // NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC
 
@@ -318,3 +472,5 @@ NSGetFactory(nsISupports* serviceMgr,
 
     return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory);
 }
+
+#endif

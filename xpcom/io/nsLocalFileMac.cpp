@@ -40,7 +40,7 @@
 
 #include "nsReadableUtils.h"
 
-#ifdef MACOSX
+#ifdef XP_MACOSX
 #include "nsXPIDLString.h"
 
 #include "private/pprio.h"
@@ -75,7 +75,7 @@
 // Stupid @#$% header looks like its got extern mojo but it doesn't really
 extern "C"
 {
-#ifndef MACOSX
+#ifndef XP_MACOSX
 // BADPINK - this MSL header doesn't exist under macosx :-(
 #include <FSp_fopen.h>
 #endif
@@ -1323,7 +1323,7 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
       spec = mTargetSpec; 
     }
 		
-#ifdef MACOSX
+#ifdef XP_MACOSX
 // BADPINK - FSp_fopen() doesn't exist under macosx :-(
   *_retval = nsnull;
 #else
@@ -1676,6 +1676,22 @@ nsLocalFile::GetPath(char **_retval)
 	PRUint32 lastChar = strlen(*_retval) - 1;
 	if ((*_retval)[lastChar] == ':')
 		(*_retval)[lastChar] = '\0';
+
+#ifdef XP_MACOSX
+	// Watch out for a really big hack, coming soon to this space!
+	char* slashified = (char*) nsMemory::Alloc(sizeof("/Volumes/") + strlen(*_retval));
+	if (slashified) {
+		strcpy(slashified, "/Volumes/");
+		strcat(slashified, *_retval);
+		nsMemory::Free(*_retval);
+		*_retval = slashified;
+		char *colon = strchr(slashified, ':');
+		while (colon != NULL) {
+			*colon = '/';
+			colon = strchr(colon + 1, ':');
+		}
+	}
+#endif
 
 	return NS_OK;
 }

@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
   #include <Errors.h>
 #endif
 
@@ -144,7 +144,7 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
         switch (errno)
         {
             /* file not found */
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             case fnfErr:
 #else
             case ENOENT:
@@ -153,7 +153,7 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
                 break;
 
             /* file in use */
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             case opWrErr:
 #else
             case EACCES:

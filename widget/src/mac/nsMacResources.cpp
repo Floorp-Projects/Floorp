@@ -42,6 +42,7 @@
 short nsMacResources::mRefNum				= kResFileNotOpened;
 short nsMacResources::mSaveResFile	= 0;
 
+#if !TARGET_CARBON
 pascal OSErr __NSInitialize(const CFragInitBlock *theInitBlock);
 pascal OSErr __initializeResources(const CFragInitBlock *theInitBlock);
 
@@ -76,6 +77,7 @@ pascal void __terminateResources(void)
 	::CloseResFile(nsMacResources::GetLocalResourceFile());
     __NSTerminate();
 }
+#endif /*!TARGET_CARBON*/
 
 //----------------------------------------------------------------------------------------
 //
@@ -83,6 +85,14 @@ pascal void __terminateResources(void)
 
 nsresult nsMacResources::OpenLocalResourceFile()
 {
+#ifdef XP_MACOSX
+  // XXX quick and dirty hack to make resources available so we don't crash.
+	if (mRefNum == kResFileNotOpened) {
+    FSSpec spec = { 0, 0, "\plibwidget.rsrc" };
+    if (FindFolder(kUserDomain, kDomainLibraryFolderType, false, &spec.vRefNum, &spec.parID) == noErr)
+      mRefNum = FSpOpenResFile(&spec, fsRdPerm);
+  }
+#endif
 	if (mRefNum == kResFileNotOpened)
 		return NS_ERROR_NOT_INITIALIZED;
 

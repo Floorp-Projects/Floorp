@@ -251,7 +251,7 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCOMTypeInfo<nsISupports>
   {
     static const nsIID& GetIID() {
-        static const nsIID iid = NS_ISUPPORTS_IID; return iid;
+        static const nsIID iid_NS_ISUPPORTS_IID = NS_ISUPPORTS_IID; return iid_NS_ISUPPORTS_IID;
     }
   };
 

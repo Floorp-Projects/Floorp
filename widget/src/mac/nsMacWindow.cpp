@@ -1225,13 +1225,22 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 		Rect macRect;
 		::GetWindowPortBounds ( mWindowPtr, &macRect );
 
-		if (((macRect.right - macRect.left) != aWidth)
-			|| ((macRect.bottom - macRect.top) != aHeight))
+    short w = macRect.right - macRect.left;
+    short h = macRect.bottom - macRect.top;
+    Boolean needReposition = (w == 1 && h == 1);
+
+		if ((w != aWidth)	|| (h != aHeight))
 		{
 		  // make sure that we don't infinitely recurse if live-resize is on
       mResizeIsFromUs = PR_TRUE;
 			::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
       mResizeIsFromUs = PR_FALSE;
+
+#if defined(XP_MACOSX)
+      // workaround for bug in MacOSX if windows start life as 1x1.
+      if (needReposition)
+        RepositionWindow(mWindowPtr, NULL, kWindowCascadeOnMainScreen);
+#endif
 		}
 	}
 	Inherited::Resize(aWidth, aHeight, aRepaint);

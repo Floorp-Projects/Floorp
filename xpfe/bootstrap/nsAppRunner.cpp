@@ -246,6 +246,24 @@ public:
 };
 #endif // XP_MAC
 
+#if defined(XP_MACOSX)
+
+static void InitializeMacOSXApp(int argc, char* argv[])
+{
+  // use the location of the executable to learn where everything is, this
+  // is because the current working directory is ill-defined when the
+  // application is double-clicked from the Finder.
+  char* path = strdup(argv[0]);
+  char* lastSlash = strrchr(path, '/');
+  if (lastSlash) {
+    *lastSlash = '\0';
+    setenv("MOZILLA_FIVE_HOME", path, 1);
+  }
+  free(path);
+}
+
+#endif /* XP_MACOSX */
+
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
 #endif //MOZ_WIDGET_GTK
@@ -1525,6 +1543,10 @@ int main(int argc, char* argv[])
 #if defined(XP_BEOS)
   if (NS_OK != InitializeBeOSApp())
     return 1;
+#endif
+
+#if defined(XP_MACOSX)
+  InitializeMacOSXApp(argc, argv);
 #endif
 
   // Handle -help and -version command line arguments.

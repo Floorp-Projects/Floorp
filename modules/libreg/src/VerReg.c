@@ -60,7 +60,7 @@
 #include "NSReg.h"
 #include "VerReg.h"
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Folders.h>
 #endif
 
@@ -101,7 +101,7 @@ static char *app_dir = NULL;
 char *verRegName = NULL;
 
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 /* Extra Unix variables to deal with two registries 
  *   "vreg" is always the writable registry.
  *   If "vreg" is the local registry then "unixreg" will
@@ -142,7 +142,7 @@ static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32
 static REGERR vr_convertPackageName(char *regPackageName, char *convertedPackageName, uint32 convertedDataLength);
 static REGERR vr_unmanglePackageName(char *mangledPackageName, char *regPackageName, uint32 regPackageLength);
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 static void vr_MacAliasFromPath(const char * fileName, void ** alias, int32 * length);
 static char * vr_PathFromMacAlias(const void * alias, uint32 aliasLength);
 #endif
@@ -154,11 +154,11 @@ static REGERR vr_Init(void)
 
     REGERR  err = REGERR_OK;
     char    *regname = vr_findVerRegName();
-#if defined(XP_UNIX) || defined(STANDALONE_REGISTRY)
+#if defined(XP_UNIX) && !defined(XP_MACOSX) || defined(STANDALONE_REGISTRY)
     char    curstr[MAXREGNAMELEN];
     RKEY    navKey;
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     char    *regbuf = NULL;
 #endif
 
@@ -170,7 +170,7 @@ static REGERR vr_Init(void)
 
     if (!isInited)
     {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
         /* need browser directory to find the correct registry */
         if (app_dir != NULL) {
             regbuf = (char*)XP_ALLOC( 10 + XP_STRLEN(app_dir) );
@@ -204,7 +204,7 @@ static REGERR vr_Init(void)
             }
         }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
         /* try to open shared Unix registry, but not an error if you can't */
         unixreg = NULL;
         if (!bGlobalRegistry && err == REGERR_OK ) {
@@ -262,7 +262,7 @@ static REGERR vr_Init(void)
 
 done:
     PR_Unlock(vr_lock);
-#if defined(XP_UNIX) && !defined(STANDALONE_REGISTRY)
+#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(STANDALONE_REGISTRY)
     XP_FREEIF(regbuf);
 #endif
     return err;
@@ -274,7 +274,7 @@ done:
 #ifdef XP_PC
 #define VR_FILE_SEP '\\'
 #endif
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define VR_FILE_SEP ':'
 #endif
 #ifdef XP_BEOS
@@ -302,7 +302,7 @@ static XP_Bool vr_CompareDirs( char *dir1, char *dir2 )
     if ( len1 != len2 )
         return FALSE;
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     return ( XP_STRNCMP(dir1, dir2, len1) == 0 );
 #else
     return ( XP_STRNCASECMP(dir1, dir2, len1) == 0 );
@@ -436,7 +436,7 @@ static REGERR vr_GetPathname(HREG reg, RKEY key, char *entry, char *buf, uint32 
     
     info.size = sizeof(REGINFO);
         
-#ifndef XP_MAC
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
         err = NR_RegGetEntry( reg, key, entry, (void*)buf, &sizebuf );
         return err;
 #else
@@ -640,7 +640,7 @@ static REGERR vr_FindKey(char *component_path, HREG *hreg, RKEY *key)
     REGERR err;
     RKEY rootkey;
 
-#if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX)
+#if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX) && !defined(XP_MACOSX)
     if (unixreg != NULL) {
         *hreg = unixreg;
         rootkey = UNIX_ROOT(component_path);
@@ -696,14 +696,14 @@ VR_INTERFACE(REGERR) VR_CreateRegistry( char *installation, char *programPath, c
 {
     REGERR      err;
     char *      regname = vr_findVerRegName();
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     char *      regbuf = NULL;
 #endif
 
     if ( installation == NULL || *installation == '\0' )
         return REGERR_PARAM;
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 #ifndef STANDALONE_REGISTRY
     if (bGlobalRegistry)
 #endif 
@@ -737,7 +737,7 @@ VR_INTERFACE(REGERR) VR_CreateRegistry( char *installation, char *programPath, c
 
     PR_Unlock(vr_lock);
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     XP_FREEIF( regbuf );
 #endif
     return err;
@@ -757,7 +757,7 @@ VR_INTERFACE(REGERR) VR_Close(void)
     PR_Lock(vr_lock);
 
     if (isInited) {
-#if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX)
+#if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX) && !defined(XP_MACOSX)
         if ( unixreg != NULL )
             NR_RegClose( unixreg );
 #endif

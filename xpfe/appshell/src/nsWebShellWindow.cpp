@@ -130,14 +130,14 @@
 
 // HACK for M4, should be removed by M5
 // ... its now M15
-#if defined(XP_MAC) || defined(RHAPSODY)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Menus.h>
 #endif
 #include "nsIMenuItem.h"
 #include "nsIDOMXULDocument.h"
 // End hack
 
-#if defined(XP_MAC) || defined(RHAPSODY)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define USE_NATIVE_MENUS
 #endif
 

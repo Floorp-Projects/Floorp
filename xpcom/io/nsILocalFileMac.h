@@ -115,4 +115,7 @@ public:
 extern "C" NS_EXPORT nsresult
 NS_NewLocalFileWithFSSpec(FSSpec* inSpec, PRBool followSymlinks, nsILocalFileMac* *result);
 
+extern "C" NS_EXPORT nsresult
+NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result);
+
 #endif

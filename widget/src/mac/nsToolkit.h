@@ -42,9 +42,7 @@
 #include "nsRepeater.h"
 
 #include "nsCOMPtr.h"
-
-class nsIEventQueue;
-class nsIEventQueueService;
+#include "nsIEventQueueService.h"
 
 /**
  * The toolkit abstraction is necessary because the message pump must

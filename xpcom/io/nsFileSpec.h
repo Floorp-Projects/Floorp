@@ -176,12 +176,10 @@
 #include "nsILocalFile.h"
 #include "nsCOMPtr.h"
 
-#if defined(XP_MAC) || defined(RHAPSODY)
+#if defined(XP_MAC)
 #include <Files.h>
 #include "nsILocalFileMac.h"
-#endif
-// this can't be elif because rhapsody needs both headers
-#if defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS) || defined(RHAPSODY)
+#elif defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
 #if defined(XP_OS2)
 #define INCL_DOS
 #define INCL_DOSERRORS
@@ -373,7 +371,7 @@ class NS_COM nsFileSpec
 
        PRBool                   IsChildOf(nsFileSpec &possibleParent);
 
-#if defined(XP_MAC) || defined(RHAPSODY)
+#if defined(XP_MAC)
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
         // of the FSSpec struct.        
                                 nsFileSpec(
@@ -409,10 +407,10 @@ class NS_COM nsFileSpec
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
         nsresult                Error() const
                                 {
-                                    #ifndef XP_MAC 
+#if !defined(XP_MAC)
                                     if (mPath.IsEmpty() && NS_SUCCEEDED(mError)) 
                                         ((nsFileSpec*)this)->mError = NS_ERROR_NOT_INITIALIZED; 
-                                    #endif 
+#endif 
                                     return mError;
                                 }
         PRBool                  Failed() const { return (PRBool)NS_FAILED(Error()); }
@@ -544,7 +542,7 @@ class NS_COM nsFileSpec
                                 friend class nsFilePath;
                                 friend class nsFileURL;
                                 friend class nsDirectoryIterator;
-#if defined(XP_MAC) || defined(RHAPSODY)
+#if defined(XP_MAC)
         FSSpec                  mSpec;
 #endif
         nsSimpleCharString      mPath;
@@ -592,7 +590,7 @@ class NS_COM nsFileURL
         const char*             GetAsString() const { return (const char*)mURL; }
         							// Not allocated, so don't free it.
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
                                 // Accessor to allow quick assignment to a mFileSpec
         const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
 #endif
@@ -605,7 +603,7 @@ class NS_COM nsFileURL
                                 friend class nsFilePath; // to allow construction of nsFilePath
         nsSimpleCharString      mURL;
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
         // Since the path on the macintosh does not uniquely specify a file (volumes
         // can have the same name), stash the secret nsFileSpec, too.
         nsFileSpec              mFileSpec;
@@ -645,7 +643,7 @@ class NS_COM nsFilePath
         void                    operator +=(const char* inRelativeUnixPath);
         nsFilePath              operator +(const char* inRelativeUnixPath) const;
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
     public:
                                 // Accessor to allow quick assignment to a mFileSpec
         const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
@@ -658,7 +656,7 @@ class NS_COM nsFilePath
     private:
 
         nsSimpleCharString       mPath;
-#ifdef XP_MAC
+#if defined(XP_MAC)
         // Since the path on the macintosh does not uniquely specify a file (volumes
         // can have the same name), stash the secret nsFileSpec, too.
         nsFileSpec               mFileSpec;
@@ -734,7 +732,7 @@ class NS_COM nsDirectoryIterator
 	public:
 	                            nsDirectoryIterator( const nsFileSpec& parent,
 	                            	                 PRBool resoveSymLinks);
-#ifndef XP_MAC
+#if !defined(XP_MAC)
 	// Macintosh currently doesn't allocate, so needn't clean up.
 	    virtual                 ~nsDirectoryIterator();
 #endif
@@ -763,19 +761,19 @@ class NS_COM nsDirectoryIterator
 	    PRBool                  mExists;
         PRBool                  mResoveSymLinks;
 
-#if defined(XP_UNIX) || defined(XP_BEOS) || defined (XP_WIN) || defined(XP_OS2)
+#if (defined(XP_UNIX) || defined(XP_BEOS) || defined (XP_WIN) || defined(XP_OS2))
 	    nsFileSpec		        mStarting;
 #endif
         
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_MAC)
+           short                                       mVRefNum;
+           long                                        mParID;
+           short         mIndex;
+           short         mMaxIndex;
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 	    DIR*                    mDir;
 #elif defined(XP_WIN) || defined(XP_OS2)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?
-#elif defined(XP_MAC)
-	    short					mVRefNum;
-	    long					mParID;
-	    short                   mIndex;
-	    short                   mMaxIndex;
 #endif
 }; // class nsDirectoryIterator
 

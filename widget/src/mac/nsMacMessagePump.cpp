@@ -70,7 +70,9 @@
 
 #include <MacWindows.h>
 #include <ToolUtils.h>
+#ifndef XP_MACOSX
 #include <DiskInit.h>
+#endif
 #include <LowMem.h>
 #include <Devices.h>
 #include <Quickdraw.h>
@@ -90,7 +92,7 @@
 #define botRight(r) (((Point *) &(r))[1])
 #endif
 
-#if DEBUG && !defined(MACOSX)
+#if DEBUG && !defined(XP_MACOSX)
 #include <SIOUX.h>
 #include "macstdlibextras.h"
 #endif
@@ -237,7 +239,7 @@ WindowPtr nsMacMessagePump::GetFrontApplicationWindow()
 {
 	WindowPtr firstAppWindow = ::FrontWindow();
 
-#if DEBUG
+#if DEBUG && !defined(XP_MACOSX)
 	if (IsSIOUXWindow(firstAppWindow))
 	  firstAppWindow = ::GetNextWindow(firstAppWindow);
 #endif
@@ -411,7 +413,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 	if (aRealEvent == PR_TRUE)
 	{
 
-#if DEBUG && !defined(MACOSX)
+#if DEBUG && !defined(XP_MACOSX)
 		if ((anEvent->what != kHighLevelEvent) && SIOUXHandleOneEvent(anEvent))
 			return;
 #endif

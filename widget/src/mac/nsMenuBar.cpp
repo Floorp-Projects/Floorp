@@ -62,7 +62,9 @@
 #include <Menus.h>
 #include <TextUtils.h>
 #include <Balloons.h>
+#ifndef XP_MACOSX
 #include <Traps.h>
+#endif
 #include <Resources.h>
 #include <Appearance.h>
 #include "nsMacResources.h"

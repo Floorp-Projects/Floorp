@@ -921,23 +921,35 @@ alpha*-*-osf*)
     fi
     ;;
 
-*-rhapsody*) 
-    DLL_SUFFIX=".dylib"
-    DSO_LDOPTS='-compatibility_version 1 -current_version 1'
-    AC_DEFINE(NO_X11)
+*-darwin*) 
     AC_DEFINE(DARWIN)
-    AC_DEFINE(RHAPSODY)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
     ENABLE_TESTS=
-    MOZ_WIDGET_TOOLKIT='mac'
-    TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
-    CFLAGS="$CFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
-    CXXFLAGS="$CXXFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
-    MKSHLIB='$(CXX) $(CXXFLAGS) -arch ppc $(DSO_LDOPTS) -o $@'
+    _PEDANTIC=
+    CFLAGS="$CFLAGS -fpascal-strings -traditional-cpp -fno-common"
+    CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
+    DLL_SUFFIX=".dylib"
+    DSO_LDOPTS='-compatibility_version 1 -current_version 1'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
-    MKSHLIB_FORCE_ALL=''
-    MKSHLIB_UNFORCE_ALL=''
+    case "${target_cpu}" in
+    powerpc*)
+        AC_DEFINE(NO_X11)
+        AC_DEFINE(XP_MACOSX)
+        AC_DEFINE(TARGET_CARBON)
+        AC_DEFINE(TARGET_API_MAC_CARBON)
+        no_x=yes
+        MACOSX=1
+        MOZ_WIDGET_TOOLKIT='mac'
+        LDFLAGS="$LDFLAGS -framework Carbon"
+	DSO_LDOPTS="$DSO_LDOPTS -arch ppc -install_name @executable_path/\$@"
+        TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
+        TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
+	CFLAGS="$CFLAGS $TK_CFLAGS"
+	CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
+        ;;
+    esac
     ;;
 
 *-sco*) 
@@ -4018,7 +4030,7 @@ elif test "$OS_TARGET" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
   MOZ_MOVEMAIL=1
   AC_SUBST(MOZ_MOVEMAIL)
-elif test "$OS_TARGET" = "Mac OS"; then
+elif test "$OS_TARGET" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_EMBED)
   AC_DEFINE(UNIX_LDAP)

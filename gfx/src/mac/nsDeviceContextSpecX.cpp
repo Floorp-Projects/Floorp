@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PM_USE_SESSION_APIS 0
 #include "nsDeviceContextSpecX.h"
 
 #include "prmem.h"

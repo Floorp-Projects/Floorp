@@ -329,7 +329,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                            JPOOL_IMAGE,
                                            row_stride, 1);
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(XP_MAC) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_PC) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
     // allocate buffer to do byte flipping if needed
     if (mInfo.output_components == 3) {
       mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);
@@ -496,7 +496,7 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
 
         /* Convert from grayscale to RGB. */
         while (j1 < j1end) {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
           j = *j1++;
           j3[0] = 0;
           j3[1] = j;
@@ -527,7 +527,7 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
         }
 
         samples = mRGBPadRow;
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
         memset(mRGBPadRow, 0, mInfo.output_width * 4);
         PRUint8 *ptrOutputBuf = mRGBPadRow;
 

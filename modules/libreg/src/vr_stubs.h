@@ -272,7 +272,7 @@ typedef int XP_Bool;
 typedef struct stat    XP_StatStruct;
 #define  XP_Stat(file,data)     stat((file),(data))
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
  extern int nr_RenameFile(char *from, char *to);
 #else
     XP_BEGIN_PROTOS

@@ -46,7 +46,7 @@
 
 #include "nsITimelineService.h"
 
-#ifdef  XP_MAC  // sdagley dougt fix
+#if defined(XP_MAC)  // sdagley dougt fix
 #include <Files.h>
 #include <Errors.h>
 #include "nsILocalFileMac.h"
@@ -726,7 +726,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         ".so",      /* Unix */
         ".shlb",    /* Mac ? */
         ".dso",     /* Unix ? */
-        ".dylib",   /* Unix: Rhapsody */
+        ".dylib",   /* Unix: Mach */
         ".so.1.0",  /* Unix: BSD */
         ".sl",      /* Unix: HP-UX */
 #if defined(VMS)
@@ -754,7 +754,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     // deal only with files that have a valid extension
     PRBool validExtension = PR_FALSE;
 
-#ifdef  XP_MAC  // sdagley dougt fix
+#if defined(XP_MAC)  // sdagley dougt fix
     // rjc - on Mac, check the file's type code (skip checking the creator code)
     
     nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(component);

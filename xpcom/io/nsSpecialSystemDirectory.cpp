@@ -253,41 +253,63 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
     // get info for the the current process to determine the directory
     // its located in
     OSErr err;
-    ProcessSerialNumber psn;
-    if (!(err = GetCurrentProcess(&psn)))
+	ProcessSerialNumber psn = {kNoProcess, kCurrentProcess};
+    ProcessInfoRec pInfo;
+    FSSpec         tempSpec;
+
+    // initialize ProcessInfoRec before calling
+    // GetProcessInformation() or die horribly.
+    pInfo.processName = nil;
+    pInfo.processAppSpec = &tempSpec;
+    pInfo.processInfoLength = sizeof(ProcessInfoRec);
+
+    if (!(err = GetProcessInformation(&psn, &pInfo)))
     {
-        ProcessInfoRec pInfo;
-        FSSpec         tempSpec;
+        FSSpec appFSSpec = *(pInfo.processAppSpec);
+        long theDirID = appFSSpec.parID;
 
-        // initialize ProcessInfoRec before calling
-        // GetProcessInformation() or die horribly.
-        pInfo.processName = nil;
-        pInfo.processAppSpec = &tempSpec;
-        pInfo.processInfoLength = sizeof(ProcessInfoRec);
+        Str255 name;
+        CInfoPBRec catInfo;
+        catInfo.dirInfo.ioCompletion = NULL;
+        catInfo.dirInfo.ioNamePtr = (StringPtr)&name;
+        catInfo.dirInfo.ioVRefNum = appFSSpec.vRefNum;
+        catInfo.dirInfo.ioDrDirID = theDirID;
+        catInfo.dirInfo.ioFDirIndex = -1; // -1 = query dir in ioDrDirID
 
-        if (!(err = GetProcessInformation(&psn, &pInfo)))
+        if (!(err = PBGetCatInfoSync(&catInfo)))
         {
-            FSSpec appFSSpec = *(pInfo.processAppSpec);
-            long theDirID = appFSSpec.parID;
+            aFileSpec = nsFileSpec(appFSSpec.vRefNum,
+                                   catInfo.dirInfo.ioDrParID,
+                                   name,
+                                   PR_TRUE);
+            return;
+        }
+    }
+#if defined(DEBUG)
+    else
+    {
+        // In the absence of a good way to get the executable directory let
+        // us try this for unix:
+        //	- if MOZILLA_FIVE_HOME is defined, that is it
+        char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
+        if (moz5)
+        {
+            printf( "nsSpecialSystemDirectory::MOZILLA_FIVE_HOME is set to %s\n", moz5 );
+            aFileSpec = moz5;
+            return;
+        }
+        else
+        {
+            static PRBool firstWarning = PR_TRUE;
 
-            Str255 name;
-            CInfoPBRec catInfo;
-            catInfo.dirInfo.ioCompletion = NULL;
-            catInfo.dirInfo.ioNamePtr = (StringPtr)&name;
-            catInfo.dirInfo.ioVRefNum = appFSSpec.vRefNum;
-            catInfo.dirInfo.ioDrDirID = theDirID;
-            catInfo.dirInfo.ioFDirIndex = -1; // -1 = query dir in ioDrDirID
-
-            if (!(err = PBGetCatInfoSync(&catInfo)))
-            {
-                aFileSpec = nsFileSpec(appFSSpec.vRefNum,
-                                       catInfo.dirInfo.ioDrParID,
-                                       name,
-                                       PR_TRUE);
-                return;
+            if(firstWarning) {
+                // Warn that MOZILLA_FIVE_HOME not set, once.
+                printf("***Warning: MOZILLA_FIVE_HOME not set.\n");
+                firstWarning = PR_FALSE;
             }
         }
     }
+#endif /* DEBUG */
 
 #elif defined(XP_UNIX)
 
@@ -502,7 +524,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
                 if (needToAppend) {
                     // XXX We need to unify these names across all platforms
-#ifdef XP_MAC
+#if defined(XP_MAC)
                     *this += "Component Registry";
 #else
                     *this += "component.reg";
@@ -540,7 +562,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
                 if (needToAppend) {
                     // XXX We need to unify these names across all platforms
-#ifdef XP_MAC
+#if defined(XP_MAC)
                     *this += "Components";
 #else
                     *this += "components";
@@ -567,7 +589,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             }
             break;
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
         case Mac_SystemDirectory:
             *this = kSystemFolderType;
             break;
@@ -827,7 +849,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         }
 #endif  // XP_WIN
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
         case Unix_LocalDirectory:
             *this = "/usr/local/netscape/";
             break;
@@ -997,7 +1019,7 @@ nsSpecialSystemDirectory::Set(SystemDirectories dirToSet, nsFileSpec *dirSpec)
     return;
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC)
 //----------------------------------------------------------------------------------------
 nsSpecialSystemDirectory::nsSpecialSystemDirectory(OSType folderType)
 //----------------------------------------------------------------------------------------

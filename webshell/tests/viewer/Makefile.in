@@ -160,8 +160,8 @@ install::
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),Rhapsody)
-INCLUDES		+= -I$(topsrcdir)/widget/src/mac
+ifeq ($(OS_ARCH),Darwin)
+LOCAL_INCLUDES		+= -I$(topsrcdir)/widget/src/mac
 endif
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)

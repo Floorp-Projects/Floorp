@@ -926,8 +926,10 @@ nsMovieSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsA
 
     // ensure that the track never draws on screen, otherwise we might be
     // suspecptible to spoofing attacks
-    Rect   movieRect = {0};
-    ::SetMovieBox(mMovie, &movieRect);
+    {
+      Rect   movieRect = {0};
+      ::SetMovieBox(mMovie, &movieRect);
+    }
     
     ::GoToEndOfMovie(mMovie);   // simplifies the logic in PlaySound()
     

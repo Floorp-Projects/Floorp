@@ -57,13 +57,15 @@
 #include <Fonts.h>
 #include <TextEdit.h>
 #include <Dialogs.h>
+#ifndef XP_MACOSX
 #include <Traps.h>
+#endif
 #include <Events.h>
 #include <Menus.h>
 
 #include <stdlib.h>
 
-#ifndef RHAPSODY
+#ifndef XP_MACOSX
 #include "macstdlibextras.h"
 #endif
 PRBool nsAppShell::mInitializedToolbox = PR_FALSE;
