@@ -35,9 +35,7 @@ function onLoad(event)
 
     var server = window.arguments[0].server;
  
-    if (server) {
-        initializeDialog(server);
-    }
+    initializeDialog(server);
 
     doSetOKCancel(onOk, 0);
 }
@@ -62,5 +60,6 @@ function onOk()
         dump("Error saving smtp server: " + ex + "\n");
     }
 
+    window.arguments[0].result = true;
     window.close();
 }

@@ -22,7 +22,7 @@
  */
 
 var smtpService;
-var serverList;
+var serverList;                 // the root <tree> node
 
 var addButton;
 var editButton;
@@ -30,25 +30,26 @@ var deleteButton;
 var setDefaultButton;
 var messengerStrings;
 
+var hasEdited=false;            // whether any kind of edits have occured
+
 // event handlersn
 function onLoad()
 {
-    dump("loading smtp dialog..\n");
-
     if (!messengerStrings)
         messengerStrings = srGetStrBundle("chrome://messenger/locale/messenger.properties");    
     if (!smtpService)
         smtpService = Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
 
-    var defaultServer = smtpService.defaultServer;
-    fillSmtpServers(document.getElementById("smtpTreeChildren"),
-                    smtpService.smtpServers, defaultServer);
 
     serverList = document.getElementById("smtpTree");
     addButton        = document.getElementById("addButton");
     editButton       = document.getElementById("editButton");
     deleteButton     = document.getElementById("deleteButton");
     setDefaultButton = document.getElementById("setDefaultButton");
+    
+    refreshServerList();
+
+    doSetOKCancel(onOk, 0);
 }
 
 function onSelectionChange(event)
@@ -59,39 +60,33 @@ function onSelectionChange(event)
 function onDelete(event)
 {
     if (serverList.selectedItems.length <= 0) return;
-
-
-
 }
-
 
 function onAdd(event)
 {
-    window.openDialog("chrome://messenger/content/SmtpServerEdit.xul",
-                      "smtpEdit", "chrome,modal");
+    openServerEditor(null);
 }
 
 function onEdit(event)
 {
     if (serverList.selectedItems.length <= 0) return;
 
-    var serverKey = serverList.selectedItems[0].getAttribute("key");
-    var serverArg = smtpService.getServerByKey(serverKey);
-    
-    window.openDialog("chrome://messenger/content/SmtpServerEdit.xul",
-                      "smtpEdit", "chrome,modal", {server: serverArg} );
+    var server = getSelectedServer();
+    openServerEditor(server);
 }
 
 function onSetDefault(event)
 {
     if (serverList.selectedItems.length <= 0) return;
 
+    smtpService.defaultServer = getSelectedServer();
+    refreshServerList();
 }
 
 function onOk()
 {
-
-
+    window.arguments[0].result = true;
+    window.close();
 }
 
 function updateButtons()
@@ -108,6 +103,36 @@ function updateButtons()
 
 }
 
+function refreshServerList()
+{
+    // save selection
+    var oldSelectedIds = new Array;
+    var selectedItems = serverList.selectedItems;
+    for (var i=0; i< selectedItems.length; i++)
+        oldSelectedIds[i] = selectedItems[0].id;
+
+    // recreate <treechildren>
+    // note - I tried creating the <treechildren> node pre-populated,
+    // but the tree wouldn't notice the update
+    dump("Removing " + serverList.firstChild.tagName + "\n");
+    if (serverList.firstChild &&
+        serverList.firstChild.tagName.toLowerCase() == "treechildren")
+        serverList.removeChild(serverList.firstChild);
+
+    var treeChildren = document.createElement("treechildren");
+    serverList.appendChild(treeChildren);
+    
+    var defaultServer = smtpService.defaultServer;
+    fillSmtpServers(treeChildren,smtpService.smtpServers, defaultServer);
+
+    // restore selection
+    for (var i=0; i< oldSelectedIds.length; i++) {
+        var element = document.getElementById(oldSelectedIds[i]);
+        if (element)
+            element.setAttribute("selected", "true");
+    }
+}
+
 // helper functions
 
 function fillSmtpServers(treechildren, servers, defaultServer)
@@ -121,7 +146,6 @@ function fillSmtpServers(treechildren, servers, defaultServer)
         var isDefault = (defaultServer.key == server.key);
         var treeitem = createSmtpTreeItem(server, isDefault);
         treechildren.appendChild(treeitem);
-        dump("server[" + i + "] = " + server.hostname + "\n");
     }
 
 }
@@ -138,9 +162,31 @@ function createSmtpTreeItem(server, isDefault)
     
     treecell.setAttribute("value", hostname);
     treeitem.setAttribute("key", server.key);
+    // give it some unique id
+    treeitem.id = "smtpServer." + server.key;
     treerow.appendChild(treecell);
     treeitem.appendChild(treerow);
 
     return treeitem;
 }
 
+function openServerEditor(serverarg)
+{
+    var args = {server: serverarg,
+                result: false};
+    window.openDialog("chrome://messenger/content/SmtpServerEdit.xul",
+                      "smtpEdit", "chrome,modal", args);
+    if (args.result) {
+        refreshServerList();
+        hasEdited = true;
+    }
+    return args.result;
+}
+
+function getSelectedServer()
+{
+    var serverKey = serverList.selectedItems[0].getAttribute("key");
+    var server = smtpService.getServerByKey(serverKey);
+    
+    return server;
+}
