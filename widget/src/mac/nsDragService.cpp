@@ -254,11 +254,9 @@ printf("**** created drag ref %ld\n", theDragRef);
 
   // start the drag. Be careful, mDragRef will be invalid AFTER this call (it is
   // reset by the dragTrackingHandler).
-  nsWatchTask::GetTask().Suspend();
   StartDragSession();
   ::TrackDrag ( theDragRef, &theEvent, theDragRgn );
   EndDragSession();
-  nsWatchTask::GetTask().Resume();
   
   // clean up after ourselves 
   ::DisposeRgn ( theDragRgn );
@@ -821,3 +819,29 @@ nsDragService :: ExtractDataFromOS ( DragReference inDragRef, ItemReference inIt
   return retval;
 
 } // ExtractDataFromOS
+
+
+//
+// StartDragSession
+// EndDragSession
+//
+// Override the defaults to disable/enable the watch cursor while we're dragging
+//
+
+nsresult
+nsDragService :: StartDragSession ( )
+{
+  nsWatchTask::GetTask().Suspend();
+  
+  return nsBaseDragService::StartDragSession();
+}
+
+nsresult
+nsDragService :: EndDragSession ( )
+{
+  nsWatchTask::GetTask().Resume();
+  
+  return nsBaseDragService::EndDragSession();
+}
+
+
