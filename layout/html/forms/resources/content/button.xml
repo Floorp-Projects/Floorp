@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings [
+<!ENTITY % htmlFormDTD SYSTEM "chrome://forms/locale/htmlforms.dtd" >
+%htmlFormDTD;
+]>
+
+<bindings id="buttonBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="button" display="xul:button"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <content>
+      <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
+        <xul:description class="button-box-text" flex="1">
+          <children/>
+        </xul:description>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="inputButton" extends="chrome://global/content/bindings/general.xml#basetext"
+           display="xul:button">
+    <content>
+      <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
+        <xul:description class="button-box-text" inherits="value" value="  "/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="submitButton" extends="chrome://global/content/bindings/general.xml#basetext"
+           display="xul:button">
+    <content>
+      <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
+        <xul:description class="button-box-text" inherits="value" value="&submitForm;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="fileButton" extends="chrome://global/content/bindings/general.xml#basetext"
+           display="xul:button">
+    <content>
+      <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
+        <xul:description class="button-box-text" value="&fileBrowse;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="resetButton" extends="chrome://global/content/bindings/general.xml#basetext"
+           display="xul:button">
+    <content>
+      <xul:hbox class="box-inherit button-box" align="center" pack="center" flex="1">
+        <xul:description class="button-box-text" value="&resetForm;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+</bindings>          
+
