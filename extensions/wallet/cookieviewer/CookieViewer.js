@@ -460,7 +460,7 @@ function loadPermissions() {
 
   // sort and display the table
   permissionsTree.treeBoxObject.view = permissionsTreeView;
-  PermissionColumnSort('rawHost');
+  PermissionColumnSort('rawHost', false);
 
   // disable "remove all" button if there are no cookies/images
   if (permissions.length == 0) {
@@ -517,10 +517,11 @@ function HandlePermissionKeyPress(e) {
 var lastPermissionSortColumn = "";
 var lastPermissionSortAscending = false;
 
-function PermissionColumnSort(column) {
+function PermissionColumnSort(column, updateSelection) {
   lastPermissionSortAscending =
     SortTree(permissionsTree, permissionsTreeView, permissions,
-                 column, lastPermissionSortColumn, lastPermissionSortAscending);
+                 column, lastPermissionSortColumn, lastPermissionSortAscending, 
+                 updateSelection);
   lastPermissionSortColumn = column;
 }
 

@@ -113,7 +113,7 @@ function GetTreeSelections(tree) {
   return selections;
 }
 
-function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending) {
+function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, updateSelection) {
 
   // remember which item was selected so we can restore it after the sort
   var selections = GetTreeSelections(tree);
@@ -145,7 +145,7 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending) 
 
   // restore the selection
   var selectedRow = -1;
-  if (selectedNumber>=0) {
+  if (selectedNumber>=0 && updateSelection) {
     for (var s=0; s<table.length; s++) {
       if (table[s].number == selectedNumber) {
         // update selection

@@ -61,13 +61,13 @@
                     onselect="CookieSelected();">
             <treecols>
               <treecol id="domainCol" label="&treehead.cookiedomain.label;" flex="6"
-                           onclick="CookieColumnSort('rawHost');"/>
+                           onclick="CookieColumnSort('rawHost', true);"/>
               <splitter class="tree-splitter"/>
               <treecol id="nameCol" label="&treehead.cookiename.label;" flex="14"
-                           onclick="CookieColumnSort('name');"/>
+                           onclick="CookieColumnSort('name', true);"/>
               <splitter class="tree-splitter"/>
               <treecol id="statusCol" label="&treehead.cookiestatus.label;" flex="1"
-                           hidden="true" onclick="CookieColumnSort('status');"/>
+                           hidden="true" onclick="CookieColumnSort('status', true);"/>
             </treecols>
             <treechildren/>
           </tree>
@@ -157,10 +157,10 @@
                 onselect="PermissionSelected();">
             <treecols>
               <treecol id="siteCol" label="&treehead.sitename.label;" flex="5"
-                           onclick="PermissionColumnSort('rawHost');"/>
+                           onclick="PermissionColumnSort('rawHost', true);"/>
               <splitter class="tree-splitter"/>
               <treecol id="statusCol" label="&treehead.status.label;" flex="5"
-                           onclick="PermissionColumnSort('capability');"/>
+                           onclick="PermissionColumnSort('capability', true);"/>
             </treecols>
             <treechildren/>
           </tree>
