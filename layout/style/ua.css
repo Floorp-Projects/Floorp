@@ -45,7 +45,7 @@ blockquote {
 }
 center {
   display: block;
-  text-align: center;
+  text-align: -moz-center;
 }
 div {
   display: block;
@@ -374,6 +374,7 @@ embed {
 hr {
   display: block;
   border: 1px -moz-bg-inset;
+  margin: 0 auto;
 }
 br {
   display: inline;
@@ -393,6 +394,9 @@ wbr {
 iframe {
   display: inline;
   border: 2px solid black;
+}
+form {
+  display: block;
 }
 input {
   vertical-align: bottom;
@@ -894,4 +898,5 @@ sourcetext {
 
 :-moz-anonymous-block {
   display: block;
+/*  border: 2px dashed green; */
 }
