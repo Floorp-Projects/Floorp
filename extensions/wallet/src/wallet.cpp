@@ -1671,10 +1671,18 @@ wallet_PostEdit() {
     /* convert cookie to a C string */
     char *cookies = nsCookie->ToNewCString();
     char *cookie = PL_strstr(cookies, "SchemaToValue="); /* get to SchemaToValue= */
-    cookie = cookie + PL_strlen("SchemaToValue="); /* get passed htmldlgs=| */
+    if (!cookie) {
+      delete[] cookies; 
+      return;
+    }
+    cookie = cookie + PL_strlen("SchemaToValue="); /* get passed SchemaToValue=| */
 
     /* return if OK button was not pressed */
     separator = strchr(cookie, BREAK);
+    if (!separator) {
+      delete[] cookies; 
+      return;
+    }
     *separator = '\0';
     if (strcmp(cookie, "OK")) {
       *separator = BREAK;
@@ -1701,6 +1709,11 @@ wallet_PostEdit() {
     /* write the values in the cookie to the file */
     for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
       separator = strchr(cookie, BREAK);
+      if (!separator) {
+        strm.close();
+        delete[] cookies; 
+        return;
+      }
       *separator = '\0';
       wallet_PutLine(strm, cookie,TRUE);
       cookie = separator+1;
