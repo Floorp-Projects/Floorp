@@ -20,8 +20,27 @@
 # Contributor(s): 
 #         Christopher Seawood <cls@seawood.org>
 
+use Getopt::Std;
+
+getopts('rs');
+$regexp = 1 if (defined($opt_r));
+$sort = 1 if (defined($opt_s));
+
 undef @out;
-foreach $d (@ARGV) { 
-    push @out, $d if (!grep(/^$d$/, @out));
+if ($sort) {
+    @in = sort @ARGV;
+} else {
+    @in = @ARGV;
+}
+foreach $d (@in) { 
+    if ($regexp) {
+        $found = 0; 
+        foreach $dir (@out) {
+            $found++, last if ($d =~ m/^$dir\// || $d eq $dir);
+        }
+        push @out, $d if (!$found);
+    } else {
+        push @out, $d if (!grep(/^$d$/, @out));
+    }
 }
 print "@out\n"

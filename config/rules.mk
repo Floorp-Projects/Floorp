@@ -367,15 +367,6 @@ LOOP_OVER_MOZ_DIRS = \
 
 endif
 
-ifneq ($(EXPORT_DIRS),)
-LOOP_OVER_EXPORT_DIRS = \
-    @$(EXIT_ON_ERROR) \
-    for d in $(EXPORT_DIRS); do \
-        $(UPDATE_TITLE) \
-        $(MAKE) -C $$d $@; \
-    done
-endif
-
 #
 # Now we can differentiate between objects used to build a library, and
 # objects used to build an executable in the same directory.
@@ -815,11 +806,9 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)
 	-rm -rf $(ALL_TRASH_DIRS)
 	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_EXPORT_DIRS)
 
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_EXPORT_DIRS)
 	-rm -rf $(ALL_TRASH_DIRS) 
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
@@ -1599,6 +1588,8 @@ endif # XPIDLSRCS
 #
 $(IDL_DIR)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+export-idl:: $(SUBMAKEFILES) $(MAKE_DIRS)
 
 export-idl:: $(XPIDLSRCS) $(SDK_XPIDLSRCS) $(IDL_DIR)
 ifneq ($(XPIDLSRCS),)
