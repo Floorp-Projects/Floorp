@@ -139,7 +139,7 @@
 <!ENTITY newtodo.completed.label "Completato">
 <!ENTITY newtodo.duedate.label "Data richiesta">
 <!ENTITY newtodo.startdate.label "Data Inizio">
-<!ENTITY newtodo.priority.label "Priorita' ">
+<!ENTITY newtodo.priority.label "PrioritÃ ">
 <!ENTITY newtodo.percentcomplete.label "&#037; completato">
 <!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "La data di inizio e' posteriore alla data richiesta.">
@@ -373,7 +373,7 @@
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progresso ">
 <!ENTITY calendar.context.progress.accesskey          "P">
-<!ENTITY calendar.context.priority.label              "Priorita'  ">
+<!ENTITY calendar.context.priority.label              "PrioritÃ  ">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
 <!ENTITY percnt "&#037;" ><!--=percent sign-->
