@@ -47,6 +47,7 @@
 #include "nsNetUtil.h"
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
+#include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
@@ -670,6 +671,12 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     xulCache->Flush();
   }
   
+  // Flush the XBL docs.
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  if (!xblService)
+    return rv;
+  xblService->FlushBindingDocuments();
+
   // Get the window mediator
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
   if (NS_SUCCEEDED(rv)) {
