@@ -230,25 +230,27 @@ nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     aSize.width = narrowDimension * p2t;
   else
     aSize.height = narrowDimension * p2t;
+  
+  // By now, we have both the content node for the scrollbar and the associated
+  // scrollbar mediator (for outliner, if applicable). Hook up the scrollbar to
+  // gecko
+  Hookup();
     
   return NS_OK;
 }
 
 
 //
-// EndLayout
+// Hookup
 //
-// Called when the box system is done moving us around. If necessary, finish initializing the
-// widget.
+// Connect our widget to the content node and/or scrolling mediator. This needs
+// to be called late enough in the game where everything is ready. Calling it too
+// early can lead to situations where the mediator hasn't yet been hooked up to the
+// scrollbar frame
 //
-NS_IMETHODIMP
-nsNativeScrollbarFrame::EndLayout(nsBoxLayoutState& aState)
+void
+nsNativeScrollbarFrame::Hookup()
 {
-  nsresult rv = nsBoxFrame::EndLayout(aState);
-
-  // By now, we have both the content node for the scrollbar and the associated
-  // scrollbar mediator (for outliner, if applicable). Hook up the scrollbar to
-  // gecko
   if ( mScrollbarNeedsContent ) {
     nsCOMPtr<nsIContent> scrollbarContent;
     nsIFrame* scrollbarFrame = nsnull;
@@ -264,6 +266,5 @@ nsNativeScrollbarFrame::EndLayout(nsBoxLayoutState& aState)
       }
     }     
   }
-  
-  return rv;
 }
+
