@@ -347,11 +347,10 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
         return res;
     }
     
-    // if (aProgressStatusFlags == nsIWebProgress::flag_net_redirecting)
-    //{
-    //    res = NS_ERROR_NOT_IMPLEMENTED;
-    //    xxx need to fix.
-    //}
+    if (aProgressStatusFlags == nsIWebProgress::flag_net_redirecting)
+    {
+        // need to implmentent.
+    }
 
     return res;
 }

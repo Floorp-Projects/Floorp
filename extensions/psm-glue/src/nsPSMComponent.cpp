@@ -41,10 +41,8 @@
 #include "nsIPref.h"
 #include "nsIProfile.h"
 #include "nsILocalFile.h"
-#ifdef XP_MAC
-#include "nsILocalFileMac.h"
-#endif
-#include "nsSpecialSystemDirectory.h"
+
+#include "nsDirectoryService.h"
 
 #include "rsrcids.h"
 
@@ -65,8 +63,7 @@
 #define PSM_FILE_NAME "psm.exe"
 #elif XP_UNIX
 #define PSM_FILE_NAME "start-psm"
-#define PSM_FILE_LOCATION "/opt/netscape/security/start-psm"
-#else
+#else XP_MAC
 #define PSM_FILE_NAME "psm"
 #endif
 
@@ -417,8 +414,37 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (nsPSMMutexInit() != PR_SUCCESS)
             return NS_ERROR_FAILURE;
 
+        // Try to see if it is open already
         mControl = CMT_ControlConnect(&nsPSMMutexTbl, &nsPSMShimTbl);
         
+        // Find the one in the bin directory
+        if (mControl == nsnull)
+        {
+            nsCOMPtr<nsILocalFile> psmAppFile;
+            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            directoryService->Get("system.OS_CurrentProcessDirectory", 
+                                   NS_GET_IID(nsIFile), 
+                                   getter_AddRefs(psmAppFile));
+
+        
+            psmAppFile->Append("psm");
+            psmAppFile->Append(PSM_FILE_NAME);
+        
+            PRBool isExecutable, exists;
+            psmAppFile->Exists(&exists);
+            psmAppFile->IsExecutable(&isExecutable);
+            if (exists && isExecutable)
+            {
+                nsXPIDLCString path;
+                psmAppFile->GetPath(getter_Copies(path));
+                // FIX THIS.  using a file path is totally wrong here.  
+                mControl = CMT_EstablishControlConnection((char*)(const char*)path, &nsPSMShimTbl, &nsPSMMutexTbl);
+            }
+        }
+
+        // Get the one in the version registry           
         if (mControl == nsnull)
         {
             //Try to find it.
@@ -438,98 +464,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
             }
          }
 
-#ifndef XP_MAC
-        if (mControl == nsnull)
-        {
-            nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-            nsFileSpec spec = sysDir;
-
-            spec += "psm/";
-            spec += PSM_FILE_NAME;
-
-            if (spec.Exists())
-            {
-                mControl = CMT_EstablishControlConnection((char *)spec.GetNativePathCString(), &nsPSMShimTbl, &nsPSMMutexTbl);
-            }
-        }
-#else
-    if (mControl == nsnull)
-    {
-      // Attempt to locate "Personal Security Manager" in "Essential Files".
-      nsCOMPtr<nsILocalFile> aPSMApp = do_CreateInstance(NS_LOCAL_FILE_PROGID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCOMPtr<nsILocalFileMac> psmAppMacFile = do_QueryInterface(aPSMApp, &rv);
-        if (NS_SUCCEEDED(rv))
-        {
-          rv = psmAppMacFile->InitFindingAppByCreatorCode('nPSM');
-          if (NS_SUCCEEDED(rv))
-          {
-            rv = psmAppMacFile->LaunchAppWithDoc(nsnull, PR_TRUE);
-            if (NS_SUCCEEDED(rv))
-            {
-                 const PRUint32 kMaxWaitTicks = 180;          // max 3 seconds
-              PRUint32 endTicks = ::TickCount() + kMaxWaitTicks;
-              
-              do
-              {
-                EventRecord theEvent;
-                    WaitNextEvent(0, &theEvent, 5, NULL);
-                mControl = CMT_ControlConnect(&nsPSMMutexTbl, &nsPSMShimTbl);
-              } while (!mControl && (::TickCount() < endTicks));
-
-            }
-          }
-        }
-      }
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Launching Personal Security Manager failed");
-    }
-
-#endif
-
-#ifdef XP_UNIX
-        if (mControl == nsnull)
-        {
-            nsFileSpec psmSpec(PSM_FILE_LOCATION);
-            if (psmSpec.Exists())
-            {
-                mControl = CMT_EstablishControlConnection(PSM_FILE_LOCATION, &nsPSMShimTbl, &nsPSMMutexTbl);
-            }
-        }
-#endif
-
-        if (mControl == nsnull)
-        {
-            char* filePath = nsnull;
-            
-            NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
-            if(NS_SUCCEEDED(rv))
-            {
-                NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
-                if (NS_FAILED(rv)) return rv;
-            
-                nsILocale* locale = nsnull;
-                nsCOMPtr<nsIStringBundle> stringBundle;
-
-                rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, locale, getter_AddRefs(stringBundle));
-                if (NS_FAILED(rv)) return rv;
-
-                PRUnichar *ptrv = nsnull;
-                rv = stringBundle->GetStringFromName( NS_ConvertASCIItoUCS2("FindText").GetUnicode(), &ptrv);
-                if (NS_FAILED(rv)) return rv;                
-                
-                handler->PromptForFile(ptrv, PSM_FILE_NAME, PR_TRUE, &filePath);
-
-                nsAllocator::Free(ptrv);
-
-            }
-            if (! filePath)
-                return NS_ERROR_FAILURE;
-
-            mControl = CMT_EstablishControlConnection(filePath, &nsPSMShimTbl, &nsPSMMutexTbl);
-        }
-
-
+        
         if (!mControl || InitPSMUICallbacks(mControl) != PR_SUCCESS)
             goto failure;
 
@@ -542,16 +477,23 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         rv = profile->GetCurrentProfileDir(&profileSpec);
         if (NS_FAILED(rv)) goto failure;;
         
+#ifdef XP_MAC
+        profileSpec += "Security";
+        // make sure the dir exists
+        profileSpec.CreateDirectory();
+#endif
+        
         rv = profile->GetCurrentProfile(&profileName);
         if (NS_FAILED(rv)) goto failure;
           
         CMTStatus psmStatus;
         nsCAutoString profilenameC;
         profilenameC.AssignWithConversion(profileName);
+
         psmStatus = CMT_Hello( mControl, 
-                                   PROTOCOL_VERSION, 
-                                   profilenameC, 
-                                   (char*)profileSpec.GetNativePathCString());        
+                               PROTOCOL_VERSION, 
+                               profilenameC, 
+                               (char*)profileSpec.GetNativePathCString());        
 
         if (psmStatus == CMTFailure)
         {  

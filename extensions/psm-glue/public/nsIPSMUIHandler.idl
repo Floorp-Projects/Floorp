@@ -26,7 +26,7 @@
 [scriptable, uuid(d92be9b0-601b-11d3-8c4a-000064657374)]
 interface nsIPSMUIHandler : nsISupports
 {
-    void DisplayURI(in long width, in long height, in string urlStr);
+    void DisplayURI(in long width, in long height, in PRBool modal, in string urlStr);
     void PromptForFile(in wstring prompt, in string fileRegEx, in boolean shouldFileExist, out string outFile);
 };
 

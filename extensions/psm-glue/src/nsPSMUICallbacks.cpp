@@ -54,8 +54,10 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static char * PromptUserCallback(void *arg, char *prompt, int isPasswd);
 static char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32 shouldFileExist);
 static void   ApplicationFreeCallback(char *userInput);
-static void * CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, PRBool isModel,
-                 char* urlStr, void *data);
+
+static void * CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, 
+								CMBool isModal, char* urlStr, void *data);
+
 extern "C" void CARTMAN_UIEventLoop(void *data);
 
 
@@ -63,7 +65,7 @@ extern "C" void CARTMAN_UIEventLoop(void *data);
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMUIHandlerImpl, nsIPSMUIHandler)
 
 NS_METHOD
-nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, const char *urlStr)
+nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, const char *urlStr)
 {
     nsresult rv;
     nsCOMPtr<nsIDOMWindow> hiddenWindow;
@@ -79,11 +81,17 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, const char *urlStr
          {
             // Set up arguments for "window.open"
             void *stackPtr;
+            char params[36];
+
+            if (modal)  // if you change this, remember to change the buffer size above.
+                strcpy(params, "menubar=no,height=%d,width=%d,modal");
+            else
+                strcpy(params, "menubar=no,height=%d,width=%d");
 
             char buffer[256];
             PR_snprintf(buffer,
                         sizeof(buffer),
-                        "menubar=no,height=%d,width=%d,modal",
+                        params,
                         height,
                         width );
 
@@ -266,7 +274,7 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, con
         return PR_FAILURE;
 
     /* Fire the URL up in a window of its own. */
-    pwin = CartmanUIHandler(advRID, nsnull, width, height, PR_FALSE, (char*)urlItem.data, NULL);
+    pwin = CartmanUIHandler(advRID, nsnull, width, height, CM_FALSE, (char*)urlItem.data, NULL);
     
     //allocated by cmt, we can free with free:
     free(urlItem.data);
@@ -276,14 +284,14 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, con
 
 
 
-void* CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, PRBool isModal, char* urlStr, void *data)
+void* CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uint32 height, CMBool isModal, char* urlStr, void *data)
 {
     nsresult rv = NS_OK;
     
     NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
     
     if(NS_SUCCEEDED(rv))
-	    handler->DisplayURI(width, height, urlStr);
+	    handler->DisplayURI(width, height, isModal, urlStr);
 
     return nsnull;
 }
