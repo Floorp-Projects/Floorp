@@ -308,8 +308,7 @@ nsWebShellWindow::Toolbar()
 
     PRUint32    chromeMask = (nsIWebBrowserChrome::CHROME_TOOLBAR |
                               nsIWebBrowserChrome::CHROME_LOCATIONBAR |
-                              nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR |
-                              nsIWebBrowserChrome::CHROME_STATUSBAR);
+                              nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
 
     PRUint32    chromeFlags, newChromeFlags = 0;
     wbc->GetChromeFlags(&chromeFlags);
