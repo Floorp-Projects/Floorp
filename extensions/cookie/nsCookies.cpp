@@ -63,6 +63,7 @@
 #define MAX_BYTES_PER_COOKIE 4096  /* must be at least 1 */
 
 #define cookie_behaviorPref "network.cookie.cookieBehavior"
+#define cookie_disableCookieForMailNewsPref "network.cookie.disableCookieForMailNews"
 #define cookie_warningPref "network.cookie.warnAboutCookies"
 #define cookie_strictDomainsPref "network.cookie.strictDomains"
 #define cookie_lifetimePref "network.cookie.lifetimeOption"
@@ -107,6 +108,7 @@ typedef enum {
 
 PRIVATE PRBool cookie_changed = PR_FALSE;
 PRIVATE PERMISSION_BehaviorEnum cookie_behavior = PERMISSION_Accept;
+PRIVATE PRBool cookie_disableCookieForMailNews = PR_TRUE; //default -- disable is true
 PRIVATE PRBool cookie_warning = PR_FALSE;
 PRIVATE COOKIE_LifetimeEnum cookie_lifetimeOpt = COOKIE_Normal;
 PRIVATE time_t cookie_lifetimeLimit = 90*24*60*60;
@@ -354,6 +356,11 @@ cookie_SetBehaviorPref(PERMISSION_BehaviorEnum x, nsIPref* prefs) {
 }
 
 PRIVATE void
+cookie_SetDisableCookieForMailNewsPref(PRBool x) {
+  cookie_disableCookieForMailNews = x;
+}
+
+PRIVATE void
 cookie_SetWarningPref(PRBool x) {
   cookie_warning = x;
 }
@@ -372,6 +379,11 @@ cookie_SetLifetimeLimit(PRInt32 x) {
 PRIVATE PERMISSION_BehaviorEnum
 cookie_GetBehaviorPref() {
   return cookie_behavior;
+}
+
+PRIVATE PRBool
+cookie_GetDisableCookieForMailNewsPref() {
+  return cookie_disableCookieForMailNews;
 }
 
 PRIVATE PRBool
@@ -429,6 +441,18 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   }
     
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
+  return 0;
+}
+
+MODULE_PRIVATE int PR_CALLBACK
+cookie_DisableCookieForMailNewsPrefChanged(const char * newpref, void * data) {
+  PRBool x;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_disableCookieForMailNewsPref, &x))) {
+    x = PR_TRUE;
+  }
+  cookie_SetDisableCookieForMailNewsPref(x);
   return 0;
 }
 
@@ -535,6 +559,13 @@ COOKIE_RegisterPrefCallbacks(void) {
   }
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
   prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, nsnull);
+
+  // Initialize  cookie_disableCookieForMailNewsPref
+  if (NS_FAILED(prefs->GetBoolPref(cookie_disableCookieForMailNewsPref, &x))) {
+    x = PR_TRUE; //default --> disable is true
+  }
+  cookie_SetDisableCookieForMailNewsPref(x);
+  prefs->RegisterCallback(cookie_disableCookieForMailNewsPref, cookie_DisableCookieForMailNewsPrefChanged, nsnull);
 
   // Initialize for cookie_warningPref
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
@@ -796,6 +827,27 @@ cookie_SameDomain(char * currentHost, char * firstHost) {
   }
   return 0;
 }
+
+PRBool
+cookie_isFromMailNews(char *firstURL, nsIIOService* ioService) {
+  
+  if (!firstURL) 
+    return PR_FALSE;
+
+  NS_ASSERTION(ioService, "IOService not available");
+  if (!ioService)
+    return PR_FALSE;  // we cannot check the scheme of orignal uri
+
+  nsCAutoString schemeString;
+  nsresult rv = ioService->ExtractScheme(nsDependentCString(firstURL), schemeString);
+  if (NS_FAILED(rv))  //malformed uri
+    return PR_FALSE; 
+  
+  return (schemeString.Equals(NS_LITERAL_CSTRING("imap")) || 
+          schemeString.Equals(NS_LITERAL_CSTRING("news")) ||
+          schemeString.Equals(NS_LITERAL_CSTRING("mailbox")));
+}
+
 
 PRBool
 cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
@@ -1464,6 +1516,10 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
     /* it's a foreign cookie so don't set the cookie */
     return;
   }
+
+  /* check if a Mail/News message is setting the cookie */
+  if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL, ioService))
+    return;
 
   /* Determine when the cookie should expire. This is done by taking the difference between 
    * the server time and the time the server wants the cookie to expire, and adding that 
