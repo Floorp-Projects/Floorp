@@ -267,7 +267,7 @@ struct LineData {
   LineData(nsIFrame* aFrame, PRInt32 aCount) {
     mFirstChild = aFrame;
     mChildCount = aCount;
-    mState = 0;
+    mState = LINE_IS_DIRTY;
     mFloaters = nsnull;
     mNext = nsnull;
   }
@@ -296,11 +296,11 @@ struct LineData {
   }
 
   PRBool GetLastContentIsComplete() {
-    return 0 != (mState & LINE_LAST_CONTENT_IS_COMPLETE);
+    return 0 != (LINE_LAST_CONTENT_IS_COMPLETE & mState);
   }
 
   PRBool IsBlock() const {
-    return 0 != (mState & LINE_IS_BLOCK);
+    return 0 != (LINE_IS_BLOCK & mState);
   }
 
   void SetIsBlock() {
@@ -318,6 +318,18 @@ struct LineData {
     else {
       ClearIsBlock();
     }
+  }
+
+  void MarkDirty() {
+    mState |= LINE_IS_DIRTY;
+  }
+
+  void ClearDirty() {
+    mState &= ~LINE_IS_DIRTY;
+  }
+
+  PRBool IsDirty() const {
+    return 0 != (LINE_IS_DIRTY & mState);
   }
 
   PRUint16 GetState() const { return mState; }
@@ -1130,7 +1142,6 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
     DrainOverflowLines();
-    state.GetAvailableSpace();
     rv = InitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
@@ -1143,8 +1154,6 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
       state.reflowCommand->GetType(type);
       switch (type) {
       case nsIReflowCommand::FrameAppended:
-        state.GetAvailableSpace();
-        //XXX RecoverState(state);
         rv = FrameAppendedReflow(state);
         break;
 
@@ -1162,7 +1171,6 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   }
   else if (eReflowReason_Resize == state.reason) {
     DrainOverflowLines();
-    state.GetAvailableSpace();
     rv = ResizeReflow(state);
   }
 
@@ -1388,16 +1396,15 @@ nsCSSBlockFrame::InitialReflow(nsCSSBlockReflowState& aState)
   }
 
   // Reflow everything
+  aState.GetAvailableSpace();
   return ResizeReflow(aState);
 }
-
-// XXX this is not incremental; yuck. it's because of
-// DrainOverflowLines; we don't know how to reflow the overflow lines
-// and incrementally handle the new lines....time for dirty bits!
 
 nsresult
 nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
 {
+  // Create new frames for the appended content. Each line that is
+  // impacted by this will be marked dirty.
   nsresult rv = CreateNewFrames(aState.mPresContext);
   if (NS_OK != rv) {
     return rv;
@@ -1409,8 +1416,57 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
     return rv;
   }
 
-  // XXX temporary: Reflow everything
-  return ResizeReflow(aState);
+  // Recover our reflow state. First find the lastCleanLine and the
+  // firstDirtyLine which follows it. While we are looking, compute
+  // the maximum xmost of each line.
+  LineData* firstDirtyLine = mLines;
+  LineData* lastCleanLine = nsnull;
+  while (nsnull != firstDirtyLine) {
+    if (firstDirtyLine->IsDirty()) {
+      break;
+    }
+    nscoord xmost = firstDirtyLine->mBounds.XMost();
+    if (xmost > aState.mKidXMost) {
+      aState.mKidXMost = xmost;
+    }
+    lastCleanLine = firstDirtyLine;
+    firstDirtyLine = firstDirtyLine->mNext;
+  }
+
+  if (nsnull != lastCleanLine) {
+    // Start Y off just past the bottom of the line before the last line
+    aState.mY = lastCleanLine->mBounds.YMost();
+
+    // Recover previous bottom margin values
+    if (lastCleanLine->IsBlock()) {
+      nsIFrame* frame = lastCleanLine->mFirstChild;
+      const nsStyleSpacing* spacing;
+      frame->GetStyleData(eStyleStruct_Spacing,
+                          (const nsStyleStruct*&) spacing);
+      nsMargin margin;
+      spacing->CalcMarginFor(frame, margin);
+      if (margin.bottom < 0) {
+        aState.mPrevPosBottomMargin = 0;
+        aState.mPrevNegBottomMargin = -margin.bottom;
+      }
+      else {
+        aState.mPrevPosBottomMargin = margin.bottom;
+        aState.mPrevNegBottomMargin = 0;
+      }
+    }
+    else {
+      aState.mPrevPosBottomMargin = 0;
+      aState.mPrevNegBottomMargin = 0;
+    }
+  }
+  aState.GetAvailableSpace();
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("nsCSSBlockReflowState::FrameAppendedReflow: y=%d firstDirtyLine=%p",
+      aState.mY, firstDirtyLine));
+
+  // Reflow lines from there forward
+  aState.mPrevLine = lastCleanLine;
+  return ReflowLinesAt(aState, firstDirtyLine);
 }
 
 nsresult
@@ -1508,6 +1564,7 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
         // Set this to true in case we don't end up reflowing all of the
         // frames on the line (because they end up being pushed).
         lastLine->SetLastContentIsComplete();
+        lastLine->MarkDirty();
         pendingInlines = 0;
       }
 
@@ -1550,6 +1607,7 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
     // Set this to true in case we don't end up reflowing all of the
     // frames on the line (because they end up being pushed).
     lastLine->SetLastContentIsComplete();
+    lastLine->MarkDirty();
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -1604,55 +1662,6 @@ nsCSSBlockFrame::FindTextRuns(nsCSSBlockReflowState& aState)
   return NS_OK;
 }
 
-#if XXX
-  // Recover our reflow state. When our last line is a block line then
-  // we will include it in the recovered state because we don't need
-  // to reflow it. When our last line is an inline line then we do not
-  // include it in the recovered state because we will begin reflowing
-  // there.
-  LineData* line = mLines;
-  if (nsnull != line) {
-    LineData* end = lastLine;
-    if (lastLine->IsBlock()) {
-      end = nsnull;
-    }
-
-    // For each line up to, but not include lastLine, compute the
-    // maximum xmost of each line.
-    while (line != end) {
-      nscoord xmost = line->mBounds.XMost();
-      if (xmost > aState.mKidXMost) {
-        aState.mKidXMost = xmost;
-      }
-      line = line->mNext;
-    }
-
-    // Start Y off just past the bottom of the line before the last line
-    aState.mY = line->mBounds.YMost();
-
-    // Recover previous bottom margin values
-    if (line->IsBlock()) {
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-        line->mFirstChild->GetStyleData(eStyleStruct_Spacing,
-                                        (const nsStyleStruct*&) spacing);
-      nsMargin margin;
-      spacing->CalcMarginFor(line->mFirstChild, margin);
-      if (margin.bottom < 0) {
-        aState.mPrevPosBottomMargin = 0;
-        aState.mPrevNegBottomMargin = -margin.bottom;
-      }
-      else {
-        aState.mPrevPosBottomMargin = margin.bottom;
-        aState.mPrevNegBottomMargin = 0;
-      }
-    }
-    else {
-      aState.mPrevPosBottomMargin = 0;
-      aState.mPrevNegBottomMargin = 0;
-    }
-  }
-#endif
-
 // XXX Todo: some incremental reflows are passing through this block
 // and into a child block; those cannot impact our text-runs. In that
 // case skip the FindTextRuns work.
@@ -1674,6 +1683,15 @@ nsCSSBlockFrame::ChildIncrementalReflow(nsCSSBlockReflowState& aState)
 nsresult
 nsCSSBlockFrame::ResizeReflow(nsCSSBlockReflowState& aState)
 {
+  // Mark everything dirty
+  LineData* line = mLines;
+  while (nsnull != line) {
+    line->MarkDirty();
+    line = line->mNext;
+  }
+
+  // Reflow all of our lines
+  aState.GetAvailableSpace();
   aState.mPrevLine = nsnull;
   return ReflowLinesAt(aState, mLines);
 }
@@ -1681,7 +1699,7 @@ nsCSSBlockFrame::ResizeReflow(nsCSSBlockReflowState& aState)
 nsresult
 nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
 {
-  if (nsnull != mRunInFloaters) {
+  if ((nsnull != mRunInFloaters) && (aLine == mLines)) {
     aState.PlaceBelowCurrentLineFloaters(mRunInFloaters);
   }
 
@@ -1713,7 +1731,7 @@ nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
     aLine->mNext = nsnull;
     if (0 == aLine->mChildCount) {
       // The line is empty. Try the next one.
-      NS_ASSERTION(nsnull == aLine->mChildCount, "bad line");
+      NS_ASSERTION(nsnull == aLine->mChildCount, "bad empty line");
       aLine->mNext = aState.mFreeList;
       aState.mFreeList = aLine;
       continue;
@@ -1788,6 +1806,7 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
   PRBool keepGoing = PR_FALSE;
   nsCSSBlockFrame* nextInFlow;
   aState.mInlineLayoutPrepared = PR_FALSE;
+  aLine->ClearDirty();
 
   // Reflow mapped frames in the line
   PRInt32 n = aLine->mChildCount;
@@ -2237,6 +2256,7 @@ nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
     // because of DeleteChildsNextInFlow not being able to delete
     // lines.
     *aFromList = fromLine->mNext;
+    NS_ASSERTION(nsnull == fromLine->mFirstChild, "bad empty line");
     fromLine->mNext = aState.mFreeList;
     aState.mFreeList = fromLine;
     return PR_TRUE;
@@ -2704,7 +2724,7 @@ nsCSSBlockFrame::ReflowFloater(nsIPresContext*        aPresContext,
     kidAvailSize.height = styleSize.height;
   }
   else {
-    kidAvailSize.width = NS_UNCONSTRAINEDSIZE;
+    kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
   }
 
   // Resize reflow the anchored item into the available space
