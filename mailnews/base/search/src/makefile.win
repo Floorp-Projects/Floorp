@@ -29,6 +29,21 @@ MODULE=msgsearch
 
 DEFINES=-D_IMPL_NS_HTML
 
+CPPSRCS=    nsMsgFilterService.cpp\
+			nsMsgFilterList.cpp\
+			nsMsgFilter.cpp\
+			nsMsgSearchTerm.cpp\
+			nsMsgBodyHandler.cpp\
+			nsMsgLocalSearch.cpp\
+			nsMsgSearchAdapter.cpp\
+			nsMsgSearchSession.cpp\
+			nsMsgSearchValue.cpp \
+			nsMsgImapSearch.cpp\
+			nsMsgSearchNews.cpp \
+			nsMsgFilterDataSource.cpp \
+			nsMsgFilterDelegateFactory.cpp \
+			$(NULL)
+
 CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgFilterList.obj\
 			.\$(OBJDIR)\nsMsgFilter.obj\
@@ -40,17 +55,15 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgSearchSession.obj\
 			.\$(OBJDIR)\nsMsgSearchAdapter.obj\
 			.\$(OBJDIR)\nsMsgSearchValue.obj \
-			.\$(OBJDIR)\nsMsgSearchDataSource.obj \
 			.\$(OBJDIR)\nsMsgFilterDataSource.obj \
 			.\$(OBJDIR)\nsMsgFilterDelegateFactory.obj \
 			$(NULL)
 
 
-EXPORTS=	nsMsgFilterService.h \
-			nsMsgSearchSession.h \
-			nsMsgFilterDataSource.h \
-			nsMsgFilterDelegateFactory.h \
-			nsMsgSearchDataSource.h \
+EXPORTS=	nsMsgFilterService.h\
+			nsMsgSearchSession.h\
+		nsMsgFilterDataSource.h \
+		nsMsgFilterDelegateFactory.h \
 			$(NULL)
 
 
