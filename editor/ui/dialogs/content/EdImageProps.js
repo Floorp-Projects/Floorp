@@ -75,14 +75,7 @@ function Startup()
     dump("Not all dialog controls were found!!!\n");
   }
       
-  initDialog();
-  
-  dialog.srcInput.focus();
-}
-
-function initDialog() {
-
-  // Get a single selected anchor element
+  // Get a single selected image element
 
   imageElement                          = editorShell.GetSelectedElement(tagName);
 
@@ -107,6 +100,14 @@ function initDialog() {
       window.close();
     }  
   }
+  
+  // Initialize all widgets with image attributes
+  InitDialog();
+  
+  dialog.srcInput.focus();
+}
+
+function InitDialog() {
 
   // Set the controls to the image's attributes
 
@@ -490,6 +491,11 @@ function constrainProportions( srcID, destID )
     destElement.value                   = Math.round( srcElement.value * destElement.value / oldSourceInt );
   
   oldSourceInt                          = srcElement.value;
+}
+
+function onAdvancedEdit()
+{
+  dump("\n\n Need to write onAdvancedEdit for Image dialog\n\n");
 }
 
 function onOK()

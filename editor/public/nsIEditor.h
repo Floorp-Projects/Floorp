@@ -279,6 +279,18 @@ public:
   NS_IMETHOD RemoveAttribute(nsIDOMElement * aElement, 
                              const nsString& aAttribute)=0;
 
+  /**
+   * CloneAttributes() is similar to nsIDOMNode::cloneNode(),
+   *   it assures the attribute nodes of the destination are identical with the source node
+   *   by copying all existing attributes from the source and deleting those not in the source.
+   *   This is used when the destination node (element) already exists
+   *
+   * The supplied nodes MUST BE ELEMENTS (most callers are working with nodes)
+   * @param aDestNode     the destination element to operate on
+   * @param aSourceNode   the source element to copy attributes from
+   */
+  NS_IMETHOD CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)=0;
+
   /** 
    * CreateNode instantiates a new element of type aTag and inserts it into aParent at aPosition.
    * @param aTag      The type of object to create

@@ -66,6 +66,11 @@ function Startup()
   dialog.rowsInput.focus();
 }
 
+function onAdvancedEdit()
+{
+  dump("\n\n Need to write onAdvancedEdit for Insert Table dialog\n\n");
+}
+
 function onOK()
 {
   rows = ValidateNumberString(dialog.rowsInput.value, 1, maxRows);

@@ -37,7 +37,15 @@ function Startup()
   // GET EACH CONTROL -- E.G.:
   //dialog.editBox = document.getElementById("editBox");
 
-  initDialog();
+/*
+  // Get the selected or enclosing table element
+  if(!element)
+  {
+    dump("Failed to get selected element or create a new one!\n");
+    window.close();
+  }
+*/
+  InitDialog();
   
   var table = editorShell.GetElementOrParentByTagName("table", null);
   if (!table)
@@ -48,14 +56,14 @@ function Startup()
 
 }
 
-function initDialog() {
-/*
-  if(!element)
-  {
-    dump("Failed to get selected element or create a new one!\n");
-    window.close();
-  }
-*/
+function InitDialog()
+{
+  dump{"Table Editing:InitDialog()\n");
+}
+
+function onAdvancedEdit()
+{
+  dump("\n\n Need to write onAdvancedEdit for Table and Cell dialog\n\n");
 }
 
 function onOK()

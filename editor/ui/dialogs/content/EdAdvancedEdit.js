@@ -22,32 +22,77 @@
 
 
 //Cancel() is in EdDialogCommon.js
+// Note: This dialog
 var tagname;
 var element;
 
 // dialog initialization code
 function Startup()
 {
+  // This is the return value for the parent,
+  //  who only needs to know if OK was clicked
+  window.opener.AdvancedEditOK = false;
+
   if (!InitEditorShell())
     return;
 
   doSetOKCancel(onOK, null);
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  // GET EACH CONTROL -- E.G.:
-  dialog.editBox = document.getElementById("editBox");
-  element = window.arguments[1]);
-
+  // Element to edit is passed in
+  element = window.arguments[1];
+  if (!element || element == "undefined") {
+    dump("Advanced Edit: Element to edit not supplied\n");
+    window.close();  
+  }
   dump("*** Element passed into Advanced Edit: "+element+" ***\n");
 
+  // Append tagname of element we are editing after the message text
+  //  above the attribute editing treewidget
+  var msgParent = document.getElementById("AttributeMsgParent");
+
+  // Remove temporary place holder text:
+  // TODO: REMOVE THIS WHEN WE CAN RESIZE DIALOG AFTER CREATION
+  msgParent.removeChild(msgParent.firstChild);
+
+  var msg = editorShell.GetString("AttributesFor");
+  dump("Tagname Msg = "+msg+"\n");
+  msg +=(" "+element.nodeName);
+  dump("Tagname Msg = "+msg+"\n");
+
+  textNode = editorShell.editorDocument.createTextNode(msg);
+  if (textNode) {
+    msgParent.appendChild(textNode);
+  }
+
+
+  // Create dialog object to store controls for easy access
+  dialog = new Object;
+  dialog.AddAttributeNameInput = document.getElementById("AddAttributeNameInput");
+  //TODO: We should disable this button if the AddAttributeNameInput editbox is empty
+  dialog.AddAttribute = document.getElementById("AddAttribute");
+
+  //TODO: Get the list of attribute nodes,
+  //  read each one, and use to build a text + editbox
+  //  in a treewidget row for each attribute 
+  var nodeMap = element.attributes;
+  var nodeMapCount = nodeMap.length;
+
   // SET FOCUS TO FIRST CONTROL
-  //dialog.editBox.focus();
 }
+
+function onAddAttribute()
+{
+  var name = dialog.AddAttributeNameInput.value;
+  // TODO: Add a new text + editbox to the treewidget editing list
+}
+
 
 function onOK()
 {
-// Set attribute example:
-//  imageElement.setAttribute("src",dialog.srcInput.value);
- return true; // do close the window
+  //TODO: Get all children of the treewidget to get all
+  //   name, value strings for all attributes.
+  //   Set those attributes on "element" we are editing.
+
+  window.opener.AdvancedEditOK = true;
+  return true; // do close the window
 }

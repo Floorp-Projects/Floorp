@@ -30,7 +30,7 @@
 <!-- <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdAdvancedEdit.dtd">
-<xul:window class="dialog" title="&windowTitle.label;"
+<xul:window class="dialog" title="&WindowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -44,6 +44,24 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <xul:broadcaster id="args" value=""/>
+
+  <xul:box align="vertical"  style="width: 100%; height: 100%">
+    <xul:box align="horizontal">
+      <!-- temporary text, do not localize -->
+      <div id="AttributeMsgParent"> "REMOVE ME"</div>
+      <!-- Message with the tagname appended will be inserted here -->
+	  </xul:box>
+    <xul:spring class="spacer"/>
+    <div id="AttributeTree" style="min-width: 200px; min-height: 200px; border: 1px inset white"/>
+    <xul:spring class="spacer"/>
+    <label for="AddAttributeNameInput"> &AddAttributeMsg.label;</label>
+    <xul:box align="horizontal" flex="100%">
+  	  <input type="text" id="AddAttributeNameInput"/>
+      <xul:spring class="spacer"/>
+      <div><xul:titledbutton class="hspaced" id="AddAttribute" onclick="AddAttribute()" value="&AddAttributeButton.label;"/></div>
+    </xul:box>
+    <html:div><html:hr width="100%"/></html:div>
+  </xul:box>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 </xul:window>

@@ -29,6 +29,8 @@ var SelectionOnly        = 1;
 var FormatedWithDoctype        = 2; 
 var FormatedWithoutDoctype      = 6; 
 var maxPixels           = 10000;
+// The element being edited - so AdvancedEdit can have access to it
+var globalElement;
 
 function InitEditorShell()
 {
@@ -405,20 +407,6 @@ function onCancel()
 function GetSelectionAsText()
 {
   return editorShell.GetContentsAs("text/plain", SelectionOnly);
-}
-
-
-// This is here so to stop the annoying JS error that keeps poping up
-// from the advanced edit button which points to a non existant onAdvanced() function
-// Well now it exists -pete
-
-function onAdvancedEdit(){
-
-
-dump("\n\ncomming soon . . .\nthe \"onAdvancedEdit\" function\n\n");
-
-
-
 }
 
 

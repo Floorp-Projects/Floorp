@@ -20,4 +20,6 @@
    - Contributor(s): 
   -->
 
-<!ENTITY windowTitle.label "Advanced Property Editor">
+<!ENTITY WindowTitle.label  "Advanced Property Editor">
+<!ENTITY AddAttributeMsg.label "Name for attribute to add:">
+<!ENTITY AddAttributeButton.label "Add">

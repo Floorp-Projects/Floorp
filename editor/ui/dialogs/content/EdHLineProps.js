@@ -23,7 +23,6 @@
 var toolkitCore;
 var tagName = "hr";
 var hLineElement;
-var tempLineElement;
 var percentChar = "";
 var width;
 var height;
@@ -47,13 +46,6 @@ function Startup()
     window.close();
     return;
   }
-  // Create a temporary element to use with Save Settings as default
-  tempLineElement = editorShell.editorDocument.createElement("HR");
-  if (!hLineElement) {
-    dump("Temporary HLine element was not created!\n");
-    window.close();
-    return;
-  }
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -64,18 +56,27 @@ function Startup()
   dialog.rightAlign = document.getElementById("rightAlign");
   dialog.shading = document.getElementById("3dShading");
 
- 
-  // Initialize control values based on existing attributes
+  // Make a copy to use for AdvancedEdit and onSaveDefault
+  globalElement = hLineElement.cloneNode(false);
 
-    // Just to be confusing, "size" is used instead of height
-    // We will use "height" here and in UI
-  dialog.heightInput.value = hLineElement.getAttribute("size");
+  // Initialize control values based on existing attributes
+  InitDialog()
+
+  // SET FOCUS TO FIRST CONTROL
+  dialog.heightInput.focus();
+}
+
+function InitDialog()
+{
+  // Just to be confusing, "size" is used instead of height
+  // We will use "height" here and in UI
+  dialog.heightInput.value = globalElement.getAttribute("size");
 
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of button text and "percentChar" variable
-  dialog.widthInput.value = InitPixelOrPercentPopupButton(hLineElement, "width", "pixelOrPercentButton");
+  dialog.widthInput.value = InitPixelOrPercentPopupButton(globalElement, "width", "pixelOrPercentButton");
 
-  align = hLineElement.getAttribute("align");
+  align = globalElement.getAttribute("align");
   if (align == "center") {
     dialog.centerAlign.checked = true;
   } else if (align == "right") {
@@ -83,18 +84,15 @@ function Startup()
   } else {
     dialog.leftAlign.checked = true;
   }
-  noshade = hLineElement.getAttribute("noshade");
+  noshade = globalElement.getAttribute("noshade");
   dialog.shading.checked = (noshade == "");
-
-  // SET FOCUS TO FIRST CONTROL
-  dialog.heightInput.focus();
 }
 
 function onSaveDefault()
 {
-  // "false" means set attributes on the tempLineElement,
+  // "false" means set attributes on the globalElement,
   //   not the real element being edited
-  if (ValidateData(false)) {
+  if (ValidateData()) {
     var prefs = Components.classes['component://netscape/preferences'];
     if (prefs) {
       prefs = prefs.getService();
@@ -139,7 +137,24 @@ function onSaveDefault()
   }
 }
 
-function ValidateData(setAttributes)
+function onAdvancedEdit()
+{
+  if (ValidateData()) {
+    // Set true if OK is clicked in the Advanced Edit dialog
+    window.AdvancedEditOK = false;
+    window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "AdvancedEdit", "chrome,close,titlebar,modal", "", globalElement);
+    if (window.AdvancedEditOK) {
+      dump("OK was pressed in AdvancedEdit Dialog\n");
+      // Copy edited attributes to the dialog widgets:
+      // Note that we still don't want
+      InitDialog();
+    } else {
+      dump("OK was NOT pressed in AdvancedEdit Dialog\n");
+    }
+  }
+}
+
+function ValidateData()
 {
   // Height is always pixels
   height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
@@ -150,11 +165,7 @@ function ValidateData(setAttributes)
     return false;
   }
   dump("Setting height="+height+"\n");
-  if (setAttributes) {
-    hLineElement.setAttribute("size", height);
-  } else {
-    tempLineElement.setAttribute("size", height);
-  }
+  globalElement.setAttribute("size", height);
 
   var maxLimit;
   dump("Validate width. PercentChar="+percentChar+"\n");
@@ -173,11 +184,7 @@ function ValidateData(setAttributes)
   }
   width = width + percentChar;
   dump("Height="+height+" Width="+width+"\n");
-  if (setAttributes) {
-    hLineElement.setAttribute("width", width);
-  } else {
-    tempLineElement.setAttribute("width", width);
-  }
+  globalElement.setAttribute("width", width);
 
   align = "left";
   if (dialog.centerAlign.checked) {
@@ -185,26 +192,14 @@ function ValidateData(setAttributes)
   } else if (dialog.rightAlign.checked) {
     align = "right";
   }
-  if (setAttributes) {
-    hLineElement.setAttribute("align", align);
-  } else {
-    tempLineElement.setAttribute("align", align);
-  }
+  globalElement.setAttribute("align", align);
 
   if (dialog.shading.checked) {
     shading = true;
-    if (setAttributes) {
-      hLineElement.removeAttribute("noshade");
-    } else {
-      tempLineElement.removeAttribute("noshade");
-    }
+    globalElement.removeAttribute("noshade");
   } else {
     shading = false;
-    if (setAttributes) {
-      hLineElement.setAttribute("noshade", "");
-    } else {
-      tempLineElement.setAttribute("noshade", "");
-    }
+    globalElement.setAttribute("noshade", "");
   }
   return true;
 }
@@ -214,5 +209,9 @@ function onOK()
   // Since we only edit existing HLines, 
   //  ValidateData will set the new attributes
   //   so there's nothing else to do
+  var res = ValidateData();
+  // Copy attributes from the globalElement to the document element
+  if (res)
+    editorShell.CloneAttributes(hLineElement, globalElement);
   return (ValidateData(true));
 }

@@ -44,7 +44,7 @@ function Startup()
   //dialog.editBox.focus();
 }
 
-function initDialog() {
+function InitDialog() {
   // Get a single selected element of the desired type
   element = editorShell.GetSelectedElement(tagName);
 
