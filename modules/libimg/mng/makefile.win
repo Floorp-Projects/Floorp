@@ -60,24 +60,24 @@ CSRCS=\
 		$(NULL)
 REQUIRES=util nspr zlib jpeg
 C_OBJS=\
-		.\$(OBJDIR)\mng_callback_xs.c \
-		.\$(OBJDIR)\mng_chunk_io.c \
-		.\$(OBJDIR)\mng_chunk_prc.c \
-		.\$(OBJDIR)\mng_chunk_xs.c \
-		.\$(OBJDIR)\mng_cms.c \
-		.\$(OBJDIR)\mng_display.c \
-		.\$(OBJDIR)\mng_dither.c \
-		.\$(OBJDIR)\mng_error.c \
-		.\$(OBJDIR)\mng_filter.c \
-		.\$(OBJDIR)\mng_hlapi.c \
-		.\$(OBJDIR)\mng_jpeg.c \
-		.\$(OBJDIR)\mng_object_prc.c \
-		.\$(OBJDIR)\mng_pixels.c \
-		.\$(OBJDIR)\mng_prop_xs.c \
-		.\$(OBJDIR)\mng_read.c \
-		.\$(OBJDIR)\mng_trace.c \
-		.\$(OBJDIR)\mng_write.c \
-		.\$(OBJDIR)\mng_zlib.c \
+		.\$(OBJDIR)\mng_callback_xs.obj \
+		.\$(OBJDIR)\mng_chunk_io.obj \
+		.\$(OBJDIR)\mng_chunk_prc.obj \
+		.\$(OBJDIR)\mng_chunk_xs.obj \
+		.\$(OBJDIR)\mng_cms.obj \
+		.\$(OBJDIR)\mng_display.obj \
+		.\$(OBJDIR)\mng_dither.obj \
+		.\$(OBJDIR)\mng_error.obj \
+		.\$(OBJDIR)\mng_filter.obj \
+		.\$(OBJDIR)\mng_hlapi.obj \
+		.\$(OBJDIR)\mng_jpeg.obj \
+		.\$(OBJDIR)\mng_object_prc.obj \
+		.\$(OBJDIR)\mng_pixels.obj \
+		.\$(OBJDIR)\mng_prop_xs.obj \
+		.\$(OBJDIR)\mng_read.obj \
+		.\$(OBJDIR)\mng_trace.obj \
+		.\$(OBJDIR)\mng_write.obj \
+		.\$(OBJDIR)\mng_zlib.obj \
 		$(NULL)
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\util -I$(XPDIST)\public\nspr \
