@@ -82,7 +82,11 @@
     </menu>
   </menubar>
 
-<tree  id="bookmarksTree" 
+<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+	<menu />
+</popup>
+
+<tree  id="bookmarksTree" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        ondblclick="return OpenURL(event,event.target.parentNode.parentNode);"
        flex="100%">
