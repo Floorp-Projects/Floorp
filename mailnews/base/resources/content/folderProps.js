@@ -84,7 +84,6 @@ function folderPropsOnLoad()
 {
   dump("folder props loaded"+'\n');
   doSetOKCancel(folderPropsOKButtonCallback);
-  moveToAlertPosition();
 
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
@@ -189,6 +188,8 @@ function folderPropsOnLoad()
     catch (ex) {}
   }
   hideShowControls(gServerTypeFolder);
+  
+  moveToAlertPosition();
 }
 
 function hideShowControls(serverType)
@@ -226,16 +227,19 @@ function hideShowControls(serverType)
   }
   // hide the priviliges button if the imap folder doesn't have an admin url
   // mabye should leave this hidden by default and only show it in this case instead
-  var imapFolder = gMsgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
-  if (imapFolder)
-  {
-    var privilegesButton = document.getElementById("imap.FolderPrivileges");
-    if (privilegesButton)
+  try {
+    var imapFolder = gMsgFolder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+    if (imapFolder)
     {
-      if (!imapFolder.hasAdminUrl)
-        privilegesButton.setAttribute("hidden", "true");
+      var privilegesButton = document.getElementById("imap.FolderPrivileges");
+      if (privilegesButton)
+      {
+        if (!imapFolder.hasAdminUrl)
+          privilegesButton.setAttribute("hidden", "true");
+      }
     }
   }
+  catch (ex) {}
 
   // hide "check for new mail" checkbox if this is inbox
   if (gMsgFolder)
