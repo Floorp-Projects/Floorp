@@ -39,7 +39,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
 // nsISupports implementation
-NS_IMPL_ISUPPORTS2(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener);
+NS_IMPL_ISUPPORTS3(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener, nsIStreamObserver);
 
 
 // nsIStreamConverter implementation
