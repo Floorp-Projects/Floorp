@@ -308,15 +308,7 @@ function onDownloadShow(aEvent)
   
     var strings = document.getElementById("downloadStrings");
     var name = aEvent.target.getAttribute("target");
-#ifdef XP_WIN
-    var message = strings.getFormattedString("fileDoesNotExistShowErrorWin", [name, appName]);
-#else
-#ifdef XP_MACOSX
-    var message = strings.getFormattedString("fileDoesNotExistShowErrorMac", [name, appName]);
-#else
-    var message = strings.getFormattedString("fileDoesNotExistShowErrorUnix", [name, appName]);
-#endif
-#endif
+    var message = strings.getFormattedString("fileDoesNotExistError", [name, appName]);
     var title = strings.getFormattedString("fileDoesNotExistShowTitle", [name]);
 
     var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
@@ -368,7 +360,7 @@ function onDownloadOpen(aEvent)
       
         var strings = document.getElementById("downloadStrings");
         var name = aEvent.target.getAttribute("target");
-        var message = strings.getFormattedString("fileDoesNotExistOpenError", [name, appName]);
+        var message = strings.getFormattedString("fileDoesNotExistError", [name, appName]);
 
         var title = strings.getFormattedString("fileDoesNotExistOpenTitle", [name]);
 
