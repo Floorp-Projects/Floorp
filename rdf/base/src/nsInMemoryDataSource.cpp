@@ -379,9 +379,9 @@ InMemoryAssertionCursor::GetValue(nsIRDFNode** aValue)
 
     NS_AUTOLOCK(mDataSource->mLock);
 
-    NS_ADDREF(mValue);
+    NS_IF_ADDREF(mValue);
     *aValue = mValue;
-    return NS_OK;
+    return mValue ? NS_OK : NS_ERROR_UNEXPECTED;
 }   
 
 NS_IMETHODIMP
@@ -391,7 +391,7 @@ InMemoryAssertionCursor::GetDataSource(nsIRDFDataSource** aDataSource)
     if (! aDataSource)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ADDREF(mDataSource);
+    NS_IF_ADDREF(mDataSource);
     *aDataSource = mDataSource;
     return NS_OK;
 }
@@ -407,7 +407,7 @@ InMemoryAssertionCursor::GetSource(nsIRDFResource** aSubject)
     NS_AUTOLOCK(mDataSource->mLock);
 
     if (mDirection == eDirectionForwards) {
-        NS_ADDREF(mSource);
+        NS_IF_ADDREF(mSource);
         *aSubject = mSource;
         return NS_OK;
     }
@@ -428,7 +428,7 @@ InMemoryAssertionCursor::GetLabel(nsIRDFResource** aPredicate)
     if (! aPredicate)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ADDREF(mLabel);
+    NS_IF_ADDREF(mLabel);
     *aPredicate = mLabel;
     return NS_OK;
 }
@@ -447,7 +447,7 @@ InMemoryAssertionCursor::GetTarget(nsIRDFNode** aObject)
         if (! mValue)
             return NS_ERROR_UNEXPECTED;
 
-        // this'll AddRef()
+        NS_ADDREF(mValue);
         *aObject = mValue;
     }
     else {
