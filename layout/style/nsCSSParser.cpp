@@ -1542,7 +1542,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_FONT_WEIGHT:
     return ParseFontWeight(aErrorCode, aDeclaration, aName);
   case PROP_HEIGHT:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KL, kHeightKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP, kHeightKTable);
   case PROP_LEFT:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP, kLeftKTable);
   case PROP_LINE_HEIGHT:
