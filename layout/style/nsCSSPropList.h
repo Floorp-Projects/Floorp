@@ -128,6 +128,7 @@ CSS_PROP(-moz-box-flex-group, box_flex_group, REFLOW) // XXX bug 3935
 CSS_PROP(-moz-box-orient, box_orient, REFLOW) // XXX bug 3935
 CSS_PROP(-moz-box-pack, box_pack, REFLOW) // XXX bug 3935
 CSS_PROP(-moz-box-sizing, box_sizing, REFLOW) // XXX bug 3935
+CSS_PROP(-moz-box-ordinal-group, box_ordinal_group, FRAMECHANGE)
 CSS_PROP(caption-side, caption_side, REFLOW)
 CSS_PROP(clear, clear, REFLOW)
 CSS_PROP(clip, clip, VISUAL)

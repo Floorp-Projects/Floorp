@@ -63,12 +63,17 @@
 #include "nsIServiceManager.h"
 
 #include "nsContainerBox.h"
+#include "nsQuickSort.h"
+
+int PR_CALLBACK 
+BoxOrderSortComparison(const void *v1, const void *v2, void *unused);
 
 nsContainerBox::nsContainerBox(nsIPresShell* aShell):nsBox(aShell)
 {
   mFirstChild = nsnull;
   mLastChild = nsnull;
   mChildCount = 0;
+  mOrderBoxes = PR_FALSE;
 }
 
 nsContainerBox::~nsContainerBox()
@@ -124,6 +129,12 @@ nsContainerBox::CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aFrameList, ns
 
          aLast->SetParentBox(this);
 
+         // check if this box is in a different ordinal group, and requires sorting
+         PRUint32 ordinal;
+         aLast->GetOrdinal(aState, ordinal);
+         if (ordinal != DEFAULT_ORDINAL_GROUP)
+           mOrderBoxes = PR_TRUE;
+         
          last->SetNextBox(aLast);
          last = aLast;
          aFrameList->GetNextSibling(&aFrameList);       
@@ -329,7 +340,9 @@ nsContainerBox::Prepend(nsBoxLayoutState& aState, nsIFrame* aList)
         last->SetNextBox(mFirstChild);
         mFirstChild= first;
     }
-
+    
+    CheckBoxOrder(aState);
+    
     if (mLayoutManager)
       mLayoutManager->ChildrenInserted(this, aState, nsnull, first);
 
@@ -348,6 +361,8 @@ nsContainerBox::Append(nsBoxLayoutState& aState, nsIFrame* aList)
     
     mLastChild= last;
 
+    CheckBoxOrder(aState);
+    
     if (mLayoutManager)
       mLayoutManager->ChildrenAppended(this, aState, first);
 }
@@ -365,6 +380,8 @@ nsContainerBox::InsertAfter(nsBoxLayoutState& aState, nsIBox* aPrev, nsIFrame* a
     if (aPrev == mLastChild)
         mLastChild = last;
 
+    CheckBoxOrder(aState);
+        
     if (mLayoutManager) {
       mLayoutManager->ChildrenInserted(this, aState, aPrev, first);
     }
@@ -376,6 +393,7 @@ nsContainerBox::InitChildren(nsBoxLayoutState& aState, nsIFrame* aList)
 {
     ClearChildren(aState);
     mChildCount += CreateBoxList(aState, aList, mFirstChild, mLastChild);
+    CheckBoxOrder(aState);
 
     if (mLayoutManager)
       mLayoutManager->ChildrenAppended(this, aState, mFirstChild);
@@ -420,6 +438,50 @@ nsContainerBox::SanityCheck(nsFrameList& aFrameList)
     }
 }
 
+void 
+nsContainerBox::CheckBoxOrder(nsBoxLayoutState& aState)
+{
+  if (mOrderBoxes) {
+    nsIBox** boxes = new nsIBox*[mChildCount];
+    
+    // turn linked list into array for quick sort
+    nsIBox* box = mFirstChild;
+    nsIBox** boxPtr = boxes;
+    while (box) {
+      *boxPtr = box;
+      box->GetNextBox(&box);
+      ++boxPtr;
+    }
+
+    // sort the array by ordinal group
+    NS_QuickSort(boxes, mChildCount, sizeof(nsIBox*), BoxOrderSortComparison, (void*)&aState);
+    
+    // turn the array back into linked list, with first and last cached
+    mFirstChild = boxes[0];
+    mLastChild = boxes[mChildCount-1];
+    for (PRInt32 i = 0; i < mChildCount; ++i) {
+      if (i <= mChildCount-2)
+        boxes[i]->SetNextBox(boxes[i+1]);
+      else
+        boxes[i]->SetNextBox(nsnull);
+    }
+  }
+}
+
+int PR_CALLBACK 
+BoxOrderSortComparison(const void *v1, const void *v2, void *unused) 
+{
+  nsIBox* box1 = *(nsIBox**) v1;
+  nsIBox* box2 = *(nsIBox**) v2;
+  nsBoxLayoutState state = *((nsBoxLayoutState*)unused);
+  
+  PRUint32 ord1;
+  box1->GetOrdinal(state, ord1);
+  PRUint32 ord2;
+  box2->GetOrdinal(state, ord2);
+  
+  return ord1 > ord2 ? 1 : (ord2 > ord1 ? -1 : 0);
+}
 
 NS_IMETHODIMP
 nsContainerBox::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
@@ -593,3 +655,78 @@ nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRe
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsContainerBox::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
+{
+  mOrderBoxes = PR_TRUE;
+  
+  PRUint32 ord;
+  aChild->GetOrdinal(aState, ord);
+  
+  PRUint32 ordCmp;
+  nsIBox* box = mFirstChild;
+  nsIBox* newPrevSib = mFirstChild;
+  
+  box->GetOrdinal(aState, ordCmp);
+  if (ord < ordCmp) {
+    // new ordinal is lower than the lowest current ordinal, so it will not
+    // have a previous sibling
+    newPrevSib = nsnull;
+  } else {  
+    // search for the box after which we will insert this box
+    while (box) {
+      box->GetOrdinal(aState, ordCmp);
+      if (newPrevSib && ordCmp > ord)
+        break;
+      
+      newPrevSib = box;
+      box->GetNextBox(&box);
+    }
+  }
+    
+  // look for the previous sibling of |aChild|
+  nsIBox* oldPrevSib = mFirstChild;
+  while (oldPrevSib) {
+    nsIBox* me;
+    oldPrevSib->GetNextBox(&me);
+    if (aChild == me) {
+      break;
+    }
+    oldPrevSib = me;
+  }
+  
+  // if we are moving |mFirstChild|, we'll have to update the |mFirstChild| 
+  // value later on
+  PRBool firstChildMoved = PR_FALSE;
+  if (aChild == mFirstChild)
+    firstChildMoved = PR_TRUE;
+
+  nsIBox* newNextSib;
+  if (newPrevSib) {
+    // insert |aChild| between |newPrevSib| and its next sibling
+    newPrevSib->GetNextBox(&newNextSib);
+    newPrevSib->SetNextBox(aChild);
+  } else {
+    // no |newPrevSib| found, so this box will become |mFirstChild|
+    newNextSib = mFirstChild;
+    mFirstChild = aChild;
+  }
+  
+  // link up our new next sibling
+  nsIBox* oldNextSib;
+  aChild->GetNextBox(&oldNextSib);
+  aChild->SetNextBox(newNextSib);
+
+  // link |oldPrevSib| with |oldNextSib| to fill the gap left behind
+  if (oldPrevSib)
+    oldPrevSib->SetNextBox(oldNextSib);
+  
+  // if |newPrevSib| was the last child, then aChild is the new last child
+  if (newPrevSib == mLastChild)
+    mLastChild = aChild;
+  
+  if (firstChildMoved)
+    mFirstChild = oldNextSib;
+
+  return NS_OK;
+}

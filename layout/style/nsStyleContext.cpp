@@ -1144,7 +1144,8 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)xul->mBoxDirection,
     (int)xul->mBoxFlex,
     (int)xul->mBoxOrient,
-    (int)xul->mBoxPack);
+    (int)xul->mBoxPack,
+    (int)xul->mBoxOrdinal);
   fprintf(out, "\" />\n");
 #endif
   //#insert new style structs here#

@@ -3573,6 +3573,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_box_pack:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxPackKTable);
+  case eCSSProperty_box_ordinal_group:
+    return ParseVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
 #endif
   case eCSSProperty_box_sizing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,

@@ -226,7 +226,7 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* a
 
   mInner->mValign = nsBoxFrame::vAlign_Top;
   mInner->mHalign = nsBoxFrame::hAlign_Left;
-
+  
   NeedsRecalc();
 
   // if no layout manager specified us the static sprocket layout
@@ -239,6 +239,7 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* a
   SetLayoutManager(layout);
 
   NeedsRecalc();
+
 }
 
 nsBoxFrame::~nsBoxFrame()
@@ -275,6 +276,7 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
     // initialize our list of infos.
     nsBoxLayoutState state(shell);
     InitChildren(state, aChildList);
+    CheckFrameOrder();
   } else {
     printf("Warning add child failed!!\n");
   }
@@ -1208,7 +1210,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
    // insert the frames to our info list
    nsBoxLayoutState state(aPresContext);
    Insert(state, aPrevFrame, aFrameList);
-
+    
    // insert the frames in out regular frame list
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
@@ -1216,6 +1218,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
        SetDebugOnChildList(state, mFirstChild, PR_TRUE);
 
+   CheckFrameOrder();
    SanityCheck(mFrames);
 
    // mark us dirty and generate a reflow command
@@ -1244,6 +1247,7 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
    if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
        SetDebugOnChildList(state, mFirstChild, PR_TRUE);
 
+   CheckFrameOrder();
    SanityCheck(mFrames);
 
    MarkDirtyChildren(state);
@@ -1264,7 +1268,21 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aModType, aHint);
 
-    if (aAttribute == nsHTMLAtoms::width ||
+    if (aAttribute == nsXULAtoms::ordinal) {
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      nsBoxLayoutState state(shell);
+      
+      nsIBox* parent;
+      GetParentBox(&parent);
+      parent->RelayoutChildAtOrdinal(state, this);
+      nsIFrame* parentFrame;
+      parent->GetFrame(&parentFrame);
+      nsBoxFrame* parentBoxFrame = (nsBoxFrame*) parentFrame;
+      if (parentBoxFrame)
+        parentBoxFrame->CheckFrameOrder();
+      parent->MarkDirty(state);
+    } else if (aAttribute == nsHTMLAtoms::width ||
         aAttribute == nsHTMLAtoms::height ||
         aAttribute == nsHTMLAtoms::align  ||
         aAttribute == nsHTMLAtoms::valign ||
@@ -1390,6 +1408,34 @@ nsBoxFrame::SyncLayout(nsBoxLayoutState& aState)
   nsresult rv = nsBox::SyncLayout(aState);
   mState &= ~(NS_STATE_STYLE_CHANGE);
   return rv;
+}
+
+void 
+nsBoxFrame::CheckFrameOrder()
+{
+  if (mOrderBoxes) {
+    // synchronize the frame order with the box order by simply walking
+    // the box list and linking each frame as its box is linked
+    nsIBox* box = mFirstChild;
+    nsIFrame* frame1;
+    box->GetFrame(&frame1);
+    
+    nsIBox* box2;
+    nsIFrame* frame;
+    nsIFrame* frame2;
+    while (box) {
+      box->GetNextBox(&box2);
+      box->GetFrame(&frame);
+      if (box2)
+        box2->GetFrame(&frame2);
+      else
+        frame2 = nsnull;
+      frame->SetNextSibling(frame2);
+      box = box2;
+    }
+    
+    mFrames.SetFrames(frame1);
+  }
 }
 
 void

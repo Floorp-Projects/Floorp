@@ -166,7 +166,8 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
-
+  virtual void CheckFrameOrder();
+  
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
  
   static nsresult CreateViewForFrame(nsIPresContext* aPresContext,

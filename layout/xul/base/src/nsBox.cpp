@@ -465,6 +465,12 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
 }
 
 NS_IMETHODIMP
+nsBox::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBox::GetVAlign(Valignment& aAlign)
 {
   aAlign = vAlign_Top;
@@ -942,6 +948,15 @@ nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 }
 
 NS_IMETHODIMP
+nsBox::GetOrdinal(nsBoxLayoutState& aState, PRUint32& aOrdinal)
+{
+  aOrdinal = DEFAULT_ORDINAL_GROUP;
+  nsIBox::AddCSSOrdinal(aState, this, aOrdinal);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
   aAscent = 0;
@@ -1375,6 +1390,41 @@ nsIBox::AddCSSCollapsed(nsBoxLayoutState& aState, nsIBox* aBox, PRBool& aCollaps
   frame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
   aCollapsed = vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
   return PR_TRUE;
+}
+
+PRBool 
+nsIBox::AddCSSOrdinal(nsBoxLayoutState& aState, nsIBox* aBox, PRUint32& aOrdinal)
+{
+  PRBool ordinalSet = PR_FALSE;
+  
+  nsIFrame* frame = nsnull;
+  aBox->GetFrame(&frame);
+
+  // get the flexibility
+  nsCOMPtr<nsIContent> content;
+  frame->GetContent(getter_AddRefs(content));
+
+  if (content) {
+    PRInt32 error;
+    nsAutoString value;
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::ordinal, value)) {
+      aOrdinal = value.ToInteger(&error);
+      ordinalSet = PR_TRUE;
+    }
+    else {
+      // No attribute value.  Check CSS.
+      const nsStyleXUL* boxInfo;
+      frame->GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+      if (boxInfo->mBoxOrdinal > 1) {
+        // The ordinal group was defined in CSS.
+        aOrdinal = (nscoord)boxInfo->mBoxOrdinal;
+        ordinalSet = PR_TRUE;
+      }
+    }
+  }
+
+  return ordinalSet;
 }
 
 void

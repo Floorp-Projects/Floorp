@@ -40,6 +40,7 @@
 #include "nsIView.h"
 #include "nsIWidget.h"
 #include "nsIDOMXULElement.h"
+#include "nsIBox.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -479,6 +480,122 @@ nsBoxObject::RemoveProperty(const PRUnichar* aPropertyName)
   return mPresState->RemoveStateProperty(propertyName);
 }
 
+NS_IMETHODIMP 
+nsBoxObject::GetParentBox(nsIDOMElement * *aParentBox)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+  nsIFrame* parent;
+  frame->GetParent(&parent);
+  if (!parent) return NS_OK;
+
+  nsCOMPtr<nsIContent> content;
+  parent->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(content);
+  *aParentBox = el;
+  NS_IF_ADDREF(*aParentBox);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBoxObject::GetFirstChild(nsIDOMElement * *aFirstVisibleChild)
+{
+  *aFirstVisibleChild = GetChildByOrdinalAt(0);
+  NS_IF_ADDREF(*aFirstVisibleChild);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetLastChild(nsIDOMElement * *aLastVisibleChild)
+{
+  PRInt32 count;
+  mContent->ChildCount(count);
+  *aLastVisibleChild = GetChildByOrdinalAt(count-1);
+  NS_IF_ADDREF(*aLastVisibleChild);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetNextSibling(nsIDOMElement **aNextOrdinalSibling)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+  nsIFrame* nextFrame;
+  frame->GetNextSibling(&nextFrame);
+  if (!nextFrame) return NS_OK;
+  // get the content for the box and query to a dom element
+  nsCOMPtr<nsIContent> nextContent;
+  nextFrame->GetContent(getter_AddRefs(nextContent));
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextContent);
+  *aNextOrdinalSibling = el;
+  NS_IF_ADDREF(*aNextOrdinalSibling);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxObject::GetPreviousSibling(nsIDOMElement **aPreviousOrdinalSibling)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+  nsIFrame* parentFrame;
+  frame->GetParent(&parentFrame);
+  if (!parentFrame) return NS_OK;
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+
+  nsIFrame* nextFrame;
+  parentFrame->FirstChild(presContext, nsnull, &nextFrame);
+  nsIFrame* prevFrame = nsnull;
+  while (nextFrame) {
+    if (nextFrame == frame)
+      break;
+    prevFrame = nextFrame;
+    nextFrame->GetNextSibling(&nextFrame);
+  }
+   
+  if (!prevFrame) return NS_OK;
+  // get the content for the box and query to a dom element
+  nsCOMPtr<nsIContent> nextContent;
+  prevFrame->GetContent(getter_AddRefs(nextContent));
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(nextContent);
+  *aPreviousOrdinalSibling = el;
+  NS_IF_ADDREF(*aPreviousOrdinalSibling);
+
+  return NS_OK;
+}
+
+nsIDOMElement*
+nsBoxObject::GetChildByOrdinalAt(PRUint32 aIndex)
+{
+  // cast our way down to our nsContainerBox interface
+  nsIFrame* frame = GetFrame();
+  if (!frame) return nsnull;
+  
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+
+  // get the first child box
+  nsIFrame* childFrame;
+  frame->FirstChild(presContext, nsnull, &childFrame);
+  
+  PRUint32 i = 0;
+  while (childFrame && i < aIndex) {
+    childFrame->GetNextSibling(&childFrame);
+    ++i;
+  }
+
+  if (!childFrame) return nsnull;
+
+  // get the content for the box and query to a dom element
+  nsCOMPtr<nsIContent> content;
+  childFrame->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMElement> el = do_QueryInterface(content);
+  
+  return el;
+}
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
@@ -490,3 +607,4 @@ NS_NewBoxObject(nsIBoxObject** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+

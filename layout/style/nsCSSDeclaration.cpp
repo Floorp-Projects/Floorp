@@ -1005,7 +1005,7 @@ nsCSSXUL::nsCSSXUL(void)
 nsCSSXUL::nsCSSXUL(const nsCSSXUL& aCopy)
   : mBoxAlign(aCopy.mBoxAlign), mBoxDirection(aCopy.mBoxDirection),
     mBoxFlex(aCopy.mBoxFlex), mBoxOrient(aCopy.mBoxOrient),
-    mBoxPack(aCopy.mBoxPack)
+    mBoxPack(aCopy.mBoxPack), mBoxOrdinal(aCopy.mBoxOrdinal)
 {
   MOZ_COUNT_CTOR(nsCSSXUL);
 }
@@ -1031,6 +1031,7 @@ void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
   mBoxFlex.AppendToString(buffer, eCSSProperty_box_flex);
   mBoxOrient.AppendToString(buffer, eCSSProperty_box_orient);
   mBoxPack.AppendToString(buffer, eCSSProperty_box_pack);
+  mBoxOrdinal.AppendToString(buffer, eCSSProperty_box_ordinal_group);
   fputs(buffer, out);
 }
 
@@ -1775,13 +1776,15 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_box_flex:
     case eCSSProperty_box_orient:
     case eCSSProperty_box_pack:
+    case eCSSProperty_box_ordinal_group:
       CSS_ENSURE(XUL) {
         switch (aProperty) {
-          case eCSSProperty_box_align:       mXUL->mBoxAlign     = aValue;   break;
-          case eCSSProperty_box_direction:   mXUL->mBoxDirection = aValue;   break;
-          case eCSSProperty_box_flex:        mXUL->mBoxFlex      = aValue;   break;
-          case eCSSProperty_box_orient:      mXUL->mBoxOrient    = aValue;   break;
-          case eCSSProperty_box_pack:        mXUL->mBoxPack      = aValue;   break;
+          case eCSSProperty_box_align:         mXUL->mBoxAlign     = aValue;   break;
+          case eCSSProperty_box_direction:     mXUL->mBoxDirection = aValue;   break;
+          case eCSSProperty_box_flex:          mXUL->mBoxFlex      = aValue;   break;
+          case eCSSProperty_box_orient:        mXUL->mBoxOrient    = aValue;   break;
+          case eCSSProperty_box_pack:          mXUL->mBoxPack      = aValue;   break;
+          case eCSSProperty_box_ordinal_group: mXUL->mBoxOrdinal   = aValue;   break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
@@ -2536,14 +2539,16 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       case eCSSProperty_box_flex:
       case eCSSProperty_box_orient:
       case eCSSProperty_box_pack:
+      case eCSSProperty_box_ordinal_group:
         if (nsnull != mXUL) {
           CSS_ENSURE_IMPORTANT(XUL) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(eCSSProperty_box_align,     mXUL->mBoxAlign);
-              CSS_CASE_IMPORTANT(eCSSProperty_box_direction, mXUL->mBoxDirection);
-              CSS_CASE_IMPORTANT(eCSSProperty_box_flex,      mXUL->mBoxFlex);
-              CSS_CASE_IMPORTANT(eCSSProperty_box_orient,    mXUL->mBoxOrient);
-              CSS_CASE_IMPORTANT(eCSSProperty_box_pack,      mXUL->mBoxPack);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_align,         mXUL->mBoxAlign);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_direction,     mXUL->mBoxDirection);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_flex,          mXUL->mBoxFlex);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_orient,        mXUL->mBoxOrient);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_pack,          mXUL->mBoxPack);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_ordinal_group, mXUL->mBoxOrdinal);
               CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
@@ -3232,13 +3237,15 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
     case eCSSProperty_box_flex:
     case eCSSProperty_box_orient:
     case eCSSProperty_box_pack:
+    case eCSSProperty_box_ordinal_group:
       CSS_CHECK(XUL) {
         switch(aProperty) {
-        case eCSSProperty_box_align:       mXUL->mBoxAlign.Reset();         break;
-        case eCSSProperty_box_direction:   mXUL->mBoxDirection.Reset();     break;
-        case eCSSProperty_box_flex:        mXUL->mBoxFlex.Reset();          break;
-        case eCSSProperty_box_orient:      mXUL->mBoxOrient.Reset();        break;
-        case eCSSProperty_box_pack:        mXUL->mBoxPack.Reset();          break;
+        case eCSSProperty_box_align:          mXUL->mBoxAlign.Reset();         break;
+        case eCSSProperty_box_direction:      mXUL->mBoxDirection.Reset();     break;
+        case eCSSProperty_box_flex:           mXUL->mBoxFlex.Reset();          break;
+        case eCSSProperty_box_orient:         mXUL->mBoxOrient.Reset();        break;
+        case eCSSProperty_box_pack:           mXUL->mBoxPack.Reset();          break;
+        case eCSSProperty_box_ordinal_group:  mXUL->mBoxOrdinal.Reset();       break;
         CSS_BOGUS_DEFAULT; // Make compiler happy
         }
       }
@@ -3979,13 +3986,15 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_box_flex:
     case eCSSProperty_box_orient:
     case eCSSProperty_box_pack:
+    case eCSSProperty_box_ordinal_group:
       if (nsnull != mXUL) {
         switch (aProperty) {
-          case eCSSProperty_box_align:     aValue = mXUL->mBoxAlign;      break;
-          case eCSSProperty_box_direction: aValue = mXUL->mBoxDirection;  break;
-          case eCSSProperty_box_flex:      aValue = mXUL->mBoxFlex;       break;
-          case eCSSProperty_box_orient:    aValue = mXUL->mBoxOrient;     break;
-          case eCSSProperty_box_pack:      aValue = mXUL->mBoxPack;       break;
+          case eCSSProperty_box_align:          aValue = mXUL->mBoxAlign;      break;
+          case eCSSProperty_box_direction:      aValue = mXUL->mBoxDirection;  break;
+          case eCSSProperty_box_flex:           aValue = mXUL->mBoxFlex;       break;
+          case eCSSProperty_box_orient:         aValue = mXUL->mBoxOrient;     break;
+          case eCSSProperty_box_pack:           aValue = mXUL->mBoxPack;       break;
+          case eCSSProperty_box_ordinal_group:  aValue = mXUL->mBoxOrdinal;    break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }

@@ -42,6 +42,8 @@ struct nsSize;
 // {162F6B5A-F926-11d3-BA06-001083023C1E}
 #define NS_IBOX_IID { 0x162f6b5a, 0xf926, 0x11d3, { 0xba, 0x6, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } }
 
+#define DEFAULT_ORDINAL_GROUP 1
+
 class nsIBox : public nsISupports {
 
 public:
@@ -65,6 +67,7 @@ public:
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
   NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)=0;
+  NS_IMETHOD GetOrdinal(nsBoxLayoutState& aBoxLayoutState, PRUint32& aOrdinal)=0;
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)=0;
   NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)=0;
   NS_IMETHOD Collapse(nsBoxLayoutState& aBoxLayoutState)=0;
@@ -102,6 +105,7 @@ public:
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)=0;
+  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
   NS_IMETHOD MarkChildrenStyleChange()=0;
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
@@ -113,6 +117,7 @@ public:
   static PRBool AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
   static PRBool AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex);
   static PRBool AddCSSCollapsed(nsBoxLayoutState& aState, nsIBox* aBox, PRBool& aCollapsed);
+  static PRBool AddCSSOrdinal(nsBoxLayoutState& aState, nsIBox* aBox, PRUint32& aOrdinal);
 
 };
 
