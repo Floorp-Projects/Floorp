@@ -32,30 +32,6 @@ nsRDFArrayCursor::~nsRDFArrayCursor(void)
     NS_IF_RELEASE(mDataSource);
 }
 
-NS_IMPL_ADDREF(nsRDFArrayCursor);
-NS_IMPL_RELEASE(nsRDFArrayCursor);
-
-NS_IMETHODIMP
-nsRDFArrayCursor::QueryInterface(REFNSIID iid, void** result)
-{
-    if (!result)
-        return NS_ERROR_NULL_POINTER;
-
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (iid.Equals(nsIRDFCursor::IID()) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIRDFCursor*, this);
-        AddRef();
-        return NS_OK;
-    }
-    else if (iid.Equals(nsIEnumerator::IID())) {
-        *result = NS_STATIC_CAST(nsIEnumerator*, this);
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
 NS_IMETHODIMP nsRDFArrayCursor::Advance(void)
 { 
     nsresult rv = Next();
@@ -93,23 +69,6 @@ nsRDFArrayAssertionCursor::~nsRDFArrayAssertionCursor()
 {
     NS_RELEASE(mSubject);
     NS_RELEASE(mPredicate);
-}
-
-NS_IMPL_ADDREF(nsRDFArrayAssertionCursor);
-NS_IMPL_RELEASE(nsRDFArrayAssertionCursor);
-
-NS_IMETHODIMP
-nsRDFArrayAssertionCursor::QueryInterface(REFNSIID iid, void** result)
-{
-    if (!result)
-        return NS_ERROR_NULL_POINTER;
-
-    if (iid.Equals(nsIRDFAssertionCursor::IID())) {
-        *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsRDFArrayCursor::QueryInterface(iid, result);
 }
 
 NS_IMETHODIMP 
@@ -256,6 +215,24 @@ NS_IMETHODIMP nsRDFSingletonAssertionCursor::GetTruthValue(PRBool *aTruthValue)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsRDFArrayArcsCursor::nsRDFArrayArcsCursor(nsIRDFDataSource* aDataSource,
+                                           nsIRDFNode* node,
+                                           nsIRDFResource* predicate,
+                                           nsISupportsArray* arcs)
+    : nsRDFArrayCursor(aDataSource, arcs), mNode(node), mPredicate(predicate)
+{
+    NS_ADDREF(mNode);
+    NS_ADDREF(mPredicate);
+}
+
+nsRDFArrayArcsCursor::~nsRDFArrayArcsCursor()
+{
+    NS_RELEASE(mNode);
+    NS_RELEASE(mPredicate);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 nsRDFEnumeratorCursor::nsRDFEnumeratorCursor(nsIRDFDataSource* aDataSource,
                                              nsIEnumerator* valueEnumerator)
     : mDataSource(aDataSource), mEnum(valueEnumerator)
@@ -327,23 +304,6 @@ nsRDFEnumeratorAssertionCursor::~nsRDFEnumeratorAssertionCursor()
     NS_RELEASE(mPredicate);
 }
 
-NS_IMPL_ADDREF(nsRDFEnumeratorAssertionCursor);
-NS_IMPL_RELEASE(nsRDFEnumeratorAssertionCursor);
-
-NS_IMETHODIMP
-nsRDFEnumeratorAssertionCursor::QueryInterface(REFNSIID iid, void** result)
-{
-    if (!result)
-        return NS_ERROR_NULL_POINTER;
-
-    if (iid.Equals(nsIRDFAssertionCursor::IID())) {
-        *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsRDFEnumeratorCursor::QueryInterface(iid, result);
-}
-
 NS_IMETHODIMP 
 nsRDFEnumeratorAssertionCursor::GetSubject(nsIRDFResource* *aSubject)
 {
@@ -368,6 +328,24 @@ NS_IMETHODIMP nsRDFEnumeratorAssertionCursor::GetTruthValue(PRBool *aTruthValue)
 {
     *aTruthValue = mTruthValue;
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsRDFEnumeratorArcsCursor::nsRDFEnumeratorArcsCursor(nsIRDFDataSource* aDataSource,
+                                                     nsIRDFNode* node,
+                                                     nsIRDFResource* predicate,
+                                                     nsIEnumerator* arcs)
+    : nsRDFEnumeratorCursor(aDataSource, arcs), mNode(node), mPredicate(predicate)
+{
+    NS_ADDREF(mNode);
+    NS_ADDREF(mPredicate);
+}
+
+nsRDFEnumeratorArcsCursor::~nsRDFEnumeratorArcsCursor()
+{
+    NS_RELEASE(mNode);
+    NS_RELEASE(mPredicate);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
