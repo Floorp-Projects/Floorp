@@ -1910,7 +1910,8 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   readSize = tempFile.read(readBuf, readSize);
   tempFile.close();
 
-  sigData.AssignWithConversion(readBuf);
+  if (NS_FAILED(ConvertToUnicode(nsMsgI18NFileSystemCharset(), readBuf, sigData)))
+    sigData.AssignWithConversion(readBuf);
   PR_FREEIF(readBuf);
   return NS_OK;
 }
