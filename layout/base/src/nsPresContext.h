@@ -61,7 +61,7 @@ public:
 
   // nsIPresContext methods
   NS_IMETHOD Init(nsIDeviceContext* aDeviceContext);
-  NS_IMETHOD Stop(void);
+  NS_IMETHOD Stop(PRBool aStopChrome = PR_TRUE);
   NS_IMETHOD SetShell(nsIPresShell* aShell);
   NS_IMETHOD GetShell(nsIPresShell** aResult);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
@@ -192,6 +192,7 @@ protected:
   nsImageAnimation      mImageAnimationMode;
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
   PRPackedBool          mStopped;                 // loading stopped
+  PRPackedBool          mStopChrome;              // should we stop chrome?
   PRUint8               mDefaultDirection;
 
 #ifdef DEBUG

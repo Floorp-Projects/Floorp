@@ -683,7 +683,8 @@ DocumentViewerImpl::Stop(void)
   }
 
   if (mPresContext) {
-    mPresContext->Stop();
+    // stop everything but the chrome.
+    mPresContext->Stop(PR_FALSE);
   }
   return NS_OK;
 }
