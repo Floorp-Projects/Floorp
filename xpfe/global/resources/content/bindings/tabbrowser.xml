@@ -1551,6 +1551,9 @@
 
       <handler event="DOMWindowClose">
         <![CDATA[
+          if (!event.isTrusted)
+            return;
+
           const browsers = this.browsers;
           if (browsers.length == 1)
             return;
