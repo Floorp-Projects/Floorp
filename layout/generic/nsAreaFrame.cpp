@@ -513,22 +513,16 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   // may have 'auto' for an offset
   ReflowAbsoluteFrames(aPresContext, reflowState);
 
-  // Compute our desired size taking into account any floaters. Note
-  // that if this frame has a height specified by CSS then we don't do
-  // this!
-  if ((nsnull != mSpaceManager) &&
-      (NS_UNCONSTRAINEDSIZE == reflowState.computedHeight)) {
-    nscoord floaterYMost;
-    mSpaceManager->YMost(floaterYMost);
-    if (floaterYMost > 0) {
-      // What we need to check for is if the bottom most floater extends below
-      // the content area of the desired size
-      nscoord   contentYMost = aDesiredSize.height -
-                               aReflowState.mComputedBorderPadding.bottom;
-  
-      if (floaterYMost > contentYMost) {
-        aDesiredSize.height += floaterYMost - contentYMost;
-      }
+  // Compute our desired size taking into account anything that sticks
+  // outside our new size (for example, floaters). Note that if this
+  // frame has a height specified by CSS then we don't do this!
+  if ((NS_UNCONSTRAINEDSIZE == reflowState.computedHeight) &&
+      (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
+    nscoord contentYMost = aDesiredSize.height -
+      aReflowState.mComputedBorderPadding.bottom;
+    nscoord yMost = aDesiredSize.mCombinedArea.YMost();
+    if (yMost > contentYMost) {
+      aDesiredSize.height += yMost - contentYMost;
     }
   }
 
