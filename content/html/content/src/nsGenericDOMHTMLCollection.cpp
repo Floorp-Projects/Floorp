@@ -21,6 +21,8 @@
  */
 #include "nslayout.h"
 #include "nsGenericDOMHTMLCollection.h"
+#include "nsIDOMClassInfo.h"
+#include "nsContentUtils.h"
 
 
 nsGenericDOMHTMLCollection::nsGenericDOMHTMLCollection() 
@@ -35,7 +37,14 @@ nsGenericDOMHTMLCollection::~nsGenericDOMHTMLCollection()
 NS_IMPL_ADDREF(nsGenericDOMHTMLCollection)
 NS_IMPL_RELEASE(nsGenericDOMHTMLCollection)
 
+// XPConnect interface list for nsGenericDOMHTMLCollection
+NS_CLASSINFO_MAP_BEGIN(HTMLGenericCollection)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+NS_CLASSINFO_MAP_END
+
 NS_INTERFACE_MAP_BEGIN(nsGenericDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(HTMLGenericCollection,
+                                                     HTMLCollection)
 NS_INTERFACE_MAP_END
