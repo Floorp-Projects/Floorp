@@ -25,7 +25,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-D_IMPL_NS_HTML 
 
 CPP_OBJS=				\
-	.\$(OBJDIR)\dlldeps.obj		\
 	.\$(OBJDIR)\nsContentDLF.obj	\
 	.\$(OBJDIR)\nsContentFactory.obj	\
 	.\$(OBJDIR)\nsContentModule.obj	\

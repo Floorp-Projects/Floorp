@@ -70,7 +70,6 @@
 #include "nsString.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
-#include "nsDOMEventsIIDs.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"

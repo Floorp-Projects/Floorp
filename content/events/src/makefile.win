@@ -33,7 +33,6 @@ CPPSRCS=    nsEventListenerManager.cpp  \
 	    nsEventStateManager.cpp  \
 	    nsDOMEvent.cpp		\
 	    nsDOMMutationEvent.cpp \
-	    nsDOMEventsIIDs.cpp		\
 	    nsPrivateTextRange.cpp		\
 	    $(NULL)
 
@@ -41,12 +40,9 @@ CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
 	    .\$(OBJDIR)\nsDOMMutationEvent.obj \
-	    .\$(OBJDIR)\nsDOMEventsIIDs.obj	    \
 	    .\$(OBJDIR)\nsPrivateTextRange.obj	    \
 	    $(NULL)
 
-
-EXPORTS= nsDOMEventsIIDs.h
 
 LINCS= -I..\..\html\base\src -I..\..\xul\content\src -I..\..\base\src
 

@@ -44,10 +44,6 @@ CPPSRCS		= \
 		nsContentHTTPStartup.cpp \
 		$(NULL)
 
-ifndef MKSHLIB_FORCE_ALL
-CPPSRCS		+= dlldeps.cpp
-endif
-
 EXPORTS		= nsContentCID.h
 
 SHARED_LIBRARY_LIBS = \

@@ -31,7 +31,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsDOMEventsIIDs.h"
 #include "nsIDocument.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLContentContainer.h"

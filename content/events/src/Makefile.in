@@ -34,13 +34,8 @@ CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
 		nsDOMEvent.cpp \
-    nsDOMMutationEvent.cpp \
-		nsDOMEventsIIDs.cpp \
+		nsDOMMutationEvent.cpp \
 		nsPrivateTextRange.cpp \
-		$(NULL)
-
-EXPORTS		= \
-		nsDOMEventsIIDs.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
