@@ -729,7 +729,7 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
     {
        nsRange* theRange;
        PRInt32 loop = 0;
-       while (NULL != (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))))
+       while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))
        {
           nsCOMPtr<nsIDOMNode> domNode;
           res = GetDOMNodeFromContent(cN, &domNode);
@@ -1489,7 +1489,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   if (NS_SUCCEEDED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  while (NULL != (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
+  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1536,7 +1536,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   // any ranges that are in the parentNode may need to have offsets updated
-  while (NULL != (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
+  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1612,7 +1612,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   // any ranges that are in the textNode may need to have offsets updated
-  while (NULL != (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))))
+  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
