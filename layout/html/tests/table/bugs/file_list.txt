@@ -194,6 +194,8 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug4520.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4523.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4527.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4576.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug46368-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug46368-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4739.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4803.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug4849.html
