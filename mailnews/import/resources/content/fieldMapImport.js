@@ -220,7 +220,7 @@ function FetchSampleData()
   var data = top.addInterface.GetData( "sampleData-"+num);
   var result = false;
   if (data != null) {
-    data = data.QueryInterface( Components.interfaces.nsISupportsWString);
+    data = data.QueryInterface( Components.interfaces.nsISupportsString);
     if (data != null) {
       ShowSampleData( data.data);
       result = true;

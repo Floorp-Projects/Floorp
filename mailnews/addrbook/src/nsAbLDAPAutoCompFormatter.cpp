@@ -320,12 +320,12 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     
     // pass the alert message in as the param; if that fails, proceed anyway
     //
-    nsCOMPtr<nsISupportsWString> alert(do_CreateInstance(
-                                           NS_SUPPORTS_WSTRING_CONTRACTID,
+    nsCOMPtr<nsISupportsString> alert(do_CreateInstance(
+                                           NS_SUPPORTS_STRING_CONTRACTID,
                                            &rv));
     if (NS_FAILED(rv)) {
         NS_WARNING("nsAbLDAPAutoCompFormatter::FormatException(): "
-                   "could not create nsISupportsWString");
+                   "could not create nsISupportsString");
     } else {
         rv = alert->SetData(alertMsg.get());
         if (NS_FAILED(rv)) {

@@ -653,12 +653,12 @@ ConvertContractIDKeyToString(PLDHashTable *table,
                              void *data, nsISupports **retval)
 {
     nsresult rv;
-    nsCOMPtr<nsISupportsString> wrapper;
+    nsCOMPtr<nsISupportsCString> wrapper;
 
     nsComponentManagerImpl *cm = NS_STATIC_CAST(nsComponentManagerImpl *, data);
 
-    rv = cm->CreateInstanceByContractID(NS_SUPPORTS_STRING_CONTRACTID, nsnull,
-                NS_GET_IID(nsISupportsString), getter_AddRefs(wrapper));
+    rv = cm->CreateInstanceByContractID(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull,
+                NS_GET_IID(nsISupportsCString), getter_AddRefs(wrapper));
 
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1303,7 +1303,7 @@ nsComponentManagerImpl::WriteCategoryManagerToRegistry(PRFileDesc* fd)
     nsCOMPtr<nsISimpleEnumerator> outerEnum;
     nsCOMPtr<nsISimpleEnumerator> innerEnum;
     nsCOMPtr<nsISupports> supports;
-    nsCOMPtr<nsISupportsString> supStr;
+    nsCOMPtr<nsISupportsCString> supStr;
 
     if (!mCategoryManager)
         return NS_OK;
@@ -3063,7 +3063,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
         if (NS_FAILED(loaderEnum->GetNext(getter_AddRefs(supports))))
             continue;
 
-        nsCOMPtr<nsISupportsString> supStr = do_QueryInterface(supports);
+        nsCOMPtr<nsISupportsCString> supStr = do_QueryInterface(supports);
         if (!supStr)
             continue;
         

@@ -72,7 +72,7 @@ static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
+static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
@@ -102,8 +102,8 @@ public:
 	/* boolean WantsProgress (); */
 	NS_IMETHOD WantsProgress(PRBool *_retval);
 
-    /* boolean BeginImport (in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome); */
-    NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
+    /* boolean BeginImport (in nsISupportsString successLog, in nsISupportsString errorLog, in boolean isAddrLocHome); */
+    NS_IMETHOD BeginImport(nsISupportsString *successLog, nsISupportsString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
 
 	/* boolean ContinueImport (); */
 	NS_IMETHOD ContinueImport(PRBool *_retval);
@@ -120,7 +120,7 @@ private:
 	void	GetDefaultFieldMap( void);
 
 public:
-	static void	SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError);
+	static void	SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError);
 	static void ReportError( PRUnichar *pName, nsString *pStream);
 
 private:
@@ -133,8 +133,8 @@ private:
 	PRBool						m_gotLocation;
 	PRBool						m_found;
 	PRBool						m_userVerify;
-	nsISupportsWString *		m_pSuccessLog;
-	nsISupportsWString *		m_pErrorLog;
+	nsISupportsString *		m_pSuccessLog;
+	nsISupportsString *		m_pErrorLog;
 	PRUint32					m_totalSize;
 	PRBool						m_doImport;
 	AddressThreadData *			m_pThreadData;
@@ -152,8 +152,8 @@ public:
 	nsISupportsArray *			books;
 	nsIImportAddressBooks *		addressImport;
 	nsIImportFieldMap *			fieldMap;
-	nsISupportsWString *		successLog;
-	nsISupportsWString *		errorLog;
+	nsISupportsString *		successLog;
+	nsISupportsString *		errorLog;
 	char *						pDestinationUri;
 	PRBool                      bAddrLocInput ;
 
@@ -303,8 +303,8 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 		}
 		IMPORT_LOG1( "Requesting sample data #: %ld\n", (long)rNum);
 		if (m_pInterface) {
-			nsCOMPtr<nsISupportsWString>	data;
-			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsWString), getter_AddRefs( data));
+			nsCOMPtr<nsISupportsString>	data;
+			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsString), getter_AddRefs( data));
 			if (NS_FAILED( rv))
 				return( rv);
 			PRUnichar *	pData = nsnull;
@@ -541,7 +541,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::WantsProgress(PRBool *_retval)
 	return( NS_OK);
 }
 
-void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError)
+void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError)
 {
 	nsString	str;
 	PRUnichar *	pStr = nsnull;
@@ -572,7 +572,7 @@ void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, n
 	}	
 }
 
-NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval)
+NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsString *successLog, nsISupportsString *errorLog, PRBool isAddrLocHome, PRBool *_retval)
 {
 	NS_PRECONDITION(_retval != nsnull, "null ptr");
     if (!_retval)

@@ -885,7 +885,7 @@ function setupLdapAutocompleteSession()
 
             try {
                 serverURL.spec = sPrefs.getComplexValue(autocompleteDirectory +".uri",
-                                           Components.interfaces.nsISupportsWString).data;
+                                           Components.interfaces.nsISupportsString).data;
             } catch (ex) {
                 dump("ERROR: " + ex + "\n");
             }
@@ -897,7 +897,7 @@ function setupLdapAutocompleteSession()
             try {
                 login = sPrefs.getComplexValue(
                     autocompleteDirectory + ".auth.dn",
-                    Components.interfaces.nsISupportsWString).data;
+                    Components.interfaces.nsISupportsString).data;
             } catch (ex) {
                 // if we don't have this pref, no big deal
             }
@@ -952,7 +952,7 @@ function setupLdapAutocompleteSession()
                 ldapFormatter.nameFormat = 
                     sPrefs.getComplexValue(autocompleteDirectory + 
                                       ".autoComplete.nameFormat",
-                                      Components.interfaces.nsISupportsWString).data;
+                                      Components.interfaces.nsISupportsString).data;
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsAbLDAPAutoCompFormatter use its default.
@@ -964,7 +964,7 @@ function setupLdapAutocompleteSession()
                 ldapFormatter.addressFormat = 
                     sPrefs.getComplexValue(autocompleteDirectory + 
                                       ".autoComplete.addressFormat",
-                                      Components.interfaces.nsISupportsWString).data;
+                                      Components.interfaces.nsISupportsString).data;
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsAbLDAPAutoCompFormatter use its default.
@@ -988,7 +988,7 @@ function setupLdapAutocompleteSession()
                     //
                     ldapFormatter.commentFormat = sPrefs.getComplexValue(
                                 autocompleteDirectory + ".description",
-                                Components.interfaces.nsISupportsWString).data;
+                                Components.interfaces.nsISupportsString).data;
                     break;
 
                 case 2:
@@ -998,7 +998,7 @@ function setupLdapAutocompleteSession()
                         ldapFormatter.commentFormat = 
                             sPrefs.getComplexValue(autocompleteDirectory + 
                                         ".autoComplete.commentFormat",
-                                        Components.interfaces.nsISupportsWString).data;
+                                        Components.interfaces.nsISupportsString).data;
                     } catch (innerException) {
                         // if nothing has been specified, use the ldap
                         // organization field
@@ -1028,7 +1028,7 @@ function setupLdapAutocompleteSession()
                 LDAPSession.outputFormat = 
                     sPrefs.getComplexValue(autocompleteDirectory + 
                                       ".autoComplete.outputFormat",
-                                      Components.interfaces.nsISupportsWString).data;
+                                      Components.interfaces.nsISupportsString).data;
 
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -1040,7 +1040,7 @@ function setupLdapAutocompleteSession()
             try { 
                 LDAPSession.filterTemplate = sPrefs.getComplexValue(
                     autocompleteDirectory + ".autoComplete.filterTemplate",
-                    Components.interfaces.nsISupportsWString).data;
+                    Components.interfaces.nsISupportsString).data;
 
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let

@@ -120,7 +120,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
     flavorList->GetElementAt(i,getter_AddRefs(genericFlavor));
 
-    nsCOMPtr<nsISupportsString> currentFlavor(do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
 
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
@@ -179,7 +179,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
     nsCOMPtr<nsISupports> genericFlavor;
 
     flavorList->GetElementAt(i,getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsString> currentFlavor(do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
 
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
@@ -249,7 +249,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
 
     aFlavorList->GetElementAt(i,getter_AddRefs(genericFlavor));
 
-    nsCOMPtr<nsISupportsString> currentFlavor(do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
 

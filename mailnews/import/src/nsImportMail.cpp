@@ -77,7 +77,7 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
+static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -106,8 +106,8 @@ public:
 	/* boolean WantsProgress (); */
 	NS_IMETHOD WantsProgress(PRBool *_retval);
 
-    /* boolean BeginImport (in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome); */
-    NS_IMETHODIMP BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
+    /* boolean BeginImport (in nsISupportsString successLog, in nsISupportsString errorLog, in boolean isAddrLocHome); */
+    NS_IMETHODIMP BeginImport(nsISupportsString *successLog, nsISupportsString *errorLog, PRBool isAddrLocHome, PRBool *_retval) ;
 
 	/* boolean ContinueImport (); */
 	NS_IMETHOD ContinueImport(PRBool *_retval);
@@ -123,10 +123,10 @@ private:
 	void	GetDefaultMailboxes( void);
 	void	GetDefaultLocation( void);
 	void	GetDefaultDestination( void);
-	void	GetMailboxName( PRUint32 index, nsISupportsWString *pStr);
+	void	GetMailboxName( PRUint32 index, nsISupportsString *pStr);
 
 public:
-	static void	SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError);
+	static void	SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError);
 	static void ReportError( PRInt32 id, const PRUnichar *pName, nsString *pStream);
 
 private:
@@ -140,8 +140,8 @@ private:
 	PRBool				m_userVerify;
 	nsIImportMail *		m_pInterface;
 	nsISupportsArray *	m_pMailboxes;
-	nsISupportsWString *m_pSuccessLog;
-	nsISupportsWString *m_pErrorLog;
+	nsISupportsString *m_pSuccessLog;
+	nsISupportsString *m_pErrorLog;
 	PRUint32			m_totalSize;
 	PRBool				m_doImport;
 	ImportThreadData *	m_pThreadData;
@@ -159,8 +159,8 @@ public:
 	PRBool					ownsDestRoot;
 	nsISupportsArray *		boxes;
 	nsIImportMail *			mailImport;
-	nsISupportsWString *	successLog;
-	nsISupportsWString *	errorLog;
+	nsISupportsString *	successLog;
+	nsISupportsString *	errorLog;
 	PRUint32				currentMailbox;
 
 	ImportThreadData();
@@ -271,10 +271,10 @@ NS_IMETHODIMP nsImportGenericMail::GetData(const char *dataId, nsISupports **_re
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "currentMailbox")) {
-		// create an nsISupportsWString, get the current mailbox
+		// create an nsISupportsString, get the current mailbox
 		// name being imported and put it in the string
-		nsCOMPtr<nsISupportsWString>	data;
-		rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsWString), getter_AddRefs( data));
+		nsCOMPtr<nsISupportsString>	data;
+		rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, NS_GET_IID(nsISupportsString), getter_AddRefs( data));
 		if (NS_FAILED( rv))
 			return( rv);
 		if (m_pThreadData) {
@@ -323,9 +323,9 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 		if (m_pName)
 			nsCRT::free( m_pName);
 		m_pName = nsnull;
-		nsCOMPtr<nsISupportsWString> nameString;
+		nsCOMPtr<nsISupportsString> nameString;
 		if (item) {
-			item->QueryInterface( NS_GET_IID(nsISupportsWString), getter_AddRefs(nameString));
+			item->QueryInterface( NS_GET_IID(nsISupportsString), getter_AddRefs(nameString));
 			rv = nameString->GetData(&m_pName);
 		}
 	}
@@ -463,7 +463,7 @@ NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
 	return( NS_OK);
 }
 
-void nsImportGenericMail::GetMailboxName( PRUint32 index, nsISupportsWString *pStr)
+void nsImportGenericMail::GetMailboxName( PRUint32 index, nsISupportsString *pStr)
 {
 	if (m_pMailboxes) {
 		nsISupports *pSupports = m_pMailboxes->ElementAt( index);
@@ -482,7 +482,7 @@ void nsImportGenericMail::GetMailboxName( PRUint32 index, nsISupportsWString *pS
 	}		
 }
 
-NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool isAddrLocHome, PRBool *_retval)
+NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsString *successLog, nsISupportsString *errorLog, PRBool isAddrLocHome, PRBool *_retval)
 {
 	NS_PRECONDITION(_retval != nsnull, "null ptr");
     if (!_retval)
@@ -639,7 +639,7 @@ void nsImportGenericMail::ReportError( PRInt32 id, const PRUnichar *pName, nsStr
 }
 
 
-void nsImportGenericMail::SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError)
+void nsImportGenericMail::SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError)
 {
 	nsString	str;
 	PRUnichar *	pStr = nsnull;

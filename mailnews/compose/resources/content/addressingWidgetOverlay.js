@@ -770,7 +770,7 @@ function DropOnAddressingWidget(event)
     var len = new Object();
     trans.getAnyTransferData ( bestFlavor, dataObj, len );
     if ( dataObj )  
-      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+      dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
     if ( !dataObj ) 
       continue;
 
@@ -834,14 +834,14 @@ function awRecipientErrorCommand(errItem, element)
 
     // try and get the string of the specific error to contruct the complete
     // err msg, otherwise fall back to something generic.  This message is
-    // handed to us as an nsISupportsWString in the param slot of the 
+    // handed to us as an nsISupportsString in the param slot of the 
     // autocomplete error item, by agreement documented in 
     // nsILDAPAutoCompFormatter.idl
     //
     var specificErrString = "";
     try {
 	var specificError = errItem.param.QueryInterface(
-	    Components.interfaces.nsISupportsWString);
+	    Components.interfaces.nsISupportsString);
 	specificErrString = specificError.data;
     } catch (ex) {
     }

@@ -75,19 +75,19 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create scriptable versions of our strings that we can store in our nsISupportsArray....
-  nsCOMPtr<nsISupportsString> scriptableImageUrl (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  nsCOMPtr<nsISupportsCString> scriptableImageUrl (do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableImageUrl, NS_ERROR_FAILURE);
 
   scriptableImageUrl->SetData(aImageUrl);
   argsArray->AppendElement(scriptableImageUrl);
 
-  nsCOMPtr<nsISupportsWString> scriptableAlertTitle (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> scriptableAlertTitle (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertTitle, NS_ERROR_FAILURE);
 
   scriptableAlertTitle->SetData(aAlertTitle);
   argsArray->AppendElement(scriptableAlertTitle);
 
-  nsCOMPtr<nsISupportsWString> scriptableAlertText (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> scriptableAlertText (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertText, NS_ERROR_FAILURE);
 
   scriptableAlertText->SetData(aAlertText);
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
   scriptableIsClickable->SetData(aAlertTextClickable);
   argsArray->AppendElement(scriptableIsClickable);
 
-  nsCOMPtr<nsISupportsWString> scriptableAlertCookie (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> scriptableAlertCookie (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertCookie, NS_ERROR_FAILURE);
 
   scriptableAlertCookie->SetData(aAlertCookie);

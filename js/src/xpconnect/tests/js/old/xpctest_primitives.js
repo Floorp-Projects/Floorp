@@ -33,8 +33,8 @@ var same = Object;
 // 6) function to use for comparing strings (null means use default compare) 
 var data = [
  ["supports-id"      ,"nsISupportsID"      ,iface_test,i_str ,eqfn  ,  null],
- ["supports-string"  ,"nsISupportsString"  ,"foo"     ,same  ,null  ,  null],
- ["supports-wstring" ,"nsISupportsWString" ,"bar"     ,same  ,null  ,  null],
+ ["supports-cstring"  ,"nsISupportsCString"  ,"foo"     ,same  ,null  ,  null],
+ ["supports-string" ,"nsISupportsString" ,"bar"     ,same  ,null  ,  null],
  ["supports-PRBool"  ,"nsISupportsPRBool"  ,true      ,same  ,null  ,  null],
  ["supports-PRBool"  ,"nsISupportsPRBool"  ,false     ,same  ,null  ,  null],
  ["supports-PRUint8" ,"nsISupportsPRUint8" ,7         ,same  ,null  ,  null],

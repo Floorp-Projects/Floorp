@@ -1057,8 +1057,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           if (NS_FAILED(rv)) 
             return NS_ERROR_FAILURE;
         } else {
-          // nsISupportsWString?
-          nsCOMPtr<nsISupportsWString> wstr(do_QueryInterface(supports));
+          // nsISupportsString?
+          nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
           if (wstr) {
             wstr->GetData(getter_Copies(serial));
           } else {

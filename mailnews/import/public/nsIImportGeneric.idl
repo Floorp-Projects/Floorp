@@ -44,7 +44,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindowInternal;
-interface nsISupportsWString;
+interface nsISupportsString;
 
 [scriptable, uuid(9b5c20c0-2348-11d3-a206-00a0cc26da63)]
 interface nsIImportGeneric : nsISupports
@@ -95,7 +95,7 @@ interface nsIImportGeneric : nsISupports
 			failure of the import.  Failure can be reported even if WantsProgress
 			returned TRUE. 
 		 */
-	boolean         BeginImport( in nsISupportsWString successLog, in nsISupportsWString errorLog, in boolean isAddrLocHome);	
+	boolean         BeginImport( in nsISupportsString successLog, in nsISupportsString errorLog, in boolean isAddrLocHome);	
 		/*
 			If WantsProgress returned TRUE then this will indicate if the import should
 			continue.  If this returns FALSE then no other methods should be called

@@ -320,7 +320,7 @@ nsDragService::GetData               (nsITransferable * aTransferable,
     return NS_ERROR_INVALID_ARG;
 
   // get flavor list that includes all acceptable flavors (including
-  // ones obtained through conversion). Flavors are nsISupportsStrings
+  // ones obtained through conversion). Flavors are nsISupportsCStrings
   // so that they can be seen from JS.
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsISupportsArray> flavorList;
@@ -341,7 +341,7 @@ nsDragService::GetData               (nsITransferable * aTransferable,
     nsCOMPtr<nsISupports> genericWrapper;
     // there is always one element if it's a list
     flavorList->GetElementAt(0, getter_AddRefs(genericWrapper));
-    nsCOMPtr<nsISupportsString> currentFlavor;
+    nsCOMPtr<nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
@@ -381,7 +381,7 @@ nsDragService::GetData               (nsITransferable * aTransferable,
   for ( i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericWrapper;
     flavorList->GetElementAt(i,getter_AddRefs(genericWrapper));
-    nsCOMPtr<nsISupportsString> currentFlavor;
+    nsCOMPtr<nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {
       // find our gtk flavor
@@ -557,7 +557,7 @@ nsDragService::IsDataFlavorSupported (const char *aDataFlavor,
           for ( PRUint32 flavorIndex = 0; flavorIndex < numFlavors ; ++flavorIndex ) {
             nsCOMPtr<nsISupports> genericWrapper;
             flavorList->GetElementAt (flavorIndex, getter_AddRefs(genericWrapper));
-            nsCOMPtr<nsISupportsString> currentFlavor;
+            nsCOMPtr<nsISupportsCString> currentFlavor;
             currentFlavor = do_QueryInterface(genericWrapper);
             if (currentFlavor) {
               nsXPIDLCString flavorStr;
@@ -811,7 +811,7 @@ nsDragService::GetSourceList(void)
              ++flavorIndex ) {
           nsCOMPtr<nsISupports> genericWrapper;
           flavorList->GetElementAt(flavorIndex, getter_AddRefs(genericWrapper));
-          nsCOMPtr<nsISupportsString> currentFlavor;
+          nsCOMPtr<nsISupportsCString> currentFlavor;
           currentFlavor = do_QueryInterface(genericWrapper);
           if (currentFlavor) {
             nsXPIDLCString flavorStr;
@@ -848,7 +848,7 @@ nsDragService::GetSourceList(void)
              ++flavorIndex ) {
           nsCOMPtr<nsISupports> genericWrapper;
           flavorList->GetElementAt(flavorIndex, getter_AddRefs(genericWrapper));
-          nsCOMPtr<nsISupportsString> currentFlavor;
+          nsCOMPtr<nsISupportsCString> currentFlavor;
           currentFlavor = do_QueryInterface(genericWrapper);
           if (currentFlavor) {
             nsXPIDLCString flavorStr;

@@ -600,7 +600,7 @@ nsDataObj :: IsInternetShortcut ( )
   for ( PRUint32 i = 0;i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
@@ -814,7 +814,7 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericURL;
   if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
-    nsCOMPtr<nsISupportsWString> urlObject ( do_QueryInterface(genericURL) );
+    nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
       nsXPIDLString url;
       urlObject->GetData ( getter_Copies(url) );
@@ -854,7 +854,7 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericURL;
   if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
-    nsCOMPtr<nsISupportsWString> urlObject ( do_QueryInterface(genericURL) );
+    nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
       nsXPIDLString url;
       nsAutoString holder;

@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.26 $
+ *  Version: $Revision: 1.27 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.26 2002/06/16 06:17:54 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.27 2002/08/06 00:52:09 alecf%netscape.com Exp $
  */
 
 /*
@@ -360,9 +360,9 @@ nsXmlRpcClient.prototype = {
                     'nsISupportsPRBool');
 
             case this.STRING:
-                uuid.value = Components.interfaces.nsISupportsString
+                uuid.value = Components.interfaces.nsISupportsCString
                 return createInstance(SUPPORTSID + 'string;1',
-                    'nsISupportsString');
+                    'nsISupportsCString');
 
             case this.DOUBLE:
                 uuid.value = Components.interfaces.nsISupportsDouble
@@ -585,7 +585,7 @@ nsXmlRpcClient.prototype = {
         } catch(e) {}
         
         try {
-            obj.QueryInterface(Components.interfaces.nsISupportsString);
+            obj.QueryInterface(Components.interfaces.nsISupportsCString);
             return 'String';
         } catch(e) {}
         

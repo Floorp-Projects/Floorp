@@ -46,7 +46,7 @@ const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
 const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
 const XULSORTSERVICE_CONTRACTID = "@mozilla.org/xul/xul-sort-service;1";
 const ARRAY_CONTRACTID          = "@mozilla.org/supports-array;1";
-const WSTRING_CONTRACTID        = "@mozilla.org/supports-wstring;1";
+const WSTRING_CONTRACTID        = "@mozilla.org/supports-string;1";
 
 const NC_NS                 = "http://home.netscape.com/NC-rdf#";
 const NC_NAME               = NC_NS + "Name";
@@ -60,7 +60,7 @@ const nsIXULSortService     = Components.interfaces.nsIXULSortService;
 const nsIRDFService         = Components.interfaces.nsIRDFService;
 const nsIRDFLiteral         = Components.interfaces.nsIRDFLiteral;
 const nsISupportsArray      = Components.interfaces.nsISupportsArray;
-const nsISupportsWString    = Components.interfaces.nsISupportsWString;
+const nsISupportsString    = Components.interfaces.nsISupportsString;
 
 // By the time this runs, The 'HTTPIndex' variable will have been
 // magically set on the global object by the native code.
@@ -259,13 +259,13 @@ function BeginDragTree (event)
     var transferable = 
       Components.classes[TRANSFERABLE_CONTRACTID].createInstance(nsITransferable);
     var genDataURL = 
-      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsString);
     var genDataHTML = 
-      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsString);
     var genData = 
-      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsString);
     var genDataURL = 
-      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsString);
 
     transferable.addDataFlavor("text/x-moz-url");
     transferable.addDataFlavor("text/html");

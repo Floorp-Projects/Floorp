@@ -49,7 +49,7 @@ function fillSettings()
   try {
     var prefValue = 
       gPrefInt.getComplexValue(gCurrentDirectoryString + ".description",
-                               Components.interfaces.nsISupportsWString).data;
+                               Components.interfaces.nsISupportsString).data;
   } catch(ex) {
     prefValue="";
   }
@@ -57,7 +57,7 @@ function fillSettings()
   document.getElementById("description").value = prefValue;
   ldapUrl.spec = gPrefInt.getComplexValue(gCurrentDirectoryString +".uri",
                                           Components.interfaces.
-                                          nsISupportsWString).data;
+                                          nsISupportsString).data;
 
   document.getElementById("hostname").value = ldapUrl.host;
   document.getElementById("port").value = ldapUrl.port;
@@ -91,7 +91,7 @@ function fillSettings()
   try {
     prefValue = 
       gPrefInt.getComplexValue(gCurrentDirectoryString + ".auth.dn",
-                               Components.interfaces.nsISupportsWString).data;
+                               Components.interfaces.nsISupportsString).data;
   } catch(ex) {
     prefValue="";
   }
@@ -180,7 +180,7 @@ function createUniqueServername()
     temp = "";
     try{ 
       temp = gPrefInt.getComplexValue(gPrefstring+gPref_string_desc+".description",
-                                      Components.interfaces.nsISupportsWString).data;
+                                      Components.interfaces.nsISupportsString).data;
     } catch(e){}
     if (temp)
       gPref_string_desc += str[0];
@@ -252,11 +252,11 @@ function onAccept()
       }
 
       pref_string_title = gPref_string_desc + "." + "description";
-      var str = Components.classes["@mozilla.org/supports-wstring;1"]
-        .createInstance(Components.interfaces.nsISupportsWString);
+      var str = Components.classes["@mozilla.org/supports-string;1"]
+        .createInstance(Components.interfaces.nsISupportsString);
       str.data = pref_string_content;
       gPrefInt.setComplexValue(pref_string_title, 
-                               Components.interfaces.nsISupportsWString, str);
+                               Components.interfaces.nsISupportsString, str);
   
       ldapUrl.host = hostname;
       pref_string_content = gLdapService.
@@ -282,11 +282,11 @@ function onAccept()
         ldapUrl.options |= ldapUrl.OPT_SECURE;
       pref_string_title = gPref_string_desc + ".uri";
 
-      var uri = Components.classes["@mozilla.org/supports-wstring;1"]
-        .createInstance(Components.interfaces.nsISupportsWString);
+      var uri = Components.classes["@mozilla.org/supports-string;1"]
+        .createInstance(Components.interfaces.nsISupportsString);
       uri.data = ldapUrl.spec;
       gPrefInt.setComplexValue(pref_string_title,
-                               Components.interfaces.nsISupportsWString, uri);
+                               Components.interfaces.nsISupportsString, uri);
 
       pref_string_content = results;
       pref_string_title = gPref_string_desc + ".maxHits";
@@ -300,11 +300,11 @@ function onAccept()
       }
 
       pref_string_title = gPref_string_desc + ".auth.dn";
-      var dnWString = Components.classes["@mozilla.org/supports-wstring;1"]
-        .createInstance(Components.interfaces.nsISupportsWString);
+      var dnWString = Components.classes["@mozilla.org/supports-string;1"]
+        .createInstance(Components.interfaces.nsISupportsString);
       dnWString.data = dn;
       gPrefInt.setComplexValue(pref_string_title,
-                               Components.interfaces.nsISupportsWString, 
+                               Components.interfaces.nsISupportsString, 
                                dnWString);
 
       // We don't actually allow the password to be saved in the preferences;

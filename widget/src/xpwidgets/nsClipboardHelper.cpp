@@ -88,8 +88,8 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get wStrings to hold clip data
-  nsCOMPtr<nsISupportsWString>
-    data(do_CreateInstance("@mozilla.org/supports-wstring;1", &rv));
+  nsCOMPtr<nsISupportsString>
+    data(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(data, NS_ERROR_FAILURE);
 

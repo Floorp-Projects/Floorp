@@ -38,11 +38,11 @@ var nsPreferences = {
     {
       try
         {
-          var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                              .createInstance(Components.interfaces.nsISupportsWString);
+          var str = Components.classes["@mozilla.org/supports-string;1"]
+                              .createInstance(Components.interfaces.nsISupportsString);
           str.data = aPrefValue;
           this.mPrefService.setComplexValue(aPrefName,
-                                            Components.interfaces.nsISupportsWString, str);
+                                            Components.interfaces.nsISupportsString, str);
         }
       catch(e)
         {
@@ -54,7 +54,7 @@ var nsPreferences = {
       try
         {
           return this.mPrefService.getComplexValue(aPrefName,
-                                                   Components.interfaces.nsISupportsWString).data;
+                                                   Components.interfaces.nsISupportsString).data;
         }
       catch(e)
         {

@@ -75,11 +75,11 @@ function BeginDragTree ( event )
   if ( !trans ) return(false);
 
   var genData = 
-    Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
+    Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
   if (!genData) return(false);
 
   var genDataURL = 
-    Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
+    Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
   if (!genDataURL) return(false);
 
   trans.addDataFlavor("text/unicode");
@@ -307,7 +307,7 @@ function DropOnTree ( event )
     var bestFlavor = new Object();
     var len = new Object();
     trans.getAnyTransferData ( bestFlavor, dataObj, len );
-    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
     if ( !dataObj ) continue;
 
     var sourceID = null;

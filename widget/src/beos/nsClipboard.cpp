@@ -150,7 +150,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
       for (i = 0; i < cnt && rv == NS_OK; i++) {
         nsCOMPtr<nsISupports> genericFlavor;
         dfList->GetElementAt(i, getter_AddRefs(genericFlavor));
-        nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));
+        nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
         if (currentFlavor) {
           nsXPIDLCString flavorStr;
           currentFlavor->ToString(getter_Copies(flavorStr));
@@ -277,7 +277,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, PRInt32 aWh
   for (PRUint32 i = 0; i < cnt; i++) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsString> currentFlavor(do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));

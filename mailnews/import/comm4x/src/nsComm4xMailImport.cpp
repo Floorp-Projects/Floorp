@@ -160,7 +160,7 @@ NS_IMETHODIMP nsComm4xMailImport::GetImportInterface(const char *pImportType, ns
                     nsXPIDLString name;
                     rv = m_pBundle->GetStringFromID( COMM4XMAILIMPORT_NAME, getter_Copies(name));
 
-                    nsCOMPtr<nsISupportsWString> nameString (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
+                    nsCOMPtr<nsISupportsString> nameString (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
                     NS_ENSURE_SUCCESS(rv,rv);
                     nameString->SetData(name.get());
                     pGeneric->SetData("name", nameString);

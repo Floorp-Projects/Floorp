@@ -545,7 +545,7 @@ function DropOnAddressListTree(event)
     var bestFlavor = new Object();
     var len = new Object();
     trans.getAnyTransferData ( bestFlavor, dataObj, len );
-    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
     if ( !dataObj ) continue;
 
     // pull the URL out of the data object

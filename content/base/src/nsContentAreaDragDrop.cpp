@@ -291,7 +291,7 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
   if ( inFlavor.Equals(kUnicodeMime) ) {
     // the data is regular unicode, just go with what we get. It may be a url, it
     // may not be. *shrug*
-    nsCOMPtr<nsISupportsWString> stringData(do_QueryInterface(inDataWrapper));
+    nsCOMPtr<nsISupportsString> stringData(do_QueryInterface(inDataWrapper));
     if ( stringData ) {
       nsXPIDLString data;
       stringData->GetData(getter_Copies(data));
@@ -301,7 +301,7 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
   else if ( inFlavor.Equals(kURLMime) ) {
     // the data is an internet shortcut of the form <url>\n<title>. Strip
     // out the url piece and return that.
-    nsCOMPtr<nsISupportsWString> stringData(do_QueryInterface(inDataWrapper));
+    nsCOMPtr<nsISupportsString> stringData(do_QueryInterface(inDataWrapper));
     if ( stringData ) {
       nsXPIDLString data;
       stringData->GetData(getter_Copies(data));
@@ -912,7 +912,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
     nsAutoString dragData ( inURLString );
     dragData += NS_LITERAL_STRING("\n");
     dragData += inTitleString;
-    nsCOMPtr<nsISupportsWString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+    nsCOMPtr<nsISupportsString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if ( !urlPrimitive )
       return NS_ERROR_FAILURE;
     urlPrimitive->SetData(dragData.get());
@@ -920,7 +920,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   }
   
   // add the full html
-  nsCOMPtr<nsISupportsWString> htmlPrimitive(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> htmlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if ( !htmlPrimitive )
     return NS_ERROR_FAILURE;
   htmlPrimitive->SetData(PromiseFlatString(inHTMLString).get());
@@ -929,7 +929,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   // add the plain (unicode) text. we use the url for text/unicode data if an anchor
   // is being dragged, rather than the title text of the link or the alt text for
   // an anchor image. 
-  nsCOMPtr<nsISupportsWString> textPrimitive(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> textPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if ( !textPrimitive )
     return NS_ERROR_FAILURE;
   textPrimitive->SetData(PromiseFlatString(inIsAnchor ? inURLString : inTitleString).get());

@@ -373,13 +373,13 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     return NS_OK;
   }
 
-  if (aType.Equals(NS_GET_IID(nsISupportsWString))) {
-    nsCOMPtr<nsISupportsWString> theString(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
+  if (aType.Equals(NS_GET_IID(nsISupportsString))) {
+    nsCOMPtr<nsISupportsString> theString(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
       rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String).get());
       if (NS_SUCCEEDED(rv)) {
-        nsISupportsWString *temp = theString;
+        nsISupportsString *temp = theString;
 
         NS_ADDREF(temp);
         *_retval = (void *)temp;
@@ -462,8 +462,8 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     return SetCharPref(aPrefName, descriptorString.get());
   }
 
-  if (aType.Equals(NS_GET_IID(nsISupportsWString))) {
-    nsCOMPtr<nsISupportsWString> theString = do_QueryInterface(aValue);
+  if (aType.Equals(NS_GET_IID(nsISupportsString))) {
+    nsCOMPtr<nsISupportsString> theString = do_QueryInterface(aValue);
 
     if (theString) {
       nsXPIDLString wideString;
@@ -969,7 +969,7 @@ nsPrefLocalizedString::nsPrefLocalizedString()
 
   NS_INIT_REFCNT();
 
-  mUnicodeString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+  mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 }
 
 nsPrefLocalizedString::~nsPrefLocalizedString()
@@ -987,13 +987,13 @@ NS_IMPL_THREADSAFE_RELEASE(nsPrefLocalizedString)
 NS_INTERFACE_MAP_BEGIN(nsPrefLocalizedString)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefLocalizedString)
     NS_INTERFACE_MAP_ENTRY(nsIPrefLocalizedString)
-    NS_INTERFACE_MAP_ENTRY(nsISupportsWString)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsString)
 NS_INTERFACE_MAP_END
 
 nsresult nsPrefLocalizedString::Init()
 {
   nsresult rv;
-  mUnicodeString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+  mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 
   return rv;
 }

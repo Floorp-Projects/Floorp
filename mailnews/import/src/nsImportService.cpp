@@ -615,7 +615,7 @@ nsresult nsImportService::DoDiscover( void)
 	nsCOMPtr<nsISimpleEnumerator> e;
 	rv = catMan->EnumerateCategory( "mailnewsimport", getter_AddRefs( e));
 	if (NS_FAILED( rv)) return( rv);
-	nsCOMPtr<nsISupportsString> contractid;
+	nsCOMPtr<nsISupportsCString> contractid;
 	rv = e->GetNext( getter_AddRefs( contractid));
 	while (NS_SUCCEEDED( rv) && contractid) {
 		nsXPIDLCString	contractIdStr;

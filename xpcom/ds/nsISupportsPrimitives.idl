@@ -49,8 +49,8 @@
 interface nsISupportsPrimitive : nsISupports
 {
     const unsigned short TYPE_ID                = 1;
-    const unsigned short TYPE_STRING            = 2;
-    const unsigned short TYPE_WSTRING           = 3;
+    const unsigned short TYPE_CSTRING           = 2;
+    const unsigned short TYPE_STRING            = 3;
     const unsigned short TYPE_PRBOOL            = 4;
     const unsigned short TYPE_PRUINT8           = 5;
     const unsigned short TYPE_PRUINT16          = 6;
@@ -77,7 +77,7 @@ interface nsISupportsID : nsISupportsPrimitive
 };
 
 [scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
-interface nsISupportsString : nsISupportsPrimitive
+interface nsISupportsCString : nsISupportsPrimitive
 {
     attribute string data;
     string toString();
@@ -103,7 +103,7 @@ interface nsISupportsString : nsISupportsPrimitive
 };
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
-interface nsISupportsWString : nsISupportsPrimitive
+interface nsISupportsString : nsISupportsPrimitive
 {
     attribute wstring data;
     wstring toString();
@@ -243,18 +243,18 @@ interface nsISupportsInterfacePointer : nsISupportsPrimitive
 #define NS_SUPPORTS_ID_CLASSNAME "Supports ID"
 
 // {ACF8DC41-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_STRING_CID \
+#define NS_SUPPORTS_CSTRING_CID \
 { 0xacf8dc41, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_STRING_CONTRACTID "@mozilla.org/supports-string;1"
-#define NS_SUPPORTS_STRING_CLASSNAME "Supports String"
+#define NS_SUPPORTS_CSTRING_CONTRACTID "@mozilla.org/supports-cstring;1"
+#define NS_SUPPORTS_CSTRING_CLASSNAME "Supports String"
 
 // {ACF8DC42-4A25-11d3-9890-006008962422}
-#define NS_SUPPORTS_WSTRING_CID \
+#define NS_SUPPORTS_STRING_CID \
 { 0xacf8dc42, 0x4a25, 0x11d3, \
     { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-#define NS_SUPPORTS_WSTRING_CONTRACTID "@mozilla.org/supports-wstring;1"
-#define NS_SUPPORTS_WSTRING_CLASSNAME "Supports WString"
+#define NS_SUPPORTS_STRING_CONTRACTID "@mozilla.org/supports-string;1"
+#define NS_SUPPORTS_STRING_CLASSNAME "Supports WString"
 
 // {ACF8DC43-4A25-11d3-9890-006008962422}
 #define NS_SUPPORTS_PRBOOL_CID \

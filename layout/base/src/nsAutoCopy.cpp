@@ -100,7 +100,7 @@ nsAutoCopyService::Listen(nsISelection *aDomSelection)
 /*
  * What we do now:
  * On every selection change, we copy to the clipboard anew, creating a
- * HTML buffer, a transferable, an nsISupportsWString and
+ * HTML buffer, a transferable, an nsISupportsString and
  * a huge mess every time.  This is basically what nsPresShell::DoCopy does
  * to move the selection into the clipboard for Edit->Copy.
  * 

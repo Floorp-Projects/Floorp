@@ -141,7 +141,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     for (PRUint32 i=0; i < count; i++) {
         nsCOMPtr<nsISupports> tastesLike;
         flavors->GetElementAt(i, getter_AddRefs(tastesLike));
-        nsCOMPtr<nsISupportsString> flavor = do_QueryInterface(tastesLike);
+        nsCOMPtr<nsISupportsCString> flavor = do_QueryInterface(tastesLike);
 
         if (flavor) {
             nsXPIDLCString flavorStr;
@@ -196,7 +196,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
         nsCOMPtr<nsISupports> genericFlavor;
         flavors->GetElementAt(i, getter_AddRefs(genericFlavor));
 
-        nsCOMPtr<nsISupportsString> currentFlavor;
+        nsCOMPtr<nsISupportsCString> currentFlavor;
         currentFlavor = do_QueryInterface(genericFlavor);
 
         if (currentFlavor) {
@@ -316,7 +316,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
     for (PRUint32 i = 0; i < length && !*_retval; i++) {
         nsCOMPtr<nsISupports> genericFlavor;
         aFlavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-        nsCOMPtr<nsISupportsString> flavorWrapper;
+        nsCOMPtr<nsISupportsCString> flavorWrapper;
         flavorWrapper = do_QueryInterface(genericFlavor);
 
         if (flavorWrapper) {
@@ -436,7 +436,7 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
         if (!item || NS_FAILED(rv))
             return;
         
-        nsCOMPtr<nsISupportsWString> wideString;
+        nsCOMPtr<nsISupportsString> wideString;
         wideString = do_QueryInterface(item);
         if (!wideString)
             return;

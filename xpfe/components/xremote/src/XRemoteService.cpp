@@ -646,8 +646,8 @@ XRemoteService::OpenURL(nsCString &aArgument,
     if (!urlString)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsISupportsWString> arg;
-    arg = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+    nsCOMPtr<nsISupportsString> arg;
+    arg = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
     if (!arg)
       return NS_ERROR_FAILURE;
     

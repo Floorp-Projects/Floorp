@@ -457,7 +457,7 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
 #endif /* DEBUG_CMD_LINE */
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+  nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
 
@@ -517,7 +517,7 @@ static void DumpArbitraryHelp()
     rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
     if(NS_SUCCEEDED(rv) && e) {
       while (PR_TRUE) {
-        nsCOMPtr<nsISupportsString> catEntry;
+        nsCOMPtr<nsISupportsCString> catEntry;
         rv = e->GetNext(getter_AddRefs(catEntry));
         if (NS_FAILED(rv) || !catEntry) break;
 

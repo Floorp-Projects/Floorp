@@ -18,9 +18,9 @@
 
 /*
  *  XPCOM XML-RPC Client, interface definition.
- *  Version: $Revision: 1.4 $
+ *  Version: $Revision: 1.5 $
  *
- *  $Id: nsIXmlRpcClient.idl,v 1.4 2002/02/12 23:57:08 samuel%sieb.net Exp $
+ *  $Id: nsIXmlRpcClient.idl,v 1.5 2002/08/06 00:52:08 alecf%netscape.com Exp $
  */
 
 #include "nsISupports.idl"
@@ -69,7 +69,7 @@ interface nsIXmlRpcClient: nsISupports {
      * nsISupportsPRUint8, nsISupportsPRUint16,
      * nsISupportsPRInt16, nsISupportsPRInt32: <i4>
      * nsISupportsPRBool: <boolean>
-     * nsISupportsChar, nsISupportsString: <string>
+     * nsISupportsChar, nsISupportsCString: <string>
      * nsISupportsFloat, nsISupportsDouble: <double>
      * nsISupportsPRTime: <dateTime.iso8601>
      * nsIInputStream: <base64>
@@ -82,10 +82,10 @@ interface nsIXmlRpcClient: nsISupports {
      * Return value will be converted as follows:
      * <i4> or <int>: nsISupportsPRInt32
      * <boolean>: nsISupportsPRBool
-     * <string>: nsISupportsString
+     * <string>: nsISupportsCString
      * <double>: nsISupportsDouble
      * <dateTime.iso8601>: nsISupportsPRTime
-     * <base64>: nsISupportsString
+     * <base64>: nsISupportsCString
      * <array>: nsISupportsArray
      * <struct>: nsIDictionary
      *
@@ -144,7 +144,7 @@ interface nsIXmlRpcClient: nsISupports {
         [iid_is(uuid),retval] out nsQIResult result);
     const unsigned long INT      = 1; // nsISupportsPRInt32
     const unsigned long BOOLEAN  = 2; // nsISupportsPRBool
-    const unsigned long STRING   = 3; // nsISupportsString
+    const unsigned long STRING   = 3; // nsISupportsCString
     const unsigned long DOUBLE   = 4; // nsISupportsDouble
     const unsigned long DATETIME = 5; // nsISupportsPRTime
     const unsigned long ARRAY    = 6; // nsISupportsArray

@@ -104,8 +104,8 @@ if (!sendPlainTextData) {
 } else {
   var mystr;
   try {
-    var WSTRING_CONTRACTID = "@mozilla.org/supports-wstring;1";
-    mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+    var WSTRING_CONTRACTID = "@mozilla.org/supports-string;1";
+    mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsString);
     mystr.data = "Heikki's data";
   } catch (e) {
     mystr = "Heikki's data";

@@ -288,8 +288,8 @@
           
             transferable.addDataFlavor("text/unicode");
             
-            const strURI = "@mozilla.org/supports-wstring;1";
-            var wstring = Components.classes[strURI].createInstance(Components.interfaces.nsISupportsWString);
+            const strURI = "@mozilla.org/supports-string;1";
+            var wstring = Components.classes[strURI].createInstance(Components.interfaces.nsISupportsString);
             
             wstring.data = aString;
             transferable.setTransferData("text/unicode", wstring, aString.length * 2);

@@ -72,7 +72,7 @@ NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *a
 
     nsCOMPtr<nsISupports> entry;
     while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
-        nsCOMPtr<nsISupportsString> category = do_QueryInterface(entry, &rv);
+        nsCOMPtr<nsISupportsCString> category = do_QueryInterface(entry, &rv);
 
         if (NS_SUCCEEDED(rv)) {
             nsXPIDLCString categoryEntry;

@@ -89,20 +89,20 @@ private:
 
 
 class nsPrefLocalizedString : public nsIPrefLocalizedString,
-                              public nsISupportsWString
+                              public nsISupportsString
 {
 public:
   nsPrefLocalizedString();
   virtual ~nsPrefLocalizedString();
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSISUPPORTSWSTRING(mUnicodeString->)
+  NS_FORWARD_NSISUPPORTSSTRING(mUnicodeString->)
   NS_FORWARD_NSISUPPORTSPRIMITIVE(mUnicodeString->)
 
   nsresult Init();
 
 private:
-  nsCOMPtr<nsISupportsWString> mUnicodeString;
+  nsCOMPtr<nsISupportsString> mUnicodeString;
 };
 
 

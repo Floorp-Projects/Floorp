@@ -229,10 +229,10 @@ function copySelectionToClipboard()
 
     // save bookmark's ID
     trans.addDataFlavor("moz/bookmarkclipboarditem");
-    var data_uri = "@mozilla.org/supports-wstring;1";
+    var data_uri = "@mozilla.org/supports-string;1";
     var data = Components.classes[data_uri].createInstance();
     if (data) {
-        data = data.QueryInterface(Components.interfaces.nsISupportsWString);
+        data = data.QueryInterface(Components.interfaces.nsISupportsString);
     }
     if (!data) return false;
     data.data = url;
@@ -243,9 +243,9 @@ function copySelectionToClipboard()
     {
         trans.addDataFlavor("text/unicode");
 
-        var textData_uri = "@mozilla.org/supports-wstring;1";
+        var textData_uri = "@mozilla.org/supports-string;1";
         var textData = Components.classes[textData_uri].createInstance();
-        if (textData) textData = textData.QueryInterface(Components.interfaces.nsISupportsWString);
+        if (textData) textData = textData.QueryInterface(Components.interfaces.nsISupportsString);
         if (!textData) return false;
         textData.data = text;
         // double byte data
@@ -255,10 +255,10 @@ function copySelectionToClipboard()
     {
         trans.addDataFlavor("text/html");
 
-        var wstring_uri = "@mozilla.org/supports-wstring;1";
+        var wstring_uri = "@mozilla.org/supports-string;1";
         var htmlData = Components.classes[wstring_uri].createInstance();
         if (htmlData) {
-            var wstring_interface = Components.interfaces.nsISupportsWString;
+            var wstring_interface = Components.interfaces.nsISupportsString;
             htmlData = htmlData.QueryInterface(wstring_interface);
         }
         if (!htmlData) return false;
@@ -314,7 +314,7 @@ function doPaste()
     var dataLen = new Object();
     trans.getTransferData("moz/bookmarkclipboarditem", data, dataLen);
     if (data) {
-        var data_interface = Components.interfaces.nsISupportsWString
+        var data_interface = Components.interfaces.nsISupportsString
         data = data.value.QueryInterface(data_interface);
     }
     var url = null;

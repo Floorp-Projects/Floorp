@@ -390,8 +390,8 @@ NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar **_retval)
 
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsISupportsWString> theString;
-    rv = prefBranch->GetComplexValue(pref, NS_GET_IID(nsISupportsWString),
+    nsCOMPtr<nsISupportsString> theString;
+    rv = prefBranch->GetComplexValue(pref, NS_GET_IID(nsISupportsString),
                                      getter_AddRefs(theString));
     if (NS_SUCCEEDED(rv)) {
       rv = theString->GetData(_retval);
@@ -403,9 +403,9 @@ NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar **_retval)
 NS_IMETHODIMP nsPref::CopyDefaultUnicharPref(const char *pref, PRUnichar **_retval)
 {
   nsresult rv;
-  nsCOMPtr<nsISupportsWString> theString;
+  nsCOMPtr<nsISupportsString> theString;
 
-  rv = mDefaultBranch->GetComplexValue(pref, NS_GET_IID(nsISupportsWString),
+  rv = mDefaultBranch->GetComplexValue(pref, NS_GET_IID(nsISupportsString),
                                        getter_AddRefs(theString));
   if (NS_SUCCEEDED(rv)) {
     rv = theString->GetData(_retval);
@@ -419,10 +419,10 @@ NS_IMETHODIMP nsPref::SetUnicharPref(const char *pref, const PRUnichar *value)
 
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsISupportsWString> theString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+    nsCOMPtr<nsISupportsString> theString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       theString->SetData(value);
-      rv = prefBranch->SetComplexValue(pref, NS_GET_IID(nsISupportsWString), theString);
+      rv = prefBranch->SetComplexValue(pref, NS_GET_IID(nsISupportsString), theString);
     }
   }
   return rv;
@@ -432,10 +432,10 @@ NS_IMETHODIMP nsPref::SetDefaultUnicharPref(const char *pref, const PRUnichar *v
 {
   nsresult rv;
 
-  nsCOMPtr<nsISupportsWString> theString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+  nsCOMPtr<nsISupportsString> theString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     theString->SetData(value);
-    rv = mDefaultBranch->SetComplexValue(pref, NS_GET_IID(nsISupportsWString), theString);
+    rv = mDefaultBranch->SetComplexValue(pref, NS_GET_IID(nsISupportsString), theString);
   }
   return rv;
 }

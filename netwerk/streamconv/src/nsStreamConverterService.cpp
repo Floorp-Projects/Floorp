@@ -111,7 +111,7 @@ nsStreamConverterService::BuildGraph() {
     if (NS_FAILED(rv)) return rv;
 
     // go through each entry to build the graph
-    nsCOMPtr<nsISupportsString> entry;
+    nsCOMPtr<nsISupportsCString> entry;
     rv = entries->GetNext(getter_AddRefs(entry));
     while (NS_SUCCEEDED(rv)) {
 

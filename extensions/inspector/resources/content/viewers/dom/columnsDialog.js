@@ -211,7 +211,7 @@ ColumnsDialog.prototype =
   onDragDropIn: function(aEvent)
   {
     var data = DNDUtils.getData("TreeBuilder/column-remove", 0);
-    var string = XPCU.QI(data, "nsISupportsWString");
+    var string = XPCU.QI(data, "nsISupportsString");
     this.addItem(string.data);
   },
 

@@ -82,7 +82,7 @@ interface nsIClipboard : nsISupports
     * inexpensive call. All it does is check if there is data on the clipboard matching
     * any of the flavors in the given list.
     *
-    * @aFlavorList - nsISupportsString's in a nsISupportsArray (for JavaScript).
+    * @aFlavorList - nsISupportsCString's in a nsISupportsArray (for JavaScript).
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
     * @outResult - if data is present matching one of 
     * @result NS_OK if successful.

@@ -326,7 +326,7 @@ inTreeBuilder.prototype =
     var data = {};
     trans.getAnyTransferData ({}, data, {});
 
-    var string = XPCU.QI(data.value, "nsISupportsWString");
+    var string = XPCU.QI(data.value, "nsISupportsString");
 
     this.insertColumn(this.mColumnInsertIndex,
       {

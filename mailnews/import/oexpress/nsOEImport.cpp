@@ -267,7 +267,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsOEStringBundle::GetStringByID( OEIMPORT_NAME, name);
-					nsCOMPtr<nsISupportsWString> nameString (do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
+					nsCOMPtr<nsISupportsString> nameString (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 					if (NS_SUCCEEDED(rv)) {
 						nameString->SetData(name.get());
 						pGeneric->SetData( "name", nameString);

@@ -113,8 +113,8 @@ TestMemoryObjectCache()
         goto error_exit;
     }
 
-    nsCOMPtr<nsISupportsString> foo =
-        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    nsCOMPtr<nsISupportsCString> foo =
+        do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
 
     foo->SetData("hello world");
 
@@ -134,7 +134,7 @@ TestMemoryObjectCache()
         goto error_exit;
     }
 
-    nsCOMPtr<nsISupportsString> bar;
+    nsCOMPtr<nsISupportsCString> bar;
     descriptor->GetCacheElement(getter_AddRefs(bar));
     if (foo.get() != bar.get()) {
         printf("cache elements not the same\n");

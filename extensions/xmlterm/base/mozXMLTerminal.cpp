@@ -790,7 +790,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   nsMemory::Free(temCStr);
 
   if (flavor.EqualsWithConversion(kHTMLMime) || flavor.EqualsWithConversion(kUnicodeMime)) {
-    nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+    nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && objLen > 0) {
       PRUnichar* text = nsnull;
       textDataObj->ToString ( &text );

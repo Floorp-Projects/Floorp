@@ -1624,7 +1624,7 @@ nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
     nsAutoString stuffToPaste;
     if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
-      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
         PRUnichar* text = nsnull;

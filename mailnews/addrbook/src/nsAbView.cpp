@@ -1206,7 +1206,7 @@ NS_IMETHODIMP nsAbView::GetSelectedAddresses(nsISupportsArray **_retval)
         NS_ENSURE_SUCCESS(rv,rv);
 
         if (!primaryEmail.IsEmpty()) {
-          nsCOMPtr<nsISupportsString> supportsEmail(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+          nsCOMPtr<nsISupportsCString> supportsEmail(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
           supportsEmail->SetDataWithLength(primaryEmail.Length(), ToNewCString(primaryEmail));
           addresses->AppendElement(supportsEmail);
         }
@@ -1217,7 +1217,7 @@ NS_IMETHODIMP nsAbView::GetSelectedAddresses(nsISupportsArray **_retval)
       NS_ENSURE_SUCCESS(rv,rv);
 
       if (!primaryEmail.IsEmpty()) {
-        nsCOMPtr<nsISupportsString> supportsEmail(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+        nsCOMPtr<nsISupportsCString> supportsEmail(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
         supportsEmail->SetDataWithLength(primaryEmail.Length(), ToNewCString(primaryEmail));
         addresses->AppendElement(supportsEmail);
       }

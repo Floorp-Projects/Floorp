@@ -15,7 +15,7 @@ pre {
 }
 </style>
 <script type="text/javascript">
-const WSTRING_CONTRACTID = "@mozilla.org/supports-wstring;1";
+const WSTRING_CONTRACTID = "@mozilla.org/supports-string;1";
 
 // You can only create the text string if you can bybass security, like in chrome
 var sendPlainTextData = false;
@@ -59,7 +59,7 @@ p.open("POST", "http://green/cgi-bin/this.handler.does.not.exist.xgfrsjfrsgdfr.c
 if (!sendPlainTextData) {
   p.send(x);
 } else {
-  var mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+  var mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsString);
   mystr.data = "Heikki's data";
   p.send(mystr);
 }

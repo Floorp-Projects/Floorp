@@ -81,8 +81,8 @@ nsMsgComposeProgress::OpenProgress(nsIDOMWindowInternal *parent,
     rv = NS_NewISupportsArray(getter_AddRefs(array));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsISupportsWString> strptr =
-      do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+    nsCOMPtr<nsISupportsString> strptr =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     strptr->SetData(subject);

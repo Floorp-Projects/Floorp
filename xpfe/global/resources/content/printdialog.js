@@ -143,7 +143,7 @@ listElement.prototype =
           // build popup menu from printer names
           while (aDataObject.hasMoreElements()) {
             printerName = aDataObject.getNext();
-            printerName = printerName.QueryInterface(Components.interfaces.nsISupportsWString);
+            printerName = printerName.QueryInterface(Components.interfaces.nsISupportsString);
             var printerNameStr = printerName.toString();
             if (strDefaultPrinterName == "")
                strDefaultPrinterName = printerNameStr;

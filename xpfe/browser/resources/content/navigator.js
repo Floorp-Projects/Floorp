@@ -1149,7 +1149,7 @@ function readFromClipboard()
     trans.getTransferData("text/unicode", data, dataLen);
 
     if (data) {
-      data = data.value.QueryInterface(Components.interfaces.nsISupportsWString);
+      data = data.value.QueryInterface(Components.interfaces.nsISupportsString);
       url = data.data.substring(0, dataLen.value / 2);
     }
   } catch (ex) {
@@ -1499,8 +1499,8 @@ function applyTheme(themeName)
   catch(e) {
   }
 
-  var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
+  var str = Components.classes["@mozilla.org/supports-string;1"]
+                      .createInstance(Components.interfaces.nsISupportsString);
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
@@ -1518,7 +1518,7 @@ function applyTheme(themeName)
 
       str.data = true;
       pref.setComplexValue("general.skins.removelist." + name,
-                           Components.interfaces.nsISupportsWString, str);
+                           Components.interfaces.nsISupportsString, str);
       
       if (inUse)
         chromeRegistry.refreshSkins();
@@ -1532,7 +1532,7 @@ function applyTheme(themeName)
  // hacking around it yet again                                                
 
  str.data = name;
- pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
+ pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
  
  // shut down quicklaunch so the next launch will have the new skin
  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();

@@ -64,7 +64,7 @@ static void PrintImageDecoders()
   do {
     enumer->CurrentItem(getter_AddRefs(s));
     if (s) {
-      nsCOMPtr<nsISupportsString> ss(do_QueryInterface(s));
+      nsCOMPtr<nsISupportsCString> ss(do_QueryInterface(s));
 
       nsXPIDLCString xcs;
       ss->GetData(getter_Copies(xcs));

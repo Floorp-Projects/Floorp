@@ -509,7 +509,7 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
     rv = catmgr->EnumerateCategory(NS_IURLPARSER_KEY, getter_AddRefs(parserList));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsISupportsString> entry;
+    nsCOMPtr<nsISupportsCString> entry;
 
     // Walk the list of parsers...
     while (1) {

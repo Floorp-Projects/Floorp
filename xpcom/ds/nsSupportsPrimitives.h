@@ -58,6 +58,23 @@ private:
 
 /***************************************************************************/
 
+class nsSupportsCStringImpl : public nsISupportsCString
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
+    NS_DECL_NSISUPPORTSCSTRING
+
+    nsSupportsCStringImpl();
+    virtual ~nsSupportsCStringImpl();
+
+private:
+    char *mData;
+    PRUint32 mLength;
+};
+
+/***************************************************************************/
+
 class nsSupportsStringImpl : public nsISupportsString
 {
 public:
@@ -67,23 +84,6 @@ public:
 
     nsSupportsStringImpl();
     virtual ~nsSupportsStringImpl();
-
-private:
-    char *mData;
-    PRUint32 mLength;
-};
-
-/***************************************************************************/
-
-class nsSupportsWStringImpl : public nsISupportsWString
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISUPPORTSPRIMITIVE
-    NS_DECL_NSISUPPORTSWSTRING
-
-    nsSupportsWStringImpl();
-    virtual ~nsSupportsWStringImpl();
 
 private:
     PRUnichar *mData;

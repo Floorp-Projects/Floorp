@@ -48,7 +48,7 @@
 interface nsITransferable : nsISupports
 {
   /**
-    * Computes a list of flavors (mime types as nsISupportsString) that the transferable 
+    * Computes a list of flavors (mime types as nsISupportsCString) that the transferable 
     * can export, either through intrinsic knowledge or output data converters.
     *
     * @param  aDataFlavorList fills list with supported flavors. This is a copy of
@@ -86,7 +86,7 @@ interface nsITransferable : nsISupports
     ///////////////////////////////
 
   /**
-    * Computes a list of flavors (mime types as nsISupportsString) that the transferable can
+    * Computes a list of flavors (mime types as nsISupportsCString) that the transferable can
     * accept into it, either through intrinsic knowledge or input data converters.
     *
     * @param  outFlavorList fills list with supported flavors. This is a copy of

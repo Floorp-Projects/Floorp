@@ -80,7 +80,7 @@ function nsLDAPPrefsService() {
         if ((position != 0) && (dirType == 1)) {
           try{
             description = gPrefInt.getComplexValue(arrayOfDirectories[i]+".description",
-                                                   Components.interfaces.nsISupportsWString).data;
+                                                   Components.interfaces.nsISupportsString).data;
           }
           catch(ex){
             description = null;
@@ -219,7 +219,7 @@ function () {
       ldapUrl.host = host;
       try{
         dn = gPrefInt.getComplexValue(pref_string + ".searchBase",
-                                      Components.interfaces.nsISupportsWString).data;
+                                      Components.interfaces.nsISupportsString).data;
       }
       catch (ex) {
         dn = null;
@@ -248,10 +248,10 @@ function () {
       ldapUrl.port = port;
       ldapUrl.scope = 2;
 
-      var uri = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
+      var uri = Components.classes["@mozilla.org/supports-string;1"]
+                      .createInstance(Components.interfaces.nsISupportsString);
       uri.data = ldapUrl.spec;
-      gPrefInt.setComplexValue(pref_string + ".uri", Components.interfaces.nsISupportsWString, uri);
+      gPrefInt.setComplexValue(pref_string + ".uri", Components.interfaces.nsISupportsString, uri);
 
       /* is this server selected for autocompletion? 
          if yes, convert the preference to mozilla format.

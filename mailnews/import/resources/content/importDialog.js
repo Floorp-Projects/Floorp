@@ -164,13 +164,13 @@ function ImportDialogOKButton()
       {
         case "mail":
 
-          top.successStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
+          top.successStr = Components.classes["@mozilla.org/supports-string;1"].createInstance();
           if (top.successStr) {
-            top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
+            top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsString);
           }
-          top.errorStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
+          top.errorStr = Components.classes["@mozilla.org/supports-string;1"].createInstance();
           if (top.errorStr)
-            top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
+            top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsString);
 
           if (ImportMail( module, top.successStr, top.errorStr) == true)
           {
@@ -206,15 +206,15 @@ function ImportDialogOKButton()
           break;
 
         case "addressbook":
-          top.successStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
+          top.successStr = Components.classes["@mozilla.org/supports-string;1"].createInstance();
           if (top.successStr)
-            top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
-          top.errorStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
+            top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsString);
+          top.errorStr = Components.classes["@mozilla.org/supports-string;1"].createInstance();
           if (top.errorStr)
-            top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsWString);
-          top.inputStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
+            top.errorStr = top.errorStr.QueryInterface( Components.interfaces.nsISupportsString);
+          top.inputStr = Components.classes["@mozilla.org/supports-string;1"].createInstance();
           if (top.inputStr)
-            top.inputStr = top.inputStr.QueryInterface( Components.interfaces.nsISupportsWString);
+            top.inputStr = top.inputStr.QueryInterface( Components.interfaces.nsISupportsString);
 
           if (ImportAddress( module, top.successStr, top.errorStr) == true) {
             // We think it was a success, either, we need to
@@ -376,7 +376,7 @@ function ContinueImport( info) {
         if (isMail) {
           var mailName = info.importInterface.GetData( "currentMailbox");
           if (mailName) {
-            mailName = mailName.QueryInterface( Components.interfaces.nsISupportsWString);
+            mailName = mailName.QueryInterface( Components.interfaces.nsISupportsString);
             if (mailName)
               SetStatusText( mailName.data);
           }

@@ -72,7 +72,7 @@ ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
 {
   nsresult status = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupportsString> obj = new nsSupportsStringImpl();
+  nsCOMPtr<nsISupportsCString> obj = new nsSupportsCStringImpl();
   if ( obj ) {
     nsCStringKey* strkey = NS_STATIC_CAST(nsCStringKey*, key);
     status = obj->SetDataWithLength(strkey->GetStringLength(), strkey->GetString());
@@ -471,7 +471,7 @@ NS_CreateServicesFromCategory(const char *category,
     nsCOMPtr<nsISupports> entry;
     while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
         // From here on just skip any error we get.
-        nsCOMPtr<nsISupportsString> catEntry = do_QueryInterface(entry, &rv);
+        nsCOMPtr<nsISupportsCString> catEntry = do_QueryInterface(entry, &rv);
         if (NS_FAILED(rv)) {
             nFailed++;
             continue;

@@ -69,8 +69,8 @@ nsPresState::GetStateProperty(const nsAString& aName,
     const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
     nsStringKey key(flatString);
 
-    nsCOMPtr<nsISupportsString> supportsStr =
-            dont_AddRef(NS_STATIC_CAST(nsISupportsString*,
+    nsCOMPtr<nsISupportsCString> supportsStr =
+            dont_AddRef(NS_STATIC_CAST(nsISupportsCString*,
                                        mPropertyTable->Get(&key)));
 
     if (supportsStr) {
@@ -96,7 +96,7 @@ nsPresState::SetStateProperty(const nsAString& aName, const nsAString& aValue)
   const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
   nsStringKey key(flatString);
 
-  nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  nsCOMPtr<nsISupportsCString> supportsStr(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
 
   supportsStr->SetData(NS_ConvertUCS2toUTF8(aValue).get());

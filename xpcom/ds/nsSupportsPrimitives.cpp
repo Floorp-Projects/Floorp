@@ -108,33 +108,33 @@ NS_IMETHODIMP nsSupportsIDImpl::ToString(char **_retval)
 }  
 
 /*****************************************************************************
- * nsSupportsStringImpl
+ * nsSupportsCStringImpl
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
+NS_IMPL_ISUPPORTS2(nsSupportsCStringImpl, nsISupportsCString,
                    nsISupportsPrimitive)
 
-nsSupportsStringImpl::nsSupportsStringImpl()
+nsSupportsCStringImpl::nsSupportsCStringImpl()
     : mData(0), mLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsSupportsStringImpl::~nsSupportsStringImpl()
+nsSupportsCStringImpl::~nsSupportsCStringImpl()
 {
     if (mData)
         nsMemory::Free(mData);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsCStringImpl::GetType(PRUint16 *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
 
-    *aType = TYPE_STRING;
+    *aType = TYPE_CSTRING;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
+NS_IMETHODIMP nsSupportsCStringImpl::GetData(char **aData)
 {
     nsresult rv = NS_OK;
     // copy the buffer
@@ -150,17 +150,17 @@ NS_IMETHODIMP nsSupportsStringImpl::GetData(char **aData)
     return rv;
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::SetData(const char *aData)
+NS_IMETHODIMP nsSupportsCStringImpl::SetData(const char *aData)
 {
     return SetDataWithLength(aData ? strlen(aData) : 0, aData);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
+NS_IMETHODIMP nsSupportsCStringImpl::ToString(char **_retval)
 {
     return GetData(_retval);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
+NS_IMETHODIMP nsSupportsCStringImpl::SetDataWithLength(PRUint32 aLength,
                                                       const char *aData)
 {
     // if the new string length is the same as the old,
@@ -191,12 +191,12 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
     return AdoptDataWithLength(aLength, newData);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::AdoptData(char *aData)
+NS_IMETHODIMP nsSupportsCStringImpl::AdoptData(char *aData)
 {
     return AdoptDataWithLength(aData ? strlen(aData) : 0, aData);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(PRUint32 aLength,
+NS_IMETHODIMP nsSupportsCStringImpl::AdoptDataWithLength(PRUint32 aLength,
                                                         char *aData)
 {
     // free current buffer
@@ -219,33 +219,33 @@ NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(PRUint32 aLength,
 }
 
 /*****************************************************************************
- * nsSupportsWStringImpl
+ * nsSupportsStringImpl
  *****************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsSupportsWStringImpl, nsISupportsWString,
+NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
                    nsISupportsPrimitive)
 
-nsSupportsWStringImpl::nsSupportsWStringImpl()
+nsSupportsStringImpl::nsSupportsStringImpl()
     : mData(0), mLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsSupportsWStringImpl::~nsSupportsWStringImpl()
+nsSupportsStringImpl::~nsSupportsStringImpl()
 {
     if (mData)
         nsMemory::Free(mData);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::GetType(PRUint16 *aType)
+NS_IMETHODIMP nsSupportsStringImpl::GetType(PRUint16 *aType)
 {
     NS_ASSERTION(aType, "Bad pointer");
 
-    *aType = TYPE_WSTRING;
+    *aType = TYPE_STRING;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
+NS_IMETHODIMP nsSupportsStringImpl::GetData(PRUnichar **aData)
 {
     nsresult rv = NS_OK;
     // copy the buffer
@@ -261,17 +261,17 @@ NS_IMETHODIMP nsSupportsWStringImpl::GetData(PRUnichar **aData)
     return rv;
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::SetData(const PRUnichar *aData)
+NS_IMETHODIMP nsSupportsStringImpl::SetData(const PRUnichar *aData)
 {
     return SetDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::ToString(PRUnichar **_retval)
+NS_IMETHODIMP nsSupportsStringImpl::ToString(PRUnichar **_retval)
 {
     return GetData(_retval);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
+NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
                                                        const PRUnichar *aData)
 {
     // if the new string length is the same as the old,
@@ -302,12 +302,12 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
     return AdoptDataWithLength(aLength, newData);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::AdoptData(PRUnichar *aData)
+NS_IMETHODIMP nsSupportsStringImpl::AdoptData(PRUnichar *aData)
 {
     return AdoptDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::AdoptDataWithLength(PRUint32 aLength,
+NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(PRUint32 aLength,
                                                          PRUnichar *aData)
 {
     // free current buffer

@@ -112,7 +112,7 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windo
   // create scriptable versions of our strings that we can store in our nsISupportsArray....
   if (aFolderURI)
   {
-    nsCOMPtr<nsISupportsString> scriptableFolderURI (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+    nsCOMPtr<nsISupportsCString> scriptableFolderURI (do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
     NS_ENSURE_TRUE(scriptableFolderURI, NS_ERROR_FAILURE);
 
     scriptableFolderURI->SetData(aFolderURI);

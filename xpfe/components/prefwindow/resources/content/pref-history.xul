@@ -45,7 +45,7 @@
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
       var lastUrl = pref.getComplexValue("general.open_location.last_url",
-                                         Components.interfaces.nsISupportsWString).data;
+                                         Components.interfaces.nsISupportsString).data;
       urlbarHistButton.disabled = ( urlBarHist.count == 0 && !lastUrl ) || isBtnLocked ;
     }
     catch(ex) {
@@ -74,11 +74,11 @@
     urlBarHistory.clearHistory();
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                         .createInstance(Components.interfaces.nsISupportsWString);
+    var str = Components.classes["@mozilla.org/supports-string;1"]
+                         .createInstance(Components.interfaces.nsISupportsString);
     str.data = "";
     pref.setComplexValue("general.open_location.last_url",
-                         Components.interfaces.nsISupportsWString,
+                         Components.interfaces.nsISupportsString,
                          str);
   }
   ]]>

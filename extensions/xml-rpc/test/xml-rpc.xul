@@ -30,7 +30,7 @@ function callAsync() {
 
 var Listener = {
     onResult: function(client, ctxt, result) {
-        result = result.QueryInterface(Components.interfaces.nsISupportsString);
+        result = result.QueryInterface(Components.interfaces.nsISupportsCString);
         document.getElementById('statename').setAttribute('value', result.data);
     },
 

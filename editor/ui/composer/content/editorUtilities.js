@@ -260,10 +260,10 @@ function SetUnicharPref(aPrefName, aPrefValue)
   if (prefs)
   {
     try {
-      var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                          .createInstance(Components.interfaces.nsISupportsWString);
+      var str = Components.classes["@mozilla.org/supports-string;1"]
+                          .createInstance(Components.interfaces.nsISupportsString);
       str.data = aPrefValue;
-      prefs.setComplexValue(aPrefName, Components.interfaces.nsISupportsWString, str);
+      prefs.setComplexValue(aPrefName, Components.interfaces.nsISupportsString, str);
     }
     catch(e) {}
   }
@@ -275,7 +275,7 @@ function GetUnicharPref(aPrefName, aDefVal)
   if (prefs)
   {
     try {
-      return prefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString).data;
+      return prefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsString).data;
     }
     catch(e) {}
   }

@@ -391,7 +391,7 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
         
           nsCOMPtr<nsISupports> genericWrapper;
           flavorList->GetElementAt ( flavorIndex, getter_AddRefs(genericWrapper) );
-          nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
+          nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericWrapper) );
 	      if ( currentFlavor ) {
 	        nsXPIDLCString flavorStr;
 	        currentFlavor->ToString ( getter_Copies(flavorStr) );
@@ -444,7 +444,7 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
     return NS_ERROR_INVALID_ARG;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through
-  // conversion). Flavors are nsISupportsStrings so that they can be seen from JS.
+  // conversion). Flavors are nsISupportsCStrings so that they can be seen from JS.
   nsCOMPtr<nsISupportsArray> flavorList;
   errCode = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
   if ( NS_FAILED(errCode) )
@@ -468,7 +468,7 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
   for ( int i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericWrapper;
     flavorList->GetElementAt ( i, getter_AddRefs(genericWrapper) );
-    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
+    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericWrapper) );
     if ( currentFlavor ) {
       // find MacOS flavor (but don't add it if it's not there)
       nsXPIDLCString flavorStr;

@@ -91,7 +91,7 @@ function CanDropOnFolderTree(index)
             continue;   //no data so continue;
         }
         if (dataObj)
-            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
         if (! dataObj)
             continue;
 
@@ -235,7 +235,7 @@ function DropOnFolderTree(row, orientation)
         var len = new Object();
         trans.getAnyTransferData(bestFlavor, dataObj, len);
         if (dataObj)
-            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+            dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
         if (! dataObj)
             continue;
 
@@ -420,7 +420,7 @@ function BeginDragTree(event, tree, selArray, flavor)
         if (!trans) 
           return false;
 
-        var genTextData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance(Components.interfaces.nsISupportsWString);
+        var genTextData = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
         if (!genTextData) 
           return false;
 

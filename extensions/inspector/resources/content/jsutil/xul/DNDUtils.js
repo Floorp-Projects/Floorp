@@ -76,7 +76,7 @@ var DNDUtils =
   {
     var obj = {};
     if (typeof(aValue) == "string") {
-      obj.data = XPCU.createInstance("@mozilla.org/supports-wstring;1", "nsISupportsWString");
+      obj.data = XPCU.createInstance("@mozilla.org/supports-string;1", "nsISupportsString");
       obj.data.data = aValue;
       obj.size = aValue.length*2;
     } else if (false) {

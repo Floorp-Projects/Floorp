@@ -149,7 +149,7 @@ QDragObject *nsDragService::RegisterDragFlavors(nsITransferable *transferable)
 
       flavorList->GetElementAt(flavorIndex,getter_AddRefs(genericWrapper));
 
-      nsCOMPtr<nsISupportsString> currentFlavor(do_QueryInterface(genericWrapper));
+      nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericWrapper));
 
       if (currentFlavor) {
 	nsXPIDLCString flavorStr;
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable,
 
     flavorList->GetElementAt(i,getter_AddRefs(genericWrapper));
 
-    nsCOMPtr<nsISupportsString> currentFlavor;
+    nsCOMPtr<nsISupportsCString> currentFlavor;
 
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {

@@ -655,7 +655,7 @@ nsMsgAccountManagerDataSource::appendGenericSettingsResources(nsIMsgIncomingServ
   rv = catman->EnumerateCategory(MAILNEWS_ACCOUNTMANAGER_EXTENSIONS, getter_AddRefs(e));
   if(NS_SUCCEEDED(rv) && e) {
     while (PR_TRUE) {
-      nsCOMPtr<nsISupportsString> catEntry;
+      nsCOMPtr<nsISupportsCString> catEntry;
       rv = e->GetNext(getter_AddRefs(catEntry));
       if (NS_FAILED(rv) || !catEntry) 
         break;

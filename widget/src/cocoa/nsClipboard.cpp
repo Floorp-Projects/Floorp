@@ -129,7 +129,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
   for ( PRUint32 i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString( getter_Copies(flavorStr) );
@@ -272,7 +272,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
   for ( PRUint32 i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
@@ -426,7 +426,7 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
 // HasDataMatchingFlavors
 //
 // Check the clipboard to see if we have any data that matches the given flavors. This
-// does NOT actually fetch the data. The items in the flavor list are nsISupportsString's.
+// does NOT actually fetch the data. The items in the flavor list are nsISupportsCString's.
 // 
 // Handle the case where we ask for unicode and it's not there, but plain text is. We 
 // say "yes" in that case, knowing that we will have to perform a conversion when we actually
@@ -452,7 +452,7 @@ nsClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 a
   for ( PRUint32 i = 0; i < length; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     aFlavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface(genericFlavor) );
     if ( flavorWrapper ) {
       nsXPIDLCString flavor;
       flavorWrapper->ToString ( getter_Copies(flavor) );

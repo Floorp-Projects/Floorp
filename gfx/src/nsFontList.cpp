@@ -128,10 +128,10 @@ nsFontListEnumerator::GetNext(nsISupports **aFont)
     return NS_ERROR_UNEXPECTED;
   }
   PRUnichar *fontName = mFonts[mIndex++];
-  nsCOMPtr<nsISupportsWString> fontNameWrapper;
+  nsCOMPtr<nsISupportsString> fontNameWrapper;
   nsresult rv;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
-                    NS_GET_IID(nsISupportsWString), getter_AddRefs(fontNameWrapper));
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
+                    NS_GET_IID(nsISupportsString), getter_AddRefs(fontNameWrapper));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(fontNameWrapper, NS_ERROR_OUT_OF_MEMORY);
   fontNameWrapper->SetData(NS_CONST_CAST(PRUnichar*, fontName));
