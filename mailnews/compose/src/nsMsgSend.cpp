@@ -1616,6 +1616,7 @@ NewsDeliveryCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsNewsExit(aUrl, aExitCode);
+	NS_RELEASE(ptr);
   }
 
   return aExitCode;
@@ -1718,6 +1719,8 @@ nsMsgComposeAndSend::DeliverFileAsNews ()
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {	
+	NS_ADDREF(this);
+
     nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
     if (!sendListener)
     {
@@ -1795,11 +1798,15 @@ nsMsgComposeAndSend::DeliverAsNewsExit(nsIURL *aUrl, nsresult aExitCode)
     }
   }
   
+   //
+  // Finally, we are ready to do last cleanup stuff and move on with life.
+  // No real reason to bother the user at this point.
+  //      
   if (mSendCompleteCallback)
     mSendCompleteCallback (aExitCode, m_fe_data);
 
   mSendCompleteCallback = nsnull;
-  Clear();
+  return;
 }
 
 #ifdef XP_OS2
@@ -3169,6 +3176,7 @@ nsMsgComposeAndSend::Clear()
   {
 		PR_Delete(m_html_filename);
 		PR_FREEIF(m_html_filename);
+		m_html_filename = nsnull;
 	}
 
 	if (mOutputFile) 
@@ -3193,6 +3201,7 @@ nsMsgComposeAndSend::Clear()
   {
     mTempFileSpec->Delete(PR_FALSE);
 		delete mTempFileSpec;
+		mTempFileSpec = nsnull;
 	}
 
 	HJ82388

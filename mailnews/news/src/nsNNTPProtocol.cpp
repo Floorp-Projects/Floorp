@@ -188,6 +188,7 @@ HG25430
 "NNTP_LIST_GROUP",
 "NNTP_LIST_GROUP_RESPONSE",
 "NEWS_DONE",
+"NEWS_POST_DONE",
 "NEWS_ERROR",
 "NNTP_ERROR",
 "NEWS_FREE"
@@ -1514,7 +1515,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		nsresult rv;
         nsCOMPtr <nsINNTPNewsgroup> newsgroup;
 		if (!m_newsHost) {
+#ifdef DEBUG_NEWS
 			printf("m_newsHost is null, panic!\n");
+#endif
 			return -1;
 		}
         rv = m_newsHost->GetNewsgroupAndNumberOfID(m_path,
@@ -1557,7 +1560,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         nsresult rv;
 		
 		if (!m_newsHost) {
+#ifdef DEBUG_NEWS
 			printf("m_newsHost is null, panic!\n");
+#endif
 			return -1;
 		}
         rv = m_newsHost->GetLastUpdatedTime(&last_update);
@@ -1594,7 +1599,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         PRUint32 last_update;
       	
 		if (!m_newsHost) {
+#ifdef DEBUG
 			printf("m_newsHost is null, panic!\n");
+#endif
 			return -1;
 		}
 		nsresult rv = m_newsHost->GetLastUpdatedTime(&last_update);
@@ -1640,7 +1647,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 
         NET_SACopy(&command, "GROUP ");
         if (!m_newsgroup) {
+#ifdef DEBUG_NEWS
 			printf("m_newsgroup is null, panic!\n");
+#endif
 			return -1;
 		}
             
@@ -1663,7 +1672,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		nsresult rv;
 		PRBool searchable=PR_FALSE;
 		if (!m_newsHost) {
+#ifdef DEBUG
 			printf("m_newsHost is null, panic!\n");
+#endif
 			return -1;
 		}
 		rv = m_newsHost->QueryExtension("SEARCH", &searchable);
@@ -1690,7 +1701,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 			/* for XPAT, we have to GROUP into the group before searching */
 			NET_SACopy(&command, "GROUP ");
 			if (!m_newsgroup) {
+#ifdef DEBUG_NEWS
 				printf("m_newsgroup is null, panic!\n");
+#endif
 				return -1;
 			}
             rv = m_newsgroup->GetName(&group_name);
@@ -1790,8 +1803,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
       {
 		if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
             m_typeWanted == GROUP_WANTED) {
-            
+#ifdef DEBUG_NEWS
             printf("group not found!\n");            
+#endif
 #ifdef UNREADY_CODE
         MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, TRUE /* opening group */);
 #else
@@ -3300,9 +3314,9 @@ PRInt32 nsNNTPProtocol::PostData()
  */   
 PRInt32 nsNNTPProtocol::PostDataResponse()
 {
-#ifdef UNREADY_CODE
 	if (m_responseCode != MK_NNTP_RESPONSE_POST_OK) 
 	{
+#ifdef UNREADY_CODE
 	  ce->URL_s->error_msg =
 		NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, 
 								m_responseText ? m_responseText : "");
@@ -3329,11 +3343,11 @@ PRInt32 nsNNTPProtocol::PostDataResponse()
 													  that this was a duplicate
 													  message and ignore the
 													  error. */
+#endif
 	  m_nextState = NEWS_ERROR;
 	  return(MK_NNTP_ERROR_MESSAGE);
 	}
-#endif
-    m_nextState = NEWS_ERROR; /* even though it worked */
+    m_nextState = NEWS_POST_DONE;
 	ClearFlag(NNTP_PAUSE_FOR_READ);
     return(MK_DATA_LOADED);
 }
@@ -4037,8 +4051,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 				}
 				else
                 {
-                    printf("set nsCOMPtr to null?\n");
-                    //m_newsgroup = NULL;
+                    m_newsgroup = null_nsCOMPtr();
 				}
 			}
             PRBool listpname;
@@ -4573,8 +4586,17 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 #endif
 	            break;
 
+			case NEWS_POST_DONE:
+#ifdef DEBUG_NEWS
+				printf("NEWS_POST_DONE!\n");
+#endif
+				m_runningURL->SetUrlState(PR_FALSE, NS_OK);
+				m_nextState = NEWS_FREE;
+				break;
 	        case NEWS_ERROR:
+#ifdef DEBUG_NEWS
 				printf("NEWS_ERROR!\n");
+#endif
 				m_runningURL->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 				m_nextState = NEWS_FREE;
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
@@ -4594,7 +4616,9 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inp
 	            break;
 
 	        case NNTP_ERROR:
-			printf("NNTP_ERROR!\n");
+#ifdef DEBUG_NEWS
+				printf("NNTP_ERROR!\n");
+#endif
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 	            if(cd->stream)
 				  {
