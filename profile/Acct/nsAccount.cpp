@@ -35,7 +35,6 @@
 //#include "pratom.h"
 #include "prmem.h"
 //#include "nsIRegistry.h"
-//#include "NSReg.h"
 #include "nsIFactory.h"
 #include "plstr.h"
 #include "nsIFileSpec.h"
