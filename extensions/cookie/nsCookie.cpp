@@ -342,12 +342,28 @@ cookie_Put(nsOutputFileStream strm, const nsString& aLine)
     return NS_ERROR_FAILURE;
   }
 
-  /* output each character */
-  char* p = cp;
-  while (*p) {
-    strm.put(*(p++));
-  }
+  /* output entire line */
+  strm.write(cp, aLine.Length());
   nsCRT::free(cp);
+  return NS_OK;
+}
+
+nsresult cookie_Get(nsInputFileStream strm, char& c) {
+#define BUFSIZE 128
+  static char buffer[BUFSIZE];
+  static PRInt32 next = BUFSIZE, count = BUFSIZE;
+
+  if (next == count) {
+    if (count < BUFSIZE) {
+      return NS_ERROR_FAILURE;
+    }
+    count = strm.read(buffer, BUFSIZE);
+    next = 0;
+    if (count == 0) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  c = buffer[next++];
   return NS_OK;
 }
 
@@ -363,18 +379,15 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString& aLine) {
   aLine.Truncate();
   char c;
   for (;;) {
-    c = strm.get();
+    if NS_FAILED(cookie_Get(strm, c)) {
+      return -1;
+    }
     if (c == '\n') {
       break;
     }
 
-    /* note that eof is not set until we read past the end of the file */
-    if (strm.eof()) {
-      return -1;
-    }
     if (c != '\r') {
       aLine.Append(c);
-//    aLine += c;
     }
   }
   return 0;
