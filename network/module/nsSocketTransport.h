@@ -78,6 +78,7 @@ public:
 
     virtual ~nsSocketTransport(void);
     NS_IMETHOD GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult);
+	NS_IMETHOD SetSocketBinding(nsIURL* pURL, URL_Struct_ ** aResult);
 
 	// the following routines are called by the sock stub protocol hack....
 	// we should be able to remove this dependency once we move things to the new
@@ -118,6 +119,8 @@ protected:
     nsIEventQueueService* mEventQService;
     nsIEventQueue* m_evQueue;
     char m_buffer[NET_SOCKSTUB_BUF_SIZE];
+
+	URL_Struct_ * m_bindedUrlStruct;
 };
 
 #endif // nsSocketTransport_h__

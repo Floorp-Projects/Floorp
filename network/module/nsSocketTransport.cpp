@@ -119,8 +119,6 @@ NS_METHOD nsSocketTransport::Open(nsIURL *pURL)
 
 	  // now the right protocol is set for the old networking world to use to complete the task
 	  // so we can open it now..
-
-	  // running this url will cause a connection to be made on the socket.
 	  rv = NS_OpenURL(pURL, m_inputStreamConsumer);
 
 	  m_socketIsOpen = PR_TRUE;
@@ -226,36 +224,33 @@ nsSocketTransport::OnDataAvailable(nsIURL* pURL,
 
   if (m_socketIsOpen == PR_TRUE)  // only do something useful if we are open...
   {
-  	  rv = GetURLInfo(pURL, &URL_s);
+  	  rv = GetURLInfo(pURL, &URL_s); // this call is necessay 'cause it forces us to get m_bindedUrlStruct if we don't have it.
 
-	  if (NS_SUCCEEDED(rv)) {
-		if (nsnull != URL_s) {
+	  if (NS_SUCCEEDED(rv)) 
+	  {
+		if (nsnull != m_bindedUrlStruct)
 		  /* Find the socket given URL_s pointer */
-		  m_ready_fd = NET_GetSocketToHashTable(URL_s);
-		}
-	  } else {
+		  m_ready_fd = NET_GetSocketToHashTable(m_bindedUrlStruct);
+	  } 
+	  else
 		return rv;
-	  }
     
-	  if (m_ready_fd == NULL) {
+	  if (m_ready_fd == NULL)
 		  return NS_ERROR_NULL_POINTER;
-	  }
 
 	  aIStream->GetLength(&len);
 
 	  memset(m_buffer, '\0', NET_SOCKSTUB_BUF_SIZE);
-	  while (len > 0) {
-		if (len < NET_SOCKSTUB_BUF_SIZE) {
+	  while (len > 0) 
+	  {
+		if (len < NET_SOCKSTUB_BUF_SIZE)
 		  lenRead = len;
-		}
-		else {
+		else
 		  lenRead = NET_SOCKSTUB_BUF_SIZE;
-		}
 
 		rv = aIStream->Read(m_buffer, lenRead, &lenRead);
-		if (NS_OK != rv) {
+		if (NS_OK != rv)
 		  return rv;
-		}
 
 		/* XXX: We should check if the write has succeeded or not */
 		(int) NET_BlockingWrite(m_ready_fd, m_buffer, lenRead);
@@ -313,6 +308,7 @@ void nsSocketTransport::Initialize()
 	m_inputStream = NULL;
 	m_inputStreamConsumer = NULL;
 	m_url = NULL;
+	m_bindedUrlStruct = NULL;
 
 	m_outStream = NULL;
 	m_outStreamSize = 0;
@@ -344,32 +340,56 @@ nsSocketTransport::~nsSocketTransport()
   rv = CloseCurrentConnection();
 
   NS_IF_RELEASE(mEventQService);
-	NS_IF_RELEASE(m_evQueue);
+  NS_IF_RELEASE(m_evQueue);
   NS_IF_RELEASE(m_outStream);
   NS_IF_RELEASE(m_url);
   NS_IF_RELEASE(m_inputStreamConsumer);
 }
 
-NS_IMETHODIMP 
-nsSocketTransport::GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult)
+NS_IMETHODIMP nsSocketTransport::SetSocketBinding(nsIURL* pURL, URL_Struct_ ** aResult)
 {
   nsresult rv = NS_OK;
   nsINetlibURL *pNetlibURL = NULL;
-
-  NS_PRECONDITION(aResult != nsnull, "invalid input argument");
-  if (aResult && pURL)
+  if (pURL && aResult)
   {
-	  *aResult = nsnull;
       if (pURL)
           rv = pURL->QueryInterface(kINetlibURLIID, (void**)&pNetlibURL);
-	  if (NS_SUCCEEDED(rv) && pNetlibURL) {
-
+	  if (NS_SUCCEEDED(rv) && pNetlibURL) 
+	  {
 		pNetlibURL->GetURLInfo(aResult);
 		NS_RELEASE(pNetlibURL);
 	  } 
   }
   
   return rv;
+}
+
+NS_IMETHODIMP 
+nsSocketTransport::GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult)
+{
+	// hack alert!!! we use a url struct to bind a socket transport to an active entry 
+	// running the sockstub protocol. however the url struct is bound to the url. if you run
+	// another url through the socket, you'll get a different active entry back! (i.e.
+	// you won't get the original active entry that should be bound to the transport. 
+	// so i'm going to remember the url_struct used to create the active entry and we'll 
+	// always return that url struct for the lifetime ofthe transport. This will ensure,
+	// that we always get the original active entry and those allows us to run multiple
+	// urls through this connection.
+
+	SetSocketBinding(pURL, aResult);
+
+	if (!m_bindedUrlStruct && aResult)
+		m_bindedUrlStruct = *aResult;
+	else // we must be running a new url.....
+	{
+		// this is a god awful hack...i'm ashamed.....swap the url associated with
+		// the connection info out from under us with the new url...pURL.
+		
+		nsIConnectionInfo * pConn = (nsIConnectionInfo *) m_bindedUrlStruct->fe_data;
+		if (pConn)
+			pConn->SetURL(pURL);
+	}
+	return NS_OK;
 }
 
 nsresult nsSocketTransport::CloseCurrentConnection()
