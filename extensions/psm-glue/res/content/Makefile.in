@@ -35,3 +35,14 @@ EXPORT_CONTENT = \
 
 install::
 	$(INSTALL) $(EXPORT_CONTENT) $(CONTENT_DIR)
+
+CONTENT_DIR   = $(DIST)/bin/chrome/global/content/default/
+EXPORT_CONTENT = \
+  $(srcdir)/PSMTaskMenu.xul \
+  $(srcdir)/psm.js \
+  $(NULL)
+
+install::
+	$(INSTALL) $(EXPORT_CONTENT) $(CONTENT_DIR)
+
+

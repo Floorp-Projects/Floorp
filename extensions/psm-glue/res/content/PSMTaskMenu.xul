@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/PSMTaskMenu.dtd" >
+
+<overlay id="psmTaskMenuID"
+xmlns:html="http://www.w3.org/TR/REC-html40"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://netwerk/content/https/psm.js" />
+
+<menupopup id="taskPopup">
+    <menuitem id="PSMMentItem" position="4" value="&PSMCmd.label;" oncommand="displaySecurityAdvisor()"/>
+</menupopup>
+
+</overlay>
