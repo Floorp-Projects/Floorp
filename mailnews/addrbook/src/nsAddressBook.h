@@ -32,7 +32,6 @@
 #include "nsIFileSpecWithUI.h"
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
-#include "nsIFileSpec.h"
 
 #define NC_RDF_NEWABCARD			"http://home.netscape.com/NC-rdf#NewCard"
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"

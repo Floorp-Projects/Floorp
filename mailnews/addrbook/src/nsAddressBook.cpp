@@ -1448,13 +1448,26 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 {
     nsresult rv = NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIFileSpecWithUI> fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
-	if (!fileSpec)
-		return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+	
+    filePicker->Init(nsnull, nsnull, nsIFilePicker::modeOpen);
 
-    // XXX: todo "Open File" should be in a string bundle
-	rv = fileSpec->ChooseInputFile("Open File", nsIFileSpecWithUI::eAllFiles, nsnull, nsnull);
-	if (NS_FAILED(rv)) return rv;
+    PRInt16 dialogResult;
+    filePicker->Show(&dialogResult);
+
+    if (dialogResult == nsIFilePicker::returnCancel)
+        return rv;
+        
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = filePicker->GetFile(getter_AddRefs(localFile));
+    if (NS_FAILED(rv)) return rv;
+                    
+    nsXPIDLCString path;
+    localFile->GetPath(getter_Copies(path));
+    nsCOMPtr<nsIFileSpec> fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+    fileSpec->SetNativePath(path);
 
 	// todo, check that we have a file, not a directory, and that is readable
 	// and that it is not zero length.
