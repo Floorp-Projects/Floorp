@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.23 $
+ *  Version: $Revision: 1.24 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.23 2002/03/09 17:13:11 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.24 2002/03/26 07:09:26 samuel%sieb.net Exp $
  */
 
 /*
@@ -380,6 +380,7 @@ nsXmlRpcClient.prototype = {
                     'nsISupportsArray');
 
             case this.STRUCT:
+                uuid.value = Components.interfaces.nsIDictionary
                 return createInstance('@mozilla.org/dictionary;1', 
                     'nsIDictionary');
 
