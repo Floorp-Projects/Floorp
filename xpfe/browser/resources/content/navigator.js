@@ -371,9 +371,9 @@ function Startup()
     // Focus the content area if the caller instructed us to.
     if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true ||
         !window.locationbar.visible)
-      setTimeout("_content.focus();", 0); // XXXjag bug 91884
+      setTimeout(WindowFocusTimerCallback, 0, _content);
     else
-      setTimeout("gURLBar.focus();", 0);  // XXXjag bug 91884
+      setTimeout(WindowFocusTimerCallback, 0, gURLBar);
 
     // Perform default browser checking.
     checkForDefaultBrowser();
@@ -385,6 +385,23 @@ function Startup()
                                 .getService(Components.interfaces.nsIXRemoteService);
       remoteService.addBrowserInstance(window);
     }
+  }
+}
+
+function WindowFocusTimerCallback(element)
+{
+  // This fuction is a redo of the fix for jag bug 91884
+  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                     .getService(Components.interfaces.nsIWindowWatcher);
+  if (window == ww.activeWindow) {
+    element.focus();
+  } else {
+    // set the element in command dispatcher so focus will restore properly
+    // when the window does become active
+    if (element instanceof Components.interfaces.nsIDOMElement)
+      document.commandDispatcher.focusedElement = element;
+    else if (element instanceof Components.interfaces.nsIDOMWindow)
+      document.commandDispatcher.focusedWindow = element;
   }
 }
 
