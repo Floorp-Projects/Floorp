@@ -703,7 +703,27 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
 {
-  *outResult = PR_TRUE;  // say we always do.
+  *outResult = PR_FALSE;
+  PRUint32 length;
+  aFlavorList->Count(&length);
+  for ( PRUint32 i = 0; i < length; ++i ) {
+    nsCOMPtr<nsISupports> genericFlavor;
+    aFlavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+    nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface(genericFlavor) );
+    if ( flavorWrapper ) {
+      nsXPIDLCString flavor;
+      flavorWrapper->ToString ( getter_Copies(flavor) );
+      
+      gint format = GetFormat(flavor);
+      if (DoConvert(format)) {
+        *outResult = PR_TRUE;
+        break;
+      }
+    }
+  }
+#ifdef DEBUG_CLIPBOARD
+  printf("nsClipboard::HasDataMatchingFlavors() called -- returning %i\n", *outResult);
+#endif
   return NS_OK;
 }
 
