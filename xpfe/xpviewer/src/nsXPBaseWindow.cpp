@@ -25,26 +25,16 @@
 #define NS_IMPL_IDS
 #include "nsXPBaseWindow.h"
 #endif
-#include "nsIStreamListener.h"
+
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
-#include "nsITextWidget.h"
-#include "nsIButton.h"
-#include "nsIImageGroup.h"
-#include "nsITimer.h"
-#include "nsIThrobber.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
-#include "nsIFileWidget.h"
-#include "nsILookAndFeel.h"
 #include "nsRepository.h"
 #include "nsIFactory.h"
 #include "nsCRT.h"
 #include "nsWidgetsCID.h"
 #include "nsViewerApp.h"
-#include "prprf.h"
-#include "nsRepository.h"
-#include "nsParserCIID.h"
 
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -52,10 +42,7 @@
 #include "nsIContentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsXIFDTD.h"
-#include "nsIParser.h"
 #include "nsHTMLContentSinkStream.h"
-#include "nsIDocumentLoader.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsWindowListener.h"
@@ -69,20 +56,8 @@
 
 // XXX For font setting below
 #include "nsFont.h"
-#include "nsUnitConversion.h"
-#include "nsIDeviceContext.h"
-
-#ifdef INSET_WEBSHELL
-#define WEBSHELL_LEFT_INSET 5
-#define WEBSHELL_RIGHT_INSET 5
-#define WEBSHELL_TOP_INSET 5
-#define WEBSHELL_BOTTOM_INSET 5
-#else
-#define WEBSHELL_LEFT_INSET 0
-#define WEBSHELL_RIGHT_INSET 0
-#define WEBSHELL_TOP_INSET 0
-#define WEBSHELL_BOTTOM_INSET 0
-#endif
+//#include "nsUnitConversion.h"
+//#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
@@ -99,7 +74,6 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID,   NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDocLoaderObserverIID,  NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 
@@ -110,7 +84,6 @@ nsXPBaseWindow::nsXPBaseWindow() :
   mAppShell(nsnull),
   mDocIsLoaded(PR_FALSE)
 {
-
 }
 
 //----------------------------------------------------------------------
@@ -270,11 +243,9 @@ nsresult nsXPBaseWindow::Init(nsIAppShell* aAppShell,
   // Now lay it all out
   Layout(r.width, r.height);
 
-
   // Load URL to Load GUI
   mDialogURL = aDialogURL;
   LoadURL(mDialogURL);
-  //SetVisible(PR_TRUE);
 
   SetTitle(aTitle);
 
@@ -301,19 +272,10 @@ void nsXPBaseWindow::ForceRefresh()
   }
 }
 
-
-
 //----------------------------------------------------------------------
 void nsXPBaseWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
   nsRect rr(0, 0, aWidth, aHeight);
-
-  // inset the web widget
-  /*rr.x += WEBSHELL_LEFT_INSET;
-  rr.y += WEBSHELL_TOP_INSET;
-  rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
-  rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
-  */
   mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
 }
 
@@ -817,9 +779,8 @@ nsresult nsXPBaseWindow::MouseOut(nsIDOMEvent* aMouseEvent)
 }
 
 //----------------------------------------------------------------------
-
 // Factory code for creating nsXPBaseWindow's
-
+//----------------------------------------------------------------------
 class nsXPBaseWindowFactory : public nsIFactory
 {
 public:
@@ -842,16 +803,19 @@ private:
   nsrefcnt  mRefCnt;
 };
 
+//----------------------------------------------------------------------
 nsXPBaseWindowFactory::nsXPBaseWindowFactory()
 {
   mRefCnt = 0;
 }
 
+//----------------------------------------------------------------------
 nsXPBaseWindowFactory::~nsXPBaseWindowFactory()
 {
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
+//----------------------------------------------------------------------
 nsresult
 nsXPBaseWindowFactory::QueryInterface(const nsIID &aIID, void **aResult)
 {
@@ -876,12 +840,14 @@ nsXPBaseWindowFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
 nsrefcnt
 nsXPBaseWindowFactory::AddRef()
 {
   return ++mRefCnt;
 }
 
+//----------------------------------------------------------------------
 nsrefcnt
 nsXPBaseWindowFactory::Release()
 {
@@ -892,6 +858,7 @@ nsXPBaseWindowFactory::Release()
   return mRefCnt;
 }
 
+//----------------------------------------------------------------------
 nsresult
 nsXPBaseWindowFactory::CreateInstance(nsISupports *aOuter,
                                        const nsIID &aIID,
@@ -923,6 +890,7 @@ done:
   return rv;
 }
 
+//----------------------------------------------------------------------
 nsresult
 nsXPBaseWindowFactory::LockFactory(PRBool aLock)
 {
@@ -930,6 +898,7 @@ nsXPBaseWindowFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
 nsresult
 NS_NewXPBaseWindowFactory(nsIFactory** aFactory)
 {
