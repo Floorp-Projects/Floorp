@@ -1111,7 +1111,8 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  fprintf(out, " sc=%p", mStyleContext);
+  fprintf(out, " [content=%p]", mContent);
+  fprintf(out, " [sc=%p]", mStyleContext);
 
   // Output the children
   nsIAtom* listName = nsnull;

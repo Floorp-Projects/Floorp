@@ -17,10 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author(s):
+ * Contributor(s): 
  *   Chris Waterson <waterson@netscape.com>
- *
- * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
  *   Brendan Eich <brendan@mozilla.org>
@@ -3401,79 +3399,121 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
     NS_PRECONDITION(mDocument != nsnull, "bad content");
 
-    nsresult rv;
-    {
-        rdf_Indent(out, aIndent);
-        fputs("<XUL", out);
-        if (mSlots) fputs("*", out);
+    PRInt32 i;
+
+    rdf_Indent(out, aIndent);
+    fputs("<XUL", out);
+    if (mSlots) fputs("*", out);
+    fputs(" ", out);
+
+    nsAutoString as;
+    NodeInfo()->GetQualifiedName(as);
+    fputs(NS_ConvertUCS2toUTF8(as).get(), out);
+
+    fprintf(out, "@%p", this);
+
+    PRInt32 nattrs;
+    GetAttributeCount(nattrs);
+
+    for (i = 0; i < nattrs; ++i) {
+        nsCOMPtr<nsIAtom> attr;
+        nsCOMPtr<nsIAtom> prefix;
+        PRInt32 nameSpaceID;
+        GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
+
+        nsAutoString v;
+        GetAttribute(nameSpaceID, attr, v);
+
         fputs(" ", out);
 
-        PRInt32 namespaceID;
-        NodeInfo()->GetNamespaceID(namespaceID);
+        nsAutoString s;
 
-        if (namespaceID == kNameSpaceID_Unknown) {
-            fputs("unknown:", out);
+        if (prefix) {
+            prefix->ToString(s);
+
+            fputs(NS_ConvertUCS2toUTF8(s).get(), out);
+            fputs(":", out);
         }
 
-        nsAutoString as;
-        NodeInfo()->GetQualifiedName(as);
-        fputs(as, out);
+        attr->ToString(s);
+
+        fputs(NS_ConvertUCS2toUTF8(s).get(), out);
+        fputs("=", out);
+        fputs(NS_ConvertUCS2toUTF8(v).get(), out);
     }
 
-    {
-        PRInt32 nattrs;
+    PRInt32 nchildren;
+    ChildCount(nchildren);
 
-        if (NS_SUCCEEDED(rv = GetAttributeCount(nattrs))) {
-            for (PRInt32 i = 0; i < nattrs; ++i) {
-                nsIAtom* attr = nsnull;
-                nsCOMPtr<nsIAtom> prefix;
-                PRInt32 nameSpaceID;
-                GetAttributeNameAt(i, nameSpaceID, attr, *getter_AddRefs(prefix));
+    if (nchildren) {
+        fputs("\n", out);
 
-                nsAutoString v;
-                GetAttribute(nameSpaceID, attr, v);
+        for (i = 0; i < nchildren; ++i) {
+            nsCOMPtr<nsIContent> child;
+            ChildAt(i, *getter_AddRefs(child));
 
-                fputs(" ", out);
-
-                nsAutoString s;
-
-                if (prefix) {
-                    prefix->ToString(s);
-
-                    fputs(s, out);
-                    fputs(":", out);
-                }
-
-                attr->ToString(s);
-                NS_RELEASE(attr);
-
-                fputs(s, out);
-                fputs("=", out);
-                fputs(v, out);
-            }
+            child->List(out, aIndent + 1);
         }
 
-        if (NS_FAILED(rv))
-            return rv;
+        rdf_Indent(out, aIndent);
     }
-
     fputs(">\n", out);
 
-    {
-        PRInt32 nchildren;
-        if (NS_FAILED(rv = ChildCount(nchildren)))
-            return rv;
+    if (mDocument) {
+        nsCOMPtr<nsIBindingManager> bindingManager;
+        mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+        if (bindingManager) {
+            nsCOMPtr<nsIDOMNodeList> anonymousChildren;
+            bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
+                                                 getter_AddRefs(anonymousChildren));
 
-        for (PRInt32 i = 0; i < nchildren; ++i) {
-            nsIContent* child;
-            if (NS_FAILED(rv = ChildAt(i, child)))
-                return rv;
+            if (anonymousChildren) {
+                PRUint32 length;
+                anonymousChildren->GetLength(&length);
+                if (length) {
+                    rdf_Indent(out, aIndent);
+                    fputs("anonymous-children<\n", out);
 
-            rv = child->List(out, aIndent + 1);
-            NS_RELEASE(child);
+                    for (PRUint32 i2 = 0; i2 < length; ++i2) {
+                        nsCOMPtr<nsIDOMNode> node;
+                        anonymousChildren->Item(i2, getter_AddRefs(node));
+                        nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+                        child->List(out, aIndent + 1);
+                    }
 
-            if (NS_FAILED(rv))
-                return rv;
+                    rdf_Indent(out, aIndent);
+                    fputs(">\n", out);
+                }
+            }
+
+            PRBool hasContentList;
+            bindingManager->HasContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
+                                              &hasContentList);
+
+            if (hasContentList) {
+                nsCOMPtr<nsIDOMNodeList> contentList;
+                bindingManager->GetContentListFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
+                                                  getter_AddRefs(contentList));
+
+                NS_ASSERTION(contentList != nsnull, "oops, binding manager lied");
+
+                PRUint32 length;
+                contentList->GetLength(&length);
+                if (length) {
+                    rdf_Indent(out, aIndent);
+                    fputs("content-list<\n", out);
+
+                    for (PRUint32 i2 = 0; i2 < length; ++i2) {
+                        nsCOMPtr<nsIDOMNode> node;
+                        contentList->Item(i2, getter_AddRefs(node));
+                        nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+                        child->List(out, aIndent + 1);
+                    }
+
+                    rdf_Indent(out, aIndent);
+                    fputs(">\n", out);
+                }
+            }
         }
     }
 
