@@ -50,7 +50,7 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 #endif /* PR_LOGGING */
 
 
-#define MAX_NUMBER_OF_OPEN_TRANSPORTS 4
+#define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
