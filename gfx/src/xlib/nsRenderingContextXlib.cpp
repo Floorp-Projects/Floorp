@@ -18,23 +18,59 @@
 
 #include "nsRenderingContextXlib.h"
 #include "nsFontMetricsXlib.h"
+#include "xlibrgb.h"
+#include "prprf.h"
 #include "prmem.h"
 
 static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
+class GraphicsState
+{
+public:
+  GraphicsState();
+  ~GraphicsState();
+
+  nsTransform2D  *mMatrix;
+  nsRegionXlib   *mClipRegion;
+  nscolor         mColor;
+  nsLineStyle     mLineStyle;
+  nsIFontMetrics *mFontMetrics;
+};
+
+GraphicsState::GraphicsState()
+{
+  mMatrix = nsnull;
+  mClipRegion = nsnull;
+  mColor = NS_RGB(0, 0, 0);
+  mLineStyle = nsLineStyle_kSolid;
+  mFontMetrics = nsnull;
+}
+
+GraphicsState::~GraphicsState()
+{
+  NS_IF_RELEASE(mClipRegion);
+  NS_IF_RELEASE(mFontMetrics);
+}
+
 nsRenderingContextXlib::nsRenderingContextXlib()
 {
   printf("nsRenderingContextXlib::nsRenderingContextXlib()\n");
   NS_INIT_REFCNT();
+  mOffscreenSurface = nsnull;
   mRenderingSurface = nsnull;
-  mTMatrix = nsnull;
-  mFontMetrics = nsnull;
   mContext = nsnull;
-  mScriptObject = nsnull;
-  mCurrentFont = nsnull;
+  mFontMetrics = nsnull;
+  mTMatrix = nsnull;
   mP2T = 1.0f;
+  mScriptObject = nsnull;
+  mStateCache = new nsVoidArray();
+  mCurrentFont = nsnull;
+  mCurrentLineStyle = nsLineStyle_kSolid;
+  mCurrentColor = NS_RGB(0, 0, 0);
+
+  PushState();
 }
 
 nsRenderingContextXlib::~nsRenderingContextXlib()
@@ -42,6 +78,22 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
   printf("nsRenderingContextXlib::~nsRenderingContextXlib()\n");
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontMetrics);
+  if (mStateCache) {
+    PRInt32 cnt = mStateCache->Count();
+
+    while (--cnt >= 0) {
+      PRBool clipstate;
+      PopState(clipstate);
+    }
+    delete mStateCache;
+    mStateCache = nsnull;
+  }
+  if (mTMatrix)
+    delete mTMatrix;
+  NS_IF_RELEASE(mClipRegion);
+  NS_IF_RELEASE(mOffscreenSurface);
+  NS_IF_RELEASE(mFontMetrics);
+  NS_IF_RELEASE(mContext);
 }
 
 nsresult
@@ -126,7 +178,20 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
 nsresult nsRenderingContextXlib::CommonInit(void)
 {
   // put common stuff in here.
+  int x, y;
+  unsigned int width, height, border, depth;
+  Window root_win;
+
+  XGetGeometry(gDisplay, mRenderingSurface->GetDrawable(), &root_win,
+               &x, &y, &width, &height, &border, &depth);
+  mClipRegion = new nsRegionXlib();
+  mClipRegion->Init();
+  mClipRegion->SetTo(0, 0, width, height);
+
   mContext->GetDevUnitsToAppUnits(mP2T);
+  float app2dev;
+  mContext->GetAppUnitsToDevUnits(app2dev);
+  mTMatrix->AddScale(app2dev, app2dev);
   return NS_OK;
 }
 
@@ -188,6 +253,29 @@ NS_IMETHODIMP
 nsRenderingContextXlib::PushState(void)
 {
   printf("nsRenderingContextXlib::PushState()\n");
+  GraphicsState *state = new GraphicsState();
+
+  state->mMatrix = mTMatrix;
+
+  if (nsnull == mTMatrix)
+    mTMatrix = new nsTransform2D();
+  else
+    mTMatrix = new nsTransform2D(mTMatrix);
+
+  if (mClipRegion) {
+    NS_IF_ADDREF(mClipRegion);
+    state->mClipRegion = mClipRegion;
+    mClipRegion = new nsRegionXlib();
+    mClipRegion->Init();
+    mClipRegion->SetTo((const nsIRegion &)*(state->mClipRegion));
+  }
+
+  NS_IF_ADDREF(mFontMetrics);
+  state->mFontMetrics = mFontMetrics;
+  state->mColor = mCurrentColor;
+  state->mLineStyle = mCurrentLineStyle;
+
+  mStateCache->AppendElement(state);
   return NS_OK;
 }
 
@@ -195,6 +283,42 @@ NS_IMETHODIMP
 nsRenderingContextXlib::PopState(PRBool &aClipState)
 {
   printf("nsRenderingContextXlib::PopState()\n");
+
+  PRUint32 cnt = mStateCache->Count();
+  GraphicsState *state;
+  
+  if (cnt > 0) {
+    state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
+    mStateCache->RemoveElementAt(cnt - 1);
+    
+    if (mTMatrix)
+      delete mTMatrix;
+    mTMatrix = state->mMatrix;
+    
+    NS_IF_RELEASE(mClipRegion);
+    
+    mClipRegion = state->mClipRegion;
+    mFontMetrics = state->mFontMetrics;
+
+    if (mRenderingSurface && mClipRegion) {
+      Region region;
+      mClipRegion->GetNativeRegion((void *&)region);
+      XSetRegion(gDisplay, mRenderingSurface->GetGC(), region);
+    }
+
+    if (state->mColor != mCurrentColor)
+      SetColor(state->mColor);
+    if (state->mLineStyle != mCurrentLineStyle)
+      SetLineStyle(state->mLineStyle);
+
+    delete state;
+  }
+
+  if (mClipRegion)
+    aClipState = mClipRegion->IsEmpty();
+  else 
+    aClipState = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -237,6 +361,39 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
 {
   printf("nsRenderingContextXlib::SetLineStyle()\n");
+  if (aLineStyle != mCurrentLineStyle) {
+    switch(aLineStyle)
+      { 
+      case nsLineStyle_kSolid:
+        XSetLineAttributes(gDisplay, mRenderingSurface->GetGC(),
+                           1, // width
+                           LineSolid, // line style
+                           CapNotLast,// cap style
+                           JoinMiter);// join style
+        break;
+      case nsLineStyle_kDashed:
+        {
+          static char dashed[2] = {4,4};
+          XSetDashes(gDisplay, mRenderingSurface->GetGC(),
+                     0, dashed, 2);
+        }
+        break;
+
+      case nsLineStyle_kDotted:
+        {
+          static char dotted[2] = {3,1};
+          XSetDashes(gDisplay, mRenderingSurface->GetGC(),
+                     0, dotted, 2);
+        }
+        break;
+
+    default:
+        break;
+
+    }
+    
+    mCurrentLineStyle = aLineStyle ;
+  }
   return NS_OK;
 }
 
@@ -244,6 +401,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetLineStyle(nsLineStyle &aLineStyle)
 {
   printf("nsRenderingContextXlib::GetLineStyle()\n");
+  aLineStyle = mCurrentLineStyle;
   return NS_OK;
 }
 
@@ -251,13 +409,28 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SetColor(nscolor aColor)
 {
   printf("nsRenderingContextXlib::SetColor()\n");
+  if (nsnull == mContext)
+    return NS_ERROR_FAILURE;
+
+  mCurrentColor = aColor;
+  xlib_rgb_gc_set_foreground(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
+                                                                NS_GET_G(aColor),
+                                                                NS_GET_B(aColor)));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::SetColor(nsString const &aColor)
+nsRenderingContextXlib::SetColor(const nsString &aColor)
 {
-  printf("nsRenderingContextXlib::SetColor()\n");
+  nscolor rgb;
+  char cbuf[40];
+  aColor.ToCString(cbuf, sizeof(cbuf));
+  if (NS_ColorNameToRGB(cbuf, &rgb)) {
+    SetColor(rgb);
+  }
+  else if (NS_HexToRGB(cbuf, &rgb)) {
+    SetColor(rgb);
+  }
   return NS_OK;
 }
 
@@ -265,13 +438,19 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetColor(nscolor &aColor) const
 {
   printf("nsRenderingContextXlib::GetColor()\n");
+  aColor = mCurrentColor;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::GetColor(nsString& aColor)
+nsRenderingContextXlib::GetColor(nsString &aColor)
 {
-  printf("nsRenderingContextXlib::GetColor()\n");
+  char cbuf[40];
+  PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
+              NS_GET_R(mCurrentColor),
+              NS_GET_G(mCurrentColor),
+              NS_GET_B(mCurrentColor));
+  aColor = cbuf;
   return NS_OK;
 }
 

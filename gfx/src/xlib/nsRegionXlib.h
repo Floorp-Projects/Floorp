@@ -17,7 +17,7 @@
  */
 
 #ifndef nsRegionXlib_h___
-#define nsRegionXlib_h__
+#define nsRegionXlib_h___
 
 #include "nsIRegion.h"
 
