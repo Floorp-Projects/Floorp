@@ -21,25 +21,13 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIInterfaceRequestor.idl"
-#include "nsIDocShell.idl"
+
+interface nsIDocShell;
+interface nsIInterfaceRequestor;
+interface nsIWebBrowserChrome;
 
 /**
  * The nsIWebBrowser
- */
-
- /*
- {69E5DF00-7B8B-11d3-AF61-00A024FFC08C} -
- {69E5DF99-7B8B-11d3-AF61-00A024FFC08C} have been reserved for nsWebBrowser
-													Interfaces.
-
- Currently Used:
- {69E5DF00-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowser
- {69E5DF01-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserNav
- {69E5DF02-7B8B-11d3-AF61-00A024FFC08C} - Available
- {69E5DF03-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserApp
- {69E5DF04-7B8B-11d3-AF61-00A024FFC08C} - nsIProgress
- {69E5DF05-7B8B-11d3-AF61-00A024FFC08C} - nsIProgressListener
  */
 
 [scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]
@@ -84,8 +72,20 @@ interface nsIWebBrowser : nsISupports
 	void removeWebBrowserListener(in nsIInterfaceRequestor listener, in long cookie);
 
 	/*
-		The current docShell that is loaded at the root.  This will change as 
-		different pages are loaded.
+	This is the top level window embedding the browser.  The object passed in
+	will be QI'd and used for setting positioning, chrome elements, etc of the
+	containing window.  This interface is implemented by the embedding app.
+	The topLevelWindow object will be QId for nsIInterfaceRequestor, if it 
+	is found, it is considered and implicit addition to the webBrowserListener
+	list and will be queried first.  Implementations of this interface should
+	not refcount the topLevelWindow as it is considered the owner of the browser
+	window.  That therefore means that when the topLevelWindow goes away, it 
+	must set topLevelWindow to nsnull.
+	*/
+	attribute nsIWebBrowserChrome topLevelWindow;
+
+	/*
+		The root docShell of the browserWindow. 
 	*/
 	readonly attribute nsIDocShell docShell;
 };

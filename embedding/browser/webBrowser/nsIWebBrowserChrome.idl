@@ -1,0 +1,76 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsIWebBrowser;
+
+/**
+ * The nsIWebBrowserChrome
+ */
+
+[scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]
+interface nsIWebBrowserChrome : nsISupports
+{
+	/*
+		Called when the js status value changes.  nsnull will be passed when 
+		there is no longer any js Status.  
+	*/
+	void setJSStatus(in wstring status);
+
+	/*
+		Called when the current link the mouse is over changes.  nsnull will 
+		be passed when the mouse is no longer over a link.
+	*/
+	void setOverLink(in wstring link);
+
+	/*
+		Called when the page is requesting the chrome to change the title.
+	*/
+	void setTitle(in wstring title);
+
+	/*
+		This is the currently loaded webBrowser.  The browser chrome may be
+		told to set the webBrowser object to a new object via setting of this
+		attribute.  In this case the implementer is responsible for taking the 
+		new webBrowser object and doing any necessary initialization or setup 
+		as if it had created the webBrowser itself.  This includes positioning
+		setting up listeners etc.
+	*/
+	attribute nsIWebBrowser webBrowser;
+
+	/*
+		Tells the implementer of this interface to create a new webBrowserChrome
+		object for it.  Typically this means the implemetor will create a new 
+		top level window that is represented by nsIWebBrowserChrome.  This
+		most often will be called when for instance there is a need for a new
+		JS window, etc.  Soon after this new object is returned, the webBrowser
+		attribute will be set with the new widget to instantiate in this 
+		new window.	
+	*/
+	void getNewBrowserChrome(out nsIWebBrowserChrome webBrowserChrome);
+
+	void findNamedWebBrowser(out nsIWebBrowserChrome webBrowserChrome);
+
+	/*	XXX Figure these out....
+	void OnFocusAvailable();  */
+};

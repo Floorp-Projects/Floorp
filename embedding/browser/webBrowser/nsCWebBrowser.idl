@@ -36,6 +36,11 @@ nsIProgress
 nsIBaseWindow
 nsIScrollable
 nsITextScroll
+
+Outwardly communicates with:
+----------------------------
+nsIWebBrowserChrome
+nsIInterfaceRequestor
 */
 
 %{ C++
