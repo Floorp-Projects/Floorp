@@ -158,6 +158,8 @@ protected:
   nsRegionGTK           *mRegion;
   nsTransform2D         *mTMatrix;
   float                  mP2T;
+  GdkWChar*              mDrawStringBuf;
+  PRInt32                mDrawStringSize;
 
  // graphic state stack (GraphicsState)
   nsVoidArray           *mStateCache;

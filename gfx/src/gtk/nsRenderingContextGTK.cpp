@@ -116,6 +116,9 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
 
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
+  if (nsnull != mDrawStringBuf) {
+    delete [] mDrawStringBuf;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextGTK, kRenderingContextIID)
@@ -556,7 +559,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  PRUint32 i;
+  PRInt32 i;
 
   g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
   g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
@@ -803,81 +806,90 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
 {
-  gint width;
-  GdkFont *font = (GdkFont *)mCurrentFont;
-  width = gdk_char_width(font,aC); 
-  aWidth = NSToCoordRound(width * mP2T);
+  gint rawWidth = gdk_char_width(mCurrentFont, aC); 
+  aWidth = NSToCoordRound(rawWidth * mP2T);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID)
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord& aWidth,
+                                PRInt32* aFontID)
 {
-  gint width;
-  GdkFont *font = (GdkFont *)mCurrentFont;
-  width = gdk_char_width_wc(font,(GdkWChar)aC); 
-  aWidth = NSToCoordRound(width * mP2T);
+  gint rawWidth = gdk_char_width_wc(mCurrentFont, (GdkWChar)aC); 
+  aWidth = NSToCoordRound(rawWidth * mP2T);
   if (nsnull != aFontID)
     *aFontID = 0;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(const nsString& aString,
+                                nscoord& aWidth, PRInt32* aFontID)
 {
-  char* cStr = aString.ToNewCString();
-  NS_IMETHODIMP ret = GetWidth(cStr, aString.Length(), aWidth);
-  delete[] cStr;
-  if (nsnull != aFontID)
-    *aFontID = 0;
-  return ret;
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString, nscoord &aWidth)
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(const char* aString, nscoord& aWidth)
 {
   return GetWidth(aString, strlen(aString), aWidth);
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
-                                              PRUint32 aLength, nscoord &aWidth)
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(const char* aString, PRUint32 aLength,
+                                nscoord& aWidth)
 {
-  g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
-  /* this really shouldn't be 0, and this gets called quite a bit.  not sure
-   * why.  could someone fix this on the XP side please?
-   */
-//  g_return_val_if_fail(aLength != 0, NS_ERROR_FAILURE);
-
-  PRInt32     rc;
-
-  GdkFont *font = (GdkFont *)mCurrentFont;
-  rc = gdk_text_width (font, aString, aLength);
-  aWidth = NSToCoordRound(rc * mP2T);
-
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+    gint rawWidth = gdk_text_width (mCurrentFont, aString, aLength);
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }
   return NS_OK;
 }
 
-
-
-NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
-                                              PRUint32 aLength, nscoord &aWidth,
-                                              PRInt32 *aFontID)
+NS_IMETHODIMP
+nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                                nscoord& aWidth, PRInt32* aFontID)
 {
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
-  /* this really shouldn't be 0, and this gets called quite a bit.  not sure
-   * why.  could someone fix this on the XP side please?
-   */
-//    g_return_val_if_fail(aLength != 0, NS_ERROR_FAILURE);
 
-    nsString nsStr;
-    nsStr.SetString(aString, aLength);
-    char* cStr = nsStr.ToNewCString();
-    NS_IMETHODIMP ret = GetWidth(cStr, aLength, aWidth);
-    delete[] cStr;
+    // Make the temporary buffer larger if needed.
+    if (nsnull == mDrawStringBuf) {
+      mDrawStringBuf = new GdkWChar[aLength];
+      mDrawStringSize = aLength;
+    }
+    else {
+      if (mDrawStringSize < PRInt32(aLength)) {
+        delete [] mDrawStringBuf;
+        mDrawStringBuf = new GdkWChar[aLength];
+        mDrawStringSize = aLength;
+      }
+    }
 
-    if (nsnull != aFontID)
-      *aFontID = 0;
+    // Translate the unicode data into GdkWChar's
+    GdkWChar* xc = mDrawStringBuf;
+    GdkWChar* end = xc + aLength;
+    while (xc < end) {
+      *xc++ = (GdkWChar) *aString++;
+    }
 
-    return ret;
+    gint rawWidth = gdk_text_width_wc(mCurrentFont, mDrawStringBuf, aLength);
+    aWidth = NSToCoordRound(rawWidth * mP2T);
+  }
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -885,30 +897,28 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                                   nscoord aX, nscoord aY,
                                   const nscoord* aSpacing)
 {
-  g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
-  /* this really shouldn't be 0, and this gets called quite a bit.  not sure
-   * why.  could someone fix this on the XP side please?
-   */
-//  g_return_val_if_fail(aLength != 0, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
+  if (0 != aLength) {
+    g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
 
-  nscoord x = aX;
-  nscoord y = aY;
+    nscoord x = aX;
+    nscoord y = aY;
 
-  // Substract xFontStruct ascent since drawing specifies baseline
-  if (mFontMetrics) {
-    mFontMetrics->GetMaxAscent(y);
-    y+=aY;
+    // Substract xFontStruct ascent since drawing specifies baseline
+    if (mFontMetrics) {
+      mFontMetrics->GetMaxAscent(y);
+      y += aY;
+    }
+
+    mTMatrix->TransformCoord(&x, &y);
+
+    ::gdk_draw_text (mRenderingSurface->drawable, mCurrentFont,
+                     mRenderingSurface->gc,
+                     x, y, aString, aLength);
   }
-
-  mTMatrix->TransformCoord(&x,&y);
-
-  ::gdk_draw_text (mRenderingSurface->drawable, mCurrentFont,
-                   mRenderingSurface->gc,
-                   x, y, aString, aLength);
 
 #if 0
   //this is no longer to be done by this API, but another
@@ -947,25 +957,65 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                                nscoord aX, nscoord aY,
-                                                PRInt32 aFontID,
-                                                const nscoord* aSpacing)
+NS_IMETHODIMP
+nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
+                                  nscoord aX, nscoord aY,
+                                  PRInt32 aFontID,
+                                  const nscoord* aSpacing)
 {
-  nsString nsStr;
-  nsStr.SetString(aString, aLength);
-  char* cStr = nsStr.ToNewCString();
-  NS_IMETHODIMP ret = DrawString(cStr, aLength, aX, aY, aSpacing);
-  delete[] cStr;
-  return ret;
+  if (0 != aLength) {
+    g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+
+    nscoord x = aX;
+    nscoord y = aY;
+
+    // Substract xFontStruct ascent since drawing specifies baseline
+    if (mFontMetrics) {
+      mFontMetrics->GetMaxAscent(y);
+      y += aY;
+    }
+
+    mTMatrix->TransformCoord(&x, &y);
+
+    // Make the temporary buffer larger if needed.
+    if (nsnull == mDrawStringBuf) {
+      mDrawStringBuf = new GdkWChar[aLength];
+      mDrawStringSize = aLength;
+    }
+    else {
+      if (mDrawStringSize < PRInt32(aLength)) {
+        delete [] mDrawStringBuf;
+        mDrawStringBuf = new GdkWChar[aLength];
+        mDrawStringSize = aLength;
+      }
+    }
+
+    // Translate the unicode data into GdkWChar's
+    GdkWChar* xc = mDrawStringBuf;
+    GdkWChar* end = xc + aLength;
+    while (xc < end) {
+      *xc++ = (GdkWChar) *aString++;
+    }
+
+    ::gdk_draw_text_wc (mRenderingSurface->drawable, mCurrentFont,
+                        mRenderingSurface->gc,
+                        x, y, mDrawStringBuf, aLength);
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::DrawString(const nsString& aString,
-                                                nscoord aX, nscoord aY,
-                                                PRInt32 aFontID,
-                                                const nscoord* aSpacing)
+NS_IMETHODIMP
+nsRenderingContextGTK::DrawString(const nsString& aString,
+                                  nscoord aX, nscoord aY,
+                                  PRInt32 aFontID,
+                                  const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+  return DrawString(aString.GetUnicode(), aString.Length(),
+                    aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
