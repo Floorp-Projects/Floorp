@@ -107,7 +107,7 @@ static JSClass nsID_class = {
 JS_STATIC_DLL_CALLBACK(JSBool)
 nsID_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    IDData* data;
+    IDData* data=NULL;
 
     if(!JS_InstanceOf(cx, obj, &nsID_class, NULL) ||
        !(data = (IDData*) JS_GetPrivate(cx, obj)))
@@ -120,8 +120,8 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 nsID_equals(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSObject *obj2;
-    IDData* data1;
-    IDData* data2;
+    IDData* data1=NULL;
+    IDData* data2=NULL;
 
     if(!JS_InstanceOf(cx, obj, &nsID_class, NULL) ||
        !argc || !JSVAL_IS_OBJECT(argv[0]) ||
@@ -207,7 +207,7 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID)
 const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj)
 {
-    IDData* data;
+    IDData* data=NULL;
 
     if(!cx || !obj ||
        !JS_InstanceOf(cx, obj, &nsID_class, NULL) ||

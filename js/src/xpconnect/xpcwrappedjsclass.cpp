@@ -266,9 +266,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     jsval argsBuffer[ARGS_BUFFER_COUNT];
     jsval* argv = NULL;
     uint8 i;
-    uint8 argc;
+    uint8 argc=0;
     jsval result;
-    uint8 paramCount;
+    uint8 paramCount=0;
     nsresult retval = NS_ERROR_FAILURE;
     JSErrorReporter older;
     JSBool success;

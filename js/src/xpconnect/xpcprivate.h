@@ -122,7 +122,7 @@ public:
     JSBool Init(JSObject* aGlobalObj = NULL);
     void DebugDump(int depth);
 
-    ~XPCContext();
+    virtual ~XPCContext();
 private:
     XPCContext();    // no implementation
     XPCContext(JSContext* aJSContext,

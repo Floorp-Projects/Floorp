@@ -299,7 +299,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 else
                 {
                     // we need to build a wrapper
-                    nsXPCWrappedNative* wrapper;
+                    nsXPCWrappedNative* wrapper=NULL;
                     XPCContext* xpcc;
                     if(!iid || !(xpcc = nsXPConnect::GetContext(cx)) ||
                        !(wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
@@ -397,7 +397,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         break;
     case nsXPTType::T_CHAR   :
         {
-            char* bytes;
+            char* bytes=NULL;
             JSString* str;
 
             if(!(str = JS_ValueToString(cx, s))||
@@ -411,7 +411,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         }
     case nsXPTType::T_WCHAR  :
         {
-            jschar* chars;
+            jschar* chars=NULL;
             JSString* str;
             if(!(str = JS_ValueToString(cx, s))||
                !(chars = JS_GetStringChars(str)))
@@ -439,7 +439,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         case nsXPTType::T_IID:
         {
             JSObject* obj;
-            const nsID* pid;
+            const nsID* pid=NULL;
             if(!JSVAL_IS_OBJECT(s) ||
                (!(obj = JSVAL_TO_OBJECT(s))) ||
                (!(pid = xpc_JSObjectToID(cx, obj))))
@@ -469,7 +469,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
         case nsXPTType::T_CHAR_STR:
         {
-            char* bytes;
+            char* bytes=NULL;
             JSString* str;
 
             if(!(str = JS_ValueToString(cx, s))||
@@ -496,7 +496,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
         case nsXPTType::T_WCHAR_STR:
         {
-            jschar* chars;
+            jschar* chars=NULL;
             JSString* str;
 
             if(!(str = JS_ValueToString(cx, s))||
