@@ -181,8 +181,7 @@ $::query_branch = 'HEAD' if !defined($::query_branch);
 $::query_branch = &SanitizeRevision($::query_branch);
 $::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
 
-if ($::query_branch eq 'HEAD' && 
-    ($::query_branchtype eq 'match' || $::query_branchtype eq 'regexp')) {
+if ($::query_branch eq 'HEAD' && $::query_branchtype ne 'notregexp') {
     $::query_branch_head = 1 ;
 }
 
