@@ -2023,10 +2023,11 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_BINDNAME:
             atom = GET_ATOM(cx, script, pc);
             SAVE_SP(fp);
-            ok = js_FindVariable(cx, (jsid)atom, &obj, &obj2, &prop);
-            if (!ok)
+            obj = js_FindIdentifierBase(cx, (jsid)atom);
+            if (!obj) {
+                ok = JS_FALSE;
                 goto out;
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 

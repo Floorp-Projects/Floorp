@@ -2419,31 +2419,32 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
     return JS_TRUE;
 }
 
-JSBool
-js_FindVariable(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
-                JSProperty **propp)
+JSObject *
+js_FindIdentifierBase(JSContext *cx, jsid id)
 {
-    JSObject *obj;
+    JSObject *obj, *pobj;
     JSProperty *prop;
 
     /*
-     * First look for id's property along the "with" statement and the
-     * statically-linked scope chains.
+     * Look for id's property along the "with" statement chain and the
+     * statically-linked scope chain.
      */
-    if (!js_FindProperty(cx, id, objp, pobjp, propp))
-        return JS_FALSE;
-    if (*propp)
-        return JS_TRUE;
+    if (!js_FindProperty(cx, id, &obj, &pobj, &prop))
+        return NULL;
+    if (prop) {
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        return obj;
+    }
 
     /*
      * Use the top-level scope from the scope chain, which won't end in the
      * same scope as cx->globalObject for cross-context function calls.
      */
-    obj = *objp;
     JS_ASSERT(obj);
 
     /*
-     * Make a top-level variable.
+     * Property not found.  Give a strict warning if binding an undeclared
+     * top-level variable.
      */
     if (JS_HAS_STRICT_OPTION(cx)) {
         JSString *str = JSVAL_TO_STRING(ID_TO_VALUE(id));
@@ -2452,16 +2453,10 @@ js_FindVariable(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_UNDECLARED_VAR,
                                           JS_GetStringBytes(str))) {
-            return JS_FALSE;
+            return NULL;
         }
     }
-    if (!OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
-                             JSPROP_ENUMERATE, &prop)) {
-        return JS_FALSE;
-    }
-    *pobjp = obj;
-    *propp = prop;
-    return JS_TRUE;
+    return obj;
 }
 
 JSBool
