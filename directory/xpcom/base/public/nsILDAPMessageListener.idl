@@ -41,31 +41,9 @@
 [scriptable, uuid(dc721d4b-3ff2-4387-a80c-5e29545f774a)]
 interface nsILDAPMessageListener : nsISupports
 {
-    // when ldap_result() returns, one of these routines is called, depending
-    // on the return value
-
-    // return value = LDAP_RES_SEARCH_ENTRY 
-    // 
-    void onLDAPSearchEntry(in nsILDAPMessage aMessage);
-
-    // return value = LDAP_RES_SEARCH_REFERENCE
+    // aMessage is the message that was returned, and aRetVal is the 
+    // return code from ldap_result()
     //
-    void onLDAPSearchReference(in nsILDAPMessage aMessage);
-
-    // return value = LDAP_RES_SEARCH_RESULT
-    //
-    void onLDAPSearchResult(in nsILDAPMessage aMessage);
-
-    // return value of -1
-    //
-    // XXX should have an arg?
-    //
-    void onLDAPError();
-
-    // return value of 0
-    //	
-    void onLDAPTimeout();
-
-    // XXX need to add other possible ldap_result return values 
+    void onLDAPMessage(in nsILDAPMessage aMessage, in PRInt32 aRetVal);
 };
 
