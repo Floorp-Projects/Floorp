@@ -43,7 +43,7 @@ nsPluginsDir::~nsPluginsDir()
 
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
-	return false;
+	return PR_FALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////
