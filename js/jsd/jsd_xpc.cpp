@@ -1451,7 +1451,7 @@ jsdContext::SetScriptsEnabled (PRBool _rval)
     if (!context)
         return NS_ERROR_NO_INTERFACE;
 
-    return context->SetScriptsEnabled(_rval);
+    return context->SetScriptsEnabled(_rval, PR_TRUE);
 }
 
 /* Stack Frames */

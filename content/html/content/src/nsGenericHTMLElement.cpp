@@ -79,6 +79,8 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 
 #include "nsIPresState.h"
 #include "nsILayoutHistoryState.h"
@@ -904,11 +906,46 @@ nsGenericHTMLElement::SetInnerHTML(const nsAReadableString& aInnerHTML)
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  rv = nsrange->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc;
+  mNodeInfo->GetDocument(*getter_AddRefs(doc));
 
-  nsCOMPtr<nsIDOMNode> tmpNode;
-  return thisNode->AppendChild(df, getter_AddRefs(tmpNode));
+  nsCOMPtr<nsIScriptContext> scx;
+  PRBool scripts_enabled = PR_FALSE;
+
+  if (doc) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+
+    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+
+    if (sgo) {
+      sgo->GetContext(getter_AddRefs(scx));
+
+      if (scx) {
+        scx->GetScriptsEnabled(&scripts_enabled);
+      }
+    }
+  }
+
+  if (scripts_enabled) {
+    // Don't let scripts execute while setting .innerHTML.
+
+    scx->SetScriptsEnabled(PR_FALSE, PR_FALSE);
+  }
+
+  rv = nsrange->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDOMNode> tmpNode;
+    rv = thisNode->AppendChild(df, getter_AddRefs(tmpNode));
+  }
+
+  if (scripts_enabled) {
+    // If we disabled scripts, re-enable them now that we're done.
+
+    scx->SetScriptsEnabled(PR_TRUE, PR_FALSE);
+  }
+
+  return rv;
 }
 
 nsresult

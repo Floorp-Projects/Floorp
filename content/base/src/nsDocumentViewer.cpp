@@ -4643,7 +4643,7 @@ DocumentViewerImpl::TurnScriptingOn(PRBool aDoTurnOn)
   nsCOMPtr<nsIScriptContext> scx;
   rv = scriptGlobalObj->GetContext(getter_AddRefs(scx));
   NS_ASSERTION(NS_SUCCEEDED(rv) && scx, "Can't get nsIScriptContext");
-  scx->SetScriptsEnabled(aDoTurnOn);
+  scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
 }
 
 //----------------------------------------------------------------------

@@ -122,7 +122,7 @@ public:
   NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef);
   NS_IMETHOD GetScriptsEnabled(PRBool *aEnabled);
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   NS_IMETHOD GetProcessingScriptTag(PRBool * aResult);
   NS_IMETHOD SetProcessingScriptTag(PRBool  aResult);

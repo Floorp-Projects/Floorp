@@ -4838,7 +4838,7 @@ nsresult nsEditorShell::StartDocumentLoad(nsIDOMWindow *aDOMWindow)
     nsCOMPtr<nsIScriptContext> scriptContext;
     sgo->GetContext(getter_AddRefs(scriptContext));
     if (scriptContext)
-      scriptContext->SetScriptsEnabled(PR_FALSE);
+      scriptContext->SetScriptsEnabled(PR_FALSE, PR_TRUE);
   }
   
   return NS_OK;
