@@ -38,6 +38,23 @@
 * SUMMARY: Testing |with (x) {function f() {}}| when |x.f| already exists
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=185485
 *
+* The idea is this: if |x| does not already have a property named |f|,
+* a |with| statement cannot be used to define one. See, for example,
+*
+*       http://bugzilla.mozilla.org/show_bug.cgi?id=159849#c11
+*       http://bugzilla.mozilla.org/show_bug.cgi?id=184107
+*
+*
+* However, if |x| does have a property |f|, a |with| statement can be
+* used to modify the value it contains. This should work even if we use
+* a |var| statement, like this:
+*
+*                 with (x) {var f = 1;}
+*
+* or a function statement, like this:
+*
+*                 with (x) {function f() {}}
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
