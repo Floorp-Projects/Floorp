@@ -1569,7 +1569,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
 {
   NS_ASSERTION(aNameSpaceID != kNameSpaceID_XHTML,
                "Error, attribute on [X]HTML element set with XHTML namespace, "
-               "this is wrong, trust me! Loose the prefix on the attribute!");
+               "this is wrong, trust me! Lose the prefix on the attribute!");
 
   nsresult  result = NS_OK;
 
@@ -1723,7 +1723,7 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 
   NS_ASSERTION(namespaceID != kNameSpaceID_XHTML,
                "Error, attribute on [X]HTML element set with XHTML namespace, "
-               "this is wrong, trust me! Loose the prefix on the attribute!");
+               "this is wrong, trust me! Lose the prefix on the attribute!");
 
   if (namespaceID == kNameSpaceID_None) {
     return SetAttr(namespaceID, localName, aValue, aNotify);
