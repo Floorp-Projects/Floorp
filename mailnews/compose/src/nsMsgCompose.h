@@ -24,6 +24,7 @@
 #include "nsIOutputStream.h"
 #include "nsIMsgQuote.h"
 #include "nsIMsgSendListener.h"
+#include "nsIMsgCopyServiceListener.h"
 
 class QuotingOutputStreamImpl;
 class nsMsgComposeSendListener;
@@ -146,33 +147,44 @@ private:
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-class nsMsgComposeSendListener : public nsIMsgSendListener
+class nsMsgComposeSendListener : public nsIMsgSendListener, public nsIMsgCopyServiceListener
 {
 public:
-	nsMsgComposeSendListener(void);
-	virtual ~nsMsgComposeSendListener(void);
+  nsMsgComposeSendListener(void);
+  virtual ~nsMsgComposeSendListener(void);
 
-	// nsISupports interface
-	NS_DECL_ISUPPORTS
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
 
-	/* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
-	NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
-
-	/* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
-	NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
-
-	/* void OnStatus (in string aMsgID, in wstring aMsg); */
-	NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
-
-	/* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
-	NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+  /* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
+  NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
+  
+  /* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
+  NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
+  
+  /* void OnStatus (in string aMsgID, in wstring aMsg); */
+  NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
+  
+  /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
+  NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                            nsIFileSpec *returnFileSpec);
 
-    NS_IMETHOD SetComposeObj(nsMsgCompose *obj);
+  // For the nsIMsgCopySerivceListener!
+  NS_IMETHOD OnStartCopy();
+  
+  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax);
+  
+  NS_IMETHOD OnStopCopy(nsresult aStatus);
+  NS_IMETHOD SetMessageKey(PRUint32 aMessageKey);
+  NS_IMETHOD GetMessageId(nsString2* aMessageId);
+
+  NS_IMETHOD SetComposeObj(nsMsgCompose *obj);
 	NS_IMETHOD SetDeliverMode(MSG_DeliverMode deliverMode);
-	nsIMsgSendListener ** CreateListenerArray();
+	nsIMsgSendListener **CreateListenerArray();
 
 private:
-    nsMsgCompose    *mComposeObj;
+  nsMsgCompose    *mComposeObj;
 	MSG_DeliverMode mDeliverMode;
+
 };
+

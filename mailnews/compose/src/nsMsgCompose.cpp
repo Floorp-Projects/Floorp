@@ -1018,16 +1018,52 @@ void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// This is the listener class for the send operation. We have to create this class 
-// to listen for message send completion and eventually notify the caller
+// This is the listener class for both the send operation and the copy operation. 
+// We have to create this class to listen for message send completion and deal with
+// failures in both send and copy operations
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(nsMsgComposeSendListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID());
+NS_IMPL_ADDREF(nsMsgComposeSendListener)
+NS_IMPL_RELEASE(nsMsgComposeSendListener)
 
-nsMsgComposeSendListener::nsMsgComposeSendListener() 
+nsIMsgSendListener ** nsMsgComposeSendListener::CreateListenerArray()
+{
+  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
+  if (!tArray)
+    return nsnull;
+  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
+  tArray[0] = this;
+  return tArray;
+}
+
+NS_IMETHODIMP 
+nsMsgComposeSendListener::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr)
+    return NS_ERROR_NULL_POINTER;
+  *aInstancePtr = NULL;
+
+  if (aIID.Equals(nsCOMTypeInfo<nsIMsgSendListener>::GetIID())) 
+  {
+	  *aInstancePtr = (nsIMsgSendListener *) this;                                                   
+	  NS_ADDREF_THIS();
+	  return NS_OK;
+  }
+  if (aIID.Equals(nsCOMTypeInfo<nsIMsgCopyServiceListener>::GetIID()))
+  {
+	  *aInstancePtr = (nsIMsgCopyServiceListener *) this;
+	  NS_ADDREF_THIS();
+	  return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
+
+nsMsgComposeSendListener::nsMsgComposeSendListener(void) 
 { 
-	mComposeObj = nsnull;
+  mComposeObj = nsnull;
 	mDeliverMode = 0;
-	NS_INIT_REFCNT(); 
+
+  NS_INIT_REFCNT(); 
 }
 
 nsMsgComposeSendListener::~nsMsgComposeSendListener(void) 
@@ -1046,29 +1082,32 @@ nsresult nsMsgComposeSendListener::SetDeliverMode(MSG_DeliverMode deliverMode)
 	return NS_OK;
 }
 
-nsresult nsMsgComposeSendListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
+nsresult
+nsMsgComposeSendListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 {
 #ifdef NS_DEBUG
-	printf("nsMsgComposeSendListener::OnStartSending()\n");
+  printf("nsMsgComposeSendListener::OnStartSending()\n");
 #endif
-	return NS_OK;
+  return NS_OK;
 }
   
-nsresult nsMsgComposeSendListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
+nsresult
+nsMsgComposeSendListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
-	printf("nsMsgComposeSendListener::OnProgress()\n");
+  printf("nsMsgComposeSendListener::OnProgress()\n");
 #endif
-	return NS_OK;
+  return NS_OK;
 }
 
-nsresult nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
+nsresult
+nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 {
 #ifdef NS_DEBUG
-	printf("nsMsgComposeSendListener::OnStatus()\n");
+  printf("nsMsgComposeSendListener::OnStatus()\n");
 #endif
 
-	return NS_OK;
+  return NS_OK;
 }
   
 nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
@@ -1083,8 +1122,25 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: Success on the message send operation!\n");
 #endif
-			if ( (mDeliverMode != nsMsgSaveAsDraft) && (mDeliverMode != nsMsgSaveAsTemplate) )
-				mComposeObj->CloseWindow();
+      nsIMsgCompFields *compFields = nsnull;
+      mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+
+			// Close the window ONLY if we are not going to do a save operation
+      PRUnichar *fieldsFCC = nsnull;
+      if (NS_SUCCEEDED(compFields->GetFcc(&fieldsFCC)))
+      {
+        nsString2 compString("nocopy://");
+        if (fieldsFCC && *fieldsFCC)
+        {
+          if (compString == fieldsFCC)
+            mComposeObj->CloseWindow();
+        }
+      }
+      else
+        mComposeObj->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
+                                     // windows hanging around to prevent the app from exiting.
+
+      NS_IF_RELEASE(mComposeObj);
 		}
 		else
 		{
@@ -1098,14 +1154,63 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
   return rv;
 }
 
-nsIMsgSendListener ** nsMsgComposeSendListener::CreateListenerArray()
+nsresult
+nsMsgComposeSendListener::OnStartCopy()
 {
-  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
-  if (!tArray)
-    return nsnull;
-  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
-  tArray[0] = this;
-  return tArray;
+#ifdef NS_DEBUG
+  printf("nsMsgComposeSendListener::OnStartCopy()\n");
+#endif
+
+  return NS_OK;
 }
 
+nsresult
+nsMsgComposeSendListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+#ifdef NS_DEBUG
+  printf("nsMsgComposeSendListener::OnProgress() - COPY\n");
+#endif
+  return NS_OK;
+}
+  
+nsresult
+nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
+{
+	nsresult rv = NS_OK;
+
+	if (mComposeObj)
+	{
+    // Ok, if we are here, we are done with the send/copy operation so
+    // we have to do something with the window....SHOW if failed, Close
+    // if succeeded
+		if (NS_SUCCEEDED(aStatus))
+		{
+#ifdef NS_DEBUG
+			printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
+#endif
+      mComposeObj->CloseWindow();
+		}
+		else
+		{
+#ifdef NS_DEBUG
+			printf("nsMsgComposeSendListener: the message copy operation failed!\n");
+#endif
+			mComposeObj->ShowWindow(PR_TRUE);
+		}
+	}
+
+  return rv;
+}
+
+nsresult
+nsMsgComposeSendListener::SetMessageKey(PRUint32 aMessageKey)
+{
+	return NS_OK;
+}
+
+nsresult
+nsMsgComposeSendListener::GetMessageId(nsString2* aMessageId)
+{
+	return NS_OK;
+}
 
