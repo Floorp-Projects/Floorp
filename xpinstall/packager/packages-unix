@@ -128,6 +128,7 @@ bin/components/libnsappshell.so
 bin/components/libcaps.so
 bin/components/libchrome.so
 bin/components/libcookie.so
+bin/components/libpermissions.so
 bin/components/libcomposer.so
 bin/components/composer.xpt
 bin/components/libdocshell.so
