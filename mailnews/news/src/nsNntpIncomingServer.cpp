@@ -474,16 +474,14 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
     }
 	}
     
-  if (ConnectionTimeOut(connection))
-      connection = null_nsCOMPtr();
   if (ConnectionTimeOut(freeConnection))
       freeConnection = null_nsCOMPtr();
 
 	// if we got here and we have a connection, then we should return it!
-	if (!isBusy && connection)
+	if (!isBusy && freeConnection)
 	{
 		*aNntpConnection = freeConnection;
-    freeConnection->Initialize(aUri, aMsgWindow);
+    freeConnection->SetIsCachedConnection(PR_TRUE);
 		NS_IF_ADDREF(*aNntpConnection);
 	}
 	else // have no queueing mechanism - just create the protocol instance.

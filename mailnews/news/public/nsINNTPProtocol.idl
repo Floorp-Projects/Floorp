@@ -44,5 +44,7 @@ interface nsINNTPProtocol : nsISupports {
     // Get last active time stamp
     void GetLastActiveTimeStamp(out PRTime aTimeStamp);
 
+  attribute boolean isCachedConnection;
+
 	void CloseConnection();
 };

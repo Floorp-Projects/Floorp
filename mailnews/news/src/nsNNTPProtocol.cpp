@@ -644,6 +644,19 @@ NS_IMETHODIMP nsNNTPProtocol::IsBusy(PRBool *aIsConnectionBusy)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsNNTPProtocol::GetIsCachedConnection(PRBool *aIsCachedConnection)
+{
+  NS_ENSURE_ARG_POINTER(aIsCachedConnection);
+  *aIsCachedConnection = m_fromCache;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNNTPProtocol::SetIsCachedConnection(PRBool aIsCachedConnection)
+{
+  m_fromCache = aIsCachedConnection;
+  return NS_OK;
+}
+
 /* void GetLastActiveTimeStamp (out PRTime aTimeStamp); */
 NS_IMETHODIMP nsNNTPProtocol::GetLastActiveTimeStamp(PRTime *aTimeStamp)
 {
@@ -666,6 +679,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsXPIDLCString group;
   char *commandSpecificData = nsnull;
   PRBool cancel = PR_FALSE;
+  m_ContentType = "";
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   nsresult rv = NS_OK;
 
@@ -4513,7 +4527,8 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 {
 	PRInt32 status = 0; 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	if (!mailnewsurl) return NS_ERROR_FAILURE;
+	if (!mailnewsurl)
+    return NS_OK; // probably no data available - it's OK.
 
 #ifdef UNREADY_CODE
     if (m_offlineNewsState != NULL)
@@ -4911,18 +4926,9 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 
 
         m_connectionBusy = PR_FALSE;
-#ifdef DEBUG_bienvenu
-//#define USE_CONN_CACHE
-#endif
-#ifdef USE_CONN_CACHE
         mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
         m_lastActiveTimeStamp = PR_Now(); // remmeber when we last used this connection.
         return CleanupAfterRunningUrl();
-#else
-				SendData(mailnewsurl, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
-				m_nextState = NEWS_FINISHED; // so we don't spin in the free state
-        return NS_OK;
-#endif
 			case NEWS_FINISHED:
 				return NS_OK;
 				break;
