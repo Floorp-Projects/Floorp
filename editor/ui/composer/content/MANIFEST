@@ -41,14 +41,6 @@ editorOverlay.js
 editorOverlay.xul
 editorTasksOverlay.xul
 composerOverlay.xul
-sidebar-editor.rdf
-sidebar-editor.xul
-sb-bookmarks-panel.xul
-sb-bookmarks.js
-sb-file-contextMenu.js
-sb-file-panel.js
-sb-file-panel.xul
-sb-FileWidgetFileHandler.js
 pref-composer.js
 pref-composer.xul
 pref-publish.xul
