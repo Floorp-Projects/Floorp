@@ -221,7 +221,7 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
 static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
 
 #include "prlink.h"
-static PRLibrary *pref_LoadAutoAdminLib(void);
+extern PRLibrary *pref_LoadAutoAdminLib(void);
 PRLibrary *gAutoAdminLib = NULL;
 
 /* -- Privates */
@@ -233,7 +233,7 @@ struct CallbackNode {
 };
 
 /* -- Prototypes */
-static PrefResult pref_DoCallback(const char* changed_pref);
+PrefResult pref_DoCallback(const char* changed_pref);
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 PrefResult pref_OpenFile(
     const char* filename,
@@ -246,15 +246,15 @@ PR_EXTERN(PrefResult) PREF_SavePrefFileWith(const char *filename, PLHashEnumerat
 
 PRBool pref_VerifyLockFile(char* buf, long buflen);
 
-static PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default);
-static PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default);
-static PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default);
-static PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default);
+PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default);
+PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default);
+PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default);
+PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default);
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
-static void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
-static void pref_Alert(char* msg);
-static PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
+void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
+void pref_Alert(char* msg);
+PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 
@@ -1229,7 +1229,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileAs(const char *filename)
 }
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
-static PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
+PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;
 	char* stringVal;
@@ -1263,7 +1263,7 @@ static PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, 
 	return result;
 }
 
-static PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
+PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;
 	char* stringVal;	
@@ -1289,7 +1289,7 @@ static PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer
 	return result;
 }
 
-static PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
+PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
 {
 	PrefResult result = PREF_ERROR;	
 	PrefNode* pref;
@@ -1576,7 +1576,7 @@ PREF_GetDefaultRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRIn
 }
 
 /* Delete a branch. Used for deleting mime types */
-static PR_IMPLEMENT(int)
+PR_IMPLEMENT(int)
 pref_DeleteItem(PLHashEntry *he, int i, void *arg)
 {
 	const char *to_delete = (const char *) arg;
@@ -1744,7 +1744,7 @@ PrefResult pref_UnlockPref(const char *key)
     return PREF_OK;
 }
 
-static PrefResult pref_LockPref(const char *key)
+PrefResult pref_LockPref(const char *key)
 {
 	PrefNode* pref;
 	if (!gHashTable)
@@ -1796,7 +1796,7 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
 	}
 }
 
-static PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
+PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
 {
 	PrefNode* pref;
 	PrefResult result = PREF_OK;
@@ -2317,7 +2317,7 @@ PREF_UnregisterCallback(const char *pref_node,
 	return result;
 }
 
-static PrefResult pref_DoCallback(const char* changed_pref)
+PrefResult pref_DoCallback(const char* changed_pref)
 {
 	PrefResult result = PREF_OK;
 	struct CallbackNode* node;
@@ -2509,7 +2509,7 @@ pref_BranchCallback(JSContext *cx, JSScript *script)
 }
 
 /* copied from libmocha */
-static void
+void
 pref_ErrorReporter(JSContext *cx, const char *message,
 				 JSErrorReport *report)
 {
@@ -2558,7 +2558,7 @@ pref_ErrorReporter(JSContext *cx, const char *message,
 #include <Dialogs.h>
 #include <Memory.h>
 
-static void pref_Alert(char* msg)
+void pref_Alert(char* msg)
 {
 	Str255 pmsg;
 	SInt16 itemHit;
@@ -2570,7 +2570,7 @@ static void pref_Alert(char* msg)
 #else
 
 /* Platform specific alert messages */
-static void pref_Alert(char* msg)
+void pref_Alert(char* msg)
 {
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 #if defined(XP_UNIX) || defined(XP_OS2)
@@ -2604,7 +2604,7 @@ extern void fe_GetProgramDirectory(char *path, int len);
 #endif
 
 /* Try to load AutoAdminLib */
-static PRLibrary *
+PRLibrary *
 pref_LoadAutoAdminLib()
 {
 	PRLibrary *lib = NULL;
@@ -2667,6 +2667,31 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
 	config		-> pref_NativeSetConfig
  *--------------------------------------------------------------------------------------*/
 {	
+#ifdef NOPE1987
+	/* this is somehow fixing an internal compiler error for win16 */
+	PrefValue value;
+    const char *key;
+	PRBool bIsBool, bIsInt, bIsString;
+
+	;
+	if (argc < 2)
+		return JS_FALSE;
+	if (!JSVAL_IS_STRING(argv[0]))
+		return JS_FALSE;
+
+	bIsBool = JSVAL_IS_BOOLEAN(argv[1]);
+	bIsInt = JSVAL_IS_INT(argv[1]);
+	bIsString = JSVAL_IS_STRING(argv[1]);
+
+    key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+
+    if (bIsString)
+    {
+    	value.stringVal = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
+    	pref_HashPref(key, value, PREF_STRING, action);
+    }
+    
+#else
     if (argc >= 2 && JSVAL_IS_STRING(argv[0]))
     {
 		PrefValue value;
@@ -2688,6 +2713,7 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
     		pref_HashPref(key, value, PREF_BOOL, action);
     	}
     }
+#endif
 
 	return JS_TRUE;
 }
