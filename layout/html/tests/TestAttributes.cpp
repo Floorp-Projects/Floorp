@@ -29,6 +29,7 @@
 #include "nsISupportsArray.h"
 #include "nsDocument.h"
 #include "nsIURL.h"
+#include "nsIDOMText.h"
 
 void testAttributes(nsIHTMLContent* content) {
   nsIAtom* sBORDER = NS_NewAtom("BORDER");
@@ -221,11 +222,19 @@ int main(int argc, char** argv)
 
   // Create a new text content object.
   nsIHTMLContent *text;
-  rv = NS_NewHTMLText(&text,destStr,destLen);
+  rv = NS_NewTextNode(&text);
   if (NS_OK != rv) {
     printf("Could not create text content.\n");
     return -1;
   }
+
+  nsIDOMText* txt = nsnull;
+  static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+  text->QueryInterface(kIDOMTextIID, (void**) &txt);
+  nsAutoString tmp(destStr, destLen);
+  txt->Append(tmp);
+  NS_RELEASE(txt);
+
   PRBool canHaveKids;
   text->CanContainChildren(canHaveKids);
   NS_ASSERTION(!canHaveKids,"");
@@ -253,7 +262,7 @@ int main(int argc, char** argv)
   nsIHTMLContent* container;
   nsIAtom* li = NS_NewAtom("LI");
 
-  rv = NS_NewHTMLContainer(&container,li);
+  rv = NS_NewHTMLLIElement(&container,li);
   if (NS_OK != rv) {
     printf("Could not create container.\n");
     return -1;
