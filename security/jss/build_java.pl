@@ -283,4 +283,5 @@ sub javadoc {
     print "$targets\n";
     print_do("$javadoc -private -breakiterator -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets");
     #print "$javadoc -private -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets" . "\n";
+    print_do("cp $dist_dir/jssdoc/overview-summary.html $dist_dir/jssdoc/index.html");
 }
