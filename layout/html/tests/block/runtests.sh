@@ -5,7 +5,19 @@
 
 testsfile=/tmp/$$-tests.txt
 
-sed -e "s@file:///s\(:\||\)@file://$MOZ_TEST_BASE@" < file_list.txt > $testsfile
+cp /dev/null $testsfile
+
+for FILE in `ls file_list.txt file_list[0-9].txt 2> /dev/null`; do
+    egrep -v "^#" < $FILE \
+        | sed -e "s@file:///s\(:\||\)@file://$MOZ_TEST_BASE@" \
+        >> $testsfile
+done
+
+if [ \! -s $testfile ]; then
+    echo "WARNING: No file lists found in `pwd`"
+    rm -f $testsfile
+    return 0
+fi
 
 if test "$1"x = "baselinex"; then
   rm -r -f baseline

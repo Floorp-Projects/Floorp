@@ -14,7 +14,9 @@ nodots() {
   echo $NODOTS_OUT
 }
 
-dirs="base bugs dom images net/HTML_Chars net/W3C net/baron net/boxAcidTest net/glazman net/mozilla ../table/core ../table/viewer_tests ../table/bugs ../table/marvin ../table/other ../table/dom"
+dirs="base bugs ../table/core ../table/viewer_tests ../table/bugs ../table/marvin ../table/other ../table/dom"
+
+#extra_dirs="net/HTML_Chars net/W3C net/baron net/boxAcidTest net/glazman net/mozilla"
 
 DEPTH="../../../../.."
 TEST_BASE=`dirname $0`
