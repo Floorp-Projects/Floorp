@@ -217,6 +217,11 @@ enum nsSpread {
   eSpreadDown   = 2
 };
 
+enum nsContextProviderRelationship {
+  eContextProvider_Ancestor = 0,
+  eContextProvider_Descendant = 1
+};
+
 //----------------------------------------------------------------------
 
 // Option flags
@@ -1062,6 +1067,28 @@ public:
    *  handle the request by generating a nsIReflowCommand::ReflowDirtyChildren reflow command.
    */
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild) = 0;
+
+  /**
+   * Called in style ReResolution to get the frame that contains the style context that is the
+   * parent style context for this frame. 
+   * @param aProviderFrame: set to the frame who's style context is to be used as the parent context
+   *                        in reresolving style for this frame. Note that this may or may not be the
+   *                        parent frame of this frame.
+   * @param aRelatioship : indicates how the provider frame relates to this frame: 
+   *                       i.e. if the parent context provider frame is a child of this frame, 
+   *                       then aRelationship must be set to eContextProvider_Descendant, 
+   *                       if a parent, grandparent etc. set to eContextProvider_Ancestor 
+   *                       (this is used to control recursion in style reresolution)
+   *
+   * if return value is NS_OK then aProvdierFrame must be set, otherwise it is ignored.
+   *
+   * PRECONDITIONS: aProviderFrame cannot be null
+   * POSTCONDITIONS: *aProfiderFrame will be a valid frame if this routine succeeds
+   *                 aRelationship will be set to a legal enum value indicating the correct relationship
+   */
+  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                           nsIFrame** aProviderFrame, 
+                                           nsContextProviderRelationship& aRelationship) = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
