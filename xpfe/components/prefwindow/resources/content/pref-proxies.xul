@@ -72,6 +72,12 @@
                        size="5"/>
             </hbox>
           </row>
+          <row>
+            <spacer/>
+            <hbox align="center">
+              <button id="reuseProxy" label="&reuseProxy.label;" accesskey="&reuseProxy.accesskey;" oncommand="DoProxyCopy();" />
+            </hbox>
+          </row>
           <row align="center">
             <hbox align="center" pack="end">
               <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
