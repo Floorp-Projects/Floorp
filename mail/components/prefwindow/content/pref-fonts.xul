@@ -272,32 +272,40 @@
     <label value="&composingDescription.label;"/>
 
     <separator class="thin"/>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
 
-    <hbox align="center" class="indent">
-      <label control="sendDefaultCharsetList"
-             value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
-      <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-                preftype="localizedstring" prefstring="mailnews.send_default_charset">
-        <template>
-          <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-          </menupopup>
-        </template>
-      </menulist>       
-    </hbox> 
-
-    <hbox align="center" class="indent">
-      <label control="viewDefaultCharsetList"
-             value="&viewDefaultCharsetList.label;" accesskey="&viewDefaultCharsetList.accesskey;"/>
-        <menulist id="viewDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-                preftype="localizedstring" prefstring="mailnews.view_default_charset">
-        <template>
-          <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-          </menupopup>
-        </template>
-      </menulist> 
-    </hbox>      
+      <rows>
+        <row align="center" class="indent">
+          <label control="sendDefaultCharsetList"
+                 value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
+          <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+                    preftype="localizedstring" prefstring="mailnews.send_default_charset">
+            <template>
+              <menupopup>
+                <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+              </menupopup>
+            </template>
+          </menulist>
+        </row> 
+        
+        <row align="center" class="indent">
+          <label control="viewDefaultCharsetList"
+                 value="&viewDefaultCharsetList.label;" accesskey="&viewDefaultCharsetList.accesskey;"/>
+          <menulist id="viewDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+                    preftype="localizedstring" prefstring="mailnews.view_default_charset">
+            <template>
+              <menupopup>
+                <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+              </menupopup>
+            </template>
+          </menulist>
+        </row>
+      </rows>
+    </grid> 
     
     <separator class="thin"/>
 
