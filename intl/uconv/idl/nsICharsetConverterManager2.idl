@@ -85,6 +85,10 @@ interface nsICharsetConverterManager2 : nsISupports
    * Get the Atom representing the a given character set. PLEASE USE THIS 
    * METHOD!!! Do not create Atoms directly by going to NS_NewAtom(), because 
    * here we also do alias resolution...
+   *
+   * Just to let you know, this method will first attempt to resolve this 
+   * charset as an alias. If that failed, the original string will be used.
+   * Then an atom is created and returned.
    */
   nsIAtom GetCharsetAtom([const] in wstring charset);
 
