@@ -47,6 +47,9 @@
      and then `about="#foo"' for each subsequent instance, we just
      _always_ write `about="#foo"'.
 
+  4) When re-serializing containers. We _really_ cheat, and use an
+     illegal "about=" construct. Sucks, but...
+
  */
 
 #include "nsFileSpec.h"
@@ -1282,10 +1285,10 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
-        static const char kIDEquals[] = " ID=\"";
+        static const char kIDEquals[] = " about=\"";
 
         nsAutoString uri(s);
-        rdf_MakeRelativeName((const char*) docURI, uri);
+        rdf_MakeRelativeRef((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
         rdf_BlockingWrite(aStream, kIDEquals, sizeof(kIDEquals) - 1);
         rdf_BlockingWrite(aStream, uri);
