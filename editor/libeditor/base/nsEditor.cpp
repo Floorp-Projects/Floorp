@@ -3221,7 +3221,7 @@ nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount)
   {
     nsCOMPtr<nsIDOMNodeList>nodeList;
     PRUint32 len;
-    PRInt32 i;
+    PRUint32 i;
     res = aNode->GetChildNodes(getter_AddRefs(nodeList));
     if (NS_SUCCEEDED(res) && nodeList) 
     {
@@ -3229,7 +3229,7 @@ nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount)
       for (i=0 ; i<len; i++)
       {
         nsCOMPtr<nsIDOMNode> child;
-        res = nodeList->Item(i, getter_AddRefs(child));
+        res = nodeList->Item((PRInt32)i, getter_AddRefs(child));
         if ((NS_SUCCEEDED(res)) && (child))
         {
           if (IsEditable(child))
