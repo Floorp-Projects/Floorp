@@ -28,6 +28,7 @@
 #include "bcXPCOMLog.h"
 
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
+static nsID nullID =   {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterfaceInfo *_interfaceInfo, 
 					 nsXPTCMiniVariant* _params, bcIORB *_orb) {
@@ -232,7 +233,11 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
     nsresult r = NS_OK;
     switch(type) {
         case nsXPTType::T_IID    :
-            data = *(char**)data;
+            if (data == NULL) {
+                data = &nullID;
+            } else {
+                data = *(char**)data;
+            }
         case nsXPTType::T_I8  :
         case nsXPTType::T_I16 :
         case nsXPTType::T_I32 :
@@ -258,7 +263,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                     PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR length=%d\n",length));
                     length *= 2;
                     length +=2;
-                    for (int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
+                    for (unsigned int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
                         char c = ((char*)data)[i];
                         PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
                     }
@@ -350,8 +355,17 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
     nsresult r = NS_OK;
     switch(type) {
         case nsXPTType::T_IID    :
-            *(char**)data = (char*)new nsIID(); //nb memory leak. how are we going to release it
-            data = *(char**)data;
+            {
+                nsID *id = new nsID();
+                um->ReadSimple(id,XPTType2bcXPType(type));
+                if (nullID.Equals(*id)) {
+                    delete id;
+                    *(char**)data = NULL;
+                } else {
+                    *(char**)data = (char*)id;
+                }
+                break;
+            }
         case nsXPTType::T_I8  :
         case nsXPTType::T_I16 :
         case nsXPTType::T_I32 :     

@@ -113,6 +113,24 @@ NS_IMETHODIMP bcJavaSample::Test6(PRUint32 count, const char **valueArray) {
 NS_IMETHODIMP bcJavaSample::Test7(PRUint32 *count, char **valueArray) {
     return NS_OK;
 }
+
+/* void test8 (in nsCIDRef cid); */
+NS_IMETHODIMP bcJavaSample::Test8(const nsCID & cid) {
+    
+    printf("--[c++]bcJavaSample::Test8 %s\n",cid.ToString());
+    return NS_OK;
+}
+
+/* void test9 (out nsIIDPtr po); */
+NS_IMETHODIMP bcJavaSample::Test9(nsIID * *po) {
+    if (po != NULL) {
+        printf("--[c++]bcJavaSample::Test9 %s\n", (*po)->ToString());
+    } else {
+        printf("--[c++]bcJavaSample::Test9 %s\n", "null");
+    }
+    return NS_OK;
+}
+
 void test() {
     printf("--BlackConnect test start\n");
     nsresult r;
@@ -128,7 +146,7 @@ void test() {
     }
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
-
+#if 1
     test->Test1(1000);
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
@@ -183,7 +201,20 @@ void test() {
         }
         printf("--[c++]end of test7\n");
     }
-
+#endif
+    {
+        printf("--[c++]about to test8\n");
+        
+        test->Test8(NS_GET_IID(bcIJavaSample));
+        printf("--[c++]end of test8\n");
+    }
+    {
+        nsCID cid = NS_GET_IID(bcIJavaSample);
+        nsCID *cidParam = &cid;
+        printf("--[c++]about to test9\n");
+        test->Test9(&cidParam);
+        printf("--[c++]end of test9\n");
+    }
     printf("--BlackConnect test end\n");
 }
 

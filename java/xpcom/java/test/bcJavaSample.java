@@ -145,6 +145,16 @@ public class bcJavaSample implements bcIJavaSample {
         count[0] = retValue.length;
         valueArray[0] = retValue;
     }
+    /* void test8 (in nsCIDRef cid); */
+    public void test8(CID cid) {
+        System.out.println("--[java]bcJavaSample.test8 "+cid);
+    }
+
+    /* void test9 (out nsIIDPtr po); */
+    public void test9(IID[] po) {
+        System.out.println("--[java]bcJavaSample::Test9 "+po[0]);
+    }
+
     static {
       try {
           Class nsIComponentManagerClass = 

@@ -19,33 +19,34 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
+
 #include "bcIIDJava.h"
 #include "bcJavaGlobal.h"
 
 jclass bcIIDJava::iidClass = NULL;
 jmethodID bcIIDJava::iidInitMID = NULL;
 jmethodID bcIIDJava::getStringMID = NULL;
-
+static nsID nullID =   {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 void bcIIDJava::Init(void) {
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     if (env) {
-	if (!(iidClass = env->FindClass("org/mozilla/xpcom/IID"))
-	    || !(iidClass = (jclass) env->NewGlobalRef(iidClass))) {
-	    env->ExceptionDescribe();
-	    Destroy();
-	    return;  
-	}
-	if (!(iidInitMID = env->GetMethodID(iidClass,"<init>","(Ljava/lang/String;)V"))) {
-	    env->ExceptionDescribe();
-	    Destroy();
-	    return;
-	}
-	if (!(getStringMID = env->GetMethodID(iidClass,"getString","()Ljava/lang/String;"))) {
-	    env->ExceptionDescribe();
-	    Destroy();
-	    return;
-	}
+        if (!(iidClass = env->FindClass("org/mozilla/xpcom/IID"))
+            || !(iidClass = (jclass) env->NewGlobalRef(iidClass))) {
+            env->ExceptionDescribe();
+            Destroy();
+            return;  
+        }
+        if (!(iidInitMID = env->GetMethodID(iidClass,"<init>","(Ljava/lang/String;)V"))) {
+            env->ExceptionDescribe();
+            Destroy();
+            return;
+        }
+        if (!(getStringMID = env->GetMethodID(iidClass,"getString","()Ljava/lang/String;"))) {
+            env->ExceptionDescribe();
+            Destroy();
+            return;
+        }
     }
 }
 void bcIIDJava::Destroy() {
@@ -61,18 +62,19 @@ void bcIIDJava::Destroy() {
 jobject  bcIIDJava::GetObject(nsIID *iid) {
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     if (!iid 
-	|| !env ) {
-	return NULL;
+        || !env 
+        || nullID.Equals(*iid)) {
+        return NULL;
     }
     if (!iidClass) {
-	Init();
-    }
+        Init();
+    } 
     char *str = iid->ToString(); //nb free ?
     jstring jstr = NULL;
     if (str) {
-	char *siid = str+1; //we do need to have it. The format is {_xxx-xxx-xxx_}
-	siid[strlen(siid)-1] = 0;
-	jstr = env->NewStringUTF((const char *)siid);
+        char *siid = str+1; //we do need to have it. The format is {_xxx-xxx-xxx_}
+        siid[strlen(siid)-1] = 0;
+        jstr = env->NewStringUTF((const char *)siid);
     }
     return env->NewObject(iidClass,iidInitMID,jstr);
 }
@@ -85,15 +87,18 @@ nsIID bcIIDJava::GetIID(jobject obj) {
     nsIID iid;
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     if (env) {
-	if (!iidClass) {
-	    Init();
-	}
-	jstring jstr = (jstring)env->CallObjectMethod(obj, getStringMID);  
-	const char * str = NULL;
-    str = env->GetStringUTFChars(jstr,NULL);
-	iid.Parse(str);
-	env->ReleaseStringUTFChars(jstr,str);
-
+        if (!iidClass) {
+            Init();
+        }
+        if (obj != NULL) {
+            jstring jstr = (jstring)env->CallObjectMethod(obj, getStringMID);  
+            const char * str = NULL;
+            str = env->GetStringUTFChars(jstr,NULL);
+            iid.Parse(str);
+            env->ReleaseStringUTFChars(jstr,str);
+        } else {
+            iid = nullID;
+        }
     }
     return iid;
 }
