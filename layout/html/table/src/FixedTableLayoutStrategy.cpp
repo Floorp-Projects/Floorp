@@ -197,9 +197,6 @@ FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
     mTableFrame->SetColumnWidth(colX, colWidths[colX]);
   }
 
-  // min/max TW is min/max of (specified table width, sum of specified column(cell) widths)
-  mMinTableContentWidth = mMaxTableContentWidth = totalColWidth;
-
   // clean up
   if (nsnull != colWidths) {
     delete [] colWidths;

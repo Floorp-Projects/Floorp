@@ -1666,7 +1666,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
 
     if (isAutoOrPctWidth) {
       // Ask the strategy for the natural width of the content area 
-      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxContentWidth();
+      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth();
      
       // Add in space for border
       nsMargin border;
@@ -2796,18 +2796,14 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
 nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const
 {
   nscoord desiredWidth = aReflowState.availableWidth;
-  // this is the biggest hack in the world.  But there's no other rational way to handle nested percent tables
-  const nsStylePosition* position;
-  PRBool isNested = IsNested(aReflowState, position);
-  if ((eReflowReason_Initial==aReflowState.reason) && 
-      (isNested) && (eStyleUnit_Percent == position->mWidth.GetUnit())) {
+  if (NS_UNCONSTRAINEDSIZE == desiredWidth) { 
     nsITableLayoutStrategy* tableLayoutStrategy = mTableLayoutStrategy;
     if (mPrevInFlow) {
       // Get the table layout strategy from the first-in-flow
       nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
       tableLayoutStrategy = table->mTableLayoutStrategy;
     }
-    desiredWidth = tableLayoutStrategy->GetTableMaxContentWidth();
+    desiredWidth = tableLayoutStrategy->GetTableMaxWidth();
   }
   return desiredWidth;
 }
@@ -4146,20 +4142,20 @@ nscoord nsTableFrame::GetMinCaptionWidth()
 }
 
 /** return the minimum width of the table.  Return 0 if the min width is unknown. */
-nscoord nsTableFrame::GetMinTableContentWidth()
+nscoord nsTableFrame::GetMinTableWidth()
 {
   nscoord result = 0;
   if (nsnull!=mTableLayoutStrategy)
-    result = mTableLayoutStrategy->GetTableMinContentWidth();
+    result = mTableLayoutStrategy->GetTableMinWidth();
   return result;
 }
 
 /** return the maximum width of the table.  Return 0 if the max width is unknown. */
-nscoord nsTableFrame::GetMaxTableContentWidth()
+nscoord nsTableFrame::GetMaxTableWidth()
 {
   nscoord result = 0;
   if (nsnull!=mTableLayoutStrategy)
-    result = mTableLayoutStrategy->GetTableMaxContentWidth();
+    result = mTableLayoutStrategy->GetTableMaxWidth();
   return result;
 }
 
