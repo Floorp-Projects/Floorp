@@ -226,6 +226,7 @@ public:
   void ShowHistory();
 
   nsIWebShell* GetTarget(const PRUnichar* aName);
+  nsIBrowserWindow* GetBrowserWindow(void);
 
   static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
 
@@ -856,7 +857,7 @@ nsWebShell::GetPrefs(nsIPref*& aPrefs)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
 {
   nsIWebShell* top = this;
@@ -1279,22 +1280,12 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
   mTitle = aTitle;
 
   // Title's set on the top level web-shell are passed ont to the container
-  nsIWebShell *rootWebShell;
+  nsIBrowserWindow *browserWindow;
 
-  GetRootWebShell(rootWebShell);
-
-  if (nsnull != rootWebShell) {
-    nsIWebShellContainer *rootContainer;
-    rootWebShell->GetContainer(rootContainer);
-    if (nsnull != rootContainer) {
-      nsIBrowserWindow *browserWindow;
-      if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow)) {
-        browserWindow->SetTitle(aTitle);
-        NS_RELEASE(browserWindow);
-      }
-      NS_RELEASE(rootContainer);
-    }
-    NS_RELEASE(rootWebShell);
+  browserWindow = GetBrowserWindow();
+  if (nsnull != browserWindow) {
+    browserWindow->SetTitle(aTitle);
+    NS_RELEASE(browserWindow);
   }
 
   return NS_OK;
@@ -1531,31 +1522,29 @@ nsWebShell::OnOverLink(nsIFrame* aFrame,
                        const PRUnichar* aTargetSpec)
 {
   if (!mOverURL.Equals(aURLSpec) || !mOverTarget.Equals(aTargetSpec)) {
-fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOverTarget, stdout); fputs("'\n", stdout); 
+#ifdef NS_DEBUG
+    fputs("Was '", stdout); 
+    fputs(mOverURL, stdout); 
+    fputs("' '", stdout); 
+    fputs(mOverTarget, stdout); 
+    fputs("'\n", stdout); 
     fputs("Over link '", stdout);
     fputs(aURLSpec, stdout);
     fputs("' '", stdout);
     fputs(aTargetSpec, stdout);
     fputs("'\n", stdout);
+#endif /* NS_DEBUG */
+
     mOverURL = aURLSpec;
     mOverTarget = aTargetSpec;
 
     // Get the browser window and setStatus
-    nsIWebShell *rootWebShell;
-    GetRootWebShell(rootWebShell);
+    nsIBrowserWindow *browserWindow;
 
-    if (nsnull != rootWebShell) {
-      nsIWebShellContainer *rootContainer;
-      rootWebShell->GetContainer(rootContainer);
-      if (nsnull != rootContainer) {
-        nsIBrowserWindow *browserWindow;
-        if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow)) {
-          browserWindow->SetStatus(aURLSpec);
-          NS_RELEASE(browserWindow);
-        }
-        NS_RELEASE(rootContainer);
-      }
-      NS_RELEASE(rootWebShell);
+    browserWindow = GetBrowserWindow();
+    if (nsnull != browserWindow) {
+      browserWindow->SetStatus(aURLSpec);
+      NS_RELEASE(browserWindow);
     }
   }
   return NS_OK;
@@ -1584,6 +1573,25 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 }
 
 //----------------------------------------------------------------------
+nsIBrowserWindow* nsWebShell::GetBrowserWindow()
+{
+  nsIBrowserWindow *browserWindow = nsnull;
+  nsIWebShell *rootWebShell;
+
+  GetRootWebShell(rootWebShell);
+
+  if (nsnull != rootWebShell) {
+    nsIWebShellContainer *rootContainer;
+    rootWebShell->GetContainer(rootContainer);
+    if (nsnull != rootContainer) {
+      rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow);
+      NS_RELEASE(rootContainer);
+    }
+    NS_RELEASE(rootWebShell);
+  }
+
+  return browserWindow;
+}
 
 nsresult 
 nsWebShell::GetScriptContext(nsIScriptContext** aContext)
@@ -1837,6 +1845,16 @@ nsWebShell::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 
     rv = mContainer->ProgressLoadURL(this, urlString, aProgress, aProgressMax);
   }
+
+  // Pass status messages out to the nsIBrowserWindow...
+  nsIBrowserWindow *browserWindow;
+
+  browserWindow = GetBrowserWindow();
+  if (nsnull != browserWindow) {
+    browserWindow->SetProgress(aProgress, aProgressMax);
+    NS_RELEASE(browserWindow);
+  }
+
   return rv;
 }
 
@@ -1849,6 +1867,16 @@ nsWebShell::OnStatus(nsIURL* aURL, const nsString &aMsg)
   if (nsnull != mObserver) {
     rv = mObserver->OnStatus(aURL, aMsg);
   }
+
+  // Pass status messages out to the nsIBrowserWindow...
+  nsIBrowserWindow *browserWindow;
+
+  browserWindow = GetBrowserWindow();
+  if (nsnull != browserWindow) {
+    browserWindow->SetStatus(aMsg);
+    NS_RELEASE(browserWindow);
+  }
+
   return rv;
 }
 
