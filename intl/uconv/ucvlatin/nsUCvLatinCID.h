@@ -22,9 +22,9 @@
 
 #include "nsISupports.h"
 
-// Class ID for our Latin1ToUnicode charset converter
+// Class ID for our ISO88591ToUnicode charset converter
 // {A3254CB0-8E20-11d2-8A98-00600811A836}
-NS_DECLARE_ID(kLatin1ToUnicodeCID,
+NS_DECLARE_ID(kISO88591ToUnicodeCID,
   0xa3254cb0, 0x8e20, 0x11d2, 0x8a, 0x98, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our ISO88592ToUnicode charset converter
@@ -87,9 +87,9 @@ NS_DECLARE_ID(kMacTurkishToUnicodeCID,
 NS_DECLARE_ID(kUTF8ToUnicodeCID, 
   0x5534ddc0, 0xdd96, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
-// Class ID for our UnicodeToLatin1 charset converter
+// Class ID for our UnicodeToISO88591 charset converter
 // {920307B0-C6E8-11d2-8AA8-00600811A836}
-NS_DECLARE_ID(kUnicodeToLatin1CID, 
+NS_DECLARE_ID(kUnicodeToISO88591CID, 
   0x920307b0, 0xc6e8, 0x11d2, 0x8a, 0xa8, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
 // Class ID for our UnicodeToISO88592 charset converter

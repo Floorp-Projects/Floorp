@@ -27,7 +27,7 @@ DLLNAME = ucvlatin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
-	nsLatin1ToUnicode.cpp		\
+	nsISO88591ToUnicode.cpp		\
 	nsISO88592ToUnicode.cpp		\
 	nsISO88597ToUnicode.cpp		\
 	nsISO88599ToUnicode.cpp		\
@@ -40,7 +40,7 @@ CPPSRCS =				\
 	nsMacGreekToUnicode.cpp		\
 	nsMacTurkishToUnicode.cpp	\
 	nsUTF8ToUnicode.cpp		\
-	nsUnicodeToLatin1.cpp		\
+	nsUnicodeToISO88591.cpp		\
 	nsUnicodeToISO88592.cpp		\
 	nsUnicodeToISO88597.cpp		\
 	nsUnicodeToISO88599.cpp		\
@@ -59,7 +59,7 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\nsLatin1ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88591ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88592ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88597ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88599ToUnicode.obj 		\
@@ -72,7 +72,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsMacGreekToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacTurkishToUnicode.obj 		\
 	.\$(OBJDIR)\nsUTF8ToUnicode.obj 		\
-	.\$(OBJDIR)\nsUnicodeToLatin1.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88591.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88592.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88597.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88599.obj		\

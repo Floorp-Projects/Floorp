@@ -29,7 +29,7 @@ CSRCS		=  \
 		  $(NULL)
 
 CPPSRCS		= \
-                  nsLatin1ToUnicode.cpp \
+                  nsISO88591ToUnicode.cpp \
                   nsISO88592ToUnicode.cpp \
                   nsISO88597ToUnicode.cpp \
                   nsISO88599ToUnicode.cpp \
@@ -42,7 +42,7 @@ CPPSRCS		= \
                   nsMacGreekToUnicode.cpp \
                   nsMacTurkishToUnicode.cpp \
                   nsUTF8ToUnicode.cpp \
-                  nsUnicodeToLatin1.cpp \
+                  nsUnicodeToISO88591.cpp \
                   nsUnicodeToISO88592.cpp \
                   nsUnicodeToISO88597.cpp \
                   nsUnicodeToISO88599.cpp \
