@@ -239,6 +239,7 @@ public:	// public on BeOS to allow BViews to access it
         SET_CURSOR,
         CREATE_HACK,
 		ONMOUSE,
+		ONWHEEL,
 		ONPAINT,
 		ONSCROLL,
 		ONRESIZE,
