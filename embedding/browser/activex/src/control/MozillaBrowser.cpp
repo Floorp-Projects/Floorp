@@ -66,6 +66,7 @@
 #include "nsIWidget.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIComponentRegistrar.h"
 
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLAnchorElement.h"
