@@ -210,6 +210,12 @@ nsresult nsMsgPurgeService::PerformPurge()
         rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
         NS_ENSURE_SUCCESS(rv, rv);
 
+        PRInt32 spamLevel = 0;
+        spamSettings->GetLevel(&spamLevel);
+        PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] spamLevel=%d (if 0, don't purge)", serverIndex, spamLevel));
+        if (spamLevel == 0)
+          continue;
+        
         // check if we are set up to purge for this server
         // if not, skip it.
         PRBool purgeSpam;
@@ -286,7 +292,7 @@ nsresult nsMsgPurgeService::PerformPurge()
           {
             PRInt32 purgeInterval;
             spamSettings->GetPurgeInterval(&purgeInterval);
-            PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] purging! searching for messages older than %d days", serverIndex, purgeInterval));
+            PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] purging! searching for messages older than %d days", serverIndex, purgeInterval));            
             rv = SearchFolderToPurge(junkFolder, purgeInterval);
             break;
           }
@@ -366,7 +372,6 @@ nsresult nsMsgPurgeService::SearchFolderToPurge(nsIMsgFolder *folder, PRInt32 pu
     
 NS_IMETHODIMP nsMsgPurgeService::OnNewSearch()
 {
-  
   PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("on new search"));
   return NS_OK;
 }
