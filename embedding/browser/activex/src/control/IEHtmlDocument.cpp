@@ -133,14 +133,13 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_body(IHTMLElement __RPC_FAR *__RP
     {
         nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
 
-        CIEHtmlElementInstance *pElement = NULL;
-        CIEHtmlElementInstance::CreateInstance(&pElement);
-        if (pElement)
-        {
-            pElement->SetDOMNode(bodyNode);
-            pElement->SetParent(this);
-            pElement->QueryInterface(IID_IHTMLElement, (void **) p);
-        }
+        // get or create com object:
+        CComPtr<IUnknown> pNode;
+        HRESULT hr = CIEHtmlDomNode::FindOrCreateFromDOMNode(bodyNode, &pNode);
+        if (FAILED(hr))
+            return hr;
+        if (FAILED(pNode->QueryInterface(IID_IHTMLElement, (void **)p)))
+            return E_UNEXPECTED;
     }
 
     return S_OK;

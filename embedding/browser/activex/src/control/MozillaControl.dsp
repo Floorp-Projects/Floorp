@@ -226,6 +226,9 @@ SOURCE=..\common\ControlSiteIPFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\IEHtmlButtonElement.cpp
+# End Source File
+# Begin Source File
 SOURCE=..\common\IEHtmlElement.cpp
 # End Source File
 # Begin Source File
@@ -274,6 +277,9 @@ SOURCE=..\common\CPMozillaControl.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\IEHtmlButtonElement.h
+# End Source File
+# Begin Source File
 SOURCE=..\common\IEHtmlElement.h
 # End Source File
 # Begin Source File

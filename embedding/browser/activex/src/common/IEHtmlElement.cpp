@@ -54,11 +54,22 @@
 
 CIEHtmlElement::CIEHtmlElement()
 {
+    m_pNodeAgg = NULL;
 }
 
+HRESULT CIEHtmlElement::FinalConstruct( )
+{
+    return CComCreator<CComAggObject<CIEHtmlDomNode> >::CreateInstance(GetControllingUnknown(),
+        IID_IUnknown, reinterpret_cast<void**>(&m_pNodeAgg));
+}
 
 CIEHtmlElement::~CIEHtmlElement()
 {
+}
+
+void CIEHtmlElement::FinalRelease( )
+{
+    m_pNodeAgg->Release();
 }
 
 HRESULT CIEHtmlElement::GetChildren(CIEHtmlElementCollectionInstance **ppCollection)
@@ -83,6 +94,41 @@ HRESULT CIEHtmlElement::GetChildren(CIEHtmlElementCollectionInstance **ppCollect
     return S_OK;
 }
 
+HRESULT CIEHtmlElement::GetHtmlDomNode(CIEHtmlDomNode **ppHtmlDomNode)
+{
+    if (ppHtmlDomNode == NULL)
+        return E_FAIL;
+    *ppHtmlDomNode = NULL;
+    IHTMLDOMNode* pHtmlNode = NULL;
+    // This causes an AddRef on outer unknown:
+    HRESULT hr = m_pNodeAgg->QueryInterface(IID_IHTMLDOMNode, (void**)&pHtmlNode);
+    *ppHtmlDomNode = (CIEHtmlDomNode*)pHtmlNode;
+    return hr;
+}
+
+HRESULT CIEHtmlElement::SetDOMNode(nsIDOMNode *pDomNode)
+{
+    mDOMNode = pDomNode;
+    // Forward to aggregated object:
+    CIEHtmlDomNode *pHtmlDomNode;
+    GetHtmlDomNode(&pHtmlDomNode);
+    HRESULT hr = pHtmlDomNode->SetDOMNode(pDomNode);
+    // Release on outer unknown because GetHtmlDomNode does AddRef on it:
+    GetControllingUnknown()->Release();
+    return hr;
+}
+
+HRESULT CIEHtmlElement::SetParent(CNode *pParent)
+{
+    CNode::SetParent(pParent);
+    // Forward to aggregated object:
+    CIEHtmlDomNode *pHtmlDomNode;
+    GetHtmlDomNode(&pHtmlDomNode);
+    HRESULT hr = pHtmlDomNode->SetParent(pParent);
+    // Release on outer unknown because GetHtmlDomNode does AddRef on it:
+    GetControllingUnknown()->Release();
+    return hr;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // IHTMLElement implementation
@@ -277,26 +323,15 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_parentElement(IHTMLElement __RPC_F
         nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(parentNode);
         if (domElement)
         {
-            CIEHtmlNode *pHtmlNode = NULL;
-            CIEHtmlElementInstance *pHtmlElement = NULL;
-            CIEHtmlElementInstance::FindFromDOMNode(parentNode, &pHtmlNode);
-            if (!pHtmlNode)
-            {
-                CIEHtmlElementInstance::CreateInstance(&pHtmlElement);
-                if (!pHtmlElement)
-                {
-                    NS_ASSERTION(0, "Could not create element");
-                    return E_OUTOFMEMORY;
-                }
-                pHtmlElement->SetDOMNode(parentNode);
-            }
-            else
-            {
-                pHtmlElement = (CIEHtmlElementInstance *) pHtmlNode;
-            }
-            pHtmlElement->QueryInterface(IID_IHTMLElement, (void **) p);
+            CComPtr<IUnknown> pNode;
+            HRESULT hr = CIEHtmlDomNode::FindOrCreateFromDOMNode(parentNode, &pNode);
+            if (FAILED(hr))
+                return hr;
+            if (FAILED(pNode->QueryInterface(IID_IHTMLElement, (void **) p)))
+                return E_UNEXPECTED;
         }
     }
+        
     return S_OK;
 }
 

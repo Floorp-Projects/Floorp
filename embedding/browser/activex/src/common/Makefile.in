@@ -70,6 +70,7 @@ CPPSRCS         = \
                 ItemContainer.cpp \
                 IEHtmlSelectionObject.cpp \
                 IEHtmlTxtRange.cpp \
+                IEHtmlButtonElement.cpp \
                 $(NULL)
 
 EXPORTS         = \
