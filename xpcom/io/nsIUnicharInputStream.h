@@ -42,11 +42,11 @@ enum nsCharSetID {
  */
 class nsIUnicharInputStream : public nsISupports {
 public:
-  virtual PRInt32 Read(PRInt32* aErrorCode,
-                       PRUnichar* aBuf,
-                       PRInt32 aOffset,
-                       PRInt32 aCount) = 0;
-  virtual void Close() = 0;
+  NS_IMETHOD Read(PRUnichar* aBuf,
+                  PRInt32 aOffset,
+                  PRInt32 aCount,
+                  PRInt32 *aReadCount) = 0;
+  NS_IMETHOD Close() = 0;
 };
 
 /**

@@ -44,7 +44,7 @@ public:
 
   /** Fill the buffer with data from aStream.  Don't grow the buffer, only
    *  read until length of buffer equals buffer size. */
-  virtual PRInt32 Fill(PRInt32* aErrorCode, nsIInputStream* aStream,
+  virtual PRInt32 Fill(nsresult* aErrorCode, nsIInputStream* aStream,
                        PRInt32 aKeep) = 0;
 };
 

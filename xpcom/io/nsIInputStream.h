@@ -27,34 +27,28 @@
 /** Abstract byte input stream */
 class nsIInputStream : public nsIBaseStream {
 public:
-  /** Read data from the stream.
-   *  @param aErrorCode the error code if an error occurs
-   *  @param aBuf the buffer into which the data is read
-   *  @param aOffset the start offset of the data
-   *  @param aCount the maximum number of bytes to read
-   *  @return number of bytes read or -1 if error
-   */   
-  virtual PRInt32 Read(PRInt32* aErrorCode,
-                       char* aBuf,
-                       PRInt32 aOffset,
-                       PRInt32 aCount) = 0;
-};
 
-/** Error codes */
-//@{ 
-// XXX fix up the values to work with nsqresult
-/// End of file
-#define NS_INPUTSTREAM_EOF 1
-/// Stream closed
-#define NS_INPUTSTREAM_CLOSED 2
-/// Error from the operating system
-#define NS_INPUTSTREAM_OSERROR 3
-/// Illegal arguments
-#define NS_INPUTSTREAM_ILLEGAL_ARGS 4
-/// For unichar streams
-#define NS_INPUTSTREAM_NO_CONVERTER 5
-/// For unichar streams
-#define NS_INPUTSTREAM_BAD_CONVERSION 6
-//@}
+    /** Return the number of bytes in the stream
+     *  @param aLength out parameter to hold the length
+     *         of the stream. if an error occurs, the length
+     *         will be undefined
+     *  @return error status
+     */
+    NS_IMETHOD
+    GetLength(PRInt32 *aLength) = 0;
+
+    /** Read data from the stream.
+     *  @param aErrorCode the error code if an error occurs
+     *  @param aBuf the buffer into which the data is read
+     *  @param aOffset the start offset of the data
+     *  @param aCount the maximum number of bytes to read
+     *  @param aReadCount out parameter to hold the number of
+     *         bytes read, eof if 0. if an error occurs, the
+     *         read count will be undefined
+     *  @return error status
+     */   
+    NS_IMETHOD
+    Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount) = 0; 
+};
 
 #endif /* nsInputStream_h___ */
