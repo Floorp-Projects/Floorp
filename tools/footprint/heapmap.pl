@@ -1,14 +1,15 @@
 use strict;
 my ($freeBytes, $freeCount);
 my ($usedBytes, $usedCount);
+my ($uncommFreeBytes, $uncommFreeCount);
 my ($freeAtEndBytes, $freeAtEndCount);
 my ($overheadBytes, $overheadCount);
 my ($holeBytes, $holeCount, @hole);
+my ($commBytes, $uncommBytes);
 # track prev address of allocation to detect holes
 # Track begin and end address of contiguous block
-my ($nextAddr);
-my $heapJump = 0;
-my $holeTolerance = 100 * 1024;
+my ($nextAddr) = 0;
+my $holeTolerance = 0;
 
 # Heading for heap dump
 my $heading;
@@ -23,9 +24,11 @@ while(<>)
         # Initialize all variables
         ($freeBytes, $freeCount) = 0;
         ($usedBytes, $usedCount) = 0;
+        ($uncommFreeBytes, $uncommFreeCount) = 0;
         ($freeAtEndBytes, $freeAtEndCount) = 0;
         ($overheadBytes, $overheadCount) = 0;
         ($holeBytes, $holeCount) = 0;
+        ($commBytes, $uncommBytes) = 0;
         $heading = $1;
         @hole = ();
         next;
@@ -33,21 +36,47 @@ while(<>)
     if (/END HEAPDUMP/) {
         # Print results of heapdump
         results();
+        next;
     }
     # look for blocks that are used or free
-    if (/Processing heap/) {
-        # make sure the jump from one heap to another is not counted
-        # as a hole
-        $heapJump = 1;
+    if (/BEGIN heap/) {
+        next;
+    }
+
+    if (/END heap/) {
+        # Reset nextAddr for overhead detection
+        $nextAddr = 0;
 
         # See if the previous heap ended with a free block
         if ($prevFree) {
+            printf "DEBUG: before END heap : $prevFree\n";
             $freeAtEndBytes += $prevFree;
             $freeAtEndCount++;
         }
+        $prevFree = 0;
         next;
     }
-    elsif (/ *FREE block at ([0-9A-Fa-f]*) of size *([0-9]*) overhead *([0-9]*)/)
+
+    if (/REGION ([0-9A-Fa-f]*) : *overhead ([0-9]*) committed ([0-9]*) uncommitted ([0-9]*)/) {
+        # Reset nextAddr for overhead detection
+        $nextAddr = 0;
+
+        # See if the previous heap ended with a free block
+        if ($prevFree) {
+            printf "DEBUG: before REGION : $prevFree\n";
+            $freeAtEndBytes += $prevFree;
+            $freeAtEndCount++;
+        }
+        $prevFree = 0;
+
+        $commBytes += $3;
+        $uncommBytes += $4;
+        $overheadBytes += $2;
+        $overheadCount++;
+        next;
+    }
+
+    if (/ *FREE ([0-9A-Fa-f]*) : *([0-9]*) overhead *([0-9]*)/)
     {
         $freeCount++;
         $freeBytes += $2;
@@ -57,7 +86,7 @@ while(<>)
         # this is a candidate for compaction.
         $prevFree = $2;
     }
-    elsif (/ *USED block at ([0-9A-Fa-f]*) of size *([0-9]*) overhead *([0-9]*)/)
+    elsif (/ *USED ([0-9A-Fa-f]*) : *([0-9]*) overhead *([0-9]*)/)
     {
         $usedCount++;
         $usedBytes += $2;
@@ -66,6 +95,15 @@ while(<>)
         # This wasn't a free
         $prevFree = 0;
     }
+    elsif (/ *---- ([0-9A-Fa-f]*) : *([0-9]*) overhead *([0-9]*)/)
+    {
+        $uncommFreeCount++;
+        $uncommFreeBytes += $2;
+        # these wont have an overhead
+        # we shouldn't view this as a free as we could shed this and
+        # reduce our VmSize
+        $prevFree = $2;
+    }
     else {
         next;
     }
@@ -73,32 +111,29 @@ while(<>)
     my $size = $2;
     my $overhead = $3;
 
-    if (!$heapJump && defined($nextAddr) && $addr-$nextAddr > $holeTolerance) {
-        # found a hole
-        push @hole, $nextAddr;
-        push @hole, $addr;
+    if ($nextAddr && $addr-$nextAddr > $holeTolerance) {
+        # found a hole. This is usally alignment overhead
         $holeCount ++;
         $holeBytes += $addr - $nextAddr;
     }
     $nextAddr = $addr + $size + $overhead;
-    $heapJump = 0;
 }
 
 sub results()
 {
     printf "Heap statistics : $heading\n";
     printf "------------------------------------------------------------\n";
-    printf "FREE            : %8.2f K in %d blocks\n", toK($freeBytes), $freeCount;
-    printf "USED            : %8.2f K in %d blocks\n", toK($usedBytes), $usedCount;
-    printf "Overhead        : %8.2f K in %d blocks\n", toK($overheadBytes), $overheadCount;
-    printf "Total           : %8.2f K\n", toK($freeBytes+$usedBytes+$overheadBytes);
-    printf "Hole            : %8.2f K in %d holes\n", toK($holeBytes), $holeCount;
-    printf "Total w/hole    : %8.2f K\n", toK($freeBytes+$usedBytes+$overheadBytes+$holeBytes);
-    printf "FREE at end of heap : %8.2f K in %d heaps - %5.2f%% of FREE\n", toK($freeAtEndBytes), $freeAtEndCount, $freeAtEndBytes/$freeBytes*100;
-    for (my $i=0; $i<$holeCount; $i++) {
-        printf "hole %08x - %08x : %8.2f K\n", $hole[$i], $hole[$i+1], toK($hole[$i+1] - $hole[$i]);
-    }
+    printf "USED               : %8.2f K in %6d blocks\n", toK($usedBytes), $usedCount;
+    printf "FREE               : %8.2f K in %6d blocks\n", toK($freeBytes), $freeCount;
+    printf "Uncommitted FREE   : %8.2f K in %6d blocks\n", toK($uncommFreeBytes), $uncommFreeCount;
+    printf "Overhead           : %8.2f K in %6d blocks\n", toK($overheadBytes), $overheadCount;
+    printf "Alignment overhead : %8.2f K in %6d blocks\n", toK($holeBytes), $holeCount;
+    printf "             Total : %8.2f K\n", toK($freeBytes+$usedBytes+$uncommFreeBytes+$overheadBytes+$holeBytes);
+    printf "FREE at heap end   : %8.2f K in %6d blocks - %5.2f%% of FREE\n", toK($freeAtEndBytes), $freeAtEndCount, $freeAtEndBytes/($freeBytes+$uncommFreeBytes)*100;
     printf "\n";
+    printf "Total Commit    : %8.2f K\n", toK($commBytes);
+    printf "Total Uncommit  : %8.2f K\n", toK($uncommBytes);
+    printf "          Total : %8.2f K\n", toK($uncommBytes + $commBytes);
 }
 
 sub toK()
