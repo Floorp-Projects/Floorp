@@ -145,8 +145,6 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
     container->GetAttributeStyleSheet(&sheet);
   }
 
-  NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
-
   return sheet;
 }
 
@@ -254,15 +252,13 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
     PRBool  impact = NS_STYLE_HINT_NONE;
     GetMappedAttributeImpact(aAttribute, impact);
 
-    if (mDocument) {  // set attr via style sheet
-      nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
-
-      if (sheet) {
-        result = sheet->SetAttributeFor(aAttribute, aValue, 
-                                        (NS_STYLE_HINT_CONTENT < impact), 
-                                        this, mAttributes);
-      }
-    } else {  // manage this ourselves and re-sync when we connect to doc
+    nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
+    if (sheet) { // set attr via style sheet
+      result = sheet->SetAttributeFor(aAttribute, aValue, 
+                                      (NS_STYLE_HINT_CONTENT < impact), 
+                                      this, mAttributes);
+    }
+    else { // manage this ourselves and re-sync when we connect to doc
       result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
 
       if (mAttributes) {
