@@ -154,7 +154,7 @@ public class Interpreter extends LabelTable {
         itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         itsData.itsSourceFile = itsSourceFile;
         itsFunctionList = (Vector) tree.getProp(Node.FUNCTION_PROP);
-        debugSource = (StringBuffer) tree.getProp(Node.DEBUGSOURCE_PROP);
+        debugSource = (String) tree.getProp(Node.DEBUGSOURCE_PROP);
         if (itsFunctionList != null)
             generateNestedFunctions(scope, cx, securityDomain);
         Object[] regExpLiterals = null;
@@ -1481,6 +1481,12 @@ public class Interpreter extends LabelTable {
             stack[VAR_SHFT + i] = undefined;
         }
 
+        DebugFrame debuggerFrame = null;
+        if (cx.debugger != null) {
+            DebuggableScript dscript = (DebuggableScript)fnOrScript;
+            debuggerFrame = cx.debugger.getFrame(cx, dscript);
+        }
+
         if (theData.itsFunctionType != 0) {
             if (fnOrScript.itsClosure != null) {
                 scope = fnOrScript.itsClosure;
@@ -1510,16 +1516,14 @@ public class Interpreter extends LabelTable {
                                      theData.itsFromEvalCode);
         }
 
-        DebugFrame debuggerFrame = null;
         boolean useActivationVars = false;
-        if (cx.debugger != null) {
+        if (debuggerFrame != null) {
             if (theData.itsFunctionType != 0 && !theData.itsNeedsActivation) {
                 useActivationVars = true;
                 scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
                                                  thisObj, args);
             }
-            debuggerFrame = cx.debugger.enterFrame
-                    (cx, scope, thisObj, args, (DebuggableScript)fnOrScript);
+            debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
 
         Object result = undefined;
@@ -2737,7 +2741,7 @@ public class Interpreter extends LabelTable {
 
     private int version;
     private boolean inLineStepMode;
-    private StringBuffer debugSource;
+    private String debugSource;
 
     private static final Object DBL_MRK = new Object();
 }

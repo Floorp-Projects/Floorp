@@ -38,6 +38,7 @@
 package org.mozilla.javascript.debug;
 
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
 
 /**
 Interface to implement if the application is interested in receiving debug
@@ -45,6 +46,16 @@ information during execution of a particular script or function.
 */
 public interface DebugFrame {
 
+/**
+Called when execution is ready to start bytecode interpretation for entered a particular function or script.
+
+@param cx current Context for this thread
+@param activation the activation scope for the function or script.
+@param thisObj value of the JavaScript <code>this</code> object
+@param args the array of arguments
+*/
+    public void onEnter(Context cx, Scriptable activation,
+                        Scriptable thisObj, Object[] args);
 /**
 Called when executed code reaches new line in the source.
 @param cx current Context for this thread

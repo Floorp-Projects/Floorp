@@ -43,8 +43,8 @@ public class DebugReader extends Reader {
         this.saved = new StringBuffer();
     }
 
-    public StringBuffer getSaved() {
-        return saved;
+    public String getSaved() {
+        return saved.toString();
     }
 
     public int read() throws IOException {
