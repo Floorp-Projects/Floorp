@@ -61,8 +61,10 @@ ifeq ($(MOZ_ZULU_FREE),1)
 	$(CVST) -d config ns/clientconfig; \
 	cd $(MOZ_SRC); \
 	$(CVST) $(LIBNLS_BRANCH) $(LIBNLS_DIR); \
-endif
 	cd $(MOZ_SRC)
+else
+	cd $(MOZ_SRC)
+endif
 
 pull_trex:
 	cd $(MOZ_SRC); \
@@ -83,8 +85,10 @@ build_julian::
 ifeq ($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC)/ns/modules/libnls; \
 	gmake; \
-endif
 	cd $(MOZ_SRC)
+else
+	cd $(MOZ_SRC)
+endif
 
 
 build_trex:
