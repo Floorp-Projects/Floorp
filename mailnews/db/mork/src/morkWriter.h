@@ -85,7 +85,7 @@
 
 #define morkWriter_kMaxColumnNameSize        128 /* longest writable col name */
 
-#define morkWriter_kMaxIndent 64 /* default value for mWriter_MaxIndent */
+#define morkWriter_kMaxIndent 66 /* default value for mWriter_MaxIndent */
 #define morkWriter_kMaxLine   78 /* default value for mWriter_MaxLine */
 
 #define morkWriter_kYarnEscapeSlop  4 /* guess average yarn escape overhead */
@@ -150,6 +150,9 @@ public: // state is public because the entire Mork system is private
   mork_u1      mWriter_Phase;         // status of writing process
   mork_bool    mWriter_DidStartDict;  // true when a dict has been started
   mork_bool    mWriter_DidEndDict;    // true when a dict has been ended
+
+  mork_bool    mWriter_SuppressDirtyRowNewline; // for table meta rows
+  mork_u1      mWriter_Pad[ 3 ];      // for u4 alignment
 
   mork_pos     mWriter_TableRowArrayPos;  // index into mTable_RowArray
    
