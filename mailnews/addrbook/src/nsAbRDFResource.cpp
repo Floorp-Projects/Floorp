@@ -35,7 +35,7 @@ nsAbRDFResource::nsAbRDFResource(void)
 {
 	NS_INIT_REFCNT();
 
-	mDatabase = nsnull;
+	mDatabase = null_nsCOMPtr();
 	GetAbDatabase();
 }
 
