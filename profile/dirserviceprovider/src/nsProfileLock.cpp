@@ -390,7 +390,8 @@ PR_BEGIN_MACRO                                                          \
 }
 #endif /* XP_UNIX */
 
-nsresult nsProfileLock::Lock(nsILocalFile* aFile)
+nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
+                             nsIProfileUnlocker* *aUnlocker)
 {
 #if defined (XP_MACOSX)
     NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
@@ -403,17 +404,20 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
 #endif
 
     nsresult rv;
+    if (aUnlocker)
+        *aUnlocker = nsnull;
+
     NS_ENSURE_STATE(!mHaveLock);
 
     PRBool isDir;
-    rv = aFile->IsDirectory(&isDir);
+    rv = aProfileDir->IsDirectory(&isDir);
     if (NS_FAILED(rv))
         return rv;
     if (!isDir)
         return NS_ERROR_FILE_NOT_DIRECTORY;
 
     nsCOMPtr<nsILocalFile> lockFile;
-    rv = aFile->Clone((nsIFile **)((void **)getter_AddRefs(lockFile)));
+    rv = aProfileDir->Clone((nsIFile **)((void **)getter_AddRefs(lockFile)));
     if (NS_FAILED(rv))
         return rv;
 
@@ -491,8 +495,10 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
                                  OPEN_ALWAYS,
                                  FILE_FLAG_DELETE_ON_CLOSE,
                                  nsnull);
-    if (mLockFileHandle == INVALID_HANDLE_VALUE)
+    if (mLockFileHandle == INVALID_HANDLE_VALUE) {
+        // XXXbsmedberg: provide a profile-unlocker here!
         return NS_ERROR_FILE_ACCESS_DENIED;
+    }
 #elif defined(XP_OS2)
     nsCAutoString filePath;
     rv = lockFile->GetNativePath(filePath);
@@ -535,7 +541,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
     }
 #elif defined(XP_UNIX)
     nsCOMPtr<nsIFile> oldLockFile;
-    rv = aFile->Clone(getter_AddRefs(oldLockFile));
+    rv = aProfileDir->Clone(getter_AddRefs(oldLockFile));
     if (NS_SUCCEEDED(rv))
     {
         rv = oldLockFile->Append(OLD_LOCKFILE_NAME);

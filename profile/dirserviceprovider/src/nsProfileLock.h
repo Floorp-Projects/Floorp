@@ -42,6 +42,8 @@
 
 #include "nsILocalFile.h"
 
+class nsIProfileUnlocker;
+
 #if defined (XP_WIN)
 #include <windows.h>
 #endif
@@ -69,7 +71,16 @@ public:
  
     nsProfileLock&          operator=(nsProfileLock& rhs);
                        
-    nsresult                Lock(nsILocalFile* aFile);
+    /**
+     * Attempt to lock a profile directory.
+     *
+     * @param aProfileDir  [in] The profile directory to lock.
+     * @param aUnlocker    [out] Optional. This is only returned when locking
+     *                     fails with NS_ERROR_FILE_ACCESS_DENIED, and may not
+     *                     be returned at all.
+     * @throws NS_ERROR_FILE_ACCESS_DENIED if the profile is locked.
+     */
+    nsresult                Lock(nsILocalFile* aProfileDir, nsIProfileUnlocker* *aUnlocker);
     nsresult                Unlock();
         
 private:

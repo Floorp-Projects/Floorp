@@ -136,7 +136,7 @@ nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir)
     dirToLock = do_QueryInterface(mNonSharedProfileDir);
   else
     dirToLock = do_QueryInterface(mProfileDir);
-  rv = mProfileDirLock->Lock(dirToLock);
+  rv = mProfileDirLock->Lock(dirToLock, nsnull);
   if (NS_FAILED(rv))
     return rv;
 #endif

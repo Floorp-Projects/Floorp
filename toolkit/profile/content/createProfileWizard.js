@@ -247,7 +247,7 @@ function onFinish()
   }
   else {
     // Use the newly created Profile.
-    var profileLock = profile.lock();
+    var profileLock = profile.lock(null);
 
     var dialogParams = window.arguments[0].QueryInterface(I.nsIDialogParamBlock);
     dialogParams.objects.insertElementAt(profileLock, 0, false);

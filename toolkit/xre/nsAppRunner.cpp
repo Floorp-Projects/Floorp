@@ -74,7 +74,10 @@
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIProcess.h"
+#include "nsIProfileUnlocker.h"
+#include "nsIPromptService.h"
 #include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITimelineService.h"
 #include "nsIToolkitChromeRegistry.h"
@@ -90,6 +93,7 @@
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsEmbedCID.h"
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
 #include "nsXPIDLString.h"
@@ -1082,7 +1086,78 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative)
   return NS_ERROR_LAUNCHED_CHILD_PROCESS;
 }
 
-static const char kProfileManagerURL[] = "chrome://mozapps/content/profile/profileSelection.xul";
+static const char kProfileProperties[] =
+  "chrome://mozapps/locale/profile/profileSelection.properties";
+
+static nsresult
+ProfileLockedDialog(nsILocalFile* aProfileDir, nsIProfileUnlocker* aUnlocker,
+                    nsINativeAppSupport* aNative, nsIProfileLock* *aResult)
+{
+  nsresult rv;
+
+  ScopedXPCOMStartup xpcom;
+  rv = xpcom.Initialize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = xpcom.DoAutoreg();
+  rv |= xpcom.InitEventQueue();
+  rv |= xpcom.SetWindowCreator(aNative);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  { //extra scoping is needed so we release these components before xpcom shutdown
+    nsCOMPtr<nsIStringBundleService> sbs
+      (do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+    NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIStringBundle> sb;
+    sbs->CreateBundle(kProfileProperties, getter_AddRefs(sb));
+    NS_ENSURE_TRUE(sbs, NS_ERROR_FAILURE);
+
+    NS_ConvertUTF8toUTF16 appName(gAppData->appName);
+    const PRUnichar* params[] = {appName.get(), appName.get()};
+
+    nsXPIDLString killMessage;
+    sb->FormatStringFromName(NS_LITERAL_STRING("restartMessage").get(),
+                             params, 2, getter_Copies(killMessage));
+
+    nsXPIDLString killTitle;
+    sb->FormatStringFromName(NS_LITERAL_STRING("restartTitle").get(),
+                             params, 1, getter_Copies(killTitle));
+
+    if (!killMessage || !killTitle)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIPromptService> ps
+      (do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(ps, NS_ERROR_FAILURE);
+
+    PRUint32 flags = nsIPromptService::BUTTON_TITLE_OK * nsIPromptService::BUTTON_POS_0;
+
+    if (aUnlocker) {
+      flags =
+        nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_0 +
+        nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_1 +
+        nsIPromptService::BUTTON_POS_1_DEFAULT;
+    }
+
+    PRInt32 button;
+    rv = ps->ConfirmEx(nsnull, killTitle, killMessage, flags,
+                       killTitle, nsnull, nsnull, nsnull, nsnull, &button);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (button == 1 && aUnlocker) {
+      rv = aUnlocker->Unlock(nsIProfileUnlocker::FORCE_QUIT);
+      if (NS_FAILED(rv)) return rv;
+
+      return NS_LockProfilePath(aProfileDir, nsnull, aResult);
+    }
+
+    return NS_ERROR_ABORT;
+  }
+}
+
+static const char kProfileManagerURL[] =
+  "chrome://mozapps/content/profile/profileSelection.xul";
 
 static nsresult
 ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
@@ -1225,7 +1300,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
                                getter_AddRefs(lf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_LockProfilePath(lf, aResult);
+    return NS_LockProfilePath(lf, nsnull, aResult);
   }
 
   if (CheckArg("migration"))
@@ -1241,7 +1316,13 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     rv = NS_GetFileFromPath(arg, getter_AddRefs(lf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_LockProfilePath(lf, aResult);
+    nsCOMPtr<nsIProfileUnlocker> unlocker;
+
+    rv = NS_LockProfilePath(lf, getter_AddRefs(unlocker), aResult);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+
+    return ProfileLockedDialog(lf, unlocker, aNative, aResult);
   }
 
   nsCOMPtr<nsIToolkitProfileService> profileSvc;
@@ -1309,9 +1390,16 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     rv = profileSvc->GetProfileByName(nsDependentCString(arg),
                                       getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
-      rv = profile->Lock(aResult);
+      nsCOMPtr<nsIProfileUnlocker> unlocker;
+      rv = profile->Lock(nsnull, aResult);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
+
+      nsCOMPtr<nsILocalFile> profileDir;
+      rv = profile->GetRootDir(getter_AddRefs(profileDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return ProfileLockedDialog(profileDir, unlocker, aNative, aResult);
     }
 
     return ShowProfileManager(profileSvc, aNative);
@@ -1320,7 +1408,6 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
   if (CheckArg("profilemanager")) {
     return ShowProfileManager(profileSvc, aNative);
   }
-
 
   if (!count) {
     gDoMigration = PR_TRUE;
@@ -1332,7 +1419,7 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
                                             getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
       profileSvc->Flush();
-      rv = profile->Lock(aResult);
+      rv = profile->Lock(nsnull, aResult);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
     }
@@ -1347,9 +1434,16 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     // GetSelectedProfile will auto-select the only profile if there's just one
     profileSvc->GetSelectedProfile(getter_AddRefs(profile));
     if (profile) {
-      rv = profile->Lock(aResult);
+      nsCOMPtr<nsIProfileUnlocker> unlocker;
+      rv = profile->Lock(getter_AddRefs(unlocker), aResult);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
+
+      nsCOMPtr<nsILocalFile> profileDir;
+      rv = profile->GetRootDir(getter_AddRefs(profileDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return ProfileLockedDialog(profileDir, unlocker, aNative, aResult);
     }
   }
 
