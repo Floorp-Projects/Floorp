@@ -1912,10 +1912,15 @@ public:
 
     CElement *theElement=GetElement(aTag);    
     if(NS_SUCCEEDED(result)) {
-      nsCParserNode *theNode=(nsCParserNode*)aNode;
-      CStartToken *theToken=(CStartToken*)theNode->mToken;
-      if(theToken->IsEmpty() && (aTag==aContext->Last())){
-        result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+      if(aNode) {
+        nsCParserNode*  theNode=(nsCParserNode*)aNode;
+        eHTMLTokenTypes theType=eHTMLTokenTypes(theNode->GetTokenType());
+        if(theType==eToken_start) {
+          CStartToken *theToken=(CStartToken*)theNode->mToken;
+          if(theToken && theToken->IsEmpty() && (aTag==aContext->Last())){
+            result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+          }
+        }
       }
     }
 
