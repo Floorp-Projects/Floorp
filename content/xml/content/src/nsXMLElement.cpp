@@ -68,10 +68,8 @@
 
 
 nsresult
-NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
+NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
   nsXMLElement* it = new nsXMLElement();
 
   if (!it) {

@@ -808,7 +808,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 }
 
 nsresult
-nsXMLContentSink::CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
+nsXMLContentSink::CreateElement(const nsIParserNode& aNode,
+                                PRInt32 aNameSpaceID, 
                                 nsINodeInfo* aNodeInfo, nsIContent** aResult)
 {
   // The first step here is to see if someone has provided their
@@ -820,9 +821,7 @@ nsXMLContentSink::CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID
     // Create the content element using the element factory.
     elementFactory->CreateInstanceByTag(aNodeInfo, aResult);
   else {
-    nsCOMPtr<nsIXMLContent> xmlContent;
-    NS_NewXMLElement(getter_AddRefs(xmlContent), aNodeInfo);
-    return CallQueryInterface(xmlContent, aResult);
+    NS_NewXMLElement(aResult, aNodeInfo);
   }
 
   return NS_OK;
@@ -1913,12 +1912,7 @@ NS_IMETHODIMP
 XMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
                                            nsIContent** aResult)
 {
-  nsCOMPtr<nsIXMLContent> xmlContent;
-  nsresult rv = NS_NewXMLElement(getter_AddRefs(xmlContent), aNodeInfo);
-  nsCOMPtr<nsIContent> result = do_QueryInterface(xmlContent);
-  *aResult = result;
-  NS_IF_ADDREF(*aResult);
-  return rv; 
+  return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
 void 
