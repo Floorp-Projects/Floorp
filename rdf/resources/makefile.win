@@ -21,14 +21,15 @@ MODULE=rdf
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-        dialog.js						\
-		dialog.xul						\
-		dialogFrame.html				\
-		dialogSidebar.js				\
-		dialogSidebar.xul				\
-		dialogWindow.xul				\
-		sidebar-registry.rdf			\
-		document.gif                    \
+        article.gif                     \
+        dialog.js                       \
+        dialog.xul                      \
+        dialogFrame.html                \
+        dialogSidebar.js                \
+        dialogSidebar.xul               \
+        dialogWindow.xul                \
+        sidebar-registry.rdf            \
+        document.gif                    \
         dom-test-1.css                  \
         dom-test-1.xul                  \
         dom-test-2.xul                  \
@@ -52,9 +53,9 @@ FILES=\
         remote-flash-2.rdf              \
         remote-flash-3.rdf              \
         sidebar.css                     \
-	sidebar.js			\
-	sidebar-browser.rdf		\
-	sidebar-browser.xul		\
+        sidebar.js                      \
+        sidebar-browser.rdf             \
+        sidebar-browser.xul             \
         stock.gif                       \
         unread.gif                      \
         xpidl-test-1.xul                \
