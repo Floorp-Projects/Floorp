@@ -56,6 +56,7 @@
 #include "nsIDeviceContextSpecPS.h"
 #include "nsIPersistentProperties2.h"
 #include "nsTempfilePS.h"
+#include "nsEPSObjectPS.h"
 
 class nsIImage;
 class nsIAtom;
@@ -155,6 +156,10 @@ struct PSContext_{
     PrintInfo	  *prInfo;	    /* State information for printing process */
 };
 typedef struct PSContext_ PSContext;
+
+struct PSBoundingBox {          /* For BeginEPSF() */
+  float llx, lly, urx, ury;
+};
 
 #ifdef __cplusplus
 class nsPostScriptObj
@@ -393,6 +398,15 @@ public:
    *	@update 6/1/2000 katakai
    */
   void preshow(const PRUnichar* aText, int aLen);
+
+  /** ---------------------------------------------------
+   *  Render an encapsulated postscript object into the document
+   *	@update 3/6/2004 kherron
+   *	@param aRect Rectangle in which to render the EPS
+   *	@param anEPS Object to render
+   *	@return NS_OK if the object was copied successfully.
+   */
+  nsresult render_eps(const nsRect& aRect, nsEPSObjectPS &anEPS);
   
   void settitle(PRUnichar * aTitle);
 

@@ -49,6 +49,9 @@
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsLocalFile.h"
+#include <sys/mman.h>
+#include <errno.h>
 
 #ifdef PR_LOGGING 
 static PRLogModuleInfo *RenderingContextXpLM = PR_NewLogModule("RenderingContextXp");
@@ -197,11 +200,52 @@ nsRenderingContextXp::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSr
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen)
+nsRenderingContextXp::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
+  nsresult             rv;
+  int                  fd;
+  const unsigned char *data;
+  size_t               datalen;
+
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::RenderPostScriptDataFragment()\n"));
 
-  return mPrintContext->RenderPostScriptDataFragment(aData, aDatalen);
+  /* Get file size */
+  fseek(aDataFile, 0, SEEK_END);
+  datalen = ftell(aDataFile);
+
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("file size=%ld\n", (long)datalen));  
+
+  /* Safeguard against bogus values
+   * (make sure we clamp the size to a reasonable value (say... 128 MB)) */
+  if (datalen <= 0 || datalen > (128 * 1024 * 1024)) {
+    PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("error: file size %ld too large\n", (long)datalen));
+    return NS_ERROR_FAILURE;
+  }
+  
+  fflush(aDataFile);
+  fd = fileno(aDataFile);
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("fileno=%d\n", fd));  
+  data = (const unsigned char *)mmap(0, datalen, PROT_READ, MAP_SHARED, fd, 0); 
+  if (!data) {
+    int saved_errno = errno;
+    PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("mmap() failure, errno=%s/%d\n",
+           strerror(saved_errno), saved_errno));  
+    return nsresultForErrno(saved_errno);
+  }
+
+  PushState();
+
+  nsRect trect = aRect;
+  mTranMatrix->TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
+  UpdateGC();
+  rv = mPrintContext->RenderEPS(trect, data, datalen);
+
+  PopState();
+  
+  munmap((void *)data, datalen);
+
+  return rv;
 }
+
 
 

@@ -73,7 +73,7 @@ public:
   NS_IMETHOD Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
-  NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *aData, unsigned long aDatalen);
+  NS_IMETHOD RenderEPS(const nsRect& aRect, const unsigned char *aData, unsigned long aDatalen);
   NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();
   NS_IMETHOD AbortDocument();

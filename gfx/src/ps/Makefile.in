@@ -66,6 +66,7 @@ EXTRA_DSO_LIBS += gkgfx
 CPPSRCS		= \
 		nsDeviceContextPS.cpp \
 		nsFontMetricsPS.cpp \
+                nsEPSObjectPS.cpp \
 		nsRenderingContextPS.cpp \
 		nsPostScriptObj.cpp \
 		nsAFMObject.cpp \
@@ -80,6 +81,7 @@ EXPORTS		= \
 		nsGfxPSCID.h \
 		nsIDeviceContextSpecPS.h \
 		nsTempfilePS.h \
+                nsEPSObjectPS.h \
 		$(NULL)
 
 EXPORT_RESOURCE	= \
