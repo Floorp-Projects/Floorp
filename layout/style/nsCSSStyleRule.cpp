@@ -1066,6 +1066,8 @@ public:
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
+                                      const nsAReadableString& aPropValue);
   virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl);
@@ -1150,44 +1152,100 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(nsICSSDeclaration *aDecl)
   return NS_OK;
 }
 
+nsresult
+DOMCSSDeclarationImpl::ParsePropertyValue(const nsAReadableString& aPropName,
+                                          const nsAReadableString& aPropValue)
+{
+  nsCOMPtr<nsICSSDeclaration> decl;
+  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  if (!decl) {
+    return result;
+  }
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsCOMPtr<nsICSSParser> cssParser;
+  nsCOMPtr<nsIURI> baseURI;
+  nsCOMPtr<nsICSSStyleSheet> cssSheet;
+  nsCOMPtr<nsIDocument> owningDoc;
+  nsCOMPtr<nsIStyleSheet> sheet;
+  if (mRule) {
+    mRule->GetStyleSheet(*getter_AddRefs(sheet));
+    if (sheet) {
+      sheet->GetURL(*getter_AddRefs(baseURI));
+      sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+      cssSheet = do_QueryInterface(sheet);
+      if (owningDoc) {
+        nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(owningDoc));
+        if (htmlContainer) {
+          htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
+        }
+      }
+    }
+  }
+  if (cssLoader) {
+    result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
+  }
+  else {
+    result = NS_NewCSSParser(getter_AddRefs(cssParser));
+  }
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  PRInt32 hint;
+  if (owningDoc) {
+    owningDoc->BeginUpdate();
+  }
+  result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl, &hint);
+  if (NS_SUCCEEDED(result)) {
+    if (cssSheet) {
+      cssSheet->SetModified(PR_TRUE);
+    }
+    if (owningDoc) {
+      owningDoc->StyleRuleChanged(cssSheet, mRule, hint);
+      owningDoc->EndUpdate();
+    }
+  }
+  if (cssLoader) {
+    cssLoader->RecycleParser(cssParser);
+  }
+
+  return result;
+}
+
 nsresult 
 DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
                                         PRBool aParseOnlyOneDecl,
                                         PRBool aClearOldDecl)
 {
-  nsICSSDeclaration *decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
+  nsCOMPtr<nsICSSDeclaration> decl;
+  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
 
-  if (NS_SUCCEEDED(result) && (decl)) {
-    nsICSSLoader* cssLoader = nsnull;
-    nsICSSParser* cssParser = nsnull;
-    nsIURI* baseURI = nsnull;
-    nsICSSStyleSheet* cssSheet = nsnull;
-    nsIDocument*  owningDoc = nsnull;
+  if (decl) {
+    nsCOMPtr<nsICSSLoader> cssLoader;
+    nsCOMPtr<nsICSSParser> cssParser;
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsICSSStyleSheet> cssSheet;
+    nsCOMPtr<nsIDocument> owningDoc;
 
-    nsIStyleSheet* sheet = nsnull;
+    nsCOMPtr<nsIStyleSheet> sheet;
     if (mRule) {
-      mRule->GetStyleSheet(sheet);
+      mRule->GetStyleSheet(*getter_AddRefs(sheet));
       if (sheet) {
-        sheet->GetURL(baseURI);
-        sheet->GetOwningDocument(owningDoc);
-        sheet->QueryInterface(NS_GET_IID(nsICSSStyleSheet), (void**)&cssSheet);
+        sheet->GetURL(*getter_AddRefs(baseURI));
+        sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+        cssSheet = do_QueryInterface(sheet);
         if (owningDoc) {
-          nsIHTMLContentContainer* htmlContainer;
-          result = owningDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer);
-          if (NS_SUCCEEDED(result)) {
-            result = htmlContainer->GetCSSLoader(cssLoader);
-            NS_RELEASE(htmlContainer);
+          nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(owningDoc));
+          if (htmlContainer) {
+            htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
           }
         }
-        NS_RELEASE(sheet);
       }
     }
     if (cssLoader) {
-      result = cssLoader->GetParserFor(nsnull, &cssParser);
+      result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
     }
     else {
-      result = NS_NewCSSParser(&cssParser);
+      result = NS_NewCSSParser(getter_AddRefs(cssParser));
     }
 
     if (NS_SUCCEEDED(result)) {
@@ -1230,15 +1288,7 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
       if (cssLoader) {
         cssLoader->RecycleParser(cssParser);
       }
-      else {
-        NS_RELEASE(cssParser);
-      }
     }
-    NS_IF_RELEASE(cssLoader);
-    NS_IF_RELEASE(baseURI);
-    NS_IF_RELEASE(cssSheet);
-    NS_IF_RELEASE(owningDoc);
-    NS_RELEASE(decl);
   }
 
   return result;

@@ -606,7 +606,6 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
     if (mParsers) {
       mParsers->AppendElement(aParser);
     }
-    NS_RELEASE(aParser);
   }
   return result;
 }
@@ -857,8 +856,8 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
   aSheet = nsnull;
   result = NS_NewCSSStyleSheet(&aSheet, aLoadData->mURL);
   if (NS_SUCCEEDED(result)) {
-    nsICSSParser* parser;
-    result = GetParserFor(aSheet, &parser);
+    nsCOMPtr<nsICSSParser> parser;
+    result = GetParserFor(aSheet, getter_AddRefs(parser));
     if (NS_SUCCEEDED(result)) {
       mParsingData.AppendElement(aLoadData);
       if (kNameSpaceID_Unknown != aLoadData->mDefaultNameSpaceID) {

@@ -173,6 +173,12 @@ public:
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult);
 
+  NS_IMETHOD ParseProperty(const nsAReadableString& aPropName,
+                           const nsAReadableString& aPropValue,
+                           nsIURI* aBaseURL,
+                           nsICSSDeclaration* aDeclaration,
+                           PRInt32* aHint);
+
   NS_IMETHOD GetCharset(/*out*/nsAWritableString &aCharsetDest) const;
     // sets the out-param to the current charset, as set by SetCharset
   NS_IMETHOD SetCharset(/*in*/ const nsAReadableString &aCharsetSrc);
@@ -775,6 +781,71 @@ CSSParserImpl::ParseRule(nsAReadableString& aRule,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+CSSParserImpl::ParseProperty(const nsAReadableString& aPropName,
+                             const nsAReadableString& aPropValue,
+                             nsIURI* aBaseURL,
+                             nsICSSDeclaration* aDeclaration,
+                             PRInt32* aHint)
+{
+  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
+  NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
+
+  nsString* str = new nsString(aPropValue);
+  if (!str) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsIUnicharInputStream> input;
+  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input), str);
+  if (NS_FAILED(rv)) {
+    delete str;
+    return rv;
+  }
+
+  rv = InitScanner(input, aBaseURL);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mSection = eCSSSection_General;
+  PRInt32 errorCode = NS_OK;
+
+  PRInt32 hint = NS_STYLE_HINT_NONE;
+
+  if (aHint) {
+    *aHint = hint;
+  }
+  nsCSSProperty propID = nsCSSProps::LookupProperty(aPropName);
+  if (eCSSProperty_UNKNOWN == propID) { // unknown property
+    REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown property '") +
+                      aPropName +
+                      NS_LITERAL_STRING("'.  Declaration dropped."));
+    OUTPUT_ERROR();
+    ReleaseScanner();
+    return NS_OK;
+  }
+  
+  if (! ParseProperty(errorCode, aDeclaration, propID, hint)) {
+    REPORT_UNEXPECTED(
+      NS_LITERAL_STRING("Error in parsing value for property '") +
+      aPropName +
+      NS_LITERAL_STRING("'.  Declaration dropped."));
+    OUTPUT_ERROR();
+    if (errorCode != -1) { // -1 means EOF which we ignore
+      ReleaseScanner();
+      return errorCode;
+    }
+  }
+  CLEAR_ERROR();
+  
+  if (aHint && hint > *aHint) {
+    *aHint = hint;
+  }
+  
+  ReleaseScanner();
+  return NS_OK;
+}
 //----------------------------------------------------------------------
 
 PRBool CSSParserImpl::GetToken(PRInt32& aErrorCode, PRBool aSkipWS)

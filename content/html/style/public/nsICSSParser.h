@@ -99,6 +99,12 @@ public:
   NS_IMETHOD ParseRule(nsAReadableString& aRule,
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult) = 0;
+
+  NS_IMETHOD ParseProperty(const nsAReadableString& aPropName,
+                           const nsAReadableString& aPropValue,
+                           nsIURI* aBaseURL,
+                           nsICSSDeclaration* aDeclaration,
+                           PRInt32* aHint) = 0;
   
   // Charset management method:
   //  Set the charset before calling any of the Parse emthods if you want the 

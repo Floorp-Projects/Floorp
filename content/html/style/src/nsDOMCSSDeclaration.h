@@ -82,6 +82,8 @@ public:
   // Note! This will only set the declaration if a style rule already exists
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl) = 0;
 
+  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
+                                      const nsAReadableString& aPropValue) = 0;
   virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl) = 0;

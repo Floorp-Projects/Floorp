@@ -142,6 +142,8 @@ public:
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
+                                      const nsAReadableString& aPropValue);
   virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl);
@@ -289,36 +291,110 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsICSSDeclaration *aDecl)
 }
 
 nsresult
+nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropName,
+                                                 const nsAReadableString& aPropValue)
+{
+  nsCOMPtr<nsICSSDeclaration> decl;
+  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+
+  if (!decl) {
+    return result;
+  }
+  
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  nsCOMPtr<nsICSSParser> cssParser;
+  nsCOMPtr<nsIURI> baseURI;
+  nsCOMPtr<nsIDocument> doc;
+
+  result = mContent->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  
+  if (doc) {
+    doc->GetBaseURL(*getter_AddRefs(baseURI));
+
+    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+    if (htmlContainer) {
+      htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
+    }
+  }
+
+  if (cssLoader) {
+    result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
+  }
+  else {
+    result = NS_NewCSSParser(getter_AddRefs(cssParser));
+  }
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  PRInt32 hint;
+  if (doc) {
+    doc->BeginUpdate();
+    doc->AttributeWillChange(mContent, kNameSpaceID_None, nsHTMLAtoms::style);
+  }
+  
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+  if (nodeInfo) {
+    nsCOMPtr<nsIDocument> doc;
+    nodeInfo->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
+      if (htmlDoc) {
+        nsDTDMode mode;
+        htmlDoc->GetDTDMode(mode);
+        cssParser->SetQuirkMode(eDTDMode_strict != mode);
+      }
+    }
+  }
+
+  result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl, &hint);
+  if (doc) {
+    doc->AttributeChanged(mContent, kNameSpaceID_None,
+                                   nsHTMLAtoms::style,
+                                   nsIDOMMutationEvent::MODIFICATION, hint);
+    doc->EndUpdate();
+  }
+
+  if (cssLoader) {
+    cssLoader->RecycleParser(cssParser);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
                                                PRBool aParseOnlyOneDecl,
                                                PRBool aClearOldDecl)
 {
-  nsICSSDeclaration *decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
+  nsCOMPtr<nsICSSDeclaration> decl;
+  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
 
-  if (NS_SUCCEEDED(result) && (decl)) {
-    nsICSSLoader* cssLoader = nsnull;
-    nsICSSParser* cssParser = nsnull;
-    nsIURI* baseURI = nsnull;
-    nsIDocument*  doc = nsnull;
+  if (decl) {
+    nsCOMPtr<nsICSSLoader> cssLoader;
+    nsCOMPtr<nsICSSParser> cssParser;
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIDocument> doc;
 
-    result = mContent->GetDocument(doc);
-    if (NS_SUCCEEDED(result) && (nsnull != doc)) {
-      doc->GetBaseURL(baseURI);
+    result = mContent->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      doc->GetBaseURL(*getter_AddRefs(baseURI));
 
-      nsIHTMLContentContainer* htmlContainer;
-      result = doc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer);
-      if (NS_SUCCEEDED(result)) {
-        result = htmlContainer->GetCSSLoader(cssLoader);
-        NS_RELEASE(htmlContainer);
+      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+      if (htmlContainer) {
+        htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
       }
     }
 
     if (cssLoader) {
-      result = cssLoader->GetParserFor(nsnull, &cssParser);
+      result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
     }
     else {
-      result = NS_NewCSSParser(&cssParser);
+      result = NS_NewCSSParser(getter_AddRefs(cssParser));
     }
 
     if (NS_SUCCEEDED(result)) {
@@ -380,14 +456,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       if (cssLoader) {
         cssLoader->RecycleParser(cssParser);
       }
-      else {
-        NS_RELEASE(cssParser);
-      }
     }
-    NS_IF_RELEASE(cssLoader);
-    NS_IF_RELEASE(baseURI);
-    NS_IF_RELEASE(doc);
-    NS_RELEASE(decl);
   }
 
   return result;
@@ -3128,17 +3197,15 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
     }
 
     if (isCSS) {
-      nsICSSLoader* cssLoader = nsnull;
-      nsICSSParser* cssParser = nsnull;
-      nsIHTMLContentContainer* htmlContainer;
+      nsCOMPtr<nsICSSLoader> cssLoader;
+      nsCOMPtr<nsICSSParser> cssParser;
+      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
 
-      result = mDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer);
-      if (NS_SUCCEEDED(result) && htmlContainer) {
-        result = htmlContainer->GetCSSLoader(cssLoader);
-        NS_RELEASE(htmlContainer);
+      if (htmlContainer) {
+        htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
       }
-      if (NS_SUCCEEDED(result) && cssLoader) {
-        result = cssLoader->GetParserFor(nsnull, &cssParser);
+      if (cssLoader) {
+        result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
 
         static const char charsetStr[] = "charset=";
         PRInt32 charsetOffset = styleType.Find(charsetStr, PR_TRUE);
@@ -3150,31 +3217,22 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
         }
       }
       else {
-        result = NS_NewCSSParser(&cssParser);
+        result = NS_NewCSSParser(getter_AddRefs(cssParser));
       }
-      if (NS_SUCCEEDED(result) && cssParser) {
-        nsIURI* docURL = nsnull;
-        mDocument->GetBaseURL(docURL);
+      if (cssParser) {
+        nsCOMPtr<nsIURI> docURL;
+        mDocument->GetBaseURL(*getter_AddRefs(docURL));
 
-        nsIStyleRule* rule;
-        result = cssParser->ParseStyleAttribute(aValue, docURL, &rule);
+        nsCOMPtr<nsIStyleRule> rule;
+        result = cssParser->ParseStyleAttribute(aValue, docURL, getter_AddRefs(rule));
         if (cssLoader) {
           cssLoader->RecycleParser(cssParser);
-          NS_RELEASE(cssLoader);
         }
-        else {
-          NS_RELEASE(cssParser);
-        }
-        NS_IF_RELEASE(docURL);
 
-        if (NS_SUCCEEDED(result) && rule) {
+        if (rule) {
           aResult.SetISupportsValue(rule);
-          NS_RELEASE(rule);
           return NS_OK;
         }
-      }
-      else {
-        NS_IF_RELEASE(cssLoader);
       }
     }
   }
