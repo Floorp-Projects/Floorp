@@ -81,18 +81,22 @@ PRLogModuleInfo* gCookieLog = nsnull;
 #define MAX_COOKIES_PER_SERVER 20
 #define MAX_BYTES_PER_COOKIE 4096  /* must be at least 1 */
 
-#define cookie_behaviorPref "network.cookie.cookieBehavior"
+#ifdef MOZ_PHOENIX
+#define cookie_enabled "network.cookie.enable"
+#define cookie_enabled_for_website_only "network.cookie.enableForOriginatingWebsiteOnly"
+#define cookie_lifetimeBehaviorPref "network.cookie.enableForCurrentSessionOnly"
+#else
 #define cookie_disableCookieForMailNewsPref "network.cookie.disableCookieForMailNews"
-#define cookie_warningPref "network.cookie.warnAboutCookies"
-#define cookie_strictDomainsPref "network.cookie.strictDomains"
 #define cookie_lifetimePref "network.cookie.lifetimeOption"
 #define cookie_lifetimeValue "network.cookie.lifetimeLimit"
-
+#define cookie_behaviorPref "network.cookie.cookieBehavior"
 #define cookie_lifetimeEnabledPref "network.cookie.lifetime.enabled"
 #define cookie_lifetimeBehaviorPref "network.cookie.lifetime.behavior"
 #define cookie_lifetimeDaysPref "network.cookie.lifetime.days"
 #define cookie_p3pPref "network.cookie.p3p"
-
+#endif
+#define cookie_warningPref "network.cookie.warnAboutCookies"
+#define cookie_strictDomainsPref "network.cookie.strictDomains"
 // mac, windows, and unix use signed integers for time_t
 #if defined(XP_MAC) || defined(XP_WIN) || defined(XP_UNIX)
 #define MAX_EXPIRE (((unsigned) (~0) << 1) >> 1)
@@ -495,14 +499,44 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
   nsresult rv;
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+#ifdef MOZ_PHOENIX
+  if (cookie_GetBehaviorPref() != PERMISSION_Accept && cookie_GetBehaviorPref() != PERMISSION_DontUse)
+    return 0;
+  PRBool cookiesEnabled;
+  if (!prefs || NS_FAILED(prefs->GetBoolPref(cookie_enabled, &cookiesEnabled)) || cookiesEnabled) {
+    n = PERMISSION_Accept;
+  }
+  else {
+    n = PERMISSION_DontUse;
+  }
+  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
+#else
   if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
-    
   cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
+#endif    
   return 0;
 }
 
+#ifdef MOZ_PHOENIX
+MODULE_PRIVATE int PR_CALLBACK
+cookie_EnabledForOriginalOnlyPrefChanged(const char * newpref, void * data) {
+  PRInt32 n;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  PRBool cookiesForWebsiteOnly = PR_FALSE;
+  prefs->GetBoolPref(cookie_enabled_for_website_only, &cookiesForWebsiteOnly);
+  if (cookiesForWebsiteOnly)
+    n = PERMISSION_DontAcceptForeign;
+  else if (cookie_GetBehaviorPref() != PERMISSION_DontUse)
+    n = PERMISSION_Accept;
+  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
+  return 0;
+}
+#endif
+
+#ifndef MOZ_PHOENIX
 MODULE_PRIVATE int PR_CALLBACK
 cookie_DisableCookieForMailNewsPrefChanged(const char * newpref, void * data) {
   PRBool x;
@@ -514,6 +548,7 @@ cookie_DisableCookieForMailNewsPrefChanged(const char * newpref, void * data) {
   cookie_SetDisableCookieForMailNewsPref(x);
   return 0;
 }
+#endif
 
 MODULE_PRIVATE int PR_CALLBACK
 cookie_WarningPrefChanged(const char * newpref, void * data) {
@@ -527,6 +562,7 @@ cookie_WarningPrefChanged(const char * newpref, void * data) {
   return 0;
 }
 
+#ifndef MOZ_PHOENIX
 MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeOptPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
@@ -561,20 +597,30 @@ cookie_LifetimeEnabledPrefChanged(const char * newpref, void * data) {
   cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
   return 0;
 }
+#endif
 
 MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeBehaviorPrefChanged(const char * newpref, void * data) {
+nsresult rv;
+nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+#ifdef MOZ_PHOENIX
+  PRBool currentSessionOnly;
+  prefs->GetBoolPref(cookie_lifetimeBehaviorPref, &currentSessionOnly);
+  cookie_SetLifetimeLimit(currentSessionOnly ? 0 : cookie_lifetimeDays);
+  cookie_SetLifetimePref(currentSessionOnly ? COOKIE_Trim : COOKIE_Normal);
+  cookie_lifetimeCurrentSession = currentSessionOnly;
+#else
   PRInt32 n;
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (!prefs || NS_FAILED(prefs->GetIntPref(cookie_lifetimeBehaviorPref, &n))) {
     n = 0;
   }
   cookie_SetLifetimeLimit((n==0) ? 0 : cookie_lifetimeDays);
   cookie_lifetimeCurrentSession = (n==0);
+#endif
   return 0;
 }
 
+#ifndef MOZ_PHOENIX
 MODULE_PRIVATE int PR_CALLBACK
 cookie_LifetimeDaysPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
@@ -598,6 +644,7 @@ cookie_P3PPrefChanged(const char * newpref, void * data) {
   }
   return 0;
 }
+#endif
 
 PRIVATE int
 cookie_SameDomain(char * currentHost, char * firstHost);
@@ -612,6 +659,22 @@ COOKIE_RegisterPrefCallbacks(void) {
     return;
   }
 
+#ifdef MOZ_PHOENIX
+  // Initialize for cookie_behaviorPref
+  if (NS_FAILED(prefs->GetBoolPref(cookie_enabled, &n))) {
+    n = PERMISSION_Accept;
+  }
+  n = n ? PERMISSION_Accept : PERMISSION_DontUse;
+  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
+  prefs->RegisterCallback(cookie_enabled, cookie_BehaviorPrefChanged, nsnull);
+  
+  if (NS_FAILED(prefs->GetBoolPref(cookie_enabled_for_website_only, &n))) {
+    n = PERMISSION_Accept;
+  }
+  if (cookie_behavior != PERMISSION_DontUse)
+    cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
+  prefs->RegisterCallback(cookie_enabled_for_website_only, cookie_EnabledForOriginalOnlyPrefChanged, nsnull);
+#else
   // Initialize for cookie_behaviorPref
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
@@ -626,6 +689,8 @@ COOKIE_RegisterPrefCallbacks(void) {
   cookie_SetDisableCookieForMailNewsPref(x);
   prefs->RegisterCallback(cookie_disableCookieForMailNewsPref, cookie_DisableCookieForMailNewsPrefChanged, nsnull);
 
+#endif
+
   // Initialize for cookie_warningPref
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
@@ -638,6 +703,14 @@ COOKIE_RegisterPrefCallbacks(void) {
   cookie_lifetimeDays = 90;
   cookie_lifetimeCurrentSession = PR_FALSE;
 
+#ifdef MOZ_PHOENIX
+  PRBool forCurrentSession;
+  if (NS_SUCCEEDED(prefs->GetBoolPref(cookie_lifetimeBehaviorPref, &forCurrentSession))) {
+    cookie_lifetimeCurrentSession = forCurrentSession;
+    cookie_SetLifetimeLimit(forCurrentSession ? 0 : cookie_lifetimeDays);
+    cookie_SetLifetimePref(forCurrentSession ? COOKIE_Normal : COOKIE_Trim);
+  }
+#else
   if (NS_SUCCEEDED(prefs->GetIntPref(cookie_lifetimeDaysPref, &n))) {
     cookie_lifetimeDays = n;
   }
@@ -647,9 +720,8 @@ COOKIE_RegisterPrefCallbacks(void) {
   }
   if (NS_SUCCEEDED(prefs->GetBoolPref(cookie_lifetimeEnabledPref, &n))) {
     cookie_SetLifetimePref(n ? COOKIE_Trim : COOKIE_Normal);
-  }
+  } 
   prefs->RegisterCallback(cookie_lifetimeEnabledPref, cookie_LifetimeEnabledPrefChanged, nsnull);
-  prefs->RegisterCallback(cookie_lifetimeBehaviorPref, cookie_LifetimeBehaviorPrefChanged, nsnull);
   prefs->RegisterCallback(cookie_lifetimeDaysPref, cookie_LifetimeDaysPrefChanged, nsnull);
 
   // Override cookie_lifetime initialization if the older prefs (with no UI) are used
@@ -668,6 +740,8 @@ COOKIE_RegisterPrefCallbacks(void) {
     cookie_P3P = PL_strdup(cookie_P3P_Default);
   }
   prefs->RegisterCallback(cookie_p3pPref, cookie_P3PPrefChanged, nsnull);
+#endif
+  prefs->RegisterCallback(cookie_lifetimeBehaviorPref, cookie_LifetimeBehaviorPrefChanged, nsnull);
 }
 
 PRBool
