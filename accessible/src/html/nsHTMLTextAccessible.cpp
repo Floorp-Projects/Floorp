@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTextAccessible.h"
+#include "nsAccessibleTreeWalker.h"
+#include "nsBulletFrame.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIFrame.h"
 #include "nsIPresContext.h"
@@ -62,10 +64,13 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
 
 nsIFrame* nsHTMLTextAccessible::GetFrame()
 {
-  if (mWeakShell) {
-    return mFrame? mFrame : nsTextAccessible::GetFrame();
+  if (!mWeakShell) {
+    return nsnull;
   }
-  return nsnull;
+  if (!mFrame) {
+    mFrame = nsTextAccessible::GetFrame();
+  }
+  return mFrame;
 }
 
 NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
@@ -186,3 +191,67 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetChildCount(PRInt32 *aAccChildCount)
   // A <label> is not necessarily a leaf!
   return nsAccessible::GetChildCount(aAccChildCount);
 }
+
+nsHTMLLIAccessible::nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
+                   nsIFrame *aBulletFrame, const nsAString& aBulletText):
+  nsAccessibleWrap(aDOMNode, aShell),
+  mBulletAccessible(aBulletText.IsEmpty() ? nsnull : 
+                    new nsHTMLListBulletAccessible(mDOMNode, mWeakShell, 
+                                                   aBulletFrame, aBulletText))
+{
+}
+
+NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+  nsresult rv = nsAccessibleWrap::GetBounds(x, y, width, height);
+  if (NS_FAILED(rv) || !mBulletAccessible) {
+    return rv;
+  }
+
+  PRInt32 bulletX, bulletY, bulletWidth, bulletHeight;
+  rv = mBulletAccessible->GetBounds(&bulletX, &bulletY, &bulletWidth, &bulletHeight);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *x = bulletX; // Move x coordinate of list item over to cover bullet as well
+  *width += bulletWidth;
+  return NS_OK;
+}
+
+void nsHTMLLIAccessible::CacheChildren(PRBool aWalkAnonContent)
+{
+  if (!mBulletAccessible || !mWeakShell) {
+    nsAccessibleWrap::CacheChildren(aWalkAnonContent);
+    return;
+  }
+
+  if (mAccChildCount == eChildCountUninitialized) {
+    SetFirstChild(mBulletAccessible);
+    mAccChildCount = 1;
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
+    walker.mState.frameHint = GetFrame();
+    walker.GetFirstChild();
+
+    nsCOMPtr<nsPIAccessible> privatePrevAccessible = do_QueryInterface(mBulletAccessible);
+    while (walker.mState.accessible) {
+      ++mAccChildCount;
+      privatePrevAccessible->SetNextSibling(walker.mState.accessible);
+      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
+      privatePrevAccessible->SetParent(this);
+      walker.GetNextSibling();
+    }
+  }
+}
+
+
+nsHTMLListBulletAccessible::nsHTMLListBulletAccessible(nsIDOMNode* aDomNode, 
+  nsIWeakReference* aShell, nsIFrame *aFrame, const nsAString& aBulletText): 
+  nsHTMLTextAccessible(aDomNode, aShell, aFrame), mBulletText(aBulletText)
+{
+}
+
+NS_IMETHODIMP nsHTMLListBulletAccessible::GetName(nsAString &aName)
+{
+  aName = mBulletText;
+  return NS_OK;
+}
+

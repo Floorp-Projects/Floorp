@@ -91,14 +91,15 @@ public:
                           gfxIImageFrame *aNewframe,
                           nsRect *aDirtyRect);
 
+  PRBool GetListItemText(nsIPresContext* aCX,
+                         const nsStyleList& aStyleList,
+                         nsString& aResult);
+
+
 protected:
   void GetDesiredSize(nsIPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aMetrics);
-
-  PRBool GetListItemText(nsIPresContext* aCX,
-                         const nsStyleList& aStyleList,
-                         nsString& aResult);
 
   void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 

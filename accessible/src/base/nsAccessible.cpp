@@ -259,7 +259,8 @@ NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
   // Last argument of PR_TRUE indicates to walk anonymous content
   nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE); 
   if (NS_SUCCEEDED(walker.GetParent())) {
-    *aParent = mParent = walker.mState.accessible;
+    *aParent = walker.mState.accessible;
+    SetParent(*aParent); // Cache it, unless perhaps accessible class overrides SetParent
     NS_ADDREF(*aParent);
   }
 

@@ -51,6 +51,7 @@ public:
   nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_STATICTEXT; return NS_OK; }
 };
 
 class nsXULTooltipAccessible : public nsLeafAccessible

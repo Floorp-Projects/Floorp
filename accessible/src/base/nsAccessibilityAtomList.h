@@ -60,3 +60,11 @@ ACCESSIBILITY_ATOM(blockFrame, "BlockFrame")
 ACCESSIBILITY_ATOM(inlineFrame, "InlineFrame")
 ACCESSIBILITY_ATOM(objectFrame, "ObjectFrame")
 ACCESSIBILITY_ATOM(textFrame, "TextFrame")
+
+  // Alphabetical list of tag names
+ACCESSIBILITY_ATOM(a, "a")
+ACCESSIBILITY_ATOM(ol, "ol")
+ACCESSIBILITY_ATOM(optgroup, "optgroup")
+ACCESSIBILITY_ATOM(option, "option")
+ACCESSIBILITY_ATOM(ul, "ul")
+
