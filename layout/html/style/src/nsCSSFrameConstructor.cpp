@@ -8475,6 +8475,11 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                                    state.mFixedItems.childList);
       }
     }
+
+    nsCOMPtr<nsIBindingManager> bm;
+    mDocument->GetBindingManager(getter_AddRefs(bm));
+    bm->ProcessAttachedQueue();
+
     // otherwise this is not a child of the root element, and we
     // won't let it have a frame.
 
