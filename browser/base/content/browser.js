@@ -538,7 +538,7 @@ function delayedStartup()
       shell.setDefaultBrowser(true);
     shell.shouldCheckDefaultBrowser = checkEveryTime.value;
   }
-#endif  
+#endif
 }
 
 function Shutdown()
