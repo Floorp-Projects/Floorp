@@ -54,6 +54,9 @@
 
 // OUTPUT_CLASS=nsHTMLAtoms
 // MACRO_NAME=HTML_ATOM
+#ifdef WINCE
+#undef small
+#endif 
 
 HTML_ATOM(_baseHref, NS_HTML_BASE_HREF)
 HTML_ATOM(_baseTarget, NS_HTML_BASE_TARGET)
