@@ -377,7 +377,7 @@ CStandardFlexTable::GetTextStyle(const STableCell& inCell)
 {
 	if (inCell.row != mTextDrawingStuff.lastCell.row)
 	{
-		mTextDrawingStuff.encoding =  TextDrawingStuff::eDefault;
+		// mTextDrawingStuff.encoding =  TextDrawingStuff::eDefault;
 		mTextDrawingStuff.style = normal;
 		mTextDrawingStuff.mode = srcOr;
 		// Initialize text color to black
@@ -593,11 +593,11 @@ Boolean CStandardFlexTable::GetHiliteText(
 	ioRect->top += 2;
 	ioRect->bottom -= 2;
 	TableIndexT		hiliteCol = GetHiliteColumn();
-	
 	StColorState penState;
 	UTextTraits::SetPortTextTraits(mTextDrawingStuff.mTextTraitsID);
 	ApplyTextStyle(STableCell(inRow, hiliteCol));
-	ioRect->right = ioRect->left + ::TextWidth(outText, 0, ::strlen(outText));
+
+	ioRect->right = ioRect->left + GetTextWidth((const char*)outText, ::strlen(outText));
 	
 	Rect cellRect;
 	
@@ -617,6 +617,21 @@ Boolean CStandardFlexTable::GetHiliteText(
 	
 	return true;
 } // CStandardFlexTable::GetHiliteText
+//----------------------------------------------------------------------------------------
+UInt16 CStandardFlexTable::GetTextWidth(
+	const char*				text,
+	int len
+) const
+//----------------------------------------------------------------------------------------
+{
+	if ( mTextDrawingStuff.encoding == CStandardFlexTable::TextDrawingStuff::eDefault)
+	{
+		return ::TextWidth(text, 0, len);
+	} else {
+		return UGraphicGizmos::GetUTF8TextWidth(text,len);		
+	}
+} //  CStandardFlexTable::GetTextWidth
+
 
 //----------------------------------------------------------------------------------------
 Boolean CStandardFlexTable::GetHiliteTextRect(

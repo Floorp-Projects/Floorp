@@ -308,6 +308,7 @@ protected:
 	virtual TextDrawingStuff& GetTextStyle(
 							const STableCell& inCell);
 	virtual void		ApplyTextStyle(const STableCell& inCell) const;
+	virtual UInt16		GetTextWidth(const char* str, int len) const; 
 	
 // ------------------------------------------------------------
 // Row Expansion/Collapsing
