@@ -25,7 +25,6 @@
 #ifndef _xfe_composeview_h
 #define _xfe_composeview_h
 
-#include "rosetta.h"
 #include "MNView.h"  /* Has to be the first include because of xp_xx.h */
 #include "msgcom.h"
 #include "Command.h" /* For compose window commands */
@@ -72,7 +71,7 @@ public:
 	static const char* tabNext;
 	static const char* eFocusIn;
 	static const char* eFocusOut;
-	HG12172
+	static const char* updateSecurityOption;
 
 	static void    daFocusProc(Widget,XtPointer,XEvent*,Boolean*);
 	static void   topFocusProc(Widget,XtPointer,XEvent*,Boolean*);

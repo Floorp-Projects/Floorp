@@ -112,7 +112,8 @@ const char *XFE_ComposeView::tabBeforeSubject = "XFE_ComposeView::tabBeforeSubje
 const char *XFE_ComposeView::tabAfterSubject = "XFE_ComposeView::tabAfterSubject";
 const char *XFE_ComposeView::tabPrev   = "XFE_ComposeView::tabPrev";
 const char *XFE_ComposeView::tabNext   = "XFE_ComposeView::tabNext";
-HG12111
+const char *XFE_ComposeView::updateSecurityOption= "XFE_ComposeView::updateSecurityOption";
+
 
 static void TabBeforeSubjectTraverse(Widget w, XEvent *, String *, Cardinal *)
 {
@@ -2533,6 +2534,10 @@ XFE_ComposeView::getCommandView(XFE_Command* )
 extern "C" void
 FE_SecurityOptionsChanged(MWContext * pContext)
 {
-   HG03833
+   XFE_Frame * pFrame = ViewGlue_getFrame(XP_GetNonGridContext(pContext));
+   if ( pFrame ) {
+        ((XFE_ComposeView*)pFrame->getView())->getToplevel()->
+		notifyInterested(XFE_ComposeView::updateSecurityOption, NULL);
+   }
 }
 
