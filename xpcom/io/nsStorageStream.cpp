@@ -440,10 +440,14 @@ nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
  out:
     *aNumRead = aCount - remainingCapacity;
 
-    if (*aNumRead == 0)
-	return NS_BASE_STREAM_WOULD_BLOCK;
+    PRBool isWriteInProgress = PR_FALSE;
+    if (NS_FAILED(mStorageStream->GetWriteInProgress(&isWriteInProgress)))
+        isWriteInProgress = PR_FALSE;
+
+    if (*aNumRead == 0 && isWriteInProgress)
+        return NS_BASE_STREAM_WOULD_BLOCK;
     else
-	return NS_OK;
+        return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -474,7 +478,11 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
  out:
     *aNumRead = aCount - remainingCapacity;
 
-    if (*aNumRead == 0)
+    PRBool isWriteInProgress = PR_FALSE;
+    if (NS_FAILED(mStorageStream->GetWriteInProgress(&isWriteInProgress)))
+        isWriteInProgress = PR_FALSE;
+
+    if (*aNumRead == 0 && isWriteInProgress)
       return NS_BASE_STREAM_WOULD_BLOCK;
     else
       return NS_OK;
