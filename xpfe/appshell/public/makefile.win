@@ -33,7 +33,6 @@ XPIDLSRCS =                        \
 		.\nsIXULWindow.idl       \
         .\nsIUserInfo.idl   \
 		.\nsITimingService.idl \
-		.\nsIInternetService.idl \
         .\nsINativeAppSupport.idl \
 		$(NULL)
 
