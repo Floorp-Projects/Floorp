@@ -764,50 +764,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       nsSize&                  aSize,
                                       nsPoint*                 aCellIndex)
 {
-  if (mDrag.mActive && aCellIndex && ChildIsFrameset(aChild)) {
-    nsIContent* childContent;
-    aChild->GetContent(&childContent);
-    if (childContent) {
-      nsIAtom* tag;
-      childContent->GetTag(tag);
-      if (nsHTMLAtoms::frameset == tag) {
-        nsHTMLFramesetFrame* childFS = (nsHTMLFramesetFrame*)aChild;
-        PRBool  vertical = PR_TRUE;
-        PRInt32 side     = RIGHT_EDGE;
-        if (mDrag.mVertical) {
-          if (mDrag.mIndex == aCellIndex->x) {
-            childFS->mColSizes[childFS->mNumCols-1] += mDrag.mChange;
-          } else if (mDrag.mIndex == RIGHT_EDGE) {
-            childFS->mColSizes[childFS->mNumCols-1] += mDrag.mChange;
-          } else if (mDrag.mIndex+1 == aCellIndex->x) {
-            side = LEFT_EDGE;
-            childFS->mColSizes[0] -= mDrag.mChange;
-          } else if (mDrag.mIndex == LEFT_EDGE) {
-            side = LEFT_EDGE;
-            childFS->mColSizes[0] -= mDrag.mChange;
-          }
-        } else {
-          vertical = PR_FALSE;
-          if (mDrag.mIndex == aCellIndex->y) {
-            childFS->mRowSizes[childFS->mNumRows-1] += mDrag.mChange;
-          } else if (mDrag.mIndex == RIGHT_EDGE) {
-            childFS->mRowSizes[childFS->mNumRows-1] += mDrag.mChange;
-          } else if (mDrag.mIndex+1 == aCellIndex->y) { 
-            side = LEFT_EDGE;
-            childFS->mRowSizes[0] -= mDrag.mChange;
-          } else if (mDrag.mIndex == LEFT_EDGE) {
-            side = LEFT_EDGE;
-            childFS->mRowSizes[0] -= mDrag.mChange;
-          }
-        }
-        childFS->GetDrag().Reset(vertical, side, mDrag.mChange, mDrag.mSource);
-      }
-      NS_IF_RELEASE(tag);
-      NS_RELEASE(childContent);
-    }
-  }
-
-  // reflow and place the child
+  // reflow the child
   nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
   nsHTMLReflowMetrics metrics(nsnull);
   metrics.width = aSize.width;
