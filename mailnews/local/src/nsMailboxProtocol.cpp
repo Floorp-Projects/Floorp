@@ -24,6 +24,7 @@
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
 #include "nsIMsgDatabase.h"
+#include "nsMsgLineBuffer.h"
 #include "nsIMessage.h"
 #include "nsMsgDBCID.h"
 
@@ -79,15 +80,16 @@ nsMailboxProtocol::~nsMailboxProtocol()
 {
 	// release all of our event sinks
 	NS_IF_RELEASE(m_mailboxParser);
-
-	// free our local state
-	PR_FREEIF(m_dataBuf);
 	
 	// free handles on all networking objects...
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
 	NS_IF_RELEASE(m_runningUrl);
+
+	// free our local state 
+	if (m_lineStreamBuffer)
+		delete m_lineStreamBuffer;
 }
 
 void nsMailboxProtocol::Initialize(nsIURL * aURL)
@@ -136,9 +138,9 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register MAILBOX instance as a consumer on the socket");
 
-	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
-	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 	m_mailboxParser = nsnull;
+
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
@@ -244,55 +246,6 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 /////////////////////////////////////////////////////////////////////////////////////////////
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-PRInt32 nsMailboxProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line)
-{
-	// I haven't looked into writing this yet. We have a couple of possibilities:
-	// (1) insert ReadLine *yuck* into here or better yet into the nsIInputStream
-	// then we can just turn around and call it here. 
-	// OR
-	// (2) we write "protocol" specific code for news which looks for a CRLF in the incoming
-	// stream. If it finds it, that's our new line that we put into @param line. We'd
-	// need a buffer (m_dataBuf) to store extra info read in from the stream.....
-
-	// read out everything we've gotten back and return it in line...this won't work for much but it does
-	// get us going...
-
-	// XXX: please don't hold this quick "algorithm" against me. I just want to read just one
-	// line for the stream. I promise this is ONLY temporary to test out NNTP. We need a generic
-	// way to read one line from a stream. For now I'm going to read out one character at a time.
-	// (I said it was only temporary =)) and test for newline...
-
-	PRUint32 numBytesToRead = 0;  // MAX # bytes to read from the stream
-	PRUint32 numBytesRead = 0;	  // total number bytes we have read from the stream during this call
-	inputStream->GetLength(&length); // refresh the length in case it has changed...
-
-	if (length > OUTPUT_BUFFER_SIZE)
-		numBytesToRead = OUTPUT_BUFFER_SIZE;
-	else
-		numBytesToRead = length;
-
-	m_dataBuf[0] = '\0';
-	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
-	do
-	{
-		inputStream->Read(m_dataBuf + numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
-		numBytesRead += numBytesLastRead;
-	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != '\n');
-
-	m_dataBuf[numBytesRead] = '\0'; // null terminate the string.
-
-	// oops....we also want to eat up the '\n' and the \r'...
-	if (numBytesRead > 1 && m_dataBuf[numBytesRead-2] == '\r')
-		m_dataBuf[numBytesRead-2] = '\0'; // hit both cr and lf...
-	else
-		if (numBytesRead > 0 && (m_dataBuf[numBytesRead-1] == '\r' || m_dataBuf[numBytesRead-1] == '\n'))
-			m_dataBuf[numBytesRead-1] = '\0';
-
-	if (line)
-		*line = m_dataBuf;
-	return numBytesRead;
-}
 
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs
@@ -481,7 +434,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 
 PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
+	char *line = nsnull;
 	PRInt32 status = 0;
 	nsresult rv = NS_OK;
 
@@ -495,54 +448,20 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	}
 	else
 	{
-		char outputBuffer[OUTPUT_BUFFER_SIZE];
+		PRBool pauseForMoreData = PR_FALSE;
 		do
 		{
-			status = ReadLine(inputStream, length, &line);
-			if(status == 0)
-			{
-				m_nextState = MAILBOX_ERROR_DONE;
-				ClearFlag(MAILBOX_PAUSE_FOR_READ);
-				m_runningUrl->SetErrorMessage("error message not implemented yet");
-				return status;
-			}
-
-			if (status > length)
-				length = 0;
-			else
-				length -= status; 
-
-			if(!line)
-				return(status);  /* no line yet or error */
+			line = m_lineStreamBuffer->ReadNextLine(inputStream, pauseForMoreData);
 		
 			if (!line || (line[0] == '.' && line[1] == 0))
 			{
-				m_nextState = MAILBOX_DONE;
-				// and close the article file if it was open....
-				if (m_tempMessageFile)
-					PR_Close(m_tempMessageFile);
-
-				// mscott: hack alert...now that the file is done...turn around and fire a file url 
-				// to display the message....
-				if (m_displayConsumer)
-				{
-					nsFilePath filePath(MESSAGE_PATH);
-					nsFileURL  fileURL(filePath);
-					char * message_path_url = PL_strdup(fileURL.GetAsString());
-
-					m_displayConsumer->LoadURL(nsAutoString(message_path_url), nsnull, PR_TRUE, nsURLReload, 0);
-
-					PR_FREEIF(message_path_url);
-				}
-
+				// we reached the end of the message!
 				ClearFlag(MAILBOX_PAUSE_FOR_READ);
 			} // otherwise process the line
 			else
 			{
 				if (line[0] == '.')
-					PL_strcpy (outputBuffer, line + 1);
-				else
-					PL_strcpy (outputBuffer, line);
+					line++; // skip over the '.'
 
 				/* When we're sending this line to a converter (ie,
 					it's a message/rfc822) use the local line termination
@@ -552,16 +471,16 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 					the local system will convert that to the local line
 					terminator as it is read.
 				*/
-			
-				PL_strcat (outputBuffer, LINEBREAK);
 
 				if (m_tempMessageFile)
-					PR_Write(m_tempMessageFile,(void *) outputBuffer,PL_strlen(outputBuffer));
+				{
+					if (line)
+						PR_Write(m_tempMessageFile,(void *) line,PL_strlen(line));
+					PR_Write(m_tempMessageFile, (void *) LINEBREAK, PL_strlen(CRLF));
+				}
 			} 
-
-
 		}
-		while (length > 0 && status > 0);
+		while (line && !pauseForMoreData);
 	}
 
 	SetFlag(MAILBOX_PAUSE_FOR_READ); // wait for more data to become available...

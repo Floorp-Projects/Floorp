@@ -69,6 +69,8 @@ typedef enum _MailboxStatesEnum {
 	MAILBOX_FINISH_COPY_MESSAGES
 } MailboxStatesEnum;
 
+class nsMsgLineStreamBuffer;
+
 class nsMailboxProtocol : public nsIStreamListener
 {
 public:
@@ -124,8 +126,6 @@ private:
 	PRUint32		m_flags; // used to store flag information
 	nsIMailboxUrl	*m_runningUrl; // the nsIMailboxURL that is currently running
 	nsMailboxAction m_mailboxAction; // current mailbox action associated with this connnection...
-	char			*m_dataBuf;
-    PRUint32		m_dataBufSize;
 	PRInt32			m_originalContentLength; /* the content length at the time of calling graph progress */
 
 	// Event sink handles
@@ -138,6 +138,7 @@ private:
 	nsITransport			* m_transport; 
 	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
@@ -160,8 +161,6 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
 	////////////////////////////////////////////////////////////////////////////////////////
-
-	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
 
 	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
 	// but it also informs the consumer that the data has been written to the stream.
