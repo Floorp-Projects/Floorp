@@ -23,6 +23,7 @@
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
@@ -57,12 +58,12 @@ static NS_DEFINE_IID(kDefColorPickerCID, NS_DEFCOLORPICKER_CID);
 //
 nsColorPickerFrame::nsColorPickerFrame()
 {
-  mColorPicker = new nsStdColorPicker();
+
 }
 
 nsColorPickerFrame::~nsColorPickerFrame()
 {
-
+  delete mColorPicker;
 }
 
 
@@ -77,25 +78,17 @@ nsColorPickerFrame::Init(nsIPresContext&  aPresContext,
   nsresult rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,
                                   aPrevInFlow);
 
-#if 0
-  // get the value
-  nsAutoString value;
-  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) &&
-      (value.Length() > 0)) {
-	  setProgress(value);
+
+  nsAutoString type;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+
+  if (type.EqualsIgnoreCase("swatch") || type.Equals(""))
+    mColorPicker = new nsStdColorPicker();
+  if (type.EqualsIgnoreCase("nose"))
+  {
+    printf("nose picker!\n");
+    mColorPicker = new nsStdColorPicker();
   }
-
-
-   // get the alignment
-  nsAutoString align;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
-  setAlignment(align);
-
-  // get the mode
-  nsAutoString mode;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, mode);
-  setMode(mode); 
-#endif
 
   return rv;
 }
@@ -166,27 +159,25 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
                      aWhichLayer);
 
   // get our border
-	const nsStyleSpacing* spacing =
-		(const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 	nsMargin border(0,0,0,0);
 	spacing->CalcBorderFor(this, border);
 
-	const nsStyleColor* colorStyle =
-		(const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-
-  nscolor color = colorStyle->mColor;
+  /*
+    const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    nscolor color = colorStyle->mColor;
+  */
 
   aRenderingContext.PushState();
 
+  // set the clip region
   PRInt32 width, height;
-
   mColorPicker->GetSize(&width, &height);
   nsRect rect(0, 0, width*p2t, height*p2t);
 
   PRBool clipState;
 
   // Clip so we don't render outside the inner rect
-  aRenderingContext.PushState();
 	aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
 
   // call the color picker's paint method
@@ -207,52 +198,36 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
 void
 nsColorPickerFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
-                                   nsHTMLReflowMetrics& aDesiredLayoutSize)
+                                   nsHTMLReflowMetrics& aDesiredSize)
 {
   float p2t;
 
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  const int CSS_NOTSET = -1;
-  //  const int ATTR_NOTSET = -1;
 
-  nsSize styleSize;
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
-    styleSize.width = aReflowState.mComputedWidth;
-  }
-  else {
-    styleSize.width = CSS_NOTSET;
-  }
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-    styleSize.height = aReflowState.mComputedHeight;
-  }
-  else {
-    styleSize.height = CSS_NOTSET;
-  }
+   // if the width is set use it
+	if (NS_INTRINSICSIZE != aReflowState.mComputedWidth) 
+	  aDesiredSize.width = aReflowState.mComputedWidth;
+  else
+    aDesiredSize.width = -1;
 
-  // subclasses should always override this method, but if not and no css, make it small
-  // XXX ???
-  /*
-  aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 200;
-  aDesiredLayoutSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 200;
-  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
-  aDesiredLayoutSize.descent = 0;
-  if (aDesiredLayoutSize.maxElementSize) {
-    aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
-    aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
-  }
-  */
+	// if the height is set use it
+ 	if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) 
+		aDesiredSize.height = aReflowState.mComputedHeight;
+  else
+    aDesiredSize.height = -1;
 
-  PRInt32 width, height;
+  mColorPicker->SetSize((aDesiredSize.width == -1) ? -1 : aDesiredSize.width/p2t,
+                        (aDesiredSize.height == -1) ? -1 : aDesiredSize.height/p2t);
 
+
+  int width, height;
+  
   mColorPicker->GetSize(&width, &height);
-
-  // convert to twips
-
-  aDesiredLayoutSize.width = nscoord(width * p2t);
-  aDesiredLayoutSize.height = nscoord(height * p2t);
-  aDesiredLayoutSize.ascent = nscoord(height * p2t);
-  aDesiredLayoutSize.descent = 0;
-
+  
+  aDesiredSize.width = nscoord(width * p2t);
+  aDesiredSize.height = nscoord(height * p2t);
+  aDesiredSize.ascent = nscoord(height * p2t);
+  aDesiredSize.descent = 0;
 
 } // GetDesiredSize
