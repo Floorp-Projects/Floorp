@@ -208,10 +208,8 @@ nsRDFCore::AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle)
 		if (RDFBookmarkDataSource)
 		{
 			char *url = aUrl.ToNewCString();
-			char *optionalTitle = aOptionalTitle.ToNewCString();
-			rv = RDFBookmarkDataSource->AddBookmark(url, optionalTitle);
+			rv = RDFBookmarkDataSource->AddBookmark(url, aOptionalTitle.GetUnicode());
 			if (url)		delete []url;
-			if (optionalTitle)	delete []optionalTitle;
 		}
 	}
 
