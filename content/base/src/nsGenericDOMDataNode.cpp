@@ -586,6 +586,25 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
         nsIDOMRange* range = nsnull;
         if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
       
+          // add whatever part of the node is actually in this range:
+          nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+          if (!nsrange)
+            continue;
+          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(NS_CONST_CAST(nsIContent*,content)));
+          if (!node)
+            continue;
+          PRBool intersects;
+          nsresult rv = nsrange->IntersectsNode(node, &intersects);
+          if (NS_FAILED(rv))
+            return rv;
+          if (!intersects)
+            continue;   // This range doesn't intersect the node at all
+
+          // Put all of our text into the buffer, initially:
+          nsString  buffer;
+          mText.AppendTo(buffer);
+
+          // Clip to whatever is inside the range:
           nsCOMPtr<nsIDOMNode> startNode;
           nsCOMPtr<nsIDOMNode> endNode;
           PRInt32 startOffset = 0;
@@ -602,9 +621,6 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
           startContent = do_QueryInterface(startNode);
           endContent = do_QueryInterface(endNode);
 
-
-          nsString  buffer;
-          mText.AppendTo(buffer);
           if (startContent.get() == content || endContent.get() == content)
           { 
             // NOTE: ORDER MATTERS!
@@ -612,10 +628,11 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
             if (endContent.get() == content)
               buffer.Truncate(endOffset);            
       
-            // This must go after the Trunctate
+            // This must go after the Truncate
             if (startContent.get() == content)
-             buffer.Cut(0,startOffset); 
+              buffer.Cut(0,startOffset); 
           }
+
           aConverter->AddContent(buffer);
 
           NS_RELEASE(range);
