@@ -19,8 +19,7 @@
 #ifndef nsMailboxProtocol_h___
 #define nsMailboxProtocol_h___
 
-#include "nsIStreamListener.h"
-#include "nsITransport.h"
+#include "nsMsgProtocol.h"
 #include "nsCOMPtr.h"
 #include "rosetta.h"
 #include HG40855
@@ -72,59 +71,32 @@ typedef enum _MailboxStatesEnum {
 
 class nsMsgLineStreamBuffer;
 
-class nsMailboxProtocol : public nsIStreamListener
+class nsMailboxProtocol : public nsMsgProtocol
 {
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
 	// a transport layer. 
 	nsMailboxProtocol(nsIURL * aURL);
-	
 	virtual ~nsMailboxProtocol();
 
 	// the consumer of the url might be something like an nsIWebShell....
-	PRInt32 LoadURL(nsIURL * aURL, nsISupports * aConsumer);
-	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
-
-	NS_DECL_ISUPPORTS
+	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
 	////////////////////////////////////////////////////////////////////////////////////////
-
-	// mscott; I don't think we need to worry about this yet so I'll leave it stubbed out for now
-	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} ;
-	
-	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
-	// OnDataAvailable. We then read and process the incoming data from the input stream. 
-	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
 
 	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
-	// Ideally, a protocol should only have to support the stream listener methods covered above. 
-	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using
-	// nsIStreamListener so we need to add stubs for the heavy weight stuff we don't want to use.
-
-	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	// Flag manipulators
-	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
-	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
-	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
-
 private:
-	// the following flag is used to determine when a url is currently being run. It is cleared on calls
-	// to ::StopBinding and it is set whenever we call Load on a url
-	PRBool			m_urlInProgress;	
-	PRBool			m_socketIsOpen;
-	PRUint32		m_flags; // used to store flag information
 	nsCOMPtr<nsIMailboxUrl>	m_runningUrl; // the nsIMailboxURL that is currently running
 	nsMailboxAction m_mailboxAction; // current mailbox action associated with this connnection...
 	PRInt32			m_originalContentLength; /* the content length at the time of calling graph progress */
@@ -134,12 +106,6 @@ private:
 	nsCOMPtr<nsIStreamListener> m_mailboxCopyHandler;
 
 	// Local state for the current operation
-
-	// Ouput stream for writing commands to the socket
-	nsCOMPtr<nsITransport>		m_transport; 
-	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
-	nsCOMPtr<nsIStreamListener> m_outputConsumer; // this will be obtained from the transport interface
-	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
 	// Generic state information -- What state are we in? What state do we want to go to
@@ -154,20 +120,12 @@ private:
 	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 
-	PRInt32	  ProcessMailboxState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
-	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
+	virtual nsresult ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
+	virtual nsresult CloseSocket();
 
 	// initialization function given a new url and transport layer
 	void Initialize(nsIURL * aURL);
 	PRInt32 SetupMessageExtraction();
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// Communication methods --> Reading and writing protocol
-	////////////////////////////////////////////////////////////////////////////////////////
-
-	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
-	// but it also informs the consumer that the data has been written to the stream.
-	PRInt32 SendData(const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 

@@ -19,8 +19,6 @@
 
 #include "nsMailboxProtocol.h"
 #include "nscore.h"
-#include "nsIStreamListener.h"
-#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
 #include "nsIMsgDatabase.h"
@@ -56,89 +54,41 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
  */
 #define OUTPUT_BUFFER_SIZE (4096*2)
 
-////////////////////////////////////////////////////////////////////////////////////////////
-// TEMPORARY HARD CODED FUNCTIONS 
-///////////////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// END OF TEMPORARY HARD CODED FUNCTIONS 
-///////////////////////////////////////////////////////////////////////////////////////////
-
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsMailboxProtocol)
-NS_IMPL_RELEASE(nsMailboxProtocol)
-NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
-
-
 nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL) : m_tempMessageFile(MESSAGE_PATH)
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
-  
+ 
   Initialize(aURL);
 }
 
 nsMailboxProtocol::~nsMailboxProtocol()
 {
 	// free our local state 
-	if (m_lineStreamBuffer)
-		delete m_lineStreamBuffer;
+	delete m_lineStreamBuffer;
 }
 
 void nsMailboxProtocol::Initialize(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
-
-	m_flags = 0;
-
 	if (aURL)
 	{
 		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) getter_AddRefs(m_runningUrl));
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
-			// extract the file name and create a file transport...
-			NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
-			if (NS_SUCCEEDED(rv) && pNetService)
-			{
-				const nsFileSpec * fileSpec = nsnull;
-				m_runningUrl->GetFilePath(&fileSpec);
-
-				nsFilePath filePath(*fileSpec);
-				rv = pNetService->CreateFileSocketTransport(getter_AddRefs(m_transport), filePath);
-			}
+			const nsFileSpec * fileSpec = nsnull;
+			m_runningUrl->GetFilePath(&fileSpec);
+			rv = OpenFileSocket(aURL, fileSpec);
 		}
 	}
-	
-	nsresult rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
-	rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
-
-	// register self as the consumer for the socket...
-	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register MAILBOX instance as a consumer on the socket");
 
 	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, MSG_LINEBREAK, PR_TRUE);
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
-
-	m_urlInProgress = PR_FALSE;
-	m_socketIsOpen = PR_FALSE;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
-
-// Whenever data arrives from the connection, core netlib notifices the protocol by calling
-// OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsMailboxProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
-{
-	// right now, this really just means turn around and process the url
-	ProcessMailboxState(aURL, aIStream, aLength);
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
@@ -163,8 +113,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aConte
 NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	// what can we do? we can close the stream?
-	m_urlInProgress = PR_FALSE;  
-	m_runningUrl->SetUrlState(PR_FALSE, aStatus);
+	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
 
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
@@ -199,47 +148,12 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 	// releasing all of our interfaces. It's important to remember that this on stop binding call
 	// is coming from netlib so they are never going to ping us again with on data available. This means
 	// we'll never be going through the Process loop...
-	CloseConnection(); 
-
-	return NS_OK;
+	return CloseSocket(); 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Writes the data contained in dataBuffer into the current output stream. It also informs
- * the transport layer that this data is now available for transmission.
- * Returns a positive number for success, 0 for failure (not all the bytes were written to the
- * stream, etc). We need to make another pass through this file to install an error system (mscott)
- */
-
-PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
-{
-	PRUint32 writeCount = 0; 
-	PRInt32 status = 0; 
-
-	NS_PRECONDITION(m_outputStream && m_outputConsumer, "no registered consumer for our output");
-	if (dataBuffer && m_outputStream)
-	{
-		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
-		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
-		{
-			// notify the consumer that data has arrived
-			// HACK ALERT: this should really be m_runningUrl once we have NNTP url support...
-			nsCOMPtr<nsIInputStream> inputStream;
-			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) getter_AddRefs(inputStream));
-			if (inputStream)
-				m_outputConsumer->OnDataAvailable(m_runningUrl, inputStream, writeCount);
-			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
-		}
-		else // the write failed for some reason, returning 0 trips an error by the caller
-			status = 0; // mscott: again, I really want to add an error code here!!
-	}
-
-	return status;
-}
 
 PRInt32 nsMailboxProtocol::DoneReadingMessage()
 {
@@ -292,7 +206,7 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 // Begin protocol state machine functions...
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
+nsresult nsMailboxProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
@@ -344,26 +258,12 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 				}
 			}
 
-	
-			// okay now kick us off to the next state...
-			// our first state is a process state so drive the state machine...
-			PRBool transportOpen = PR_FALSE;
-			m_transport->IsTransportOpen(&transportOpen);
-			m_urlInProgress = PR_TRUE;
-			m_runningUrl->SetUrlState(PR_TRUE, NS_OK);
-			if (transportOpen == PR_FALSE)
-				m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
-			else  // the connection is already open so we should begin processing our new url...
-			{
-				// mscott - I think mailbox urls always come in fresh for each mailbox protocol connection
-				// so we should always be calling m_transport->open(our url)....
-				NS_ASSERTION(0, "I don't think we should get here for mailbox urls");
-				status = ProcessMailboxState(m_runningUrl, nsnull, 0); 
-			}
+			rv = nsMsgProtocol::LoadUrl(aURL);
+
 		} // if we received an MAILBOX url...
 	} // if we received a url!
 
-	return status;
+	return rv;
 }
 	
 PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUint32 length)
@@ -457,7 +357,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
  *
  * returns zero or more if the transfer needs to be continued.
  */
- PRInt32 nsMailboxProtocol::ProcessMailboxState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsMailboxProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
 {
     PRInt32 status = 0;
     ClearFlag(MAILBOX_PAUSE_FOR_READ); /* already paused; reset */
@@ -481,15 +381,14 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 				break;
 			case MAILBOX_DONE:
 			case MAILBOX_ERROR_DONE:
-				m_urlInProgress = PR_FALSE;
 				m_runningUrl->SetUrlState(PR_FALSE, NS_OK);
 	            m_nextState = MAILBOX_FREE;
 				break;
         
 			case MAILBOX_FREE:
 				// MAILBOX is a one time use connection so kill it if we get here...
-				CloseConnection(); 
-	            return(-1); /* final end */
+				CloseSocket(); 
+	            return NS_OK; /* final end */
         
 			default: /* should never happen !!! */
 				m_nextState = MAILBOX_ERROR_DONE;
@@ -507,17 +406,14 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
           }
       } /* while(!MAILBOX_PAUSE_FOR_READ) */
     
-    return(status);
+    return NS_OK;
 }
 
-PRInt32	  nsMailboxProtocol::CloseConnection()
+nsresult nsMailboxProtocol::CloseSocket()
 {
 	// how do you force a release when closing the connection??
-	m_outputStream = null_nsCOMPtr();
-	m_outputConsumer = null_nsCOMPtr();
-	m_transport = null_nsCOMPtr();
+	nsMsgProtocol::CloseSocket(); 
 	m_runningUrl = null_nsCOMPtr();
 	m_mailboxParser = null_nsCOMPtr();
 	return 0;
 }
-
