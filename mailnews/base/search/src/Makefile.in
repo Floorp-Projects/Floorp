@@ -48,6 +48,7 @@ CPPSRCS		= \
 
 EXPORTS		= nsMsgFilterService.h \
 			nsMsgSearchSession.h \
+                nsMsgSearchDataSource.h \
 				nsMsgFilterDataSource.h \
 				nsMsgFilterDelegateFactory.h \
 				$(NULL)
