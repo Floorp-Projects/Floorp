@@ -78,7 +78,7 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
     return result;
 }
 
-extern "C" void
+extern "C" PRUint32
 invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 {
 /*
@@ -89,6 +89,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     uint32 *l_d = d;
     nsXPTCVariant *l_s = s;
     uint32 l_paramCount = paramCount;
+    uint32 regCount = 0;	// return the number of registers to load from the stack
 
     typedef struct {
         uint32 hi;
@@ -98,6 +99,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 
     for(uint32 i = 0; i < l_paramCount; i++, l_d++, l_s++)
     {
+	if (regCount < 5) regCount++;
         if(l_s->IsPtrData())
         {
             *((void**)l_d) = l_s->ptr;
@@ -111,6 +113,7 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
         case nsXPTType::T_I64    : 
         case nsXPTType::T_U64    : 
         case nsXPTType::T_DOUBLE : *((uint32*) l_d++) = ((DU *)l_s)->hi;
+				   if (regCount < 5) regCount++;
                                    *((uint32*) l_d) = ((DU *)l_s)->lo;
                                    break;
         case nsXPTType::T_U8     : *((uint32*)  l_d) = l_s->val.u8;          break;
@@ -126,5 +129,6 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
             break;
         }
     }
+    return regCount;
 }
 
