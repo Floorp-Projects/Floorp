@@ -36,9 +36,11 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGBPathBuilder.h"
 #include <math.h>
-#include<stdio.h>
+#include <stdio.h>
+
+#include "nsSVGBPathBuilder.h"
+
 nsSVGBPathBuilder::nsSVGBPathBuilder()
     : mBPath(nsnull),
       mBPathSize(0),
