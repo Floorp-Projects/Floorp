@@ -186,8 +186,8 @@ public:
     virtual PRBool Equals(const nsHashKey* aKey) const {
         NodeHashKey* that;
 
-        if (! (that = NS_DYNAMIC_CAST(NodeHashKey*, aKey)))
-            return PR_FALSE;
+        // XXX like to do a dynamic_cast<> here.
+        that = (NodeHashKey*) aKey;
 
         return (that->mNode == this->mNode);
     }

@@ -175,7 +175,8 @@ public:
     }
 
     virtual PRBool Equals(const nsHashKey* aKey) const {
-        AttributeKey* that = NS_DYNAMIC_CAST(AttributeKey*, aKey);
+        // XXX like to do a dynamic cast here.
+        AttributeKey* that = (AttributeKey*) aKey;
         return ((that) && (this->mAttr == that->mAttr));
     }
 
@@ -226,10 +227,11 @@ static PRBool
 rdf_AttributeDestroyEnumFunc(nsHashKey* key, void* aData, void* closure)
 {
     // XXX this doesn't seem to work...
-    //nsHashtable* attributes = NS_DYNAMIC_CAST(nsHashtable*, closure);
+    //nsHashtable* attributes = (nsHashtable*) closure;
     //attributes->Remove(key);
 
-    nsString* value = NS_DYNAMIC_CAST(nsString*, aData);
+    // XXX like to do a dynamic_cast here...
+    nsString* value = (nsString*) aData;
     delete value;
 
     return PR_TRUE;
@@ -964,8 +966,9 @@ nsRDFElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 static PRBool
 rdf_AttributeNameEnumFunc(nsHashKey* key, void* aData, void* closure)
 {
-    nsISupportsArray* array = NS_DYNAMIC_CAST(nsISupportsArray*, closure);
-    AttributeKey* k = NS_DYNAMIC_CAST(AttributeKey*, key);
+    // XXX like to do dynamic_cast<>'s here...
+    nsISupportsArray* array = (nsISupportsArray*) closure;
+    AttributeKey* k = (AttributeKey*) key;
 
     nsIAtom* atom;
     if (NS_SUCCEEDED(k->GetAtomValue(atom))) {
