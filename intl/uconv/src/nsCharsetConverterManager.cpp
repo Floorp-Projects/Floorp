@@ -648,36 +648,26 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom(
                                          const PRUnichar * aCharset, 
                                          nsIAtom ** aResult)
 {
-  if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  nsresult res;
+  NS_PRECONDITION(aCharset && aResult, "null param");
+  if (!aCharset)
+    return NS_ERROR_NULL_POINTER;
 
   // We try to obtain the preferred name for this charset from the charset 
   // aliases. If we don't get it from there, we just use the original string
-  nsAutoString charset(aCharset);
-  nsCOMPtr<nsICharsetAlias> csAlias(do_GetService(kCharsetAliasCID, &res));
-  NS_ASSERTION(NS_SUCCEEDED(res), "failed to get the CharsetAlias service");
-  if (NS_SUCCEEDED(res)) {
+  nsDependentString charset(aCharset);
+  nsCOMPtr<nsICharsetAlias> csAlias( do_GetService(kCharsetAliasCID) );
+  NS_ASSERTION(csAlias, "failed to get the CharsetAlias service");
+  if (csAlias) {
     nsAutoString pref;
-    res = csAlias->GetPreferred(charset, pref);
+    nsresult res = csAlias->GetPreferred(charset, pref);
     if (NS_SUCCEEDED(res)) {
-      charset.Assign(pref);
+      *aResult = NS_NewAtom(pref);
+      return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  // turn that cannonical name into an Atom
-  nsCOMPtr<nsIAtom> atom =  getter_AddRefs(NS_NewAtom(charset));
-  if (atom.get() == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // everything was fine, set the result
-  *aResult = atom;
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
+  *aResult = NS_NewAtom(charset);
+  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom2(
