@@ -623,6 +623,11 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
     return NS_OK;
   }
 
+  if (aLength >= 8 && !nsCRT::strncmp(aContents, "#define ", 8)) {
+    *aContentType = nsCRT::strndup("image/x-xbitmap", 15);
+    return NS_OK;
+  }
+
   /* none of the above?  I give up */
   /* don't raise an exception, simply return null */
   return NS_OK;
