@@ -33,8 +33,9 @@
 #include <ctype.h>
 #include "jspubtd.h"
 #include "jsprvtd.h"
+#include "jshash.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 struct JSString {
     size_t          length;
@@ -191,11 +192,11 @@ js_ValueToString(JSContext *cx, jsval v);
 extern JSString *
 js_ValueToSource(JSContext *cx, jsval v);
 
-#ifdef HT_ENUMERATE_NEXT	/* XXX don't require prhash.h */
+#ifdef HT_ENUMERATE_NEXT	/* XXX don't require jshash.h */
 /*
  * Compute a hash function from str.
  */
-extern PRHashNumber
+extern JSHashNumber
 js_HashString(const JSString *str);
 #endif
 
@@ -263,6 +264,6 @@ js_SetStringBytes(JSString *str, char *bytes, size_t length);
 extern char *
 js_GetStringBytes(JSString *str);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsstr_h___ */

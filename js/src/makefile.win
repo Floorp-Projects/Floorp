@@ -67,29 +67,37 @@ LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 #//------------------------------------------------------------------------
 OBJS =					\
 	.\$(OBJDIR)\jsapi.obj		\
-	.\$(OBJDIR)\prmjtime.obj	\
+	.\$(OBJDIR)\jsarena.obj		\
 	.\$(OBJDIR)\jsarray.obj		\
 	.\$(OBJDIR)\jsatom.obj		\
 	.\$(OBJDIR)\jsbool.obj		\
 	.\$(OBJDIR)\jscntxt.obj		\
 	.\$(OBJDIR)\jsdate.obj		\
 	.\$(OBJDIR)\jsdbgapi.obj	\
+	.\$(OBJDIR)\jsdtoa.obj		\
 	.\$(OBJDIR)\jsemit.obj		\
+	.\$(OBJDIR)\jsexn.obj		\
 	.\$(OBJDIR)\jsfun.obj		\
 	.\$(OBJDIR)\jsgc.obj		\
+	.\$(OBJDIR)\jshash.obj		\
 	.\$(OBJDIR)\jsinterp.obj	\
 	.\$(OBJDIR)\jslock.obj		\
+	.\$(OBJDIR)\jslog2.obj		\
+	.\$(OBJDIR)\jslong.obj		\
 	.\$(OBJDIR)\jsmath.obj		\
 	.\$(OBJDIR)\jsnum.obj		\
 	.\$(OBJDIR)\jsobj.obj		\
 	.\$(OBJDIR)\jsopcode.obj	\
 	.\$(OBJDIR)\jsparse.obj		\
+	.\$(OBJDIR)\jsprf.obj		\
 	.\$(OBJDIR)\jsregexp.obj	\
 	.\$(OBJDIR)\jsscan.obj		\
 	.\$(OBJDIR)\jsscope.obj		\
 	.\$(OBJDIR)\jsscript.obj	\
 	.\$(OBJDIR)\jsstr.obj		\
+	.\$(OBJDIR)\jsutil.obj		\
 	.\$(OBJDIR)\jsxdrapi.obj	\
+	.\$(OBJDIR)\prmjtime.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------
@@ -99,26 +107,36 @@ OBJS =					\
 #//------------------------------------------------------------------------
 INSTALL_DIR=$(PUBLIC)\js
 INSTALL_FILE_LIST=	\
+	js.msg		\
 	jsapi.h		\
 	jsarray.h	\
+	jsarena.h	\
 	jsatom.h	\
+	jsbit.h	 	\
 	jsbool.h	\
+	jsclist.h	\
 	jscntxt.h	\
 	jscompat.h	\
 	jsconfig.h	\
+	jscpucfg.h	\
 	jsdate.h	\
 	jsdbgapi.h	\
 	jsemit.h	\
 	jsfun.h		\
 	jsgc.h		\
+	jshash.h	\
 	jsinterp.h	\
 	jslock.h	\
+	jslong.h	\
 	jsmath.h	\
 	jsnum.h		\
 	jsobj.h		\
-	jsopcode.def	\
+	jsopcode.tbl	\
 	jsopcode.h	\
+	jsosdep.h	\
+	jsotypes.h	\
 	jsparse.h	\
+        jsprf.h         \
 	jsprvtd.h	\
 	jspubtd.h	\
 	jsregexp.h	\
@@ -126,6 +144,9 @@ INSTALL_FILE_LIST=	\
 	jsscope.h	\
 	jsscript.h	\
 	jsstr.h		\
+	jstypes.h	\
+        jsutil.h        \
+	jsxdrapi.h	\
 	$(NULL)
 
 #//------------------------------------------------------------------------

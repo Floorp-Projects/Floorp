@@ -42,7 +42,7 @@
 #include "jspubtd.h"
 #include "jsprvtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 /* We use little-endian byteorder for all encoded data */
 

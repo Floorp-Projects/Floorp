@@ -24,14 +24,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#ifndef NSPR20
-#include "prarena.h"
-#else
-#include "plarena.h"
-#endif
-#include "prlog.h"
-#include "prclist.h"
+#include "jstypes.h"
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsutil.h" /* Added by JSIFY */
+#include "jsclist.h"
+#include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -40,6 +37,7 @@
 #include "jsconfig.h"
 #include "jsdate.h"
 #include "jsemit.h"
+#include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -56,7 +54,7 @@
 #include "jsstr.h"
 
 #if defined(JS_PARANOID_REQUEST) && defined(JS_THREADSAFE)
-#define CHECK_REQUEST(cx)	PR_ASSERT(cx->requestDepth)
+#define CHECK_REQUEST(cx)	JS_ASSERT(cx->requestDepth)
 #else
 #define CHECK_REQUEST(cx)	((void)0)
 #endif
@@ -107,9 +105,9 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
     i = 0;
     required = JS_TRUE;
     for (cp = format; *cp != '\0'; cp++) {
-    	if (isspace(*cp))
+	if (isspace(*cp))
 	    continue;
-    	if (*cp == '/') {
+	if (*cp == '/') {
 	    required = JS_FALSE;
 	    continue;
 	}
@@ -117,82 +115,88 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    if (required) {
 		fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
 		if (fun) {
-		    JS_ReportError(cx,
-				   "%s requires more than %u argument%s",
-				   JS_GetFunctionName(fun),
-				   argc, (argc == 1) ? "" : "s");
+		    char numBuf[12];
+		    JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
+		    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+					 JSMSG_MORE_ARGS_NEEDED,
+					 JS_GetFunctionName(fun), numBuf,
+					 (argc == 1) ? "" : "s");
 		}
 		return JS_FALSE;
 	    }
 	    break;
 	}
-    	switch (*cp) {
-    	  case 'b':
+	switch (*cp) {
+	  case 'b':
 	    if (!js_ValueToBoolean(cx, argv[i], va_arg(ap, JSBool *)))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    break;
-    	  case 'c':
+	  case 'c':
 	    if (!js_ValueToUint16(cx, argv[i], va_arg(ap, uint16 *)))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    break;
-    	  case 'i':
+	  case 'i':
 	    if (!js_ValueToECMAInt32(cx, argv[i], va_arg(ap, int32 *)))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    break;
-    	  case 'u':
+	  case 'u':
 	    if (!js_ValueToECMAUint32(cx, argv[i], va_arg(ap, uint32 *)))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    break;
-    	  case 'j':
+	  case 'j':
 	    if (!js_ValueToInt32(cx, argv[i], va_arg(ap, int32 *)))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    break;
-    	  case 'd':
+	  case 'd':
 	    if (!js_ValueToNumber(cx, argv[i], va_arg(ap, jsdouble *)))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    break;
-    	  case 'I':
+	  case 'I':
 	    if (!js_ValueToNumber(cx, argv[i], &d))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
 	    break;
-    	  case 's':
+	  case 's':
 	    str = js_ValueToString(cx, argv[i]);
 	    if (!str)
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    argv[i] = STRING_TO_JSVAL(str);
 	    *va_arg(ap, char **) = JS_GetStringBytes(str);
 	    break;
-    	  case 'S':
+	  case 'S':
 	    str = js_ValueToString(cx, argv[i]);
 	    if (!str)
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    argv[i] = STRING_TO_JSVAL(str);
 	    *va_arg(ap, JSString **) = str;
 	    break;
-    	  case 'o':
+	  case 'o':
 	    if (!js_ValueToObject(cx, argv[i], &obj))
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    argv[i] = OBJECT_TO_JSVAL(obj);
 	    *va_arg(ap, JSObject **) = obj;
 	    break;
-    	  case 'f':
+	  case 'f':
 	    fun = js_ValueToFunction(cx, &argv[i], JS_FALSE);
 	    if (!fun)
-	    	return JS_FALSE;
+		return JS_FALSE;
 	    argv[i] = OBJECT_TO_JSVAL(fun->object);
 	    *va_arg(ap, JSFunction **) = fun;
 	    break;
-    	  case 'v':
+	  case 'v':
 	    *va_arg(ap, jsval *) = argv[i];
 	    break;
-    	  case '*':
+	  case '*':
 	    break;
-    	  default:
-	    JS_ReportError(cx, "invalid format character %c", *cp);
+	  default: {
+	    char charBuf[2] = " ";
+	    charBuf[0] = *cp;
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR,
+				 charBuf);
 	    return JS_FALSE;
-    	}
-    	i++;
+	    }
+	}
+	i++;
     }
     va_end(ap);
     return JS_TRUE;
@@ -201,7 +205,7 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
-    JSBool ok=JS_FALSE, b;
+    JSBool ok = JS_FALSE, b;
     JSObject *obj;
     JSFunction *fun;
     JSString *str;
@@ -243,10 +247,14 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 	if (ok)
 	    *vp = BOOLEAN_TO_JSVAL(b);
 	break;
-      default:
-	JS_ReportError(cx, "unknown type %d", (int)type);
+      default: {
+	char numBuf[12];
+	JS_snprintf(numBuf, sizeof numBuf, "%d", (int)type);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_TYPE,
+			     numBuf);
 	ok = JS_FALSE;
 	break;
+      }
     }
     return ok;
 }
@@ -334,16 +342,16 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 	type = JSTYPE_VOID;
     } else if (JSVAL_IS_OBJECT(v)) {
 	obj = JSVAL_TO_OBJECT(v);
-        if (obj &&
-            (ops = obj->map->ops,
+	if (obj &&
+	    (ops = obj->map->ops,
 	     ops == &js_ObjectOps
-             ? (clasp = OBJ_GET_CLASS(cx, obj),
+	     ? (clasp = OBJ_GET_CLASS(cx, obj),
 		clasp->call || clasp == &js_FunctionClass)
-             : ops->call != 0)) {
-            type = JSTYPE_FUNCTION;
-        } else {
-            type = JSTYPE_OBJECT;
-        }
+	     : ops->call != 0)) {
+	    type = JSTYPE_FUNCTION;
+	} else {
+	    type = JSTYPE_OBJECT;
+	}
     } else if (JSVAL_IS_NUMBER(v)) {
 	type = JSTYPE_NUMBER;
     } else if (JSVAL_IS_STRING(v)) {
@@ -370,6 +378,22 @@ JS_NewRuntime(uint32 maxbytes)
 {
     JSRuntime *rt;
 
+#ifdef DEBUG
+    JS_BEGIN_MACRO
+    /*
+     * This code asserts that the numbers associated with the error names in
+     * jsmsg.def are monotonically increasing.  It uses values for the error
+     * names enumerated in jscntxt.c.  It's not a compiletime check, but it's
+     * better than nothing.
+     */
+    int errorNumber = 0;
+#define MSG_DEF(name, number, count, exception, format) \
+    JS_ASSERT(name == errorNumber++);
+#include "js.msg"
+#undef MSG_DEF
+    JS_END_MACRO;
+#endif /* DEBUG */
+
     if (!js_InitStringGlobals())
 	return NULL;
     rt = malloc(sizeof(JSRuntime));
@@ -392,9 +416,9 @@ JS_NewRuntime(uint32 maxbytes)
     js_NewLock(&rt->rtLock);
 #endif
     rt->propertyCache.empty = JS_TRUE;
-    PR_INIT_CLIST(&rt->contextList);
-    PR_INIT_CLIST(&rt->trapList);
-    PR_INIT_CLIST(&rt->watchPointList);
+    JS_INIT_CLIST(&rt->contextList);
+    JS_INIT_CLIST(&rt->trapList);
+    JS_INIT_CLIST(&rt->watchPointList);
     return rt;
 
 bad:
@@ -458,7 +482,7 @@ JS_EndRequest(JSContext *cx)
     if (!cx->requestDepth) {
 	rt = cx->runtime;
 	JS_LOCK_GC(rt);
-	PR_ASSERT(rt->requestCount > 0);
+	JS_ASSERT(rt->requestCount > 0);
 	rt->requestCount--;
 	JS_NOTIFY_REQUEST_DONE(rt);
 	JS_UNLOCK_GC(rt);
@@ -472,8 +496,8 @@ JS_YieldRequest(JSContext *cx)
     JSRuntime *rt;
 
     CHECK_REQUEST(cx);
-
-    PR_ASSERT(rt->requestCount > 0);
+	rt = cx->runtime;
+    JS_ASSERT(rt->requestCount > 0);
     rt->requestCount--;
     JS_NOTIFY_REQUEST_DONE(rt);
     JS_UNLOCK_GC(rt);
@@ -493,7 +517,7 @@ JS_SuspendRequest(JSContext *cx)
     if (!cx->requestDepth) {
 	rt = cx->runtime;
 	JS_LOCK_GC(rt);
-	PR_ASSERT(rt->requestCount > 0);
+	JS_ASSERT(rt->requestCount > 0);
 	rt->requestCount--;
 	JS_UNLOCK_GC(rt);
     }
@@ -604,7 +628,7 @@ JS_SetVersion(JSContext *cx, JSVersion version)
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.3 1998 06 30";
+    return "JavaScript-C 1.4 1998 09 21";
 }
 
 
@@ -635,9 +659,9 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
      * (proposed ECMA v2.)
      */
     if (!OBJ_DEFINE_PROPERTY(cx, obj,
-                             (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
-                             JSVAL_VOID, NULL, NULL, 0, NULL))
-    	return JS_FALSE;
+			     (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
+			     JSVAL_VOID, NULL, NULL, 0, NULL))
+	return JS_FALSE;
 #endif
 
     /* Initialize the function class first so constructors can be made. */
@@ -668,6 +692,9 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_SCRIPT_OBJECT
 	   js_InitScriptClass(cx, obj) &&
 #endif
+#if JS_HAS_ERROR_EXCEPTIONS
+	   js_InitExceptionClasses(cx, obj) &&
+#endif
 	   js_InitDateClass(cx, obj);
 }
 
@@ -683,7 +710,7 @@ JS_malloc(JSContext *cx, size_t nbytes)
 {
     void *p;
 
-#if defined(XP_OS2) || defined(XP_MAC)
+#if defined(XP_OS2) || defined(XP_MAC) || defined(AIX)
     if (nbytes == 0) /*DSR072897 - Windows allows this, OS/2 & Mac don't*/
 	nbytes = 1;
 #endif
@@ -762,19 +789,15 @@ JS_AddNamedRoot(JSContext *cx, void *rp, const char *name)
 
 #ifdef DEBUG
 
-#ifndef NSPR20
-#include "prhash.h"
-#else
-#include "plhash.h"
-#endif
+#include "jshash.h" /* Added by JSIFY */
 
 typedef struct NamedRootDumpArgs {
     void (*dump)(const char *name, void *rp, void *data);
     void *data;
 } NamedRootDumpArgs;
 
-PR_STATIC_CALLBACK(intN)
-js_named_root_dumper(PRHashEntry *he, intN i, void *arg)
+JS_STATIC_DLL_CALLBACK(intN)
+js_named_root_dumper(JSHashEntry *he, intN i, void *arg)
 {
     NamedRootDumpArgs *args = arg;
 
@@ -792,7 +815,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 
     args.dump = dump;
     args.data = data;
-    PR_HashTableEnumerateEntries(rt->gcRootsHash, js_named_root_dumper, &args);
+    JS_HashTableEnumerateEntries(rt->gcRootsHash, js_named_root_dumper, &args);
 }
 
 #endif /* DEBUG */
@@ -805,7 +828,7 @@ JS_LockGCThing(JSContext *cx, void *thing)
     CHECK_REQUEST(cx);
     ok = js_LockGCThing(cx, thing);
     if (!ok)
-	JS_ReportError(cx, "can't lock memory");
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_LOCK);
     return ok;
 }
 
@@ -817,7 +840,7 @@ JS_UnlockGCThing(JSContext *cx, void *thing)
     CHECK_REQUEST(cx);
     ok = js_UnlockGCThing(cx, thing);
     if (!ok)
-	JS_ReportError(cx, "can't unlock memory");
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_UNLOCK);
     return ok;
 }
 
@@ -825,9 +848,9 @@ JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
     if (!cx->fp)
-	PR_FinishArenaPool(&cx->stackPool);
-    PR_FinishArenaPool(&cx->codePool);
-    PR_FinishArenaPool(&cx->tempPool);
+	JS_FinishArenaPool(&cx->stackPool);
+    JS_FinishArenaPool(&cx->codePool);
+    JS_FinishArenaPool(&cx->tempPool);
     js_ForceGC(cx);
 }
 
@@ -871,12 +894,12 @@ JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 
     CHECK_REQUEST(cx);
     if (JSVAL_IS_INT(v)) {
-    	*idp = v;
+	*idp = v;
     } else {
-    	atom = js_ValueToStringAtom(cx, v);
-    	if (!atom)
+	atom = js_ValueToStringAtom(cx, v);
+	if (!atom)
 	    return JS_FALSE;
-    	*idp = (jsid)atom;
+	*idp = (jsid)atom;
     }
     return JS_TRUE;
 }
@@ -918,8 +941,7 @@ JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     if (type == JSTYPE_STRING)
 	return JS_TRUE;
 #endif
-    js_TryValueOf(cx, obj, type, vp);
-    return JS_TRUE;
+    return js_TryValueOf(cx, obj, type, vp);
 }
 
 JS_PUBLIC_API(void)
@@ -950,18 +972,23 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	return NULL;
 
     if (!constructor) {
-    	/* Lacking a constructor, name the prototype (e.g., Math). */
-    	named = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, OBJECT_TO_JSVAL(proto),
+	/* Lacking a constructor, name the prototype (e.g., Math). */
+	named = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, OBJECT_TO_JSVAL(proto),
 				    NULL, NULL, 0, NULL);
 	if (!named)
 	    goto bad;
-    	ctor = proto;
+	ctor = proto;
     } else {
 	/* Define the constructor function in obj's scope. */
 	fun = js_DefineFunction(cx, obj, atom, constructor, nargs, 0);
 	named = (fun != NULL);
 	if (!fun)
 	    goto bad;
+
+#if 0
+        if (clasp->construct == NULL)
+            clasp->construct = constructor;
+#endif
 
 	/* Connect constructor and prototype by named properties. */
 	ctor = fun->object;
@@ -974,7 +1001,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	if (OBJ_GET_CLASS(cx, ctor) == clasp) {
 	    /* XXXMLM - this fails in framesets that are writing over
 	     *           themselves!
-	     * PR_ASSERT(!OBJ_GET_PROTO(cx, ctor));
+	     * JS_ASSERT(!OBJ_GET_PROTO(cx, ctor));
 	     */
 	    OBJ_SET_PROTO(cx, ctor, proto);
 	}
@@ -1023,9 +1050,10 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     if (argv) {
 	fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
 	if (fun) {
-	    JS_ReportError(cx, "%s.prototype.%s called on incompatible %s",
-			   clasp->name, JS_GetFunctionName(fun),
-			   OBJ_GET_CLASS(cx, obj)->name);
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_INCOMPATIBLE_PROTO,
+				 clasp->name, JS_GetFunctionName(fun),
+				 OBJ_GET_CLASS(cx, obj)->name);
 	}
     }
     return JS_FALSE;
@@ -1037,7 +1065,7 @@ JS_GetPrivate(JSContext *cx, JSObject *obj)
     jsval v;
 
     CHECK_REQUEST(cx);
-    PR_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
+    JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_INT(v))
 	return NULL;
@@ -1048,7 +1076,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 {
     CHECK_REQUEST(cx);
-    PR_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
+    JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(data));
     return JS_TRUE;
 }
@@ -1116,8 +1144,8 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
     if (!ok)
 	return NULL;
     if (!JSVAL_IS_FUNCTION(cx, cval)) {
-	JS_ReportError(cx, "%s has no constructor",
-		       OBJ_GET_CLASS(cx, proto)->name);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
+			     OBJ_GET_CLASS(cx, proto)->name);
 	return NULL;
     }
     return JSVAL_TO_OBJECT(cval);
@@ -1185,7 +1213,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     CHECK_REQUEST(cx);
     nobj = js_NewObject(cx, clasp, proto, obj);
     if (!nobj)
-    	return NULL;
+	return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
 			NULL)) {
 	cx->newborn[GCX_OBJECT] = NULL;
@@ -1203,17 +1231,17 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
-#if PR_ALIGN_OF_DOUBLE == 8
+#if JS_ALIGN_OF_DOUBLE == 8
 	/*
 	 * The GC ignores references outside its pool such as &cds->dval,
 	 * so we don't need to GC-alloc constant doubles.
 	 */
 	jsdouble d = cds->dval;
-        jsint i;
+	jsint i;
 
-        value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
-            ? INT_TO_JSVAL(i)
-            : DOUBLE_TO_JSVAL(&cds->dval);
+	value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
+		? INT_TO_JSVAL(i)
+		: DOUBLE_TO_JSVAL(&cds->dval);
 #else
 	ok = js_NewNumberValue(cx, cds->dval, &value);
 	if (!ok)
@@ -1331,8 +1359,8 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     }
     if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
 	OBJ_DROP_PROPERTY(cx, obj2, prop);
-	JS_ReportError(cx, "can't alias %s to %s in class %s",
-		       alias, name, OBJ_GET_CLASS(cx, obj2)->name);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
+			     alias, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
     atom = js_Atomize(cx, alias, strlen(alias), 0);
@@ -1369,17 +1397,14 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
     return rval;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-			 uintN *attrsp, JSBool *foundp)
+static JSBool
+GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
+		      uintN *attrsp, JSBool *foundp)
 {
-    JSAtom *atom;
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
 	return JS_FALSE;
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
@@ -1397,17 +1422,14 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
     return ok;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-			 uintN attrs, JSBool *foundp)
+static JSBool
+SetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
+		      uintN attrs, JSBool *foundp)
 {
-    JSAtom *atom;
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
 	return JS_FALSE;
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
@@ -1425,6 +1447,27 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
     return ok;
 }
 
+
+JS_PUBLIC_API(JSBool)
+JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
+			 uintN *attrsp, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return GetPropertyAttributes(cx, obj,
+				 js_Atomize(cx, name, strlen(name), 0),
+				 attrsp, foundp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
+			 uintN attrs, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return SetPropertyAttributes(cx, obj,
+				 js_Atomize(cx, name, strlen(name), 0),
+				 attrs, foundp);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
@@ -1435,7 +1478,7 @@ JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
     CHECK_REQUEST(cx);
     ok = LookupProperty(cx, obj, name, &obj2, &prop);
     if (ok)
-    	*vp = LookupResult(cx, obj, obj2, prop);
+	*vp = LookupResult(cx, obj, obj2, prop);
     return ok;
 }
 
@@ -1497,6 +1540,28 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
 }
 
 JS_PUBLIC_API(JSBool)
+JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+			   const jschar *name, size_t namelen,
+			   uintN *attrsp, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return GetPropertyAttributes(cx, obj,
+		    js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0),
+		    attrsp, foundp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+			   const jschar *name, size_t namelen,
+			   uintN attrs, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return SetPropertyAttributes(cx, obj,
+		    js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0),
+		    attrs, foundp);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 			      const jschar *name, size_t namelen,
 			      int8 tinyid, jsval value,
@@ -1509,7 +1574,7 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     ok = DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs,
-    			  &prop);
+			  &prop);
     if (ok && prop) {
 	if (OBJ_IS_NATIVE(obj)) {
 	    sprop = (JSScopeProperty *)prop;
@@ -1533,7 +1598,7 @@ JS_LookupUCProperty(JSContext *cx, JSObject *obj,
     CHECK_REQUEST(cx);
     ok = LookupUCProperty(cx, obj, name, namelen, &obj2, &prop);
     if (ok)
-    	*vp = LookupResult(cx, obj, obj2, prop);
+	*vp = LookupResult(cx, obj, obj2, prop);
     return ok;
 }
 
@@ -1641,9 +1706,11 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 	return JS_FALSE;
     }
     if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
+	char numBuf[12];
 	OBJ_DROP_PROPERTY(cx, obj2, prop);
-	JS_ReportError(cx, "can't alias %ld to %s in class %s",
-		       (long)alias, name, OBJ_GET_CLASS(cx, obj2)->name);
+	JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)alias);
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_ALIAS,
+			     numBuf, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
     scope = (JSScope *) obj->map;
@@ -1664,7 +1731,7 @@ JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
     CHECK_REQUEST(cx);
     ok = OBJ_LOOKUP_PROPERTY(cx, obj, INT_TO_JSVAL(index), &obj2, &prop);
     if (ok)
-    	*vp = LookupResult(cx, obj, obj2, prop);
+	*vp = LookupResult(cx, obj, obj2, prop);
     return ok;
 }
 
@@ -1734,10 +1801,10 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 
     /* Get the number of properties to enumerate. */
     if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, &num_properties))
-        goto error;
+	goto error;
     if (!JSVAL_IS_INT(num_properties)) {
-        PR_ASSERT(0);
-        goto error;
+	JS_ASSERT(0);
+	goto error;
     }
 
     n = JSVAL_TO_INT(num_properties);
@@ -1762,9 +1829,9 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 
 error:
     if (iter_state != JSVAL_NULL)
-        OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, 0);
+	OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, 0);
     if (ida)
-        JS_DestroyIdArray(cx, ida);
+	JS_DestroyIdArray(cx, ida);
     return NULL;
 }
 
@@ -1786,8 +1853,8 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
 
     atom = NULL;
     if (name) {
-        atom = js_Atomize(cx, name, strlen(name), 0);
-        if (!atom)
+	atom = js_Atomize(cx, name, strlen(name), 0);
+	if (!atom)
 	    return NULL;
     }
     return js_NewFunction(cx, NULL, call, nargs, flags, parent, atom);
@@ -1800,8 +1867,10 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     JSObject *newfunobj;
 
     CHECK_REQUEST(cx);
-    if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass)
-	return NULL;
+    if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
+        /* Indicate we cannot clone this object */
+	return funobj;
+    }
     fun = JS_GetPrivate(cx, funobj);
 
     newfunobj = js_NewObject(cx, &js_FunctionClass, funobj, parent);
@@ -1875,18 +1944,17 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
     lineno = ts->lineno;
     if (!js_CompileTokenStream(cx, obj, ts, &cg)) {
 	script = NULL;
-    	goto out;
+	goto out;
     }
     script = js_NewScriptFromCG(cx, &cg, NULL);
-    if (!script)
-	goto out;
+out:
     if (!js_CloseTokenStream(cx, ts)) {
-	js_DestroyScript(cx, script);
+        if (script)
+	    js_DestroyScript(cx, script);
 	script = NULL;
     }
-out:
     cg.tempMark = tempMark;
-    js_ResetCodeGenerator(cx, &cg);
+    js_FinishCodeGenerator(cx, &cg);
     return script;
 }
 
@@ -1946,10 +2014,10 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSTokenStream *ts;
 
     CHECK_REQUEST(cx);
-    mark = PR_ARENA_MARK(&cx->tempPool);
+    mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewTokenStream(cx, chars, length, filename, lineno, principals);
     if (!ts)
-    	return NULL;
+	return NULL;
     return CompileTokenStream(cx, obj, ts, mark);
 }
 
@@ -1961,7 +2029,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
     JSTokenStream *ts;
 
     CHECK_REQUEST(cx);
-    mark = PR_ARENA_MARK(&cx->tempPool);
+    mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewFileTokenStream(cx, filename, stdin);
     if (!ts)
 	return NULL;
@@ -1977,10 +2045,10 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     CHECK_REQUEST(cx);
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
     if (!obj)
-    	return NULL;
+	return NULL;
     if (script) {
-        JS_SetPrivate(cx, obj, script);
-        script->object = obj;
+	JS_SetPrivate(cx, obj, script);
+	script->object = obj;
     }
     return obj;
 }
@@ -2061,7 +2129,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     jsval junk;
 
     CHECK_REQUEST(cx);
-    mark = PR_ARENA_MARK(&cx->tempPool);
+    mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewTokenStream(cx, chars, length, filename, lineno, principals);
     if (!ts) {
 	fun = NULL;
@@ -2087,7 +2155,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 				   (JSProperty **)&sprop)) {
 		break;
 	    }
-	    PR_ASSERT(sprop);
+	    JS_ASSERT(sprop);
 	    sprop->id = INT_TO_JSVAL(i);
 	    OBJ_DROP_PROPERTY(cx, fun->object, (JSProperty *)sprop);
 	}
@@ -2103,8 +2171,8 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     }
 out:
     if (ts)
-        js_CloseTokenStream(cx, ts);
-    PR_ARENA_RELEASE(&cx->tempPool, mark);
+	js_CloseTokenStream(cx, ts);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return fun;
 }
 
@@ -2148,8 +2216,19 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 {
+    JSPrinter *jp;
+    JSString *str;
+
     CHECK_REQUEST(cx);
-    return JS_DecompileScript(cx, fun->script, JS_GetFunctionName(fun), indent);
+    jp = js_NewPrinter(cx, JS_GetFunctionName(fun), indent);
+    if (!jp)
+	return NULL;
+    if (js_DecompileFunctionBody(jp, fun, JS_TRUE))
+	str = js_GetPrinterOutput(jp);
+    else
+	str = NULL;
+    js_DestroyPrinter(jp);
+    return str;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2431,7 +2510,43 @@ JS_ReportError(JSContext *cx, const char *format, ...)
 
     CHECK_REQUEST(cx);
     va_start(ap, format);
-    js_ReportErrorVA(cx, format, ap);
+    js_ReportErrorVA(cx, JSREPORT_ERROR, format, ap);
+    va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...)
+{
+    va_list ap;
+
+    CHECK_REQUEST(cx);
+    va_start(ap, errorNumber);
+    js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
+			   errorNumber, JS_TRUE, ap);
+    va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...)
+{
+    va_list ap;
+
+    CHECK_REQUEST(cx);
+    va_start(ap, errorNumber);
+    js_ReportErrorNumberVA(cx, JSREPORT_ERROR, errorCallback, userRef,
+			   errorNumber, JS_FALSE, ap);
+    va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportWarning(JSContext *cx, const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    js_ReportErrorVA(cx, JSREPORT_WARNING, format, ap);
     va_end(ap);
 }
 
@@ -2472,7 +2587,7 @@ JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
     JS_free(cx, chars);
     return obj;
 #else
-    JS_ReportError(cx, "sorry, regular expression are not supported");
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
     return NULL;
 #endif
 }
@@ -2484,7 +2599,7 @@ JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 #if JS_HAS_REGEXPS
     return js_NewRegExpObject(cx, chars, length, flags);
 #else
-    JS_ReportError(cx, "sorry, regular expression are not supported");
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
     return NULL;
 #endif
 }
@@ -2536,7 +2651,7 @@ JS_IsExceptionPending(JSContext *cx)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    return (JSBool) cx->fp->throwing;
+    return (JSBool) cx->throwing;
 #else
     return JS_FALSE;
 #endif
@@ -2547,9 +2662,9 @@ JS_GetPendingException(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    if (!cx->fp->throwing)
+    if (!cx->throwing)
 	return JS_FALSE;
-    *vp = cx->fp->exception;
+    *vp = cx->exception;
     return JS_TRUE;
 #else
     return JS_FALSE;
@@ -2561,8 +2676,8 @@ JS_SetPendingException(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    cx->fp->throwing = JS_TRUE;
-    cx->fp->exception = v;
+    cx->throwing = JS_TRUE;
+    cx->exception = v;
 #endif
 }
 
@@ -2571,7 +2686,7 @@ JS_ClearPendingException(JSContext *cx)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    cx->fp->throwing = JS_FALSE;
+    cx->throwing = JS_FALSE;
 #endif
 }
 
@@ -2601,8 +2716,7 @@ JS_ClearContextThread(JSContext *cx)
 
 /************************************************************************/
 
-#ifdef NETSCAPE_INTERNAL
-JS_PUBLIC_API(JSBool)
+JS_FRIEND_API(JSBool)
 JS_IsAssigning(JSContext *cx)
 {
     JSStackFrame *fp;
@@ -2612,7 +2726,6 @@ JS_IsAssigning(JSContext *cx)
 	return JS_FALSE;
     return (js_CodeSpec[*pc].format & JOF_SET) != 0;
 }
-#endif
 
 /************************************************************************/
 

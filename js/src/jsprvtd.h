@@ -74,26 +74,81 @@ typedef enum JSTrapStatus {
     JSTRAP_ERROR,
     JSTRAP_CONTINUE,
     JSTRAP_RETURN,
+    JSTRAP_THROW,
     JSTRAP_LIMIT
 } JSTrapStatus;
 
+#ifndef CRT_CALL
+#ifdef XP_OS2
+#define CRT_CALL _Optlink
+#else
+#define CRT_CALL
+#endif
+#endif
+
 typedef JSTrapStatus
-(*JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-		 void *closure);
+(* CRT_CALL JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, 
+                           jsval *rval, void *closure);
+
+typedef JSBool
+(* CRT_CALL JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
+                                 jsval old, jsval *newp, void *closure);
 
 /* called just after script creation */
 typedef void
-(*JSNewScriptHook)( JSContext   *cx,
-		    const char  *filename,  /* URL this script loads from */
-		    uintN       lineno,     /* line where this script starts */
-		    JSScript    *script,
-		    JSFunction  *fun,
-		    void        *callerdata );
+(* CRT_CALL JSNewScriptHook)(JSContext  *cx,
+                             const char *filename,  /* URL of script */
+                             uintN      lineno,     /* line script starts */
+                             JSScript   *script,
+                             JSFunction *fun,
+                             void       *callerdata);
 
 /* called just before script destruction */
 typedef void
-(*JSDestroyScriptHook)( JSContext   *cx,
-			JSScript    *script,
-			void        *callerdata );
+(* CRT_CALL JSDestroyScriptHook)(JSContext *cx, 
+                                 JSScript  *script, 
+                                 void      *callerdata);
+
+typedef void
+(* CRT_CALL JSSourceHandler)(const char *filename, uintN lineno, 
+                             jschar *str, size_t length, 
+                             void **listenerTSData, void *closure);
+
+/*
+* This hook captures high level script execution and function calls
+* (JS or native). 
+* It is used by JS_SetExecuteHook to hook top level scripts and by
+* JS_SetCallHook to hook function calls.
+* It will get called twice per script or function call:
+* just before execution begins and just after it finishes. In both cases
+* the 'current' frame is that of the executing code.
+*
+* The 'before' param is JS_TRUE for the hook invocation before the execution
+* and JS_FALSE for the invocation after the code has run.
+*
+* The 'ok' param is significant only on the post execution invocation to
+* signify whether or not the code completed 'normally'.
+*
+* The 'closure' param is as passed to JS_SetExecuteHook or JS_SetCallHook 
+* for the 'before'invocation, but is whatever value is returned from that 
+* invocation for the 'after' invocation. Thus, the hook implementor *could*
+* allocate a stucture in the 'before' invocation and return a pointer
+* to that structure. The pointer would then be handed to the hook for
+* the 'after' invocation. Alternately, the 'before' could just return the
+* same value as in 'closure' to cause the 'after' invocation to be called 
+* with the same 'closure' value as the 'before'.
+*
+* Returning NULL in the 'before' hook will cause the 'after' hook to
+* NOT be called.
+*/
+
+typedef void *
+(* CRT_CALL JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
+                               JSBool *ok, void *closure);
+
+typedef void
+(* CRT_CALL JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, 
+                          void *closure);
+
 
 #endif /* jsprvtd_h___ */

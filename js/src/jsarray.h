@@ -24,7 +24,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 extern JSClass js_ArrayClass;
 
@@ -48,9 +48,9 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
  */
 typedef int (*JSComparator)(const void *a, const void *b, void *arg);
 
-extern PRBool
+extern JSBool
 js_qsort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsarray_h___ */

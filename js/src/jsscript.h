@@ -24,7 +24,7 @@
 #include "jsatom.h"
 #include "jsprvtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 /*
  * Exception handling runtime information.
@@ -50,7 +50,6 @@ struct JSScript {
     jssrcnote    *notes;        /* line number and other decompiling data */
     JSTryNote    *trynotes;     /* exception table for this script */
     JSPrincipals *principals;   /* principals for this script */
-    void         *javaData;     /* XXX extra data used by jsjava.c */
     JSObject     *object;       /* optional Script-class object wrapper */
 };
 
@@ -89,6 +88,6 @@ js_GetScriptLineExtent(JSScript *script);
 extern JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsscript_h___ */

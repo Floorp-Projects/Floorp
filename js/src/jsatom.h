@@ -22,12 +22,8 @@
  * JS atom table.
  */
 #include <stddef.h>
-#include "prtypes.h"
-#ifndef NSPR20
-#include "prhash.h"
-#else
-#include "plhash.h"
-#endif
+#include "jstypes.h"
+#include "jshash.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -36,7 +32,7 @@
 #include "jslock.h"
 #endif
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 #define ATOM_NOCOPY     0x01            /* don't copy atom string bytes */
 #define ATOM_TMPSTR     0x02            /* internal, to avoid extra string */
@@ -44,7 +40,7 @@ PR_BEGIN_EXTERN_C
 #define ATOM_PINNED     0x08            /* atom is pinned against GC */
 
 struct JSAtom {
-    PRHashEntry         entry;          /* key is jsval, value keyword info */
+    JSHashEntry         entry;          /* key is jsval, value keyword info */
     uint8               flags;          /* flags, PINNED and/or MARK for now */
     int8                kwindex;        /* keyword index, -1 if not keyword */
     jsatomid            number;         /* atom serial number and hash code */
@@ -77,19 +73,19 @@ struct JSAtomList {
 #define ATOM_LIST_INIT(al)  ((al)->list = NULL, (al)->count = 0)
 
 #define ATOM_LIST_SEARCH(_ale,_al,_atom)                                      \
-    PR_BEGIN_MACRO                                                            \
-        JSAtomListElement **_alep = &(_al)->list;                             \
-        while ((_ale = *_alep) != NULL) {                                     \
-            if (_ale->atom == (_atom)) {                                      \
-                /* Hit, move atom's element to the front of the list. */      \
-                *_alep = _ale->next;                                          \
-                _ale->next = (_al)->list;                                     \
-                (_al)->list = _ale;                                           \
-                break;                                                        \
-            }                                                                 \
-            _alep = &_ale->next;                                              \
-        }                                                                     \
-    PR_END_MACRO
+    JS_BEGIN_MACRO                                                            \
+	JSAtomListElement **_alep = &(_al)->list;                             \
+	while ((_ale = *_alep) != NULL) {                                     \
+	    if (_ale->atom == (_atom)) {                                      \
+		/* Hit, move atom's element to the front of the list. */      \
+		*_alep = _ale->next;                                          \
+		_ale->next = (_al)->list;                                     \
+		(_al)->list = _ale;                                           \
+		break;                                                        \
+	    }                                                                 \
+	    _alep = &_ale->next;                                              \
+	}                                                                     \
+    JS_END_MACRO
 
 struct JSAtomMap {
     JSAtom              **vector;       /* array of ptrs to indexed atoms */
@@ -98,7 +94,7 @@ struct JSAtomMap {
 
 struct JSAtomState {
     JSRuntime           *runtime;       /* runtime that owns us */
-    PRHashTable         *table;         /* hash table containing all atoms */
+    JSHashTable         *table;         /* hash table containing all atoms */
     jsatomid            number;         /* one beyond greatest atom number */
 
     /* Type names and value literals. */
@@ -128,6 +124,7 @@ struct JSAtomState {
     JSAtom              *toSourceAtom;
     JSAtom              *toStringAtom;
     JSAtom              *valueOfAtom;
+    JSAtom              *evalAtom;
 
 #ifdef JS_THREADSAFE
     JSThinLock          lock;
@@ -271,6 +268,6 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
 extern JS_FRIEND_API(void)
 js_FreeAtomMap(JSContext *cx, JSAtomMap *map);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsatom_h___ */

@@ -25,7 +25,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 /*
  * JS operation bytecodes.
@@ -33,7 +33,7 @@ PR_BEGIN_EXTERN_C
 typedef enum JSOp {
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
     op = val,
-#include "jsopcode.def"
+#include "jsopcode.tbl"
 #undef OPDEF
     JSOP_LIMIT
 } JSOp;
@@ -173,6 +173,9 @@ extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
 extern JSBool
+js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun, JSBool newlines);
+
+extern JSBool
 js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines);
 
 /*
@@ -183,6 +186,6 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines);
 extern JSString *
 js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsopcode_h___ */

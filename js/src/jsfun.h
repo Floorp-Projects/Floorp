@@ -24,7 +24,7 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 struct JSFunction {
     jsrefcount	 nrefs;		/* number of referencing objects */
@@ -42,7 +42,8 @@ struct JSFunction {
 extern JSClass js_ArgumentsClass;
 extern JSClass js_CallClass;
 extern JSClass js_ClosureClass;
-extern JSClass js_FunctionClass;
+/* JS_FRIEND_DATA so that JSVAL_IS_FUNCTION is callable from outside */
+extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
 
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
@@ -100,6 +101,6 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
 extern JSBool
 js_XDRFunction(JSXDRState *xdr, JSObject **objp);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsfun_h___ */

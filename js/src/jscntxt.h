@@ -21,13 +21,9 @@
 /*
  * JS execution context.
  */
-#ifndef NSPR20
-#include "prarena.h"
-#else
-#include "plarena.h"
-#endif
-#include "prclist.h"
-#include "prlong.h"
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsclist.h"
+#include "jslong.h"
 #include "jsatom.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -36,13 +32,13 @@
 #include "jspubtd.h"
 #include "jsregexp.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 struct JSRuntime {
     /* Garbage collector state, used by jsgc.c. */
-    PRArenaPool         gcArenaPool;
-    PRArenaPool         gcFlagsPool;
-    PRHashTable         *gcRootsHash;
+    JSArenaPool         gcArenaPool;
+    JSArenaPool         gcFlagsPool;
+    JSHashTable         *gcRootsHash;
     JSGCThing           *gcFreeList;
     uint32              gcBytes;
     uint32              gcLastBytes;
@@ -75,7 +71,7 @@ struct JSRuntime {
     JSString            *emptyString;
 
     /* List of active contexts sharing this runtime. */
-    PRCList             contextList;
+    JSCList             contextList;
 
     /* These are used for debugging -- see jsprvtd.h and jsdbgapi.h. */
     JSTrapHandler       interruptHandler;
@@ -86,13 +82,21 @@ struct JSRuntime {
     void                *destroyScriptHookData;
     JSTrapHandler       debuggerHandler;
     void                *debuggerHandlerData;
+    JSSourceHandler     sourceHandler;
+    void                *sourceHandlerData;
+    JSInterpreterHook   executeHook;
+    void                *executeHookData;
+    JSInterpreterHook   callHook;
+    void                *callHookData;
+    JSObjectHook        objectHook;
+    void                *objectHookData;
 
     /* More debugging state, see jsdbgapi.c. */
-    PRCList             trapList;
-    PRCList             watchPointList;
+    JSCList             trapList;
+    JSCList             watchPointList;
 
     /* Weak links to properties, indexed by quickened get/set opcodes. */
-    /* XXX must come after PRCLists or MSVC alignment bug bites empty lists */
+    /* XXX must come after JSCLists or MSVC alignment bug bites empty lists */
     JSPropertyCache     propertyCache;
 
 #ifdef JS_THREADSAFE
@@ -108,7 +112,7 @@ struct JSRuntime {
 };
 
 struct JSContext {
-    PRCList             links;
+    JSCList             links;
 
     /* Interpreter activation count. */
     uintN               interpLevel;
@@ -122,12 +126,12 @@ struct JSContext {
     JSRuntime           *runtime;
 
     /* Stack arena pool and frame pointer register. */
-    PRArenaPool         stackPool;
+    JSArenaPool         stackPool;
     JSStackFrame        *fp;
 
     /* Temporary arena pools used while compiling and decompiling. */
-    PRArenaPool         codePool;
-    PRArenaPool         tempPool;
+    JSArenaPool         codePool;
+    JSArenaPool         tempPool;
 
     /* Top-level object and pointer to top stack frame's scope chain. */
     JSObject            *globalObject;
@@ -154,28 +158,19 @@ struct JSContext {
     /* Client opaque pointer */
     void                *data;
 
-    /* Java environment and JS errors to throw as exceptions. */
-    void                *javaEnv;
-    void                *savedErrors;
-
+    /* GC and thread-safe state. */
+    JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
+    uint32              gcDisabled;         /* XXX for pre-ECMAv2 switch */
 #ifdef JS_THREADSAFE
-    prword              thread;
-    JSPackedBool        gcActive;
+    jsword              thread;
     jsrefcount          requestDepth;
+    JSPackedBool        gcActive;
 #endif
-    JSStackFrame        *dormantFrameChain;   /* dormant frame chains */
+
+    /* Exception state (NB: throwing is packed with gcActive above). */
+    JSPackedBool        throwing;           /* is there a pending exception? */
+    jsval               exception;          /* most-recently-thrown exceptin */
 };
-
-typedef struct JSInterpreterHooks {
-    void (*destroyContext)(JSContext *cx);
-    void (*destroyScript)(JSContext *cx, JSScript *script);
-    void (*destroyFrame)(JSContext *cx, JSStackFrame *frame);
-} JSInterpreterHooks;
-
-extern JSInterpreterHooks *js_InterpreterHooks;
-
-extern JS_FRIEND_API(void)
-js_SetInterpreterHooks(JSInterpreterHooks *hooks);
 
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize);
@@ -190,9 +185,30 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp);
  * Report an exception, which is currently realized as a printf-style format
  * string and its arguments.
  */
+typedef enum JSErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "js.msg"
+#undef MSG_DEF
+    JSErr_Limit
+} JSErrNum;
+
+extern const JSErrorFormatString *
+js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+
 #ifdef va_start
 extern void
-js_ReportErrorVA(JSContext *cx, const char *format, va_list ap);
+js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
+extern void
+js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
+		       void *userRef, const uintN errorNumber,
+                       JSBool charArgs, va_list ap);
+
+extern JSBool
+js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
+			void *userRef, const uintN errorNumber,
+			char **message, JSErrorReport *reportp,
+                        JSBool charArgs, va_list ap);
 #endif
 
 /*
@@ -204,6 +220,8 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
 
-PR_END_EXTERN_C
+extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
+
+JS_END_EXTERN_C
 
 #endif /* jscntxt_h___ */

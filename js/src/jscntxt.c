@@ -23,33 +23,22 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#ifndef NSPR20
-#include "prarena.h"
-#else
-#include "plarena.h"
-#endif
-#include "prlog.h"
-#include "prclist.h"
-#include "prprf.h"
+#include "jstypes.h"
+#include "jsarena.h" /* Added by JSIFY */
+#include "jsutil.h" /* Added by JSIFY */
+#include "jsclist.h"
+#include "jsprf.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
+#include "jsexn.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscan.h"
 #include "jsscript.h"
-
-JSInterpreterHooks *js_InterpreterHooks = NULL;
-
-JS_FRIEND_API(void)
-js_SetInterpreterHooks(JSInterpreterHooks *hooks)
-{
-    js_InterpreterHooks = hooks;
-}
 
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stacksize)
@@ -65,7 +54,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 #ifdef JS_THREADSAFE
     js_InitContextForLocking(cx);
 #endif
-    if (rt->contextList.next == (PRCList *)&rt->contextList) {
+    if (rt->contextList.next == (JSCList *)&rt->contextList) {
 	/* First context on this runtime: initialize atoms and keywords. */
 	if (!js_InitAtomState(cx, &rt->atomState) ||
 	    !js_InitScanner(cx)) {
@@ -74,20 +63,23 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 	}
     }
     /* Atomicly append cx to rt's context list. */
-    JS_LOCK_RUNTIME_VOID(rt, PR_APPEND_LINK(&cx->links, &rt->contextList));
+    JS_LOCK_RUNTIME_VOID(rt, JS_APPEND_LINK(&cx->links, &rt->contextList));
 
     cx->version = JSVERSION_DEFAULT;
     cx->jsop_eq = JSOP_EQ;
     cx->jsop_ne = JSOP_NE;
-    PR_InitArenaPool(&cx->stackPool, "stack", stacksize, sizeof(jsval));
-    PR_InitArenaPool(&cx->codePool, "code", 1024, sizeof(jsbytecode));
-    PR_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
+    JS_InitArenaPool(&cx->stackPool, "stack", stacksize, sizeof(jsval));
+    JS_InitArenaPool(&cx->codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
 #if JS_HAS_REGEXPS
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
 	js_DestroyContext(cx);
 	return NULL;
     }
+#endif
+#if JS_HAS_EXCEPTIONS
+    cx->throwing = JS_FALSE;
 #endif
     return cx;
 }
@@ -102,14 +94,9 @@ js_DestroyContext(JSContext *cx)
 
     /* Remove cx from context list first. */
     JS_LOCK_RUNTIME(rt);
-    PR_REMOVE_LINK(&cx->links);
-    rtempty = (rt->contextList.next == (PRCList *)&rt->contextList);
+    JS_REMOVE_LINK(&cx->links);
+    rtempty = (rt->contextList.next == (JSCList *)&rt->contextList);
     JS_UNLOCK_RUNTIME(rt);
-
-    if (js_InterpreterHooks && js_InterpreterHooks->destroyContext) {
-	/* This is a stub, but in case it removes roots, call it now. */
-        js_InterpreterHooks->destroyContext(cx);
-    }
 
     if (rtempty) {
 	/* Unpin all pinned atoms before final GC. */
@@ -147,9 +134,9 @@ js_DestroyContext(JSContext *cx)
     }
 
     /* Free the stuff hanging off of cx. */
-    PR_FinishArenaPool(&cx->stackPool);
-    PR_FinishArenaPool(&cx->codePool);
-    PR_FinishArenaPool(&cx->tempPool);
+    JS_FinishArenaPool(&cx->stackPool);
+    JS_FinishArenaPool(&cx->codePool);
+    JS_FinishArenaPool(&cx->tempPool);
     if (cx->lastMessage)
 	free(cx->lastMessage);
     free(cx);
@@ -172,7 +159,7 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp)
 }
 
 void
-js_ReportErrorVA(JSContext *cx, const char *format, va_list ap)
+js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
     JSStackFrame *fp;
     JSErrorReport report, *reportp;
@@ -185,16 +172,189 @@ js_ReportErrorVA(JSContext *cx, const char *format, va_list ap)
 	/* XXX should fetch line somehow */
 	report.linebuf = NULL;
 	report.tokenptr = NULL;
+	report.flags = flags;
 	reportp = &report;
     } else {
+	/* XXXshaver still fill out report here for flags? */
 	reportp = NULL;
     }
-    last = PR_vsmprintf(format, ap);
+    last = JS_vsmprintf(format, ap);
     if (!last)
 	return;
 
     js_ReportErrorAgain(cx, last, reportp);
     free(last);
+}
+
+/*
+ * The arguments from ap need to be packaged up into an array and stored
+ * into the report struct.
+ *
+ * The format string addressed by the error number may contain operands
+ * identified by the format {N}, where N is a decimal digit. Each of these
+ * is to be replaced by the Nth argument from the va_list. The complete
+ * message is placed into reportp->ucmessage converted to a JSString.
+ *
+ * returns true/false if the expansion succeeds (can fail for memory errors)
+ */
+JSBool
+js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
+			void *userRef, const uintN errorNumber,
+			char **messagep, JSErrorReport *reportp,
+                        JSBool charArgs, va_list ap)
+{
+    const JSErrorFormatString *fmtData;
+    int i;
+    int argCount;
+
+    *messagep = NULL;
+    if (callback) {
+	fmtData = (*callback)(userRef, "Mountain View", errorNumber);
+	if (fmtData != NULL) {
+            int totalArgsLength = 0;
+            int argLengths[10]; /* only {0} thru {9} supported */
+	    argCount = fmtData->argCount;
+            JS_ASSERT(argCount <= 10);
+	    if (argCount > 0) {
+		/*
+                 * Gather the arguments into an array, and accumulate
+                 * their sizes.
+		 */
+		reportp->messageArgs
+                        = JS_malloc(cx, sizeof(jschar *) * argCount);
+		if (!reportp->messageArgs)
+		    return JS_FALSE;
+                for (i = 0; i < argCount; i++) {
+                    if (charArgs) {
+                        char *charArg = va_arg(ap, char *);
+		        reportp->messageArgs[i] 
+                            = js_InflateString(cx, charArg, strlen(charArg));
+                    }
+                    else
+		        reportp->messageArgs[i] = va_arg(ap, jschar *);
+                    argLengths[i] = js_strlen(reportp->messageArgs[i]);
+                    totalArgsLength += argLengths[i];
+                }
+	    }
+	    /*
+	     * Parse the error format, substituting the argument X
+	     * for {X} in the format.
+	     */
+	    if (argCount > 0) {
+		if (fmtData->format) {
+		    const char *fmt;
+                    const jschar *arg;
+		    jschar *out;
+		    int expandedArgs = 0;
+		    int expandedLength
+			= strlen(fmtData->format)
+			  - (3 * argCount) /* exclude the {n} */
+                          + totalArgsLength;
+            /* Note - the above calculation assumes that each argument
+             *   is used once and only once in the expansion !!!
+             */
+		    reportp->ucmessage = out 
+                        = JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
+		    if (!out) {
+			if (reportp->messageArgs) {
+			    JS_free(cx, (void *)reportp->messageArgs);
+			    reportp->messageArgs = NULL;
+			}
+			return JS_FALSE;
+		    }
+		    fmt = fmtData->format;
+		    while (*fmt) {
+			if (*fmt == '{') {	/* balance} */
+			    if (isdigit(fmt[1])) {
+				int d = JS7_UNDEC(fmt[1]);
+				JS_ASSERT(expandedArgs < argCount);
+				arg = reportp->messageArgs[d];
+				js_strncpy(out, arg, argLengths[d]);
+				out += argLengths[d];
+				fmt += 3;
+				expandedArgs++;
+				continue;
+			    }
+			}
+                        /*
+                         * is this kosher?
+                         */
+			*out++ = (unsigned char)(*fmt++);
+		    }
+		    JS_ASSERT(expandedArgs == argCount);
+		    *out = 0;
+                    *messagep = js_DeflateString(cx, reportp->ucmessage,
+                                                    out - reportp->ucmessage);
+		}
+            } else { /* 0 arguments, the format string
+                        (if it exists) is the entire message */
+                if (fmtData->format) {
+		    *messagep = JS_strdup(cx, fmtData->format);
+                    reportp->ucmessage 
+                        = js_InflateString(cx, *messagep, strlen(*messagep));
+                }
+	    }
+	}
+    }
+    if (*messagep == NULL) {
+	/* where's the right place for this ??? */
+	const char *defaultErrorMessage
+	    = "No error message available for error number %d";
+	size_t nbytes = strlen(defaultErrorMessage) + 16;
+	*messagep = (char *)JS_malloc(cx, nbytes);
+	JS_snprintf(*messagep, nbytes, defaultErrorMessage, errorNumber);
+    }
+    return JS_TRUE;
+}
+
+void
+js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
+			void *userRef, const uintN errorNumber,
+                        JSBool charArgs, va_list ap)
+{
+    JSStackFrame *fp;
+    JSErrorReport report;
+    char *message;
+
+    report.messageArgs = NULL;
+    report.ucmessage = NULL;
+    message = NULL;
+
+    fp = cx->fp;
+    if (fp && fp->script && fp->pc) {
+	report.filename = fp->script->filename;
+	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+    } else {
+	report.filename = NULL;
+	report.lineno = 0;
+    }
+
+    /* XXX should fetch line somehow */
+    report.linebuf = NULL;
+    report.tokenptr = NULL;
+    report.flags = flags;
+    report.errorNumber = errorNumber;
+
+    if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
+				 &message, &report, charArgs, ap))
+	return;
+
+#if JS_HAS_ERROR_EXCEPTIONS
+    /*
+     * Check the error report, and set a JavaScript-catchable exception
+     * if the error is defined to have an associated exception.  If an
+     * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
+     * on the error report, and exception-aware hosts should ignore it.
+     */
+    js_ErrorToException(cx, &report, message);
+#endif
+
+    js_ReportErrorAgain(cx, message, &report);
+
+    if (message)
+	JS_free(cx, message);
+    if (report.messageArgs)
+	JS_free(cx, (void *)report.messageArgs);
 }
 
 JS_FRIEND_API(void)
@@ -217,7 +377,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
 void
 js_ReportIsNotDefined(JSContext *cx, const char *name)
 {
-    JS_ReportError(cx, "%s is not defined", name);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_DEFINED, name);
 }
 
 #if defined DEBUG && defined XP_UNIX
@@ -225,3 +385,26 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 void js_traceon(JSContext *cx)  { cx->tracefp = stderr; }
 void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
+
+
+JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
+#if JS_HAS_DFLT_MSG_STRINGS
+#define MSG_DEF(name, number, count, exception, format) \
+    { format, count } ,
+#else
+#define MSG_DEF(name, number, count, exception, format) \
+    { NULL, count } ,
+#endif
+#include "js.msg"
+#undef MSG_DEF
+};
+
+const JSErrorFormatString *
+js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+{
+    if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
+	    return &js_ErrorFormatString[errorNumber];
+	else
+	    return NULL;
+}
+

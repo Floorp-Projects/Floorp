@@ -17,25 +17,25 @@
  * in the importing module's import address table.
  */
 
-PR_IMPLEMENT(JSPropertyOp)
+JS_EXPORT_API(JSPropertyOp)
 js_GetArgumentAddress()
 {
 	return ((void *)js_GetArgument);
 }
 
-PR_IMPLEMENT(JSPropertyOp)
+JS_EXPORT_API(JSPropertyOp)
 js_SetArgumentAddress()
 {
 	return ((void *)js_SetArgument);
 }
 
-PR_IMPLEMENT(JSPropertyOp)
+JS_EXPORT_API(JSPropertyOp)
 js_GetLocalVariableAddress()
 {
 	return ((void *)js_GetLocalVariable);
 }
 
-PR_IMPLEMENT(JSPropertyOp)
+JS_EXPORT_API(JSPropertyOp)
 js_SetLocalVariableAddress()
 {
 	return ((void *)js_SetLocalVariable);

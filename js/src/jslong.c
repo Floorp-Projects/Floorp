@@ -16,45 +16,41 @@
  * Reserved.
  */
 
-#ifdef MINI_NSPR
-#include "prtypes.h"
-#include "prlong.h"
-#else
-#include "primpl.h"
-#endif
+#include "jstypes.h"
+#include "jslong.h"
 
-static PRInt64 ll_zero = LL_INIT( 0x00000000,0x00000000 );
-static PRInt64 ll_maxint = LL_INIT( 0x7fffffff, 0xffffffff );
-static PRInt64 ll_minint = LL_INIT( 0x80000000, 0x00000000 );
+static JSInt64 ll_zero = JSLL_INIT( 0x00000000,0x00000000 );
+static JSInt64 ll_maxint = JSLL_INIT( 0x7fffffff, 0xffffffff );
+static JSInt64 ll_minint = JSLL_INIT( 0x80000000, 0x00000000 );
 
-#if defined(HAVE_WATCOM_BUG_2)
-PRInt64 __pascal __loadds __export
-    LL_Zero(void) { return ll_zero; }
-PRInt64 __pascal __loadds __export
-    LL_MaxInt(void) { return ll_maxint; }
-PRInt64 __pascal __loadds __export
-    LL_MinInt(void) { return ll_minint; }
+#ifdef HAVE_WATCOM_BUG_2
+JSInt64 __pascal __loadds __export
+    JSLL_Zero(void) { return ll_zero; }
+JSInt64 __pascal __loadds __export
+    JSLL_MaxInt(void) { return ll_maxint; }
+JSInt64 __pascal __loadds __export
+    JSLL_MinInt(void) { return ll_minint; }
 #else
-PR_IMPLEMENT(PRInt64) LL_Zero(void) { return ll_zero; }
-PR_IMPLEMENT(PRInt64) LL_MaxInt(void) { return ll_maxint; }
-PR_IMPLEMENT(PRInt64) LL_MinInt(void) { return ll_minint; }
+JS_EXPORT_API(JSInt64) JSLL_Zero(void) { return ll_zero; }
+JS_EXPORT_API(JSInt64) JSLL_MaxInt(void) { return ll_maxint; }
+JS_EXPORT_API(JSInt64) JSLL_MinInt(void) { return ll_minint; }
 #endif
 
 #ifndef HAVE_LONG_LONG
 /*
 ** Divide 64-bit a by 32-bit b, which must be normalized so its high bit is 1.
 */
-static void norm_udivmod32(PRUint32 *qp, PRUint32 *rp, PRUint64 a, PRUint32 b)
+static void norm_udivmod32(JSUint32 *qp, JSUint32 *rp, JSUint64 a, JSUint32 b)
 {
-    PRUint32 d1, d0, q1, q0;
-    PRUint32 r1, r0, m;
+    JSUint32 d1, d0, q1, q0;
+    JSUint32 r1, r0, m;
 
-    d1 = _hi16(b);
-    d0 = _lo16(b);
+    d1 = jshi16(b);
+    d0 = jslo16(b);
     r1 = a.hi % d1;
     q1 = a.hi / d1;
     m = q1 * d0;
-    r1 = (r1 << 16) | _hi16(a.lo);
+    r1 = (r1 << 16) | jshi16(a.lo);
     if (r1 < m) {
         q1--, r1 += b;
         if (r1 >= b	/* i.e., we didn't get a carry when adding to r1 */
@@ -66,7 +62,7 @@ static void norm_udivmod32(PRUint32 *qp, PRUint32 *rp, PRUint64 a, PRUint32 b)
     r0 = r1 % d1;
     q0 = r1 / d1;
     m = q0 * d0;
-    r0 = (r0 << 16) | _lo16(a.lo);
+    r0 = (r0 << 16) | jslo16(a.lo);
     if (r0 < m) {
         q0--, r0 += b;
         if (r0 >= b
@@ -78,10 +74,10 @@ static void norm_udivmod32(PRUint32 *qp, PRUint32 *rp, PRUint64 a, PRUint32 b)
     *rp = r0 - m;
 }
 
-static PRUint32 CountLeadingZeros(PRUint32 a)
+static JSUint32 CountLeadingZeros(JSUint32 a)
 {
-    PRUint32 t;
-    PRUint32 r = 32;
+    JSUint32 t;
+    JSUint32 r = 32;
 
     if ((t = a >> 16) != 0)
 	r -= 16, a = t;
@@ -98,11 +94,11 @@ static PRUint32 CountLeadingZeros(PRUint32 a)
     return r;
 }
 
-PR_IMPLEMENT(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b)
+JS_EXPORT_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint64 b)
 {
-    PRUint32 n0, n1, n2;
-    PRUint32 q0, q1;
-    PRUint32 rsh, lsh;
+    JSUint32 n0, n1, n2;
+    JSUint32 q0, q1;
+    JSUint32 rsh, lsh;
 
     n0 = a.lo;
     n1 = a.hi;
@@ -210,7 +206,7 @@ PR_IMPLEMENT(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b
 		if (n1 > b.hi || n0 >= b.lo) {
 		    q0 = 1;
 		    a.lo = n0, a.hi = n1;
-		    LL_SUB(a, a, b);
+		    JSLL_SUB(a, a, b);
 		} else {
 		    q0 = 0;
 		}
@@ -221,7 +217,7 @@ PR_IMPLEMENT(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b
 		    rp->hi = n1;
 		}
 	    } else {
-		PRInt64 m;
+		JSInt64 m;
 
 		/*
 		 * Normalize.
@@ -236,11 +232,11 @@ PR_IMPLEMENT(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b
 
 		a.lo = n1, a.hi = n2;
 		norm_udivmod32(&q0, &n1, a, b.hi);
-		LL_MUL32(m, q0, b.lo);
+		JSLL_MUL32(m, q0, b.lo);
 
 		if ((m.hi > n1) || ((m.hi == n1) && (m.lo > n0))) {
 		    q0--;
-		    LL_SUB(m, m, b);
+		    JSLL_SUB(m, m, b);
 		}
 
 		q1 = 0;
@@ -248,7 +244,7 @@ PR_IMPLEMENT(void) ll_udivmod(PRUint64 *qp, PRUint64 *rp, PRUint64 a, PRUint64 b
 		/* Remainder is ((n1 n0) - (m1 m0)) >> lsh */
 		if (rp) {
 		    a.lo = n0, a.hi = n1;
-		    LL_SUB(a, a, m);
+		    JSLL_SUB(a, a, m);
 		    rp->lo = (a.hi << rsh) | (a.lo >> lsh);
 		    rp->hi = a.hi >> lsh;
 		}

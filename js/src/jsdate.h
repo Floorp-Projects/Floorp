@@ -22,7 +22,7 @@
  * JS Date class interface.
  */
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);
@@ -32,7 +32,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj);
  */
 extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
-                                int hour, int min, int sec);
+				int hour, int min, int sec);
 
 extern JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, JSObject* obj);
@@ -71,6 +71,6 @@ extern JS_FRIEND_API(void)
 js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds);
 
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsdate_h___ */

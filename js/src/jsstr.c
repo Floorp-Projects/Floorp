@@ -29,14 +29,10 @@
 #include "jsstddef.h"
 #include <stdlib.h>
 #include <string.h>
-#include "prtypes.h"
-#include "prlog.h"
-#ifndef NSPR20
-#include "prhash.h"
-#else
-#include "plhash.h"
-#endif
-#include "prprf.h"
+#include "jstypes.h"
+#include "jsutil.h" /* Added by JSIFY */
+#include "jshash.h" /* Added by JSIFY */
+#include "jsprf.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -57,7 +53,7 @@
 
 /* Contributions from the String class to the set of methods defined for the
  * global object.  escape and unescape used to be defined in the Mocha library,
- * but as ECMA decided to spec them.  So they've been moved to the core engine
+ * but as ECMA decided to spec them, they've been moved to the core engine
  * and made ECMA-compliant.  (Incomplete escapes are interpreted as literal
  * characters by unescape.)
  */
@@ -79,13 +75,13 @@ static const unsigned char netCharType[256] =
 */
     /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
     {    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 0x */
-         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 1x */
-         0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,	/* 2x   !"#$%&'()*+,-./	 */
-         7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,	/* 3x  0123456789:;<=>?	 */
-         7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 4x  @ABCDEFGHIJKLMNO  */
-         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,	/* 5X  PQRSTUVWXYZ[\]^_	 */
-         0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 6x  `abcdefghijklmno	 */
-         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,	/* 7X  pqrstuvwxyz{\}~	DEL */
+	 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 1x */
+	 0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,	/* 2x   !"#$%&'()*+,-./	 */
+	 7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,	/* 3x  0123456789:;<=>?	 */
+	 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 4x  @ABCDEFGHIJKLMNO  */
+	 7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,	/* 5X  PQRSTUVWXYZ[\]^_	 */
+	 0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 6x  `abcdefghijklmno	 */
+	 7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,	/* 7X  pqrstuvwxyz{\}~	DEL */
 	 0, };
 
 /* This matches the ECMA escape set when mask is 7 (default.) */
@@ -104,71 +100,74 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsint mask;
     jsdouble d;
     const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
-                           '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+			   '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
     if (argc > 1) {
-        if (!js_ValueToNumber(cx, argv[1], &d))
-            return JS_FALSE;
-        if (!JSDOUBLE_IS_FINITE(d) ||
-            (mask = (jsint)d) != d ||
-            mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
-        {
-            JS_ReportError(cx, "invalid string escape mask %x", mask);
-            return JS_FALSE;
-        }
+	if (!js_ValueToNumber(cx, argv[1], &d))
+	    return JS_FALSE;
+	if (!JSDOUBLE_IS_FINITE(d) ||
+	    (mask = (jsint)d) != d ||
+	    mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
+	{
+	    char numBuf[12];
+	    JS_snprintf(numBuf, sizeof numBuf, "%lx", (unsigned long) mask);
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				 JSMSG_BAD_STRING_MASK, numBuf);
+	    return JS_FALSE;
+	}
     } else {
-        mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
+	mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
     }
 
     str = js_ValueToString(cx, argv[0]);
     if (!str)
-        return JS_FALSE;
+	return JS_FALSE;
     argv[0] = STRING_TO_JSVAL(str);
 
     chars = str->chars;
     newlength = str->length;
     /* Take a first pass and see how big the result string will need to be. */
     for (i = 0; i < str->length; i++) {
-        if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
-            continue;
-        } else if (ch < 256) {
-            if (mask == URL_XPALPHAS && ch == ' ')
-                continue;   /* The character will be encoded as '+' */
-            else
-                newlength += 2; /* The character will be encoded as %XX */
-        } else {
-            newlength += 5; /* The character will be encoded as %uXXXX */
-        }
+	if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+	    continue;
+	} else if (ch < 256) {
+	    if (mask == URL_XPALPHAS && ch == ' ')
+		continue;   /* The character will be encoded as '+' */
+	    else
+		newlength += 2; /* The character will be encoded as %XX */
+	} else {
+	    newlength += 5; /* The character will be encoded as %uXXXX */
+	}
     }
 
     newchars = (jschar *) JS_malloc(cx, (newlength + 1) * sizeof(jschar));
     for (i = 0, ni = 0; i < str->length; i++) {
-        if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
-            newchars[ni++] = ch;
-        } else if (ch < 256) {
-            if (mask == URL_XPALPHAS && ch == ' ') {
-                newchars[ni++] = '+'; /* convert spaces to pluses */
-            } else {
-                newchars[ni++] = '%';
-                newchars[ni++] = digits[ch >> 4];
-                newchars[ni++] = digits[ch & 0xF];
-            }
-        } else {
-            newchars[ni++] = '%';
-            newchars[ni++] = 'u';
-            newchars[ni++] = digits[ch >> 12];
-            newchars[ni++] = digits[(ch & 0xF00) >> 8];
-            newchars[ni++] = digits[(ch & 0xF0) >> 4];
-            newchars[ni++] = digits[ch & 0xF];
-        }
+	if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+	    newchars[ni++] = ch;
+	} else if (ch < 256) {
+	    if (mask == URL_XPALPHAS && ch == ' ') {
+		newchars[ni++] = '+'; /* convert spaces to pluses */
+	    } else {
+		newchars[ni++] = '%';
+		newchars[ni++] = digits[ch >> 4];
+		newchars[ni++] = digits[ch & 0xF];
+	    }
+	} else {
+	    newchars[ni++] = '%';
+	    newchars[ni++] = 'u';
+	    newchars[ni++] = digits[ch >> 12];
+	    newchars[ni++] = digits[(ch & 0xF00) >> 8];
+	    newchars[ni++] = digits[(ch & 0xF0) >> 4];
+	    newchars[ni++] = digits[ch & 0xF];
+	}
     }
-    PR_ASSERT(ni == newlength);
+    JS_ASSERT(ni == newlength);
     newchars[newlength] = 0;
 
     str = js_NewString(cx, newchars, newlength, 0);
     if (!str) {
-        JS_free(cx, newchars);
-        return JS_FALSE;
+	JS_free(cx, newchars);
+	return JS_FALSE;
     }
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
@@ -187,7 +186,7 @@ str_unescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     str = js_ValueToString(cx, argv[0]);
     if (!str)
-        return JS_FALSE;
+	return JS_FALSE;
     argv[0] = STRING_TO_JSVAL(str);
 
     chars = str->chars;
@@ -195,32 +194,32 @@ str_unescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     newchars = (jschar *) JS_malloc(cx, (str->length + 1) * sizeof(jschar));
     ni = i = 0;
     while (i < str->length) {
-        ch = chars[i++];
-        if (ch == '%') {
-            if (i + 1 < str->length &&
-                JS7_ISHEX(chars[i]) && JS7_ISHEX(chars[i + 1]))
-            {
-                ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
-                i += 2;
-            } else if (i + 4 < str->length && chars[i] == 'u' &&
-                       JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
-                       JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
-            {
-                ch = (((((JS7_UNHEX(chars[i + 1]) << 4)
-                        + JS7_UNHEX(chars[i + 2])) << 4)
-                      + JS7_UNHEX(chars[i + 3])) << 4)
-                    + JS7_UNHEX(chars[i + 4]);
-                i += 5;
-            }
-        }
-        newchars[ni++] = ch;
+	ch = chars[i++];
+	if (ch == '%') {
+	    if (i + 1 < str->length &&
+		JS7_ISHEX(chars[i]) && JS7_ISHEX(chars[i + 1]))
+	    {
+		ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
+		i += 2;
+	    } else if (i + 4 < str->length && chars[i] == 'u' &&
+		       JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
+		       JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
+	    {
+		ch = (((((JS7_UNHEX(chars[i + 1]) << 4)
+			+ JS7_UNHEX(chars[i + 2])) << 4)
+		      + JS7_UNHEX(chars[i + 3])) << 4)
+		    + JS7_UNHEX(chars[i + 4]);
+		i += 5;
+	    }
+	}
+	newchars[ni++] = ch;
     }
     newchars[ni] = 0;
 
     str = js_NewString(cx, newchars, ni, 0);
     if (!str) {
-        JS_free(cx, newchars);
-        return JS_FALSE;
+	JS_free(cx, newchars);
+	return JS_FALSE;
     }
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
@@ -345,7 +344,7 @@ str_quote(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     str = js_QuoteString(cx, str, '"');
     if (!str)
-    	return JS_FALSE;
+	return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -366,25 +365,25 @@ str_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return js_obj_toSource(cx, obj, argc, argv, rval);
     str = js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (!str)
-    	return JS_FALSE;
-    j = PR_snprintf(buf, sizeof buf, "(new %s(", string_class.name);
+	return JS_FALSE;
+    j = JS_snprintf(buf, sizeof buf, "(new %s(", string_class.name);
     s = str->chars;
     k = str->length;
     n = j + k + 2;
     t = JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!t)
-    	return JS_FALSE;
+	return JS_FALSE;
     for (i = 0; i < j; i++)
-    	t[i] = buf[i];
+	t[i] = buf[i];
     for (j = 0; j < k; i++, j++)
-    	t[i] = s[j];
+	t[i] = s[j];
     t[i++] = ')';
     t[i++] = ')';
     t[i] = 0;
     str = js_NewString(cx, t, n, 0);
     if (!str) {
-    	JS_free(cx, t);
-    	return JS_FALSE;
+	JS_free(cx, t);
+	return JS_FALSE;
     }
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
@@ -464,7 +463,7 @@ str_substring(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	}
 
 	str = js_NewStringCopyN(cx, str->chars + (size_t)begin,
-                                (size_t)(end - begin), 0);
+				(size_t)(end - begin), 0);
 	if (!str)
 	    return JS_FALSE;
     }
@@ -547,7 +546,7 @@ str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (d < 0 || str->length <= d) {
 	*rval = JS_GetEmptyStringValue(cx);
     } else {
-        index = (size_t)d;
+	index = (size_t)d;
 	buf[0] = str->chars[index];
 	buf[1] = 0;
 	str = js_NewStringCopyN(cx, buf, 1, 0);
@@ -575,10 +574,10 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     d = js_DoubleToInteger(d);
     if (d < 0 || str->length <= d) {
-        *rval = JS_GetNaNValue(cx);
+	*rval = JS_GetNaNValue(cx);
     } else {
-        index = (size_t)d;
-        *rval = INT_TO_JSVAL((jsint)str->chars[index]);
+	index = (size_t)d;
+	*rval = INT_TO_JSVAL((jsint)str->chars[index]);
     }
     return JS_TRUE;
 }
@@ -592,7 +591,7 @@ js_BoyerMooreHorspool(const jschar *text, jsint textlen,
     uint8 skip[BMH_CHARSET_SIZE];
     jschar c;
 
-    PR_ASSERT(0 < patlen && patlen <= BMH_PATLEN_MAX);
+    JS_ASSERT(0 < patlen && patlen <= BMH_PATLEN_MAX);
     for (i = 0; i < BMH_CHARSET_SIZE; i++)
 	skip[i] = (uint8)patlen;
     m = patlen - 1;
@@ -640,13 +639,13 @@ str_indexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (argc > 1) {
 	if (!js_ValueToNumber(cx, argv[1], &d))
 	    return JS_FALSE;
-        d = js_DoubleToInteger(d);
+	d = js_DoubleToInteger(d);
 	if (d < 0)
 	    i = 0;
 	else if (d > textlen)
 	    i = textlen;
-        else
-            i = (jsint)d;
+	else
+	    i = (jsint)d;
     } else {
 	i = 0;
     }
@@ -707,19 +706,19 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (argc > 1) {
 	if (!js_ValueToNumber(cx, argv[1], &d))
 	    return JS_FALSE;
-        if (JSDOUBLE_IS_NaN(d)) {
-            i = textlen;
-        } else {
-            d = js_DoubleToInteger(d);
-            if (d < 0)
-                i = 0;
-            else if (d > textlen - patlen)
-                i = textlen - patlen;
-            else
-                i = (jsint)d;
-        }
+	if (JSDOUBLE_IS_NaN(d)) {
+	    i = textlen;
+	} else {
+	    d = js_DoubleToInteger(d);
+	    if (d < 0)
+		i = 0;
+	    else if (d > textlen - patlen)
+		i = textlen - patlen;
+	    else
+		i = (jsint)d;
+	}
     } else {
-        i = textlen;
+	i = textlen;
     }
 
     if (patlen == 0) {
@@ -748,8 +747,8 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 str_nyi(JSContext *cx, const char *what)
 {
-    JS_ReportError(cx, "sorry, String.prototype.%s is not yet implemented",
-		   what);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+			 JSMSG_NO_STRING_PROTO, what);
     return JS_FALSE;
 }
 #endif
@@ -791,7 +790,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	reobj = JSVAL_TO_OBJECT(argv[0]);
 	re = JS_GetPrivate(cx, reobj);
     } else {
-    	src = js_ValueToString(cx, argv[0]);
+	src = js_ValueToString(cx, argv[0]);
 	if (!src)
 	    return JS_FALSE;
 	if (data->optarg < argc) {
@@ -832,7 +831,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    if (!ok)
 		break;
 	    if (cx->regExpStatics.lastMatch.length == 0) {
-	        if (index == str->length)
+		if (index == str->length)
 		    break;
 		index++;
 	    }
@@ -867,7 +866,7 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     mdata = (MatchData *)data;
     arrayobj = mdata->arrayobj;
     if (!arrayobj) {
-        arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL);
+	arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL);
 	if (!arrayobj)
 	    return JS_FALSE;
 	mdata->arrayobj = arrayobj;
@@ -938,7 +937,7 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     JSString *str;
 
     /* Allow a real backslash (literal "\\") to escape "$1" etc. */
-    PR_ASSERT(*dp == '$');
+    JS_ASSERT(*dp == '$');
     if (dp > rdata->repstr->chars && dp[-1] == '\\')
 	return NULL;
 
@@ -1003,11 +1002,11 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
     lambda = rdata->lambda;
     if (lambda) {
-    	uintN argc, i, j, m, n, p;
-    	jsval *sp, *oldsp, rval;
-    	void *mark;
+	uintN argc, i, j, m, n, p;
+	jsval *sp, *oldsp, rval;
+	void *mark;
 	JSStackFrame *fp;
-    	JSBool ok;
+	JSBool ok;
 
 	/*
 	 * In the lambda case, not only do we find the replacement string's
@@ -1017,8 +1016,8 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	 * For $&, etc., we must create string jsvals from cx->regExpStatics.
 	 * We grab up stack space to keep the newborn strings GC-rooted.
 	 */
-    	p = rdata->base.regexp->parenCount;
-    	argc = 1 + p + 2;
+	p = rdata->base.regexp->parenCount;
+	argc = 1 + p + 2;
 	sp = js_AllocStack(cx, 2 + argc, &mark);
 	if (!sp)
 	    return JS_FALSE;
@@ -1028,7 +1027,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	*sp++ = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, lambda));
 
 #define PUSH_REGEXP_STATIC(sub)                                               \
-    PR_BEGIN_MACRO                                                            \
+    JS_BEGIN_MACRO                                                            \
 	JSString *str = js_NewStringCopyN(cx,                                 \
 					  cx->regExpStatics.sub.chars,        \
 					  cx->regExpStatics.sub.length,       \
@@ -1038,16 +1037,16 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	    goto lambda_out;                                                  \
 	}                                                                     \
 	*sp++ = STRING_TO_JSVAL(str);                                         \
-    PR_END_MACRO
+    JS_END_MACRO
 
-    	/* Push $&, $1, $2, ... */
+	/* Push $&, $1, $2, ... */
 	PUSH_REGEXP_STATIC(lastMatch);
 	i = 0;
-    	m = cx->regExpStatics.parenCount;
-    	n = PR_MIN(m, 9);
-    	for (j = 0; i < n; i++, j++)
+	m = cx->regExpStatics.parenCount;
+	n = JS_MIN(m, 9);
+	for (j = 0; i < n; i++, j++)
 	    PUSH_REGEXP_STATIC(parens[j]);
-    	for (j = 0; i < m; i++, j++)
+	for (j = 0; i < m; i++, j++)
 	    PUSH_REGEXP_STATIC(moreParens[j]);
 
 #undef PUSH_REGEXP_STATIC
@@ -1064,7 +1063,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	fp = cx->fp;
 	oldsp = fp->sp;
 	fp->sp = sp;
-    	ok = js_Invoke(cx, argc, JS_FALSE);
+	ok = js_Invoke(cx, argc, JS_FALSE);
 	rval = fp->sp[-1];
 	fp->sp = oldsp;
 
@@ -1076,7 +1075,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 	     */
 	    repstr = js_ValueToString(cx, rval);
 	    if (!repstr) {
-	    	ok = JS_FALSE;
+		ok = JS_FALSE;
 	    } else {
 		rdata->repstr = repstr;
 		*sizep = repstr->length;
@@ -1085,7 +1084,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
       lambda_out:
 	js_FreeStack(cx, mark);
-    	return ok;
+	return ok;
     }
 #endif /* JS_HAS_REPLACE_LAMBDA */
 
@@ -1145,7 +1144,7 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     rdata->leftIndex = cx->regExpStatics.lastMatch.chars - str->chars;
     rdata->leftIndex += cx->regExpStatics.lastMatch.length;
     if (!find_replen(cx, rdata, &replen))
-    	return JS_FALSE;
+	return JS_FALSE;
     growth = leftlen + replen;
     chars = rdata->chars
 	    ? JS_realloc(cx, rdata->chars, (rdata->length + growth + 1)
@@ -1179,8 +1178,8 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #if JS_HAS_REPLACE_LAMBDA
     if (JS_TypeOfValue(cx, argv[1]) == JSTYPE_FUNCTION) {
-    	lambda = JSVAL_TO_OBJECT(argv[1]);
-    	repstr = NULL;
+	lambda = JSVAL_TO_OBJECT(argv[1]);
+	repstr = NULL;
     } else
 #endif
     {
@@ -1321,8 +1320,6 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
 
       again:
 	/* JS1.2 deviated from Perl by never matching at end of string. */
-	if (cx->version == JSVERSION_1_2 && (size_t)i == str->length)
-	    return -1;
 	index = (size_t)i;
 	if (!js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, &rval))
 	    return -2;
@@ -1340,20 +1337,20 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
 	     * in match_or_replace.
 	     */
 	    if (i == *ip) {
-	    	/*
-	    	 * "Bump-along" to avoid sticking at an empty match, but don't
-	    	 * bump past end of string -- our caller must do that by adding
-	    	 * sep->length to our return value.
-	    	 */
-	    	if ((size_t)i == str->length) {
+		/*
+		 * "Bump-along" to avoid sticking at an empty match, but don't
+		 * bump past end of string -- our caller must do that by adding
+		 * sep->length to our return value.
+		 */
+		if ((size_t)i == str->length) {
 		    sep->length = 1;
 		    return i;
 		}
-	    	i++;
-	    	goto again;
+		i++;
+		goto again;
 	    }
 	}
-	PR_ASSERT((size_t)i >= sep->length);
+	JS_ASSERT((size_t)i >= sep->length);
 	return i - sep->length;
     }
 #endif
@@ -1438,19 +1435,19 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    re = NULL;
 	}
 
-        /* Use the second argument as the split limit, if given. */
-        /* XXX our v2 ecma spec checks against given, undefined. */
+	/* Use the second argument as the split limit, if given. */
+	/* XXX our v2 ecma spec checks against given, undefined. */
 	limited = (argc > 1);
 	if (limited) {
 	    if (!js_ValueToNumber(cx, argv[1], &d))
 		return JS_FALSE;
 
-            /* Clamp limit between 0 and 1 + string length. */
-            d = js_DoubleToInteger(d);
-            if (d < 0)
-                d = 0;
-            else if (d > str->length)
-                d = 1 + str->length;
+	    /* Clamp limit between 0 and 1 + string length. */
+	    d = js_DoubleToInteger(d);
+	    if (d < 0)
+		d = 0;
+	    else if (d > str->length)
+		d = 1 + str->length;
 	    limit = (jsint)d;
 	}
 
@@ -1561,7 +1558,7 @@ str_substr(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	}
 
 	str = js_NewStringCopyN(cx, str->chars + (size_t)begin,
-                                (size_t)(end - begin), 0);
+				(size_t)(end - begin), 0);
 	if (!str)
 	    return JS_FALSE;
     }
@@ -1714,7 +1711,7 @@ str_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	}
 
 	str = js_NewStringCopyN(cx, str->chars + (size_t)begin,
-                                (size_t)(end - begin), 0);
+				(size_t)(end - begin), 0);
 	if (!str)
 	    return JS_FALSE;
     }
@@ -1776,7 +1773,7 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
     for (i = 0; i < endlen; i++)
 	tagbuf[j++] = (jschar)end[i];
     tagbuf[j++] = '>';
-    PR_ASSERT(j == taglen);
+    JS_ASSERT(j == taglen);
 
     str = js_NewString(cx, tagbuf, taglen, 0);
     if (!str) {
@@ -1984,7 +1981,7 @@ static JSFunctionSpec string_static_methods[] = {
     {0}
 };
 
-static PRHashTable *deflated_string_cache;
+static JSHashTable *deflated_string_cache;
 static uint32 deflated_string_cache_bytes;
 #ifdef JS_THREADSAFE
 static JSLock *deflated_string_cache_lock;
@@ -2008,7 +2005,7 @@ void
 js_FreeStringGlobals()
 {
     if (deflated_string_cache) {
-	PR_HashTableDestroy(deflated_string_cache);
+	JS_HashTableDestroy(deflated_string_cache);
 	deflated_string_cache = NULL;
     }
 #ifdef JS_THREADSAFE
@@ -2098,17 +2095,17 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag)
     return str;
 }
 
-PR_STATIC_CALLBACK(PRHashNumber)
+JS_STATIC_DLL_CALLBACK(JSHashNumber)
 js_hash_string_pointer(const void *key)
 {
-    return (PRHashNumber)key >> JSVAL_TAGBITS;
+    return (JSHashNumber)key >> JSVAL_TAGBITS;
 }
 
 void
 js_FinalizeString(JSContext *cx, JSString *str)
 {
-    PRHashNumber hash;
-    PRHashEntry *he, **hep;
+    JSHashNumber hash;
+    JSHashEntry *he, **hep;
 
     if (str->chars) {
 	JS_free(cx, str->chars);
@@ -2116,11 +2113,11 @@ js_FinalizeString(JSContext *cx, JSString *str)
 	if (deflated_string_cache) {
 	    hash = js_hash_string_pointer(str);
 	    JS_ACQUIRE_LOCK(deflated_string_cache_lock);
-	    hep = PR_HashTableRawLookup(deflated_string_cache, hash, str);
+	    hep = JS_HashTableRawLookup(deflated_string_cache, hash, str);
 	    he = *hep;
 	    if (he) {
 		JS_free(cx, he->value);
-		PR_HashTableRawRemove(deflated_string_cache, hep, he);
+		JS_HashTableRawRemove(deflated_string_cache, hep, he);
 		deflated_string_cache_bytes -= str->length;
 	    }
 	    JS_RELEASE_LOCK(deflated_string_cache_lock);
@@ -2174,17 +2171,18 @@ js_ValueToSource(JSContext *cx, jsval v)
     if (JSVAL_IS_STRING(v))
 	return js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (!JSVAL_IS_PRIMITIVE(v)) {
-	js_TryMethod(cx, JSVAL_TO_OBJECT(v),
+	if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v),
 		     cx->runtime->atomState.toSourceAtom,
-		     0, NULL, &v);
+		     0, NULL, &v))
+            return NULL;
     }
     return js_ValueToString(cx, v);
 }
 
-PRHashNumber
+JSHashNumber
 js_HashString(const JSString *str)
 {
-    PRHashNumber h;
+    JSHashNumber h;
     size_t n, m;
     const jschar *s;
 
@@ -2212,7 +2210,7 @@ js_CompareStrings(const JSString *str1, const JSString *str2)
 
     l1 = str1->length, l2 = str2->length;
     s1 = str1->chars,  s2 = str2->chars;
-    n = PR_MIN(l1, l2);
+    n = JS_MIN(l1, l2);
     for (i = 0; i < n; i++) {
 	cmp = s1[i] - s2[i];
 	if (cmp != 0)
@@ -2247,7 +2245,7 @@ js_SkipWhiteSpace(const jschar *s)
 {
     /* JS_ISSPACE is false on a null. */
     while (JS_ISSPACE(*s))
-        s++;
+	s++;
     return s;
 }
 
@@ -2295,15 +2293,15 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
     return bytes;
 }
 
-static PRHashTable *
+static JSHashTable *
 GetDeflatedStringCache(void)
 {
-    PRHashTable *cache;
+    JSHashTable *cache;
 
     cache = deflated_string_cache;
     if (!cache) {
-	cache = PR_NewHashTable(8, js_hash_string_pointer,
-				PR_CompareValues, PR_CompareValues,
+	cache = JS_NewHashTable(8, js_hash_string_pointer,
+				JS_CompareValues, JS_CompareValues,
 				NULL, NULL);
 	deflated_string_cache = cache;
     }
@@ -2313,10 +2311,10 @@ GetDeflatedStringCache(void)
 JSBool
 js_SetStringBytes(JSString *str, char *bytes, size_t length)
 {
-    PRHashTable *cache;
+    JSHashTable *cache;
     JSBool ok;
-    PRHashNumber hash;
-    PRHashEntry **hep;
+    JSHashNumber hash;
+    JSHashEntry **hep;
 
     JS_ACQUIRE_LOCK(deflated_string_cache_lock);
 
@@ -2325,9 +2323,9 @@ js_SetStringBytes(JSString *str, char *bytes, size_t length)
 	ok = JS_FALSE;
     } else {
 	hash = js_hash_string_pointer(str);
-	hep = PR_HashTableRawLookup(cache, hash, str);
-	PR_ASSERT(*hep == NULL);
-	ok = PR_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
+	hep = JS_HashTableRawLookup(cache, hash, str);
+	JS_ASSERT(*hep == NULL);
+	ok = JS_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
 	if (ok)
 	    deflated_string_cache_bytes += length;
     }
@@ -2339,10 +2337,10 @@ js_SetStringBytes(JSString *str, char *bytes, size_t length)
 char *
 js_GetStringBytes(JSString *str)
 {
-    PRHashTable *cache;
+    JSHashTable *cache;
     char *bytes;
-    PRHashNumber hash;
-    PRHashEntry *he, **hep;
+    JSHashNumber hash;
+    JSHashEntry *he, **hep;
 
     JS_ACQUIRE_LOCK(deflated_string_cache_lock);
 
@@ -2351,14 +2349,14 @@ js_GetStringBytes(JSString *str)
 	bytes = NULL;
     } else {
 	hash = js_hash_string_pointer(str);
-	hep = PR_HashTableRawLookup(cache, hash, str);
+	hep = JS_HashTableRawLookup(cache, hash, str);
 	he = *hep;
 	if (he) {
 	    bytes = he->value;
 	} else {
 	    bytes = js_DeflateString(NULL, str->chars, str->length);
 	    if (bytes) {
-		if (PR_HashTableRawAdd(cache, hep, hash, str, bytes)) {
+		if (JS_HashTableRawAdd(cache, hep, hash, str, bytes)) {
 		    deflated_string_cache_bytes += str->length;
 		} else {
 		    free(bytes);

@@ -24,7 +24,7 @@
 #include <stddef.h>
 #include "jspubtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 /*
  * Type tags stored in the low bits of a jsval.
@@ -37,11 +37,11 @@ PR_BEGIN_EXTERN_C
 
 /* Type tag bitfield length and derived macros. */
 #define JSVAL_TAGBITS           3
-#define JSVAL_TAGMASK           PR_BITMASK(JSVAL_TAGBITS)
+#define JSVAL_TAGMASK           JS_BITMASK(JSVAL_TAGBITS)
 #define JSVAL_TAG(v)            ((v) & JSVAL_TAGMASK)
 #define JSVAL_SETTAG(v,t)       ((v) | (t))
 #define JSVAL_CLRTAG(v)         ((v) & ~(jsval)JSVAL_TAGMASK)
-#define JSVAL_ALIGN             PR_BIT(JSVAL_TAGBITS)
+#define JSVAL_ALIGN             JS_BIT(JSVAL_TAGBITS)
 
 /* Predicates for type testing. */
 #define JSVAL_IS_OBJECT(v)      (JSVAL_TAG(v) == JSVAL_OBJECT)
@@ -269,10 +269,10 @@ JS_NewContext(JSRuntime *rt, size_t stacksize);
 extern JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext *cx);
 
-PR_EXTERN(void*)
+JS_EXTERN_API(void*)
 JS_GetContextPrivate(JSContext *cx);
 
-PR_EXTERN(void)
+JS_EXTERN_API(void)
 JS_SetContextPrivate(JSContext *cx, void *data);
 
 extern JS_PUBLIC_API(JSRuntime *)
@@ -381,7 +381,7 @@ struct JSClass {
     JSNative            construct;
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
-    prword              spare[2];
+    jsword              spare[2];
 };
 
 #define JSCLASS_HAS_PRIVATE     0x01    /* class instances have private slot */
@@ -410,7 +410,7 @@ struct JSObjectOps {
     JSNative            construct;
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
-    prword              spare[2];
+    jsword              spare[2];
 };
 
 /*
@@ -493,14 +493,14 @@ struct JSFunctionSpec {
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 	     JSClass *clasp, JSNative constructor, uintN nargs,
-             JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+	     JSPropertySpec *ps, JSFunctionSpec *fs,
+	     JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
 #ifdef JS_THREADSAFE
 extern JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj);
 #else
-JS_PUBLIC_API(JSClass *)
+extern JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSObject *obj);
 #endif
 
@@ -515,7 +515,7 @@ JS_SetPrivate(JSContext *cx, JSObject *obj, void *data);
 
 extern JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
-                      jsval *argv);
+		      jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(JSContext *cx, JSObject *obj);
@@ -604,6 +604,29 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
 		    const jschar *name, size_t namelen, jsval value,
 		    JSPropertyOp getter, JSPropertyOp setter,
 		    uintN attrs);
+
+/*
+ * Determine the attributes (JSPROP_* flags) of a property on a given object.
+ *
+ * If the object does not have a property by that name, *foundp will be
+ * JS_FALSE and the value of *attrsp is undefined.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+			   const jschar *name, size_t namelen,
+			   uintN *attrsp, JSBool *foundp);
+
+/*
+ * Set the attributes of a property on a given object.
+ *
+ * If the object does not have a property by that name, *foundp will be
+ * JS_FALSE and nothing will be altered.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+			   const jschar *name, size_t namelen,
+			   uintN attrs, JSBool *foundp);
+
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
@@ -698,8 +721,8 @@ typedef struct JSPrincipals {
     ((principals)->refcount++)
 #define JSPRINCIPALS_DROP(cx, principals)               \
     ((--((principals)->refcount) == 0)                  \
-        ? (*(principals)->destroy)((cx), (principals))  \
-        : (void) 0)
+	? (*(principals)->destroy)((cx), (principals))  \
+	: (void) 0)
 
 /************************************************************************/
 
@@ -767,10 +790,10 @@ JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
-                                JSPrincipals *principals, const char *name,
-                                uintN nargs, const char **argnames,
-                                const char *bytes, size_t length,
-                                const char *filename, uintN lineno);
+				JSPrincipals *principals, const char *name,
+				uintN nargs, const char **argnames,
+				const char *bytes, size_t length,
+				const char *filename, uintN lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
@@ -905,19 +928,63 @@ extern JS_PUBLIC_API(void)
 JS_ReportError(JSContext *cx, const char *format, ...);
 
 /*
+ * Use an errorNumber to retrieve the format string, args are char *
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...);
+
+/*
+ * Use an errorNumber to retrieve the format string, args are jschar *
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
+		     void *userRef, const uintN errorNumber, ...);
+
+/*
+ * As above, but report a warning instead (JSREPORT_IS_WARNING(report->flags)).
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportWarning(JSContext *cx, const char *format, ...);
+
+/*
  * Complain when out of memory.
  */
 extern JS_PUBLIC_API(void)
 JS_ReportOutOfMemory(JSContext *cx);
 
 struct JSErrorReport {
-    const char      *filename;  /* source file name, URL, etc., or null */
-    uintN           lineno;     /* source line number */
-    const char      *linebuf;   /* offending source line without final '\n' */
-    const char      *tokenptr;  /* pointer to error token in linebuf */
-    const jschar    *uclinebuf; /* unicode (original) line buffer */
-    const jschar    *uctokenptr;/* unicode (original) token pointer */
+    const char      *filename;      /* source file name, URL, etc., or null */
+    uintN           lineno;         /* source line number */
+    const char      *linebuf;       /* offending source line without final \n */
+    const char      *tokenptr;      /* pointer to error token in linebuf */
+    const jschar    *uclinebuf;     /* unicode (original) line buffer */
+    const jschar    *uctokenptr;    /* unicode (original) token pointer */
+    uintN	    flags;          /* error/warning, etc. */
+    uintN           errorNumber;    /* the error number, e.g. see js.msg */
+    const jschar    *ucmessage;     /* the (default) error message */
+    const jschar    **messageArgs;  /* arguments for the error message */
 };
+
+/*
+ * JSErrorReport flag values.
+ */
+
+/* XXX need better classification system */
+#define JSREPORT_ERROR			0x0
+#define JSREPORT_WARNING		0x1 /* reported via JS_ReportWarning */
+
+/*
+ * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
+ * has been thrown for this runtime error, and the host should ignore it.
+ * Exception-aware hosts should also check for JS_IsExceptionPending if
+ * JS_ExecuteScript returns failure, and signal or propagate the exception, as
+ * appropriate.
+ */
+#define JSREPORT_EXCEPTION		0x2
+
+#define JSREPORT_IS_WARNING(flags)	(flags & JSREPORT_WARNING)
+#define JSREPORT_IS_EXCEPTION(flags)	(flags & JSREPORT_EXCEPTION)
 
 extern JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
@@ -984,15 +1051,16 @@ JS_ClearContextThread(JSContext *cx);
 
 /************************************************************************/
 
-#ifdef NETSCAPE_INTERNAL
 /*
  * Returns true if a script is executing and its current bytecode is a set
  * (assignment) operation.
+ *
+ * NOTE: Previously conditional on NETSCAPE_INTERNAL. This function may 
+ * be removed in the future.
  */
-extern JS_PUBLIC_API(JSBool)
+extern JS_FRIEND_API(JSBool)
 JS_IsAssigning(JSContext *cx);
-#endif
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsapi_h___ */

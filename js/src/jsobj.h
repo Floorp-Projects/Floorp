@@ -26,17 +26,11 @@
  * values, called slots.  The map/slot pointer pair is GC'ed, while the map
  * is reference counted and the slot vector is malloc'ed.
  */
-#ifdef NETSCAPE_INTERNAL
-#ifndef NSPR20
-#include "prhash.h"
-#else
-#include "plhash.h"
-#endif
-#endif
+#include "jshash.h" /* Added by JSIFY */
 #include "jsprvtd.h"
 #include "jspubtd.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 struct JSObjectMap {
     jsrefcount  nrefs;          /* count of all referencing objects */
@@ -101,7 +95,7 @@ struct JSObject {
 
 #ifdef DEBUG
 #define MAP_CHECK_SLOT(map,slot) \
-    PR_ASSERT((uint32)slot < PR_MAX((map)->nslots, (map)->freeslot))
+    JS_ASSERT((uint32)slot < JS_MAX((map)->nslots, (map)->freeslot))
 #define OBJ_CHECK_SLOT(obj,slot) \
     MAP_CHECK_SLOT((obj)->map, slot)
 #else
@@ -148,24 +142,26 @@ struct JSObject {
     ((JSClass *)JSVAL_TO_PRIVATE(OBJ_GET_SLOT(cx, obj, JSSLOT_CLASS)))
 
 /* Test whether a map or object is native. */
-#define MAP_IS_NATIVE(map)  ((map)->ops == &js_ObjectOps)
+#define MAP_IS_NATIVE(map)  ((map)->ops == &js_ObjectOps || \
+                             (map)->ops == &js_WithObjectOps)
 #define OBJ_IS_NATIVE(obj)  MAP_IS_NATIVE((obj)->map)
 
 extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
+extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
 extern JSClass      js_ObjectClass;
 extern JSClass      js_WithClass;
 
 struct JSSharpObjectMap {
     jsrefcount  depth;
     jsatomid    sharpgen;
-    PRHashTable *table;
+    JSHashTable *table;
 };
 
 #define SHARP_BIT       1
 #define IS_SHARP(he)	((jsatomid)(he)->value & SHARP_BIT)
 #define MAKE_SHARP(he)  ((he)->value = (void*)((jsatomid)(he)->value|SHARP_BIT))
 
-extern PRHashEntry *
+extern JSHashEntry *
 js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
 		    jschar **sp);
 
@@ -178,7 +174,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 extern JSBool
 js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	        jsval *rval);
+		jsval *rval);
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
@@ -281,7 +277,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-             jsval *statep, jsid *idp);
+	     jsval *statep, jsid *idp);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
@@ -313,10 +309,10 @@ js_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
 extern JSObject *
 js_ValueToNonNullObject(JSContext *cx, jsval v);
 
-extern void
+extern JSBool
 js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, jsval *rval);
 
-extern void
+extern JSBool
 js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
 	     uintN argc, jsval *argv, jsval *rval);
 
@@ -326,6 +322,6 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp);
 extern JSIdArray *
 js_NewIdArray(JSContext *cx, jsint length);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

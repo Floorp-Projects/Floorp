@@ -37,52 +37,70 @@ endif
 
 MODULE		= js
 
-CSRCS		= jsapi.c \
-		  jsarray.c \
-		  jsatom.c \
-		  jsbool.c \
-		  jscntxt.c \
-		  jsdate.c \
-		  jsdbgapi.c \
-		  jsemit.c \
-		  jsfun.c \
-		  jsgc.c \
-		  jsinterp.c \
-		  jsmath.c \
-		  jsnum.c \
-		  jsobj.c \
-		  jsopcode.c \
-		  jsparse.c \
-		  jsregexp.c \
-		  jsscan.c \
-		  jsscope.c \
-		  jsscript.c \
-		  jsstr.c \
-		  jslock.c \
-		  jsxdrapi.c \
-		  prmjtime.c \
-		  $(NULL)
+CSRCS		= 	jsapi.c		\
+			jsarena.c	\
+			jsarray.c	\
+			jsatom.c	\
+			jsbool.c	\
+			jscntxt.c	\
+			jsdate.c	\
+			jsdbgapi.c	\
+			jsdtoa.c	\
+			jsemit.c	\
+			jsexn.c		\
+			jsfun.c		\
+			jsgc.c		\
+			jshash.c	\
+			jsinterp.c	\
+			jslock.c	\
+			jslog2.c	\
+			jslong.c	\
+			jsmath.c	\
+			jsnum.c		\
+			jsobj.c		\
+			jsopcode.c      \
+			jsparse.c	\
+			jsprf.c		\
+			jsregexp.c	\
+			jsscan.c	\
+			jsscope.c	\
+			jsscript.c	\
+			jsstr.c		\
+			jsutil.c        \
+			jsxdrapi.c	\
+			prmjtime.c	\
+			$(NULL)
 
-EXPORTS		= jsapi.h \
+EXPORTS		= js.msg \
+		  jsapi.h \
 		  jsarray.h \
+		  jsarena.h \
 		  jsatom.h \
+		  jsbit.h \
 		  jsbool.h \
+		  jsclist.h \
 		  jscntxt.h \
 		  jscompat.h \
 		  jsconfig.h \
+		  jscpucfg.h \
 		  jsdate.h \
 		  jsdbgapi.h \
 		  jsemit.h \
 		  jsfun.h \
 		  jsgc.h \
+	          jshash.h \
 		  jsinterp.h \
 		  jslock.h \
+		  jslong.h \
 		  jsmath.h \
 		  jsnum.h \
 		  jsobj.h \
-		  jsopcode.def \
+		  jsopcode.tbl \
 		  jsopcode.h \
+		  jsosdep.h \
+		  jsotypes.h \
 		  jsparse.h \
+		  jsprf.h \
 		  jsprvtd.h \
 		  jspubtd.h \
 		  jsregexp.h \
@@ -90,6 +108,8 @@ EXPORTS		= jsapi.h \
 		  jsscope.h \
 		  jsscript.h \
 		  jsstr.h \
+		  jstypes.h \
+		  jsutil.h \
 		  jsxdrapi.h \
 		  $(NULL)
 
@@ -102,7 +122,6 @@ JS_SAFE_ARENA = 1
 
 ifdef JS_SAFE_ARENA
 DEFINES += -DJS_USE_SAFE_ARENA
-CSRCS += prarena.c
 endif
 
 include $(DEPTH)/config/rules.mk
@@ -196,8 +215,8 @@ $(OBJDIR)/js$(BIN_SUFFIX): $(OBJDIR)/js.o $(LIBRARY)
 	    $(LINK_EXE) -OUT:$@ $(OBJDIR)/js.o  $(LIBRARIES) $(EXTRA_LIBS)
 endif
 
-# hardwire dependencies on jsopcode.def
-jsopcode.h jsopcode.c: jsopcode.def
+# hardwire dependencies on jsopcode.tbl
+jsopcode.h jsopcode.c: jsopcode.tbl
 
 # this section was put in the merged by danda into the
 # JAVA_*_MERGE section and normally would have

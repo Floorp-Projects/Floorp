@@ -22,7 +22,7 @@
  * JS boolean interface.
  */
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 extern JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj);
@@ -36,6 +36,6 @@ js_BooleanToString(JSContext *cx, JSBool b);
 extern JSBool
 js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsbool_h___ */

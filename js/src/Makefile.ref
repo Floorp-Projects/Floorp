@@ -1,0 +1,216 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+#
+# JSRef GNUmake makefile.
+#
+
+DEPTH = .
+
+include config.mk
+
+#NS_USE_NATIVE = 1
+
+ifdef JS_THREADSAFE
+DEFINES += -DJS_THREADSAFE
+INCLUDES += -I../../dist/$(OBJDIR)/include
+ifdef USE_MSVC
+OTHER_LIBS += ../../dist/$(OBJDIR)/lib/libnspr21.lib
+else
+OTHER_LIBS += -L../../dist/$(OBJDIR)/lib -lnspr21
+endif
+else
+# Look in OBJDIR to find prcpucfg.h
+INCLUDES   += -I$(OBJDIR)
+endif
+
+ifdef JS_NO_THIN_LOCKS
+DEFINES += -DJS_USE_ONLY_NSPR_LOCKS
+endif
+
+#
+# XCFLAGS may be set in the environment or on the gmake command line
+#
+CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
+                  -DJSFILE $(XCFLAGS)
+LDFLAGS		= -lm $(XLDFLAGS)
+
+#
+# Ask perl what flags it was built with, so we can build js with similar flags
+# and link properly.  Viva gmake.
+#
+ifdef JS_PERLCONNECT
+DEFINES += -DPERLCONNECT
+
+PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
+PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
+
+CFLAGS += $(PERLCFLAGS)
+LDFLAGS += $(PERLLDFLAGS)
+endif
+
+# For purify
+PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
+                  $(INCLUDES) $(XCFLAGS)
+
+#
+# JS file lists
+#
+JS_HFILES =		\
+	jsarray.h	\
+	jsatom.h	\
+	jsbool.h	\
+	jsconfig.h	\
+	jscntxt.h	\
+	jsdate.h	\
+	jsemit.h	\
+	jsexn.h		\
+	jsfun.h		\
+	jsgc.h		\
+	jsinterp.h	\
+	jslock.h	\
+	jsmath.h	\
+	jsnum.h		\
+	jsobj.h		\
+	jsopcode.h      \
+	jsparse.h	\
+	jsarena.h	\
+	jsclist.h	\
+	jsdtoa.h	\
+	jshash.h	\
+	jslong.h	\
+	jsosdep.h	\
+	jstypes.h	\
+	jsprvtd.h	\
+	jspubtd.h	\
+	jsregexp.h	\
+	jsscan.h	\
+	jsscope.h	\
+	jsscript.h	\
+	jsstr.h		\
+	jsxdrapi.h	\
+	$(NULL)
+
+API_HFILES =		\
+	jsapi.h		\
+	jsdbgapi.h	\
+	$(NULL)
+
+HFILES = $(JS_HFILES) $(API_HFILES)
+
+JS_CFILES =		\
+	jsapi.c		\
+	jsarena.c	\
+	jsarray.c	\
+	jsatom.c	\
+	jsbool.c	\
+	jscntxt.c	\
+	jsdate.c	\
+	jsdbgapi.c	\
+	jsdtoa.c	\
+	jsemit.c	\
+	jsexn.c		\
+	jsfun.c		\
+	jsgc.c		\
+	jshash.c	\
+	jsinterp.c	\
+	jslock.c	\
+	jslog2.c	\
+	jslong.c	\
+	jsmath.c	\
+	jsnum.c		\
+	jsobj.c		\
+	jsopcode.c      \
+	jsparse.c	\
+	jsprf.c		\
+	jsregexp.c	\
+	jsscan.c	\
+	jsscope.c	\
+	jsscript.c	\
+	jsstr.c		\
+	jsutil.c        \
+	jsxdrapi.c	\
+	prmjtime.c	\
+	$(NULL)
+
+ifdef JS_LIVECONNECT
+DIRS	= liveconnect
+endif
+
+ifdef JS_PERLCONNECT
+JS_CFILES += jsperl.c
+endif
+
+LIB_CFILES  = $(JS_CFILES)
+LIB_ASFILES := $(wildcard *_$(OS_ARCH).s)
+PROG_CFILES = js.c
+
+ifdef USE_MSVC
+LIBRARY = $(OBJDIR)/js32.lib
+SHARED_LIBRARY = $(OBJDIR)/js32.dll
+PROGRAM = $(OBJDIR)/js.exe
+else
+LIBRARY = $(OBJDIR)/libjs.a
+SHARED_LIBRARY = $(OBJDIR)/libjs.so
+PROGRAM = $(OBJDIR)/js
+endif
+
+include rules.mk
+
+MOZ_DEPTH = ../..
+include jsconfig.mk
+
+nsinstall-target:
+	cd ../../config; $(MAKE) OBJDIR=$(OBJDIR) OBJDIR_NAME=$(OBJDIR)
+ifdef USE_MSVC
+$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
+	link.exe -out:"$@" $(EXE_LINK_FLAGS) $?
+else
+$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
+	$(CC) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS)
+endif
+
+$(PROGRAM).pure: $(PROG_OBJS) $(LIBRARY)
+	purify $(PUREFLAGS) \
+	    $(CC) -o $@ $(PURE_OS_CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS)
+
+$(HFILES) $(CFILES): $(OBJDIR)/jscpucfg.h
+
+ifdef PREBUILT_CPUCFG
+$(OBJDIR)/jscpucfg.h: jscpucfg.h
+	cp jscpucfg.h $(OBJDIR)
+else
+$(OBJDIR)/jscpucfg.h: $(OBJDIR)/jscpucfg
+	rm -f $@
+	$(OBJDIR)/jscpucfg > $@
+
+$(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
+	$(CC) -o $@ $(OBJDIR)/jscpucfg.o
+endif
+
+#
+# Hardwire dependencies on jsopcode.tbl
+#
+jsopcode.h jsopcode.c: jsopcode.tbl
+
+-include $(DEPENDENCIES)
+
+TARNAME = jsref.tar
+TARFILES = files `cat files`
+
+SUFFIXES: .i
+%.i: %.c
+	$(CC) -C -E $(CFLAGS) $< > $*.i
