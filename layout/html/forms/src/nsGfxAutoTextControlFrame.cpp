@@ -340,6 +340,7 @@ nsresult nsGfxAutoTextControlFrame::BuildScriptEventHandler(nsIScriptContext* aC
 
 nsresult nsGfxAutoTextControlFrame::ExecuteScriptEventHandler(PRInt32 handlerID)
 {
+/* PER REQUEST FROM brendan@mozilla.org (see bug 9713), I REMOVE TEMPORARY THIS PIECE OF CODE UNTIL I REWRITE IT
 	jsval funval, result;
 	SetEventHandlers(handlerID);
 	if (mEvtHdlrContext[handlerID] && mEvtHdlrScript[handlerID])
@@ -351,5 +352,6 @@ nsresult nsGfxAutoTextControlFrame::ExecuteScriptEventHandler(PRInt32 handlerID)
       return NS_OK;
 		JS_CallFunctionValue(mJSContext, mEvtHdlrScript[handlerID], funval, 0, nsnull, &result);
 	}
+*/
   return NS_OK;
 }
