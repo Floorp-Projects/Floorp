@@ -40,7 +40,13 @@
 #include "htrdf.h"
 #include "CDynamicTooltips.h"
 #include "CURLDragHelper.h"
+#include "CImageIconMixin.h"
 
+#include "il_types.h"
+
+
+class CIconContext;
+class CNavCenterSelectorPane;
 
 #pragma mark -- class SelectorImage and SelectorData --
 
@@ -51,11 +57,12 @@
 // An abstract base class that knows how to draw itself in the appropriate mode (text/icon/text&icon)
 // as well as selected or not-selected.
 //
-class SelectorImage
+class SelectorImage : public CImageIconMixin
 {
-	public:
-		virtual ~SelectorImage ( ) { } ;
-		virtual void DrawInCurrentView( const Rect& bounds, unsigned long mode ) const = 0;
+public:
+	SelectorImage ( const string & inURL ) : CImageIconMixin(inURL) { } ;
+	virtual ~SelectorImage ( ) { } ;
+	virtual void DrawInCurrentView( const Rect& bounds, unsigned long mode ) const = 0;
 };
 
 
@@ -66,7 +73,7 @@ class SelectorImage
 //
 struct SelectorData
 {
-	SelectorData ( HT_View inView ) ;
+	SelectorData ( HT_View inView, CNavCenterSelectorPane* inSelectorBar ) ;
 	~SelectorData();
 	
 	SelectorImage*		workspaceImage;		// ptr to object that knows how to draw workspace icon
@@ -180,20 +187,27 @@ protected:
 //
 // TitleImage
 //
-// A simple little hack to display the title of the workspace
+// Display the image for the workspace (and possibly the title). The icon will be a gif/jpeg
+// loaded from the URL specified in HT.
 //
-
 class TitleImage : public SelectorImage
 {
 public:
-	TitleImage ( const LStr255 & inTitle, ResIDT inIconID ) ;
-
+	TitleImage ( const LStr255 & inTitle, ResIDT inIconID, const string & inIconURL, CNavCenterSelectorPane* inSelectorBar ) ;
+	~TitleImage ( ) ;
+	
 	virtual void DrawInCurrentView( const Rect& bounds, unsigned long mode ) const ;
 	
 	const LStr255 & Title ( ) const { return mTitle; } ;
 	ResIDT IconID ( ) const { return mIconID; } ;
 	Uint16 TextWidth ( ) const { return mTextWidth; } ;
-		
+	
+protected:
+
+		// overrides for CImageIconMixin to handle drawing of images
+	virtual void ListenToMessage ( MessageT inMessage, void* inData ) ;
+	virtual void DrawStandby ( const Point & inTopLeft, const IconTransformType inTransform ) const ;
+
 private:
 
 #if DRAW_SELECTED_AS_TAB
@@ -211,4 +225,6 @@ private:
 	ResIDT mIconID;
 	Uint16 mTextWidth;
 	
+	CNavCenterSelectorPane* mSelector;		// selector bar reference, so it can be told when
+											//  we need to redraw the image
 }; // classTitleImage

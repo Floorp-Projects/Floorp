@@ -24,8 +24,13 @@
 #include "CRDFCoordinator.h"
 #include "CContextMenuAttachment.h"
 #include "Netscape_constants.h"
+#include "CIconContext.h"
+#include "CIconCache.h"
 
 #include "UGAColorRamp.h"
+
+#include "net.h"
+#include "mimages.h"
 
 
 #pragma mark -- CNavCenterSelectorPane methods --
@@ -99,11 +104,12 @@ CNavCenterSelectorPane::DrawSelf()
 		unsigned long drawMode = mImageMode;
 
 		HT_View currView = HT_GetNthView(GetHTPane(), i);
-		SelectorData* viewData = static_cast<SelectorData*>(HT_GetViewFEData(currView));
+		ViewFEData* viewData = static_cast<ViewFEData*>(HT_GetViewFEData(currView));
 		if ( viewData ) {
 			if ( currView == selectedView )
 				drawMode |= kSelected;
-			viewData->workspaceImage->DrawInCurrentView(cellBounds, drawMode);
+			if ( viewData->mSelector )
+				viewData->mSelector->workspaceImage->DrawInCurrentView(cellBounds, drawMode);
 		}
 		
 		// prepare to draw next selector
@@ -273,8 +279,9 @@ CNavCenterSelectorPane :: NoticeActiveWorkspaceChanged ( HT_View inOldSel )
 		CalcLocalFrameRect(previous);
 		previous.top = HT_GetViewIndex(inOldSel) * mCellHeight;
 		previous.bottom = previous.top + mCellHeight;
-		SelectorData* data = static_cast<SelectorData*>(HT_GetViewFEData(inOldSel));
-		data->workspaceImage->DrawInCurrentView ( previous, mImageMode );
+		ViewFEData* data = static_cast<ViewFEData*>(HT_GetViewFEData(inOldSel));
+		if ( data && data->mSelector )
+			data->mSelector->workspaceImage->DrawInCurrentView ( previous, mImageMode );
 	}
 	
 	// redraw new
@@ -283,8 +290,9 @@ CNavCenterSelectorPane :: NoticeActiveWorkspaceChanged ( HT_View inOldSel )
 		CalcLocalFrameRect(current);
 		current.top = HT_GetViewIndex(GetActiveWorkspace()) * mCellHeight;
 		current.bottom = current.top + mCellHeight;
-		SelectorData* data = static_cast<SelectorData*>(HT_GetViewFEData(GetActiveWorkspace()));
-		data->workspaceImage->DrawInCurrentView ( current, mImageMode | kSelected );
+		ViewFEData* data = static_cast<ViewFEData*>(HT_GetViewFEData(GetActiveWorkspace()));
+		if ( data && data->mSelector )
+			data->mSelector->workspaceImage->DrawInCurrentView ( current, mImageMode | kSelected );
 	}
 	
 	
@@ -701,10 +709,9 @@ CNavCenterSelectorPane :: HandleDropOfText ( const char* /*inTextData*/ )
 #pragma mark --- struct SelectorData ---
 
 
-SelectorData :: SelectorData ( HT_View inView )
+SelectorData :: SelectorData ( HT_View inView, CNavCenterSelectorPane* inSelectorBar )
 {
 	const ResIDT cFolderIconID = -3999;		// use the OS Finder folder icon
-	enum { kWorkspaceID = cFolderIconID, kHistoryID = 16251, kSearchID = 16252, kSiteMapID = 16253 };
 
 	char viewName[64];
 #if DRAW_WITH_TITLE
@@ -714,24 +721,25 @@ SelectorData :: SelectorData ( HT_View inView )
 	viewName[0] = NULL;
 #endif
 	
-	// еее HACK: figure out what pane this is and give it an icon. We should just be
-	// using the url given and pass that to the imageLib, but the API is too complicated
-	// and I just can't figure it out. Instead, parse the url string looking for things
-	// we recognize and use the "Finder folder" icon if we can't determine it.
-	char* iconURL = HT_GetWorkspaceLargeIconURL(inView);
-
-	char workspace[500];
-	workspace[0] = NULL;			// clear out value left on stack from last time.
-	ResIDT iconID = kWorkspaceID;
-	sscanf ( iconURL, "icon/large:workspace,%s", workspace );
-	if ( strcmp(workspace, "history") == 0 )
-		iconID = kHistoryID;
-	else if ( strcmp(workspace, "search") == 0 )
-		iconID = kSearchID;
-	else if ( strcmp(workspace, "sitemap") == 0 )
-		iconID = kSiteMapID;
+	// Because of the way we get GIF images into the app (loading them into a 'Tang' resource),
+	// we look for certain url's that we know are internal to the product and use the about:XXX.gif
+	// hack on them. FE_AboutData() knows how to decode these images so we're set. If things aren't
+	// of a form we recognize, they are probably a real url to a real icon somewhere on the net.
 	
-	workspaceImage = new TitleImage(viewName, iconID);
+	char* iconURL = HT_GetWorkspaceSmallIconURL(inView);
+
+	string aboutURL = "about:";
+	char workspace[500];
+	workspace[0] = '\0';
+	sscanf ( iconURL, "icon/small:workspace,%s", workspace );
+	if ( *workspace ) {
+		aboutURL += workspace;		// make into form: about:XXX.gif
+		aboutURL += ".gif";
+	}
+	else
+		aboutURL = iconURL;			// probably a url to something on the net, leave it alone
+	
+	workspaceImage = new TitleImage(viewName, cFolderIconID, aboutURL, inSelectorBar);
 
 } // constructor
 
@@ -745,16 +753,43 @@ SelectorData :: ~SelectorData ( )
 
 #include "UGraphicGizmos.h"
 
-TitleImage :: TitleImage ( const LStr255 & inTitle, ResIDT inIconID ) 
-	: mTitle(inTitle), mIconID(inIconID)
+TitleImage :: TitleImage ( const LStr255 & inTitle, ResIDT inIconID, const string & inIconURL, CNavCenterSelectorPane* inSelectorBar ) 
+	: mTitle(inTitle), mIconID(inIconID), mSelector(inSelectorBar), SelectorImage(inIconURL)
 {
+	Assert_(mSelector != NULL);
+	
 #if DRAW_WITH_TITLE
 	::TextFont(kFontIDGeneva);
 	::TextSize(9);
 	::TextFace(0);
 	mTextWidth = ::TextWidth( inTitle, 0, inTitle.Length() ) + 6;
 #endif
+	
 }
+
+
+TitleImage :: ~TitleImage ( )
+{
+	
+}
+
+
+//
+// ListenToMessage
+//
+// Listen to messages from the icon cache so we can display the image when imageLib gives us
+// something to display.
+//
+void
+TitleImage :: ListenToMessage ( MessageT inMessage, void* inData )
+{
+	switch ( inMessage ) {
+		case CIconContext::msg_ImageReadyToDraw:
+			mSelector->Refresh();		//ее do this better after it all works
+			break;		
+	}
+	
+} // ListenToMessage
 
 
 //
@@ -804,7 +839,7 @@ TitleImage :: DrawInCurrentView( const Rect& inBounds, unsigned long inMode ) co
 #endif
 	}
 
-	OSErr err = ::PlotIconID(&iconRect, kAlignNone, iconTransform, IconID());
+	DrawImage ( *(Point*)&inBounds, iconTransform, 0, 0 ) ;
 
 #if DRAW_WITH_TITLE
 	::MoveTo( textbg.left + 2, inBounds.bottom - 2 );
@@ -812,6 +847,21 @@ TitleImage :: DrawInCurrentView( const Rect& inBounds, unsigned long inMode ) co
 #endif
 
 } // DrawInCurrentView
+
+
+//
+// DrawStandby
+//
+// Override to just draw a folder icon when the appropriate image has not yet been loaded
+//
+void
+TitleImage :: DrawStandby ( const Point & inTopLeft, const IconTransformType inTransform ) const
+{
+	Rect bounds = { inTopLeft.v + 3, inTopLeft.h + 3, inTopLeft.v + 19, inTopLeft.h + 19 } ;
+	OSErr err = ::PlotIconID(&bounds, kAlignNone, inTransform, IconID());
+	
+} // DrawStandby
+
 
 #if DRAW_SELECTED_AS_TAB
 
