@@ -1198,7 +1198,7 @@ nsRangeList::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   nsCOMPtr<nsIContent> content;
   result = frame->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
-  if (node != content) //we are not pointing to same node! offset is meaningless
+  if (node != weakNodeUsed) //we are not pointing to same node! offset is meaningless
     offsetused = 0;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
                    //index 0 of parent is the first child so if we say the first child is the frame then say offset is 0 we are correct
   
