@@ -927,37 +927,31 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(mRoot);
-    NS_ASSERTION(owner != nsnull, "unable to get script object owner");
-    if (! owner)
-        return NS_ERROR_UNEXPECTED;
-
-    JSObject* jselement;
-    rv = owner->GetScriptObject(context, (void**) &jselement);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's script object");
-    if (NS_FAILED(rv)) return rv;
-
     static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_FAILED(rv)) return rv;
+    JSObject* jselement = nsnull;
+
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+    rv = xpc->WrapNative(jscontext, ::JS_GetGlobalObject(jscontext), mRoot,
+                         NS_GET_IID(nsIDOMElement),
+                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = wrapper->GetJSObject(&jselement);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     {
         // database
-        nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-        rv = xpc->WrapNative(jscontext,                       
-                             jselement,
-                             mDB,
+        rv = xpc->WrapNative(jscontext, ::JS_GetGlobalObject(jscontext), mDB,
                              NS_GET_IID(nsIRDFCompositeDataSource),
                              getter_AddRefs(wrapper));
-
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to xpconnect-wrap database");
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         JSObject* jsobj;
         rv = wrapper->GetJSObject(&jsobj);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get jsobj from xpconnect wrapper");
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         jsval jsdatabase = OBJECT_TO_JSVAL(jsobj);
 
@@ -971,17 +965,15 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     {
         // builder
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-        rv = xpc->WrapNative(jscontext,
-                             jselement,
+        rv = xpc->WrapNative(jscontext, jselement,
                              NS_STATIC_CAST(nsIXULTemplateBuilder*, this),
                              NS_GET_IID(nsIXULTemplateBuilder),
                              getter_AddRefs(wrapper));
-
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         JSObject* jsobj;
         rv = wrapper->GetJSObject(&jsobj);
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         jsval jsbuilder = OBJECT_TO_JSVAL(jsobj);
 
