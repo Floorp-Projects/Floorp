@@ -24,7 +24,11 @@ DEPTH=..\..
 
 include <$(DEPTH)\config\config.mak>
 
-META_MODULES=mail crypto
+META_MODULES=mail
+
+!ifdef BUILD_PSM2
+META_MODULES=$(META_MODULES) crypto
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 
