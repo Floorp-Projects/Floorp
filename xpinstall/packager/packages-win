@@ -64,6 +64,7 @@ bin\components\jar.xpt
 bin\components\jar50.dll
 bin\components\jsloader.dll
 bin\components\jsurl.dll
+bin\components\jsurl.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.dll
 bin\components\mimetype.dll
@@ -170,15 +171,16 @@ bin\defaults\pref\winpref.js
 bin\defaults\pref\xpinstall.js
 bin\defaults\profile\bookmarks.html
 bin\plugins\*
-bin\res\throbber\*
-bin\res\toolbar\*
-bin\res\xpinstall\*
+bin\res\html.css
 bin\res\ua.css
 bin\res\rdf\article.gif
 bin\res\rdf\document.gif
 bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
+bin\res\xpinstall\*
+bin\res\throbber\*
+bin\res\toolbar\*
 
 [mail]
 bin\msgbsutl.dll
