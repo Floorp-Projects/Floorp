@@ -355,10 +355,10 @@ public:
    */
   NS_IMETHOD EnableRefresh(void) = 0;
 
-  //XXX this needs to take parameters to tell
-  //it what part of the document to display, not just the
-  //whole thing. MMP
-  NS_IMETHOD Display(void) = 0;
+  /**
+   * Display the specified view. Used when printing.
+   */
+  NS_IMETHOD Display(nsIView *aView) = 0;
 };
 
 //when the refresh happens, should it be double buffered?
