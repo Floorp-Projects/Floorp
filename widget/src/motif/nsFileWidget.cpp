@@ -183,20 +183,20 @@ PRBool nsFileWidget::Show()
 
 nsFileDlgResults nsFileWidget::GetFile(class nsIWidget *, const class nsString &, class nsFileSpec &)
 {
-//XXX:Implement this.
-  return NS_OK;
+  //XXX:Implement this.
+  return nsFileDlgResults_Cancel;
 }
 
 nsFileDlgResults nsFileWidget::GetFolder(class nsIWidget *, const class nsString &, class nsFileSpec &)
 {
-//XXX:Implement this.
-  return NS_OK;
+  //XXX:Implement this.
+  return nsFileDlgResults_Cancel;
 }
 
 nsFileDlgResults nsFileWidget::PutFile(class nsIWidget *, const class nsString &, class nsFileSpec &)
 {
-//XXX:Implement this.
-  return NS_OK;
+  //XXX:Implement this.
+  return nsFileDlgResults_Cancel;
 }
 
 //-------------------------------------------------------------------------

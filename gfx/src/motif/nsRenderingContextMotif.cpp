@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-
 #include "xp_core.h"			//this is a hack to get it to build. MMP
 #include "nsRenderingContextMotif.h"
 #include "nsDeviceContextMotif.h"
@@ -27,10 +26,8 @@
 #include "nsRegionMotif.h"
 #include "nsGfxCIID.h"
 
-#include "X11/Xlib.h"
-#include "X11/Xutil.h"
-
-
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 /*
   Some Implementation Notes
@@ -316,7 +313,7 @@ NS_IMETHODIMP nsRenderingContextMotif :: PushState(void)
 
     state->mClipRegion = mRegion;
   }
-  else state = NS_ERROR_OUT_OF_MEMORY;
+  else return NS_ERROR_OUT_OF_MEMORY;
 
   if (nsnull != state->mClipRegion) {
     mRegion = ::XCreateRegion();
@@ -862,8 +859,10 @@ NS_IMETHODIMP nsRenderingContextMotif :: CreateDrawingSurface(nsRect *aBounds, P
 
 #endif
   }
-  else surface = NS_ERROR_OUT_OF_MEMORY;
-
+  else {
+    aSurface = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   aSurface = (nsDrawingSurface)surface;
 
   return NS_OK;
