@@ -73,6 +73,16 @@ nsStyleChangeList::ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aCon
 }
 
 nsresult 
+nsStyleChangeList::ChangeAt(PRInt32 aIndex, const nsStyleChangeData** aChangeData) const
+{
+  if ((0 <= aIndex) && (aIndex < mCount)) {
+    *aChangeData = &mArray[aIndex];
+    return NS_OK;
+  }
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+nsresult 
 nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint)
 {
   NS_ASSERTION(aFrame || (aHint & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc)),
