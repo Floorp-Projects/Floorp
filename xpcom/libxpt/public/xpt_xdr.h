@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,37 +23,48 @@
 #ifndef __xpt_xdr_h__
 #define __xpt_xdr_h__
 
-#include "xpt_struct.h"
 #include "prosdep.h"
 #include "plhash.h"
 
-typedef struct XPTXDRState      XPTXDRState;
-typedef struct XPTXDRDatapool   XPTXDRDatapool;
+typedef struct XPTState         XPTState;
+typedef struct XPTDatapool      XPTDatapool;
+typedef struct XPTCursor        XPTCursor;
 
 PRBool
-XPT_DoString(XPTXDRState *state, XPTString **strp);
+XPT_DoString(XPTCursor *cursor, XPTString **strp);
 
 PRBool
-XPT_DoIdentifier(XPTState *state, char **identp);
+XPT_DoIdentifier(XPTCursor *cursor, char **identp);
 
 /*
- * XXX need to think about ordering and API issues for offset<->addr
- * XXX conversion
+ * We can't include nsID.h, because it's full of C++ goop and we're not doing
+ * C++ here, so we define our own minimal struct.  We protect against multiple
+ * definitions of this struct, though, and use the same field naming.
  */
-PRBool
-XPT_GetOffsetForAddr(XPTXDRState *state, void *addr, uint32 *offsetp);
+
+#ifndef nsID_h__
+struct nsID {
+    PRUint32 m0;
+    PRUint16 m1;
+    PRUint16 m2;
+    PRUint8  m3[8];
+};
+
+typedef struct nsID nsID;
+
+#endif
 
 PRBool
-XPT_GetAddrForOffset(XPTXDRState *state, uint32 offset, void **addr);
+XPT_DoIID(XPTCursor *cursor, nsID *iidp);
 
 PRBool
-XPT_Do32(XPTXDRState *state, uint32 *u32p);
+XPT_Do32(XPTCursor *cursor, uint32 *u32p);
 
 PRBool
-XPT_Do16(XPTXDRState *state, uint16 *u16p);
+XPT_Do16(XPTCursor *cursor, uint16 *u16p);
 
 PRBool
-XPT_Do8(XPTXDRState *state, uint8 *u8p);
+XPT_Do8(XPTCursor *cursor, uint8 *u8p);
 
 /*
  * When working with bitfields, use the DoBits call with a uint8.
@@ -66,29 +77,69 @@ XPT_Do8(XPTXDRState *state, uint8 *u8p);
  */
 
 PRBool
-XPT_DoBits(XPTXDRState *state, uint8 *u8p, uintN nbits);
+XPT_DoBits(XPTCursor *cursor, uint8 *u8p, uintN nbits);
 
 /* returns the number of bits skipped, which should be 0-7 */
 int
-XPT_FlushBits(XPTXDRState *state);
+XPT_FlushBits(XPTCursor *cursor);
 
 typedef enum {
-    XPTXDR_ENCODE,
-    XPTXDR_DECODE
-} XPTXDRMode;
+    XPT_ENCODE,
+    XPT_DECODE
+} XPTMode;
 
-struct XPTXDRState {
-    XPTXDRMode          mode;
-    XPTXDRDatapool      *pool;
+typedef enum {
+    XPT_HEADER = 0,
+    XPT_DATA = 1
+} XPTPool;
+
+struct XPTState {
+    XPTMode          mode;
+    XPTDatapool      pools[2];
 };
 
-struct XPTXDRDatapool {
+struct XPTDatapool {
     PLHash      *offset_map;
     char        *data;
-    uint32      point;
+    uint32      count;
     uint8       bit;
     uint32      allocated;
 };
+
+struct XPTCursor {
+    XPTState    *state;
+    XPTPool     pool;
+    uint32      offset;
+    uint32      len;
+}
+
+XPTState *
+XPT_NewXDRState(XPTMode mode);
+
+void
+XPT_DestroyXDRState(XPTState *state);
+
+void
+XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len);
+
+/*
+ * On CreateCursor:
+ * cursors are used to track position within the byte stream.
+ * In encode/write mode, the cursor reserves an area of memory for a structure.
+ * In decode/read mode, it simply tracks position.
+ *
+ * Usage will commonly be something like this (taken from XPT_DoString) for
+ * out-of-line structures:
+ * 
+ *   // create my_cursor and reserve memory as required
+ *   XPT_CreateCursor(parent_cursor, XPT_DATA, str->length + 2, &my_cursor);
+ *   // write mode: store the offset for this structure in the parent cursor
+ *   // read mode: adjust my_cursor to point to the write offset
+ *   XPT_Do32(parent_cursor, &my_cursor->offset);
+ */
+
+PRBool
+XPT_CreateCursor(XPTCursor *base, XPTPool pool, uint32 len, XPTCursor *cursor);
 
 /* increase the data allocation for the pool by XPT_GROW_CHUNK */
 #define XPT_GROW_CHUNK 8192
@@ -102,12 +153,62 @@ XPT_GrowPool(XPTXDRDatapool *pool);
 #  define XPTXDR_SWAB16(x) x
 #elif defined IS_LITTLE_ENDIAN
 #  define XPTXDR_SWAB32(x) (((x) >> 24) |                                     \
-			 (((x) >> 8) & 0xff00) |                                          \
-			 (((x) << 8) & 0xff0000) |                                        \
-			 ((x) << 24))
+             (((x) >> 8) & 0xff00) |                                          \
+             (((x) << 8) & 0xff0000) |                                        \
+             ((x) << 24))
 #  define XPTXDR_SWAB16(x) (((x) >> 8) | ((x) << 8))
 #else
 #  error "unknown byte order"
 #endif
+
+/*
+ * If we're decoding, we want to read the offset before we check
+ * for already-decoded values.
+ *
+ * Then we check for repetition: CheckForRepeat will see if we've already
+ * encoded/decoded this value, and if so will set offset/addr correctly
+ * and make already be true.  If not, it will set up the cursor for
+ * encoding (reserve space) or decoding (seek to correct location) as
+ * appropriate.  In the encode case, it will also set the addr->offset
+ * mapping.
+ */
+
+#define XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already,           \
+                     ALLOC_CODE) {                                            \
+    XPTMode mode = cursor->state->mode;                                       \
+    if (!(mode == XPT_ENCODE || XPT_Do32(cursor, &new_curs.offset)) ||        \
+        !XPT_CheckForRepeat(cursor, (void **)addrp, pool,                     \
+                            mode == XPT_ENCODE ? size : 0, &new_curs,         \
+                            &already) ||                                      \
+        !(mode == XPT_DECODE || XPT_Do32(cursor, &new_curs.offset)))          \
+        return PR_FALSE;                                                      \
+    if (already)                                                              \
+        return PR_TRUE;                                                       \
+    ALLOC_CODE;                                                               \
+}
+
+#define XPT_ALLOC                                                             \
+    if (mode == XPT_DECODE) {                                                 \
+        *addrp = localp = PR_NEWZAP(XPTType);                                 \
+        if (!localp ||                                                        \
+            !XPT_SetAddrForOffset(new_curs, localp)                           \
+            return PR_FALSE;                                                  \
+    } else {                                                                  \
+        localp = *addrp;                                                      \
+    }
+
+#define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already)            \
+    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already, XPT_ALLOC)
+
+#define XPT_PREAMBLE_NO_ALLOC(cursor, addrp, pool, size, new_curs, already)   \
+    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already, ;)
+
+
+#define XPT_ERROR_HANDLE(free_it)                                             \
+ error:                                                                       \
+    if (cursor->state->mode == XPT_DECODE)                                    \
+    PR_FREE_IF(free_it);                                                      \
+    return PR_FALSE;
+
 
 #endif /* __xpt_xdr_h__ */
