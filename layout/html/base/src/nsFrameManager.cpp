@@ -37,6 +37,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIStatefulFrame.h"
 #include "nsIContent.h"
+#include "nsINameSpaceManager.h"
 
 // Class IID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -211,6 +212,8 @@ public:
                                   nsIStyleContext* aNewParentContext);
   NS_IMETHOD ComputeStyleChangeFor(nsIPresContext& aPresContext,
                                    nsIFrame* aFrame, 
+                                   PRInt32 aAttrNameSpaceID,
+                                   nsIAtom* aAttribute,
                                    nsStyleChangeList& aChangeList,
                                    PRInt32 aMinChange,
                                    PRInt32& aTopLevelChange);
@@ -235,6 +238,8 @@ private:
                              nsIFrame* aFrame,
                              nsIStyleContext* aParentContext,
                              nsIContent* aParentContent,
+                             PRInt32 aAttrNameSpaceID,
+                             nsIAtom* aAttribute,
                              nsStyleChangeList& aChangeList, 
                              PRInt32 aMinChange,
                              PRInt32& aResultChange);
@@ -977,6 +982,49 @@ FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
   return result;
 }
 
+static PRBool
+HasAttributeContent(nsIStyleContext* aStyleContext, 
+                    PRInt32 aNameSpaceID,
+                    nsIAtom* aAttribute)
+{
+  PRBool  result = PR_FALSE;
+  if (aStyleContext) {
+    const nsStyleContent* content = (const nsStyleContent*)aStyleContext->GetStyleData(eStyleStruct_Content);
+    PRUint32 count = content->ContentCount();
+    while ((0 < count) && (! result)) {
+      nsStyleContentType  contentType;
+      nsAutoString        contentString;
+      content->GetContentAt(--count, contentType, contentString);
+      if (eStyleContentType_Attr == contentType) {
+        nsIAtom* attrName = nsnull;
+        PRInt32 attrNameSpace = kNameSpaceID_None;
+        PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
+        if (-1 != barIndex) {
+          nsAutoString  nameSpaceVal;
+          contentString.Left(nameSpaceVal, barIndex);
+          PRInt32 error;
+          attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
+          contentString.Cut(0, barIndex + 1);
+          if (contentString.Length()) {
+            attrName = NS_NewAtom(contentString);
+          }
+        }
+        else {
+          attrName = NS_NewAtom(contentString);
+        }
+        if ((attrName == aAttribute) && 
+            ((attrNameSpace == aNameSpaceID) || 
+             (attrNameSpace == kNameSpaceID_Unknown))) {
+          result = PR_TRUE;
+        }
+        NS_IF_RELEASE(attrName);
+      }
+    }
+  }
+  return result;
+}
+    
+
 static PRInt32
 CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
               nsIFrame* aFrame, nsIContent* aContent,
@@ -996,6 +1044,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
                                     nsIFrame* aFrame,
                                     nsIStyleContext* aParentContext,
                                     nsIContent* aParentContent,
+                                    PRInt32 aAttrNameSpaceID,
+                                    nsIAtom* aAttribute,
                                     nsStyleChangeList& aChangeList, 
                                     PRInt32 aMinChange,
                                     PRInt32& aResultChange)
@@ -1013,6 +1063,13 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
     }
     else {
       content = aParentContent;
+    }
+    if (aParentContent && aAttribute) { // attribute came from parent, we don't care about it here when recursing
+      nsFrameState  frameState;
+      aFrame->GetFrameState(&frameState);
+      if (0 == (frameState & NS_FRAME_GENERATED_CONTENT)) { // keep it for generated content
+        aAttribute = nsnull;
+      }
     }
 
     // do primary context
@@ -1036,6 +1093,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
       }
       else {
         oldContext->RemapStyle(&aPresContext, PR_FALSE);
+        if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
+            HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
+          aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
+        }
       }
       NS_RELEASE(oldContext);
     }
@@ -1067,6 +1128,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
             }
             else {
               oldExtraContext->RemapStyle(&aPresContext, PR_FALSE);
+              if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
+                  HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
+                aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
+              }
             }
             NS_RELEASE(newExtraContext);
           }
@@ -1134,17 +1199,20 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
             NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
             ReResolveStyleContext(aPresContext, outOfFlowFrame, newContext, content,
+                                  aAttrNameSpaceID, aAttribute,
                                   aChangeList, aMinChange, childChange);
 
             // reresolve placeholder's context under out of flow frame
             nsIStyleContext*  outOfFlowContext;
             outOfFlowFrame->GetStyleContext(&outOfFlowContext);
             ReResolveStyleContext(aPresContext, child, outOfFlowContext, content,
+                                  kNameSpaceID_Unknown, nsnull,
                                   aChangeList, aMinChange, childChange);
             NS_RELEASE(outOfFlowContext);
           }
           else {  // regular child frame
             ReResolveStyleContext(aPresContext, child, newContext, content,
+                                  aAttrNameSpaceID, aAttribute,
                                   aChangeList, aMinChange, childChange);
           }
         }
@@ -1164,38 +1232,34 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 FrameManager::ComputeStyleChangeFor(nsIPresContext& aPresContext,
                                     nsIFrame* aFrame, 
+                                    PRInt32 aAttrNameSpaceID,
+                                    nsIAtom* aAttribute,
                                     nsStyleChangeList& aChangeList,
                                     PRInt32 aMinChange,
                                     PRInt32& aTopLevelChange)
 {
-  nsIContent* content = nsnull;
-  aFrame->GetContent(&content);
-  NS_ASSERTION(content, "primary frame needs content pointer");
-
   aTopLevelChange = NS_STYLE_HINT_NONE;
-  if (content) {
-    nsIFrame* frame = aFrame;
+  nsIFrame* frame = aFrame;
 
-    do {
-      nsIStyleContext* styleContext = nsnull;
-      frame->GetStyleContext(&styleContext);
-      nsIStyleContext* parentContext = styleContext->GetParent();
-      PRInt32 frameChange;
-      ReResolveStyleContext(aPresContext, frame, parentContext, content,
-                            aChangeList, aMinChange, frameChange);
+  do {
+    nsIStyleContext* styleContext = nsnull;
+    frame->GetStyleContext(&styleContext);
+    nsIStyleContext* parentContext = styleContext->GetParent();
+    PRInt32 frameChange;
+    ReResolveStyleContext(aPresContext, frame, parentContext, nsnull,
+                          aAttrNameSpaceID, aAttribute,
+                          aChangeList, aMinChange, frameChange);
 #ifdef NS_DEBUG
-      VerifyStyleTree(frame, parentContext);
+    VerifyStyleTree(frame, parentContext);
 #endif
-      NS_IF_RELEASE(parentContext);
-      NS_RELEASE(styleContext);
-      if (aTopLevelChange < frameChange) {
-        aTopLevelChange = frameChange;
-      }
+    NS_IF_RELEASE(parentContext);
+    NS_RELEASE(styleContext);
+    if (aTopLevelChange < frameChange) {
+      aTopLevelChange = frameChange;
+    }
 
-      frame->GetNextInFlow(&frame);
-    } while (frame);
-    NS_RELEASE(content);
-  }
+    frame->GetNextInFlow(&frame);
+  } while (frame);
   return NS_OK;
 }
 
