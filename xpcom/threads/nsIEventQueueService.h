@@ -41,15 +41,19 @@
 class nsIEventQueueService : public nsISupports
 {
 public:
-	static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUESERVICE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUESERVICE_IID; return iid; }
 
   NS_IMETHOD CreateThreadEventQueue(void) = 0;
   NS_IMETHOD DestroyThreadEventQueue(void) = 0;
 
-	NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult) = 0;
+  NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult) = 0;
 
-	NS_IMETHOD PushThreadEventQueue(void) = 0;
-	NS_IMETHOD PopThreadEventQueue(void) = 0;
+  // Add a new event queue for the current thread, making it the "current"
+  // queue. Return that queue in aNewQueue, addrefed.
+  NS_IMETHOD PushThreadEventQueue(nsIEventQueue **aNewQueue) = 0;
+
+  // release and disable the queue
+  NS_IMETHOD PopThreadEventQueue(nsIEventQueue *aQueue) = 0;
 
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult) = 0;
   
