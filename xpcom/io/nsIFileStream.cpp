@@ -307,7 +307,7 @@ NS_IMETHODIMP FileImpl::Seek(PRSeekWhence whence, PRInt32 offset)
     PRInt32 position = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
     PRInt32 available = PR_Available(mFileDesc);
     PRInt32 fileSize = position + available;
-    PRInt32 newPosition;
+    PRInt32 newPosition = 0;
     switch (whence)
     {
         case PR_SEEK_CUR: newPosition = position + offset; break;
