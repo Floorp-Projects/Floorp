@@ -187,6 +187,16 @@ FreeGlobals(void)
     }
     nsFontMetricsWin::gFontMaps = nsnull;
     gInitializedFontMaps = 0;
+    if (nsFontMetricsWin::gGlobalFonts) {  
+      //while all cmap is freed, gGlobalFonts's pointer should be freed too.
+      for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+         delete nsFontMetricsWin::gGlobalFonts[i].name;
+      }
+      PR_Free(nsFontMetricsWin::gGlobalFonts);
+      nsFontMetricsWin::gGlobalFonts = nsnull;
+      gGlobalFontsAlloc = 0;
+      nsFontMetricsWin::gGlobalFontsCount = 0;
+    }
   }
 
   // free FamilyNames
