@@ -21,7 +21,7 @@
 #include "nscore.h"
 #include "celldata.h"
 #include "nsVoidArray.h"
-
+#include "stdio.h" // XXX look at this when bug 10911 get fixed
 class nsTableColFrame;
 class nsTableCellFrame;
 
@@ -162,9 +162,11 @@ protected:
 inline CellData* nsCellMap::GetCellAt(PRInt32 aRowIndex, 
                                       PRInt32 aColIndex) const
 {
-  NS_PRECONDITION((0 <= aRowIndex) && (aRowIndex < mRowCount), "GetCellAt: bad row index");
-  PRInt32 colCount = mNumCellsInCol.Count();
-  NS_PRECONDITION((0 <= aColIndex) && (aColIndex < colCount), "GetCellAt: bad col index");
+  if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
+      (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+    printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
+    return nsnull;
+  }
   
   CellData* result = nsnull;
   nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aRowIndex));
@@ -176,8 +178,11 @@ inline CellData* nsCellMap::GetCellAt(PRInt32 aRowIndex,
 inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex, 
                                          PRInt32 aColIndex) const
 {
-  NS_PRECONDITION((0 <= aMapRowIndex) && (aMapRowIndex < mRows.Count()), "GetMapCellAt: bad row index");
-  NS_PRECONDITION((0 <= aColIndex) && (aColIndex < mNumCellsInCol.Count()), "GetMapCellAt: bad col index");
+  if ((0 > aMapRowIndex) || (aMapRowIndex >= mRows.Count()) || 
+      (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+    printf("%s \n", "nsCellMap::GetMapCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
+    return nsnull;
+  }
 
   CellData* result = nsnull;
   nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(aMapRowIndex));
@@ -189,9 +194,11 @@ inline CellData* nsCellMap::GetMapCellAt(PRInt32 aMapRowIndex,
 inline nsTableCellFrame* nsCellMap::GetCellFrameAt(PRInt32 aRowIndex, 
                                                    PRInt32 aColIndex) const
 {
-  NS_PRECONDITION((0 <= aRowIndex) && (aRowIndex < mRowCount), "GetCellFrameAt: bad row index");
-  PRInt32 colCount = mNumCellsInCol.Count();
-  NS_PRECONDITION((0 <= aColIndex) && (aColIndex < colCount), "GetCellFrameAt: bad col index");
+  if ((0 > aRowIndex) || (aRowIndex >= mRowCount) || 
+      (0 > aColIndex) || (aColIndex >= mNumCellsInCol.Count())) {
+    printf("%s \n", "nsCellMap::GetCellAt called with invalid row or col index"); // XXX look at this when bug 10911 get fixed
+    return nsnull;
+  }
 
   nsTableCellFrame* result = nsnull;
   CellData* cellData = GetCellAt(aRowIndex, aColIndex);
