@@ -73,6 +73,7 @@ $fileUninstall    = $ENV{WIZ_fileUninstall};
 $greBuildID       = $ENV{WIZ_greBuildID};
 $greFileVersion   = $ENV{WIZ_greFileVersion};
 $greUniqueID      = $ENV{WIZ_greUniqueID};
+$greVersion       = $ENV{WIZ_greVersion};
 
 # Get the name of the file replacing the .jst extension with a .js extension
 @inJstFileSplit   = split(/\./,$inJstFile);
@@ -129,6 +130,7 @@ while($line = <fpInTemplate>)
     $line =~ s/\$GreBuildID\$/$greBuildID/gi;
     $line =~ s/\$GreFileVersion\$/$greFileVersion/gi;
     $line =~ s/\$GreUniqueID\$/$greUniqueID/gi;
+    $line =~ s/\$GreVersion\$/$greVersion/gi;
   }
 
   print fpOutJs $line;

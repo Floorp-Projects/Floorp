@@ -17,10 +17,11 @@ function registerProgramFolderKey(winreg, fFolderPath)
 
   if((szCurrentMozillaVersion == "") || (szCurrentMozillaVersion == null))
   {
-    /* we *MUST* have a Mozilla CurrentVersion key for the Java plugin to work with Firebird - bug 229627 */
+    // A Mozilla\CurrentVersion key must be set so that Java can work. 
+    // (bug 229627)
     subkey  = "SOFTWARE\\$CompanyName$\\Mozilla";
     winreg.createKey(subkey,"");
-    err     = winreg.setValueString(subkey, "CurrentVersion", "1.6");
+    err     = winreg.setValueString(subkey, "CurrentVersion", "$GreVersion$");
   }
 
   subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
@@ -128,9 +129,9 @@ function createShortcuts()
     // Explicitly create the fFolderPrograms even though the windowsShortcut 
     // function creates the folder. This is so that the folder creation gets 
     // logged for uninstall to remove it.
-    if(!File.exists(fFolderPrograms))
+    if(winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0 && !File.exists(fFolderPrograms))
       File.dirCreate(fFolderPrograms);
-    if(!File.exists(fDefShortcuts))
+    if(winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0 && !File.exists(fDefShortcuts))
       File.dirCreate(fDefShortcuts);
 
     // Create the Shortcuts
@@ -149,6 +150,11 @@ function createShortcuts()
     // Always create the default shortcuts. 
     File.windowsShortcut(fileExe, fDefShortcuts,    scExeDesc,      fProgram, "",               fileExe, 0);
     File.windowsShortcut(fileExe, fDefShortcuts,    scSafeModeDesc, fProgram, scSafeModeParam,  fileExe, 0);
+
+    // Clean up after ourselves
+    winreg.deleteValue(subkey, "Create Desktop Shortcut");
+    winreg.deleteValue(subkey, "Create Quick Launch Shortcut");
+    winreg.deleteValue(subkey, "Create Start Menu Shortcut");
 
     if(!restrictedAccess) {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
@@ -179,14 +185,8 @@ function IsWinnt()
   subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
   szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
   logComment("szCurrentVersion: " + szCurrentVersion);
-  if((szCurrentVersion == "") || (szCurrentVersion == null))
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
+  
+  return szCurrentVersion != "";
 }
 
 function registerMainKeys(winreg)
@@ -337,6 +337,52 @@ function upgradeCleanup()
   deleteThisFile("Program",     "defaults/pref/winpref.js");
   deleteThisFile("Program",     "defaults/pref/xpinstall.js");
   deleteThisFolder("Program",   "defaults/profile/US");
+  
+  // Now clean up Uninstall entries that may be laying around in the
+  // registry for older versions of the software that we're overwriting/
+  // upgrading...
+  var wr = getWinRegistry();
+  wr.setRootKey(wr.HKEY_LOCAL_MACHINE);
+  var i = 0; 
+  const uninstallKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+  do {
+    var key = wr.enumKeys(uninstallKey, i++);
+    if (!key)
+      break;
+    key = uninstallKey + "\\" + key;
+    
+    // For us to remove the entry from the ARP uninstall list, the install 
+    // folder paths must *match* and the display version strings must *NOT
+    // MATCH* - i.e. we don't want to remove the entry we just created for
+    // this version.
+    var itemInstallFolder = wr.getValueString(key, "InstallLocation");
+    var thisInstallFolder = wr.getValueString("SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main", 
+                                              "Install Directory");
+    var itemInstallFolderShortName = File.windowsGetShortName(getFolder("file:///", itemInstallFolder));
+    var thisInstallFolderShortName = File.windowsGetShortName(getFolder("file:///", thisInstallFolder));
+    
+    var itemDisplayVersion = wr.getValueString(key, "DisplayVersion");
+    var thisDisplayVersion = "$UserAgent$";
+
+    // It is possible that a user might have installed several products into
+    // the same directory that have the same "DisplayVersion" (e.g. "1.0")... 
+    // in this case we don't want to trash the Uninstall info for the others
+    // so we have to be sure to make sure Comment matches... we use Comment
+    // instead of DisplayName since DisplayName varies from version to version
+    // as it contains the version number, and this instance of javascript is
+    // crippled so as not to contain any useful string parsing.
+    var itemComment = wr.getValueString(key, "Comment");
+    var thisComment = "$ProductName$";
+
+    if ((itemComment == thisComment || itemComment == "The Browser, Reloaded.") && 
+        itemInstallFolderShortName == thisInstallFolderShortName &&
+        thisDisplayVersion != itemDisplayVersion && 
+        wr.isKeyWritable(key)) {
+      wr.deleteKey(key);
+      logComment("Removing obsolete uninstall key with upgrade: " + key);
+    }
+  }
+  while (true);
 }
 
 // main

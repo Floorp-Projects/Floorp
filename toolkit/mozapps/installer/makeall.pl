@@ -118,7 +118,7 @@ print "  Raw version id   : $gDefaultProductVersion\n";
 $gDefaultProductVersion =~ s/[^0-9.][^.]*//g;
 
 # set environment vars for use by other .pl scripts called from this script.
-if($versionParts[2] eq "0")
+if($versionParts[2] eq "0" || $versionParts[2] eq "")
 {
   $versionMain = "$versionParts[0].$versionParts[1]";
 }
@@ -328,10 +328,10 @@ sub MakeConfigFile
       $itFile =~ s/\.ini$/\.it/;
       copy("$inConfigFiles/$itFile", "$gDirDistInstall/$itFile") || die "copy $inConfigFiles/$itFile $gDirDistInstall/$itFile";
 
-      if(system("perl $gNGAppsScriptsDir/makecfgini.pl $itFile $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL"))
+      if(system("perl $gNGAppsScriptsDir/makecfgini.pl $itFile $versionMain $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL"))
       {
-	  print "\n Error: perl $gNGAppsScriptsDir/makecfgini.pl $itFile $gDefaultProductVersion $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL\n";
-	  return(1);
+        print "\n Error: perl $gNGAppsScriptsDir/makecfgini.pl $itFile $versionMain $gDirStageProduct $gDirDistInstall/xpi $inRedirIniURL $inXpiURL\n";
+        return(1);
       }
 
       unlink("$gDirDistInstall/$itFile");
