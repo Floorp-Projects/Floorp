@@ -249,7 +249,9 @@ endif
 
 ifdef USE_AUTOCONF
 OPTIMIZER	=
+ifndef MOZ_DEBUG
 DEFINES		+= -UDEBUG -DNDEBUG -DTRIMMED
+endif
 XBCFLAGS	=
 else
 
