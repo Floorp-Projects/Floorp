@@ -480,15 +480,18 @@ static PRBool LogThisType(const char* aTypeName)
   return nsnull != he;
 }
 
-static PRInt32 EnsureSerialNumber(void* aPtr)
+static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
 {
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
   if (hep && *hep) {
     return PRInt32((*hep)->value);
   }
-  else {
+  else if (aCreate) {
     PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(aPtr), aPtr, (void*)(++gNextSerialNumber));
     return gNextSerialNumber;
+  }
+  else {
+    return 0;
   }
 }
 
@@ -1171,7 +1174,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
     PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
     PRInt32 serialno = 0;
     if (gSerialNumbers && loggingThisType) {
-      serialno = EnsureSerialNumber(aPtr);
+      serialno = GetSerialNumber(aPtr, aRefCnt == 1);
     }
 
     if (aRefCnt == 1 && gAllocLog && loggingThisType) {
@@ -1229,7 +1232,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     PRBool loggingThisType = (!gTypesToLog || LogThisType(aClazz));
     PRInt32 serialno = 0;
     if (gSerialNumbers && loggingThisType) {
-      serialno = EnsureSerialNumber(aPtr);
+      serialno = GetSerialNumber(aPtr, PR_FALSE);
     }
 
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
