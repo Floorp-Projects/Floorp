@@ -53,6 +53,7 @@
 #include "nsParserCIID.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -1690,7 +1691,7 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
     PRInt32 count = mParserNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {
       const nsAString& key = mParserNode->GetKeyAt(i);
-      if (key.Equals(name)) {
+      if (key.Equals(name, nsCaseInsensitiveStringComparator())) {
         aValueRet = mParserNode->GetValueAt(i);
         aValueRet.StripChars("\"");
         return NS_OK;
