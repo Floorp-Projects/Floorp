@@ -269,7 +269,6 @@ public class NodeTransformer {
                 if (!hasFinally)
                     break;     // skip the whole mess.
 
-                Node parent = iterator.getCurrentParent();
                 for (int i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
@@ -277,10 +276,10 @@ public class NodeTransformer {
                         Node jsrnode = new Node(TokenStream.JSR);
                         Object jsrtarget = n.getProp(Node.FINALLY_PROP);
                         jsrnode.putProp(Node.TARGET_PROP, jsrtarget);
-                        parent.addChildBefore(jsrnode, node);
+                        iterator.addBeforeCurrent(jsrnode);
                     } else if (elemtype == TokenStream.WITH) {
-                        parent.addChildBefore(new Node(TokenStream.LEAVEWITH),
-                                              node);
+                        Node leave = new Node(TokenStream.LEAVEWITH);
+                        iterator.addBeforeCurrent(leave);
                     }
                 }
                 break;
@@ -300,18 +299,17 @@ public class NodeTransformer {
                 }
 
                 int i;
-                Node parent = iterator.getCurrentParent();
                 for (i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
                     if (elemtype == TokenStream.WITH) {
-                        parent.addChildBefore(new Node(TokenStream.LEAVEWITH),
-                                              node);
+                        Node leave = new Node(TokenStream.LEAVEWITH);
+                        iterator.addBeforeCurrent(leave);
                     } else if (elemtype == TokenStream.TRY) {
                         Node jsrFinally = new Node(TokenStream.JSR);
                         Object jsrTarget = n.getProp(Node.FINALLY_PROP);
                         jsrFinally.putProp(Node.TARGET_PROP, jsrTarget);
-                        parent.addChildBefore(jsrFinally, node);
+                        iterator.addBeforeCurrent(jsrFinally);
                     } else if (!labelled &&
                                (elemtype == TokenStream.LOOP ||
                                 (elemtype == TokenStream.SWITCH &&

@@ -247,36 +247,16 @@ public class IRFactory {
      * While
      */
     public Object createWhile(Object cond, Object body, int lineno) {
-        // Just add a GOTO to the condition in the do..while
-        Node result = (Node) createDoWhile(body, cond, lineno);
-        Node condTarget = (Node) result.getProp(Node.CONTINUE_PROP);
-        Node GOTO = new Node(TokenStream.GOTO);
-        GOTO.putProp(Node.TARGET_PROP, condTarget);
-        result.addChildToFront(GOTO);
-        return result;
+        return createLoop(LOOP_WHILE, (Node)body, (Node)cond, null, null,
+                          lineno);
     }
 
     /**
      * DoWhile
      */
     public Object createDoWhile(Object body, Object cond, int lineno) {
-        Node result = new Node(TokenStream.LOOP, lineno);
-        Node bodyTarget = new Node(TokenStream.TARGET);
-        Node condTarget = new Node(TokenStream.TARGET);
-        Node IFEQ = new Node(TokenStream.IFEQ, (Node)cond);
-        IFEQ.putProp(Node.TARGET_PROP, bodyTarget);
-        Node breakTarget = new Node(TokenStream.TARGET);
-
-        result.addChildToBack(bodyTarget);
-        result.addChildrenToBack((Node)body);
-        result.addChildToBack(condTarget);
-        result.addChildToBack(IFEQ);
-        result.addChildToBack(breakTarget);
-
-        result.putProp(Node.BREAK_PROP, breakTarget);
-        result.putProp(Node.CONTINUE_PROP, condTarget);
-
-        return result;
+        return createLoop(LOOP_DO_WHILE, (Node)body, (Node)cond, null, null,
+                          lineno);
     }
 
     /**
@@ -285,24 +265,57 @@ public class IRFactory {
     public Object createFor(Object init, Object test, Object incr,
                             Object body, int lineno)
     {
-        if (((Node) test).getType() == TokenStream.VOID) {
-            test = new Node(TokenStream.PRIMARY, TokenStream.TRUE);
+        return createLoop(LOOP_FOR, (Node)body, (Node)test,
+                          (Node)init, (Node)incr, lineno);
+    }
+
+    private Node createLoop(int loopType, Node body, Node cond,
+                            Node init, Node incr, int lineno)
+    {
+        Node bodyTarget = new Node(TokenStream.TARGET);
+        Node condTarget = new Node(TokenStream.TARGET);
+        if (loopType == LOOP_FOR && cond.getType() == TokenStream.VOID) {
+            cond = new Node(TokenStream.PRIMARY, TokenStream.TRUE);
         }
-        Node result = (Node)createWhile(test, body, lineno);
-        Node initNode = (Node) init;
-        if (initNode.getType() != TokenStream.VOID) {
-            if (initNode.getType() != TokenStream.VAR)
-                initNode = new Node(TokenStream.POP, initNode);
-            result.addChildToFront(initNode);
+        Node IFEQ = new Node(TokenStream.IFEQ, (Node)cond);
+        IFEQ.putProp(Node.TARGET_PROP, bodyTarget);
+        Node breakTarget = new Node(TokenStream.TARGET);
+
+        Node result = new Node(TokenStream.LOOP, lineno);
+        result.addChildToBack(bodyTarget);
+        result.addChildrenToBack(body);
+        result.addChildToBack(condTarget);
+        result.addChildToBack(IFEQ);
+        result.addChildToBack(breakTarget);
+
+        result.putProp(Node.BREAK_PROP, breakTarget);
+        Node continueTarget = condTarget;
+
+        if (loopType == LOOP_WHILE || loopType == LOOP_FOR) {
+            // Just add a GOTO to the condition in the do..while
+            Node GOTO = new Node(TokenStream.GOTO);
+            GOTO.putProp(Node.TARGET_PROP, condTarget);
+            result.addChildToFront(GOTO);
+
+            if (loopType == LOOP_FOR) {
+                if (init.getType() != TokenStream.VOID) {
+                    if (init.getType() != TokenStream.VAR) {
+                        init = new Node(TokenStream.POP, init);
+                    }
+                    result.addChildToFront(init);
+                }
+                Node incrTarget = new Node(TokenStream.TARGET);
+                result.addChildAfter(incrTarget, body);
+                if (incr.getType() != TokenStream.VOID) {
+                    incr = (Node)createUnary(TokenStream.POP, incr);
+                    result.addChildAfter(incr, incrTarget);
+                }
+                continueTarget = incrTarget;
+            }
         }
-        Node condTarget = (Node)result.getProp(Node.CONTINUE_PROP);
-        Node incrTarget = new Node(TokenStream.TARGET);
-        result.addChildBefore(incrTarget, condTarget);
-        if (((Node) incr).getType() != TokenStream.VOID) {
-            incr = createUnary(TokenStream.POP, incr);
-            result.addChildAfter((Node)incr, incrTarget);
-        }
-        result.putProp(Node.CONTINUE_PROP, incrTarget);
+
+        result.putProp(Node.CONTINUE_PROP, continueTarget);
+
         return result;
     }
 
@@ -1028,5 +1041,9 @@ public class IRFactory {
 
     // Only needed to pass to the Erorr exception constructors
     private Scriptable scope;
+
+    private static final int LOOP_DO_WHILE = 0;
+    private static final int LOOP_WHILE    = 1;
+    private static final int LOOP_FOR      = 2;
 }
 

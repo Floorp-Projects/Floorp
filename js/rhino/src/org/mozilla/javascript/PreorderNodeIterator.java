@@ -101,6 +101,19 @@ public final class PreorderNodeIterator {
         current = newNode;
     }
 
+    public void addBeforeCurrent(Node newNode) {
+        // Should not be used when stackTop == 0,
+        // i.e. with start or its siblings
+        Node parent = stack[stackTop - 1];
+        if (cachedPrev != null && cachedPrev.next == current) {
+            parent.addChildAfter(newNode, cachedPrev);
+        }
+        else {
+            parent.addChildBefore(newNode, current);
+        }
+        cachedPrev = newNode;
+    }
+
     private void stackPush(Node n) {
         int N = stackTop;
         if (N == 0) {
