@@ -1757,6 +1757,34 @@ nsDocShell::SetParent(nsIDocShellTreeItem * aParent)
      */
     mParent = aParent;
 
+    // If parent is another docshell, we inherit all their flags for
+    // allowing plugins, scripting etc.
+    nsCOMPtr<nsIDocShell> parentAsDocShell = do_QueryInterface(mParent);
+    if (parentAsDocShell)
+    {
+        PRBool value;
+        if (NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value)))
+        {
+            SetAllowPlugins(value);
+        }
+        if (NS_SUCCEEDED(parentAsDocShell->GetAllowJavascript(&value)))
+        {
+            SetAllowJavascript(value);
+        }
+        if (NS_SUCCEEDED(parentAsDocShell->GetAllowMetaRedirects(&value)))
+        {
+            SetAllowMetaRedirects(value);
+        }
+        if (NS_SUCCEEDED(parentAsDocShell->GetAllowSubframes(&value)))
+        {
+            SetAllowSubframes(value);
+        }
+        if (NS_SUCCEEDED(parentAsDocShell->GetAllowImages(&value)))
+        {
+            SetAllowImages(value);
+        }
+    }
+
     nsCOMPtr<nsIURIContentListener>
         parentURIListener(do_GetInterface(aParent));
     if (parentURIListener)
