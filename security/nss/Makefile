@@ -95,11 +95,6 @@ nsm_server: nsm_protocol nsm_ui
 	cd ssm/server; gmake import; gmake
 
 coreconf_hack:
-ifeq ($(OS_ARCH), SunOS)
-ifeq ($(OS_RELEASE), 5.5.1)
-	gmake import IMPORTS=nspr20/v3.5.1-sol251 RELEASE_TREE=/h/tortoise/export/share/builds/components
-endif
-endif
 	cd ../coreconf; gmake
 	gmake import
 
