@@ -191,7 +191,7 @@ install:: $(DESTDIR)$(mozappdir)/res/forms.css
 libs:: $(_FILES)
 	$(INSTALL) $^ $(DIST)/bin/res
 	rm -f $(DIST)/bin/res/ua.css
-	cp $(srcdir)/ua.css $(DIST)/bin/res
+	$(NSINSTALL) $(srcdir)/ua.css $(DIST)/bin/res
 
 install:: $(_FILES) ua.css
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
