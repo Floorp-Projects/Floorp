@@ -134,4 +134,5 @@ NS_END_EXTERN_C
 #define IMAP_QUOTA_STATUS_NOTSUPPORTED              5096
 #define IMAP_QUOTA_STATUS_NOQUOTA                   5097
 #define	IMAP_OUT_OF_MEMORY                          5100
+#define IMAP_AUTH_SECURE_NOTSUPPORTED               5102
 #endif /* _nsImapStringBundle_H__ */

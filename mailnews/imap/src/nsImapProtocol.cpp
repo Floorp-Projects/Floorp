@@ -4731,7 +4731,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   char * currentCommand=nsnull;
   nsresult rv;
 
-  if (m_useSecAuth && flag & kHasCRAMCapability)
+  if (flag & kHasCRAMCapability)
   {
       nsresult rv;
       char *digest;
@@ -4845,8 +4845,10 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
     } // if last command successful
   } // if has auth login capability
 
-  // fall back to use InsecureLogin()
-  InsecureLogin(userName, password);
+  // Fall back to InsecureLogin() if the user did not request secure authentication
+  if (!m_useSecAuth)
+    InsecureLogin(userName, password);
+
   PR_Free(currentCommand);
 }
 
@@ -6992,17 +6994,6 @@ PRBool nsImapProtocol::TryToLogon()
 
   do
   {
-    if (userName && password.IsEmpty() && m_imapServerSink)
-    {
-      if (!aMsgWindow)
-      {
-          rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
-          if (NS_FAILED(rv)) return rv;
-      }
-      rv = m_imapServerSink->PromptForPassword(getter_Copies(password), aMsgWindow);
-      if (rv == NS_MSG_PASSWORD_PROMPT_CANCELLED)
-        break;
-    }
       PRBool imapPasswordIsNew = PR_FALSE;
 
       if (userName)
@@ -7019,7 +7010,28 @@ PRBool nsImapProtocol::TryToLogon()
       {
         if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
           Capability();
-        
+
+        // If secure auth is configured, don't proceed unless the server
+        // supports it. This avoids fallback to insecure login in case
+        // authentication fails.
+        if(m_useSecAuth && !(GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability))
+        {
+          AlertUserEventUsingId(IMAP_AUTH_SECURE_NOTSUPPORTED);
+          break;
+        }
+
+        if (password.IsEmpty() && m_imapServerSink)
+        {
+          if (!aMsgWindow)
+          {
+              rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
+              if (NS_FAILED(rv)) return rv;
+          }
+          rv = m_imapServerSink->PromptForPassword(getter_Copies(password), aMsgWindow);
+          if (rv == NS_MSG_PASSWORD_PROMPT_CANCELLED)
+            break;
+         }
+
         // try to use CRAM before we fall back to plain or auth login....
         if (GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability)
         {
