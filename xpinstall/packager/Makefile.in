@@ -33,7 +33,11 @@ include $(DEPTH)/config/autoconf.mk
 # to add .rpm (RPM) and .deb (DEB) later.
 #
 ifndef MOZ_PKG_FORMAT
+ifeq ($(OS_ARCH),WINNT)
+MOZ_PKG_FORMAT  = ZIP
+else
 MOZ_PKG_FORMAT	= TGZ
+endif
 endif
 ifndef MOZ_PKG_APPNAME
 MOZ_PKG_APPNAME = mozilla
