@@ -31,4 +31,6 @@
   CHAutoCompleteDataSource* mDataSource;
 }
 
+- (BOOL)isShowing;
+
 @end

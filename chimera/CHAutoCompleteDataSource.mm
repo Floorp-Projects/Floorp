@@ -23,8 +23,28 @@
 
 #import <AppKit/AppKit.h>
 #import "CHAutoCompleteDataSource.h"
+#include "nsIServiceManager.h"
 
 @implementation CHAutoCompleteDataSource
+
+-(id)init
+{
+  if ((self = [super init])) {
+    mAutoComplete = nsnull;
+  }
+  return self;
+}
+
+-(void)initialize
+{
+  if (!mAutoComplete) {
+    nsCOMPtr<nsIAutoCompleteSession> session =
+      do_GetService("@mozilla.org/autocompleteSession;1?type=history");
+    mAutoComplete = session;
+    if (!mAutoComplete)
+      printf("CRAP CRAP!\n");
+  }
+}
 
 -(int)numberOfRowsInTableView:(NSTableView*)aTableView
 {

@@ -48,14 +48,21 @@
   [super dealloc];
 }
 
+-(BOOL)isShowing
+{
+  return ([self superview] != nil);
+}
+
 -(void)controlTextDidChange:(NSNotification*)aNotification
 {
+  // Ensure that our data source is initialized.
+  [mDataSource initialize];
+  
 //  [[[[mWindowController window] contentView] superview] addSubview: self];
 }
 
 -(void)controlTextDidEndEditing:(NSNotification*)aNotification
 {
-  printf("Editing finished.\n");
 }
 
 @end
