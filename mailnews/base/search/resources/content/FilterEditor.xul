@@ -33,6 +33,8 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script src="resource:/res/samples/DumpDOM.js"/>
+<keyset id="keyset"/>
 
   <box orient="horizontal" class="padded">
     <text value="&filterName.label;"/>
@@ -59,23 +61,32 @@ Rights Reserved.
                 searchvalue="searchValue"/>
     </searchterms>
     <tree class="inset" flex="1">
-      <treecol id="a" />
-      <treecol id="b"/>
-      <treecol id="c"/>
+      <treecol id="preSearchAttr" width="0*"/>
+      <treecol id="searchAttr" width="1*"/>
+      <treecol id="preSearchOp" width="0*"/>
+      <treecol id="searchOp" width="1*"/>
+      <treecol id="preSearchValue" width="0*"/>
+      <treecol id="searchValue" width="1*"/>
+      <treecol id="postSearchValue" width="0*"/>
         
       <treechildren id="filterTermList">
-<!--
+
+<!-- this is what the treerows will look like:
         <treeitem id="filterListItem">
           <treerow>
+            <treecell id="preSearchAttr"/>
             <treecell allowevents="true">
               <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
             </treecell>
+            <treecell id="preSearchOp"/>
             <treecell allowevents="true">
               <searchoperator id="searchOp" flex="1"/>
             </treecell>
+            <treecell id="preSearchValue"/>
             <treecell allowevents="true" >
               <searchvalue id="searchValue" flex="1"/>
             </treecell>
+            <treecell id="postSearchValue"/>
           </treerow>
         </treeitem>
         <treeitem>
@@ -98,16 +109,39 @@ Rights Reserved.
     </title>
     <menulist id="actionMenu" flex="1">
       <menupopup>
-        <menuitem value="&moveToFolder.label;"/>
-        <menuitem value="&changePriority.label;"/>
-        <menuitem value="&delete.label;"/>
-        <menuitem value="&markRead.label;"/>
-        <menuitem value="&ignoreThread.label;"/>
-        <menuitem value="&watchThread.label;"/>
+        <menuitem data="1" value="&moveToFolder.label;"/>
+        <menuitem data="2" value="&changePriority.label;"/>
+        <menuitem data="3" value="&delete.label;"/>
+        <menuitem data="4" value="&markRead.label;"/>
+        <menuitem data="5" value="&ignoreThread.label;"/>
+        <menuitem data="6" value="&watchThread.label;"/>
       </menupopup>
     </menulist>
-    <spring flex="2"/>
+    <menulist id="actionTargetFolder" flex="1"
+              containment="http://home.netscape.com/NC-rdf#child"
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              ref="msgaccounts:/">
+      <template>
+        <rule iscontainer="true" isempty="false">
+          <menupopup>
+              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup>
+                  <menuitem uri="..." value="file here" />
+                  <menuseparator/>
+                </menupopup>
+              </menu>
+          </menupopup>
+        </rule>
+        <rule>
+          <menupopup>
+             <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </menupopup>
+        </rule>
+      </template>
+      <menupopup/>
+    </menulist>
   </titledbox>
+  <button onclick="DumpDOM(document.getElementById('actionTargetFolder'))" value="dump"/>
   <separator class="groove"/>
   <box id="okCancelButtons"/>
 </window>

@@ -77,9 +77,13 @@ function initializeDialog(filter)
     var filterName = document.getElementById("filterName");
     filterName.value = filter.filterName;
 
+    var actionElement = document.getElementById("actionMenu");
+    actionElement.selectedItem=actionElement.getElementsByAttribute("data", filter.action)[0];
+
+    
     // now test by initializing the psuedo <searchterm>
     var searchTerm = document.getElementById("searchTerm");
-    
+    var scope = getScope(filter);
     var filterRowContainer = document.getElementById("filterTermList");
     var numTerms = filter.numTerms;
     for (var i=0; i<numTerms; i++) {
@@ -87,8 +91,15 @@ function initializeDialog(filter)
       filterRowContainer.appendChild(filterRow);
 
       // now that it's been added to the document, we can initialize it.
-      initializeFilterRow(filter, i);
+      var filterTermObject = document.getElementById("searchTerm" + i);
+
+      filterTermObject.searchScope = scope;
+      var searchTerm =
+          filter.searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
+      if (searchTerm)
+          filterTermObject.searchTerm = searchTerm;
     }
+
 }
 
 function createFilterRow(filter, index)
@@ -104,7 +115,7 @@ function createFilterRow(filter, index)
 
     searchAttr.setAttribute("for", searchOp.id + "," + searchVal.id);
 
-    var rowdata = new Array(searchAttr, searchOp, searchVal);
+    var rowdata = new Array(null, searchAttr, null, searchOp, null, searchVal, null);
     var searchrow = constructRow(rowdata);
 
     searchrow.id = "searchRow" + index;
@@ -142,36 +153,14 @@ function constructRow(treeCellChildren)
     for (var i = 0; i<treeCellChildren.length; i++) {
       var treecell = document.createElement("treecell");
       treecell.setAttribute("allowevents", "true");
-      treeCellChildren[i].setAttribute("flex", "1");
-      treecell.appendChild(treeCellChildren[i]);
+      // it's ok to have empty cells
+      if (treeCellChildren[i]) {
+        treeCellChildren[i].setAttribute("flex", "1");
+        treecell.appendChild(treeCellChildren[i]);
+      }
       row.appendChild(treecell);
     }
     treeitem.appendChild(row);
     return treeitem;
 }
 
-function getFilterObject(filter, index)
-{
-    var attrib = new Object;
-    var operator = new Object;
-    var value = new Object;
-    var booleanAnd = new Object;
-    var header = new Object;
-
-    filter.GetTerm(index, attrib, operator, value, booleanAnd, header);
-
-    var result = { attribute: attrib.value,
-                   operator: operator.value,
-                   value: value.value,
-                   booleanAnd: booleanAnd.value,
-                   header: header.value };
-    
-    return result;
-}
-
-function initializeFilterRow(filter, index)
-{
-    var filterTermObject = document.getElementById("searchTerm" + index);
-
-    filterTermObject.initialize(filter, index, getScope(filter));
-}
