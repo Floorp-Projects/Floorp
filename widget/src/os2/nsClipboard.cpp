@@ -141,7 +141,8 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
         pTempBuf = nsMemory::Alloc( NumOfBytes + sizeof(UniChar) );
         TempBufAllocated = PR_TRUE;
-        gModuleData.ConvertToUcs( NS_STATIC_CAST(char*, pDataMem), NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars + 1 );
+        NumOfChars = gModuleData.ConvertToUcs( NS_STATIC_CAST(char*, pDataMem), NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars + 1 );
+        NumOfBytes = NumOfChars * sizeof(UniChar);
         pDataMem = pTempBuf;
       }
 

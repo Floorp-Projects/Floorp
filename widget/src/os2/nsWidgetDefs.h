@@ -144,7 +144,7 @@ class nsWidgetModuleData
    HPOINTER GetFrameIcon();
 
    // local->Unicode cp. conversion
-   PRUnichar *ConvertToUcs( const char *szText, PRUnichar *pBuffer, ULONG ulSize);
+   ULONG ConvertToUcs( const char *szText, PRUnichar *pBuffer, ULONG ulSize);
 
    // Unicode->local cp. conversions
    char *ConvertFromUcs( const PRUnichar *pText, char *szBuffer, ULONG ulSize);
