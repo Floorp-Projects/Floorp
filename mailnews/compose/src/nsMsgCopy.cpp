@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsXPIDLString.h"
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
 #include "nsIMsgCopyService.h"
@@ -413,35 +414,28 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
                      const char       *aFolderURI)
 {
   nsresult                        rv;
-  char                            *aType = nsnull;
+  nsXPIDLCString                  aType;
   nsCOMPtr<nsIMsgFolder>          dstFolder = nsnull;
-  nsIMsgIncomingServer            *dstServer = nsnull;
+  nsCOMPtr<nsIMsgIncomingServer>  dstServer = nsnull;
 
   dstFolder = LocateMessageFolder(userIdentity, aFolderType, aFolderURI);
   if (!dstFolder)
     return PR_TRUE;
 
-  rv = dstFolder->GetServer(&dstServer);
-  if (NS_FAILED(rv) || !dstServer)
+  rv = dstFolder->GetServer(getter_AddRefs(dstServer));
+  if (NS_FAILED(rv))
     return PR_TRUE;
 
-  rv = dstServer->GetType(&aType);
+  rv = dstServer->GetType(getter_Copies(aType));
   if (NS_FAILED(rv) || !aType)
-  {
-    NS_IF_RELEASE(dstServer);
     return PR_TRUE;
-  }
 
   if ((aType) && (*aType))
   {
     if (PL_strcasecmp(aType, "POP3") == 0)
-    {
-      NS_IF_RELEASE(dstServer);
       return PR_TRUE;
-    }
   }
 
-  NS_IF_RELEASE(dstServer);
   return PR_FALSE;
 }
 
