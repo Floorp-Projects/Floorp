@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *    Henrik Gemal <gemal@gemal.dk>
  */
 #include "nsCOMPtr.h"
 #include "stdio.h"
@@ -136,15 +137,15 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 {
   if (mDocHeader)
   {
-    UtilityWriteCRLF("<HTML>");
-    UtilityWriteCRLF("<HEAD>");
+    UtilityWriteCRLF("<html>");
+    UtilityWriteCRLF("<head>");
 
     // mscott --> we should refer to the style sheet used in msg display...this one is wrong i think.
     // Stylesheet info!
-    UtilityWriteCRLF("<LINK REL=\"IMPORTANT STYLESHEET\" HREF=\"chrome://messenger/skin/mailheader.css\">");
+    UtilityWriteCRLF("<link rel=\"important stylesheet\" href=\"chrome://messenger/skin/mailheader.css\">");
 
-    UtilityWriteCRLF("</HEAD>");
-    UtilityWriteCRLF("<BODY>");
+    UtilityWriteCRLF("</head>");
+    UtilityWriteCRLF("<body>");
   }
 
   // if we aren't broadcasting headers OR printing...just do whatever
@@ -281,26 +282,24 @@ nsMimeHtmlDisplayEmitter::StartAttachmentInBody(const char *name, const char *co
     mSkipAttachment = PR_FALSE;
 
   if (!mFirst)
-    UtilityWrite("<HR WIDTH=\"90%\" SIZE=4>");
+    UtilityWrite("<hr width=\"90%\" size=4>");
 
   mFirst = PR_FALSE;
 
   UtilityWrite("<CENTER>");
-  UtilityWrite("<TABLE BORDER>");
+  UtilityWrite("<table border>");
   UtilityWrite("<tr>");
-  UtilityWrite("<TD>");
+  UtilityWrite("<td>");
 
-  UtilityWrite("<CENTER>");
-  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\" style=\"display:inline;\">");
+  UtilityWrite("<div align=right class=\"headerdisplayname\" style=\"display:inline;\">");
 
   UtilityWrite(name);
 
-  UtilityWrite("</DIV>");
-  UtilityWrite("</CENTER>");
+  UtilityWrite("</div>");
 
-  UtilityWrite("</TD>");
-  UtilityWrite("<TD>");
-  UtilityWrite("<TABLE BORDER=0>");
+  UtilityWrite("</td>");
+  UtilityWrite("<td>");
+  UtilityWrite("<table border=0>");
   return NS_OK;
 }
 
@@ -320,21 +319,21 @@ nsMimeHtmlDisplayEmitter::AddAttachmentField(const char *field, const char *valu
 
   char  *newValue = nsEscapeHTML(value);
 
-  UtilityWrite("<TR>");
+  UtilityWrite("<tr>");
 
-  UtilityWrite("<TD>");
-  UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\" style=\"display:inline;\">");
+  UtilityWrite("<td>");
+  UtilityWrite("<div align=right class=\"headerdisplayname\" style=\"display:inline;\">");
 
   UtilityWrite(field);
   UtilityWrite(":");
-  UtilityWrite("</DIV>");
-  UtilityWrite("</TD>");
-  UtilityWrite("<TD>");
+  UtilityWrite("</div>");
+  UtilityWrite("</td>");
+  UtilityWrite("<td>");
 
   UtilityWrite(newValue);
 
-  UtilityWrite("</TD>");
-  UtilityWrite("</TR>");
+  UtilityWrite("</td>");
+  UtilityWrite("</tr>");
 
   PR_FREEIF(newValue);
   return NS_OK;
@@ -347,13 +346,13 @@ nsMimeHtmlDisplayEmitter::EndAttachment()
   if (BroadCastHeadersAndAttachments())
     return NS_OK;
   
-  UtilityWrite("</TABLE>");
-  UtilityWrite("</TD>");
+  UtilityWrite("</table>");
+  UtilityWrite("</td>");
   UtilityWrite("</tr>");
 
-  UtilityWrite("</TABLE>");
-  UtilityWrite("</CENTER>");
-  UtilityWrite("<BR>");
+  UtilityWrite("</table>");
+  UtilityWrite("</center>");
+  UtilityWrite("<br>");
   return NS_OK;
 }
 
@@ -378,8 +377,8 @@ nsMimeHtmlDisplayEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *am
 nsresult
 nsMimeHtmlDisplayEmitter::EndBody()
 {
-  UtilityWriteCRLF("</BODY>");
-  UtilityWriteCRLF("</HTML>");
+  UtilityWriteCRLF("</body>");
+  UtilityWriteCRLF("</html>");
   return NS_OK;
 }
 
