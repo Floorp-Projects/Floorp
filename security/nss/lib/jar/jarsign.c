@@ -37,6 +37,7 @@
  *  Routines used in signing archives.
  */
 
+
 #define USE_MOZ_THREAD
 
 #include "jar.h"
@@ -51,7 +52,7 @@
 /* from libevent.h */
 typedef void (*ETVoidPtrFunc) (void * data);
 
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
 
 extern void ET_moz_CallFunction (ETVoidPtrFunc fn, void *data);
 
@@ -314,7 +315,7 @@ int jar_create_pk7
   /* signtool must use any old context it can find since it's
      calling from inside javaland. */
 
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   mw = XP_FindSomeContext();
 #else
   mw = NULL;

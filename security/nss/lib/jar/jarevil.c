@@ -48,7 +48,7 @@
 #include "jarevil.h"
 
 /* from libevent.h */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
 typedef void (*ETVoidPtrFunc) (void * data);
 extern void ET_moz_CallFunction (ETVoidPtrFunc fn, void *data);
 
@@ -152,7 +152,7 @@ SECStatus jar_moz_encode
   encode_data->pwfnarg   = pwfnarg;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_encode_fn, encode_data);
   else
@@ -231,7 +231,7 @@ SECStatus jar_moz_verify
   verify_data->keepcerts       = keepcerts;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_verify_fn, verify_data);
   else
@@ -295,7 +295,7 @@ CERTCertificate *jar_moz_nickname (CERTCertDBHandle *certdb, char *nickname)
   nickname_data->nickname = nickname;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_nickname_fn, nickname_data);
   else
@@ -362,7 +362,7 @@ SECStatus jar_moz_perm
   perm_data->trust    = trust;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_perm_fn, perm_data);
   else
@@ -426,7 +426,7 @@ CERTCertificate *jar_moz_certkey (CERTCertDBHandle *certdb, SECItem *seckey)
   certkey_data->seckey = seckey;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_certkey_fn, certkey_data);
   else
@@ -489,7 +489,7 @@ CERTCertificate *jar_moz_issuer (CERTCertificate *cert)
   issuer_data->cert  = cert;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_issuer_fn, issuer_data);
   else
@@ -551,7 +551,7 @@ CERTCertificate *jar_moz_dup (CERTCertificate *cert)
   dup_data->cert  = cert;
 
   /* Synchronously invoke the callback function on the mozilla thread. */
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (mozilla_event_queue)
     ET_moz_CallFunction (jar_moz_dup_fn, dup_data);
   else

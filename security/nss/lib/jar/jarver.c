@@ -1672,7 +1672,7 @@ static int jar_validate_pkcs7
 
   /* We need a context if we can get one */
 
-#ifdef MOZILLA_CLIENT
+#ifdef MOZILLA_CLIENT_OLD
   if (jar->mw == NULL) {
     JAR_set_context (jar, NULL);
   }
