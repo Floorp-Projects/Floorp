@@ -43,6 +43,7 @@ CPPSRCS		= \
 		nsHankakuToZenkaku.cpp \
 		nsEntityConverter.cpp \
 		nsSaveAsCharset.cpp \
+		nsUnicodeNormalizer.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

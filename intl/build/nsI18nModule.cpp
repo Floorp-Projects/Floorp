@@ -306,6 +306,9 @@ static nsModuleComponentInfo components[] =
       NS_SAVEASCHARSET_CONTRACTID, nsSaveAsCharsetConstructor},
   { "Japanese Hankaku To Zenkaku", NS_HANKAKUTOZENKAKU_CID, 
       NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
+  { "Unicode Normlization", NS_UNICODE_NORMALIZER_CID, 
+      NS_UNICODE_NORMALIZER_CONTRACTID,  nsUnicodeNormalizerConstructor},
+
 
  // strres
   { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID,
