@@ -436,6 +436,8 @@ protected:
 
   nsresult CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBHdr *destHdr, nsIMsgDBHdr *origHdr);
 
+  void GetTrashFolderName(nsAString &aFolderName);
+
   PRBool m_initialized;
   PRBool m_haveDiscoveredAllFolders;
   PRBool m_haveReadNameFromDB;

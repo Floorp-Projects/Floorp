@@ -108,8 +108,6 @@ PRLogModuleInfo *IMAP;
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
-const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
-
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -4136,7 +4134,6 @@ nsImapProtocol::GetSubscribingNow()
 void
 nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)  
 {
-  // IMAP_LoadTrashFolderName(); **** needs to work on localization issues
   nsIMAPNamespace *ns = nsnull;
   
   NS_ASSERTION (m_hostSessionList, "fatal null host session list");
@@ -4164,7 +4161,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
           // if not using the Trash model
           !onlineTrashFolderExists && 
           PL_strstr(adoptedBoxSpec->allocatedPathName, 
-          kImapTrashFolderName))
+          GetTrashFolderName()))
         {
           PRBool trashExists = PR_FALSE;
           nsCString trashMatch(CreatePossibleTrashName(nsPrefix));
@@ -6483,15 +6480,33 @@ void nsImapProtocol::RenameMailbox(const char *existingName,
 
 char * nsImapProtocol::CreatePossibleTrashName(const char *prefix)
 {
-  // mscott we used to have a localized global string for the trash name...
-  // I haven't don't localization stuff yet so I'm going to do a bad thing and just
-  // use a string literal....(only temporary!!!!! =))...
-
-//  IMAP_LoadTrashFolderName();
   nsCString returnTrash(prefix);
 
-  returnTrash += "Trash";
+  returnTrash += GetTrashFolderName();
   return ToNewCString(returnTrash);
+}
+
+const char * nsImapProtocol::GetTrashFolderName()
+{
+  if (m_trashFolderName.IsEmpty())
+  {
+    nsCOMPtr<nsIImapIncomingServer> server = do_QueryReferent(m_server);
+    if (server)
+    {
+      nsXPIDLString trashFolderName;
+      if (NS_SUCCEEDED(server->GetTrashFolderName(getter_Copies(trashFolderName))))
+      {
+        char *trashFolderNameUtf7 = CreateUtf7ConvertedStringFromUnicode(trashFolderName);
+        if (trashFolderNameUtf7)
+        {
+          m_trashFolderName.Assign(trashFolderNameUtf7);  
+          PR_Free(trashFolderNameUtf7);
+        }
+      }
+    }
+  }
+  
+  return m_trashFolderName.get();
 }
 
 void nsImapProtocol::Lsub(const char *mailboxPattern, PRBool addDirectoryIfNecessary)

@@ -375,9 +375,13 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
        name->Equals(NS_LITERAL_STRING("Inbox"),
                     nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if((isServer || isParentInbox) && name->Equals(NS_LITERAL_STRING("Trash"),
-                                                        nsCaseInsensitiveStringComparator()))
-      flags |= MSG_FOLDER_FLAG_TRASH;
+    else if(isServer || isParentInbox) 
+    {
+      nsAutoString trashName;
+      GetTrashFolderName(trashName);
+      if (name->Equals(trashName))
+        flags |= MSG_FOLDER_FLAG_TRASH;
+    }
 #if 0
     else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Sent")))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
@@ -750,7 +754,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
     if (!folderName) 
       return rv;
 
-    if ( nsDependentString(folderName).Equals(NS_LITERAL_STRING("Trash"),nsCaseInsensitiveStringComparator()) )   // Trash , a special folder
+    nsAutoString trashName;
+    GetTrashFolderName(trashName);
+    if ( nsDependentString(folderName).Equals(trashName) )   // Trash , a special folder
     {
         ThrowAlertMsg("folderExists", msgWindow);
         return NS_MSG_FOLDER_EXISTS;
@@ -4183,10 +4189,8 @@ nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
   {
     PRUint32 numFolders;
     rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, pTrashFolder);
-	if (numFolders != 1)
-		rv = NS_ERROR_FAILURE;
-    if (*pTrashFolder)
-      NS_ADDREF(*pTrashFolder);
+    if (numFolders != 1)
+      rv = NS_ERROR_FAILURE;
   }
   return rv;
 }
@@ -7205,3 +7209,20 @@ nsImapMailFolder::GetShouldDownloadAllHeaders(PRBool *aResult)
 }
 
 
+void nsImapMailFolder::GetTrashFolderName(nsAString &aFolderName)
+{
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsIImapIncomingServer> imapServer;
+    
+  if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
+    imapServer = do_QueryInterface(server);
+    
+  if (imapServer)
+  {
+    nsXPIDLString trashFolderName;
+    if (NS_SUCCEEDED(imapServer->GetTrashFolderName(getter_Copies(trashFolderName))))
+    {
+      aFolderName = trashFolderName;
+    }
+  }
+}

@@ -94,6 +94,9 @@
 #include "nsITimer.h"
 #include "nsMsgUtils.h"
 
+#define PREF_TRASH_FOLDER_NAME "trash_folder_name"
+#define DEFAULT_TRASH_FOLDER_NAME "Trash"
+
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1584,7 +1587,6 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
     return rv;
 }
 
-
 NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderDelete(const char *aFolderName) 
 {
 	return NS_OK;
@@ -1724,7 +1726,37 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 	  if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
       if (rootMsgFolder)
+      {
         rootMsgFolder->SetPrefFlag();
+      }
+
+      // Verify there is only one trash folder. Another might be present if 
+      // the trash name has been changed.
+      PRUint32 numFolders;
+      rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 0, &numFolders, NULL);
+      
+      if (NS_SUCCEEDED(rv) && numFolders > 1)
+      {
+          nsXPIDLString trashName;
+          if (NS_SUCCEEDED(GetTrashFolderName(getter_Copies(trashName))))
+          {
+              nsIMsgFolder *trashFolders[2];
+              if (NS_SUCCEEDED(rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 2, 
+                  &numFolders, trashFolders)))
+              {
+                  for (int i = 0; i < numFolders; i++)
+                  {
+                      nsXPIDLString folderName;
+                      if (NS_SUCCEEDED(trashFolders[i]->GetName(getter_Copies(folderName))) && 
+                          !folderName.Equals(trashName))
+                      {
+                          trashFolders[i]->ClearFlag(MSG_FOLDER_FLAG_TRASH);
+                      }
+                      NS_RELEASE(trashFolders[i]);
+                  }
+              }
+          }
+      }
   }
 
 	PRInt32 numUnverifiedFolders;
@@ -3732,4 +3764,44 @@ nsImapIncomingServer::GetUriWithNamespacePrefixIfNecessary(PRInt32 namespaceType
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetTrashFolderName(PRUnichar **retval)
+{
+  nsresult rv = GetUnicharValue(PREF_TRASH_FOLDER_NAME, retval);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!*retval || !**retval)
+  {
+      // if GetUnicharValue() above returned allocated empty string, we must free it first
+      // before allocating space and assigning the default value
+      if (*retval)
+          nsMemory::Free(*retval);
+      *retval = ToNewUnicode(NS_LITERAL_STRING(DEFAULT_TRASH_FOLDER_NAME));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::SetTrashFolderName(const PRUnichar *chvalue)
+{
+  // clear trash flag from the old pref
+  nsXPIDLString oldTrashName;
+  nsresult rv = GetTrashFolderName(getter_Copies(oldTrashName));
+  if (NS_SUCCEEDED(rv))
+  {
+    char *oldTrashNameUtf7 = CreateUtf7ConvertedStringFromUnicode(oldTrashName);
+    if (oldTrashNameUtf7)
+    {
+      nsCOMPtr<nsIMsgFolder> oldFolder;
+      rv = GetFolder(oldTrashNameUtf7, getter_AddRefs(oldFolder));
+      if (NS_SUCCEEDED(rv) && oldFolder)
+      {
+        oldFolder->ClearFlag(MSG_FOLDER_FLAG_TRASH);
+      }
+      PR_Free(oldTrashNameUtf7);
+    }
+  }
+  
+  return SetUnicharValue(PREF_TRASH_FOLDER_NAME, chvalue);
 }

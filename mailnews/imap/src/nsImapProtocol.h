@@ -387,6 +387,7 @@ private:
   PRUint32		m_allocatedSize; // allocated size
   PRUint32        m_totalDataSize; // total data size
   PRUint32        m_curReadIndex;  // current read index
+  nsCAutoString  m_trashFolderName;
 
 	// Ouput stream for writing commands to the socket
 	nsCOMPtr<nsITransport>		m_channel; 
@@ -568,6 +569,7 @@ private:
     
 	PRBool	MailboxIsNoSelectMailbox(const char *mailboxName);
 	char * CreatePossibleTrashName(const char *prefix);
+	const char * GetTrashFolderName();
 	PRBool FolderNeedsACLInitialized(const char *folderName);
 	void DiscoverMailboxList();
 	void DiscoverAllAndSubscribedBoxes();
