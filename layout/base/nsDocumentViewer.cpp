@@ -2210,7 +2210,8 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "@mozilla.org/chrome/chrome-registry;1", &rv);
     if (NS_SUCCEEDED(rv) && chromeRegistry) {
       nsCOMPtr<nsISupportsArray> sheets;
-      chromeRegistry->GetBackstopSheets(getter_AddRefs(sheets));
+      nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
+      chromeRegistry->GetBackstopSheets(ds, getter_AddRefs(sheets));
       if(sheets){
         nsCOMPtr<nsICSSStyleSheet> sheet;
         PRUint32 count;
