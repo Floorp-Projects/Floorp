@@ -44,6 +44,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInputStream.h"
 #include "nsEnumeratorUtils.h"
+#include "nsArray.h"
 
 #define GECKO_NATIVE(func) Java_org_mozilla_xpcom_GeckoEmbed_##func
 #define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_XPCOM_##func
@@ -267,6 +268,37 @@ GECKO_NATIVE(NS_1NewSingletonEnumerator) (JNIEnv *env, jclass, jobject aSingleto
     if (inst) {
       // create java stub
       java_stub = CreateJavaWrapper(env, "nsISimpleEnumerator");
+
+      if (java_stub) {
+        // Associate XPCOM object w/ Java stub
+        AddJavaXPCOMBinding(env, java_stub, inst);
+      }
+    }
+  }
+
+  if (java_stub == nsnull)
+    ThrowXPCOMException(env, 0);
+
+  return java_stub;
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+GECKO_NATIVE(NS_1NewArray) (JNIEnv *env, jclass)
+{
+  jobject java_stub = nsnull;
+
+  // Call XPCOM method
+  nsCOMPtr<nsIMutableArray> array;
+  nsresult rv = NS_NewArray(getter_AddRefs(array));
+
+  if (NS_SUCCEEDED(rv)) {
+    // wrap xpcom instance
+    JavaXPCOMInstance* inst;
+    inst = CreateJavaXPCOMInstance(array, &NS_GET_IID(nsIMutableArray));
+
+    if (inst) {
+      // create java stub
+      java_stub = CreateJavaWrapper(env, "nsIMutableArray");
 
       if (java_stub) {
         // Associate XPCOM object w/ Java stub
