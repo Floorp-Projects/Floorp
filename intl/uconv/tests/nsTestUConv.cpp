@@ -27,30 +27,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 
-// include the CIDs
-#include "nsUCvLatinCID.h"
-#include "nsUCVJACID.h"
-#include "nsUCVJA2CID.h"
-
-#ifdef XP_UNIX
-#define UCONV_DLL         "libuconv.so"
-#define UCVLATIN_DLL      "libucvlatin.so"
-#define UCVJA_DLL         "libucvja.so"
-#define UCVJA2_DLL        "libucvja2.so"
-#else /* XP_UNIX */
-#ifdef XP_MAC
-#define UCONV_DLL       "UCONV_DLL"
-#define UCVLATIN_DLL    "UCVLATIN_DLL"
-#define UCVJA_DLL       "UCVJA_DLL"
-#define UCVJA2_DLL      "UCVJA2_DLL"
-#else /* XP_MAC */
-#define UCONV_DLL       "uconv.dll"
-#define UCVLATIN_DLL    "ucvlatin.dll"
-#define UCVJA_DLL       "ucvja.dll"
-#define UCVJA2_DLL      "ucvja2.dll"
-#endif 
-#endif
-
 /**
  * Test program for the Unicode Converters.
  *
@@ -72,35 +48,43 @@
 
 #define GENERAL_BUFFER 20000 // general purpose buffer; for Unicode divide by 2
 
+#define ARRAY_SIZE(_array)                                      \
+     (sizeof(_array) / sizeof(_array[0]))
+
 nsICharsetConverterManager * ccMan = NULL;
+
+/**
+ * Test data for Latin1 charset.
+ */
+
+char bLatin1_d0[] = {
+  "\x00\x0d\x7f\x80\xff"
+};
+
+PRUnichar cLatin1_d0[] = {
+  0x0000,0x000d,0xfffd,0xfffd,0x00ff
+};
+
+PRInt32 bLatin1_s0 = ARRAY_SIZE(bLatin1_d0)-1;
+PRInt32 cLatin1_s0 = ARRAY_SIZE(cLatin1_d0);
+
 
 //----------------------------------------------------------------------
 // Registry setup function(s)
 
 nsresult setupRegistry()
 {
-  nsresult res;
-
-  res = nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsComponentManager::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsComponentManager::RegisterComponent(kCP1253ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsComponentManager::RegisterComponent(kISO88597ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsComponentManager::RegisterComponent(kSJIS2UnicodeCID, NULL, NULL, UCVJA_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsComponentManager::RegisterComponent(kISO2022JPToUnicodeCID, NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsComponentManager::RegisterComponent(kPlatformCharsetCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+  /** 
+   * Ok, here's where we used to register the components needed to run the 
+   * tests. This is not necessary anymore, as the auto-registration stuff
+   * is in place now. But, please we don't trigger the autoregistration in 
+   * this test program, so make sure you first run an autoreg app (like 
+   * viewer). Included is an example of the old code, in case we'll need it.
+   *
+   * nsresult res = nsComponentManager::RegisterComponent(
+   * kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+   * if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+   */
 
   return NS_OK;
 }
@@ -173,9 +157,6 @@ nsresult testCharsetConverterManager()
       printf("ERROR at GetUnicodeEncoder() code=0x%x.\n",res);  \
       return res;                                               \
     }
-
-#define ARRAY_SIZE(_array)                                      \
-     (sizeof(_array) / sizeof(_array[0]))
 
 /**
  * Decoder test.
@@ -471,6 +452,38 @@ nsresult resetEncoder(nsIUnicodeEncoder * aEnc, const char * aTestName)
   return res;
 }
 
+/**
+ * A standard decoder test.
+ */
+nsresult standardDecoderTest(char * aTestName, char * aCharset, char * aSrc, 
+  PRInt32 aSrcLen, PRUnichar * aRes, PRInt32 aResLen)
+{
+  printf("\n[%s] Unicode <- %s\n", aTestName, aCharset);
+
+  // create converter
+  CREATE_DECODER(aCharset);
+
+  // test converter - easy test
+  res = testDecoder(dec, aSrc, aSrcLen, aRes, aResLen, aTestName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, aTestName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, aSrc, aSrcLen, aRes, aResLen, aTestName);
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 nsresult loadBinaryFile(char * aFile, char * aBuff, PRInt32 * aBuffLen)
 {
   FILE * f = fopen(aFile, "rb");
@@ -543,48 +556,12 @@ nsresult testEncoderFromFiles(char * aCharset, char * aSrcFile, char * aResultFi
 // Decoders testing functions
 
 /**
- * Test the Latin1 decoder.
- */
-nsresult testLatin1Decoder()
-{
-  char * testName = "T101";
-  printf("\n[%s] Latin1ToUnicode\n", testName);
-
-  // create converter
-  CREATE_DECODER("iso-8859-1");
-
-  // test data
-  char src[] = {"\x00\x0d\x7f\x80\xff"};
-  PRUnichar exp[] = {0x0000,0x000d,0xfffd,0xfffd,0x00ff};
-
-  // test converter - easy test
-  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
-
-  // reset converter
-  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
-
-  // test converter - stress test
-  if (NS_SUCCEEDED(res)) 
-    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
-
-  // release converter
-  NS_RELEASE(dec);
-
-  if (NS_FAILED(res)) {
-    return res;
-  } else {
-    printf("Test Passed.\n");
-    return NS_OK;
-  }
-}
-
-/**
  * Test the ISO2022JP decoder.
  */
 nsresult testISO2022JPDecoder()
 {
   char * testName = "T102";
-  printf("\n[%s] ISO2022JPToUnicode\n", testName);
+  printf("\n[%s] Unicode <- ISO2022JP\n", testName);
 
   // create converter
   CREATE_DECODER("iso-2022-jp");
@@ -620,7 +597,7 @@ nsresult testISO2022JPDecoder()
 nsresult testEUCJPDecoder()
 {
   char * testName = "T103";
-  printf("\n[%s] EUCJPToUnicode\n", testName);
+  printf("\n[%s] Unicode <- EUCJP\n", testName);
 
   // create converter
   CREATE_DECODER("euc-jp");
@@ -632,14 +609,12 @@ nsresult testEUCJPDecoder()
   // test converter - normal operation
   res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
 
-#ifdef NOPE // XXX decomment this when the decoder can take this test.
   // reset converter
   if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
 
   // test converter - stress test
   if (NS_SUCCEEDED(res)) 
     res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
-#endif
 
   // release converter
   NS_RELEASE(dec);
@@ -658,7 +633,7 @@ nsresult testEUCJPDecoder()
 nsresult testISO88597Decoder()
 {
   char * testName = "T104";
-  printf("\n[%s] ISO88597ToUnicode\n", testName);
+  printf("\n[%s] Unicode <- ISO88597\n", testName);
 
   // create converter
   CREATE_DECODER("iso-8859-7");
@@ -704,7 +679,7 @@ nsresult testISO88597Decoder()
 nsresult testSJISDecoder()
 {
   char * testName = "T105";
-  printf("\n[%s] SJISToUnicode\n", testName);
+  printf("\n[%s] Unicode <- SJIS\n", testName);
 
   // create converter
   CREATE_DECODER("Shift_JIS");
@@ -728,14 +703,12 @@ nsresult testSJISDecoder()
   // test converter - normal operation
   res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
 
-#ifdef NOPE // XXX decomment this when the decoder can take this test.
   // reset converter
   if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
 
   // test converter - stress test
   if (NS_SUCCEEDED(res)) 
     res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
-#endif
 
   // release converter
   NS_RELEASE(dec);
@@ -754,7 +727,7 @@ nsresult testSJISDecoder()
 nsresult testUTF8Decoder()
 {
   char * testName = "T106";
-  printf("\n[%s] UTF8ToUnicode\n", testName);
+  printf("\n[%s] Unicode <- UTF8\n", testName);
 
   // create converter
   CREATE_DECODER("utf-8");
@@ -795,7 +768,7 @@ nsresult testUTF8Decoder()
 nsresult testLatin1Encoder()
 {
   char * testName = "T201";
-  printf("\n[%s] UnicodeToLatin1\n", testName);
+  printf("\n[%s] Unicode -> Latin1\n", testName);
 
   // create converter
   CREATE_ENCODER("iso-8859-1");
@@ -832,7 +805,7 @@ nsresult testLatin1Encoder()
 nsresult testSJISEncoder()
 {
   char * testName = "T202";
-  printf("\n[%s] UnicodeToSJIS\n", testName);
+  printf("\n[%s] Unicode -> SJIS\n", testName);
 
   // create converter
   CREATE_ENCODER("Shift_JIS");
@@ -881,7 +854,7 @@ nsresult testSJISEncoder()
 nsresult testEUCJPEncoder()
 {
   char * testName = "T203";
-  printf("\n[%s] UnicodeToEUCJP\n", testName);
+  printf("\n[%s] Unicode -> EUCJP\n", testName);
 
   // create converter
   CREATE_ENCODER("euc-jp");
@@ -936,6 +909,7 @@ nsresult  testPlatformCharset()
   return res;
   
 }
+
 //----------------------------------------------------------------------
 // Testing functions
 
@@ -947,11 +921,10 @@ nsresult testAll()
   res = testCharsetConverterManager();
   if (NS_FAILED(res)) return res;
 
-
   testPlatformCharset();
 
   // test decoders
-  testLatin1Decoder();
+  standardDecoderTest("T101", "ISO-8859-1", bLatin1_d0, bLatin1_s0, cLatin1_d0, cLatin1_s0);
   testISO2022JPDecoder();
   testEUCJPDecoder();
   testISO88597Decoder();
