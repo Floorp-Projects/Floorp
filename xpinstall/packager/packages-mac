@@ -69,9 +69,7 @@ viewer:Essential Files:libutil.shlb
 viewer:Essential Files:RaptorShell.shlb 
 viewer:Essential Files:widget.shlb 
 
-viewer:Essential Files:PSM.shlb
 viewer:Essential Files:NSSckbi.shlb
-viewer:psmdata:*
 
 viewer:Components:docshell.shlb 
 viewer:Components:AppShell.shlb 
@@ -130,14 +128,16 @@ viewer:Components:nslocale.shlb
 viewer:Components:nsLocale.xpt 
 viewer:Components:nsSidebar.js
 viewer:Components:oji.xpt 
+viewer:Components:PIPNSS.shlb
+viewer:Components:pipnss.xpt
+viewer:Components:PIPPKI.shlb
+viewer:Components:pippki.xpt
 viewer:Components:plugin.shlb 
 viewer:Components:pngdecoder.shlb 
 viewer:Components:prefm.shlb 
 viewer:Components:prefm.xpt 
 viewer:Components:profile.shlb 
 viewer:Components:profileservices.xpt 
-viewer:Components:PSMGlue.shlb
-viewer:Components:psmglue.xpt
 viewer:Components:rdf.xpt 
 viewer:Components:RDFLibrary.shlb 
 viewer:Components:RegViewer.shlb 
@@ -201,6 +201,8 @@ viewer:chrome:comm.jar
 viewer:chrome:toolkit.jar
 viewer:chrome:modern.jar
 viewer:chrome:classic.jar
+viewer:chrome:pippki.jar
+viewer:chrome:pipnss.jar
 -viewer:chrome:comm:content:editor:EditorInitPage.html
 -viewer:chrome:comm:content:editor:EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
