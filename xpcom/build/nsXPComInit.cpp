@@ -89,6 +89,7 @@
 #endif
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsCategoryManager.h"
 #include "nsICategoryManager.h"
 #include "nsStringStream.h"
 #include "nsMultiplexInputStream.h"
@@ -453,6 +454,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     // Category Manager
     {
+      extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
       nsCOMPtr<nsIFactory> categoryManagerFactory;
       if ( NS_FAILED(rv = NS_CategoryManagerGetFactory(getter_AddRefs(categoryManagerFactory))) )
         return rv;
@@ -476,6 +478,13 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         printf("No Persistent Registry Found.\n");        
     }
 #endif
+
+    if ( NS_FAILED(rv) ) {
+        // if we find no persistent registry, we will try to autoregister
+        // the default components directory.
+        nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);        
+    }
+
     // Pay the cost at startup time of starting this singleton.
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);

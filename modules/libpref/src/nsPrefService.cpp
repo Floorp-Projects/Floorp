@@ -42,6 +42,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsILocalFile.h"

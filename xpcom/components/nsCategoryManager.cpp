@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsICategoryManager.h"
+#include "nsCategoryManager.h"
 
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
@@ -184,17 +185,6 @@ nsCategoryManager::GetCategoryEntry( const char *aCategoryName,
                                      const char *aEntryName,
                                      char **_retval )
   {
-      // BULLSHIT ALERT: Category `handler's currently not implemented, so just call through
-    return GetCategoryEntryRaw(aCategoryName, aEntryName, _retval);
-  }
-
-
-
-NS_IMETHODIMP
-nsCategoryManager::GetCategoryEntryRaw( const char *aCategoryName,
-                                        const char *aEntryName,
-                                        char **_retval )
-  {
     NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
     NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
     NS_ASSERTION(_retval,       "_retval is NULL!");
@@ -211,8 +201,6 @@ nsCategoryManager::GetCategoryEntryRaw( const char *aCategoryName,
 
     return status;
   }
-
-
 
 NS_IMETHODIMP
 nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
@@ -385,30 +373,6 @@ nsCategoryManager::EnumerateCategories(nsISimpleEnumerator **_retval)
     return status;
 }
 
-
-NS_IMETHODIMP
-nsCategoryManager::RegisterCategoryHandler( const char*          /* aCategoryName */,
-                                            nsICategoryHandler*  /* aHandler */,
-                                            PRInt32              /* aMode */,
-                                            nsICategoryHandler** /* _retval */ )
-  {
-      // BULLSHIT ALERT: Category `handler's currently not implemented
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-
-
-NS_IMETHODIMP
-nsCategoryManager::UnregisterCategoryHandler( const char *category,
-                                              nsICategoryHandler *handler,
-                                              nsICategoryHandler *previous )
-  {
-      // BULLSHIT ALERT: Category `handler's currently not implemented.
-      //  Wasn't implemented in the JS version either.
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
- 
- 
 class nsCategoryManagerFactory : public nsIFactory
    {
      public:
@@ -455,8 +419,6 @@ nsCategoryManagerFactory::LockFactory( PRBool )
     return NS_OK;
   }
 
-extern "C"
-NS_EXPORT
 nsresult
 NS_CategoryManagerGetFactory( nsIFactory** aFactory )
   {
@@ -489,7 +451,7 @@ NS_CategoryManagerGetFactory( nsIFactory** aFactory )
  * this will attempt to notify the observer with the origin, observerTopic string
  * as parameter.
  */
-nsresult
+NS_EXPORT nsresult
 NS_CreateServicesFromCategory(const char *category,
                               nsISupports *origin,
                               const char *observerTopic)

@@ -56,6 +56,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 
 class nsAbQueryLDAPMessageListener : public nsILDAPMessageListener
 {

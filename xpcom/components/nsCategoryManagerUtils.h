@@ -41,6 +41,11 @@
 #include "nsICategoryManager.h"
 #include "nsCOMPtr.h"
 
+NS_COM nsresult
+NS_CreateServicesFromCategory(const char *category,
+                              nsISupports *origin,
+                              const char *observerTopic);
+
 class NS_COM nsCreateInstanceFromCategory : public nsCOMPtr_helper
 {
 public:
