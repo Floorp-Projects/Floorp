@@ -411,14 +411,34 @@ nsImageFrame::IsPendingLoad(imgIContainer* aContainer) const
 }
 
 nsRect
-nsImageFrame::ConvertPxRectToTwips(const nsRect& aRect) const
+nsImageFrame::SourceRectToDest(const nsRect& aRect)
 {
-  float p2t;
-  p2t = GetPresContext()->PixelsToTwips();
-  return nsRect(NSIntPixelsToTwips(aRect.x, p2t), // x
-                NSIntPixelsToTwips(aRect.y, p2t), // y
-                NSIntPixelsToTwips(aRect.width, p2t), // width
-                NSIntPixelsToTwips(aRect.height, p2t)); // height
+  float p2t = GetPresContext()->PixelsToTwips();
+
+  // When scaling the image, row N of the source image may (depending on
+  // the scaling function) be used to draw any row in the destination image
+  // between floor(F * (N-1)) and ceil(F * (N+1)), where F is the
+  // floating-point scaling factor.  The same holds true for columns.
+  // So, we start by computing that bound without the floor and ceiling.
+
+  nsRect r(NSIntPixelsToTwips(aRect.x - 1, p2t),
+           NSIntPixelsToTwips(aRect.y - 1, p2t),
+           NSIntPixelsToTwips(aRect.width + 2, p2t),
+           NSIntPixelsToTwips(aRect.height + 2, p2t));
+
+  mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
+
+  // Now, round the edges out to the pixel boundary.
+  int scale = (int) p2t;
+  nscoord right = r.x + r.width;
+  nscoord bottom = r.y + r.height;
+
+  r.x -= (scale + (r.x % scale)) % scale;
+  r.y -= (scale + (r.y % scale)) % scale;
+  r.width = right + ((scale - (right % scale)) % scale) - r.x;
+  r.height = bottom + ((scale - (bottom % scale)) % scale) - r.y;
+
+  return r;
 }
 
 nsresult
@@ -597,9 +617,13 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     }
   }
 
-  nsRect r = ConvertPxRectToTwips(*aRect);
-  mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
-  // Invalidate updated image
+  nsRect r = SourceRectToDest(*aRect);
+#ifdef DEBUG_decode
+  printf("Source rect (%d,%d,%d,%d) -> invalidate dest rect (%d,%d,%d,%d)\n",
+         aRect->x, aRect->y, aRect->width, aRect->height,
+         r.x, r.y, r.width, r.height);
+#endif
+
   Invalidate(r, PR_FALSE);
   
   return NS_OK;
@@ -684,8 +708,7 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
   
-  nsRect r = ConvertPxRectToTwips(*aDirtyRect);
-  mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
+  nsRect r = SourceRectToDest(*aDirtyRect);
 
   // Update border+content to account for image change
   Invalidate(r, PR_FALSE);
@@ -1375,6 +1398,12 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
             // Transform that to image coords
             trans.TransformCoord(&r.x, &r.y, &r.width, &r.height);
           
+#ifdef DEBUG_decode
+            printf("IF draw src (%d,%d,%d,%d) -> dst (%d,%d,%d,%d)\n",
+                   r.x, r.y, r.width, r.height, paintArea.x, paintArea.y,
+                   paintArea.width, paintArea.height);
+#endif
+
             aRenderingContext.DrawImage(imgCon, r, paintArea);
           }
         }

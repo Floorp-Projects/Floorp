@@ -230,10 +230,10 @@ private:
   PRBool IsPendingLoad(imgIContainer* aContainer) const;
 
   /**
-   * Helper to convert a rect in pixels to one in twips using the
-   * prescontext's p2t factor
+   * Function to convert a dirty rect in the source image to a dirty
+   * rect for the image frame.
    */
-  nsRect ConvertPxRectToTwips(const nsRect & aRect) const;
+  nsRect SourceRectToDest(const nsRect & aRect);
 
   /**
    * Function to call when a load fails; this handles things like alt
