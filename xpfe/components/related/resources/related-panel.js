@@ -35,7 +35,7 @@ var oNavObserver = null;
 
 function debug(msg) {
 	// uncomment for noise
-	 dump("-+- related-panel: " + msg + "\n");
+	// dump("-+- related-panel: " + msg + "\n");
 }
 
 
