@@ -747,6 +747,12 @@ NS_IMETHODIMP nsDocAccessible::OnProgressChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsIURI *location)
 {
+  PRBool isLoadingDocument;
+  aWebProgress->GetIsLoadingDocument(&isLoadingDocument);
+  if (!isLoadingDocument) {
+    return NS_OK;  // Staying on the same page, perhaps jumping to a named anchor
+  }
+
   // Load has been verified, it will occur, about to commence
 
   // We won't fire a "doc finished loading" event on this nsDocAccessible 
