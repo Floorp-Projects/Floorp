@@ -313,6 +313,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
 
   if (NS_FAILED(rv)) finalResult = rv;
+  
+  rv = compMgr->RegisterComponent(kPop3ServiceCID,  
+                                  "POP Protocol Handler",
+                                  NS_POP3PROTOCOLINFO_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+
+  if (NS_FAILED(rv)) finalResult = rv;
 
   // register our RDF resource factories:
   rv = compMgr->RegisterComponent(kLocalMailFolderResourceCID,

@@ -22,7 +22,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
-
+#include "nsMsgBaseCID.h"
 //
 // nsLocalMailFolderResourceCID
 //
@@ -124,6 +124,9 @@
 
 #define NS_POP3SERVICE_PROGID2 \
   NS_NETWORK_PROTOCOL_PROGID_PREFIX "pop3"
+
+#define NS_POP3PROTOCOLINFO_PROGID \
+  NS_MSGPROTOCOLINFO_PROGID_PREFIX "pop3"
 
 #define NS_POP3SERVICE_CID								\
 { /* 3BB459E3-D746-11d2-806A-006008128C4E} */			\
