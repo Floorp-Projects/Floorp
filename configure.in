@@ -3992,7 +3992,7 @@ dnl Enable code size metrics.
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(codesighs,
 [  --enable-codesighs      Enable code size analysis tools],
-[ if test -d ./tools/codesighs; then 
+[ if test -d $srcdir/tools/codesighs; then 
     MOZ_MAPINFO=1
 else
     AC_MSG_ERROR([Codesighs directory ./tools/codesighs required.])
