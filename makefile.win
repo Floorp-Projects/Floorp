@@ -47,6 +47,7 @@ DIRS =                         \
 !if defined(DIST_DIRS)
   config                       \
   include                      \
+  modules\libutil              \
   jpeg                         \
   sun-java                     \
   modules\libreg               \
@@ -58,7 +59,6 @@ DIRS =                         \
   js                           \
   modules\zlib                 \
   modules\libjar               \
-  modules\libutil              \
   modules\libimg               \
   modules\libpref              \
   modules\plugin               \
