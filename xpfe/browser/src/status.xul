@@ -9,15 +9,18 @@
 <html:script>
 	var mode = "undetermined";
 	function kickProgressMeter() {
+		var meter = document.getElementByID("meter");
+		dump( "Meter was mode=" + meter.getAttribute("mode") + " value=" + meter.getAttribute("value") + "\n" );
 		if ( mode == "undetermined" ) {
 			mode = "normal";
 			var random = Math.round( Math.random() * 100 )
-			var meter = document.getElementByID("meter");
-			alert( "meter is " + meter );
+			dump("Setting meter to (" + mode + ") " + random.toString() + "\n" );
 			meter.setAttribute( "value", random.toString() );
 		} else {
 			mode = "undetermined";
+			dump("Setting meter to (undetermined)\n");
 		}
+		meter.setAttribute( "mode", mode );
 	}
 </html:script>
 
@@ -32,13 +35,13 @@
 		</html:button>
 	</html:td>
 	<html:td html:WIDTH="15%" html:nowrap html:style="border: 1px inset rgb(192,192,192);">
-		<progressmeter id="meter" value="61" mode="normal">       
+		<progressmeter id="meter" mode="normal" value="61">
 			<observes element="Browser:LoadingProgress" attribute="value" />
             <observes element="Browser:LoadingProgress" attribute="mode" />                     
         </progressmeter>
 	</html:td>
 	<html:td html:WIDTH="82%" html:nowrap html:style="border: 1px inset rgb(192,192,192);">
-		Document done (even a stopped clock is right twice a day)
+		Document: Done (even a stopped clock is right twice a day)
 	</html:td>
 </html:tr>
 </html:table>
