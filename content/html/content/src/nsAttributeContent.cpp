@@ -177,8 +177,8 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange);
+  NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
+  NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
   // Implementation for nsIContent
@@ -358,14 +358,14 @@ nsAttributeContent::HandleDOMEvent(nsIPresContext* aPresContext,
 
 
 nsresult 
-nsAttributeContent::RangeAdd(nsIDOMRange& aRange)
+nsAttributeContent::RangeAdd(nsIDOMRange* aRange)
 {
   return NS_ERROR_FAILURE;
 }
 
 
 nsresult 
-nsAttributeContent::RangeRemove(nsIDOMRange& aRange)
+nsAttributeContent::RangeRemove(nsIDOMRange* aRange)
 {
   return NS_ERROR_FAILURE;
 }

@@ -748,7 +748,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
 
 
 nsresult 
-nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
+nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 {
   // lazy allocation of range list
   if (nsnull == mRangeList) {
@@ -760,7 +760,7 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
 
   // Make sure we don't add a range that is already
   // in the list!
-  PRInt32 i = mRangeList->IndexOf(&aRange);
+  PRInt32 i = mRangeList->IndexOf(aRange);
   if (i >= 0) {
     // Range is already in the list, so there
     // is nothing to do!
@@ -768,18 +768,18 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
   }
   
   // dont need to addref - this call is made by the range object itself
-  PRBool rv = mRangeList->AppendElement(&aRange);
+  PRBool rv = mRangeList->AppendElement(aRange);
   if (rv)  return NS_OK;
   return NS_ERROR_FAILURE;
 }
 
 
 nsresult 
-nsGenericDOMDataNode::RangeRemove(nsIDOMRange& aRange)
+nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
 {
   if (mRangeList) {
     // dont need to release - this call is made by the range object itself
-    PRBool rv = mRangeList->RemoveElement(&aRange);
+    PRBool rv = mRangeList->RemoveElement(aRange);
     if (rv) {
       if (mRangeList->Count() == 0) {
         delete mRangeList;

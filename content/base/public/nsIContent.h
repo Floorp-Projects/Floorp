@@ -249,8 +249,8 @@ public:
    * GetRangeList -- returns the list of ranges that have one or both endpoints
    *                 within this content item
    */
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) = 0;
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) = 0;
+  NS_IMETHOD RangeAdd(nsIDOMRange* aRange) = 0;
+  NS_IMETHOD RangeRemove(nsIDOMRange* aRange) = 0;
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const = 0;
   
   /**

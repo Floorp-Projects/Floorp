@@ -643,7 +643,7 @@ nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
   if (NS_FAILED(res)) 
     return res;
 
-  res = cN->RangeAdd(*NS_STATIC_CAST(nsIDOMRange*,this));
+  res = cN->RangeAdd(NS_STATIC_CAST(nsIDOMRange*,this));
   return res;
 }
   
@@ -659,7 +659,7 @@ nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
   if (NS_FAILED(res)) 
     return res;
 
-  res = cN->RangeRemove(*NS_STATIC_CAST(nsIDOMRange*,this));
+  res = cN->RangeRemove(NS_STATIC_CAST(nsIDOMRange*,this));
   return res;
 }
 
