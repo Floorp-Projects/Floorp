@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.24 $ 
-# $Date: 2002/05/02 01:46:53 $ 
+# $Revision: 1.25 $ 
+# $Date: 2002/05/07 20:33:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -517,22 +517,25 @@ sub check_required_vars {
 
   ($TINDERBOX{'errorparser'}) ||
     ($err_string .= "Variable: 'tinderbox: errorparser:' not set.\n");
-  
-  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
-  my ($ignore) = eval &$func(@_);    
-  
-  ($@) &&
-    ($err_string .= (
-                     "Errorparser: ".
-                     "'$TINDERBOX{'errorparser'}::parse_errorline'".
-                     " does not exist.\n"
-                    ));
 
-  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
-  my ($ignore) = eval &$func(@_);    
-  ($@) &&
-    ($err_string .= "Errorparser: '$TINDERBOX{'errorparser'}::line_type'".
-     " does not exist.\n");
+  {
+      my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
+      my ($ignore) = eval &$func(@_);    
+      
+      ($@) &&
+          ($err_string .= (
+                           "Errorparser: ".
+                           "'$TINDERBOX{'errorparser'}::parse_errorline'".
+                           " does not exist.\n"
+                           ));
+  }
+  {
+      ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
+      ($ignore) = eval &$func(@_);    
+      ($@) &&
+          ($err_string .= "Errorparser: '$TINDERBOX{'errorparser'}::line_type'".
+           " does not exist.\n");
+  }
   
   # Note at this point we could have sourced only the implementation
   # of the error parser that we need.  I think programs which use an
@@ -857,22 +860,26 @@ sub parse_mail_body {
   # calling the symbolic reference to the function continually.  This
   # is also how we check that the function exists.
 
-  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
-  my($func_line_type) = '';
+    {
+        my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
+        my($func_line_type) = '';
+        
+        my ($out) = eval "\$func_line_type = \\&${func};";
 
-  my ($out) = eval "\$func_line_type = \\&${func};";
+        ($@) &&
+            die("Errorparser is not set. $@");
+    }
 
-  ($@) &&
-    die("Errorparser is not set. $@");
-  
-  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
-  my ($func_parse_errorline) = "";
-  
-  my ($out) = eval "\$func_parse_errorline = \\&${func};";
-  
-  ($@) &&
-    die("Errorparser is not set. $@");
-  
+    {        
+        my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
+        my ($func_parse_errorline) = "";
+        
+        my ($out) = eval "\$func_parse_errorline = \\&${func};";
+        
+        ($@) &&
+            die("Errorparser is not set. $@");
+    }
+
   open(BINARY, ">$TMP_FILE{'binaryfile'}") ||
     die("Could not write to file: '$TMP_FILE{'binaryfile'}'. $!\n");
   open(FULL, ">$TMP_FILE{'full-log'}") ||
@@ -1151,14 +1158,18 @@ sub assemble_files {
     # server the full path name of the binary.
 
   }
-  
-    my (@cmd) = (@GZIP, $FILE{'full-log'});
-    system(@cmd) &&
-      die("Could not run '@cmd'. $!\n");
 
-    my (@cmd) = (@GZIP, $FILE{'brief-log'});
-    system(@cmd) &&
-      die("Could not run '@cmd'. $!\n");
+  {
+      my (@cmd) = (@GZIP, $FILE{'full-log'});
+      system(@cmd) &&
+          die("Could not run '@cmd'. $!\n");
+  }
+
+  {
+      my (@cmd) = (@GZIP, $FILE{'brief-log'});
+      system(@cmd) &&
+          die("Could not run '@cmd'. $!\n");
+  }
 
   return ;
 }
