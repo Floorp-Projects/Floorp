@@ -514,7 +514,7 @@ Contributor(s): ______________________________________. -->
                       key="key_preferences"
                       accesskey="&preferencesCmd.accesskey;"
                       oncommand="goPreferences('navigator.xul',
-                                               'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
+                                               'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
           </menupopup>
         </menu>
     

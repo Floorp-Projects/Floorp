@@ -27,7 +27,7 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % prefAppearanceDTD SYSTEM "chrome://communicator/locale/pref/pref-appearance.dtd" >
+<!ENTITY % prefAppearanceDTD SYSTEM "chrome://browser/locale/pref/pref-appearance.dtd" >
 %prefAppearanceDTD;
 ]>
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -36,7 +36,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var panel = "chrome://communicator/content/pref/pref-appearance.xul";
+    var panel = "chrome://browser/content/pref/pref-appearance.xul";
     var _elementIDs = ["generalStartupBrowser", "showHideTooltips", "useSiteIcons"];
   ]]>
   </script>

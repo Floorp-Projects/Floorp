@@ -11,11 +11,6 @@
 <!--LOCALIZATION NOTE (navCheck.label): DONT_TRANSLATE -->
 <!ENTITY navCheck.label "Navigator">
 <!ENTITY navCheck.accesskey "n">
-<!--LOCALIZATION NOTE (compCheck.label): DONT_TRANSLATE -->
-<!ENTITY compCheck.label "Composer">
-<!ENTITY compCheck.accesskey "c">
-<!ENTITY calCheck.label "Calendar">
-<!ENTITY calCheck.accesskey "a">
 <!ENTITY showToolsLegend.label "Show toolbars as">
 <!ENTITY picsNtextRadio.label "Pictures and text">
 <!ENTITY picsNtextRadio.accesskey "p">
