@@ -1325,7 +1325,12 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
  *    publish history location. Caller must XP_FREE the returned location,
  *    username, passwd.
  */
+/* OTHER PLATFORMS NEED TO CHANGE CALL TO PASS IN pMWContext */
+#ifdef XP_WIN
+XP_Bool EDT_GetPublishingHistory(MWContext *pMWContext, unsigned n, char** ppLocation, char** ppUsername, char** ppPassword);
+#else
 XP_Bool EDT_GetPublishingHistory(unsigned n, char** loc, char** u, char** p);
+#endif
 
 /* Get URL and TITLE from the recently-edited history list kept in preferences
  * Similar to Publish history list, except caller should NOT XP_FREE the returned strings
@@ -1430,6 +1435,12 @@ PRBool EDT_EncryptState(MWContext *pContext);
 
 /* Used for QA only - Ctrl+Alt+Shift+N accelerator for automated testing */
 void EDT_SelectNextNonTextObject(MWContext *pContext);
+
+/* Called from NET_AskForAuthString in mkaccess.c to tell us the correct 
+   username after the dialog to enter it was used
+*/
+void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername);
+
 
 XP_END_PROTOS
 
