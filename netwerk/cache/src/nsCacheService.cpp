@@ -255,7 +255,7 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
                                         getter_AddRefs(listenerProxy));
     if (NS_FAILED(rv)) return rv;
 
-    return listenerProxy->OnDescriptorAvailable(descriptor, accessGranted, error);
+    return listenerProxy->OnCacheEntryAvailable(descriptor, accessGranted, error);
 }
 
 
