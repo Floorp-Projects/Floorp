@@ -149,11 +149,12 @@ nsHttpHandler::~nsHttpHandler()
 
     nsHttp::DestroyAtomTable();
 
-    LOG(("dropping active connections...\n"));
-    DropConnections(mActiveConnections);
-
-    LOG(("dropping idle connections...\n"));
-    DropConnections(mIdleConnections);
+    // If the |nsHttpConnection| objects stop holding references to this
+    // object (as was done to fix bug 143821), then the code from
+    // |Observe| to call |DropConnections| should probably move back
+    // here.
+    NS_ASSERTION(!mActiveConnections.Count() && !mIdleConnections.Count(),
+                 "Connections should own reference to nsHttpHandler");
 
     if (mAuthCache) {
         delete mAuthCache;
@@ -432,11 +433,12 @@ nsresult
 nsHttpHandler::PurgeDeadConnections()
 {
     nsAutoLock lock(mConnectionLock);
-    for (PRInt32 i = 0; i < mIdleConnections.Count(); ++i) {
+    // Loop from end to beginning because of |RemoveElement| calls.
+    for (PRInt32 i = mIdleConnections.Count() - 1; i >= 0; --i) {
         nsHttpConnection *conn = (nsHttpConnection *) mIdleConnections[i];
         if (conn && !conn->CanReuse()) {
             // Dead and idle connection; purge it
-            mIdleConnections.RemoveElement(conn);
+            mIdleConnections.RemoveElementAt(i);
             NS_RELEASE(conn);
         }
     }
@@ -2111,6 +2113,19 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (mTimer) {
             mTimer->Cancel();
             mTimer = 0;
+        }
+
+        // If we don't call DropConnections here, we'll never get
+        // destroyed, since we own a reference to the connections in
+        // these arrays and they own a reference back to us.
+        {
+            nsAutoLock lock(mConnectionLock);
+
+            LOG(("dropping active connections...\n"));
+            DropConnections(mActiveConnections);
+
+            LOG(("dropping idle connections...\n"));
+            DropConnections(mIdleConnections);
         }
     }
 
