@@ -696,6 +696,48 @@ void UpdateInstallLog(LPSTR szKey, LPSTR szDir)
   }
 }
 
+void UpdateJSProxyInfo()
+{
+  FILE *fJSFile;
+  char szBuf[MAX_BUF];
+  char szJSFile[MAX_BUF];
+
+  if((*diAdvancedSettings.szProxyServer != '\0') || (*diAdvancedSettings.szProxyPort != '\0'))
+  {
+    lstrcpy(szJSFile, sgProduct.szPath);
+    if(*sgProduct.szSubPath != '\0')
+    {
+      AppendBackSlash(szJSFile, sizeof(szJSFile));
+      lstrcat(szJSFile, sgProduct.szSubPath);
+    }
+    AppendBackSlash(szJSFile, sizeof(szJSFile));
+    lstrcat(szJSFile, "defaults\\pref\\");
+    CreateDirectoriesAll(szJSFile, TRUE);
+    lstrcat(szJSFile, FILE_ALL_JS);
+
+    if((fJSFile = fopen(szJSFile, "a+t")) != NULL)
+    {
+      ZeroMemory(szBuf, sizeof(szBuf));
+      if(*diAdvancedSettings.szProxyServer != '\0')
+      {
+        lstrcpy(szBuf, "user_pref(\"network.proxy.ftp\", \"");
+        lstrcat(szBuf, diAdvancedSettings.szProxyServer);
+        lstrcat(szBuf, "\");\n");
+      }
+
+      if(*diAdvancedSettings.szProxyPort != '\0')
+      {
+        lstrcat(szBuf, "user_pref(\"network.proxy.ftp_port\", ");
+        lstrcat(szBuf, diAdvancedSettings.szProxyPort);
+        lstrcat(szBuf, ");\n");
+      }
+
+      fwrite(szBuf, sizeof(char), lstrlen(szBuf), fJSFile);
+      fclose(fJSFile);
+    }
+  }
+}
+
 HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
 {
   int     i;

@@ -64,5 +64,6 @@ void        UpdateInstallLog(LPSTR szKey, LPSTR szDir);
 int         RegisterDll32(char *File);
 HRESULT     FileSelfRegister(LPSTR szFilename, LPSTR szDestination);
 HRESULT     ProcessSelfRegisterFile(DWORD dwTiming);
+void        UpdateJSProxyInfo(void);
 
 #endif

@@ -65,6 +65,7 @@ typedef int PRInt32;
 #define FILE_INI_REDIRECT               "redirect.ini"
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install.log"
+#define FILE_ALL_JS                     "all.js"
 
 /* UG: Upgrade */
 #define UG_NONE                         0
@@ -242,6 +243,9 @@ typedef struct dlgAdvancedSettings
   LPSTR szTitle;
   LPSTR szMessage0;
   LPSTR szMessage1;
+  LPSTR szProxyServer;
+  LPSTR szProxyPort;
+  BOOL  bSaveInstaller;
 } diAS;
 
 typedef struct dlgStartInstall
@@ -264,13 +268,13 @@ typedef struct setupStruct
   DWORD     dwCustomType;
   DWORD     dwNumberOfComponents;
   LPSTR     szPath;
+  LPSTR     szSubPath;
+  LPSTR     szProgramName;
   LPSTR     szProductName;
   LPSTR     szProgramFolderName;
   LPSTR     szProgramFolderPath;
   LPSTR     szAlternateArchiveSearchPath;
   LPSTR     szParentProcessFilename;
-  LPSTR     szProxyServer;
-  LPSTR     szProxyPort;
   LPSTR     szSetupTitle0;
   COLORREF  crSetupTitle0FontColor;
   int       iSetupTitle0FontSize;

@@ -100,6 +100,7 @@
 #define IDC_EDIT_PROXY_SERVER           1062
 #define IDC_EDIT_PROXY_PORT             1063
 #define IDC_TAB1                        1064
+#define IDC_DELETE_PATH                 1065
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -148,7 +149,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1065
+#define _APS_NEXT_CONTROL_VALUE         1066
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
