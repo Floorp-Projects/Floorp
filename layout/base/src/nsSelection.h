@@ -59,4 +59,7 @@ class nsSelection : public nsISelection {
     char * ToString();
 };
 
+extern NS_LAYOUT nsresult
+  NS_NewSelection(nsISelection** aInstancePtrResult);
+
 #endif /* nsSelection_h___ */
