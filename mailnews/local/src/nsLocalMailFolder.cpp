@@ -2346,7 +2346,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     
 
       nsCOMPtr<nsIMsgFolder> srcFolder;
-      srcFolder = do_QueryInterface(mCopyState->m_srcSupport, &rv);
+      srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
       if (srcFolder)
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 		  ClearCopyState();
