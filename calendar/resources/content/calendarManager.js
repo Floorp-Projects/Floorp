@@ -554,6 +554,8 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
 //invoked.
 calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAllRemoteCalendars()
 {
+   var throbberElement = document.getElementById("navigator-throbber");
+   
    //get all the calendars.
    //get all the other calendars
    var SubNodes = this.rootContainer.getSubNodes();
@@ -563,12 +565,14 @@ calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAll
       //check their remote attribute, if its true, call retrieveAndSaveRemoteCalendar()
       if( SubNodes[i].getAttribute( "http://home.netscape.com/NC-rdf#remote" ) == "true" )
       {
+         throbberElement.setAttribute("busy", "true")
          this.retrieveAndSaveRemoteCalendar( SubNodes[i] );
          gNextSubNodeToRefresh = i+1;
          return;
       }
    }
    gNextSubNodeToRefresh = 0;
+   throbberElement.setAttribute("busy", "false")
 }
 
 /*
