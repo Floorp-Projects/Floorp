@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.27 $
+ *  npapi.h $Revision: 3.28 $
  *  Netscape client plug-in API spec
  */
 
@@ -110,7 +110,7 @@
 	#include <Events.h>
 #endif
 
-#if defined(XP_UNIX) && !defined(NO_X11)
+#if defined(XP_UNIX) && defined(MOZ_X11)
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
 #endif
@@ -305,7 +305,7 @@ typedef struct
 typedef struct
 {
   int32        type;
-#ifndef NO_X11
+#ifdef MOZ_X11
   Display*     display;
   Visual*      visual;
   Colormap     colormap;
@@ -467,7 +467,7 @@ typedef struct _NPEvent
   uint32 wParam;
   uint32 lParam;
 } NPEvent;
-#elif defined (XP_UNIX) && !defined(NO_X11)
+#elif defined (XP_UNIX) && defined(MOZ_X11)
 typedef XEvent NPEvent;
 #else
 typedef void*			NPEvent;
@@ -477,7 +477,7 @@ typedef void*			NPEvent;
 typedef RgnHandle NPRegion;
 #elif defined(XP_WIN)
 typedef HRGN NPRegion;
-#elif defined(XP_UNIX) && !defined(NO_X11)
+#elif defined(XP_UNIX) && defined(MOZ_X11)
 typedef Region NPRegion;
 #else
 typedef void *NPRegion;

@@ -678,7 +678,7 @@ nsHttpHandler::InitUserAgentComponents()
     "Macintosh"
 #elif defined(XP_BEOS)
     "BeOS"
-#elif defined(NO_X11)
+#elif !defined(MOZ_X11)
     "?"
 #else
     "X11"

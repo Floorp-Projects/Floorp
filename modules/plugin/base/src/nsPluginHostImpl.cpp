@@ -2648,7 +2648,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 
   NS_ENSURE_ARG_POINTER(aValue);
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(NO_X11)
+#if defined(XP_UNIX) && !defined(XP_MACOSX) && defined(MOZ_X11)
   if (nsPluginManagerVariable_XDisplay == aVariable) {
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
