@@ -97,7 +97,9 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
   NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);

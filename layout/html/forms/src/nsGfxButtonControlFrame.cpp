@@ -28,7 +28,9 @@
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentCID.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsLayoutAtoms.h"
@@ -471,6 +473,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
   return rv;
 }
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxButtonControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -482,6 +485,7 @@ NS_IMETHODIMP nsGfxButtonControlFrame::GetAccessible(nsIAccessible** aAccessible
 
   return NS_ERROR_FAILURE;
 }
+#endif
 
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP

@@ -20,15 +20,17 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-#
 
+include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME = raptorwidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DMOZ_AIMM
 
 CPPSRCS =              \
+!ifdef ACCESSIBILITY
 	Accessible.cpp      \
 	SimpleDOMNode.cpp      \
+!endif
 	nsFontRetrieverService.cpp      \
 	nsFontSizeIterator.cpp      \
 	nsNativeDragTarget.cpp      \
@@ -53,8 +55,10 @@ CPPSRCS =              \
 MODULE=raptor 
 
 OBJS =                             \
+!ifdef ACCESSIBILITY
 	.\$(OBJDIR)\Accessible.obj  \
 	.\$(OBJDIR)\SimpleDOMNode.obj  \
+!endif
 	.\$(OBJDIR)\nsFontRetrieverService.obj  \
 	.\$(OBJDIR)\nsFontSizeIterator.obj  \
 	.\$(OBJDIR)\nsNativeDragTarget.obj  \

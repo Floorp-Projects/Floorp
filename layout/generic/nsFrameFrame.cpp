@@ -74,7 +74,9 @@
 #include "nsIRenderingContext.h"
 
 // For Accessibility 
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 #include "nsIServiceManager.h"
 
 #ifdef INCLUDE_XUL
@@ -161,7 +163,9 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
   NS_IMETHOD  VerifyTree() const;
   PRBool IsInline();
@@ -257,6 +261,7 @@ nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
   //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
 }
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -268,6 +273,7 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::GetAccessible(nsIAccessible** aAccessible)
 
   return NS_ERROR_FAILURE;
 }
+#endif
 
 //--------------------------------------------------------------
 // Frames are not refcounted, no need to AddRef

@@ -65,7 +65,9 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
 
   NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,

@@ -30,7 +30,9 @@
 #include "nsITextContent.h"
 #include "nsIStatefulFrame.h"
 
+#ifdef ACCESSIBILITY
 class nsIAccessible;
+#endif
 
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
@@ -59,7 +61,9 @@ public:
                          nsEventStatus* aEventStatus);
 
  
+#ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 

@@ -32,7 +32,9 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresState.h"
 #include "nsCSSRendering.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 
@@ -90,6 +92,7 @@ nsGfxCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -101,6 +104,7 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessib
 
   return NS_ERROR_FAILURE;
 }
+#endif
 
 //--------------------------------------------------------------
 NS_IMETHODIMP

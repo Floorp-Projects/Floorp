@@ -46,7 +46,9 @@
 #include "nsCOMPtr.h"
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 
@@ -1087,6 +1089,7 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -1098,6 +1101,7 @@ NS_IMETHODIMP nsTableCellFrame::GetAccessible(nsIAccessible** aAccessible)
 
   return NS_ERROR_FAILURE;
 }
+#endif
 
 /* This is primarily for editor access via nsITableLayout */
 NS_IMETHODIMP

@@ -32,7 +32,9 @@
 #include "nsCSSRendering.h"
 #include "nsIPresState.h"
 #include "nsINameSpaceManager.h"
+#ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 
@@ -84,6 +86,7 @@ nsGfxRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+#ifdef ACCESSIBILITY
 NS_IMETHODIMP nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
@@ -95,6 +98,7 @@ NS_IMETHODIMP nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   return NS_ERROR_FAILURE;
 }
+#endif
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
