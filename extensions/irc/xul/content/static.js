@@ -396,8 +396,6 @@ function setOutputStyle (styleSheet)
 {
     var oc = top.frames[0].document;
 
-    top.frames[0].setClientOutput = setClientOutput;
-
     oc.close();
     oc.open();
     oc.write ("<html><head>");
@@ -417,8 +415,7 @@ function setOutputStyle (styleSheet)
                  "TYPE='text/css' MEDIA='screen'>");
 
     oc.write ("</head>" +
-              "<body onload='setClientOutput(document)'>" + 
-	      "<div id='output' class='output-window'></div></body>" +
+              "<body><div id='output' class='output-window'></div></body>" +
               "</html>");
 
     oc.close();
