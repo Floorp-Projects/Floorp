@@ -173,7 +173,7 @@ struct prldap_errormap_entry {
 #define ETXTBSY         -1
 #endif
 
-#if defined(BSDI) || defined(OPENBSD)
+#if defined(BSDI) || defined(OPENBSD) || defined (NETBSD)
 #define ENOTSUP		-1
 #endif
 
@@ -183,7 +183,7 @@ struct prldap_errormap_entry {
 
 #if defined(__hpux) || defined(_AIX) || defined(OSF1) || defined(DARWIN) || \
   defined(BEOS) || defined(FREEBSD) || defined(BSDI) || defined(VMS) || \
-  defined(OPENBSD)
+  defined(OPENBSD) || defined(NETBSD)
 #define EDEADLOCK       -1
 #endif
 
