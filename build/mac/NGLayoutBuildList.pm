@@ -550,7 +550,8 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                      "$distdirectory:chrome:");
     
 	#EDITOR
-	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",							"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",								"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",					"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
 	_InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
 	_InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
@@ -835,6 +836,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:gfx:macbuild:gfxIDL.mcp", 							"gfx");
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
+	BuildIDLProject(":mozilla:editor:txmgr:macbuild:txmgrIDL.mcp", 						"txmgr");
 	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp",				"profileservices");
 	BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",	"prefm");
 		
