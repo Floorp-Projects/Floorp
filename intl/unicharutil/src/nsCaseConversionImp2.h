@@ -45,9 +45,8 @@ public:
   NS_IMETHOD ToTitle(const PRUnichar* anArray, PRUnichar* aReturn, 
                      PRUint32 aLen, PRBool aStartInWordBoundary = PR_TRUE);
    
-  void Init();
 private:
-  static PRBool gInit;
+  static nsrefcnt gInit;
 };
 
 #endif
