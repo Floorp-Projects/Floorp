@@ -44,6 +44,6 @@ Rights Reserved.
 <!ENTITY useMIMEpart2.label "(does not work well with some mail or newsgroups readers)">
 <!ENTITY emoticonsAndStructs.label "Emoticons And Structs">
 <!ENTITY emoticons.label "Emoticons">
-<!ENTITY sructs.label "Structs">
+<!ENTITY structs.label "Structs">
 <!ENTITY convertEmoticons.label "When viewing a text message, convert emoticons to glyphs.">
 <!ENTITY convertStructs.label "When viewing a text message, convert structs to styles.">
