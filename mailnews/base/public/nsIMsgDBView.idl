@@ -137,11 +137,11 @@ interface nsMsgDBViewType
 [scriptable, uuid(704c7d28-fd1a-11d4-a5be-0060b0fc04b7)]
 interface nsIMsgDBView : nsISupports
 {
-    void open(in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType, out long count);
+    void open(in nsIMsgDatabase msgDB, in nsMsgViewSortTypeValue viewType, out long count);
     void close();
 
     void init(out long pCount);
-    void addKeys(out nsMsgKey pKeys, out long pFlags, in string pLevels, in nsMsgViewSortType sortType, in long numKeysToAdd);
+    void addKeys(out nsMsgKey pKeys, out long pFlags, in string pLevels, in nsMsgViewSortTypeValue sortType, in long numKeysToAdd);
 
-    void sort(in nsMsgViewSortType sortType, in nsMsgViewSortOrder sortOrder);
+    void sort(in nsMsgViewSortTypeValue sortType, in nsMsgViewSortOrderValue sortOrder);
 };

@@ -63,7 +63,7 @@ protected:
 
   nsCOMPtr <nsIMsgDatabase> m_db;
   PRBool		m_sortValid;
-	nsMsgViewSortTypeValue	m_sortType;
+  nsMsgViewSortTypeValue  m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;
   nsMsgDBViewTypeValue m_viewType;
 };

@@ -44,8 +44,7 @@ nsMsgDBView::~nsMsgDBView()
   /* destructor code */
 }
 
-/* void open (in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType); */
-NS_IMETHODIMP nsMsgDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortTypeValue viewType, PRInt32 *pCount)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -60,14 +59,41 @@ NS_IMETHODIMP nsMsgDBView::Init(PRInt32 *pCount)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd)
+NS_IMETHODIMP nsMsgDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder *sortOrder)
+NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    printf("XXX nsMsgDBView::Sort(%d,%d)\n",(int)sortType,(int)sortOrder);
+    if (m_sortType == sortType && m_sortValid) {
+        if (m_sortOrder == sortOrder) {
+            printf("XXX same as it ever was.  do nothing\n");
+            return NS_OK;
+        }   
+        else {
+            if (m_sortType != nsMsgViewSortType::byThread) {
+                printf("XXX same sort type (but not threaded), just different sort order.  just reverse it\n");
+                //ReverseSort();
+            }
+            else {
+                printf("XXX same sort type, just different sort order.  just reverse threads\n");
+                //ReverseThreads();
+            }
+
+            m_sortType = sortType;
+            m_sortOrder = sortOrder;
+            return NS_OK;
+        }
+    }
+
+    printf("XXX ok, sort the beast.\n");
+
+    m_sortType = sortType;
+    m_sortOrder = sortOrder;
+
+    return NS_OK;
 }
 
 nsresult nsMsgDBView::ExpandAll()

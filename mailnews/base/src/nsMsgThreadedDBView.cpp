@@ -36,7 +36,7 @@ nsMsgThreadedDBView::~nsMsgThreadedDBView()
   /* destructor code */
 }
 
-NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortTypeValue viewType, PRInt32 *pCount)
 {
 	nsresult rv;;
 	rv = nsMsgDBView::Open(msgDB, viewType, pCount);
@@ -56,7 +56,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Init(PRInt32 *pCount)
 {
 #ifndef DEBUG_seth
 	nsresult rv;
-	nsMsgViewSortOrder sortOrder;
+	nsMsgViewSortOrderValue sortOrder;
 	nsMsgViewSortTypeValue sortType;
 
 	m_keys.RemoveAll();
@@ -103,15 +103,18 @@ NS_IMETHODIMP nsMsgThreadedDBView::Init(PRInt32 *pCount)
 #endif
 }
 
-NS_IMETHODIMP nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd)
+NS_IMETHODIMP nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd)
 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder *sortOrder)
+NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    rv = nsMsgDBView::Sort(sortType,sortOrder);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
 }
 
 
@@ -244,7 +247,7 @@ nsresult	nsMsgThreadedDBView::ExpandAll()
 }
 
 
-nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortType sortType, nsMsgViewSortOrder sortOrder)
+nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
 #ifdef HAVE_BRANCH_YET
   if (sortType == nsMsgViewSortType::byThread)

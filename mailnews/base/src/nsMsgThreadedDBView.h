@@ -34,16 +34,16 @@ public:
   nsMsgThreadedDBView();
   virtual ~nsMsgThreadedDBView();
 
-  NS_IMETHOD Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *count);
+  NS_IMETHOD Open(nsIMsgDatabase *msgDB, nsMsgViewSortTypeValue viewType, PRInt32 *count);
   NS_IMETHOD Close();
   NS_IMETHOD Init(PRInt32 *pCount);
-  NS_IMETHOD AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortType *sortType, PRInt32 numKeysToAdd);
-  NS_IMETHOD Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder *sortOrder);
+  NS_IMETHOD AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd);
+  NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
 
 protected:
   nsresult ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
 									 PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders);
-  nsresult InitSort(nsMsgViewSortType sortType, nsMsgViewSortOrder sortOrder);
+  nsresult InitSort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   nsresult ExpandAll();
   // these are used to save off the previous view so that bopping back and forth
   // between two views is quick (e.g., threaded and flat sorted by date).
