@@ -1,3 +1,4 @@
 
 .bz_private { color: darkred ; background : #f3eeee ; }
 
+table#flags th, table#flags td { vertical-align: baseline; text-align: left; }

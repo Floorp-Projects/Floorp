@@ -563,6 +563,7 @@ sub edit
                                                     'attach_id' => $::FORM{'id'} });
   }
   $vars->{'flag_types'} = $flag_types;
+  $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);
   
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'attachid'} = $::FORM{'id'}; 

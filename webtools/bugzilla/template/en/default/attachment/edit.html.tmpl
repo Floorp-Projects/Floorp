@@ -33,7 +33,7 @@
     table.attachment_info td { text-align: left; vertical-align: top; }
     #noview { text-align: left; vertical-align: center; }
     
-    table#flags th, table#flags td { font-size: small; vertical-align: baseline; }
+    table#flags th, table#flags td { font-size: small; vertical-align: baseline; text-align: left; }
   "
 %]
 
@@ -173,7 +173,6 @@
           [% END %]
 
         [% IF flag_types.size > 0 %]
-          <b>Flags:</b><br>
           [% PROCESS "flag/list.html.tmpl" bug_id=bugid attach_id=attachid %]<br>
         [% END %]
         

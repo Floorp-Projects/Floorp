@@ -217,6 +217,7 @@ sub show_bug {
                                   'target_type' => 'bug' });
     }
     $vars->{'flag_types'} = $flag_types;
+    $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);
 
     # The number of types of flags that can be set on attachments to this bug
     # and the number of flags on those attachments.  One of these counts must be
