@@ -177,14 +177,6 @@ function toEditor()
   window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
 }
 
-function toNewTextEditorWindow()
-{
-  window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
-                     "_blank",
-                     "chrome,dialog=no,all",
-                     "about:blank");
-}
-
 function ShowWindowFromResource( node )
 {
 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
