@@ -1317,7 +1317,9 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	if (certs) {
 	    cert = nssCertificateArray_FindBestCertificate(certs, NULL, 
 	                                                   &usage, NULL);
-	    rvCert = STAN_GetCERTCertificate(cert);
+	    if (cert) {
+		rvCert = STAN_GetCERTCertificate(cert);
+	    }
 	    nssCertificateArray_Destroy(certs);
 	}
 	nssList_Destroy(certList);
