@@ -1368,7 +1368,11 @@ nsDNSService::Shutdown()
         mThreadRunning = PR_FALSE;
 
 		// let's shutdown Open Transport so outstanding lookups won't complete while we're cleaning them up
-        (void) OTCloseProvider((ProviderRef)mServiceRef);
+        if (mServiceRef) {
+	        (void) OTCloseProvider((ProviderRef)mServiceRef);
+	        mServiceRef = nsnull;
+	        gNeedLateInitialization = PR_TRUE;
+	    }
         CLOSE_OPEN_TRANSPORT();           // terminate routine should check flag and do this if Shutdown() is bypassed somehow
         DisposeOTNotifyUPP(nsDnsServiceNotifierRoutineUPP);
 
