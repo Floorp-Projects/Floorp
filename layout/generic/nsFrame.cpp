@@ -1598,7 +1598,8 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   }
   nsFrameState  frameState;
   GetFrameState(&frameState);
-  if (aSelected == frameState & NS_FRAME_SELECTED_CONTENT) //allready set thanks
+  PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
+  if (aSelected == isSelected) //allready set thanks
   {
     return NS_OK;
   }
