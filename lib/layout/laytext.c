@@ -16,8 +16,6 @@
  * Reserved.
  */
 
-
-
 #include "xp.h"
 #include "pa_tags.h"
 #include "layout.h"
@@ -61,34 +59,59 @@
 
 int32 lo_correct_text_element_width(LO_TextInfo *);
 
-static void lo_insert_quote_characters(MWContext *context, lo_DocState *state);
-static LO_TextStruct * lo_new_text_element(MWContext *context, lo_DocState *state, ED_Element *edit_element,
-	 intn edit_offset );
+static void lo_insert_quote_characters(MWContext *context,
+                                       lo_DocState *state);
+static LO_TextStruct * lo_new_text_element(MWContext *context,
+                                           lo_DocState *state,
+                                           ED_Element *edit_element,
+                                           intn edit_offset );
 
-void lo_LayoutFormattedText(MWContext *context, lo_DocState *state, LO_TextBlock * block);
-void lo_LayoutPreformattedText(MWContext *context, lo_DocState *state, LO_TextBlock * block);
-LO_TextBlock * lo_NewTextBlock ( MWContext * context, lo_DocState * state, char * text, uint16 formatMode );
-int32 lo_compute_text_basline_inc ( lo_DocState * state, LO_TextBlock * block, LO_TextStruct * text_data );
+void lo_LayoutFormattedText(MWContext *context,
+                            lo_DocState *state,
+                            LO_TextBlock * block);
+void lo_LayoutPreformattedText(MWContext *context,
+                               lo_DocState *state,
+                               LO_TextBlock * block);
+LO_TextBlock * lo_NewTextBlock (MWContext * context,
+                                lo_DocState * state,
+                                char * text,
+                                uint16 formatMode );
+int32 lo_compute_text_basline_inc (lo_DocState * state,
+                                   LO_TextBlock * block,
+                                   LO_TextStruct * text_data );
 
-uint32 lo_FindBlockOffset ( LO_TextBlock * block, LO_TextStruct * fromElement );
-void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_TextBlock * block, LO_TextStruct * fromElement );
-Bool lo_CanUseBreakTable ( lo_DocState * state );
-Bool lo_UseBreakTable ( LO_TextBlock * block );
+uint32 lo_FindBlockOffset (LO_TextBlock * block,
+                           LO_TextStruct * fromElement );
+void lo_RelayoutTextElements (MWContext * context,
+                              lo_DocState * state,
+                              LO_TextBlock * block,
+                              LO_TextStruct * fromElement );
+Bool lo_CanUseBreakTable (lo_DocState * state );
+Bool lo_UseBreakTable (LO_TextBlock * block );
 
-void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock * block, char *text );
-void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLastLine );
-static void lo_FlushText ( MWContext * context, lo_DocState * state );
-static void lo_SetupBreakState ( LO_TextBlock * block );
+void lo_AppendTextToBlock (MWContext *context,
+                           lo_DocState *state,
+                           LO_TextBlock * block,
+                           char *text );
+void lo_LayoutTextBlock (MWContext * context,
+                         lo_DocState * state,
+                         Bool flushLastLine );
+static void lo_FlushText (MWContext * context,
+                          lo_DocState * state );
+static void lo_SetupBreakState (LO_TextBlock * block );
 
-Bool lo_GrowTextBlock ( LO_TextBlock * block, uint32 length );
-static void lo_GetTextParseAtributes ( lo_DocState * state, Bool * multiByte );
+Bool lo_GrowTextBlock (LO_TextBlock * block,
+                       uint32 length );
+static void lo_GetTextParseAtributes (lo_DocState * state,
+                                      Bool * multiByte );
 
 
 #ifdef XP_MAC
 #define	kStaticMeasureTextBufferSize	512
 static uint16 gMeasureTextBuffer[ kStaticMeasureTextBufferSize ];
 
-/* This needs to go in fe_proto.h - will move it there once we're out of the branch */
+/* This needs to go in fe_proto.h - will move it there once we're out
+   of the branch */
 #define FE_MeasureText(context, text, charLocs) \
 			(*context->funcs->MeasureText)(context, text, charLocs)
 #endif
@@ -97,14 +120,18 @@ static uint16 gMeasureTextBuffer[ kStaticMeasureTextBufferSize ];
 Bool gCallNewText = TRUE;
 #endif
 
-LO_TextBlock * lo_NewTextBlock ( MWContext * context, lo_DocState * state, char * text, uint16 formatMode )
+LO_TextBlock * lo_NewTextBlock ( MWContext * context,
+                                 lo_DocState * state,
+                                 char * text,
+                                 uint16 formatMode )
 {
 	LO_TextBlock *	block;
 	uint32			length;
 	
 	length = strlen ( text );
 	
-	block = (LO_TextBlock *)lo_NewElement ( context, state, LO_TEXTBLOCK, NULL, 0 );
+	block = (LO_TextBlock *)lo_NewElement ( context, state,
+                                            LO_TEXTBLOCK, NULL, 0 );
 	if ( block == NULL )
 		{
 		state->top_state->out_of_memory = TRUE;
@@ -177,10 +204,10 @@ LO_TextBlock * lo_NewTextBlock ( MWContext * context, lo_DocState * state, char 
 	
 	block->format_mode = formatMode;
 	
-	/*
-	 * Since we're creating a new text block, grab some of the text state out of the
-	 * layout state.
-	 */
+	/* 
+     * Since we're creating a new text block, grab some of the text
+	 * state out of the layout state.  
+     */
 	block->anchor_href = state->current_anchor;
 	
 	if ( state->font_stack != NULL )
@@ -386,8 +413,10 @@ lo_FreshText(lo_DocState *state)
  *	Returns a NULL on error (such as out of memory);
  *************************************/
 static LO_TextStruct *
-lo_new_text_element(MWContext *context, lo_DocState *state, ED_Element *edit_element,
-		intn edit_offset )
+lo_new_text_element(MWContext *context,
+                    lo_DocState *state,
+                    ED_Element *edit_element,
+                    intn edit_offset )
 {
 	LO_TextStruct *text_ele = NULL;
 #ifdef DEBUG
@@ -502,7 +531,8 @@ lo_fillin_text_info(MWContext *context, lo_DocState *state)
 	tmp_text.text = buff;
 	tmp_text.text_len = 1;
 	
-	/* if we have a text block, use it's font info, otherwise get it from the state */
+	/* if we have a text block, use it's font info, otherwise get it
+       from the state */
 	if ( state->cur_text_block == NULL )
 		{
 		tmp_text.text_attr = state->font_stack->text_attr;
@@ -530,7 +560,10 @@ lo_fillin_text_info(MWContext *context, lo_DocState *state)
  *	Returns a NULL on error (such as out of memory);
  *************************************/
 LO_LinefeedStruct *
-lo_NewLinefeed(lo_DocState *state, MWContext * context, uint32 break_type, uint32 clear_type)
+lo_NewLinefeed(lo_DocState *state,
+               MWContext * context,
+               uint32 break_type,
+               uint32 clear_type)
 {	
 	LO_LinefeedStruct *linefeed = NULL;
 
@@ -578,7 +611,11 @@ lo_NewLinefeed(lo_DocState *state, MWContext * context, uint32 break_type, uint3
  * Returns: Nothing
  *************************************/
 void
-lo_InsertLineBreak(MWContext *context, lo_DocState *state, uint32 break_type, uint32 clear_type, Bool breaking)
+lo_InsertLineBreak(MWContext *context,
+                   lo_DocState *state,
+                   uint32 break_type,
+                   uint32 clear_type,
+                   Bool breaking)
 {
 	/* int32 line_width; */
 	Bool scroll_at_bottom;
@@ -755,7 +792,8 @@ lo_InsertLineBreak(MWContext *context, lo_DocState *state, uint32 break_type, ui
 void
 lo_HardLineBreak(MWContext *context, lo_DocState *state, Bool breaking)
 {
-	lo_InsertLineBreak ( context, state, LO_LINEFEED_BREAK_HARD, LO_CLEAR_NONE, breaking );
+	lo_InsertLineBreak ( context, state, LO_LINEFEED_BREAK_HARD,
+                         LO_CLEAR_NONE, breaking );
 }
 
 /*************************************
@@ -764,9 +802,13 @@ lo_HardLineBreak(MWContext *context, lo_DocState *state, Bool breaking)
  * Returns: Nothing
  *************************************/
 void
-lo_HardLineBreakWithClearType(MWContext *context, lo_DocState *state, uint32 clear_type, Bool breaking)
+lo_HardLineBreakWithClearType(MWContext *context,
+                              lo_DocState *state,
+                              uint32 clear_type,
+                              Bool breaking)
 {
-	lo_InsertLineBreak ( context, state, LO_LINEFEED_BREAK_HARD, clear_type, breaking );
+	lo_InsertLineBreak ( context, state, LO_LINEFEED_BREAK_HARD,
+                         clear_type, breaking );
 }
 
 /*************************************
@@ -782,7 +824,8 @@ lo_HardLineBreakWithClearType(MWContext *context, lo_DocState *state, uint32 cle
 void
 lo_SoftLineBreak(MWContext *context, lo_DocState *state, Bool breaking)
 {
-	lo_InsertLineBreak ( context, state, LO_LINEFEED_BREAK_SOFT, LO_CLEAR_NONE, breaking);
+	lo_InsertLineBreak ( context, state, LO_LINEFEED_BREAK_SOFT,
+                         LO_CLEAR_NONE, breaking);
 }
 
 /*************************************
@@ -802,11 +845,13 @@ lo_SoftLineBreak(MWContext *context, lo_DocState *state, Bool breaking)
  * Returns: Nothing
  *************************************/
 void
-lo_SetSoftLineBreakState(MWContext *context, lo_DocState *state, Bool breaking,
-	intn linefeed_state)
+lo_SetSoftLineBreakState(MWContext *context,
+                         lo_DocState *state,
+                         Bool breaking,
+                         intn linefeed_state)
 {
 	lo_SetLineBreakState ( context, state, breaking, LO_LINEFEED_BREAK_SOFT,
-		linefeed_state, FALSE);
+                           linefeed_state, FALSE);
 }
 
 /*************************************
@@ -826,8 +871,12 @@ lo_SetSoftLineBreakState(MWContext *context, lo_DocState *state, Bool breaking,
  * Returns: Nothing
  *************************************/
 void
-lo_SetLineBreakState(MWContext *context, lo_DocState *state, Bool breaking,
-	uint32 break_type, intn linefeed_state, Bool relayout)
+lo_SetLineBreakState(MWContext *context,
+                     lo_DocState *state,
+                     Bool breaking,
+                     uint32 break_type,
+                     intn linefeed_state,
+                     Bool relayout)
 {
 	/*
 	 * Linefeeds are partially disabled if we are placing
@@ -840,11 +889,14 @@ lo_SetLineBreakState(MWContext *context, lo_DocState *state, Bool breaking,
 		{
 			if (relayout == FALSE) 
 			{
-				lo_InsertLineBreak(context, state, break_type, LO_CLEAR_NONE, breaking);				
+				lo_InsertLineBreak(context, state, break_type,
+                                   LO_CLEAR_NONE, breaking);				
 			}
 			else 
 			{
-				lo_rl_AddBreakAndFlushLine( context, state, break_type, LO_CLEAR_NONE, breaking);
+				lo_rl_AddBreakAndFlushLine( context, state,
+                                            break_type, LO_CLEAR_NONE,
+                                            breaking);
 			}
 		}
 		return;
@@ -856,8 +908,8 @@ lo_SetLineBreakState(MWContext *context, lo_DocState *state, Bool breaking,
 	if(state->top_state && state->top_state->style_stack)
 	{
 		StyleStruct *style = STYLESTACK_GetStyleByIndex(
-													state->top_state->style_stack,
-													0);
+												state->top_state->style_stack,
+                                                0);
 		if(style)
 		{
 			char * property = STYLESTRUCT_GetString(style, DISPLAY_STYLE);
@@ -880,11 +932,13 @@ lo_SetLineBreakState(MWContext *context, lo_DocState *state, Bool breaking,
 	{
 		if (relayout == FALSE) 
 		{
-			lo_InsertLineBreak(context, state, break_type, LO_CLEAR_NONE, breaking);
+			lo_InsertLineBreak(context, state, break_type,
+                               LO_CLEAR_NONE, breaking);
 		}
 		else 
 		{
-			lo_rl_AddBreakAndFlushLine( context, state, break_type, LO_CLEAR_NONE, breaking );
+			lo_rl_AddBreakAndFlushLine( context, state, break_type,
+                                        LO_CLEAR_NONE, breaking );
 		}
 	}
 }
@@ -913,7 +967,8 @@ lo_InsertWordBreak(MWContext *context, lo_DocState *state)
 		return;
 	}
 
-	text_ele = (LO_TextStruct *)lo_NewElement(context, state, LO_TEXT, NULL, 0);
+	text_ele = (LO_TextStruct *)lo_NewElement(context, state,
+                                              LO_TEXT, NULL, 0);
 	if (text_ele == NULL)
 	{
 #ifdef DEBUG
@@ -983,8 +1038,11 @@ lo_InsertWordBreak(MWContext *context, lo_DocState *state)
 
 
 int32
-lo_baseline_adjust(MWContext *context, lo_DocState * state, LO_Element *ele_list,
-			int32 old_baseline, int32 old_line_height)
+lo_baseline_adjust(MWContext *context,
+                   lo_DocState * state,
+                   LO_Element *ele_list,
+                   int32 old_baseline,
+                   int32 old_line_height)
 {
 	LO_Element *eptr;
 	int32 baseline;
@@ -1103,7 +1161,8 @@ XP_TRACE(("lo_BreakOldElement, flush text.\n"));
 		return;
 	}
 
-	/* BRAIN DAMAGE: Make sure the correct element is at the end of the list for this block */
+	/* BRAIN DAMAGE: Make sure the correct element is at the end of
+       the list for this block */
 	block = state->old_break_block;
 	
 	if ( block == NULL )
@@ -1111,9 +1170,10 @@ XP_TRACE(("lo_BreakOldElement, flush text.\n"));
 		return;
 	}
 	
-	/*
-	 * If this text block is using the new breaktable algorithm, call that code
-	 */
+	/* 
+     * If this text block is using the new breaktable algorithm,
+     * call that code 
+     */
 	if ( lo_UseBreakTable ( block ) )
 		{
 		lo_BreakOldTextBlockElement ( context, state );
@@ -1620,11 +1680,13 @@ void lo_UpdateElementPosition ( lo_DocState * state, LO_Element * element )
 	switch ( element->lo_any.type )
 		{
 		case LO_IMAGE:
-			CL_MoveLayer(element->lo_image.layer, element->lo_any.x, element->lo_any.y);
+			CL_MoveLayer(element->lo_image.layer,
+                         element->lo_any.x, element->lo_any.y);
 			break;
 			
 		case LO_EMBED:
-			CL_MoveLayer(element->lo_embed.layer, element->lo_any.x, element->lo_any.y);
+			CL_MoveLayer(element->lo_embed.layer,
+                         element->lo_any.x, element->lo_any.y);
 			break;
 		}
 }
@@ -1707,7 +1769,9 @@ lo_PreformatedText(MWContext *context, lo_DocState *state, char *text)
 
 
 void
-lo_LayoutPreformattedText(MWContext *context, lo_DocState *state, LO_TextBlock * block)
+lo_LayoutPreformattedText(MWContext *context,
+                          lo_DocState *state,
+                          LO_TextBlock * block)
 {
 	char *tptr;
 	char *w_start;
@@ -2381,8 +2445,8 @@ lo_transform_text_from_string_method(char *ptr, char *method)
 /*************************************
  * Function: lo_FormatText
  *
- * Description: This function creates a text block element and then calls the format
- *	text function for it.
+ * Description: This function creates a text block element and then calls the
+ *  format text function for it.
  *
  * Params: Window context and document state., and the text to be formatted.
  *
@@ -2432,7 +2496,9 @@ lo_FormatText(MWContext *context, lo_DocState *state, char *text)
  * Returns: Nothing
  *************************************/
 void
-lo_LayoutFormattedText(MWContext *context, lo_DocState *state, LO_TextBlock * block)
+lo_LayoutFormattedText(MWContext *context,
+                       lo_DocState *state,
+                       LO_TextBlock * block)
 {
 	char *tptr;
 	char *w_start;
@@ -2939,7 +3005,7 @@ XP_TRACE(("Throwing out empty string!\n"));
 				if(multi_byte) {
 					int i;
 					int len = INTL_CharLen(charset,
-                                                               (unsigned char *)tmp_ptr);
+                                           (unsigned char *)tmp_ptr);
 					to_ptr++;
 					tmp_ptr++;
 					for (i=1; (i<len) && (*tmp_ptr != '\0'); i++) {
@@ -3253,9 +3319,10 @@ XP_TRACE(("LineBreak, flush text.\n"));
 			nbsp_block = NULL;
 		}
 	}
-	/*  
-	 * if last char is multibyte, break position need to be set to end of string
-	 */
+	/*   
+     * if last char is multibyte, break position need to be set to
+	 * end of string 
+     */
 	if (multi_byte != FALSE && *tptr == '\0' && prev_word_breakable != FALSE)
 		state->break_pos = state->line_buf_len;
 	
@@ -3794,7 +3861,8 @@ lo_PlaceBullet(MWContext *context, lo_DocState *state)
 	PA_Block buff;
 	char *str;
 
-	bullet = (LO_BulletStruct *)lo_NewElement(context, state, LO_BULLET, NULL, 0);
+	bullet = (LO_BulletStruct *)lo_NewElement(context, state,
+                                              LO_BULLET, NULL, 0);
 	if (bullet == NULL)
 	{
 #ifdef DEBUG
@@ -3816,15 +3884,18 @@ lo_PlaceBullet(MWContext *context, lo_DocState *state)
     /* try and get a bullet type from style sheets */
     if(state && state->top_state && state->top_state->style_stack)
     {
-        StyleStruct *style_struct = STYLESTACK_GetStyleByIndex(state->top_state->style_stack, 0);
+        StyleStruct *style_struct = STYLESTACK_GetStyleByIndex(
+                                            state->top_state->style_stack, 0);
 
         if(style_struct)
         {
-            char *list_style_prop = STYLESTRUCT_GetString(style_struct,
-													      LIST_STYLE_TYPE_STYLE);
+            char *list_style_prop = STYLESTRUCT_GetString(
+                                            style_struct,
+                                            LIST_STYLE_TYPE_STYLE);
 			if(list_style_prop)
 			{
-				bullet->bullet_type = lo_list_bullet_type(list_style_prop, P_UNUM_LIST);
+				bullet->bullet_type = lo_list_bullet_type(list_style_prop,
+                                                          P_UNUM_LIST);
 				XP_FREE(list_style_prop);
 			}
         }
@@ -3938,7 +4009,8 @@ lo_PlaceBulletStr(MWContext *context, lo_DocState *state)
     int bullet_type;
 	int32 line_height, baseline;
 
-	bullet_text = (LO_TextStruct *)lo_NewElement(context, state, LO_TEXT, NULL, 0);
+	bullet_text = (LO_TextStruct *)lo_NewElement(context, state,
+                                                 LO_TEXT, NULL, 0);
 	if (bullet_text == NULL)
 	{
 #ifdef DEBUG
@@ -3952,12 +4024,14 @@ lo_PlaceBulletStr(MWContext *context, lo_DocState *state)
     /* try and get a bullet type from style sheets */
     if(state && state->top_state && state->top_state->style_stack)
     {
-        StyleStruct *style_struct = STYLESTACK_GetStyleByIndex(state->top_state->style_stack, 0);
+        StyleStruct *style_struct = STYLESTACK_GetStyleByIndex(
+                                            state->top_state->style_stack, 0);
 
         if(style_struct)
         {
-            char *list_style_prop = STYLESTRUCT_GetString(style_struct,
-													      LIST_STYLE_TYPE_STYLE);
+            char *list_style_prop = STYLESTRUCT_GetString(
+                                            style_struct,
+                                            LIST_STYLE_TYPE_STYLE);
 			if(list_style_prop)
 			{
 				bullet_type = lo_list_bullet_type(list_style_prop, P_NUM_LIST);
@@ -4069,7 +4143,8 @@ lo_PlaceBulletStr(MWContext *context, lo_DocState *state)
 	state->baseline = text_info.ascent;
 	state->line_height = (intn) bullet_text->height;
 
-	lo_UpdateStateAfterBulletStr(context, state, bullet_text, line_height, baseline);
+	lo_UpdateStateAfterBulletStr(context, state, bullet_text,
+                                 line_height, baseline);
 }
 
 
@@ -4162,7 +4237,8 @@ lo_make_quote_bullet(MWContext *context, lo_DocState *state, int32 margin)
 	LO_TextAttr *tptr;
 	int32 bullet_size;
 
-	bullet = (LO_BulletStruct *)lo_NewElement(context, state, LO_BULLET, NULL, 0);
+	bullet = (LO_BulletStruct *)lo_NewElement(context, state,
+                                              LO_BULLET, NULL, 0);
 	if (bullet == NULL)
 	{
 #ifdef DEBUG
@@ -4317,7 +4393,9 @@ lo_PlaceQuoteMarker(MWContext *context, lo_DocState *state, lo_ListStack *lptr)
 }
 
 
-void lo_UpdateStateAfterLineBreak( MWContext *context, lo_DocState *state, Bool updateFE )
+void lo_UpdateStateAfterLineBreak( MWContext *context,
+                                   lo_DocState *state,
+                                   Bool updateFE )
 {
 	int32 line_width;
 
@@ -4446,7 +4524,11 @@ void lo_UpdateFEDocSize( MWContext *context, lo_DocState *state )
 }
 
 
-void lo_FillInLineFeed( MWContext *context, lo_DocState *state, int32 break_type, uint32 clear_type, LO_LinefeedStruct *linefeed )
+void lo_FillInLineFeed( MWContext *context,
+                        lo_DocState *state,
+                        int32 break_type,
+                        uint32 clear_type,
+                        LO_LinefeedStruct *linefeed )
 {
 	linefeed->type = LO_LINEFEED;
 	linefeed->ele_id = NEXT_ELEMENT;
@@ -4540,10 +4622,10 @@ Bool lo_CanUseBreakTable ( lo_DocState * state )
 	lo_GetTextParseAtributes ( state, &multiByte );
 
 #ifndef FAST_MULTI	
-	/*
-	 * We also need some sort of check for the script - for example Arabic should go through
-	 * the old algorithm for now.
-	 */
+	/* 
+     * We also need some sort of check for the script - for example
+	 * Arabic should go through the old algorithm for now.  
+     */
 	if ( multiByte )
 		{
 		useBreakTable = FALSE;
@@ -4553,7 +4635,8 @@ Bool lo_CanUseBreakTable ( lo_DocState * state )
 	/*
 	 * Justified text is currently broken, route it through old layout for now
 	 */
-	if ( ( state->align_stack != NULL ) && ( state->align_stack->alignment == LO_ALIGN_JUSTIFY ) )
+	if ( ( state->align_stack != NULL ) && 
+         ( state->align_stack->alignment == LO_ALIGN_JUSTIFY ) )
 		{
 		useBreakTable = FALSE;
 		}
@@ -4576,7 +4659,8 @@ Bool lo_CanUseBreakTable ( lo_DocState * state )
 }
 
 /*
- * Is the current text that's being layed out using the break table layout algorithm?
+ * Is the current text that's being layed out using the break table
+ * layout algorithm?  
  */
 Bool lo_UseBreakTable ( LO_TextBlock * block )
 {
@@ -4595,7 +4679,9 @@ Bool lo_UseBreakTable ( LO_TextBlock * block )
 	return useBreakTable;
 }
 
-int32 lo_compute_text_basline_inc ( lo_DocState * state, LO_TextBlock * block, LO_TextStruct * text_data )
+int32 lo_compute_text_basline_inc ( lo_DocState * state,
+                                    LO_TextBlock * block,
+                                    LO_TextStruct * text_data )
 {
 	int32	line_inc;
 	int32	baseline_inc;
@@ -4654,8 +4740,10 @@ int32 lo_compute_text_basline_inc ( lo_DocState * state, LO_TextBlock * block, L
 }
 
 
-void lo_FlushTextElement ( MWContext * context, lo_DocState * state, LO_TextBlock * block, LO_TextStruct * element );
-void lo_FlushTextElement ( MWContext * context, lo_DocState * state, LO_TextBlock * block, LO_TextStruct * element )
+void lo_FlushTextElement ( MWContext * context,
+                           lo_DocState * state,
+                           LO_TextBlock * block,
+                           LO_TextStruct * element )
 {
 	int32	baseline_inc;
 	
@@ -4676,7 +4764,8 @@ void lo_FlushTextElement ( MWContext * context, lo_DocState * state, LO_TextBloc
 		
 	element->prev = NULL;
 	element->next = NULL;
-	lo_AppendToLineList ( context, state, (LO_Element *) element, baseline_inc );
+	lo_AppendToLineList ( context, state, (LO_Element *) element,
+                          baseline_inc );
 
 	state->line_buf_len = 0;
 	state->x += state->width;
@@ -4702,7 +4791,8 @@ uint32 lo_FindBlockOffset ( LO_TextBlock * block, LO_TextStruct * fromElement )
 		
 	if ( fromElement != NULL )
 		{
-		/* run through all elements in this text block. the correct block offset is belongs to */
+		/* run through all elements in this text block. the correct
+           block offset is belongs to */
 		/* the previous element in this list */
 		element = (LO_Element *) block->startTextElement;
 		endElement = (LO_Element *) block->endTextElement;
@@ -4732,7 +4822,10 @@ uint32 lo_FindBlockOffset ( LO_TextBlock * block, LO_TextStruct * fromElement )
 	return blockOffset;
 }
 
-void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_TextBlock * block, LO_TextStruct * fromElement )
+void lo_RelayoutTextElements ( MWContext * context,
+                               lo_DocState * state,
+                               LO_TextBlock * block,
+                               LO_TextStruct * fromElement )
 {
 	LO_Element *	next;
 	LO_Element *	element;
@@ -4779,9 +4872,11 @@ void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_Text
 		switch ( element->lo_any.type )
 			{
 			case LO_TEXT:
-				lo_PrepareElementForReuse ( context, state, element, element->lo_any.edit_element,
-						element->lo_any.edit_offset );
-				lo_FlushTextElement ( context, state, block, (LO_TextStruct *) element );
+				lo_PrepareElementForReuse ( context, state, element,
+                                            element->lo_any.edit_element,
+                                            element->lo_any.edit_offset );
+				lo_FlushTextElement ( context, state, block,
+                                      (LO_TextStruct *) element );
 				break;
 			
 			case LO_LINEFEED:
@@ -4807,14 +4902,14 @@ void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_Text
 	 * layout environment may not have changed. So, run through the remaining
 	 * elements until we find the first one that's changed.
 	 *
-	 * We have to layout the last element using the proper code path so that
-	 * we can correctly update the state record with the last break position and
-	 * other flags.
+	 * We have to layout the last element using the proper code path
+	 * so that we can correctly update the state record with the last
+	 * break position and other flags.
 	 *
-	 * Column and line wrapped preformatted text can always reuse the elements as
-	 * it's wrapping will never change. Word wrapped preformatted text may change
-	 * if the document width changes.
-	 */
+	 * Column and line wrapped preformatted text can always reuse the
+	 * elements as it's wrapping will never change. Word wrapped
+	 * preformatted text may change if the document width changes.  
+     */
 	
 	element = (LO_Element *) fromElement;
 	done = element == endElement;
@@ -4828,15 +4923,19 @@ void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_Text
 		switch ( element->lo_any.type )
 			{
 			case LO_TEXT:
-				/*
-				 * We only assume this element can be reused if the line width is exactly
-				 * the same as last time. If the line is longer, we could potentially
-				 * reuse this element (the next one may appear on this line as well) but
-				 * we won't be able to set the state's old_break_position, which may be needed!
+				/* 
+                 * We only assume this element can be reused if the
+				 * line width is exactly the same as last time. If the
+				 * line is longer, we could potentially reuse this
+				 * element (the next one may appear on this line as
+				 * well) but we won't be able to set the state's
+				 * old_break_position, which may be needed!
 				 *
-				 * We can also always flush column or line wrapped preformatted text (word wrapped
-				 * preformatted text may need to be layed out again as it's wrapping may change).
-				 */
+				 * We can also always flush column or line wrapped
+				 * preformatted text (word wrapped preformatted text
+				 * may need to be layed out again as it's wrapping may
+				 * change).  
+                 */
 				lineWidth = state->right_margin - state->x;
 				
 				if ( fastPreformat || ( element->lo_text.doc_width == lineWidth ) )
@@ -4880,9 +4979,10 @@ void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_Text
 			}
 		}
 	
-	/*
-	 * now run through and delete all the remaining elements in this text block.
-	 */
+	/* 
+     * now run through and delete all the remaining elements in this
+	 * text block.  
+     */
 	while ( element != NULL )
 		{
 		next = lo_tv_GetNextLayoutElement ( state, element, FALSE );
@@ -4923,28 +5023,34 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 		next = lo_tv_GetNextLayoutElement ( state, (LO_Element *) block, FALSE );
 		}
 
-	/*
-	 * In the relayout case we might be able to skip layout for some elements that have not changed.
-	 * This happens frequenty for typing in the editor and occasionaly in table layout (very occasionally
-	 * on resizes).
+	/* 
+     * In the relayout case we might be able to skip layout for some
+	 * elements that have not changed.  This happens frequenty for
+	 * typing in the editor and occasionaly in table layout (very
+	 * occasionally on resizes).
 	 *
-	 * To do this, we run through the text elements until we come across one whose width does not match the
-	 * layout width or whose text has changed. That element and all others are then recycled.
-	 */
+	 * To do this, we run through the text elements until we come
+	 * across one whose width does not match the layout width or whose
+	 * text has changed. That element and all others are then
+	 * recycled.  
+     */
 	
 	if ( EDT_IS_EDITOR( context ) )
 		{
-		/*
-		 * for the editor we don't want to relayout the text elements that precede the current one. we just
-		 * want to start laying out afresh from this specified element to the end of the text block. the editor
-		 * will take care of merging the elements back in
-		 */
+		/* 
+         * for the editor we don't want to relayout the text elements
+		 * that precede the current one. we just want to start laying
+		 * out afresh from this specified element to the end of the
+		 * text block. the editor will take care of merging the
+		 * elements back in 
+         */
 		block->buffer_read_index = lo_FindBlockOffset ( block, fromElement );
 
 		state->edit_current_element = block->edit_element;
 		state->edit_current_offset = 0;
 		
-		/* if we're laying this element out, then we need to reinsert it on the line list */
+		/* if we're laying this element out, then we need to reinsert
+           it on the line list */
 		if ( ( block->startTextElement == fromElement ) || ( fromElement == NULL ) )
 			{
 			/* record the current edit element for later use */
@@ -4990,10 +5096,10 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 			LO_TextStruct * lastText;
 			Bool			hitFromElement;
 			
-			/*
-			 * We're reflowing from somewhere within the text block (past the first element). We need
-			 * to reset the endTextElement as well as recycle from the fromElement to the end of the text block
-			 */
+			/* We're reflowing from somewhere within the text block
+			 * (past the first element). We need to reset the
+			 * endTextElement as well as recycle from the fromElement
+			 * to the end of the text block */
 			
 			hitFromElement = FALSE;
 			endElement = (LO_Element *) block->endTextElement;
@@ -5011,7 +5117,8 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 					hitFromElement = TRUE;
 					}
 					
-				/* if we've found the fromElement, we need to start recycling */
+				/* if we've found the fromElement, we need to start
+                   recycling */
 				if ( hitFromElement )
 					{
 					lo_ele->lo_any.next = NULL;
@@ -5024,7 +5131,8 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 					break;
 					}
 				
-				/* if we haven't hit the from element and this is a text element, it may be the new end */
+				/* if we haven't hit the from element and this is a
+                   text element, it may be the new end */
 				/* element for the block */
 				if ( !hitFromElement && ( lo_ele->type == LO_TEXT ) )
 					{
@@ -5040,7 +5148,8 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 		}
 	else
 		{
-		/* put the text block back in the line list and then add any existing elements that we can */
+		/* put the text block back in the line list and then add any
+           existing elements that we can */
 		block->prev = NULL;
 		block->next = NULL;
 		block->ele_id = NEXT_ELEMENT;
@@ -5051,9 +5160,8 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 		lo_RelayoutTextElements ( context, state, block, fromElement );
 		}
 		
-	/*
-	 * Because we're lame for now we just delete all the old linefeeds and lay the text out afresh
-	 */
+	/* Because we're lame for now we just delete all the old linefeeds
+	 * and lay the text out afresh */
 	
 	/* Tell everybody we're laying out text */
 	if (state->cur_ele_type != LO_TEXT)
@@ -5091,9 +5199,9 @@ LO_Element * lo_RelayoutTextBlock ( MWContext * context, lo_DocState * state, LO
 	/*
 	 * If there's text left in the line buffer, then flush it.
 	 *
-	 * BRAIN DAMAGE: We don't want to do that here - there may be a following text block
-	 * that continues this same text buffer.
-	 */
+	 * BRAIN DAMAGE: We don't want to do that here - there may be a
+	 * following text block that continues this same text buffer.  
+     */
 	lo_FlushLineBuffer(context, state);
 		
 	return next;
@@ -5141,11 +5249,11 @@ Bool lo_ChangeText ( LO_TextBlock * block, char * text )
 
 /*
  *
- * ======================================================================================================
+ * ===========================================================================
  * 
  *											New text layout
  *
- * ======================================================================================================
+ *  ==========================================================================
  */
 
 /*
@@ -5289,10 +5397,8 @@ lo_CurrentTextBlock ( MWContext * context, lo_DocState * state )
 		textBlock->break_table = XP_ALLOC ( BREAK_TABLE_INC );
 		textBlock->break_length = BREAK_TABLE_INC * 2;
 		
-		/*
-		 * Since we're creating a new text block, grab some of the text state out of the
-		 * layout state.
-		 */
+		/* Since we're creating a new text block, grab some of the
+		 * text state out of the layout state.  */
 		textBlock->anchor_href = state->current_anchor;
 		
 		if ( state->font_stack != NULL )
@@ -5321,7 +5427,8 @@ void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock
 	/*
 	 * We have several cases in which we can just bail:
 	 *	1. The text string and the line buffer is empty.
-	 *	2. The text string is all whitespace and we already have a trailing space.
+	 *	2. The text string is all whitespace and we already have a trailing 
+     *     space.
 	 */
 	
 	if ( ( state != NULL ) && ( state->line_buf_len == 0 ) )
@@ -5356,14 +5463,13 @@ void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock
 			}
 		}
 	
-	/*
-	 * If we don't have a block, create one if we have a valid state record. Otherwise we
-	 * have an error
-	 */
+	/* If we don't have a block, create one if we have a valid state
+	 * record. Otherwise we have an error */
 	
 	if ( block == NULL )
 		{
-		/* the editor may call us with a NULL state and context record, in this case we must always have a block */
+		/* the editor may call us with a NULL state and context
+           record, in this case we must always have a block */
 		XP_ASSERT(( state != NULL ) && ( context != NULL ));
 		if ( ( state != NULL ) && ( context != NULL ) )
 			{
@@ -5371,28 +5477,25 @@ void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock
 			}
 		}
 	
-	/*
-	 * OPTIMIZATION: If the parser could tell us if we have a split buffer then we could intelligently set
-	 * parseAllText here and not buffer words that we think may be split across a buffer but in reality are
-	 * whole.
-	 */
+	/* OPTIMIZATION: If the parser could tell us if we have a split
+	 * buffer then we could intelligently set parseAllText here and
+	 * not buffer words that we think may be split across a buffer but
+	 * in reality are whole.  */
 	 
-	/*
-	 * If we're in an editor context, then we can always parse the whole buffer of text, we never need to
-	 * worry about partial buffers being passed to us.
-	 */
+	/* If we're in an editor context, then we can always parse the
+	 * whole buffer of text, we never need to worry about partial
+	 * buffers being passed to us.  */
 	parseAllText = EDT_IS_EDITOR( context );
 		
-	/*
-	 * Scan through the text, removing whitespace and adding words to the text buffer as we come across
-	 * them.
+	/* Scan through the text, removing whitespace and adding words to
+	 * the text buffer as we come across them.
 	 *
 	 * Particular things we have to deal with:
 	 *		- Preformatted text (normal, word wrapped and column wrapped)
 	 *		- Normal single byte text
 	 *		- Multibyte text
-	 *		- non-breaking spaces
-	 */
+	 *      - non-breaking spaces 
+     */
 	
 	lo_GetTextParseAtributes ( state, &multiByte );
 
@@ -5506,10 +5609,9 @@ lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 					return;
 					}
 				
-				/*
-				 * If the space was real whitespace and not a trailing space from a previous layout,
-				 * then copy the space to the text block.
-				 */
+				/* If the space was real whitespace and not a trailing
+				 * space from a previous layout, then copy the space
+				 * to the text block.  */
 				if ( !state->trailing_space )
 					{
 					block->text_buffer[ block->buffer_write_index ] = ' ';
@@ -5528,14 +5630,14 @@ lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 			}
 		}
 	
-	/*
-	 * The last chunk of text may have left a single piece of whitespace at the end of the buffer. If so,
-	 * we need to skip any whitespace at the front of the buffer so we don't have to worry about this inside
-	 * the main loop.
+	/* The last chunk of text may have left a single piece of
+	 * whitespace at the end of the buffer. If so, we need to skip any
+	 * whitespace at the front of the buffer so we don't have to worry
+	 * about this inside the main loop.
 	 *
-	 * When called from the editor, we may not have a state record. However, we also won't need to worry
-	 * about this case as it will have taken care of it for us.
-	 */
+	 * When called from the editor, we may not have a state
+	 * record. However, we also won't need to worry about this case as
+	 * it will have taken care of it for us.  */
 	if ( ( state != NULL ) && ( state->trailing_space ) && ( *t_ptr != '\0' ) )
 		{
 		skipped_space = TRUE;
@@ -5566,20 +5668,21 @@ lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 			w_length++;
 			}
 
-		/*
-		 * If we hit the end of the buffer then we may be inside a partial word. This can cause
-		 * problems with interword kerning, multibyte characters and other contextually sensitive
-		 * script systems.
+		/* If we hit the end of the buffer then we may be inside a
+		 * partial word. This can cause problems with interword
+		 * kerning, multibyte characters and other contextually
+		 * sensitive script systems.
 		 *
-		 * We buffer this word in the line_buff. If this is truly the end of the text, then we'll
-		 * be called to flush the last line. We'll do this by appending this word to our text block
-		 * and then laying out the last of the text.
+		 * We buffer this word in the line_buff. If this is truly the
+		 * end of the text, then we'll be called to flush the last
+		 * line. We'll do this by appending this word to our text
+		 * block and then laying out the last of the text.
 		 *
-		 * If this word is just split across a buffer, then it will be inserted to the beginning of
-		 * the next text block.
+		 * If this word is just split across a buffer, then it will be
+		 * inserted to the beginning of the next text block.
 		 *
-		 * If the caller tells us to parse the whole buffer, then we don't care.
-		 */
+		 * If the caller tells us to parse the whole buffer, then we
+		 * don't care.  */
 		
 		if ( !parseAllText && ( *w_end == '\0' ) && ( w_length > 0 ) && ( state != NULL ) )
 			{
@@ -5606,9 +5709,8 @@ lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 			break;
 			}
 					
-		/*
-		 * If we skipped some white space, then we know that we can put a break here.
-		 */
+		/* If we skipped some white space, then we know that we can
+		 * put a break here.  */
 		if ( w_start != t_ptr )
 			{
 			skipped_space = TRUE;
@@ -5638,10 +5740,9 @@ lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 			block->text_buffer[ block->buffer_write_index ] = ' ';
 			block->buffer_write_index++;
 			
-			/*
-			 * BRAIN DAMAGE: Add a new field to the text block struct to indicate how many
-			 * chars to skip when calculating the length of the next run.
-			 */
+			/* BRAIN DAMAGE: Add a new field to the text block struct
+			 * to indicate how many chars to skip when calculating the
+			 * length of the next run.  */
 			block->last_buffer_write_index++;
 			}
 		else
@@ -5712,8 +5813,10 @@ typedef enum {
 /*
  * Things to Note:
  *
- * 1. SET_BREAKABLE means to insert a normal break command. This run can be broken at the end of the run.
- * 2. SET_MULTI_BREAKABLE means that we have a run which can be broken at the end of every character.
+ * 1. SET_BREAKABLE means to insert a normal break command. This run can 
+ *    be broken at the end of the run.
+ * 2. SET_MULTI_BREAKABLE means that we have a run which can be broken at 
+ *    the end of every character.
  *
  */
 
@@ -5828,7 +5931,8 @@ lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 	
 	processLastRun = FALSE;
 	
-	/* BRAIN DAMAGE: We need to see if there's anything in the line buffer for us */
+	/* BRAIN DAMAGE: We need to see if there's anything in the line
+       buffer for us */
 	
 	/* Make sure the text block has enough space to hold this block of text */
 	textLength += XP_STRLEN ( text );
@@ -5888,10 +5992,9 @@ lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 		nextRunLength = nextCharBytes;
 		nextWordStart = tptr;
 		
-		/*
-		 * Unprohibited multibyte check - we need to catch cases where our byte size changes. We might
-		 * want to add a command bit for this check, for now I shall do it this way.
-		 */
+		/* Unprohibited multibyte check - we need to catch cases where
+		 * our byte size changes. We might want to add a command bit
+		 * for this check, for now I shall do it this way.  */
 		
 		if ( ( curCharType == kUnprohibited ) && ( nextCharType == kUnprohibited ) )
 			{
@@ -5948,7 +6051,8 @@ lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 		
 		if ( parseCommand & DUMP_TEXT_AND_BREAK )
 			{
-			/* copy the text out but don't set a break (only happens when flushing at the end) */
+			/* copy the text out but don't set a break (only happens
+               when flushing at the end) */
 			lo_CopyText ( (uint8 *) wordStart, &block->text_buffer[ block->buffer_write_index ], runLength );
 			block->buffer_write_index += runLength;
 			
@@ -5992,17 +6096,17 @@ lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllTex
 			break;
 			}
 			
-		/*
-		 * if we're on the last character, then we may have a partial run left over. if we're parsing all text
-		 * then we need to dump it.
-		 */
+		/* if we're on the last character, then we may have a partial
+		 * run left over. if we're parsing all text then we need to
+		 * dump it.  */
 		if ( parseAllText && ( *tptr == 0 ) && ( runLength > 0 ) )
 			{
 			processLastRun = TRUE;
 			}
 		}
 	
-	/* if we've ended and we have a run, then we need to save it in the line buffer */
+	/* if we've ended and we have a run, then we need to save it in
+       the line buffer */
 	if ( ( runLength > 0 ) && ( *wordStart != 0 ) )
 		{
 		lo_CopyTextToLineBuffer ( state,(uint8 *)  wordStart, runLength );
@@ -6022,7 +6126,8 @@ lo_FlushText ( MWContext * context, lo_DocState * state )
 		{
 		lo_GetTextParseAtributes ( state, &multiByte );
 		
-		/* add any text to the text block that may be sitting in the line buffer */
+		/* add any text to the text block that may be sitting in the
+           line buffer */
 		/* BRAIN DAMAGE: These should both be handled the same way */
 		if ( multiByte )
 			{
@@ -6058,9 +6163,8 @@ lo_SetupBreakState ( LO_TextBlock * block )
 	block->break_read_index = 0;
 	block->last_line_break = 0;
 
-	/*
-	 * We need to update our state to be at the current text position (specified by buffer_read_index)
-	 */
+	/* We need to update our state to be at the current text position
+	 * (specified by buffer_read_index) */
 	
 	lineLength = 0;
 
@@ -6072,16 +6176,16 @@ lo_SetupBreakState ( LO_TextBlock * block )
 		runEnd = lo_GetNextTextPosition ( block, &wordLength, &lineLength, &canBreak );
 		if ( runEnd == NULL )
 			{
-			/* this should not happen, but just in case, let's do something kinda reasonable */
+			/* this should not happen, but just in case, let's do
+               something kinda reasonable */
 			lo_RestoreBreakState ( block, &breakState, NULL );
 			break;
 			}
 		}
 
-	/*
-	 * If we're not at the beginning of the text buffer, then we need to increment buffer_read_index so
-	 * that we skip the breakable space we're currently at.
-	 */
+	/* If we're not at the beginning of the text buffer, then we need
+	 * to increment buffer_read_index so that we skip the breakable
+	 * space we're currently at.  */
 	if ( ( block->buffer_read_index > 0 ) && XP_IS_SPACE ( block->text_buffer[ block->buffer_read_index ] ) )
 		{
 		block->buffer_read_index++;
@@ -6171,18 +6275,20 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 			msTextData.text_len = block->buffer_write_index;
 			FE_MeasureText ( context, &msTextData, (int16 *) charLocs );
 			
-			/* BRAIN DAMAGE: We need to figure out for sure if the width has ever exceeded a uint16! */
-			/* the actual interface for MeasureText says it takes an array of signed ints, however */
-			/* the data stuffed in there is unsigned (we quickly overflow a int16 with an 8Kb buffer) */
+			/* BRAIN DAMAGE: We need to figure out for sure if the
+               width has ever exceeded a uint16! */
+			/* the actual interface for MeasureText says it takes an
+               array of signed ints, however */
+			/* the data stuffed in there is unsigned (we quickly
+               overflow a int16 with an 8Kb buffer) */
 			}
 		}
 #endif
 	
-	/*
-	 * Given the current layout state, run through this text block and convert all that we can into text elements.
-	 * If flushLastLine is set, we want to flush all the text, rather than keeping the last bit in case more text
-	 * comes.
-	 */
+	/* Given the current layout state, run through this text block and
+	 * convert all that we can into text elements.  If flushLastLine
+	 * is set, we want to flush all the text, rather than keeping the
+	 * last bit in case more text comes.  */
 	
 	allTextFits = FALSE;
 	
@@ -6193,13 +6299,12 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 		{
 		canBreakAtStart = FALSE;
 
-		/* Save the current break state in case we need to delay on the last line */
+		/* Save the current break state in case we need to delay on
+           the last line */
 		SAVE_BREAK_STATE ( block, &breakState, lineLength );
 				
-		/*
-		 * We need to handle the case where we're at the beginning of the line and the
-		 * first character is a breakable space.
-		 */
+		/* We need to handle the case where we're at the beginning of
+		 * the line and the first character is a breakable space.  */
 		if ( state->at_begin_line )
 			{
 			canBreakAtStart = lo_SkipInitialSpace ( block );
@@ -6217,7 +6322,8 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				
 		lineLength = lo_FindLineBreak ( context, state, block, text, charLocs, &width, minWidthPtr, &allTextFits );
 
-		/* update the state's min_width if we need to - this will be constant even if we don't flush this line */
+		/* update the state's min_width if we need to - this will be
+           constant even if we don't flush this line */
 		if ( minWidthPtr != NULL )
 			{
 			if ( minWidth > state->min_width )
@@ -6226,11 +6332,10 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				}
 			}
 		
-		/*
-		 * if this line is too long, we either need to break at the beginning of the run (if we can)
-		 * or break at an old element. If we can't do either of those then we just have to make the line
-		 * too big
-		 */
+		/* if this line is too long, we either need to break at the
+		 * beginning of the run (if we can) or break at an old
+		 * element. If we can't do either of those then we just have
+		 * to make the line too big */
 		
 		if ( ( width > ( state->right_margin - state->x ) ) && ( state->x > state->left_margin ) )
 			{
@@ -6245,22 +6350,25 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				/* break the line here */
 				lo_SoftLineBreak( context, state, TRUE );
 				
-				/*
-				 * BUG BUG: We're restoring the break state to the beginning of the buffer - ie
-				 * to before the space we skipped above. We need to fix the space skipping mechanism
-				 * to remove this case (we can go into an infinite loop here if there's not enough space
-				 * for the first word).
+				/* BUG BUG: We're restoring the break state to the
+				 * beginning of the buffer - ie to before the space we
+				 * skipped above. We need to fix the space skipping
+				 * mechanism to remove this case (we can go into an
+				 * infinite loop here if there's not enough space for
+				 * the first word).
 				 *
-				 * Should be able to have a new flag "canSkipSpace" but then actually don't skip it. Then
-				 * if the line does fit and it's at the beginning, we can skip the space. lo_FindLineBreak
-				 * should probably be the one to do this work so that the width we get back is correct.
-				 */
+				 * Should be able to have a new flag "canSkipSpace"
+				 * but then actually don't skip it. Then if the line
+				 * does fit and it's at the beginning, we can skip the
+				 * space. lo_FindLineBreak should probably be the one
+				 * to do this work so that the width we get back is
+				 * correct.  */
 				lo_RestoreBreakState ( block, &breakState, NULL );
 				
-				/*
-				 * if all the text fits (ie there was only an unbreakable run left in this block), then
-				 * we need to stick with this break position. Otherwise we can go find a new one
-				 */
+				/* if all the text fits (ie there was only an
+				 * unbreakable run left in this block), then we need
+				 * to stick with this break position. Otherwise we can
+				 * go find a new one */
 				if ( !allTextFits )
 					{
 					continue;
@@ -6278,10 +6386,10 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				lo_BreakOldElement ( context, state );
 				lo_RestoreBreakState ( block, &breakState, NULL );
 				
-				/*
-				 * if all the text fits (ie there was only an unbreakable run left in this block), then
-				 * we need to stick with this break position. Otherwise we can go find a new one
-				 */
+				/* if all the text fits (ie there was only an
+				 * unbreakable run left in this block), then we need
+				 * to stick with this break position. Otherwise we can
+				 * go find a new one */
 				if ( !allTextFits )
 					{
 					continue;
@@ -6291,13 +6399,14 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 			/* we're screwed, we just have to make this line too long */
 			}
 						
-		/*
-		 * We may not necessarily want to flush the whole buffer out to layout elements (the case where were
-		 * processing part of a text chunk based on what netlib has streamed to us).
+		/* We may not necessarily want to flush the whole buffer out
+		 * to layout elements (the case where were processing part of
+		 * a text chunk based on what netlib has streamed to us).
 		 *
-		 * We know we do want to flush this next line out if we still have more text in this buffer to process
-		 * or layout really does want us to flush this whole buffer (because some other element is after us).
-		 */
+		 * We know we do want to flush this next line out if we still
+		 * have more text in this buffer to process or layout really
+		 * does want us to flush this whole buffer (because some other
+		 * element is after us).  */
 		if ( !allTextFits || flushLastLine )
 			{
 			state->width = width;
@@ -6331,7 +6440,8 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				text_data->text_attr = block->text_attr;
 				text_data->ele_attrmask = block->ele_attrmask;
 				
-				/* BRAIN DAMAGE: Set LO_ELE_INVISIBLE to mark the element as not having a valid text ptr */
+				/* BRAIN DAMAGE: Set LO_ELE_INVISIBLE to mark the
+                   element as not having a valid text ptr */
 				XP_ASSERT ( !(text_data->ele_attrmask & LO_ELE_INVISIBLE ) );
 				text_data->ele_attrmask |= LO_ELE_INVISIBLE;
 				
@@ -6350,10 +6460,9 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				 * previous character is probably not in the same font, we
 				 * move forward to avoid overlap.
 				 *
-				 * Those same funny fonts can extend past the last character,
-				 * and we also have to catch that, and advance the following text
-				 * to eliminate cutoff.
-				 */
+				 * Those same funny fonts can extend past the last
+				 * character, and we also have to catch that, and
+				 * advance the following text to eliminate cutoff.  */
 				if ( state->text_info.lbearing < 0 )
 					{
 					text_data->x_offset = state->text_info.lbearing * -1;
@@ -6362,18 +6471,18 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				baseline_inc = 0;
 				line_inc = 0;
 				
-				/*
-				 * The baseline of the text element just added to the line may be
-				 * less than or greater than the baseline of the rest of the line
-				 * due to font changes.  If the baseline is less, this is easy,
-				 * we just increase y_offest to move the text down so the baselines
-				 * line up.  For greater baselines, we can't move the text up to
-				 * line up the baselines because we will overlay the previous line,
-				 * so we have to move all the previous elements in this line down.
+				/* The baseline of the text element just added to the
+				 * line may be less than or greater than the baseline
+				 * of the rest of the line due to font changes.  If
+				 * the baseline is less, this is easy, we just
+				 * increase y_offest to move the text down so the
+				 * baselines line up.  For greater baselines, we can't
+				 * move the text up to line up the baselines because
+				 * we will overlay the previous line, so we have to
+				 * move all the previous elements in this line down.
 				 *
-				 * If the baseline is zero, we are the first element on the line,
-				 * and we get to set the baseline.
-				 */
+				 * If the baseline is zero, we are the first element
+				 * on the line, and we get to set the baseline.  */
 				if ( state->baseline == 0 )
 					{
 					state->baseline = state->text_info.ascent;
@@ -6404,9 +6513,8 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 						}
 					}
 				
-				/*
-				 * Append this element to layout's linelist and our own list of text elements belonging to this block
-				 */
+				/* Append this element to layout's linelist and our
+				 * own list of text elements belonging to this block */
 				lo_AppendToLineList ( context, state, (LO_Element *) text_data, baseline_inc );
 				if ( block->startTextElement == NULL )
 					{
@@ -6444,9 +6552,8 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				state->width = 0;
 				}
 				
-			/*
-			 * If we're still processing text in this buffer, put a linebreak out there
-			 */
+			/* If we're still processing text in this buffer, put a
+			 * linebreak out there */
 			if ( !allTextFits && !justify )
 				{
 				lo_SoftLineBreak(context, state, TRUE);
@@ -6463,14 +6570,15 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				
 			if ( !( allTextFits && !flushLastLine ) )
 				{
-				/*
-				 * Skip the break character if it's whitespace. We don't need to worry about non-breaking spaces
-				 * here as if the space was non-breaking, we would not have broken the line here
-				 */
+				/* Skip the break character if it's whitespace. We
+				 * don't need to worry about non-breaking spaces here
+				 * as if the space was non-breaking, we would not have
+				 * broken the line here */
 
 				if ( XP_IS_SPACE ( *text ) && !allTextFits )
 					{
-					/* BRAIN DAMAGE: We should be able to do this at the start of the line */
+					/* BRAIN DAMAGE: We should be able to do this at
+                       the start of the line */
 /*					lo_SkipCharacter ( block ); */
 					}
 				}
@@ -6491,7 +6599,8 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 		state->cur_ele_type = LO_TEXT;
 		state->trailing_space = block->last_char_is_whitespace;
 		
-		/* We're not going to flush the last line, so restore our break state to the start of the line */
+		/* We're not going to flush the last line, so restore our
+           break state to the start of the line */
 		lo_RestoreBreakState ( block, &breakState, NULL );
 		}
 	
@@ -6592,14 +6701,13 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 		breakChar = lineLength;
 		}
 	
-	/*
-	 * We first need to walk through the word runs until we get to the first one before our
-	 * break character.
+	/* We first need to walk through the word runs until we get to the
+	 * first one before our break character.
 	 *
-	 * OPTIMIZATION: Make lo_GetNextTextPosition take a breakChar and have it walk forward to that
-	 * position in an inner loop. This will save us a ton of calls (we currently spend about 5% if our
-	 * time in lo_GetNextTextPosition - not huge but significant).
-	 */
+	 * OPTIMIZATION: Make lo_GetNextTextPosition take a breakChar and
+	 * have it walk forward to that position in an inner loop. This
+	 * will save us a ton of calls (we currently spend about 5% if our
+	 * time in lo_GetNextTextPosition - not huge but significant).  */
 
 	lineLength = 0;
 	
@@ -6634,7 +6742,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 		PR_LogPrint ( "Get next break position\n" );
 		PR_LogFlush();
 #endif
-		/* Save the current break position in case it ends up being the one we need */
+		/* Save the current break position in case it ends up being
+           the one we need */
 		if ( breakCount > 0 && canBreak )
 			{
 			oldBreakPos = lineLength;
@@ -6714,7 +6823,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 			break;
 			}
 		
-		/* if we're justifying text, then we just dump the next break position */
+		/* if we're justifying text, then we just dump the next break
+           position */
 		if ( justify )
 			{
 			break;
@@ -6724,10 +6834,9 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 		++breakCount;
 		}
 
-	/*
-	 * So now we're looking at the nearest break position to where we guessed we'd want to be.
-	 * Now we loop measuring this line of text until we find the best break position
-	 */
+	/* So now we're looking at the nearest break position to where we
+	 * guessed we'd want to be.  Now we loop measuring this line of
+	 * text until we find the best break position */
 	
 #ifdef LOG
 	PR_LogPrint ( "Finding actual break position\n" );
@@ -6781,16 +6890,15 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 		/* are we non-breakable text? */
 		if ( !state->breakable )
 			{
-			/*
-			 * We always want to move to the end of the text block. We should already be
-			 * there from the loop above.
-			 */
+			/* We always want to move to the end of the text block. We
+			 * should already be there from the loop above.  */
 #ifdef LOG
 			PR_LogPrint ( "Non-breakable, always get next break point\n" );
 			PR_LogFlush();
 #endif
 			
-			/* go forward one break position and measure again (including min width) */
+			/* go forward one break position and measure again
+               (including min width) */
 			SAVE_BREAK_STATE ( block, &tooShortBreak, lineLength );
 			haveTooShort = TRUE;
 			
@@ -6812,7 +6920,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 					{
 					int32 min_width;
 										
-					/* compute the real min width based on the last break position - we cannot break here */
+					/* compute the real min width based on the last
+                       break position - we cannot break here */
 					min_width = lo_ComputeTextMinWidth ( state, runLength, FALSE );
 					if ( min_width > *minWidth )
 						{
@@ -6831,7 +6940,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 			PR_LogFlush();
 #endif
 			
-			/* if we found a break position before this one that was too short, choose the too short one */
+			/* if we found a break position before this one that was
+               too short, choose the too short one */
 			if ( haveTooShort )
 				{
 #ifdef LOG
@@ -6842,7 +6952,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 				break;
 				}
 			
-			/* if we have something to back up to, then do so. Otherwise we have to break here */
+			/* if we have something to back up to, then do
+               so. Otherwise we have to break here */
 			if ( breakCount > 0 )
 				{
 #ifdef LOG
@@ -6858,7 +6969,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 				runEnd = lo_GetPrevTextPosition ( block, &wordLength, &lineLength, &canBreak );
 				if ( runEnd == NULL )
 					{
-					/* we need to break at a previous break position on this line... */
+					/* we need to break at a previous break position
+                       on this line... */
 					break;
 					}
 					
@@ -6883,7 +6995,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 			PR_LogPrint ( "Too short\n" );
 			PR_LogFlush();
 #endif
-			/* if we have a too long break position, then we know we're straddling the break point, choose */
+			/* if we have a too long break position, then we know
+               we're straddling the break point, choose */
 			/* this one */
 			if ( haveTooLong )
 				{
@@ -6901,7 +7014,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 				oldBreakWidth = runLength;
 				}
 			
-			/* go forward one break position and measure again (including min width) */
+			/* go forward one break position and measure again
+               (including min width) */
 			SAVE_BREAK_STATE ( block, &tooShortBreak, lineLength );
 			haveTooShort = TRUE;
 			
@@ -6945,11 +7059,13 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 					text_data.text_len = wordLength;
 					FE_GetTextInfo ( context, &text_data, &text_info );
 					
-					/* add the length of this word into the length of the line */
+					/* add the length of this word into the length of
+                       the line */
 					runLength += text_info.max_width;
 					}
 									
-				/* compute the real min width based on the last break position */
+				/* compute the real min width based on the last break
+                   position */
 				min_width = lo_ComputeTextMinWidth ( state, runLength, canBreak );
 				if ( min_width > *minWidth )
 					{
@@ -6967,12 +7083,11 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 			}
 		}
 	
-	/*
-	 * We may be in a nasty case where our current break position is before our
-	 * last saved one in oldBreakPos. This can happen when we move backwards
-	 * from our initial break guess. To correct this, we need to back up from our
-	 * current break point, get the new position and then move forward again.
-	 */
+	/* We may be in a nasty case where our current break position is
+	 * before our last saved one in oldBreakPos. This can happen when
+	 * we move backwards from our initial break guess. To correct
+	 * this, we need to back up from our current break point, get the
+	 * new position and then move forward again.  */
 	if ( ( oldBreakPos != -1 ) && ( oldBreakPos >= lineLength ) )
 		{
 		uint32	dummyWordLength;
@@ -7029,7 +7144,8 @@ lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_TextBlock * bloc
 	
 	text_data.text_len = lineLength;
 	
-	/* if we're breaking at a space at the end of this line, don't measure it */
+	/* if we're breaking at a space at the end of this line, don't
+       measure it */
 	if ( skipEndSpace )
 		{
 		--text_data.text_len;
@@ -7123,7 +7239,8 @@ lo_GetNextTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 		uint16	charSize;
 		
 		/* BRAIN DAMAGE */
-		/* turn this next line on when the uint16 multibyte_char_size field is added to LO_TextBlock */
+		/* turn this next line on when the uint16 multibyte_char_size
+           field is added to LO_TextBlock */
 #if 0
 		charSize = block->multibyte_char_size;
 #else
@@ -7255,13 +7372,13 @@ lo_GetNextTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 
 		lineLength += wordLength;
 
-		/*
-		 * if we actually have a word here and are not the first word on the line, then 
-		 * add one to the length to account for the interword space. We know we're not the
-		 * first word on the line if we're not at the linebreak or if we're at the start of the
-		 * buffer but have already skipped a break position (this happens when the first
-		 * character of the buffer is a breaking space).
-		 */
+		/* if we actually have a word here and are not the first word
+		 * on the line, then add one to the length to account for the
+		 * interword space. We know we're not the first word on the
+		 * line if we're not at the linebreak or if we're at the start
+		 * of the buffer but have already skipped a break position
+		 * (this happens when the first character of the buffer is a
+		 * breaking space).  */
 		if ( ( wordLength > 0 ) && ( ( block->last_line_break != block->buffer_read_index ) ||
 				( ( block->buffer_read_index == 0 ) && ( block->break_read_index > 0 ) ) ) )
 			{
@@ -7275,10 +7392,8 @@ lo_GetNextTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 		}
 	else
 		{
-		/*
-		 * We're at the end of the break table. We may have some text after this last break.
-		 * Either way, we cannot break here
-		 */
+		/* We're at the end of the break table. We may have some text
+		 * after this last break.  Either way, we cannot break here */
 		
 		*canBreak = FALSE;
 		
@@ -7353,7 +7468,8 @@ lo_ExtractPrevBreakCommand ( LO_TextBlock * block, Bool * multiByte, uint32 * co
 			breakCommand = ( breakLong >> ( ( 7 - ( breakIndex & 0x7 ) ) << 2 ) ) & 0xF;	
 			if ( breakCommand <= MAX_NATURAL_LENGTH )
 				{
-				/* a nibble of length data, we already have all the info we need */
+				/* a nibble of length data, we already have all the
+                   info we need */
 				dataNibbles = 0;
 				commandData = breakCommand;
 				}
@@ -7451,7 +7567,8 @@ lo_GetPrevTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 		uint16	charSize;
 		
 		/* BRAIN DAMAGE */
-		/* turn this next line on when the uint16 multibyte_char_size field is added to LO_TextBlock */
+		/* turn this next line on when the uint16 multibyte_char_size
+           field is added to LO_TextBlock */
 #if 0
 		charSize = block->multibyte_char_size;
 #else
@@ -7503,7 +7620,8 @@ lo_GetPrevTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 			block->multibyte_length = 0;
 			}
 			
-		/* MAJOR BRAIN DAMAGE: WE NEED TO STORE THIS IN THE TEXT BLOCK AS IT WILL NOT */
+		/* MAJOR BRAIN DAMAGE: WE NEED TO STORE THIS IN THE TEXT BLOCK
+           AS IT WILL NOT */
 		/* ALWAYS BE TWO BYTE!!!! */
 		XP_ASSERT( charSize == 2 );
 		
@@ -7517,10 +7635,9 @@ lo_GetPrevTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 	
 	lineLength = block->buffer_read_index;
 	
-	/*
-	 * if we actually have a word here and are not the first word on the line, then 
-	 * subtract one to the length to account for the interword space.
-	 */
+	/* if we actually have a word here and are not the first word on
+	 * the line, then subtract one to the length to account for the
+	 * interword space.  */
 	if ( ( wordLength > 0 ) && ( block->last_line_break != ( lineLength - wordLength )) )
 		{
 		/* only true if there's a space here */
@@ -7540,7 +7657,8 @@ lo_GetPrevTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 	*outLineLength -= wordLength;
 	*outWordLength = wordLength;
 
-	/* We can't break if we've backed up all the way to the start of the buffer and there is */
+	/* We can't break if we've backed up all the way to the start of
+       the buffer and there is */
 	/* no break position there */
 	if ( ( block->break_read_index == 0 ) && ( wordLength == 0 ) )
 		{
@@ -7560,13 +7678,15 @@ lo_SetBreakCommand ( LO_TextBlock * block, uint32 command, uint32 commandLength 
 	uint32		break_write_index;
 	uint32 *	break_table;
 	
-	/* record the current break position as it may be the last entry in the break table */
+	/* record the current break position as it may be the last entry
+       in the break table */
 	block->last_break_offset = block->buffer_write_index;
 	block->last_buffer_write_index = block->buffer_write_index;
 	
 	break_write_index = block->break_write_index;
 	
-	/* grow the break table if we need to - always have space for one long of data */
+	/* grow the break table if we need to - always have space for one
+       long of data */
 	if ( ( break_write_index + 8 ) > block->break_length )
 		{
 		/* allocate in bytes, count in nibbles */
@@ -7675,11 +7795,10 @@ lo_SetMultiByteRun ( LO_TextBlock * block, int32 charSize, Bool breakable, Bool 
 	w_length = block->buffer_write_index - block->last_buffer_write_index;
 	XP_ASSERT ( w_length >= 0 );
 	
-	/*
-	 * There are two cases where we can use a normal simple break entry:
-	 *	1. We are not breakable on every char and the text is breakable (the normal break table case).
-	 *	2. We can break on every char, but we only have one char in the run
-	 */
+	/* * There are two cases where we can use a normal simple break
+	 *	entry: 1. We are not breakable on every char and the text is
+	 *	breakable (the normal break table case).  2. We can break on
+	 *	every char, but we only have one char in the run */
 	if ( breakable )
 		{
 		if ( !eachCharBreakable || ( charSize == w_length ) )
@@ -7690,7 +7809,8 @@ lo_SetMultiByteRun ( LO_TextBlock * block, int32 charSize, Bool breakable, Bool 
 		
 	/* BRAIN DAMAGE: We need to handle overflow of our data word */
 	
-	/* this break command always has 16 bits of data and so it is 24 bits big */
+	/* this break command always has 16 bits of data and so it is 24
+       bits big */
 	command_size = 6;
 	
 	data_long = w_length;
@@ -7772,12 +7892,11 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 		}
 	else
 		{
-		/*
-		 * We're trying to break inside an actual text element. We need to shorten
-		 * this element to point up to this break position, then add a linefeed, then
-		 * create a new element that contains the remaining text and place it on the
-		 * line buffer
-		 */
+		/* We're trying to break inside an actual text element. We
+		 * need to shorten this element to point up to this break
+		 * position, then add a linefeed, then create a new element
+		 * that contains the remaining text and place it on the line
+		 * buffer */
 		 
 		 /* if we're breaking an element, we must have a text block */
 		if ( block == NULL )
@@ -7811,7 +7930,8 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 		PA_UNLOCK(text_data->text);
 		state->x += state->width;
 		
-		/* this element should point at the space before the next word, so skip it */
+		/* this element should point at the space before the next
+           word, so skip it */
 		if ( XP_IS_SPACE ( *breakPtr ) )
 			{
 			++breakPtr;
@@ -7881,7 +8001,8 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 		new_text_data->text_attr = block->text_attr;
 		new_text_data->ele_attrmask = block->ele_attrmask;
 		
-		/* BRAIN DAMAGE: Set LO_ELE_INVISIBLE to mark the element as not having a valid text ptr */
+		/* BRAIN DAMAGE: Set LO_ELE_INVISIBLE to mark the element as
+           not having a valid text ptr */
 		XP_ASSERT ( !(new_text_data->ele_attrmask & LO_ELE_INVISIBLE ) );
 		new_text_data->ele_attrmask |= LO_ELE_INVISIBLE;
 		
@@ -7956,10 +8077,8 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 		state->x += new_text_data->width;
 		}
 	
-	/*
-	 * if our previous element was the last text element for this block, then our
-	 * new element is the new end
-	 */
+	/* if our previous element was the last text element for this
+	 * block, then our new element is the new end */
 	if ( block->endTextElement == text_data )
 		{
 		block->endTextElement = new_text_data;
@@ -8010,7 +8129,8 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 			}
 		}
 	
-	/* if we've added a new element then increment the element id's of the following elements */
+	/* if we've added a new element then increment the element id's of
+       the following elements */
 	if ( new_text_data != NULL )
 		{
 		eptr = tptr;
@@ -8060,7 +8180,8 @@ lo_SkipCharacter ( LO_TextBlock * block )
 static void
 lo_SetLineBreak ( LO_TextBlock * block, Bool skipSpace )
 {
-	/* if the current character is a space, we can skip it as we're breaking here */
+	/* if the current character is a space, we can skip it as we're
+       breaking here */
 	/* NOT FOR PREFORMATTED TEXT THOUGH */
 	if ( skipSpace && ( XP_IS_SPACE ( block->text_buffer[ block->buffer_read_index ] ) ) )
 		{
@@ -8132,7 +8253,8 @@ Bool lo_GrowTextBlock ( LO_TextBlock * block, uint32 length )
 	
 	if ( block->buffer_length < ( block->buffer_write_index + length ) )
 		{
-		/* need to make sure that the new size is enough to contain the new data */
+		/* need to make sure that the new size is enough to contain
+           the new data */
 		growBy = TEXT_BUFFER_INC;
 		if ( growBy < length )
 			{
@@ -8150,10 +8272,8 @@ Bool lo_GrowTextBlock ( LO_TextBlock * block, uint32 length )
 		/* update any break table related information */
 		if ( success && ( block->break_table != NULL ) )
 			{
-			/*
-			 * Run through all the text elements and adjust their text addresses to point to the newly
-			 * relocated block
-			 */
+			/* Run through all the text elements and adjust their text
+			 * addresses to point to the newly relocated block */
 			
 			textElement = block->startTextElement;
 			endElement = block->endTextElement;
@@ -8184,7 +8304,8 @@ lo_CopyText ( uint8 * src, uint8 * dst, uint32 length )
 {
 	uint8	c;
 	
-	/* copy a text string, converting non breaking spaces to normal spaces as we go */
+	/* copy a text string, converting non breaking spaces to normal
+       spaces as we go */
 	while ( length-- )
 		{
 		c = *src++;
