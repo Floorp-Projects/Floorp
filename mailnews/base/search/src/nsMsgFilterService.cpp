@@ -26,16 +26,7 @@
 NS_IMPL_ADDREF(nsMsgFilterService)
 NS_IMPL_RELEASE(nsMsgFilterService)
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgFilterService(const nsIID& iid, void **result)
-{
-	nsMsgFilterService *ids = new nsMsgFilterService();
-	return (ids) ? ids->QueryInterface(iid, result) : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_END_EXTERN_C
 
 
 nsMsgFilterService::nsMsgFilterService()

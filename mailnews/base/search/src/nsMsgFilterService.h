@@ -22,12 +22,7 @@
 #include "nsIMsgFilterService.h"
 
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgFilterService(const nsIID& iid, void **result);
-
-NS_END_EXTERN_C
 
 // The filter service is used to acquire and manipulate filter lists.
 
