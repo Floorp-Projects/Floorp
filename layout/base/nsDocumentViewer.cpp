@@ -1311,7 +1311,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
       }
     }
 
-    // Initial refllow
+    // Initial reflow
     mPresShell->InitialReflow(width, height);
 
     // Now trigger a refresh
