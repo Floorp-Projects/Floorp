@@ -53,9 +53,9 @@ sub createFieldByID {
     my $self = shift;
     my($app, $user, $fieldID, $fieldData) = @_;
     my($type, @data) = $app->getService('dataSource.user')->getFieldByID($app, $fieldID);
-    $app->assert(defined($type), 1, "Database contains a user with a field ID '$fieldID' but that field ID is not defined");
+    $app->assert(defined($type), 1, "Tried to create a field with ID '$fieldID' but that field ID is not defined");
     my $field = $app->getServiceInstance("user.field.$type", $user, @data, $fieldData);
-    $app->assert(defined($field), 1, "Database contains a field of type '$type' but there is no service providing that type");
+    $app->assert(defined($field), 1, "Tried to create a field of type '$type' but there is no service providing that type");
     return $field;
 }
 
@@ -66,9 +66,9 @@ sub createFieldByName {
     # fieldData is likely to be undefined, as the field is unlikely to
     # exist for this user.
     my($type, @data) = $app->getService('dataSource.user')->getFieldByName($app, $fieldCategory, $fieldName);
-    $app->assert(defined($type), 1, "Database contains a user with a field name '$fieldCategory.$fieldName' but that field is not defined");
+    $app->assert(defined($type), 1, "Tried to create a field with name '$fieldCategory.$fieldName' but that field is not defined");
     my $field = $app->getServiceInstance("user.field.$type", $user, @data, $fieldData);
-    $app->assert(defined($field), 1, "Database contains a field of type '$type' but there is no service providing that type");
+    $app->assert(defined($field), 1, "Tried to create a field of type '$type' but there is no service providing that type");
     return $field;
 }
 
