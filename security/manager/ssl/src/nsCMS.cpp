@@ -855,6 +855,7 @@ NS_IMETHODIMP nsCMSDecoder::Finish(nsICMSMessage ** aCMSMsg)
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCMSEncoder, nsICMSEncoder)
 
 nsCMSEncoder::nsCMSEncoder()
+: m_ecx(nsnull)
 {
 }
 
