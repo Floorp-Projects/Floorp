@@ -55,7 +55,7 @@
 	</menu>
 
 	 <toolbox id="taskbox">
-		 <toolbar id="taskbar" chromeclass="status">
+		 <toolbar id="taskbar" chromeclass="status" persist="collapsed">
 
 			  <popup id="mozillaPopup">
 			    <menu>
