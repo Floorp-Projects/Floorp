@@ -81,7 +81,6 @@ CPPSRCS = \
 ifdef MOZ_DEBUG
 CPPSRCS += \
 		nsLoggingSink.cpp   \
-		nsHTMLNullSink.cpp  \
 		$(NULL)
 endif
 

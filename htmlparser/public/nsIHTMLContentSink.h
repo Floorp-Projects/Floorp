@@ -326,9 +326,5 @@ public:
 
 };
 
-#ifdef NS_DEBUG
-extern nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
-#endif
-
 #endif /* nsIHTMLContentSink_h___ */
 
