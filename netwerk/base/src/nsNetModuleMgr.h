@@ -20,7 +20,7 @@
 #define ___nsNetModuleMgr_h__
 
 #include "nsINetModuleMgr.h"
-//#include "prlock.h"
+#include "prlock.h"
 #include "nspr.h"
 #include "nsISupportsArray.h"
 
@@ -43,7 +43,7 @@ public:
 
 
     nsISupportsArray    *mEntries;
-    //PR_Lock             *mLock;
+    PRLock             *mLock;
 };
 
 
