@@ -1398,6 +1398,11 @@ main(int argc, char **argv)
     }
 
     envString = getenv(envVarName);
+    tmp = getenv("TMP");
+    if (!tmp)
+	tmp = getenv("TMPDIR");
+    if (!tmp)
+	tmp = getenv("TEMP");
     if (envString) {
 	/* we're one of the children in a multi-process server. */
 	listen_sock = PR_GetInheritedFD(inheritableSockName);
@@ -1412,7 +1417,7 @@ main(int argc, char **argv)
     } else if (maxProcs > 1) {
 	/* we're going to be the parent in a multi-process server.  */
 	listen_sock = getBoundListenSocket(port);
-	rv = SSL_ConfigMPServerSIDCache(32 * 1024, 0, 0, NULL);
+	rv = SSL_ConfigMPServerSIDCache(32 * 1024, 0, 0, tmp);
 	if (rv != SECSuccess)
 	    errExit("SSL_ConfigMPServerSIDCache");
 	beAGoodParent(argc, argv, maxProcs, listen_sock);
@@ -1423,7 +1428,7 @@ main(int argc, char **argv)
 	prStatus = PR_SetFDInheritable(listen_sock, PR_FALSE);
 	if (prStatus != PR_SUCCESS)
 	    errExit("PR_SetFDInheritable");
-	rv = SSL_ConfigServerSessionIDCache(32 * 1024, 0, 0, NULL);
+	rv = SSL_ConfigServerSessionIDCache(32 * 1024, 0, 0, tmp);
 	if (rv != SECSuccess)
 	    errExit("SSL_ConfigServerSessionIDCache");
     }
