@@ -39,8 +39,37 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
+#
+# Rhapsody is using a more-portable way of specifying
+# the link line, Linux and other OS's probably want
+# to follow suit. -mcafee
+#
+ifeq ($(OS_TARGET),Rhapsody)
+EXTRA_DSO_LDOPTS = \
+	-L$(DIST)/lib	\
+	-lraptorhtmldoc_s	\
+	-lnglhtmlcon_s		\
+	-lraptorhtmlforms_s	\
+	-lraptorhtmlbase_s	\
+	-lraptorhtmlstyle_s	\
+	-lraptorhtmltable_s	\
+	-lraptorlayout_s        \
+	-lraptorevents_s	\
+	-L$(DIST)/bin		\
+	-lraptorhtmlpars	\
+	-lraptorgfx	\
+	-lraptorbase	\
+	-lgmbaseunix	\
+	-ljsdom		\
+	-ljs		\
+	-lnetlib	\
+	-lxpcom		\
+	-lnspr21	\
+	-lplds21	\
+	-lplc21		\
+	$(NULL)
+else
 # These must be maintained in the proper order for Linux.
-
 EXTRA_DSO_LDOPTS = \
 	$(LD_ALL)					\
 	$(DIST)/lib/libraptorhtmldoc_s.a		\
@@ -65,5 +94,6 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/bin/libplds21.so			\
 	$(DIST)/bin/libplc21.so				\
 	-lm
+endif
 
 include $(DEPTH)/config/rules.mk
