@@ -40,11 +40,13 @@ class nsIScriptGlobalObject;
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
 #define WEB_DLL    "raptorweb.dll"
+#define PREF_DLL   "xppref32.dll"
 #else
 #define WIDGET_DLL "libwidgetunix.so"
 #define GFXWIN_DLL "libgfxunix.so"
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
+#define PREF_DLL   "libpref.so"
 #endif
 
 #define MAXPATHLEN 1024
