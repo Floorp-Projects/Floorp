@@ -1301,6 +1301,8 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 NS_IMETHODIMP 
 nsPlaintextEditor::Undo(PRUint32 aCount)
 {
+  nsAutoUpdateViewBatch beginViewBatching(this);
+
   ForceCompositionEnd();
   nsresult result = NS_OK;
 
@@ -1327,6 +1329,7 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
 
+  nsAutoUpdateViewBatch beginViewBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRedo);

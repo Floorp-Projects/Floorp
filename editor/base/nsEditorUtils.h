@@ -144,6 +144,31 @@ class nsAutoTxnsConserveSelection
   PRBool mOldState;
 };
 
+/***************************************************************************
+ * stack based helper class for batching reflow and paint requests.
+ */
+class nsAutoUpdateViewBatch
+{
+  public:
+  
+  nsAutoUpdateViewBatch(nsEditor *ed) : mEd(ed)
+  {
+    NS_ASSERTION(mEd, "null mEd pointer!");
+
+    if (mEd) 
+      mEd->BeginUpdateViewBatch();
+  }
+  
+  ~nsAutoUpdateViewBatch() 
+  {
+    if (mEd) 
+      mEd->EndUpdateViewBatch();
+  }
+  
+  protected:
+  nsEditor *mEd;
+};
+
 /******************************************************************************
  * some helper classes for iterating the dom tree
  *****************************************************************************/
