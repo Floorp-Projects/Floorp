@@ -95,7 +95,8 @@ NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
    NS_ENSURE(content, NS_ERROR_FAILURE);
 
    // Get the primary frame
-   nsIFrame* frame; 
+   nsIFrame* frame;  // Remember Frames aren't ref-counted.  They are in their 
+                     // own special little world.
 
    NS_ENSURE_SUCCESS(GetPrimaryFrameFor(content, &frame),
       NS_ERROR_FAILURE);
