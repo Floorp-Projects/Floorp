@@ -261,7 +261,7 @@ sub Checkout()
 	if ($main::pull{moz})
 	{
 		$session->checkout("mozilla/nsprpub",	$nsprpub_tag)				|| print "checkout of nsprpub failed";		
-		$session->checkout("mozilla/security",	$security_tag)		                || print "checkout of security failed";		
+		$session->checkout("mozilla/security", $security_tag)		                || print "checkout of security failed";		
 		$session->checkout("SeaMonkeyAll")									|| 
 			print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
 	}
@@ -559,7 +559,12 @@ sub MakeResourceAliases()
 	#SECURITY
 	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",		"$global_content_chrome_dir");
 	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_NAV",			"$navigator_content_chrome_dir");
+	
 	_InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",			"$global_locale_chrome_dir");
+	_InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST_NAV",		"$navigator_locale_chrome_dir");
+	
+	
+
 
 	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_content_chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_content_chrome_dir");
@@ -1667,10 +1672,10 @@ sub BuildNeckoProjects()
 #	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# security stuff
-#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
-#	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
+	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
+	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp",		"PSMProtocol$D.o", "", 0, 0, 0);	
 
-#	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp",		"PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
+	BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp",		"PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
 	
 	print("--- Necko projects complete ----\n");
 } # necko
