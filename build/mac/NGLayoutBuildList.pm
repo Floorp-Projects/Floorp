@@ -19,7 +19,7 @@ use File::Copy;
 # homegrown
 use Moz;
 #use MozJar;
-use MakeJarsMac;
+#use MakeJarsMac;
 use MacCVS;
 use MANIFESTO;
 
@@ -2575,5 +2575,5 @@ sub BuildProjects()
     ActivateApplication('McPL');
     MakeResourceAliases();
 
-    BuildJarFiles();
+#    BuildJarFiles();
 }
