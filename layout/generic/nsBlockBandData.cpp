@@ -74,20 +74,8 @@ nsresult
 nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
 {
   // Get the raw band data for the given Y coordinate
-  nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
-  while (NS_FAILED(rv)) {
-    // We need more space for our bands
-    if (mTrapezoids != mData) {
-      delete [] mTrapezoids;
-    }
-    PRInt32 newSize = mSize * 2;
-    mTrapezoids = new nsBandTrapezoid[newSize];
-    if (!mTrapezoids) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mSize = newSize;
-    rv = mSpaceManager->GetBandData(aY, mSpace, *this);
-  }
+  nsresult rv = GetBandData(aY);
+  if (NS_FAILED(rv)) { return rv; }
 
   // Compute the bounding rect of the available space, i.e. space
   // between any left and right floaters.
@@ -95,6 +83,46 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
   aResult = mAvailSpace;
   return NS_OK;
 }
+
+// the code below should never loop more than a very few times.
+// this is a safety valve to see if we've gone off the deep end
+#define ERROR_TOO_MANY_ITERATIONS 1000
+
+/* nsBlockBandData methods should never call mSpaceManager->GetBandData directly.
+ * They should always call nsBlockBandData::GetBandData() instead.
+ */
+nsresult
+nsBlockBandData::GetBandData(nscoord aY)
+{
+  PRInt32 iterations =0;
+  nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
+  while (NS_FAILED(rv)) {
+    iterations++;
+    if (iterations>ERROR_TOO_MANY_ITERATIONS)
+    {
+      NS_ASSERTION(PR_FALSE, "too many iterations in nsBlockBandData::GetBandData");
+      return NS_ERROR_FAILURE;
+    }
+    // We need more space for our bands
+    if (mTrapezoids != mData) {
+      delete [] mTrapezoids;
+    }
+    PRInt32 newSize = mSize * 2;
+    if (newSize<mCount) {
+      newSize = mCount;
+    }
+    mTrapezoids = new nsBandTrapezoid[newSize];
+    if (!mTrapezoids) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mSize = newSize;
+    rv = mSpaceManager->GetBandData(aY, mSpace, *this);
+  }
+  NS_POSTCONDITION(mCount<=mSize, "bad state, count > size");
+  return NS_OK;
+}
+
+
 
 /**
  * Computes the bounding rect of the available space, i.e. space
@@ -125,6 +153,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
     // Examine each trapezoid in the band, counting up the number of
     // left and right floaters. Use the right-most floater to
     // determine where the right edge of the available space is.
+    NS_PRECONDITION(mCount<=mSize, "bad state, count > size");
     for (i = 0; i < mCount; i++) {
       trapezoid = &mTrapezoids[i];
       if (trapezoid->mState != nsBandTrapezoid::Available) {
@@ -245,8 +274,10 @@ nscoord
 nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
   for (;;) {
-    // Update band information based on target Y before clearing.
-    mSpaceManager->GetBandData(aY, mSpace, *this);
+    nsresult rv = GetBandData(aY);
+    if (NS_FAILED(rv)) {
+      break;  // something is seriously wrong, bail
+    }
     ComputeAvailSpaceRect();
 
     // Compute aYS as aY in space-manager "root" coordinates.
@@ -256,6 +287,7 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
     // this band.
     nscoord yMost = aYS;
     PRInt32 i;
+    NS_PRECONDITION(mCount<=mSize, "bad state, count > size");
     for (i = 0; i < mCount; i++) {
       nsBandTrapezoid* trapezoid = &mTrapezoids[i];
       if (nsBandTrapezoid::Available != trapezoid->mState) {
