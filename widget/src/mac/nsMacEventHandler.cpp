@@ -234,7 +234,6 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 //
 PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
-printf("dispatching event %ld into Gecko\n", aMessage);
 	nsMouseEvent geckoEvent;
 
 	// convert the mouse to local coordinates. We have to do all the funny port origin
