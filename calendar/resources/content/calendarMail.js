@@ -157,113 +157,187 @@ function noSmtp()
 
 function sendEvent()
 {
-	var Event;
-	var CalendarDataFilePath;
-	var nsIMsgCompFieldsComponent;
-	var nsIMsgCompFields;
-	var nsIMsgComposeParamsComponent;
-	var nsIMsgComposeParams;
-	var nsIMsgComposeServiceComponent;
-	var nsIMsgComposeService;
-	var nsIMsgCompFormat;
-	var nsIMsgCompType;
-	var nsIMsgAttachmentComponent;
-	var nsIMsgAttachment;
+  var CalendarDataFilePath;
+  var nsIMsgCompFieldsComponent;
+  var nsIMsgCompFields;
+  var nsIMsgComposeParamsComponent;
+  var nsIMsgComposeParams;
+  var nsIMsgComposeServiceComponent;
+  var nsIMsgComposeService;
+  var nsIMsgCompFormat;
+  var nsIMsgCompType;
+  var nsIMsgAttachmentComponent;
+  var nsIMsgAttachment;
 
-	CalendarDataFilePath = getCalendarDataFilePath();
-	if (! CalendarDataFilePath)
-	{
-		alert( "No calendarDataFilePath in calendarMail.js" );
-      return;
-	}
-	/* Want output like
-	 * When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time
-     * (US & Canada); Tijuana.
-     * Where: San Francisco
-	 * see bug 59630
-	 */
-   var CalendarText = "";
-   var EmailBody = "";
-   var Separator = "";
+  CalendarDataFilePath = getCalendarDataFilePath();
+  if (! CalendarDataFilePath) {
+    alert( "No calendarDataFilePath in calendarMail.js" );
+    return;
+  }
+  /* Outputs plain text for message body like
+   *
+   *   Summary: Pre-midnight gathering
+   *   When: Friday, 31 December 1999 11:00 PM -- 11:45 PM
+   *   Where: City hall
+   *   Organizer: Moz <moz@mozilla.org>
+   *
+   *   We will gather and ride over en-masse.
+   * 
+   * For recurring event, date is next occurrence (or prev if none).
+   * Date is not repeated if end is same.  Time is omitted for all day events.
+   */
+  var CalendarText = "";
+  var EmailBody = "";
+  var Separator = "";
 
-	for( var i = 0; i < gCalendarWindow.EventSelection.selectedEvents.length; i++ )
-   {
-      Event = gCalendarWindow.EventSelection.selectedEvents[0].clone();
+  for( var i = 0; i < gCalendarWindow.EventSelection.selectedEvents.length; i++ ) {
+    var event = gCalendarWindow.EventSelection.selectedEvents[i].clone();
 
-      if( Event )
-      {
-         Event.alarm = false;
-         if( Event.method == 0 )
-            Event.method = Event.ICAL_METHOD_PUBLISH;
+    if( event ) {
+      event.alarm = false;
+      if( event.method == 0 )
+	event.method = event.ICAL_METHOD_PUBLISH;
 
-         CalendarText += Event.getIcalString();
-         var dateFormat = new DateFormater();
-         var eventStartDate = new Date(Event.start.getTime());
-         var eventEndDate   = new Date(Event.end.getTime());
-         var eventStartFormatted = (dateFormat.getShortFormatedDate(eventStartDate)+" "+
-                                   dateFormat.getFormatedTime(eventStartDate));
-         var eventEndFormatted   = (dateFormat.getShortFormatedDate(eventEndDate)+" "+
-                                   dateFormat.getFormatedTime(eventEndDate));
-         EmailBody += (emailStringBundle.GetStringFromName( "When" )+" " + eventStartFormatted + " - " + eventEndFormatted + "\n"+
-                      emailStringBundle.GetStringFromName( "Where" )+" " + Event.location + "\n"+
-                      emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n" +
-                      emailStringBundle.GetStringFromName( "Summary" )+":" + Event.description);
-         EmailBody += Separator;
-         Separator = "\n";
-      }
-   }
+      CalendarText += event.getIcalString();
+      var dateFormat = new DateFormater();
+      var eventDuration  = event.end.getTime() - event.start.getTime();
+      var displayStartDate = getNextOrPreviousOccurrence(event);
+      var displayEndDate   = new Date(displayStartDate.getTime() + eventDuration);
+      if (event.allDay)
+	displayEndDate.setDate(displayEndDate.getDate() - 1);
+      var sameDay = (displayStartDate.getFullYear() == displayEndDate.getFullYear() &&
+		     displayStartDate.getMonth() == displayEndDate.getMonth() &&
+		     displayStartDate.getDay() == displayEndDate.getDay());
+      var sameTime = (displayStartDate.getHours() == displayEndDate.getHours() &&
+		      displayStartDate.getMinutes() == displayEndDate.getMinutes());
+      var when = (event.allDay
+		  ? (sameDay
+		     // just one day
+		     ? dateFormat.getFormatedDate(displayStartDate)
+		     // range of days
+		     : makeRange(dateFormat.getFormatedDate(displayStartDate),
+				 dateFormat.getFormatedDate(displayEndDate)))
+		  : (sameDay
+		     ? (sameTime
+			// just one date time
+			? (dateFormat.getFormatedDate(displayStartDate) +
+			   " "+ dateFormat.getFormatedTime(displayStartDate))
+			// range of times on same day
+			: (dateFormat.getFormatedDate(displayStartDate)+
+			   " " + makeRange(dateFormat.getFormatedTime(displayStartDate),
+					   dateFormat.getFormatedTime(displayEndDate))))
+		     // range across different days
+		     : makeRange(dateFormat.getFormatedDate(displayStartDate) +
+				 " "+ dateFormat.getFormatedTime(displayStartDate),
+				 dateFormat.getFormatedDate(displayEndDate) +
+				 " "+ dateFormat.getFormatedTime(displayEndDate))));
+
+      EmailBody += Separator;
+      Separator = "\n\n";
+      EmailBody += (emailStringBundle.GetStringFromName( "Summary" )+" " + nullToEmpty(event.title) +"\n"+
+		    emailStringBundle.GetStringFromName( "When" )+" " + when + "\n"+
+		    emailStringBundle.GetStringFromName( "Where" )+" " + nullToEmpty(event.location) + "\n"+
+		    emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n" +
+		    "\n" +
+		    (event.description == null? "" : event.description + "\n"));
+    }
+  }
    
-   var EmailSubject;
+  var EmailSubject;
 
-   if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
-      EmailSubject = Event.title;
-   else
-      EmailSubject = emailStringBundle.GetStringFromName( "EmailSubject" );
+  if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
+    EmailSubject = gCalendarWindow.EventSelection.selectedEvents[0].title;
+  else
+    EmailSubject = emailStringBundle.GetStringFromName( "EmailSubject" );
 
-   saveCalendarObject(CalendarDataFilePath, CalendarText);
+  saveCalendarObject(CalendarDataFilePath, CalendarText);
 
-   // lets open a composer with fields and body prefilled
-   try
-   {
-      nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
-      nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
-      nsIMsgAttachment.name = emailStringBundle.GetStringFromName( "AttachmentName" );
-      nsIMsgAttachment.contentType = "text/calendar;"
-      nsIMsgAttachment.temporary = true;
-      nsIMsgAttachment.url = "file://" + CalendarDataFilePath;
-      // lets setup the fields for the message
-      nsIMsgCompFieldsComponent = Components.classes["@mozilla.org/messengercompose/composefields;1"];
-      nsIMsgCompFields = nsIMsgCompFieldsComponent.createInstance(Components.interfaces.nsIMsgCompFields);
-      nsIMsgCompFields.useMultipartAlternative = true;
-      nsIMsgCompFields.attachVCard = true;
-      nsIMsgCompFields.from = gMailIdentity.email;
-      nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
-      nsIMsgCompFields.subject = EmailSubject;
-      nsIMsgCompFields.organization = gMailIdentity.organization;
-      nsIMsgCompFields.body = EmailBody;
-      nsIMsgCompFields.addAttachment(nsIMsgAttachment);
-      /* later on we may be able to add:
-       * returnReceipt, attachVCard
-       */
-      // time to handle the message paramaters
-      nsIMsgComposeParamsComponent = Components.classes["@mozilla.org/messengercompose/composeparams;1"];
-      nsIMsgComposeParams = nsIMsgComposeParamsComponent.createInstance(Components.interfaces.nsIMsgComposeParams);
-      nsIMsgComposeParams.composeFields = nsIMsgCompFields;
-      nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
-      nsIMsgCompType = Components.interfaces.nsIMsgCompType;
-      nsIMsgComposeParams.format = nsIMsgCompFormat.PlainText; // this could be a pref for the user
-      nsIMsgComposeParams.type = nsIMsgCompType.New;
-      // finally lets pop open a composer window after all this work :)
-      nsIMsgComposeServiceComponent = Components.classes["@mozilla.org/messengercompose;1"];
-      nsIMsgComposeService = nsIMsgComposeServiceComponent.getService().QueryInterface(Components.interfaces.nsIMsgComposeService);
-      nsIMsgComposeService.OpenComposeWindowWithParams(null, nsIMsgComposeParams);
-   }
-   catch(ex)
-   {
-      alert( ex );
-      mdebug("failed to get composer window\nex: " + ex);
-   }
+  // lets open a composer with fields and body prefilled
+  try {
+    nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
+    nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
+    nsIMsgAttachment.name = emailStringBundle.GetStringFromName( "AttachmentName" );
+    nsIMsgAttachment.contentType = "text/calendar";
+    nsIMsgAttachment.temporary = true;
+    nsIMsgAttachment.url = "file://" + CalendarDataFilePath;
+    // lets setup the fields for the message
+    nsIMsgCompFieldsComponent = Components.classes["@mozilla.org/messengercompose/composefields;1"];
+    nsIMsgCompFields = nsIMsgCompFieldsComponent.createInstance(Components.interfaces.nsIMsgCompFields);
+    nsIMsgCompFields.useMultipartAlternative = true;
+    nsIMsgCompFields.attachVCard = true;
+    nsIMsgCompFields.from = gMailIdentity.email;
+    nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
+    nsIMsgCompFields.subject = EmailSubject;
+    nsIMsgCompFields.organization = gMailIdentity.organization;
+    nsIMsgCompFields.body = EmailBody;
+    nsIMsgCompFields.addAttachment(nsIMsgAttachment);
+    /* later on we may be able to add:
+     * returnReceipt, attachVCard
+     */
+    // time to handle the message paramaters
+    nsIMsgComposeParamsComponent = Components.classes["@mozilla.org/messengercompose/composeparams;1"];
+    nsIMsgComposeParams = nsIMsgComposeParamsComponent.createInstance(Components.interfaces.nsIMsgComposeParams);
+    nsIMsgComposeParams.composeFields = nsIMsgCompFields;
+    nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
+    nsIMsgCompType = Components.interfaces.nsIMsgCompType;
+    nsIMsgComposeParams.format = nsIMsgCompFormat.PlainText; // this could be a pref for the user
+    nsIMsgComposeParams.type = nsIMsgCompType.New;
+    // finally lets pop open a composer window after all this work :)
+    nsIMsgComposeServiceComponent = Components.classes["@mozilla.org/messengercompose;1"];
+    nsIMsgComposeService = nsIMsgComposeServiceComponent.getService().QueryInterface(Components.interfaces.nsIMsgComposeService);
+    nsIMsgComposeService.OpenComposeWindowWithParams(null, nsIMsgComposeParams);
+  } catch(ex) {
+    alert( ex );
+    mdebug("failed to get composer window\nex: " + ex);
+  }
 }
+
+/** from unifinder.js **/
+function getNextOrPreviousOccurrence( calendarEvent )
+{
+  var isValid = false;
+
+  if( calendarEvent.recur ) {
+    var now = new Date();
+    var result = new Object();
+    isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
+    if( isValid )
+      return( new Date( result.value ) );
+
+    isValid = calendarEvent.getPreviousOccurrence( now.getTime(), result );
+    if( isValid )
+      return( new Date( result.value ) );
+  }
+  // !isValid or !calendarEvent.recur
+  if (calendarEvent.start != null) 
+    return( new Date( calendarEvent.start.getTime() ) );
+  dump("calendarEvent == "+calendarEvent+"\n");
+  return null;
+}
+
+/** PRIVATE makeRange takes two strings and concatenates them with
+    "--" in the middle if they have no spaces, or " -- " if they do. 
+
+    Range dash should look different from hyphen used in dates like 1999-12-31.
+    Western typeset text uses an &ndash;.  (Far eastern text uses no spaces.)
+    Plain text convention is to use - for hyphen and minus, -- for ndash,
+    and --- for mdash.  For now use -- so works with plain text email.
+    Add spaces around it only if fromDateTime or toDateTime includes space,
+    e.g., "1999-12-31--2000-01-01", "1999-12-31 23:55 -- 2000.01.01 00:05".
+**/
+function makeRange(fromDateTime, toDateTime) {
+  if (fromDateTime.indexOf(" ") == -1 && toDateTime.indexOf(" ") == -1)
+    return fromDateTime + "--" + toDateTime;
+  else
+    return fromDateTime + " -- "+ toDateTime;
+}
+
+/** PRIVATE Return string unless string is null, in which case return "" **/
+function nullToEmpty(string) {
+  return string == null? "" : string;
+}
+
+
 
 /**** getCalendarDataFilePath
  *
