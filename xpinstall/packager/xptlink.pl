@@ -101,11 +101,10 @@ foreach $component (@xptdirs) {
 		} else {
 			chdir ("$bindir$PD"."components") ;
 		}	
-		( -f "$component".".xpt" ) &&
+		if (( -f "$component".".xpt" ) || ( -f ":$component".".xpt" )) {
 			warn "Warning:  file ".$component.".xpt already exists.\n";
-		( -f ":$component".".xpt" ) &&
-			warn "Warning:  file ".$component.".xpt already exists.\n";
-
+		}
+		
 		# create list of .xpt files in cwd
 		($debug >= 4) && print "opendir: $destdir$PD$component$PD$bindir$PD"."components\n";
 		opendir (COMPDIR, "$destdir$PD$component$PD$bindir$PD"."components") ||
