@@ -51,6 +51,7 @@ nsInterfaceState::nsInterfaceState()
 ,  mDirtyState(eStateUninitialized)
 ,  mSelectionCollapsed(eStateUninitialized)
 ,  mFirstDoOfFirstUndo(PR_TRUE)
+,  mBatchDepth(0)
 {
 	NS_INIT_REFCNT();
 }
@@ -123,16 +124,8 @@ NS_IMETHODIMP nsInterfaceState::WillDo(nsITransactionManager *aManager,
 NS_IMETHODIMP nsInterfaceState::DidDo(nsITransactionManager *aManager,
   nsITransaction *aTransaction, nsresult aDoResult)
 {
-  // only need to update if the status of the Undo menu item changes.
-  PRInt32 undoCount;
-  aManager->GetNumberOfUndoItems(&undoCount);
-  if (undoCount == 1)
-  {
-    if (mFirstDoOfFirstUndo)
-      CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
-    mFirstDoOfFirstUndo = PR_FALSE;
-  }
-	
+  if (mBatchDepth == 0)
+    UpdateUndoCommands(aManager);
   return NS_OK;
 }
 
@@ -151,7 +144,7 @@ NS_IMETHODIMP nsInterfaceState::DidUndo(nsITransactionManager *aManager,
   if (undoCount == 0)
     mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
 
-  CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
+  CallUpdateCommands(NS_LITERAL_STRING("undo"));
   return NS_OK;
 }
 
@@ -165,7 +158,7 @@ NS_IMETHODIMP nsInterfaceState::WillRedo(nsITransactionManager *aManager,
 NS_IMETHODIMP nsInterfaceState::DidRedo(nsITransactionManager *aManager,  
   nsITransaction *aTransaction, nsresult aRedoResult)
 {
-  CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
+  CallUpdateCommands(NS_LITERAL_STRING("undo"));
   return NS_OK;
 }
 
@@ -177,6 +170,7 @@ NS_IMETHODIMP nsInterfaceState::WillBeginBatch(nsITransactionManager *aManager, 
 
 NS_IMETHODIMP nsInterfaceState::DidBeginBatch(nsITransactionManager *aManager, nsresult aResult)
 {
+  ++mBatchDepth;
   return NS_OK;
 }
 
@@ -188,6 +182,10 @@ NS_IMETHODIMP nsInterfaceState::WillEndBatch(nsITransactionManager *aManager, PR
 
 NS_IMETHODIMP nsInterfaceState::DidEndBatch(nsITransactionManager *aManager, nsresult aResult)
 {
+  --mBatchDepth;
+  if (mBatchDepth == 0)
+    UpdateUndoCommands(aManager);
+
   return NS_OK;
 }
 
@@ -230,17 +228,32 @@ nsresult nsInterfaceState::PrimeUpdateTimer()
 }
 
 
+nsresult nsInterfaceState::UpdateUndoCommands(nsITransactionManager *aManager)
+{
+  // only need to update if the status of the Undo menu item changes.
+  PRInt32 undoCount;
+  aManager->GetNumberOfUndoItems(&undoCount);
+  if (undoCount == 1)
+  {
+    if (mFirstDoOfFirstUndo)
+      CallUpdateCommands(NS_LITERAL_STRING("undo"));
+    mFirstDoOfFirstUndo = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
 void nsInterfaceState::TimerCallback()
 {
   // if the selection state has changed, update stuff
   PRBool isCollapsed = SelectionIsCollapsed();
   if (isCollapsed != mSelectionCollapsed)
   {
-    CallUpdateCommands(NS_ConvertASCIItoUCS2("select"));
+    CallUpdateCommands(NS_LITERAL_STRING("select"));
     mSelectionCollapsed = isCollapsed;
   }
   
-  CallUpdateCommands(NS_ConvertASCIItoUCS2("style"));
+  CallUpdateCommands(NS_LITERAL_STRING("style"));
 }
 
 nsresult
@@ -248,7 +261,7 @@ nsInterfaceState::UpdateDirtyState(PRBool aNowDirty)
 {
   if (mDirtyState != aNowDirty)
   {
-    CallUpdateCommands(NS_ConvertASCIItoUCS2("save"));
+    CallUpdateCommands(NS_LITERAL_STRING("save"));
 
     mDirtyState = aNowDirty;
   }
@@ -256,7 +269,7 @@ nsInterfaceState::UpdateDirtyState(PRBool aNowDirty)
   return NS_OK;  
 }
 
-nsresult nsInterfaceState::CallUpdateCommands(const nsString& aCommand)
+nsresult nsInterfaceState::CallUpdateCommands(const nsAString& aCommand)
 {
   if (!mDOMWindow)
   {

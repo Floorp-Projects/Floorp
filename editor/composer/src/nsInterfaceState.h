@@ -89,8 +89,8 @@ protected:
   
   PRBool        SelectionIsCollapsed();
   nsresult      UpdateDirtyState(PRBool aNowDirty);  
-  nsresult      CallUpdateCommands(const nsString& aCommand);
-  
+  nsresult      CallUpdateCommands(const nsAString& aCommand);
+  nsresult      UpdateUndoCommands(nsITransactionManager *aManager);
   nsresult      PrimeUpdateTimer();
   void          TimerCallback();
 
@@ -107,6 +107,7 @@ protected:
   PRInt8        mDirtyState;  
   PRInt8        mSelectionCollapsed;  
   PRPackedBool  mFirstDoOfFirstUndo;
+  PRInt32       mBatchDepth;
     
 };
 
