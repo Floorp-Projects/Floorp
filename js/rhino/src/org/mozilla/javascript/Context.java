@@ -1829,7 +1829,7 @@ public class Context {
             if (n < 0) { break; }
             cursor += n;
             if (cursor == buffer.length) {
-                char[] tmp = new char[buffer.length * 2]; 
+                char[] tmp = new char[buffer.length * 2];
                 System.arraycopy(buffer, 0, tmp, 0, cursor);
                 buffer = tmp;
             }
