@@ -40,7 +40,7 @@
  * @author Norris Boyd
  * @see rhinotip.jar
  * @lastmodified xx
- * @version 1.2 Roland Pennings: Allow multiple files for a function. 
+ * @version 1.2 Roland Pennings: Allow multiple files for a function.
  * @version 1.3 Roland Pennings: Removes ../.. from the input directory name
  */
 defineClass("File")
@@ -61,7 +61,7 @@ var debug = 0;
 
 
 /**
- * Process JavaScript source file <code>f</code>, writing jsdoc to 
+ * Process JavaScript source file <code>f</code>, writing jsdoc to
  * file <code>out</code>.
  * @param f input file
  * @param fname name of the input file (without the path)
@@ -72,11 +72,11 @@ function processFile(f, fname, inputdir, out) {
 	var s;
 	var firstLine = true;
 	indexFileArray[fname] = "";
-	
+
     // write the header of the output file
 	out.writeLine('<HTML><HEADER><TITLE>' + fname + '</TITLE><BODY>');
 	if (inputdir != null) {
-	  outstr = '<a name=\"_top_\"></a><pre><a href=\"' + indexFile + '\">Index Files</a> '; 
+	  outstr = '<a name=\"_top_\"></a><pre><a href=\"' + indexFile + '\">Index Files</a> ';
 	  outstr += '<a href=\"' + indexFunction + '\">Index Functions</a></pre><hr>';
       out.writeLine(outstr);
 	}
@@ -98,7 +98,7 @@ function processFile(f, fname, inputdir, out) {
 			// Strip leading whitespace and "*".
 			comment += s.replace(/^\s*\*/, "");
 			s = f.readLine();
-		  } while (s != null);	
+		  } while (s != null);
 
     	  if (debug)
           print("Found comment " + comment);
@@ -116,7 +116,7 @@ function processFile(f, fname, inputdir, out) {
 	  // match the beginning of the function
 	  // NB we also match functions without a comment!
 	  // if we have two comments one after another only the last one will be taken
-	  m = s.match(/^\s*function\s+((\w+)|(\w+)(\s+))\(([^)]*)\)/); 
+	  m = s.match(/^\s*function\s+((\w+)|(\w+)(\s+))\(([^)]*)\)/);
 	  if (m != null)
 	  {
 			// Found a function start
@@ -126,7 +126,7 @@ function processFile(f, fname, inputdir, out) {
 			// can write out a table of contents first.
 			functionDocArray[functionDocArray.length] = {name:m[1], text:htmlText};
 
-			// Store the function also in the indexFunctionArray 
+			// Store the function also in the indexFunctionArray
 			// so we can have a seperate file with the function table of contents
 			if (indexFunctionArray[m[1]]) {
 				//  print("ERROR: function: " + m[1] + " is defined more than once!");
@@ -135,25 +135,25 @@ function processFile(f, fname, inputdir, out) {
 					filename = filename + "|" + fname;
 					// print("filename = " + filename);
 				}
-			} 
+			}
 			else {
 				indexFunctionArray[m[1]] = {filename:fname};
 			}
-			//reset comment 
+			//reset comment
 			comment = "";
-		}  
+		}
 		// match a method being bound to a prototype
 	  m = s.match(/^\s*(\w*)\.prototype\.(\w*)\s*=\s*function\s*\(([^)]*)\)/);
 	  if (m != null)
 	  {
-			// Found a method being bound to a prototype. 
+			// Found a method being bound to a prototype.
 			var htmlText = processPrototypeMethod(m[1], m[2], m[3], comment);
 
 			// Save the text in a global variable, so we
 			// can write out a table of contents first.
 			functionDocArray[functionDocArray.length] = {name:m[1]+".prototype."+m[2], text:htmlText};
 
-			// Store the function also in the indexFunctionArray 
+			// Store the function also in the indexFunctionArray
 			// so we can have a seperate file with the function table of contents
 			if (indexFunctionArray[m[1]]) {
 				//  print("ERROR: function: " + m[1] + " is defined more than once!");
@@ -162,15 +162,15 @@ function processFile(f, fname, inputdir, out) {
 					filename = filename + "|" + fname;
 					// print("filename = " + filename);
 				}
-			} 
+			}
 			else {
 				indexFunctionArray[m[1]] = {filename:fname};
 			}
-			//reset comment 
+			//reset comment
 			comment = "";
-		}  
-		
-		
+		}
+
+
 		firstLine = false;
 	}
 
@@ -193,7 +193,7 @@ function processFile(f, fname, inputdir, out) {
 	out.writeLine('</BODY></HTML>');
 
 	// Now clean up the doc array
-	functionDocArray = [];  
+	functionDocArray = [];
 }
 
 /**
@@ -215,7 +215,7 @@ function processFunction(name, args, comment) {
 }
 
 /**
- * Process a method being bound to a prototype. 
+ * Process a method being bound to a prototype.
  * @param proto the name of the prototype
  * @param name the name of the function
  * @param args the args of the function as a single string
@@ -244,11 +244,11 @@ function processPrototypeMethod(proto, name, args, comment) {
 function processComment(comment,firstLine,fname) {
 	var tags = {};
 	// Use the "lambda" form of regular expression replace,
-	// where the replacement object is a function rather 
-	// than a string. The function is called with the 
+	// where the replacement object is a function rather
+	// than a string. The function is called with the
 	// matched text and any parenthetical matches as
 	// arguments, and the result of the function used as the
-	// replacement text. 
+	// replacement text.
 	// Here we use the function to build up the "tags" object,
 	// which has a property for each "@" tag that is the name
 	// of the tag, and whose value is an array of the
@@ -260,9 +260,9 @@ function processComment(comment,firstLine,fname) {
 					tags[name] = a;
 					return "";
 				  });
-				  
+
 	// if we have a comment at the beginning of a file
-	// store the comment for the index file 			  
+	// store the comment for the index file
 	if (firstLine) {
 	  indexFileArray[fname] = comment;
 	}
@@ -274,7 +274,7 @@ function processComment(comment,firstLine,fname) {
 		var params = "";
 		for (var i=0; i < array.length; i++) {
 			var m = array[i].match(/(\w+)\s+(.*)/);
-			params += '<TR><TD><I>'+m[1]+'</I></TD>' + 
+			params += '<TR><TD><I>'+m[1]+'</I></TD>' +
 			          '<TD>'+m[2]+'</TD></TR>';
 		}
 		out += '<TABLE WIDTH="90%" BORDER=1>';
@@ -326,7 +326,7 @@ function processComment(comment,firstLine,fname) {
 	    out += '<DT><B>Last modified:</B><DD>';
 		out += '<script><!--\n';
 		out += 'document.writeln(document.lastModified);\n';
-		out += '// ---></script>\n';		
+		out += '// ---></script>\n';
 		out += '</DL><P>';
 	}
 
@@ -338,9 +338,9 @@ function processComment(comment,firstLine,fname) {
  * Create an html output file
  * @param outputdir directory to put the file
  * @param htmlfile name of the file
-*/ 
+*/
 function CreateOutputFile(outputdir,htmlfile)
-{ 	 
+{
   if (outputdir==null)
   {
     var outname = htmlfile;
@@ -355,18 +355,18 @@ function CreateOutputFile(outputdir,htmlfile)
 }
 
 /**
- * Process a javascript file. Puts the generated HTML file in the outdir  
+ * Process a javascript file. Puts the generated HTML file in the outdir
  * @param filename name of the javascript file
  * @inputdir input directory of the file (default null)
  */
-function processJSFile(filename,inputdir) 
+function processJSFile(filename,inputdir)
 {
   if (debug) print("filename = " + filename + " inputdir = " + inputdir);
 
-  if (!filename.match(/\.js$/)) { 
-	print("Expected filename to end in '.js'; had instead " + 
+  if (!filename.match(/\.js$/)) {
+	print("Expected filename to end in '.js'; had instead " +
 	  filename + ". I don't treat the file.");
-  } else { 
+  } else {
     if (inputdir==null)
 	{
 	  var inname = filename;
@@ -379,12 +379,12 @@ function processJSFile(filename,inputdir)
     print("Processing file " + inname);
 
 	var f = new File(inname);
- 	 
+
     // create the output file
     var htmlfile = filename.replace(/\.js$/, ".html");
 
 	var out = CreateOutputFile(outputdir,htmlfile);
-	
+
     processFile(f, filename, inputdir, out);
 	out.close();
   }
@@ -398,7 +398,7 @@ function GenerateIndex(dirname)
 {
   // construct the files index file
   var out = CreateOutputFile(outputdir,indexFile);
-  
+
   // write the beginning of the file
   out.writeLine('<HTML><HEADER><TITLE>File Index - directory: ' + dirname + '</TITLE><BODY>');
   out.writeLine('<H1>File Index - directory: ' + dirname + '</H1>\n');
@@ -412,7 +412,7 @@ function GenerateIndex(dirname)
   // sort the index file array
   var SortedFileArray = [];
   for (var fname in indexFileArray)
-    SortedFileArray.push(fname);  
+    SortedFileArray.push(fname);
   SortedFileArray.sort();
 
   for (var i=0; i < SortedFileArray.length; i++) {
@@ -427,10 +427,10 @@ function GenerateIndex(dirname)
   }
   out.writeLine('</TABLE></BODY></HTML>');
   out.close();
-  
+
   // construct the functions index file
   var out = CreateOutputFile(outputdir,indexFunction);
-    
+
   // write the beginning of the file
   out.writeLine('<HTML><HEADER><TITLE>Function Index - directory: ' + dirname + '</TITLE><BODY>');
   out.writeLine('<H1>Function Index - directory: ' + dirname + '</H1>\n');
@@ -438,11 +438,11 @@ function GenerateIndex(dirname)
   out.writeLine('<TR BGCOLOR=0xdddddddd>');
   out.writeLine('<TD><B>Function</B></TD>');
   out.writeLine('<TD><B>Files</B></TD></TR>');
-  
+
   // sort the function array
   var SortedFunctionArray = [];
   for (var functionname in indexFunctionArray)
-    SortedFunctionArray.push(functionname);  
+    SortedFunctionArray.push(functionname);
   SortedFunctionArray.sort();
 
   for (var j=0; j < SortedFunctionArray.length; j++) {
@@ -476,10 +476,10 @@ function PrintOptions()
 
 
 // Main Script
-// first read the arguments 
+// first read the arguments
 if (! arguments)
   PrintOptions();
-  
+
 for (var i=0; i < arguments.length; i++) {
   if (debug) print("argument: + \'" + arguments[i] + "\'");
   if (arguments[i].match(/^\-/)) {
@@ -489,7 +489,7 @@ for (var i=0; i < arguments.length; i++) {
     outputdir = String(arguments[i+1]);
 	if (debug) print("outputdir: + \'" + outputdir + "\'");
 
-    i++;  
+    i++;
    }
    else if (String(arguments[i])=="-i"){
     // process all files in an input directory
@@ -510,16 +510,16 @@ if (debug) print("inputdir: + \'" + arguments[i+1] + "\'");
 
 	FileList.push(String(arguments[i]));
   }
-}  
-	
+}
+
 // first handle the single files
-for (var i in FileList) 
+for (var i in FileList)
   processJSFile(FileList[i],null);
 
 // then handle the input directories
 for (var j in DirList) {
   var inputdir = String(DirList[j]);
-  
+
   print("Process input directory: " + inputdir);
 
   // clean up index arrays
@@ -528,13 +528,13 @@ for (var j in DirList) {
 
   // for the directory name get rid of ../../ or ..\..\
   inputDirName = inputdir.replace(/\.\.\/|\.\.\\/g,"");
-  
+
   indexFile = indexFileName + "_" + inputDirName + ".html";
   indexFunction = indexFunctionName + "_" + inputDirName + ".html";
-  
+
 print("indexFile = " + indexFile);
 print("indexFunction = " + indexFunction);
-	
+
   // read the files in the directory
   var DirFile = new java.io.File(inputdir);
   var lst = DirFile.list();
@@ -543,7 +543,7 @@ print("indexFunction = " + indexFunction);
   for (var i=0; i < lst.length; i++)
   {
     processJSFile(String(lst[i]),inputdir);
-  }  
+  }
 
   // generate the index files for the input directory
   GenerateIndex(inputDirName);

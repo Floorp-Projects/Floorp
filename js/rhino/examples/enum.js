@@ -35,10 +35,10 @@
 
 /*
 	enum.js
-	
+
 	Implementing the interface java.util.Enumeration using the new syntax.
 	Note that this syntax is experimental only, and hasn't been approved
-	by ECMA. 
+	by ECMA.
 	The same functionality can be had without the new syntax using the
 	uglier syntax:
 
@@ -47,7 +47,7 @@
 						hasMoreElements: function ...
 						nextElement: function ...
 		});
-	
+
 	by Patrick C. Beard.
  */
 

@@ -1,10 +1,10 @@
 // The Java "NervousText" example ported to JavaScript.
 // Compile using java org.mozilla.javascript.tools.jsc.Main -extends java.applet.Applet -implements java.lang.Runnable NervousText.js
-/*  
+/*
 Adapted from Java code by
-    Daniel Wyszynski 
-    Center for Applied Large-Scale Computing (CALC) 
-    04-12-95 
+    Daniel Wyszynski
+    Center for Applied Large-Scale Computing (CALC)
+    04-12-95
 
     Test of text animation.
 
@@ -23,7 +23,7 @@ var counter =0;
 var threadSuspended = false; //added by kwalrath
 
 function init() {
-        this.resize(150,50); 
+        this.resize(150,50);
         this.setFont(new Font("TimesRoman",Font.BOLD,36));
         s = this.getParameter("text");
         if (s == null) {
@@ -33,7 +33,7 @@ function init() {
 }
 
 function start() {
-        if(killme == null) 
+        if(killme == null)
         {
         killme = new java.lang.Thread(java.lang.Runnable(this));
         killme.start();
@@ -60,7 +60,7 @@ function paint(g) {
         g.drawChars(separated, i,1,x_coord,y_coord);
         }
 }
- 
+
 /* Added by kwalrath. */
 function mouseDown(evt, x, y) {
         if (threadSuspended) {

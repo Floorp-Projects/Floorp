@@ -37,7 +37,7 @@
 
 defineClass("File")
 
-// "arguments[0]" refers to the first argument at the command line to the 
+// "arguments[0]" refers to the first argument at the command line to the
 // script, if present. If not present, "arguments[0]" will be undefined,
 // which will cause f to read from System.in.
 var f = new File(arguments[0]);
@@ -50,4 +50,4 @@ while ((line = f.readLine()) != null) {
 }
 for (i in o) {
 	print(i);
-} 
+}

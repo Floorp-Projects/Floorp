@@ -1,7 +1,7 @@
 /*
  * SwingApplication.js - a translation into JavaScript of
  * SwingApplication.java, a java.sun.com Swing example.
- * 
+ *
  * @author Roger E Critchlow, Jr.
  */
 
