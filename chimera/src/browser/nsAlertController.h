@@ -64,6 +64,7 @@
     IBOutlet id passwordPanelText;
     IBOutlet id passwordPanelInput;
     IBOutlet id securityMismatchPanel;
+    IBOutlet id expiredCertPanel;
     IBOutlet id securityUnknownPanel;
     IBOutlet id usernamePanel;
     IBOutlet id usernamePanelCheck;
@@ -94,6 +95,7 @@
 - (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 
 - (BOOL)badCert:(NSWindow*)parent;
+- (BOOL)expiredCert:(NSWindow*)parent;
 - (int)unknownCert:(NSWindow*)parent;
 
 @end

@@ -276,6 +276,15 @@
   return (result == 1);
 }
 
+- (BOOL)expiredCert:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:expiredCertPanel relativeToWindow:parent];
+  [expiredCertPanel close];
+
+  return (result == 1);
+}
+
+
 - (int)unknownCert:(NSWindow*)parent
 {
   int result = [NSApp runModalForWindow:securityUnknownPanel relativeToWindow:parent];
