@@ -66,6 +66,8 @@ class nsMenuPopupFrame;
 class nsCSSFrameConstructor;
 class nsIScrollableView;
 
+#define NS_STATE_ACCELTEXT_IS_DERIVED  NS_STATE_BOX_CHILD_RESERVED
+
 class nsMenuFrame : public nsBoxFrame, 
                     public nsIMenuFrame,
                     public nsITimerCallback,
@@ -199,7 +201,7 @@ protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 
   // Examines the key node and builds the accelerator.
-  void BuildAcceleratorText(nsString& aAccelString);
+  void BuildAcceleratorText();
 
   // Called to execute our command handler.
   void Execute();
@@ -234,8 +236,6 @@ protected:
   PRPackedBool mChecked;              // are we checked?
   nsMenuType mType;
 
-  nsCOMPtr<nsIContent> mMenuText;
-  nsCOMPtr<nsIContent> mAccelText;
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.

@@ -201,8 +201,6 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
   // Do the type="checkbox" magic
   UpdateMenuType(aPresContext);
 
-  nsAutoString accelString;
-  
   //load the display strings for the keyboard accelerators, but only once
   if (gRefCnt++ == 0) {
     
@@ -237,7 +235,7 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
     gModifierSeparator = new nsString(modifierSeparator);    
   }
   
-  BuildAcceleratorText(accelString);
+  BuildAcceleratorText();
   
   return rv;
 }
@@ -668,6 +666,14 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
   } else if (aAttribute == nsHTMLAtoms::checked) {
     if (mType != eMenuType_Normal)
         UpdateMenuSpecialState(aPresContext);
+  } else if (aAttribute == nsXULAtoms::acceltext) {
+    // someone reset the accelText attribute, so clear the bit that says *we* set it
+    nsFrameState state;
+    GetFrameState(&state);
+    SetFrameState(state & ~NS_STATE_ACCELTEXT_IS_DERIVED);
+    BuildAcceleratorText();
+  } else if (aAttribute == nsXULAtoms::key) {
+    BuildAcceleratorText();
   } else if ( aAttribute == nsHTMLAtoms::type || aAttribute == nsHTMLAtoms::name )
     UpdateMenuType(aPresContext);
 
@@ -1359,20 +1365,28 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 }
 
 void 
-nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
+nsMenuFrame::BuildAcceleratorText()
 {
+  nsFrameState state;
   nsAutoString accelText;
-  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
-  if (!accelText.IsEmpty()) {
-    // Just use this.
-    aAccelString = accelText;
-    return;
+
+  GetFrameState(&state);
+  if ((state & NS_STATE_ACCELTEXT_IS_DERIVED) == 0) {
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, accelText);
+    if (!accelText.IsEmpty())
+      return;
   }
+  // accelText is definitely empty here.
+
+  // Now we're going to compute the accelerator text, so remember that we did.
+  SetFrameState(state | NS_STATE_ACCELTEXT_IS_DERIVED);
+
+  // If anything below fails, just leave the accelerator text blank.
+  mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, PR_FALSE);
 
   // See if we have a key node and use that instead.
   nsAutoString keyValue;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::key, keyValue);
-
   if (keyValue.IsEmpty())
     return;
 
@@ -1458,41 +1472,41 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   while (token) {
       
     if (PL_strcmp(token, "shift") == 0)
-      aAccelString += *gShiftText;
+      accelText += *gShiftText;
     else if (PL_strcmp(token, "alt") == 0) 
-      aAccelString += *gAltText; 
+      accelText += *gAltText; 
     else if (PL_strcmp(token, "meta") == 0) 
-      aAccelString += *gMetaText; 
+      accelText += *gMetaText; 
     else if (PL_strcmp(token, "control") == 0) 
-      aAccelString += *gControlText; 
+      accelText += *gControlText; 
     else if (PL_strcmp(token, "accel") == 0) {
       switch (accelKey)
       {
         case nsIDOMKeyEvent::DOM_VK_META:
-          aAccelString += *gMetaText;
+          accelText += *gMetaText;
           break;
 
         case nsIDOMKeyEvent::DOM_VK_ALT:
-          aAccelString += *gAltText;
+          accelText += *gAltText;
           break;
 
         case nsIDOMKeyEvent::DOM_VK_CONTROL:
         default:
-          aAccelString += *gControlText;
+          accelText += *gControlText;
           break;
       }
     }
     
-    aAccelString += *gModifierSeparator;
+    accelText += *gModifierSeparator;
 
     token = nsCRT::strtok(newStr, ", ", &newStr);
   }
 
   nsMemory::Free(str);
 
-  aAccelString += accelString;
-
-  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, aAccelString, PR_FALSE);
+  accelText += accelString;
+  
+  mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::acceltext, accelText, PR_FALSE);
 }
 
 void
