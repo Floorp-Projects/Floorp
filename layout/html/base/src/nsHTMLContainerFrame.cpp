@@ -389,3 +389,32 @@ nsHTMLContainerFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
 
   return NS_OK;
 }
+
+PRBool
+nsHTMLContainerFrame::DeleteNextInFlowsFor(nsIPresContext& aPresContext,
+                                           nsIFrame* aChild)
+{
+  // XXX get rid of this sillyness
+  NS_NOTREACHED("subclass should've overriden this!");
+  return PR_TRUE;
+}
+
+nsPlaceholderFrame*
+nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFloatedFrame)
+{
+  nsIContent* content;
+  aFloatedFrame->GetContent(content);
+
+  nsPlaceholderFrame* placeholder;
+  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
+  NS_IF_RELEASE(content);
+
+  // Let the placeholder share the same style context as the floated element
+  nsIStyleContext*  kidSC;
+  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
+  placeholder->SetStyleContext(aPresContext, kidSC);
+  NS_RELEASE(kidSC);
+  
+  return placeholder;
+}

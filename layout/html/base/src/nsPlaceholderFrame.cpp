@@ -25,7 +25,7 @@
 #include "nsIView.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
-#include "nsCSSBlockFrame.h"
+#include "nsBlockFrame.h"
 
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
@@ -73,14 +73,15 @@ nsPlaceholderFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+nsPlaceholderFrame::FindTextRuns(nsLineLayout&     aLineLayout,
                                  nsIReflowCommand* aReflowCommand)
 {
+  aLineLayout.EndTextRun();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
+nsPlaceholderFrame::InlineReflow(nsLineLayout&        aLineLayout,
                                  nsReflowMetrics&     aDesiredSize,
                                  const nsReflowState& aReflowState)
 {

@@ -32,7 +32,7 @@
 #include "nsViewsCID.h"
 #include "nsAbsoluteFrame.h"
 #include "nsHTMLIIDs.h"
-#include "nsCSSBlockFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLTagContent.h"
@@ -90,7 +90,7 @@ NS_IMETHODIMP
 nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create a block frame and set its style context
-  NS_NewCSSBlockFrame(&mFirstChild, mContent, this);
+  NS_NewBlockFrame(&mFirstChild, mContent, this);
   mChildCount = 1;
   nsIStyleContext* pseudoStyleContext =
    aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
@@ -510,7 +510,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a column pseudo frame
-    NS_NewCSSBlockFrame(&mFirstChild, mContent, this);
+    NS_NewBlockFrame(&mFirstChild, mContent, this);
     mChildCount = 1;
     mFirstChild->SetStyleContext(aPresContext,styleContext);
   } else {

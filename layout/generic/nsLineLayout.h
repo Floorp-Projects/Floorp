@@ -16,27 +16,27 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsCSSLineLayout_h___
-#define nsCSSLineLayout_h___
+#ifndef nsLineLayout_h___
+#define nsLineLayout_h___
 
 #include "nsIFrame.h"
 #include "nsVoidArray.h"
 
-struct nsCSSBlockReflowState;
+struct nsBlockReflowState;
 class nsPlaceholderFrame;
 struct nsStyleDisplay;
 struct nsStylePosition;
 
 // This structure represents a run of text. In mText are the
 // nsIFrame's that are considered text frames.
-struct nsCSSTextRun {
-  nsCSSTextRun() {
+struct nsTextRun {
+  nsTextRun() {
     mNext = nsnull;
   }
 
-  static void DeleteTextRuns(nsCSSTextRun* aRun) {
+  static void DeleteTextRuns(nsTextRun* aRun) {
     while (nsnull != aRun) {
-      nsCSSTextRun* next = aRun->mNext;
+      nsTextRun* next = aRun->mNext;
       delete aRun;
       aRun = next;
     }
@@ -45,22 +45,22 @@ struct nsCSSTextRun {
   void List(FILE* out, PRInt32 aIndent);
 
   nsVoidArray mArray;
-  nsCSSTextRun* mNext;
+  nsTextRun* mNext;
 
 protected:
-  ~nsCSSTextRun() {
+  ~nsTextRun() {
   }
 };
 
 //----------------------------------------------------------------------
 
-class nsCSSLineLayout {
+class nsLineLayout {
 public:
-  nsCSSLineLayout(nsIPresContext* aPresContext,
-                  nsISpaceManager* aSpaceManager);
-  ~nsCSSLineLayout();
+  nsLineLayout(nsIPresContext* aPresContext,
+               nsISpaceManager* aSpaceManager);
+  ~nsLineLayout();
 
-  void Init(nsCSSBlockReflowState* aReflowState) {
+  void Init(nsBlockReflowState* aReflowState) {
     mBlockReflowState = aReflowState;
   }
 
@@ -75,9 +75,9 @@ public:
   // Close out a text-run during FindTextRuns.
   void EndTextRun();
 
-  // This returns the first nsCSSTextRun found during a
+  // This returns the first nsTextRun found during a
   // FindTextRuns. The internal text-run state is reset.
-  nsCSSTextRun* TakeTextRuns();
+  nsTextRun* TakeTextRuns();
 
   // Prepare this line-layout for the reflow of a new line
   void Prepare(nscoord aLeftEdge) {
@@ -105,7 +105,7 @@ public:
 
   nsIPresContext* mPresContext;
   nsISpaceManager* mSpaceManager;
-  nsCSSBlockReflowState* mBlockReflowState;
+  nsBlockReflowState* mBlockReflowState;
 
   PRBool mListPositionOutside;
   PRInt32 mLineNumber;
@@ -123,13 +123,13 @@ public:
 
 protected:
   // These slots are used during FindTextRuns
-  nsCSSTextRun* mTextRuns;
-  nsCSSTextRun** mTextRunP;
-  nsCSSTextRun* mNewTextRun;
+  nsTextRun* mTextRuns;
+  nsTextRun** mTextRunP;
+  nsTextRun* mNewTextRun;
 
   // These slots are used during InlineReflow
-  nsCSSTextRun* mReflowTextRuns;
-  nsCSSTextRun* mTextRun;
+  nsTextRun* mReflowTextRuns;
+  nsTextRun* mTextRun;
 };
 
-#endif /* nsCSSLineLayout_h___ */
+#endif /* nsLineLayout_h___ */

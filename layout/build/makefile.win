@@ -36,7 +36,6 @@ MISCDEP =				\
  $(DIST)\lib\raptorlayout_s.lib		\
  $(DIST)\lib\raptorhtmlbase_s.lib	\
  $(DIST)\lib\nglhtmlcon_s.lib		\
- $(DIST)\lib\nglcsslay_s.lib		\
  $(DIST)\lib\raptorhtmldoc_s.lib	\
  $(DIST)\lib\raptorhtmlforms_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
@@ -63,7 +62,6 @@ LLIBS=					\
  $(DIST)\lib\raptorlayout_s.lib		\
  $(DIST)\lib\raptorhtmlbase_s.lib	\
  $(DIST)\lib\nglhtmlcon_s.lib		\
- $(DIST)\lib\nglcsslay_s.lib		\
  $(DIST)\lib\raptorhtmldoc_s.lib	\
  $(DIST)\lib\raptorhtmlforms_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\

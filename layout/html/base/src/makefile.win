@@ -25,6 +25,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=			\
  nsAbsoluteFrame.cpp		\
  nsBRFrame.cpp			\
+ nsBlockFrame.cpp		\
  nsBodyFrame.cpp		\
  nsGlobalVariables.cpp		\
  nsHRFrame.cpp			\
@@ -37,7 +38,10 @@ CPPSRCS=			\
  nsHTMLReflowCommand.cpp	\
  nsImageFrame.cpp		\
  nsImageMap.cpp			\
+ nsInlineFrame.cpp		\
+ nsInlineLayout.cpp		\
  nsLeafFrame.cpp		\
+ nsLineLayout.cpp		\
  nsObjectFrame.cpp		\
  nsPageFrame.cpp		\
  nsPlaceholderFrame.cpp		\
@@ -55,6 +59,7 @@ CPPSRCS=			\
 CPP_OBJS=				\
  .\$(OBJDIR)\nsAbsoluteFrame.obj	\
  .\$(OBJDIR)\nsBRFrame.obj		\
+ .\$(OBJDIR)\nsBlockFrame.obj		\
  .\$(OBJDIR)\nsBodyFrame.obj		\
  .\$(OBJDIR)\nsGlobalVariables.obj	\
  .\$(OBJDIR)\nsHRFrame.obj		\
@@ -70,7 +75,10 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsHTMLTagContent.obj	\
  .\$(OBJDIR)\nsImageFrame.obj		\
  .\$(OBJDIR)\nsImageMap.obj		\
+ .\$(OBJDIR)\nsInlineFrame.obj		\
+ .\$(OBJDIR)\nsInlineLayout.obj		\
  .\$(OBJDIR)\nsLeafFrame.obj		\
+ .\$(OBJDIR)\nsLineLayout.obj		\
  .\$(OBJDIR)\nsObjectFrame.obj		\
  .\$(OBJDIR)\nsPageFrame.obj		\
  .\$(OBJDIR)\nsPlaceholderFrame.obj	\
@@ -86,8 +94,8 @@ EXPORTS=nsGlobalVariables.h
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I$(PUBLIC)\dom -I$(PUBLIC)\netlib				\
- -I..\..\style\src -I..\..\..\css\layout\src			\
- -I..\..\content\src \
+ -I..\..\style\src						\
+ -I..\..\content\src						\
  -I..\..\..\base\src -I$(PUBLIC)\plugin -I$(PUBLIC)\java
 
 LCFLAGS = \

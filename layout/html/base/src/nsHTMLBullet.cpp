@@ -18,9 +18,9 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLTagContent.h"
 #include "nsLeafFrame.h"
-#include "nsCSSBlockFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIInlineReflow.h"
-#include "nsCSSLineLayout.h"
+#include "nsLineLayout.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIRenderingContext.h"
@@ -82,28 +82,28 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+  NS_IMETHOD InlineReflow(nsLineLayout&        aLineLayout,
                           nsReflowMetrics&     aMetrics,
                           const nsReflowState& aReflowState);
 
 protected:
-  void GetDesiredSize(nsIPresContext*        aPresContext,
-                      nsCSSBlockReflowState* aBlockState,
+  void GetDesiredSize(nsIPresContext*     aPresContext,
+                      nsBlockReflowState* aBlockState,
                       const nsReflowState&   aReflowState,
                       nsReflowMetrics&       aMetrics);
 
-  PRInt32 GetListItemOrdinal(nsIPresContext*        aCX,
-                             nsCSSBlockReflowState* aBlockState,
+  PRInt32 GetListItemOrdinal(nsIPresContext*     aCX,
+                             nsBlockReflowState* aBlockState,
                              const nsStyleList&     aMol);
 
-  void GetListItemText(nsIPresContext*        aCX,
-                       nsCSSBlockReflowState* aBlockState,
+  void GetListItemText(nsIPresContext*     aCX,
+                       nsBlockReflowState* aBlockState,
                        const nsStyleList&     aMol,
                        nsString&              aResult);
 
-  nsCSSBlockReflowState*
+  nsBlockReflowState*
     GetListContainerReflowState(nsIPresContext*      aCX,
                                 const nsReflowState& aReflowState);
 
@@ -338,7 +338,7 @@ BulletFrame::Paint(nsIPresContext&      aCX,
 // Return the reflow state for the list container that contains this
 // list item frame. There may be no list container (a dangling LI)
 // therefore this may return nsnull.
-nsCSSBlockReflowState*
+nsBlockReflowState*
 BulletFrame::GetListContainerReflowState(nsIPresContext*      aCX,
                                          const nsReflowState& aReflowState)
 {
@@ -352,7 +352,7 @@ BulletFrame::GetListContainerReflowState(nsIPresContext*      aCX,
     if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
         (tag == nsHTMLAtoms::menu) || (tag == nsHTMLAtoms::dir)) {
       NS_RELEASE(tag);
-      return (nsCSSBlockReflowState*) rs;
+      return (nsBlockReflowState*) rs;
     }
     NS_RELEASE(tag);
     rs = rs->parentReflowState;
@@ -361,9 +361,9 @@ BulletFrame::GetListContainerReflowState(nsIPresContext*      aCX,
 }
 
 PRInt32
-BulletFrame::GetListItemOrdinal(nsIPresContext*        aCX,
-                                nsCSSBlockReflowState* aReflowState,
-                                const nsStyleList&     aListStyle)
+BulletFrame::GetListItemOrdinal(nsIPresContext*     aCX,
+                                nsBlockReflowState* aReflowState,
+                                const nsStyleList&  aListStyle)
 {
   if (mOrdinalValid) {
     return mOrdinal;
@@ -427,7 +427,7 @@ static const char* gUpperAlphaChars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 // maxnegint will work
 void
 BulletFrame::GetListItemText(nsIPresContext* aCX,
-                             nsCSSBlockReflowState* aReflowState,
+                             nsBlockReflowState* aReflowState,
                              const nsStyleList& aListStyle,
                              nsString& result)
 {
@@ -548,7 +548,7 @@ BulletFrame::GetListItemText(nsIPresContext* aCX,
 
 void
 BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
-                            nsCSSBlockReflowState* aState,
+                            nsBlockReflowState* aState,
                             const nsReflowState& aReflowState,
                             nsReflowMetrics& aMetrics)
 {
@@ -629,11 +629,11 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 }
 
 NS_IMETHODIMP
-BulletFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
-                          nsReflowMetrics&     aMetrics,
+BulletFrame::InlineReflow(nsLineLayout& aLineLayout,
+                          nsReflowMetrics& aMetrics,
                           const nsReflowState& aReflowState)
 {
-  nsCSSBlockReflowState* state =
+  nsBlockReflowState* state =
     GetListContainerReflowState(aLineLayout.mPresContext, aReflowState);
 
   // Get the base size
@@ -658,7 +658,7 @@ BulletFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
 }
 
 NS_IMETHODIMP
-BulletFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+BulletFrame::FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();

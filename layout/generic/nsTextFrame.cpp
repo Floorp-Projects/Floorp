@@ -19,7 +19,7 @@
 #include "nsCRT.h"
 #include "nsSplittableFrame.h"
 #include "nsIInlineReflow.h"
-#include "nsCSSLineLayout.h"
+#include "nsLineLayout.h"
 #include "nsString.h"
 #include "nsIPresContext.h"
 #include "nsStyleConsts.h"
@@ -143,11 +143,11 @@ public:
                               PRUint32&       aAcutalContentOffset);
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
 
-  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
-                          nsReflowMetrics&     aMetrics,
+  NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
+                          nsReflowMetrics& aMetrics,
                           const nsReflowState& aReflowState);
 
   // TextFrame methods
@@ -184,13 +184,13 @@ public:
                       nscolor aSelectionBGColor,
                       nscoord dx, nscoord dy);
 
-  nsInlineReflowStatus ReflowPre(nsCSSLineLayout& aLineLayout,
+  nsInlineReflowStatus ReflowPre(nsLineLayout& aLineLayout,
                                  nsReflowMetrics& aMetrics,
                                  const nsReflowState& aReflowState,
                                  const nsStyleFont& aFont,
                                  PRInt32 aStartingOffset);
 
-  nsInlineReflowStatus ReflowNormal(nsCSSLineLayout& aLineLayout,
+  nsInlineReflowStatus ReflowNormal(nsLineLayout& aLineLayout,
                                     nsReflowMetrics& aMetrics,
                                     const nsReflowState& aReflowState,
                                     const nsStyleFont& aFontStyle,
@@ -1081,7 +1081,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-TextFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+TextFrame::FindTextRuns(nsLineLayout&  aLineLayout,
                         nsIReflowCommand* aReflowCommand)
 {
   if (nsnull == mPrevInFlow) {
@@ -1214,7 +1214,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 }
 
 NS_IMETHODIMP
-TextFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
+TextFrame::InlineReflow(nsLineLayout&     aLineLayout,
                         nsReflowMetrics&     aMetrics,
                         const nsReflowState& aReflowState)
 {
@@ -1267,7 +1267,7 @@ TextFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
 // tabs). Normal text reflow may or may not wrap depending on the
 // "whiteSpace" style property.
 nsInlineReflowStatus
-TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
+TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
                         nsReflowMetrics& aMetrics,
                         const nsReflowState& aReflowState,
                         const nsStyleFont& aFont,
@@ -1441,7 +1441,7 @@ TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
 }
 
 nsInlineReflowStatus
-TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
+TextFrame::ReflowPre(nsLineLayout& aLineLayout,
                      nsReflowMetrics& aMetrics,
                      const nsReflowState& aReflowState,
                      const nsStyleFont& aFont,

@@ -16,13 +16,13 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsCSSLineLayout.h"
+#include "nsLineLayout.h"
 #include "nsCSSLayout.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 
 void
-nsCSSTextRun::List(FILE* out, PRInt32 aIndent)
+nsTextRun::List(FILE* out, PRInt32 aIndent)
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -38,7 +38,7 @@ nsCSSTextRun::List(FILE* out, PRInt32 aIndent)
 
 //----------------------------------------------------------------------
 
-nsCSSLineLayout::nsCSSLineLayout(nsIPresContext* aPresContext,
+nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
                                  nsISpaceManager* aSpaceManager)
 {
   mPresContext = aPresContext;
@@ -53,40 +53,40 @@ nsCSSLineLayout::nsCSSLineLayout(nsIPresContext* aPresContext,
   ResetTextRuns();
 }
 
-nsCSSLineLayout::~nsCSSLineLayout()
+nsLineLayout::~nsLineLayout()
 {
-  nsCSSTextRun::DeleteTextRuns(mTextRuns);
+  nsTextRun::DeleteTextRuns(mTextRuns);
 }
 
 void
-nsCSSLineLayout::ResetTextRuns()
+nsLineLayout::ResetTextRuns()
 {
-  nsCSSTextRun::DeleteTextRuns(mTextRuns);
+  nsTextRun::DeleteTextRuns(mTextRuns);
   mTextRuns = nsnull;
   mTextRunP = &mTextRuns;
   mNewTextRun = nsnull;
 }
 
-nsCSSTextRun*
-nsCSSLineLayout::TakeTextRuns()
+nsTextRun*
+nsLineLayout::TakeTextRuns()
 {
-  nsCSSTextRun* result = mTextRuns;
+  nsTextRun* result = mTextRuns;
   mTextRuns = nsnull;
   ResetTextRuns();
   return result;
 }
 
 void
-nsCSSLineLayout::EndTextRun()
+nsLineLayout::EndTextRun()
 {
   mNewTextRun = nsnull;
 }
 
 nsresult
-nsCSSLineLayout::AddText(nsIFrame* aTextFrame)
+nsLineLayout::AddText(nsIFrame* aTextFrame)
 {
   if (nsnull == mNewTextRun) {
-    mNewTextRun = new nsCSSTextRun();
+    mNewTextRun = new nsTextRun();
     if (nsnull == mNewTextRun) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -99,7 +99,7 @@ nsCSSLineLayout::AddText(nsIFrame* aTextFrame)
 
 // XXX move this somewhere else!!!
 PRBool
-nsCSSLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
+nsLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
                                    const nsStylePosition* aPosition)
 {
   if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {

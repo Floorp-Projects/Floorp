@@ -62,7 +62,7 @@ include $(DEPTH)/config/config.mk
 
 LCFLAGS += -D_IMPL_NS_HTML
 
-INCLUDES += -I../../style/src -I../../content/src -I../../../base/src -I../../../css/layout/src -I.
+INCLUDES += -I../../style/src -I../../content/src -I../../../base/src -I.
 
 MKSHLIB :=
 

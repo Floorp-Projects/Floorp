@@ -15,30 +15,30 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsCSSInlineFrame_h___
-#define nsCSSInlineFrame_h___
+#ifndef nsInlineFrame_h___
+#define nsInlineFrame_h___
 
-#include "nsCSSContainerFrame.h"
-#include "nsCSSInlineLayout.h"
-#include "nsCSSLineLayout.h"
+#include "nsHTMLContainerFrame.h"
+#include "nsInlineLayout.h"
+#include "nsLineLayout.h"
 
-class nsCSSInlineFrame;
+class nsInlineFrame;
 class nsPlaceholderFrame;
 
 /**
  * Reflow state object for managing css inline layout. Most of the state
- * is managed by the nsCSSInlineLayout object.
+ * is managed by the nsInlineLayout object.
  */
-struct nsCSSInlineReflowState : public nsReflowState {
-  nsCSSInlineReflowState(nsCSSLineLayout& aLineLayout,
-                         nsCSSInlineFrame* aInlineFrame,
-                         nsIStyleContext* aInlineSC,
-                         const nsReflowState& aReflowState,
-                         PRBool aComputeMaxElementSize);
-  ~nsCSSInlineReflowState();
+struct nsInlineReflowState : public nsReflowState {
+  nsInlineReflowState(nsLineLayout& aLineLayout,
+                      nsInlineFrame* aInlineFrame,
+                      nsIStyleContext* aInlineSC,
+                      const nsReflowState& aReflowState,
+                      PRBool aComputeMaxElementSize);
+  ~nsInlineReflowState();
 
   nsIPresContext* mPresContext;
-  nsCSSInlineLayout mInlineLayout;
+  nsInlineLayout mInlineLayout;
 
   nsIFrame* mLastChild;         // last child we have reflowed (so far)
 
@@ -55,8 +55,8 @@ struct nsCSSInlineReflowState : public nsReflowState {
  *
  * Note: This class does not support being used as a pseudo frame.
  */
-class nsCSSInlineFrame : public nsCSSContainerFrame,
-                         public nsIInlineReflow
+class nsInlineFrame : public nsHTMLContainerFrame,
+                      public nsIInlineReflow
 {
 public:
   // nsISupports
@@ -76,46 +76,46 @@ public:
 #endif
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+  NS_IMETHOD FindTextRuns(nsLineLayout&  aLineLayout,
                           nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+  NS_IMETHOD InlineReflow(nsLineLayout&     aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
 
-  // nsCSSContainerFrame
+  // nsContainerFrame
   virtual PRBool DeleteNextInFlowsFor(nsIPresContext& aPresContext, nsIFrame* aChild);
 
 protected:
-  nsCSSInlineFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsInlineFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  virtual ~nsCSSInlineFrame();
+  virtual ~nsInlineFrame();
 
   virtual PRIntn GetSkipSides() const;
 
-  nsresult InitialReflow(nsCSSInlineReflowState& aState);
+  nsresult InitialReflow(nsInlineReflowState& aState);
 
-  nsresult FrameAppendedReflow(nsCSSInlineReflowState& aState);
+  nsresult FrameAppendedReflow(nsInlineReflowState& aState);
 
-  nsresult ChildIncrementalReflow(nsCSSInlineReflowState& aState);
+  nsresult ChildIncrementalReflow(nsInlineReflowState& aState);
 
-  nsresult ResizeReflow(nsCSSInlineReflowState& aState);
+  nsresult ResizeReflow(nsInlineReflowState& aState);
 
-  void ComputeFinalSize(nsCSSInlineReflowState& aState,
+  void ComputeFinalSize(nsInlineReflowState& aState,
                         nsReflowMetrics& aMetrics);
 
-  PRBool ReflowMapped(nsCSSInlineReflowState& aState,
+  PRBool ReflowMapped(nsInlineReflowState& aState,
                       nsInlineReflowStatus&   aReflowStatus);
 
-  PRBool PullUpChildren(nsCSSInlineReflowState& aState,
+  PRBool PullUpChildren(nsInlineReflowState& aState,
                         nsInlineReflowStatus&   aReflowStatus);
 
-  nsIFrame* PullOneChild(nsCSSInlineFrame* aNextInFlow,
+  nsIFrame* PullOneChild(nsInlineFrame* aNextInFlow,
                          nsIFrame*         aLastChild);
 
-  nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
+  nsresult MaybeCreateNextInFlow(nsInlineReflowState& aState,
                                  nsIFrame*               aFrame);
 
-  void PushKids(nsCSSInlineReflowState& aState,
+  void PushKids(nsInlineReflowState& aState,
                 nsIFrame* aPrevChild, nsIFrame* aPushedChild);
 
   void DrainOverflowLists();
@@ -124,13 +124,13 @@ protected:
   nsresult CreateNewFrames(nsIPresContext* aPresContext);
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
-  friend nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
-                                       nsIContent* aContent,
-                                       nsIFrame*   aParent);
+  friend nsresult NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
+                                    nsIContent* aContent,
+                                    nsIFrame*   aParent);
 };
 
-extern nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
-                                     nsIContent* aContent,
-                                     nsIFrame*   aParent);
+extern nsresult NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
+                                  nsIContent* aContent,
+                                  nsIFrame*   aParent);
 
-#endif /* nsCSSInlineFrame_h___ */
+#endif /* nsInlineFrame_h___ */

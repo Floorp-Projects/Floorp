@@ -236,12 +236,17 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 // Factory methods for creating html layout objects
 
 extern nsresult
+NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+              nsIFrame*& aNewFrame);
+
+extern nsresult
 NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                 nsIFrame*& aNewFrame);
 
 extern nsresult
-NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-              nsIFrame*& aNewFrame);
+NS_NewBlockFrame(nsIFrame**  aInstancePtrResult,
+                 nsIContent* aContent,
+                 nsIFrame*   aParent);
 
 extern nsresult
 NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,
@@ -252,11 +257,13 @@ NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
               nsIFrame*& aNewFrame);
 
 // <frame> and <iframe> 
-extern nsresult NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                                          nsIFrame*& aNewFrame);
+extern nsresult
+NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                          nsIFrame*& aNewFrame);
 // <frameset>
-extern nsresult NS_NewHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                                        nsIFrame*& aNewFrame);
+extern nsresult
+NS_NewHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                        nsIFrame*& aNewFrame);
 
 extern nsresult
 NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
@@ -265,6 +272,11 @@ NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 extern nsresult
 NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                  nsIFrame*& aFrameResult);
+
+extern nsresult
+NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
+                  nsIContent* aContent,
+                  nsIFrame*   aParent);
 
 extern nsresult
 NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
@@ -281,16 +293,6 @@ NS_NewTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 nsresult
 NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                nsIFrame*& aResult);
-
-extern nsresult
-NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
-                     nsIContent* aContent,
-                     nsIFrame*   aParent);
-
-extern nsresult
-NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
-                    nsIContent* aContent,
-                    nsIFrame*   aParent);
 
 extern nsresult
 NS_NewInputButtonFrame(nsIContent* aContent, nsIFrame* aParentFrame,
