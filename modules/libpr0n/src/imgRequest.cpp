@@ -538,8 +538,8 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
 
 /* prototype for this defined below */
-NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
-                                  PRUint32 toOffset, PRUint32 count, PRUint32 *writeCount);
+static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
+                                         PRUint32 toOffset, PRUint32 count, PRUint32 *writeCount);
 
 
 /** nsIStreamListener methods **/
