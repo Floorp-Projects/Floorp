@@ -45,6 +45,12 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMBOBOXCONTROLFRAME_IID)
 
   /**
+   * Gets the Drop Down List
+   *
+   */
+  NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame) = 0;
+
+  /**
    * Sets the Drop Down List
    *
    */

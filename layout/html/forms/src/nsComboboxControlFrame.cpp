@@ -939,6 +939,18 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame) 
+{
+  if (nsnull == aDropDownFrame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aDropDownFrame = mDropdownFrame;
+ 
+  return NS_OK;
+}
+
 
 void
 nsComboboxControlFrame::SelectionChanged()
@@ -947,6 +959,19 @@ nsComboboxControlFrame::SelectionChanged()
     mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, mTextStr, PR_TRUE);
     nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
     nsFormControlHelper::ForceDrawFrame(displayFrame);
+
+    // Send reflow command because the new text maybe larger
+    nsIReflowCommand* cmd;
+    nsresult          rv;
+    rv = NS_NewHTMLReflowCommand(&cmd, displayFrame, nsIReflowCommand::ContentChanged);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPresShell> shell;
+      rv = mPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_SUCCEEDED(rv) && shell) {
+        shell->AppendReflowCommand(cmd);
+        NS_RELEASE(cmd);
+      }
+    }
   }
 
    // Dispatch the NS_FORM_CHANGE event
@@ -1247,12 +1272,5 @@ nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
 #endif
   return NS_OK;
 }
-
-
-
-
-
-
-
 
 
