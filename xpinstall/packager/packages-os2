@@ -50,6 +50,7 @@ bin/xpcom.dll
 bin/xpistub.dll
 ;bin/zlib.dll
 bin/mozz.dll
+bin/components/xpcom_obsolete.xpt
 bin/xpcomct.dll
 bin/components/xpcomctc.dll
 bin/components/jar50.dll
