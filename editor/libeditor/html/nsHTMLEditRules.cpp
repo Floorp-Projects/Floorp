@@ -1564,7 +1564,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
       // it means the break wont end up making an empty line that happens to be inside a
       // mailquote.  The latter can confuse a user if they click there and start typing,
       // because being in the mailquote may affect wrapping behavior, or font color, etc.
-      nsWSRunObject wsObj(mHTMLEditor, selNode, newOffset);
+      nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
       nsCOMPtr<nsIDOMNode> visNode;
       PRInt32 visOffset=0;
       PRInt16 wsType;
@@ -1599,7 +1599,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
     // if citeNode wasn't a block, we might also want another break before it.
     // We need to examine the content both before the br we just added and also
     // just after it.  If we dont have another br or block boundary adjacent,
-    // then we will ned a 2nd br added to achieve blank line that user expects.
+    // then we will need a 2nd br added to achieve blank line that user expects.
     if (IsInlineNode(citeNode))
     {
       nsWSRunObject wsObj(mHTMLEditor, selNode, newOffset);
@@ -1613,7 +1613,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
           (wsType==nsWSRunObject::eSpecial))
       {
         nsWSRunObject wsObjAfterBR(mHTMLEditor, selNode, newOffset+1);
-        res = wsObj.NextVisibleNode(selNode, newOffset, address_of(visNode), &visOffset, &wsType);
+        res = wsObjAfterBR.NextVisibleNode(selNode, newOffset+1, address_of(visNode), &visOffset, &wsType);
         if (NS_FAILED(res)) return res;
         if ((wsType==nsWSRunObject::eNormalWS) || 
             (wsType==nsWSRunObject::eText)     ||

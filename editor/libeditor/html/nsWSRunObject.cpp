@@ -622,8 +622,8 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
   }
   
   // if we get here then nothing in ws data to find.  return start reason
-  *outVisNode = mStartNode;
-  *outVisOffset = mStartOffset;
+  *outVisNode = mStartReasonNode;
+  *outVisOffset = mStartOffset;  // this really isn't meaningful if mStartReasonNode!=mStartNode
   *outType = mStartReason;
   return NS_OK;
 }
@@ -677,8 +677,8 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
   }
   
   // if we get here then nothing in ws data to find.  return end reason
-  *outVisNode = mEndNode;
-  *outVisOffset = mEndOffset;
+  *outVisNode = mEndReasonNode;
+  *outVisOffset = mEndOffset; // this really isn't meaningful if mEndReasonNode!=mEndNode
   *outType = mEndReason;
   return NS_OK;
 }
