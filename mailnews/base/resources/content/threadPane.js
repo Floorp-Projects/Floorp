@@ -54,7 +54,7 @@ function ThreadPaneOnClick(event)
       // if the cell is in a "cycler" column
       // or if the user double clicked on the twisty,
       // don't open the message in a new window
-      if (event.detail == 2 && !col.value.isCycler && (childElt.value != "twisty")) {
+      if (event.detail == 2 && !col.value.cycler && (childElt.value != "twisty")) {
         ThreadPaneDoubleClick();
         // double clicking should not toggle the open / close state of the 
         // thread.  this will happen if we don't prevent the event from

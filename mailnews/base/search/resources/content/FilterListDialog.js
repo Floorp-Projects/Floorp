@@ -605,7 +605,7 @@ function onFilterDoubleClick(event)
 
     // if the cell is in a "cycler" column (the enabled column)
     // don't open the edit filter dialog with the selected filter
-    if (!col.value.isCycler)
+    if (!col.value.cycler)
       onEditFilter();
 }
 
