@@ -2,3 +2,4 @@ Makefile
 RegFactory
 TestFactory
 TestCOMPtr
+TestID
