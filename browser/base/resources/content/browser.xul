@@ -36,6 +36,8 @@ Contributor(s): ______________________________________. -->
 %buildDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
 %navigatorDTD;
+<!ENTITY % policyDTD SYSTEM "chrome://browser/locale/policy/policy.dtd" >
+%policyDTD;
 ]>
 
 <window id="main-window"
@@ -387,18 +389,22 @@ Contributor(s): ______________________________________. -->
     </statusbarpanel>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button" onclick="displayPageInfo()"/>
+<!--
     <statusbarpanel>
       <button id="policy-menu" type="menu" label="Policy"
               oncommand="policyMenuAction(event);">
         <menupopup onpopupshowing="policyMenuShowing(event);"
-                   popupanchor="topright" popupalign="topleft">
-          <menuitem id="policyMenu-noregions" label="Add to New Region..."/>
+                   popupanchor="topleft" popupalign="topleft">
+          <label>&addCurrentPageTo.label;</label>
+          <menuitem id="policyMenu-newregion" label="&addToNewRegion.label;"/>
           <menuseparator id="customPolicySeparator"/>
-          <menuitem id="policyMenu-cookies" label="Can set cookies"/>
-          <menuitem id="policyMenu-scripts" label="Can execute scripts"/>
+          <label>&currentPageDetails.label;</label>
+          <menuitem id="policyMenu-cookies" label="&currentPageCanSetCookies.label;"/>
+          <menuitem id="policyMenu-scripts" label="&currentPageCanExecuteJavaScript.label;"/>
         </menupopup>
       </button>
     </statusbarpanel>
+-->
   </statusbar> 
 
 </window>

@@ -51,7 +51,26 @@ function getPolicyBranch()
 
 function policyMenuAction(aEvent)
 {
+  var branch = getPolicyBranch();
+  var prePath = gBrowser.mCurrentBrowser.currentURI.prePath;
 
+  if (aEvent.target.id == "policyMenu-newregion") {
+    // XXXben replace with full selection UI. 
+    var name = prompt("(PLACEHOLDER) Enter a new region name: ", "New Region");
+    // XXXben normalize, strip whitespace, etc. 
+
+    // XXXben user defined from selection UI
+    branch.setCharPref(name + ".sites", prePath);
+    branch.setCharPref(name + ".policyName", name);
+    branch.setCharPref(name + ".Window.open", "noAccess");
+  }  
+  else if (aEvent.target.hasAttribute("region")) {
+    var region = aEvent.target.getAttribute("region");
+
+    var sites = branch.getCharPref(region + ".sites");
+    sites += " " + prePath;
+    branch.setCharPref(region + ".sites", sites);
+  }
 }
 
 function policyMenuShowing(aEvent)
@@ -61,14 +80,24 @@ function policyMenuShowing(aEvent)
   var regions = branch.getCharPref("policynames");
   regions = regions.split(", ");
 
-  var noRegionsItem = document.getElementById("policyMenu-noregions");
+  var prePath = gBrowser.mCurrentBrowser.currentURI.prePath;
+ 
+  var noRegionsItem = document.getElementById("policyMenu-newregion");
 
   for (var i = 0; i < regions.length; ++i) {
-    var menuitem = document.createElement("menuitem");
-    var label = branch.getCharPref(regions[i] + ".policyName");
-    menuitem.setAttribute("label", label);
-    menuitem.setAttribute("id", "policyMenuRegion-" + regions[i]);
-    aEvent.target.insertBefore(menuitem, noRegionsItem);
+    var itemElement = document.getElementById("policyMenuRegion-" + regions[i]);
+    if (!itemElement) {
+      var menuitem = document.createElement("menuitem");
+      var label = branch.getCharPref(regions[i] + ".policyName");
+      menuitem.setAttribute("label", label);
+      menuitem.setAttribute("id", "policyMenuRegion-" + regions[i]);
+      menuitem.setAttribute("region", regions[i]);
+      var sites = branch.getCharPref(regions[i] + ".sites");
+      if (sites.indexOf(prePath) != -1) 
+        menuitem.setAttribute("disaled", "true");
+
+      aEvent.target.insertBefore(menuitem, noRegionsItem);
+    }
   }
 }
 

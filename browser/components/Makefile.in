@@ -42,6 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = bookmarks build policy
+DIRS = bookmarks policy
 
 include $(topsrcdir)/config/rules.mk
