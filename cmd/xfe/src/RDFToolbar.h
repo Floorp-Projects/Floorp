@@ -82,7 +82,9 @@ protected:
     // Override RDFMenuToolbarBase methods
 	virtual void	prepareToUpdateRoot		();
 	virtual void	updateRoot      		();
-	virtual void	updateAppearance		();
+
+    // Gets called to update icon appearance
+    virtual void    updateAppearance          ();
 
 private:
     XFE_Frame *	    _frame;
@@ -93,6 +95,9 @@ private:
     static void tooltipCB(Widget, XtPointer,  XmString *, Boolean *);
     static void docStringSetCB(Widget, XtPointer, XmString *, Boolean *);
     static void docStringCB(Widget, XtPointer, unsigned char, XmString);
+
+	// update the icon appearance
+    XFE_CALLBACK_DECL(updateIconAppearance)
 };
 
 #endif /*_xfe_rdftoolbar_*/

@@ -27,7 +27,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RDFMenuToolbarBase.h"
-#include "MozillaApp.h"
 #include "BrowserFrame.h"  /* for fe_reuseBrowser() */
 #include "IconGroup.h"
 #include "View.h"
@@ -73,21 +72,11 @@ XFE_RDFMenuToolbarBase::XFE_RDFMenuToolbarBase( XFE_Frame *  frame,
     _dropLastAccess(0)
 {
     XP_ASSERT( _frame != NULL );
-
-    XFE_MozillaApp::theApp()->registerInterest(
-        XFE_MozillaApp::updateToolbarAppearance,
-        this,
-        (XFE_FunctionNotification)updateIconAppearance_cb);
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */
 XFE_RDFMenuToolbarBase::~XFE_RDFMenuToolbarBase()
 {
-    XFE_MozillaApp::theApp()->unregisterInterest(
-        XFE_MozillaApp::updateToolbarAppearance,
-        this,
-        (XFE_FunctionNotification)updateIconAppearance_cb);
-
     if (_dropAddressBuffer)
     {
         XtFree(_dropAddressBuffer);
@@ -308,16 +297,6 @@ XFE_RDFMenuToolbarBase::pane_mapping_eh(Widget        submenu,
 
     *cont = True;
 }
-//////////////////////////////////////////////////////////////////////////
-XFE_CALLBACK_DEFN(XFE_RDFMenuToolbarBase,updateIconAppearance)
-    (XFE_NotificationCenter *    /*obj*/, 
-     void *                        /*clientData*/, 
-     void *                        /*callData*/)
-{
-    // Update the appearance
-    updateAppearance();
-}
-//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
                                      Pixmap *    pixmapOut,
@@ -516,11 +495,6 @@ XFE_RDFMenuToolbarBase::createItemTree(Widget menu,HT_Resource entry)
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
 XFE_RDFMenuToolbarBase::prepareToUpdateRoot()
-{
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_RDFMenuToolbarBase::updateAppearance()
 {
 }
 //////////////////////////////////////////////////////////////////////////
@@ -1361,14 +1335,6 @@ XFE_RDFMenuToolbarBase::formatItem(HT_Resource        entry,
   {
       strcpy (buf, "-------------------------");
   }
-#if DONT_HACK
-  // hack hack hack
-  else if (HT_IsURLBar(entry))
-  {
-      strcpy (buf, "<URLBar RSN>" );
-  }
-  // end hack hack hack
-#endif
   else if (name || url)
   {
       fe_FormatDocTitle (name, url, buf, 1024);
@@ -1389,6 +1355,7 @@ XFE_RDFMenuToolbarBase::formatItem(HT_Resource        entry,
 
       loc = (char *) fe_ConvertToLocaleEncoding (charset,
                                                  (unsigned char *) buf);
+
       xmstring = XmStringSegmentCreate (loc, "HEADING",
                                         XmSTRING_DIRECTION_L_TO_R, False);
       if (loc != buf)
@@ -1397,14 +1364,12 @@ XFE_RDFMenuToolbarBase::formatItem(HT_Resource        entry,
       }
   }
 
-  if (xmstring)
+  if (!xmstring)
   {
-      return (xmstring);
+	  xmstring = XmStringCreateLtoR ("", XmFONTLIST_DEFAULT_TAG);
   }
-  else
-  {
-      return XmStringCreateLtoR ("", XmFONTLIST_DEFAULT_TAG);
-  }
+
+  return (xmstring);
 }
 //////////////////////////////////////////////////////////////////////////
 void 

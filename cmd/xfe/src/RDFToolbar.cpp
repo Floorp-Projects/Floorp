@@ -22,6 +22,7 @@
 
 #include "RDFToolbar.h"
 #include "Logo.h"
+#include "MozillaApp.h"
 
 #include "prefapi.h"
 #include "felocale.h"
@@ -116,6 +117,11 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                                                this,
                                                (XFE_FunctionNotification)updateToolbarAppearance_cb);
 #endif
+
+    XFE_MozillaApp::theApp()->registerInterest(
+        XFE_MozillaApp::updateToolbarAppearance,
+        this,
+        (XFE_FunctionNotification)updateIconAppearance_cb);
 }
 
 
@@ -138,6 +144,11 @@ XFE_RDFToolbar::~XFE_RDFToolbar()
                                                  this,
                                                  (XFE_FunctionNotification)updateToolbarAppearance_cb);
 #endif
+
+    XFE_MozillaApp::theApp()->unregisterInterest(
+        XFE_MozillaApp::updateToolbarAppearance,
+        this,
+        (XFE_FunctionNotification)updateIconAppearance_cb);
 }
 #ifdef NOT_YET
 //////////////////////////////////////////////////////////////////////////
@@ -161,6 +172,17 @@ XFE_CALLBACK_DEFN(XFE_RDFToolbar, updateToolbarAppearance)(XFE_NotificationCente
 	updateAppearance();
 }
 #endif /*NOT_YET*/
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_RDFToolbar,updateIconAppearance)
+    (XFE_NotificationCenter *    /*obj*/, 
+     void *                        /*clientData*/, 
+     void *                        /*callData*/)
+{
+    // Update the appearance
+    updateAppearance();
+}
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFToolbar::update()

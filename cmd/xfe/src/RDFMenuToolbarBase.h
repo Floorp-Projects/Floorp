@@ -45,8 +45,7 @@ typedef struct _ItemCallbackStruct
 
 //////////////////////////////////////////////////////////////////////////
 
-class XFE_RDFMenuToolbarBase : public XFE_NotificationCenter,
-                               public XFE_RDFBase
+class XFE_RDFMenuToolbarBase : public XFE_RDFBase
 {
 public:
     XFE_RDFMenuToolbarBase      (XFE_Frame * frame,
@@ -141,9 +140,6 @@ protected:
     // Gets called when the whole thing needs updating
     virtual void    prepareToUpdateRoot       ();
 
-    // Gets called to update icon appearance
-    virtual void    updateAppearance          ();
-
     // Gets called when the personal toolbar folder's name changes
     virtual void    updateToolbarFolderName   ();
 
@@ -201,9 +197,6 @@ private:
     void             createPixmaps      ();
 
     Widget           getLastMoreMenu    (Widget menu);
-
-    // update the icon appearance
-    XFE_CALLBACK_DECL(updateIconAppearance)
 };
 
 
