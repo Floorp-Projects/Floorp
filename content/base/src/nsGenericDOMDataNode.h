@@ -119,10 +119,9 @@ public:
     *aReturn = nsnull;
 
     /*
-     * Data nodes can't have children, i.e. aOldChild can't be a child of
-     * this node.
+     * Data nodes can't have children.
      */
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   {
