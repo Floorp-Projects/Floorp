@@ -189,12 +189,9 @@
        dump("Couldn't obtain menu item Forward\n");
        return;
      }
-     else
-	dump("Got a handle to forward menu item\n");
 
      // Enable/Disable the Forward Menuitem
      if (canForward == "true")  {
-	dump("Setting forward menu item disabled\n");
         fm.setAttribute("disabled", "true");
      }
      else {
@@ -210,10 +207,10 @@
         var stopDisabled = stop.getAttribute("disabled");
         var stopButton   = document.getElementById( "stop-button" );
         if ( stopButton ) {
-            if ( stopDisabled ) {
-                stopButton.setAttribute( "disabled", "" );
+            if ( stopDisabled == "true") {
+                stopButton.setAttribute( "disabled", "true" );
             } else {
-                stopButton.removeAttribute( "disabled" );
+                stopButton.setAttribute( "disabled", "" );
             }
         }
     }
@@ -241,7 +238,7 @@
      }
 	
      //Stop button has just been pressed. Disable it. 
-     sb.setAttribute("disabled", "");
+     sb.setAttribute("disabled", "true");
 
      // Get a handle to the stop menu item.
      var sm = document.getElementById("menuitem-stop");
@@ -291,12 +288,9 @@
        dump("Couldn't obtain menu item Back\n");
        return;
      }
-     else
-	dump("Obtained MenuItem Back\n");
 
      // Enable/Disable the Back Menuitem
      if (canBack == "true")  {
-	dump("Setting Back menuitem to disabled\n");
         bm.setAttribute("disabled", "true");
      }
      else {
