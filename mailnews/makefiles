@@ -44,9 +44,6 @@ mailnews/mime/cthandlers/signstub/Makefile
 mailnews/mime/emitters/Makefile
 mailnews/mime/emitters/build/Makefile
 mailnews/mime/emitters/src/Makefile
-mailnews/mime/tests/Makefile
-mailnews/mime/tests/xpcomtest/Makefile
-mailnews/mime/tests/mimetest/Makefile
 mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
 mailnews/mime/build/Makefile
