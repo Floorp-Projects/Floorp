@@ -194,9 +194,9 @@ function initHost(obj)
     obj.munger = new CMunger();
     obj.munger.enabled = true;
     obj.munger.addRule ("you-talking-to-me?", matchMyNick, "");
-    obj.munger.addRule ("im-stalking-you", matchMyNick, "" );
+    //    obj.munger.addRule ("im-stalking-you", matchMyNick, "" );
     obj.munger.addRule
-        ("link", /((http|mailto|ftp|irc)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,
+        ("link", /((\w+)\:\/\/[^\<\>\(\)\'\"\s]*|www\.[^\<\>\(\)\'\"\s]+\.[^\<\>\(\)\'\"\s]*)/,
          insertLink);
     obj.munger.addRule
         ("face",
@@ -608,7 +608,7 @@ function gotoIRCURL (url)
         if (!alreadyThere)
         {
             dd ("-*- chatzilla: gotoIRCURL: not already connected to " +
-                "server " + ary[1] + " trying to connect...");
+                "server " + url.host + " trying to connect...");
             client.onInputServer ({inputData: url.host + " " + url.port +
                                                   " " + pass});
             net = client.networks[url.host];

@@ -195,7 +195,7 @@
     <splitter id="main-splitter" align="vertical" collapse="before"/>
     <box align="vertical" flex="60%">
       <html:iframe id="it-doesnt-matter-anyway" class="output-container"
-       src="about:blank" flex="1"/>
+       type="content" src="about:blank" flex="1"/>
     <!--
       <html:textarea id="input" class="input-window"/>
     -->
