@@ -204,12 +204,14 @@ var messageHeaderSink = {
         // be sure to escape the display name before we insert it into the
         // method
       var commandString = "OpenAttachURL('" + contentType + "', '" + url + "', '" + escape(displayName) + "', '" + uri + "')";
+      var screenDisplayName = displayName;
+
       if (notDownloaded)
       {
-        displayName += " " + Bundle.GetStringFromName("notDownloaded");
+        screenDisplayName += " " + Bundle.GetStringFromName("notDownloaded");
       }
 
-      AddAttachmentToMenu(displayName, commandString);
+      AddAttachmentToMenu(screenDisplayName, commandString);
 
       var count = attachmentUrlArray.length;
       // dump ("** attachment count**" + count + "\n");
