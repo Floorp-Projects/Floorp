@@ -31,13 +31,14 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400" x="20" y="20" persist="width height x y" align="vertical"
+  width="630" height="400" x="20" y="20" persist="width height x y" align="vertical"
   ondraggesture="return TopLevelDrag(event);"
   windowtype="bookmarks:manager"
   >
 
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
   <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
+  <html:script src="chrome://global/content/treePopups.js"/>
 
   <menubar>
     <menu value="&menu.file.label;">
@@ -74,19 +75,21 @@
 </popup>
 </popupset>
 
-<html:div style="width: 100px; height: 100px;" flex="1">
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
        onkeyup="if (event.keyCode == 8)	return doDelete(false);"
-       style="width:100%;height:100%"
+       multiple="true"
        ondragover="return DragOverTree(event);"
        ondraggesture="return BeginDragTree(event);"
-       ondragdrop="return DropOnTree(event);" multiple="true">
+       ondragdrop="return DropOnTree(event);"
+       style="height:0px" flex="2">
 
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
       <treechildren>
-       <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
+       <treeitem uri="rdf:*"
+         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+         loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell><html:hr width="100%" align="center" size="1" /></treecell>
            <treecell><html:hr width="100%" align="center" size="1" /></treecell>
@@ -102,31 +105,65 @@
 
      <rule>
       <treechildren>
-       <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
+       <treeitem uri="rdf:*" persist="open"
+         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+         loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" src="rdf:http://home.netscape.com/NC-rdf#Icon" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Description"/>
-           <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-           <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+           <treecell indent="true"
+             value="rdf:http://home.netscape.com/NC-rdf#Name"
+             src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+           <treecell 
+             value="rdf:http://home.netscape.com/NC-rdf#URL"/>
+           <treecell
+             value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+           <treecell
+             value="rdf:http://home.netscape.com/NC-rdf#Description"/>
+           <treecell
+             value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+           <treecell
+             value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
+           <treecell
+             value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
          </treerow>
        </treeitem>
       </treechildren>
      </rule>
   </template>
 
-  <treecol persist="width" id="NameColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="URLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#URL" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="ShortcutURLColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="DescriptionColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#Description" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="LastVisitColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="AddedOnColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol persist="width" id="LastModColumn" sortSeparators="true" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate" rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+  <treecolgroup id="theColumns">
+    <treecol id="NameColumn" sortSeparators="true"
+      persist="hidden width" width="4*"
+      rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="URLColumn" sortSeparators="true"
+      persist="hidden width" width="4*"
+      rdf:resource="http://home.netscape.com/NC-rdf#URL"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="ShortcutURLColumn" sortSeparators="true"
+      persist="hidden width" width="1*"
+      rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="DescriptionColumn" sortSeparators="true"
+      persist="hidden width" width="1*"
+      rdf:resource="http://home.netscape.com/NC-rdf#Description"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="LastVisitColumn" sortSeparators="true"
+      persist="hidden width" width="1*"
+      rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="AddedOnColumn" sortSeparators="true"
+      persist="hidden width" width="1*"
+      rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol id="LastModColumn" sortSeparators="true"
+      persist="hidden width" width="1*"
+      rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
+      rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
+    <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
+  </treecolgroup>
 
   <treehead>
-    <treerow>
+    <treerow id="headRow">
       <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
       <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
       <treecell value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
@@ -134,20 +171,30 @@
       <treecell value="&tree.header.lastvisit.label;" onclick="return doSort('LastVisitColumn');" observes="LastVisitColumn" />
       <treecell value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
       <treecell value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
+      <treecell allowevents="true" id="popupCell">
+        <menu>
+          <titledbutton src="chrome://global/skin/opentwisty.gif"/>
+          <menupopup popupanchor="bottomright" 
+            popupalign="topright"
+            oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,
+            document.getElementById('popupCell'))"/>
+        </menu>
+      </treecell>
     </treerow>
   </treehead>
   <treechildren onclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"/>
 </tree>
-</html:div>
 
 <!--
 pinkerton
-This extra "status" bar is necessary because the bottom right corner of the window on MacOS is
-taken up by the growBox. If this window had a horizontal scrollbar, we'd be alright, but since
-it doesn't the bottom arrow on the vertical scrollbar was being hidden by this growBox. To
-combat this, we can just stick in a 16px high bar to bump up the bottom of the tree so that
-the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, but we can
-use this area for information (maybe full URL of selected item or the like) in the future.
+This extra "status" bar is necessary because the bottom right corner of
+the window on MacOS is taken up by the growBox. If this window had a
+horizontal scrollbar, we'd be alright, but since it doesn't the bottom
+arrow on the vertical scrollbar was being hidden by this growBox. To
+combat this, we can just stick in a 16px high bar to bump up the bottom
+of the tree so that the scrollbar is visible. Yes, I know this is not
+necessary for win32 or gtk, but we can use this area for information
+(maybe full URL of selected item or the like) in the future.
 -->
 <box id="status-bar" style="min-height:16px; max-height:16px;">
   <titledbutton class="status-bar" align="left" value=""/>
