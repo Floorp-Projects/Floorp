@@ -1334,7 +1334,7 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
 
   if (nsnull != mView) {
     viewManager = mView->GetViewManager();
-    viewManager->UpdateView(mView, aDamageRect, 0);
+    viewManager->UpdateView(mView, aDamageRect, NS_VMREFRESH_NO_SYNC);
     
   } else {
     nsRect      rect(aDamageRect);
@@ -1345,7 +1345,7 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
     NS_ASSERTION(view.IsNotNull(), "no view");
     rect += offset;
     viewManager = view->GetViewManager();
-    viewManager->UpdateView(view, rect, 0);
+    viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
   }
 }
 
