@@ -1699,6 +1699,8 @@ nsMsgFolderDataSource::NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aP
   nsCOMPtr <nsIMsgFolder> parentMsgFolder;
   rv = aFolder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
   NS_ENSURE_SUCCESS(rv,rv);
+  if (!parentMsgFolder)
+    return NS_OK;
 
   rv = parentMsgFolder->GetIsServer(&isServer);
   NS_ENSURE_SUCCESS(rv,rv);
