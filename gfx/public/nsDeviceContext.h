@@ -47,6 +47,7 @@
 #include "nsVoidArray.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsWeakReference.h"
 
 class nsIImageRequest;
 class nsHashtable;
@@ -78,7 +79,8 @@ protected:
 };
 
 class NS_GFX DeviceContextImpl : public nsIDeviceContext,
-                                 public nsIObserver
+                                 public nsIObserver,
+                                 public nsSupportsWeakReference
 {
 public:
   DeviceContextImpl();
@@ -174,6 +176,9 @@ protected:
 
 public:
   nsNativeWidget    mWidget;
+#ifdef NS_DEBUG
+  PRBool            mInitialized;
+#endif
 };
 
 #endif /* nsDeviceContext_h___ */

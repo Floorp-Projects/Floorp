@@ -449,6 +449,11 @@ nsFontMetricsOS2::nsFontMetricsOS2()
 nsFontMetricsOS2::~nsFontMetricsOS2()
 {
   delete mFontHandle;
+  if (mDeviceContext) {
+    // Notify our device context that owns us so that it can update its font cache
+    mDeviceContext->FontMetricsDeleted(this);
+    mDeviceContext = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsFontMetricsOS2, nsIFontMetrics)

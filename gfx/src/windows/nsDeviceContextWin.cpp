@@ -117,7 +117,7 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
 
 NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
 {
-  nsresult retval = DeviceContextImpl::Init(aWidget);
+  mWidget = aWidget;
 
   HWND  hwnd = (HWND)aWidget;
   HDC   hdc = ::GetDC(hwnd);
@@ -126,7 +126,7 @@ NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
 
   ::ReleaseDC(hwnd, hdc);
 
-  return retval;
+  return NS_OK;
 }
 
 //local method...
