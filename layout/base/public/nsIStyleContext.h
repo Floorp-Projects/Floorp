@@ -190,8 +190,8 @@ protected:
   nsStyleTable(void);
 };
 
-#define BORDER_PRECEDENT_EQUAL 0
-#define BORDER_PRECEDENT_LOWER 1
+#define BORDER_PRECEDENT_EQUAL  0
+#define BORDER_PRECEDENT_LOWER  1
 #define BORDER_PRECEDENT_HIGHER 2
 
 
@@ -199,6 +199,7 @@ protected:
 struct nsBorderEdge
 {
   nscoord mWidth;
+  nscoord mLength;
   PRUint8 mStyle;  
   nscolor mColor;
   PRUint8 mSide;
@@ -209,6 +210,7 @@ struct nsBorderEdge
 inline nsBorderEdge::nsBorderEdge()
 {
   mWidth=0;
+  mLength=0;
   mStyle=NS_STYLE_BORDER_STYLE_NONE;
   mColor=0;
   mSide=NS_SIDE_LEFT;
