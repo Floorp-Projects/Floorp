@@ -46,7 +46,7 @@
 #include "nsINntpIncomingServer.h"
 
 #ifdef DEBUG_sspitzer_
-#define DEBUG_NOISY_NEWS 1
+#define DEBUG_NEWS 1
 #endif
 
 //not using nsMsgLineBuffer yet, but I need to soon...
@@ -153,7 +153,7 @@ nsMsgNewsFolder::isNewsHost()
     // if we get here, mURI looks like this:  news://x
     // where x is non-empty, and may contain "/"
     char *rightAfterTheRoot = mURI+kNewsRootURILen+1;
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("search for a slash in %s\n",rightAfterTheRoot);
 #endif
     if (PL_strstr(rightAfterTheRoot,"/") == nsnull) {
@@ -186,7 +186,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
 	char is_newsgroup[512];
   PRBool rv;
 
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
   printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
 #endif
   lookingFor = PR_smprintf("newsrc-%s",newshostname);
@@ -250,21 +250,21 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
       }
 
 		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
       printf("is_newsgroups_file = TRUE\n");
 #endif
     }
     else {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
       printf("is_newsgroups_file = FALSE\n");
 #endif
     }
     
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
 #endif
     if (!PL_strncmp(psuedo_name,lookingFor,PL_strlen(lookingFor))) {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
       printf("found a match for %s\n",lookingFor);
 #endif
 
@@ -340,13 +340,13 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
     nsFileSpec newsrcFile("");
     rv = GetNewsrcFile(newshostname, path, newsrcFile);
     if (rv == NS_OK) {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
       printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);
 #endif
       rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
@@ -356,7 +356,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     newshostname = nsnull;
   }
   else {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("%s is not a host, so it has no newsgroups.\n", mURI);
 #endif
     rv = NS_OK;
@@ -503,7 +503,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
 			folderOpen = newsDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
       if (NS_SUCCEEDED(folderOpen)) {
         printf ("newsDBFactory->Open() succeeded\n");
       }
@@ -571,7 +571,7 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
         for (msgHdrEnumerator->First(); msgHdrEnumerator->IsDone() != NS_OK; msgHdrEnumerator->Next()) {
           total++;
         }
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
         printf("total = %d\n",total);
 #endif
         PRInt32 count = 0;
@@ -581,11 +581,11 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
             rv = msgHdrEnumerator->CurrentItem(getter_AddRefs(i));
             if (NS_FAILED(rv)) return rv;
             shortlist->AppendElement(i);
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
             printf("not skipping %d\n", count);
 #endif
           }
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
           else {
             printf("skipping %d\n", count);
           }
@@ -1094,7 +1094,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 {
   nsresult rv = NS_OK;
 
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
   printf("GetNewMessages (for news)  uri = %s\n",mURI);
 #endif
 
@@ -1115,7 +1115,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
   rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
                               (void **)&nntpServer);
   if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("Getting new news articles....\n");
 #endif
     rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull,mURI);
@@ -1436,16 +1436,43 @@ nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
 	PRBool subscribed = (*s == ':');
 	*s = '\0';
 
-	if (strlen(line) == 0)
+	if (PL_strlen(line) == 0)
 	{
 #ifdef HAVE_PORT
 		delete set;
 #endif
 		return 0;
 	}
-  
+ 
+  // previous versions of Communicator poluted the
+  // newsrc files with articles
+  // (this would happen when you clicked on a link like
+  // news://news.mozilla.org/3746EF3F.6080309@netscape.com)
+  //
+  // legal newsgroup names can't contain @ or %
+  // 
+  // News group names are structured into parts separated by dots, 
+  // for example "netscape.public.mozilla.mail-news". 
+  // Each part may be up to 14 characters long, and should consist 
+  // only of letters, digits, "+" and "-", with at least one letter
+  //
+  // @ indicates an article and %40 is @ escaped.
+  // previous versions of Communicator also dumped
+  // the escaped version into the newsrc file
+  //
+  // So lines like this in a newsrc file should be ignored:
+  // 3746EF3F.6080309@netscape.com:
+  // 3746EF3F.6080309%40netscape.com:
+  if ((PL_strstr(line,"@") != nsnull) || 
+      (PL_strstr(line,"%40") != nsnull)) {
+#ifdef DEBUG_NEWS
+	printf("skipping %s.  it contains @ or %%40\n",line);
+#endif
+  	subscribed = PR_FALSE;
+  }
+
   if (subscribed) {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("subscribed: %s\n", line);
 #endif
 
@@ -1457,7 +1484,7 @@ nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
     child = nsnull;
   }
   else {
-#ifdef DEBUG_NOISY_NEWS
+#ifdef DEBUG_NEWS
     printf("NOT subscribed: %s\n", line);
 #endif
   }
