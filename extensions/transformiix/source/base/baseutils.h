@@ -24,7 +24,6 @@
  * Tom Kneeland, tomk@mitre.org
  *    -- added PRUint32 to provide a common unsigned integer
  *
- * $Id: baseutils.h,v 1.8 2001/06/26 14:07:22 peterv%netscape.com Exp $
  */
 
 // Basic Definitions used throughout many of these classes

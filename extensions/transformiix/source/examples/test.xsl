@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.9 2001/04/11 10:32:45 axel%pike.org Exp $
  */
 -->
 

@@ -26,8 +26,7 @@
  *       PRECEDING_SIBLING_AXIS to be compatible with the
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
-
- * $Id: Names.h,v 1.10 2001/06/26 11:58:51 sicking%bigfoot.com Exp $
+ *
  */
 
 #ifndef TRANSFRMX_NAMES_H

@@ -72,8 +72,6 @@
 
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.62 $ $Date: 2001/06/30 10:59:41 $
 **/
 
 /**

@@ -20,15 +20,12 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: StringResult.cpp,v 1.8 2001/07/02 20:11:05 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * StringResult
  * Represents a String as a Result of evaluating an Expr
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/07/02 20:11:05 $
 **/
 #include "ExprResult.h"
 

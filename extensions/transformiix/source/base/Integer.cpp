@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Integer.cpp,v 1.3 2001/06/26 14:08:02 peterv%netscape.com Exp $
  */
 
 #include "primitives.h"
@@ -34,8 +33,6 @@
 /**
  * A wrapper for the primitive int type, and provides some simple
  * integer related routines
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2001/06/26 14:08:02 $
 **/
 
 /**

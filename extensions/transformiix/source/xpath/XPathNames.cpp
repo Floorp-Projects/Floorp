@@ -24,13 +24,10 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added LANG_FN
  *
- * $Id: XPathNames.cpp,v 1.4 2001/01/12 20:06:37 axel%pike.org Exp $
  */
 
 /**
  * XPath names
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/01/12 20:06:37 $
 **/
 
 #include "FunctionLib.h"

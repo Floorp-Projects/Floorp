@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: CommandLineUtils.h,v 1.4 2001/04/08 14:38:03 peterv%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_COMMANDLINEUTILS_H
@@ -30,10 +29,6 @@
 #include "StringList.h"
 #include "NamedMap.h"
 
-/**
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/04/08 14:38:03 $
-**/
 class CommandLineUtils {
 
 public:

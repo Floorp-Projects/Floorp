@@ -19,7 +19,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: TxObject.h,v 1.5 2001/06/26 14:09:57 peterv%netscape.com Exp $
  */
 
 

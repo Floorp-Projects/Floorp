@@ -46,9 +46,6 @@ typedef struct  {
 /**
  * Implementation of an In-Memory DOM based XML parser.  The actual XML
  * parsing is provided by EXPAT.
- * @author <a href="tomk@mitre.org">Tom Kneeland</a>
- * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.12 $ $Date: 2001/06/10 16:43:13 $
 **/
 class XMLParser
 {

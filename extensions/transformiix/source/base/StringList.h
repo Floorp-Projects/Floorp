@@ -23,13 +23,10 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.h,v 1.10 2001/06/26 14:09:31 peterv%netscape.com Exp $
  */
 
 /**
  * A class for keeping an ordered list of Strings
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2001/06/26 14:09:31 $
 **/
 
 #ifndef TRANSFRMX_STRINGLIST_H

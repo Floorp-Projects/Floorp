@@ -26,7 +26,6 @@
  * Jonas Sicking,
  *    -- added txXSLKey class
  *
- * $Id: XSLTFunctions.h,v 1.7 2001/06/26 11:58:56 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_XSLT_FUNCTIONS_H

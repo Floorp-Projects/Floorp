@@ -21,15 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: CommandLineUtils.cpp,v 1.4 2001/06/26 14:07:29 peterv%netscape.com Exp $
  */
 
 #include "CommandLineUtils.h"
 
-/**
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/06/26 14:07:29 $
-**/
 void CommandLineUtils::getOptions
     (NamedMap& options, int argc, char** argv, StringList& flags)
 {

@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.15 2001/06/26 11:58:52 sicking%bigfoot.com Exp $
  */
 
 
@@ -44,8 +43,6 @@ class txXSLKey;
 
 /**
  * Class used for keeping the current state of the XSL Processor
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.15 $ $Date: 2001/06/26 11:58:52 $
 **/
 class ProcessorState : public ContextState {
 
@@ -317,8 +314,8 @@ public:
     /**
      * Sorts the given NodeSet by DocumentOrder. 
      * @param nodes the NodeSet to sort
-     * <BR />
-     * <B>Note:</B> I will be moving this functionality elsewhere soon
+     *
+     * Note: I will be moving this functionality elsewhere soon
     **/
     virtual void sortByDocumentOrder(NodeSet* nodes);
 

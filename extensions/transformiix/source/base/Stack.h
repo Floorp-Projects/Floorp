@@ -21,13 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Stack.h,v 1.3 2001/04/08 14:39:07 peterv%netscape.com Exp $
  */
 
 /**
  * Stack
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2001/04/08 14:39:07 $
 **/
 
 #ifndef MITRE_STACK_H

@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: SimpleErrorObserver.cpp,v 1.3 2001/06/20 06:00:31 margaret.chan%sun.com Exp $
  */
 
 #include "ErrorObserver.h"

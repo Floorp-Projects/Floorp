@@ -21,12 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XMLUtils.h,v 1.6 2001/06/26 14:10:23 peterv%netscape.com Exp $
  */
 
 /**
  * An XML Utility class
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 
 #ifndef MITRE_XMLUTILS_H

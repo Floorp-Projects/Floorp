@@ -33,8 +33,6 @@
  * Just output the stringValue of text nodes.
  *
  * bad ripoff from HTMLPrinter.cpp :-)
- *
- * @author <a href="mailto:axel@pike.org">Axel Hecht</a>
 **/
   //---------------/
  //- Contructors -/

@@ -23,7 +23,6 @@
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 
 #include "DOMHelper.h"

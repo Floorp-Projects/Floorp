@@ -20,12 +20,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.h,v 1.3 2001/06/26 14:08:27 peterv%netscape.com Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.3 $ $Date: 2001/06/26 14:08:27 $
  */
 
 #ifndef TRANSFRMX_MAP_H
@@ -63,7 +61,7 @@ public:
 
     /**
      * Returns a list of all the keys of this Map.
-     * <BR />
+     *
      * You will need to delete this List when you are done with it.
     **/
     List* keys();

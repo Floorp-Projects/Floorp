@@ -20,7 +20,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: GenerateIdFunctionCall.cpp,v 1.4 2001/04/08 14:38:29 peterv%netscape.com Exp $
  */
 
 #include "XSLTFunctions.h"

@@ -21,7 +21,6 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.h,v 1.9 2001/04/08 14:34:48 peterv%netscape.com Exp $
  */
 
 

@@ -20,7 +20,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NodeSorter.cpp,v 1.5 2001/04/08 14:37:45 peterv%netscape.com Exp $
  */
 
 

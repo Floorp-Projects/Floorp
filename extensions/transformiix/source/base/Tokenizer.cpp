@@ -45,14 +45,12 @@
  *  -- 19990806
  *    -- added void return type declaration for ::nextToken()
  *    -- added proper cast from PRInt32 to char in ::nextToken()
- * $Id: Tokenizer.cpp,v 1.3 2001/06/26 14:09:39 peterv%netscape.com Exp $
+ *
  */
 
 /**
  * Tokenizer
  * A simple String tokenizer
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2001/06/26 14:09:39 $
 **/
 
 #include "Tokenizer.h"

@@ -36,10 +36,9 @@
 
 /**
  * A Token class for the ExprLexer.
- * <BR />
+ *
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 class Token {
 
@@ -135,8 +134,7 @@ public:
  * A class for splitting an "Expr" String into tokens and
  * performing  basic Lexical Analysis.
  *
- * <BR>This class was ported from XSL:P, an open source Java based XSL processor
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * This class was ported from XSL:P, an open source Java based XSL processor
 **/
 class ExprLexer {
 

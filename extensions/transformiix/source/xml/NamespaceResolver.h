@@ -16,7 +16,6 @@
  * Peter Van der Beken, Peter.VanderBeken@pandora.be
  *   -- original author.
  *
- * $Id: NamespaceResolver.h,v 1.6 2001/04/08 14:37:03 peterv%netscape.com Exp $
  */
 
 

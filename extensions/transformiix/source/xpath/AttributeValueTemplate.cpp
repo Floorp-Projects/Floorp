@@ -20,14 +20,11 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: AttributeValueTemplate.cpp,v 1.1 2000/04/06 07:44:42 kvisco%ziplink.net Exp $
+ *
  */
 
 /**
  * AttributeValueTemplate
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:44:42 $
 **/
 
 #include "Expr.h"

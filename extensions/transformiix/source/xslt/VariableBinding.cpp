@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: VariableBinding.cpp,v 1.1 2000/04/06 07:46:52 kvisco%ziplink.net Exp $
  */
 
 #include "VariableBinding.h"
@@ -29,8 +28,6 @@
 
 /**
  * Creates a variable binding with no name or value
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:52 $
 **/
 VariableBinding::VariableBinding() {
     this->allowShadow = MB_FALSE;
