@@ -1770,7 +1770,9 @@ sub BuildNeckoProjects()
     # security stuff
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", "", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", "", 0, 0, 0); 
-    BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);    
+
+    # now depends on PSM shared library.
+    #BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);    
     
     print("--- Necko projects complete ----\n");
 } # necko
