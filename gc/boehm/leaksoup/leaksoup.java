@@ -40,20 +40,22 @@ import java.util.*;
 class Leak {
 	String mAddress;
 	Object[] mReferences;
+	Object[] mCrawl;
 	int mRefCount;
 	int mSize;
 	String mType;
 
-	Leak(String addr, String type, Object[] refs, int size) {
+	Leak(String addr, String type, Object[] refs, Object[] crawl, int size) {
 		mAddress = addr;
 		mReferences = refs;
+		mCrawl = crawl;
 		mRefCount = 0;
 		mSize = size;
 		mType = type;
 	}
 
 	public String toString() {
-		return (mAddress + " [" + mRefCount + "] (" + mSize + ") " + mType);
+		return (mAddress + " [" + mRefCount + "] " + mType +  " (" + mSize + ") " + mType);
 	}
 	
 	static class Comparator implements QuickSort.Comparator {
@@ -66,6 +68,55 @@ class Leak {
 	public static void sort(Leak[] leaks) {
 		QuickSort sorter = new QuickSort(new Comparator());
 		sorter.sort(leaks);
+	}
+}
+
+class FileTable {
+	static class Line {
+		int mOffset;
+		int mLength;
+		
+		Line(int offset, int length) {
+			mOffset = offset;
+			mLength = length;
+		}
+	}
+	Line[] mLines;
+
+	FileTable(String path) throws IOException {
+		Vector lines = new Vector();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
+		int offset = 0;
+		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+			// always add 1 for the line feed.
+			int length = 1 + line.length();
+			lines.addElement(new Line(offset, length));
+			offset += length;
+		}
+		reader.close();
+		int size = lines.size();
+		mLines = new Line[size];
+		lines.copyInto(mLines);
+	}
+	
+	public int getLine(int offset) {
+		// use binary search to find the line which spans this offset.
+		int length = mLines.length;
+		int minIndex = 0, maxIndex = length - 1;
+		int index = maxIndex / 2;
+		while (minIndex < maxIndex) {
+			Line line = mLines[index];
+			if (offset < line.mOffset) {
+				maxIndex = (index - 1);
+				index = (minIndex + maxIndex) / 2;
+			} else {
+				if (offset < (line.mOffset + line.mLength))
+					break;
+				minIndex = (index + 1);
+				index = (minIndex + maxIndex) / 2;
+			}
+		}
+		return (1 + index);
 	}
 }
 
@@ -95,12 +146,23 @@ public class leaksoup {
 					} catch (NumberFormatException nfe) {
 						size = 0;
 					}
+					
+					// read in fields.
 					vec.setSize(0);
 					for (line = reader.readLine(); line != null && line.charAt(0) == '\t'; line = reader.readLine())
 						vec.addElement(line.substring(1, 11));
 					Object[] refs = new Object[vec.size()];
 					vec.copyInto(refs);
-					table.put(addr, new Leak(addr, type, refs, size));
+					
+					// read in stack crawl.
+					vec.setSize(0);
+					for (line = reader.readLine(); line != null && !line.equals("Leaked composite object at:"); line = reader.readLine())
+						vec.addElement(line.intern());
+					Object[] crawl = new Object[vec.size()];
+					vec.copyInto(crawl);
+					
+					// record the leak.
+					table.put(addr, new Leak(addr, type, refs, crawl, size));
 					if (type.equals("<void*>"))
 						type = "(" + size + ") <void*>";
 					hist.record(type);
@@ -153,6 +215,38 @@ public class leaksoup {
 		}
 	}
 	
+	static final String MOZILLA_BASE = "mozilla/";
+	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
+	
+	static String getFileLocation(Hashtable fileTables, String line) throws IOException {
+		int leftBracket = line.indexOf('[');
+		if (leftBracket == -1)
+			return line;
+		int comma = line.indexOf(',', leftBracket + 1);
+		int rightBracket = line.indexOf(']', leftBracket + 1);
+		String macPath = line.substring(leftBracket + 1, comma);
+		String path = macPath.replace(':', '/');
+		int mozillaIndex = path.indexOf(MOZILLA_BASE);
+		String locationURL;
+		if (mozillaIndex > -1)
+			locationURL = LXR_BASE + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
+		else
+			locationURL = "file:///" + path;
+		int offset = 0;
+		try {
+			offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
+		} catch (NumberFormatException nfe) {
+			return line;
+		}
+		FileTable table = (FileTable) fileTables.get(path);
+		if (table == null) {
+			table = new FileTable("/" + path);
+			fileTables.put(path, table);
+		}
+		int lineNumber = table.getLine(offset);
+		return line.substring(0, leftBracket) + "[" + locationURL + "#" + lineNumber + "]";
+	}
+	
 	static void printLeaks(PrintStream out, Leak[] leaks, int leakCount, long totalSize) throws IOException {
 		// sort the leaks by reference count.
 		QuickSort sorter = new QuickSort(new Leak.Comparator());
@@ -163,14 +257,24 @@ public class leaksoup {
 		out.println("total objects leaked = " + leakCount);
 		out.println("total memory leaked  = " + totalSize + " bytes.");
 
+		Hashtable fileTables = new Hashtable();
+
 		// now, print the report, sorted by reference count.
 		for (int i = 0; i < leakCount; i++) {
 			Leak leak = leaks[i];
 			out.println(leak);
+			// print object's fields:
 			Object[] refs = leak.mReferences;
 			int count = refs.length;
 			for (int j = 0; j < count; j++)
 				out.println("\t" + refs[j]);
+			// print object's stack crawl:
+			Object[] crawl = leak.mCrawl;
+			count = crawl.length;
+			for (int j = 0; j < count; j++) {
+				String location = getFileLocation(fileTables, (String) crawl[j]);
+				out.println(location);
+			}
 		}
 	}
 	
