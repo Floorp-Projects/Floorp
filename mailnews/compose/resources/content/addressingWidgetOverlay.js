@@ -339,23 +339,29 @@ function awAddRecipients(msgCompFields, recipientType, recipientsList)
     return;
 
   for ( var index = 0; index < recipientArray.count; index++ )
+    awAddRecipient(recipientType, recipientArray.StringAt(index));
+}
+
+// this was broken out of awAddRecipients so it can be re-used...adds a new row matching recipientType and
+// drops in the single address.
+function awAddRecipient(recipientType, address)
+{
+  for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
   {
-    for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
-    {
-      if (awGetInputElement(row).value == "")
-        break;
-    }
-    if (row > top.MAX_RECIPIENTS)
-      awAppendNewRow(false);
+    if (awGetInputElement(row).value == "")
+      break;
+  }
+  
+  if (row > top.MAX_RECIPIENTS)
+    awAppendNewRow(false);
 
-    awSetInputAndPopupValue(awGetInputElement(row), recipientArray.StringAt(index), awGetPopupElement(row), recipientType, row);
-
-    /* be sure we still have an empty row left at the end */
-    if (row == top.MAX_RECIPIENTS)
-    {
-      awAppendNewRow(true);
-      awSetInputAndPopupValue(awGetInputElement(top.MAX_RECIPIENTS), "", awGetPopupElement(top.MAX_RECIPIENTS), "addr_to", top.MAX_RECIPIENTS);
-    }
+  awSetInputAndPopupValue(awGetInputElement(row), address, awGetPopupElement(row), recipientType, row);
+ 
+  /* be sure we still have an empty row left at the end */
+  if (row == top.MAX_RECIPIENTS)
+  {
+    awAppendNewRow(true);
+    awSetInputAndPopupValue(awGetInputElement(top.MAX_RECIPIENTS), "", awGetPopupElement(top.MAX_RECIPIENTS), "addr_to", top.MAX_RECIPIENTS);
   }
 }
 
