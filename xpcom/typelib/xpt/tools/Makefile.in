@@ -33,6 +33,10 @@ SIMPLE_PROGRAMS	= xpt_dump$(BIN_SUFFIX) xpt_link$(BIN_SUFFIX)
 
 CSRCS		= xpt_dump.c xpt_link.c
 
+SDK_BINARY     =                   \
+		$(SIMPLE_PROGRAMS) \
+		$(NULL)
+
 ifdef CROSS_COMPILE
 HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS))
 HOST_CSRCS		= $(CSRCS)
@@ -60,6 +64,7 @@ ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
+
 
 # Build xpt_link and xpt_dump early.  (libs creates .deps used by libs.)
 export:: libs

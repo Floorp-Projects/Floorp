@@ -43,6 +43,9 @@ CSRCS		= \
 		xpidl_java.c \
 		$(NULL)
 
+SDK_BINARY     =           \
+		$(PROGRAM) \
+		$(NULL)
 
 ifdef CROSS_COMPILE
 HOST_PROGRAM	= host_xpidl
