@@ -230,6 +230,14 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
   return NS_STYLE_HINT_REFLOW;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleFont::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
+
 inline float
 TextZoomFor(nsPresContext* aPresContext)
 {
@@ -351,6 +359,14 @@ nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
   return NS_STYLE_HINT_REFLOW;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleMargin::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
+
 void 
 nsStyleMargin::CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const
 {
@@ -406,6 +422,14 @@ nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
   }
   return NS_STYLE_HINT_REFLOW;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStylePadding::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
 
 void 
 nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
@@ -566,6 +590,14 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   return NS_STYLE_HINT_REFLOW;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleBorder::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
+
 void 
 nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
 {
@@ -656,6 +688,14 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
   return NS_STYLE_HINT_NONE;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleOutline::MaxDifference()
+{
+  return NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame);
+}
+#endif
+
 // --------------------
 // nsStyleList
 //
@@ -690,6 +730,14 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
   }
   return NS_STYLE_HINT_REFLOW;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleList::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
 
 // --------------------
 // nsStyleXUL
@@ -727,6 +775,14 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
   return NS_STYLE_HINT_REFLOW;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleXUL::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
 // --------------------
 // nsStyleColumn
 //
@@ -761,6 +817,15 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 
   return NS_STYLE_HINT_NONE;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleColumn::MaxDifference()
+{
+  return NS_CombineHint(nsChangeHint_ReconstructFrame,
+                        nsChangeHint_ReflowFrame);
+}
+#endif
 
 #ifdef MOZ_SVG
 // --------------------
@@ -842,6 +907,14 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
   return NS_STYLE_HINT_NONE;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleSVG::MaxDifference()
+{
+  return NS_STYLE_HINT_VISUAL;
+}
+#endif
+
 // --------------------
 // nsStyleSVGReset
 //
@@ -866,6 +939,14 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
   
   return NS_STYLE_HINT_NONE;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleSVGReset::MaxDifference()
+{
+  return NS_STYLE_HINT_VISUAL;
+}
+#endif
 
 #endif // MOZ_SVG
 
@@ -919,6 +1000,14 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   return nsChangeHint_ReflowFrame;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStylePosition::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
+
 // --------------------
 // nsStyleTable
 //
@@ -955,6 +1044,14 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_REFLOW;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleTable::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
 
 // -----------------------
 // nsStyleTableBorder
@@ -1004,6 +1101,14 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
     return NS_STYLE_HINT_REFLOW;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleTableBorder::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
 // --------------------
 // nsStyleColor
 //
@@ -1024,6 +1129,14 @@ nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_VISUAL;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleColor::MaxDifference()
+{
+  return NS_STYLE_HINT_VISUAL;
+}
+#endif
 
 // --------------------
 // nsStyleBackground
@@ -1087,6 +1200,14 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_VISUAL;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleBackground::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
 
 PRBool nsStyleBackground::HasFixedBackground() const
 {
@@ -1167,6 +1288,15 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   return hint;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleDisplay::MaxDifference()
+{
+  // All the parts of FRAMECHANGE are present above in CalcDifference.
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
 // --------------------
 // nsStyleVisibility
 //
@@ -1206,6 +1336,14 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
   }
   return NS_STYLE_HINT_REFLOW;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleVisibility::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
 
 nsStyleContentData::~nsStyleContentData()
 {
@@ -1339,6 +1477,14 @@ nsChangeHint nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
   return NS_STYLE_HINT_FRAMECHANGE;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleContent::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
 nsresult nsStyleContent::AllocateContents(PRUint32 aCount)
 {
   if (aCount != mContentCount) {
@@ -1399,6 +1545,14 @@ nsChangeHint nsStyleQuotes::CalcDifference(const nsStyleQuotes& aOther) const
   return NS_STYLE_HINT_FRAMECHANGE;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleQuotes::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
 // --------------------
 // nsStyleTextReset
 //
@@ -1433,6 +1587,14 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
   }
   return NS_STYLE_HINT_REFLOW;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleTextReset::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
 
 // --------------------
 // nsStyleText
@@ -1469,6 +1631,14 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_REFLOW;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleText::MaxDifference()
+{
+  return NS_STYLE_HINT_REFLOW;
+}
+#endif
 
 //-----------------------
 // nsStyleUserInterface
@@ -1518,6 +1688,14 @@ nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aO
   return NS_STYLE_HINT_VISUAL;
 }
 
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleUserInterface::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
 //-----------------------
 // nsStyleUIReset
 //
@@ -1551,3 +1729,12 @@ nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
   }
   return NS_STYLE_HINT_FRAMECHANGE;
 }
+
+#ifdef DEBUG
+/* static */
+nsChangeHint nsStyleUIReset::MaxDifference()
+{
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+#endif
+
