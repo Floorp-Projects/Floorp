@@ -102,7 +102,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_APPWORKSPACE;
       break;
     case eColor_background:
-      idx = COLOR_BACKGROUND; 
+      idx = COLOR_BACKGROUND;
       break;
     case eColor_buttonface:
       idx = COLOR_BTNFACE;
@@ -177,13 +177,22 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_WINDOWTEXT;
       break;
     case eColor__moz_field:
-      idx = COLOR_WINDOW;  
-      break;  
+      idx = COLOR_WINDOW;
+      break;
+    case eColor__moz_fieldtext:
+      idx = COLOR_WINDOWTEXT;
+      break;
+    case eColor__moz_dialog:
+      idx = COLOR_3DFACE;
+      break;
+    case eColor__moz_dialogtext:
+      idx = COLOR_WINDOWTEXT;
+      break;
     case eColor__moz_dragtargetzone:
         idx = COLOR_HIGHLIGHTTEXT;
-        break;      
+        break;
     default:
-        idx = COLOR_WINDOW;    
+        idx = COLOR_WINDOW;
         break;
     }
 
@@ -191,7 +200,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
   return res;
 }
-  
+
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
   nsresult res = NS_OK;

@@ -186,6 +186,15 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_field:
       idx = SYSCLR_WINDOW;
       break;
+    case eColor__moz_fieldtext:
+      idx = SYSCLR_WINDOWTEXT;
+      break;
+    case eColor__moz_dialog:
+      idx = SYSCLR_BUTTONMIDDLE;
+      break;
+    case eColor__moz_dialogtext:
+      idx = SYSCLR_WINDOWTEXT;
+      break;
     default:
         idx = SYSCLR_WINDOW;
         break;

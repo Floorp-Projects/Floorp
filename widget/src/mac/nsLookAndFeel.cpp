@@ -254,6 +254,24 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_field:
 		aColor = NS_RGB(0xff,0xff,0xff);
         break;
+    case eColor__moz_fieldtext:
+        // XXX There may be a better color for this, but I'm making it
+        // the same as WindowText since that's what's currently used where
+        // I will use -moz-FieldText.
+        res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
+        break;
+    case eColor__moz_dialog:
+        // XXX There may be a better color for this, but I'm making it
+        // the same as ThreeDFace since that's what's currently used where
+        // I will use -moz-Dialog:
+        res = GetMacBrushColor(kThemeBrushButtonFaceActive, aColor, NS_RGB(0xDD,0xDD,0xDD));
+        break;
+    case eColor__moz_dialogtext:
+        // XXX There may be a better color for this, but I'm making it
+        // the same as WindowText since that's what's currently used where
+        // I will use -moz-DialogText.
+        res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
+        break;
     case eColor__moz_dragtargetzone:
 		//default to lavender if not available
 		res = GetMacBrushColor(kThemeBrushDragHilite, aColor, NS_RGB(0x63,0x63,0xCE));

@@ -181,6 +181,15 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_field: /* normal widget background */
       aColor = NS_RGB(0xff,0xff,0xff);
       break;  
+    case eColor__moz_fieldtext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;  
+    case eColor__moz_dialog:
+      aColor = NS_RGB(0xd8,0xd8,0xd8);
+      break;  
+    case eColor__moz_dialogtext:
+      aColor = NS_RGB(0x00,0x00,0x00);
+      break;  
  
     default:
       aColor = NS_RGB(0x00,0x00,0x00);

@@ -170,6 +170,12 @@ nsLookAndFeelColorPref nsXPLookAndFeel::sColorPrefs[] =
     eColor_windowtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
   { "ui.-moz-field",
     eColor__moz_field, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-fieldtext",
+    eColor__moz_fieldtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-dialog",
+    eColor__moz_dialog, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
+  { "ui.-moz-dialogtext",
+    eColor__moz_dialogtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
   { "ui.-moz-dragtargetzone",
     eColor__moz_dragtargetzone, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
   { "ui.-moz-mac-focusring",
@@ -375,6 +381,87 @@ NS_IMETHODIMP nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   if (!sInitialized)
     Init();
+
+  // define DEBUG_SYSTEM_COLOR_USE if you want to debug system color
+  // use in a skin that uses them.  When set, it will make all system
+  // color pairs that are appropriate for foreground/background
+  // pairing the same.  This means if the skin is using system colors
+  // correctly you will not be able to see *any* text.
+#undef DEBUG_SYSTEM_COLOR_USE
+
+#ifdef DEBUG_SYSTEM_COLOR_USE
+  {
+    nsresult rv = NS_OK;
+    switch (aID) {
+        // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
+      case eColor_activecaption:
+          // active window caption background
+      case eColor_captiontext:
+          // text in active window caption
+        aColor = NS_RGB(0xff, 0x00, 0x00);
+        break;
+
+      case eColor_highlight:
+          // background of selected item
+      case eColor_highlighttext:
+          // text of selected item
+        aColor = NS_RGB(0xff, 0xff, 0x00);
+        break;
+
+      case eColor_inactivecaption:
+          // inactive window caption
+      case eColor_inactivecaptiontext:
+          // text in inactive window caption
+        aColor = NS_RGB(0x66, 0x66, 0x00);
+        break;
+
+      case eColor_infobackground:
+          // tooltip background color
+      case eColor_infotext:
+          // tooltip text color
+        aColor = NS_RGB(0x00, 0xff, 0x00);
+        break;
+
+      case eColor_menu:
+          // menu background
+      case eColor_menutext:
+          // menu text
+        aColor = NS_RGB(0x00, 0xff, 0xff);
+        break;
+
+      case eColor_threedface:
+      case eColor_buttonface:
+          // 3-D face color
+      case eColor_buttontext:
+          // text on push buttons
+        aColor = NS_RGB(0x00, 0x66, 0x66);
+        break;
+
+      case eColor_window:
+      case eColor_windowtext:
+        aColor = NS_RGB(0x00, 0x00, 0xff);
+        break;
+
+      // from the CSS3 working draft (not yet finalized)
+      // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
+
+      case eColor__moz_field:
+      case eColor__moz_fieldtext:
+        aColor = NS_RGB(0xff, 0x00, 0xff);
+        break;
+
+      case eColor__moz_dialog:
+      case eColor__moz_dialogtext:
+        aColor = NS_RGB(0x66, 0x00, 0x66);
+        break;
+
+      default:
+        rv = NS_ERROR_NOT_AVAILABLE;
+    }
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+#endif // DEBUG_SYSTEM_COLOR_USE
 
   for (unsigned int i = 0; i < ((sizeof (sIntPrefs) / sizeof (*sIntPrefs))); ++i)
     if (sColorPrefs[i].isSet && (sColorPrefs[i].id == aID))
