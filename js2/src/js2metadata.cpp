@@ -2715,7 +2715,7 @@ doUnary:
  *  JS2Metadata
  *
  ************************************************************************************/
-#if 0
+
     // - Define namespaces::id (for all namespaces or at least 'public') in the top frame 
     //     unless it's there already. 
     // - If the binding exists (not forbidden) in lower frames in the regional environment, it's an error.
@@ -2725,18 +2725,15 @@ doUnary:
                                                 Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
                                                 LocalMember *m, size_t pos)
     {
-        NamespaceList publicNamespaceList;
-
-        FrameListIterator fi = env->getBegin();
-        NonWithFrame *localFrame = checked_cast<NonWithFrame *>(*fi);
-        if ((overrideMod != Attribute::NoOverride) || (xplicit && localFrame->kind != PackageKind))
+        NonWithFrame *innerFrame = checked_cast<NonWithFrame *>(*(env->getBegin()));
+        if ((overrideMod != Attribute::NoOverride) || (xplicit && innerFrame->kind != PackageKind))
             reportError(Exception::definitionError, "Illegal definition", pos);
-        if ((namespaces == NULL) || namespaces->empty()) {
-            publicNamespaceList.push_back(publicNamespace);
-            namespaces = &publicNamespaceList;
-        }
-        Multiname *mn = new Multiname(id);
-        mn->addNamespace(namespaces);
+        
+        Multiname *multiname = new Multiname(id);
+        if (namespaces->empty()) 
+            multiname->addNamespace(publicNamespace);
+        else
+            multiname->addNamespace(namespaces);
 
         // Search the local frame for an overlapping definition
         LocalBindingEntry **lbeP = localFrame->localBindings[*id];
@@ -2910,41 +2907,41 @@ doUnary:
             }
             if (mOverridden->final || !goodKind)
                 reportError(Exception::definitionError, "Illegal override", pos);
-
-            InstanceBindingEntry **ibeP = c->instanceBindings[*id];
-            if (ibeP) {
-                for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
-                    InstanceBindingEntry::NamespaceBinding &ns = *i;
-                    if ((ns.second->accesses & access) && (ns.first == *nli))
-                        reportError(Exception::definitionError, "Illegal override", pos);
-                }
-            }
-
         }
-        
+        InstanceBindingEntry **ibeP = c->instanceBindings[*id];
+        if (ibeP) {
+            for (InstanceBindingEntry::NS_Iterator i = (*ibeP)->begin(), end = (*ibeP)->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding &ns = *i;
+                if (access & m2->instanceMemberAccess()) && (definedMultiname->listContaines(ns.first)))
+                    reportError(Exception::definitionError, "Illegal override", pos);
+            }
+        }
+        switch (overrideMod) {
+        case Attribute::NoOverride:
+            if (mBase || searchForOverrides(c, openMultiname, access))
+                reportError(Exception::definitionError, "Illegal override", pos);
+            break;
+        case Attribute::DoOverride: 
+            if (mBase)
+                reportError(Exception::definitionError, "Illegal override", pos);
+            break;
+        case Attribute::DontOverride:
+            if (mBase == NULL)
+                reportError(Exception::definitionError, "Illegal override", pos);
+            break;
+        }
+        m->multiname = new Multiname(definedMultiname);
+        InstanceBinding *ib = new LocalBinding(access, m);
+        if (ibeP) {
+            for (NamespaceListIterator nli = definedMultiname.nsList->begin(), nlend = definedMultiname.nsList->end(); (nli != nlend); nli++) {
+                *ibeP->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib);
+            }
+        }
+        return mOverridden;
     }
 
 
-if mOverridden.final or not goodKind then throw definitionError end if
-end if;
-if some m2 OE c.instanceMembers satisfies m2.multiname « definedMultiname ! {} and
-accessesOverlap(instanceMemberAccesses(m2), accesses) then
-throw definitionError
-end if;
-case overrideMod of
-{ none } do
-if mBase ! none or searchForOverrides(c, openMultiname, accesses) ! none then
-throw definitionError
-end if;
-{ false } do if mBase ! none then throw definitionError end if;
-{ true } do if mBase = none then throw definitionError end if;
-{ undefined } do nothing
-end case;
-m.multiname ¨ definedMultiname;
-c.instanceMembers ¨ c.instanceMembers » {m};
-return mOverridden
-
-
+    defineLocalMember
 
     // Find the possible override conflicts that arise from the given id and namespaces
     // Fall back on the currently open namespace list if no others are specified.
@@ -3007,58 +3004,7 @@ return mOverridden
         return os;
     }
 
-    // Define an instance member in the class. Verify that, if any overriding is happening, it's legal. The result pair indicates
-    // the members being overridden.
-    OverrideStatusPair *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
-    {
-        OverrideStatus *readStatus;
-        OverrideStatus *writeStatus;
-        if (xplicit)
-            reportError(Exception::definitionError, "Illegal use of explicit", pos);
 
-        if (access & ReadAccess)
-            readStatus = resolveOverrides(c, cxt, id, namespaces, ReadAccess, (m->kind == InstanceMember::InstanceMethodKind), pos);
-        else
-            readStatus = new OverrideStatus(NULL, id);
-
-        if (access & WriteAccess)
-            writeStatus = resolveOverrides(c, cxt, id, namespaces, WriteAccess, (m->kind == InstanceMember::InstanceMethodKind), pos);
-        else
-            writeStatus = new OverrideStatus(NULL, id);
-
-        if ((readStatus->overriddenMember && (readStatus->overriddenMember != POTENTIAL_CONFLICT))
-                || (writeStatus->overriddenMember && (writeStatus->overriddenMember != POTENTIAL_CONFLICT))) {
-            if ((overrideMod != Attribute::DoOverride) && (overrideMod != Attribute::OverrideUndefined))
-                reportError(Exception::definitionError, "Illegal override", pos);
-        }
-        else {
-            if ((readStatus->overriddenMember == POTENTIAL_CONFLICT) || (writeStatus->overriddenMember == POTENTIAL_CONFLICT)) {
-                if ((overrideMod != Attribute::DontOverride) && (overrideMod != Attribute::OverrideUndefined))
-                    reportError(Exception::definitionError, "Illegal override", pos);
-            }
-        }
-
-        NamespaceListIterator nli, nlend;
-        InstanceBindingEntry **ibeP = c->instanceBindings[*id];
-        InstanceBindingEntry *ibe;
-        if (ibeP == NULL) {
-            ibe = new InstanceBindingEntry(*id);
-            c->instanceBindings.insert(*id, ibe);
-        }
-        else
-            ibe = *ibeP;
-        for (nli = readStatus->multiname.nsList->begin(), nlend = readStatus->multiname.nsList->end(); (nli != nlend); nli++) {
-            InstanceBinding *ib = new InstanceBinding(ReadAccess, m);
-            ibe->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
-        }
-        
-        for (nli = writeStatus->multiname.nsList->begin(), nlend = writeStatus->multiname.nsList->end(); (nli != nlend); nli++) {
-            InstanceBinding *ib = new InstanceBinding(ReadAccess, m);
-            ibe->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
-        }
-        
-        return new OverrideStatusPair(readStatus, writeStatus);;
-    }
 #endif
     // Define a hoisted var in the current frame (either Package or a Function)
     // defineHoistedVar(env, id, initialValue) defines a hoisted variable with the name id in the environment env. 

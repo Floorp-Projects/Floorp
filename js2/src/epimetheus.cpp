@@ -298,36 +298,6 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                         }
                     }
                 }
-                else {
-                    if (fObj->kind == PrototypeInstanceKind) {
-                        PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(fObj);
-                        stdOut << "Prototype Instance\n";
-                        if (pInst->parent)
-                            printFormat(stdOut, "Parent @ 0x%08X\n", pInst->parent);
-                        else
-                            stdOut << " Null Parent\n";
-                        if (pInst->type)
-                            stdOut << " Type: " << *pInst->type->getName() << "\n";
-                        else
-                            stdOut << " Null Type\n";
-
-                        stdOut << " Dynamic Properties:\n";                    
-                        for (DynamicPropertyIterator dpi = pInst->dynamicProperties.begin(), dpend = pInst->dynamicProperties.end(); (dpi != dpend); dpi++) {
-                            DynamicPropertyBinding *dpb = *dpi;
-                            stdOut << "\t" << dpb->name << " = " << *meta->toString(dpb->v.value) << "\n";
-                        }
-                        if (pInst->type == meta->functionClass) {
-                            FunctionWrapper *fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
-                            stdOut << "Function:" << "\n";
-                            if (fWrap) {
-                                stdOut << "Environment depth " << fWrap->env->getSize() << "\n";
-                                dumpBytecode(fWrap->bCon);
-                            }
-                            else
-                                stdOut << "<<Empty Function>>\n";
-                        }
-                    }
-                }
             }
         }
     }

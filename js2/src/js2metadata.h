@@ -51,6 +51,7 @@ class CompoundAttribute;
 class BytecodeContainer;
 class Pond;
 class SimpleInstance;
+class LookupKind;
 
 
 typedef void (Invokable)();
@@ -242,27 +243,27 @@ public:
 // A QualifiedName is the combination of an identifier and a namespace
 class QualifiedName {
 public:
-    QualifiedName() : nameSpace(NULL), id(NULL) { }
-    QualifiedName(Namespace *nameSpace, const String *id) : nameSpace(nameSpace), id(id) { }
+    QualifiedName() : nameSpace(NULL), name(NULL) { }
+    QualifiedName(Namespace *nameSpace, const String *name) : nameSpace(nameSpace), name(name) { }
 
-    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (*id == *b.id); }
+    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (*name == *b.name); }
 
     Namespace *nameSpace;    // The namespace qualifier
-    const String *id;        // The name
+    const String *name;      // The name
 };
 
 // A MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
 // We keep Multinames as a basename and a list of namespace qualifiers (XXX is that right - would the basename 
 // ever be different for the same multiname?)
 
-// XXX can nsList ever be null, or could allow null nsList to indicate public?
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
+
 class Multiname : public JS2Object {
 public:    
     Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { }
     Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
-    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(q.nameSpace)    { }
+    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(new NamespaceList)    { nsList->push_back(q.nameSpace); }
 
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
 
@@ -270,7 +271,7 @@ public:
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
-    bool matches(QualifiedName &q)                  { return (*name == *q.id) && listContains(q.nameSpace); }
+    bool matches(QualifiedName &q)                  { return (*name == *q.name) && listContains(q.nameSpace); }
     bool listContains(Namespace *nameSpace);
 
     QualifiedName selectPrimaryName(JS2Metadata *meta);
@@ -1157,7 +1158,7 @@ public:
 
     bool readProperty(js2val *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-    bool readDynamicProperty(JS2Object *container, const String *name, LookupKind *lookupKind, Phase phase, js2val *rval);
+    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
     JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
@@ -1165,13 +1166,13 @@ public:
 
     bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag);
-    bool writeDynamicProperty(JS2Object *container, const String *name, bool createIfMissing, js2val newValue, Phase phase);
+    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
     bool writeLocalMember(LocalMember *m, js2val newValue, Phase phase, bool initFlag);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
 
     bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
     bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
-    bool deleteDynamicProperty(JS2Object *container, const String *name, LookupKind *lookupKind, bool *result);
+    bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
     bool deleteLocalMember(LocalMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 

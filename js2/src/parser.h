@@ -152,7 +152,6 @@ namespace JavaScript {
 #ifdef EPIMETHEUS
         MetaData::Member *member;           // the associated definition...
         MetaData::Multiname *mn;            // ...and name constructed by the semantics phase
-        MetaData::OverrideStatusPair *osp;  // Read & Write status for PreEval stage
 #endif
 
         VariableBinding(size_t pos, const StringAtom *name, ExprNode *type, ExprNode *initializer, bool constant):
