@@ -366,6 +366,9 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 	// Oct-4-1999]
 	if ((numPrincipals!=0) && (pNSISecurityContext != NULL)) {
 		JVMSecurityStack *pSecInfoNew    = new JVMSecurityStack;
+        if (NULL == pSecInfoNew) {
+            return PR_FALSE;
+        }
 		pSecInfoNew->pNSIPrincipaArray   = pNSIPrincipaArray;
 		pSecInfoNew->numPrincipals       = numPrincipals;
 		pSecInfoNew->pNSISecurityContext = pNSISecurityContext;

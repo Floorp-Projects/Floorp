@@ -516,9 +516,11 @@ JVM_GetJSSecurityContext()
     }
 
     if (cx != NULL) {
-	nsCSecurityContext *securityContext = new nsCSecurityContext(cx);
-	securityContext->AddRef();
-	return securityContext;
+        nsCSecurityContext *securityContext = new nsCSecurityContext(cx);
+        if (NULL != securityContext) {
+            securityContext->AddRef();
+            return securityContext;
+        }
     }
     return NULL;
 }
