@@ -389,11 +389,10 @@ nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
   else if (aStr)
   {
     // ugly workaround for older compilers not understanding operator+
-    NS_NAMED_LITERAL_STRING(ampersand, "&");
-    NS_NAMED_LITERAL_STRING(semicolon, ";");
-    nsAReadableString *ptrAmp = &ampersand;
-    nsAReadableString *ptrSemi = &semicolon;
-    aStr->Append(*ptrAmp + *str + *ptrSemi);
+    // and thinking that nsPromiseConcatenation doesn't exist.
+    aStr->Append(NS_LITERAL_STRING("&"));
+    aStr->Append(*str);
+    aStr->Append(NS_LITERAL_STRING(";"));
   }
   return NS_OK;
 }
