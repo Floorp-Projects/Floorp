@@ -1090,7 +1090,9 @@ PRInt32 nsZipArchive::CopyItemToDisk(const nsZipItem* aItem, PRFileDesc* fOut)
   if ( SeekToItem( aItem ) != ZIP_OK )
     return ZIP_ERR_CORRUPT;
   
-  char buf[ZIP_BUFLEN];
+  char* buf = (char*)PR_Malloc(ZIP_BUFLEN);
+  if ( buf == 0 )
+    return ZIP_ERR_MEMORY;
 
   //-- initialize crc
   crc = crc32(0L, Z_NULL, 0);
@@ -1123,6 +1125,7 @@ PRInt32 nsZipArchive::CopyItemToDisk(const nsZipItem* aItem, PRFileDesc* fOut)
   if ( (status == ZIP_OK) && (crc != aItem->crc32) )
       status = ZIP_ERR_CORRUPT;
 
+  PR_FREEIF( buf );
   return status;
 }
 
@@ -1174,8 +1177,13 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
     return ZIP_ERR_CORRUPT;
   
   //-- allocate deflation buffers
-  Bytef inbuf[ZIP_BUFLEN];
-  Bytef outbuf[ZIP_BUFLEN];
+  Bytef *inbuf  = (Bytef*)PR_Malloc(ZIP_BUFLEN);
+  Bytef *outbuf = (Bytef*)PR_Malloc(ZIP_BUFLEN);
+  if ( inbuf == 0 || outbuf == 0 )
+  {
+    status = ZIP_ERR_MEMORY;
+    goto cleanup;
+  }
   
   //-- set up the inflate
   memset( &zs, 0, sizeof(zs) );
@@ -1304,6 +1312,8 @@ cleanup:
     inflateEnd( &zs );
   }
 
+  PR_FREEIF( inbuf );
+  PR_FREEIF( outbuf );
   return status;
 }
 
