@@ -118,7 +118,7 @@
       <spring flex="100%"/>
 			<menu id="normaltextmenu" allowevents="true" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.text_color" style="width:30px; background-color:white"/>
-				<titledbutton class="popup" align="right" flex="100%"/>
+				<titledbutton class="dialog push popup" align="right" flex="100%"/>
 				<menupopup id="normalMenuPopup">
 					<colorpicker allowevents="true" id="normalColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'normaltext', false);"/>
 				</menupopup>
@@ -134,7 +134,7 @@
       <spring flex="100%"/>
 			<menu id="linktextmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.link_color" style="width:30px; background-color:white"/>
-				<titledbutton class="popup" align="right" flex="100%"/>
+				<titledbutton class="dialog push popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'linktext',false);"/>
 				</menupopup>
@@ -150,7 +150,7 @@
       <spring flex="100%"/>
 			<menu id="activelinktextmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.active_link_color" style="width:30px; background-color:white"/>
-				<titledbutton class="popup" align="right" flex="100%"/>
+				<titledbutton class="dialog push popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'activelinktext',false);"/>
 				</menupopup>
@@ -166,7 +166,7 @@
       <spring flex="100%"/>
 			<menu id="followedlinktextmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.followed_link_color" style="width:30px; background-color:white"/>
-				<titledbutton class="popup" align="right" flex="100%"/>
+				<titledbutton class="dialog push popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'followedlinktext',false);"/>
 				</menupopup>
@@ -182,7 +182,7 @@
       <spring flex="100%"/>
 			<menu id="colorpreviewmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.background_color" style="width:30px; background-color:white"/>
-				<titledbutton class="popup" align="right" flex="100%"/>
+				<titledbutton class="dialog push popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'colorpreview',true);"/>
 				</menupopup>
