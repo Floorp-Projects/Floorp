@@ -28,13 +28,11 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var certdb;
 var certs = [];
-var dialogParams;
-var pkiParams;
 var helpUrl;
 
 function setWindowName()
 {
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  var params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
   
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
