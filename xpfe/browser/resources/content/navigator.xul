@@ -252,6 +252,13 @@ Contributor(s): ______________________________________. -->
             </menupopup>
           </rule>
         </template>
+
+        <!-- We need a 'dummy' menupopup here that the template
+             builder can hang stuff off of. Failure to add this makes
+             it s.t. you need to triple-click (!) to get the bookmarks
+             menu to drop down. -->
+        <menupopup/>
+
         <spring class="personaltoolbarspacer" flex="1"/>
       </menu>
 
