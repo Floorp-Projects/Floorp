@@ -270,15 +270,21 @@ NS_IMETHODIMP NS_NewCharsetMenu(nsISupports * aOuter, const nsIID & aIID,
   return res;
 }
 
+struct charsetMenuSortRecord {
+  nsMenuEntry* item;
+  PRUint8*     key;
+  PRUint32     len;
+
+};
+
 static int PR_CALLBACK CompareMenuItems(const void* aArg1, const void* aArg2, void *data)
 {
   PRInt32 res; 
-  nsMenuEntry * aItem1 = *((nsMenuEntry **) aArg1);
-  nsMenuEntry * aItem2 = *((nsMenuEntry **) aArg2);
-  nsICollation * aCollation = (nsICollation *) data;
+  nsICollation * collation = (nsICollation *) data;
+  charsetMenuSortRecord *rec1 = (charsetMenuSortRecord *) aArg1;
+  charsetMenuSortRecord *rec2 = (charsetMenuSortRecord *) aArg2;
 
-  aCollation->CompareString(kCollationCaseInSensitive, aItem1->mTitle, 
-    aItem2->mTitle, &res);
+  collation->CompareRawSortKey(rec1->key, rec1->len, rec2->key, rec2->len, &res);
 
   return res;
 }
@@ -1421,28 +1427,48 @@ nsresult nsCharsetMenu::ReorderMenuItemArray(nsVoidArray * aArray)
   PRUint32 i;
 
   // we need to use a temporary array
-  nsMenuEntry ** array = new nsMenuEntry * [count];
-  if (array == NULL) {
-    res = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
+  charsetMenuSortRecord *array = new charsetMenuSortRecord [count];
+  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+  for (i = 0; i < count; i++)
+    array[i].key = nsnull;
 
-  for (i = 0; i < count; i++) {
-    array[i] = (nsMenuEntry *)aArray->ElementAt(i);
+  res = GetCollation(getter_AddRefs(collation));
+  if (NS_FAILED(res))
+    goto done;
+
+  for (i = 0; i < count && NS_SUCCEEDED(res); i++) {
+    array[i].item = (nsMenuEntry *)aArray->ElementAt(i);
+
+    res = collation->GetSortKeyLen(kCollationCaseInSensitive, 
+                                   (array[i].item)->mTitle, &array[i].len);
+
+    if (NS_SUCCEEDED(res)) {
+      array[i].key = new PRUint8 [array[i].len];
+      if (!(array[i].key)) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
+      }
+      res = collation->CreateRawSortKey(kCollationCaseInSensitive, 
+                                       (array[i].item)->mTitle, array[i].key, &array[i].len);
+    }
   }
 
   // reorder the array
-  res = GetCollation(getter_AddRefs(collation));
-  if (NS_SUCCEEDED(res)) 
+  if (NS_SUCCEEDED(res)) {
     NS_QuickSort(array, count, sizeof(*array), CompareMenuItems, collation);
 
-  // move the elements from the temporary array into the the real one
-  aArray->Clear();
-  for (i = 0; i < count; i++) {
-    aArray->AppendElement(array[i]);
+    // move the elements from the temporary array into the the real one
+    aArray->Clear();
+    for (i = 0; i < count; i++) {
+      aArray->AppendElement(array[i].item);
+    }
   }
 
 done:
+  for (i = 0; i < count; i++) {
+    if (array[i].key)
+      delete [] array[i].key;
+  }
   delete [] array;
   return res;
 }
