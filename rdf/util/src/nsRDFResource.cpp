@@ -40,7 +40,8 @@ nsRDFResource::nsRDFResource(void)
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
-        nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+        nsresult rv = NS_OK;
+        rv = nsServiceManager::GetService(kRDFServiceCID,
                                                    nsIRDFService::GetIID(),
                                                    (nsISupports**) &gRDFService);
 
