@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.17 2001/05/08 23:12:34 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.18 2001/05/18 20:44:35 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1372,6 +1372,9 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
     } else if ((new_flags & PR_POLL_READ) && (SSL_DataPending(fd) > 0)) {
 	*p_out_flags = PR_POLL_READ;	/* it's ready already. */
 	return new_flags;
+    } else if ((ss->lastWriteBlocked) && (how_flags & PR_POLL_READ) &&
+	       (ss->pendingBuf.len != 0)) { /* write data waiting to be sent */
+	new_flags |=  PR_POLL_WRITE;   /* also select on write. */
     } 
     if (new_flags && (fd->lower->methods->poll != NULL)) {
 	PRInt16    lower_out_flags = 0;
