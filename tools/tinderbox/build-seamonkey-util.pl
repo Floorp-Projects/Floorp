@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.107 $ ';
+$::UtilsVersion = '$Revision: 1.108 $ ';
 
 package TinderUtils;
 
@@ -931,7 +931,7 @@ sub run_all_tests {
 	  system("cp bloat_Inbox Inbox");
 
 	  # Remove the Inbox.msf file.
-	  unlink("Inbox.msf");
+	  # unlink("Inbox.msf");
 
 	  $test_result = BloatTest($binary, $build_dir, " -mail", "mail",
 							   $Settings::BloatTestTimeout);
