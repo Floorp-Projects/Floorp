@@ -102,7 +102,7 @@
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        onclick="return DoSingleClick(event, event.target);"
-       ondblclick="return OpenURL(event,event.target.parentNode.parentNode.parentNode);"
+       ondblclick="return OpenURL(event,event.target.parentNode.parentNode);"
        style="height:100%;">
 
   <template>
