@@ -477,7 +477,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 				{
 					if (line)
 						PR_Write(m_tempMessageFile,(void *) line,PL_strlen(line));
-					PR_Write(m_tempMessageFile, (void *) MSG_LINEBREAK, PL_strlen(CRLF));
+					PR_Write(m_tempMessageFile, (void *) MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK));
 				}
 			} 
 		}
