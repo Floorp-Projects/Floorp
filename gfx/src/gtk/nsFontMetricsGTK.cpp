@@ -850,11 +850,18 @@ static nsresult
 InitGlobals(nsIDeviceContext *aDevice)
 {
 #ifdef NS_FONT_DEBUG
-  char* debug = PR_GetEnv("NS_FONT_DEBUG");
+  /* First check gfx/src/gtk/-specific env var "NS_FONT_DEBUG_GTK",
+   * then the more general "NS_FONT_DEBUG" if "NS_FONT_DEBUG_GTK"
+   * is not present */
+  const char *debug = PR_GetEnv("NS_FONT_DEBUG_GTK");
+  if (!debug) {
+    debug = PR_GetEnv("NS_FONT_DEBUG");
+  }
+  
   if (debug) {
     PR_sscanf(debug, "%lX", &gFontDebug);
   }
-#endif
+#endif /* NS_FONT_DEBUG */
 
   NS_ENSURE_TRUE(nsnull != aDevice, NS_ERROR_NULL_POINTER);
 

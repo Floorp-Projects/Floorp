@@ -1146,7 +1146,25 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
   PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("## CopyFontCharSetMapXlib done.\n"));
 
 #ifdef NS_FONT_DEBUG
-  const char* debug = PR_GetEnv("NS_FONT_DEBUG");
+  /* First check gfx/src/xlib/-specific env var "NS_FONT_DEBUG_XLIB" (or
+  * "NS_FONT_DEBUG_XPRINT" if the device is a printer),
+   * then the more general "NS_FONT_DEBUG" if 
+   * "NS_FONT_DEBUG_XLIB"/"NS_FONT_DEBUG_XPRINT" is not present */
+  const char *debug;
+#ifdef USE_XPRINT
+  if (mPrinterMode) {
+    debug = PR_GetEnv("NS_FONT_DEBUG_XPRINT");
+  }
+  else
+#endif /* USE_XPRINT */
+  {
+    debug = PR_GetEnv("NS_FONT_DEBUG_XLIB");
+  }
+
+  if (!debug) {
+    debug = PR_GetEnv("NS_FONT_DEBUG");
+  }
+  
   if (debug) {
     PR_sscanf(debug, "%lX", &gFontDebug);
   }
