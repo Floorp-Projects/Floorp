@@ -312,19 +312,19 @@ inline void AddNullTerminator(nsStr& aDest) {
 
 class nsIMemoryAgent {
 public:
-  virtual PRBool Alloc(nsStr& aString,PRInt32 aCount)=0;
-  virtual PRBool Realloc(nsStr& aString,PRInt32 aCount)=0;
+  virtual PRBool Alloc(nsStr& aString,PRUint32 aCount)=0;
+  virtual PRBool Realloc(nsStr& aString,PRUint32 aCount)=0;
   virtual PRBool Free(nsStr& aString)=0;
 };
 
 class nsMemoryAgent : public nsIMemoryAgent {
   enum eDelta{eGrowthDelta=8};
 public:
-  virtual PRBool Alloc(nsStr& aDest,PRInt32 aCount) {
+  virtual PRBool Alloc(nsStr& aDest,PRUint32 aCount) {
     
     //we're given the acount value in charunits; we have to scale up by the charsize.
 
-    PRInt32 theNewCapacity;
+    PRUint32 theNewCapacity;
     if (aDest.mCapacity > 64) {
       // When the string starts getting large, double the capacity as we grow.
       theNewCapacity = aDest.mCapacity * 2;
@@ -356,7 +356,7 @@ public:
     return PR_FALSE;
   }
 
-  virtual PRBool Realloc(nsStr& aDest,PRInt32 aCount){
+  virtual PRBool Realloc(nsStr& aDest,PRUint32 aCount){
     Free(aDest);
     return Alloc(aDest,aCount);
   }
