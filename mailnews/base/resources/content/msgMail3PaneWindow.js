@@ -307,10 +307,6 @@ function AddDataSources()
 
 function InitPanes()
 {
-	var mailsidebar = new Object
-	mailsidebar.db       = 'chrome://messenger/content/sidebar-messenger.rdf'
-	mailsidebar.resource = 'NC:MessengerSidebarRoot'
-
 	var threadTree = GetThreadTree();
 	if(threadTree);
 		OnLoadThreadPane(threadTree);
