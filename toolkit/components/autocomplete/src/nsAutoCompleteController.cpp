@@ -145,8 +145,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
     cid.Append(searchName);
     
     // Use the created cid to get a pointer to the search service and store it for later
-    nsIAutoCompleteSearch* search = nsnull;
-    CallGetService(cid.get(), &search);
+    nsCOMPtr<nsIAutoCompleteSearch> search = do_GetService(cid.get());
     if (search)
       mSearches->AppendElement(search);
   }
