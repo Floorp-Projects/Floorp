@@ -19,7 +19,7 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..\..
 
-DIRS= skin content
+DIRS= skin content locale
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -15,16 +15,30 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../../..
+DEPTH = ../../../../..
 topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
 VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = content skin locale
-
 include $(topsrcdir)/config/config.mk
+
 include $(topsrcdir)/config/rules.mk
 
+EXPORT_RESOURCE_CONTENT = \
+	$(srcdir)/navigator.dtd \
+	$(srcdir)/openLocation.dtd \
+	$(srcdir)/viewSource.dtd \
+	$(srcdir)/NetSupportConfirm.dtd \
+	$(srcdir)/NetSupportAlert.dtd \
+	$(srcdir)/NetSupportConfirmCheck.dtd \
+	$(srcdir)/NetSupportConfirmCheckYN.dtd \
+	$(srcdir)/NetSupportPassword.dtd \
+	$(srcdir)/NetSupportPrompt.dtd \
+	$(srcdir)/NetSupportUserPassword.dtd \
+	$(NULL)
+
+install:: 
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/locale/en-US
 
