@@ -67,7 +67,7 @@ CShelf :: ToggleShelf ( bool inUpdatePref )
 	
 	// Update the visible pref. The pref should be true if the pane is showing (!collapsed)
 	if ( inUpdatePref && mPrefString.c_str() )
-		PREF_SetBoolPref ( mPrefString.c_str(), !mShelf->IsFirstPaneCollapsed() );
+		PREF_SetBoolPref ( mPrefString.c_str(), IsShelfOpen() );
 	
 	// force menu items to update show "Show" and "Hide" string changes are reflected
 	LCommander::SetUpdateCommandStatus(true);
@@ -87,7 +87,7 @@ CShelf :: SetShelfState ( bool inShelfOpen, bool inUpdatePref )
 	if ( !mShelf )
 		return;			// this is the case for composer
 	
-	bool isShelfOpenNow = !mShelf->IsFirstPaneCollapsed();
+	bool isShelfOpenNow = IsShelfOpen();
 	if ( inShelfOpen ) {
 		if ( !isShelfOpenNow )
 			ToggleShelf(inUpdatePref);
@@ -102,7 +102,7 @@ CShelf :: SetShelfState ( bool inShelfOpen, bool inUpdatePref )
 //
 // IsShelfOpen
 //
-// return the state of the shelf/
+// return the state of the shelf.
 //
 bool
 CShelf :: IsShelfOpen ( )
@@ -110,6 +110,10 @@ CShelf :: IsShelfOpen ( )
 	if ( !mShelf )
 		return false;			// this is the case for composer
 	
-	return ( ! mShelf->IsFirstPaneCollapsed() ) ;
+	// this class handles both the case where the first pane is the one being collapsed
+	// and also the case where the 2nd pane is the one being collapsed. Either way, if
+	// one of them is collapsed, then the shelf is not open (because the concept of the
+	// shelf is tied to the one that is collapsed)
+	return ( ! (mShelf->IsFirstPaneCollapsed() || mShelf->IsSecondPaneCollapsed()) ) ;
 
 } // IsShelfOpen
