@@ -68,38 +68,50 @@
       <property name="paused">
         <getter>
         <![CDATA[
-          return this.getAttribute("state") == "4";
+          return parseInt(this.getAttribute("state")) == Components.interfaces.nsIDownloadManager.DOWNLOAD_PAUSED;
         ]]>
         </getter>
       </property>
       <property name="openable">
         <getter>
         <![CDATA[
-          return this.getAttribute("state") == "1";
+          return parseInt(this.getAttribute("state")) == Components.interfaces.nsIDownloadManager.DOWNLOAD_FINISHED;
         ]]>
         </getter>
       </property>
       <property name="inProgress">
         <getter>
         <![CDATA[
-          var state = this.getAttribute("state");
-          return state == "-1" || state == "0" || state == "4";
+          var state = parseInt(this.getAttribute("state"));
+          const dl = Components.interfaces.nsIDownloadManager;
+          const xpi = Components.interfaces.nsIXPInstallManagerUI;
+          return state == dl.DOWNLOAD_NOTSTARTED || 
+                 state == dl.DOWNLOAD_DOWNLOADING || 
+                 state == dl.DOWNLOAD_PAUSED ||
+                 state == xpi.INSTALL_DOWNLOADING ||
+                 state == xpi.INSTALL_INSTALLING;
         ]]>
         </getter>
       </property>
       <property name="removable">
         <getter>
         <![CDATA[
-          var state = this.getAttribute("state");
-          return state == "1" || state == "2" || state == "3";
+          var state = parseInt(this.getAttribute("state"));
+          const dl = Components.interfaces.nsIDownloadManager;
+          const xpi = Components.interfaces.nsIXPInstallManagerUI;
+          return state == dl.DOWNLOAD_FINISHED || 
+                 state == dl.DOWNLOAD_CANCELED || 
+                 state == dl.DOWNLOAD_FAILED ||
+                 state == xpi.INSTALL_FINISHED;
         ]]>
         </getter>
       </property>
       <property name="canceledOrFailed">
         <getter>
         <![CDATA[
-          var state = this.getAttribute("state");
-          return state == "2" || state == "3";
+          var state = parseInt(this.getAttribute("state"));
+          var dl = Components.interfaces.nsIDownloadManager;
+          return state == dl.DOWNLOAD_CANCELED || state == dl.DOWNLOAD_FAILED;
         ]]>
         </getter>
       </property>
@@ -111,14 +123,6 @@
         ]]>
         </body>
       </method>
-      
-      <constructor>
-      <![CDATA[
-        // This is a hack to circumvent the template builder, which eats every character
-        // after 'rdf:' and assumes it's part of the property name. 
-        this.setAttribute("image", this.getAttribute("image") + "?size=32");
-      ]]>
-      </constructor>
     </implementation>
   </binding>
   
@@ -390,6 +394,60 @@
         <xul:vbox pack="start">
           <xul:label value="&retry.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
+          <xul:label value="&remove.label;" class="link" 
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+  </binding>
+  
+  <binding id="install-downloading" extends="chrome://mozapps/content/downloads/download.xml#download-downloading">
+    <content>
+      <xul:hbox flex="1" class="downloadContentBox" xbl:inherits="animated,animated-temp">
+        <xul:vbox pack="start">
+          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+        </xul:vbox>
+        <xul:vbox flex="1">
+          <xul:hbox flex="1">
+            <xul:vbox flex="1">
+              <xul:label xbl:inherits="value=target" crop="center"/>
+              <xul:progressmeter mode="normal" value="0" flex="1"
+                                xbl:inherits="value=progress,mode=progressmode"/>
+            </xul:vbox>
+          </xul:hbox>                              
+          <xul:hbox align="center">
+            <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
+          </xul:hbox>                            
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+  
+  <binding id="install-installing" extends="chrome://mozapps/content/downloads/download.xml#download-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:label xbl:inherits="value=target" crop="center"/>
+          <xul:label value="&installing.label;"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+  </binding>
+  
+  <binding id="install-done" extends="chrome://mozapps/content/downloads/download.xml#download-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:label xbl:inherits="value=target" crop="center"/>
+          <xul:label value="&done.label;"/>
+        </xul:vbox>
+        <xul:vbox pack="start">
           <xul:label value="&remove.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>

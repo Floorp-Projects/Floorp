@@ -68,6 +68,7 @@
 #endif
 
 typedef PRInt16 DownloadState;
+typedef PRInt16 DownloadType;
 
 class nsXPIProgressListener;
 class nsDownload;
@@ -170,6 +171,7 @@ public:
   virtual ~nsXPIProgressListener();
 
   void AddDownload(nsIDownload* aDownload);
+
   PRBool HasActiveXPIOperations();
 
 protected:
@@ -180,6 +182,23 @@ protected:
 private:
   nsDownloadManager* mDownloadManager;
   nsCOMPtr<nsISupportsArray> mDownloads;
+};
+
+class nsDownloadsDataSource : public nsIRDFDataSource, 
+                              public nsIRDFRemoteDataSource
+{
+public:
+  NS_DECL_NSIRDFDATASOURCE
+  NS_DECL_NSIRDFREMOTEDATASOURCE
+  NS_DECL_ISUPPORTS
+
+  nsDownloadsDataSource() { };
+  virtual ~nsDownloadsDataSource() { };
+
+  nsresult LoadDataSource();
+
+private:
+  nsCOMPtr<nsIRDFDataSource> mInner;
 };
 
 class nsDownload : public nsIDownload,
@@ -194,8 +213,10 @@ public:
   virtual ~nsDownload();
 
 public:
-  nsresult GetDownloadState(DownloadState* aState);
-  nsresult SetDownloadState(DownloadState aState);
+  DownloadState GetDownloadState();
+  void SetDownloadState(DownloadState aState);
+  DownloadType GetDownloadType();
+  void SetDownloadType(DownloadType aType);
 
 protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
@@ -228,6 +249,7 @@ private:
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
   
   DownloadState mDownloadState;
+  DownloadType  mDownloadType;
 
   PRBool  mPaused;
   PRInt32 mPercentComplete;
