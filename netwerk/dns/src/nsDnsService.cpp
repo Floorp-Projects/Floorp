@@ -370,14 +370,6 @@ nsDNSLookup::Init(const char * hostName)
     rv = NS_NewISupportsArray(getter_AddRefs(mRequests));
     if (NS_FAILED(rv)) return rv;
 
-#if defined(XP_PC) && !defined(XP_OS2)
-    mMsgID    = 0;
-#endif
-
-    // Initialize result holders
-    mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
-    mHostEntry.bufPtr = mHostEntry.buffer;
-
     // Platform specific initializations
 #if defined(XP_MAC)
     mInetHostInfo.lookup = this;
@@ -391,6 +383,13 @@ nsDNSLookup::Init(const char * hostName)
 void
 nsDNSLookup::Reset(void)
 {
+    // Initialize result holders
+    mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
+    mHostEntry.bufPtr = mHostEntry.buffer;
+#if defined(XP_PC) && !defined(XP_OS2)
+    mMsgID    = 0;
+#endif
+
     mComplete = PR_FALSE;
     mStatus = NS_OK;
     mExpires = LL_ZERO;
@@ -494,13 +493,13 @@ nsDNSLookup::InitiateLookup(void)
 
             PRUint32 hostNameLen = nsCRT::strlen(mHostName);
             mHostEntry.hostEnt.h_name = (char*)BufAlloc(hostNameLen + 1,
-                                                        (char**)&mHostEntry.buffer,
+                                                        (char**)&mHostEntry.bufPtr,
                                                         &mHostEntry.bufLen,
                                                         0);
             memcpy(mHostEntry.hostEnt.h_name, mHostName, hostNameLen + 1);
 
             mHostEntry.hostEnt.h_aliases = (char**)BufAlloc(1 * sizeof(char*),
-                                                            (char**)&mHostEntry.buffer,
+                                                            (char**)&mHostEntry.bufPtr,
                                                             &mHostEntry.bufLen,
                                                             sizeof(char **));
             mHostEntry.hostEnt.h_aliases[0] = '\0';
@@ -508,11 +507,11 @@ nsDNSLookup::InitiateLookup(void)
             mHostEntry.hostEnt.h_addrtype = 2;
             mHostEntry.hostEnt.h_length = 4;
             mHostEntry.hostEnt.h_addr_list = (char**)BufAlloc(2 * sizeof(char*),
-                                                              (char**)&mHostEntry.buffer,
+                                                              (char**)&mHostEntry.bufPtr,
                                                               &mHostEntry.bufLen,
                                                               sizeof(char **));
             mHostEntry.hostEnt.h_addr_list[0] = (char*)BufAlloc(mHostEntry.hostEnt.h_length,
-                                                                (char**)&mHostEntry.buffer,
+                                                                (char**)&mHostEntry.bufPtr,
                                                                 &mHostEntry.bufLen,
                                                                 0);
             memcpy(mHostEntry.hostEnt.h_addr_list[0], &netAddr->inet.ip, mHostEntry.hostEnt.h_length);
@@ -1104,7 +1103,7 @@ nsDNSService::GetLookupEntry(const char* hostName,
     nsStringKey key(hostName);
     nsDNSLookup * lookup = (nsDNSLookup*)mLookups.Get(&key);
     if (lookup) {
-        nsAutoCMonitor mon(lookup);
+        nsAutoCMonitor lmon(lookup);
 
         if (lookup->mComplete && lookup->IsExpired()) {
             lookup->Reset();
@@ -1190,8 +1189,6 @@ nsDNSService::Shutdown()
     // and the thread holds onto the nsDNSService via its mRunnable
     mThread = nsnull;
     
-    PR_DestroyMonitor(mMonitor);		// XXX also done in destructor
-    mMonitor = nsnull;
     return rv;
 }
 
