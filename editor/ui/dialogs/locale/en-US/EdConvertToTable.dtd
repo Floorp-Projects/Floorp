@@ -29,6 +29,5 @@
 <!ENTITY spaceRadio.label      "Space">
 <!ENTITY otherRadio.label      "Other Character:">
 <!ENTITY deleteCharCheck.label "Delete separator character">
-
-
-
+<!ENTITY collapseSpaces.label  "Ignore extra spaces">
+<!ENTITY collapseSpaces.tooltip "Convert adjacent spaces to one separator">
