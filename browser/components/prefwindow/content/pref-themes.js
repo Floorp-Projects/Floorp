@@ -39,6 +39,9 @@
 
 var gShowDescription = true;
 var gData;
+const kPrefSvcContractID = "@mozilla.org/preferences;1";
+const kPrefSvcIID = Components.interfaces.nsIPref;
+const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
 try {
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
@@ -65,7 +68,7 @@ function Startup()
   var theme = null;
   try {
     theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
-                                     Components.interfaces.nsISupportsWString).data;
+                                     Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
   var matches;
@@ -102,7 +105,7 @@ function applyTheme()
   var theme = null;
   try {
     theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
-                                     Components.interfaces.nsISupportsWString).data;
+                                     Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
 
@@ -142,12 +145,12 @@ function applyTheme()
 
       chromeRegistry.uninstallSkin(data.name, true);
 
-      var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                          .createInstance(Components.interfaces.nsISupportsWString);
+      var str = Components.classes["@mozilla.org/supports-string;1"]
+                          .createInstance(Components.interfaces.nsISupportsString);
 
       str.data = true;
       pref.setComplexValue("general.skins.removelist." + data.name,
-                           Components.interfaces.nsISupportsWString, str);
+                           Components.interfaces.nsISupportsString, str);
       
       if (inUse)
         chromeRegistry.refreshSkins();
@@ -156,10 +159,10 @@ function applyTheme()
     return;
   }
 
-var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                    .createInstance(Components.interfaces.nsISupportsWString);
+var str = Components.classes["@mozilla.org/supports-string;1"]
+                    .createInstance(Components.interfaces.nsISupportsString);
 str.data = data.name;
-kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
+kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
 
 
 chromeRegistry.selectSkin(data.name, true);                                        
@@ -221,9 +224,6 @@ function themeSelect()
     // XXX - this sucks and should only be temporary.
     var selectedSkin = "";
     try {
-      const kPrefSvcContractID = "@mozilla.org/preferences;1";
-      const kPrefSvcIID = Components.interfaces.nsIPref;
-      const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
       selectedSkin = kPrefSvc.CopyCharPref("general.skins.selectedSkin");
     }
     catch (e) {
