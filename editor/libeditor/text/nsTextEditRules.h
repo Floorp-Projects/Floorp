@@ -64,6 +64,7 @@ public:
     kDeleteSelection = 2001,
     kSetTextProperty = 2003,
     kRemoveTextProperty = 2004,
+    kOutputText      = 2005,
     // html only action
     kInsertBreak     = 3000,
     kMakeList        = 3001,
@@ -94,8 +95,12 @@ protected:
   nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
 
-  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
-  nsresult DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, 
+                               nsIEditor::ECollapsedSelectionAction aCollapsedAction, 
+                               PRBool *aCancel);
+  nsresult DidDeleteSelection(nsIDOMSelection *aSelection, 
+                              nsIEditor::ECollapsedSelectionAction aCollapsedAction, 
+                              nsresult aResult);
 
   nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
@@ -108,6 +113,10 @@ protected:
 
   nsresult WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
+
+  nsresult WillOutputText(nsIDOMSelection *aSelection, nsString *aOutText, PRBool *aCancel);
+  nsresult DidOutputText(nsIDOMSelection *aSelection, nsresult aResult);
+
 
   // helper functions
   
@@ -140,9 +149,17 @@ protected:
 
   /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
+
+  /** returns the absolute position of the end points of aSelection
+    * in the document as a text stream.
+    */
+  void GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+                               PRInt32 &aStartOffset, 
+                               PRInt32 &aEndOffset);
   
   // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor
+  nsString      mPasswordText;  // a buffer we use to store the real value of password editors
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
   PRUint32 mFlags;
 };
@@ -153,8 +170,17 @@ class nsTextRulesInfo : public nsRulesInfo
 {
  public:
  
-  nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState(),maxLength(-1),collapsedAction(nsIEditor::eDeleteRight) {}
-  virtual ~nsTextRulesInfo() {}
+  nsTextRulesInfo(int aAction) : 
+    nsRulesInfo(aAction),
+    placeTxn(0),
+    inString(0),
+    outString(0),
+    typeInState(),
+    maxLength(-1),
+    collapsedAction(nsIEditor::eDeleteRight) 
+    {};
+
+  virtual ~nsTextRulesInfo() {};
   
   // kInsertText
   PlaceholderTxn **placeTxn;

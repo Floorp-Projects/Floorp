@@ -28,11 +28,14 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIEnumerator.h"
 #include "nsIContent.h"
+#include "nsIContentIterator.h"
+#include "nsIEnumerator.h"
+#include "nsLayoutCID.h"
 #include "nsIEditProperty.h"
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
+static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if (mFlags & TEXT_EDITOR_FLAG_READONLY || mFlags & TEXT_EDITOR_FLAG_DISABLED) \
@@ -112,7 +115,7 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             info->typeInState,
                             info->maxLength);
     case kDeleteSelection:
-      return WillDeleteSelection(aSelection, aCancel);
+      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
     case kUndo:
       return WillUndo(aSelection, aCancel);
     case kRedo:
@@ -121,6 +124,10 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
       return WillSetTextProperty(aSelection, aCancel);
     case kRemoveTextProperty:
       return WillRemoveTextProperty(aSelection, aCancel);
+    case kOutputText:
+      return WillOutputText(aSelection, 
+                            info->outString,
+                            aCancel);
   }
   return NS_ERROR_FAILURE;
 }
@@ -142,7 +149,7 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
     case kInsertText:
       return DidInsertText(aSelection, aResult);
     case kDeleteSelection:
-      return DidDeleteSelection(aSelection, aResult);
+      return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
     case kUndo:
       return DidUndo(aSelection, aResult);
     case kRedo:
@@ -151,6 +158,8 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
       return DidSetTextProperty(aSelection, aResult);
     case kRemoveTextProperty:
       return DidRemoveTextProperty(aSelection, aResult);
+    case kOutputText:
+      return DidOutputText(aSelection, aResult);
   }
   return NS_ERROR_FAILURE;
 }
@@ -229,20 +238,43 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     // if l1 + l2 > max, set outString to subset of inString so length = max
     
   }
-    
+
+  nsresult result;
+
   // initialize out params
   *aCancel = PR_FALSE;
-  *outString = *inString;
+
+  if (mFlags&TEXT_EDITOR_FLAG_PASSWORD)
+  {
+    // manage the password buffer
+    PRInt32 start, end;
+    GetTextSelectionOffsets(aSelection, start, end);
+    mPasswordText.Insert(*inString, start);
+
+    char *password = mPasswordText.ToNewCString();
+    printf("mPasswordText is %s\n", password);
+    delete [] password;
+
+    // change the output to '*' only
+    PRInt32 length = inString->Length();
+    PRInt32 i;
+    for (i=0; i<length; i++)
+      *outString += '*';
+  }
+  else
+  {
+    *outString = *inString;
+  }
   
   if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
   {
-    nsresult result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
     if (NS_FAILED(result)) { return result; }
     if (!*aTxn) { return NS_ERROR_NULL_POINTER; }
     (*aTxn)->SetName(InsertTextTxn::gInsertTextTxnName);
     mEditor->Do(*aTxn);
   }
-  nsresult result = WillInsert(aSelection, aCancel);
+  result = WillInsert(aSelection, aCancel);
   if (NS_SUCCEEDED(result) && (PR_FALSE==*aCancel))
   {
     if (PR_TRUE==typeInState.IsAnySet())
@@ -550,7 +582,9 @@ nsTextEditRules::DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aRe
 }
 
 nsresult
-nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel)
+nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, 
+                                     nsIEditor::ECollapsedSelectionAction aCollapsedAction, 
+                                     PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -563,13 +597,38 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCance
     *aCancel = PR_TRUE;
     return NS_OK;
   }
+  if (mFlags&TEXT_EDITOR_FLAG_PASSWORD)
+  {
+    // manage the password buffer
+    PRInt32 start, end;
+    GetTextSelectionOffsets(aSelection, start, end);
+    if (end==start)
+    { // collapsed selection
+      if (nsIEditor::eDeleteLeft==aCollapsedAction && 0<start) { // del back
+        mPasswordText.Cut(start-1, 1);
+      }
+      else if (nsIEditor::eDeleteRight==aCollapsedAction) {      // del forward
+        mPasswordText.Cut(start, 1);
+      }
+      // otherwise nothing to do for this collapsed selection
+    }
+    else {  // extended selection
+      mPasswordText.Cut(start, end-start);
+    }
+
+    char *password = mPasswordText.ToNewCString();
+    printf("mPasswordText is %s\n", password);
+    delete [] password;
+  }
   return NS_OK;
 }
 
 // if the document is empty, insert a bogus text node with a &nbsp;
 // if we ended up with consecutive text nodes, merge them
 nsresult
-nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult)
+nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, 
+                                    nsIEditor::ECollapsedSelectionAction aCollapsedAction, 
+                                    nsresult aResult)
 {
   nsresult result = aResult;  // if aResult is an error, we just return it
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
@@ -744,6 +803,31 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
   return result;
 }
 
+nsresult
+nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection, 
+                                nsString *aOutString,
+                                PRBool *aCancel)
+{
+  // null selection ok
+  if (!aOutString || !aCancel) { return NS_ERROR_NULL_POINTER; }
+
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  if (mFlags&TEXT_EDITOR_FLAG_PASSWORD)
+  {
+    *aOutString = mPasswordText;
+    *aCancel = PR_TRUE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsTextEditRules::DidOutputText(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  return NS_OK;
+}
+
 
 nsresult
 nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
@@ -816,6 +900,78 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   }
   return result;
 }
+
+// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
+// the two should use common code, or even just be one method
+void nsTextEditRules::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
+                                              PRInt32 &aStartOffset, 
+                                              PRInt32 &aEndOffset)
+{
+  nsresult result;
+  // initialize out params
+  aStartOffset = aEndOffset = 0;
+
+  nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
+  PRInt32 startOffset, endOffset;
+  aSelection->GetAnchorNode(getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(&startOffset);
+  aSelection->GetFocusNode(getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(&endOffset);
+
+  nsCOMPtr<nsIEnumerator> enumerator;
+  enumerator = do_QueryInterface(aSelection);
+  if (enumerator)
+  {
+    // don't use "result" in this block
+    enumerator->First(); 
+    nsISupports *currentItem;
+    nsresult findParentResult = enumerator->CurrentItem(&currentItem);
+    if ((NS_SUCCEEDED(findParentResult)) && (nsnull!=currentItem))
+    {
+      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+      range->GetCommonParent(getter_AddRefs(parentNode));
+    }
+    else parentNode = do_QueryInterface(startNode);
+  }
+
+  nsCOMPtr<nsIContentIterator> iter;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              nsIContentIterator::GetIID(), 
+                                              getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    PRUint32 totalLength=0;
+    nsCOMPtr<nsIDOMCharacterData>textNode;
+    nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(parentNode);
+    iter->Init(blockParentContent);
+    // loop through the content iterator for each content node
+    nsCOMPtr<nsIContent> content;
+    result = iter->CurrentNode(getter_AddRefs(content));
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      textNode = do_QueryInterface(content);
+      if (textNode)
+      {
+        nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
+        if (currentNode.get() == startNode.get())
+        {
+          aStartOffset = totalLength + startOffset;
+        }
+        if (currentNode.get() == endNode.get())
+        {
+          aEndOffset = totalLength + endOffset;
+          break;
+        }
+        PRUint32 length;
+        textNode->GetLength(&length);
+        totalLength += length;
+      }
+      iter->Next();
+      iter->CurrentNode(getter_AddRefs(content));
+    }
+  }
+}
+
 
 
 
