@@ -52,6 +52,6 @@
 <!ENTITY            newButton.label       "New Profile...">
 
 <!-- manager entities -->
-<!ENTITY            pmTextA.label         "Mozilla stores information about your settings, preferences, bookmarks, stored messages and other personalised information in your personal profile.">
+<!ENTITY            pmTextA.label         "Mozilla stores information about your settings, preferences, bookmarks, stored messages and other personalized information in your personal profile.">
 <!ENTITY            pmTextB.label         "Indicates a profile created with a previous version of Communicator. These profiles must be converted before they can be loaded with Mozilla. This is an automated process.">
 
