@@ -2000,14 +2000,14 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
                                            PRBool aUseProfile, PRBool aIsAdding)
 {
   nsCAutoString package( "urn:mozilla:package:" );
-  package.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, package);
 
   nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
   provider += aProviderName;
   provider += ":";
-  provider.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, provider);
 
   // Obtain the package resource.
   nsresult rv = NS_OK;
@@ -2156,14 +2156,14 @@ nsChromeRegistry::IsProviderSelectedForPackage(const nsACString& aProviderType,
 {
   *aResult = PR_FALSE;
   nsCAutoString package( "urn:mozilla:package:" );
-  package.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, package);
 
   nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
   provider += aProviderName;
   provider += ":";
-  provider.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, provider);
 
   // Obtain the package resource.
   nsresult rv = NS_OK;
@@ -2586,7 +2586,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
 NS_IMETHODIMP nsChromeRegistry::SetAllowOverlaysForPackage(const PRUnichar *aPackageName, PRBool allowOverlays)
 {
   nsCAutoString package("urn:mozilla:package:");
-  package.AppendWithConversion(aPackageName);
+  AppendUTF16toUTF8(aPackageName, package);
 
   // Obtain the package resource.
   nsCOMPtr<nsIRDFResource> packageResource;
@@ -2786,7 +2786,7 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
           nsXPIDLString val;
           element->GetValue(getter_Copies(val));
 
-          nsCAutoString valC; valC.AssignWithConversion(val);
+          NS_ConvertUTF16toUTF8 valC(val);
           nsCOMPtr<nsIURI> targetURI;
           rv = ioServ->NewURI(valC, nsnull, nsnull, getter_AddRefs(targetURI));
           if (NS_FAILED(rv)) return rv;
