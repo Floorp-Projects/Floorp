@@ -138,7 +138,7 @@
       <html:div class="separator" align="vertical" />
 
       <titledbutton id="linkButton"/>
-      <titledbutton id="tagetButton"/>
+      <titledbutton id="namedAnchorButton"/>
 
       <html:div class="separator" align="vertical" />
 
