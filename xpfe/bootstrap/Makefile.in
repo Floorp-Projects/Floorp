@@ -29,21 +29,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE = apprunner-beos.rsrc
 endif
 
-
-TOOLKIT_GFX_LIB     = -lgfx$(MOZ_GFX_TOOLKIT)
-TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_WIDGET_TOOLKIT)
-
-ifeq ($(MOZ_GFX_TOOLKIT),xlib)
-TOOLKIT_GFX_XLIBRGB_LIB := -lxlibrgb
-endif
-
-# Hardcoding dlopen()'s?  This needs to get fixed.
-#
-TOOLKIT_CFLAGS := \
-       -DWIDGET_DLL=\"libwidget$(MOZ_WIDGET_TOOLKIT).$(DLL_SUFFIX)\" \
-       -DGFXWIN_DLL=\"libgfx$(MOZ_GFX_TOOLKIT).$(DLL_SUFFIX)\" \
-       $(TK_CFLAGS)
-
 ifndef NECKO
 LIBS = 		\
 	-labouturl	\
@@ -71,10 +56,9 @@ LIBS += \
 	-L$(DIST)/bin	\
 	-lnsappshell	\
 	-lxpcom		\
-	$(TOOLKIT_WIDGET_LIB)\
+	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 	-lraptorgfx	\
-	$(TOOLKIT_GFX_LIB)\
-	$(TOOLKIT_GFX_XLIBRGB_LIB) \
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lreg		\
 	-lraptorwebwidget	\
 	-lraptorhtmlpars	\
@@ -96,7 +80,6 @@ LIBS += \
 	$(NULL)
 
 
-
 CPPSRCS = \
 	nsAppRunner.cpp 	\
 	nsSetupRegistry.cpp	\
@@ -105,7 +88,7 @@ CPPSRCS = \
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+= $(TOOLKIT_CFLAGS)
+CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 install:: $(srcdir)/mozilla-apprunner.sh
 	$(INSTALL) $< $(DIST)/bin

@@ -61,8 +61,8 @@ LIBS = \
 	$(PNG_LIBS)     \
 	$(JPEG_LIBS)    \
 	-lxp	\
-	-lgfx$(MOZ_GFX_TOOLKIT)    \
-	-lraptorgfx \
+	-lraptorgfx 	\
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lmozutil \
 	-lsecfree \
 	$(ZLIB_LIBS) \

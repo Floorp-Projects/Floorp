@@ -32,14 +32,11 @@ BASE_LIBS =          \
         -l$(MOZ_LIB_UTIL_PREFIX)util    \
         $(NULL)
 
-TOOLKIT_WIDGET_LIB = -lwidgetgtk
-TOOLKIT_GFX_LIB = -lgfxgtk
-
 GECKO_LIBS =                  \
         -lraptorwebwidget     \
-        $(TOOLKIT_WIDGET_LIB) \
-        -lraptorgfx           \
-        $(TOOLKIT_GFX_LIB)    \
+		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+		-lraptorgfx 	\
+		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
         -lraptorhtmlpars      \
         -lexpat \
         -lxmltok \

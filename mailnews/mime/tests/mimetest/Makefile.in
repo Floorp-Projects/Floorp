@@ -28,9 +28,6 @@ LOCAL_INCLUDES  =
 
 REQUIRES	= 
 
-TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_GFX_TOOLKIT)
-TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_WIDGET_TOOLKIT)
-
 BASE_LIBS =	     \
 	-lpref	     \
 	$(ZLIB_LIBS) \
@@ -43,9 +40,9 @@ BASE_LIBS =	     \
 
 GECKO_LIBS =		      \
 	-lraptorwebwidget     \
-	$(TOOLKIT_WIDGET_LIB) \
-	-lraptorgfx	      \
-	$(TOOLKIT_GFX_LIB)    \
+	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+	-lraptorgfx 	\
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lraptorhtmlpars      \
 	-lexpat \
 	-lxmltok \

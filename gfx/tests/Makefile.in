@@ -57,8 +57,8 @@ NET_LIBS =		\
 endif
 
 LIBS = \
-	-lraptorgfx \
-	-lgfx$(MOZ_GFX_TOOLKIT) \
+	-lraptorgfx 	\
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	$(TK_LIBS) \
 	-lxpcom \
 	-lreg \

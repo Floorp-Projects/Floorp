@@ -33,8 +33,8 @@ LOCAL_INCLUDES := -I$(srcdir)/../src
 REQUIRES = raptor netlib xpcom reg pref
 
 LIBS = \
-	-lraptorgfx	\
-	-lgfx$(MOZ_GFX_TOOLKIT) \
+	-lraptorgfx 	\
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lnetlib \
 	-labouturl \
 	-lfileurl \
