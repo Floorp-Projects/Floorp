@@ -33,8 +33,6 @@
 // XXX what do we do with catastrophic errors (rv < 0)? What is the
 // state of the reflow world after such an error?
 
-#undef NOISY_REFLOW
-
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
@@ -534,7 +532,9 @@ nsBlockFrame::DrainOverflowList()
     }
   }
 #ifdef NS_DEBUG
-  VerifyLines(PR_FALSE);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_FALSE);
+  }
 #endif
 }
 
@@ -703,13 +703,17 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState, nsLineData* aLine)
     firstKid->GetContentIndex(nextInFlow->mFirstContentOffset);
 
 #ifdef NS_DEBUG
-    nextInFlow->VerifyLines(PR_FALSE);
+    if (GetVerifyTreeEnable()) {
+      nextInFlow->VerifyLines(PR_FALSE);
+    }
 #endif
   }
   mChildCount -= pushCount;
 
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+  }
 #endif
   return NS_LINE_LAYOUT_NOT_COMPLETE;
 }
@@ -757,7 +761,9 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
 done:
   aState.mCurrentLine = nsnull;
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+  }
 #endif
   return rv;
 }
@@ -803,7 +809,9 @@ nsBlockFrame::ReflowMappedFrom(nsBlockReflowState& aState, nsLineData* aLine)
 done:
   aState.mCurrentLine = nsnull;
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+  }
 #endif
   return rv;
 }
@@ -919,7 +927,9 @@ done:
   }
 
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+  }
 #endif
   return rv;
 }
@@ -950,6 +960,7 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
       // If our width is unconstrained don't bother futzing with the
       // available width/height because they don't matter - we are
       // going to get reflowed again.
+      aState.mDeltaWidth = NS_UNCONSTRAINEDSIZE;
     }
     else {
       // When we are constrained we need to apply the width/height
@@ -970,10 +981,12 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
       else {
         aState.mAvailSize.width -= lr;
       }
+      aState.mDeltaWidth = aState.mAvailSize.width - mRect.width;
     }
   }
   else {
     aState.mBorderPadding.SizeTo(0, 0, 0, 0);
+    aState.mDeltaWidth = aState.mAvailSize.width - mRect.width;
   }
 
   // Setup initial list ordinal value
@@ -992,38 +1005,6 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
 
   return rv;
 }
-
-#if XXX
-NS_METHOD
-nsBlockFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  printf("size to %g,%g\n", NS_TWIPS_TO_POINTS_FLOAT(aWidth),
-         NS_TWIPS_TO_POINTS_FLOAT(aHeight));
-  return nsHTMLContainerFrame::SizeTo(aWidth, aHeight);
-}
-
-NS_METHOD
-nsBlockFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize&    aMaxSize,
-                           nsSize*          aMaxElementSize,
-                           nsReflowStatus&  aStatus)
-{
-  nsresult rv = NS_OK;
-  aStatus = NS_FRAME_COMPLETE;
-  nsBlockReflowState state;
-  rv = InitializeState(aPresContext, aMaxSize, aMaxElementSize, state);
-  if (NS_OK == rv) {
-    nsRect desiredRect;
-    rv = DoResizeReflow(state, desiredRect, aStatus);
-    aDesiredSize.width = desiredRect.width;
-    aDesiredSize.height = desiredRect.height;
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-  }
-  return rv;
-}
-#endif
 
 PRBool
 nsBlockFrame::MoreToReflow(nsBlockReflowState& aState)
@@ -1064,18 +1045,17 @@ nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
                              nsRect&             aDesiredRect,
                              nsReflowStatus&     aStatus)
 {
+  NS_FRAME_TRACE_MSG(("enter nsBlockFrame::DoResizeReflow: deltaWidth=%d",
+                      aState.mDeltaWidth));
+
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
-  PreReflowCheck();
-#endif
-#ifdef NOISY_REFLOW
-  ListTag(stdout);
-  printf(": Before:\n");
-  List(stdout, 1);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+    PreReflowCheck();
+  }
 #endif
 
   nsresult rv = NS_OK;
-
   nsIPresShell* shell = aState.mPresContext->GetShell();
   shell->PutCachedData(this, &aState);
 
@@ -1105,28 +1085,30 @@ nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 #ifdef NS_DEBUG
-  // Verify that the line layout code pulled everything up when it
-  // indicates a complete reflow.
-  if (NS_FRAME_IS_COMPLETE(aStatus)) {
-    nsBlockFrame* nextBlock = (nsBlockFrame*) mNextInFlow;
-    while (nsnull != nextBlock) {
-      NS_ASSERTION((nsnull == nextBlock->mLines) &&
-                   (nextBlock->mChildCount == 0) &&
-                   (nsnull == nextBlock->mFirstChild),
-                   "bad completion status");
-      nextBlock = (nsBlockFrame*) nextBlock->mNextInFlow;
-    }
+  if (GetVerifyTreeEnable()) {
+    // Verify that the line layout code pulled everything up when it
+    // indicates a complete reflow.
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+      nsBlockFrame* nextBlock = (nsBlockFrame*) mNextInFlow;
+      while (nsnull != nextBlock) {
+        NS_ASSERTION((nsnull == nextBlock->mLines) &&
+                     (nextBlock->mChildCount == 0) &&
+                     (nsnull == nextBlock->mFirstChild),
+                     "bad completion status");
+        nextBlock = (nsBlockFrame*) nextBlock->mNextInFlow;
+      }
 
 #if XXX
-    // We better not be in the same parent frame as our prev-in-flow.
-    // If we are it means that we were continued instead of pulling up
-    // children.
-    if (nsnull != mPrevInFlow) {
-      nsIFrame* ourParent = mGeometricParent;
-      nsIFrame* prevParent = ((nsBlockFrame*)mPrevInFlow)->mGeometricParent;
-      NS_ASSERTION(ourParent != prevParent, "bad continuation");
-    }
+      // We better not be in the same parent frame as our prev-in-flow.
+      // If we are it means that we were continued instead of pulling up
+      // children.
+      if (nsnull != mPrevInFlow) {
+        nsIFrame* ourParent = mGeometricParent;
+        nsIFrame* prevParent = ((nsBlockFrame*)mPrevInFlow)->mGeometricParent;
+        NS_ASSERTION(ourParent != prevParent, "bad continuation");
+      }
 #endif
+    }
   }
 #endif
 
@@ -1135,14 +1117,13 @@ nsBlockFrame::DoResizeReflow(nsBlockReflowState& aState,
   NS_RELEASE(shell);
 
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
-  PostReflowCheck(aStatus);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+    PostReflowCheck(aStatus);
+  }
 #endif
-#ifdef NOISY_REFLOW
-  ListTag(stdout);
-  printf(": After:\n");
-  List(stdout, 1);
-#endif
+
+  NS_FRAME_TRACE_REFLOW_OUT("nsBlockFrame::DoResizeReflow", aStatus);
   return rv;
 }
 
@@ -1190,11 +1171,17 @@ nsBlockFrame::ContentDeleted(nsIPresShell*   aShell,
   return rv;
 }
 
+// XXX if there is nothing special going on here, then remove this
+// implementation and let nsFrame do it.
 NS_METHOD
 nsBlockFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aMetrics)
 {
   nsresult rv = NS_OK;
+  aMetrics.width = mRect.width;
+  aMetrics.height = mRect.height;
+  aMetrics.ascent = mRect.height;
+  aMetrics.descent = 0;
   return rv;
 }
 
@@ -1273,9 +1260,12 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                 nsReflowCommand& aReflowCommand,
                                 nsReflowStatus&  aStatus)
 {
+  NS_FRAME_TRACE_REFLOW_IN("nsBlockFrame::IncrementalReflow");
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
-  PreReflowCheck();
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+    PreReflowCheck();
+  }
 #endif
   
   nsresult rv = NS_OK;
@@ -1374,9 +1364,12 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   NS_RELEASE(shell);
 
 #ifdef NS_DEBUG
-  VerifyLines(PR_TRUE);
-  PostReflowCheck(aStatus);
+  if (GetVerifyTreeEnable()) {
+    VerifyLines(PR_TRUE);
+    PostReflowCheck(aStatus);
+  }
 #endif
+  NS_FRAME_TRACE_REFLOW_OUT("nsBlockFrame::IncrementalReflow", aStatus);
   return rv;
 }
 
