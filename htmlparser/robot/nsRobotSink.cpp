@@ -68,7 +68,7 @@ public:
   virtual PRInt32 CloseTopmostContainer();
   virtual PRInt32 AddLeaf(const nsIParserNode& aNode);
   virtual void WillBuildModel(void) { }
-  virtual void DidBuildModel(void);
+  virtual void DidBuildModel(void) { }
   virtual void WillInterrupt(void) { }
   virtual void WillResume(void) { }
 
@@ -289,12 +289,3 @@ void RobotSink::ProcessLink(const nsString& aLink)
   }
 }
 
-void RobotSink::DidBuildModel(void)
-{
-  PRInt32 i, n = mObservers.Count();
-  for (i = 0; i < n; i++) {
-    nsIRobotSinkObserver* cop = (nsIRobotSinkObserver*)mObservers.ElementAt(i);
-    cop->ReadyForNextUrl();
-  }
-   
-}
