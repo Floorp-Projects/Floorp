@@ -1,0 +1,209 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla IPC.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsISimpleEnumerator;
+interface ipcIMessageObserver;
+interface ipcIClientObserver;
+
+/**
+ * the IPC service provides the means to communicate with an external IPC
+ * daemon and/or other mozilla-based applications sharing the same user
+ * profile.  the IPC daemon hosts modules (some builtin and others dynamically
+ * loaded) with which applications may interact.
+ *
+ * at application startup, the IPC service will attempt to establish a
+ * connection with the IPC daemon for the current profile.  (there is one IPC
+ * daemon per profile.)  the IPC daemon will be automatically started if
+ * necessary.  when a connection has been established, the IPC service will
+ * broadcast an "ipc-startup" notification using the observer service.
+ *
+ * when the connection to the IPC daemon is closed (due to error, profile
+ * change, or normal shutdown), an "ipc-shutdown" notification will be
+ * broadcast.
+ *
+ * each client has a name.  the client name need not be unique across all
+ * clients, but it is usually good if it is.  this IPC service does not require
+ * unique names.  instead, the IPC daemon assigns each client a unique ID that
+ * is good for the current "session."  clients can query other clients by name
+ * or by ID.  the IPC service supports forwarding messages from one client to
+ * another via the IPC daemon.
+ *
+ * for performance reasons, this system should not be used to transfer large
+ * amounts of data.  instead, applications may choose to utilize shared memory,
+ * and rely on the IPC service for synchronization and small message transfer
+ * only.
+ */
+[scriptable, uuid(53d3e3a7-528f-4b09-9eab-9416272568c0)]
+interface ipcIService : nsISupports
+{
+    /**
+     * returns the "client ID" assigned to this application by the IPC daemon.
+     * this number is the name given to our application for the current
+     * session.  after a profile change, our client ID will change.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if no connection to the IPC daemon.
+     */
+    readonly attribute unsigned long clientID;
+
+    /**
+     * client aliases give the client a way to register itself under multiple
+     * names.  for example, the mozilla browser might register itself under
+     * the name "mozilla", but it could also register itself under the aliases
+     * "browser", "mail", "news", "addrbook", and so on.  aliases provide a
+     * simple mechanism for clients to discover other clients.
+     */
+    void addClientAlias(in ACString aAlias);
+    void removeClientAlias(in ACString aAlias);
+
+    /**
+     * query info about a particular client given its client name.
+     *
+     * @param aNameOrAlias  name or alias of the client being queried.
+     * @param aObserver     client observer to be notified.
+     *
+     * @return integer token identifying this request.
+     */
+    unsigned long queryClientByName(in ACString           aNameOrAlias,
+                                    in ipcIClientObserver aObserver);
+
+    /**
+     * query info about a particular client given its client ID.
+     *
+     * @return integer token identifying this request.
+     */
+    unsigned long queryClientByID(in unsigned long      aClientID,
+                                  in ipcIClientObserver aObserver);
+
+    /**
+     * set client observer.  observer is notified whenever the status of
+     * a client changes.
+     *
+     * @param aClientID  the ID of the client to observe.
+     * @param aObserver  the client observer.
+     */
+    void setClientObserver(in unsigned long aClientID,
+                           in ipcIClientObserver aObserver);
+
+    /**
+     * set a message observer for a particular message target.
+     *
+     * @param aTarget    the message target being observed.  any existing
+     *                   observer will be replaced.
+     * @param aObserver  the message observer to receive incoming messages
+     *                   for the specified target.  pass null to remove the
+     *                   existing observer.
+     */
+    void setMessageObserver(in nsIDRef aTarget, in ipcIMessageObserver aObserver);
+
+    /**
+     * send message asynchronously to the IPC daemon.  there is no guarantee
+     * that the message will be delivered.
+     *
+     * @param aTarget   the target of the message.  this is the ID of the
+     *                  daemon module that should receive this message.
+     * @param aData     the data of the message.
+     * @param aDataLen  the data length of the message.
+     */
+    [noscript] void sendMessage(in nsIDRef       aTarget,
+                                in string        aData,
+                                in unsigned long aDataLen);
+
+    /**
+     * forward message asynchronously via the IPC daemon to another application
+     * process.  there is no guarantee that the message will be delivered.
+     *
+     * @param aClientID  the client ID of the foreign application that should
+     *                   receive this message.
+     * 
+     * other parameters are identical to those for sendMessage.
+     */
+    [noscript] void forwardMessage(in unsigned long aClientID,
+                                   in nsIDRef       aTarget,
+                                   in string        aData,
+                                   in unsigned long aDataLen);
+};
+
+[scriptable, uuid(e40a4a3c-2dc1-470e-ab7f-5675fe1f1384)]
+interface ipcIMessageObserver : nsISupports
+{
+    /**
+     * @param aTarget   the target of the message, corresponding to the target
+     *                  this observer was registered under.  this parameter is
+     *                  passed to allow an observer instance to receive
+     *                  messages for more than one target.
+     * @param aData     the data of the message.
+     * @param aDataLen  the data length of the message.
+     */
+    [noscript] void onMessageAvailable(in nsIDRef       aTarget,
+                                       in string        aData,
+                                       in unsigned long aDataLen);
+};
+
+[scriptable, uuid(e858d450-62b2-482d-99bb-3b5425aa28cc)]
+interface ipcIClientInfo : nsISupports
+{
+    readonly attribute unsigned long ID;
+    readonly attribute ACString name;
+    readonly attribute nsISimpleEnumerator aliases;
+    readonly attribute nsISimpleEnumerator targets;
+};
+
+[scriptable, uuid(42283079-030c-4b13-b069-a08b7ad5eab2)]
+interface ipcIClientObserver : nsISupports
+{
+    /**
+     * client status values
+     */
+    const unsigned long CLIENT_UP   = 1;
+    const unsigned long CLIENT_DOWN = 2;
+
+    /**
+     * @param aRequestToken  the request token returned from the call that
+     *                       initiated this observation.  0 if initiated
+     *                       from a setClientObserver call.
+     * @param aClientInfo    client info.
+     * @param aStatus        client status (e.g. CLIENT_UP).
+     */
+    void onClientStatus(in unsigned long  aRequestToken,
+                        in ipcIClientInfo aClientInfo,
+                        in unsigned long  aStatus);
+
+    // XXX do we care about changes to the aliases and targets supported
+    //     by a client?  if so, how should we pass this information up?
+};
