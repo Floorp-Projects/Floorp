@@ -541,8 +541,9 @@ CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
 }
 
 /* convert an OID to dotted-decimal representation */
-static char *
-get_oid_string(SECItem *oid)
+/* Returns a string that must be freed with PR_smprintf_free(), */
+char *
+CERT_GetOidString(const SECItem *oid)
 {
     PRUint8 *end;
     PRUint8 *d;
@@ -668,7 +669,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
         tagName = n2k->name;
     } else {
 	/* handle unknown attribute types per RFC 2253 */
-	tagName = unknownTag = get_oid_string(&ava->type);
+	tagName = unknownTag = CERT_GetOidString(&ava->type);
     }
     maxLen = n2k->maxLen;
 

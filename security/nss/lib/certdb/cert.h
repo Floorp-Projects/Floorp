@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.39 2003/10/14 17:44:33 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.40 2003/11/04 01:48:39 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -70,6 +70,10 @@ extern CERTName *CERT_AsciiToName(char *string);
 extern char *CERT_NameToAscii(CERTName *name);
 
 extern CERTAVA *CERT_CopyAVA(PRArenaPool *arena, CERTAVA *src);
+
+/* convert an OID to dotted-decimal representation */
+/* Returns a string that must be freed with PR_smprintf_free(), */
+extern char * CERT_GetOidString(const SECItem *oid);
 
 /*
 ** Examine an AVA and return the tag that refers to it. The AVA tags are
