@@ -873,24 +873,26 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
   // background
   if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::background, value)) {
     if (eHTMLUnit_String == value.GetUnit()) {
-      // Resolve url to an absolute url
-      nsIURL* docURL = nsnull;
-      nsIDocument* doc = mDocument;
-      if (nsnull != doc) {
-        docURL = doc->GetDocumentURL();
-      }
-
       nsAutoString absURLSpec;
       nsAutoString spec;
       value.GetStringValue(spec);
-      nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
-      if (nsnull != docURL) {
-        NS_RELEASE(docURL);
+      if (spec.Length() > 0) {
+        // Resolve url to an absolute url
+        nsIURL* docURL = nsnull;
+        nsIDocument* doc = mDocument;
+        if (nsnull != doc) {
+          docURL = doc->GetDocumentURL();
+        }
+
+        nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
+        if (nsnull != docURL) {
+          NS_RELEASE(docURL);
+        }
+        nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+        color->mBackgroundImage = absURLSpec;
+        color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+        color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
       }
-      nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-      color->mBackgroundImage = absURLSpec;
-      color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-      color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
     }
   }
 
