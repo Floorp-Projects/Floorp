@@ -334,7 +334,7 @@ LocalVar('@platforms', '
 if ($newstuff ne "") {
     print "This version of Bugzilla contains some variables that you may \n",
           "to change and adapt to your local settings. Please edit the file\n",
-          "'localconfig' and return checksetup.pl\n\n",
+          "'localconfig' and rerun checksetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
           "checksetup.pl:  $newstuff\n";
     exit;
@@ -530,6 +530,9 @@ $table{bugs} =
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
     votes mediumint not null,
+    keywords mediumtext not null, ' # Note: keywords field is only a cache;
+                                # the real data comes from the keywords table.
+    . '
 
     index (assigned_to),
     index (creation_ts),
@@ -918,7 +921,7 @@ sub DropField ($$)
 
 
 
-# 5/12/99 Added a pref to control how much email you get.  This needs a new
+# 1999-05-12 Added a pref to control how much email you get.  This needs a new
 # column in the profiles table, so feed the following to mysql:
 
 AddField('profiles', 'emailnotification', 'enum("ExcludeSelfChanges", "CConly", 
@@ -926,7 +929,7 @@ AddField('profiles', 'emailnotification', 'enum("ExcludeSelfChanges", "CConly",
 
 
 
-# 6/22/99 Added an entry to the attachments table to record who the
+# 1999-06-22 Added an entry to the attachments table to record who the
 # submitter was.  Nothing uses this yet, but it still should be recorded.
 
 AddField('attachments', 'submitter_id', 'mediumint not null');
@@ -943,7 +946,7 @@ AddField('attachments', 'submitter_id', 'mediumint not null');
 
 
 
-# 9/15/99 Apparently, newer alphas of MySQL won't allow you to have "when"
+# 1999-9-15 Apparently, newer alphas of MySQL won't allow you to have "when"
 # as a column name.  So, I have had to rename a column in the bugs_activity
 # table.
 
@@ -951,11 +954,13 @@ RenameField ('bugs_activity', 'when', 'bug_when');
 
 
 
-# 10/11/99 Restructured voting database to add a cached value in each bug
+# 1999-10-11 Restructured voting database to add a cached value in each bug
 # recording how many total votes that bug has.  While I'm at it, I removed
 # the unused "area" field from the bugs database.  It is distressing to
 # realize that the bugs table has reached the maximum number of indices
 # allowed by MySQL (16), which may make future enhancements awkward.
+# (P.S. All is not lost; it appears that the latest betas of MySQL support
+# a new table format which will allow 32 indices.)
 
 DropField('bugs', 'area');
 AddField('bugs',     'votes',        'mediumint not null, add index (votes)');
@@ -977,6 +982,46 @@ ChangeFieldType ('bugs',       'product', 'varchar(64)');
 ChangeFieldType ('components', 'program', 'varchar(64)');
 ChangeFieldType ('products',   'product', 'varchar(64)');
 ChangeFieldType ('versions',   'program', 'varchar(64)');
+
+# 2000-01-16 Added a "keywords" field to the bugs table, which
+# contains a string copy of the entries of the keywords table for this
+# bug.  This is so that I can easily sort and display a keywords
+# column in bug lists.
+
+if (!GetFieldDef('bugs', 'keywords')) {
+    AddField('bugs', 'keywords', 'mediumtext not null');
+
+    my @kwords;
+    print "Making sure 'keywords' field of table 'bugs' is empty ...\n";
+    $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = '' " .
+             "WHERE keywords != ''");
+    print "Repopulating 'keywords' field of table 'bugs' ...\n";
+    my $sth = $dbh->prepare("SELECT keywords.bug_id, keyworddefs.name " .
+                            "FROM keywords, keyworddefs " .
+                            "WHERE keyworddefs.id = keywords.keywordid " .
+                            "ORDER BY keywords.bug_id, keyworddefs.name");
+    $sth->execute;
+    my @list;
+    my $bugid = 0;
+    my @row;
+    while (1) {
+        my ($b, $k) = ($sth->fetchrow_array());
+        if (!defined $b || $b ne $bugid) {
+            if (@list) {
+                $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
+                         $dbh->quote(join(', ', @list)) .
+                         " WHERE bug_id = $bugid");
+            }
+            if (!$b) {
+                last;
+            }
+            $bugid = $b;
+            @list = ();
+        }
+        push(@list, $k);
+    }
+}
+        
 
 
 

@@ -455,20 +455,6 @@ sub SnapShotDeps {
 }
 
 
-sub SnapShotKeywords {
-    my ($id) = (@_);
-    SendSQL("SELECT keyworddefs.name 
-             FROM keyworddefs, keywords
-             WHERE keywords.bug_id = $id AND keyworddefs.id = keywords.keywordid
-             ORDER BY keyworddefs.name");
-    my @list;
-    while (MoreSQLData()) {
-        push(@list, FetchOneColumn());
-    }
-    return join(',', @list);
-}
-    
-
 my $whoid = DBNameToIdAndCheck($::FORM{'who'});
 my $timestamp;
 
@@ -490,7 +476,6 @@ foreach my $id (@idlist) {
     my %dependencychanged;
     SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, keyworddefs read");
     my @oldvalues = SnapShotBug($id);
-    my $oldkeywords = SnapShotKeywords($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
         print "
@@ -587,18 +572,36 @@ The changes made were:
         # For add, we delete things we're adding (to make sure we don't
         # end up having them twice), and then we add them.
         # For delete, we just delete things on the list.
+        my $changed = 0;
         if ($keywordaction eq "makeexact") {
             SendSQL("DELETE FROM keywords WHERE bug_id = $id");
+            $changed = 1;
         }
         foreach my $keyword (@keywordlist) {
             if ($keywordaction ne "makeexact") {
                 SendSQL("DELETE FROM keywords
                          WHERE bug_id = $id AND keywordid = $keyword");
+                $changed = 1;
             }
             if ($keywordaction ne "delete") {
                 SendSQL("INSERT INTO keywords 
                          (bug_id, keywordid) VALUES ($id, $keyword)");
+                $changed = 1;
             }
+        }
+        if ($changed) {
+            SendSQL("SELECT keyworddefs.name 
+                     FROM keyworddefs, keywords
+                     WHERE keywords.bug_id = $id
+                         AND keyworddefs.id = keywords.keywordid
+                     ORDER BY keyworddefs.name");
+            my @list;
+            while (MoreSQLData()) {
+                push(@list, FetchOneColumn());
+            }
+            SendSQL("UPDATE bugs SET keywords = " .
+                    SqlQuote(join(', ', @list)) .
+                    " WHERE bug_id = $id");
         }
     }
 
@@ -685,9 +688,7 @@ The changes made were:
     #
     my @newvalues = SnapShotBug($id);
 
-    push(@oldvalues, $oldkeywords);
-    push(@newvalues, SnapShotKeywords($id));
-    foreach my $c (@::log_columns, "keywords") {
+    foreach my $c (@::log_columns) {
         my $col = $c;           # We modify it, don't want to modify array
                                 # values in place.
         my $old = shift @oldvalues;

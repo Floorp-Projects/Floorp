@@ -134,7 +134,7 @@ foreach my $ref (@checklist) {
 }
 
 
-Status("Checking profile ids...");
+Status("Checking profile ids");
 
 SendSQL("select userid,login_name from profiles");
 
@@ -154,13 +154,15 @@ undef $profid{0};
 
 
 Status("Checking reporter/assigned_to/qa_contact ids");
-SendSQL("select bug_id,reporter,assigned_to,qa_contact,votes from bugs");
+SendSQL("SELECT bug_id,reporter,assigned_to,qa_contact,votes,keywords " .
+        "FROM bugs");
 
 my %votes;
 my %bugid;
+my %keyword;
 
 while (@row = FetchSQLData()) {
-    my($id, $reporter, $assigned_to, $qa_contact, $v) = (@row);
+    my($id, $reporter, $assigned_to, $qa_contact, $v, $k) = (@row);
     $bugid{$id} = 1;
     if (!defined $profid{$reporter}) {
         Alert("Bad reporter $reporter in " . BugLink($id));
@@ -173,6 +175,9 @@ while (@row = FetchSQLData()) {
     }
     if ($v != 0) {
         $votes{$id} = $v;
+    }
+    if ($k) {
+        $keyword{$id} = $k;
     }
 }
 
@@ -197,6 +202,105 @@ foreach my $id (keys %votes) {
 if ($offervotecacherebuild) {
     print qq{<a href="sanitycheck.cgi?rebuildvotecache=1">Click here to rebuild the vote cache</a><p>\n};
 }
+
+
+Status("Checking keywords table");
+
+my %keywordids;
+SendSQL("SELECT id, name FROM keyworddefs");
+while (@row = FetchSQLData()) {
+    my ($id, $name) = (@row);
+    if ($keywordids{$id}) {
+        Alert("Duplicate entry in keyworddefs for id $id");
+    }
+    $keywordids{$id} = 1;
+    if ($name =~ /,/ || $name =~ /^\s/ || $name =~ /\s$/) {
+        Alert("Bogus name in keyworddefs for id $id");
+    }
+}
+
+
+SendSQL("SELECT bug_id, keywordid FROM keywords ORDER BY bug_id, keywordid");
+my $lastid;
+my $lastk;
+while (@row = FetchSQLData()) {
+    my ($id, $k) = (@row);
+    if (!defined $bugid{$id}) {
+        Alert("Bad bugid " . BugLink($id));
+    }
+    if (!$keywordids{$k}) {
+        Alert("Bogus keywordids $k found in keywords table");
+    }
+    if (defined $lastid && $id eq $lastid && $k eq $lastk) {
+        Alert("Duplicate keyword ids found in bug " . BugLink($id));
+    }
+    $lastid = $id;
+    $lastk = $k;
+}
+
+Status("Checking cached keywords");
+
+my %realk;
+
+if (exists $::FORM{'rebuildkeywordcache'}) {
+    SendSQL("LOCK TABLES bugs write, keywords read, keyworddefs read");
+}
+
+SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
+        "FROM keywords, keyworddefs " .
+        "WHERE keyworddefs.id = keywords.keywordid " .
+        "ORDER BY keywords.bug_id, keyworddefs.name");
+
+my $lastb;
+my @list;
+while (1) {
+    my ($b, $k) = (FetchSQLData());
+    if (!defined $b || $b ne $lastb) {
+        if (@list) {
+            $realk{$lastb} = join(', ', @list);
+        }
+        if (!$b) {
+            last;
+        }
+        $lastb = $b;
+        @list = ();
+    }
+    push(@list, $k);
+}
+
+my @fixlist;
+foreach my $b (keys(%keyword)) {
+    if (!exists $realk{$b} || $realk{$b} ne $keyword{$b}) {
+        push(@fixlist, $b);
+    }
+}
+foreach my $b (keys(%realk)) {
+    if (!exists $keyword{$b}) {
+        push(@fixlist, $b);
+    }
+}
+if (@fixlist) {
+    @fixlist = sort {$a <=> $b} @fixlist;
+    Alert("Bug(s) found with incorrect keyword cache: " .
+          join(', ', @fixlist));
+    if (exists $::FORM{'rebuildkeywordcache'}) {
+        Status("OK, now fixing keyword cache.");
+        foreach my $b (@fixlist) {
+            my $k = '';
+            if (exists($realk{$b})) {
+                $k = $realk{$b};
+            }
+            SendSQL("UPDATE bugs SET delta_ts = delta_ts, keywords = " .
+                    SqlQuote($k) .
+                    " WHERE bug_id = $b");
+        }
+        SendSQL("UNLOCK TABLES");
+        Status("Keyword cache fixed.");
+    } else {
+        print qq{<a href="sanitycheck.cgi?rebuildkeywordcache=1">Click here to rebuild the keyword cache</a><p>\n};
+    }
+}
+
 
 
 Status("Checking CC table");
