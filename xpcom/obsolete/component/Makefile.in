@@ -52,12 +52,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../ \
 		$(NULL)
 
-# Force use of PIC
-FORCE_USE_PIC	= 1 
-
-FORCE_SHARED_LIB = 1
-
-
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		    $(MOZ_XPCOM_OBSOLETE_LIBS) \
 		    $(NULL)
