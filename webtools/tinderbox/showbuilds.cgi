@@ -70,6 +70,12 @@ if ($form{'quickparse'}) {
     exit();
 }
 
+if ($form{'rdf'}) {
+    print "Content-type: text/plain\n\n";
+    &do_rdf;
+    exit();
+}
+
 
 if ($nowdate eq $maxdate) {
   print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
@@ -758,6 +764,44 @@ sub do_express {
 }
 
 
+sub loadquickparseinfo {
+    my ($t, $build, $times) = (@_);
+    open(BUILDLOG, "<$t/build.dat" ) || die "Bad treename $t";
+    while( <BUILDLOG> ){
+        chop;
+        my ($mailtime, $buildtime, $buildname, $errorparser,
+            $buildstatus, $logfile) = split( /\|/ );
+        if( $buildstatus eq 'success' || $buildstatus eq 'busted'){
+            $build->{$buildname} = $buildstatus;
+            $times->{$buildname} = $buildtime;
+        }
+    }
+    close( BUILDLOG );
+    
+    if( -r "$t/ignorebuilds.pl" ){
+        require "$t/ignorebuilds.pl";
+        foreach my $z (keys(%$ignore_builds)) {
+            delete $build->{$z}; # We're supposed to ignore this
+                                # build entirely.
+        }
+    }
+    my @keys = sort keys %build;
+    
+    my $maxtime = 0;
+    for my $buildname (@keys) {
+        if ($maxtime < $times->{$buildname}) {
+            $maxtime = $times->{$buildname};
+        }
+    }
+    for my $buildname (@keys ){
+        if ($times->{$buildname} < $maxtime - 12*60*60) {
+            # This build is more than 12 hours old.  Ignore it.
+            delete $times->{$buildname};
+            delete $build->{$buildname};
+        }
+    }
+}
+
 sub do_quickparse {
     if ($tree eq '') {
         foreach my $t (make_tree_list()) {
@@ -775,41 +819,41 @@ sub do_quickparse {
         }
         my %build;
         my %times;
-        open(BUILDLOG, "<$t/build.dat" ) || die "Bad treename $t";
-        while( <BUILDLOG> ){
-            chop;
-            ($mailtime, $buildtime, $buildname, $errorparser,
-             $buildstatus, $logfile) = 
-                 split( /\|/ );
-            if( $buildstatus eq 'success' || $buildstatus eq 'busted'){
-                $build{$buildname} = $buildstatus;
-                $times{$buildname} = $buildtime;
-            }
-        }
-        close( BUILDLOG );
-        
-        if( -r "$t/ignorebuilds.pl" ){
-            require "$t/ignorebuilds.pl";
-            foreach my $z (keys(%$ignore_builds)) {
-                delete $build{$z}; # We're supposed to ignore this
-                                   # build entirely.
-            }
-        }
-        my @keys = sort keys %build;
+        loadquickparseinfo($t, \%build, \%times);
 
-        my $maxtime = 0;
-        for my $buildname (@keys) {
-            if ($maxtime < $times{$buildname}) {
-                $maxtime = $times{$buildname};
-            }
-        }
-
-        for my $buildname (@keys ){
-            if ($times{$buildname} < $maxtime - 12*60*60) {
-                # This build is more than 12 hours old.  Ignore it.
-                next;
-            }
+        for my $buildname (sort(keys %build) ){
             print "Build|$t|$buildname|$build{$buildname}\n";
         }
     }
+}
+
+sub do_rdf {
+    my $mainurl = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}?tree=$tree";
+    print qq{
+<?xml version="1.0"?>
+<rdf:RDF 
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns="http://my.netscape.com/rdf/simple/0.9/">
+<channel>
+<title>Tinderbox - $tree</title>
+<description>Build bustages for $tree</description>
+<link>$mainurl</link>
+</channel>
+};
+    $bonsai_tree = "";
+    require "$tree/treedata.pl";
+    if ($bonsai_tree ne "") {
+        my $state = tree_open() ? "OPEN" : "CLOSED";
+        print "<item><title>The tree is currently $state</title></item>\n";
+    }
+    my %build;
+    my %times;
+    loadquickparseinfo($tree, \%build, \%times);
+    
+    for my $buildname (sort(keys %build)) {
+        if ($build{$buildname} eq 'busted') {
+            print "<item><title>$buildname is in flames</title></item>\n";
+        }
+    }
+    print "</rdf:RDF>\n";
 }
