@@ -30,7 +30,7 @@ $field_separator = '<<fs>>';
 $configure_in    = 'configure-mirror/mozilla/configure.in';
 $chrome_color    = '#F0A000';
 $CVSROOT         = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-$ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin"; # for cvs
+$ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin:/usr/local/bin"; # for cvs & m4
 
 
 if ($query->param()) {
@@ -198,7 +198,7 @@ sub print_script {
 
 sub print_configure_form {
   mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
-  system 'echo :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot Ay=0=a%0bZ | cat > configure-mirror/.cvspass' if not -f 'configure-miror/.cvspass';
+  system 'echo :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot Ay=0=a%0bZ | cat > configure-mirror/.cvspass' if not -f 'configure-mirror/.cvspass';
   link 'config.cgi', '.mozconfig.sh' if not -f '.mozconfig.sh';
   # Set the HOME variable to pick up '.cvspass' for cvs login
   system "cd configure-mirror && HOME=. cvs -d $CVSROOT co mozilla/configure.in > /dev/null 2>&1";
