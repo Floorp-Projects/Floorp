@@ -1,0 +1,129 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Stuart Parmenter <pavlov@netscape.com>
+ */
+
+
+#include "nsISupports.idl"
+
+native int(int);
+[ptr] native nsDispatchListener(nsDispatchListener);
+[ptr] native nsIWidget(nsIWidget);
+[ref] native PRBoolRef(PRBool);
+[ref] native voidStarRef(void *);
+
+%{ C++
+#include "nsIEventQueue.h"
+
+/**
+ * Flags for the getNativeData function.
+ * See GetNativeData()
+ */
+#define NS_NATIVE_SHELL   0
+
+/**
+ * During the nsIAppShell Run method notify this listener 
+ * after each message dispatch.
+ * @see SetDispatchListener member function of nsIAppShell 
+ */
+class nsDispatchListener {
+public:
+  virtual void AfterDispatch() = 0;
+};
+
+class nsIWidget;
+%}
+
+
+[uuid(a0757c31-eeac-11d1-9ec1-00aa002fb821)]
+interface nsIAppShell : nsISupports
+{
+ /**
+  * Creates an application shell
+  */ 
+
+  void Create(inout int argc, inout string argv);
+
+ /**
+  * Enter an event loop.
+  * Don't leave until application exits.
+  */
+  
+  void Run();
+
+ /**
+  * Prepare to process events. 
+  */
+  
+  void Spinup();
+
+ /**
+  * Prepare to stop processing events.  
+  */
+  
+  void Spindown();
+
+ /**
+  * Push event queue onto current thread and begin processing events from it
+  */
+  void PushThreadEventQueue();
+
+ /**
+  * Pop event queue from current thread's stack
+  */
+  void PopThreadEventQueue();
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  void GetNativeEvent(in PRBoolRef aRealEvent, in voidStarRef aEvent);
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  void DispatchNativeEvent(in PRBool aRealEvent, in voidStar aEvent);
+
+ /**
+  * After event dispatch execute app specific code
+  */
+  
+  void SetDispatchListener(in nsDispatchListener aDispatchListener);
+
+  /**
+   * Exit the handle event loop
+   */
+
+  void Exit();
+
+  /**
+   * Determines whether a given event should be processed assuming the given
+   * widget is a currently active modal window
+   */
+  void EventIsForModalWindow(in PRBool aRealEvent, in voidStar aEvent, in nsIWidget aWidget,
+                             out PRBool aForWindow);
+
+};
+
+#endif // nsIAppShell_h__
+
+

@@ -27,6 +27,9 @@
 
 #include "nsISupports.idl"
 #include "nsIScriptableRegion.idl"
+#include "nsIRollupListner.idl"
+#include "nsIToolkit.idl"
+#include "nsIAppShell.idl"
 
 %{ C++
 #include "nsRect.h"
@@ -59,8 +62,6 @@ class   nsIRollupListener;
 [ptr] native nsRect(nsRect);
 native nsRectRef(nsRect &);
 [ptr] native nsIDeviceContext(nsIDeviceContext);
-[ptr] native nsIAppShell(nsIAppShell);
-[ptr] native nsIToolkit(nsIToolkit);
 
 [ptr] native nsFont(nsFont);
 [ptr] native nsIMouseListener(nsIMouseListener);
@@ -273,26 +274,19 @@ interface nsIWidget : nsISupports
    * @param     aRect     the widget dimension
    * @param     aHandleEventFunction the event handler callback function
    */
-  void Create2(in nsNativeWidget  aParent,
-               [const] in nsRectRef aRect,
-               in EVENT_CALLBACK   aHandleEventFunction,
-               in nsIDeviceContext aContext,
-               in nsIAppShell      aAppShell,
-               in nsIToolkit       aToolkit,
-               in nsWidgetInitData aInitData);
+  void CreateFromNativeWidget(in nsNativeWidget  aParent,
+                              [const] in nsRectRef aRect,
+                              in EVENT_CALLBACK   aHandleEventFunction,
+                              in nsIDeviceContext aContext,
+                              in nsIAppShell      aAppShell,
+                              in nsIToolkit       aToolkit,
+                              in nsWidgetInitData aInitData);
 
   /**
    * Accessor functions to get and set the client data associated with the
    * widget.
    */
   attribute voidStar ClientData;
-
-  /**
-   * Close and destroy the internal native window. 
-   * This method does not delete the widget.
-   */
-
-  void Destroy();
 
   /**
    * Return the parent Widget of this Widget or nsnull if this is a 
@@ -315,11 +309,11 @@ interface nsIWidget : nsISupports
   
   /**
    * Show or hide this widget
-   *
+   * XXX Replaced Show() and IsVisible()
    * @param aState PR_TRUE to show the Widget, PR_FALSE to hide it
    *
    */
-  void Show(in PRBool aState);
+  attribute PRBool Visibility;
 
   /**
    * Make the window modal 
@@ -328,12 +322,6 @@ interface nsIWidget : nsISupports
    *
    */
   void SetModal();
-
-  /**
-   * Returns whether the window is visible
-   *
-   */
-  void IsVisible(out PRBool aState);
 
   /**
    * Move this widget.
