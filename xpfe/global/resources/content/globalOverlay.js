@@ -69,7 +69,20 @@ function goEditCardDialog(abURI, card, okCallback)
 
 function goPreferences(id, pane)
 {
-  var prefWindow = window.openDialog("chrome://pref/content/pref.xul","PrefWindow", "chrome,modal=yes,resizable=yes", pane);
+  var prefWindowModalityPref;
+  try {
+    var pref = Components.classes["component://netscape/preferences"].getService();
+    if( pref ) 
+      pref = pref.QueryInterface( Components.interfaces.nsIPref );
+    if( pref )
+      prefWindowModalityPref = pref.GetBoolPref( "browser.prefWindowModal");
+  }
+  catch(e) {
+    prefWindowModalityPref = true;
+  }
+  var modality = prefWindowModalityPref ? "yes" : "no";
+  
+  var prefWindow = window.openDialog("chrome://pref/content/pref.xul","PrefWindow", "chrome,modal=" + modality + ",resizable=yes", pane);
 }
 
 
