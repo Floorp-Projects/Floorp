@@ -208,6 +208,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                       aReflowState.availableWidth,
                       aReflowState.availableHeight));
 
+  nsIFrame* kidFrame = mFrames.FirstChild();
   nsIFrame* targetFrame;
   nsIFrame* nextFrame;
 
@@ -234,7 +235,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // Get the next frame in the reflow chain, and verify that it's our
     // child frame
     aReflowState.reflowCommand->GetNext(nextFrame);
-    NS_ASSERTION(nextFrame == mFrames.FirstChild(), "unexpected reflow command next-frame");
+    NS_ASSERTION(nextFrame == kidFrame, "unexpected reflow command next-frame");
   }
 
   // Calculate the amount of space needed for borders
@@ -264,25 +265,52 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // and inside of any vertical and horizontal scrollbars. We need to add
   // back the padding area that was subtracted off
   nsSize scrollAreaSize;
+  PRBool roomForVerticalScrollbar = PR_FALSE;  // if we allocated room for vertical scrollbar
+
   scrollAreaSize.width = aReflowState.computedWidth + padding.left + padding.right;
-  // Subtract for the width of the vertical scrollbar. We always do this
-  // regardless of whether scrollbars are auto or always visible
-  scrollAreaSize.width -= NSToCoordRound(sbWidth);
+
   if (NS_AUTOHEIGHT == aReflowState.computedHeight) {
     // We have an 'auto' height and so we should shrink wrap around the
     // scrolled frame. Let the scrolled frame be as high as the available
     // height
     scrollAreaSize.height = aReflowState.availableHeight;
     scrollAreaSize.height -= border.top + border.bottom;
-
-    // XXX Check for min/max limits...
   } else {
     // We have a fixed height so use the computed height plus padding
     // that applies to the scrolled frame
     scrollAreaSize.height = aReflowState.computedHeight + padding.top +
       padding.bottom;
   }
-  // If scrollbars are always visible then subtract for the height of the
+  // See whether we have 'auto' scrollbars
+  // XXX What about the case where we're shrink-wrapping our height?
+  if (display->mOverflow == NS_STYLE_OVERFLOW_SCROLL) {
+    // Always show scrollbars, so subtract for the space talen up by the
+    // vertical scrollbar
+    scrollAreaSize.width -= NSToCoordRound(sbWidth);
+
+  } else {
+    // Predict whether we'll need a vertical scrollbar
+    if (eReflowReason_Initial == aReflowState.reason) {
+      roomForVerticalScrollbar = PR_TRUE;
+
+    } else {
+      // Just assume the current scenario.
+      // Note: an important but subtle point is that for incremental reflow
+      // we must give the frame being reflowed the same amount of available
+      // width; otherwise, it's not only just an incremental reflow but also
+      // a resize reflow
+      nsSize  kidSize;
+      kidFrame->GetSize(kidSize);
+      if (kidSize.height > scrollAreaSize.height) {
+        roomForVerticalScrollbar = PR_TRUE;
+      }
+    }
+
+    if (roomForVerticalScrollbar) {
+      scrollAreaSize.width -= NSToCoordRound(sbWidth);
+    }
+  }
+  // If scrollbars are always visible, then subtract for the height of the
   // horizontal scrollbar
   if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
     scrollAreaSize.height -= NSToCoordRound(sbHeight);
@@ -290,7 +318,6 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
-  nsIFrame*           kidFrame = mFrames.FirstChild();
   nsSize              kidReflowSize(scrollAreaSize.width, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState   kidReflowState(aPresContext, kidFrame, aReflowState,
                                      kidReflowSize);
@@ -321,37 +348,54 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // XXX Speculative code...
-  // Now if we're 'auto' scrolling and we don't need the vertical scrollbar
-  // then reflow the child frame again, this time letting it reflow to the space
-  // where the vertical scrollbar would be...
+  // If we're 'auto' scrolling and not shrink-wrapping our height, then see
+  // whether we correctly predicted whether a vertical scrollbar is needed
   if ((display->mOverflow != NS_STYLE_OVERFLOW_SCROLL) &&
       (NS_AUTOHEIGHT != aReflowState.computedHeight)) {
-    if (kidDesiredSize.height < scrollAreaSize.height) {
-      // No vertical scrollbar needed so reflow the document with a larger
-      // computed width
-      // XXX We need to be checking for horizontal scrolling...
-      kidReflowState.availableWidth += NSToCoordRound(sbWidth);
-      kidReflowState.computedWidth += NSToCoordRound(sbWidth);
-      scrollAreaSize.width += NSToCoordRound(sbWidth);
+
+    PRBool  mustReflow = PR_FALSE;
+
+    // There are two cases to consider
+    if (roomForVerticalScrollbar) {
+      if (kidDesiredSize.height <= scrollAreaSize.height) {
+        // We left room for the vertical scrollbar, but it's not needed;
+        // reflow with a larger computed width
+        // XXX We need to be checking for horizontal scrolling...
+        kidReflowState.availableWidth += NSToCoordRound(sbWidth);
+        kidReflowState.computedWidth += NSToCoordRound(sbWidth);
+        scrollAreaSize.width += NSToCoordRound(sbWidth);
+        mustReflow = PR_TRUE;
+      }
+    } else {
+      if (kidDesiredSize.height > scrollAreaSize.height) {
+        // We didn't leave room for the vertical scrollbar, but it turns
+        // out we needed it
+        kidReflowState.availableWidth -= NSToCoordRound(sbWidth);
+        kidReflowState.computedWidth -= NSToCoordRound(sbWidth);
+        scrollAreaSize.width -= NSToCoordRound(sbWidth);
+        mustReflow = PR_TRUE;
+      }
+    }
+
+    if (mustReflow) {
       kidReflowState.reason = eReflowReason_Resize;
       ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                   aStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-    }
 
-    // If it's an area frame then get the total size, which includes the
-    // space taken up by absolutely positioned child elements
-    nsIAreaFrame* areaFrame;
-    if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
-      nscoord xMost, yMost;
-
-      areaFrame->GetPositionedInfo(xMost, yMost);
-      if (xMost > kidDesiredSize.width) {
-        kidDesiredSize.width = xMost;
-      }
-      if (yMost > kidDesiredSize.height) {
-        kidDesiredSize.height = yMost;
+      // If it's an area frame then get the total size, which includes the
+      // space taken up by absolutely positioned child elements
+      nsIAreaFrame* areaFrame;
+      if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
+        nscoord xMost, yMost;
+  
+        areaFrame->GetPositionedInfo(xMost, yMost);
+        if (xMost > kidDesiredSize.width) {
+          kidDesiredSize.width = xMost;
+        }
+        if (yMost > kidDesiredSize.height) {
+          kidDesiredSize.height = yMost;
+        }
       }
     }
   }
@@ -371,17 +415,6 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
         kidDesiredSize.height -= NSToCoordRound(sbHeight);
       }
     }
-    
-#if 0
-    if (kidDesiredSize.height <= scrollAreaSize.height) {
-      // If the scrollbars are auto and the scrolled frame is fully visible
-      // vertically then the vertical scrollbar will be hidden so increase the
-      // width of the scrolled frame
-      if (display->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
-        kidDesiredSize.width += NSToCoordRound(sbWidth);
-      }
-    }
-#endif
   }
   // Make sure the width of the scrolled frame fills the entire scroll area
   if (kidDesiredSize.width < scrollAreaSize.width) {
@@ -394,31 +427,12 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   nsRect rect(x, y, kidDesiredSize.width, kidDesiredSize.height);
   kidFrame->SetRect(rect);
 
-  // XXX Moved to root frame
-#if 0
-  // If this is a resize reflow then repaint the scrolled frame
-  if (eReflowReason_Resize == aReflowState.reason) {
-    nsIView*        scrolledView;
-    nsIViewManager* viewManager;
-    nsRect          damageRect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
-
-    mFirstChild->GetView(scrolledView);
-    scrolledView->GetViewManager(viewManager);
-    viewManager->UpdateView(scrolledView, damageRect, NS_VMREFRESH_NO_SYNC);
-    NS_RELEASE(viewManager);
-  }
-#endif
-
   // Compute our desired size
   aDesiredSize.width = scrollAreaSize.width;
-#if 0
-  aDesiredSize.width += border.left + border.right + NSToCoordRound(sbWidth);
-#else
   aDesiredSize.width += border.left + border.right;
   if (kidDesiredSize.height > scrollAreaSize.height) {
     aDesiredSize.width += NSToCoordRound(sbWidth);
   }
-#endif
   
   // For the height if we're shrink wrapping then use whatever is smaller between
   // the available height and the child's desired size; otherwise, use the scroll
