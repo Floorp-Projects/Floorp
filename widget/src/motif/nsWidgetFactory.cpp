@@ -35,6 +35,9 @@
 #include "nsListBox.h"
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
+#include "nsDialog.h"
+#include "nsLabel.h"
+
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -50,6 +53,8 @@ static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
 static NS_DEFINE_IID(kCListBoxCID,    NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCComboBoxCID,    NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
+static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
@@ -178,6 +183,12 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCChild)) {
         inst = new ChildWindow(aOuter);
+    }
+    else if (mClassID.Equals(kCDialog)) {
+        inst = new nsDialog(aOuter);
+    }
+    else if (mClassID.Equals(kCLabel)) {
+        inst = new nsLabel(aOuter);
     }
     else if (mClassID.Equals(kCLookAndFeelCID)) {
         nsLookAndFeel *laf = new nsLookAndFeel(aOuter);
