@@ -68,7 +68,7 @@ public:
     PRBool              mMultipart;
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
-    PRInt32             mRefCount;
+
 
     nsString            mSourceType;
 
