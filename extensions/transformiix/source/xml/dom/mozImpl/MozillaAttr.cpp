@@ -32,6 +32,8 @@
 // 
  
 #include "mozilladom.h" 
+#include "nsCOMPtr.h"
+#include "nsIXMLContent.h"
  
 // 
 //Construct an Attribute wrapper object using the specified nsIDOMAttr object 
@@ -77,9 +79,25 @@ void Attr::setNSObj(nsIDOMAttr* attr)
 const String& Attr::getName() 
 { 
   nsString* name = new nsString(); 
+  nsString prefix; 
  
-  if (nsAttr->GetName(*name) == NS_OK) 
-    return *(ownerDocument->createDOMString(name)); 
+  /* XXX HACK (pvdb)
+     This can be removed once we have DOM Level 2 support
+     in Mozilla
+  */
+  if (nsAttr->GetName(*name) == NS_OK)
+    {
+      /* XXX HACK (pvdb)
+         This can be removed once we have DOM Level 2 support
+         in Mozilla
+      */
+      if (NS_SUCCEEDED(nsAttr->GetPrefix(prefix)) && (prefix.Length() > 0))
+      {
+          name->InsertWithConversion(":", 0);
+          name->Insert(prefix, 0);
+      }
+      return *(ownerDocument->createDOMString(name));
+    }
   else 
     { 
       //name won't be used, so delete it. 
