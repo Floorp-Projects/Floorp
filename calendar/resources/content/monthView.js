@@ -958,9 +958,15 @@ var monthViewEventDragAndDropObserver  = {
   onDragStart: function (evt, transferData, action){
       if( evt.target.calendarEventDisplay ) 
          gEventBeingDragged = evt.target.calendarEventDisplay.event;
-      else if( evt.target.parentNode.calendarEventDisplay )
-         gEventBeingDragged = evt.target.parentNode.calendarEventDisplay.event;
-
+      else {
+	if( evt.target.parentNode.calendarEventDisplay )
+	  gEventBeingDragged = evt.target.parentNode.calendarEventDisplay.event;
+	else if(evt.target.calendarToDo || evt.target.parentNode.calendarToDo) {
+	  dump("\n ToDo Drag not supported yet");
+	  gEventBeingDragged = null ;
+	  return;
+	}
+      }
       //dump( "\nEvent being dragged is "+gEventBeingDragged );
       transferData.data=new TransferData();
       transferData.data.addDataForFlavour("text/unicode",0);
@@ -1000,29 +1006,37 @@ var monthViewEventDragAndDropObserver  = {
     
     var newEndDate = oldEndDate.getTime() + Difference;
 
-    gEventBeingDragged.start.setTime( newStartDate.getTime() );
-    gEventBeingDragged.end.setTime( newEndDate );
-    
-    if( gEventBeingDragged.recurWeekdays > 0 )
-    {
-        //shift the days from their old days to their new days.
-        if( Difference < 0 )
-            Difference += 7;
+    //shift the days from their old days to their new days.
+    //Coupled with the shift below : Does this work ?
+    if( Difference < 0 )
+        Difference += 7;
 
-        gEventBeingDragged.recurWeekdays = gEventBeingDragged.recurWeekdays << Difference;
-    }
     //edit the event being dragged to change its start and end date
     //don't change the start and end time though.
     if( evt.ctrlKey == true )
     {
         var eventToCopy = gEventBeingDragged.clone();
-        eventToCopy.id = 0; //set the id to 0 so that it generates a new one
+        eventToCopy.id = null; //set the id to null so that it generates a new one
+        eventToCopy.start.setTime( newStartDate.getTime() );
+        eventToCopy.end.setTime( newEndDate );
+    
+        if( eventToCopy.recurWeekdays > 0 )
+          {
+            eventToCopy.recurWeekdays = eventToCopy.recurWeekdays << Difference;
+          }
         
         gICalLib.addEvent( eventToCopy, gEventBeingDragged.parent.server );  
     }
     else
     {
-        gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
+      gEventBeingDragged.start.setTime( newStartDate.getTime() );
+      gEventBeingDragged.end.setTime( newEndDate );
+    
+      if( gEventBeingDragged.recurWeekdays > 0 )
+      {
+        gEventBeingDragged.recurWeekdays = gEventBeingDragged.recurWeekdays << Difference;
       }
+      gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
+    }
   }
 };

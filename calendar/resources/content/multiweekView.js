@@ -206,8 +206,8 @@ function MultiweekView( calendarWindow )
          dayBoxItem.setAttribute( "oncontextmenu", "gCalendarWindow.multiweekView.contextClickDay( event )" );
 
          //set the drop
-         dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,multiweekViewEventDragAndDropObserver)" );
-         dayBoxItem.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,multiweekViewEventDragAndDropObserver)" );
+         dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver)" );
+         dayBoxItem.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,monthViewEventDragAndDropObserver)" );
          
          //set the double click of day boxes
          dayBoxItem.setAttribute( "ondblclick", "gCalendarWindow.multiweekView.doubleClickDay( event )" );
@@ -328,7 +328,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "eventTooltip" );
-         eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,multiweekViewEventDragAndDropObserver);" );
+         eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
          // add a property to the event box that holds the calendarEvent that the
          // box represents
 
@@ -361,7 +361,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 
          //you need this flex in order for text to crop
          eventBoxText.setAttribute( "flex", "1" );
-         eventBoxText.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,multiweekViewEventDragAndDropObserver);" );
+         eventBoxText.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
          // add the text to the event box and the event box to the day box
          
@@ -447,7 +447,7 @@ MultiweekView.prototype.getToDoBox = function multiweekView_getToDoBox( calendar
   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarToDo, event )" );
   eventBox.setAttribute( "tooltip", "eventTooltip" );
   eventBox.setAttribute( "ondraggesture", 
-		"nsDragAndDrop.startDrag(event,multiweekViewEventDragAndDropObserver);" );
+		"nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
   // add a property to the event box that holds the calendarEvent that the
   // box represents
   
@@ -475,7 +475,7 @@ MultiweekView.prototype.getToDoBox = function multiweekView_getToDoBox( calendar
   eventBox.appendChild( newImage );
   eventBoxText.setAttribute( "flex", "1" );
   eventBoxText.setAttribute( "ondraggesture", 
-		  "nsDragAndDrop.startDrag(event,multiweekViewEventDragAndDropObserver);" );
+		  "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
   // add the text to the event box and the event box to the day box
   eventBox.appendChild( eventBoxText );        
   return (eventBox) ; 
@@ -1076,89 +1076,3 @@ MultiweekView.prototype.setFictitiousEvents = function multiweekView_setFictitio
   eventDotBox.appendChild( eventBox );
   dotBoxHolder.appendChild( eventDotBox );
 }
-
-
-/*
-drag and drop stuff 
-*/
-var gEventBeingDragged = false;
-var gBoxBeingDroppedOn = false;
-
-var multiweekViewEventDragAndDropObserver  = {
-  onDragStart: function (evt, transferData, action){
-      if( evt.target.calendarEventDisplay ) 
-         gEventBeingDragged = evt.target.calendarEventDisplay.event;
-      else {
-	if( evt.target.parentNode.calendarEventDisplay )
-	  gEventBeingDragged = evt.target.parentNode.calendarEventDisplay.event;
-	else if(evt.target.calendarToDo || evt.target.parentNode.calendarToDo) {
-	  dump("\n ToDo Drag not supported yet");
-	  gEventBeingDragged = null ;
-	  return;
-	}
-      }
-      //dump( "\nEvent being dragged is "+gEventBeingDragged );
-      transferData.data=new TransferData();
-      transferData.data.addDataForFlavour("text/unicode",0);
-  },
-  getSupportedFlavours : function () {
-    var weekflavours = new FlavourSet();
-    weekflavours.appendFlavour("text/unicode");
-    return weekflavours;
-  },
-  onDragOver: function (evt,flavour,session){
-    //dump( "on dragged over "+evt.target.getAttribute( "id" )+"\n" );
-    gBoxBeingDroppedOn = document.getElementById( evt.target.getAttribute( "id" ) );
-    //dump( evt.target.getAttribute( "id" ) );
-  },
-  onDrop: function (evt,dropdata,session){
-    //get the date of the current event box.
-    //dump( "\n\nDROP EVNET->\n"+gEventBeingDragged.start );
-
-    if( gBoxBeingDroppedOn.date == null )
-        return;
-    
-    var newDay = new Date(gBoxBeingDroppedOn.date) ;
-
-    var oldStartDate = new Date( gEventBeingDragged.start.getTime() );
-    var oldEndDate = new Date( gEventBeingDragged.end.getTime() );
-
-    var newStartDate = new Date( oldStartDate.getTime() ) ;
-    newStartDate.setFullYear( newDay.getFullYear());
-    //call setMonth() twice necessary, because of a bug ? observed in Mozilla 1.2.1. :
-    //     - the bug consequence is that an event drag from month 0 (Jan.) to month 1 (Feb)
-    //       is set by a single call to month 2 (Mar). 
-    newStartDate.setMonth( newDay.getMonth() );
-    newStartDate.setMonth( newDay.getMonth() );
-    newStartDate.setDate( newDay.getDate());
-
-    var Difference = newStartDate.getTime() - oldStartDate.getTime();
-    
-    var newEndDate = oldEndDate.getTime() + Difference;
-
-    gEventBeingDragged.start.setTime( newStartDate.getTime() );
-    gEventBeingDragged.end.setTime( newEndDate );
-    
-    if( gEventBeingDragged.recurWeekdays > 0 )
-    {
-        //shift the days from their old days to their new days.
-        if( Difference < 0 )
-            Difference += 7;
-
-        gEventBeingDragged.recurWeekdays = gEventBeingDragged.recurWeekdays << Difference;
-    }
-    //edit the event being dragged to change its start and end date
-    //don't change the start and end time though.
-    if( evt.ctrlKey == true )
-    {
-        var eventToCopy = gEventBeingDragged.clone();
-        eventToCopy.id = 0; //set the id to 0 so that it generates a new one
-        
-        gICalLib.addEvent( eventToCopy, gEventBeingDragged.parent.server );  
-    }
-    else
-    {
-        gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
-      }
-  }
-};
