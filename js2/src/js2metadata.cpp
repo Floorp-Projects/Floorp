@@ -444,7 +444,7 @@ namespace MetaData {
                                 if (unchecked 
                                         && (f->attributes == NULL)
                                         && ((topFrame->kind == PackageKind)
-                                                        || (topFrame->kind == BlockKind)
+                                                        || (topFrame->kind == BlockFrameKind)
                                                         || (topFrame->kind == ParameterKind)) ) {
                                     DynamicVariable *v = defineHoistedVar(env, f->function.name, p);
                                     v->value = OBJECT_TO_JS2VAL(fObj);
@@ -2364,18 +2364,31 @@ doUnary:
         return NULL;
     }
 
-    // Returns the most specific regional frame. A regional frame is either any frame other than 
-    // a local block frame or a local block frame whose immediate enclosing frame is a class.
+    // getRegionalEnvironment(env) returns all frames in env up to and including the first 
+    // regional frame. A regional frame is either any frame other than a with frame or local 
+    // block frame, a local block frame directly enclosed in a class, or a local block frame 
+    // directly enclosed in a with frame directly enclosed in a class.
+    // In this implementation, the return value is the iterator at the end of the regional environment.
+    FrameListIterator Environment::getRegionalEnvironment()
+    {
+        FrameListIterator start = getBegin();
+        FrameListIterator  fi = start;
+        while (((*fi)->kind == BlockFrameKind) || ((*fi)->kind == WithFrameKind)) {
+            fi++;
+            ASSERT(fi != getEnd());
+        }
+        if ((*fi)->kind == ClassKind) {
+            while ((fi != start) && ((*fi)->kind != BlockFrameKind))
+                fi--;
+        }
+        return fi;
+   }
+
+
+    // Returns the most specific regional frame.
     FrameListIterator Environment::getRegionalFrame()
     {
-        FrameListIterator fi = getBegin();
-        while (fi != getEnd()) {
-            if ((*fi)->kind != BlockKind)
-                break;
-            fi++;
-        }
-        if ((fi != getBegin()) && ((*fi)->kind == ClassKind))
-            fi--;
+        FrameListIterator fi = getRegionalEnvironment();
         return fi;
     }
 
@@ -2399,8 +2412,9 @@ doUnary:
                     && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
                     return checked_cast<ParameterFrame *>(pf)->thisObject;
-            if (pf->kind == PackageKind)    // XXX for ECMA3, when we hit a package (read GlobalObject)
-                                            // return that as the 'this'
+            // XXX for ECMA3, when we hit a package (read GlobalObject) return that as the 'this'
+            // XXX should have 'ECMA3' compatibility flag in Environment?
+            if (pf->kind == PackageKind)    
                 return OBJECT_TO_JS2VAL(pf);
             fi++;
         }
@@ -2833,24 +2847,40 @@ doUnary:
     // variable can be defined using either a var or a function statement. If it is defined using var, then initialValue
     // is always undefined (if the var statement has an initialiser, then the variable's value will be written later 
     // when the var statement is executed). If it is defined using function, then initialValue must be a function 
-    // instance or open instance. According to rules inherited from ECMAScript Edition 3, if there are multiple 
-    // definitions of a hoisted variable, then the initial value of that variable is undefined if none of the definitions
-    // is a function definition; otherwise, the initial value is the last function definition.
-    DynamicVariable *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p)
+    // instance or open instance.  A var hoisted variable may be hoisted into the ParameterFrame if there is already 
+    // a parameter with the same name; a function hoisted variable is never hoisted into the ParameterFrame and 
+    // will shadow a parameter with the same name for compatibility with ECMAScript Edition 3. 
+    // If there are multiple function definitions, the initial value is the last function definition. 
+    
+    DynamicVariable *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar)
     {
-        DynamicVariable *result = NULL;
-        QualifiedName qName(publicNamespace, id);
-        FrameListIterator regionalFrameMark = env->getRegionalFrame();
-        // XXX can the regionalFrame be a WithFrame?
+        FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameMark);
         ASSERT((regionalFrame->kind == PackageKind) || (regionalFrame->kind == ParameterKind));
           
         // run through all the existing bindings, to see if this variable already exists.
+        DynamicVariable *result = NULL;
+        bool foundMultiple = false;
         LocalBindingEntry **lbeP = regionalFrame->localBindings[*id];
         if (lbeP) {
             for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding &ns = *i;
                 if (ns.first == publicNamespace) {
+                    if (result) {
+                        foundMultiple = true;
+                        break;  // it's not important to find more than one duplicate (is that even possible?)
+                    }
+                    else
+                        result = checked_cast<DynamicVariable *>(ns.second->content);
+                }
+            }
+        }
+
+        if (((result == NULL) || !isVar) 
+                && (regionalFrame->kind == ParameterKind)
+                && (regionalFrameEnd != env->getBegin()))
+        
+
                     if (ns.second->content->kind != LocalMember::DynamicVariableKind)
                         reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                     else {
@@ -2859,10 +2889,7 @@ doUnary:
                         else
                             result = checked_cast<DynamicVariable *>(ns.second->content);
                     }
-                }
-            }
-        }
-        
+
         if (result == NULL) {
             if (regionalFrame->kind == PackageKind) {
                 Package *gObj = checked_cast<Package *>(regionalFrame);
@@ -3071,7 +3098,7 @@ static const uint8 urlCharType[256] =
         const char16 *chars = str->data();
         uint32 length = str->length();
         const char16 *numEnd;
-        uint base = 10;
+        uint base = 0;
         
         if (argc > 1) {
             float64 d = meta->toFloat64(argv[1]);
@@ -3087,12 +3114,18 @@ static const uint8 urlCharType[256] =
         return meta->engine->allocNumber(stringToInteger(chars, chars + length, numEnd, base));
     }
 
+    static js2val GlobalObject_parseFloat(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+    {
+        const String *str = meta->toString(argv[0]);
+        return meta->engine->allocNumber(meta->convertStringToDouble(str));
+    }
+
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
     {
         SimpleInstance *fInst = new SimpleInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code, env);
         writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-        fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(length), DynamicPropertyValue::READONLY);
+        fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(length), DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT);
     }
 
     static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
@@ -3191,6 +3224,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         addGlobalObjectFunction("unescape", GlobalObject_unescape, 1);
         addGlobalObjectFunction("escape", GlobalObject_escape, 1);
         addGlobalObjectFunction("parseInt", GlobalObject_parseInt, 2);
+        addGlobalObjectFunction("parseFloat", GlobalObject_parseFloat, 1);
 
 
 /*** ECMA 3  Object Class ***/
@@ -3324,7 +3358,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
         case SystemKind:
         case ParameterKind: 
-        case BlockKind: 
+        case BlockFrameKind: 
         default:
             ASSERT(false);
             return NULL;
@@ -3659,7 +3693,7 @@ readClassProperty:
         case SystemKind:
         case PackageKind:
         case ParameterKind: 
-        case BlockKind: 
+        case BlockFrameKind: 
         case ClassKind:
             return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, rval);
 
@@ -3787,7 +3821,7 @@ readClassProperty:
         case SystemKind:
         case PackageKind:
         case ParameterKind: 
-        case BlockKind: 
+        case BlockFrameKind: 
         case ClassKind:
             return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase, false);
 
@@ -3900,7 +3934,7 @@ deleteClassProperty:
         case SystemKind:
         case PackageKind:
         case ParameterKind: 
-        case BlockKind: 
+        case BlockFrameKind: 
         case ClassKind:
             return deleteProperty(checked_cast<Frame *>(container), multiname, lookupKind, phase, result);
 
@@ -4254,7 +4288,7 @@ deleteClassProperty:
                 FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                 fInst->fWrap = callInst->fWrap;
                 writeDynamicProperty(builtinClass->prototype, new Multiname(&world.identifiers[pf->name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-                writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
+                fInst->writeProperty(this, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), DynamicPropertyValue::READONLY | DynamicPropertyValue::PERMANENT);
                 pf++;
             }
         }

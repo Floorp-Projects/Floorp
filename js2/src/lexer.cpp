@@ -340,6 +340,7 @@ bool JS::Lexer::lexNumeral()
 {
     int hasDecimalPoint = 0;
     bool hexadecimal = false;
+    bool octal = false;
     String &s = nextToken->chars;
     uint digit;
 
@@ -363,7 +364,14 @@ bool JS::Lexer::lexNumeral()
                 reader.setPos(pos);
             goto done;
         } else if (isASCIIDecimalDigit(ch)) {
-            syntaxError("Numeric constant syntax error");
+            // Backward compatible hack, support octal for SpiderMonkey's sake
+            octal = true;
+            while (isASCIIDecimalDigit(ch)) {
+                reader.recordChar(ch);
+                ch = getChar();
+            }
+            goto done;
+//          syntaxError("Numeric constant syntax error");
         }
     }
     while (isASCIIDecimalDigit(ch) || ch == '.' && !hasDecimalPoint++) {
@@ -399,7 +407,11 @@ bool JS::Lexer::lexNumeral()
     const char16 *sBegin = s.data();
     const char16 *sEnd = sBegin + s.size();
     const char16 *numEnd;
-    nextToken->value = hexadecimal ? stringToInteger(sBegin, sEnd, numEnd, 16) : stringToDouble(sBegin, sEnd, numEnd);
+    nextToken->value = hexadecimal ? 
+                            stringToInteger(sBegin, sEnd, numEnd, 16)
+                          : octal ? 
+                                stringToInteger(sBegin, sEnd, numEnd, 8)
+                              : stringToDouble(sBegin, sEnd, numEnd);
     ASSERT(numEnd == sEnd);
     reader.unget();
     ASSERT(ch == reader.peek());

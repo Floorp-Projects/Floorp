@@ -446,6 +446,35 @@ namespace MetaData {
         return JS2VAL_VOID;
     }
 
+    float64 JS2Metadata::convertStringToDouble(const String *str)
+    {
+        bool neg = false;
+        uint32 length = str->length();
+        if (length == 0)
+            return 0.0;
+        const char16 *numEnd;
+        // if the string begins with '0X' or '0x' (after white space), then
+        // read it as a hex integer.
+        const char16 *strStart = str->data();
+        const char16 *strEnd = strStart + length;
+        const char16 *str1 = skipWhiteSpace(strStart, strEnd);
+        if (str1 == strEnd)
+            return 0.0;
+        if (*str1 == '-') {
+            neg = true;
+            str1++;
+        }
+        float64 d;
+        if ((*str1 == '0') && ((str1[1] == 'x') || (str1[1] == 'X')))
+            d = stringToInteger(str1, strEnd, numEnd, 16);
+        else {
+            d = stringToDouble(str1, strEnd, numEnd);
+            if (numEnd == str1)
+                return nan;
+        }
+        return (neg) ? -d : d;
+    }
+
     // x is not a number
     float64 JS2Metadata::convertValueToDouble(js2val x)
     {
@@ -457,23 +486,7 @@ namespace MetaData {
             return (JS2VAL_TO_BOOLEAN(x)) ? 1.0 : 0.0;
         if (JS2VAL_IS_STRING(x)) {
             String *str = JS2VAL_TO_STRING(x);
-            uint32 length = str->length();
-            if (length == 0)
-                return 0.0;
-            const char16 *numEnd;
-            // if the string begins with '0X' or '0x' (after white space), then
-            // read it as a hex integer.
-            const char16 *strStart = str->data();
-            const char16 *strEnd = strStart + length;
-            const char16 *str1 = skipWhiteSpace(strStart, strEnd);
-            if ((*str1 == '0') && ((str1[1] == 'x') || (str1[1] == 'X')))
-                return stringToInteger(str1, strEnd, numEnd, 16);
-            else {
-                float64 d = stringToDouble(str1, strEnd, numEnd);
-                if (numEnd == str1)
-                    return nan;
-                return d;
-            }
+            return convertStringToDouble(str);
         }
         if (JS2VAL_IS_INACCESSIBLE(x))
             reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());

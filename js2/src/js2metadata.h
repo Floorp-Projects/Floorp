@@ -106,7 +106,7 @@ enum ObjectKind {
     PackageKind, 
     ParameterKind, 
     ClassKind, 
-    BlockKind, 
+    BlockFrameKind, 
     PrototypeInstanceKind,
     SimpleInstanceKind,
     MultinameKind,
@@ -586,6 +586,7 @@ public:
     
     JS2Class *getEnclosingClass();
     FrameListIterator getRegionalFrame();
+    FrameListIterator getRegionalEnvironment();
     Frame *getTopFrame()                    { return frameList.front(); }
     FrameListIterator getBegin()            { return frameList.begin(); }
     FrameListIterator getEnd()              { return frameList.end(); }
@@ -1042,8 +1043,8 @@ public:
 
 class BlockFrame : public NonWithFrame {
 public:
-    BlockFrame() : NonWithFrame(BlockKind) { }
-    BlockFrame(BlockFrame *pluralFrame) : NonWithFrame(BlockKind, pluralFrame) { }
+    BlockFrame() : NonWithFrame(BlockFrameKind) { }
+    BlockFrame(BlockFrame *pluralFrame) : NonWithFrame(BlockFrameKind, pluralFrame) { }
 
     Plurality plurality;
 
@@ -1167,7 +1168,7 @@ public:
     LocalMember *findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
-    DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p);
+    DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar);
     Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos);
     OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
     OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
@@ -1183,7 +1184,7 @@ public:
 
     bool readProperty(js2val *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+    bool readDynamicProperty(JS2Object *container, const String *name, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
     JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
@@ -1191,13 +1192,13 @@ public:
 
     bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag);
-    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
+    bool writeDynamicProperty(JS2Object *container, const String *name, bool createIfMissing, js2val newValue, Phase phase);
     bool writeLocalMember(LocalMember *m, js2val newValue, Phase phase, bool initFlag);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase);
 
     bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
     bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
-    bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
+    bool deleteDynamicProperty(JS2Object *container, const String *name, LookupKind *lookupKind, bool *result);
     bool deleteLocalMember(LocalMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
@@ -1211,6 +1212,7 @@ public:
     const String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x, Hint hint);
     float64 convertValueToDouble(js2val x);
+    float64 convertStringToDouble(const String *str);
     bool convertValueToBoolean(js2val x);
     int32 convertValueToInteger(js2val x);
     js2val convertValueToGeneralNumber(js2val x);
