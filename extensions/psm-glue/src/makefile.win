@@ -48,6 +48,7 @@ LLIBS   = \
     $(DIST)\lib\cmt.lib       \
     $(DIST)\lib\protocol.lib  \
     $(DIST)\lib\mozreg.lib       \
+    $(DIST)\lib\jsdom.lib \
     $(NULL)
 
 OBJS = \
@@ -60,6 +61,7 @@ OBJS = \
     .\$(OBJDIR)\nsSSLIOLayer.obj \
     .\$(OBJDIR)\nsSSLSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
+    .\$(OBJDRI)\nsCrypto.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
