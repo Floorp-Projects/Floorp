@@ -1,0 +1,141 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ 
+ * The Original Code is mozilla.org code.
+ 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ 
+ * Contributor(s):
+ */
+
+/*
+nsIWindowWatcher is the keeper of Gecko/DOM Windows. It maintains
+opens and closes windows, and maintains a traversable list of open
+windows.
+
+Usage notes:
+
+  This component has an |activeWindow| property. Clients may expect
+this property to be always current, so to properly integrate this component
+the application will need to keep it current by setting the property
+as the active window changes.
+  This component does automatically keep an accurate list of extant
+windows; windows need not be added or removed by hand (and there's no
+interface for doing so).
+  Windows referenced will not be refcounted; the implementation will
+claim no ownership. Since it's the nature of this service to always
+hold a ("weak") reference to an open window, this requirement removes
+a potential reference loop.  It should be safe because it's a
+design requirement that clients explicitly maintain |activeWindow| and
+|currentWindow|, and that windows remove themselves from the service
+when they are closed.
+*/
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIObserver;
+interface nsISimpleEnumerator;
+
+[scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
+
+/*
+  Subject to change without revision of CID until further notice.
+
+Assumptions:
+
+  For now I'm assuming we'll use this component to track the current
+"networking context." That is, the window currently being serviced by
+the network libraries, and therefore the proper parent of any alerts
+those libraries may need to pose. I'm not yet convinced that this will
+actually work or be necessary.
+  The "networking context" must provide two things: an nsIDOMWindow
+to provide a script context and a native window to act as a parent
+for a networking dialog. This implies the nsIDOMWindow will be able
+to walk up some chain to find its container native embedding window.
+  In fact, I believe I can always pull a JS context off that stack
+of the things that people keep around when they're switching back and forth
+between C++ and JS, so all I really need to create a window is a (native)
+parent.
+  All windows must inform the Watcher when they're being closed (perhaps
+automatically through the DOMWindow's destructor), so the Watcher can
+trust all its windows to be real, so there's no need for the Watcher to
+addref any of its windows. This means, for instance, that setCurrentContext
+won't cause a leak if you don't unset it. It would be an error to fail
+to set the current context before getting into a situation where one
+might be necessary.
+*/
+
+interface nsIWindowWatcher : nsISupports {
+
+  /** Create a new window. It will automatically be added to our list
+      (via addWindow()).
+      @param aParent parent window, if any. null if not.
+      @param aURL window URL from JS window.open
+      @param aName window name from JS window.open
+      @param aFeatures window features from JS window.open
+      @return the new window
+  */
+  nsIDOMWindow openWindow(in nsIDOMWindow aParent, in string aUrl,
+               in string aName, in string aFeatures);
+
+  /** Clients of this service can register themselves to be notified
+      when a window is opened or closed (added to or removed from this
+      service). This method adds an aObserver to the list of objects
+      to be notified.
+      @param aObserver the object to be notified when windows are
+                       opened or closed. Its Observe method will be
+                       called with the following parameters:
+      @param aSubject (parameter to aObserver::Observe) the window being
+                      opened or closed, sent as an nsISupports
+                      which can be QIed to an nsIDOMWindow.
+      @param aTopic (parameter to aObserver::Observe) a wstring, either
+                    "domwindowopened" or "domwindowclosed".
+      @param someData (parameter to aObserver::Observe) not used.
+  */
+  void registerNotification(in nsIObserver aObserver);
+
+  /** Clients of this service can register themselves to be notified
+      when a window is opened or closed (added to or removed from this
+      service). This method removes an aObserver from the list of objects
+      to be notified.
+      @param aObserver the observer to be removed.
+  */
+  void unregisterNotification(in nsIObserver aObserver);
+
+  /** iterates over currently open windows in the order they were opened,
+      guaranteeing that each will be visited exactly once.
+      @return an enumerator which will itself return an nsISupports which
+              can be QIed to an nsIDOMWindow
+  */
+
+  nsISimpleEnumerator getWindowEnumerator();
+
+  /** The Watcher serves as a global storage facility for the current active
+      (frontmost non-floating-palette-type) window, storing and returning
+      it on demand. Users must keep this attribute current, including after
+      the topmost window is closed. This attribute obviously can return null
+      if no windows are open, but should otherwise always return a valid
+      window.
+  */
+  attribute nsIDOMWindow activeWindow;
+
+};
+
+%{C++
+// {002286a8-494b-43b3-8ddd-49e3fc50622b}
+#define NS_WINDOWWATCHER_IID \
+ {0x002286a8, 0x494b, 0x43b3, {0x8d, 0xdd, 0x49, 0xe3, 0xfc, 0x50, 0x62, 0x2b}}
+%}
+
