@@ -4276,6 +4276,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
                       PRT_YESNO(skipPageEjectOnly), PRT_YESNO(skipAllPageAdjustments), 
                       PRT_YESNO(doOffsetting), PRT_YESNO(doAddInParentsOffset));
 
+    // We are done preparing for printing, so we can turn this off
+    mPrt->mPreparingForPrint = PR_FALSE;
+
     // mPrt->mDebugFilePtr this is onlu non-null when compiled for debugging
     if (nsnull != mPrt->mDebugFilePtr) {
 #ifdef NS_DEBUG
@@ -4417,9 +4420,6 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             // this gives the user more time to press cancel
             PRInt32 printPageDelay = 500;
             mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
-
-            // We are done preparing for printing, so we can turn this off
-            mPrt->mPreparingForPrint = PR_FALSE;
 
             // Schedule Page to Print
             PRINT_DEBUG_MSG3("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]);
