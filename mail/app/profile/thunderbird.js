@@ -156,14 +156,6 @@ pref("browser.sessionhistory.max_entries", 50);
 // Translation service
 pref("browser.translation.service", "http://www.teletranslator.com:8120/?AlisUI=frames_ex/moz_home&alis_info=moz&AlisTargetURI=");
 pref("browser.translation.serviceDomain", "teletranslator.com");
-  
-// Platform for Internet Content Selection
-pref("browser.PICS.ratings_enabled", false);
-pref("browser.PICS.pages_must_be_rated", false);
-pref("browser.PICS.disable_for_this_session", false);
-pref("browser.PICS.reenable_for_this_session", false);
-pref("browser.PICS.service.http___home_netscape_com_default_rating.service_enabled", true);
-pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
 
 // css2 hover pref
 pref("nglayout.events.showHierarchicalHover", false);
