@@ -39,6 +39,10 @@
   #include <Errors.h>
 #endif
 
+#if defined(SUNOS4)
+#include <unistd.h>  /* for SEEK_SET */
+#endif /* SUNOS4 */
+
 #include "prerror.h"
 #include "prlog.h"
 
