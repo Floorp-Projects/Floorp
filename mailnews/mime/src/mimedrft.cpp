@@ -457,8 +457,7 @@ mime_parse_stream_write ( nsMIMESession *stream, const char *buf, PRInt32 size )
 static void
 mime_free_attach_data ( nsMsgAttachmentData *attachData)
 {
-  PRInt32     i;
-    struct nsMsgAttachmentData  *tmp = attachData;
+  struct nsMsgAttachmentData  *tmp = attachData;
 
   while (tmp && tmp->real_name) 
   {
@@ -1807,29 +1806,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     newAttachment->description = nsCRT::strdup(workURLSpec);
 
   nsFileSpec *tmpSpec = nsnull;
-  if (newAttachment->real_name && *newAttachment->real_name)
   {
-    //Need some convertion to native file system character set
-    nsAutoString outStr;
-    char * fileName = nsnull;
-    nsresult rv = ConvertToUnicode(msgCompHeaderInternalCharset(), newAttachment->real_name, outStr);
-    if (NS_SUCCEEDED(rv))
-    {
-      rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), outStr, &fileName);
-      if (NS_FAILED(rv))
-        fileName = PL_strdup(newAttachment->real_name);
-    }
-    else
-      fileName = PL_strdup(newAttachment->real_name);
-
-    tmpSpec = nsMsgCreateTempFileSpec(fileName);
-    PR_FREEIF(fileName);
-  }
-  else
-  {
-    // if we didn't get a real name for the attachment, then we should
-    // ask the mime service what extension this content type should use and use nsmail.that file extension
-    // if that doesn't work then just use "nsmail.tmp"
+    // Let's build a temp file with an extension based on the content-type: nsmail.<extension>
 
     nsCAutoString  newAttachName ("nsmail");
     PRBool extensionAdded = PR_FALSE;
