@@ -76,6 +76,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     // Vertically align the child
     nscoord kidYTop = 0;
 
+    PRBool isPass2Kid = PR_FALSE;
     switch (verticalAlignUnit) {
       case eStyleUnit_Coord:
         kidYTop = aMaxAscent + textStyle->mVerticalAlign.GetCoordValue();
@@ -83,6 +84,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 
       case eStyleUnit_Percent:
         pass2Kids++;
+        isPass2Kid = PR_TRUE;
         break;
 
       case eStyleUnit_Enumerated:
@@ -114,11 +116,12 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 
           case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
             pass2Kids++;
+            isPass2Kid = PR_TRUE;
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-            // XXX spec says use the 'x' height but our font api doesn't give us
-            // that information.
+            // XXX spec says use the 'x' height but our font api
+            // doesn't give us that information.
             kidYTop = aMaxAscent - (fm->GetHeight() / 2) - kidRect.height/2;
             break;
 
@@ -140,11 +143,17 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     }
 
     // Place kid and update min and max Y values
-    nscoord y = aY0 + kidYTop;
-    if (y < minY) minY = y;
-    kid->MoveTo(kidRect.x, y);
-    y += kidRect.height;
-    if (y > maxY) maxY = y;
+    if (!isPass2Kid) {
+      nscoord y = aY0 + kidYTop;
+      if (y < minY) minY = y;
+      kid->MoveTo(kidRect.x, y);
+      y += kidRect.height;
+      if (y > maxY) maxY = y;
+    }
+    else {
+      nscoord y = aY0 + kidRect.height;
+      if (y > maxY) maxY = y;
+    }
 
     kid->GetNextSibling(kid);
   }
