@@ -22,7 +22,7 @@
 #include "domstubs.idl"
 
 [scriptable, uuid(a6cf906d-15b3-11d2-932e-00805f8add32)]
-interface Location : nsISupports
+interface nsIDOMLocation : nsISupports
 {
            attribute DOMString        hash;
            attribute DOMString        host;
@@ -33,8 +33,9 @@ interface Location : nsISupports
            attribute DOMString        protocol;
            attribute DOMString        search;
 
+  // XXX is this needed?
   [noscript] void           reload(in boolean forceget);
-  [noscript] void           replace(in DOMString url);
+  void                      replace(in DOMString url);
   void                      assign(in DOMString url);
 
   DOMString                 toString();

@@ -25,5 +25,4 @@
 interface nsIDOMNSLocation : nsISupports
 {
   void                      reload(/* ... */);
-  void                      replace(/* ... */);
 };
