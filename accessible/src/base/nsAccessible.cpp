@@ -871,10 +871,7 @@ PRBool nsAccessible::IsCorrectFrameType( nsIFrame* aFrame, nsIAtom* aAtom )
   NS_ASSERTION(aFrame != nsnull, "aFrame is null in call to IsCorrectFrameType!");
   NS_ASSERTION(aAtom != nsnull, "aAtom is null in call to IsCorrectFrameType!");
 
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-
-  return (frameType.get() == aAtom);
+  return aFrame->GetType() == aAtom;
 }
 
 
@@ -1464,9 +1461,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
   aPresShell->GetPresContext(getter_AddRefs(presContext));
   nsIFrame* childFrame = nsnull;
   nsCOMPtr<nsIAtom> frameType;
-  while (frame &&
-         NS_SUCCEEDED(frame->GetFrameType(getter_AddRefs(frameType))) &&
-         frameType != nsAccessibilityAtoms::textFrame) {
+  while (frame && frame->GetType() != nsAccessibilityAtoms::textFrame) {
     frame->FirstChild(presContext, nsnull, &childFrame);
     frame = childFrame;
   }
@@ -1498,12 +1493,8 @@ nsIFrame* nsAccessible::GetParentBlockFrame(nsIFrame *aFrame)
     return nsnull;
 
   nsIFrame* frame = aFrame;
-  nsCOMPtr<nsIAtom> frameType;
-  frame->GetFrameType(getter_AddRefs(frameType));
-  while (frame && frameType != nsAccessibilityAtoms::blockFrame) {
+  while (frame && frame->GetType() != nsAccessibilityAtoms::blockFrame) {
     nsIFrame* parentFrame = frame->GetParent();
-    if (parentFrame)
-      parentFrame->GetFrameType(getter_AddRefs(frameType));
     frame = parentFrame;
   }
   return frame;
@@ -1532,8 +1523,7 @@ PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext,
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIAtom> frameType;
-  aCurFrame->GetFrameType(getter_AddRefs(frameType));
+  nsIAtom* frameType = aCurFrame->GetType();
   if (frameType == nsAccessibilityAtoms::blockFrame) {
     // every block frame will reset the index
     index = 0;

@@ -93,8 +93,7 @@ PRBool nsAccessibleHyperText::GetAllTextChildren(nsIPresContext *aPresContext, n
   if (! aCurFrame)
     return PR_FALSE;
 
-  nsCOMPtr<nsIAtom> frameType;
-  aCurFrame->GetFrameType(getter_AddRefs(frameType));
+  nsIAtom* frameType = aCurFrame->GetType();
   if (frameType == nsAccessibilityAtoms::blockFrame) {
     if (bSave)
       return PR_TRUE;
