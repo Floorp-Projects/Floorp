@@ -46,6 +46,7 @@ const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
 const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID = "@mozilla.org/layout-debug/layout-debuggingtools;1";
 
+
 function nsLDBBrowserContentListener()
 {
   this.init();
@@ -78,11 +79,12 @@ nsLDBBrowserContentListener.prototype = {
         this.setButtonEnabled(this.mStopButton, true);
         this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);
         this.setButtonEnabled(this.mBackButton, gBrowser.canGoBack);
-        
+        this.mStatusText.value = "loading...";
         this.mLoading = true;
+
       } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
         this.setButtonEnabled(this.mStopButton, false);
-        this.mStatusText.value = "";
+        this.mStatusText.value = this.mURLBar.value + " loaded";
 
         if (gRTestURLList && this.mLoading) {
           // Let other things happen in the first 20ms, since this
@@ -186,6 +188,18 @@ function toggle(menuitem)
   gDebugger[feature] = menuitem.getAttribute("checked") == "true";
 }
 
+function openFile()
+{
+  var nsIFilePicker = Components.interfaces.nsIFilePicker;
+  var fp = Components.classes["@mozilla.org/filepicker;1"]
+        .createInstance(nsIFilePicker);
+  fp.init(window, "Select a File", nsIFilePicker.modeOpen);
+  fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+  if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec &&
+                fp.fileURL.spec.length > 0) {
+    gBrowser.loadURI(fp.fileURL.spec);
+  }
+}
 const LDB_RDFNS = "http://mozilla.org/newlayout/LDB-rdf#";
 const NC_RDFNS = "http://home.netscape.com/NC-rdf#";
 
@@ -314,10 +328,10 @@ RTestIndexList.prototype = {
 const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
 const nsILineInputStream = Components.interfaces.nsILineInputStream;
 const nsILocalFile = Components.interfaces.nsILocalFile;
-const nsIFileURL = Components.interfaces.nsIFileURL;
+const nsIIOService = Components.interfaces.nsIIOService;
 
 const NS_LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
-const NS_STANDARDURL_CONTRACTID = "@mozilla.org/network/standard-url;1";
+const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
 
@@ -353,9 +367,10 @@ RTestURLList.prototype = {
 
   readFileList : function(aLocalFile)
     {
-      var dirURL = Components.classes[NS_STANDARDURL_CONTRACTID].
-                       createInstance(nsIFileURL);
-      dirURL.file = aLocalFile.parent;
+      var ios = Components.classes[IO_SERVICE_CONTRACTID]
+                .getService(nsIIOService);
+      var dirURL = ios.newFileURI(aLocalFile.parent);
+      var moz_src = /.*(?=mozilla)/.exec(dirURL.path);
 
       var fis = Components.classes[NS_LOCALFILEINPUTSTREAM_CONTRACTID].
                     createInstance(nsIFileInputStream);
@@ -369,12 +384,10 @@ RTestURLList.prototype = {
         str = /\S*/.exec(str); // take the first chunk of non-whitespace
         if (!str || str == "")
           continue;
-
-        var item = dirURL.resolve(str);
+      
+        var item = dirURL.resolve(str.toString().replace(/\/s\|\//, moz_src));
         if (item.match(/\/rtest.lst$/)) {
-          var itemurl = Components.classes[NS_STANDARDURL_CONTRACTID].
-                            createInstance(nsIFileURL);
-          itemurl.spec = item;
+          var itemurl = ios.newURI(item, null, null);
           this.readFileList(itemurl.file);
         } else {
           this.mURLs.push(item);
