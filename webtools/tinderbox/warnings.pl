@@ -327,6 +327,7 @@ sub gcc_parser {
 
     # Look up the file name to determine the directory
     my $dir = '';
+
     if ($file_fullnames->{"$build_dir/$filename"}) {
       $dir = $build_dir;
     } else {
@@ -386,7 +387,7 @@ sub build_blame {
 
   while (($file, $lines_hash) = each %warnings) {
 
-    my $rcs_filename = "$cvs_root/$file,v";
+    my $rcs_filename = "$cvs_root/$source_root/$file,v";
 
     unless (-e $rcs_filename) {
       warn "Unable to find $rcs_filename\n";
