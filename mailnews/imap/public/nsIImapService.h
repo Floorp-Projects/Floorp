@@ -21,6 +21,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsIImapUrl.h"
 #include "nsFileSpec.h"
 
 /* 9E3233E1-EBE2-11d2-95AD-000064657374 */
@@ -42,7 +43,6 @@ class nsIImapProtocol;
 class nsIImapMessageSink;
 class nsIUrlListener;
 class nsIURI;
-class nsIImapUrl;
 class nsIEventQueue;
 class nsIMsgFolder;
 class nsIMsgStatusFeedback;
@@ -66,10 +66,12 @@ public:
                                 nsIUrlListener * aUrlListener, 
                                 nsIURI ** aURL) = 0;
 
-	NS_IMETHOD FetchMessage(nsIEventQueue * aClientEventQueue, 
+	NS_IMETHOD FetchMessage(
+                            nsIImapUrl * aUrl,
+                            nsIImapUrl::nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
-                            nsIUrlListener * aUrlListener, nsIURI ** aURL,
+                            nsIURI ** aURL,
 							nsISupports *aConsumer,
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID) = 0;
