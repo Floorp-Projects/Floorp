@@ -26,10 +26,16 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+#ifdef XP_WIN
 // XXX These are defined in platform specific FE directories right now :-/
+typedef NPError (__stdcall *NP_GETENTRYPOINTS)(NPPluginFuncs* pCallbacks);
+typedef NPError (__stdcall *NP_PLUGININIT)(const NPNetscapeFuncs* pCallbacks);
+typedef NPError (__stdcall *NP_PLUGINSHUTDOWN)();
+#else
 typedef NPError (*NP_GETENTRYPOINTS)(NPPluginFuncs* pCallbacks);
 typedef NPError (*NP_PLUGININIT)(const NPNetscapeFuncs* pCallbacks);
 typedef NPError (*NP_PLUGINSHUTDOWN)();
+#endif /* XP_WIN */
 
 
 ////////////////////////////////////////////////////////////////////////
