@@ -6,7 +6,7 @@
 <!ENTITY fonts.label "Fonts &amp; Colors">
 <!ENTITY themes.label "Themes">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
-<!ENTITY navigator.label "Navigator">
+<!ENTITY navigator.label "General">
 <!ENTITY bidi.label "Bidi Options">
 <!ENTITY languages.label "Languages">
 <!ENTITY applications.label "Helper Applications">
