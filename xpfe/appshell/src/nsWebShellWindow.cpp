@@ -1832,7 +1832,7 @@ nsDOMWindowPrompter::Alert(const PRUnichar* dialogTitle,
  
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Alert"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Alert").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->Alert(mDOMWindow, title, text);
@@ -1854,7 +1854,7 @@ nsDOMWindowPrompter::Confirm(const PRUnichar* dialogTitle,
   nsresult rv;
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Confirm"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Confirm").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->Confirm(mDOMWindow, title, text, _retval);
@@ -1879,7 +1879,7 @@ nsDOMWindowPrompter::ConfirmCheck(const PRUnichar* dialogTitle,
 
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("ConfirmCheck"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("ConfirmCheck").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->ConfirmCheck(mDOMWindow, title, text, checkMsg, checkValue, _retval);
@@ -1906,7 +1906,7 @@ nsDOMWindowPrompter::Prompt(const PRUnichar* dialogTitle,
 
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Prompt"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Prompt").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->Prompt(mDOMWindow, title, text,
@@ -1935,7 +1935,7 @@ nsDOMWindowPrompter::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
   
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("PromptUsernameAndPassword"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("PromptUsernameAndPassword").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->PromptUsernameAndPassword(mDOMWindow, title, text,
@@ -1964,7 +1964,7 @@ nsDOMWindowPrompter::PromptPassword(const PRUnichar* dialogTitle,
 
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("PromptPassword"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("PromptPassword").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->PromptPassword(mDOMWindow, title, text, 
@@ -1993,7 +1993,7 @@ nsDOMWindowPrompter::Select(const PRUnichar *dialogTitle,
 
   if (dialogTitle == nsnull) {
     PRUnichar *title;
-    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Select"), &title);
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Select").get(), &title);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = mCommonDialogs->Select(mDOMWindow, title, inMsg, 
