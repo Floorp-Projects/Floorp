@@ -91,7 +91,7 @@ protected:
 		nsresult	TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBool testTargetSpec = PR_TRUE);
 
     OSErr			GetTargetSpecCatInfo(CInfoPBRec& outInfo);
-		
+		nsresult MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy );		
 private:
 
     // It's important we keep track of how we were initialized

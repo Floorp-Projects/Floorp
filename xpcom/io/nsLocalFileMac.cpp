@@ -39,7 +39,7 @@
 #include "FullPath.h"
 #include "FileCopy.h"
 #include "MoreFilesExtras.h"
-
+#include "DirectoryCopy.h"
 #include <Errors.h>
 #include <Script.h>
 #include <Processes.h>
@@ -50,6 +50,7 @@
 
 #include <Aliases.h>
 #include <Folders.h>
+#include "macDirectoryCopy.h"
 
 // Stupid @#$% header looks like its got extern mojo but it doesn't really
 extern "C"
@@ -1299,11 +1300,54 @@ nsLocalFile::GetPath(char **_retval)
 	return NS_OK;
 }
 
+nsresult nsLocalFile::MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy )
+{
+		nsresult  rv = ResolveAndStat( PR_TRUE );
+	if ( NS_FAILED( rv ) )
+		return rv;
+	nsCOMPtr<nsILocalFileMac> destDir( do_QueryInterface( newParentDir ));
+	
+	PRBool isDirectory;
+	rv = newParentDir->IsDirectory( &isDirectory );
+	if ( NS_FAILED( rv ) )
+		return rv;
+	FSSpec srcSpec;
+	FSSpec destSpec;
+	srcSpec = mResolvedSpec;
+	rv = destDir->GetResolvedFSSpec( &destSpec );
+	if ( NS_FAILED( rv ) )
+		return rv;		
+
+	OSErr macErr;
+	Str255 newPascalName;
+	if ( newName )
+		myPLstrncpy( newPascalName, newName, 255);
+	if ( isCopy )
+	{
+		if ( mResolvedWasFolder )
+			macErr = MacFSpDirectoryCopyRename( &srcSpec, &destSpec, newPascalName, NULL, 0, true, NULL );
+		else
+			macErr = ::FSpFileCopy( &srcSpec, &destSpec, newPascalName, NULL, 0, true );
+	}
+	else
+	{
+		macErr= ::FSpMoveRenameCompat(&srcSpec, &destSpec, newPascalName);
+		if ( macErr == diffVolErr)
+		{
+				// On a different Volume so go for Copy and then delete
+				rv = CopyTo( newParentDir, newName );
+				if ( NS_FAILED ( rv ) )
+					return rv;
+				return Delete( PR_TRUE );
+		}
+	}	
+	return MacErrorMapper( macErr );
+}
 
 NS_IMETHODIMP  
 nsLocalFile::CopyTo(nsIFile *newParentDir, const char *newName)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return MoveCopy( newParentDir, newName, PR_TRUE );
 }
 
 NS_IMETHODIMP  
@@ -1315,7 +1359,7 @@ nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const char *newName)
 NS_IMETHODIMP  
 nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return MoveCopy( newParentDir, newName, PR_FALSE );
 }
 
 NS_IMETHODIMP  
@@ -1362,47 +1406,18 @@ nsLocalFile::Delete(PRBool recursive)
 	MakeDirty();
 	
 	PRBool isDir;
-	
 	nsresult rv = IsDirectory(&isDir);
 	if (NS_FAILED(rv))
 		return rv;
 
 	const char *filePath = mResolvedPath.GetBuffer();
-
-	if (isDir)
-	{
-		if (recursive)
-		{
-			nsDirEnumerator* dirEnum = new nsDirEnumerator();
-			if (dirEnum)
-				return NS_ERROR_OUT_OF_MEMORY;
-		
-			rv = dirEnum->Init(this);
-
-			nsCOMPtr<nsISimpleEnumerator> dirIterator = do_QueryInterface(dirEnum);
-		
-			PRBool more;
-			dirIterator->HasMoreElements(&more);
-			while (more)
-			{
-				nsCOMPtr<nsISupports> item;
-				nsCOMPtr<nsIFile> file;
-				dirIterator->GetNext(getter_AddRefs(item));
-				file = do_QueryInterface(item);
-	
-				file->Delete(recursive);
-				
-				dirIterator->HasMoreElements(&more);
-			}
-		}
-		//rmdir(filePath);	// todo: save return value?
-	}
+	OSErr macerror;
+	if (isDir && recursive)
+		macerror = ::DeleteDirectory( mResolvedSpec.vRefNum, mResolvedSpec.parID, mResolvedSpec.name );
 	else
-	{
-		//remove(filePath); // todo: save return value?
-	}
+		macerror = ::HDelete( mResolvedSpec.vRefNum, mResolvedSpec.parID, mResolvedSpec.name );
 	
-	return NS_OK;
+	return MacErrorMapper( macerror );
 }
 
 NS_IMETHODIMP  
