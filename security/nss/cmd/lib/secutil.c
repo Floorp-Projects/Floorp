@@ -1294,7 +1294,7 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
     if (t->data[1] & 0x80) {
 	start = (t->data[1] & 0x7f) +1;
     }
-    for (bp=&t->data[start]; bp <= &t->data[t->len]; ) {
+    for (bp=&t->data[start]; bp < &t->data[t->len]; ) {
 	SECItem tmp;
 	unsigned int i,len,lenlen;
 
