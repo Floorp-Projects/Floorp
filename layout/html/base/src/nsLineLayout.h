@@ -21,6 +21,7 @@
 
 #include "nsIFrame.h"
 #include "nsVoidArray.h"
+#include "nsTextReflow.h"
 
 struct nsBlockReflowState;
 class nsInlineReflow;
@@ -29,30 +30,7 @@ struct nsStyleDisplay;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
-// This structure represents a run of text. In mText are the
-// nsIFrame's that are considered text frames.
-struct nsTextRun {
-  nsTextRun() {
-    mNext = nsnull;
-  }
-
-  static void DeleteTextRuns(nsTextRun* aRun) {
-    while (nsnull != aRun) {
-      nsTextRun* next = aRun->mNext;
-      delete aRun;
-      aRun = next;
-    }
-  }
-
-  void List(FILE* out, PRInt32 aIndent);
-
-  nsVoidArray mArray;
-  nsTextRun* mNext;
-
-protected:
-  ~nsTextRun() {
-  }
-};
+// XXX rename to nsLineReflow
 
 //----------------------------------------------------------------------
 
@@ -138,6 +116,8 @@ public:
 
   nsIFrame* FindNextText(nsIFrame* aFrame);
 
+  nsTextRun* FindTextRunFor(nsIFrame* aFrame);
+
   void RecordWordFrame(nsIFrame* aWordFrame) {
     mWordFrames.AppendElement(aWordFrame);
   }
@@ -148,7 +128,7 @@ public:
 
   PRBool IsNextWordFrame(nsIFrame* aFrame);
 
-  PRBool InNonBreakingUnit() {
+  PRBool InWord() {
     return 0 != mWordFrames.Count();
   }
 
