@@ -276,10 +276,20 @@ xpmenu {
 }
 
 
-xpmenuchildren {
-	display: none;
+/* xpmenu visibility rules */
+-moz-dropdown-menu {
+  background-color:inherit;
+  color: inherit;
+  border: 1px white outset;
 }
 
+xpmenuchildren:-moz-dropdown-menu {
+  visibility:hidden;
+}
+
+xpmenu[open] xpmenuchildren:-moz-dropdown-menu {
+  visibility: visible;
+}
 
 progressmeter {
         display:inline;
@@ -982,6 +992,12 @@ box[align="vertical"] splitter[collapse="after"] grippy {
 box splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
+
+titledbutton.twisty
+{
+  visibility: hidden;
+}
+
 
 treeitem > treerow > treecell > titledbutton.twisty {
  vertical-align: bottom;
