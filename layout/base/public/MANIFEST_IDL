@@ -3,3 +3,4 @@
 #
 
 nsIChromeEventHandler.idl
+nsISelectionController.idl
