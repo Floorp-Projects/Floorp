@@ -220,26 +220,26 @@ BookmarksUIElement.prototype = {
                   "bm_newfolder"];
       break;
     case "http://home.netscape.com/NC-rdf#Bookmark":
-      commands = ["bm_open", "bm_find", "separator", "bm_cut", 
+      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_cut", 
                   "bm_copy", "bm_paste", "bm_delete", "separator", "bm_rename",
                   "separator", "bm_fileBookmark", "separator", "bm_newfolder", 
                   "separator", "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#Folder":
-      commands = ["bm_openfolder", "bm_openfolderinnewwindow", "bm_find", "separator", 
+      commands = ["bm_openfolder", "bm_openinnewwindow", "separator", 
                   "bm_cut", "bm_copy", "bm_paste", "bm_delete", "separator", "bm_rename", 
                   "separator", "bm_fileBookmark", "separator", 
                   "bm_newfolder", "separator", "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-      commands = ["bm_open", "bm_find", "separator", "bm_copy", "bm_delete", "separator", "bm_rename", "separator",
+      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_copy", "bm_delete", "separator", "bm_rename", "separator",
                   "bm_fileBookmark", "separator", "separator", "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
-      commands = ["bm_open", "bm_find", "separator", "bm_copy"];
+      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_copy"];
       break;
     case "http://home.netscape.com/NC-rdf#FileSystemObject":
-      commands = ["bm_open", "bm_find", "separator", "bm_copy"];
+      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_copy"];
       break;
     default: 
       var source = this.RDF.GetResource(aNodeID);
@@ -289,13 +289,16 @@ BookmarksUIElement.prototype = {
       var selectedItem = selection[0];
     switch (aCommandID) {
     case "bm_open":
-      this.open(null, selectedItem);
+      this.open(null, selectedItem, false);
       break;
     case "bm_openfolder":
       this.commands.openFolder(selectedItem);
       break;
-    case "bm_openfolderinnewwindow":
-      this.openFolderInNewWindow(selectedItem);
+    case "bm_openinnewwindow":
+      if (selectedItem.getAttribute("type") == NC_NS + "Folder")
+        this.openFolderInNewWindow(selectedItem);
+      else
+        this.open(null, selectedItem, true);
       break;
     case "bm_rename":
       // XXX - this is SO going to break if we ever do column re-ordering.
@@ -646,7 +649,7 @@ BookmarksUIElement.prototype = {
     kRDFC.RemoveElement(krSrc, true);
   },
   
-  open: function (aEvent, aRDFNode) 
+  open: function (aEvent, aRDFNode, aInNewWindow) 
   { 
     var urlValue = LITERAL(this.db, aRDFNode, NC_NS + "URL");
     
@@ -655,7 +658,7 @@ BookmarksUIElement.prototype = {
     
     if (aEvent && aEvent.altKey)   
       this.showPropertiesForNode (aRDFNode);
-    else if (this.openNewWindow)
+    else if (aInNewWindow)
       openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", urlValue);
     else
       openTopWin (urlValue);
