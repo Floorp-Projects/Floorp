@@ -1128,17 +1128,11 @@ sub BuildIDLProjects()
 			print("XPIDL tools have been updated, will clobber all IDL data folders.\n");
 			
 			# in this situation, we need to quit and restart the IDE to pick up the new plugin
-			CodeWarriorLib::quit();
-			WaitNextEvent();
-			WaitNextEvent();
-			WaitNextEvent();
-			WaitNextEvent();
-			WaitNextEvent();
-			WaitNextEvent();
-			CodeWarriorLib::activate();
-			WaitNextEvent();
-			WaitNextEvent();
-			WaitNextEvent();
+			# sadly, this seems to crash MacPerl or CodeWarrior, so disabled for now.
+#			CodeWarriorLib::quit();
+#			WaitNextEvent();
+#			CodeWarriorLib::activate();
+#			WaitNextEvent();
 		}
 	}
 	
