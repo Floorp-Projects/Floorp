@@ -253,7 +253,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         switch (fromCode) {
 
         case JSTYPE_UNDEFINED:
-            if (to == String.class || to == Object.class) {
+            if (to == ScriptRuntime.StringClass || 
+                to == ScriptRuntime.ObjectClass) {
                 result = 1;
             }
             break;
@@ -269,13 +270,13 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             if (to == Boolean.TYPE) {
                 result = 1;
             }
-            else if (to == Boolean.class) {
+            else if (to == ScriptRuntime.BooleanClass) {
                 result = 2;
             }
-            else if (to == Object.class) {
+            else if (to == ScriptRuntime.ObjectClass) {
                 result = 3;
             }
-            else if (to == String.class) {
+            else if (to == ScriptRuntime.StringClass) {
                 result = 4;
             }
             break;
@@ -293,14 +294,14 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 }
             }
             else {
-                if (to == String.class) {
+                if (to == ScriptRuntime.StringClass) {
                     // native numbers are #1-8
                     result = 9;
                 }
-                else if (to == Object.class) {
+                else if (to == ScriptRuntime.ObjectClass) {
                     result = 10;
                 }
-                else if (Number.class.isAssignableFrom(to)) {
+                else if (ScriptRuntime.NumberClass.isAssignableFrom(to)) {
                     // "double" is #1
                     result = 2;
                 }
@@ -308,10 +309,10 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             break;
 
         case JSTYPE_STRING:
-            if (to == String.class) {
+            if (to == ScriptRuntime.StringClass) {
                 result = 1;
             }
-            else if (to == Object.class) {
+            else if (to == ScriptRuntime.ObjectClass) {
                 result = 2;
             }
             else if (to.isPrimitive()) {
@@ -325,24 +326,24 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             break;
 
         case JSTYPE_JAVA_CLASS:
-            if (to == Class.class) {
+            if (to == ScriptRuntime.ClassClass) {
                 result = 1;
             }
             if (Context.useJSObject && jsObjectClass != null && 
                 jsObjectClass.isAssignableFrom(to)) {
                 result = 2;
             }
-            else if (to == Object.class) {
+            else if (to == ScriptRuntime.ObjectClass) {
                 result = 3;
             }
-            else if (to == String.class) {
+            else if (to == ScriptRuntime.StringClass) {
                 result = 4;
             }
             break;
 
         case JSTYPE_JAVA_OBJECT:
         case JSTYPE_JAVA_ARRAY:
-            if (to == String.class) {
+            if (to == ScriptRuntime.StringClass) {
                 result = 2;
             }
             else if (to.isPrimitive()) {
@@ -368,10 +369,10 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                 jsObjectClass.isAssignableFrom(to)) {
                 result = 1;
             }
-            else if (to == Object.class) {
+            else if (to == ScriptRuntime.ObjectClass) {
                 result = 2;
             }
-            else if (to == String.class) {
+            else if (to == ScriptRuntime.StringClass) {
                 result = 3;
             }
             else if (to.isPrimitive()) {
@@ -435,16 +436,16 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         else {
             Class valueClass = value.getClass();
 
-            if (valueClass == String.class) {
+            if (valueClass == ScriptRuntime.StringClass) {
                 return JSTYPE_STRING;
             }
-            else if (valueClass == Boolean.class) {
+            else if (valueClass == ScriptRuntime.BooleanClass) {
                 return JSTYPE_BOOLEAN;
             }
             else if (value instanceof Number) {
                 return JSTYPE_NUMBER;
             }
-            else if (valueClass == Class.class) {
+            else if (valueClass == ScriptRuntime.ClassClass) {
                 return JSTYPE_JAVA_CLASS;
             }
             else if (valueClass.isArray()) {
@@ -465,7 +466,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             return null;
         }
 
-        // For final classes we can compare valueClass to a class object
+        // For ScriptRuntime.finalClasses we can compare valueClass to ScriptRuntime.aClass object
         // rather than using instanceof
         Class valueClass = value.getClass();
         
@@ -522,7 +523,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         if (Context.useJSObject && jsObjectClass != null && 
             value instanceof Scriptable)
             {
-                if (Scriptable.class.isAssignableFrom(type))
+                if (ScriptRuntime.ScriptableClass.isAssignableFrom(type))
                     return value;
                 try {
                     Object ctorArgs[] = { value };

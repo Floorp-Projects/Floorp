@@ -59,6 +59,7 @@ public class ScriptRuntime {
     public final static Class CharacterClass = Character.class; 
     public final static Class ObjectClass = Object.class; 
     public final static Class FunctionClass = Function.class;
+    public final static Class ClassClass = Class.class;
     
     /**
      * Convert the value to a boolean.
