@@ -221,7 +221,7 @@ static void AbbrevWeekdayString(DateTimeRec &dateTime, Str255 weekdayString, Int
 ////////////////////////////////////////////////////////////////////////////////
 
 
-NS_IMPL_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
 
 nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 {
