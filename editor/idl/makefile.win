@@ -38,6 +38,7 @@ XPIDLSRCS = .\nsICiter.idl \
 		.\nsIEditorSpellCheck.idl \
 		.\nsIHTMLEditor.idl \
 		.\nsIPlaintextEditor.idl \
+		.\nsIURIRefObject.idl \
 		.\nsPIEditorTransaction.idl \
             $(NULL)
 
