@@ -435,6 +435,13 @@ NS_IMETHODIMP GtkMozEmbedChrome::ShowAsModal(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP GtkMozEmbedChrome::IsWindowModal(PRBool *_retval)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::IsWindowModal\n"));
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP GtkMozEmbedChrome::ExitModalEventLoop(nsresult aStatus)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ExitModalLoop\n"));
@@ -602,6 +609,13 @@ NS_IMETHODIMP GtkMozEmbedChrome::SizeShellTo(nsIDocShellTreeItem *shell,
 NS_IMETHODIMP GtkMozEmbedChrome::ShowModal(void)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ShowModal\n"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::IsModal(PRBool *_retval)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::IsModal\n"));
+  *_retval = PR_FALSE;
   return NS_OK;
 }
 
