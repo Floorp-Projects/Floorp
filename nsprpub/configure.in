@@ -64,6 +64,7 @@ MOZ_OPTIMIZE=
 OBJDIR=.
 OBJDIR_NAME=.
 NSINSTALL='$(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall'
+NOSUCHFILE=/no-such-file
 
 dnl Link in libraries necessary to resolve all symbols for shared libs
 RESOLVE_LINK_SYMBOLS=
@@ -520,7 +521,7 @@ case "$target" in
         ;;
     esac
     CFLAGS="$CFLAGS -qro -qroconst"
-    if test `grep -c xlC_r $CC`; then
+    if echo "$CC" | grep -c xlC_r; then
         CFLAGS="$CFLAGS -qarch=com"
     fi
     AIX_WRAP='$(DIST)/lib/aixwrap.o'
@@ -544,11 +545,25 @@ case "$target" in
     AC_DEFINE(BEOS)
     AC_DEFINE(_POSIX_SOURCE)
     DSO_LDOPTS=-nostart
-    MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
     MDCPUCFG_H=_beos.cfg
     USE_BTHREADS=1
     PR_MD_ARCH_DIR=beos
     RESOLVE_LINK_SYMBOLS=1
+    case "${target_cpu}" in
+    i?86)
+        _OPTIMIZE_FLAGS=-O2
+        _DEBUG_FLAGS='-gdwarf-2 -O0'
+        MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
+        ;;
+    powerpc)
+        CC=mwcc
+        CCC=mwcc
+        LD=mwld
+        DSO_LDOPTS='-xms -export pragma -init _init_routine_ -term _term_routine_ -lroot -lnet /boot/develop/lib/ppc/glue-noinit.a /boot/develop/lib/ppc/init_term_dyn.o /boot/develop/lib/ppc/start_dyn.o'
+        _OPTIMIZE_FLAGS=-O2    
+        _DEBUG_FLAGS='-g -O0'
+        ;;
+    esac
     ;;
 
 *-bsdi*)
@@ -568,7 +583,6 @@ case "$target" in
     MDCPUCFG_H=_bsdi.cfg
     PR_MD_CSRCS=bsdi.c
 
-    MKSHLIB='$(LD) -o $@ $(DSO_LDOPTS)'
     DSO_LDOPTS=-r
 
     case "$target_os" in
@@ -619,9 +633,7 @@ case "$target" in
     AC_DEFINE(DGUX)
     AC_DEFINE(_DGUX_SOURCE)
     AC_DEFINE(_POSIX4A_DRAFT6_SOURCE)
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
     DSO_LDOPTS=-G
-    NOSUCHFILE=/no-such-file
     _OPTIMIZE_FLAGS=-O2
     _DEBUG_FLAGS=
     MDCPUCFG_H=_dgux.cfg
@@ -629,9 +641,6 @@ case "$target" in
     ;;
 
 *-freebsd*)
-    if test "${target_cpu}" != "alpha"; then
-        AC_DEFINE(i386)
-    fi
     AC_DEFINE(FREEBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
     CFLAGS="$CFLAGS $(DSO_CFLAGS) -ansi -Wall -pipe"
@@ -679,6 +688,10 @@ case "$target" in
         AC_DEFINE(HPUX9)
         DEFAULT_IMPL_STRATEGY=_EMU
     	USE_NSPR_THREADS=1
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(A.09|B.10)' >/dev/null; then
+        AC_DEFINE(_PR_NO_LARGE_FILES)
     fi
 
     if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
@@ -998,14 +1011,14 @@ case "$target" in
    	;;
     esac
 
-    case "$target" in
-    i?86-*)
+    case "$target_cpu" in
+    i?86)
 	    AC_DEFINE(_X86_)
         ;;
-    alpha-*)
+    alpha)
 	    AC_DEFINE(_ALPHA_)
    	    ;;
-    mips-*)
+    mips)
 	    AC_DEFINE(_MIPS_)
 	    ;;
     *)
@@ -1015,23 +1028,259 @@ case "$target" in
 
     ;;
 
+*-ncr-sysv*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SVR4)
+    AC_DEFINE(SYSV)
+    AC_DEFINE(NCR)
+    USE_NSPR_THREADS=1
+    if test "$OS_RELEASE" = "2.03"; then
+        AC_DEFINE(_PR_STAT_HAS_ST_ATIM)
+    else
+        AC_DEFINE(_PR_STAT_HAS_ST_ATIM_UNION)
+    fi
+
+    if test -z "$GNU_CC"; then
+        CFLAGS="$CFLAGS -Hnocopyr"
+        CXXFLAGS="$CXXFLAGS -Hnocopyr"
+    else
+        CFLAGS="$CFLAGS -fPIC -Wall -pipe"
+        CXXFLAGS="$CXXFLAGS -fPIC -Wall -pipe"
+        DSO_LDOPTS=-G
+    fi
+    ;;
+
+mips-nec-sysv*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SVR4)
+    AC_DEFINE(__SVR4)
+    AC_DEFINE(NEC)
+    AC_DEFINE(nec_ews)
+    USE_NSPR_THREADS=1
+    if test -z "$GNU_CC"; then
+        CC='$(NSDEPTH)/build/hcc cc -Xa -KGnum=0 -KOlimit=4000'
+        CXX=g++
+    fi
+    OS_LIBS="$OS_LIBS -lsocket -lnsl -ldl"
+    DSO_LDOPTS=-G
+    ;;
+
+*-netbsd*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(NETBSD)
+    AC_DEFINE(HAVE_BSD_FLOCK)
+    if test -z "$OBJECT_FMT"; then
+        if echo __ELF__ | ${CC-cc} -E - | grep -q __ELF__ 2>/dev/null; then
+            OBJECT_FMT=a.out;
+        else
+            OBJECT_FMT=ELF
+        fi
+    fi
+    if test "$OBJECT_FMT" = "ELF"; then
+        DLL_SUFFIX=so
+    else
+        DLL_SUFFIX=so.1.0
+    fi
+    CFLAGS="$CFLAGS -ansi -Wall -pipe"
+    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
+    DSO_CFLAGS='-fPIC -DPIC'
+    DSO_LDOPTS='-x -shared'
+    if test "$LIBRUNPATH"; then
+        DSO_LDOPTS="$DSO_LDOPTS -R$(LIBRUNPATH)"
+    fi
+    ;;
+
+mips-sony-newsos*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SONY)
+    AC_DEFINE(SYSV)
+    AC_DEFINE(SVR4)
+    AC_DEFINE(__svr4)
+    AC_DEFINE(__svr4__)
+    AC_DEFINE(HAVE_SVID_GETTOD)
+    USE_NSPR_THREADS=1
+    CFLAGS="$CFLAGS -Xa -fullwarn"
+    CXXFLAGS="$CXXFLAGS -Xa -fullwarn"
+    DSO_LDOPTS=-G
+    ;;
+
+*-nextstep*|*-openstep*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(NEXTSTEP)
+    AC_DEFINE(HAVE_BSD_FLOCK)
+    AC_DEFINE(_POSIX_SOURCE)
+    CFLAGS="$CFLAGS -Wall -fno-common -pipe -traditional-cpp -posix"
+    CXXFLAGS="$CXXFLAGS -Wall -fno-common -pipe -traditional-cpp -posix"
+    USE_NSPR_THREADS=1
+    DLL_SUFFIX=dylib
+    ;;
+
+
 *-nto*)
     AC_DEFINE(XP_UNIX)
+    AC_DEFINE(NTO)
+    AC_DEFINE(_QNX_SOURCE)
+    AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     MDCPUCFG_H=_nto.cfg
     PR_MD_CSRCS=nto.c
     MKSHLIB='qcc -Vgcc_ntox86 -shared -Wl,-h$(@:$(OBJDIR)/%.so=%.so) -M -o $(@:$(OBJDIR)/%.so=%.so)'
-    CFLAGS="$CFLAGS -Wc,-Wall -Wc,-Wno-parentheses -DNTO -D_QNX_SOURCE -DHAVE_POINTER_LOCALTIME_R -shared"
-    OS_LIBS="-lsocket"
+    CFLAGS="$CFLAGS -Wc,-Wall -Wc,-Wno-parentheses -shared"
+    OS_LIBS="$OS_LIBS -lsocket"
     _OPTIMIZE_FLAGS="-O1"
     _DEBUG_FLAGS="-O1 -gstabs"
     COMPILER_TAG="_qcc"
     CC="qcc -Vgcc_ntox86 -w"
-    CXX="QCC -Vgcc_ntox86 -w"
-    CPP="qcc -Vgcc_ntox86 -w"
+    CXX='$(CC)'
     LD="qcc -Vgcc_ntox86 -nostdlib"
-    AR="qcc -Vgcc_ntox86 -M -a "
-    AR_FLAGS="$@"
+    AR="qcc -Vgcc_ntox86 -M -a $@"
+    AR_FLAGS=
 	;;
+
+*-openbsd*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(OPENBSD)
+    AC_DEFINE(HAVE_BSD_FLOCK)
+    CFLAGS="$CFLAGS -ansi -Wall -pipe"
+    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
+    DLL_SUFFIX=so.1.0
+    DSO_CFLAGS=-fPIC
+    case "$OS_TEST" in
+    alpha|mips|pmax)
+        DSO_LDOPTS=-shared ;;
+    *)
+        DSO_LDOPTS=-Bshareable ;;
+    esac
+    ;;
+
+*-openvms*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(VMS)
+    AC_DEFINE(VMS_AS_IS)
+    AC_DEFINE(GENERIC_PTHREAD_REDEFINES)
+    CROSS_COMPILE=1
+    HOST_CC=c89
+    HOST_CXX=cxx
+    HOST_CFLAGS=-O
+    HOST_CXXFLAGS=-O
+    CFLAGS="$CFLAGS -Wc,names=\(short,as\)"
+    CXXFLAGS="$CXXFLAGS -Wc,names=\(short,as\)"
+    MKSHLIB='vmsld $(OPTIMIZER)'
+    ;;
+
+*-osf1*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(OSF1)
+
+    if echo "$OS_RELEASE" | egrep -c '(V2.0|V3.2)' 2>/dev/null ; then
+        USE_NSPR_THREADS=1
+    fi
+
+    if test -z "$GNU_CC"; then
+        CC="$CC -std1 -ieee_with_inexact"
+        if test "$OS_RELEASE" = "V2.0"; then
+            CC="$CC -readonly_strings"
+        fi
+        _OPTIMIZE_FLAGS='-Olimit 4000'
+    fi
+
+    if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
+        AC_DEFINE(HAVE_INT_LOCALTIME_R)
+    else
+        AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
+        AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H)
+    fi
+    DSO_LDOPTS='-shared -all -expect_unresolved "*" -soname $(notdir $@)'
+    ;;
+
+*-qnx*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(QNX)
+    AC_DEFINE(_PR_NEED_H_ERRNO)
+    USE_NSPR_THREADS=1
+    ;;
+
+*-rhapsody*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(RHAPSODY)
+    AC_DEFINE(HAVE_BSD_FLOCK)
+    CFLAGS="$CFLAGS -Wmost -fno-common -pipe"    
+    if echo $OS_TEST | grep -c 86 2>/dev/null; then
+        CFLAGS="$CFLAGS -mno-486"
+        AC_DEFINE(i386)
+        CPU_ARCH=i386
+    else
+        AC_DEFINE(ppc)
+        CPU_ARCH=ppc
+    fi
+    DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load'
+    MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
+    DLL_SUFFIX=dylib
+    USE_PTHREADS=1
+    ;;
+
+*-*-sco*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SCO)
+    AC_DEFINE(sco)
+    AC_DEFINE(SYSV)
+    AC_DEFINE(_SVID3)
+    AC_DEFINE(_PR_NEED_H_ERRNO)
+    CC='cc -b elf -KPIC'
+    CXX='$(NSDEPTH)/build/hcpp CC +.cpp +w'
+    USE_NSPR_THREADS=1
+    CPU_ARCH=x86
+    DSO_LDOPTS='-b elf -G'
+    ;;
+
+*-sinix*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SVR4)
+    AC_DEFINE(SNI)
+    AC_DEFINE(RELIANTUNIX)
+    AC_DEFINE(sinix)
+    AC_DEFINE(HAVE_SVID_GETTOD)
+    if echo "$OS_TEST" | grep -c 86 2>/dev/null; then
+        AC_DEFINE(i386)
+        CPU_ARCH=x86
+    else
+        CPU_ARCH=mips
+    fi
+
+    if test "$GNU_CC"; then
+        AS='$(CC) -x assembler-with-cpp'
+        if test "$CPU_ARCH" = "mips"; then
+            LD=gld
+            CFLAGS="$CFLAGS -pipe"
+        fi
+        CFLAGS="$CFLAGS -Wall -Wno-format"
+    else
+        AS='/usr/bin/cc'
+        _OPTIMIZE_FLAGS='-O -F Olimit,4000'
+    fi
+
+    DSO_LDOPTS='-G -z defs -h $(@:$(OBJDIR)/%.so=%.so)'
+
+    if test "$OS_RELEASE" = "5.43"; then
+        AC_DEFINE(IP_MULTICAST)
+    fi
+
+    OS_LIBS="$OS_LIBS -lsocket -lnsl -lresolv -ldl -lc"
+    USE_NSPR_THREADS=1
+    ;;
+
+*-sunos*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SUNOS4)
+    CFLAGS="$CFLAGS -Wall -Wno-format"
+    if test "$USE_MDUPDATE"; then
+        CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
+    fi
+    CPU_ARCH=sparc
+    DLL_SUFFIX=so.1.0
+    DSO_LDOPTS=
+    DSO_CFLAGS=-fPIC
+    USE_NSPR_THREADS=1
+    ;;
 
 *-solaris*)
     AC_DEFINE(XP_UNIX)
@@ -1056,11 +1305,10 @@ case "$target" in
     if test -z "$GNU_AS"; then
         ASFLAGS="$ASFLAGS -Wa,-P"
     fi
-    NOSUCHFILE=/no-such-file
     if test -n "$GNU_CC"; then
         if test -n "$USE_MDUPDATE"; then
-            CFLAGS="$CFLAGS -MDupdate"
-            CXXFLAGS="$CXXFLAGS -MDupdate"
+            CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
+            CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
         fi
     else
         CC="$CC -xstrconst"
@@ -1074,7 +1322,7 @@ case "$target" in
         CC="$CC -xarch=v9"
         CXX="$CXX -xarch=v9"
     fi
-    if test "${target_cpu}" = "i386"; then
+    if test "$OS_TEST" = "i86pc"; then
         AC_DEFINE(i386)
         if test -n "$MOZ_DEBUG" && test -n "$GNU_CC"; then
             _DEBUG_FLAGS="$_DEBUG_FLAGS -gstabs"
@@ -1100,11 +1348,30 @@ case "$target" in
         fi
         ;;
     esac
-    if test "${target_cpu}" = "sun4u"; then
+    if test "$OS_TEST" = "sun4u"; then
         ULTRASPARC_LIBRARY=ultrasparc
         ULTRASPARC_FILTER_LIBRARY=libatomic.so
         DSO_LDOPTS="$DSO_LDOPTS -f "'$(ULTRASPARC_FILTER_LIBRARY)'
     fi
+    ;;
+
+*-sco-sysv5*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(UNIXWARE)
+    AC_DEFINE(SVR4)
+    AC_DEFINE(SYSV)
+    USE_NSPR_THREADS=1
+    if echo $OS_RELEASE | grep -c 2.1 2>/dev/null; then
+        AC_DEFINE(_PR_NO_LARGE_FILES)
+        CC='$(NSDEPTH)/build/hcc cc'
+        CXX='$(NSDEPTH)/build/hcpp CC'
+    else
+        AC_DEFINE(_LARGEFILE64_SOURCE)
+        AC_DEFINE(_PR_HAVE_OFF64_T)
+        AC_DEFINE(_PR_HAVE_SOCKADDR_LEN)
+    fi
+    DSO_LDOPTS=-G
+    CPU_ARCH=x86
     ;;
 
 *)
@@ -1145,6 +1412,10 @@ dnl AC_CHECK_LIB(socket, main)
 dnl AC_CHECK_LIB(svld, main)
 dnl AC_CHECK_LIB(thread, main)
 dnl AC_CHECK_LIB(vms_jackets, main)
+
+AC_CHECK_FUNC(dlopen,,[
+    AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
+])
 
 dnl ========================================================
 dnl Check for system header files.
@@ -1362,7 +1633,7 @@ if test -n "$USE_PTHREADS"; then
             _PTHREAD_LDFLAGS=
         fi
 	    ;;
-    *-freebsd*)
+    *-freebsd*|*-openbsd*|*-bsdi*|*-netbsd*)
 	    AC_DEFINE(_REENTRANT)
 	    AC_DEFINE(_THREAD_SAFE)
 	    dnl -pthread links in -lc_r, so don't specify it explicitly.
@@ -1380,9 +1651,10 @@ else
 	    USE_PTHREADS=
 	    USE_NSPR_THREADS=
     else
-	    USE_NSPR_THREADS=1
-            _PTHREAD_LDFLAGS=
-	    dnl AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+        _PTHREAD_LDFLAGS=
+        if test -n "$USE_NSPR_THREADS"; then
+    	    AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+        fi
     fi
 fi
 dnl Special thread exceptions
@@ -1401,20 +1673,9 @@ case "$target" in
 *-bsdi*)
     if test -n "$USE_PTHREADS"; then
         AC_DEFINE(_PR_NEED_PTHREAD_INIT)
-    else
-        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-
 *-hpux*)
-    if test "$USE_NSPR_THREADS"; then
-        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
-    fi
-
-    if echo "$OS_RELEASE" | egrep '^(A.09|B.10)' >/dev/null; then
-        AC_DEFINE(_PR_NO_LARGE_FILES)
-    fi
-
     if test "$USE_PTHREADS"; then
         if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
             AC_DEFINE(REENTRANT)
@@ -1433,6 +1694,11 @@ case "$target" in
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
     ;;
+*-netbsd*)
+    if test -z "$USE_PTHREADS"; then
+        OS_LIBS="$OS_LIBS -lc"
+    fi
+    ;;    
 *-solaris*)
     if test -n "$USE_NATIVE_THREADS"; then
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
@@ -1444,7 +1710,7 @@ case "$target" in
     if test -z "$USE_USER_PTHREADS"; then
         AC_DEFINE(_REENTRANT)
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-        if test "${target_cpu}" = "i386"; then
+        if test "$OS_TEST" = "i86pc"; then
             PR_MD_ASFILES=os_SunOS_x86.s
         else
             PR_MD_ASFILES=os_SunOS.s
@@ -1457,12 +1723,6 @@ case "$target" in
 esac
 
 OS_LIBS="$_PTHREAD_LDFLAGS $OS_LIBS"
-
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-AC_CHECK_FUNC(dlopen,,[
-    AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
-])
-fi
 
 dnl If the user passed in arg to --enable-optimize,
 dnl make sure that we use it.
@@ -1515,6 +1775,7 @@ AC_SUBST(MOZ_WIN32_TARGET)
 AC_SUBST(PR_MD_CSRCS)
 AC_SUBST(PR_MD_ASFILES)
 AC_SUBST(PR_MD_ARCH_DIR)
+AC_SUBST(CPU_ARCH)
 
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(LIB_SUFFIX)
