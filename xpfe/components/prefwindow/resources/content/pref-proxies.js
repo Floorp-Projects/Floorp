@@ -1,14 +1,14 @@
 function showManualProxyConfig()
 {
   var manualRow = document.getElementById("manual-proxy");
-  bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
+  var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
   var viewHideButton = document.getElementById("viewhideManual");
   if( manualRow.style.display == "none" ) {
-    viewHideButton.value = bundle.GetStringFromName("hiderow");
+    viewHideButton.value = prefutilitiesBundle.getString("hiderow");
     manualRow.style.display = "inherit";
   }
   else {
-    viewHideButton.value = bundle.GetStringFromName("viewrow");
+    viewHideButton.value = prefutilitiesBundle.getString("viewrow");
     manualRow.style.display = "none"
   }
 }

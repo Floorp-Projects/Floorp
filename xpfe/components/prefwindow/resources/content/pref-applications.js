@@ -1,6 +1,15 @@
 
 var gNewTypeRV    = null;
 var gUpdateTypeRV = null;
+var gTree   = null;
+var gDS     = null;
+var gPrefApplicationsBundle = null;
+
+var gExtensionField = null;
+var gMIMETypeField  = null;
+var gHandlerField   = null;
+var gEditButton     = null;
+var gRemoveButton   = null;
 
 function newType()
 {
@@ -14,8 +23,8 @@ function newType()
 
 function removeType()
 {
-  var titleMsg = gBundle.GetStringFromName("removeHandlerTitle");
-  var dialogMsg = gBundle.GetStringFromName("removeHandler");
+  var titleMsg = gPrefApplicationsBundle.getString("removeHandlerTitle");
+  var dialogMsg = gPrefApplicationsBundle.getString("removeHandler");
   dialogMsg = dialogMsg.replace(/%n/g, "\n");
   var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                               "nsICommonDialogs");
@@ -38,20 +47,10 @@ function editType()
   }
 }
 
-var gTree   = null;
-var gDS     = null;
-var gBundle = null;
-
-var gExtensionField = null;
-var gMIMETypeField  = null;
-var gHandlerField   = null;
-var gEditButton     = null;
-var gRemoveButton   = null;
-
 function Startup()
 {
   // set up the string bundle
-  gBundle = srGetStrBundle("chrome://communicator/locale/pref/pref-applications.properties");
+  gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
 
   // set up the elements
   gTree = document.getElementById("appTree"); 
@@ -92,9 +91,11 @@ function selectApplication()
     
     // figure out how this type is handled
     if (handlerOverride.handleInternal == "true")
-      gHandlerField.setAttribute("value", gBundle.GetStringFromName("handleInternally"));
+      gHandlerField.setAttribute("value",
+                                 gPrefApplicationsBundle.getString("handleInternally"));
     else if (handlerOverride.saveToDisk == "true")
-      gHandlerField.setAttribute("value", gBundle.GetStringFromName("saveToDisk"));
+      gHandlerField.setAttribute("value",
+                                 gPrefApplicationsBundle.getString("saveToDisk"));
     else 
       gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
 

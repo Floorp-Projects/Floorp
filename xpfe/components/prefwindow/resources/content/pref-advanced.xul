@@ -25,7 +25,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-advanced.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-       	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical" title="&window.title;"
         onload="parent.initPanel(panel);">
@@ -49,10 +49,10 @@
     
   ]]>
   </script>
+  <!-- XXX: Replace strres.js when prefutilities is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
-        
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical" id="advancedSettings">

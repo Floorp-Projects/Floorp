@@ -36,15 +36,18 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["networkProxyType",
-	"networkProxyFTP", "networkProxyFTP_Port",
-	"networkProxyGopher", "networkProxyGopher_Port",
-	"networkProxyHTTP", "networkProxyHTTP_Port", 
-	"networkProxySSL", "networkProxySSL_Port", 
-	"networkProxySOCKS", "networkProxySOCKS_Port",
-	"networkProxyNone", "networkProxyAutoconfigURL"];
+                       "networkProxyFTP", "networkProxyFTP_Port",
+                       "networkProxyGopher", "networkProxyGopher_Port",
+                       "networkProxyHTTP", "networkProxyHTTP_Port", 
+                       "networkProxySSL", "networkProxySSL_Port", 
+                       "networkProxySOCKS", "networkProxySOCKS_Port",
+                       "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
+  <stringbundle id="bundle_prefutilities"
+                src="chrome://pref/locale/prefutilities.properties"/>
+  <!-- XXX: Replace strres.js when prefutilities is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-proxies.js"/>
@@ -119,7 +122,7 @@
               <textfield id="networkProxySOCKS_Port" pref="true" preftype="int" prefstring="network.proxy.socks_port"
                        prefattribute="value" size="5"/>
             </box>
-	  </row>
+          </row>
           <row> 
             <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
             <textfield id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"

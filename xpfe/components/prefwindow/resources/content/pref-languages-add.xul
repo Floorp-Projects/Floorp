@@ -36,6 +36,7 @@
   style="width: 25em;height: 25em;">
 
   <script type="application/x-javascript" src="pref-languages.js"/>
+  <!-- XXX: Replace strres.js when pref-languages is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <keyset id="keyset"/>
