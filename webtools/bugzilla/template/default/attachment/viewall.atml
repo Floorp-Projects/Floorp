@@ -63,15 +63,13 @@
       <td valign="top">[% a.date %]</td>
 
       <td valign="top">
-        <nobr>
         [% IF a.statuses.size == 0 %]
           <i>none</i>
         [% ELSE %]
           [% FOREACH s = a.statuses %]
-            [% s FILTER html %]<br>
+            [% s FILTER html FILTER replace('\s', '&nbsp;') %]<br>
           [% END %]
         [% END %]
-        </nobr>
       </td>
 
       <td valign="top">
