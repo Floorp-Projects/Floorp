@@ -60,7 +60,17 @@ public:
 
 private:
 
-  DragReference mDragRef;    // reference to _the_ drag. There can be only one.
+  void RegisterDragItemsAndFlavors ( nsISupportsArray * inArray ) ;
+
+    // callback for the MacOS DragManager when a drop site asks for data
+  static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,
+  										 ItemReference theItemRef, DragReference inDragRef ) ;
+
+  static DragSendDataUPP sDragSendDataUPP;
+  DragReference mDragRef;        // reference to _the_ drag. There can be only one.
+  nsISupportsArray* mDataItems;  // cached here for when we start the drag so the 
+                                 // DragSendDataProc has access to them. 
+                                 // ONLY VALID DURING A DRAG STARTED WITHIN THIS APP.
 
 }; // class nsDragService
 
