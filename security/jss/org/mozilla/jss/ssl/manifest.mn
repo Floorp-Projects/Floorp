@@ -37,7 +37,7 @@ MODULE = jss
 
 NS_USE_JDK = 1
 
-REQUIRES = security
+REQUIRES = nspr20 nss
 
 PACKAGE =       org/mozilla/jss/ssl
 

@@ -75,18 +75,5 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 include rules.mk
 
-#
-# The public NSS headers from an NSS binary release are now unpacked in
-# the mozilla/dist/public/nss directory; they were unpacked in the
-# mozilla/dist/public/security directory before.  If we build NSS from
-# source, NSS still installs its headers in mozilla/dist/public/security.
-# To allow JSS to work with either an NSS binary release or an NSS built
-# from source, we rename mozilla/dist/public/nss to
-# mozilla/dist/public/security after unpacking a binary release.
-#
-
 build_coreconf:
 	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
-
-import::
-	if test -d $(SOURCE_XP_DIR)/public/nss; then rm -rf $(SOURCE_XP_DIR)/public/security; mv $(SOURCE_XP_DIR)/public/nss $(SOURCE_XP_DIR)/public/security; fi
