@@ -56,7 +56,7 @@ nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
 }
 
 nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener* aListener) {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
     
     mEventQueue = aEventQ; // whoever creates us must provide an event queue
                            // so we can post events back to them.
@@ -70,13 +70,13 @@ nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamLi
     mLength = 0;
     mConnected = PR_FALSE;
 
-	mLock = PR_NewLock();
+    mLock = PR_NewLock();
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mEventQueue);
-	PR_DestroyLock(mLock);
+    PR_DestroyLock(mLock);
 }
 
 
@@ -90,12 +90,12 @@ nsFtpConnectionThread::Cancel(void) {
 
 NS_IMETHODIMP
 nsFtpConnectionThread::Suspend(void) {
-	PRStatus status;
-	PR_Lock(mLock);
-	status = PR_Sleep(PR_INTERVAL_NO_TIMEOUT);
-	PR_Unlock(mLock);
-	if (PR_FAILURE == status)
-		return NS_FAILURE;
+    PRStatus status;
+    PR_Lock(mLock);
+    status = PR_Sleep(PR_INTERVAL_NO_TIMEOUT);
+    PR_Unlock(mLock);
+    if (PR_FAILURE == status)
+        return NS_FAILURE;
     return NS_OK;
 }
 
@@ -116,8 +116,8 @@ nsFtpConnectionThread::Run() {
     nsIChannel* lCPipe = nsnull;
     nsIChannel* lDPipe = nsnull;
 
-	// set our thread var
-	mThread = PR_CurrentThread();
+    // set our thread var
+    mThread = PR_CurrentThread();
 
     mState = FTP_S_USER;
 
@@ -160,7 +160,7 @@ nsFtpConnectionThread::Run() {
     PRUint32 bytes = 0;
     PRUint32 prevBytes = 0;
 
-	while (processing) {
+    while (processing) {
         nsresult rv;
         char *buffer = nsnull;      // the buffer to be sent to the server
                                     // XXX the buffer symantics need to be established
@@ -170,8 +170,8 @@ nsFtpConnectionThread::Run() {
         // each hunk of data that comes in is evaluated, appropriate action 
         // is taken and the state is incremented.
 
-	    // XXX some of the "buffer"s allocated below in the individual states can be removed
-	    // XXX and replaced with static char or #defines.
+        // XXX some of the "buffer"s allocated below in the individual states can be removed
+        // XXX and replaced with static char or #defines.
         switch(mState) {
 
 //////////////////////////////
@@ -269,11 +269,11 @@ nsFtpConnectionThread::Run() {
                     mState = FTP_S_PASS;
                 } else if (mResponseCode == 2) {
                     // no password required, we're already logged in
-				    mState = FTP_S_SYST;
+                    mState = FTP_S_SYST;
                 }
                 break;
                 }
-			    // END: FTP_R_USER
+                // END: FTP_R_USER
 
             case FTP_S_PASS:
                 {
@@ -313,95 +313,13 @@ nsFtpConnectionThread::Run() {
                 } else {
                     NS_ASSERTION(0, "ftp unexpected condition");
                 }
-			    break;
+                break;
                 }
-			    // END: FTP_R_PASS    
+                // END: FTP_R_PASS    
 
-		    case FTP_S_SYST:
+            case FTP_S_SYST:
                 {
-			    buffer = "SYST\r\n";
-                bufLen = PL_strlen(buffer);
-
-			    // send off the command
-                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
-                if (NS_FAILED(rv)) {
-                    mState = FTP_ERROR;
-                    break;
-                }
-
-                prevBytes += bytes;
-                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
-                prevBytes = 0;
-
-                mState = FTP_READ_BUF;
-			    mNextState = FTP_R_SYST;
-			    break;
-                }
-                // END: FTP_S_SYST
-
-            case FTP_R_SYST: 
-                {
-			    if (mResponseCode == 2) {
-                    if (mUseDefaultPath) {
-					    mState = FTP_S_PWD;
-                    } else {
-                        mState = FindActionState();
-                    }
-
-				    SetSystInternals(); // must be called first to setup member vars.
-
-				    // setup next state based on server type.
-				    if (mServerType == FTP_PETER_LEWIS_TYPE || mServerType == FTP_WEBSTAR_TYPE) {
-					    mState = FTP_S_MACB;
-				    } else if (mServerType == FTP_TCPC_TYPE || mServerType == FTP_GENERIC_TYPE) {
-					    mState = FTP_S_PWD;
-				    } 
-			    } else {
-				    mState = FTP_S_PWD;		
-			    }
-			    break;
-                }
-			    // END: FTP_R_SYST
-
-		    case FTP_S_ACCT:
-                {
-			    buffer = "ACCT noaccount\r\n";
-                bufLen = PL_strlen(buffer);
-
-			    // send off the command
-                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
-                if (NS_FAILED(rv)) {
-                    mState = FTP_ERROR;
-                    break;
-                }
-
-                prevBytes += bytes;
-                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
-                prevBytes = 0;
-
-                mState = FTP_READ_BUF;
-			    mNextState = FTP_R_ACCT;			
-			    break;
-                }
-                // END: FTP_S_ACCT
-
-		    case FTP_R_ACCT:
-                {
-			    if (mResponseCode == 2) {
-				    mState = FTP_S_SYST;
-			    } else {
-				    // failure. couldn't login
-                    rv = NS_ERROR_FTP_LOGIN;
-                    mState = FTP_ERROR;
-                    break;
-			    }
-			    break;
-                }
-			    // END: FTP_R_ACCT
-
-		    case FTP_S_MACB:
-                {
-			    buffer = "MACB ENABLE\r\n";
+                buffer = "SYST\r\n";
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
@@ -416,33 +334,115 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_MACB;
-			    break;
+                mNextState = FTP_R_SYST;
+                break;
+                }
+                // END: FTP_S_SYST
+
+            case FTP_R_SYST: 
+                {
+                if (mResponseCode == 2) {
+                    if (mUseDefaultPath) {
+                        mState = FTP_S_PWD;
+                    } else {
+                        mState = FindActionState();
+                    }
+
+                    SetSystInternals(); // must be called first to setup member vars.
+
+                    // setup next state based on server type.
+                    if (mServerType == FTP_PETER_LEWIS_TYPE || mServerType == FTP_WEBSTAR_TYPE) {
+                        mState = FTP_S_MACB;
+                    } else if (mServerType == FTP_TCPC_TYPE || mServerType == FTP_GENERIC_TYPE) {
+                        mState = FTP_S_PWD;
+                    } 
+                } else {
+                    mState = FTP_S_PWD;        
+                }
+                break;
+                }
+                // END: FTP_R_SYST
+
+            case FTP_S_ACCT:
+                {
+                buffer = "ACCT noaccount\r\n";
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
+
+                mState = FTP_READ_BUF;
+                mNextState = FTP_R_ACCT;            
+                break;
+                }
+                // END: FTP_S_ACCT
+
+            case FTP_R_ACCT:
+                {
+                if (mResponseCode == 2) {
+                    mState = FTP_S_SYST;
+                } else {
+                    // failure. couldn't login
+                    rv = NS_ERROR_FTP_LOGIN;
+                    mState = FTP_ERROR;
+                    break;
+                }
+                break;
+                }
+                // END: FTP_R_ACCT
+
+            case FTP_S_MACB:
+                {
+                buffer = "MACB ENABLE\r\n";
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
+
+                mState = FTP_READ_BUF;
+                mNextState = FTP_R_MACB;
+                break;
                 }
                 // END: FTP_S_MACB
 
-		    case FTP_R_MACB:
+            case FTP_R_MACB:
                 {
-			    if (mResponseCode == 2) {
-				    // set the mac binary
-				    if (mServerType == FTP_UNIX_TYPE) {
-					    // This state is carry over from the old ftp implementation
-					    // I'm not sure what's really going on here.
-					    // original comment "we were unsure here"
-					    mServerType = FTP_NCSA_TYPE;	
-				    }
-			    }
-                mState = FindActionState();
-			    break;
+                if (mResponseCode == 2) {
+                    // set the mac binary
+                    if (mServerType == FTP_UNIX_TYPE) {
+                        // This state is carry over from the old ftp implementation
+                        // I'm not sure what's really going on here.
+                        // original comment "we were unsure here"
+                        mServerType = FTP_NCSA_TYPE;    
+                    }
                 }
-			    // END: FTP_R_MACB
+                mState = FindActionState();
+                break;
+                }
+                // END: FTP_R_MACB
 
-		    case FTP_S_PWD:
+            case FTP_S_PWD:
                 {
-			    buffer = "PWD\r\n";
+                buffer = "PWD\r\n";
                 bufLen = PL_strlen(buffer);
 
-    		    // send off the command
+                // send off the command
                 rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -454,102 +454,102 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_PWD;
-			    break;
+                mNextState = FTP_R_PWD;
+                break;
                 }
                 // END: FTP_S_PWD
 
-		    case FTP_R_PWD:
-			    {
-			    // fun response interpretation begins :)
-			    PRInt32 start = mResponseMsg.Find('"', PR_FALSE, 5);
-			    nsString2 lNewMsg;
-			    if (start > -1) {
-				    mResponseMsg.Left(lNewMsg, start);
-			    } else {
-				    lNewMsg = mResponseMsg;				
-			    }
+            case FTP_R_PWD:
+                {
+                // fun response interpretation begins :)
+                PRInt32 start = mResponseMsg.Find('"', PR_FALSE, 5);
+                nsString2 lNewMsg;
+                if (start > -1) {
+                    mResponseMsg.Left(lNewMsg, start);
+                } else {
+                    lNewMsg = mResponseMsg;                
+                }
 
-			    // default next state
-			    mState = FindActionState();
+                // default next state
+                mState = FindActionState();
 
-			    // reset server types if necessary
-			    if (mServerType == FTP_TCPC_TYPE) {
-				    if (lNewMsg.CharAt(1) == '/') {
-					    mServerType = FTP_NCSA_TYPE;
-				    }
-			    }
-			    else if(mServerType == FTP_GENERIC_TYPE) {
-				    if (lNewMsg.CharAt(1) == '/') {
-					    // path names ending with '/' imply unix
-					    mServerType = FTP_UNIX_TYPE;
-					    mList = PR_TRUE;
-				    } else if (lNewMsg.Last() == ']') {
-					    // path names ending with ']' imply vms
-					    mServerType = FTP_VMS_TYPE;
-					    mList = PR_TRUE;
-				    }
-			    }
+                // reset server types if necessary
+                if (mServerType == FTP_TCPC_TYPE) {
+                    if (lNewMsg.CharAt(1) == '/') {
+                        mServerType = FTP_NCSA_TYPE;
+                    }
+                }
+                else if(mServerType == FTP_GENERIC_TYPE) {
+                    if (lNewMsg.CharAt(1) == '/') {
+                        // path names ending with '/' imply unix
+                        mServerType = FTP_UNIX_TYPE;
+                        mList = PR_TRUE;
+                    } else if (lNewMsg.Last() == ']') {
+                        // path names ending with ']' imply vms
+                        mServerType = FTP_VMS_TYPE;
+                        mList = PR_TRUE;
+                    }
+                }
 
-			    if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
-				    // we want to use the default path specified by the PWD command.
-				    PRInt32 start = lNewMsg.Find('"', PR_FALSE, 1);
-				    nsString2 path, ptr;
-				    lNewMsg.Right(path, start);
+                if (mUseDefaultPath && mServerType != FTP_VMS_TYPE) {
+                    // we want to use the default path specified by the PWD command.
+                    PRInt32 start = lNewMsg.Find('"', PR_FALSE, 1);
+                    nsString2 path, ptr;
+                    lNewMsg.Right(path, start);
 
-				    if (path.First() != '/') {
-					    start = path.Find('/');
-					    if (start > -1) {
-						    path.Right(ptr, start);
-					    } else {
-						    // if we couldn't find a slash, check for back slashes and switch them out.
-						    PRInt32 start = path.Find('\\');
-						    if (start > -1) {
-							    path.ReplaceChar('\\', '/');
-						    }
-					    }
-				    } else {
-					    ptr = path;
-				    }
+                    if (path.First() != '/') {
+                        start = path.Find('/');
+                        if (start > -1) {
+                            path.Right(ptr, start);
+                        } else {
+                            // if we couldn't find a slash, check for back slashes and switch them out.
+                            PRInt32 start = path.Find('\\');
+                            if (start > -1) {
+                                path.ReplaceChar('\\', '/');
+                            }
+                        }
+                    } else {
+                        ptr = path;
+                    }
 
-				    // construct the new url
-				    if (ptr.Length()) {
-					    nsString2 newPath;
+                    // construct the new url
+                    if (ptr.Length()) {
+                        nsString2 newPath;
 
-					    newPath = ptr;
+                        newPath = ptr;
 
 
-					    char *initialPath = nsnull;
-					    rv = mUrl->GetPath(&initialPath);
-					    if (NS_FAILED(rv)) {
+                        char *initialPath = nsnull;
+                        rv = mUrl->GetPath(&initialPath);
+                        if (NS_FAILED(rv)) {
                   mState = FTP_ERROR;
                   break;
               }
-					    
-					    if (initialPath && *initialPath) {
+                        
+                        if (initialPath && *initialPath) {
                   if (newPath.Last() == '/')
                       newPath.Cut(newPath.Length()-1, 1);
                   newPath.Append(initialPath);
-					    }
+                        }
               nsCRT::free(initialPath);
 
-					    char *p = newPath.ToNewCString();
-					    mUrl->SetPath(p);
-					    delete [] p;
-				    }
-			    }
+                        char *p = newPath.ToNewCString();
+                        mUrl->SetPath(p);
+                        delete [] p;
+                    }
+                }
 
-			    // change state for these servers.
-			    if (mServerType == FTP_GENERIC_TYPE
-				    || mServerType == FTP_NCSA_TYPE
-				    || mServerType == FTP_TCPC_TYPE
-				    || mServerType == FTP_WEBSTAR_TYPE
-				    || mServerType == FTP_PETER_LEWIS_TYPE)
-				    mState = FTP_S_MACB;
+                // change state for these servers.
+                if (mServerType == FTP_GENERIC_TYPE
+                    || mServerType == FTP_NCSA_TYPE
+                    || mServerType == FTP_TCPC_TYPE
+                    || mServerType == FTP_WEBSTAR_TYPE
+                    || mServerType == FTP_PETER_LEWIS_TYPE)
+                    mState = FTP_S_MACB;
 
-			    break;
-			    }
-			    // END: FTP_R_PWD
+                break;
+                }
+                // END: FTP_R_PWD
 
             case FTP_S_MODE:
                 {
@@ -572,7 +572,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_MODE;
+                mNextState = FTP_R_MODE;
                 break;
                 }
                 // END: FTP_S_MODE
@@ -636,7 +636,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_CWD;
+                mNextState = FTP_R_CWD;
                 break;
                 }
                 // END: FTP_S_CWD
@@ -701,7 +701,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_SIZE;
+                mNextState = FTP_R_SIZE;
                 break;
                 }
                 // END: FTP_S_SIZE
@@ -747,7 +747,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_MDTM;
+                mNextState = FTP_R_MDTM;
                 break;
                 }
                 // END: FTP_S_MDTM;
@@ -825,7 +825,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_LIST;
+                mNextState = FTP_R_LIST;
                 break;
                 }
                 // END: FTP_S_LIST
@@ -936,7 +936,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_RETR;
+                mNextState = FTP_R_RETR;
                 break;
                 }
                 // END: FTP_S_RETR
@@ -1100,11 +1100,11 @@ nsFtpConnectionThread::Run() {
 
                 PRInt32 fields = PR_sscanf(ptr, 
 #ifdef __alpha
-		            "%d,%d,%d,%d,%d,%d",
+                    "%d,%d,%d,%d,%d,%d",
 #else
-		            "%ld,%ld,%ld,%ld,%ld,%ld",
+                    "%ld,%ld,%ld,%ld,%ld,%ld",
 #endif
-		            &h0, &h1, &h2, &h3, &p0, &p1);
+                    &h0, &h1, &h2, &h3, &p0, &p1);
 
                 if (fields < 6) {
                     // bad format. we'll try PORT, but it's probably over.
@@ -1167,7 +1167,7 @@ nsFtpConnectionThread::Run() {
                 nsCRT::free(filename);
                 bufLen = PL_strlen(buffer);
 
-    		    // send off the command
+                // send off the command
                 rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -1179,7 +1179,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_DEL_FILE;
+                mNextState = FTP_R_DEL_FILE;
                 break;
                 }
                 // END: FTP_S_DEL_FILE
@@ -1210,7 +1210,7 @@ nsFtpConnectionThread::Run() {
                 nsCRT::free(dir);
                 bufLen = PL_strlen(buffer);
 
-    		    // send off the command
+                // send off the command
                 rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -1222,7 +1222,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_DEL_DIR;
+                mNextState = FTP_R_DEL_DIR;
 
                 break;
                 }
@@ -1254,7 +1254,7 @@ nsFtpConnectionThread::Run() {
                 nsCRT::free(dir);
                 bufLen = PL_strlen(buffer);
 
-    		    // send off the command
+                // send off the command
                 rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
                 if (NS_FAILED(rv)) {
                     mState = FTP_ERROR;
@@ -1266,7 +1266,7 @@ nsFtpConnectionThread::Run() {
                 prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
-			    mNextState = FTP_R_MKDIR;
+                mNextState = FTP_R_MKDIR;
                 break;
                 }
                 // END: FTP_S_MKDIR
@@ -1309,10 +1309,10 @@ nsFtpConnectionThread::Init(nsIThread* aThread, nsIURI* aUrl) {
     PR_CNotify(this);
     PR_CExitMonitor(this);
 */
-	PR_Lock(mLock);
+    PR_Lock(mLock);
     mUrl = aUrl;
     NS_ADDREF(mUrl);
-	PR_Unlock(mLock);
+    PR_Unlock(mLock);
     return NS_OK;
 }
 
@@ -1320,9 +1320,9 @@ nsresult
 nsFtpConnectionThread::SetAction(FTP_ACTION aAction) {
     if (mConnected)
         return NS_ERROR_ALREADY_CONNECTED;
-	PR_Lock(mLock);
+    PR_Lock(mLock);
     mAction = aAction;
-	PR_Unlock(mLock);
+    PR_Unlock(mLock);
     return NS_OK;
 }
 
@@ -1330,9 +1330,9 @@ nsresult
 nsFtpConnectionThread::SetUsePasv(PRBool aUsePasv) {
     if (mConnected)
         return NS_ERROR_ALREADY_CONNECTED;
-	PR_Lock(mLock);
+    PR_Lock(mLock);
     mUsePasv = aUsePasv;
-	PR_Unlock(mLock);
+    PR_Unlock(mLock);
     return NS_OK;
 }
 
@@ -1352,11 +1352,11 @@ nsFtpConnectionThread::Read(void) {
         return rv;
     }
 
-	// get the response code out.
+    // get the response code out.
     PR_sscanf(buffer, "%d", &mResponseCode);
 
-	// get the rest of the line
-	mResponseMsg = buffer+4;
+    // get the rest of the line
+    mResponseMsg = buffer+4;
     return rv;   
 }
 
@@ -1365,39 +1365,39 @@ nsFtpConnectionThread::Read(void) {
 void
 nsFtpConnectionThread::SetSystInternals(void) {
     if (mResponseMsg.Equals("UNIX Type: L8 MAC-OS MachTen", 28)) {
-		mServerType = FTP_MACHTEN_TYPE;
-		mList = PR_TRUE;
-	}
-	else if (mResponseMsg.Find("UNIX") > -1) {
-		mServerType = FTP_UNIX_TYPE;
-		mList = PR_TRUE;
-	}
-	else if (mResponseMsg.Find("Windows_NT") > -1) {
-		mServerType = FTP_NT_TYPE;
-		mList = PR_TRUE;
-	}
-	else if (mResponseMsg.Equals("VMS", 3)) {
-		mServerType = FTP_VMS_TYPE;
-		mList = PR_TRUE;
-	}
-	else if (mResponseMsg.Equals("VMS/CMS", 6) || mResponseMsg.Equals("VM ", 3)) {
-		mServerType = FTP_CMS_TYPE;
-	}
-	else if (mResponseMsg.Equals("DCTS", 4)) {
-		mServerType = FTP_DCTS_TYPE;
-	}
-	else if (mResponseMsg.Find("MAC-OS TCP/Connect II") > -1) {
-		mServerType = FTP_TCPC_TYPE;
-		mList = PR_TRUE;
-	}
-	else if (mResponseMsg.Equals("MACOS Peter's Server", 20)) {
-		mServerType = FTP_PETER_LEWIS_TYPE;
-		mList = PR_TRUE;
-	}
-	else if (mResponseMsg.Equals("MACOS WebSTAR FTP", 17)) {
-		mServerType = FTP_WEBSTAR_TYPE;
-		mList = PR_TRUE;
-	}
+        mServerType = FTP_MACHTEN_TYPE;
+        mList = PR_TRUE;
+    }
+    else if (mResponseMsg.Find("UNIX") > -1) {
+        mServerType = FTP_UNIX_TYPE;
+        mList = PR_TRUE;
+    }
+    else if (mResponseMsg.Find("Windows_NT") > -1) {
+        mServerType = FTP_NT_TYPE;
+        mList = PR_TRUE;
+    }
+    else if (mResponseMsg.Equals("VMS", 3)) {
+        mServerType = FTP_VMS_TYPE;
+        mList = PR_TRUE;
+    }
+    else if (mResponseMsg.Equals("VMS/CMS", 6) || mResponseMsg.Equals("VM ", 3)) {
+        mServerType = FTP_CMS_TYPE;
+    }
+    else if (mResponseMsg.Equals("DCTS", 4)) {
+        mServerType = FTP_DCTS_TYPE;
+    }
+    else if (mResponseMsg.Find("MAC-OS TCP/Connect II") > -1) {
+        mServerType = FTP_TCPC_TYPE;
+        mList = PR_TRUE;
+    }
+    else if (mResponseMsg.Equals("MACOS Peter's Server", 20)) {
+        mServerType = FTP_PETER_LEWIS_TYPE;
+        mList = PR_TRUE;
+    }
+    else if (mResponseMsg.Equals("MACOS WebSTAR FTP", 17)) {
+        mServerType = FTP_WEBSTAR_TYPE;
+        mList = PR_TRUE;
+    }
 }
 
 FTP_STATE
