@@ -1718,7 +1718,18 @@ void CRDFOutliner::OnPaint()
 
 	// Divider color
 	m_DividerColor = RGB(255,255,255);
-	m_bDrawDividers = TRUE;
+	HT_GetNodeData(top, gNavCenter->dividerColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_DividerColor);
+	
+	HT_GetNodeData(top, gNavCenter->showDivider, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
+			m_bDrawDividers = FALSE;
+	}
+	else m_bDrawDividers = TRUE;
 
 	HPALETTE pOldPalette = NULL;
 	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
