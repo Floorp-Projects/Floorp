@@ -7,6 +7,8 @@ libgtkmozilla_la_SOURCES = \
 			gtkmozilla.h \
 			GtkMozillaContainer.h \
 			GtkMozillaContainer.cpp \
+			GtkMozillaInputStream.h \
+			GtkMozillaInputStream.cpp \
 			nsSetupRegistry.cpp
 
 MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include

@@ -353,3 +353,47 @@ gtk_mozilla_get_history_index(GtkMozilla *moz)
   moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
   return moz_container->GetHistoryIndex();
 }
+
+gint
+gtk_mozilla_stream_start(GtkMozilla *moz,
+                         const char *base_url,
+                         const char *action,
+                         const char *content_type)
+{
+  class GtkMozillaContainer *moz_container;
+  
+  moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
+  return moz_container->StartStream(base_url, action, content_type);
+}
+
+gint
+gtk_mozilla_stream_start_html(GtkMozilla *moz,
+                              const char *base_url)
+{
+  gtk_mozilla_stream_start(moz, base_url, "view", "text/html");
+}
+
+gint
+gtk_mozilla_stream_write(GtkMozilla *moz,
+                         const char *data,
+                         gint len)
+{
+  class GtkMozillaContainer *moz_container;
+  
+  moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
+
+  // Returns the number of bytes written!
+  return moz_container->WriteStream(data, len);
+}
+
+void
+gtk_mozilla_stream_end(GtkMozilla *moz)
+{
+  class GtkMozillaContainer *moz_container;
+  
+  moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
+  moz_container->EndStream();
+}
+
+
+
