@@ -102,7 +102,7 @@ NS_SetupRegistry_1()
   nsRepository::RegisterComponent(kToolbarCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kIEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 //#endif
 ///  nsRepository::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }

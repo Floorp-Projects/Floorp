@@ -78,7 +78,6 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 
   protected:
-    NS_IMETHOD SetToEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShell);
     nsIPresShell* GetPresShellFor(nsIWebShell* aWebShell);
     void DoEditorMode(nsIWebShell *aWebShell);
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
