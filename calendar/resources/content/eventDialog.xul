@@ -157,7 +157,7 @@
                    <textbox id="description-field"
                             multiline="true"
                             rows="1"
-                            cols="60"
+                            cols="65"
                             flex="1" />
                 </row>
                 <row align="center">
@@ -283,7 +283,6 @@
                     <hbox flex="1">
                       <checkbox id="start-checkbox"
                                 oncommand="onDateTimeCheckbox(this, 'start-datetime')"
-                                persist="checked"
                                 hidden-controller="todo"
                                 hidden="true"/>
                       <datetimepicker id="start-datetime"
@@ -294,7 +293,6 @@
                         <checkbox id="all-day-event-checkbox"
                                   label="All Day"
                                   oncommand="commandAllDay()"
-                                  persist="checked"
                                   hidden-controller="event"
                                   hidden="true"/>
                         <!-- XXX localize &newevent.alldayevent.label; -->
@@ -316,7 +314,6 @@
                     <hbox flex="1">
                       <checkbox id="due-checkbox"
                                 oncommand="onDateTimeCheckbox(this, 'due-datetime')"
-                                persist="checked"
                                 hidden-controller="todo"
                                 hidden="true"/>
                       <datetimepicker id="due-datetime"
@@ -455,15 +452,15 @@
                                 labelnumber="label2">
                         <menupopup>
                           <menuitem label="minutes"
-                                    label1="minute"
+                                    label1="minute "
                                     label2="minutes"
                                     value="minutes"/>
                           <menuitem label="hours"
-                                    label1="hour"
+                                    label1="hour "
                                     label2="hours"
                                     value="hours"/>
                           <menuitem label="days"
-                                    label1="day"
+                                    label1="day "
                                     label2="days"
                                     value="days"/>
                           <!-- XXX original code for fixing localization 

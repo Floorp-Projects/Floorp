@@ -122,7 +122,7 @@ function loadCalendarEventDialog()
     // XXX I want to get rid of the use of gEvent
     gEvent = args.calendarEvent;
 
-    event = args.calendarEvent;
+    var event = args.calendarEvent;
 
     // Set up dialog as event or todo
     var componentType;
@@ -254,11 +254,11 @@ function loadCalendarEventDialog()
     var priorityInteger = parseInt( event.priority );
     if( priorityInteger == 0 ) {
         menuListSelectItem("priority-levels", "0"); // not defined
-    } else if( priorityInteger >= 1 || priorityInteger <= 4 ) {
+    } else if( priorityInteger >= 1 && priorityInteger <= 4 ) {
         menuListSelectItem("priority-levels", "1"); // high priority
     } else if( priorityInteger == 5 ) {
         menuListSelectItem("priority-levels", "5"); // medium priority
-    } else if( priorityInteger >= 6 || priorityInteger <= 9 ) {
+    } else if( priorityInteger >= 6 && priorityInteger <= 9 ) {
         menuListSelectItem("priority-levels", "9"); // low priority
     } else {
         dump("loadCalendarEventDialog: ERROR! Event has invalid priority: " + event.priority +"\n");
@@ -266,9 +266,7 @@ function loadCalendarEventDialog()
 
 
     // ALARMS ------------------------------------------------------------
-    // XXX Need to handle todo "before task starts/before task is due" 
     if (!event.hasAlarm) {
-        // If the event has no alarm
         menuListSelectItem("alarm-type", "none");
     } else {
         setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
@@ -422,7 +420,7 @@ function loadCalendarEventDialog()
         document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
     }
     document.getElementById( "categories-field" ).selectedIndex = -1;
-    setFieldValue( "categories-field", gEvent.categories );
+    menuListSelectItem("categories-field", event.getProperty("categories") );
 
     /* XXX
 
@@ -477,6 +475,7 @@ function loadCalendarEventDialog()
     opener.setCursor( "auto" );
 
     self.focus();
+    return;
 }
 
 
@@ -486,24 +485,27 @@ function loadCalendarEventDialog()
 
 function onOKCommand()
 {
-    event = gEvent;
+    var event = gEvent;
 
     // if this event isn't mutable, we need to clone it like a sheep
     var originalEvent = event;
     // get values from the form and put them into the event
 
+    var componentType;
+
     // calIEvent properties
     if (isEvent(event)) {
-        if (!event.isMutable)
-            // I will cut vlad for making me do this QI
+        componentType = "event";
+        if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
         event.startDate.jsDate = gStartDate;
         event.endDate.jsDate   = gEndDate;
-        event.isAllDay = getFieldValue( "all-day-event-checkbox", "checked" );
+        event.isAllDay = getFieldValue("all-day-event-checkbox", "checked");
+        event.status   = getFieldValue("event-status-field");
     } else if (isToDo(event)) {
-        if (!event.isMutable)
-            // I will cut vlad for making me do this QI
+        componentType = "todo";
+        if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
 
         dump ("this todo is: " + event + "\n");
@@ -518,13 +520,25 @@ function onOKCommand()
         } else {
             event.dueDate.reset();
         }
+        event.status          = getFieldValue("todo-status-field");
+        event.percentComplete = getFieldValue("percent-complete-menulist");
+
     }
 
     // XXX should do an idiot check here to see if duration is negative
 
     // calIItemBase properties
-    event.title = getFieldValue( "title-field" );
+    event.title    = getFieldValue("title-field");
+    event.priority = getFieldValue("priority-levels");
 
+    // other properties
+    event.setProperty("categories",   getFieldValue("categories-field"));
+    event.setProperty("description",  getFieldValue("description-field"));
+    event.setProperty("location",     getFieldValue("location-field"));
+    event.setProperty("url",          getFieldValue("uri-field"));
+
+
+    // PRIVACY -----------------------------------------------------------
     var privacyValue = getFieldValue( "privacy-menulist" );
     switch(privacyValue) {
     case "PUBLIC":
@@ -538,13 +552,23 @@ function onOKCommand()
         break;
     }
 
-    if (getFieldValue( "alarm-type" ) != "" && getFieldValue( "alarm-type" ) != "none") {
-        event.hasAlarm == 1
-        alarmLength = getFieldValue( "alarm-length-field" );
-        alarmUnits  = getFieldValue( "alarm-length-units", "value" );
+
+    // ALARMS ------------------------------------------------------------
+    var alarmType = getFieldValue( "alarm-type" );
+    if (alarmType != "" && alarmType != "none") {
+        event.hasAlarm = true;
+        event.setProperty("alarmLength",  getFieldValue("alarm-length-field"));
+        event.setProperty("alarmUnits",   getFieldValue("alarm-length-units"));
+        event.setProperty("alarmRelated", getFieldValue("alarm-trigger-relation"));
         //event.alarmTime = ...
     }
+    if (alarmType == "email" )
+        event.setProperty("alarmEmailAddress", getFieldValue("alarm-email-field"));
+    else
+        event.deleteProperty("alarmEmailAddress");
 
+
+    // RECURRENCE --------------------------------------------------------
     event.recurrenceInfo = null;
     
     if (getFieldValue("repeat-checkbox", "checked")) {
@@ -554,14 +578,14 @@ function onOKCommand()
 
         var recRule = new calRecurrenceRule();
 
-        recurUnits    = getFieldValue("repeat-length-units", "value");
+        recurUnits    = getFieldValue("repeat-length-units");
         recurInterval = getFieldValue("repeat-length-field");
 
         if (getFieldValue("repeat-forever-radio", "selected")) {
             recRule.count = -1;
         }
         else if (getFieldValue("repeat-numberoftimes-radio", "selected")) {
-            recRule.count = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"))
+            recRule.count = Math.max(1, getFieldValue("repeat-numberoftimes-textbox"));
         }
         else if (getFieldValue("repeat-until-radio", "selected")) {
             var recurEndDate = document.getElementById("repeat-end-date-picker").value;
@@ -581,7 +605,8 @@ function onOKCommand()
                         "years"  : "YEARLY" };
         recRule.type = typeMap[recurUnits];
 
-        // XXX need to do extra work for weeks here and for months incase extra things are checked
+        // XXX need to do extra work for weeks here and for months incase 
+        // extra things are checked
 
         recurrenceInfo.appendRecurrenceItem(recRule);
 
@@ -606,30 +631,24 @@ function onOKCommand()
         // Finally, set the recurrenceInfo
         event.recurrenceInfo = recurrenceInfo;
     }
-
     debug("RECURRENCE INFO ON EVENT: " + event.recurrenceInfo );
 
 
-    // other properties
-    event.setProperty('categories',   getFieldValue("categories-field", "value"));
-    event.setProperty('description',  getFieldValue("description-field"));
-    event.setProperty('location',     getFieldValue("location-field"));
-    event.setProperty('url',          getFieldValue("uri-field"));
-
-    if (getFieldValue("alarm-type") != "none" )
-        event.setProperty("alarmRelated", getFieldValue("alarm-trigger-relation", "value"));
-
-    if (getFieldValue("alarm-type") == "email" )
-        event.setProperty('alarmEmailAddress', getFieldValue("alarm-email-field", "value"));
-    else
-        event.deleteProperty('alarmEmailAddress');
+    // INVITEES ----------------------------------------------------------
+    event.removeAllAttendees();
+    var attendeeList = document.getElementById("bucketBody").getElementsByTagName("treecell");
+    for (i = 0; i < attendeeList.length; i++) {
+        label = attendeeList[i].getAttribute("label");
+        attendee = createAttendee();
+        attendee.id = label;
+        event.addAttendee(attendee);
+    }
 
     if (getFieldValue("invite-checkbox", "checked"))
-        event.setProperty('inviteEmailAddress', getFieldValue("invite-email-field", "value"));
+        event.setProperty('inviteEmailAddress', getFieldValue("invite-email-field"));
     else
         event.deleteProperty('inviteEmailAddress');
 
-    event.priority = getFieldValue( "priority-levels", "value" );
 
     /* File attachments */
     /* XXX this could will work when attachments are supported by calItemBase
@@ -645,15 +664,6 @@ function onOKCommand()
     }
     */
 
-    /* wire up attendees */
-    event.removeAllAttendees();
-    attendeeList = document.getElementById("bucketBody").getElementsByTagName("treecell");
-    for (var i = 0; i < attendeeList.length; i++) {
-        label = attendeeList[i].getAttribute("label");
-        attendee = createAttendee();
-        attendee.id = label;
-        event.addAttendee(attendee);
-    }
 
    var Server = getFieldValue( "server-field" );
 
@@ -1810,19 +1820,19 @@ function processToDoStatus(status)
     switch(status) {
     case "":
     case "None":
-        menuListSelectItem("component-type", "None");
+        menuListSelectItem("todo-status-field", "None");
         disableElement( "completed-date-picker" );
         disableElement( "percent-complete-menulist" );
         disableElement( "percent-complete-label" );
         break;
     case "CANCELLED":
-        menuListSelectItem("component-type", "CANCELLED");
+        menuListSelectItem("todo-status-field", "CANCELLED");
         disableElement( "completed-date-picker" );
         disableElement( "percent-complete-menulist" );
         disableElement( "percent-complete-label" );
         break;
     case "COMPLETED":
-        menuListSelectItem("component-type", "COMPLETED");
+        menuListSelectItem("todo-status-field", "COMPLETED");
         enableElement( "completed-date-picker" );
         enableElement( "percent-complete-menulist" );
         enableElement( "percent-complete-label" );
@@ -1830,13 +1840,13 @@ function processToDoStatus(status)
         setFieldValue( "percent-complete-menulist", "100" );
         break;
     case "IN-PROCESS":
-        menuListSelectItem("component-type", "IN-PROCESS");
+        menuListSelectItem("todo-status-field", "IN-PROCESS");
         enableElement( "completed-date-picker" );
         enableElement( "percent-complete-menulist" );
         enableElement( "percent-complete-label" );
         break;
     case "NEEDS-ACTION":
-        menuListSelectItem("component-type", "NEEDS-ACTION");
+        menuListSelectItem("todo-status-field", "NEEDS-ACTION");
         enableElement( "percent-complete-menulist" );
         enableElement( "percent-complete-label" );
         break;
