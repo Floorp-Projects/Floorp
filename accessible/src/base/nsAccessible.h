@@ -105,7 +105,7 @@ protected:
   void GetScrollOffset(nsRect *aRect);
   void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
-  void CacheChildren(PRBool aWalkNormalDOM);
+  virtual void CacheChildren(PRBool aWalkNormalDOM);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

@@ -159,18 +159,14 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
 
   *x = *y = *width = *height = 0;
 
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsIPresContext> presContext(GetPresContext());
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> ourContent(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(ourContent, NS_ERROR_FAILURE);
 
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(ourContent, &frame);
+  nsIFrame *frame = GetFrame();
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
   nsIImageFrame *imageFrame;
   nsresult rv = frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
   NS_ENSURE_SUCCESS(rv, rv);

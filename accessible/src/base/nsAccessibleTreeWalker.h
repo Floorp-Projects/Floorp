@@ -54,8 +54,10 @@ struct WalkState {
   nsCOMPtr<nsIAccessible> accessible;
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIDOMNodeList> siblingList;
-  PRInt32 siblingIndex;  // Holds a state flag or an index into the siblingList
   WalkState *prevState;
+  nsIFrame *frameHint;     // Helps avoid GetPrimaryFrameFor() calls
+  PRInt32 siblingIndex;    // Holds a state flag or an index into the siblingList
+  PRBool isHidden;         // Don't enter subtree if hidden
 };
  
 /** This class is used to walk the DOM tree. It skips
@@ -74,12 +76,12 @@ public:
   NS_IMETHOD GetParent();
   NS_IMETHOD GetFirstChild();
   NS_IMETHOD GetLastChild();
+
   WalkState mState;
   WalkState mInitialState;
 
 protected:
   NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
-  PRBool IsHidden();
   PRBool GetAccessible();
   NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
   void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
@@ -88,6 +90,8 @@ protected:
   void ClearState();
   NS_IMETHOD PushState();
   NS_IMETHOD PopState();
+
+  void UpdateFrameHint(nsIDOMNode *aStartNode, PRBool aTryFirstChild);
 
   nsCOMPtr<nsIWeakReference> mWeakShell;
   nsCOMPtr<nsIAccessibilityService> mAccService;

@@ -41,6 +41,7 @@
 
 interface nsIAccessibleEventListener;
 interface nsIDocument;
+interface nsIFrame;
 interface nsObjectFrame;
 
 [scriptable, uuid(68D9720A-0984-42b6-A3F5-8237ED925727)]
@@ -105,6 +106,10 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createXULToolbarAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULToolbarSeparatorAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTooltipAccessible(in nsIDOMNode aNode);
+
+  [noscript] nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
+                              in nsIWeakReference aWeakShell, 
+                              inout nsIFrame frameHint, out boolean aIsHidden);
 };
 
 

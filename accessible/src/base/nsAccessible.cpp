@@ -326,6 +326,9 @@ NS_IMETHODIMP nsAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling
   /* readonly attribute nsIAccessible firstChild; */
 NS_IMETHODIMP nsAccessible::GetFirstChild(nsIAccessible * *aFirstChild) 
 {  
+  if (gIsCacheDisabled) {
+    InvalidateChildren();
+  }
   PRInt32 numChildren;
   GetChildCount(&numChildren);  // Make sure we cache all of the children
 
@@ -380,10 +383,16 @@ void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
 
   if (mAccChildCount == eChildCountUninitialized) {
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
+    // Seed the frame hint early while we're still on a container node.
+    // This is better than doing the GetPrimaryFrameFor() later on
+    // a text node, because text nodes aren't in the frame map.
+    walker.mState.frameHint = GetFrame();
+
     nsCOMPtr<nsPIAccessible> privatePrevAccessible;
     mAccChildCount = 0;
     walker.GetFirstChild();
     SetFirstChild(walker.mState.accessible);
+
     while (walker.mState.accessible) {
       ++mAccChildCount;
       privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
@@ -447,14 +456,10 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   if (!viewManager)
     return PR_FALSE;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content)   // Null means we are on the document node
-    return PR_TRUE;   // Document itself is visible
-
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
-  if (!frame) 
+  nsIFrame *frame = GetFrame();
+  if (!frame) {
     return PR_FALSE;
+  }
 
   // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
   if (!frame->GetStyleVisibility()->IsVisible())
@@ -986,18 +991,19 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
 
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
   if (textContent) {
-    // If it's a text node, but node a comment node, append the text
+    // If it's a text node, but not a comment node, append the text
     nsCOMPtr<nsIDOMComment> commentNode(do_QueryInterface(aContent));
     if (!commentNode) {
       PRBool isHTMLBlock = PR_FALSE;
-      nsIFrame *frame;
       nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
       if (!shell) {
          return NS_ERROR_FAILURE;  
       }
 
       nsCOMPtr<nsIContent> parentContent = aContent->GetParent();
-      if (parentContent) {
+      nsCOMPtr<nsIContent> appendedSubtreeStart(do_QueryInterface(mDOMNode));
+      if (parentContent && parentContent != appendedSubtreeStart) {
+        nsIFrame *frame;
         nsresult rv = shell->GetPrimaryFrameFor(parentContent, &frame);
         if (NS_SUCCEEDED(rv)) {
           // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 

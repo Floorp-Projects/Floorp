@@ -96,9 +96,7 @@ nsresult nsAccessibleText::GetSelections(nsISelectionController **aSelCon, nsISe
   nsIPresShell *shell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   // Get the selection and selection controller
@@ -652,11 +650,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   shell->GetPresContext(getter_AddRefs(context));
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   nsRect frameRect = frame->GetRect();
@@ -966,18 +960,7 @@ nsresult nsAccessibleEditableText::GetSelections(nsISelectionController **aSelCo
 
 nsITextControlFrame* nsAccessibleEditableText::GetTextFrame()
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mTextNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc) // that could be a composer
-    return nsnull;
-
-  nsIPresShell *shell = doc->GetShellAt(0);
-  NS_ENSURE_TRUE(shell, nsnull);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, nsnull);
 
   nsITextControlFrame *textFrame;

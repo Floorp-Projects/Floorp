@@ -758,14 +758,9 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
       if (theChar == 160 || theChar=='\n')
         return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIDOMNode> parentNode;
-    node->GetParentNode(getter_AddRefs(parentNode));
-    nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(parentNode));
-    if (legend)  // Expose <legend> as the name in a groupbox, not as a ROLE_TEXT accessible
-      return NS_ERROR_FAILURE; 
   }
     
-  *_retval = new nsHTMLTextAccessible(node, weakShell);
+  *_retval = new nsHTMLTextAccessible(node, weakShell, frame);
 #else
   // In ATK, we are only creating the accessible object for the text frame that is the FIRST
   //   text frame in its block.
@@ -1517,7 +1512,10 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode,
                                                            nsIAccessible **aAccessible) 
 {
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
-  return GetAccessible(aNode, aPresShell, weakShell, aAccessible);
+  nsIFrame *outFrameUnused = NULL;
+  PRBool isHiddenUnused = false;
+  return GetAccessible(aNode, aPresShell, weakShell, 
+                       &outFrameUnused, &isHiddenUnused, aAccessible);
 }
 
 NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode, 
@@ -1525,22 +1523,45 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode
                                                                nsIAccessible **aAccessible) 
 {
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
-  return GetAccessible(aNode, presShell, aWeakShell, aAccessible);
+  nsIFrame *outFrameUnused = NULL;
+  PRBool isHiddenUnused = false;
+  return GetAccessible(aNode, presShell, aWeakShell, 
+                       &outFrameUnused, &isHiddenUnused, aAccessible);
 }
 
-nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode, 
-                                               nsIPresShell *aPresShell,
-                                               nsIWeakReference *aWeakShell,
-                                               nsIAccessible **aAccessible) 
+nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn, 
+                                                nsIAccessible **aAccessibleOut)
+{
+  NS_ASSERTION(aAccessibleOut && !*aAccessibleOut, "Out param should already be cleared out");
+  if (!aAccessibleIn)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(aAccessibleIn);
+  NS_ASSERTION(privateAccessNode, "All accessibles must support nsPIAccessNode");
+  nsresult rv = privateAccessNode->Init(); // Add to cache, etc.
+  if (NS_SUCCEEDED(rv)) {
+    NS_ADDREF(*aAccessibleOut = aAccessibleIn);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode, 
+                                                    nsIPresShell *aPresShell,
+                                                    nsIWeakReference *aWeakShell,
+                                                    nsIFrame **aFrameHint,
+                                                    PRBool *aIsHidden,
+                                                    nsIAccessible **aAccessible) 
 {
   *aAccessible = nsnull;
   if (!aPresShell || !aWeakShell) {
     return NS_ERROR_FAILURE;
   }
 
-  NS_ASSERTION(aNode, "GetAccessibleFor() called with no node.");
+  NS_ASSERTION(aNode, "GetAccessible() called with no node.");
 
-#ifdef DEBUG_aaronl
+  *aIsHidden = false;
+
+#ifdef DEBUG_aleventhal
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
@@ -1566,63 +1587,22 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // Retrieved from cache
     // QI might not succeed if it's a node that's not accessible
     newAcc = do_QueryInterface(accessNode);
-    NS_IF_ADDREF(*aAccessible = newAcc);
+    if (!newAcc) {
+      return NS_ERROR_FAILURE;
+    }
+    NS_ADDREF(*aAccessible = newAcc);
     return NS_OK;
   }
 
   // No cache entry, so we must create the accessible
-
-  // XUL elements may implement nsIAccessibleProvider via XBL
-  // This allows them to say what kind of accessible to create
-  nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-  if (accProv) {
-    accProv->GetAccessible(getter_AddRefs(newAcc)); 
-    if (! newAcc)
-      return NS_ERROR_FAILURE;
-    PRUint32 role, state;
-    newAcc->GetRole(&role);
-    // don't create the accessible object for popup widget when it's not visible
-    if (role == nsIAccessible::ROLE_MENUPOPUP) {
-      newAcc->GetState(&state);
-      if (state & (nsIAccessible::STATE_INVISIBLE | nsIAccessible::STATE_OFFSCREEN))
-        return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(newAcc);
-    privateAccessNode->Init(); // Add to cache, etc.
-    *aAccessible = newAcc;
-    NS_ADDREF(*aAccessible);
-    return NS_OK;
-  }
-
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aNode)); 
-  if (xulElement) 
-    return NS_ERROR_FAILURE;
-#endif // MOZ_XUL
-
-  // ---- Get the document for this node  ----
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIDocument> nodeIsDoc(do_QueryInterface(aNode));
-  if (nodeIsDoc)
-    doc = nodeIsDoc;
-  else {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!domDoc)
-      return NS_ERROR_INVALID_ARG;
-    doc = do_QueryInterface(domDoc);
-  }
-  if (!doc)
-    return NS_ERROR_INVALID_ARG;
-
-  // ---- Check if area node ----
-  nsCOMPtr<nsIDOMHTMLAreaElement> areaContent(do_QueryInterface(aNode));
-  if (areaContent)   // Area elements are implemented in nsHTMLImageAccessible as children of the image
-    return NS_ERROR_FAILURE; // Return, otherwise the image frame looks like an accessible object in the wrong place
-
-  // ---- Check if we need outer owning doc ----
+  // Check to see if hidden first
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (!content && nodeIsDoc) {
+  nsCOMPtr<nsIDocument> nodeIsDoc;
+  if (!content) {
+    nodeIsDoc = do_QueryInterface(aNode);
+    if (!nodeIsDoc) {
+      return NS_ERROR_FAILURE;   // No content, and not doc node
+    }
     // This happens when we're on the document node, which will not QI to an nsIContent, 
     nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
     nsAccessNode::GetDocAccessibleFor(aWeakShell, getter_AddRefs(accessibleDoc));
@@ -1631,22 +1611,87 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       NS_ASSERTION(newAcc, "nsIAccessibleDocument is not an nsIAccessible");
     }
     else {
-      CreateRootAccessible(aPresShell, doc, getter_AddRefs(newAcc)); // Does Init() for us
+      CreateRootAccessible(aPresShell, nodeIsDoc, getter_AddRefs(newAcc)); // Does Init() for us
       NS_ASSERTION(newAcc, "No root/doc accessible created");
     }
 
+    aPresShell->GetRootFrame(aFrameHint);
     NS_ADDREF(*aAccessible = newAcc );
     return NS_OK;
   }
 
-  NS_ASSERTION(content, "GetAccessibleFor() called with no content.");
+  // We have a content node
+  nsIFrame *frame = *aFrameHint;
+  if (content->IsContentOfType(nsIContent::eXUL)) {
+    nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(aNode));
+    if (xulElt) {
+      xulElt->GetHidden(aIsHidden);
+      if (!*aIsHidden) {
+        xulElt->GetCollapsed(aIsHidden);
+      }
+    }
+  }
+  else { // Try frame hint
+#ifdef DEBUG_aleventhal
+    static int frameHintFailed, frameHintTried, frameHintNonexistant, frameHintFailedForText;
+    ++frameHintTried;
+#endif
+    if (!frame || content != frame->GetContent()) {
+      // Frame hint not correct, get true frame, we try to optimize away from this
+      aPresShell->GetPrimaryFrameFor(content, &frame);
+      if (frame) {
+#ifdef DEBUG_aleventhal
+        // Frame hint debugging
+        ++frameHintFailed;
+        if (content->IsContentOfType(nsIContent::eTEXT)) {
+          ++frameHintFailedForText;
+        }
+        frameHintNonexistant += !*aFrameHint;
+        printf("Frame hint failures: %d / %d . Text fails = %d. No hint fails = %d \n", frameHintFailed, frameHintTried, frameHintFailedForText, frameHintNonexistant);
+        if (frameHintTried >= 354) {
+          printf("* "); // Aaron's break point
+        }
+#endif
+        *aFrameHint = frame;
+      }
+    }
+
+    // Check frame to see if it is hidden
+    *aIsHidden = !frame;
+  }
+
+  if (*aIsHidden) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (content->IsContentOfType(nsIContent::eTEXT)) {
+    // ---- Try using frame to get nsIAccessible ----                   
+    nsSize frameSize = frame->GetSize();
+    if (frameSize.height == 0 || frameSize.width == 0) {
+      *aIsHidden = true;
+      return NS_ERROR_FAILURE;
+    }
+    frame->GetAccessible(getter_AddRefs(newAcc));
+    return InitAccessible(newAcc, aAccessible);
+  }
+  else if (!content->IsContentOfType(nsIContent::eHTML)) {
+    // XUL elements may implement nsIAccessibleProvider via XBL
+    // This allows them to say what kind of accessible to create
+    nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
+    // Non-HTML elements must have an nsIAccessibleProvider or they're not in
+    // accessible tree.
+    if (!accProv)
+      return NS_ERROR_FAILURE;
+    accProv->GetAccessible(getter_AddRefs(newAcc)); 
+    return InitAccessible(newAcc, aAccessible);
+  }
+
+  // ---- Check if area node ----
+  nsCOMPtr<nsIDOMHTMLAreaElement> areaContent(do_QueryInterface(aNode));
+  if (areaContent)   // Area elements are implemented in nsHTMLImageAccessible as children of the image
+    return NS_ERROR_FAILURE; // Return, otherwise the image frame looks like an accessible object in the wrong place
 
   // ---- Try using frame to get nsIAccessible ----                   
-  nsIFrame* frame = nsnull;
-  aPresShell->GetPrimaryFrameFor(content, &frame);
-  if (!frame)
-   return NS_ERROR_FAILURE;
-
   frame->GetAccessible(getter_AddRefs(newAcc));
 
 #ifndef MOZ_ACCESSIBILITY_ATK
@@ -1655,7 +1700,7 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // is it a link?
     nsCOMPtr<nsILink> link(do_QueryInterface(aNode));
     if (link) {
-      newAcc = new nsHTMLLinkAccessible(aNode, aWeakShell);
+      newAcc = new nsHTMLLinkAccessible(aNode, aWeakShell, frame);
     }
   }
 #endif //MOZ_ACCESSIBILITY_ATK
@@ -1677,16 +1722,7 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
   }
 
-  if (!newAcc)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(newAcc);
-  privateAccessNode->Init(); // Add to cache, etc.
-
-  *aAccessible = newAcc;
-  NS_ADDREF(*aAccessible);
-
-  return NS_OK;
+  return InitAccessible(newAcc, aAccessible);
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -37,9 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
+#include "nsAccessibleTreeWalker.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
+#include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
 #include "nsISelectionController.h"
@@ -375,17 +377,10 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *_retval)
   if (isReadOnly)
     *_retval |= STATE_READONLY;
 
-  // Get current selection and find out if current node is in it
-  nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!shell) {
-     return NS_ERROR_FAILURE;  
-  }
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIFrame *frame = nsnull;
-  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
-    nsCOMPtr<nsIPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
+  nsIFrame *frame = GetFrame();
+  if (frame) {
+    nsCOMPtr<nsIPresContext> context(GetPresContext());
+    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
     nsCOMPtr<nsISelectionController> selCon;
     frame->GetSelectionController(context,getter_AddRefs(selCon));
     if (selCon) {
@@ -465,4 +460,38 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& _retval)
     }
   }
   return NS_OK;
+}
+
+void nsHTMLGroupboxAccessible::CacheChildren(PRBool aWalkAnonContent)
+{
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = -1;
+    return;
+  }
+
+  if (mAccChildCount == eChildCountUninitialized) {
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
+    walker.mState.frameHint = GetFrame();
+    mAccChildCount = 0;
+    walker.GetFirstChild();
+    // Check for <legend> and skip it if it's there
+    if (walker.mState.accessible && walker.mState.domNode) {
+      nsCOMPtr<nsIDOMNode> mightBeLegendNode;
+      walker.mState.domNode->GetParentNode(getter_AddRefs(mightBeLegendNode));
+      nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(mightBeLegendNode));
+      if (legend) {
+        walker.GetNextSibling();      // Skip the legend
+      }
+    }
+    SetFirstChild(walker.mState.accessible);
+    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
+    while (walker.mState.accessible) {
+      ++mAccChildCount;
+      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
+      privatePrevAccessible->SetParent(this);
+      walker.GetNextSibling();
+      privatePrevAccessible->SetNextSibling(walker.mState.accessible);
+    }
+  }
 }

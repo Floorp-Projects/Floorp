@@ -461,7 +461,7 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
           }
         }
         if (!(*aLink)) {
-          *aLink = new nsHTMLLinkAccessibleWrap(parentNode, weakShell);
+          *aLink = new nsHTMLLinkAccessibleWrap(parentNode, weakShell, nsnull);
           NS_ENSURE_TRUE(*aLink, NS_ERROR_OUT_OF_MEMORY);
           NS_ADDREF(*aLink);
           nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(*aLink));
@@ -529,7 +529,7 @@ nsresult nsAccessibleHyperText::GetBounds(nsIWeakReference *aWeakShell, PRInt32 
   mTextChildren->Count(&count);
   for (index = 0; index < count; index++) {
     nsHTMLTextAccessible *accText = new nsHTMLTextAccessible(
-        (nsIDOMNode *)mTextChildren->ElementAt(index), aWeakShell);
+        (nsIDOMNode *)mTextChildren->ElementAt(index), aWeakShell, nsnull);
     if (!accText)
       return NS_ERROR_OUT_OF_MEMORY;
 
