@@ -170,6 +170,10 @@ nsWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
 PRUint32
 nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
 {
+#ifdef MOZ_PHOENIX
+  // Phoenix doesn't check here. It checks over in nsGlobalWindow.cpp.
+  return nsIPopupWindowManager::ALLOW_POPUP;
+#else
   nsCOMPtr<nsIPopupWindowManager> pm(do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID));
   if (!pm)
     return nsIPopupWindowManager::ALLOW_POPUP;
@@ -178,6 +182,7 @@ nsWindowCreator::AllowWindowCreation(nsIURI *aURI)
   if (NS_SUCCEEDED(pm->TestPermission(aURI, &permission)))
     return permission;
   return nsIPopupWindowManager::ALLOW_POPUP;
+#endif
 }
 
 void
