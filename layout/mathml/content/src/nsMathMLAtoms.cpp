@@ -34,11 +34,10 @@ PRInt32  nsMathMLAtoms::nameSpaceID;
 #undef MATHML_ATOM
 
 
-static nsrefcnt gRefCnt;
+static nsrefcnt gRefCnt = 0;
 static nsINameSpaceManager* gNameSpaceManager;
 
 void nsMathMLAtoms::AddRefAtoms() {
-
   if (gRefCnt == 0) {
     /* MathML Atoms registers the MathML name space ID because it's a convenient
        place to do this, if you don't want a permanent, "well-known" ID.
@@ -58,7 +57,6 @@ void nsMathMLAtoms::AddRefAtoms() {
 }
 
 void nsMathMLAtoms::ReleaseAtoms() {
-
   NS_PRECONDITION(gRefCnt != 0, "bad release of MathML atoms");
   if (--gRefCnt == 0) {
 #define MATHML_ATOM(_name, _value) NS_RELEASE(_name);
