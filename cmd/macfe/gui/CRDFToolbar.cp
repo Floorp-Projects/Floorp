@@ -281,6 +281,8 @@ CRDFToolbar::LayoutButtons()
 
 				HT_DeleteCursor(cursor);
 			}
+		Refresh();
+		
 	}
 
 
@@ -403,3 +405,12 @@ CRDFToolbar::ShowSelf ( )
 	Activate();
 	
 } // ShowSelf
+
+
+void
+CRDFToolbar::ResizeFrameBy ( SInt16 inH, SInt16 inW, Boolean inRefresh )
+{
+	CDragBar :: ResizeFrameBy ( inH, inW, inRefresh );
+	LayoutButtons();
+
+}

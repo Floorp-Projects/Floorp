@@ -60,6 +60,7 @@ class CRDFToolbar
 			virtual void DrawSelf ( ) ;
 			virtual void EraseBackground ( ) const;
 			virtual void ShowSelf ( ) ;
+			virtual void ResizeFrameBy ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh );
 			
 			virtual void FillInToolbar ( ) ;
 			virtual void LayoutButtons ( ) ;
