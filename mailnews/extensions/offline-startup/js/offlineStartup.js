@@ -72,6 +72,7 @@ var nsOfflineStartup =
         getService(Components.interfaces.nsIObserverService);
       observerService.addObserver(this, "network:offline-status-changed", false);
       observerService.addObserver(this, "quit-application", false);
+      observerService.addObserver(this, "xpcom-shutdown", false);
     }
     else if (gOfflineStartupMode == kAskForOnlineState)
     {
