@@ -632,9 +632,7 @@ nsWebShell::nsWebShell()
   mChromeShell = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
-
-  // XXX we should get such mDefaultCharacterSet from pref laster...
-  mDefaultCharacterSet = "ISO-8859-1";
+  mDefaultCharacterSet = "";
   mProcessedEndDocumentLoad = PR_FALSE;
   mHintCharset = "";
   mHintCharsetSource = kCharsetUninitialized;
@@ -1458,7 +1456,9 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   }
   mChildren.AppendElement(aChild);
   aChild->SetParent(this);
-  aChild->SetDefaultCharacterSet(mDefaultCharacterSet.GetUnicode()); 
+  const PRUnichar *defaultCharset=nsnull;
+  if(NS_SUCCEEDED(this->GetDefaultCharacterSet (&defaultCharset)))
+       aChild->SetDefaultCharacterSet(defaultCharset); 
   aChild->SetForceCharacterSet(mForceCharacterSet.GetUnicode()); 
   NS_ADDREF(aChild);
 
@@ -3639,9 +3639,23 @@ nsWebShell::SelectNone(void)
   return NS_ERROR_FAILURE;
 }
 
+static char *gDefCharset = nsnull;
+
 NS_IMETHODIMP 
 nsWebShell::GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet)
 {
+  if(0 == mDefaultCharacterSet.Length())
+  {
+      if((nsnull == gDefCharset) || (nsnull == *gDefCharset))
+      {
+         if(mPrefs) 
+            mPrefs->CopyCharPref("intl.charset.default", &gDefCharset);
+      }
+      if((nsnull == gDefCharset) || (nsnull == *gDefCharset))
+           mDefaultCharacterSet = "ISO-8859-1";
+	  else
+		   mDefaultCharacterSet = gDefCharset;
+  }
   *aDefaultCharacterSet = mDefaultCharacterSet.GetUnicode();
   return NS_OK;
 }
