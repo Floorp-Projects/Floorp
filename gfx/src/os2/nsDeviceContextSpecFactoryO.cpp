@@ -75,6 +75,9 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIWidget
         rv = NS_OK;
       }
     }
+  } else {
+    // Cancel was pressed
+    rv = NS_ERROR_ABORT;
   }
 
   return rv;
