@@ -531,6 +531,17 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // (note: aParent is ignored. Mac (real) windows don't want parents)
 	Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
+#if TARGET_CARBON
+  // OSX enforces window layering so we have to make sure that popups can
+  // appear over modal dialogs (at the top of the layering chain). Create
+  // the popup like normal and change its window class to the modal layer.
+  //
+  // XXX This needs to use ::SetWindowGroup() when we move to headers that
+  // XXX support it.
+  if ( mWindowType == eWindowType_popup )
+    ::SetWindowClass(mWindowPtr, kModalWindowClass);
+#endif
+  
   // create a phantom scrollbar to catch the attention of mousewheel 
   // drivers. We'll catch events sent to this scrollbar in the eventhandler
   // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. We need
@@ -753,12 +764,22 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 			aY=globalRect.y;
 			
 			// there is a bug on OSX where if we call ::MoveWindow() with the same
-			// coordinates as it's current location, it will go to (0,0,-1,-1). The
-			// fix is to not move the window if we're already there. (radar# 2669004)
+			// coordinates (within a pixel or two) as a window's current location, it will 
+			// move to (0,0,-1,-1). The fix is to not move the window if we're already
+			// there. (radar# 2669004)
+#if TARGET_CARBON
+      const PRInt32 kMoveThreshold = 2;
+#else
+      const PRInt32 kMoveThreshold = 0;
+#endif
 			Rect currBounds;
 			::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
-			if ( currBounds.left != aX || currBounds.top != aY )
+			if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
 			  ::MoveWindow(mWindowPtr, aX, aY, false);
+			  
+			  Rect newBounds;
+			  ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &newBounds );
+			}  
 		}
 
 		return NS_OK;
