@@ -86,7 +86,7 @@ CKutil_GetLine(nsInputFileStream& strm, nsString& aLine) {
 
 PUBLIC char * 
 CKutil_ParseURL (const char *url, int parts_requested) {
-  char *rv=0,*colon, *slash, *ques_mark, *hash_mark;
+  char *rv=0, *colon, *portColon, *slash, *ques_mark, *hash_mark;
   char *atSign, *host, *passwordColon, *gtThan;
   assert(url);
   if(!url) {
@@ -170,6 +170,10 @@ CKutil_ParseURL (const char *url, int parts_requested) {
         if (gtThan) {
           *gtThan = '\0';
         }
+        portColon = PL_strchr(host, ':');
+        if (portColon) {
+          *portColon = '\0';
+        }
 
         /* limit hostnames to within MAX_HOST_NAME_LEN characters to keep from crashing */
         if(PL_strlen(host) > MAX_HOST_NAME_LEN) {
@@ -191,6 +195,9 @@ CKutil_ParseURL (const char *url, int parts_requested) {
         }
         if (gtThan) {
           *gtThan = '>';
+        }
+        if (portColon) {
+          *portColon = ':';
         }
       }
     }
