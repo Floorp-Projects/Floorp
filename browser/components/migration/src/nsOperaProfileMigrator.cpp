@@ -1082,6 +1082,11 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                          getter_AddRefs(itemRes));
   }
   while (1);
+  
+  if (parser) {
+    delete parser; 
+    parser = nsnull;
+  }
 
   return rv;
 }
