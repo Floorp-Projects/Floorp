@@ -6,6 +6,7 @@ my $export_file;
 my @import_files;
 
 my $show_class_usage = 0;
+my $show_function_usage = 0;
 my $infrequent_use_threshold = 1;
 
 # first argument is the file that's exporting
@@ -15,6 +16,7 @@ my $arg;
 foreach $arg (@ARGV) {
   if ($arg =~ /^-(.*)/) {
     $show_class_usage=1 if ($1 eq "c");
+    $show_function_usage=1 if ($1 eq "f");
   }
   elsif (!$export_file) {
     $export_file = $arg;
@@ -170,51 +172,98 @@ my %class_methods;              # number of methods
 my %class_method_unused;        # number of unused methods in this class
 my %class_method_infreq;        # number of infrequently-used methods
 my %class_method_used;          # number of used method
+my %multiple_consumers;         # if a class is in here, it has multiple consumers
+my %last_consumer_of_class;     # last DLL to use this class
 
-foreach $func (sort keys %demangle ) {
+foreach $func (sort keys %demangle) {
 
   # skip vtables, they don't matter
   next if ($demangle{$func} =~ /vftable/);
+  next if ($demangle{$func} =~ /vbtable/);
 
   my ($class) = ($demangle{$func} =~ /(\S+)::\S+/);
 
-  $class_methods{$class}++ if ($class);
-  
-  if ($import_count{$func} == 0) {
-    $class_method_unused{$class}++ if ($class);
-    print "$demangle{$func}: No importers\n";
+  # gather general class info, no matter what the usage
+  if ($class) {
+    $class_methods{$class}++;
+    $multiple_consumers{$class} = 1 if ($import_count{$func} > 1);
   }
 
-  elsif ($import_count{$func} <= $infrequent_use_threshold) {
-    $class_method_infreq{$class}++ if ($class);
-    print "$demangle{$func}: $import_count{$func} consumer(s) ($last_consumer_of{$func})\n";
+  # never used
+  if ($import_count{$func} == 0) {
+    $class_method_unused{$class}++ if ($class);
+    print "$demangle{$func}: No importers\n" if ($show_function_usage);
   }
+
+  # used, but only by a few consumers
+  elsif ($import_count{$func} <= $infrequent_use_threshold) {
+
+    print "$demangle{$func}: $import_count{$func} consumer(s) ($last_consumer_of{$func})\n" if ($show_function_usage);
+    &gather_class_info($class, $func) if ($class);
+  }
+
+  # used by more than one consumer
   else {
     $class_method_used{$class}++ if ($class);
   }
 
+
 }
 
-print "Checking class usage ($show_class_usage)\n";
-if ($show_class_usage) {
+&show_class_usage() if ($show_class_usage);
 
-  print "\n";
+
+sub show_class_usage() {
+
   print "Classes that might be worth trimming:\n";
   my $class;
   foreach $class (sort keys %class_methods) {
+    # no methods are used
     if ($class_method_unused{$class} == $class_methods{$class}) {
       print "$class is never used! ($class_methods{$class} methods)\n";
     }
 
-    elsif ($class_method_unused{$class} == $class_methods{$class}) {
+    # all methods are used
+    elsif ($class_method_used{$class} == $class_methods{$class}) {
       # print "$class is well-used\n";
     }
-    else {
-      print "$class: $class_methods{$class} methods.\n";
-      print "  Used:   $class_method_used{$class}\n";
-      print "  Infreq: $class_method_infreq{$class}\n";
+
+    # only report classes that less than 50% used
+    elsif ($class_method_unused{$class}*2 > $class_methods{$class}) {
+      print "$class: $class_methods{$class} methods, mostly unused.\n";
+      print "  Used:   $class_method_used{$class}";
+
+      print " ($class_method_infreq{$class} are used by few consumers)"
+        if ($class_method_infreq{$class});
+
+      print "\n";
+
       print "  Unused: $class_method_unused{$class}\n";
+      if (!$multiple_consumers{$class}) {
+        print "  Suggest moving $class into $last_consumer_of_class{$class} (the only consumer)\n";
+      }
     }
   }
 
+}
+
+sub gather_class_info() {
+  my ($class, $func) = @_;
+
+  $class_method_infreq{$class}++;
+  $class_method_used{$class}++;
+  # we rely on $infrequent_use_threshold being >= 1
+  if ($import_count{$func} == 1) {
+
+    # check to see if this class has multiple consumers
+    if (!$multiple_consumers{$class} && !$last_consumer_of_class{$class}) {
+      $last_consumer_of_class{$class} = $last_consumer_of{$func};
+      # $multiple_consumers{$class} = 0;
+    }
+
+    elsif ($last_consumer_of_class{$class} ne $last_consumer_of{$func}) {
+      # flag this to never match
+      $multiple_consumers{$class} = 1;
+    }
+  }
 }
