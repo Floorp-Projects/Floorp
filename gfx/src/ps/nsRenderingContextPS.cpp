@@ -451,6 +451,17 @@ nsRenderingContextPS :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aC
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
+nsRenderingContextPS :: CopyClipRegion(nsIRegion &aRegion)
+{
+  //XXX wow, needs to do something.
+  return NS_OK; 
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP 
 nsRenderingContextPS :: GetClipRegion(nsIRegion **aRegion)
 {
   //XXX wow, needs to do something.

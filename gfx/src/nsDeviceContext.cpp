@@ -46,11 +46,7 @@ protected:
 };
 
 
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-
-NS_IMPL_QUERY_INTERFACE(DeviceContextImpl, kDeviceContextIID)
-NS_IMPL_ADDREF(DeviceContextImpl)
-NS_IMPL_RELEASE(DeviceContextImpl)
+NS_IMPL_ISUPPORTS1(DeviceContextImpl, nsIDeviceContext)
 
 DeviceContextImpl :: DeviceContextImpl()
 {
@@ -177,11 +173,10 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRen
   aView->GetWidget(win);
   nsresult             rv;
 
-  static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
+  static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
 
   aContext = nsnull;
-  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
+  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
 
   if (NS_OK == rv) {
     rv = InitRenderingContext(pContext, win);
@@ -200,11 +195,10 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
   nsIRenderingContext *pContext;
   nsresult             rv;
 
-  static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
+  static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
 
   aContext = nsnull;
-  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
+  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
 
   if (NS_OK == rv) {
     rv = InitRenderingContext(pContext, aWidget);
@@ -667,12 +661,11 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMet
 
   // It's not in the cache. Get font metrics and then cache them.
 
-  static NS_DEFINE_IID(kFontMetricsCID, NS_FONT_METRICS_CID);
-  static NS_DEFINE_IID(kFontMetricsIID, NS_IFONT_METRICS_IID);
+  static NS_DEFINE_CID(kFontMetricsCID, NS_FONT_METRICS_CID);
 
   nsIFontMetrics* fm;
   nsresult        rv = nsComponentManager::CreateInstance(kFontMetricsCID, nsnull,
-                                                    kFontMetricsIID, (void **)&fm);
+                                                    NS_GET_IID(nsIFontMetrics), (void **)&fm);
   if (NS_OK != rv) {
     aMetrics = nsnull;
     return rv;

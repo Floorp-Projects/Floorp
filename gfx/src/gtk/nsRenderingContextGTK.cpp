@@ -440,16 +440,37 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
   return NS_OK;
 }
 
+/**
+ * Fills in |aRegion| with a copy of the current clip region.
+ */
+NS_IMETHODIMP nsRenderingContextGTK::CopyClipRegion(nsIRegion &aRegion)
+{
+  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 {
-  nsresult  rv = NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
 
-  NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
+  static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
-  if (*aRegion)
+  if (!aRegion)
+    return NS_ERROR_NULL_POINTER;
+
+  if (*aRegion) // copy it, they should be using CopyClipRegion
   {
-    nsIRegion *nRegion = (nsIRegion*)mClipRegion;;
-    (*aRegion)->SetTo(*nRegion);
+    (*aRegion)->SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+    rv = NS_OK;
+  }
+  else
+  {
+    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)*aRegion)) )
+    {
+      (*aRegion)->Init();
+      (*aRegion)->SetTo( *NS_STATIC_CAST(nsIRegion*, mClipRegion) );
+      rv = NS_OK;
+    } 
   }
 
   return rv;
@@ -751,7 +772,7 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // Fill the rect
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
-                       x, y, w, h);
+                       x, y, w+2, h);
 
   // Back to normal copy drawing mode
   ::gdk_gc_set_function(mSurface->GetGC(),GDK_COPY);

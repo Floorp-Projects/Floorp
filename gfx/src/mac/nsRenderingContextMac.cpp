@@ -707,6 +707,14 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsC
 	return NS_OK;
 }
 
+/**
+ * Fills in |aRegion| with a copy of the current clip region.
+ */
+NS_IMETHODIMP nsRenderingContextMac::CopyClipRegion(nsIRegion &aRegion)
+{
+  return NS_ERROR_FAILURE;
+}
+
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac::GetClipRegion(nsIRegion **aRegion)
