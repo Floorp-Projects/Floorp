@@ -36,6 +36,7 @@ CPPSRCS=			\
  nsHTMLContainerFrame.cpp	\
  nsHTMLContent.cpp		\
  nsHTMLFrame.cpp		\
+ nsHTMLHead.cpp			\
  nsHTMLIIDs.cpp			\
  nsHTMLImage.cpp		\
  nsHTMLTagContent.cpp		\
@@ -68,6 +69,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsHTMLContainerFrame.obj	\
  .\$(OBJDIR)\nsHTMLContent.obj		\
  .\$(OBJDIR)\nsHTMLFrame.obj		\
+ .\$(OBJDIR)\nsHTMLHead.obj		\
  .\$(OBJDIR)\nsHTMLIIDs.obj		\
  .\$(OBJDIR)\nsHTMLImage.obj		\
  .\$(OBJDIR)\nsHTMLTagContent.obj	\
