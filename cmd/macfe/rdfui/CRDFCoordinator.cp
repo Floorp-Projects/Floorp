@@ -39,6 +39,7 @@
 #include "CRDFCoordinator.h"
 
 #include "CHyperTreeFlexTable.h"
+#include "CNavCenterScroller.h"
 #include "CNavCenterTitle.h"
 #include "UGraphicGizmos.h"
 
@@ -182,6 +183,10 @@ CRDFCoordinator :: ShowColumnHeaders ( )
 	mTreePane->MoveBy ( 0, columnHeaderFrame.height, false );
 	mTreePane->ResizeFrameBy ( 0, -columnHeaderFrame.height, false );
 
+	CNavCenterScroller* scroller = dynamic_cast<CNavCenterScroller*>(FindPaneByID(kScrollerPaneID));
+	if ( scroller )
+		scroller->ColumnHeadersChangedVisibility ( true, columnHeaderFrame.height );
+		
 } // ShowColumnHeaders
 
 
@@ -199,6 +204,10 @@ CRDFCoordinator :: HideColumnHeaders ( )
 	
 	mTreePane->MoveBy ( 0, -columnHeaderFrame.height, false );
 	mTreePane->ResizeFrameBy ( 0, columnHeaderFrame.height, false );
+
+	CNavCenterScroller* scroller = dynamic_cast<CNavCenterScroller*>(FindPaneByID(kScrollerPaneID));
+	if ( scroller )
+		scroller->ColumnHeadersChangedVisibility ( false, columnHeaderFrame.height );
 
 } // HideColumnHeaders
 

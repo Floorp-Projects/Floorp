@@ -87,7 +87,8 @@ protected:
 public:
 	enum { class_ID = 'RCoo', pane_ID = 'RCoo' };
 	enum {
-		msg_ActiveSelectorChanged	= 'selc'		// broadcast when selector changes
+		msg_ActiveSelectorChanged = 'selc',		// broadcast when selector changes
+		kScrollerPaneID = 'HyTC'				// pane id of the scroller containing tree/headers/etc
 	};
 
 		// Set the current workspace to a particular kind of workspace
