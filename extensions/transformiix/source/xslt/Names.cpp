@@ -27,14 +27,14 @@
  *       PRECEDING_SIBLING_AXIS to be compatible with the
  *       W3C XPath 1.0 Recommendation
  *
- * $Id: Names.cpp,v 1.3 2000/04/12 11:00:29 kvisco%ziplink.net Exp $
+ * $Id: Names.cpp,v 1.4 2000/04/19 10:32:35 kvisco%ziplink.net Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/12 11:00:29 $
+ * @version $Revision: 1.4 $ $Date: 2000/04/19 10:32:35 $
 **/
 #include "Names.h"
 
@@ -147,7 +147,12 @@ const String NODE_FNAME              = "node";
 const String IDENTITY_OP             = ".";
 const String PARENT_OP               = "..";
 
-//-- XSL extension functions
+//-- XSLT extension functions
+const String CURRENT_FN              = "current";
+const String FORMAT_NUMBER_FN        = "format-number";
+const String GENERATE_ID_FN          = "generate-id";
+const String SYSTEM_PROPERTY_FN      = "system-property";
 
+//-- MISC
 const String WILD_CARD               = "*";
 

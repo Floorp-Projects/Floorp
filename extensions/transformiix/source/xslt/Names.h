@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Names.h,v 1.3 2000/04/12 22:33:33 nisheeth%netscape.com Exp $
+ * $Id: Names.h,v 1.4 2000/04/19 10:32:20 kvisco%ziplink.net Exp $
  */
 
 #include "TxString.h"
@@ -137,8 +137,13 @@ extern const String NODE_FNAME;
 extern const String IDENTITY_OP;
 extern const String PARENT_OP;
 
-//-- XSL extension functions
+//-- XSLT extension functions
+extern const String CURRENT_FN;
+extern const String FORMAT_NUMBER_FN;
+extern const String GENERATE_ID_FN;
+extern const String SYSTEM_PROPERTY_FN;
 
+//-- MISC
 extern const String WILD_CARD;
 
 #endif
