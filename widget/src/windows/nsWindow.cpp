@@ -3390,14 +3390,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           }
           
           nsMouseScrollEvent scrollEvent;
+          scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
           if (ulScrollLines == WHEEL_PAGESCROLL) {
-            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
             if (msg == WM_MOUSEWHEEL)
               scrollEvent.delta = (((short) HIWORD (wParam)) > 0) ? -1 : 1;
             else
               scrollEvent.delta = ((int) wParam > 0) ? -1 : 1;
           } else {
-            scrollEvent.isPageScroll = PR_FALSE;
             if (msg == WM_MOUSEWHEEL)
               scrollEvent.delta = -((short) HIWORD (wParam) / iDeltaPerLine);
             else

@@ -928,7 +928,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
                                   &aBool);
         if (aBool) {
           numLines = msEvent->delta;
-          if (msEvent->isPageScroll)
+          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;
         }
         else
@@ -940,7 +940,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
                                   &aBool);
         if (aBool) {
           numLines = msEvent->delta;
-          if (msEvent->isPageScroll)
+          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;          
         }
         else
@@ -951,7 +951,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         mPrefService->GetBoolPref("mousewheel.withaltkey.sysnumlines", &aBool);
         if (aBool) {
           numLines = msEvent->delta;
-          if (msEvent->isPageScroll)
+          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;
         }
         else
@@ -962,7 +962,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         mPrefService->GetBoolPref("mousewheel.withnokey.sysnumlines", &aBool);
         if (aBool) {
           numLines = msEvent->delta;
-          if (msEvent->isPageScroll)
+          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
             action = MOUSE_SCROLL_PAGE;
         }
         else
@@ -1030,7 +1030,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           if (!focusContent)
             break;
           
-          // Get the content's view and scroll it.
           presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
           if (!focusFrame)
               break;
