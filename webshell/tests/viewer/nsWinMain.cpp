@@ -108,7 +108,7 @@ nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 nsresult
 nsNativeBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
 {
-  NS_ASSERTION(nsnull != aHeightOut,"null out param.");
+  NS_ENSURE_ARG_POINTER(aHeightOut);
 
   *aHeightOut = 0;
 
