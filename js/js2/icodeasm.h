@@ -54,6 +54,7 @@ namespace ICodeASM {
         teEOF,
         teIllegal,
         teMinus,
+        teNewline,
         teNotARegister,
         teNumeric,
         teOpenParen,
@@ -176,7 +177,7 @@ namespace ICodeASM {
 
         /* "high level" parse functions */
         iter ParseInstruction (uint icodeID, iter start, iter end);
-        iter ParseStatement (iter begin, iter end);
+        iter ParseNextStatement (iter begin, iter end);
 
     };
     
