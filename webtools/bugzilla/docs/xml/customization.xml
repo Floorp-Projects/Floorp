@@ -337,6 +337,12 @@
         extensible fashion to enable you to add arbitrary HTML widgets,
         such as drop-down lists or textboxes, to the bug entry page
         and have their values appear formatted in the initial comment.
+        A hidden field that indicates the format should be added inside
+        the form in order to make the template functional. Its value should
+        be the suffix of the template filename. For example, if the file
+        is called <filename>create-cust.html.tmpl</filename>, then
+        <programlisting>&lt;input type="hidden" name="format" value="cust"&gt;</programlisting>
+        should be used inside the form.
       </para>
 
       <para>  
