@@ -63,7 +63,8 @@
         E_NO_DEST       = -623,     /* destination dir doesn't exist */
         E_MKDIR_FAIL    = -624,     /* can't make destination dir */
         E_OLD_INST      = -625,     /* old instllation exists */
-        E_NO_PERMS      = -626      /* don't have rwx perms on selected dir */
+        E_NO_PERMS      = -626,     /* don't have rwx perms on selected dir */
+        E_NO_DISK_SPACE = -627      /* not eough disk space to install */
     };
 
 #endif /* _XI_ERRORS_H_ */

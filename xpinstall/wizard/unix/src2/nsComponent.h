@@ -48,8 +48,11 @@ public:
     char *          GetDescLong();
     int             SetArchive(char *aAcrhive);
     char *          GetArchive();
-    int             SetSize(int aSize);
-    int             GetSize();
+    int             SetInstallSize(int aInstallSize);
+    int             GetInstallSize();
+    int             SetArchiveSize(int aArchiveSize);
+    int             GetArchiveSize();
+    int             GetCurrentSize();
     int             SetURL(char *aURL, int aIndex);
     char *          GetURL(int aIndex);
     int             AddDependee(char *aDependee); 
@@ -77,6 +80,10 @@ public:
     int             DepAddRef();
     int             DepRelease();
     int             DepGetRefCount();
+    int             SetResumePos(int aResPos);
+    int             GetResumePos();
+    int             SetDownloaded();
+    int             IsDownloaded();
   
 /*---------------------------------------------------------------*
  *   Attributes
@@ -93,7 +100,8 @@ private:
     char            *mDescShort;
     char            *mDescLong;
     char            *mArchive;
-    int             mSize;
+    int             mInstallSize;
+    int             mArchiveSize;
     char            *mURL[MAX_URLS];
     char            *mDependees[MAX_COMPONENTS];
     int             mNextDependeeIdx;
@@ -102,6 +110,8 @@ private:
     int             mIndex;
     int             mRefCount;
     int             mDepRefCount;
+    int             mResPos;
+    int             mDownloaded;
 };
 
 #endif /* _NS_COMPONENT_H_ */

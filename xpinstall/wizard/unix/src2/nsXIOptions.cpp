@@ -27,7 +27,8 @@
 nsXIOptions::nsXIOptions() :
     mTitle(NULL),
     mDestination(NULL),
-    mSetupType(-1),
+    mSetupType(0),
+    mMode(MODE_DEFAULT),
     mProxyHost(NULL),
     mProxyPort(NULL),
     mProxyUser(NULL),

@@ -40,6 +40,7 @@ public:
     nsXInstaller();
     ~nsXInstaller();
 
+    int ParseArgs(int aArgc, char **aArgv);
     int ParseConfig();
     int RunWizard(int argc, char **argv);
     int ParseGeneral(nsINIParser *aParser);

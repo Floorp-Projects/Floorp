@@ -45,6 +45,6 @@ export PATH
 MOZILLA_FIVE_HOME=.
 export MOZILLA_FIVE_HOME
 
-./mozilla-installer-bin --sync
+./mozilla-installer-bin --sync $@
 
 rm -rf /tmp/.tmp.xi.*

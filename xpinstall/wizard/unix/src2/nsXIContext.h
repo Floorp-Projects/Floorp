@@ -84,6 +84,7 @@ public:
 
     int                 backID;     /* signal handler id for back btn */
     int                 nextID;     /* signal handler id for next btn */
+    int                 cancelID;   /* signal handler id for cancel btn */
     int                 bMoving;    /* when moving between dlgs signals are
                                        emitted twice; this notes the state */
     int                 bDone;      /* engine thread sets boolean when done

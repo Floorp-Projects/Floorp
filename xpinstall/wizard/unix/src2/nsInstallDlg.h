@@ -29,7 +29,7 @@
 #include "XIErrors.h"
 #include "nsRunApp.h"
 
-#include <sys/time.h>
+class nsComponent;
 
 class nsInstallDlg : public nsXInstallerDlg
 {
@@ -47,19 +47,30 @@ public:
 
     int             Show(int aDirection);
     int             Hide(int aDirection);
+    int             ShowTable();
+    int             HideTable();
 
     static void     XPIProgressCB(const char *aMsg, int aVal, int aMax);
     static void     MajorProgressCB(char *aName, int aNum, int aTotal, 
                                     int aActivity);
     static int      DownloadCB(int aBytesRd, int aTotal);
-    static void     SetDownloadComp(char *aName, int aNum, int aTotal);
+    static void     SetDownloadComp(nsComponent *aComp, int aURLIndex,
+                                    int aNum, int aTotal);
     static void     ClearRateLabel();
+    static int      CancelOrPause();
 
     enum
     {
         ACT_DOWNLOAD,
         ACT_EXTRACT,
         ACT_INSTALL
+    };
+
+    enum
+    {
+        E_DL_PAUSE      = -1101,
+        E_DL_CANCEL     = -1102,
+        E_DL_DROP_CXN   = -1103
     };
 
 /*------------------------------------------------------------------*
@@ -69,7 +80,7 @@ public:
     char            *GetMsg0();
 
 private:
-    static void     *WorkDammitWork(void *arg); // install start
+    static int      WorkDammitWork(void); // install start
     static void     SaveModulesToggled(GtkWidget *aWidget, gpointer aData);
     static void     ShowProxySettings(GtkWidget *aWidget, gpointer aData);
     static void     PSDlgOK    (GtkWidget *aWidget, gpointer aData);
@@ -79,6 +90,17 @@ private:
     static void     RunApps();
     static void     FreeRunAppList();
     int             AppendRunApp(nsRunApp *aNewRunApp);
+    static void     DLPause(GtkWidget *aWidget, gpointer aData);
+    static void     DLResume(GtkWidget *aWidget, gpointer aData);
+    static void     DLCancel(GtkWidget *aWidget, gpointer aData);
+    static int      ShowCxnDroppedDlg();
+    static void     CxnDroppedOK(GtkWidget *aWidget, gpointer aData);
+    static void     HideNavButtons();
+    static void     InitDLProgress();
+    static void     InitInstallProgress();
+    static int      TotalDLSize();
+    static void     CompressToFit(char *aOrigStr, char *aOutStr, 
+                        int aOutStrLen);
 
     char            *mMsg0;
 };

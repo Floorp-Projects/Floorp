@@ -38,6 +38,34 @@ nsXInstaller::~nsXInstaller()
     XI_IF_DELETE(gCtx);
 }
 
+int 
+nsXInstaller::ParseArgs(int aArgc, char **aArgv)
+{
+    if (aArgc <= 0 || !aArgv)
+        return E_PARAM;
+
+    for (int argNum = 1; argNum < aArgc; ++argNum)
+    {
+        /* mode: auto  (show progress UI but assume defaults
+         *              without user intervention)
+         */
+        if (strcmp(aArgv[argNum], "-ma") == 0)
+        {
+            gCtx->opt->mMode = nsXIOptions::MODE_AUTO;
+        }
+        
+        /* mode: silent (show no UI and have no user
+         *               intervention)
+         */
+        else if (strcmp(aArgv[argNum], "-ms") == 0)
+        {
+            gCtx->opt->mMode = nsXIOptions::MODE_SILENT;
+        }
+    }
+
+    return OK;
+}
+
 int
 nsXInstaller::ParseConfig()
 {
@@ -155,11 +183,21 @@ nsXInstaller::RunWizard(int argc, char **argv)
     gtk_widget_show(gCtx->notebook);
     gtk_container_add(GTK_CONTAINER(gCtx->canvas), gCtx->notebook);
 
-    // show welcome dlg
-    gCtx->wdlg->Show(nsXInstallerDlg::FORWARD_MOVE); 
+    if (gCtx->opt->mMode == nsXIOptions::MODE_AUTO)
+    {
+        // show install dlg
+        gCtx->idlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+        gCtx->idlg->Next((GtkWidget *)NULL, (gpointer) gCtx->idlg);
+    }
+    else
+    {
+        // show welcome dlg
+        gCtx->wdlg->Show(nsXInstallerDlg::FORWARD_MOVE); 
 
-    // pop over to main event loop
-    gtk_main();
+        // pop over to main event loop
+        gtk_main();
+
+    }
 
     return OK;
 
@@ -222,8 +260,8 @@ nsXInstaller::DrawCancelButton(GtkWidget *aLogoVBox)
     hbox = gtk_hbox_new(FALSE, 10);
     gtk_box_pack_start(GTK_BOX(hbox), gCtx->cancel, TRUE, TRUE, 15);
     gtk_box_pack_end(GTK_BOX(aLogoVBox), hbox, FALSE, TRUE, 10);
-    gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
-                       GTK_SIGNAL_FUNC(Kill), NULL);
+    gCtx->cancelID = gtk_signal_connect(GTK_OBJECT(gCtx->cancel), "clicked",
+                        GTK_SIGNAL_FUNC(Kill), NULL);
     gtk_widget_show(hbox);
     gtk_widget_show(gCtx->cancel);
 
@@ -328,7 +366,10 @@ main(int argc, char **argv)
     if (installer)
     {
         if ( (err = installer->ParseConfig()) == OK)
+        {
+            installer->ParseArgs(argc, argv);
             err = installer->RunWizard(argc, argv);
+        }
     }
     else
         err = E_MEM;

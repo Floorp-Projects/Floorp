@@ -23,18 +23,22 @@
  */
 
 #include "nsComponent.h"
+#include <sys/stat.h>
 
 nsComponent::nsComponent() :
     mDescShort(NULL),
     mDescLong(NULL),
     mArchive(NULL),
-    mSize(0),
+    mInstallSize(0),
+    mArchiveSize(0),
+    mNextDependeeIdx(0),
     mAttributes(NO_ATTR),
     mNext(NULL),
     mIndex(-1),
     mRefCount(0),
     mDepRefCount(0),
-    mNextDependeeIdx(0)
+    mResPos(0),
+    mDownloaded(FALSE)
 {
     int i;
 
@@ -129,20 +133,55 @@ nsComponent::GetArchive()
 }
 
 int
-nsComponent::SetSize(int aSize)
+nsComponent::SetInstallSize(int aInstallSize)
 {
-    mSize = aSize;
+    mInstallSize = aInstallSize;
 
     return OK;
 }
 
 int
-nsComponent::GetSize()
+nsComponent::GetInstallSize()
 {
-    if (mSize >= 0)
-        return mSize;
+    if (mInstallSize >= 0)
+        return mInstallSize;
 
     return 0;
+}
+
+int
+nsComponent::SetArchiveSize(int aArchiveSize)
+{
+    mArchiveSize = aArchiveSize;
+
+    return OK;
+}
+
+int
+nsComponent::GetArchiveSize()
+{
+    if (mArchiveSize >= 0)
+        return mArchiveSize;
+
+    return 0;
+}
+
+int
+nsComponent::GetCurrentSize()
+{
+    // assumes cwd is the same as the installer binary location
+
+    char path[MAXPATHLEN];
+    struct stat stbuf;
+
+    if (!mArchive)
+        return 0;
+
+    sprintf(path, "./xpi/%s", mArchive);
+    if (0 != stat(path, &stbuf))
+        return 0;
+
+    return (stbuf.st_size/1024); // return size in KB
 }
 
 int
@@ -394,4 +433,35 @@ int
 nsComponent::DepGetRefCount()
 {
     return mDepRefCount;
+}
+
+int
+nsComponent::SetResumePos(int aResPos)
+{
+    mResPos = aResPos;
+
+    return OK;
+}
+
+int
+nsComponent::GetResumePos()
+{
+    if (mResPos > 0)
+        return mResPos;
+
+    return 0;
+}
+
+int
+nsComponent::SetDownloaded()
+{
+    mDownloaded = TRUE;
+
+    return OK;
+}
+
+int
+nsComponent::IsDownloaded()
+{
+    return mDownloaded;
 }

@@ -34,7 +34,7 @@
 class nsZipExtractor
 {
 public:
-    nsZipExtractor(char *aTmp);
+    nsZipExtractor(char *aSrc, char *aDest);
     ~nsZipExtractor();
 
     int     Extract(nsComponent *aXPIEngine, int aTotal);
@@ -42,7 +42,8 @@ public:
 private:
     int     DirCreateRecursive(char *aPath);
 
-    char    *mTmp;
+    char    *mSrc;
+    char    *mDest;
 };
 
 #endif /* _NS_ZIPEXTRACTOR_H_ */

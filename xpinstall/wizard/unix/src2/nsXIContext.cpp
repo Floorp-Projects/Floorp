@@ -53,6 +53,7 @@ nsXIContext::nsXIContext()
 
     backID = 0;
     nextID = 0;
+    cancelID = 0;
     bMoving = FALSE;
     bDone = FALSE;
 
@@ -148,6 +149,8 @@ nsXIContext::LoadResources()
         "ACCEPT",
         "DECLINE",
         "INSTALL",
+        "PAUSE",
+        "RESUME",
         "DEFAULT_TITLE",
         "DEST_DIR",
         "BROWSE",
@@ -161,8 +164,6 @@ nsXIContext::LoadResources()
         "ERROR",
         "FATAL_ERROR",
         "DESCRIPTION",
-        "DOWNLOADING",
-        "DLRATE",
         "PREPARING",
         "EXTRACTING",
         "INSTALLING_XPI",
@@ -177,6 +178,16 @@ nsXIContext::LoadResources()
         "PS_LABEL2",
         "PS_LABEL3",
         "ERROR_TITLE",
+        "DS_AVAIL",
+        "DS_REQD",
+        "NO_DISK_SPACE",
+        "CXN_DROPPED",
+        "DOWNLOADING",
+        "FROM",
+        "TO",
+        "STATUS",
+        "DL_STATUS_STR",
+        "UNKNOWN",
 
         __EOT__
     };

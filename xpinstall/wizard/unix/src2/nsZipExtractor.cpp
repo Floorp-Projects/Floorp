@@ -28,14 +28,20 @@
 #include "zipstub.h"
 #include "zipfile.h"
 
-nsZipExtractor::nsZipExtractor(char *aTmp) :
-    mTmp(aTmp)
+nsZipExtractor::nsZipExtractor(char *aSrc, char *aDest) :
+    mSrc(NULL),
+    mDest(NULL)
 {
+    if (aSrc)
+        mSrc = strdup(aSrc);
+    if (aDest)
+        mDest = strdup(aDest);
 }
 
 nsZipExtractor::~nsZipExtractor()
 {
-    // don't free mTmp: we don't own it
+    XI_IF_FREE(mSrc);
+    XI_IF_FREE(mDest);
 }
 
 int
@@ -56,7 +62,7 @@ nsZipExtractor::Extract(nsComponent *aXPIEngine, int aTotal)
     if (!aXPIEngine || !(aXPIEngine->GetArchive()))
         return E_PARAM;
 
-    sprintf(apath, "%s/%s", mTmp, aXPIEngine->GetArchive());
+    sprintf(apath, "%s/%s", mSrc, aXPIEngine->GetArchive());
     if (-1 == stat(apath, &dummy))
         return E_NO_DOWNLOAD;
 
@@ -107,7 +113,7 @@ nsZipExtractor::Extract(nsComponent *aXPIEngine, int aTotal)
         nsInstallDlg::MajorProgressCB(leaf, i, 
             aTotal, nsInstallDlg::ACT_EXTRACT);
 
-        sprintf(epath, "%s/%s", mTmp, zpath);
+        sprintf(epath, "%s/%s", mDest, zpath);
         err = DirCreateRecursive(epath);
         if (err != OK) goto au_revoir;
 
@@ -121,7 +127,7 @@ nsZipExtractor::Extract(nsComponent *aXPIEngine, int aTotal)
         i++;
     }
     
-    sprintf(bindir, "%s/%s", mTmp, TMP_EXTRACT_SUBDIR);
+    sprintf(bindir, "%s/%s", mDest, TMP_EXTRACT_SUBDIR);
     if (-1 == stat(bindir, &dummy))
         err = E_EXTRACTION;
 
@@ -143,10 +149,10 @@ nsZipExtractor::DirCreateRecursive(char *aPath)
     char currdir[MAXPATHLEN];
     struct stat dummy;
     
-    if (!aPath || !mTmp)
+    if (!aPath || !mDest)
         return E_PARAM;
 
-    slash = aPath + strlen(mTmp);
+    slash = aPath + strlen(mDest);
     if (*slash != '/')
         return E_INVALID_PTR;
 

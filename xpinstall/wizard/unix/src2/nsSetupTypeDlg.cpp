@@ -25,6 +25,24 @@
 #include "nsSetupTypeDlg.h"
 #include "nsXInstaller.h"
 
+
+// need these for statfs 
+
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+
+#ifdef HAVE_STATVFS
+#define STATFS statvfs
+#else
+#define STATFS statfs
+#endif
+
+
 static GtkWidget        *sBrowseBtn;
 static gint             sBrowseBtnID;
 static GtkWidget        *sFolder;
@@ -96,6 +114,13 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
     // old installation may exist: delete it
     if (OK != nsSetupTypeDlg::DeleteOldInst())
         return;
+
+    // if not custom setup type verify disk space
+    if (gCtx->opt->mSetupType != (gCtx->sdlg->GetNumSetupTypes() - 1))
+    {
+        if (OK != nsSetupTypeDlg::VerifyDiskSpace())
+            return;
+    }
 
     // hide this notebook page
     gCtx->sdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
@@ -321,7 +346,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_widget_show(hbox);
         gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			GTK_FILL, 20, 20);
+            GTK_FILL, 20, 20);
         gtk_widget_show(msg0);
 
         // insert a [n x 2] heterogeneous table in the second row
@@ -332,7 +357,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_table_attach(GTK_TABLE(mTable), stTable, 0, 1, 2, 3,
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
-			20, 0);
+            20, 0);
 
         currST = GetSetupTypeList();
         if (!currST) return E_NO_SETUPTYPES;
@@ -345,7 +370,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_table_attach(GTK_TABLE(stTable), radbtns[0], 0, 1, 0, 1,
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			0, 0);
+            0, 0);
         gtk_signal_connect(GTK_OBJECT(radbtns[0]), "toggled",
                            GTK_SIGNAL_FUNC(RadBtnToggled), 0);
         gtk_widget_show(radbtns[0]);
@@ -373,7 +398,7 @@ nsSetupTypeDlg::Show(int aDirection)
                 static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), 0, 0);
             gtk_signal_connect(GTK_OBJECT(radbtns[i]), "toggled",
                                GTK_SIGNAL_FUNC(RadBtnToggled),
-			                   reinterpret_cast<void *>(i));
+                               reinterpret_cast<void *>(i));
             gtk_widget_show(radbtns[i]);
 
             desc[i] = gtk_label_new(currST->GetDescLong());
@@ -393,7 +418,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_table_attach(GTK_TABLE(mTable), destTable, 0, 1, 3, 4,
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
-			20, 5);
+            20, 5);
         frame = gtk_frame_new(gCtx->Res("DEST_DIR"));
         gtk_table_attach_defaults(GTK_TABLE(destTable), frame, 0, 2, 0, 1);
         gtk_widget_show(frame);
@@ -412,7 +437,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_widget_show(sBrowseBtn);
         gtk_table_attach(GTK_TABLE(destTable), sBrowseBtn, 1, 2, 0, 1,
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
-			GTK_SHRINK, 10, 10);
+            GTK_SHRINK, 10, 10);
 
         mWidgetsInit = TRUE;
     }
@@ -936,3 +961,144 @@ nsSetupTypeDlg::ConstructPath(char *aDest, char *aTrunk, char *aLeaf)
 
     return err;
 }
+
+int
+nsSetupTypeDlg::VerifyDiskSpace(void)
+{
+    int err = OK;
+    int dsAvail, dsReqd;
+    char dsAvailStr[128], dsReqdStr[128];
+    char message[512];
+    GtkWidget *noDSDlg, *label, *okButton, *packer;
+
+    // find disk space available at destination
+    dsAvail = DSAvailable();
+    if (dsAvail < 0)
+        return OK; // optimistic when statfs failed
+                   // or we don't have statfs
+
+    // get disk space required
+    dsReqd = DSRequired();
+
+    if (dsReqd > dsAvail)
+    {
+        // throw up not enough ds dlg
+        sprintf(dsAvailStr, gCtx->Res("DS_AVAIL"), dsAvail);
+        sprintf(dsReqdStr, gCtx->Res("DS_REQD"), dsReqd);
+        sprintf(message, "%s\n%s\n\n%s", dsAvailStr, dsReqdStr, 
+                gCtx->Res("NO_DISK_SPACE"));
+
+        noDSDlg = gtk_dialog_new();
+        label = gtk_label_new(message);
+        okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+        packer = gtk_packer_new(); 
+
+        if (noDSDlg && label && okButton && packer)
+        {
+            gtk_window_set_title(GTK_WINDOW(noDSDlg), gCtx->opt->mTitle);
+            gtk_window_set_position(GTK_WINDOW(noDSDlg), 
+                                    GTK_WIN_POS_CENTER);
+            gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+            gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
+            gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
+                                    GTK_ANCHOR_CENTER, GTK_FILL_X);
+            gtk_box_pack_start(GTK_BOX(
+                GTK_DIALOG(noDSDlg)->action_area), okButton,
+                FALSE, FALSE, 10);
+            gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
+                GTK_SIGNAL_FUNC(NoDiskSpaceOK), noDSDlg);
+            gtk_box_pack_start(GTK_BOX(
+                GTK_DIALOG(noDSDlg)->vbox), packer, FALSE, FALSE, 10);
+
+            gtk_widget_show_all(noDSDlg);
+        }
+
+        err = E_NO_DISK_SPACE;
+    }
+
+    return err;
+}
+
+int
+nsSetupTypeDlg::DSAvailable(void)
+{
+    // returns disk space available in kilobytes
+
+    int dsAvail = -1;
+
+#if defined(HAVE_SYS_STATVFS_H) || defined(HAVE_SYS_STATFS_H)
+    struct STATFS buf;
+    int rv;
+
+    if (gCtx->opt->mDestination)
+    {
+        rv = STATFS(gCtx->opt->mDestination, &buf);
+        if (rv == 0)
+        {
+            if (buf.f_bsize > 1024 && (buf.f_bsize%1024 == 0))
+            {
+                // normally the block size is >= 1024 and a multiple
+                // so we can shave off the last three digits before 
+                // finding the product of the block size and num blocks
+                // which is important for large disks
+
+                dsAvail = (buf.f_bsize/1024) * (buf.f_bavail);
+            }
+            else
+            {
+                // attempt to stuff into a 32 bit int even though
+                // we convert from bytes -> kilobytes later
+                // (may fail to compute on very large disks whose
+                // block size is not a multiple of 1024 -- highly 
+                // improbable)
+
+                dsAvail = (buf.f_bsize * buf.f_bavail)/1024;
+            }
+        }
+    }
+#endif // HAVE_SYS_STATVFS_H -or- HAVE_SYS_STATFS_H 
+
+    return dsAvail;
+}
+
+int 
+nsSetupTypeDlg::DSRequired(void)
+{
+    // returns disk space required in kilobytes 
+
+    int dsReqd = 0;
+    nsComponentList *comps;
+    int bCus;
+
+    // find setup type's component list
+    bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+    comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
+
+    // loop through all components
+    nsComponent *currComp = comps->GetHead();
+    while (currComp)
+    {
+        if ( (bCus == TRUE && currComp->IsSelected()) || (bCus == FALSE) )
+        {
+            // add to disk space required 
+            dsReqd += currComp->GetInstallSize();
+            dsReqd += currComp->GetArchiveSize();
+        }
+
+        currComp = currComp->GetNext();
+    }
+
+    return dsReqd;
+}
+
+void
+nsSetupTypeDlg::NoDiskSpaceOK(GtkWidget *aWidget, gpointer aData)
+{
+    GtkWidget *noDSDlg = (GtkWidget *) aData;
+
+    if (!noDSDlg)
+        return;
+
+    gtk_widget_destroy(noDSDlg);
+}
+
