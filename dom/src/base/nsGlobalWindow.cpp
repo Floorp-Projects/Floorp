@@ -3089,21 +3089,20 @@ NavigatorImpl::GetUserAgent(nsString& aUserAgent)
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    res = service->GetUserAgent(aUserAgent);
+    NS_RELEASE(service);
+  }
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
-
-  if ((NS_OK == res) && (nsnull != service)) {
-#ifndef NECKO
-    res = service->GetUserAgent(aUserAgent);
-#else
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *ua = nsnull;
     res = service->GetUserAgent(&ua);
     aUserAgent = ua;
     delete [] ua;
-#endif // NECKO
-    NS_RELEASE(service);
   }
+#endif // NECKO
+
   return res;
 }
 
@@ -3116,21 +3115,19 @@ NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    res = service->GetAppCodeName(aAppCodeName);
+    NS_RELEASE(service);
+  }
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
-
-  if ((NS_OK == res) && (nsnull != service)) {
-#ifndef NECKO
-    res = service->GetAppCodeName(aAppCodeName);
-#else
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appName = nsnull;
     res = service->GetAppCodeName(&appName);
     aAppCodeName = appName;
     delete [] appName;
-#endif // NECKO
-    NS_RELEASE(service);
   }
+#endif // NECKO
 
   return res;
 }
@@ -3144,20 +3141,18 @@ NavigatorImpl::GetAppVersion(nsString& aAppVersion)
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    res = service->GetAppVersion(aAppVersion);
+    NS_RELEASE(service);
+  }
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
-
-  if ((NS_OK == res) && (nsnull != service)) {
-#ifndef NECKO
-    res = service->GetAppVersion(aAppVersion);
-#else
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appVer = nsnull;
     res = service->GetAppVersion(&appVer);
     aAppVersion = appVer;
     delete [] appVer;
 #endif // NECKO
-    NS_RELEASE(service);
   }
 
   return res;
@@ -3172,21 +3167,19 @@ NavigatorImpl::GetAppName(nsString& aAppName)
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    res = service->GetAppName(aAppName);
+    NS_RELEASE(service);
+  }
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
-
-  if ((NS_OK == res) && (nsnull != service)) {
-#ifndef NECKO
-    res = service->GetAppName(aAppName);
-#else
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appName = nsnull;
     res = service->GetAppName(&appName);
     aAppName = appName;
     delete [] appName;
-#endif // NECKO
-    NS_RELEASE(service);
   }
+#endif // NECKO
 
   return res;
 }
@@ -3200,21 +3193,19 @@ NavigatorImpl::GetLanguage(nsString& aLanguage)
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    res = service->GetLanguage(aLanguage);
+    NS_RELEASE(service);
+  }
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
-
-  if ((NS_OK == res) && (nsnull != service)) {
-#ifndef NECKO
-    res = service->GetLanguage(aLanguage);
-#else
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *lang = nsnull;
     res = service->GetLanguage(&lang);
     aLanguage = lang;
     delete [] lang;
-#endif // NECKO
-    NS_RELEASE(service);
   }
+#endif // NECKO
 
   return res;
 }
@@ -3228,21 +3219,19 @@ NavigatorImpl::GetPlatform(nsString& aPlatform)
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
+    res = service->GetPlatform(aPlatform);
+    NS_RELEASE(service);
+  }
 #else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
-#endif // NECKO
-
-  if ((NS_OK == res) && (nsnull != service)) {
-#ifndef NECKO
-    res = service->GetPlatform(aPlatform);
-#else
+  if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *plat = nsnull;
     res = service->GetPlatform(&plat);
     aPlatform = plat;
     delete [] plat;
-#endif // NECKO
-    NS_RELEASE(service);
   }
+#endif // NECKO
 
   return res;
 }
