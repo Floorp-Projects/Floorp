@@ -38,7 +38,7 @@
 // Wrapper for creating a new menu popup container
 //
 nsresult
-NS_NewMenuFrame(nsIFrame** aNewFrame)
+NS_NewMenuFrame(nsIFrame** aNewFrame, PRInt32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -48,6 +48,8 @@ NS_NewMenuFrame(nsIFrame** aNewFrame)
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;
+  if (aFlags)
+    it->SetIsMenu(PR_TRUE);
   return NS_OK;
 }
 
@@ -76,7 +78,7 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
-:mMenuOpen(PR_FALSE),mMenuParent(nsnull)
+:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull)
 {
 
 } // cntr
@@ -234,6 +236,9 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 void 
 nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
 {
+  if (!mIsMenu)
+    return;
+
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
   
