@@ -30,6 +30,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
+#include "nsMacLocaleFactory.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -38,6 +39,8 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 //
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
+NS_DEFINE_IID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
+
 
 //
 // for the collation and formatting interfaces
@@ -80,10 +83,23 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 			*aFactory = NULL;
 			delete factory;
 		}
-
+			printf("returning nsLocaleFactory\n");
 			return res;
 	}
 	
+	if (aClass.Equals(kMacLocaleFactoryCID))
+	{
+		nsMacLocaleFactory	*mac_factory = new nsMacLocaleFactory();
+		res = mac_factory->QueryInterface(kILocaleFactoryIID,(void**) aFactory);
+		
+		if (NS_FAILED(res))
+		{
+			*aFactory = NULL;
+			delete mac_factory;
+		}
+		
+			return res;
+	}
 	//
 	// let the nsLocaleFactoryWin logic take over from here
 	//
@@ -121,6 +137,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   // register the generic factory
   //
   rv = compMgr->RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
+  NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
+  //
+  // register the generic factory
+  //
+  rv = compMgr->RegisterComponent(kMacLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
   NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
