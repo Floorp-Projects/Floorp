@@ -1047,7 +1047,7 @@ skip-networking
     
     <para>
       Templatization also makes localized versions of Bugzilla possible, 
-      for the first time. As of version <![%bz-devel;[2.14.5 which will soon
+      for the first time. As of version <![%bz-devel;[2.17.4 which will soon
       become ]]>2.18, it's possible to have Bugzilla's language determined by
       the user's browser. More information is available in
       <xref linkend="template-http-accept"/>.
