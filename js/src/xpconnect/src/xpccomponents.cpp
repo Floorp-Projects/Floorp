@@ -141,7 +141,7 @@ class nsXPCInterfaces : public nsIXPCInterfaces
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
 public:
     nsXPCInterfaces();
@@ -286,7 +286,7 @@ class nsXPCClasses : public nsIXPCClasses
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
 public:
     nsXPCClasses();
