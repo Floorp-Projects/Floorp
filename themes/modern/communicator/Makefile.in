@@ -35,10 +35,13 @@ EXPORT_RESOURCE = \
 		$(srcdir)/communicator.css \
 		$(srcdir)/formatting.css \
 		$(srcdir)/menu.css \
+		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/splitter.css \
 		$(srcdir)/toolbar.css \
 		$(srcdir)/navbar-endbox.gif \
+		$(srcdir)/tb-menubutton-dm.gif \
+		$(srcdir)/tb-menubutton-dm-disabled.gif \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related wallet 

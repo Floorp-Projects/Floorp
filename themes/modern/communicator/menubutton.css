@@ -52,4 +52,37 @@
      border-bottom          : 1px solid #CCCCCC;
    }
 
-   
+/** 
+ * Navigation bar style menubuttons 
+ **/
+.toolbar.menubutton-dual,
+.toolbar.menubutton-dual
+  {
+    border                  : none ! important;
+  }
+
+.button-toolbar-1.menubutton-dual-button
+  {
+    list-style-image        : inherit;
+  }
+
+.menubutton-dual-dropmarker
+  {
+    background              : transparent;
+    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm.gif");
+  } 
+
+.menubutton-dual-dropmarker[disabled="true"]
+  {
+    background              : transparent;
+    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm-disabled.gif");
+  } 
+  
+.menubutton-dual-dropmarker-box
+  {
+    margin-left             : 32px;
+    margin-bottom           : 1px;
+  }
+
+  
+  

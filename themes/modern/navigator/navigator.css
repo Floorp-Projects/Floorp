@@ -43,12 +43,16 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
  */
 #back-button 
   {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
 	  list-style-image      : url("chrome://navigator/skin/back.gif");
+    margin                : 0px;
   }
 
 #forward-button 
   {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
 	  list-style-image      : url("chrome://navigator/skin/forward.gif");
+    margin                : 0px;
   }
 
 #stop-button 
