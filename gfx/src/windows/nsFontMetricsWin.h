@@ -291,6 +291,7 @@ protected:
   PRInt32  GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable);
   PRInt32  GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable);
   PRUint16 GetFontWeightTable(HDC aDC, nsString* aFontName);
+  nsFontWin* LocateFont(HDC aDC, PRUnichar aChar, PRInt32 & aCount);
 
   nsresult RealizeFont();
   void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight,
@@ -438,6 +439,9 @@ public:
                    PRUint32             aLength,
                    nsFontSwitchCallback aFunc, 
                    void*                aData);
+
+protected:
+  nsFontSubset* LocateFontSubset(HDC aDC, PRUnichar aChar, PRInt32 & aCount, nsFontWinA*& aFont);
 };
 
 #endif /* nsFontMetricsWin_h__ */
