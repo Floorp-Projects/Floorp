@@ -45,6 +45,9 @@ sub checkout {
 }
 
 
+sub PreBuild {
+}
+
 sub main {
   my ($mozilla_build_dir) = @_;
 
