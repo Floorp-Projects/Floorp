@@ -275,7 +275,7 @@ function InitCommonJS()
 {
   dirTree = document.getElementById("dirTree");
   abList = document.getElementById("addressbookList");
-  gAbResultsTree = document.getElementById('abResultsTree');
+  gAbResultsTree = document.getElementById("abResultsTree");
 }
 
 // builds prior to 12-08-2001 did not use an tree for

@@ -85,6 +85,10 @@ function searchOnLoad()
   if (window.arguments && window.arguments[0])
     SelectDirectory(window.arguments[0].directory);
 
+  // initialize globals, see abCommon.js, InitCommonJS()
+  abList = document.getElementById("abPopup");
+  gAbResultsTree = document.getElementById('abResultsTree');
+
   onMore(null);
 }
 
