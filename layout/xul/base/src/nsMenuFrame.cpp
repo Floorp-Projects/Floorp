@@ -27,6 +27,7 @@
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsMenuPopupFrame.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -54,6 +55,7 @@ NS_NewMenuFrame(nsIFrame** aNewFrame)
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
+:mMenuOpen(PR_FALSE),mOnMenuBar(PR_TRUE)
 {
 
 } // cntr
@@ -114,14 +116,14 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
    // This is necessary because we don't want the menu contents to be included in the layout
    // of the menu's single item because it would take up space, when it is supposed to
    // be floating above the display.
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+  /*NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   
   *aListName = nsnull;
   if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
     *aListName = nsLayoutAtoms::popupList;
     NS_ADDREF(*aListName);
     return NS_OK;
-  }
+  }*/
   return nsAreaFrame::GetAdditionalChildListName(aIndex, aListName);
 }
 
@@ -140,4 +142,87 @@ nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint,
 {
   *aFrame = this; // Capture all events so that we can perform selection
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMenuFrame::HandleEvent(nsIPresContext& aPresContext, 
+                             nsGUIEvent*     aEvent,
+                             nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  if (aEvent->message == NS_MOUSE_LEFT_CLICK) {
+    // The menu item was clicked. Bring up the menu.
+    nsIFrame* frame = mPopupFrames.FirstChild();
+    if (frame) {
+      // We have children.
+      nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
+      popup->SyncViewWithFrame(mOnMenuBar);
+      ToggleMenuState();
+    }
+  }
+  return NS_OK;
+}
+
+void
+nsMenuFrame::ToggleMenuState()
+{
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+    
+  if (mMenuOpen) {
+    // Close the menu.
+    child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    mMenuOpen = PR_FALSE;
+  }
+  else {
+    // Open the menu.
+    child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    mMenuOpen = PR_TRUE;
+  }
+}
+
+void
+nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
+{
+  *aResult = nsnull;
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  if (frame) {
+    frame->GetContent(aResult);
+  }
+}
+
+NS_IMETHODIMP
+nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus)
+{
+  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsIFrame* frame = mPopupFrames.FirstChild();
+    
+  if (rv == NS_OK && frame) {
+    // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
+    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
+                                     availSize);
+    kidReflowState.computedWidth = NS_UNCONSTRAINEDSIZE;
+    kidReflowState.computedHeight = NS_UNCONSTRAINEDSIZE;
+      
+     // Reflow child
+    nscoord w = aDesiredSize.width;
+    nscoord h = aDesiredSize.height;
+    nsresult rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
+ 
+    // Don't let it affect our size.
+    aDesiredSize.width = w;
+    aDesiredSize.height = h;
+
+     // Set the child's width and height to its desired size
+    nsRect rect;
+    frame->GetRect(rect);
+    rect.width = aDesiredSize.width;
+    rect.height = aDesiredSize.height;
+    frame->SetRect(rect);
+  }
+  return rv;
 }
