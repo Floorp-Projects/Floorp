@@ -138,14 +138,21 @@ NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri,
 {
    NS_ENSURE_ARG(aUri);
 
-   nsCOMPtr<nsIURILoader> uriLoader = do_CreateInstance(NS_URI_LOADER_PROGID);
+   nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
    mContentListener->SetPresContext(aPresContext);
 
-   NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(aUri, nsIURILoader::viewNormal, nsnull, 
-      NS_STATIC_CAST(nsIDocShell*, this), nsnull, mLoadCookie, 
+   // first, open a channel for the url
+   nsCOMPtr<nsIChannel> channel;
+   nsCOMPtr<nsIInterfaceRequestor> capabilities (do_QueryInterface(NS_STATIC_CAST(nsIDocShell *, this)));
+   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
+   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aUri, loadGroup, capabilities), NS_ERROR_FAILURE);
+
+
+   NS_ENSURE_SUCCESS(uriLoader->OpenURIVia(channel, nsIURILoader::viewNormal, nsnull, 
+      NS_STATIC_CAST(nsIDocShell*, this), mLoadCookie, 
       getter_AddRefs(mLoadCookie), aAdapterBinding), NS_ERROR_FAILURE);
 
    return NS_OK;

@@ -51,6 +51,8 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
+#include "nsHTTPEnums.h"
 
 #if defined(PR_LOGGING)
 //
@@ -77,7 +79,7 @@ static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
-
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 /****************************************************************************
  * nsDocLoaderImpl implementation...
@@ -321,8 +323,6 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
 }
 
 
-static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
-
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadDocument(nsIURI * aUri, 
                               const char* aCommand,
@@ -341,45 +341,45 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
 
     nsCOMPtr<nsISupports> openContext = do_QueryInterface(mLoadGroup);
 
-    // let's try uri dispatching...
-    NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    // first, create a channel for the protocol....
+    nsCOMPtr<nsIIOService> pNetService = do_GetService(kIOServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIChannel> pChannel;
+      nsCOMPtr<nsIInterfaceRequestor> requestor (do_QueryInterface(aContainer));
+      rv = pNetService->NewChannelFromURI(aCommand, aUri, mLoadGroup, requestor,
+                                        aType, nsnull /* referring uri */, 0, 0,
+                                        getter_AddRefs(pChannel));
+      if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
+      
+      // figure out if we need to set the post data stream on the channel...right now, 
+      // this is only done for http channels.....
+      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(pChannel));
+      if (httpChannel && aPostDataStream)
+      {
+        httpChannel->SetRequestMethod(HM_POST);
+        httpChannel->SetPostDataStream(aPostDataStream);
+      }
 
-    /*
-     * Set the flag indicating that the document loader is in the process of
-     * loading a document.  This flag will remain set until the 
-     * OnConnectionsComplete(...) notification is fired for the loader...
-     */
-    mIsLoadingDocument = PR_TRUE;
+      // now let's pass the channel into the uri loader
+      nsCOMPtr<nsIURILoader> pURILoader = do_GetService(NS_URI_LOADER_PROGID, &rv);
+      if (NS_FAILED(rv)) return rv;
 
-    nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
-    if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
-      loadCmd = nsIURILoader::viewUserClick;
-    else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
-      loadCmd = nsIURILoader::viewSource;
+      /*
+       * Set the flag indicating that the document loader is in the process of
+       *  loading a document.  This flag will remain set until the 
+       * OnConnectionsComplete(...) notification is fired for the loader...
+       */
+    
+      mIsLoadingDocument = PR_TRUE;
 
-    // temporary hack for post data...eventually this snippet of code
-    // should be moved into the layout call when callers go through the
-    // uri loader directly!
+      nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
+      if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
+        loadCmd = nsIURILoader::viewUserClick;
+      else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
+        loadCmd = nsIURILoader::viewSource;
 
-    if (aPostDataStream) {
-      // query for private post data stream interface
-      nsCOMPtr<nsPIURILoaderWithPostData>  postLoader = do_QueryInterface(pURILoader, &rv);
-      if (NS_SUCCEEDED(rv))
-        rv = postLoader->OpenURIWithPostData(aUri, 
-                                             loadCmd,
-                                             nsnull /* window target */,
-                                             aContainer,
-                                             nsnull /* referring uri */,
-                                             aPostDataStream,
-                                             mLoadGroup,
-                                             getter_AddRefs(openContext));
-                                         
-    }
-    else
-      rv = pURILoader->OpenURI(aUri, loadCmd, nsnull /* window target */, 
+      rv = pURILoader->OpenURI(pChannel, loadCmd, nsnull /* window target */, 
                                aContainer,
-                               nsnull /* refferring URI */, 
                                mLoadGroup, 
                                getter_AddRefs(openContext));
 
@@ -389,7 +389,8 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
 ///    if (openContext) {
 ///      mLoadGroup = do_QueryInterface(openContext);
 ///    }
-  } 
+    } // if we have a channel
+  }  // if we have a uri to load
 
   return rv;
 }

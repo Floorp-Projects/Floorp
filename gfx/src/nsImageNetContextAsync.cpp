@@ -615,13 +615,22 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
   // See if a reconnect is being done...(XXX: hack!)
   if (mReconnectCallback == nsnull
       || !(*mReconnectCallback)(mReconnectArg, ic)) {
-     
+    // first, create a channel for the protocol....
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
+    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
+    if (NS_FAILED(rv)) goto error;
+
+    PRBool bIsBackground = aURL->GetBackgroundLoad();
+    if (bIsBackground) {
+      (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
+    }
+    
     nsCOMPtr<nsISupports> openContext (do_QueryInterface(mLoadGroup));
     nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
-    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
 
     // let's try uri dispatching...
-    NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
+    nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID, &rv));
     if (NS_SUCCEEDED(rv)) 
     {
       nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
@@ -630,9 +639,8 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
         loadCmd = nsIURILoader::viewNormalBackground;
       }
 
-      rv = pURILoader->OpenURI(nsurl, loadCmd, nsnull /* window target */, 
+      rv = pURILoader->OpenURI(channel, loadCmd, nsnull /* window target */, 
                                window,
-                               nsnull /* refferring URI */, 
                                group, 
                                getter_AddRefs(openContext));
     }
