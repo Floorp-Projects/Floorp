@@ -47,6 +47,7 @@ public:
 
   // nsIMenuBar Methods
   NS_IMETHOD GetLabel(nsString &aText);
+  NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);

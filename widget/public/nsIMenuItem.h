@@ -61,6 +61,12 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD GetLabel(nsString &aText) = 0;
 
    /**
+    * Get the MenuItem label
+    *
+    */
+    NS_IMETHOD SetLabel(nsString &aText) = 0;
+
+   /**
     * Gets the MenuItem Command identifier
     *
     */
