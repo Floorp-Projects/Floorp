@@ -167,8 +167,18 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsRect caretScreenRect;
   widget->WidgetToScreen(caretRect, mCaretRect);
 
+#ifndef MOZ_ACCESSIBILITY_ATK
   if (visible)
     mListener->HandleEvent(nsIAccessibleEventListener::EVENT_LOCATION_CHANGE, this, nsnull);
+#else
+  if (isCollapsed) {
+    PRInt32 caretOffset;
+    domSel->GetFocusOffset(&caretOffset);
+    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, this, (AccessibleEventData*)&caretOffset);
+  }
+  else
+    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, this, nsnull);
+#endif
 
   return NS_OK;
 }

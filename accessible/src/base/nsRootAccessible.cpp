@@ -84,6 +84,8 @@
 #include "nsISelectionPrivate.h"
 #include "nsICaret.h"
 #include "nsIAccessibleCaret.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsAccessibleEventData.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
@@ -526,7 +528,7 @@ NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAc
 
 void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode)
 {
-  if (focusNode && gLastFocusedNode != focusNode) {
+  if (focusAccessible && focusNode && gLastFocusedNode != focusNode) {
     mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, focusAccessible, nsnull);
     NS_IF_RELEASE(gLastFocusedNode);
     gLastFocusedNode = focusNode;
@@ -577,6 +579,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIAccessible> accessible;
 
     if (NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
+#ifndef MOZ_ACCESSIBILITY_ATK
       // tree event
       if (treeBox && treeIndex >= 0 && 
           (eventType.EqualsIgnoreCase("DOMMenuItemActive") || eventType.EqualsIgnoreCase("select"))) {
@@ -633,6 +636,60 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
           FireAccessibleFocusEvent(accessible, targetNode);
         }
       }
+#else
+      AtkStateChange stateData;
+      if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
+        if (treeBox && treeIndex >= 0) { // use focused treeitem
+          nsCOMPtr<nsIWeakReference> weakShell;
+          nsAccessibilityService::GetShellFromNode(targetNode, getter_AddRefs(weakShell));
+          accessible = new nsXULTreeitemAccessible(accessible, targetNode, weakShell, treeIndex);
+          if (!accessible)
+            return NS_ERROR_OUT_OF_MEMORY;
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible, nsnull);
+          return NS_OK;
+        }
+        else if (optionTargetNode && // use focused option
+            NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible)))) {
+          FireAccessibleFocusEvent(accessible, optionTargetNode);
+        }
+        else
+          FireAccessibleFocusEvent(accessible, targetNode);
+      }
+      else if (eventType.EqualsIgnoreCase("change")) {
+        if (selectElement) // it's a HTML <select>
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
+        else {
+          nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(targetNode));
+          if (inputElement) { // it's a HTML <input>
+            accessible->GetAccState(&stateData.state);
+            stateData.enable = stateData.state & STATE_CHECKED;
+            stateData.state = STATE_CHECKED;
+            mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
+          }
+        }
+      }
+      else if (eventType.EqualsIgnoreCase("select")) {
+        if (selectControl) // it's a XUL <listbox>
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
+        else if (treeBox && treeIndex >= 0) // it's a XUL <tree>
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
+        // XUL <menulist> doesn't send FORM_SELECT event yet :(
+      }
+      else if (eventType.EqualsIgnoreCase("input")) {
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE, accessible, nsnull);
+      }
+      else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
+               eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
+        accessible->GetAccState(&stateData.state);
+        stateData.enable = stateData.state & STATE_CHECKED;
+        stateData.state = STATE_CHECKED;
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
+      }
+      else if (eventType.EqualsIgnoreCase("popupshowing")) 
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPSTART, accessible, nsnull);
+      else if (eventType.EqualsIgnoreCase("popuphiding")) 
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPEND, accessible, nsnull);
+#endif
     }
   }
   return NS_OK;
@@ -696,7 +753,11 @@ NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent)
 // gets Input events when text is entered or deleted in a textarea or input
 NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent) 
 { 
+#ifndef MOZ_ACCESSIBILITY_ATK
   return NS_OK; 
+#else
+  return HandleEvent(aEvent);
+#endif
 }
 
 // ------- nsIDOMXULListener Methods (8) ---------------

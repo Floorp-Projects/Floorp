@@ -57,6 +57,7 @@ CPP_OBJS = \
 
 EXPORTS = \
   .\nsRootAccessible.h \
+  .\nsAccessibleEventData.h \
   $(NULL)
 
 LINCS = \

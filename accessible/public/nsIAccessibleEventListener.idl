@@ -84,6 +84,7 @@ interface nsIAccessibleEventListener : nsISupports
   const unsigned long EVENT_ATK_TEXT_CHANGE            = 0x0102;
   const unsigned long EVENT_ATK_TEXT_SELECTION_CHANGE  = 0x0103;
   const unsigned long EVENT_ATK_TEXT_CARET_MOVE        = 0x0104;
+  const unsigned long EVENT_ATK_VISIBLE_DATA_CHANGE    = 0x0105;
   const unsigned long EVENT_ATK_TABLE_MODEL_CHANGE     = 0x0110;
   const unsigned long EVENT_ATK_TABLE_ROW_INSERT       = 0x0111;
   const unsigned long EVENT_ATK_TABLE_ROW_DELETE       = 0x0112;
