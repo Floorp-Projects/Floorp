@@ -406,7 +406,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
     char charset_buf[kMAX_CSNAME+1];
     res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
                       bTEXT_HTML ? 
-                      nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR : 
+                      nsISaveAsCharset::attr_htmlTextDefault : 
                       nsISaveAsCharset::attr_plainTextDefault + nsISaveAsCharset::attr_FallbackQuestionMark, 
                       nsIEntityConverter::html40);
     if (NS_SUCCEEDED(res)) {
