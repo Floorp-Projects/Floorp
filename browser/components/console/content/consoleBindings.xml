@@ -409,7 +409,7 @@
     <handlers>
       <handler event="click"><![CDATA[
           window.openDialog(
-            "chrome://navigator/content/viewSource.xul", "_blank", 
+            "chrome://browser/content/viewSource.xul", "_blank", 
             "scrollbars,resizable,chrome,dialog=no", this.getAttribute("url"));
       ]]></handler>
     </handlers>

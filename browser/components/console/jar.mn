@@ -2,7 +2,7 @@ browser.jar:
   content/browser/console/console.js                     (content/console.js)
   content/browser/console/console.xul                    (content/console.xul)
   content/browser/console/console.css                    (content/console.css)
-  content/browser/console/consoleBindings.xml                     (content/consoleBindings.xml)
+  content/browser/console/consoleBindings.xml            (content/consoleBindings.xml)
 
 en-US.jar:
   locale/en-US/browser/console/console.dtd               (locale/console.dtd)
