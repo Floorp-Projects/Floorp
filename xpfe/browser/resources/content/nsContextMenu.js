@@ -377,7 +377,7 @@ nsContextMenu.prototype = {
     viewFrameSource : function () {
     window.openDialog(  "chrome://navigator/content/viewSource.xul",
                         "_blank",
-                        "chrome,dialog=no",
+                        "scrollbars,resizable,chrome,dialog=no",
                         this.target.ownerDocument.location.href);
     },
     viewInfo : function () {
