@@ -26,6 +26,72 @@
 (defvar *markup-logical-line-width* 90) ;Approximate maximum number of characters to display on a single logical line
 (defvar *average-space-width* 2/3)      ;Width of a space as a percentage of average character width when calculating logical line widths
 
+(defvar *external-link-base* nil)       ;URL prefix for referring to a page with external links or nil if none
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; LINK TABLES
+
+; Return a table for recording defined, referenced, and external links.
+; External links include a # character; locally defined and referenced ones do not.
+(declaim (inline make-link-table))
+(defun make-link-table ()
+  (make-hash-table :test #'equal))
+
+
+; The concatenation of link-prefix and link-name is the name of a link.  Mark the link defined.
+; Return the full name if links are allowed and this is the first definition of that name.
+; If duplicate is false, don't allow multiple definitions of the same link name.
+(defun record-link-definition (links link-prefix link-name duplicate)
+  (assert-type link-prefix string)
+  (assert-type link-name string)
+  (and links
+       (let ((name (concatenate 'string link-prefix link-name)))
+         (cond
+          ((not (eq (gethash name links) :defined))
+           (setf (gethash name links) :defined)
+           name)
+          (duplicate nil)
+          (t (warn "Duplicate link definition ~S" name)
+             name)))))
+
+
+; The concatenation of link-prefix and link-name is the name of a link.  Mark the link referenced.
+; If external is true, the link refers to the page given by *external-link-base*; if *external-link-base*
+; is null and external is true, no link gets made.
+; Return the full href if links are allowed or nil if not.
+(defun record-link-reference (links link-prefix link-name external)
+  (assert-type link-prefix string)
+  (assert-type link-name string)
+  (and links
+       (if external
+         (and *external-link-base*
+              (let ((href (concatenate 'string *external-link-base* "#" link-prefix link-name)))
+                (setf (gethash href links) :external)
+                href))
+         (let ((name (concatenate 'string link-prefix link-name)))
+           (unless (eq (gethash name links) :defined)
+             (setf (gethash name links) :referenced))
+           (concatenate 'string "#" name)))))
+
+
+; Warn about all referenced but not defined links.
+(defun warn-missing-links (links)
+  (when links
+    (let ((missing-links nil)
+          (external-links nil))
+      (maphash #'(lambda (name link-state)
+                   (case link-state
+                     (:referenced (push name missing-links))
+                     (:external (push name external-links))))
+               links)
+      (setq missing-links (sort missing-links #'string<))
+      (setq external-links (sort external-links #'string<))
+      (when missing-links
+        (warn "The following links have been referenced but not defined: ~S" missing-links))
+      (when external-links
+        (format *error-output* "External links:~%~{  ~A~%~}" external-links)))))
+
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; MARKUP ENVIRONMENTS
@@ -33,12 +99,18 @@
 
 (defstruct (markup-env (:constructor allocate-markup-env (macros widths)))
   (macros nil :type hash-table :read-only t)     ;Hash table of keyword -> expansion list
-  (widths nil :type hash-table :read-only t))    ;Hash table of keyword -> estimated width of macro expansion;
+  (widths nil :type hash-table :read-only t)     ;Hash table of keyword -> estimated width of macro expansion;
 ;                                                ;  zero-width entries can be omitted; multiline entries have t for a width.
+  (links nil :type (or null hash-table)))        ;Hash table of string -> either :referenced or :defined;
+;                                                ;  nil if links not supported
 
 
-(defun make-markup-env ()
-  (allocate-markup-env (make-hash-table :test #'eq) (make-hash-table :test #'eq)))
+; Make a markup-env.  If links is true, allow links.
+(defun make-markup-env (links)
+  (let ((markup-env (allocate-markup-env (make-hash-table :test #'eq) (make-hash-table :test #'eq))))
+    (when links
+      (setf (markup-env-links markup-env) (make-link-table)))
+    markup-env))
 
 
 ; Recursively expand all keywords in markup-tree, producing a freshly consed expansion tree.
@@ -295,6 +367,49 @@
 (defgeneric depict-char-style-f (markup-stream char-style emitter))
 
 
+; Depict an anchor.  The concatenation of link-prefix and link-name must be a string
+; suitable for an anchor name.
+; If duplicate is true, allow duplicate calls for the same link-name, in which case only
+; the first one takes effect.
+(defgeneric depict-anchor (markup-stream link-prefix link-name duplicate))
+
+
+; markup-stream must be a variable that names a markup-stream that is currently
+; accepting paragraph contents.  Execute body with markup-stream bound to a markup-stream
+; to which the body can emit contents.  The given link name is the destination of a local
+; link for which body is the contents.  The concatenation of link-prefix and link-name
+; must be a string suitable for an anchor name.
+; Return the result value of body.
+(defmacro depict-link-reference ((markup-stream link-prefix link-name external) &body body)
+  `(depict-link-reference-f ,markup-stream ,link-prefix ,link-name ,external
+                            #'(lambda (,markup-stream) ,@body)))
+
+(defgeneric depict-link-reference-f (markup-stream link-prefix link-name external emitter))
+
+
+; markup-stream must be a variable that names a markup-stream that is currently
+; accepting paragraph contents.  Execute body with markup-stream bound to a markup-stream
+; to which the body can emit contents.  Depending on link, do one of the following:
+;   :reference   Emit a reference to the link with the given body of the reference;
+;   :external    Emit an external reference to the link with the given body of the reference;
+;   :definition  Emit the link as an anchor, followed by the body;
+;   nil          Emit the body only.
+; If duplicate is true, allow duplicate anchors, in which case only the first one takes effect.
+; Return the result value of body.
+(defmacro depict-link ((markup-stream link link-prefix link-name duplicate) &body body)
+  `(depict-link-f ,markup-stream ,link ,link-prefix ,link-name ,duplicate
+                  #'(lambda (,markup-stream) ,@body)))
+
+(defun depict-link-f (markup-stream link link-prefix link-name duplicate emitter)
+  (ecase link
+    (:reference (depict-link-reference-f markup-stream link-prefix link-name nil emitter))
+    (:external (depict-link-reference-f markup-stream link-prefix link-name t emitter))
+    (:definition
+      (depict-anchor markup-stream link-prefix link-name duplicate)
+      (funcall emitter markup-stream))
+    ((nil) (funcall emitter markup-stream))))
+
+
 (defun depict-logical-block-f (markup-stream indent emitter)
   (assert-true (>= (markup-stream-level markup-stream) *markup-stream-content-level*))
   (if indent
@@ -526,3 +641,31 @@
 (defun depict-integer (markup-stream i)
   (depict markup-stream (format nil "~D" i)))
 
+
+(defmacro styled-text-depictor (symbol)
+  `(get ,symbol 'styled-text-depictor))
+
+
+; Emit markup for the given <text>, which should be a list of:
+;   <string>                display as is
+;   <keyword>               display as is
+;   (<symbol> . <args>)     if <symbol>'s styled-text-depictor property is present, call it giving it <args>
+;                             as arguments; otherwise treat this case as the following:
+;   (<style> . <text>)      display <text> with the given <style> keyword
+;   <character>             display using depict-character
+(defun depict-styled-text (markup-stream text)
+  (dolist (item text)
+    (cond
+     ((or (stringp item) (keywordp item))
+      (depict markup-stream item))
+     ((consp item)
+      (let* ((first (first item))
+             (rest (rest item))
+             (depictor (styled-text-depictor first)))
+        (if depictor
+          (apply depictor markup-stream rest)
+          (depict-char-style (markup-stream first)
+            (depict-styled-text markup-stream rest)))))
+     ((characterp item)
+      (depict-character markup-stream item))
+     (t (error "Bad depict-styled-text item: ~S" item)))))
