@@ -17,13 +17,32 @@
  */
 
 #include "nsMsgCopyService.h"
-#include "nsMsgBaseCID.h"
+#include "nsCOMPtr.h"
+#include "nsVoidArray.h"
+#include "nsMsgKeyArray.h"
+#include "prmon.h"
 
 #ifdef XP_PC
 #include <windows.h>
 #endif 
 
-static NS_DEFINE_CID(kMsgCopyServiceCID, NS_MSGCOPYSERVICE_CID);
+typedef struct _nsMsgStore
+{
+    nsCOMPtr<nsIMsgFolder> msgFolder;
+    nsMsgKeyArray keyArray;
+} nsMsgStore;
+
+typedef struct _nsCopyRequest 
+{
+    nsCOMPtr<nsISupports> srcSupport; // a nsIMsgFolder or nsFileSpec
+    nsCOMPtr<nsIMsgFolder> dstFolder;
+    nsCOMPtr<nsITransactionManager> txnMgr;
+    nsCOMPtr<nsIMsgCopyServiceListener> listener;
+    nsCOMPtr<nsISupports> listenerData;
+    PRBool isMove;
+    nsVoidArray msgStoreArray; // array of nsMsgStore
+} nsCopyRequest;
+
 class nsMsgCopyService : public nsIMsgCopyService
 {
 public:
@@ -37,48 +56,121 @@ public:
 							nsISupportsArray* messages,
 							nsIMsgFolder* dstFolder,
 							PRBool isMove,
+                            nsIMsgCopyServiceListener* listener,
+                            nsISupports* listenerData,
 							nsITransactionManager* txnMgr);
 
-	NS_IMETHOD CopyMessage(nsIFileSpec* fileSpec,
-						   nsIMsgFolder* dstFolder,
-						   nsITransactionManager* txnMgr);
+	NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
+                               nsIMsgFolder* dstFolder,
+                               nsIMessage* msgToReplace,
+                               PRBool isDraft,
+                               nsIMsgCopyServiceListener* listener,
+                               nsISupports* listenerData,
+                               nsITransactionManager* txnMgr);
 
 	NS_IMETHOD NotifyCompletion(nsISupports* aSupport, /* store src folder */
 								nsIMsgFolder* dstFolder);
 
-    NS_IMETHOD RegisterListener(nsIMsgCopyServiceListener* aListener,
-                                nsISupports* aSupport, /* src folder or file */
-                                                       /* spec */
-                                nsIMsgFolder* dstFolder,
-                                nsISupports* listenerData);
-    NS_IMETHOD UnregisterListener(nsIMsgCopyServiceListener* theListener);
+
+private:
+
+    nsresult ClearRequest(nsCopyRequest* aRequest, nsresult rv);
+    void RemoveAll();
+    nsVoidArray m_copyRequests;
 };
 
 nsMsgCopyService::nsMsgCopyService()
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsMsgCopyService::~nsMsgCopyService()
 {
+    RemoveAll();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, nsIMsgCopyService::GetIID());
+nsresult
+nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
+{
+    nsMsgStore* nms;
+    PRInt32 j;
+
+    if (aRequest)
+    {
+        j = aRequest->msgStoreArray.Count();
+        while(j-- > 0)
+        {
+            nms = (nsMsgStore*) aRequest->msgStoreArray.ElementAt(j);
+            aRequest->msgStoreArray.RemoveElementAt(j);
+            delete nms;
+        }
+        m_copyRequests.RemoveElement(aRequest);
+        if (aRequest->listener)
+            aRequest->listener->OnStopCopy(rv, aRequest->listenerData);
+        delete aRequest;
+    }
+    return rv;
+}
+
+void
+nsMsgCopyService::RemoveAll()
+{
+    PRInt32 i;
+    nsCopyRequest* ncr;
+    
+    i = m_copyRequests.Count();
+
+    while(i-- > 0)
+    {
+        ncr = (nsCopyRequest*) m_copyRequests.ElementAt(i);
+        ClearRequest(ncr, NS_ERROR_FAILURE);
+    }
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, nsIMsgCopyService::GetIID())
 
 NS_IMETHODIMP
 nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
                                nsISupportsArray* messages,
                                nsIMsgFolder* dstFolder,
                                PRBool isMove,
+                               nsIMsgCopyServiceListener* listener,
+                               nsISupports* listenerData,
                                nsITransactionManager* txnMgr)
 {
+#if 0
+    nsCopyRequest* ncr;
+    nsMsgStore* nms;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsVoidArray msgArray;
+    PRUint32 i, cnt;
+    nsCOMPtr<nsIMessage> msg;
+
+    if (!srcFolder || !messages || !dstFolder) return rv;
+
+    ncr = new nsCopyRequest;
+    if (!ncr) return rv;
+
+    nms = new nsMsgStore;
+
+    cnt = messages->Count();
+
+    // duplicate the message array so we could sort the messages by it's
+    // folder easily
+    for (i=0; i<cnt; i++)
+        msgArray.AppendElement((void*) messages->ElementAt(i));
+#endif 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMsgCopyService::CopyMessage(nsIFileSpec* fileSpec,
-                              nsIMsgFolder* dstFolder,
-                              nsITransactionManager* txnMgr)
+nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
+                                  nsIMsgFolder* dstFolder,
+                                  nsIMessage* msgToReplace,
+                                  PRBool isDraft,
+                                  nsIMsgCopyServiceListener* listener,
+                                  nsISupports* listenerData,
+                                  nsITransactionManager* txnMgr)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -86,21 +178,6 @@ nsMsgCopyService::CopyMessage(nsIFileSpec* fileSpec,
 NS_IMETHODIMP
 nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
                                    nsIMsgFolder* dstFolder)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMsgCopyService::RegisterListener(nsIMsgCopyServiceListener* aListener,
-                                   nsISupports* aSupport,
-                                   nsIMsgFolder* dstFolder,
-                                   nsISupports* listenerData)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMsgCopyService::UnregisterListener(nsIMsgCopyServiceListener* theListener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
