@@ -80,7 +80,7 @@ void nsContainerFrame::PrepareContinuingFrame(nsIPresContext* aPresContext,
   // XXX presumptive
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContFrame->SetStyleContext(styleContext);
+  aContFrame->SetStyleContext(aPresContext,styleContext);
   NS_RELEASE(styleContext);
 }
 

@@ -109,7 +109,8 @@ public:
    */
   NS_IMETHOD  GetStyleContext(nsIPresContext*   aContext,
                               nsIStyleContext*& aStyleContext) = 0;
-  NS_IMETHOD  SetStyleContext(nsIStyleContext* aContext) = 0;
+  NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
+                              nsIStyleContext* aContext) = 0;
 
   /**
    * Get the style data associated with this frame
