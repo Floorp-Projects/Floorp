@@ -707,14 +707,14 @@ sub MakeResourceAliases()
 	if ($main::build{mailnews})
 	{
 		my($messenger_dir) = "$resource_dir" . "mailnews:messenger:";
-		BuildFolderResourceAliases(":mozilla:mailnews:ui:messenger:resources:",				"$messenger_dir");	
-		#		BuildFolderResourceAliases(":mozilla:mailnews:mime:emitters:xml:resources:",		"$messenger_dir");	
+		BuildFolderResourceAliases(":mozilla:mailnews:ui:messenger:resources:",			"$messenger_dir");	
+		BuildFolderResourceAliases(":mozilla:mailnews:mime:emitters:resources:",		"$messenger_dir");	
 		
 		my($compose_dir) = "$resource_dir" . "mailnews:compose:";
-		BuildFolderResourceAliases(":mozilla:mailnews:ui:compose:resources:",				"$compose_dir");	
-		
+		BuildFolderResourceAliases(":mozilla:mailnews:ui:compose:resources:",			"$compose_dir");	
+
 		my($msgpref_dir) = "$resource_dir" . "mailnews:preference:";
-		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",			"$msgpref_dir");
+		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",		"$msgpref_dir");
 	}	
 
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
