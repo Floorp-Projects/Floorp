@@ -284,7 +284,6 @@ private:
     jbool mInProxyFindClass;
 
     static ProxyJNIEnv& GetProxyEnv(JNIEnv* env) { return *(ProxyJNIEnv*)env; }
-    static nsISecureEnv* GetSecureEnv(JNIEnv* env) { return ((ProxyJNIEnv*)env)->mSecureEnv; }
 
     nsISecurityContext* getContext() { 
         if (!mContext) {
