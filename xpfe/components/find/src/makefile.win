@@ -40,6 +40,7 @@ MAKE_OBJ_TYPE	= DLL
 
 LINCS = \
 	-I$(PUBLIC)/xpcom \
+	-I$(PUBLIC)/txtsvc \
 	-I$(PUBLIC)/xpfe/components \
 	-I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/netlib \
