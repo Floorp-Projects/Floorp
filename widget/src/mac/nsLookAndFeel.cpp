@@ -115,8 +115,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
         RGBColor macColor;
-        GrafPtr thePort;
-        ::GetPort(&thePort);
+        CGrafPtr thePort;
+        ::GetPort((GrafPtr*)&thePort);
        	if (thePort)
        	{
           ::GetPortHiliteColor(thePort,&macColor);

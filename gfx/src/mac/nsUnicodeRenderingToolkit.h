@@ -38,11 +38,15 @@
 
 #ifndef nsUnicodeRenderingToolkit_h__
 #define nsUnicodeRenderingToolkit_h__
-#include "nsATSUIUtils.h"
+
 #include <UnicodeConverter.h>
+
+#include "nsATSUIUtils.h"
+
 #include "nsCOMPtr.h"
 #include "nsISaveAsCharset.h"
 #include "nsIRenderingContext.h"
+
 class nsUnicodeFallbackCache;
 class nsIDeviceContext;
 class nsGraphicState;
@@ -54,7 +58,7 @@ public:
   virtual ~nsUnicodeRenderingToolkit() {};
 
   nsresult PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, 
-                         GrafPtr aPort, PRBool aRightToLeftText);
+                         CGrafPtr aPort, PRBool aRightToLeftText);
   nsresult GetTextDimensions(const PRUnichar *aString, PRUint32 aLength, 
                              nsTextDimensions &aDimension, PRInt32 *aFontID);
   nsresult GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
@@ -107,7 +111,7 @@ private:
   nsIDeviceContext *mContext;
   nsGraphicState *mGS; // current graphic state - shortcut for mCurrentSurface->GetGS()
 
-  GrafPtr mPort; // current grafPort - shortcut for mCurrentSurface->GetPort()
+  CGrafPtr mPort; // current grafPort - shortcut for mCurrentSurface->GetPort()
   nsATSUIToolkit mATSUIToolkit;
   nsCOMPtr<nsISaveAsCharset> mTrans;
   PRBool mRightToLeftText;

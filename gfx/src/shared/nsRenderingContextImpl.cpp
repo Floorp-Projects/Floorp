@@ -59,10 +59,12 @@ PRInt32 PR_CALLBACK compare_active(const void *u,const void *v){return ((Edge*)u
  *	@update 3/16/00 dwc
  */
 nsRenderingContextImpl :: nsRenderingContextImpl()
+: mTranMatrix(nsnull)
+, mLineStyle(nsLineStyle_kSolid)
+, mAct(0)
+, mActive(nsnull)
+, mPenMode(nsPenMode_kNone)
 {
-
-  mPenMode = nsPenMode_kNone;
-
 }
 
 /** ---------------------------------------------------

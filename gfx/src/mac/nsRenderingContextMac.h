@@ -39,21 +39,22 @@
 #ifndef nsRenderingContextMac_h___
 #define nsRenderingContextMac_h___
 
+#include <QDOffscreen.h>
+#include <UnicodeConverter.h>
+
 #include "nsRenderingContextImpl.h"
 #include "nsDrawingSurfaceMac.h"
 #include "nsUnicodeRenderingToolkit.h"
-#include <QDOffscreen.h>
-#include <UnicodeConverter.h>
+
+#include "nsVoidArray.h"
 
 class nsIFontMetrics;
 class nsIDeviceContext;
 class nsIRegion;
 class nsFont;
 class nsTransform2D;
-class nsVoidArray;
 
 class nsGraphicState;
-class DrawingSurface;		// a surface is a combination of a port and a graphic state
 class nsUnicodeFallbackCache;
 
 class nsIGraphics;
@@ -156,6 +157,9 @@ public:
 
   NS_IMETHOD GetGraphics(nsIGraphics* *aGraphics);
 
+  // nsRenderingContextImpl overrides
+  NS_IMETHOD ReleaseBackbuffer(void);
+
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
@@ -181,7 +185,7 @@ public:
 #endif // IBMBIDI
   //locals
   NS_IMETHOD SetPortTextState();
-  nsresult   Init(nsIDeviceContext* aContext, GrafPtr aPort);
+  nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
 
 protected:
   enum GraphicStateChanges {
@@ -198,17 +202,13 @@ protected:
 	float             		mP2T;				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
-	CGrafPtr				mSavePort;
-	GDHandle        mSaveDevice;
-	Rect					mSavePortRect;
-
 	nsDrawingSurfaceMac*	mFrontSurface;
 	nsDrawingSurfaceMac*	mCurrentSurface;	// pointer to the current surface
 
-	GrafPtr					mPort;				// current grafPort - shortcut for mCurrentSurface->GetPort()
+    CGrafPtr                mPort;              // current grafPort - shortcut for mCurrentSurface->GetPort()
 	nsGraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 	nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
-	nsVoidArray *			mGSStack;			// GraphicStates stack, used for PushState/PopState
+    nsAutoVoidArray         mGSStack;           // GraphicStates stack, used for PushState/PopState
 	PRUint32				mChanges;			// bit mask of attributes that have changed since last Push().
 #ifdef IBMBIDI
 	PRBool          mRightToLeftText;

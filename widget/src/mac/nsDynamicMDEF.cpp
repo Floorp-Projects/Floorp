@@ -295,7 +295,7 @@ void nsCheckDestroy(MenuHandle theMenu, short * whichItem)
   if(gCurrentMenuItem == *whichItem)
     changeOccured = false;
 
-  if(!gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1])
+  if(gPreviousMenuHandleStack.Count() == 0 || !gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1])
     changeOccured = false;
   
   if(nsIsHierChild(theMenu))
@@ -464,7 +464,8 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
 void nsPostBuild(nsIMenu * menu, MenuHandle theMenu, PRBool isChild)
 {
   // it is built now
-  if(isChild || (gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1] != theMenu))
+  if (isChild || (gPreviousMenuHandleStack.Count() == 0 ||
+                  gPreviousMenuHandleStack[gPreviousMenuHandleStack.Count() - 1] != theMenu))
   {
     nsPushMenu(menu);  
     nsPushMenuHandle(theMenu);    

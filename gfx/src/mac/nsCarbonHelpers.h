@@ -48,6 +48,7 @@
 #endif
 #include <Menus.h>
 #include <MacWindows.h>
+#include <LowMem.h>
 
 #if UNIVERSAL_INTERFACES_VERSION < 0x0341
 enum {
@@ -86,14 +87,24 @@ inline void SetControlPopupMenuStuff ( ControlHandle control, MenuHandle menu, s
 }
 
 
+inline WindowRef GetTheWindowList(void)
+{
+#if TARGET_CARBON
+  return GetWindowList();
+#else
+  return LMGetWindowList();
+#endif
+}
+
+
 #if !TARGET_CARBON
 
-inline void GetPortHiliteColor ( GrafPtr port, RGBColor* color )
+inline void GetPortHiliteColor(CGrafPtr port, RGBColor* color)
 {
 	// is this really a color grafport?
-	if (port->portBits.rowBytes & 0xC000)
+	if (port->portVersion & 0xC000)
 	{
-		GrafVars** grafVars = (GrafVars**)((CGrafPtr)port)->grafVars;
+		GrafVars** grafVars = (GrafVars**)port->grafVars;
 		*color = (*grafVars)->rgbHiliteColor;
 	}
 	else
@@ -101,6 +112,11 @@ inline void GetPortHiliteColor ( GrafPtr port, RGBColor* color )
 		RGBColor fakeColor = { 0x0000, 0x0000, 0x0000};
 		*color = fakeColor;
 	}
+}
+
+inline Boolean IsPortOffscreen(CGrafPtr port)
+{
+  return ((UInt16)port->portVersion == 0xC001);
 }
 
 inline Rect* GetRegionBounds(RgnHandle region, Rect* rect)
@@ -114,48 +130,48 @@ inline Boolean IsRegionComplex(RgnHandle region)
 	return (**region).rgnSize != sizeof(MacRegion);
 }
 
-inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
+inline void GetPortVisibleRegion(CGrafPtr port, RgnHandle visRgn)
 {
 	::CopyRgn(port->visRgn, visRgn);
 }
 
-inline void GetPortClipRegion(GrafPtr port, RgnHandle clipRgn)
+inline void GetPortClipRegion(CGrafPtr port, RgnHandle clipRgn)
 {
 	::CopyRgn(port->clipRgn, clipRgn);
 }
 
-inline short GetPortTextFace ( GrafPtr port )
+inline short GetPortTextFace(CGrafPtr port)
 {
 	return port->txFace;
 }
 
-inline short GetPortTextFont ( GrafPtr port )
+inline short GetPortTextFont(CGrafPtr port)
 {
 	return port->txFont;
 }
 
-inline short GetPortTextSize ( GrafPtr port )
+inline short GetPortTextSize(CGrafPtr port)
 {
 	return port->txSize;
 }
 
-inline Rect* GetPortBounds(GrafPtr port, Rect* portRect)
+inline Rect* GetPortBounds(CGrafPtr port, Rect* portRect)
 {
 	*portRect = port->portRect;
 	return portRect;
 }
 
-inline PixMapHandle GetPortPixMap ( CGrafPtr port )
+inline PixMapHandle GetPortPixMap(CGrafPtr port)
 {
 	return port->portPixMap;
 }
 
-inline Boolean IsRegionRectangular ( RgnHandle rgn )
+inline Boolean IsRegionRectangular(RgnHandle rgn)
 {
 	return (**rgn).rgnSize == 10;
 }
 
-inline GrafPtr GetQDGlobalsThePort ( )
+inline GrafPtr GetQDGlobalsThePort()
 {
   return qd.thePort;
 }

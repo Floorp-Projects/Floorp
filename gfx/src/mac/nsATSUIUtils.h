@@ -72,7 +72,7 @@ public:
   nsATSUIToolkit();
   ~nsATSUIToolkit() {};
 
-  void PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext);
+  void PrepareToDraw(CGrafPtr aPort, nsIDeviceContext* aContext);
  
   nsresult GetTextDimensions(const PRUnichar *aCharPt, nsTextDimensions &oDim, 
                              short aSize, short fontNum, PRBool aBold, 
@@ -83,14 +83,13 @@ public:
 
 private:
   void StartDraw(const PRUnichar *aCharPt, short aSize, short fontNum, PRBool aBold,
-                 PRBool aItalic, nscolor aColor, 
-                 GrafPtr& oSavePort, ATSUTextLayout& oLayout);
-  void EndDraw(GrafPtr aSavePort);
+                 PRBool aItalic, nscolor aColor, ATSUTextLayout& oLayout);
+
   ATSUTextLayout GetTextLayout(short aFontNum, short aSize, PRBool aBold, 
                                PRBool aItalic, nscolor aColor);
   
 private:
-  GrafPtr        mPort;
+  CGrafPtr        mPort;
   nsIDeviceContext*  mContext;
 };
 

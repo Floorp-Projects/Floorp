@@ -156,11 +156,11 @@ protected:
   nsCursor          mCursor;
   nsWindowType      mWindowType;
   nsBorderStyle     mBorderStyle;
-  PRBool            mIsShiftDown;
-  PRBool            mIsControlDown;
-  PRBool            mIsAltDown;
-  PRBool            mIsDestroying;
-  PRBool            mOnDestroyCalled;
+  PRPackedBool      mIsShiftDown;
+  PRPackedBool      mIsControlDown;
+  PRPackedBool      mIsAltDown;
+  PRPackedBool      mIsDestroying;
+  PRPackedBool      mOnDestroyCalled;
   nsRect            mBounds;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;

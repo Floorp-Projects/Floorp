@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- 
+#include "nsIInterfaceRequestorUtils.h" 
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsFontMetricsMac.h"
@@ -71,28 +71,20 @@
 //------------------------------------------------------------------------
 
 nsRenderingContextMac::nsRenderingContextMac()
+: mP2T(1.0f)
+, mContext(nsnull)
+, mCurrentSurface(nsnull)
+, mPort(nsnull)
+, mGS(nsnull)
+, mChanges(kEverythingChanged)
+#ifdef IBMBIDI
+, mRightToLeftText(PR_FALSE)
+#endif
 {
 	NS_INIT_REFCNT();
 
-	mP2T						= 1.0f;
-	mContext					= nsnull ;
-
-	mSavePort					= nsnull;
-	mSaveDevice       = nsnull;
 	mFrontSurface				= new nsDrawingSurfaceMac();
 	NS_IF_ADDREF(mFrontSurface);
-
-	mCurrentSurface				= nsnull;
-	mPort						= nsnull;
-	mGS							= nsnull;
-
-	mGSStack					= new nsVoidArray();
-  
-	mChanges					= kEverythingChanged;
-  mLineStyle = nsLineStyle_kSolid;
-#ifdef IBMBIDI
-  mRightToLeftText = PR_FALSE;
-#endif
 }
 
 
@@ -102,10 +94,6 @@ nsRenderingContextMac::~nsRenderingContextMac()
 {
 	// restore stuff
 	NS_IF_RELEASE(mContext);
-	if (mSavePort) {
-		::SetGWorld(mSavePort, mSaveDevice);
-		::SetOrigin(mSavePortRect.left, mSavePortRect.top);
-	}
 
 	// release surfaces
 	NS_IF_RELEASE(mFrontSurface);
@@ -115,16 +103,14 @@ nsRenderingContextMac::~nsRenderingContextMac()
 	mGS = nsnull;
 
 	// delete the stack and its contents
-	if (mGSStack != nsnull) {
-	  PRInt32 cnt = mGSStack->Count();
+  PRInt32 cnt = mGSStack.Count();
 	  for (PRInt32 i = 0; i < cnt; i ++) {
-	    nsGraphicState* gs = (nsGraphicState*)mGSStack->ElementAt(i);
+    nsGraphicState* gs = (nsGraphicState*)mGSStack.ElementAt(i);
     	if (gs != nsnull)
     		sGraphicStatePool.ReleaseGS(gs); //delete gs;
 	  }
-	  delete mGSStack;
-	  mGSStack = nsnull;
-	}
+
+	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 }
 
 
@@ -135,8 +121,10 @@ NS_IMPL_ISUPPORTS1(nsRenderingContextMac, nsIRenderingContext)
 
 NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget* aWindow)
 {
+	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+
 	// make sure all allocations in the constructor succeeded.
-	if (nsnull == mFrontSurface || nsnull == mGSStack)
+	if (nsnull == mFrontSurface)
 		return NS_ERROR_OUT_OF_MEMORY;
 		
 	if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
@@ -168,7 +156,7 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
 {
 	// make sure all allocations in the constructor succeeded.
-	if (nsnull == mFrontSurface || nsnull == mGSStack)
+	if (nsnull == mFrontSurface)
 		return NS_ERROR_OUT_OF_MEMORY;
 		
 	mContext = aContext;
@@ -184,10 +172,10 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
 //------------------------------------------------------------------------
 
 // used by nsDeviceContextMac::CreateRenderingContext() for printing
-nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
+nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, CGrafPtr aPort)
 {
 	// make sure all allocations in the constructor succeeded.
-	if (nsnull == mFrontSurface || nsnull == mGSStack)
+	if (nsnull == mFrontSurface)
 		return NS_ERROR_OUT_OF_MEMORY;
 		
 	mContext = aContext;
@@ -208,14 +196,11 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 	if (! aSurface)
 		return;
 
-	if (!mSavePort) {
-		::GetGWorld(&mSavePort, &mSaveDevice);
-		if (mSavePort)
-			::GetPortBounds((GrafPtr)mSavePort, &mSavePortRect);
-	}
+  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 	
 	// if surface is changing, be extra conservative about graphic state changes.
-	if (mCurrentSurface != aSurface) {
+	if (mCurrentSurface != aSurface)
+	{
 		aChanges = kEverythingChanged;
 
 		NS_IF_RELEASE(mCurrentSurface);
@@ -223,12 +208,13 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 		NS_IF_ADDREF(mCurrentSurface);
 	}
 	
-	aSurface->GetGrafPtr(&mPort);
+	CGrafPtr    newPort;
+	aSurface->GetGrafPtr(&newPort);
+	mPort = newPort;
 	mGS = aSurface->GetGS();
 	mTranMatrix = &(mGS->mTMatrix);
 
-	// quickdraw initialization
-	::SetPort(mPort);
+  nsGraphicsUtils::SafeSetPort(mPort);
 
 	::SetOrigin(-mGS->mOffx, -mGS->mOffy);		// line order...
 
@@ -240,7 +226,7 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 	::TextMode(srcOr);
 
 	if (aChanges & kColorChanged)
-		this->SetColor(mGS->mColor);
+		SetColor(mGS->mColor);
 
 	if (mGS->mFontMetrics && (aChanges & kFontChanged))
 		SetFont(mGS->mFontMetrics);
@@ -261,6 +247,8 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 		mContext->GetAppUnitsToDevUnits(app2dev);
 		mGS->mTMatrix.AddScale(app2dev, app2dev);
 	}
+
+  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 }
 
 
@@ -307,7 +295,7 @@ NS_IMETHODIMP nsRenderingContextMac::PushState(void)
 	gs->Duplicate(mGS);
 
 	// put the new GS at the end of the stack
-	mGSStack->AppendElement(gs);
+	mGSStack.AppendElement(gs);
   
 	// reset the graphics changes. this always represents a delta from previous state to current.
 	mChanges = 0;
@@ -319,22 +307,26 @@ NS_IMETHODIMP nsRenderingContextMac::PushState(void)
 
 NS_IMETHODIMP nsRenderingContextMac::PopState(PRBool &aClipEmpty)
 {
-	PRInt32 count = mGSStack->Count();
+	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+
+	PRInt32 count = mGSStack.Count();
+	NS_ASSERTION(count > 0, "No state to pop");
 	if (count > 0) {
 		PRInt32 index = count - 1;
 	
 		// get the GS from the stack
-		nsGraphicState* gs = (nsGraphicState *)mGSStack->ElementAt(index);
+		nsGraphicState* gs = (nsGraphicState *)mGSStack.ElementAt(index);
 
 		// copy the GS into the current one and tell the current surface to use it
 		mGS->Duplicate(gs);
+		
 		SelectDrawingSurface(mCurrentSurface, mChanges);
 		
 		// restore the current set of changes.
 		mChanges = mGS->GetChanges();
 
 		// remove the GS object from the stack and delete it
-		mGSStack->RemoveElementAt(index);
+		mGSStack.RemoveElementAt(index);
 		sGraphicStatePool.ReleaseGS(gs);
 		
 		// make sure the matrix is pointing at the current matrix
@@ -393,6 +385,9 @@ NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurf
 NS_IMETHODIMP nsRenderingContextMac::GetDrawingSurface(nsDrawingSurface *aSurface)
 {  
 	*aSurface = mCurrentSurface;
+	// on Mac, select it too, to ensure that the port gets set correct for
+	// tiling and image drawing
+	//SelectDrawingSurface(mCurrentSurface);
 	return NS_OK;
 }
 
@@ -411,7 +406,7 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 
 	// retrieve the surface
 	nsDrawingSurfaceMac* srcSurface = static_cast<nsDrawingSurfaceMac*>(aSrcSurf);
-	GrafPtr srcPort;
+	CGrafPtr srcPort;
 	srcSurface->GetGrafPtr(&srcPort);
 
 	// apply the selected transformations
@@ -439,7 +434,7 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 		::CopyRgn(mGS->mMainRegion, clipRgn);
 
 	// get the destination port and surface
-	GrafPtr destPort;
+	CGrafPtr destPort;
 	nsDrawingSurfaceMac* destSurface;
 	if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) {
 		destSurface	= mCurrentSurface;
@@ -450,15 +445,8 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 		mFrontSurface->GetGrafPtr(&destPort);
 	}
 
-	// select the destination surface to set the colors
-	nsDrawingSurfaceMac* saveSurface = nsnull;
-	if (mCurrentSurface != destSurface) {
-		saveSurface = mCurrentSurface;
-		SelectDrawingSurface(destSurface);
-	}
-
-	// make sure the current port is correct. where else does this need to be done?
-	StPortSetter setter(destPort);
+  // set the port to the destination for CopyBits
+  StPortSetter    portSetter(destPort);
 
 	// set the right colors for CopyBits
 	RGBColor foreColor;
@@ -481,13 +469,8 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 
 	// copy the bits now
 	::CopyBits(
-#if TARGET_CARBON
           ::GetPortBitMapForCopyBits(srcPort),
           ::GetPortBitMapForCopyBits(destPort),
-#else
-		  &srcPort->portBits,
-		  &destPort->portBits,
-#endif
 		  &macSrcRect,
 		  &macDstRect,
 		  srcCopy,
@@ -498,9 +481,6 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 		::RGBForeColor(&foreColor);
 	if (changedBackColor)
 		::RGBBackColor(&backColor);
-
-	if (saveSurface != nsnull)
-		SelectDrawingSurface(saveSurface);
 
 	return NS_OK;
 }
@@ -546,8 +526,10 @@ NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSur
 
 	// if that surface is still the current one, select the front surface
 	if (aSurface == mCurrentSurface)
+	{
+	  NS_ASSERTION(mCurrentSurface != mFrontSurface, "Nuking the front surface");
 		SelectDrawingSurface(mFrontSurface);
-
+  }
 	// release the surface
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 	NS_IF_RELEASE(surface);
@@ -1267,7 +1249,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32
  	if (NS_FAILED(rv))
  		return rv;
 
-	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort, mRightToLeftText);
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, mRightToLeftText);
 	if (NS_SUCCEEDED(rv))
     rv = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
     
@@ -1299,7 +1281,7 @@ nsRenderingContextMac::GetTextDimensions(const PRUnichar* aString, PRUint32 aLen
   if (NS_FAILED(rv))
     return rv;
 
-  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort, mRightToLeftText);
+  rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, mRightToLeftText);
 	if (NS_SUCCEEDED(rv))
     rv = mUnicodeRenderingToolkit.GetTextDimensions(aString, aLength, aDimensions, aFontID);
     
@@ -1371,7 +1353,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint
 	if (nsnull == mGS->mFontMetrics)
 		return NS_ERROR_NULL_POINTER;
 
-	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort,mRightToLeftText);
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort,mRightToLeftText);
 	if (NS_SUCCEEDED(rv))
 		rv = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 
@@ -1531,3 +1513,12 @@ nsRenderingContextMac::SetRightToLeftText(PRBool aIsRTL)
 }
 #endif
 
+#pragma mark -
+
+// override to set the port back to the window port
+NS_IMETHODIMP
+nsRenderingContextMac::ReleaseBackbuffer(void)
+{
+  SelectOffScreenDrawingSurface(nsnull);
+  return NS_OK;
+}

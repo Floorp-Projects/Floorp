@@ -268,14 +268,15 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 	maskRect = srcRect;
 	::SetRect(&dstRect, aDX, aDY, aDX + aDWidth, aDY + aDHeight);
 
-	::ForeColor(blackColor);
-	::BackColor(whiteColor);
-	
 	// get the destination pix map
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 	CGrafPtr		destPort;
-	nsresult		rv = surface->GetGrafPtr((GrafPtr *)&destPort);
+	nsresult		rv = surface->GetGrafPtr(&destPort);
 	if (NS_FAILED(rv)) return rv;
+	
+	StPortSetter    destSetter(destPort);
+	::ForeColor(blackColor);
+	::BackColor(whiteColor);
 	
 	PixMapHandle		destPixels = ::GetGWorldPixMap(destPort);
 	NS_ASSERTION(destPixels, "No dest pixels!");
@@ -466,10 +467,10 @@ nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
 	Handle		thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
 	::HUnlock(thePixelsHandle);
 	
-  if(aMaskPixels)
-    mMaskPixmap.baseAddr = 0;
+  if (aMaskPixels)
+    mMaskPixmap.baseAddr = nsnull;
   else
-    mImagePixmap.baseAddr = 0;
+    mImagePixmap.baseAddr = nsnull;
     
 	return NS_OK;
 }
@@ -497,7 +498,7 @@ OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight,
       ioPixMap.cmpSize = 1;
       // default to black & white colortable
       ioPixMap.pmTable = aColorTable ? aColorTable : GetCTable(32 + 1);		
-      bufferdepth = 1;
+      ioPixMap.pixelSize = 1;
       break;
 
     case 2:
@@ -524,7 +525,7 @@ OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight,
       ioPixMap.cmpSize = 8;
       // default to gray ramp colortable
       ioPixMap.pmTable = aColorTable ? aColorTable : GetCTable(32 + 8);
-      bufferdepth = 8;
+      ioPixMap.pixelSize = 8;
       break;
       
     case 16:
@@ -532,16 +533,27 @@ OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight,
       ioPixMap.cmpCount = 3;
       ioPixMap.cmpSize = 5;
       ioPixMap.pmTable = nsnull;
-      bufferdepth = 16;
+      ioPixMap.pixelSize = 16;
       break;
       
     case 24:      // 24 and 32 bit are basically the same
-    case 32:
       ioPixMap.pixelType = RGBDirect;
       ioPixMap.cmpCount = 3;
       ioPixMap.cmpSize = 8;
       ioPixMap.pmTable = nsnull;
-      bufferdepth = 32;
+      ioPixMap.pixelSize = 32;      // ??
+      break;
+
+    case 32:
+      ioPixMap.pixelType = RGBDirect;
+#if TARGET_CARBON
+      ioPixMap.cmpCount = 4;
+#else
+      ioPixMap.cmpCount = 3;
+#endif
+      ioPixMap.cmpSize = 8;
+      ioPixMap.pmTable = nsnull;
+      ioPixMap.pixelSize = 32;
       break;
       
     default:
@@ -552,7 +564,7 @@ OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight,
   if (ioPixMap.cmpCount)
   {
     PRInt32   imageSize;
-    PRInt32   rowBytes = CalculateRowBytes(aWidth, bufferdepth);
+    PRInt32   rowBytes = CalculateRowBytes(aWidth, ioPixMap.pixelSize);
     
     if (rowBytes >= 0x4000)
     {
@@ -574,14 +586,12 @@ OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight,
     ioPixMap.bounds.left = 0;
     ioPixMap.bounds.bottom = aHeight;
     ioPixMap.bounds.right = aWidth;
-    ioPixMap.pixelSize = bufferdepth;
     ioPixMap.packType = 0;
     ioPixMap.packSize = 0;
-    // is this correct? printing?
-    ioPixMap.hRes = nsDeviceContextMac::GetScreenResolution() << 16;    
-    ioPixMap.vRes = nsDeviceContextMac::GetScreenResolution() << 16;
+    ioPixMap.hRes = 72 << 16;     // 72 dpi as Fixed
+    ioPixMap.vRes = 72 << 16;     // 72 dpi as Fixed
 #if TARGET_CARBON
-    ioPixMap.pixelFormat = 0;				/*fourCharCode representation*/
+    ioPixMap.pixelFormat = 0;
     ioPixMap.pmExt = 0;	
 #else
     ioPixMap.planeBytes = 0;
@@ -675,23 +685,18 @@ PRInt32  nsImageMac::CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth)
 void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 {
 	PixMapHandle	thePixels;
-	GWorldPtr			curPort;
-	GDHandle			curDev;
 
 	thePixels = ::GetGWorldPixMap(theGWorld);
-	::GetGWorld(&curPort, &curDev);
 
 	StPixelLocker	pixelLocker(thePixels);
+  StGWorldPortSetter  tilingWorldSetter(theGWorld);	
 	
-	// Black the offscreen
-	::SetGWorld(theGWorld, nil);
+	// White the offscreen
 	::BackColor(whiteColor);
 
   Rect portRect;
-  ::GetPortBounds(reinterpret_cast<GrafPtr>(theGWorld), &portRect);
+  ::GetPortBounds(theGWorld, &portRect);
 	::EraseRect(&portRect);
-
-	::SetGWorld(curPort, curDev);
 }
 
 /** -----------------------------------------------------------------
@@ -1444,6 +1449,9 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
+	if (!mImageBitsHandle)
+		return NS_ERROR_FAILURE;
+
   // lock and set up bits handles
   StHandleLocker  imageBitsLocker(mImageBitsHandle);
   StHandleLocker  maskBitsLocker(mMaskBitsHandle);    // ok with nil handle
@@ -1458,18 +1466,20 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 	imageRect.right = mWidth;
 	imageRect.bottom = mHeight;
 
-  // set up the dest port
-  ::ForeColor(blackColor);
-  ::BackColor(whiteColor);
-  
   // this code assumes that, if we have a mask, it's the same size as the image
   NS_ASSERTION((mMaskBitsHandle == nsnull) || (mAlphaWidth == mWidth && mAlphaHeight == mHeight), "Mask should be same dimensions as image");
   
   // get the destination pix map
-  nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+  nsDrawingSurfaceMac* destSurface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+  
   CGrafPtr    destPort;
-  nsresult    rv = surface->GetGrafPtr((GrafPtr *)&destPort);
+  nsresult    rv = destSurface->GetGrafPtr(&destPort);
   if (NS_FAILED(rv)) return rv;
+  
+  StPortSetter    destSetter(destPort);
+  ::ForeColor(blackColor);
+  ::BackColor(whiteColor);
+  
   PixMapHandle    destPixels = ::GetGWorldPixMap(destPort);
   StPixelLocker   destPixLocker(destPixels);
   
@@ -1517,6 +1527,7 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 
   Rect  tileRect = tileDestRect;
   ::OffsetRect(&tileRect, -tileRect.left, -tileRect.top);   // offset to {0, 0}
+
   GWorldPtr   tilingGWorld = nsnull;
   OSErr err = AllocateGWorld(mImagePixmap.pixelSize, nsnull, tileRect, &tilingGWorld);
   if (err != noErr) return NS_ERROR_OUT_OF_MEMORY;

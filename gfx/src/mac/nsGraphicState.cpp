@@ -137,7 +137,7 @@ void nsGraphicState::Init(nsDrawingSurface aSurface)
 {
 	// retrieve the grafPort
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
-	GrafPtr port;
+	CGrafPtr port;
 	surface->GetGrafPtr(&port);
 
 	// init from grafPort
@@ -146,7 +146,7 @@ void nsGraphicState::Init(nsDrawingSurface aSurface)
 
 //------------------------------------------------------------------------
 
-void nsGraphicState::Init(GrafPtr aPort)
+void nsGraphicState::Init(CGrafPtr aPort)
 {
 	// delete old values
 	Clear();
@@ -158,6 +158,11 @@ void nsGraphicState::Init(GrafPtr aPort)
 		::RectRgn(rgn, ::GetPortBounds(aPort, &bounds));
 	}
 
+  Rect    portBounds;
+  ::GetPortBounds(aPort, &portBounds);
+  mOffx = -portBounds.left;
+  mOffy = -portBounds.top;
+  
   mMainRegion					= rgn;
   mClipRegion					= DuplicateRgn(rgn);
 }
@@ -205,7 +210,6 @@ void nsGraphicState::Duplicate(nsGraphicState* aGS)
 	
 	mChanges				= aGS->mChanges;
 }
-
 
 //------------------------------------------------------------------------
 

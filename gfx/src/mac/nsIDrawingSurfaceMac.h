@@ -69,7 +69,7 @@ public:
    * @param  aPort GrafPtr to initialize drawing surface with
    * @return error status
    **/
-  NS_IMETHOD Init(GrafPtr aPort) = 0;
+  NS_IMETHOD Init(CGrafPtr aPort) = 0;
 
   /**
    * Initialize a drawing surface using a nsIWidget.
@@ -94,7 +94,7 @@ public:
    * @param  aPort out parameter for GrafPtr
    * @return error status
    **/
-  NS_IMETHOD GetGrafPtr(GrafPtr *aPort) = 0;
+  NS_IMETHOD GetGrafPtr(CGrafPtr *aPort) = 0;
 
 };
 

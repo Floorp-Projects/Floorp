@@ -411,7 +411,6 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
  */
 void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 {
-
   if (aRealEvent == PR_TRUE)
   {
 
@@ -478,6 +477,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
   else
   {
     DoIdle(*anEvent);
+
     if (mRunning)
       Repeater::DoIdlers(*anEvent);
 
@@ -487,6 +487,8 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 
   if (mRunning)
     Repeater::DoRepeaters(*anEvent);
+
+  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 }
 
 #pragma mark -
@@ -506,7 +508,6 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
   // The app can do its own updates here
   DispatchOSEventToRaptor(anEvent, whichWindow);
   ::EndUpdate(whichWindow);
-
 }
 
 
@@ -558,7 +559,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
       case inContent:
       {
-        ::SetPortWindowPort(whichWindow);
+        nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         if ( IsWindowHilited(whichWindow) || (gRollupListener && gRollupWidget) )
           DispatchOSEventToRaptor(anEvent, whichWindow);
         else {
@@ -598,7 +599,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
       case inDrag:
       {
-        ::SetPortWindowPort(whichWindow);
+        nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
 
         // grrr... DragWindow calls SelectWindow, no way to stop it. For now,
         // we'll just let it come to the front and then push it back if necessary.
@@ -635,7 +636,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
       case inGrow:
       {
-        ::SetPortWindowPort(whichWindow);
+        nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
 
         // use the cmd-key to do the opposite of the DRAW_ON_RESIZE setting.
         Boolean cmdKeyDown = (anEvent.modifiers & cmdKey) != 0;
@@ -718,7 +719,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
       case inGoAway:
       {
         nsWatchTask::GetTask().Suspend();       
-        ::SetPortWindowPort(whichWindow);
+        nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         if (::TrackGoAway(whichWindow, anEvent.where)) {
           nsWatchTask::GetTask().Resume();        
           DispatchOSEventToRaptor(anEvent, whichWindow);
@@ -756,7 +757,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 #if TARGET_CARBON
       case inToolbarButton:           // Mac OS X only
         nsWatchTask::GetTask().Suspend();       
-        ::SetPortWindowPort(whichWindow);
+        nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         DispatchOSEventToRaptor(anEvent, whichWindow);
         nsWatchTask::GetTask().Resume();        
         break;
@@ -934,7 +935,7 @@ void  nsMacMessagePump::DoMenu(EventRecord &anEvent, long menuResult)
 void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
 {
   WindowPtr whichWindow = (WindowPtr)anEvent.message;
-  ::SetPortWindowPort(whichWindow);
+  nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
   if (anEvent.modifiers & activeFlag)
     ::HiliteWindow(whichWindow,TRUE);
   else

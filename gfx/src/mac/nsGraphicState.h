@@ -60,11 +60,10 @@ public:
 
 	void				Clear();
 	void				Init(nsDrawingSurface aSurface);
-	void				Init(GrafPtr aPort);
+	void				Init(CGrafPtr aPort);
 	void				Init(nsIWidget* aWindow);
 	void				Duplicate(nsGraphicState* aGS);	// would you prefer an '=' operator? <anonymous>
 																							// - no thanks, <pierre>
-
 	void				SetChanges(PRUint32 aChanges) { mChanges = aChanges; }
 	PRUint32		GetChanges() { return mChanges; }	
 
@@ -104,17 +103,6 @@ public:
 	void							ReleaseGS(nsGraphicState* aGS);
 
 private:
-#if 0
-	static const short	kGSPoolCount = 80;  // sizeof(nsGraphicState) = 36 bytes
-
-	typedef struct nsGSRec
-	{
-			nsGraphicState*		mGS;
-			PRBool						mFree;
-	} nsGSRec;
-
-	nsGSRec						mGSArray[kGSPoolCount];
-#endif
 
 	nsGraphicState*	mFreeList;
 };

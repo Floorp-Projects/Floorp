@@ -358,15 +358,17 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 
 	return txLayout;
 }
+
 //------------------------------------------------------------------------
 //	PrepareToDraw
 //
 //------------------------------------------------------------------------
-void nsATSUIToolkit::PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext)
+void nsATSUIToolkit::PrepareToDraw(CGrafPtr aPort, nsIDeviceContext* aContext)
 {
    mPort = aPort;
    mContext = aContext;
 }
+
 //------------------------------------------------------------------------
 //	StartDraw
 //
@@ -374,12 +376,8 @@ void nsATSUIToolkit::PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext)
 void nsATSUIToolkit::StartDraw(
 	const PRUnichar *aCharPt, 
 	short aSize, short aFontNum,
-	PRBool aBold, PRBool aItalic, nscolor aColor,
-	GrafPtr& oSavePort, ATSUTextLayout& oLayout)
+	PRBool aBold, PRBool aItalic, nscolor aColor, ATSUTextLayout& oLayout)
 {
-  ::GetPort(&oSavePort);
-  ::SetPort(mPort);
-
   OSStatus err = noErr;
   oLayout = GetTextLayout(aFontNum, aSize, aBold, aItalic, aColor);
   if (nsnull == oLayout) {
@@ -388,20 +386,13 @@ void nsATSUIToolkit::StartDraw(
   }
 
   err = ATSUSetTextPointerLocation( oLayout, (ConstUniCharArrayPtr)aCharPt, 0, 1, 1);
-  if(noErr != err) {
+  if (noErr != err) {
     NS_WARNING("ATSUSetTextPointerLocation failed");
   	oLayout = nsnull;
   }
   return;
 }
-//------------------------------------------------------------------------
-//	EndDraw
-//
-//------------------------------------------------------------------------
-void nsATSUIToolkit::EndDraw(GrafPtr aSavePort)
-{
-  ::SetPort(aSavePort);
-}
+
 //------------------------------------------------------------------------
 //	GetWidth
 //
@@ -416,33 +407,29 @@ nsATSUIToolkit::GetTextDimensions(
   if (!nsATSUIUtils::IsAvailable())
     return NS_ERROR_NOT_INITIALIZED;
     
-  nsresult res = NS_ERROR_FAILURE;
-  GrafPtr savePort;
-  ATSUTextLayout aTxtLayout;
+  StPortSetter    setter(mPort);
   
-  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor , savePort, aTxtLayout);
+  ATSUTextLayout aTxtLayout;
+  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
   if (nsnull == aTxtLayout) 
-  {
-     return res;
-  }
+     return NS_ERROR_FAILURE;
 
   OSStatus err = noErr;  
   ATSUTextMeasurement after; 
   ATSUTextMeasurement ascent; 
   ATSUTextMeasurement descent; 
-  err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &after, &ascent, &descent );
+  err = ATSUMeasureText(aTxtLayout, 0, 1, NULL, &after, &ascent, &descent);
   if (noErr != err) 
   {
     NS_WARNING("ATSUMeasureText failed");     
-    EndDraw(savePort);
-    return res;
+    return NS_ERROR_FAILURE;
   }
+
   oDim.width = FixRound(after);
   oDim.ascent = FixRound(ascent);
   oDim.descent = FixRound(descent);
-  res = NS_OK;
-  EndDraw(savePort);
-  return res;
+  // aTxtLayout is cached and does not need to be disposed
+  return NS_OK;
 }
 
 
@@ -462,34 +449,29 @@ nsATSUIToolkit::DrawString(
   if (!nsATSUIUtils::IsAvailable())
   	return NS_ERROR_NOT_INITIALIZED;
   	
-  nsresult res = NS_ERROR_FAILURE;
-  GrafPtr savePort;
+  StPortSetter    setter(mPort);
+
   ATSUTextLayout aTxtLayout;
   
-  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor , savePort, aTxtLayout);
+  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
   if (nsnull == aTxtLayout)
-    {
-      return res;
-  	}
+    return NS_ERROR_FAILURE;
 
   OSStatus err = noErr;	
   ATSUTextMeasurement iAfter; 
   err = ATSUMeasureText( aTxtLayout, 0, 1, NULL, &iAfter, NULL, NULL );
-  if(noErr != err) {
+  if (noErr != err) {
      NS_WARNING("ATSUMeasureText failed");
-     EndDraw(savePort);
-     return res;
+     return NS_ERROR_FAILURE;
   } 
 
-  err = ATSUDrawText( aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
-  if(noErr != err) {
+  err = ATSUDrawText(aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
+  if (noErr != err) {
     NS_WARNING("ATSUDrawText failed");
-    EndDraw(savePort);
-    return res;
+    return NS_ERROR_FAILURE;
   } 
-  oWidth = FixRound(iAfter);
-  res = NS_OK;
 
-  EndDraw(savePort);
-  return res;
+  oWidth = FixRound(iAfter);
+  // aTxtLayout is cached and does not need to be disposed
+  return NS_OK;
 }

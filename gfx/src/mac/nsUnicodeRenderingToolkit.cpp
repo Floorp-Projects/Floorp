@@ -495,15 +495,17 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
   }
   return PR_FALSE;
 }
-static char *question = "<?>";
+
+static const char question[] = "<?>";
+
 //------------------------------------------------------------------------
 
 PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackGetWidth(
 	const PRUnichar *aCharPt, 
 	short& oWidth)
 {
-  GrafPtr thePort;
-  ::GetPort(&thePort);
+  CGrafPtr thePort;
+  ::GetPort((GrafPtr*)&thePort);
   short saveSize = ::GetPortTextSize(thePort);		
   ::TextSize(QUESTION_FALLBACKSIZE);
   GetScriptTextWidth(question, 3,oWidth);
@@ -518,8 +520,8 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackDrawChar(
 	PRInt32 y, 
 	short& oWidth)
 {
-  GrafPtr thePort;
-  ::GetPort(&thePort);
+  CGrafPtr thePort;
+  ::GetPort((GrafPtr*)&thePort);
   short saveSize = ::GetPortTextSize(thePort);		
   ::TextSize(QUESTION_FALLBACKSIZE);
   DrawScriptText(question, 3, x, y, oWidth);
@@ -559,8 +561,8 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
     nsAutoString tmp(aCharPt, 1);
     char* conv = nsnull;
     if(NS_SUCCEEDED(mTrans->Convert(tmp.get(), &conv)) && conv) {
-	    GrafPtr thePort;
-	    ::GetPort(&thePort);
+      CGrafPtr thePort;
+      ::GetPort((GrafPtr*)&thePort);
 	    short aSize = ::GetPortTextSize(thePort);		 		
   		PRInt32 l=nsCRT::strlen(conv);
     	if((l>3) && ('^' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sup
@@ -619,8 +621,8 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
     nsAutoString tmp(aCharPt, 1);
     char* conv = nsnull;
     if(NS_SUCCEEDED(mTrans->Convert(tmp.get(), &conv)) && conv) {
-	    GrafPtr thePort;
-	    ::GetPort(&thePort);
+	    CGrafPtr thePort;
+	    ::GetPort((GrafPtr*)&thePort);
 	    short aSize = ::GetPortTextSize(thePort);		
     	PRInt32 l=nsCRT::strlen(conv);
     	if((l>3) && ('^' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sup
@@ -760,8 +762,8 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackGetWidth(
 	const PRUnichar *aCharPt, 
 	short& oWidth)
 {
-  GrafPtr thePort;
-  ::GetPort(&thePort);
+  CGrafPtr thePort;
+  ::GetPort((GrafPtr*)&thePort);
   short saveSize = ::GetPortTextSize(thePort);		
   char buf[16];
   PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
@@ -779,8 +781,8 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackDrawChar(
 	PRInt32 y, 
 	short& oWidth)
 {
-  GrafPtr thePort;
-  ::GetPort(&thePort);
+  CGrafPtr thePort;
+  ::GetPort((GrafPtr*)&thePort);
   short saveSize = ::GetPortTextSize(thePort);		
   char buf[16];
   PRUint32 len = PR_snprintf(buf, 16 , "<U+%04X>", *aCharPt);
@@ -814,7 +816,7 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackDrawChar(
 # H - Hook Above 
 # N - Horn Above
 */
-static char *g1E00Dec = 
+static const char * const g1E00Dec = 
 //0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E00 - U+1E0F
  "Ar ar BD bD Bd bd Bl bl CcAccADD dD Dd dd Dl dl "
 //0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E10 - U+1E1F
@@ -907,8 +909,8 @@ PRBool nsUnicodeRenderingToolkit :: LatinFallbackDrawChar(
   	PRInt32 idx = 3 * ( *aCharPt & 0x00FF);
   	if(' ' != g1E00Dec[idx])
   	{
-	    GrafPtr thePort;
-	    ::GetPort(&thePort);
+      CGrafPtr thePort;
+      ::GetPort((GrafPtr*)&thePort);
 	    short aSize = ::GetPortTextSize(thePort);	
 	    short dummy;
 	    short realwidth;
@@ -1455,7 +1457,7 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
 nsresult
 nsUnicodeRenderingToolkit::PrepareToDraw(float aP2T, nsIDeviceContext* aContext,
                                          nsGraphicState* aGS, 
-                                         GrafPtr aPort, PRBool aRightToLeftText )
+                                         CGrafPtr aPort, PRBool aRightToLeftText )
 {
 	mP2T = aP2T;
 	mContext = aContext;

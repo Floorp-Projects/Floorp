@@ -954,6 +954,32 @@ static void blinkRgn(RgnHandle rgn)
 
 //-------------------------------------------------------------------------
 //
+// Validate this component's visible area
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Validate()
+{
+	if (!mWindowPtr || !mVisible)
+		return NS_OK;
+
+	nsRect wRect = mBounds;
+	LocalToWindowCoordinate(wRect);
+	Rect macRect;
+	nsRectToMacRect(wRect, macRect);
+
+	StPortSetter portSetter(mWindowPtr);
+	Rect savePortRect;
+	::GetWindowPortBounds(mWindowPtr, &savePortRect);
+	::SetOrigin(0, 0);
+
+	::ValidWindowRect(mWindowPtr, &macRect);
+	::SetOrigin(savePortRect.left, savePortRect.top);
+
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Invalidate this component's visible area
 //
 //-------------------------------------------------------------------------
@@ -982,6 +1008,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	nsRectToMacRect(wRect, macRect);
 
 	StPortSetter portSetter(mWindowPtr);
+
 	Rect savePortRect;
 	::GetWindowPortBounds(mWindowPtr, &savePortRect);
 	::SetOrigin(0, 0);
@@ -1022,6 +1049,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 	::OffsetRgn(windowRgn, mBounds.x + offX, mBounds.y + offY);
 	
 	StPortSetter portSetter(mWindowPtr);
+
 	Rect savePortRect;
 	::GetWindowPortBounds(mWindowPtr, &savePortRect);
 	::SetOrigin(0, 0);
@@ -1069,7 +1097,6 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 		NS_IF_ADDREF(aRenderingContext);
 		mTempRenderingContext = aRenderingContext;
 		mTempRenderingContextMadeHere = PR_FALSE;
-		mTempRenderingContext->PushState();
 
 		// set the environment to the current widget
 		mTempRenderingContext->Init(mContext, this);
@@ -1097,6 +1124,7 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	::RGBForeColor(&macColor);
 
 	mTempRenderingContext->SetColor(color);				// just in case, set the rendering context color too
+	mTempRenderingContext->PushState();           // push the state so we can pop it later
 }
 
 
@@ -1110,11 +1138,9 @@ void nsWindow::EndDraw()
 		return;
 	mDrawing = PR_FALSE;
 
-	if (mTempRenderingContextMadeHere)
-	{
 		PRBool clipEmpty;
 		mTempRenderingContext->PopState(clipEmpty);
-	}
+
 	NS_RELEASE(mTempRenderingContext);
 }
 
@@ -1400,7 +1426,7 @@ else
 	StRegionFromPool damagedRgn;
 	if (!damagedRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
-	::GetPortVisibleRegion(GrafPtr(GetWindowPort(mWindowPtr)), damagedRgn);
+	::GetPortVisibleRegion(GetWindowPort(mWindowPtr), damagedRgn);
 
 #ifdef PAINT_DEBUGGING	
 	blinkRgn(damagedRgn);
@@ -1525,6 +1551,8 @@ else
 	ProfileStop();
 #endif
 
+	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+
 	return NS_OK;
 }
 
@@ -1643,12 +1671,14 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// draw the widget
 	StartDraw(aContext);
+
 	if ( OnPaint(paintEvent) ) {
 		nsEventStatus	eventStatus;
 		DispatchWindowEvent(paintEvent,eventStatus);
 		if(eventStatus != nsEventStatus_eIgnore)
 			Flash(paintEvent);
 	}
+
 	EndDraw();
 
 	// beard:  Since we clip so aggressively, drawing from front to back should work,
@@ -1689,6 +1719,8 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 #undef FIRST_CHILD
 #undef NEXT_CHILD
+
+	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 }
 
 
