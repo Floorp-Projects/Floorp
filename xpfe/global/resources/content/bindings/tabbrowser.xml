@@ -157,13 +157,12 @@
 
       <!-- A web progress listener object definition for a given tab. --> 
       <method name="mTabProgressListener">
-        <parameter name="aTabBrowser"/>
         <parameter name="aTab"/>
         <parameter name="aStartsBlank"/>
         <body>
         <![CDATA[
           return ({
-            mTabBrowser: aTabBrowser,
+            mTabBrowser: this,
             mTab: aTab,
             mBlank: aStartsBlank,
             mIcon: "", 
@@ -648,7 +647,7 @@
             }
 
             // Wire up a progress listener to our filter.
-            const listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
+            const listener = this.mTabProgressListener(this.mCurrentTab, false);
             filter.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[0] = listener;
           ]]>
@@ -699,7 +698,7 @@
             
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
-            var tabListener = (this.mTabProgressListener)(this, t, blank);
+            var tabListener = this.mTabProgressListener(t, blank);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
