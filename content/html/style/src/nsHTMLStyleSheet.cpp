@@ -2571,21 +2571,58 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
   shell->GetPrimaryFrameFor(aChild, childFrame);
 
   if (nsnull != childFrame) {
-    // Get the parent frame.
-    // Note that we use the content parent, and not the geometric parent,
-    // in case the frame has been moved out of the flow...
-    nsIFrame* parentFrame;
-    childFrame->GetContentParent(parentFrame);
-    NS_ASSERTION(nsnull != parentFrame, "null content parent frame");
+    // See if it's absolutely positioned
+    const nsStylePosition* position;
+    childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+    if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+      // Generate two reflow commands. First for the absolutely positioned
+      // frame and then for its placeholder frame
+      nsIFrame* parentFrame;
+      childFrame->GetGeometricParent(parentFrame);
+  
+      // Notify the parent frame with a reflow command.
+      nsIReflowCommand* reflowCmd;
+      rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                   nsIReflowCommand::FrameRemoved, childFrame);
+  
+      if (NS_SUCCEEDED(rv)) {
+        reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
+        shell->AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
 
-    // Notify the parent frame with a reflow command.
-    nsIReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                 nsIReflowCommand::FrameRemoved, childFrame);
+      // Now the placeholder frame
+      nsIFrame* placeholderFrame;
 
-    if (NS_SUCCEEDED(rv)) {
-      shell->AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
+      shell->GetPlaceholderFrameFor(childFrame, placeholderFrame);
+      if (nsnull != placeholderFrame) {
+        placeholderFrame->GetGeometricParent(parentFrame);
+        rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                     nsIReflowCommand::FrameRemoved, placeholderFrame);
+        
+        if (NS_SUCCEEDED(rv)) {
+          shell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+        }
+      }
+
+    } else {
+      // Get the parent frame.
+      // Note that we use the content parent, and not the geometric parent,
+      // in case the frame has been moved out of the flow...
+      nsIFrame* parentFrame;
+      childFrame->GetContentParent(parentFrame);
+      NS_ASSERTION(nsnull != parentFrame, "null content parent frame");
+  
+      // Notify the parent frame with a reflow command.
+      nsIReflowCommand* reflowCmd;
+      rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
+                                   nsIReflowCommand::FrameRemoved, childFrame);
+  
+      if (NS_SUCCEEDED(rv)) {
+        shell->AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
     }
   }
 
