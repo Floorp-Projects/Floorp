@@ -53,7 +53,7 @@
     onclick="AbResultsPaneOnClick(event);"
     onselect="this.view.selectionChanged();"
     sortCol="GeneratedName"
-    persist="sortCol">
+    persist="sortCol height">
 
   <treecols id="abResultsTreeCols">
   <!-- these column ids must match up to the mork column names, except for GeneratedName, see nsIAddrDatabase.idl -->

@@ -424,15 +424,14 @@ Contributor(s):
       </hbox>
 
       <!-- results pane -->
-      <tree id="abResultsTree" context="abResultsTreeContext"
-            flex="1" persist="height"/>
+      <tree id="abResultsTree" context="abResultsTreeContext" flex="1" />
       
       <splitter id="results-splitter" collapse="after" persist="state">
         <grippy/>
       </splitter>
       
       <!-- card view -->
-      <hbox id="CardViewOuterBox" flex="1">
+      <hbox id="CardViewOuterBox" flex="1" persist="height">
         <vbox id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
       </hbox>
     </vbox>
