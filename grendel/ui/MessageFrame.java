@@ -56,7 +56,7 @@ public class MessageFrame extends GeneralFrame {
     fPanel.add(fMessagePanel);
     //    fMenu = buildMenu("messageMain", Util.MergeActions(actions,
     //                                           fMessagePanel.getActions()));
-    fMenu = buildMenu();
+    fMenu = buildMenu("menus.xml");
     getRootPane().setMenuBar(fMenu);
 
     fToolBar = fMessagePanel.getToolBar();

@@ -33,8 +33,8 @@
 MOZILLA_BUILD = /disk2/mozilla
 GRENDEL_BUILD = /disk2/mozilla/grendel
 MOZILLA_HOME = /usr/local/netscape-4.5
-JAVAC	= /usr/local/jdk117_v1a/bin/javac
-CLASSPATH = /usr/local/jdk117_v1a/lib/classes.zip:/usr/local/swing-1.1/swingall.jar:/usr/local/javamail-1.1/mail.jar:/usr/local/jaf/activation.jar:/usr/local/xml-ea2/xml.jar:$(MOZILLA_HOME)/java/classes/ifc11.jar:$(MOZILLA_HOME)/java/classes/ldap10.jar:$(MOZILLA_BUILD):$(GRENDEL_BUILD)
+JAVAC	= javac
+CLASSPATH = .:/export/home/grail/java:/export/home/grail/java/grendel:/usr/local/java/lib/activation.jar:/usr/local/java/lib/iiimp.jar:/usr/local/java/lib/jsdk.jar:/usr/local/java/lib/mail.jar:/usr/local/java/lib/swingall.jar:/usr/local/java/lib/xml.jar
 
 RM	= rm -f
 
@@ -43,7 +43,7 @@ OBJS	= $(subst .java,.class,$(SRCS))
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JAVAC) -g -classpath $(CLASSPATH) $*.java
+	$(JAVAC) -g $*.java
 
 all:: $(OBJS)
 
@@ -64,5 +64,5 @@ all clean distclean::
 	done
 
 run::
-	java -classpath $(CLASSPATH) grendel.Main
+	java grendel.Main
 

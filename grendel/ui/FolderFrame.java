@@ -55,7 +55,7 @@ public class FolderFrame extends GeneralFrame {
     fPanel.add(fFolderPanel);
     //    fMenu = buildMenu("folderMain", Util.MergeActions(actions,
     //                                             fFolderPanel.getActions()));
-    fMenu = buildMenu();
+    fMenu = buildMenu("menus.xml");
     getRootPane().setMenuBar(fMenu);
 
     fToolBar = fFolderPanel.getToolBar();

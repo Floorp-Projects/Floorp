@@ -39,14 +39,17 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.MissingResourceException;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.swing.Action;
+import javax.swing.ButtonGroup;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
@@ -56,10 +59,24 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.BoxLayout;
+
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import com.sun.xml.parser.Resolver;
+import com.sun.xml.parser.Parser;
+import com.sun.xml.tree.XmlDocument;
+import com.sun.xml.tree.XmlDocumentBuilder;
+import com.sun.xml.tree.TreeWalker;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 //import netscape.orion.toolbars.BarLayout;
 //import netscape.orion.toolbars.CollapsibleToolbarPanel;
@@ -103,6 +120,9 @@ public class GeneralFrame extends JFrame
   //  protected netscape.orion.uimanager.UIManager fUIManager;
 
   private LAFListener     fLAFListener;
+  private Properties      prop;
+  private Hashtable       widgets = new Hashtable();
+  private Hashtable       groups = new Hashtable();
 
   static Vector fFrameList = new Vector();
   static boolean sExternalShell = false;
@@ -255,183 +275,177 @@ public class GeneralFrame extends JFrame
     }
   }
 
-  /** Creates the MenuBar. This method has been completely re-written by Jeff Galyan, 12/30/1998 */
-  protected JMenuBar buildMenu() {
-    JMenuBar res = new JMenuBar();
+  /** 
+   * Creates the MenuBar by reading from an XML file
+   *
+   * @param file the XML file to build the menu from
+   * @return a menubar built from the file
+   */
+  protected JMenuBar buildMenu(String file) {
+    String id;
+    JMenuBar menubar = null;
+    Node node;
+    TreeWalker tree;
+    InputSource input;
+    XmlDocument doc;
+    URL linkURL;
+    Element current;
 
-    JMenu fileMenu = new JMenu("File");
-    JMenu editMenu = new JMenu("Edit");
-    JMenu viewMenu = new JMenu("View");
-    JMenu sortMenu = new JMenu("Sort");
-    JMenu layoutMenu = new JMenu("Layout");
-    JMenu messageMenu = new JMenu("Message");
-    JMenu msgMarkMenu = new JMenu("Mark");
-    
-    fileMenu.setMnemonic('F');
-    editMenu.setMnemonic('E');
-    viewMenu.setMnemonic('V');
-    sortMenu.setMnemonic('S');
-    layoutMenu.setMnemonic('L');
-    messageMenu.setMnemonic('M');
-    msgMarkMenu.setMnemonic('M');
+    try {
+      // handle to the document
+      input = Resolver.getSource(getClass().getResource(file), false);
+      // build the doc
+      doc = XmlDocumentBuilder.createXmlDocument(input, false);
+      // get the root node
+      current = doc.getDocumentElement();
 
-    JMenuItem fileMsgNew = new JMenuItem("New Message");
-    fileMsgNew.setMnemonic('N');
-    
-    JMenuItem folderNew = new JMenuItem("New Folder...");
-    folderNew.setMnemonic('F');
-    
-    JMenuItem msgOpen = new JMenuItem("Open Message");
-    msgOpen.setMnemonic('M');
+      // create a tree
+      tree = new TreeWalker(current);
 
-    JMenuItem msgSaveAs = new JMenuItem("Save As...");
-    msgSaveAs.setMnemonic('A');
+      // pull out the properties if any
+      node = tree.getNextElement("link");
+      if (node != null) {
+	current = (Element)node;
+	linkURL = getClass().getResource(current.getAttribute("href"));
+	prop = new Properties();
+	prop.load(linkURL.openStream());
+      }
 
-    JMenuItem msgGetNew = new JMenuItem("Get New Messages");
-    msgGetNew.setMnemonic('G');
+      // build the menu bar
+      node = tree.getNextElement("menubar");
+      if (node == null) { // what? no menubar? screw that, i'm outta here
+	return menubar;
+      }
+      current = (Element)node;
+      menubar = new JMenuBar();
+      widgets.put(current.getAttribute("id"), menubar);
+      node = tree.getNext();
 
-    JMenuItem appExit = new JMenuItem("Exit");
-    appExit.setMnemonic('x');
+      while (node != null) {
+	processNode(node);
+	node = tree.getNext();
+      }
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
 
-    fileMenu.add(fileMsgNew);
-    fileMenu.add(folderNew);
-    fileMenu.add(msgOpen);
-    fileMenu.add(msgSaveAs);
-    fileMenu.addSeparator();
-    fileMenu.add(msgGetNew);
-    fileMenu.addSeparator();
-    fileMenu.add(appExit);
-    
-    res.add(fileMenu);
-
-    JMenuItem editUndo = new JMenuItem("Undo");
-    editUndo.setMnemonic('U');
-
-    JMenuItem editCut = new JMenuItem("Cut");
-    editCut.setMnemonic('t');
-
-    JMenuItem editCopy = new JMenuItem("Copy");
-    editCopy.setMnemonic('C');
-
-    JMenuItem editPaste = new JMenuItem("Paste");
-    editPaste.setMnemonic('P');
-
-    JMenuItem editFolderDelete = new JMenuItem("Delete Folder");
-    editFolderDelete.setMnemonic('D');
-
-    JMenuItem editAppSearch = new JMenuItem("Search");
-    editAppSearch.setMnemonic('S');
-
-    JMenuItem editAppRunFilters = new JMenuItem("Run Filters on TestInbox");
-    editAppRunFilters.setMnemonic('F');
-
-    JMenuItem editAppPrefs = new JMenuItem("Preferences...");
-    editAppPrefs.setMnemonic('r');
-
-    editMenu.add(editUndo);
-    editMenu.add(editCut);
-    editMenu.add(editCopy);
-    editMenu.add(editPaste);
-    editMenu.addSeparator();
-    editMenu.add(editFolderDelete);
-    editMenu.addSeparator();
-    editMenu.add(editAppSearch);
-    editMenu.add(editAppRunFilters);
-    editMenu.addSeparator();
-    editMenu.add(editAppPrefs);
-
-    res.add(editMenu);
-
-    JCheckBoxMenuItem toggleThreading = new JCheckBoxMenuItem("Toggle Threading");
-    toggleThreading.setMnemonic('T');
-
-    JRadioButtonMenuItem sortAuthor = new JRadioButtonMenuItem("by Author");
-    sortAuthor.setMnemonic('A');
-    
-    JRadioButtonMenuItem sortDate = new JRadioButtonMenuItem("by Date");
-    sortDate.setMnemonic('D');
-
-    JRadioButtonMenuItem sortNumber = new JRadioButtonMenuItem("by Number");
-    sortNumber.setMnemonic('N');
-
-    JRadioButtonMenuItem sortSubject = new JRadioButtonMenuItem("by Subject");
-    sortSubject.setMnemonic('S');
-
-    sortMenu.add(toggleThreading);
-    sortMenu.addSeparator();
-    sortMenu.add(sortAuthor);
-    sortMenu.add(sortDate);
-    sortMenu.add(sortNumber);
-    sortMenu.add(sortSubject);
-    
-    JRadioButtonMenuItem splitTop = new JRadioButtonMenuItem("Split Top");
-    splitTop.setMnemonic('T');
-
-    JRadioButtonMenuItem splitLeft = new JRadioButtonMenuItem("Split Left");
-    splitLeft.setMnemonic('L');
-    
-    JRadioButtonMenuItem splitRight = new JRadioButtonMenuItem("Split Right");
-    splitRight.setMnemonic('R');
-    
-    JRadioButtonMenuItem layoutStacked = new JRadioButtonMenuItem("Stacked");
-    layoutStacked.setMnemonic('S');
-
-    layoutMenu.add(splitTop);
-    layoutMenu.add(splitLeft);
-    layoutMenu.add(splitRight);
-    layoutMenu.add(layoutStacked);
-
-    JCheckBoxMenuItem viewAppShowToolTips = new JCheckBoxMenuItem("Show Tooltips");
-    viewAppShowToolTips.setMnemonic('T');
-
-    viewMenu.add(sortMenu);
-    viewMenu.add(layoutMenu);
-    viewMenu.addSeparator();
-    viewMenu.add(viewAppShowToolTips);
-
-    res.add(viewMenu);
-
-    JMenuItem msgNew = new JMenuItem("New Message");
-    msgNew.setMnemonic('N');
-
-    JMenuItem msgReply = new JMenuItem("Reply");
-    msgReply.setMnemonic('R');
-
-    JMenuItem msgReplyAll = new JMenuItem("Reply All");
-    msgReplyAll.setMnemonic('A');
-    
-    JMenuItem msgForward = new JMenuItem("Forward");
-    msgForward.setMnemonic('F');
-
-    JMenuItem msgForwardQuoted = new JMenuItem("Forward Quoted");
-    msgForwardQuoted.setMnemonic('Q');
-
-    JMenuItem markMsgRead = new JMenuItem("As Read");
-    markMsgRead.setMnemonic('R');
-
-    JMenuItem markThreadRead = new JMenuItem("Thread Read");
-    markThreadRead.setMnemonic('T');
-    
-    JMenuItem markAllRead = new JMenuItem("All Read");
-    markAllRead.setMnemonic('A');
-
-    msgMarkMenu.add(markMsgRead);
-    msgMarkMenu.add(markThreadRead);
-    msgMarkMenu.add(markAllRead);
-
-    messageMenu.add(msgNew);
-    messageMenu.addSeparator();
-    messageMenu.add(msgReply);
-    messageMenu.add(msgReplyAll);
-    messageMenu.add(msgForward);
-    messageMenu.add(msgForwardQuoted);
-    messageMenu.addSeparator();
-    messageMenu.add(msgMarkMenu);
-
-    res.add(messageMenu);
-
-    return res;
+    return menubar;
   }
+
+  protected void processNode(Node node)
+    throws SAXParseException {
+    Element current = null;
+    Container con = null;
+    JComponent item = buildItem(node);
+
+    if (item != null) {
+      Element parent;
+      current = (Element)node;
+      parent = (Element)current.getParentNode();
+      con = (Container)widgets.get(parent.getAttribute("id"));
+      if (con != null) {
+	// what's the frequency kenneth?
+	String label = getReferencedLabel(current, "label");
+	if (label != null) ((JMenuItem)item).setText(label);
+	label = getReferencedLabel(current, "accel");
+	if (label != null) ((JMenuItem)item).setMnemonic(label.charAt(0));
+	con.add(item);
+      }
+    }
+  }
+
+  /**
+   */
+  protected JComponent buildItem(Node node) 
+    throws SAXParseException {
+    JComponent item = null;
+    Element current = null;
+    Element parent = null;
+
+    if (node.getNodeType() == 1) {
+      current = (Element)node;
+      parent = (Element)current.getParentNode();
+
+      item = createFromElement(current);
+    }
+
+    return item;
+  }
+
+  /**
+   * Reads the an attribute from the XML element. If the element is 
+   * crossed referenced to a string property (it starts with '$'), 
+   * look it up.
+   *
+   * @param current the current XML element
+   * @param attr the attribute to look up
+   */
+  protected String getReferencedLabel(Element current, String attr)
+    throws SAXParseException {
+    String label = current.getAttribute(attr);
+
+    if (prop == null) return label;
+
+    // if there's a key, and it begins with '$', look up in properties
+    if (label != null && label.charAt(0) == '$') {
+      String key = label.substring(1);
+      label = prop.getProperty(key);
+    }
+
+    return label;
+  }
+
+  /**
+   * Create components that can be added to a menu.
+   *
+   * @param current the XML element node to be processed
+   * @return the component composed from the element
+   */
+  protected JComponent createFromElement(Element current) 
+    throws SAXParseException {
+    String tag = current.getTagName();
+    JComponent item = null;
+    // if it's a container (menu) we need to store it into 
+    // widgets
+    if (tag.equals("menu")) { // menu tag
+      String my_id = current.getAttribute("id");
+      item = new JMenu();
+      widgets.put(my_id, item);
+    } else if (tag.equals("menuitem")) { // menu item tag
+      String type = current.getAttribute("type");
+      if (type == null) {
+	item = new JMenuItem();
+      } else {
+	if (type.equals("separator")) { // type = separator
+	  item = new JSeparator(SwingConstants.HORIZONTAL);
+	} else if (type.equals("checkbox")) { // type = checkbox
+	  String value = current.getAttribute("value");
+	  JCheckBoxMenuItem cb = new JCheckBoxMenuItem();
+	  item = cb;
+	  if (value != null) {
+	    cb.setState(value.trim().toLowerCase().equals("true"));
+	  }
+	} else if (type.equals("radio")) { // type = radio
+	  ButtonGroup bg;
+	  String group = current.getAttribute("group");
+	  item = new JRadioButtonMenuItem();
+
+	  if (group != null) {
+	    if (groups.containsKey(group)) {
+	      bg = (ButtonGroup)groups.get(group);
+	    } else {
+	      bg = new ButtonGroup();
+	      groups.put(group, bg);
+	    }
+
+	    bg.add((JRadioButtonMenuItem)item);
+	  }
+	}
+      }
+    }
+
+    return item;
+  }  
 
   protected Component buildStatusBar() {
     JPanel res = new JPanel();

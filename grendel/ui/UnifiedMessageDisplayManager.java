@@ -37,6 +37,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JToolBar;
+import javax.swing.JSplitPane;
 import javax.swing.event.ChangeEvent;
 
 import calypso.util.Preferences;
@@ -145,7 +146,7 @@ class UnifiedMessageFrame extends GeneralFrame {
   MasterPanel   fFolders = null;
   FolderPanel   fThreads = null;
   MessagePanel  fMessage = null;
-  Splitter      splitter1 = null, splitter2 = null;
+  JSplitPane    splitter1 = null, splitter2 = null;
   String        fLayout = null;
   JToolBar      fToolBar1 = null;
 
@@ -157,6 +158,11 @@ class UnifiedMessageFrame extends GeneralFrame {
     fFolders = new MasterPanel();
     fThreads = new FolderPanel();
     fMessage = new MessagePanel();
+
+    splitter1 = new JSplitPane();
+    splitter2 = new JSplitPane();
+    splitter1.setOneTouchExpandable(true);
+    splitter2.setOneTouchExpandable(true);
 
     PanelListener listener = new PanelListener();
 
@@ -171,7 +177,7 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     layoutPanels(layout);
 
-    fMenu = buildMenu();
+    fMenu = buildMenu("menus.xml");
 
     getRootPane().setMenuBar(fMenu);
 
@@ -213,20 +219,21 @@ class UnifiedMessageFrame extends GeneralFrame {
     String messageWeight = "2.0";
     String splitWeight = "1.0";
 
+    // XXX store dimensions into preferences. NYI --giao
     if (fLayout.equals(UnifiedMessageDisplayManager.STACKED)) {
-      masterWeight = splitter1.getWeight(fFolders).toString();
-      folderWeight = splitter1.getWeight(fThreads).toString();
-      messageWeight = splitter1.getWeight(fMessage).toString();
+      // masterWeight = splitter1.getWeight(fFolders).toString();
+      // folderWeight = splitter1.getWeight(fThreads).toString();
+      // messageWeight = splitter1.getWeight(fMessage).toString();
     } else if (fLayout.equals(UnifiedMessageDisplayManager.SPLIT_RIGHT)) {
-      masterWeight = splitter1.getWeight(fFolders).toString();
-      folderWeight = splitter2.getWeight(fThreads).toString();
-      messageWeight = splitter2.getWeight(fMessage).toString();
-      splitWeight = splitter1.getWeight(splitter2).toString();
+      // masterWeight = splitter1.getWeight(fFolders).toString();
+      // folderWeight = splitter2.getWeight(fThreads).toString();
+      // messageWeight = splitter2.getWeight(fMessage).toString();
+      // splitWeight = splitter1.getWeight(splitter2).toString();
     } else {
-      masterWeight = splitter2.getWeight(fFolders).toString();
-      folderWeight = splitter2.getWeight(fThreads).toString();
-      messageWeight = splitter1.getWeight(fMessage).toString();
-      splitWeight = splitter1.getWeight(splitter2).toString();
+      // masterWeight = splitter2.getWeight(fFolders).toString();
+      // folderWeight = splitter2.getWeight(fThreads).toString();
+      // messageWeight = splitter1.getWeight(fMessage).toString();
+      // splitWeight = splitter1.getWeight(splitter2).toString();
     }
 
     prefs.putString("mail.multi_pane.master_weight", masterWeight);
@@ -272,54 +279,49 @@ class UnifiedMessageFrame extends GeneralFrame {
     String splitWeight = prefs.getString("mail.multi_pane.split_weight", "1.0");
 
     if (layout.equals(UnifiedMessageDisplayManager.STACKED)) {
-      splitter1 = new Splitter(Splitter.VERTICAL);
-      splitter1.add(fFolders, new Float(masterWeight));
-      splitter1.add(splitter1.createSeparator(4));
-      splitter1.add(fThreads, new Float(folderWeight));
-      splitter1.add(splitter1.createSeparator(4));
-      splitter1.add(fMessage, new Float(messageWeight));
+      splitter1.setOrientation(JSplitPane.VERTICAL_SPLIT);
+      splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
+
+      splitter1.setTopComponent(fFolders);
+      splitter1.setBottomComponent(splitter2);
+      splitter2.setTopComponent(fThreads);
+      splitter2.setBottomComponent(fMessage);
 
       //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
-      splitter1 = new Splitter(Splitter.HORIZONTAL);
+      splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+      splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
+      
+      splitter2.setLeftComponent(fFolders);
+      splitter2.setRightComponent(fThreads);
 
-      splitter2 = new Splitter(Splitter.VERTICAL);
-      splitter2.add(fFolders, new Float(masterWeight));
-      splitter2.add(splitter2.createSeparator(4));
-      splitter2.add(fThreads, new Float(folderWeight));
-
-      splitter1.add(splitter2, new Float(splitWeight));
-      splitter1.add(splitter1.createSeparator(4));
-      splitter1.add(fMessage, new Float(messageWeight));
-
+      splitter1.setTopComponent(splitter2);
+      splitter1.setBottomComponent(fMessage);
       //      fSplitLeftLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_RIGHT)) {
+      splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
+      splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
 
-      splitter2 = new Splitter(Splitter.VERTICAL);
-      splitter2.add(fThreads, new Float(folderWeight));
-      splitter2.add(splitter2.createSeparator(4));
-      splitter2.add(fMessage, new Float(messageWeight));
+      splitter2.setLeftComponent(fThreads);
+      splitter2.setRightComponent(fMessage);
 
-      splitter1 = new Splitter(Splitter.HORIZONTAL);
-      splitter1.add(fFolders, new Float(masterWeight));
-      splitter1.add(splitter1.createSeparator(4));
-      splitter1.add(splitter2, new Float(splitWeight));
-
+      splitter1.setTopComponent(fFolders);
+      splitter1.setBottomComponent(splitter2);
       //      fSplitRightLayoutAction.setSelected(IUICmd.kSelected);
     } else { // Default: SPLIT_TOP
-      splitter1 = new Splitter(Splitter.VERTICAL);
+      splitter2.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+      splitter1.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
-      splitter2 = new Splitter(Splitter.HORIZONTAL);
-      splitter2.add(fFolders, new Float(masterWeight));
-      splitter2.add(splitter2.createSeparator(4));
-      splitter2.add(fThreads, new Float(folderWeight));
+      splitter2.setLeftComponent(fFolders);
+      splitter2.setRightComponent(fThreads);
+      
+      splitter1.setTopComponent(splitter2);
+      splitter1.setBottomComponent(fMessage);
 
-      splitter1.add(splitter2, new Float(splitWeight));
-      splitter1.add(splitter1.createSeparator(4));
-      splitter1.add(fMessage, new Float(messageWeight));
-
+      
       //      fSplitTopLayoutAction.setSelected(IUICmd.kSelected);
     }
+
     fPanel.add("Center", splitter1);
 
     invalidate();

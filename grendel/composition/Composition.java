@@ -84,7 +84,7 @@ public class Composition extends GeneralFrame {
         //create menubar (top)
         //  fMenu = buildMenu("mainMenubar",
         //                  mCompositionPanel.getActions());
-        fMenu = buildMenu();
+        fMenu = buildMenu("menus.xml");
 
         getRootPane().setMenuBar(fMenu);
 

@@ -130,7 +130,7 @@ class MasterFrame extends GeneralFrame {
     fMasterPanel.addMasterPanelListener(new FolderSelectionListener());
     fPanel.add(fMasterPanel);
     //    fMenu = buildMenu("masterMain", actions);
-    fMenu = buildMenu();
+    fMenu = buildMenu("menus.xml");
     getRootPane().setMenuBar(fMenu);
 
     fToolBar = fMasterPanel.getToolBar();
