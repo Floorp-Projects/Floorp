@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2:
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -30,7 +31,13 @@
 
 nscolor nsLookAndFeel::sInfoText = 0;
 nscolor nsLookAndFeel::sInfoBackground = 0;
-PRBool nsLookAndFeel::sHaveInfoColors = PR_FALSE;
+nscolor nsLookAndFeel::sMenuText = 0;
+nscolor nsLookAndFeel::sMenuBackground = 0;
+nscolor nsLookAndFeel::sButtonBackground = 0;
+nscolor nsLookAndFeel::sButtonText = 0;
+nscolor nsLookAndFeel::sButtonOuterLightBorder = 0;
+nscolor nsLookAndFeel::sButtonInnerDarkBorder = 0;
+PRBool nsLookAndFeel::sColorsInitialized = PR_FALSE;
 
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
@@ -45,6 +52,9 @@ nsLookAndFeel::nsLookAndFeel()
   mWidget = gtk_invisible_new();
   gtk_widget_ensure_style(mWidget);
   mStyle = gtk_widget_get_style(mWidget);
+
+  if (!sColorsInitialized)
+    InitColors();
 
   (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
@@ -108,84 +118,104 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
     // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
   case eColor_activeborder:
+      // active window border
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
   case eColor_activecaption:
+      // active window caption background
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
   case eColor_appworkspace:
+      // MDI background color
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
   case eColor_background:
+      // desktop background
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
-
   case eColor_captiontext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
+      // text in active window caption, size box, and scrollbar arrow box (!)
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
   case eColor_graytext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_INSENSITIVE]);
+      // disabled text
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
+    // or maybe mStyle->text?
     break;
   case eColor_highlight:
+      // background of selected item
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
     break;
   case eColor_highlighttext:
+      // text of selected item
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
     break;
   case eColor_inactiveborder:
+      // inactive window border
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
   case eColor_inactivecaption:
+      // inactive window caption
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_INSENSITIVE]);
     break;
   case eColor_inactivecaptiontext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_INSENSITIVE]);
+      // text in inactive window caption
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
     break;
   case eColor_infobackground:
-    if (!sHaveInfoColors)
-      GetInfoColors();
+      // tooltip background color
     aColor = sInfoBackground;
     break;
   case eColor_infotext:
-    if (!sHaveInfoColors)
-      GetInfoColors();
+      // tooltip text color
     aColor = sInfoText;
     break;
   case eColor_menu:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
+      // menu background
+    aColor = sMenuBackground;
     break;
   case eColor_menutext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
+      // menu text
+    aColor = sMenuText;
     break;
   case eColor_scrollbar:
+      // scrollbar gray area
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
     break;
 
   case eColor_threedface:
   case eColor_buttonface:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-    break;
-
-  case eColor_buttonhighlight:
-  case eColor_threedhighlight:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]);
+      // 3-D face color
+    aColor = sButtonBackground;
     break;
 
   case eColor_buttontext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
+      // text on push buttons
+    aColor = sButtonText;
     break;
 
-  case eColor_buttonshadow:
-  case eColor_threedshadow: // i think these should be the same
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->dark[GTK_STATE_NORMAL]);
-    break;
-
-  case eColor_threeddarkshadow:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
+  case eColor_buttonhighlight:
+      // 3-D highlighted edge color
+  case eColor_threedhighlight:
+      // 3-D highlighted outer edge color
+    aColor = sButtonOuterLightBorder;
     break;
 
   case eColor_threedlightshadow:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]);
+      // 3-D highlighted inner edge color
+    aColor = sButtonBackground; // always same as background in GTK code
+    break;
+
+  case eColor_buttonshadow:
+      // 3-D shadow edge color
+  case eColor_threedshadow:
+      // 3-D shadow inner edge color
+    aColor = sButtonInnerDarkBorder;
+    break;
+
+  case eColor_threeddarkshadow:
+      // 3-D shadow outer edge color
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
     break;
 
   case eColor_window:
@@ -375,19 +405,66 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
 }
 
 void
-nsLookAndFeel::GetInfoColors()
+nsLookAndFeel::InitColors()
 {
+  sColorsInitialized = PR_TRUE;
+  GtkStyle *style;
+  
+  // tooltip foreground and background
   GtkTooltips *tooltips = gtk_tooltips_new();
   gtk_tooltips_force_window(tooltips);
   GtkWidget *tip_window = tooltips->tip_window;
   gtk_widget_set_rc_style(tip_window);
 
-  GtkStyle *tipstyle = gtk_widget_get_style(tip_window);
-  sInfoBackground = GDK_COLOR_TO_NS_RGB(tipstyle->bg[GTK_STATE_NORMAL]);
-  sInfoText = GDK_COLOR_TO_NS_RGB(tipstyle->fg[GTK_STATE_NORMAL]);
-  sHaveInfoColors = PR_TRUE;
+  style = gtk_widget_get_style(tip_window);
+  sInfoBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+  sInfoText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
 
   gtk_object_unref(GTK_OBJECT(tooltips));
+
+
+  // menu foreground & menu background
+  GtkWidget *accel_label = gtk_accel_label_new("M");
+  GtkWidget *menuitem = gtk_menu_item_new();
+  GtkWidget *menu = gtk_menu_new();
+
+  gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
+  gtk_menu_append(GTK_MENU(menu), menuitem);
+
+  gtk_widget_set_rc_style(accel_label);
+  style = gtk_widget_get_style(accel_label);
+  sMenuText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+
+  gtk_widget_set_rc_style(menu);
+  style = gtk_widget_get_style(menu);
+  sMenuBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+
+  gtk_widget_unref(menu);
+
+
+  // button styles
+  GtkWidget *parent = gtk_fixed_new();
+  GtkWidget *button = gtk_button_new();
+  GtkWidget *label = gtk_label_new("M");
+  
+  gtk_container_add(GTK_CONTAINER(button), label);
+  gtk_container_add(GTK_CONTAINER(parent), button);
+
+  gtk_widget_set_rc_style(button);
+  gtk_widget_set_rc_style(label);
+
+  style = gtk_widget_get_style(label);
+  sButtonText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+
+  style = gtk_widget_get_style(button);
+  sButtonBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
+  sButtonOuterLightBorder =
+    GDK_COLOR_TO_NS_RGB(style->light[GTK_STATE_NORMAL]);
+  sButtonInnerDarkBorder =
+    GDK_COLOR_TO_NS_RGB(style->dark[GTK_STATE_NORMAL]);
+
+  gtk_widget_unref(parent);
+
 }
 
 #ifdef NS_DEBUG
