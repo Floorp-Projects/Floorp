@@ -111,8 +111,7 @@ CoalesceDirs(char* io_Path)
      */
     char *fwdPtr = io_Path;
     char *urlPtr = io_Path;
-    PRUint32 traversal = 0;
-
+    
     for(; (*fwdPtr != '\0') && 
             (*fwdPtr != '?') && 
             (*fwdPtr != '#'); ++fwdPtr)
@@ -130,7 +129,7 @@ CoalesceDirs(char* io_Path)
         if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/' )
         {
             // remove . followed by slash
-            ++fwdPtr;
+            fwdPtr += 1;
         }
         else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
                 (*(fwdPtr+3) == '/' || 
@@ -139,37 +138,20 @@ CoalesceDirs(char* io_Path)
                     *(fwdPtr+3) == '#'))
         {
             // remove foo/.. 
-            // reverse the urlPtr to the previous slash if possible
-            if(traversal > 0 )
-            { 
-                if (urlPtr != io_Path)
-                    urlPtr--; // we must be going back at least by one 
-                for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
-                    ;  // null body 
-                --traversal; // count back
-                // forward the fwdPtr past the ../
-                fwdPtr += 2;
-                // special case if we have reached the end 
-                // to preserve the last /
-                if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
-                    ++urlPtr;
-            } else {
-                // there are to much /.. in this path, just copy them instead
-                // forward the urlPtr past the /.. and coppying it
-                *urlPtr++ = *fwdPtr;
-                ++fwdPtr;
-                *urlPtr++ = *fwdPtr;
-                ++fwdPtr;
-                *urlPtr++ = *fwdPtr;
-            }
+            // reverse the urlPtr to the previous slash 
+            if(urlPtr != io_Path) 
+                urlPtr--; // we must be going back at least by one 
+            for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
+                ;  // null body 
+
+            // forward the fwd_prt past the ../
+            fwdPtr += 2;
+            // special case if we have reached the end to preserve the last /
+            if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
+                urlPtr +=1;
         }
         else
         {
-            if(*fwdPtr == '/' && *(fwdPtr+1) != '.')
-            {
-                // count the hierachie
-                traversal++;
-            }  
             // copy the url incrementaly 
             *urlPtr++ = *fwdPtr;
         }
