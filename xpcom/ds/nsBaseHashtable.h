@@ -136,8 +136,6 @@ public:
 
   /**
    * function type provided by the application for enumeration.
-   * currently, only "read" enumeration is supported.  If you need to change
-   * or remove entries during enumeration, it might could be arranged.
    * @param aKey the key being enumerated
    * @param aData data being enumerated
    * @parm userArg passed unchanged from Enumerate
@@ -146,9 +144,9 @@ public:
    *   @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink
    */
   typedef PLDHashOperator
-    (*PR_CALLBACK EnumReadFunction)(KeyType  aKey,
-                                    DataType aData,
-                                    void*    userArg);
+    (*PR_CALLBACK EnumReadFunction)(KeyType      aKey,
+                                    UserDataType aData,
+                                    void*        userArg);
 
   /**
    * enumerate entries in the hashtable, without allowing changes
@@ -157,7 +155,31 @@ public:
    * @param enumFunc enumeration callback
    * @param userArg passed unchanged to the EnumReadFunction
    */
-  void EnumerateRead(EnumReadFunction enumFunc, void* userArg) const;
+  PRUint32 EnumerateRead(EnumReadFunction enumFunc, void* userArg) const;
+
+  /**
+   * function type provided by the application for enumeration.
+   * @param aKey the key being enumerated
+   * @param aData Reference to data being enumerated, may be altered. e.g. for
+   *        nsInterfaceHashtable this is an nsCOMPtr reference...
+   * @parm userArg passed unchanged from Enumerate
+   * @return bitflag combination of
+   *   @link PLDHashOperator::PL_DHASH_REMOVE @endlink,
+   *   @link PLDHashOperator::PL_DHASH_NEXT PL_DHASH_NEXT @endlink, or
+   *   @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink
+   */
+  typedef PLDHashOperator
+    (*PR_CALLBACK EnumFunction)(KeyType       aKey,
+                                DataType&     aData,
+                                void*         userArg);
+
+  /**
+   * enumerate entries in the hashtable, allowing changes. This
+   * functions write-locks the hashtable.
+   * @param enumFunc enumeration callback
+   * @param userArg passed unchanged to the EnumFunction
+   */
+  PRUint32 Enumerate(EnumFunction enumFunc, void* userArg);
 
   /**
    * reset the hashtable, removing all entries
@@ -182,6 +204,17 @@ protected:
                                         PLDHashEntryHdr *hdr,
                                         PRUint32         number,
                                         void            *arg);
+
+  struct s_EnumArgs
+  {
+    EnumFunction func;
+    void* userArg;
+  };
+
+  static PLDHashOperator s_EnumStub(PLDHashTable      *table,
+                                    PLDHashEntryHdr   *hdr,
+                                    PRUint32           number,
+                                    void              *arg);
 };
 
 //
@@ -251,7 +284,7 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::Get(KeyType       aKey,
   if (mLock)
     PR_RWLock_Rlock(mLock);
 
-  EntryType* ent = GetEntry(KeyClass::KeyToPointer(aKey));
+  EntryType* ent = GetEntry(aKey);
 
   if (ent)
   {
@@ -278,7 +311,7 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::Put(KeyType      aKey,
   if (mLock)
     PR_RWLock_Wlock(mLock);
 
-  EntryType* ent = PutEntry(KeyClass::KeyToPointer(aKey));
+  EntryType* ent = PutEntry(aKey);
 
   if (!ent)
   {
@@ -303,14 +336,14 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::Remove(KeyType aKey)
   if (mLock)
     PR_RWLock_Wlock(mLock);
 
-  RemoveEntry(KeyClass::KeyToPointer(aKey));
+  RemoveEntry(aKey);
 
   if (mLock)
     PR_RWLock_Unlock(mLock);
 }
 
 template<class KeyClass,class DataType,class UserDataType>
-void
+PRUint32
 nsBaseHashtable<KeyClass,DataType,UserDataType>::EnumerateRead
   (EnumReadFunction fEnumCall, void* userArg) const
 {
@@ -321,12 +354,38 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::EnumerateRead
     PR_RWLock_Rlock(mLock);
 
   s_EnumReadArgs enumData = { fEnumCall, userArg };
-  PL_DHashTableEnumerate(NS_CONST_CAST(PLDHashTable*,&mTable),
-                         s_EnumStub,
-                         &enumData);
+  PRUint32 count =
+    PL_DHashTableEnumerate(NS_CONST_CAST(PLDHashTable*,&mTable),
+                           s_EnumReadStub,
+                           &enumData);
 
   if (mLock)
     PR_RWLock_Unlock(mLock);
+
+  return count;
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+PRUint32
+nsBaseHashtable<KeyClass,DataType,UserDataType>::Enumerate
+  (EnumFunction fEnumCall, void* userArg)
+{
+  NS_ASSERTION(mTable.entrySize,
+               "nsBaseHashtable was not initialized properly.");
+
+  if (mLock)
+    PR_RWLock_Wlock(mLock);
+
+  s_EnumArgs enumData = { fEnumCall, userArg };
+  PRUint32 count =
+    PL_DHashTableEnumerate(&mTable,
+                           s_EnumStub,
+                           &enumData);
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+
+  return count;
 }
 
 template<class KeyClass,class DataType,class UserDataType>
@@ -358,6 +417,17 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::s_EnumReadStub
     return PL_DHASH_STOP;
 
   return PL_DHASH_NEXT;
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+PLDHashOperator
+nsBaseHashtable<KeyClass,DataType,UserDataType>::s_EnumStub
+  (PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number, void* arg)
+{
+  EntryType* ent = NS_STATIC_CAST(EntryType*, hdr);
+  s_EnumArgs* eargs = (s_EnumArgs*) arg;
+
+  return (eargs->func)(ent->GetKey(), ent->mData, eargs->userArg);
 }
 
 #endif // nsBaseHashtable_h__

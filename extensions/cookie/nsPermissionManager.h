@@ -57,7 +57,7 @@
 // This should be a multiple of 4, to make PermissionsAreEmpty() fast
 #define NUMBER_OF_TYPES      (8)
 
-class nsHostEntry : protected PLDHashEntryHdr
+class nsHostEntry : public PLDHashEntryHdr
 {
 public:
   // Hash methods
@@ -98,10 +98,7 @@ public:
     return PL_DHashStringKey(nsnull, aKey);
   }
 
-  static PRBool AllowMemMove()
-  {
-    return PR_TRUE;
-  }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
   // Permissions methods
   inline const nsDependentCString GetHost() const

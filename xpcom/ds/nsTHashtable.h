@@ -53,7 +53,7 @@
  *   and <strong>must not declare any virtual functions or derive from classes
  *   with virtual functions.</strong>  Any vtable pointer would break the
  *   PLDHashTable code.
- *<pre>   class EntryType : PLDHashEntryHdr
+ *<pre>   class EntryType : public PLDHashEntryHdr
  *   {
  *   public: or friend nsTHashtable<EntryType>;
  *     // KeyType is what we use when Get()ing or Put()ing this entry
@@ -85,9 +85,9 @@
  *     // HashKey(): calculate the hash number
  *     static PLDHashNumber HashKey(KeyTypePointer aKey);
  *
- *     // AllowMemMove(): can we move this class with memmove(), or do we have
+ *     // ALLOW_MEMMOVE can we move this class with memmove(), or do we have
  *     // to use the copy constructor?
- *     static PRBool AllowMemMove();
+ *     enum { ALLOW_MEMMOVE = PR_(TRUE or FALSE) };
  *   }</pre>
  *
  * @see nsInterfaceHashtable
@@ -111,12 +111,18 @@ public:
   ~nsTHashtable();
 
   /**
-   * Initialize the class.  This function must be called before any other
+   * Initialize the table.  This function must be called before any other
    * class operations.  This can fail due to OOM conditions.
    * @param initSize the initial number of buckets in the hashtable, default 16
    * @return PR_TRUE if the class was initialized properly.
    */
   PRBool Init(PRUint32 initSize = PL_DHASH_MIN_SIZE);
+
+  /**
+   * Check whether the table has been initialized. This can be useful for static hashtables.
+   * @return the initialization state of the class.
+   */
+  PRBool IsInitialized() const { return mTable.entrySize; }
 
   /**
    * KeyType is typedef'ed for ease of use.
@@ -134,7 +140,18 @@ public:
    * @return    pointer to the entry class, if the key exists; nsnull if the
    *            key doesn't exist
    */
-  EntryType* GetEntry(KeyTypePointer aKey) const;
+  EntryType* GetEntry(KeyType aKey) const
+  {
+    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+  
+    EntryType* entry =
+      NS_REINTERPRET_CAST(EntryType*,
+                          PL_DHashTableOperate(
+                            NS_CONST_CAST(PLDHashTable*,&mTable),
+                            EntryType::KeyToPointer(aKey),
+                            PL_DHASH_LOOKUP));
+    return PL_DHASH_ENTRY_IS_BUSY(entry) ?  entry : nsnull;
+  }
 
   /**
    * Get the entry associated with a key, or create a new entry,
@@ -142,13 +159,42 @@ public:
    * @return    pointer to the entry class retreived; nsnull only if memory
                 can't be allocated
    */
-  EntryType* PutEntry(KeyTypePointer aKey);
+  EntryType* PutEntry(KeyType aKey)
+  {
+    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    
+    return NS_STATIC_CAST(EntryType*,
+                          PL_DHashTableOperate(
+                            &mTable,
+                            EntryType::KeyToPointer(aKey),
+                            PL_DHASH_ADD));
+  }
 
   /**
    * Remove the entry associated with a key.
    * @param     aKey of the entry to remove
    */
-  void RemoveEntry(KeyTypePointer aKey);
+  void RemoveEntry(KeyType aKey)
+  {
+    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+    PL_DHashTableOperate(&mTable,
+                         EntryType::KeyToPointer(aKey),
+                         PL_DHASH_REMOVE);
+  }
+
+  /**
+   * Remove the entry associated with a key, but don't resize the hashtable.
+   * This is a low-level method, and is not recommended unless you know what
+   * you're doing and you need the extra performance. This method can be used
+   * during enumeration, while RemoveEntry() cannot.
+   * @param aEntry   the entry-pointer to remove (obtained from GetEntry or
+   *                 the enumerator
+   */
+  void RawRemoveEntry(EntryType* aEntry)
+  {
+    PL_DHashTableRawRemove(&mTable, aEntry);
+  }
 
   /**
    * client must provide an <code>Enumerator</code> function for
@@ -169,12 +215,23 @@ public:
    *            <code>Enumerator</code> function
    * @return    the number of entries actually enumerated
    */
-  PRUint32 EnumerateEntries(Enumerator enumFunc, void* userArg);
+  PRUint32 EnumerateEntries(Enumerator enumFunc, void* userArg)
+  {
+    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+    
+    s_EnumArgs args = { enumFunc, userArg };
+    return PL_DHashTableEnumerate(&mTable, s_EnumStub, &args);
+  }
 
   /**
    * remove all entries, return hashtable to "pristine" state ;)
    */
-  void Clear();
+  void Clear()
+  {
+    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+    PL_DHashTableEnumerate(&mTable, PL_DHashStubEnumRemove, nsnull);
+  }
 
 protected:
   PLDHashTable mTable;
@@ -254,8 +311,11 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize)
   if (mTable.entrySize)
   {
     NS_ERROR("nsTHashtable::Init() should not be called twice.");
-    return PR_FALSE;
+    return PR_TRUE;
   }
+
+  if (!EntryType::ALLOW_MEMMOVE)
+    sOps.moveEntry = s_CopyEntry;
   
   if (!PL_DHashTableInit(&mTable, &sOps, nsnull, sizeof(EntryType), initSize))
   {
@@ -265,59 +325,6 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize)
   }
 
   return PR_TRUE;
-}
-
-template<class EntryType>
-EntryType*
-nsTHashtable<EntryType>::GetEntry(KeyTypePointer aKey) const
-{
-  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
-  
-  return NS_REINTERPRET_CAST(EntryType*,
-                             PL_DHashTableOperate(
-                               NS_CONST_CAST(PLDHashTable*,&mTable),
-                               aKey,
-                               PL_DHASH_LOOKUP));
-}
-
-template<class EntryType>
-EntryType*
-nsTHashtable<EntryType>::PutEntry(KeyTypePointer aKey)
-{
-  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
-
-  return (EntryType*) PL_DHashTableOperate(&mTable, aKey, PL_DHASH_ADD);
-}
-
-template<class EntryType>
-void
-nsTHashtable<EntryType>::RemoveEntry(KeyTypePointer aKey)
-{
-  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
-
-  PL_DHashTableOperate(&mTable, aKey, PL_DHASH_REMOVE);
-
-  return;
-}
-
-template<class EntryType>
-PRUint32
-nsTHashtable<EntryType>::EnumerateEntries(Enumerator enumFunc, void* userArg)
-{
-  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
-
-  s_EnumArgs args = { enumFunc, userArg };
-  
-  return PL_DHashTableEnumerate(&mTable, s_EnumStub, &args);
-}
-
-template<class EntryType>
-void
-nsTHashtable<EntryType>::Clear()
-{
-  NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
-
-  PL_DHashTableEnumerate(&mTable, PL_DHashStubEnumRemove, nsnull);
 }
 
 // static definitions
@@ -331,7 +338,7 @@ nsTHashtable<EntryType>::sOps =
   s_GetKey,
   s_HashKey,
   s_MatchEntry,
-  EntryType::AllowMemMove() ? ::PL_DHashMoveEntryStub : s_CopyEntry,
+  PL_DHashMoveEntryStub,
   s_ClearEntry,
   ::PL_DHashFinalizeStub,
   s_InitEntry
