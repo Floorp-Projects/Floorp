@@ -38,6 +38,7 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsICookieAcceptDialog = Components.interfaces.nsICookieAcceptDialog;
 
 var params; 
+var cookieBundle;
 var gDateService = null;
 
 var showDetails = "";
@@ -54,7 +55,7 @@ function onload()
                              .getService(nsIScriptableDateFormat);
   }
 
-  var cookieBundle = document.getElementById("cookieBundle");
+  cookieBundle = document.getElementById("cookieBundle");
 
   //cache strings
   if (!showDetails) {
