@@ -112,14 +112,25 @@ CWebShellContainer::MoveTo(PRInt32 aX, PRInt32 aY)
 
 
 NS_IMETHODIMP
-CWebShellContainer::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+CWebShellContainer::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 {
+	NG_TRACE_METHOD(CWebShellContainer::SizeTo);
 	return NS_OK;
 }
+
+
+NS_IMETHODIMP
+CWebShellContainer::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+	NG_TRACE_METHOD(CWebShellContainer::SizeWindowTo);
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP
 CWebShellContainer::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
+	NG_TRACE_METHOD(CWebShellContainer::SizeContentTo);
 	return NS_OK;
 }
 
@@ -128,6 +139,16 @@ NS_IMETHODIMP
 CWebShellContainer::GetContentBounds(nsRect& aResult)
 {
 	NG_TRACE_METHOD(CWebShellContainer::GetContentBounds);
+	return NS_OK;
+}
+
+
+
+
+NS_IMETHODIMP
+CWebShellContainer::GetBounds(nsRect& aResult)
+{
+	NG_TRACE_METHOD(CWebShellContainer::GetBounds);
 	return NS_OK;
 }
 
@@ -143,6 +164,7 @@ CWebShellContainer::GetWindowBounds(nsRect& aResult)
 NS_IMETHODIMP
 CWebShellContainer::IsIntrinsicallySized(PRBool& aResult)
 {
+	NG_TRACE_METHOD(CWebShellContainer::IsIntrinsicallySized);
     aResult = PR_FALSE;
     return NS_OK;
 }

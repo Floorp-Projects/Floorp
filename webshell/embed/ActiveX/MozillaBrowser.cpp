@@ -38,14 +38,10 @@ static const TCHAR *c_szUninitialized = _T("Method called while control is unini
 	RETURN_ERROR(c_szUninitialized, E_UNEXPECTED);
 
 
-
 extern "C" void NS_SetupRegistry();
 
-static const std::string c_szPrefsFile     = "prefs50.js";
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource:/res/MozillaControl.html";
-
-BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
 class CMozDir
 {
@@ -72,6 +68,8 @@ public:
 		SetCurrentDirectory(m_szOldDir);
 	}
 };
+
+BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
@@ -2098,6 +2096,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL
 }
 
 
+
+static BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam)
+{
+	::RevokeDragDrop(hwnd);
+	return TRUE;
+}
+ 
+
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL bRegister)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::put_RegisterAsDropTarget);
@@ -2137,6 +2143,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 
 				pDropTarget->Release();
 			}
+
+			// Now revoke any child window drop targets and pray they aren't
+			// reset by the layout engine.
+
+			::EnumChildWindows(m_hWnd, EnumChildProc, (LPARAM) this);
 		}
 	}
 	else
