@@ -6,6 +6,9 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Saving file"
+        width="425"
+        height="225"
         onload="onLoad()">
 
     <data>
@@ -20,6 +23,7 @@
     <dialog>
         <observes element="data.progress" attribute="value" onchange="onProgress()"/>
         <observes element="data.progress" attribute="completed" onchange="onCompletion()"/>
+        <observes element="data.status"   attribute="value" onchange="onStatus()"/>
     </dialog>
 
     <html:script>
@@ -150,6 +154,11 @@
                 completed = true;
                 data.execute.setAttribute( "command", "close" );
             }
+        }
+
+        function onStatus() {
+            var txt = data.status.getAttribute( "value" );
+            dialog.status.childNodes[0].nodeValue = txt;
         }
     </html:script>
 

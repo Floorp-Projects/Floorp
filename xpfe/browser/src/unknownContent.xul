@@ -6,6 +6,8 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Unknown File Type"
+        width="425"
+        height="180"
         onload="onLoad()">
 
     <data>
