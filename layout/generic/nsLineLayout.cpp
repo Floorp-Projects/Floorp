@@ -2636,8 +2636,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         if ( NS_SUCCEEDED(result) && blockTagAtom) {
           // (2) above, if the first line of LI
           if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
-            // if the line is empty, then don't force the min width (see bug 75963)
-            if ((mLineBox->mBounds.height > 0) || (mLineBox->mBounds.width > 0)) {
+            // if the line is empty, then don't force the min height (see bug 75963)
+            if (!IsZeroHeight()) {
               applyMinLH = PR_TRUE;
               foundLI = PR_TRUE;
             }
