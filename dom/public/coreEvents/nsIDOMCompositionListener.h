@@ -43,6 +43,7 @@ public:
 
   virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
   virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
+  virtual nsresult HandleQueryComposition(nsIDOMEvent* aCompositionEvent) = 0;
 
 };
 #endif // nsIDOMCompositionListener_h__

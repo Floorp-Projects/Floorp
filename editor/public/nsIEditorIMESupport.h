@@ -53,10 +53,15 @@ public:
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRange, nsTextEventReply* aReply) = 0;
 
   /**
-   * BeginComposition() Handles the end of inline input composition.
+   * EndComposition() Handles the end of inline input composition.
    */
 
   NS_IMETHOD EndComposition(void) = 0;
+
+  /**
+   * QueryComposition()  Get the composition position
+   */
+  NS_IMETHOD QueryComposition(nsTextEventReply *aReply) = 0;
 
 };
 

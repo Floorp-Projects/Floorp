@@ -821,6 +821,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 	
 	  case NS_COMPOSITION_START:
 	  case NS_COMPOSITION_END:
+	  case NS_COMPOSITION_QUERY:
 #if DEBUG_TAGUE
 		  printf("DOM: got composition event\n");
 #endif
@@ -842,6 +843,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 						    if (aEvent->message==NS_COMPOSITION_END) {
 							    ret = mCompositionListener->HandleEndComposition(*aDOMEvent);
 						    }
+						    if (aEvent->message==NS_COMPOSITION_QUERY) {
+							    ret = mCompositionListener->HandleQueryComposition(*aDOMEvent);
+						    }
 						  }
 						  NS_RELEASE(mCompositionListener);
 					  }
@@ -858,6 +862,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 						    case NS_COMPOSITION_END:
                   subType = NS_EVENT_BITS_COMPOSITION_END;
 							    if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_END) {
+							      correctSubType = PR_TRUE;
+							    }
+							    break;
+						    case NS_COMPOSITION_QUERY:
+                  subType = NS_EVENT_BITS_COMPOSITION_QUERY;
+							    if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_QUERY) {
 							      correctSubType = PR_TRUE;
 							    }
 							    break;

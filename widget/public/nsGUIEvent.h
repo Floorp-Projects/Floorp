@@ -234,6 +234,7 @@ enum nsDragDropEventStatus {
 #define NS_COMPOSITION_START	13
 #define NS_COMPOSITION_END		14
 #define NS_MOUSE_SCROLL_EVENT 15
+#define NS_COMPOSITION_QUERY		16
  
  /**
  * GUI MESSAGES

@@ -40,6 +40,7 @@ class nsIToolkit;
 #include <gdk/gdkprivate.h>
 
 #include "gtkmozbox.h"
+#include "nsITimer.h"
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
@@ -415,6 +416,14 @@ protected:
   static nsIRollupListener *gRollupListener;
   static nsIWidget         *gRollupWidget;
   static PRBool             gRollupConsumeRollupEvent;
+
+  nsITimer* mICSpotTimer;
+  static void ICSpotCallback(nsITimer* aTimer, void* aClosure);
+  nsresult UpdateICSpot();
+public:
+  nsresult KillICSpotTimer();
+  nsresult PrimeICSpotTimer();
+
 
 private:
   PRBool mIsDragDest;

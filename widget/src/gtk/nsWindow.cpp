@@ -585,6 +585,7 @@ nsWindow::SetFocus(void)
     if (mIC)
     {
       GdkWindow *gdkWindow = (GdkWindow*) focusWindow->GetNativeData(NS_NATIVE_WINDOW);
+      focusWindow->KillICSpotTimer();
       if (gdkWindow)
       {
         gdk_im_end();
@@ -656,6 +657,7 @@ nsWindow::SetFocus(void)
     if (gdkWindow)
     {
       gdk_im_begin ((GdkIC*)mIC, gdkWindow);
+      PrimeICSpotTimer();
     }
     else
     {
@@ -718,6 +720,7 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
     if (gdkWindow)
     {
       gdk_im_begin ((GdkIC*)mIC, gdkWindow);
+      PrimeICSpotTimer();
     }
     else
     {
@@ -773,6 +776,7 @@ nsWindow::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
   if (mIC)
   {
     GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
+    KillICSpotTimer();
     if (gdkWindow)
     {
       gdk_im_end();

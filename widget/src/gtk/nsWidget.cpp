@@ -70,6 +70,68 @@ PRUint32 nsWidget::sWidgetCount = 0;
 // this is the nsWindow with the focus
 nsWidget *nsWidget::focusWindow = NULL;
 
+
+
+nsresult nsWidget::KillICSpotTimer ()
+{
+   if(mICSpotTimer)
+   {
+     mICSpotTimer->Cancel();
+     NS_RELEASE(mICSpotTimer);
+     mICSpotTimer = nsnull;
+   }
+   return NS_OK;
+}
+nsresult nsWidget::PrimeICSpotTimer ()
+{
+   KillICSpotTimer();
+   nsresult err = NS_NewTimer(&mICSpotTimer);
+   if(NS_FAILED(err))
+       return err;
+   mICSpotTimer->Init(ICSpotCallback, this, 1000);
+   return NS_OK;
+}
+void nsWidget::ICSpotCallback(nsITimer * aTimer, void * aClosure)
+{
+   nsWidget *widget= NS_REINTERPRET_CAST(nsWidget*, aClosure);
+   if( ! widget) return;
+   nsresult res = widget->UpdateICSpot();
+   if(NS_SUCCEEDED(res))
+   {
+      widget->PrimeICSpotTimer();
+   }
+}
+nsresult nsWidget::UpdateICSpot()
+{
+   // set spot location
+   nsCompositionEvent compEvent;
+   nsEventStatus status;
+   compEvent.widget = (nsWidget*)this;
+   compEvent.point.x = 0;
+   compEvent.point.y = 0;
+   compEvent.time = 0;
+   compEvent.message = NS_COMPOSITION_QUERY;
+   compEvent.eventStructType = NS_COMPOSITION_QUERY;
+   compEvent.compositionMessage = NS_COMPOSITION_QUERY;
+   static gint oldx =0;
+   static gint oldy =0;
+   compEvent.theReply.mCursorPosition.x=-1;
+   compEvent.theReply.mCursorPosition.y=-1;
+   DispatchEvent(&compEvent, status);
+   // set SpotLocation
+   if((compEvent.theReply.mCursorPosition.x == -1) &&
+      (compEvent.theReply.mCursorPosition.y == -1))
+     return NS_ERROR_ABORT;
+   if((compEvent.theReply.mCursorPosition.x != oldx)||
+      (compEvent.theReply.mCursorPosition.y != oldy))
+   {
+       SetXICSpotLocation(compEvent.theReply.mCursorPosition);
+       oldx = compEvent.theReply.mCursorPosition.x;
+       oldy = compEvent.theReply.mCursorPosition.y;
+   } 
+   return NS_OK;
+}
+
 nsIRollupListener *nsWidget::gRollupListener = nsnull;
 nsIWidget         *nsWidget::gRollupWidget = nsnull;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
@@ -148,6 +210,8 @@ nsWidget::nsWidget()
   mIMECompositionUniString = nsnull;
   mIMECompositionUniStringSize = 0;
   mListenForResizes = PR_FALSE;
+
+  mICSpotTimer = nsnull;
   mHasFocus = PR_FALSE;
   if (mGDKHandlerInstalled == PR_FALSE) {
     mGDKHandlerInstalled = PR_TRUE;
@@ -159,6 +223,7 @@ nsWidget::nsWidget()
 
 nsWidget::~nsWidget()
 {
+  KillICSpotTimer();
 #ifdef NOISY_DESTROY
   IndentByDepth(stdout);
   printf("nsWidget::~nsWidget:%p\n", this);
@@ -2008,21 +2073,7 @@ nsWidget::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
     if (gdkWindow)
     {
       gdk_im_begin ((GdkIC*)mIC, gdkWindow);
-#if 0
-      // set spot location
-      nsCompositionEvent compEvent;
-      nsEventStatus status;
-      compEvent.widget = (nsWidget*)this;
-      compEvent.point.x = 0;
-      compEvent.point.y = 0;
-      compEvent.time = 0;
-      compEvent.message = NS_COMPOSITION_START;
-      compEvent.eventStructType = NS_COMPOSITION_START;
-      compEvent.compositionMessage = NS_COMPOSITION_START;
-      DispatchEvent(&compEvent, status);
-      // set SpotLocation
-      SetXICSpotLocation(compEvent.theReply.mCursorPosition);
-#endif
+      PrimeICSpotTimer();
     }
     else
     {
@@ -2079,6 +2130,8 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
   }
   if (mIC)
   {
+    KillICSpotTimer();
+
     GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
     if (gdkWindow)
     {
