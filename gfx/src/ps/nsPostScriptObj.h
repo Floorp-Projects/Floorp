@@ -74,11 +74,11 @@ typedef struct {
 static const
 PSPaperSizeRec postscript_module_paper_sizes[] =
 {
-  // 148mm X 210mm == 5.83in X 8.27in  
+  /* 148mm X 210mm == 5.83in X 8.27in */
   { "A5",         5.83f, 8.27f },
-  // 210mm X 297mm == 8.27in X 11.69in  
+  /* 210mm X 297mm == 8.27in X 11.69in */
   { "A4",         8.27f, 11.69f },
-  // 297mm X 420mm == 11.69in X 16.53in  
+  /* 297mm X 420mm == 11.69in X 16.53in */
   { "A3",        11.69f, 16.53f },
   { "Letter",     8.50f,  11.0f  },
   { "Legal",      8.50f,  14.0f  },   
