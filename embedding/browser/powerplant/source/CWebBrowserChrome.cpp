@@ -136,7 +136,7 @@ NS_IMETHODIMP CWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstanc
         nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(NS_SINGLESIGNONPROMPT_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-          siPrompt->Init(prompt);
+          siPrompt->SetPromptDialogs(prompt);
           mPrompter = siPrompt;
         }
         else
