@@ -923,7 +923,7 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
 
     // Create a cache transport to read the cached response...
     nsCOMPtr<nsIChannel> cacheTransport;
-    rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheTransport));
+    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(cacheTransport));
     if (NS_FAILED(rv)) return rv;
 
     mRequest->SetTransport(cacheTransport);
@@ -1832,7 +1832,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
 
     // Create a cache transport to read the cached response...
     nsCOMPtr<nsIChannel> cacheTransport;
-    rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheTransport));
+    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(cacheTransport));
     if (NS_FAILED(rv)) return rv;
 
     mRequest->SetTransport(cacheTransport);

@@ -210,12 +210,9 @@ interface nsICachedNetData : nsISupports
      *
      * Though nsIChannel provides for both async and synchronous I/O APIs, both
      * may not be implemented.  Only AsyncRead() and OpenOutputStream() is
-     * required.  The aProxyChannel argument allows another channel to be
-     * specified as the proffered argument to nsIStreamListener methods rather
-     * than the cache's own channel.
+     * required.  
      */
-    nsIChannel newChannel(in nsILoadGroup aLoadGroup,
-                          in nsIChannel aProxyChannel);
+    nsIChannel newChannel(in nsILoadGroup aLoadGroup);
 
     /**
      * This method can be used by a caching protocol handler to store data in

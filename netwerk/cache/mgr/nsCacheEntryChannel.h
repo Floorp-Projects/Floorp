@@ -75,7 +75,6 @@ protected:
 private:
     nsCOMPtr<nsCachedNetData>    mCacheEntry;
     nsCOMPtr<nsILoadGroup>       mLoadGroup;
-    nsCOMPtr<nsIChannel>         mProxyChannel;
     nsLoadFlags                  mLoadAttributes;
 };
 

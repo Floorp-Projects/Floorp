@@ -1035,7 +1035,7 @@ nsCachedNetData::GetCache(nsINetDataCache* *aCache)
 }
 
 NS_IMETHODIMP
-nsCachedNetData::NewChannel(nsILoadGroup* aLoadGroup, nsIChannel* aProxyChannel, nsIChannel* *aChannel)
+nsCachedNetData::NewChannel(nsILoadGroup* aLoadGroup, nsIChannel* *aChannel)
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
@@ -1049,7 +1049,6 @@ nsCachedNetData::NewChannel(nsILoadGroup* aLoadGroup, nsIChannel* aProxyChannel,
     cacheEntryChannel = new nsCacheEntryChannel(this, channel, aLoadGroup);
     if (!cacheEntryChannel)
         return NS_ERROR_OUT_OF_MEMORY;
-    cacheEntryChannel->mProxyChannel = aProxyChannel;
 
     *aChannel = cacheEntryChannel;
     NS_ADDREF(*aChannel);
@@ -1089,7 +1088,7 @@ public:
         // Just in case the protocol handler forgot to set this flag...
         mCacheEntry->SetFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
 
-        rv = mCacheEntry->NewChannel(0, 0, getter_AddRefs(mChannel));
+        rv = mCacheEntry->NewChannel(0, getter_AddRefs(mChannel));
         if (NS_FAILED(rv)) return rv;
 
         return mChannel->OpenOutputStream(aStartingOffset, getter_AddRefs(mCacheStream));

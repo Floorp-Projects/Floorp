@@ -40,7 +40,7 @@ nsHeaderEntry::~nsHeaderEntry()
 }
 
 
-NS_IMPL_ISUPPORTS(nsHeaderEntry, NS_GET_IID(nsIHTTPHeader))
+NS_IMPL_THREADSAFE_ISUPPORTS(nsHeaderEntry, NS_GET_IID(nsIHTTPHeader))
 
 
 NS_IMETHODIMP

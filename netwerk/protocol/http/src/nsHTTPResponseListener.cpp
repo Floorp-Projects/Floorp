@@ -533,7 +533,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in,
   // characters...
   //
   mHeaderBuffer.CompressSet(" \t", ' ');
-  mHeaderBuffer.StripChars("\r\n");
+  mHeaderBuffer.Trim("\r\n", PR_FALSE);
 
   rv = mResponse->ParseStatusLine(mHeaderBuffer);
   if (NS_SUCCEEDED(rv)) {
