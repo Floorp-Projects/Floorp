@@ -3628,28 +3628,57 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
 //                appropriate.  The place to split is represented by
 //                a dom point at {splitPointParent, splitPointOffset}.
 //                That dom point must be inside aNode, which is the node to 
-//                split.
+//                split.  outOffset is set to the offset in aNode where
+//                the split terminates - where you would want to insert 
+//                a new element, for instance, if thats why you were splitting 
+//                the node.
+//
 nsresult
 nsEditor::SplitNodeDeep(nsIDOMNode *aNode, 
                         nsIDOMNode *aSplitPointParent, 
-                        PRInt32 aSplitPointOffset)
+                        PRInt32 aSplitPointOffset,
+                        PRInt32 *outOffset)
 {
-  if (!aNode || !aSplitPointParent) return NS_ERROR_NULL_POINTER;
+  if (!aNode || !aSplitPointParent || !outOffset) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> nodeToSplit = do_QueryInterface(aSplitPointParent);
-  nsCOMPtr<nsIDOMNode> tempNode;  
+  nsCOMPtr<nsIDOMNode> tempNode, parentNode;  
   PRInt32 offset = aSplitPointOffset;
+  nsresult res;
   
   while (nodeToSplit)
   {
-    nsresult res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
+    // need to insert rules code call here to do thingsa like
+    // not split a list if you are after the last <li> or before the first, etc.
+    // for now we just have some smarts about unneccessarily splitting
+    // textnodes, which should be universal enough to put straight in
+    // this nsEditor routine.
+    
+    nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(nodeToSplit);
+    PRUint32 textLen=0;
+    if (nodeAsText)
+      nodeAsText->GetLength(&textLen);
+    PRBool bDoSplit = PR_FALSE;
+    
+    if (!nodeAsText || (offset && (offset != textLen)))
+    {
+      bDoSplit = PR_TRUE;
+      nsresult res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
+      if (NS_FAILED(res)) return res;
+    }
+
+    res = nodeToSplit->GetParentNode(getter_AddRefs(parentNode));
     if (NS_FAILED(res)) return res;
+    if (!parentNode) return NS_ERROR_FAILURE;
+    
+    if (!bDoSplit && offset)  // must be "end of text node" case, we didn't split it, just move past it
+      offset = GetIndexOf(parentNode, nodeToSplit) +1;
+    else
+      offset = GetIndexOf(parentNode, nodeToSplit);
     
     if (nodeToSplit.get() == aNode)  // we split all the way up to (and including) aNode; we're done
       break;
       
-    tempNode = nodeToSplit;
-    res = tempNode->GetParentNode(getter_AddRefs(nodeToSplit));
-    offset = GetIndexOf(nodeToSplit, tempNode);
+    nodeToSplit = parentNode;
   }
   
   if (!nodeToSplit)
@@ -3657,6 +3686,8 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
     NS_NOTREACHED("null node obtained in nsEditor::SplitNodeDeep()");
     return NS_ERROR_FAILURE;
   }
+  
+  *outOffset = offset;
   
   return NS_OK;
 }
