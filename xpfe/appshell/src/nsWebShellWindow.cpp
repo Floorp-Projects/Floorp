@@ -216,7 +216,6 @@ nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
   mWindow   = nsnull;
   mCallbacks = nsnull;
   mLockedUntilChromeLoad = PR_FALSE;
-  mChromeMask = NS_CHROME_ALL_CHROME;
   mIntrinsicallySized = PR_FALSE;
   mDebuting = PR_FALSE;
   mLoadDefaultPage = PR_TRUE;
@@ -1131,189 +1130,6 @@ nsWebShellWindow::GetPresShell(nsIPresShell** aPresShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
-{
-  // Find out the id of the frameNode in question 
-  nsIAtom      *idAtom = NS_NewAtom("id");
-  nsIAtom      *typeAtom = NS_NewAtom("type");
-  PRBool       isPrimary;
-  nsAutoString value;
-
-  // right now, any webshell with type "content" or "content-XXX" is
-  // considered a content webshell.  but only "content-primary" is
-  // considered primary.
-  frameNode->GetAttribute(kNameSpaceID_None, typeAtom, value);
-  isPrimary = value.EqualsIgnoreCase(kPrimaryContentTypeValue) ? PR_TRUE : PR_FALSE;
-  frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
-
-  NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellTreeItem> childAsItem(do_QueryInterface(aChildShell));
-  mChromeTreeOwner->ContentShellAdded(childAsItem, isPrimary, value.GetUnicode());
-
-  NS_RELEASE(typeAtom);
-  NS_RELEASE(idAtom);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
-                              nsIWebShell *&aNewWebShell)
-{
-   NS_ERROR("Can't use this anymore");
-   return NS_ERROR_FAILURE;
-
- /* nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIWebShellWindow> newWindow;
-
-  // XXX Check modal chrome flag to run a modal dialog!
-
-  if ((aChromeMask & NS_CHROME_OPEN_AS_CHROME) != 0) {
-    // Just do a nice normal create of a web shell and
-    // return it immediately. 
-
-    nsIWebShellWindow *parent = aChromeMask & NS_CHROME_DEPENDENT ? this : nsnull;
-    rv = appShell->CreateTopLevelWindow(parent, nsnull, aVisible, PR_FALSE,
-                                 aChromeMask, nsnull,
-                                 NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-                                 getter_AddRefs(newWindow));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
-      if (browser)
-        browser->SetChrome(aChromeMask);
-      newWindow->GetWebShell(aNewWebShell); // GetWebShell does the addref.
-    }
-    return rv;
-  }
-
-  // We need to create a new top level window and then enter a nested
-  // loop. Eventually the new window will be told that it has loaded,
-  // at which time we know it is safe to spin out of the nested loop
-  // and allow the opening code to proceed.
-
-  // First push a nested event queue for event processing from netlib
-  // onto our UI thread queue stack.
-  stEventQueueStack queuePusher;
-  rv = queuePusher.Success();
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIURI> urlObj;
-  char * urlStr = "chrome://navigator/content/";
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsIURI *uri = nsnull;
-  rv = service->NewURI(urlStr, nsnull, &uri);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
-  NS_RELEASE(uri);
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, aVisible, PR_FALSE,
-                                 aChromeMask, nsnull, 615, 480,
-                                 getter_AddRefs(newWindow));
-  }
-
-  nsIAppShell *subshell;
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
-    if (browser)
-      browser->SetChrome(aChromeMask);
-
-    // Spin into the modal loop.
-    rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, NS_GET_IID(nsIAppShell), (void**)&subshell);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-
-    subshell->Create(0, nsnull);
-    subshell->Spinup(); // Spin up 
-
-    // Specify that we want the window to remain locked until the chrome has loaded.
-    newWindow->LockUntilChromeLoad();
-
-    PRBool locked = PR_FALSE;
-    nsresult looprv = NS_OK;
-    newWindow->GetLockedState(locked);
-
-    // Push nsnull onto the JSContext stack before we dispatch a native event.
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
-                    &rv);
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(stack->Push(nsnull))) {
-
-      while (NS_SUCCEEDED(looprv) && locked) {
-        void      *data;
-        PRBool    isRealEvent;
-    
-        looprv = subshell->GetNativeEvent(isRealEvent, data);
-        subshell->DispatchNativeEvent(isRealEvent, data);
-
-        newWindow->GetLockedState(locked);
-      }
-
-      JSContext *cx;
-      stack->Pop(&cx);
-      NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
-    }
-
-    subshell->Spindown();
-    NS_RELEASE(subshell);
-  }
-
-  // We're out of the nested loop.
-  // During the layout of the new window, all content shells were located and placed
-  // into the new window's content shell array.  Locate the "content area" content
-  // shell.
-  if (NS_SUCCEEDED(rv)) {
-    rv = newWindow->GetContentShellById("content", &aNewWebShell);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("Unable to obtain a browser content shell.");
-      return rv;
-    }
-  }
-
-  return rv; */
-}
-
-
-/**
- * FindWebShellWithName - recursively search for any open window
- * containing a webshell with the given name.
- * @param aName - the name of the webshell to find. I believe this cannot
- *                be null. Hard to tell. If zero-length, the find will
- *                always fail (returning NS_OK).
- * @param aResult - the webshell, returned, addrefed. null on failure to
- *                  locate the desired webshell.
- * @return an error indication. Can be NS_OK even if no match was found.
- */
-NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
-                                                     nsIWebShell*& aResult)
-{
-   aResult = nsnull;
-   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-   
-   nsCOMPtr<nsIDocShellTreeItem> shellItem;
-   NS_ENSURE_SUCCESS(mContentTreeOwner->FindItemWithName(aName, nsnull, 
-      getter_AddRefs(shellItem)), NS_ERROR_FAILURE);
-
-   if(shellItem)
-      NS_ENSURE_SUCCESS(CallQueryInterface(shellItem, &aResult), NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
-{
-  return NS_OK;
-}
-
 //----------------------------------------
 // nsIWebShellWindow methods...
 //----------------------------------------
@@ -2022,7 +1838,8 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
 
    rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE, PR_TRUE,
        nsnull, aBounds.width, aBounds.height, widgetInitData);
-   mChromeMask = aChromeMask;
+   EnsureContentTreeOwner();
+   mContentTreeOwner->SetChromeMask(aChromeMask);
    if (NS_SUCCEEDED(rv))
      MoveTo(aBounds.x, aBounds.y);
    return rv;
@@ -2223,16 +2040,6 @@ NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgress
     rv = NotifyObservers( "progress", topic );
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsWebShellWindow::ShowMenuBar(PRBool aShow)
-{
-  if (aShow)
-    mChromeMask |= NS_CHROME_MENU_BAR_ON;
-  else
-    mChromeMask &= ~NS_CHROME_MENU_BAR_ON;
-  return mWindow->ShowMenuBar(aShow);
 }
 
 NS_IMETHODIMP
