@@ -164,6 +164,7 @@ public class TestArray {
     System.out.println("release array:");
     array = null;
     System.gc();
+    dumpArray(array, 0, null, 0);
 
     componentManager = null;
     System.gc();
@@ -190,7 +191,9 @@ public class TestArray {
   static void dumpArray(nsIMutableArray aArray, int aExpectedCount,
                         int[] aElementIDs, int aExpectedTotal)
   {
-    int count = aArray.getLength();
+    int count = 0;
+    if (aArray != null)
+      count = aArray.getLength();
 
     System.out.println("object count " + Foo.gCount + " = " + aExpectedTotal +
                        " " + assertEqual(Foo.gCount, aExpectedTotal));
