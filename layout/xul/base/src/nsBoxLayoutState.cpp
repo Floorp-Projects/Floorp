@@ -152,15 +152,10 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
       {
          case eReflowReason_Incremental: 
          {
-           // Unwind the reflow command, updating dirty bits as
-           // appropriate.
            // XXXwaterson according to evaughan's prior comment here,
            // the target ought not to be a box frame. This makes some
            // of the logic in `Unwind' confusing.
-           PRBool clearDirtyBits =
-             (mReflowState->path->mReflowCommand == nsnull);
-
-           Unwind(mReflowState->path, aRootBox, clearDirtyBits);
+           Unwind(mReflowState->path, aRootBox);
            mType = Dirty;
            break;  
          }
@@ -193,7 +188,7 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
 
 
 void
-nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox, PRBool aClearDirtyBits)
+nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
 {
   // If incremental, unwind the reflow path, updating dirty bits
   // appropriately. We recursively descend through the reflow tree,
@@ -204,11 +199,6 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox, PRBool aCl
   // NS_FRAME_HAS_DIRTY_CHILDREN bit on each box on the path back to
   // root, as well as initialize each box correctly for a dirty
   // layout.
-  //
-  // Note that we _won't_ clear the NS_FRAME_HAS_DIRTY_CHILDREN bit
-  // once we encounter a target: boxes below a target are assumed to
-  // have had their reflow states initialized properly for a dirty
-  // layout, and we don't want to perturb them.
   nsReflowPath::iterator iter = aReflowPath->FirstChild();
   nsReflowPath::iterator end = aReflowPath->EndChildren();
 
@@ -221,16 +211,12 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox, PRBool aCl
       continue;
     }
 
+    // Clear the dirty-children bit. This will be re-set by MarkDirty
+    // once we reach a target.
     nsFrameState state;
     (*iter)->GetFrameState(&state);
-
-    // Clear the dirty-children bit if no box above us has been
-    // targeted. This will be re-set by MarkDirty once we reach a
-    // target.
-    if (aClearDirtyBits) {
-      state &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
-      (*iter)->SetFrameState(state);
-    }
+    state &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
+    (*iter)->SetFrameState(state);
 
     if (isAdaptor) {
       // It's nested HTML. Mark the root box's frame with
@@ -300,15 +286,10 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox, PRBool aCl
       }
       else
         ibox->MarkDirty(*this);      
-
-      // Since we're the target of the reflow, don't clear any dirty
-      // bits below this box, as they're still significant and ought
-      // not be coalesced away.
-      aClearDirtyBits = PR_FALSE;
     }
 
     // Recursively unwind the reflow path.
-    Unwind(iter.get(), aRootBox, aClearDirtyBits);
+    Unwind(iter.get(), aRootBox);
   }
 }
 
