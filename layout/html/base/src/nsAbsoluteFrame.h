@@ -41,7 +41,7 @@ public:
 
   // nsIFrame overrides
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
-                     nsReflowMetrics&     aDesiredSize,
+                     nsHTMLReflowMetrics& aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
 

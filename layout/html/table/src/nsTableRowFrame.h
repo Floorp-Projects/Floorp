@@ -82,7 +82,7 @@ public:
     * @see nsTableFrame::ShrinkWrapChildren
     */
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -157,7 +157,7 @@ protected:
    */
   nsresult ResizeReflow(nsIPresContext&  aPresContext,
                         RowReflowState&  aState,
-                        nsReflowMetrics& aDesiredSize);
+                        nsHTMLReflowMetrics& aDesiredSize);
 
   /**
    * Called for the initial reflow. Creates each table cell frame, and
@@ -165,14 +165,14 @@ protected:
    */
   nsresult InitialReflow(nsIPresContext&  aPresContext,
                          RowReflowState&  aState,
-                         nsReflowMetrics& aDesiredSize);
+                         nsHTMLReflowMetrics& aDesiredSize);
 
   /**
    * Called for incremental reflow
    */
   nsresult IncrementalReflow(nsIPresContext&  aPresContext,
                              RowReflowState&  aState,
-                             nsReflowMetrics& aDesiredSize);
+                             nsHTMLReflowMetrics& aDesiredSize);
 
 private:
   PRInt32  mRowIndex;

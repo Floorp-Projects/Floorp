@@ -43,7 +43,7 @@ public:
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsReflowMetrics& aDesiredSize,
+                          nsHTMLReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState);
 
 protected:
@@ -110,7 +110,7 @@ BRFrame::FindTextRuns(nsLineLayout& aLineLayout,
 
 NS_IMETHODIMP
 BRFrame::InlineReflow(nsLineLayout& aLineLayout,
-                      nsReflowMetrics& aMetrics,
+                      nsHTMLReflowMetrics& aMetrics,
                       const nsReflowState& aReflowState)
 {
   if (nsnull != aMetrics.maxElementSize) {

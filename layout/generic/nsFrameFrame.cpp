@@ -113,7 +113,7 @@ public:
                    const nsRect& aDirtyRect);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
   NS_IMETHOD  VerifyTree() const;
@@ -124,7 +124,7 @@ protected:
   virtual ~nsHTMLFrameOuterFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
   virtual PRIntn GetSkipSides() const;
   PRBool *mIsInline;
 };
@@ -151,7 +151,7 @@ public:
     * @see nsIFrame::Reflow
     */
   NS_IMETHOD Reflow(nsIPresContext&      aCX,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -172,7 +172,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
 
   nsIWebShell* mWebShell;
   PRBool mCreatingViewer;
@@ -224,7 +224,7 @@ nsHTMLFrameOuterFrame::GetSkipSides() const
 void 
 nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                       const nsReflowState& aReflowState,
-                                      nsReflowMetrics& aDesiredSize)
+                                      nsHTMLReflowMetrics& aDesiredSize)
 {
   // <frame> processing does not use this routine, only <iframe>
   float p2t = aPresContext->GetPixelsToTwips();
@@ -286,7 +286,7 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::ListTag(FILE* out) const
 
 NS_IMETHODIMP
 nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
+                              nsHTMLReflowMetrics& aDesiredSize,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
@@ -316,16 +316,20 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
   nsSize innerSize(aDesiredSize.width - borderWidth - kludge, aDesiredSize.height - borderWidth - kludge);
 
   // Reflow the child and get its desired size
-  nsReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsReflowState kidReflowState(mFirstChild, aReflowState, innerSize);
-  mFirstChild->WillReflow(aPresContext);
-  aStatus = ReflowChild(mFirstChild, &aPresContext, kidMetrics, kidReflowState);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
+  nsReflowState       kidReflowState(mFirstChild, aReflowState, innerSize);
+  nsIHTMLReflow*      htmlReflow;
+
+  if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    htmlReflow->WillReflow(aPresContext);
+    aStatus = ReflowChild(mFirstChild, &aPresContext, kidMetrics, kidReflowState);
+    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
-  // Place and size the child
-  nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
-  mFirstChild->SetRect(rect);
-  mFirstChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+    // Place and size the child
+    nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
+    mFirstChild->SetRect(rect);
+    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  }
 
   // XXX what should the max-element-size of an iframe be? Shouldn't
   // iframe's normally shrink wrap around their content when they
@@ -688,7 +692,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
+                              nsHTMLReflowMetrics& aDesiredSize,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
@@ -754,7 +758,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
 void 
 nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                       const nsReflowState& aReflowState,
-                                      nsReflowMetrics& aDesiredSize)
+                                      nsHTMLReflowMetrics& aDesiredSize)
 {
   // it must be defined, but not called
   NS_ASSERTION(0, "this should never be called");

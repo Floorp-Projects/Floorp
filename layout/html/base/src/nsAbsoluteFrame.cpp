@@ -53,7 +53,7 @@ nsAbsoluteFrame::~nsAbsoluteFrame()
 }
 
 NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&      aPresContext,
-                                      nsReflowMetrics&     aDesiredSize,
+                                      nsHTMLReflowMetrics& aDesiredSize,
                                       const nsReflowState& aReflowState,
                                       nsReflowStatus&      aStatus)
 {

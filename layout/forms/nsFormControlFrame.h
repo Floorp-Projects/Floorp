@@ -118,7 +118,7 @@ public:
     * @see nsIFrame::Reflow
     */
   NS_IMETHOD Reflow(nsIPresContext&      aCX,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -216,11 +216,11 @@ protected:
     */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, nsFont& aFont);

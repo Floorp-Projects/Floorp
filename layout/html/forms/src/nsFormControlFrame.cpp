@@ -164,7 +164,7 @@ nsFormControlFrame::Paint(nsIPresContext& aPresContext,
 void 
 nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsReflowState& aReflowState,
-                             nsReflowMetrics& aDesiredLayoutSize,
+                             nsHTMLReflowMetrics& aDesiredLayoutSize,
                              nsSize& aDesiredWidgetSize)
 {
   // get the css size and let the frame use or override it
@@ -183,7 +183,7 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsReflowState& aReflowState,
-                             nsReflowMetrics& aDesiredSize)
+                             nsHTMLReflowMetrics& aDesiredSize)
 {
   nsSize ignore;
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize, ignore);
@@ -209,7 +209,7 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
 
 NS_METHOD
 nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
-                     nsReflowMetrics&     aDesiredSize,
+                     nsHTMLReflowMetrics& aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus)
 {

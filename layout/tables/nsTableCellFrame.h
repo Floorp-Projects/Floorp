@@ -65,7 +65,7 @@ public:
                    const nsRect& aDirtyRect);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -107,7 +107,7 @@ public:
   virtual nsSize GetDesiredSize();
 
   /** set the desired size returned by this frame during its last reflow */
-  virtual void SetDesiredSize(const nsReflowMetrics & aDesiredSize);
+  virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
   /** return the MaxElement size returned by this frame during its last reflow 
     * not counting reflows where MaxElementSize is not requested.  
@@ -124,7 +124,7 @@ public:
   virtual nsSize GetPass1DesiredSize();
 
   /** set the desired size returned by this frame during its last reflow */
-  virtual void SetPass1DesiredSize(const nsReflowMetrics & aDesiredSize);
+  virtual void SetPass1DesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
 
   /** return the MaxElement size returned by this frame during its last reflow 
     * not counting reflows where MaxElementSize is not requested.  
@@ -267,7 +267,7 @@ inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
 inline nsSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
 
-inline void nsTableCellFrame::SetDesiredSize(const nsReflowMetrics & aDesiredSize)
+inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
 { 
   mDesiredSize.width = aDesiredSize.width;
   mDesiredSize.height = aDesiredSize.height;
@@ -285,7 +285,7 @@ inline void nsTableCellFrame::SetMaxElementSize(const nsSize & aMaxElementSize)
 inline nsSize nsTableCellFrame::GetPass1DesiredSize()
 { return mPass1DesiredSize; }
 
-inline void nsTableCellFrame::SetPass1DesiredSize(const nsReflowMetrics & aDesiredSize)
+inline void nsTableCellFrame::SetPass1DesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
 { 
   mPass1DesiredSize.width = aDesiredSize.width;
   mPass1DesiredSize.height = aDesiredSize.height;

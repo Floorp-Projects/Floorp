@@ -115,7 +115,7 @@ nsFormFrame::CanSubmit(nsFormControlFrame& aFrame)
 void 
 nsFormFrame::GetDesiredSize(nsIPresContext* aPresContext,
                             const nsReflowState& aReflowState,
-                            nsReflowMetrics& aDesiredSize)
+                            nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width   = 0;
   aDesiredSize.height  = 0;
@@ -201,7 +201,7 @@ nsFormFrame::GetEnctype(PRInt32* aEnctype)
 
 NS_IMETHODIMP
 nsFormFrame::Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus)
 {

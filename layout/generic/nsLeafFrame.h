@@ -34,7 +34,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
@@ -53,7 +53,7 @@ protected:
    */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize) = 0;
+                              nsHTMLReflowMetrics& aDesiredSize) = 0;
 
   /**
    * Get the inner rect of this frame. This takes the outer size (mRect)
@@ -65,7 +65,7 @@ protected:
    * Subroutine to add in borders and padding
    */
   void AddBordersAndPadding(nsIPresContext* aPresContext,
-                            nsReflowMetrics& aDesiredSize);
+                            nsHTMLReflowMetrics& aDesiredSize);
 };
 
 #endif /* nsLeafFrame_h___ */

@@ -44,7 +44,7 @@ public:
   NS_IMETHOD FindTextRuns(nsLineLayout&     aLineLayout,
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout&        aLineLayout,
-                          nsReflowMetrics&     aDesiredSize,
+                          nsHTMLReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState);
 
   PRUint8 GetType();
@@ -91,7 +91,7 @@ SpacerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 
 NS_IMETHODIMP
 SpacerFrame::InlineReflow(nsLineLayout&        aLineLayout,
-                          nsReflowMetrics&     aMetrics,
+                          nsHTMLReflowMetrics& aMetrics,
                           const nsReflowState& aReflowState)
 {
   nsresult rv = NS_FRAME_COMPLETE;

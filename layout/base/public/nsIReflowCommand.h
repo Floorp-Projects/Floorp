@@ -22,7 +22,7 @@
 
 class  nsIFrame;
 class  nsIPresContext;
-struct nsReflowMetrics;
+struct nsHTMLReflowMetrics;
 struct nsSize;
 
 // IID for the nsIReflowCommand interface {C3658E40-FF20-11d1-85BC-00A02468FAB6}
@@ -91,9 +91,9 @@ public:
    *
    * @see nsIFrame#Reflow()
    */
-  NS_IMETHOD Dispatch(nsIPresContext&  aPresContext,
-                      nsReflowMetrics& aDesiredSize,
-                      const nsSize&    aMaxSize) = 0;
+  NS_IMETHOD Dispatch(nsIPresContext&      aPresContext,
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      const nsSize&        aMaxSize) = 0;
 
   /**
    * Get the next frame in the command processing path. Note that this removes

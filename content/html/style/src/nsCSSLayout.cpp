@@ -20,6 +20,7 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIFrameReflow.h"
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
 #include "nsRect.h"

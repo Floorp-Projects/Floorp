@@ -19,8 +19,11 @@
 #ifndef nsFrameReflowState_h___
 #define nsFrameReflowState_h___
 
-#include "nsIFrame.h"
+#include "nsIFrameReflow.h"
+#include "nsMargin.h"
 
+class nsIPresContext;
+struct nsHTMLReflowMetrics;
 struct nsStyleDisplay;
 struct nsStyleSpacing;
 struct nsStyleText;
@@ -29,7 +32,7 @@ class nsFrameReflowState : public nsReflowState {
 public:
   nsFrameReflowState(nsIPresContext& aPresContext,
                      const nsReflowState& aReflowState,
-                     const nsReflowMetrics& aMetrics);
+                     const nsHTMLReflowMetrics& aMetrics);
   ~nsFrameReflowState();
 
   nsIPresContext& mPresContext;

@@ -248,7 +248,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
 /**
   */
 NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
-                                   nsReflowMetrics& aDesiredSize,
+                                   nsHTMLReflowMetrics& aDesiredSize,
                                    const nsReflowState& aReflowState,
                                    nsReflowStatus& aStatus)
 {
@@ -322,13 +322,16 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (gsDebug==PR_TRUE)
     printf("  nsTableCellFrame::Reflow calling ReflowChild with availSize=%d,%d\n",
            availSize.width, availSize.height);
-  nsReflowMetrics kidSize(pMaxElementSize);
+  nsHTMLReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.maxSize.width);
   nsReflowState kidReflowState(mFirstChild, aReflowState, availSize);
-  mFirstChild->WillReflow(aPresContext);
-  mFirstChild->MoveTo(leftInset, topInset);
-  aStatus = ReflowChild(mFirstChild, &aPresContext, kidSize, kidReflowState);
+  nsIHTMLReflow* htmlReflow;
+
+  if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    htmlReflow->WillReflow(aPresContext);
+    mFirstChild->MoveTo(leftInset, topInset);
+    aStatus = ReflowChild(mFirstChild, &aPresContext, kidSize, kidReflowState);
 #ifdef NS_DEBUG
       if (kidSize.width > availSize.width)
       {
@@ -336,6 +339,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
                 kidSize.width, availSize.width);
       }
 #endif
+  }
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
     if (nsnull!=pMaxElementSize)

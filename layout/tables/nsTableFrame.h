@@ -114,7 +114,7 @@ public:
     * @see nsIFrame::Reflow 
     */
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
-                    nsReflowMetrics& aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
@@ -258,7 +258,7 @@ protected:
     * @see Reflow
     */
   virtual nsReflowStatus ResizeReflowPass1(nsIPresContext*      aPresContext,
-                                           nsReflowMetrics&     aDesiredSize,
+                                           nsHTMLReflowMetrics& aDesiredSize,
                                            const nsReflowState& aReflowState,
                                            nsReflowStatus&      aStatus);
 
@@ -272,7 +272,7 @@ protected:
     * @see NeedsReflow
     */
   virtual nsReflowStatus ResizeReflowPass2(nsIPresContext*      aPresContext,
-                                           nsReflowMetrics&     aDesiredSize,
+                                           nsHTMLReflowMetrics& aDesiredSize,
                                            const nsReflowState& aReflowState);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
@@ -396,7 +396,7 @@ protected:
   virtual void SetMinColSpanForTable();
 
   virtual void BuildColumnCache(nsIPresContext*      aPresContext,
-                                nsReflowMetrics&     aDesiredSize,
+                                nsHTMLReflowMetrics& aDesiredSize,
                                 const nsReflowState& aReflowState,
                                 nsReflowStatus&      aStatus);
 

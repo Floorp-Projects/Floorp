@@ -41,7 +41,7 @@ public:
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -89,7 +89,7 @@ protected:
                           const nsRect& aDesiredRect,
                           const nsSize& aMaxSize,
                           const nsMargin& aBorderPadding,
-                          nsReflowMetrics& aDesiredSize);
+                          nsHTMLReflowMetrics& aDesiredSize);
 
   virtual PRIntn GetSkipSides() const;
 

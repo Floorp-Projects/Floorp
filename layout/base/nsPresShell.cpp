@@ -32,6 +32,7 @@
 #include "nsIPref.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
+#include "nsHTMLIIDs.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -495,20 +496,23 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mRootFrame->VerifyTree();
     }
 #endif
-    nsRect          bounds;
+    nsRect              bounds;
     mPresContext->GetVisibleArea(bounds);
-    nsSize          maxSize(bounds.width, bounds.height);
-    nsReflowMetrics desiredSize(nsnull);
-    nsReflowStatus  status;
-    nsReflowState   reflowState(mRootFrame, eReflowReason_Initial, maxSize);
+    nsSize              maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics desiredSize(nsnull);
+    nsReflowStatus      status;
+    nsReflowState       reflowState(mRootFrame, eReflowReason_Initial, maxSize);
+    nsIHTMLReflow*      htmlReflow;
 
-    mRootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
-    mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+    if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
+      mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      mRootFrame->VerifyTree();
-    }
+      if (nsIFrame::GetVerifyTreeEnable()) {
+        mRootFrame->VerifyTree();
+      }
 #endif
+    }
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
   }
 
@@ -538,20 +542,23 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       mRootFrame->VerifyTree();
     }
 #endif
-    nsRect          bounds;
+    nsRect              bounds;
     mPresContext->GetVisibleArea(bounds);
-    nsSize          maxSize(bounds.width, bounds.height);
-    nsReflowMetrics desiredSize(nsnull);
-    nsReflowStatus  status;
-    nsReflowState   reflowState(mRootFrame, eReflowReason_Resize, maxSize);
+    nsSize              maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics desiredSize(nsnull);
+    nsReflowStatus      status;
+    nsReflowState       reflowState(mRootFrame, eReflowReason_Resize, maxSize);
+    nsIHTMLReflow*      htmlReflow;
 
-    mRootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
-    mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
+    if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
+      mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
-    if (nsIFrame::GetVerifyTreeEnable()) {
-      mRootFrame->VerifyTree();
-    }
+      if (nsIFrame::GetVerifyTreeEnable()) {
+        mRootFrame->VerifyTree();
+      }
 #endif
+    }
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
     // XXX if debugging then we should assert that the cache is empty
@@ -624,7 +631,7 @@ void
 PresShell::ProcessReflowCommands()
 {
   if (0 != mReflowCommands.Count()) {
-    nsReflowMetrics desiredSize(nsnull);
+    nsHTMLReflowMetrics desiredSize(nsnull);
 
     while (0 != mReflowCommands.Count()) {
       nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);

@@ -184,7 +184,7 @@ void SetType(nsIHTMLContent* aElement, nsString& aValue)
 }
 
 NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&      aPresContext, 
-                                         nsReflowMetrics&     aDesiredSize,
+                                         nsHTMLReflowMetrics& aDesiredSize,
                                          const nsReflowState& aReflowState, 
                                          nsReflowStatus&      aStatus)
 {
@@ -219,23 +219,27 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&      aPresContext,
   }
 
   nsSize maxSize = aReflowState.maxSize;
-  nsReflowMetrics desiredSize = aDesiredSize;
+  nsHTMLReflowMetrics desiredSize = aDesiredSize;
   aDesiredSize.width = CONTROL_SPACING; 
   aDesiredSize.height = 0;
   childFrame = mFirstChild;
   nsPoint offset(0,0);
   while (nsnull != childFrame) {  // reflow, place, size the children
     nsReflowState   reflowState(childFrame, aReflowState, maxSize);
-    childFrame->WillReflow(aPresContext);
-    nsresult result = childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-    nsRect rect(offset.x, offset.y, desiredSize.width, desiredSize.height);
-    childFrame->SetRect(rect);
-    maxSize.width  -= desiredSize.width;
-    aDesiredSize.width  += desiredSize.width; 
-    aDesiredSize.height = desiredSize.height;
-    childFrame->GetNextSibling(childFrame);
-    offset.x += desiredSize.width + CONTROL_SPACING;
+    nsIHTMLReflow*  htmlReflow;
+
+    if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->WillReflow(aPresContext);
+      nsresult result = htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+      nsRect rect(offset.x, offset.y, desiredSize.width, desiredSize.height);
+      childFrame->SetRect(rect);
+      maxSize.width  -= desiredSize.width;
+      aDesiredSize.width  += desiredSize.width; 
+      aDesiredSize.height = desiredSize.height;
+      childFrame->GetNextSibling(childFrame);
+      offset.x += desiredSize.width + CONTROL_SPACING;
+    }
   }
 
   aDesiredSize.ascent = aDesiredSize.height;

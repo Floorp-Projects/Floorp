@@ -39,6 +39,7 @@
 #include "nsDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
+#include "nsHTMLIIDs.h"
 
 // Some Misc #defines
 #define SELECTION_DEBUG        0
@@ -267,7 +268,10 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kClassIID, kIFrameIID);
-  if (aIID.Equals(kClassIID) || (aIID.Equals(kISupportsIID))) {
+  if (aIID.Equals(kIHTMLReflowIID)) {
+    *aInstancePtr = (void*)(nsIHTMLReflow*)this;
+    return NS_OK;
+  } else if (aIID.Equals(kClassIID) || aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)this;
     return NS_OK;
   }
@@ -1083,7 +1087,7 @@ nsFrame::SetFrameState(nsFrameState aNewState)
   return NS_OK;
 }
 
-// Resize reflow methods
+// nsIHTMLReflow member functions
 
 NS_METHOD
 nsFrame::WillReflow(nsIPresContext& aPresContext)
@@ -1120,7 +1124,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
-                          nsReflowMetrics&     aDesiredSize,
+                          nsHTMLReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState,
                           nsReflowStatus&      aStatus)
 {
@@ -1141,6 +1145,16 @@ NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext&      aPresContext,
+                                    nsHTMLReflowMetrics& aMetrics)
+{
+  aMetrics.width = mRect.width;
+  aMetrics.height = mRect.height;
+  aMetrics.ascent = mRect.height;
+  aMetrics.descent = 0;
+  return NS_OK;
+}
+
 NS_METHOD nsFrame::ContentChanged(nsIPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   nsISupports*    aSubContent)
@@ -1153,16 +1167,6 @@ NS_IMETHODIMP nsFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIAtom*        aAttribute,
                                         PRInt32         aHint)
 {
-  return NS_OK;
-}
-
-NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext&  aPresContext,
-                                    nsReflowMetrics& aMetrics)
-{
-  aMetrics.width = mRect.width;
-  aMetrics.height = mRect.height;
-  aMetrics.ascent = mRect.height;
-  aMetrics.descent = 0;
   return NS_OK;
 }
 

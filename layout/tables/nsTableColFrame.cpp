@@ -61,7 +61,7 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
 
 
 NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
-                                  nsReflowMetrics&     aDesiredSize,
+                                  nsHTMLReflowMetrics& aDesiredSize,
                                   const nsReflowState& aReflowState,
                                   nsReflowStatus&      aStatus)
 {

@@ -114,7 +114,7 @@ nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 
 NS_IMETHODIMP
 nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus)
 {
@@ -183,14 +183,16 @@ nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       // It's an absolutely positioned frame that's the target.
       // XXX FIX ME. For an absolutely positioned item we need to properly
       // compute the available space and compute the origin...
-      nsReflowState reflowState(nextFrame, aReflowState, aReflowState.maxSize);
-      nextFrame->WillReflow(aPresContext);
-      nsresult rv = nextFrame->Reflow(aPresContext, aDesiredSize,
-                                      reflowState, aStatus);
-      if (NS_OK != rv) {
-        return rv;
+      nsIHTMLReflow*  reflow;
+      if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
+        nsReflowState reflowState(nextFrame, aReflowState, aReflowState.maxSize);
+        reflow->WillReflow(aPresContext);
+        nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+        if (NS_OK != rv) {
+          return rv;
+        }
+        nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
       }
-      nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
 
       // XXX Temporary code: if the frame we just reflowed is a
       // floating frame then fall through into the main reflow pathway
@@ -206,7 +208,7 @@ nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       nextFrame->GetStyleData(eStyleStruct_Display,
                               (const nsStyleStruct*&) display);
       if (NS_STYLE_FLOAT_NONE == display->mFloats) {
-        return rv;
+        return NS_OK;
       }
 
       // Switch over to a reflow-state that is called resize instead
@@ -246,15 +248,18 @@ nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     mFirstChild->GetRect(kidOldRect);
 
     // Get the column's desired rect
-    nsIRunaround* reflowRunaround;
-    nsReflowState reflowState(mFirstChild, *rsp, kidMaxSize);
-    nsRect        desiredRect;
+    nsIRunaround*  reflowRunaround;
+    nsReflowState  reflowState(mFirstChild, *rsp, kidMaxSize);
+    nsRect         desiredRect;
+    nsIHTMLReflow* childReflow;
 
-    mFirstChild->WillReflow(aPresContext);
-    mFirstChild->MoveTo(borderPadding.left, borderPadding.top);
-    mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
-    reflowRunaround->ReflowAround(aPresContext, mSpaceManager, aDesiredSize,
-                                  reflowState, desiredRect, aStatus);
+    if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&childReflow)) {
+      childReflow->WillReflow(aPresContext);
+      mFirstChild->MoveTo(borderPadding.left, borderPadding.top);
+      mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
+      reflowRunaround->ReflowAround(aPresContext, mSpaceManager, aDesiredSize,
+                                    reflowState, desiredRect, aStatus);
+    }
 
     // If the frame is complete, then check whether there's a next-in-flow that
     // needs to be deleted
@@ -497,7 +502,7 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
                                 const nsRect& aDesiredRect,
                                 const nsSize& aMaxSize,
                                 const nsMargin& aBorderPadding,
-                                nsReflowMetrics& aMetrics)
+                                nsHTMLReflowMetrics& aMetrics)
 {
   // Note: Body used as a pseudo-frame shrink wraps (unless of course
   // style says otherwise)
@@ -732,40 +737,43 @@ void nsBodyFrame::ReflowAbsoluteItems(nsIPresContext*      aPresContext,
       nsRect  rect;
       ComputeAbsoluteFrameBounds(anchorFrame, aReflowState, position, rect);
   
-      absoluteFrame->WillReflow(*aPresContext);
-      absoluteFrame->MoveTo(rect.x, rect.y);
+      nsIHTMLReflow*  htmlReflow;
+      if (NS_OK == absoluteFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+        htmlReflow->WillReflow(*aPresContext);
+        absoluteFrame->MoveTo(rect.x, rect.y);
 
-      if (reflowFrame) {
-        // Resize reflow the absolutely positioned element
-        nsSize  availSize(rect.width, rect.height);
+        if (reflowFrame) {
+          // Resize reflow the absolutely positioned element
+          nsSize  availSize(rect.width, rect.height);
       
-        if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
-          // Don't constrain the height since the container should be enlarged
-          // to contain overflowing frames
-          availSize.height = NS_UNCONSTRAINEDSIZE;
-        }
+          if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
+            // Don't constrain the height since the container should be enlarged
+            // to contain overflowing frames
+            availSize.height = NS_UNCONSTRAINEDSIZE;
+          }
       
-        nsReflowMetrics desiredSize(nsnull);
-        nsReflowState   reflowState(absoluteFrame, aReflowState, availSize,
-                                    reflowReason);
-        nsReflowStatus  status;
-        absoluteFrame->Reflow(*aPresContext, desiredSize, reflowState, status);
+          nsHTMLReflowMetrics desiredSize(nsnull);
+          nsReflowState       reflowState(absoluteFrame, aReflowState, availSize,
+                                          reflowReason);
+          nsReflowStatus      status;
+          htmlReflow->Reflow(*aPresContext, desiredSize, reflowState, status);
         
-        // Figure out what size to actually use. If we let the child choose its
-        // size, then use what the child requested. Otherwise, use the value
-        // specified in the style information
-        if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
-            ((desiredSize.width > availSize.width) &&
-             (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
-          rect.width = desiredSize.width;
+          // Figure out what size to actually use. If we let the child choose its
+          // size, then use what the child requested. Otherwise, use the value
+          // specified in the style information
+          if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
+              ((desiredSize.width > availSize.width) &&
+               (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
+            rect.width = desiredSize.width;
+          }
+          if ((eStyleUnit_Auto == position->mHeight.GetUnit()) ||
+              (NS_UNCONSTRAINEDSIZE == rect.height) ||
+              ((desiredSize.height > rect.height) &&
+               (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
+            rect.height = desiredSize.height;
+          }
+          absoluteFrame->SetRect(rect);
         }
-        if ((eStyleUnit_Auto == position->mHeight.GetUnit()) ||
-            (NS_UNCONSTRAINEDSIZE == rect.height) ||
-            ((desiredSize.height > rect.height) &&
-             (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
-          rect.height = desiredSize.height;
-        }
-        absoluteFrame->SetRect(rect);
       }
     }
   }

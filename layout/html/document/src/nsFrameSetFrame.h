@@ -23,7 +23,6 @@
 #include "nsColor.h"
 
 class  nsIContent;
-struct nsReflowMetrics;
 class  nsIFrame;
 class  nsIPresContext;
 class  nsIRenderingContext;
@@ -118,13 +117,13 @@ public:
                    const nsRect& aDirtyRect);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsFramesetDrag*      aDrag,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -144,7 +143,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
 
   PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
   PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }

@@ -43,7 +43,6 @@ class nsString;
 
 struct nsPoint;
 struct nsRect;
-struct nsReflowMetrics;
 struct nsStyleStruct;
 
 struct PRLogModuleInfo;
@@ -52,168 +51,6 @@ struct PRLogModuleInfo;
 // a6cf9050-15b3-11d2-932e-00805f8add32
 #define NS_IFRAME_IID \
  { 0xa6cf9050, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-/**
- * Reflow metrics used to return the frame's desired size and alignment
- * information.
- *
- * @see #Reflow()
- * @see #GetReflowMetrics()
- */
-struct nsReflowMetrics {
-  nscoord width, height;        // desired width and height
-  nscoord ascent, descent;
-
-  // Set this to null if you don't need to compute the max element size
-  nsSize* maxElementSize;
-
-  // XXX Explain this better somehow!
-
-  // The caller of nsIFrame::Reflow will set these to the top margin
-  // value carried into the child frame. This allows the the child
-  // container to collapse the top margin with its first childs
-  // margin.
-  nscoord mCarriedInTopMargin;          // in
-
-  // These values are set by the child frame indicating its final
-  // inner bottom margin value (the value of the childs last child
-  // bottom margin)
-  nscoord mCarriedOutBottomMargin;      // out
-
-  nsReflowMetrics(nsSize* aMaxElementSize) {
-    maxElementSize = aMaxElementSize;
-    mCarriedInTopMargin = 0;
-    mCarriedOutBottomMargin = 0;
-    width = 0;
-    height = 0;
-    ascent = 0;
-    descent = 0;
-  }
-};
-
-/**
- * Constant used to indicate an unconstrained size.
- *
- * @see #Reflow()
- */
-#define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
-
-/**
- * The reason the frame is being reflowed.
- *
- * @see nsReflowState
- */
-enum nsReflowReason {
-  eReflowReason_Initial = 0,     // initial reflow of a newly created frame
-  eReflowReason_Incremental = 1, // an incremental change has occured. see the reflow command for details
-  eReflowReason_Resize = 2       // general request to determine a desired size
-};
-
-/**
- * The type of size constraint that applies to a particular dimension.
- * For the fixed and fixed content cases the min size in the reflow state
- * structure is ignored and you should use the max size value when reflowing
- * the frame.
- *
- * @see nsReflowState
- */
-//XXX enum's are prefixed wrong
-enum nsReflowConstraint {
-  eReflowSize_Unconstrained = 0,  // choose whatever frame size you want
-  eReflowSize_Constrained = 1,    // choose a frame size between the min and max sizes
-  eReflowSize_Fixed = 2,          // frame size is fixed
-  eReflowSize_FixedContent = 3    // size of your content area is fixed
-};
-
-/**
- * Reflow state passed to a frame during reflow. The reflow states are linked
- * together. The max size represents the max available space in which to reflow
- * your frame, and is computed as the parent frame's available content area
- * minus any room for margins that your frame requests. The min size represents
- * the min available space in which to reflow your frame
- *
- * @see #Reflow()
- */
-struct nsReflowState {
-  const nsReflowState* parentReflowState; // pointer to parent's reflow state
-  nsIFrame*            frame;             // the frame being reflowed
-  nsReflowReason       reason;            // the reason for the reflow
-  nsIReflowCommand*    reflowCommand;     // only used for incremental changes
-  nsReflowConstraint   widthConstraint;   // constraint that applies to width dimension
-  nsReflowConstraint   heightConstraint;  // constraint that applies to height dimension
-  nsSize               maxSize;           // the max available space in which to reflow
-  nsSize               minSize;           // the min available space in which to reflow.
-                                          // Only used for eReflowSize_Constrained
-
-  // Note: there is no copy constructor so that the compiler can
-  // generate an optimal one.
-
-  // Constructs an initial reflow state (no parent reflow state) for a
-  // non-incremental reflow command
-  nsReflowState(nsIFrame*      aFrame,
-                nsReflowReason aReason, 
-                const nsSize&  aMaxSize);
-
-  // Constructs an initial reflow state (no parent reflow state) for an
-  // incremental reflow command
-  nsReflowState(nsIFrame*         aFrame,
-                nsIReflowCommand& aReflowCommand,
-                const nsSize&     aMaxSize);
-
-  // Construct a reflow state for the given frame, parent reflow state, and
-  // max size. Uses the reflow reason and reflow command from the parent's
-  // reflow state
-  nsReflowState(nsIFrame*            aFrame,
-                const nsReflowState& aParentReflowState,
-                const nsSize&        aMaxSize);
-
-  // Constructs a reflow state that overrides the reflow reason of the parent
-  // reflow state. Sets the reflow command to NULL
-  nsReflowState(nsIFrame*            aFrame,
-                const nsReflowState& aParentReflowState,
-                const nsSize&        aMaxSize,
-                nsReflowReason       aReflowReason);
-};
-
-//----------------------------------------------------------------------
-
-/**
- * Reflow status returned by the reflow methods.
- *
- * NS_FRAME_NOT_COMPLETE bit flag means the frame does not map all its
- * content, and that the parent frame should create a continuing frame.
- * If this bit isn't set it means the frame does map all its content.
- *
- * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
- * dirty, and also needs to be reflowed. This status only makes sense
- * for a frame that is not complete, i.e. you wouldn't set both
- * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW
- *
- * The low 8 bits of the nsReflowStatus are reserved for future extensions;
- * the remaining 24 bits are zero (and available for extensions; however
- * API's that accept/return nsReflowStatus must not receive/return any
- * extension bits).
- *
- * @see #Reflow()
- * @see #CreateContinuingFrame()
- */
-typedef PRUint32 nsReflowStatus;
-
-#define NS_FRAME_COMPLETE          0            // Note: not a bit!
-#define NS_FRAME_NOT_COMPLETE      0x1
-#define NS_FRAME_REFLOW_NEXTINFLOW 0x2
-
-#define NS_FRAME_IS_COMPLETE(status) \
-  (0 == ((status) & NS_FRAME_NOT_COMPLETE))
-
-#define NS_FRAME_IS_NOT_COMPLETE(status) \
-  (0 != ((status) & NS_FRAME_NOT_COMPLETE))
-
-// This macro tests to see if an nsReflowStatus is an error value
-// or just a regular return value
-#define NS_IS_REFLOW_ERROR(_status) (PRInt32(_status) < 0)
-
-//----------------------------------------------------------------------
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -254,16 +91,6 @@ typedef PRUint32 nsFrameState;
 // once (during the DidReflow with a finished state) the bit is
 // cleared.
 #define NS_FRAME_FIRST_REFLOW 0x00000002
-
-//----------------------------------------------------------------------
-
-/**
- * DidReflow status values.
- */
-typedef PRBool nsDidReflowStatus;
-
-#define NS_FRAME_REFLOW_NOT_FINISHED PR_FALSE
-#define NS_FRAME_REFLOW_FINISHED     PR_TRUE
 
 //----------------------------------------------------------------------
 
@@ -419,64 +246,6 @@ public:
   NS_IMETHOD  SetFrameState(nsFrameState aNewState) = 0;
 
   /**
-   * Pre-reflow hook. Before a frame is incrementally reflowed or
-   * resize-reflowed this method will be called warning the frame of
-   * the impending reflow. This call may be invoked zero or more times
-   * before a subsequent DidReflow call. This method when called the
-   * first time will set the NS_FRAME_IN_REFLOW bit in the frame
-   * state bits.
-   */
-  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext) = 0;
-
-  /**
-   * The frame is given a maximum size and asked for its desired size.
-   * This is the frame's opportunity to reflow its children.
-   *
-   * @param aDesiredSize <i>out</i> parameter where you should return the
-   *          desired size and ascent/descent info. You should include any
-   *          space you want for border/padding in the desired size you return.
-   *
-   *          It's okay to return a desired size that exceeds the max
-   *          size if that's the smallest you can be, i.e. it's your
-   *          minimum size.
-   *
-   *          maxElementSize is an optional parameter for returning your
-   *          maximum element size. If may be null in which case you
-   *          don't have to compute a maximum element size. The
-   *          maximum element size must be less than or equal to your
-   *          desired size.
-   *
-   * @param aReflowState information about your reflow including the reason
-   *          for the reflow and the available space in which to lay out. Each
-   *          dimension of the available space can either be constrained or
-   *          unconstrained (a value of NS_UNCONSTRAINEDSIZE). If constrained
-   *          you should choose a value that's less than or equal to the
-   *          constrained size. If unconstrained you can choose as
-   *          large a value as you like.
-   *
-   *          Note that the available space can be negative. In this case you
-   *          still must return an accurate desired size. If you're a container
-   *          you must <b>always</b> reflow at least one frame regardless of the
-   *          available space
-   */
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus) = 0;
-
-  /**
-   * Post-reflow hook. After a frame is incrementally reflowed or
-   * resize-reflowed this method will be called telling the frame of
-   * the outcome. This call may be invoked many times, while
-   * NS_FRAME_IN_REFLOW is set, before it is finally called once with
-   * a NS_FRAME_REFLOW_COMPLETE value. When called with a
-   * NS_FRAME_REFLOW_COMPLETE value the NS_FRAME_IN_REFLOW bit in the
-   * frame state will be cleared.
-   */
-  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
-                        nsDidReflowStatus aStatus) = 0;
-
-  /**
    * This call is invoked when content is changed in the content tree.
    * The first frame that maps that content is asked to deal with the
    * change by generating an incremental reflow command.
@@ -501,17 +270,6 @@ public:
                                nsIContent*     aChild,
                                nsIAtom*        aAttribute,
                                PRInt32         aHint) = 0;
-
-  /**
-   * Return the reflow metrics for this frame. If the frame is a
-   * container then the values for ascent and descent are computed
-   * across the the various children in the appropriate manner
-   * (e.g. for a line frame the ascent value would be the maximum
-   * ascent of the line's children). Note that the metrics returned
-   * apply to the frame as it exists at the time of the call.
-   */
-  NS_IMETHOD  GetReflowMetrics(nsIPresContext&  aPresContext,
-                               nsReflowMetrics& aMetrics) = 0;
 
   /**
    * Return how your frame can be split.
@@ -630,91 +388,6 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
-
-// Constructs an initial reflow state (no parent reflow state) for a
-// non-incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*      aFrame,
-                                    nsReflowReason aReason, 
-                                    const nsSize&  aMaxSize)
-{
-  NS_PRECONDITION(aReason != eReflowReason_Incremental, "unexpected reflow reason");
-// the following was removed because framesets need to force a reflow on themselves and didn't
-// have nsReflowState parentage available
-#if 0
-#ifdef NS_DEBUG
-  nsIFrame* parent;
-  aFrame->GetGeometricParent(parent);
-  NS_PRECONDITION(nsnull == parent, "not root frame");
-#endif
-#endif
-  reason = aReason;
-  reflowCommand = nsnull;
-  maxSize = aMaxSize;
-  parentReflowState = nsnull;
-  frame = aFrame;
-  widthConstraint = eReflowSize_Constrained;
-  heightConstraint = eReflowSize_Constrained;
-  minSize.width = 0;
-  minSize.height = 0;
-}
-
-// Constructs an initial reflow state (no parent reflow state) for an
-// incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*         aFrame,
-                                    nsIReflowCommand& aReflowCommand,
-                                    const nsSize&     aMaxSize)
-{
-#ifdef NS_DEBUG
-  nsIFrame* parent;
-  aFrame->GetGeometricParent(parent);
-  NS_PRECONDITION(nsnull == parent, "not root frame");
-#endif
-  reason = eReflowReason_Incremental;
-  reflowCommand = &aReflowCommand;
-  maxSize = aMaxSize;
-  parentReflowState = nsnull;
-  frame = aFrame;
-  widthConstraint = eReflowSize_Constrained;
-  heightConstraint = eReflowSize_Constrained;
-  minSize.width = 0;
-  minSize.height = 0;
-}
-
-// Construct a reflow state for the given frame, parent reflow state, and
-// max size. Uses the reflow reason and reflow command from the parent's
-// reflow state
-inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
-                                    const nsReflowState& aParentReflowState,
-                                    const nsSize&        aMaxSize)
-{
-  reason = aParentReflowState.reason;
-  reflowCommand = aParentReflowState.reflowCommand;
-  maxSize = aMaxSize;
-  parentReflowState = &aParentReflowState;
-  frame = aFrame;
-  widthConstraint = eReflowSize_Constrained;
-  heightConstraint = eReflowSize_Constrained;
-  minSize.width = 0;
-  minSize.height = 0;
-}
-
-// Constructs a reflow state that overrides the reflow reason of the parent
-// reflow state. Sets the reflow command to NULL
-inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
-                                    const nsReflowState& aParentReflowState,
-                                    const nsSize&        aMaxSize,
-                                    nsReflowReason       aReflowReason)
-{
-  reason = aReflowReason;
-  reflowCommand = nsnull;
-  maxSize = aMaxSize;
-  parentReflowState = &aParentReflowState;
-  frame = aFrame;
-  widthConstraint = eReflowSize_Constrained;
-  heightConstraint = eReflowSize_Constrained;
-  minSize.width = 0;
-  minSize.height = 0;
-}
 
 /* ----- nsIListFilter definition ----- */
 class nsIListFilter

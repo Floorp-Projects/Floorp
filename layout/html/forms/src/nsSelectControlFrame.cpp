@@ -95,7 +95,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredLayoutSize,
+                              nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
   
   PRBool mIsComboBox;
@@ -194,7 +194,7 @@ nsSelectControlFrame::GetCID()
 void 
 nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                      const nsReflowState& aReflowState,
-                                     nsReflowMetrics& aDesiredLayoutSize,
+                                     nsHTMLReflowMetrics& aDesiredLayoutSize,
                                      nsSize& aDesiredWidgetSize)
 {
   nsIDOMHTMLSelectElement* select = GetSelect();

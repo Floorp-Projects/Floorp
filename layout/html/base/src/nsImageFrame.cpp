@@ -82,7 +82,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
 
   nsIImageMap* GetImageMap();
 
@@ -269,7 +269,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
                                   nsIFrame* aTargetFrame,
                                   nsFrameImageLoaderCB aCallBack,
-                                  nsReflowMetrics& aDesiredSize)
+                                  nsHTMLReflowMetrics& aDesiredSize)
 {
   nsSize styleSize;
   PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, styleSize);
@@ -419,7 +419,7 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
 void
 ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
-                           nsReflowMetrics& aDesiredSize)
+                           nsHTMLReflowMetrics& aDesiredSize)
 {
   if (mSizeFrozen) {
     aDesiredSize.width = mRect.width;

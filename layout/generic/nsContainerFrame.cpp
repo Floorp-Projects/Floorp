@@ -29,6 +29,7 @@
 #include "nsIView.h"
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
+#include "nsHTMLIIDs.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -114,7 +115,11 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
     nsIFrame* kid;
     FirstChild(kid);
     while (nsnull != kid) {
-      kid->DidReflow(aPresContext, aStatus);
+      nsIHTMLReflow*  htmlReflow;
+
+      if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+        htmlReflow->DidReflow(aPresContext, aStatus);
+      }
       kid->GetNextSibling(kid);
     }
   }
@@ -287,7 +292,7 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
  */
 nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
                                              nsIPresContext*      aPresContext,
-                                             nsReflowMetrics&     aDesiredSize,
+                                             nsHTMLReflowMetrics& aDesiredSize,
                                              const nsReflowState& aReflowState)
 {
   nsReflowStatus status;
@@ -299,7 +304,10 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
   aKidFrame->GetFrameState(kidFrameState);
   NS_ASSERTION(kidFrameState & NS_FRAME_IN_REFLOW, "kid frame is not in reflow");
 #endif
-  aKidFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, status);
+  nsIHTMLReflow*  htmlReflow;
+  if (NS_OK == aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    htmlReflow->Reflow(*aPresContext, aDesiredSize, aReflowState, status);
+  }
 
   if (NS_FRAME_IS_COMPLETE(status)) {
     nsIFrame* kidNextInFlow;
