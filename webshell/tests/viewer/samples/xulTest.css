@@ -1,10 +1,12 @@
 toolbar {
+    display:block;
     background-color: rgb(192,192,192);
     border-bottom: solid darkGray 1px;
     border-top: solid white 1px;
     border-left: solid white 1px;
     border-right: solid darkGray 1px;
     font: 10pt sans-serif;
+    min-height:20px;
 }
 toolbar[collapsed="true"] {
 	display:none;
