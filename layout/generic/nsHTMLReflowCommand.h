@@ -82,8 +82,7 @@ public:
    */
   nsHTMLReflowCommand(nsIFrame*    aTargetFrame,
                       nsReflowType aReflowType,
-                      nsIFrame*    aChildFrame = nsnull,
-                      nsIAtom*     aAttribute = nsnull);
+                      nsIAtom*     aChildListName);
 
   ~nsHTMLReflowCommand();
 
@@ -95,17 +94,7 @@ public:
   /**
    * Get the type of reflow command.
    */
-  nsReflowType GetType() const { return mType; }
-
-  /**
-   * Can return nsnull.
-   */
-  nsIAtom* GetAttribute() const { return mAttribute; }
-
-  /**
-   * Get the child frame associated with the reflow command.
-   */
-  nsIFrame* GetChildFrame() const { return mChildFrame; }
+  nsReflowType Type() const { return mType; }
 
   /**
    * Returns the name of the child list to which the child frame belongs.
@@ -118,24 +107,13 @@ public:
   nsIAtom* GetChildListName() const { return mListName; }
 
   /**
-   * Sets the name of the child list to which the child frame belongs.
-   * Only used for reflow command types FrameAppended, FrameInserted, and
-   * FrameRemoved
-   */
-  void SetChildListName(nsIAtom* aListName) {
-    NS_ASSERTION(!mListName, "SetChildListName called twice");
-    mListName = aListName;
-    NS_IF_ADDREF(mListName);
-  }
-
-  /**
    * Dump out the reflow-command to out
    */
   nsresult List(FILE* out) const;
 
-  /**
-   * Get/set reflow command flags
-   */
+   /**
+    * Get/set reflow command flags
+    */
   PRInt32 GetFlagBits() { return mFlags; }
   void AddFlagBits(PRInt32 aBits) { mFlags |= aBits; }
   void RemoveFlagBits(PRInt32 aBits) { mFlags &= ~aBits; }
@@ -152,40 +130,18 @@ public:
     aReflowType = mType;
     return NS_OK;
   }
-
-  nsresult GetAttribute(nsIAtom *& aAttribute) const {
-    aAttribute = mAttribute;
-    NS_IF_ADDREF(aAttribute);
-    return NS_OK;
-  }
-
-  nsresult GetChildFrame(nsIFrame*& aChildFrame) const {
-    aChildFrame = mChildFrame;
-    return NS_OK;
-  }
-
+  
   nsresult GetChildListName(nsIAtom*& aListName) const {
     aListName = mListName;
     NS_IF_ADDREF(aListName);
     return NS_OK;
   }
 
-  nsresult GetFlags(PRInt32* aFlags) {
-    *aFlags = mFlags;
-    return NS_OK;
-  }
-
-  nsresult SetFlags(PRInt32 aFlags) {
-    mFlags = aFlags;
-    return NS_OK;
-  }
-
 private:
-  nsReflowType    mType;
-  nsIFrame*       mTargetFrame;
-  nsIFrame*       mChildFrame;
-  nsIAtom*        mAttribute;
-  nsIAtom*        mListName;
+  nsReflowType      mType;
+  nsIFrame*         mTargetFrame;
+  nsCOMPtr<nsIAtom> mListName;
+  // XXXbz remove the flags?  They're not being used for much...
   PRInt32         mFlags;
 };
 

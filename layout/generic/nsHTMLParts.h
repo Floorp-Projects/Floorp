@@ -259,12 +259,4 @@ NS_NewHTMLFragmentContentSink(nsIFragmentContentSink** aInstancePtrResult);
 nsresult
 NS_NewHTMLFragmentContentSink2(nsIFragmentContentSink** aInstancePtrResult);
 
-/** Create a new HTML reflow command */
-nsresult
-NS_NewHTMLReflowCommand(nsHTMLReflowCommand** aInstancePtrResult,
-                        nsIFrame*             aTargetFrame,
-                        nsReflowType          aReflowType,
-                        nsIFrame*             aChildFrame = nsnull,
-                        nsIAtom*              aAttribute = nsnull);
-
 #endif /* nsHTMLParts_h___ */

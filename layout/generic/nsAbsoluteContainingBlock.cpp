@@ -78,8 +78,6 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
                                         nsIAtom*       aListName,
                                         nsIFrame*      aFrameList)
 {
-  nsresult  rv = NS_OK;
-
   // Append the frames to our list of absolutely positioned frames
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aFrameList);
@@ -87,15 +85,9 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
   mAbsoluteFrames.AppendFrames(nsnull, aFrameList);
 
   // Generate a reflow command to reflow the dirty frames
-  nsHTMLReflowCommand* reflowCmd;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    reflowCmd->SetChildListName(GetChildListName());
-    aDelegatingFrame->GetPresContext()->PresShell()->
-                                        AppendReflowCommand(reflowCmd);
-  }
-
-  return rv;
+  return aDelegatingFrame->GetPresContext()->PresShell()->
+          AppendReflowCommand(aDelegatingFrame, eReflowType_ReflowDirty,
+                              GetChildListName());
 }
 
 nsresult
@@ -104,8 +96,6 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
                                         nsIFrame*      aPrevFrame,
                                         nsIFrame*      aFrameList)
 {
-  nsresult  rv = NS_OK;
-
   // Insert the new frames
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aFrameList);
@@ -113,15 +103,9 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
   mAbsoluteFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
   // Generate a reflow command to reflow the dirty frames
-  nsHTMLReflowCommand* reflowCmd;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    reflowCmd->SetChildListName(GetChildListName());
-    aDelegatingFrame->GetPresContext()->PresShell()->
-                                        AppendReflowCommand(reflowCmd);
-  }
-
-  return rv;
+  return aDelegatingFrame->GetPresContext()->PresShell()->
+          AppendReflowCommand(aDelegatingFrame, eReflowType_ReflowDirty,
+                              GetChildListName());
 }
 
 nsresult
@@ -248,10 +232,7 @@ nsAbsoluteContainingBlock::ReflowingAbsolutesOnly(nsIFrame* aDelegatingFrame,
 
   if (command) {
     // It's targeted at us. See if it's for the positioned child frames
-    nsCOMPtr<nsIAtom> listName;
-    command->GetChildListName(*getter_AddRefs(listName));
-
-    if (GetChildListName() != listName) {
+    if (GetChildListName() != command->GetChildListName()) {
       // A reflow command is targeted directly at this block.
       // The block will have to do a proper reflow.
       return PR_FALSE;
@@ -403,18 +384,11 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
   if (command) {
     // It's targeted at us. See if it's for the positioned child frames
-    nsCOMPtr<nsIAtom> listName;
-    command->GetChildListName(*getter_AddRefs(listName));
-
-    if (GetChildListName() == listName) {
-      nsReflowType  type;
-
-      // Get the type of reflow command
-      command->GetType(type);
-
+    if (GetChildListName() == command->GetChildListName()) {
       // The only type of reflow command we expect is that we have dirty
       // child frames to reflow
-      NS_ASSERTION(type == eReflowType_ReflowDirty, "unexpected reflow type");
+      NS_ASSERTION(command->Type() == eReflowType_ReflowDirty,
+                   "unexpected reflow type");
 
       // Walk the positioned frames and reflow the dirty frames
       for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
@@ -504,9 +478,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
       if (command) {
         // We're the target.
-        nsReflowType type;
-        command->GetType(type);
-        printf("(%d)", type);      
+        printf("(%d)", command->Type());      
       }
     }
     char width[16];

@@ -381,12 +381,9 @@ void
 nsFormControlHelper::StyleChangeReflow(nsPresContext* aPresContext,
                                        nsIFrame* aFrame)
 {
-  nsHTMLReflowCommand* reflowCmd;
-  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                        eReflowType_StyleChanged);
-  if (NS_SUCCEEDED(rv)) {
-    aPresContext->PresShell()->AppendReflowCommand(reflowCmd);
-  }
+  aPresContext->PresShell()->AppendReflowCommand(aFrame,
+                                                 eReflowType_StyleChanged,
+                                                 nsnull);
 }
 
 

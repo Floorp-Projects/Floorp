@@ -885,15 +885,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // subtree.
     nsHTMLReflowCommand* rc = rs->path->mReflowCommand;
     if (rc) {
-      nsReflowType type;
-      rc->GetType(type);
+      nsReflowType type = rc->Type();
       if (type == eReflowType_StyleChanged) {
         nsIFrame* parentFrame = psd->mFrame
           ? psd->mFrame->mFrame
           : mBlockReflowState->frame;
-        nsIFrame* target;
-        rc->GetTarget(target);
-        if (target == parentFrame) {
+        if (rc->GetTarget() == parentFrame) {
           reason = eReflowReason_StyleChange;
         }
       }

@@ -343,15 +343,8 @@ nsTableFrame::AppendDirtyReflowCommand(nsIFrame* aFrame)
 {
   aFrame->AddStateBits(NS_FRAME_IS_DIRTY);  // mark the table frame as dirty
 
-  nsHTMLReflowCommand* reflowCmd;
-  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                        eReflowType_ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    // Add the reflow command
-    rv = aFrame->GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
-  }
-
-  return rv;
+  return aFrame->GetPresContext()->PresShell()->
+          AppendReflowCommand(aFrame, eReflowType_ReflowDirty, nsnull);
 }
 
 // Make sure any views are positioned properly
@@ -2667,10 +2660,7 @@ nsTableFrame::IR_TargetIsMe(nsTableReflowState&  aReflowState,
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
 
-  nsReflowType type;
-  aReflowState.reflowState.path->mReflowCommand->GetType(type);
-
-  switch (type) {
+  switch (aReflowState.reflowState.path->mReflowCommand->Type()) {
     case eReflowType_StyleChanged :
       rv = IR_StyleChanged(aReflowState, aStatus);
       break;
@@ -7419,9 +7409,7 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
     timer->mCount = gRflCount++; 
     nsHTMLReflowCommand* reflowCommand = aState.reflowCommand;
     if (reflowCommand) {
-      nsReflowType reflowType;
-      reflowCommand->GetType(reflowType);
-      timer->mReflowType = reflowType;
+      timer->mReflowType = reflowType->Type();
     }
     timer->Start();
     aState.mDebugHook = timer;

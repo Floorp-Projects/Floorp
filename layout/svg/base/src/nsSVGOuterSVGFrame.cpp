@@ -254,7 +254,6 @@ protected:
                                const nsHTMLReflowState& aReflowState);
   
 //  nsIView* mView;
-  nsIPresShell* mPresShell; // XXX is a non-owning ref ok?
   PRUint32 mRedrawSuspendCount;
   PRBool mNeedsReflow;
   PRBool mViewportInitialized;
@@ -289,9 +288,6 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame*
 
   *aNewFrame = it;
 
-  // XXX is this ok?
-  it->mPresShell = aPresShell;
-  
   return NS_OK;
 }
 
@@ -876,11 +872,9 @@ nsSVGOuterSVGFrame::InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedra
   
   if (!region && !bRedraw) return NS_OK;
 
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-
   // just ignore invalidates if painting is suppressed by the shell
   PRBool suppressed = PR_FALSE;
-  mPresShell->IsPaintingSuppressed(&suppressed);
+  GetPresContext()->PresShell()->IsPaintingSuppressed(&suppressed);
   if (suppressed) return NS_OK;
   
   nsIView* view = GetClosestView();
@@ -974,8 +968,6 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
       SVGFrame->NotifyRedrawUnsuspended();
     }
   }
-
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
 
   vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   return NS_OK;
@@ -1076,18 +1068,12 @@ void nsSVGOuterSVGFrame::InitiateReflow()
   mNeedsReflow = PR_FALSE;
   
   // Generate a reflow command to reflow ourselves
-  nsHTMLReflowCommand *reflowCmd;
-  NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
-  if (!reflowCmd) {
-    NS_ERROR("error creating reflow command object");
-    return;
-  }
-  
-  mPresShell->AppendReflowCommand(reflowCmd);
+  nsIPresShell* presShell = GetPresContext()->PresShell();
+  presShell->AppendReflowCommand(this, eReflowType_ReflowDirty, nsnull);
   // XXXbz why is this synchronously flushing reflows, exactly?  If it
   // needs to, why is it not using the presshell's reflow batching
   // instead of hacking its own?
-  mPresShell->FlushPendingNotifications(Flush_OnlyReflow);  
+  presShell->FlushPendingNotifications(Flush_OnlyReflow);  
 }
 
 

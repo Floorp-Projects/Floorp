@@ -452,8 +452,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
         // targeted at our selected frame
         nsIPresShell *presShell = mPresContext->PresShell();
         presShell->CancelReflowCommand(this, nsnull);
-        nsFrame::CreateAndPostReflowCommand(presShell, mSelectedFrame, 
-          eReflowType_StyleChanged, nsnull, nsnull, nsnull);
+        presShell->AppendReflowCommand(mSelectedFrame,
+				       eReflowType_StyleChanged,
+				       nsnull);
       }
     }
   }

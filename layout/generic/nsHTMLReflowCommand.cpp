@@ -46,25 +46,6 @@
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
 
-nsresult
-NS_NewHTMLReflowCommand(nsHTMLReflowCommand**           aInstancePtrResult,
-                        nsIFrame*                       aTargetFrame,
-                        nsReflowType                    aReflowType,
-                        nsIFrame*                       aChildFrame,
-                        nsIAtom*                        aAttribute)
-{
-  NS_ASSERTION(aInstancePtrResult,
-               "null result passed to NS_NewHTMLReflowCommand");
-
-  *aInstancePtrResult = new nsHTMLReflowCommand(aTargetFrame, aReflowType,
-                                                aChildFrame, aAttribute);
-  if (!*aInstancePtrResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
 #ifdef DEBUG_jesup
 PRInt32 gReflows;
 PRInt32 gReflowsInUse;
@@ -105,17 +86,12 @@ mPathStats gmPathStats;
 // and optional child frame
 nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*    aTargetFrame,
                                          nsReflowType aReflowType,
-                                         nsIFrame*    aChildFrame,
-                                         nsIAtom*     aAttribute)
-  : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mAttribute(aAttribute),
-    mListName(nsnull),
+                                         nsIAtom*     aChildListName)
+  : mType(aReflowType), mTargetFrame(aTargetFrame), mListName(aChildListName),
     mFlags(0)
 {
   MOZ_COUNT_CTOR(nsHTMLReflowCommand);
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
-  if (nsnull!=mAttribute)
-    NS_ADDREF(mAttribute);
 #ifdef DEBUG_jesup
   gReflows++;
   gReflowsInUse++;
@@ -136,9 +112,6 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
     gReflowsMaxLarger++;
   gReflowsInUse--;
 #endif
-
-  NS_IF_RELEASE(mAttribute);
-  NS_IF_RELEASE(mListName);
 }
 
 nsresult
@@ -157,16 +130,6 @@ nsHTMLReflowCommand::List(FILE* out) const
   if (mTargetFrame) {
     fprintf(out, " target=");
     nsFrame::ListTag(out, mTargetFrame);
-  }
-  if (mChildFrame) {
-    fprintf(out, " child=");
-    nsFrame::ListTag(out, mChildFrame);
-  }
-  if (mAttribute) {
-    fprintf(out, " attr=");
-    nsAutoString attr;
-    mAttribute->ToString(attr);
-    fputs(NS_LossyConvertUCS2toASCII(attr).get(), out);
   }
   if (mListName) {
     fprintf(out, " list=");

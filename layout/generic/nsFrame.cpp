@@ -4504,34 +4504,6 @@ nsFrame::GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
   }
 }
 
-nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell* aPresShell,
-                                             nsIFrame*     aTargetFrame,
-                                             nsReflowType  aReflowType,
-                                             nsIFrame*     aChildFrame,
-                                             nsIAtom*      aAttribute,
-                                             nsIAtom*      aListName)
-{
-  nsresult rv;
-
-  if (!aPresShell || !aTargetFrame) {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-  else {
-    nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, aTargetFrame,
-                                 aReflowType, aChildFrame, 
-                                 aAttribute);
-    if (NS_SUCCEEDED(rv)) {
-      if (nsnull != aListName) {
-        reflowCmd->SetChildListName(aListName);
-      }
-      aPresShell->AppendReflowCommand(reflowCmd);    
-    }
-  } 
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsFrame::CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
@@ -5298,14 +5270,12 @@ nsFrame::BoxReflow(nsBoxLayoutState& aState,
         PRBool reflowChild = PR_TRUE;
 
         if (path->mReflowCommand &&
-            path->FirstChild() == path->EndChildren()) {
+            path->FirstChild() == path->EndChildren() &&
+            path->mReflowCommand->Type() == eReflowType_StyleChanged) {
           // There's an incremental reflow targeted directly at our
           // frame, and our frame only (i.e., none of our descendants
           // are targets).
-          nsReflowType type;
-          path->mReflowCommand->GetType(type);
-          if (type == eReflowType_StyleChanged)
-            reflowChild = PR_FALSE;
+          reflowChild = PR_FALSE;
         }
 
         if (reflowChild) {
@@ -5607,14 +5577,11 @@ nsFrame::CanSetMaxElementWidth(nsBoxLayoutState& aState, nsReflowReason& aReason
       // only  incremental reflows can handle maxelementsize being set.
       if (reflowState->reason == eReflowReason_Incremental) {
         nsReflowPath *path = *aReflowPath;
-        if (path && path->mReflowCommand) {
+        if (path && path->mReflowCommand &&
+            path->mReflowCommand->Type() == eReflowType_StyleChanged) {
           // MaxElement doesn't work on style change reflows.. :-(
           // XXXwaterson why?
-          nsReflowType  type;
-          path->mReflowCommand->GetType(type);
-
-          if (type == eReflowType_StyleChanged) 
-            return PR_FALSE;
+          return PR_FALSE;
         }
 
         return PR_TRUE;
@@ -5719,9 +5686,7 @@ nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
           break;
         case eReflowReason_Incremental: 
         {
-           nsReflowType  type;
-            aReflowState.reflowCommand->GetType(type);
-            switch (type) {
+            switch (aReflowState.reflowCommand->Type()) {
               case eReflowType_StyleChanged:
                  reflowReasonString = "incremental (StyleChanged)";
               break;
@@ -6413,10 +6378,8 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     DR_state->PrettyUC(aReflowState.availableWidth, width);
     DR_state->PrettyUC(aReflowState.availableHeight, height);
     if (aReflowState.path && aReflowState.path->mReflowCommand) {
-      nsReflowType type;
-      aReflowState.path->mReflowCommand->GetType(type);
       const char *incr_reason;
-      switch(type) {
+      switch(aReflowState.path->mReflowCommand->Type()) {
         case eReflowType_ContentChanged:
           incr_reason = "incr. (Content)";
           break;
