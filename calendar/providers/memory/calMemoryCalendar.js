@@ -42,8 +42,7 @@
 
 function calMemoryCalendar() {
     this.wrappedJSObject = this;
-    this.mObservers = Array();
-    this.mItems = { };
+    this.initMemoryCalendar();
 }
 
 function makeOccurrence(item, start, end)
@@ -72,6 +71,11 @@ calMemoryCalendar.prototype = {
         }
 
         return this;
+    },
+
+    initMemoryCalendar: function() {
+        this.mObservers = Array();
+        this.mItems = { };
     },
 
     //
@@ -113,7 +117,7 @@ calMemoryCalendar.prototype = {
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
         if (aItem.id == null && aItem.isMutable)
-            aItem.id = "uuid:" + (new Date()).getTime();
+            aItem.id = "uuid" + (new Date()).getTime();
 
         if (aItem.id == null) {
             if (aListener)
@@ -303,16 +307,12 @@ calMemoryCalendar.prototype = {
         //
 
         // item base type
-        var itemTypeFilter = null;
-        if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL)
-            itemTypeFilter = calIItemBase;
-        else if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT)
-            itemTypeFilter = calIEvent;
-        else if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO)
-            itemTypeFilter = calITodo;
-        else {
+        var wantEvents = ((aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT) != 0);
+        var wantTodos = ((aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO) != 0);
+        if(!wantEvents && !wantTodos) {
             // bail.
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_ERROR_FAILURE,
                                            aListener.GET,
                                            null,
                                            "Bad aItemFilter passed to getItems");
@@ -326,33 +326,45 @@ calMemoryCalendar.prototype = {
         // return occurrences?
         var itemReturnOccurrences = ((aItemFilter & calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0);
 
+        // figure out the return interface type
+        var typeIID = null;
+        if (itemReturnOccurrences) {
+            typeIID = calIItemOccurrence;
+        } else {
+            if (wantEvents && wantTodos) {
+                typeIID = calIItemBase;
+            } else if (wantEvents) {
+                typeIID = calIEvent;
+            } else if (wantTodos) {
+                typeIID = calITodo;
+            }
+        }
+
         //  if aCount != 0, we don't attempt to sort anything, and
         //  instead return the first aCount items that match.
 
         for (var itemIndex in this.mItems) {
             var item = this.mItems[itemIndex];
             var itemtoadd = null;
-            if (itemTypeFilter && !(item instanceof itemTypeFilter))
-                continue;
 
             var itemStartTime = 0;
             var itemEndTime = 0;
 
             var tmpitem = item;
-            if (item instanceof calIEvent) {
+            if (wantEvents && (item instanceof calIEvent)) {
                 tmpitem = item.QueryInterface(calIEvent);
                 itemStartTime = item.startDate.valid ? item.startDate.nativeTime :
                                                        START_OF_TIME;
                 itemEndTime = item.endDate.valid ? item.endDate.nativeTime :
                                                    END_OF_TIME
-            } else if (item instanceof calITodo) {
+            } else if (wantTodos && (item instanceof calITodo)) {
                 // if it's a todo, also filter based on completeness
                 if (item.percentComplete == 100 && !itemCompletedFilter)
                     continue;
                 else if (item.percentComplete < 100 && !itemNotCompletedFilter)
                     continue;
 
-                itemEndTime = itemStartTime = item.entryTime.nativeTime || 0;
+                itemEndTime = itemStartTime = item.entryDate.nativeTime || 0;
             } else {
                 // XXX unknown item type, wth do we do?
                 continue;
@@ -383,7 +395,7 @@ calMemoryCalendar.prototype = {
 
         aListener.onGetResult (this,
                                Components.results.NS_OK,
-                               itemReturnOccurrences ? calIItemOccurrence : itemTypeFilter,
+                               typeIID,
                                null,
                                itemsFound.length,
                                itemsFound);
