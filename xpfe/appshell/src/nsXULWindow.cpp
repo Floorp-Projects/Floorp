@@ -98,8 +98,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
-   mShowAfterLoad(PR_FALSE), mSizeMode(nsSizeMode_Normal),
-   mIntrinsicallySized(PR_FALSE), mCenterAfterLoad(PR_FALSE),
+   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE), mCenterAfterLoad(PR_FALSE),
    mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ), mIsHiddenWindow(PR_FALSE)
 {
   NS_INIT_REFCNT();
@@ -744,10 +743,8 @@ void nsXULWindow::OnChromeLoaded()
     Center(parentWindow, PR_TRUE, PR_FALSE);
   }
 
-  if(mShowAfterLoad) {
-    mWindow->SetSizeMode(mSizeMode);
+  if(mShowAfterLoad)
     SetVisibility(PR_TRUE);
-  }
 }
 
 NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
@@ -825,20 +822,21 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
       mIntrinsicallySized = PR_FALSE;
       SetSize(specWidth, specHeight, PR_FALSE);
     }
-  
+
     rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
     if (NS_SUCCEEDED(rv)) {
-      mSizeMode = nsSizeMode_Normal;
+      PRInt32 sizeMode = nsSizeMode_Normal;
       /* ignore request to minimize, to not confuse novices
       if (sizeString.Equals(SIZEMODE_MINIMIZED))
-        mSizeMode = nsSizeMode_Minimized;
+        sizeMode = nsSizeMode_Minimized;
       */
       if (sizeString.Equals(SIZEMODE_MAXIMIZED))
-        mSizeMode = nsSizeMode_Maximized;
-      // defer telling the widget until we're visible
+        sizeMode = nsSizeMode_Maximized;
+      // the widget had better be able to deal with not becoming visible yet
+      mWindow->SetSizeMode(sizeMode);
     }
   }
-  
+
   return NS_OK;
 }
 
@@ -1048,24 +1046,19 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
   mWindow->GetSizeMode(&sizeMode);
 
   char           sizeBuf[10];
-  nsAutoString   sizeString,
-                 currentValue;
+  nsAutoString   sizeString;
 
   // (only for size elements which are persisted)
   if(aPosition && sizeMode == nsSizeMode_Normal) {
     if(persistString.Find("screenX") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)x);
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->GetAttribute(SCREENX_ATTRIBUTE, currentValue);
-      if (!currentValue.Equals(sizeString))
-        docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString);
     }
     if(persistString.Find("screenY") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)y);
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->GetAttribute(SCREENY_ATTRIBUTE, currentValue);
-      if (!currentValue.Equals(sizeString))
-        docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString);
     }
   }
 
@@ -1073,16 +1066,12 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
     if(persistString.Find("width") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cx);
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->GetAttribute(WIDTH_ATTRIBUTE, currentValue);
-      if (!currentValue.Equals(sizeString))
-        docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString);
     }
     if(persistString.Find("height") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%ld", (long)cy);
       sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->GetAttribute(HEIGHT_ATTRIBUTE, currentValue);
-      if (!currentValue.Equals(sizeString))
-        docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
+      docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString);
     }
   }
 
@@ -1093,9 +1082,7 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       sizeString.Assign(SIZEMODE_MAXIMIZED);
     else
       sizeString.Assign(SIZEMODE_NORMAL);
-    docShellElement->GetAttribute(MODE_ATTRIBUTE, currentValue);
-    if (!currentValue.Equals(sizeString))
-      docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
+    docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString);
   }
 
   return NS_OK;
