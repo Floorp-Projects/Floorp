@@ -56,6 +56,8 @@ function GetFields()
 {
   var profName = document.getElementById("ProfileName").value;
   var profDir  = document.getElementById("ProfileDir");
+  var profDirContent;
+
   for(var i = 0; i < profDir.attributes.length; i++)
   {
     // this is just an awful, bad, terrible hack. I shouldn't have to do this
