@@ -53,7 +53,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIStyleRule.h"
 #include "nsIStyledContent.h"
-#include "nsIBindableContent.h"
+#include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 #include "nsIURI.h"
 #include "nsIXMLContent.h"
@@ -65,6 +65,7 @@ class nsISizeOfHandler;
 
 class nsIDocument;
 class nsIRDFService;
+class nsIXBLService;
 class nsISupportsArray;
 class nsIXULContentUtils;
 class nsIXULPrototypeDocument;
@@ -316,7 +317,6 @@ public:
 class nsXULElement : public nsIStyledContent,
                      public nsIXMLContent,
                      public nsIXULContent,
-                     public nsIBindableContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
                      public nsIScriptEventHandlerOwner,
@@ -329,6 +329,7 @@ protected:
     // pseudo-constants
     static nsrefcnt             gRefCnt;
     static nsIRDFService*       gRDFService;
+    static nsIXBLService*       gXBLService;
     static nsINameSpaceManager* gNameSpaceManager;
     static nsIXULContentUtils*  gXULUtils;
     static PRInt32              kNameSpaceID_RDF;
@@ -451,11 +452,6 @@ public:
     NS_IMETHOD InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
                                 nsIXULTemplateBuilder* aBuilder);
 
-    // nsIBindableContent interface
-    NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
-    NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
-    NS_IMETHOD GetBaseTag(nsIAtom** aResult);
-
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_IDOMNODE
   
@@ -554,10 +550,6 @@ protected:
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
 
-    // XXX Both of these methods must die.
-    static PRBool IsFocusable(nsIAtom* aTag);
-    PRBool IsFocusableContent();
-
     nsresult AddPopupListener(nsIAtom* aName);
 
 protected:
@@ -595,7 +587,6 @@ protected:
         nsIXULTemplateBuilder*              mBuilder;            // [WEAK]
         nsCOMPtr<nsIRDFResource>            mOwnedResource;      // [OWNER]
         nsXULAttributes*                    mAttributes;
-        nsCOMPtr<nsIXBLBinding>             mBinding;            // [OWNER]
 
         // An unreferenced bare pointer to an aggregate that can
         // implement element-specific APIs.
@@ -623,7 +614,6 @@ protected:
     nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
-    nsIXBLBinding*             Binding() const         { return mSlots ? mSlots->mBinding.get()                     : nsnull; }
 };
 
 

@@ -1795,6 +1795,21 @@ nsXULDocument::GetAndIncrementContentID(PRInt32* aID)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetBindingManager(nsIBindingManager** aResult)
+{
+  nsresult rv;
+  if (!mBindingManager) {
+    mBindingManager = do_CreateInstance("component://netscape/xbl/binding-manager", &rv);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+  }
+
+  *aResult = mBindingManager;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
 void
 nsXULDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {

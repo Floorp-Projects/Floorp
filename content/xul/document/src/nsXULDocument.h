@@ -65,6 +65,7 @@
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
 #include "nsIStreamLoader.h"
+#include "nsIBindingManager.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -259,6 +260,8 @@ public:
 
     NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
 
+    NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
+
     virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
     virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
@@ -284,7 +287,6 @@ public:
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
-
 
     // nsIXMLDocument interface
     NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
@@ -559,6 +561,8 @@ protected:
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
+    nsCOMPtr<nsIBindingManager> mBindingManager; // [OWNER] of all bindings
+    
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;
     PRInt32 mNextContentID;

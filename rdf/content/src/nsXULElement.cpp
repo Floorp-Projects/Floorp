@@ -286,6 +286,7 @@ struct XULBroadcastListener
 
 nsrefcnt             nsXULElement::gRefCnt;
 nsIRDFService*       nsXULElement::gRDFService;
+nsIXBLService*       nsXULElement::gXBLService;
 nsINameSpaceManager* nsXULElement::gNameSpaceManager;
 nsIXULContentUtils*  nsXULElement::gXULUtils;
 PRInt32              nsXULElement::kNameSpaceID_RDF;
@@ -363,6 +364,12 @@ nsXULElement::Init()
                                           (nsISupports**) &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+        if (NS_FAILED(rv)) return rv;
+        rv = nsServiceManager::GetService("component://netscape/xbl",
+                                          NS_GET_IID(nsIXBLService),
+                                          (nsISupports**) &gXBLService);
+
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XBL service");
         if (NS_FAILED(rv)) return rv;
 
         kClassAtom          = NS_NewAtom("class");
@@ -447,6 +454,10 @@ nsXULElement::~nsXULElement()
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
             gRDFService = nsnull;
+        }
+        if (gXBLService) {
+            nsServiceManager::ReleaseService("component://netscape/xbl", gXBLService);
+            gXBLService = nsnull;
         }
 
         NS_IF_RELEASE(kClassAtom);
@@ -639,9 +650,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
     }
-    else if (iid.Equals(NS_GET_IID(nsIBindableContent))) {
-        *result = NS_STATIC_CAST(nsIBindableContent*, this);
-    }
     else if (iid.Equals(NS_GET_IID(nsIStyleRule))) {
         *result = NS_STATIC_CAST(nsIStyleRule*, this);
     }
@@ -651,9 +659,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULPopupElement))) &&
              (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if ((tag.get() == kPopupAtom) || (tag.get() == kMenuPopupAtom)) {
         // We delegate XULPopupElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -673,9 +679,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
               iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
               (NameSpaceID() == kNameSpaceID_XUL)){
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kTreeAtom) {
         // We delegate XULTreeElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -694,10 +698,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULIFrameElement)) &&
              (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
-
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kIFrameAtom) {
         // We delegate XULIFrameElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -716,9 +717,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULBrowserElement)) &&
       (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kBrowserAtom) {
         // We delegate XULBrowserElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -737,9 +736,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULTitledButtonElement)) &&
              (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kTitledButtonAtom) {
         // We delegate XULTitledButtonElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -758,10 +755,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULCheckboxElement)) &&
       (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
-
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kCheckboxAtom) {
         // We delegate XULCheckboxElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -780,9 +774,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioElement)) &&
       (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kRadioAtom) {
         // We delegate XULRadioElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -801,10 +793,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULRadioGroupElement)) &&
       (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
-      
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kRadioGroupAtom) {
         // We delegate XULRadioElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -823,10 +812,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULMenuListElement)) &&
       (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
-      
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kMenuListAtom) {
         // We delegate XULMenuListElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -845,10 +831,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIDOMXULEditorElement)) &&
       (NameSpaceID() == kNameSpaceID_XUL)) {
       nsCOMPtr<nsIAtom> tag;
-      GetBaseTag(getter_AddRefs(tag));
-      if (!tag)
-        tag = Tag();
-
+      gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
       if (tag.get() == kEditorAtom) {
         // We delegate XULEditorElement APIs to an aggregate object
         if (! InnerXULElement()) {
@@ -1944,10 +1927,7 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         nsresult (*PR_CALLBACK fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
 
         nsCOMPtr<nsIAtom> tag;
-        GetBaseTag(getter_AddRefs(tag));
-
-        if (!tag)
-          tag = Tag();
+        gXBLService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(tag));
 
         const char* rootname;
         if (tag.get() == kTreeAtom) {
@@ -2006,9 +1986,15 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
     }
 
     void* object = nsnull;
-    if (Binding()) {
-      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(Binding()));
-      owner->GetScriptObject(aContext, &object);
+    if (mDocument) {
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      nsCOMPtr<nsIXBLBinding> binding;
+      bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+      if (binding) {
+        nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(binding));
+        owner->GetScriptObject(aContext, &object);
+      }
     }
 
     *aScriptObject = object ? object : mScriptObject;
@@ -2245,8 +2231,21 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             }
         }
 
-        if (Binding())
-            Binding()->ChangeDocument(mDocument, aDocument);
+        if (mDocument) {
+          nsCOMPtr<nsIBindingManager> bindingManager;
+          mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          nsCOMPtr<nsIXBLBinding> binding;
+          bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+          if (binding) {
+            binding->ChangeDocument(mDocument, aDocument);
+            bindingManager->SetBinding(NS_STATIC_CAST(nsIStyledContent*, this), nsnull);
+            if (aDocument) {
+              nsCOMPtr<nsIBindingManager> otherManager;
+              aDocument->GetBindingManager(getter_AddRefs(otherManager));
+              otherManager->SetBinding(NS_STATIC_CAST(nsIStyledContent*, this), binding);
+            }
+          }
+        }
 
         mDocument = aDocument; // not refcounted
 
@@ -2857,12 +2856,16 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
         }
     }
 
-    if (NS_SUCCEEDED(rv) && aNotify) {
-        if (Binding())
-          Binding()->AttributeChanged(aName, aNameSpaceID, PR_FALSE);
-        
-        if (mDocument)
-          mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+    if (NS_SUCCEEDED(rv) && mDocument) {
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      nsCOMPtr<nsIXBLBinding> binding;
+      bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+      if (binding)
+        binding->AttributeChanged(aName, aNameSpaceID, PR_FALSE);
+      
+      if (aNotify)
+        mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
     }
 
     return rv;
@@ -3056,10 +3059,15 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
         }
      
         // Notify document
-        if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-            if (Binding())
-              Binding()->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
+        if (NS_SUCCEEDED(rv) && mDocument) {
+          nsCOMPtr<nsIBindingManager> bindingManager;
+          mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          nsCOMPtr<nsIXBLBinding> binding;
+          bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+          if (binding)
+            binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
 
+          if (aNotify)
             mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
                                         aNameSpaceID, aName,
                                         NS_STYLE_HINT_UNKNOWN);
@@ -4216,51 +4224,6 @@ NS_IMETHODIMP
 nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   return NS_OK;
-}
-
-PRBool 
-nsXULElement::IsFocusable(nsIAtom* aTag)
-{
-  return (aTag == kTitledButtonAtom) || (aTag == kTreeAtom) || (aTag == kCheckboxAtom) || (aTag == kRadioAtom) ||
-         (aTag == kMenuListAtom) || (aTag == kMenuButtonAtom) || (aTag == kTextFieldAtom);
-}
-
-PRBool
-nsXULElement::IsFocusableContent()
-{
-  // XXX This method sucks. I mean it. It really really sucks.
-  // We HAVE to fix this before we ship.
-  nsCOMPtr<nsIAtom> baseTag;
-  GetBaseTag(getter_AddRefs(baseTag));
- 
-  return IsFocusable(Tag()) || IsFocusable(baseTag);
-}
-
-// nsIBindableContent Interface
-
-NS_IMETHODIMP
-nsXULElement::SetBinding(nsIXBLBinding* aBinding) 
-{
-  EnsureSlots();
-  mSlots->mBinding = aBinding; // nsCOMPtr handles addrefing.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::GetBinding(nsIXBLBinding** aResult)
-{
-  *aResult = Binding();
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::GetBaseTag(nsIAtom** aResult)
-{
-  if (Binding())
-    return Binding()->GetBaseTag(aResult);
-  else
-    return NS_OK;
 }
 
 // nsIStyleRule interface
