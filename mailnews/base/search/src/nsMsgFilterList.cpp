@@ -34,7 +34,8 @@ nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 {
 	m_fileStream = fileStream;
 	// I don't know how we're going to report this error if we failed to create the isupports array...
-	nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
+	nsresult rv;
+	rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
 	m_loggingEnabled = PR_FALSE;
 	m_curFilter = nsnull;
 	NS_INIT_REFCNT();
@@ -304,7 +305,7 @@ char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttrib &attrib)
 	
 	curChar = SkipWhitespace();
 	int i;
-	for (i = 0; i + 1 < sizeof(attribStr); )
+	for (i = 0; i + 1 < (int)(sizeof(attribStr)); )
 	{
 		if (curChar == (char) -1 || IsWhitespace(curChar) || curChar == '=')
 			break;
@@ -312,7 +313,7 @@ char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttrib &attrib)
 		curChar = ReadChar();
 	}
 	attribStr[i] = '\0';
-	for (int tableIndex = 0; tableIndex < sizeof(FilterFileAttribTable) / sizeof(FilterFileAttribTable[0]); tableIndex++)
+	for (int tableIndex = 0; tableIndex < (int)(sizeof(FilterFileAttribTable) / sizeof(FilterFileAttribTable[0])); tableIndex++)
 	{
 		if (!PL_strcasecmp(attribStr, FilterFileAttribTable[tableIndex].attribName))
 		{
@@ -325,7 +326,7 @@ char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttrib &attrib)
 
 const char *nsMsgFilterList::GetStringForAttrib(nsMsgFilterFileAttrib attrib)
 {
-	for (int tableIndex = 0; tableIndex < sizeof(FilterFileAttribTable) / sizeof(FilterFileAttribTable[0]); tableIndex++)
+	for (int tableIndex = 0; tableIndex < (int)(sizeof(FilterFileAttribTable) / sizeof(FilterFileAttribTable[0])); tableIndex++)
 	{
 		if (attrib == FilterFileAttribTable[tableIndex].attrib)
 			return FilterFileAttribTable[tableIndex].attribName;
