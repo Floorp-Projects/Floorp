@@ -54,7 +54,7 @@
 #else
 #include "prprf.h"
 #include "plhash.h"
-#include "xp_core.h"
+#include "nspr.h"
 #include "rdf.h"
 #include "rdf-int.h"
 #include "core.h"
@@ -284,7 +284,7 @@ typedef struct _HT_URLSiteMapAssoc {
 
 /* HT function prototypes */
 
-XP_BEGIN_PROTOS
+NSPR_BEGIN_EXTERN_C
 
 void				HT_Startup();
 void				HT_Shutdown();
@@ -393,7 +393,7 @@ void				PaneDeleteSBPCleanup (HT_Pane htPane);
 PRBool				rdfFindDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned int button);
 #endif
 
-XP_END_PROTOS
+NSPR_END_EXTERN_C
 
 #endif
 
