@@ -1907,10 +1907,6 @@ nsEnderKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 
     // Have the content handle the event.
     mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-    
-    // Now have the frame handle the event
-    mFrame->HandleEvent(*mContext, &event, status);
-
   }
   
   return NS_OK;
@@ -1943,9 +1939,6 @@ nsEnderKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 
     // Have the content handle the event.
     mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-    
-    // Now have the frame handle the event
-    mFrame->HandleEvent(*mContext, &event, status);
   }
   return NS_OK;
 }
