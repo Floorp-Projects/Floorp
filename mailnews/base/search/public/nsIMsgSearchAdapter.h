@@ -44,7 +44,7 @@ public:
 	NS_IMETHOD OpenResultElement (nsMsgResultElement *) = 0;
 	NS_IMETHOD ModifyResultElement (nsMsgResultElement*, nsMsgSearchValue*) = 0;
 	NS_IMETHOD GetEncoding (const char **encoding) = 0;
-	NS_IMETHOD FindTargetFolder (const nsMsgResultElement *, nsIMsgFolder **aFolder) = 0;
+	NS_IMETHOD FindTargetFolder (nsMsgResultElement *, nsIMsgFolder **aFolder) = 0;
 	NS_IMETHOD Abort () = 0;
 };
 
