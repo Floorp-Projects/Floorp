@@ -1142,6 +1142,8 @@ function EditorInitFormatMenu()
       if (element.nodeName)
       {
         propertiesMenu.removeAttribute("hidden");
+        propertiesMenu.removeAttribute("disabled");
+
         var objStr;
         var menuStr = editorShell.GetString("ObjectProperties");
         switch (element.nodeName)
