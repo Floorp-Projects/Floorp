@@ -196,6 +196,14 @@ pref("print.print_footerright", "&D");
 pref("print.show_print_progress", true);
 
 // xxxbsmedberg: more toolkit prefs
+
+// When this is set to false each window has its own PrintSettings
+// and a chnage in one window does not affect the others
+pref("print.use_global_printsettings", true);
+
+// Use the native dialog or the XP dialog?
+pref("print.use_native_print_dialog", false);
+
 // Save the Printings after each print job
 pref("print.save_print_settings", true);
 
