@@ -559,9 +559,23 @@
                 }
               }
 
-              if (title && title != "about:blank")
+              if (title && title != "about:blank") {
+                // At this point, we now have a URI.
+                // Let's try to unescape it using a character set
+                // in case the URI is not ASCII.
+                try {
+                  var characterSet = Components.lookupMethod(browser.contentDocument, 'characterSet')
+                                               .call(browser.contentDocument);
+                  const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                                 .getService(Components.interfaces.nsITextToSubURI);
+                  title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
+                }
+                catch(ex) {
+                  // Do nothing.
+                }
+
                 crop = "center";
-              else // Still no title?  Fall back to our untitled string.
+              } else // Still no title?  Fall back to our untitled string.
                 title = this.mStringBundle.getString("tabs.untitled");
             }
 
