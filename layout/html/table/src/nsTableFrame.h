@@ -500,6 +500,7 @@ protected:
   void   SetRequestedTimeoutReflow(PRBool aValue);
   void   InterruptNotification(nsIPresContext* aPresContext,
                                PRBool          aIsRequest);
+
 public:
   /** first pass of ResizeReflow.  
     * lays out all table content with aMaxSize(NS_UNCONSTRAINEDSIZE,NS_UNCONSTRAINEDSIZE) and
@@ -522,6 +523,9 @@ public:
   NS_IMETHOD  ReflowCommandNotify(nsIPresShell*     aShell,
                                   nsIReflowCommand* aRC,
                                   PRBool            aCommandAdded);
+  PRBool IsRowInserted() const;
+  void   SetRowInserted(PRBool aValue);
+
 protected:
 
   NS_METHOD ReflowChildren(nsIPresContext*      aPresContext,
@@ -866,7 +870,8 @@ protected:
     // we know that a descendant will be getting a timeout reflow and we cancel the one
     // targeted at us, as an optimization.
     unsigned mRequestedTimeoutReflow:1;
-    int : 23;                          // unused
+    unsigned mRowInserted;
+    int : 22;                          // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -973,6 +978,16 @@ inline PRBool nsTableFrame::RequestedTimeoutReflow() const
 inline void nsTableFrame::SetRequestedTimeoutReflow(PRBool aValue)
 {
   mBits.mRequestedTimeoutReflow = (unsigned)aValue;
+}
+
+inline PRBool nsTableFrame::IsRowInserted() const
+{
+  return (PRBool)mBits.mRowInserted;
+}
+
+inline void nsTableFrame::SetRowInserted(PRBool aValue)
+{
+  mBits.mRowInserted = (unsigned)aValue;
 }
 
 inline nsFrameList& nsTableFrame::GetColGroups()

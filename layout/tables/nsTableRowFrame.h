@@ -193,6 +193,9 @@ public:
                                    nscoord&  aDesiredHeight,
                                    nscoord   aAvailWidth);
 
+  PRBool IsFirstInserted() const;
+  void   SetFirstInserted(PRBool aValue);
+
 protected:
 
   /** protected constructor.
@@ -258,7 +261,8 @@ protected:
 public:
   struct RowBits {
     int      mRowIndex:20;
-    unsigned mMinRowSpan:12;        // the smallest row span among all my child cells
+    unsigned mMinRowSpan:11; // the smallest row span among all my child cells
+    unsigned mFirstInserted; // if true, then it was the top most newly inserted row 
   };
 
 private:
@@ -287,6 +291,16 @@ inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
   NS_PRECONDITION(aRowIndex < NS_TABLE_MAX_ROW_INDEX, "unexpected row index");
   mBits.mRowIndex = aRowIndex;
+}
+
+inline PRBool nsTableRowFrame::IsFirstInserted() const
+{
+  return PRBool(mBits.mFirstInserted);
+}
+
+inline void nsTableRowFrame::SetFirstInserted(PRBool aValue)
+{
+  mBits.mFirstInserted = aValue;
 }
 
 #endif

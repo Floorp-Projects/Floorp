@@ -1741,6 +1741,54 @@ nsTableFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
   return ((aProviderFrame != nsnull) && (*aProviderFrame != nsnull)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+// XXX this could be made more general to handle row modifications that change the
+// table height, but first we need to scrutinize every Invalidate
+static void
+ProcessRowInserted(nsIPresContext* aPresContext,
+                   nsTableFrame&   aTableFrame,
+                   PRBool          aInvalidate,
+                   nscoord         aNewHeight)
+{
+  aTableFrame.SetRowInserted(PR_FALSE); // reset the bit that got us here
+  nsVoidArray rowGroups;
+  PRUint32 numRowGroups;
+  aTableFrame.OrderRowGroups(rowGroups, numRowGroups);
+  // find the row group containing the inserted row
+  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
+    nsTableRowGroupFrame* rgFrame = (nsTableRowGroupFrame*)rowGroups.ElementAt(rgX);
+    if (!rgFrame) continue; // should never happen
+    nsIFrame* childFrame = nsnull;
+    rgFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    // find the row that was inserted first
+    while (childFrame) {
+      nsCOMPtr<nsIAtom> childType;
+      childFrame->GetFrameType(getter_AddRefs(childType));
+      if (nsLayoutAtoms::tableRowFrame == childType.get()) {
+        nsTableRowFrame* rowFrame = (nsTableRowFrame*)childFrame;
+        if (rowFrame->IsFirstInserted()) {
+          rowFrame->SetFirstInserted(PR_FALSE);
+          if (aInvalidate) {
+            // damage the table from the 1st row inserted to the end of the table
+            nsRect damageRect, rgRect, rowRect;
+
+            aTableFrame.GetRect(damageRect);
+            rgFrame->GetRect(rgRect);
+            rowFrame->GetRect(rowRect);
+
+            nscoord tableY = damageRect.y;
+            damageRect.y += rgRect.y + rowRect.y; 
+            damageRect.height = aNewHeight - damageRect.y;
+
+            aTableFrame.Invalidate(aPresContext, damageRect);
+            aTableFrame.SetRowInserted(PR_FALSE);
+          }
+          return; // found it, so leave
+        }
+      }
+      childFrame->GetNextSibling(&childFrame);
+    }
+  }
+}
 
 /* overview:
   if mFirstPassValid is false, this is our first time through since content was last changed
@@ -1863,6 +1911,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     // If we're here that means we had to reflow all the rows, e.g., the column widths 
     // changed. We need to make sure that any damaged areas are repainted
     Invalidate(aPresContext, mRect);
+    if (IsRowInserted()) {
+      ProcessRowInserted(aPresContext, *this, PR_FALSE, 0);
+    }
 
     if (eReflowReason_Resize == aReflowState.reason) {
       if (isPaginated && (NS_FRAME_COMPLETE == aStatus) && (reflowState.availSize.height > 0)) {
@@ -1879,6 +1930,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
   aDesiredSize.width  = GetDesiredWidth();
   aDesiredSize.height = CalcDesiredHeight(aPresContext, aReflowState); 
+
+  if (IsRowInserted()) {
+    ProcessRowInserted(aPresContext, *this, PR_TRUE, aDesiredSize.height);
+  }
 
 #ifndef TABLE_REFLOW_COALESCING_OFF
   // determine if we need to reset DescendantReflowedNotTimeout and/or
