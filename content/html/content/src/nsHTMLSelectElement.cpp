@@ -72,6 +72,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 #include "nsIComponentManager.h"
+#include "nsDoubleHashtable.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -83,7 +84,6 @@
 
 
 class nsHTMLSelectElement;
-
 
 /**
  * The collection of options in the select (what you get back when you do
@@ -145,6 +145,21 @@ private:
   /** The select element that contains this array */
   nsHTMLSelectElement* mSelect;
 };
+
+/**
+ * The restore state used by select
+ */
+class nsSelectState : public nsISupports {
+  public:
+    nsSelectState() { NS_INIT_ISUPPORTS(); mValues.Init(10); }
+    virtual ~nsSelectState() { }
+
+    NS_DECL_ISUPPORTS
+
+    nsStringHashSet mValues;
+};
+
+NS_IMPL_ISUPPORTS0(nsSelectState)
 
 
 /**
@@ -262,7 +277,7 @@ protected:
    * Restore state to a particular state string (representing the options)
    * @param aNewSelected the state string to restore to
    */
-  void RestoreStateTo(nsAString* aNewSelected);
+  void RestoreStateTo(nsSelectState* aNewSelected);
 
 #ifdef DEBUG_john
   // Don't remove these, por favor.  They're very useful in debugging
@@ -377,7 +392,7 @@ protected:
    * The temporary restore state in case we try to restore before parser is
    * done adding options
    */
-  nsString* mRestoreState;
+  nsSelectState* mRestoreState;
 };
 
 
@@ -437,10 +452,7 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
     mOptions->DropReference();
     NS_RELEASE(mOptions);
   }
-  if (mRestoreState) {
-    delete mRestoreState;
-    mRestoreState = nsnull;
-  }
+  NS_IF_RELEASE(mRestoreState);
 }
 
 // ISupports
@@ -1174,7 +1186,6 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                                       PRBool aSelected,
                                       PRBool aNotify)
 {
-  //printf("OnOptionSelected(%d = '%c')\n", aIndex, (aSelected ? 'Y' : 'N'));
   // Set the selected index
   if (aSelected && (aIndex < mSelectedIndex || mSelectedIndex < 0)) {
     mSelectedIndex = aIndex;
@@ -1755,8 +1766,7 @@ nsHTMLSelectElement::DoneAddingChildren()
   // content, restore the rest of the options proper-like
   if (mRestoreState) {
     RestoreStateTo(mRestoreState);
-    delete mRestoreState;
-    mRestoreState = nsnull;
+    NS_RELEASE(mRestoreState);
   }
 
   // Notify the frame
@@ -1902,7 +1912,11 @@ nsHTMLSelectElement::GetType(PRInt32* aType)
 NS_IMETHODIMP
 nsHTMLSelectElement::SaveState()
 {
-  nsAutoString stateStr;
+  nsSelectState* state = new nsSelectState();
+  if (!state) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(state);
 
   PRUint32 len;
   GetLength(&len);
@@ -1914,36 +1928,36 @@ nsHTMLSelectElement::SaveState()
       PRBool isSelected;
       option->GetSelected(&isSelected);
       if (isSelected) {
-        if (!stateStr.IsEmpty()) {
-          stateStr.Append(PRUnichar(','));
-        }
-        stateStr.AppendInt(optIndex);
+        nsCOMPtr<nsIOptionElement> optionElem = do_QueryInterface(option);
+        nsAutoString value;
+        optionElem->GetValueOrText(value);
+        state->mValues.Put(value);
       }
     }
   }
 
-  nsCOMPtr<nsIPresState> state;
-  nsresult rv = GetPrimaryPresState(this, getter_AddRefs(state));
-  if (state) {
-    rv = state->SetStateProperty(NS_LITERAL_STRING("selecteditems"),
-                                 stateStr);
+  nsCOMPtr<nsIPresState> presState;
+  nsresult rv = GetPrimaryPresState(this, getter_AddRefs(presState));
+  if (presState) {
+    rv = presState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                           state);
     NS_ASSERTION(NS_SUCCEEDED(rv), "selecteditems set failed!");
   }
+
+  NS_RELEASE(state);
+
   return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLSelectElement::RestoreState(nsIPresState* aState)
 {
-  // If RestoreState() is called a second time after SaveState() was
-  // called, this will do nothing.
-
   // Get the presentation state object to retrieve our stuff out of.
-  nsAutoString stateStr;
-  nsresult rv = aState->GetStateProperty(NS_LITERAL_STRING("selecteditems"),
-                                         stateStr);
+  nsCOMPtr<nsISupports> state;
+  nsresult rv = aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                                   getter_AddRefs(state));
   if (NS_SUCCEEDED(rv)) {
-    RestoreStateTo(&stateStr);
+    RestoreStateTo((nsSelectState*)(nsISupports*)state);
 
     // Don't flush, if the frame doesn't exist yet it doesn't care if
     // we're reset or not.
@@ -1969,14 +1983,11 @@ nsHTMLSelectElement::GetBoxObject(nsIBoxObject** aResult)
 }
 
 void
-nsHTMLSelectElement::RestoreStateTo(nsAString* aNewSelected)
+nsHTMLSelectElement::RestoreStateTo(nsSelectState* aNewSelected)
 {
   if (!mIsDoneAddingChildren) {
-    mRestoreState = new nsString;
-    if (!mRestoreState) {
-      return;
-    }
-    *mRestoreState = *aNewSelected;
+    mRestoreState = aNewSelected;
+    NS_ADDREF(mRestoreState);
     return;
   }
 
@@ -1987,17 +1998,17 @@ nsHTMLSelectElement::RestoreStateTo(nsAString* aNewSelected)
   SetOptionsSelectedByIndex(-1, -1, PR_TRUE, PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
 
   // Next set the proper ones
-  PRUint32 currentInd = 0;
-  while (currentInd < aNewSelected->Length()) {
-    PRInt32 nextInd = aNewSelected->FindChar(',', currentInd);
-    if (nextInd == -1) {
-      nextInd = aNewSelected->Length();
+  for (PRInt32 i = 0; i < (PRInt32)len; i++) {
+    nsCOMPtr<nsIDOMHTMLOptionElement> option;
+    mOptions->ItemAsOption(i, getter_AddRefs(option));
+    if (option) {
+      nsCOMPtr<nsIOptionElement> optionElem = do_QueryInterface(option);
+      nsAutoString value;
+      optionElem->GetValueOrText(value);
+      if (aNewSelected->mValues.Contains(value)) {
+        SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
+      }
     }
-    nsDependentSubstring s = Substring(*aNewSelected,
-                                       currentInd, (nextInd-currentInd));
-    PRInt32 i = atoi(NS_ConvertUCS2toUTF8(s).get());
-    SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
-    currentInd = (PRUint32)nextInd+1;
   }
 
   //CheckSelectSomething();
