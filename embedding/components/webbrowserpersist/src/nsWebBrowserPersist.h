@@ -89,9 +89,13 @@ private:
     nsresult MakeAndStoreLocalFilenameInURIMap(
         const char *aURI, PRBool aNeedsPersisting, URIData **aData);
     nsresult MakeOutputStream(
-        nsIURI *aFile, nsIChannel *aChannel, nsIOutputStream **aOutputStream);
+        nsIURI *aFile, nsIOutputStream **aOutputStream);
     nsresult MakeOutputStreamFromFile(
-        nsILocalFile *aFile, nsIChannel *aChannel, nsIOutputStream **aOutputStream);
+        nsILocalFile *aFile, nsIOutputStream **aOutputStream);
+    nsresult MakeOutputStreamFromURI(nsIURI *aURI, nsIOutputStream  **aOutStream);
+    nsresult CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel);
+    nsresult StartUpload(nsIOutputStream *aOutStream, nsIURI *aDestinationURI,
+        const char *aContentType);
     nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel);
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
@@ -104,7 +108,7 @@ private:
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentWithFixup(
         nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
-        nsIURI *aFile, PRBool aReplaceExisting, const nsString &aFormatType,
+        nsIURI *aFile, PRBool aReplaceExisting, const char *aFormatType,
         const nsString &aSaveCharset, PRUint32  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
@@ -125,7 +129,11 @@ private:
         nsHashKey *aKey, void *aData, void* closure);
     static PRBool PR_CALLBACK EnumCleanupOutputMap(
         nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumCleanupUploadList(
+        nsHashKey *aKey, void *aData, void* closure);
     static PRBool PR_CALLBACK EnumCalcProgress(
+        nsHashKey *aKey, void *aData, void* closure);
+    static PRBool PR_CALLBACK EnumCalcUploadProgress(
         nsHashKey *aKey, void *aData, void* closure);
     static PRBool PR_CALLBACK EnumFixRedirect(
         nsHashKey *aKey, void *aData, void* closure);
@@ -142,19 +150,21 @@ private:
     nsCOMPtr<nsIURI>          mURI;
     nsCOMPtr<nsIWebProgressListener> mProgressListener;
     nsHashtable               mOutputMap;
+    nsHashtable               mUploadList;
     nsHashtable               mURIMap;
     nsVoidArray               mDocList;
     PRUint32                  mFileCounter;
     PRUint32                  mFrameCounter;
-    PRBool                    mFirstAndOnlyUse;
-    PRBool                    mCancel;
-    PRBool                    mJustStartedLoading;
-    PRBool                    mCompleted;
+    PRPackedBool              mFirstAndOnlyUse;
+    PRPackedBool              mCancel;
+    PRPackedBool              mJustStartedLoading;
+    PRPackedBool              mCompleted;
+    PRPackedBool              mStartSaving;
+    PRPackedBool              mReplaceExisting;
     PRUint32                  mPersistFlags;
     PRUint32                  mPersistResult;
     PRInt32                   mTotalCurrentProgress;
     PRInt32                   mTotalMaxProgress;
-    PRBool                    mReplaceExisting;
     PRInt16                   mWrapColumn;
     PRUint32                  mEncodingFlags;
     nsString                  mContentType;
