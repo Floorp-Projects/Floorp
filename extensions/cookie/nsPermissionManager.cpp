@@ -225,6 +225,7 @@ nsPermissionManager::Add(nsIURI     *aURI,
                          PRUint32    aPermission)
 {
   NS_ASSERTION(aURI, "could not get uri");
+  NS_ENSURE_ARG_POINTER(aType);
   nsresult rv;
 
   nsCAutoString hostPort;
@@ -283,6 +284,7 @@ NS_IMETHODIMP
 nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
+  NS_ENSURE_ARG_POINTER(aType);
   PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
   // If type == -1, the type isn't known,
   // so just return NS_OK
@@ -321,6 +323,7 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
 {
   NS_ASSERTION(aURI, "could not get uri");
   NS_ASSERTION(aPermission, "no permission pointer");
+  NS_ENSURE_ARG_POINTER(aType);
 
   // set the default
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
