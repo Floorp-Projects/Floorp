@@ -26,20 +26,13 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<window
-  id="certDetails" 
-  title="&certmgr.certdetail.title;"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="setWindowName();"
-  persist="height width screenX screenY"
-  debug="tru1"
->
-
-<script src="viewCertDetails.js"/>
-<script src="chrome://global/content/strres.js" />
-
-<box orient="vertical" flex="1">
+<overlay id="certViewerOverlay" 
+         xmlns:html="http://www.w3.org/1999/xhtml" 
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+         xmlns:cert="http://netscape.com/rdf-cert#" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<box id="chain_box" orient="vertical">
+ <box orient="vertical" flex="1">
   <box flex="0" height="100">
     <tree id="treeset" debug="false" width="500" flex="1">
       <treecolgroup flex="1">
@@ -48,6 +41,11 @@
       <treechildren id="chain" flex="1" />
     </tree>
   </box>
+ </box>
+</box>
+<box id="general_info" orient="vertical">
+  <box id="chain_box" flex="1" />
+  <separator />
   <box orient="vertical">
     <text id="verified"/>
     <tree id="usagetree" flex="1">
@@ -57,7 +55,7 @@
       <treechildren id="usage" flex="1" />
     </tree>
   </box>
-  <box>
+  <box orient="vertical" flex="1">
     <grid style="margin: 5px;border: 1px solid black;"> 
       <columns>
         <column width="200"/>
@@ -103,12 +101,5 @@
       </rows>
     </grid>
   </box>
-  <box>
-    <button id="closeButton"
-            class="normal"
-            label="&certmgr.close.label;"
-            orient="horizontal"
-            onclick="window.close();" /> 
-  </box>
 </box>
-</window>
+</overlay>

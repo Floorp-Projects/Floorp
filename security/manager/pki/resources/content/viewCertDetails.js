@@ -116,7 +116,11 @@ function setWindowName()
   }
   } catch (e) {}
   AddCertChain("chain", chain.reverse());
-  
+  DisplayGeneralDataFromCert(cert);
+}
+
+function DisplayGeneralDataFromCert(cert)
+{
   //  Verification and usage
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var verifystr = "";
@@ -157,7 +161,6 @@ function setWindowName()
   //  Organization
   var org=document.getElementById('organization');
   org.setAttribute("value", cert.organization);
-
   //  Organizational Unit
   var ou=document.getElementById('orgunit');
   ou.setAttribute("value", cert.organizationalUnit);
@@ -185,5 +188,4 @@ function setWindowName()
   //  MD5 Fingerprint
   var md5=document.getElementById('md5fingerprint');
   md5.setAttribute("value", cert.md5Fingerprint);
-
 }
