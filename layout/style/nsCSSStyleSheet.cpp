@@ -40,6 +40,7 @@
 #include "nsIMediaList.h"
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
+#include "nsIHTMLContentContainer.h"
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsHTMLAtoms.h"
@@ -61,6 +62,7 @@
 #include "nsDOMError.h"
 #include "nsIPresShell.h"
 #include "nsICSSParser.h"
+#include "nsICSSLoader.h"
 #include "nsIRuleWalker.h"
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
@@ -679,7 +681,7 @@ public:
 
   nsISupportsArray*     mOrderedRules;
 
-  nsINameSpace*         mNameSpace;
+  nsCOMPtr<nsINameSpace> mNameSpace;
   PRInt32               mDefaultNameSpaceID;
   nsHashtable           mRelevantAttributes;
 };
@@ -715,10 +717,12 @@ public:
   NS_IMETHOD GetType(nsString& aType) const;
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
-  NS_IMETHOD UseForMedium(nsIAtom* aMedium) const;
+  NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
   NS_IMETHOD AppendMedium(nsIAtom* aMedium);
   NS_IMETHOD ClearMedia(void);
-
+  NS_IMETHOD DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
+  NS_IMETHOD InsertRuleIntoGroup(nsAReadableString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  
   NS_IMETHOD GetEnabled(PRBool& aEnabled) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
 
@@ -812,7 +816,8 @@ protected:
 
   nsVoidArray*          mRuleProcessors;
 
-friend class CSSRuleProcessor;
+  friend class CSSRuleProcessor;
+  friend class DOMMediaListImpl;
 };
 
 
@@ -923,13 +928,22 @@ class DOMMediaListImpl : public nsIDOMMediaList,
     return mArray->ElementAt(aIndex);
   }
 
+  // nsIMediaList methods
+  NS_DECL_NSIMEDIALIST
+  
   DOMMediaListImpl(nsISupportsArray *aArray, CSSStyleSheetImpl *aStyleSheet);
   virtual ~DOMMediaListImpl();
 
-  void DropReference() { mStyleSheet = nsnull; }
-
 private:
+  nsresult BeginMediaChange(void);
+  nsresult EndMediaChange(void);
+  nsresult Delete(nsAReadableString & aOldMedium);
+  nsresult Append(nsAReadableString & aOldMedium);
+
   nsCOMPtr<nsISupportsArray> mArray;
+  // not refcounted; sheet will let us know when it goes away
+  // mStyleSheet is the sheet that needs to be dirtied when this medialist
+  // changes
   CSSStyleSheetImpl*         mStyleSheet;
 };
 
@@ -937,6 +951,7 @@ private:
 NS_INTERFACE_MAP_BEGIN(DOMMediaListImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY(nsIMediaList)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MediaList)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
@@ -962,13 +977,13 @@ DOMMediaListImpl::~DOMMediaListImpl()
 
 nsresult
 NS_NewMediaList(nsIMediaList** aInstancePtrResult) {
-  return NS_NewMediaList(aInstancePtrResult, NS_LITERAL_STRING(""));
+  return NS_NewMediaList(NS_LITERAL_STRING(""), aInstancePtrResult);
 }
 
 nsresult
-NS_NewMediaList(nsIMediaList** aInstancePtrResult, const nsAReadableString& aMediaText) {
+NS_NewMediaList(const nsAReadableString& aMediaText, nsIMediaList** aInstancePtrResult) {
   nsresult rv;
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  NS_ASSERTION(aInstancePtrResult, "Null out param.");
 
   nsCOMPtr<nsISupportsArray> array;
   rv = NS_NewISupportsArray(getter_AddRefs(array));
@@ -976,15 +991,29 @@ NS_NewMediaList(nsIMediaList** aInstancePtrResult, const nsAReadableString& aMed
     return NS_ERROR_OUT_OF_MEMORY;
   }
   DOMMediaListImpl* medialist = new DOMMediaListImpl(array, nsnull);
-  NS_ENSURE_TRUE(medialist, NS_ERROR_OUT_OF_MEMORY);
-  rv = medialist->SetMediaText(aMediaText);
-  NS_ENSURE_SUCCESS(rv, rv);
   *aInstancePtrResult = medialist;
+  NS_ENSURE_TRUE(medialist, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aInstancePtrResult);
+  rv = medialist->SetMediaText(aMediaText);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(*aInstancePtrResult);
+    *aInstancePtrResult = nsnull;
+  }
+  return rv;
+}
+
+nsresult NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet, nsIMediaList** aInstancePtrResult)
+{
+  NS_ASSERTION(aInstancePtrResult, "Null out param.");
+  DOMMediaListImpl* medialist = new DOMMediaListImpl(aArray, NS_STATIC_CAST(CSSStyleSheetImpl*, aSheet));
+  *aInstancePtrResult = medialist;
+  NS_ENSURE_TRUE(medialist, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aInstancePtrResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::GetMediaText(nsAWritableString& aMediaText)
+DOMMediaListImpl::GetText(nsAWritableString& aMediaText)
 {
   aMediaText.Truncate();
 
@@ -995,10 +1024,8 @@ DOMMediaListImpl::GetMediaText(nsAWritableString& aMediaText)
   PRInt32 count = cnt, index = 0;
 
   while (index < count) {
-    nsCOMPtr<nsISupports> tmp(dont_AddRef(ElementAt(index++)));
-    NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIAtom> medium(do_QueryInterface(tmp));
+    nsCOMPtr<nsIAtom> medium;
+    QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
     NS_ENSURE_TRUE(medium, NS_ERROR_FAILURE);
 
     const PRUnichar *buffer;
@@ -1013,7 +1040,7 @@ DOMMediaListImpl::GetMediaText(nsAWritableString& aMediaText)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::SetMediaText(const nsAReadableString& aMediaText)
+DOMMediaListImpl::SetText(const nsAReadableString& aMediaText)
 {
   nsresult rv = Clear();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1044,6 +1071,57 @@ DOMMediaListImpl::SetMediaText(const nsAReadableString& aMediaText)
   return rv;
 }
 
+/*
+ * aMatch is true when we contain the desired medium or contain the
+ * "all" medium or contain no media at all, which is the same as
+ * containing "all"
+ */
+NS_IMETHODIMP
+DOMMediaListImpl::MatchesMedium(nsIAtom* aMedium, PRBool* aMatch)
+{
+  NS_ENSURE_ARG_POINTER(aMatch);
+  *aMatch = PR_FALSE;
+  *aMatch = (-1 != IndexOf(aMedium)) ||
+            (-1 != IndexOf(nsLayoutAtoms::all));
+  if (*aMatch)
+    return NS_OK;
+  PRUint32 count;
+  nsresult rv = Count(&count);
+  if(NS_FAILED(rv))
+    return rv;  
+  *aMatch = (count == 0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMMediaListImpl::DropReference(void)
+{
+  mStyleSheet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DOMMediaListImpl::GetMediaText(nsAWritableString& aMediaText)
+{
+  return GetText(aMediaText);
+}
+
+NS_IMETHODIMP
+DOMMediaListImpl::SetMediaText(nsAReadableString& aMediaText)
+{
+  nsresult rv;
+  rv = BeginMediaChange();
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = SetText(aMediaText);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = EndMediaChange();
+  return rv;
+}
+                               
 NS_IMETHODIMP
 DOMMediaListImpl::GetLength(PRUint32* aLength)
 {
@@ -1079,6 +1157,38 @@ DOMMediaListImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 }
 
 NS_IMETHODIMP
+DOMMediaListImpl::DeleteMedium(const nsAReadableString& aOldMedium)
+{
+  nsresult rv;
+  rv = BeginMediaChange();
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = Delete(aOldMedium);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = EndMediaChange();
+  return rv;
+}
+
+NS_IMETHODIMP
+DOMMediaListImpl::AppendMedium(const nsAReadableString& aNewMedium)
+{
+  nsresult rv;
+  rv = BeginMediaChange();
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = Append(aNewMedium);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = EndMediaChange();
+  return rv;
+}
+
+nsresult
 DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
 {
   if (!aOldMedium.Length())
@@ -1098,7 +1208,7 @@ DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 DOMMediaListImpl::Append(const nsAReadableString& aNewMedium)
 {
   if (!aNewMedium.Length())
@@ -1118,6 +1228,39 @@ DOMMediaListImpl::Append(const nsAReadableString& aNewMedium)
   return NS_OK;
 }
 
+nsresult
+DOMMediaListImpl::BeginMediaChange(void)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc;
+
+  if (mStyleSheet) {
+    rv = mStyleSheet->GetOwningDocument(*getter_AddRefs(doc));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = doc->BeginUpdate();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mStyleSheet->WillDirty();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult
+DOMMediaListImpl::EndMediaChange(void)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc;
+  if (mStyleSheet) {
+    mStyleSheet->DidDirty();
+    rv = mStyleSheet->GetOwningDocument(*getter_AddRefs(doc));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = doc->StyleRuleChanged(mStyleSheet, nsnull, NS_STYLE_HINT_RECONSTRUCT_ALL);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = doc->EndUpdate();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
 
 // -------------------------------
 // Imports Collection for the DOM
@@ -1286,7 +1429,6 @@ CSSStyleSheetInner::~CSSStyleSheetInner(void)
     mOrderedRules->EnumerateForwards(SetStyleSheetReference, nsnull);
     NS_RELEASE(mOrderedRules);
   }
-  NS_IF_RELEASE(mNameSpace);
 }
 
 CSSStyleSheetInner* 
@@ -1326,7 +1468,7 @@ static PRBool
 CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
 {
   nsICSSRule* rule = (nsICSSRule*)aRule;
-  PRInt32 type;
+  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
   rule->GetType(type);
   if (nsICSSRule::NAMESPACE_RULE == type) {
     nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)rule;
@@ -1355,27 +1497,26 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
 void 
 CSSStyleSheetInner::RebuildNameSpaces(void)
 {
-  nsINameSpaceManager*  nameSpaceMgr;
+  nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
   if (mNameSpace) {
-    mNameSpace->GetNameSpaceManager(nameSpaceMgr);
-    NS_RELEASE(mNameSpace);
+    mNameSpace->GetNameSpaceManager(*getter_AddRefs(nameSpaceMgr));
   }
   else {
-    NS_NewNameSpaceManager(&nameSpaceMgr);
+    NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
   }
   if (nameSpaceMgr) {
-    nameSpaceMgr->CreateRootNameSpace(mNameSpace);
+    nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mNameSpace));
     if (kNameSpaceID_Unknown != mDefaultNameSpaceID) {
-      nsINameSpace* defaultNameSpace;
-      mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID, defaultNameSpace);
+      nsCOMPtr<nsINameSpace> defaultNameSpace;
+      mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID,
+                                       *getter_AddRefs(defaultNameSpace));
       if (defaultNameSpace) {
-        NS_RELEASE(mNameSpace);
         mNameSpace = defaultNameSpace;
       }
     }
-    NS_RELEASE(nameSpaceMgr);
     if (mOrderedRules) {
-      mOrderedRules->EnumerateForwards(CreateNameSpace, &mNameSpace);
+      nsINameSpace* nameSpace = mNameSpace;
+      mOrderedRules->EnumerateForwards(CreateNameSpace, &nameSpace);
     }
   }
 }
@@ -1745,24 +1886,15 @@ CSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(PRBool)
 CSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
 {
   if (mMedia) {
-    if (-1 != mMedia->IndexOf(aMedium)) {
-      return NS_OK;
-    }
-    if (-1 != mMedia->IndexOf(nsLayoutAtoms::all)) {
-      return NS_OK;
-    }
-    PRUint32 count;
-    mMedia->Count(&count);
-    if (count == 0) { // equivalent to having a medium of "all"
-      return NS_OK;
-    }
-    return NS_COMFALSE;
+    PRBool matches = PR_FALSE;
+    mMedia->MatchesMedium(aMedium, &matches);
+    return matches;
   }
-  return NS_OK;
+  return PR_TRUE;
 }
 
 
@@ -1976,7 +2108,7 @@ CSSStyleSheetImpl::PrependStyleRule(nsICSSRule* aRule)
       aRule->SetStyleSheet(this);
       DidDirty();
 
-      PRInt32 type;
+      PRInt32 type = nsICSSRule::UNKNOWN_RULE;
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
         // no api to prepend a namespace (ugh), release old ones and re-create them all
@@ -2003,31 +2135,29 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
       aRule->SetStyleSheet(this);
       DidDirty();
 
-      PRInt32 type;
+      PRInt32 type = nsICSSRule::UNKNOWN_RULE;
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
         if (! mInner->mNameSpace) {
-          nsINameSpaceManager*  nameSpaceMgr;
-          NS_NewNameSpaceManager(&nameSpaceMgr);
+          nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
+          NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
           if (nameSpaceMgr) {
-            nameSpaceMgr->CreateRootNameSpace(mInner->mNameSpace);
-            NS_RELEASE(nameSpaceMgr);
+            nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
           }
         }
 
         if (mInner->mNameSpace) {
-          nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)aRule;
-          nsINameSpace* newNameSpace = nsnull;
+          nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(aRule));
+          nsCOMPtr<nsINameSpace> newNameSpace;
 
-          nsIAtom*      prefix = nsnull;
+          nsCOMPtr<nsIAtom> prefix;
           nsAutoString  urlSpec;
-          nameSpaceRule->GetPrefix(prefix);
+          nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
           nameSpaceRule->GetURLSpec(urlSpec);
-          mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec, newNameSpace);
-          NS_IF_RELEASE(prefix);
+          mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
+                                                   *getter_AddRefs(newNameSpace));
           if (newNameSpace) {
-            NS_RELEASE(mInner->mNameSpace);
-            mInner->mNameSpace = newNameSpace; // takes ref
+            mInner->mNameSpace = newNameSpace;
           }
         }
       } else {
@@ -2050,7 +2180,7 @@ CheckRuleForAttributesEnum(nsISupports *aRule, void *aData)
 NS_IMETHODIMP
 CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
 {
-  PRInt32 ruleType;
+  PRInt32 ruleType = nsICSSRule::UNKNOWN_RULE;
   aRule->GetType(ruleType);
   switch (ruleType) {
     case nsICSSRule::MEDIA_RULE: {
@@ -2124,8 +2254,13 @@ CSSStyleSheetImpl::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetNameSpace(nsINameSpace*& aNameSpace) const
 {
-  aNameSpace = ((mInner) ? mInner->mNameSpace : nsnull);
-  NS_IF_ADDREF(aNameSpace);
+  if (mInner) {
+    aNameSpace = mInner->mNameSpace;
+    NS_IF_ADDREF(aNameSpace);
+  }
+  else {
+    aNameSpace = nsnull;
+  }
   return NS_OK;
 }
 
@@ -2218,9 +2353,9 @@ ListRules(nsISupportsArray* aRules, FILE* aOut, PRInt32 aIndent)
   if (aRules) {
     aRules->Count(&count);
     for (index = 0; index < count; index++) {
-      nsICSSRule* rule = (nsICSSRule*)aRules->ElementAt(index);
+      nsCOMPtr<nsICSSRule> rule;
+      aRules->QueryElementAt(index, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
       rule->List(aOut, aIndent);
-      NS_RELEASE(rule);
     }
   }
 }
@@ -2282,13 +2417,13 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     mMedia->Count(&count);
     nsAutoString  buffer;
     while (index < PRInt32(count)) {
-      nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
+      nsCOMPtr<nsIAtom> medium;
+      mMedia->QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
       medium->ToString(buffer);
       fputs(buffer, out);
       if (index < PRInt32(count)) {
         fputs(", ", out);
       }
-      NS_RELEASE(medium);
     }
   }
   fputs("\n", out);
@@ -2543,67 +2678,294 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
                               PRUint32 aIndex, 
                               PRUint32* aReturn)
 {
-  nsICSSParser* css;
-  // XXX should get parser from CSS loader
-  nsresult result = NS_NewCSSParser(&css);
-  if (NS_OK == result) {
-    nsString* str = new nsString(aRule); // will be deleted by the input stream
-    nsIUnicharInputStream* input = nsnull;
-    result = NS_NewStringUnicharInputStream(&input, str);
-    if (NS_OK == result) {
-      nsICSSStyleSheet* tmp;
-      css->SetStyleSheet(this);
-      // XXX Currently, the parser will append the rule to the
-      // style sheet. We shouldn't ignore the index.
-      result = css->Parse(input, mInner->mURL, tmp);
-      NS_ASSERTION(tmp == this, "parser incorrectly created a new stylesheet");
-      NS_RELEASE(tmp);
-      NS_RELEASE(input);
-      PRUint32 cnt;
-      if (mInner && mInner->mOrderedRules) {
-        result = mInner->mOrderedRules->Count(&cnt);
-        if (NS_SUCCEEDED(result)) {
-          *aReturn = cnt;
-          if (nsnull != mDocument) {
-            nsICSSRule* rule;
+  NS_ENSURE_TRUE(mInner, NS_ERROR_FAILURE);
+  nsresult result;
+  if (! mInner->mOrderedRules) {
+    result = NS_NewISupportsArray(&(mInner->mOrderedRules));
+  }
+  if (NS_FAILED(result))
+    return result;
 
-            rule = (nsICSSRule*)(mInner->mOrderedRules->ElementAt(aIndex));
-            mDocument->StyleRuleAdded(this, rule);
-            NS_IF_RELEASE(rule);
-          }
-        }
-      }
-    }
+  PRUint32 count;
+  mInner->mOrderedRules->Count(&count);
+  if (aIndex > count)
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  
+  result = WillDirty();
+  if (NS_FAILED(result))
+    return result;
 
-    NS_RELEASE(css);
+  nsCOMPtr<nsICSSLoader> loader;
+  nsCOMPtr<nsICSSParser> css;
+  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
+  if (htmlContainer) {
+    htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
+  }
+  if (loader) {
+    result = loader->GetParserFor(this, getter_AddRefs(css));
+  }
+  else {
+    result = NS_NewCSSParser(getter_AddRefs(css));
+    css->SetStyleSheet(this);
+  }
+  if (NS_FAILED(result))
+    return result;
+  
+  if (mDocument) {
+    result = mDocument->BeginUpdate();
+    if (NS_FAILED(result))
+      return result;
   }
 
-  return result;
+  nsCOMPtr<nsIStyleRule> rule;
+  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rule));
+  if (NS_FAILED(result))
+    return result;
+  if (! rule) // parsed successfully, but no rule resulted
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  
+  nsCOMPtr<nsICSSRule> cssRule(do_QueryInterface(rule, &result));
+  NS_ENSURE_SUCCESS(result, result);
+
+  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
+  cssRule->GetType(type);
+  if (aIndex != 0) {
+    if (type == nsICSSRule::CHARSET_RULE) { // no inserting charset at nonzero position
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+  
+    nsCOMPtr<nsICSSRule> prevRule;
+    result = mInner->mOrderedRules->QueryElementAt(aIndex-1, NS_GET_IID(nsICSSRule), getter_AddRefs(prevRule));
+    NS_ENSURE_SUCCESS(result, result);
+    PRInt32 prevType = nsICSSRule::UNKNOWN_RULE;
+    prevRule->GetType(prevType);
+
+    if (type == nsICSSRule::IMPORT_RULE &&
+        prevType != nsICSSRule::CHARSET_RULE &&
+        prevType != nsICSSRule::IMPORT_RULE) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
+    if (type == nsICSSRule::NAMESPACE_RULE &&
+        prevType != nsICSSRule::CHARSET_RULE &&
+        prevType != nsICSSRule::IMPORT_RULE &&
+        prevType != nsICSSRule::NAMESPACE_RULE) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+  }
+
+  if (type == nsICSSRule::CHARSET_RULE) {
+    // check that we're not inserting before another chatset rule
+    nsCOMPtr<nsICSSRule> nextRule;
+    mInner->mOrderedRules->QueryElementAt(aIndex, NS_GET_IID(nsICSSRule), getter_AddRefs(nextRule));
+    if (nextRule) {
+      PRInt32 nextType = nsICSSRule::UNKNOWN_RULE;
+      nextRule->GetType(nextType);
+      if (nextType == nsICSSRule::CHARSET_RULE) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+    }
+  }
+  
+  result = mInner->mOrderedRules->InsertElementAt(cssRule, aIndex);
+  NS_ENSURE_SUCCESS(result, result);
+  cssRule->SetStyleSheet(this);
+  DidDirty();
+  if (type == nsICSSRule::NAMESPACE_RULE) {
+    if (! mInner->mNameSpace) {
+      nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
+      result = NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
+      if (NS_FAILED(result))
+        return result;
+      nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
+    }
+
+    NS_ENSURE_TRUE(mInner->mNameSpace, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(cssRule));
+    nsCOMPtr<nsINameSpace> newNameSpace;
+    
+    nsCOMPtr<nsIAtom> prefix;
+    nsAutoString urlSpec;
+    nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
+    nameSpaceRule->GetURLSpec(urlSpec);
+    mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
+                                             *getter_AddRefs(newNameSpace));
+    if (newNameSpace) {
+      mInner->mNameSpace = newNameSpace;
+    }
+  }
+  else {
+    CheckRuleForAttributes(cssRule);
+  }
+  if (mDocument) {
+    result = mDocument->StyleRuleAdded(this, cssRule);
+    NS_ENSURE_SUCCESS(result, result);
+    
+    result = mDocument->EndUpdate();
+    NS_ENSURE_SUCCESS(result, result);
+  }
+    
+  *aReturn = aIndex;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
 CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
 {
-  nsresult result = NS_ERROR_INVALID_ARG;
+  nsresult result = NS_ERROR_DOM_INDEX_SIZE_ERR;
 
   // XXX TBI: handle @rule types
   if (mInner && mInner->mOrderedRules) {
+    if (mDocument) {
+      result = mDocument->BeginUpdate();
+      if (NS_FAILED(result))
+        return result;
+    }
     result = WillDirty();
-  
-    if (NS_SUCCEEDED(result)) {
-      nsICSSRule *rule;
 
-      rule = (nsICSSRule*)(mInner->mOrderedRules->ElementAt(aIndex));
-      if (nsnull != rule) {
+    if (NS_SUCCEEDED(result)) {
+      PRUint32 count;
+      mInner->mOrderedRules->Count(&count);
+      if (aIndex >= count)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+      nsCOMPtr<nsICSSRule> rule;
+      mInner->mOrderedRules->QueryElementAt(aIndex, NS_GET_IID(nsICSSRule),
+                                            getter_AddRefs(rule));
+      if (rule) {
         mInner->mOrderedRules->RemoveElementAt(aIndex);
         rule->SetStyleSheet(nsnull);
         DidDirty();
-        NS_RELEASE(rule);
+
+        if (mDocument) {
+          result = mDocument->StyleRuleRemoved(this, rule);
+          NS_ENSURE_SUCCESS(result, result);
+          
+          result = mDocument->EndUpdate();
+          NS_ENSURE_SUCCESS(result, result);
+        }
       }
     }
   }
 
   return result;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aGroup);
+  
+  nsresult result;
+  nsCOMPtr<nsICSSRule> rule;
+  result = aGroup->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
+  NS_ENSURE_SUCCESS(result, result);
+  
+  // check that the rule actually belongs to this sheet!
+  nsCOMPtr<nsIDOMCSSRule> domRule(do_QueryInterface(rule));
+  nsCOMPtr<nsIDOMCSSStyleSheet> ruleSheet;
+  result = domRule->GetParentStyleSheet(getter_AddRefs(ruleSheet));
+  NS_ENSURE_SUCCESS(result, result);  
+  nsCOMPtr<nsIDOMCSSStyleSheet> thisSheet;
+  this->QueryInterface(NS_GET_IID(nsIDOMCSSStyleSheet), getter_AddRefs(thisSheet));
+
+  if (thisSheet != ruleSheet) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  result = mDocument->BeginUpdate();
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = WillDirty();
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = aGroup->DeleteStyleRuleAt(aIndex);
+  NS_ENSURE_SUCCESS(result, result);
+  
+  rule->SetStyleSheet(nsnull);
+  
+  DidDirty();
+
+  result = mDocument->StyleRuleRemoved(this, rule);
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = mDocument->EndUpdate();
+  NS_ENSURE_SUCCESS(result, result);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval)
+{
+  nsresult result;
+  // check that the group actually belongs to this sheet!
+  nsCOMPtr<nsIDOMCSSRule> domGroup(do_QueryInterface(aGroup));
+  nsCOMPtr<nsIDOMCSSStyleSheet> groupSheet;
+  result = domGroup->GetParentStyleSheet(getter_AddRefs(groupSheet));
+  NS_ENSURE_SUCCESS(result, result);  
+  nsCOMPtr<nsIDOMCSSStyleSheet> thisSheet;
+  this->QueryInterface(NS_GET_IID(nsIDOMCSSStyleSheet), getter_AddRefs(thisSheet));
+
+  if (thisSheet != groupSheet) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // get the css parser
+  nsCOMPtr<nsICSSLoader> loader;
+  nsCOMPtr<nsICSSParser> css;
+  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
+  if (htmlContainer) {
+    htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
+  }
+  if (loader) {
+    result = loader->GetParserFor(this, getter_AddRefs(css));
+  }
+  else {
+    result = NS_NewCSSParser(getter_AddRefs(css));
+    css->SetStyleSheet(this);
+  }
+  NS_ENSURE_SUCCESS(result, result);
+
+  // parse and grab the rule 
+  result = mDocument->BeginUpdate();
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = WillDirty();
+  NS_ENSURE_SUCCESS(result, result);
+
+  nsCOMPtr<nsIStyleRule> rule;
+  result = css->ParseRule(aRule, mInner->mURL, getter_AddRefs(rule));
+  NS_ENSURE_SUCCESS(result, result);
+
+  if (! rule) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
+  nsCOMPtr<nsICSSRule> cssRule(do_QueryInterface(rule, &result));
+  NS_ENSURE_SUCCESS(result, result);
+             
+  // Only rulesets are allowed in a group as of CSS2
+  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
+  cssRule->GetType(type);
+  if (type != nsICSSRule::STYLE_RULE) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+  
+  result = aGroup->InsertStyleRuleAt(aIndex, cssRule);
+  NS_ENSURE_SUCCESS(result, result);
+  DidDirty();
+  CheckRuleForAttributes(cssRule);
+  
+  result = mDocument->StyleRuleAdded(this, cssRule);
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = mDocument->EndUpdate();
+  NS_ENSURE_SUCCESS(result, result);
+
+  *_retval = aIndex;
+  return NS_OK;
 }
 
 // XXX for backwards compatibility and convenience
@@ -3731,7 +4093,8 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     PRUint32 sheetCount, curSheet, localSize2;
     mSheets->Count(&sheetCount);
     for(curSheet=0; curSheet < sheetCount; curSheet++){
-      nsICSSStyleSheet *pSheet = (nsICSSStyleSheet *)mSheets->ElementAt(curSheet);
+      nsCOMPtr<nsICSSStyleSheet> pSheet;
+      mSheets->QueryElementAt(curSheet, NS_GET_IID(nsICSSStyleSheet), getter_AddRefs(pSheet));
       if(pSheet && uniqueItems->AddItem((void*)pSheet)){
         pSheet->SizeOf(aSizeOfHandler, localSize2);
         // XXX aSize += localSize2;
@@ -3765,6 +4128,7 @@ CSSRuleProcessor::ClearRuleCascades(void)
     delete data;
     data = next;
   }
+  mRuleCascades = nsnull;
   return NS_OK;
 }
 
@@ -3835,7 +4199,7 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
 {
   nsICSSRule* rule = (nsICSSRule*)aRule;
   CascadeEnumData* data = (CascadeEnumData*)aData;
-  PRInt32 type;
+  PRInt32 type = nsICSSRule::UNKNOWN_RULE;
   rule->GetType(type);
 
   if (nsICSSRule::STYLE_RULE == type) {
@@ -3854,7 +4218,7 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
   }
   else if (nsICSSRule::MEDIA_RULE == type) {
     nsICSSMediaRule* mediaRule = (nsICSSMediaRule*)rule;
-    if (NS_OK == mediaRule->UseForMedium(data->mMedium)) {
+    if (mediaRule->UseForMedium(data->mMedium)) {
       mediaRule->EnumerateRulesForwards(InsertRuleByWeight, aData);
     }
   }
@@ -3871,7 +4235,7 @@ CSSRuleProcessor::CascadeSheetRulesInto(nsISupports* aSheet, void* aData)
   PRBool bSheetEnabled = PR_TRUE;
   sheet->GetEnabled(bSheetEnabled);
 
-  if ((bSheetEnabled) && (NS_OK == sheet->UseForMedium(data->mMedium))) {
+  if ((bSheetEnabled) && (sheet->UseForMedium(data->mMedium))) {
     CSSStyleSheetImpl*  child = sheet->mFirstChild;
     while (child) {
       CascadeSheetRulesInto((nsICSSStyleSheet*)child, data);

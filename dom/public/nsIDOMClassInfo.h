@@ -140,6 +140,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_CSSMediaRule_id,
   eDOMClassInfo_CSSNameSpaceRule_id,
   eDOMClassInfo_CSSRuleList_id,
+  eDOMClassInfo_CSSGroupRuleRuleList_id,
   eDOMClassInfo_MediaList_id,
   eDOMClassInfo_StyleSheetList_id,
   eDOMClassInfo_CSSStyleSheet_id,

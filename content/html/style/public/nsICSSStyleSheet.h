@@ -24,12 +24,14 @@
 
 #include "nslayout.h"
 #include "nsIStyleSheet.h"
+#include "nsString.h"
 
 class nsICSSRule;
 class nsIDOMNode;
 class nsINameSpace;
 class nsICSSStyleRuleProcessor;
 class nsIMediaList;
+class nsICSSGroupRule;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \
@@ -49,6 +51,9 @@ public:
 
   NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const = 0;
   NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const = 0;
+
+  NS_IMETHOD  DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex) = 0;
+  NS_IMETHOD  InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval) = 0;
 
   NS_IMETHOD  StyleSheetCount(PRInt32& aCount) const = 0;
   NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
