@@ -21,7 +21,6 @@
 
 DEPTH=..\..\..
 
-include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=composer
 
@@ -75,6 +74,8 @@ REQUIRES    = xpcom \
               editor \
               content_xul \
               $(NULL)
+
+include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = composer
