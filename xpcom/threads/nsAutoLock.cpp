@@ -378,11 +378,11 @@ void nsAutoMonitor::DestroyMonitor(PRMonitor* mon)
 
 void nsAutoMonitor::Enter()
 {
+#ifdef DEBUG
     if (!mAddr) {
         NS_ERROR("It is not legal to enter a null monitor");
         return;
     }
-#ifdef DEBUG
     nsAutoLockBase* stackTop =
         (nsAutoLockBase*) PR_GetThreadPrivate(LockStackTPI);
     NS_ASSERTION(stackTop == mDown, "non-LIFO nsAutoMonitor::Enter");
@@ -395,11 +395,11 @@ void nsAutoMonitor::Enter()
 
 void nsAutoMonitor::Exit()
 {
+#ifdef DEBUG
     if (!mAddr) {
         NS_ERROR("It is not legal to exit a null monitor");
         return;
     }
-#ifdef DEBUG
     (void) PR_SetThreadPrivate(LockStackTPI, mDown);
 #endif
     PRStatus status = PR_ExitMonitor(mMonitor);
