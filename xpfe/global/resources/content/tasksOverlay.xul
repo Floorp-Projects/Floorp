@@ -45,7 +45,19 @@
         <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
       </menupopup> 
     </menu> 
-    <menuseparator/>
+
+    <menu value="Update Notifications" datasources="rdf:xpinstall-update-notifier" ref="NC:SoftwareNotificationRoot">
+      <template>
+        <rule>
+          <menupopup>
+            <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#name"/>
+          </menupopup>
+        </rule>
+      </template>
+      <menupopup/>
+     </menu>
+     
+     <menuseparator/>
 		<menu value="&toolsMenu.label;">
 		  <menupopup>
 			<menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
@@ -89,12 +101,10 @@
 	 	  <box align="horizontal">
   	 		<titledbutton align="right"  class="popup" popup="mozillaPopup"
 			   popupanchor="bottomright" value="&mozillaButton.label;" />
-  	 		
-  	 		
-  	 
 			   
 			<titledbutton align="right" class="popup" value="&openWinButton.label;" popup="windowPopup"
 			 popupanchor="topleft" popupalign="bottomleft"  />
+
           </box>
 		  <spring flex="100%"/>
 	   	 
