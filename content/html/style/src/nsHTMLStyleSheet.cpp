@@ -55,6 +55,7 @@
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
+#include "nsTreeCellFrame.h"
 #endif
 
 //#define FRAMEBASED_COMPONENTS 1 // This is temporary please leave in for now - rods
@@ -266,6 +267,31 @@ nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
 {
 }
 
+void
+nsAbsoluteItems::AddAbsolutelyPositionedChild(nsIFrame* aChildFrame)
+{
+#ifdef NS_DEBUG
+  nsIFrame* parent;
+  aChildFrame->GetParent(parent);
+  NS_PRECONDITION(parent == containingBlock, "bad geometric parent");
+#endif
+
+  if (nsnull == childList) {
+    childList = aChildFrame;
+  } else {
+    // Get the last frane in the list
+    nsIFrame* lastChild = nsnull;
+
+    for (nsIFrame* f = childList; nsnull != f; f->GetNextSibling(f)) {
+      lastChild = f;
+    }
+
+    lastChild->SetNextSibling(aChildFrame);
+  }
+=======
+>>>>>>> 3.141
+}
+
 // -----------------------------------------------------------
 
 class HTMLStyleSheetImpl : public nsIHTMLStyleSheet,
@@ -465,9 +491,35 @@ protected:
                              nsIStyleContext* aStyleContext,
                              nsAbsoluteItems& aAbsoluteItems,
                              nsFrameItems&    aFrameItems,
+<<<<<<< nsHTMLStyleSheet.cpp
+               PRBool&      haltProcessing);
+=======
                              nsAbsoluteItems& aFixedItems,
                              PRBool&          haltProcessing);
+>>>>>>> 3.141
 
+<<<<<<< nsHTMLStyleSheet.cpp
+  nsresult ConstructTreeFrame(nsIPresContext*   aPresContext,
+                               nsIContent*      aContent,
+                               nsIFrame*        aParent,
+                               nsIStyleContext* aStyleContext,
+                               nsAbsoluteItems& aAboluteItems,
+                               nsIFrame*&       aNewFrame);
+
+  nsresult ConstructTreeBodyFrame(nsIPresContext*       aPresContext,
+                                       nsIContent*      aContent,
+                                       nsIFrame*        aParent,
+                                       nsIStyleContext* aStyleContext,
+                                       nsIFrame*&       aNewScrollFrame,
+                                       nsIFrame*&       aNewFrame);
+
+  nsresult ConstructTreeCellFrame(nsIPresContext*   aPresContext,
+                                   nsIContent*      aContent,
+                                   nsIFrame*        aParentFrame,
+                                   nsIStyleContext* aStyleContext,
+                                   nsAbsoluteItems& aAbsoluteItems,
+                                   nsIFrame*&       aNewFrame);
+=======
   nsresult ConstructTreeFrame(nsIPresContext*  aPresContext,
                               nsIContent*      aContent,
                               nsIFrame*        aParent,
@@ -490,6 +542,7 @@ protected:
                                   nsAbsoluteItems& aAbsoluteItems,
                                   nsIFrame*&       aNewFrame,
                                   nsAbsoluteItems& aFixedItems);
+>>>>>>> 3.141
 #endif
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
@@ -2438,7 +2491,7 @@ HTMLStyleSheetImpl::ConstructTreeCellFrame(nsIPresContext*  aPresContext,
   nsresult  rv;
 
   // Create a table cell frame
-  rv = NS_NewTableCellFrame(aNewFrame);
+  rv = NS_NewTreeCellFrame(aNewFrame);
   if (NS_SUCCEEDED(rv)) {
     // Initialize the table cell frame
     aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
@@ -3008,6 +3061,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       styleContext->GetStyleData(eStyleStruct_Display);
 
     if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
+
       nsIFrame* lastChild = aFrameItems.lastChild;
 
       // Handle specific frame types
@@ -3619,6 +3673,7 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
         htmlContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
         NS_RELEASE(htmlContent); 
       } 
+      else aHint = NS_STYLE_HINT_REFLOW;
     } 
 
     switch (aHint) {
