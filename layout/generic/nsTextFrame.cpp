@@ -1791,10 +1791,13 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
     nsCOMPtr<nsIDOMNode> thisNode;
     thisNode = do_QueryInterface(content);
 
-    if (thisNode == startNode){
-      if ((mContentOffset + mContentLength) >= startOffset){
+    if (thisNode == startNode)
+    {
+      if ((mContentOffset + mContentLength) >= startOffset)
+      {
         found = PR_TRUE;
-        if (thisNode == endNode){ //special case
+        if (thisNode == endNode)
+        { //special case
           if (endOffset == startOffset) //no need to redraw since drawing takes place with cursor
             found = PR_FALSE;
 
@@ -1803,16 +1806,19 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
         }
       }
     }
-    else if (thisNode == endNode){
+    else if (thisNode == endNode)
+    {
       if (mContentOffset < endOffset)
         found = PR_TRUE;
       else
+      {
         found = PR_FALSE;
+        wholeContentFound = PR_TRUE;
+      }
     }
-    else//this WHOLE content is selected. 
+    else
     {
       found = PR_TRUE;
-      wholeContentFound = PR_TRUE;
     }
   }
   else {
@@ -1843,13 +1849,17 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
         break;
     }
     frame = GetNextInFlow();
-    while (frame){
-      frame->SetSelected(aRange,aSelected,eSpreadNone);
-      result = frame->GetNextInFlow(&frame);
-      if (NS_FAILED(result))
-        break;
+    if (!wholeContentFound)
+    {
+      while (frame){
+        frame->SetSelected(aRange,aSelected,eSpreadNone);
+        result = frame->GetNextInFlow(&frame);
+        if (NS_FAILED(result))
+          break;
+      }
     }
-    if (wholeContentFound)//we need to talk to siblings as well as flow
+#if 0
+    else //we need to talk to siblings as well as flow
     {
       nsIFrame *frame;
       result = GetNextSibling(&frame);
@@ -1860,6 +1870,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
           break;
       }
     }
+#endif
   }
   return NS_OK;
 }

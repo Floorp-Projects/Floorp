@@ -1690,7 +1690,8 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
-  nsresult rv;
+/*  nsresult rv;
+
   if (eSpreadDown == aSpread){
     nsIFrame* kid;
     rv = FirstChild(nsnull, &kid);
@@ -1701,6 +1702,7 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
       }
     }
   }
+*/
   nsFrameState  frameState;
   GetFrameState(&frameState);
   PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
@@ -1718,6 +1720,7 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   GetRect(frameRect);
   nsRect rect(0, 0, frameRect.width, frameRect.height);
   Invalidate(rect, PR_FALSE);
+#if 0
   if (aRange) {
     //lets see if the range contains us, if so we must redraw!
     nsCOMPtr<nsIDOMNode> endNode;
@@ -1744,6 +1747,7 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
       }
     }
   }
+#endif
   return NS_OK;
 }
 
