@@ -31,6 +31,7 @@
 #include "imgRequestProxy.h"
 
 // gif
+#include "imgContainerGIF.h"
 #include "nsGIFDecoder2.h"
 
 
@@ -58,6 +59,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 
 // gif
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainerGIF)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIFDecoder2)
 
 // jpeg
@@ -96,6 +98,10 @@ static const nsModuleComponentInfo components[] =
     imgRequestProxyConstructor, },
 
   // gif
+  { "GIF image container",
+    NS_GIFCONTAINER_CID,
+    "@mozilla.org/image/container;1?type=image/gif",
+    imgContainerGIFConstructor, },
   { "GIF Decoder",
      NS_GIFDECODER2_CID,
      "@mozilla.org/image/decoder;2?type=image/gif",
