@@ -225,7 +225,12 @@ nsJAR::Open()
 NS_IMETHODIMP
 nsJAR::Close()
 {
+#ifdef STANDALONE
   // nsZipReadState::CloseArchive closes the file descriptor
+#else
+  if (mFd)
+    PR_Close(mFd);
+#endif
   mFd = nsnull;
   PRInt32 err = mZip.CloseArchive();
   return ziperr2nsresult(err);
