@@ -75,10 +75,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(nsIPrintSettings* aPS);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview);
   NS_IMETHOD ClosePrintManager(); 
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
+  NS_IMETHOD GetIsPrintPreview(PRBool &aIsPPreview);
   NS_IMETHOD GetPrinterName ( const char **aPrinter );
   NS_IMETHOD GetCopies ( int &aCopies );
   NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);     
@@ -100,9 +101,11 @@ public:
   
 protected:
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  PRBool mToPrinter;          /* If PR_TRUE, print to printer */
-  PRBool mFpf;                /* If PR_TRUE, first page first */
-  PRBool mGrayscale;          /* If PR_TRUE, print grayscale */
+  PRBool mToPrinter : 1;      /* If PR_TRUE, print to printer */
+  PRBool mIsPPreview : 1;     /* If PR_TRUE, is print preview */
+  PRBool mFpf : 1;            /* If PR_TRUE, first page first */
+  PRBool mGrayscale : 1;      /* If PR_TRUE, print grayscale */
+  PRBool mCancel : 1;         /* If PR_TRUE, user cancelled */
   int    mOrientation;        /* Orientation e.g. Portrait */
   char   mCommand[PATH_MAX];  /* Print command e.g., lpr */
   char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
@@ -110,7 +113,6 @@ protected:
   char   mPaperName[256];     /* Printer name */
   char   mPlexName[256];      /* Plex mode name */
   int    mCopies;             /* number of copies */
-  PRBool mCancel;             /* If PR_TRUE, user cancelled */
   float  mLeft;               /* left margin */
   float  mRight;              /* right margin */
   float  mTop;                /* top margin */

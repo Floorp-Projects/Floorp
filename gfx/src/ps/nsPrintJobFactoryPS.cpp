@@ -54,29 +54,34 @@
 
 nsresult
 nsPrintJobFactoryPS::CreatePrintJob(nsIDeviceContextSpecPS *aSpec,
-	nsIPrintJobPS* &aPrintJob)
+        nsIPrintJobPS* &aPrintJob)
 {
     NS_PRECONDITION(nsnull != aSpec, "aSpec is NULL");
 
     nsIPrintJobPS *newPJ;
 
-    PRBool destIsPrinter;
-    aSpec->GetToPrinter(destIsPrinter);
-    if (destIsPrinter)
+    PRBool setting;
+    aSpec->GetIsPrintPreview(setting);
+    if (setting)
+        newPJ = new nsPrintJobPreviewPS();
+    else {
+        aSpec->GetToPrinter(setting);
+        if (setting)
 #ifdef VMS
-        newPJ = new nsPrintJobVMSCmdPS();
+            newPJ = new nsPrintJobVMSCmdPS();
 #else
-        newPJ = new nsPrintJobPipePS();
+            newPJ = new nsPrintJobPipePS();
 #endif
-    else
-        newPJ = new nsPrintJobFilePS();
+        else
+            newPJ = new nsPrintJobFilePS();
+    }
     if (!newPJ)
-	return NS_ERROR_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = newPJ->Init(aSpec);
     if (NS_FAILED(rv))
-	delete newPJ;
+        delete newPJ;
     else
-	aPrintJob = newPJ;
+        aPrintJob = newPJ;
     return rv;
 }
