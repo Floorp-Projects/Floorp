@@ -2179,8 +2179,7 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, 
     // and so we select POST as the request method if contentType and
     // contentLength are unspecified.
     
-    mUploadStream = stream;    
-    if (mUploadStream) {
+    if (stream) {
         if (contentType) {
             if (contentLength < 0) {
                 stream->Available((PRUint32 *) &contentLength);
@@ -2204,6 +2203,7 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, 
         mUploadStreamHasHeaders = PR_FALSE;
         mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
     }
+    mUploadStream = stream;    
     return NS_OK;
 }
 
