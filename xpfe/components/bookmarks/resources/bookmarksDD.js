@@ -165,16 +165,6 @@ function DragOverTree ( event )
   if ( !gDragDropEnabled )
     return(false);
 
-  // for beta1, don't allow D&D if sorting is active
-  var tree = document.getElementById("bookmarksTree");
-  if (!tree)	return(false);
-  var sortActive = tree.getAttribute("sortActive");
-  if (sortActive == "true")
-  {
-  	dump("Sorry, drag&drop is currently disabled when sorting is active.\n");
-  	return(false);
-  }
-    
   var validFlavor = false;
   var dragSession = null;
   var retVal = true;
@@ -193,9 +183,19 @@ function DragOverTree ( event )
   // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
   if ( validFlavor )
   {
+    var treeRoot = document.getElementById("bookmarksTree");
+    if (!treeRoot)  return(false);
+    var treeDatabase = treeRoot.database;
+    if (!treeDatabase)  return(false);
+
     //XXX this is really slow and likes to refresh N times per second.
     var rowGroup = event.target.parentNode.parentNode;
-    rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+    var sortActive = treeRoot.getAttribute("sortActive");
+    if (sortActive == "true")
+      rowGroup.setAttribute ( "dd-triggerrepaintsorted", 0 );
+    else
+      rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+
     dragSession.canDrop = true;
     // necessary??
     retVal = false;
