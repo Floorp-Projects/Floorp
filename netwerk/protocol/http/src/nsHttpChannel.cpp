@@ -1253,9 +1253,19 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
             }
         }
 
+        PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE;
+        // if the original channel was using SSL and this channel is not using
+        // SSL, then no need to inhibit persistent caching.  however, if the
+        // original channel was not using SSL and has INHIBIT_PERSISTENT_CACHING
+        // set, then allow the flag to apply to the redirected channel as well.
+        // since we force set INHIBIT_PERSISTENT_CACHING on all HTTPS channels,
+        // we only need to check if the original channel was using SSL.
+        if (mConnectionInfo->UsingSSL())
+            newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
+
         // build the new channel
         rv = NS_NewChannel(getter_AddRefs(newChannel), newURI, ioService, mLoadGroup,
-                           mCallbacks, mLoadFlags | LOAD_REPLACE);
+                           mCallbacks, newLoadFlags);
         if (NS_FAILED(rv)) return rv;
     }
 
