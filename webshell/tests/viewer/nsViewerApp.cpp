@@ -123,24 +123,8 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 #define DEFAULT_WIDTH 620
 #define DEFAULT_HEIGHT 400
 
-#include <windows.h>
-
-#define MEM_START  MEMORYSTATUS stat1; \
-                   MEMORYSTATUS stat2;\
-                   GlobalMemoryStatus(&stat1);
-
-#define MEM_END(_TXT)  GlobalMemoryStatus(&stat2); \
-  printf("****\n%s - Bytes allocated by operation  Virt: %ld bytes  %ld kBytes   Phys: %ld bytes\n", (_TXT), \
-         stat1.dwAvailVirtual - stat2.dwAvailVirtual, \
-         (stat1.dwAvailVirtual - stat2.dwAvailVirtual) / 1024, \
-         long(stat1.dwTotalPhys) - long(stat2.dwTotalPhys));
-
-MEMORYSTATUS stat1;
-MEMORYSTATUS stat2;
-
 nsViewerApp::nsViewerApp()
 {
-  GlobalMemoryStatus(&stat1);
   NS_INIT_REFCNT(); 
 
   char * text = PR_GetEnv("NGLAYOUT_HOME");
@@ -162,7 +146,6 @@ nsViewerApp::nsViewerApp()
 nsViewerApp::~nsViewerApp()
 {
   Destroy();
-  MEM_END("ViewerApp")
 }
 
 NS_IMPL_THREADSAFE_ADDREF(nsViewerApp)
