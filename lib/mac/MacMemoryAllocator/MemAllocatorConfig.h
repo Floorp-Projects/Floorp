@@ -16,11 +16,14 @@
  * Reserved.
  */
 
+/* must be first in order to correctly pick up TARGET_CARBON define before
+ * it is set in ConditionalMacros.h */
+#include "DefinesMac.h"
+
 #include <Types.h>
 #include <stdlib.h>
 
 #include "IDE_Options.h"
-#include "DefinesMac.h"
 
 #ifdef DEBUG
 
