@@ -137,7 +137,7 @@ PR_STATIC_CALLBACK(JSBool)
 RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMRDFCore *nativeThis = (nsIDOMRDFCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+//  JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
   nsAutoString b1;
   nsAutoString b2;
