@@ -88,11 +88,9 @@ function toggleAffectedChrome(aHide)
 
   if (!gChromeState)
     gChromeState = new Object;
-  var chrome = new Array;
-  var i = 0;
-  chrome[i++] = document.getElementById("main-menubar");
-  chrome[i++] = document.getElementById("nav-bar");
-  chrome[i++] = document.getElementById("PersonalToolbar");
+  var navToolbox = document.getElementById("navigator-toolbox");
+  navToolbox.hidden = aHide;
+  var theTabbrowser = document.getElementById("content"); 
 
   // sidebar states map as follows:
   //   was-hidden    => hide/show nothing
@@ -104,56 +102,34 @@ function toggleAffectedChrome(aHide)
     if (sidebar_is_collapsed())
     {
       gChromeState.sidebar = "was-collapsed";
-      chrome[i++] = document.getElementById("sidebar-splitter");
     }
     else if (sidebar_is_hidden())
       gChromeState.sidebar = "was-hidden";
     else 
     {
       gChromeState.sidebar = "was-visible";
-      chrome[i++] = document.getElementById("sidebar-box");
-      chrome[i++] = document.getElementById("sidebar-splitter");
     }
+    document.getElementById("sidebar-box").hidden = true;
+    document.getElementById("sidebar-splitter").hidden = true;
+    //deal with tab browser
+    gChromeState.hadTabStrip = theTabbrowser.getStripVisibility();
+    theTabbrowser.setStripVisibilityTo(false);
   }
   else
   {
     // restoring normal mode (i.e., leaving print preview mode)
+    //restore tab browser
+    theTabbrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
     if (gChromeState.sidebar == "was-collapsed" ||
         gChromeState.sidebar == "was-visible")
-      chrome[i++] = document.getElementById("sidebar-splitter");
+      document.getElementById("sidebar-splitter").hidden = false;
     if (gChromeState.sidebar == "was-visible")
-      chrome[i++] = document.getElementById("sidebar-box");
-  }
-
-  // now that we've figured out which elements we're interested, toggle 'em
-  for (i = 0; i < chrome.length; ++i)
-  {
-    if (aHide)
-      chrome[i].hidden = true;
-    else
-      chrome[i].hidden = false;
+      document.getElementById("sidebar-box").hidden = false;
   }
 
   // if we are unhiding and sidebar used to be there rebuild it
   if (!aHide && gChromeState.sidebar == "was-visible")
     SidebarRebuild();
-    
-  // now deal with the tab browser ``strip'' 
-  var theTabbrowser = document.getElementById("content"); 
-  if (aHide) // normal mode -> print preview
-  {
-    gChromeState.hadTabStrip = theTabbrowser.getStripVisibility();
-    theTabbrowser.setStripVisibilityTo(false);
-  }
-  else // print preview -> normal mode
-  {
-    // tabs were showing before entering print preview
-    if (gChromeState.hadTabStrip) 
-    {
-      theTabbrowser.setStripVisibilityTo(true);
-      gChromeState.hadTabStrip = false; // reset
-    }
-  }
 }
 
 function showPrintPreviewToolbar()
@@ -166,8 +142,8 @@ function showPrintPreviewToolbar()
   printPreviewTB.setAttribute("printpreview", true);
   printPreviewTB.setAttribute("id", "print-preview-toolbar");
 
-  var navTB = document.getElementById("nav-bar");
-  navTB.parentNode.appendChild(printPreviewTB);
+  var navToolbox = document.getElementById("navigator-toolbox");
+  navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
 }
 
 function BrowserExitPrintPreview()
@@ -186,9 +162,9 @@ function BrowserExitPrintPreview()
   _content.focus();
 
   // remove the print preview toolbar
-  var navTB = document.getElementById("nav-bar");
+  var navToolbox = document.getElementById("navigator-toolbox");
   var printPreviewTB = document.getElementById("print-preview-toolbar");
-  navTB.parentNode.removeChild(printPreviewTB);
+  navToolbox.parentNode.removeChild(printPreviewTB);
 
   // restore chrome to original state
   toggleAffectedChrome(false);
