@@ -158,7 +158,7 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
   void uninstallLocale(in ACString localeName, in boolean useProfile);
 
   void installPackage(in string baseURL, in boolean useProfile);
-  void uninstallPackage(in wstring packageName, in boolean useProfile);
+  void uninstallPackage(in ACString packageName, in boolean useProfile);
 };
 
 %{ C++

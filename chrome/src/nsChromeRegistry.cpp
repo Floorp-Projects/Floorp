@@ -2668,10 +2668,140 @@ NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const nsACString& aLocaleName, P
   return UninstallProvider(NS_LITERAL_CSTRING("locale"), aLocaleName, aUseProfile);
 }
 
-NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, PRBool aUseProfile)
+static void GetURIForPackage(nsIIOService* aIOService, const nsACString& aPackageName, nsIURI** aResult)
 {
-  NS_ERROR("XXX Write me!\n");
-  return NS_ERROR_FAILURE;
+  nsCAutoString chromeURL("chrome://");
+  chromeURL += aPackageName;
+  chromeURL += "/content/";
+
+  nsCOMPtr<nsIURI> uri;
+  aIOService->NewURI(chromeURL, nsnull, nsnull, aResult);
+}
+
+NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName, PRBool aUseProfile)
+{
+  // Remove the package from the package list
+  nsresult rv = UninstallProvider(NS_LITERAL_CSTRING("package"), aPackageName, aUseProfile);
+  if (NS_FAILED(rv)) return rv;
+
+  // Now disconnect any overlay entries that this package may have supplied.
+  // This is a little tricky - the chrome registry identifies that packages may have
+  // dynamic overlays specified like so: 
+  // - each package entry in the chrome registry datasource has a "chrome:hasOverlays"
+  //   property set to "true"
+  // - if this property is set, the chrome registry knows to load a dynamic overlay
+  //   datasource over in <profile>/chrome/overlayinfo/<package_name>/overlays.rdf
+  // To remove this dynamic overlay info when we disable a package:
+  // - first get an enumeration of all the packages that have the "hasOverlays" 
+  //   property set. 
+  // - walk this list, loading the Dynamic Datasource (overlays.rdf) for each
+  //   package
+  // - enumerate the Seqs in each Dynamic Datasource
+  // - for each seq, remove entries that refer to chrome URLs that are supplied
+  //   by the package we're removing.
+  nsCOMPtr<nsIIOService> ioServ(do_GetService(NS_IOSERVICE_CONTRACTID));
+
+  nsCOMPtr<nsIURI> uninstallURI;
+  GetURIForPackage(ioServ, aPackageName, getter_AddRefs(uninstallURI));
+  if (!uninstallURI) return NS_ERROR_OUT_OF_MEMORY;
+  nsCAutoString uninstallHost;
+  uninstallURI->GetHost(uninstallHost);
+
+  nsCOMPtr<nsIRDFLiteral> trueLiteral;
+  mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(trueLiteral));
+  
+  nsCOMPtr<nsISimpleEnumerator> e;
+  mChromeDataSource->GetSources(mHasOverlays, trueLiteral, PR_TRUE, getter_AddRefs(e));
+  do {
+    PRBool hasMore;
+    e->HasMoreElements(&hasMore);
+    if (!hasMore)
+      break;
+    
+    nsCOMPtr<nsISupports> res;
+    e->GetNext(getter_AddRefs(res));
+    nsCOMPtr<nsIRDFResource> package(do_QueryInterface(res));
+
+    nsXPIDLCString val;
+    package->GetValue(getter_Copies(val));
+
+    val.Cut(0, NS_LITERAL_CSTRING("urn:mozilla:package:").Length());
+    nsCOMPtr<nsIURI> sourcePackageURI;
+    GetURIForPackage(ioServ, val, getter_AddRefs(sourcePackageURI));
+    if (!sourcePackageURI) return NS_ERROR_OUT_OF_MEMORY;
+
+    PRBool states[] = { PR_FALSE, PR_TRUE };
+    for (PRInt32 i = 0; i < 2; ++i) {
+      nsCOMPtr<nsIRDFDataSource> overlayDS;
+      rv = GetDynamicDataSource(sourcePackageURI, PR_TRUE, states[i], PR_FALSE,
+                                getter_AddRefs(overlayDS));
+      if (NS_FAILED(rv) || !overlayDS) continue;
+
+      // Look for all the seqs in this file
+      nsCOMPtr<nsIRDFResource> instanceOf, seq;
+      GetResource(NS_LITERAL_CSTRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#instanceOf"),
+                  getter_AddRefs(instanceOf));
+      GetResource(NS_LITERAL_CSTRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"),
+                  getter_AddRefs(seq));
+
+      nsCOMPtr<nsISimpleEnumerator> seqs;
+      overlayDS->GetSources(instanceOf, seq, PR_TRUE, getter_AddRefs(seqs));
+
+      do {
+        PRBool hasMore;
+        seqs->HasMoreElements(&hasMore);
+        if (!hasMore)
+          break;
+
+        nsCOMPtr<nsISupports> res;
+        seqs->GetNext(getter_AddRefs(res));
+        nsCOMPtr<nsIRDFResource> seq(do_QueryInterface(res));
+
+        nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("@mozilla.org/rdf/container;1"));
+        container->Init(overlayDS, seq);
+
+        nsCOMPtr<nsISimpleEnumerator> elements;
+        container->GetElements(getter_AddRefs(elements));
+
+        do {
+          PRBool hasMore;
+          elements->HasMoreElements(&hasMore);
+          if (!hasMore)
+            break;
+
+          nsCOMPtr<nsISupports> res;
+          elements->GetNext(getter_AddRefs(res));
+          nsCOMPtr<nsIRDFLiteral> element(do_QueryInterface(res));
+
+          nsXPIDLString val;
+          element->GetValue(getter_Copies(val));
+
+          nsCAutoString valC; valC.AssignWithConversion(val);
+          nsCOMPtr<nsIURI> targetURI;
+          rv = ioServ->NewURI(valC, nsnull, nsnull, getter_AddRefs(targetURI));
+          if (NS_FAILED(rv)) return rv;
+
+          nsCAutoString targetHost;
+          targetURI->GetHost(targetHost);
+
+          // This overlay entry is for a package that is being uninstalled. Remove the
+          // entry from the overlay list.
+          printf("*** uninstall = %s; target = %s\n", uninstallHost.get(), targetHost.get());
+          if (targetHost.Equals(uninstallHost))
+            container->RemoveElement(element, PR_TRUE);
+        }
+        while (PR_TRUE);
+      }
+      while (PR_TRUE);
+
+      nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(overlayDS);
+      rv = remote->Flush();
+    }
+  }
+  while (PR_TRUE);
+
+  // goats
+  return rv;
 }
 
 nsresult
