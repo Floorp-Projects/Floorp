@@ -299,7 +299,7 @@ sub make_checkboxes {
                 $capitalized =~ tr/A-Z/a-z/;
                 $capitalized =~ s/^(.?)(.*)/\u$1$2/;
                 if ($isregexp ? $item =~ $default : $default eq $item) {
-                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\" SELECTED>$capitalized<br>";
+                    $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\" CHECKED>$capitalized<br>";
                     $found = 1;
                 } else {
                     $popup .= "<INPUT NAME=$name TYPE=CHECKBOX VALUE=\"$item\">$capitalized<br>";
@@ -308,7 +308,7 @@ sub make_checkboxes {
         }
     }
     if (!$found && $default ne "") {
-	$popup .= "<INPUT NAME=$name TYPE=CHECKBOX SELECTED>$default";
+	$popup .= "<INPUT NAME=$name TYPE=CHECKBOX CHECKED>$default";
     }
     return $popup;
 }
