@@ -4344,7 +4344,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 
   res = bodyElement->SetAttribute(styleName, styleValue);
 
-#ifdef DEBUG_akkana
+#ifdef DEBUG_wrapstyle
   char* curstyle = styleValue.ToNewCString();
   printf("Setting style: [%s]\nNow body looks like:\n", curstyle);
   Recycle(curstyle);
