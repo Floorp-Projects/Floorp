@@ -418,7 +418,6 @@ nsContextMenu.prototype = {
         }
     },
     initPopupURL: function() {
-      return; // remove this line to reenable the context menu
       // quick check: if no opener, it can't be a popup
       if (!window.content.opener)
         return;
@@ -438,10 +437,7 @@ nsContextMenu.prototype = {
           // do the pref settings allow site-by-site popup management?
           const PB = Components.classes["@mozilla.org/preferences-service;1"]
                      .getService(CI.nsIPrefBranch);
-          show = !PB.getBoolPref("dom.disable_open_during_load") &&
-                 PB.getIntPref("privacy.popups.policy") ==
-                     CI.nsIPopupWindowManager.ALLOW_POPUP &&
-                 PB.getBoolPref("privacy.popups.usecustom");
+          show = !PB.getBoolPref("dom.disable_open_during_load");
         }
         if (show) {
           // initialize popupURL
