@@ -241,7 +241,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIChannel * aChannel, nsISuppo
   nsresult rv = NS_OK;
   rv = DispatchContent(aChannel, aCtxt);
   if (m_targetStreamListener)
-    m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
+    rv = m_targetStreamListener->OnStartRequest(aChannel, aCtxt);
   return rv;
 }
 
@@ -260,12 +260,13 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIChannel * aChannel, nsISupp
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISupports *aCtxt, 
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
+  nsresult rv = NS_OK;
   if (m_targetStreamListener)
     m_targetStreamListener->OnStopRequest(aChannel, aCtxt, aStatus, errorMsg);
 
   m_targetStreamListener = 0;
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports * aCtxt)
