@@ -22,7 +22,7 @@
 
 <!-- os2 version of platformDialogOverlay.xul -->
 
-<!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd">
 
 <overlay id="platformDialogOverlay"
              xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

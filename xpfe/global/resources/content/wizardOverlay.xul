@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/wizardOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://global/locale/wizardOverlay.dtd">
 
 <?xml-stylesheet href="chrome://global/skin/wizardOverlay.css" type="text/css"?>
 

@@ -23,7 +23,7 @@
      Ben Goodger <ben@netscape.com>
   -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd">  
+<!DOCTYPE overlay SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd">  
   
 <overlay id="platformPreferencesOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

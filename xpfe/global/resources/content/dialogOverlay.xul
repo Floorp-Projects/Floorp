@@ -2,7 +2,7 @@
 
 <?xul-overlay href="chrome://global/content/platformDialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/dialogOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://global/locale/dialogOverlay.dtd">
 
 <overlay id="dialogOverlay"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

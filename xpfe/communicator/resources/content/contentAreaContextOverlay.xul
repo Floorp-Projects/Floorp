@@ -20,7 +20,7 @@
    - Contributor(s):
    -   Blake Ross <blakeross@telocity.com>
    -->
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 <overlay id="contentAreaContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 

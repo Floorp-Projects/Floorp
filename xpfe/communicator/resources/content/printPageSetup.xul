@@ -31,7 +31,7 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/printing.css" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/printPageSetup.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/printPageSetup.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();"

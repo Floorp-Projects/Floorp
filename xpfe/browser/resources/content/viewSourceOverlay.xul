@@ -37,7 +37,7 @@
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://navigator/locale/viewSource.dtd" >

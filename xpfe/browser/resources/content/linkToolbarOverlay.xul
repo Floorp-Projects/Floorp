@@ -40,7 +40,7 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/linkToolbar.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://navigator/locale/linkToolbar.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://navigator/locale/linkToolbar.dtd">
 
 <overlay id="linkToolbarOverlay" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

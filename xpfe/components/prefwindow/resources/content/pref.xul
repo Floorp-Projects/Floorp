@@ -3,7 +3,7 @@
 
 <?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/pref/pref.dtd" >
 
 
 <!-- This dialog has a fixed size and is not resizable. 

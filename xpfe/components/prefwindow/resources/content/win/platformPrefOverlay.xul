@@ -24,7 +24,7 @@
      Bill Law    <law@netscape.com>
   -->
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % platformPrefOverlayDTD SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd">  

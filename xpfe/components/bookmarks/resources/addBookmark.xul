@@ -29,7 +29,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css"?>
 <?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % addBookmarkDTD SYSTEM "chrome://communicator/locale/bookmarks/addBookmark.dtd">

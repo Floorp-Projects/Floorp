@@ -24,7 +24,7 @@
     Ben Goodger <ben@netscape.com> (Original Author) 
 -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarksOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/bookmarks/bookmarksOverlay.dtd">
 
 <overlay id="bookmarksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

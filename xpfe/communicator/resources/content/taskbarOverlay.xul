@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE window [
+<!DOCTYPE overlay [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % taskbarDTD SYSTEM "chrome://communicator/locale/taskbarOverlay.dtd" >
