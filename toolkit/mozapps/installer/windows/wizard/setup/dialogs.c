@@ -46,206 +46,44 @@ static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;
 static DWORD   gdwIndexLastSelected;
 
-/* List of Dialog Item IDs from the Download dialog
- * that need to be repositioned (up) when the banner
- * in the dialog is hidden.
- */
-const int DownloadDlgItemList[] = {IDPAUSE,
-                                   IDRESUME,
-                                   IDCANCEL,
-                                   IDC_MESSAGE0,
-                                   IDC_STATIC3,
-                                   IDC_STATUS_URL,
-                                   IDC_STATIC1,
-                                   IDC_STATUS_STATUS,
-                                   IDC_STATIC2,
-                                   IDC_STATUS_FILE,
-                                   IDC_PERCENTAGE,
-                                   IDC_STATIC4,
-                                   IDC_STATUS_TO,
-                                   -2};  /* -1 is used by IDC_STATIC.  Even though
-                                          * there shouldn't be any IDC_STATIC in
-                                          * list, we shouldn't use it.
-                                          */
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: EXIT SETUP
+//
 
-/* List of Dialog Item IDs from the Install Progress dialog
- * that need to be repositioned (up) when the banner
- * in the dialog is hidden.
-*/
-const int InstallProgressDlgItemList[] = {IDC_STATUS0,
-                                          IDC_STATUS3,
-                                          -2};  /* -1 is used by IDC_STATIC.  Even though
-                                                 * there shouldn't be any IDC_STATIC in
-                                                 * list, we shouldn't use it.
-                                                 */
-
-BOOL AskCancelDlg(HWND hDlg)
+BOOL ShouldExitSetup(HWND hDlg)
 {
   char szDlgQuitTitle[MAX_BUF];
   char szDlgQuitMsg[MAX_BUF];
   char szMsg[MAX_BUF];
-  BOOL bRv = FALSE;
+  BOOL rv = FALSE;
 
-  if((sgProduct.mode != SILENT) && (sgProduct.mode != AUTO))
-  {
-    if(!GetPrivateProfileString("Messages", "DLGQUITTITLE", "", szDlgQuitTitle, sizeof(szDlgQuitTitle), szFileIniInstall))
+  if (sgProduct.mode != SILENT && sgProduct.mode != AUTO) {
+    if (!GetPrivateProfileString("Messages", "DLGQUITTITLE", "", szDlgQuitTitle, 
+                                 sizeof(szDlgQuitTitle), szFileIniInstall) ||
+        !GetPrivateProfileString("Messages", "DLGQUITMSG", "", szDlgQuitMsg, 
+                                      sizeof(szDlgQuitMsg), szFileIniInstall))
       PostQuitMessage(1);
-    else if(!GetPrivateProfileString("Messages", "DLGQUITMSG", "", szDlgQuitMsg, sizeof(szDlgQuitMsg), szFileIniInstall))
-      PostQuitMessage(1);
-    else if(MessageBox(hDlg, szDlgQuitMsg, szDlgQuitTitle, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND) == IDYES)
-    {
-      DestroyWindow(hDlg);
-      PostQuitMessage(0);
-      bRv = TRUE;
-    }
+
+    
+    rv = MessageBox(GetParent(hDlg), szDlgQuitMsg, szDlgQuitTitle, 
+                    MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_APPLMODAL | 
+                    MB_SETFOREGROUND) == IDYES;
   }
-  else
-  {
-    GetPrivateProfileString("Strings", "Message Cancel Setup AUTO mode", "", szMsg, sizeof(szMsg), szFileIniConfig);
+  else {
+    GetPrivateProfileString("Strings", "Message Cancel Setup AUTO mode", "", szMsg, 
+                            sizeof(szMsg), szFileIniConfig);
     ShowMessage(szMsg, TRUE);
     Delay(5);
     ShowMessage(szMsg, FALSE);
-    bRv = TRUE;
+    rv = TRUE;
   }
 
-  return(bRv);
+  if (!rv) 
+    SetWindowLong(hDlg, DWL_MSGRESULT, (LONG)TRUE);
+
+  return rv;
 } 
 
-void DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose)
-{
-  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_RESTORE,  MF_BYCOMMAND | MF_GRAYED);
-  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_SIZE,     MF_BYCOMMAND | MF_GRAYED);
-  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
-
-  if(bDisableClose)
-    EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
-}
-
-/* Function: MoveDlgItem()
- *
- *       in: HWND  aWndDlg     : handle to a dialog containing items in aIDList.
- *           const int *aIDList: list of dlg item IDs that require moving.
- *           DWORD aWidth      : width to move the dlg items by (+/-).
- *           DWORD aHeight     : height to move the dlg items by (+/-).
- *           
- *  purpose: To move dialog items (given a list of item ids) +aWidth/+aHeight from
- *           its current position.
- *           This is for when the banner logo in the download/install process
- *           dialogs are not to be displayed, it leaves an empty area above
- *           the dialog items/controls.  So this helps move them up by the
- *           height of the banner.
- *           The resizing of the window given the lack of the banner is done
- *           RepositionWindow().
- */
-void MoveDlgItem(HWND aWndDlg, const int *aIDList, DWORD aWidth, DWORD aHeight)
-{
-  RECT rect;
-  HWND hDlgItem;
-  int i;
-  int id;
-
-  i  = 0;
-  id = aIDList[i];
-  while(id != -2)
-  {
-    hDlgItem = GetDlgItem(aWndDlg, id);
-    if(hDlgItem)
-    {
-      GetWindowRect(hDlgItem, &rect);
-      SetWindowPos(hDlgItem, NULL, rect.left + aWidth, rect.top + aHeight,
-                   -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-    }
-    id = aIDList[++i];
-  }
-}
-
-/* Function: RepositionWindow()
- *
- *       in: HWND  aHwndDlg    : Window handle to reposition.
- *           DWORD aBannerImage: Integer indicating which dialog needs to have
- *                               it's dlg items moved.
- *                               There are only 3 types:
- *                                 NO_BANNER_IMAGE
- *                                 BANNER_IMAGE_DOWNLOAD
- *                                 BANNER_IMAGE_INSTALLING
- *
- *  purpose: To reposition a window given the screen position of the previous
- *           window.  The previous window position is saved in:
- *             gSystemInfo.lastWindowPosCenterX
- *             gSystemInfo.lastWindowPosCenterY
- *
- *           aHwndDlg is the window handle to the dialog to reposition.
- *           aBannerImage is a DWORD value that indicates which dialog
- *           the banner is displayed in.  There are only two possible dialogs:
- *             Download dialog
- *             Install dialog
- *
- *           This function also hides the banner image normally displayed in
- *           the Download and Install Process dialgs.  Once hidden, it also
- *           moves all of their dialog items up by the height of the hidden
- *           banner image and resizes the dialogs so it'll look nice.
- */
-void RepositionWindow(HWND aHwndDlg, DWORD aBannerImage)
-{
-  RECT  rect;
-  int   iLeft, iTop;
-  DWORD width = -1;
-  DWORD height = -1;
-  DWORD windowFlags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE;
-
-  GetWindowRect(aHwndDlg, &rect);
-  if(aBannerImage && !gShowBannerImage)
-  {
-    RECT  rLogo;
-    HWND  hwndBanner;
-
-    hwndBanner = GetDlgItem(aHwndDlg, IDB_BITMAP_BANNER);
-    GetWindowRect(hwndBanner, &rLogo);
-    ShowWindow(hwndBanner, SW_HIDE);
-    width = rect.right;
-    height = rect.bottom - rLogo.bottom + rLogo.top;
-    windowFlags = SWP_NOZORDER | SWP_NOACTIVATE;
-
-    /* aBannerImage indicates which dialog we need to move it's dlg items
-     * up to fit the resized window.
-     */
-    switch(aBannerImage)
-    {
-      case BANNER_IMAGE_DOWNLOAD:
-        MoveDlgItem(aHwndDlg, DownloadDlgItemList, 0, -rLogo.bottom);
-        break;
-
-      case BANNER_IMAGE_INSTALLING:
-        MoveDlgItem(aHwndDlg, InstallProgressDlgItemList, 0, -rLogo.bottom);
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  iLeft = (gSystemInfo.lastWindowPosCenterX - ((rect.right - rect.left) / 2));
-  iTop  = (gSystemInfo.lastWindowPosCenterY - ((rect.bottom - rect.top) / 2));
-  SetWindowPos(aHwndDlg, NULL, iLeft, iTop, width, height, windowFlags);
-}
-
-/* Function: SaveWindowPosition()
- *
- *       in: HWND aDlg: Window handle to remember the position of.
- *
- *  purpose: Saves the current window's position so that it can be
- *           used to position the next window created.
- */
-void SaveWindowPosition(HWND aDlg)
-{
-  RECT rectDlg;
-
-  if(GetWindowRect(aDlg, &rectDlg))
-  {
-    gSystemInfo.lastWindowPosCenterX = ((rectDlg.right - rectDlg.left) / 2) + rectDlg.left;
-    gSystemInfo.lastWindowPosCenterY = ((rectDlg.bottom - rectDlg.top) / 2) + rectDlg.top;
-  }
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: WELCOME
@@ -284,6 +122,9 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
       PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT);
       break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
     break;
   }
@@ -357,14 +198,17 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       // Wizard dialog title
       PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diLicense.szTitle); 
 
-      SetFocus(GetDlgItem(hDlg, IDC_RADIO_ACCEPT));
-
       if (IsDlgButtonChecked(hDlg, IDC_RADIO_DECLINE) == BST_CHECKED) 
         PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_BACK);  
       else
         PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
       
+      SendDlgItemMessage(hDlg, IDC_EDIT_LICENSE, EM_SETSEL, 0, 0);
+
       break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
     break;
   }
@@ -458,6 +302,9 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       }
       
       break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
 
     break;
@@ -652,6 +499,9 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
       }
 
       break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
 
     break;
@@ -671,8 +521,6 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-
       GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
           buf, sizeof(buf), szFileIniInstall);
       SetWindowText(hDlg, buf);
@@ -689,8 +537,6 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
       RemoveBackSlash(buf);
       SetDlgItemText(hDlg, IDC_DELETE_PATH, buf);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
 
       SetDlgItemText(hDlg, IDCONTINUE, sgInstallGui.szContinue_);
       SetDlgItemText(hDlg, IDSKIP, sgInstallGui.szSkip_);
@@ -721,19 +567,16 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
             sgProduct.doCleanupOnUpgrade = TRUE;
 
           SiCNodeSetItemsSelected(dwSetupType);
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           break;
 
         case IDSKIP:
           sgProduct.doCleanupOnUpgrade = FALSE;
           SiCNodeSetItemsSelected(dwSetupType);
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           break;
 
@@ -1103,6 +946,9 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
 
       break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
 
     break;
@@ -1296,6 +1142,8 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       }
       break;
 
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
     break;
   case WM_COMMAND:
@@ -1507,15 +1355,12 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
   switch(msg)
   {
     case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diAdvancedSettings.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_USER,   diAdvancedSettings.szProxyUser);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
 
       GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
       SetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
@@ -1576,7 +1421,6 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           /* get the proxy server and port information */
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
@@ -1589,7 +1433,6 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
 
         case IDWIZBACK:
         case IDCANCEL:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           break;
 
@@ -1610,7 +1453,6 @@ LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
   switch(msg)
   {
     case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diDownloading.szTitle);
 
       SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloading.szBlurb);
@@ -1660,10 +1502,10 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
   LPNMHDR notifyMessage;
   static BOOL initialized = FALSE; 
   HWND parent = GetParent(hDlg);
-  
+  char installStart[MAX_BUF];
+
   switch(msg) {
   case WM_INITDIALOG:
-    DisableSystemMenuItems(hDlg, FALSE);
     SetWindowText(hDlg, diInstalling.szTitle);
 
     SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
@@ -1701,6 +1543,13 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
       // Wizard dialog title
       PropSheet_SetTitle(parent, 0, (LPTSTR)diInstalling.szTitle); 
 
+      GetPrivateProfileString("Messages", "MSG_SMARTUPDATE_START", 
+                              "", installStart, 
+                              sizeof(installStart), 
+                              szFileIniInstall);
+
+      SetDlgItemText(hDlg, IDC_STATUS0, installStart);
+
       // Disable the Cancel button. This leaves the button disabled for
       // this page (Installing) and the final page (Finish) because it 
       // is meaningless and potentially damaging in both places. If we 
@@ -1711,6 +1560,11 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
       PropSheet_SetWizButtons(parent, 0);
 
       break;
+
+    case PSN_QUERYCANCEL:
+      // Do NOT let the user cancel at this point. 
+      SetWindowLong(hDlg, DWL_MSGRESULT, (LONG)FALSE);
+      return TRUE;
     }
   }
   return 0;
@@ -1868,6 +1722,9 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
         IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
 
       break;
+
+    case PSN_QUERYCANCEL:
+      return !ShouldExitSetup(hDlg);
     }
       
     break;
@@ -1967,6 +1824,26 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
         /* DEPEND_REBOOT process file manipulation functions */
         ProcessFileOpsForAll(T_DEPEND_REBOOT);
       }
+
+      break;
+
+
+    case PSN_QUERYCANCEL:
+      // Cancel is meaningless and potentially harmful here (the install work
+      // is not yet complete). If the user finds a way of cancelling, e.g. by
+      // clicking the X button on the window, send the FINISH message. 
+
+      // Assume at least that they didn't want the app to run right away. 
+      gbIgnoreRunAppX = FALSE;
+
+      // Send the PSN_WIZFINISH so we can clean up properly. 
+      notifyMessage->code = PSN_WIZFINISH;
+      SendMessage(hDlg, WM_NOTIFY, wParam, (LPARAM)notifyMessage);
+
+      // Tell the Wizard97 framework that we don't want to hard-quit. Processing
+      // of the PSN_WIZFINISH will cause the app to shut down. 
+      SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+      return TRUE;
     }
       
     break;
@@ -2004,14 +1881,12 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         lstrcpy(szBuf, sgProduct.szProductName);
 
       SetWindowText(hDlg, szBuf);
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
       break;
 
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
         case IDC_MESSAGE:
-          SaveWindowPosition(hDlg);
           hdcSTMessage = GetWindowDC(hSTMessage);
 
           SystemParametersInfo(SPI_GETICONTITLELOGFONT,
@@ -2079,7 +1954,6 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
     }
     else
     {
-      SaveWindowPosition(hDlgMessage);
       DestroyWindow(hDlgMessage);
       hDlgMessage = NULL;
     }

@@ -1242,8 +1242,6 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                               gszFileInfo,
                               sizeof(gszFileInfo),
                               szFileIniConfig);
-      DisableSystemMenuItems(hWndDlg, FALSE);
-      RepositionWindow(hWndDlg, BANNER_IMAGE_DOWNLOAD);
       if(gbShowDownloadRetryMsg)
         SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else
@@ -1291,7 +1289,7 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       switch(LOWORD(wParam))
       {
         case IDCANCEL:
-          if(AskCancelDlg(hWndDlg))
+          if(ShouldExitSetup(hWndDlg))
             gdwDownloadDialogStatus = CS_CANCEL;
           break;
 
@@ -1516,7 +1514,6 @@ void DeInitDownloadDlg()
 {
   if(sgProduct.mode != SILENT)
   {
-    SaveWindowPosition(dlgInfo.hWndDlg);
     DestroyWindow(dlgInfo.hWndDlg);
     UnregisterClass("GaugeFile", hInst);
   }

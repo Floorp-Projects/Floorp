@@ -21,6 +21,9 @@
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
  *     Curt Patrick <curt@netscape.com>
+ *
+ *  Next Generation Apps Version:
+ *     Ben Goodger <ben@mozilla.org>
  */
 
 #include "extern.h"

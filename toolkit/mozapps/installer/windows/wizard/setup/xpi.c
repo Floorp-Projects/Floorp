@@ -20,6 +20,9 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
+ *
+ *  Next Generation Apps Version:
+ *     Ben Goodger <ben@mozilla.org>
  */
 
 #include "extern.h"
@@ -205,11 +208,7 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
   // can send messages to it. 
   dlgInfo.hWndDlg = aWizardPanel;
 
-  if (!GetPrivateProfileString("Messages", "MSG_SMARTUPDATE_START", 
-                               "", szMsgSmartUpdateStart, 
-                               sizeof(szMsgSmartUpdateStart), 
-                               szFileIniInstall) ||
-      !GetPrivateProfileString("Messages", "DLG_EXTRACTING_TITLE", 
+  if (!GetPrivateProfileString("Messages", "DLG_EXTRACTING_TITLE", 
                                "", szDlgExtractingTitle, 
                                sizeof(szDlgExtractingTitle), 
                                szFileIniInstall))
@@ -229,11 +228,6 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
                                szFileIniInstall))
     exit(1);
 
-#if 0
-  // XXXben fix me
-  ShowMessage(szMsgSmartUpdateStart, TRUE);
-#endif
-
   GetXpinstallPath(xpinstallPath, sizeof(xpinstallPath));
   if(InitializeXPIStub(xpinstallPath) == WIZ_OK)
   {
@@ -246,10 +240,7 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
     }
     hrResult = pfnXpiInit(szBuf, FILE_INSTALL_LOG, cbXPIProgress);
 
-#if 0 
-    // XXXben fix me
-    ShowMessage(szMsgSmartUpdateStart, FALSE);
-#endif
+    SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS0, szMsgSmartUpdateStart);
 
     GetTotalArchivesToInstall();
 
