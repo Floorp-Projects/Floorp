@@ -61,6 +61,10 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLDocument.h"
 
+#include "ftpCore.h"
+#include "nsISocketTransportService.h"
+#include "nsIStringBundle.h"
+
 #include "nsWebBrowserPersist.h"
 
 
@@ -581,12 +585,58 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
         {
             stateFlags |= nsIWebProgressListener::STATE_IS_NETWORK;
         }
+        // XXX Shouldn't we pass status, or at least check it?
         mProgressListener->OnStateChange(nsnull, request, stateFlags, NS_OK);
     }
 
     return NS_OK;
 }
 
+// Convert error info into proper message text and send OnStatusChange notification
+// to the web progress listener.
+static void SendStatusChange( 
+    PRBool readError, nsresult rv, nsIRequest *aRequest, nsIWebProgressListener *aListener, const PRUnichar *path)
+{
+    nsAutoString msgId;
+    switch(rv)
+    {
+    case NS_ERROR_FILE_DISK_FULL:
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
+        // Out of space on target volume.
+        msgId = NS_LITERAL_STRING("diskFull");
+        break;
+
+    case NS_ERROR_FILE_READ_ONLY:
+        // Attempt to write to read/only file.
+        msgId = NS_LITERAL_STRING("readOnly");
+        break;
+
+    case NS_ERROR_FILE_ACCESS_DENIED:
+        // Attempt to write without sufficient permissions.
+        msgId = NS_LITERAL_STRING("accessError");
+        break;
+
+    default:
+        // Generic read/write error message.
+        msgId = readError ? NS_LITERAL_STRING("readError") : NS_LITERAL_STRING("writeError");
+        break;
+    }
+    // Get properties file bundle and extract status string.
+    nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (s)
+    {
+        nsCOMPtr<nsIStringBundle> bundle;
+        if (NS_SUCCEEDED(s->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties", getter_AddRefs(bundle))))
+        {
+            nsXPIDLString msgText;
+            const PRUnichar *strings[] = { path };
+            if(NS_SUCCEEDED(bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText))))
+            {
+                aListener->OnStatusChange(nsnull, readError ? aRequest : nsnull, rv, msgText);
+            }
+        }
+    }
+}
 
 //*****************************************************************************
 // nsWebBrowserPersist::nsIStreamListener
@@ -600,7 +650,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
     if (!cancel)
     {
         nsresult rv = NS_OK;
-        unsigned long bytesRemaining = aLength;
+        PRUint32 bytesRemaining = aLength;
 
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
         NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
@@ -620,22 +670,43 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
 
         // Read data from the input and write to the output
         char buffer[8192];
-        unsigned int bytesRead;
+        PRUint32 bytesRead;
+        PRBool readError;
         while (!cancel && bytesRemaining)
         {
+            readError = PR_TRUE;
             rv = aIStream->Read(buffer, PR_MIN(sizeof(buffer), bytesRemaining), &bytesRead);
             if (NS_SUCCEEDED(rv))
             {
-                unsigned int bytesWritten;
-                rv = data->mStream->Write(buffer, bytesRead, &bytesWritten);
-                if (NS_SUCCEEDED(rv) && bytesWritten == bytesRead)
+                readError = PR_FALSE;
+                // Write out the data until something goes wrong, or, it is
+                // all written.  We loop because for some errors (e.g., disk
+                // full), we get NS_OK with some bytes written, then an error.
+                // So, we want to write again in that case to get the actual
+                // error code.
+                const char *bufPtr = buffer; // Where to write from.
+                while (NS_SUCCEEDED(rv) && bytesRead)
                 {
-                    bytesRemaining -= bytesWritten;
-                }
-                else
-                {
-                    // Disaster - can't write out the bytes - disk full / permission?
-                    cancel = PR_TRUE;
+                    PRUint32 bytesWritten = 0;
+                    rv = data->mStream->Write(bufPtr, bytesRead, &bytesWritten);
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        bytesRead -= bytesWritten;
+                        bufPtr += bytesWritten;
+                        bytesRemaining -= bytesWritten;
+                        // Force an error if (for some reason) we get NS_OK but
+                        // no bytes written.
+                        if (!bytesWritten)
+                        {
+                            rv = NS_ERROR_FAILURE;
+                            cancel = PR_TRUE;
+                        }
+                    }
+                    else
+                    {
+                        // Disaster - can't write out the bytes - disk full / permission?
+                        cancel = PR_TRUE;
+                    }
                 }
             }
             else
@@ -646,21 +717,33 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         }
 
         PRInt32 channelContentLength = -1;
-        rv = channel->GetContentLength(&channelContentLength);
-        if (NS_SUCCEEDED(rv) && channelContentLength != -1)
+        if (!cancel &&
+            NS_SUCCEEDED(channel->GetContentLength(&channelContentLength)) &&
+            channelContentLength != -1)
         {
             if ((channelContentLength - (aOffset + aLength)) == 0)
             {
                 // we're done with this pass; see if we need to do upload
                 nsXPIDLCString contentType;
                 channel->GetContentType(getter_Copies(contentType));
-                PRBool isUpload = PR_FALSE;
                 rv = StartUpload(data->mStream, data->mFile, contentType.get());
                 if (NS_FAILED(rv))
                 {
                     cancel = PR_TRUE;
                 }
             }
+        }
+
+        // Notify listener if an error occurred.
+        if (cancel && mProgressListener)
+        {
+            nsCOMPtr<nsILocalFile> file;
+            GetLocalFileFromURI(data->mFile, getter_AddRefs(file));
+            nsXPIDLString path;
+            if (file) {
+                file->GetUnicodePath(getter_Copies(path));
+            }
+            SendStatusChange(readError, rv, request, mProgressListener, path.get());
         }
     }
 
@@ -725,7 +808,26 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
 {
     if (mProgressListener)
     {
-        mProgressListener->OnStatusChange(nsnull, request, status, statusArg);
+        // We need to filter out non-error error codes.
+        // Is the only NS_SUCCEEDED value NS_OK?
+        switch ( status )
+        {
+        case NS_NET_STATUS_RESOLVING_HOST:
+        case NS_NET_STATUS_BEGIN_FTP_TRANSACTION:
+        case NS_NET_STATUS_END_FTP_TRANSACTION:
+        case NS_NET_STATUS_CONNECTING_TO:
+        case NS_NET_STATUS_CONNECTED_TO:
+        case NS_NET_STATUS_SENDING_TO:
+        case NS_NET_STATUS_RECEIVING_FROM:
+        case NS_NET_STATUS_READ_FROM:
+            break;
+
+        default:
+            // Pass other notifications (for legitimate errors) along.
+            mProgressListener->OnStatusChange(nsnull, request, status, statusArg);
+            break;
+        }
+
     }
     return NS_OK;
 }
