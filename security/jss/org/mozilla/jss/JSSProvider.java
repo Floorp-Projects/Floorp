@@ -32,7 +32,7 @@
  */
 package org.mozilla.jss;
 
-public class JSSProvider extends java.security.Provider {
+public final class JSSProvider extends java.security.Provider {
 
     public JSSProvider() {
         super("Mozilla-JSS", 3.2,
@@ -41,9 +41,8 @@ public class JSSProvider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
         // Signature
         /////////////////////////////////////////////////////////////
-
         put("Signature.SHA1withDSA",
-            "org.mozilla.jss.provider.java.security.DSASignatureSpi");
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$DSA");
 
         put("Alg.Alias.Signature.DSA", "SHA1withDSA");
         put("Alg.Alias.Signature.DSS", "SHA1withDSA");
@@ -54,11 +53,11 @@ public class JSSProvider extends java.security.Provider {
         put("Alg.Alias.Signature.SHAwithDSA", "SHA1withDSA");
 
         put("Signature.MD5/RSA",
-            "org.mozilla.jss.provider.java.security.MD5RSASignatureSpi");
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$MD5RSA");
         put("Signature.MD2/RSA",
-            "org.mozilla.jss.provider.java.security.MD2RSASignatureSpi");
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$MD2RSA");
         put("Signature.SHA-1/RSA",
-            "org.mozilla.jss.provider.java.security.SHA1RSASignatureSpi");
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA1RSA");
 
         put("Alg.Alias.Signature.SHA1/RSA", "SHA-1/RSA");
 
@@ -67,11 +66,11 @@ public class JSSProvider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
 
         put("MessageDigest.SHA-1",
-                "org.mozilla.jss.provider.java.security.SHA1MessageDigestSpi");
+                "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$SHA1");
         put("MessageDigest.MD2",
-                "org.mozilla.jss.provider.java.security.MD2MessageDigestSpi");
+                "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$MD2");
         put("MessageDigest.MD5",
-                "org.mozilla.jss.provider.java.security.MD5MessageDigestSpi");
+                "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$MD5");
 
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");
@@ -86,9 +85,9 @@ public class JSSProvider extends java.security.Provider {
         // KeyPairGenerator
         /////////////////////////////////////////////////////////////
         put("KeyPairGenerator.RSA",
-            "org.mozilla.jss.provider.java.security.RSAKeyPairGeneratorSpi");
+            "org.mozilla.jss.provider.java.security.JSSKeyPairGeneratorSpi$RSA");
         put("KeyPairGenerator.DSA",
-            "org.mozilla.jss.provider.java.security.DSAKeyPairGeneratorSpi");
+            "org.mozilla.jss.provider.java.security.JSSKeyPairGeneratorSpi$DSA");
 
         /////////////////////////////////////////////////////////////
         // KeyFactory
@@ -114,24 +113,50 @@ public class JSSProvider extends java.security.Provider {
         // Cipher
         /////////////////////////////////////////////////////////////
         put("Cipher.DES",
-            "org.mozilla.jss.provider.javax.crypto.DESCipherSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$DES");
         put("Cipher.DESede",
-            "org.mozilla.jss.provider.javax.crypto.DESedeCipherSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$DESede");
+        put("Alg.Alias.Cipher.DES3", "DESede");
         put("Cipher.AES",
-            "org.mozilla.jss.provider.javax.crypto.AESCipherSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$AES");
+        put("Cipher.RC4",
+            "org.mozilla.jss.provider.javax.crypto.JSSCipherSpi$RC4");
 
         /////////////////////////////////////////////////////////////
         // KeyGenerator
         /////////////////////////////////////////////////////////////
         put("KeyGenerator.DES",
-            "org.mozilla.jss.provider.javax.crypto.DESKeyGeneratorSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$DES");
         put("KeyGenerator.DESede",
-            "org.mozilla.jss.provider.javax.crypto.DESedeKeyGeneratorSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$DESede");
+        put("Alg.Alias.KeyGenerator.DES3", "DESede");
         put("KeyGenerator.AES",
-            "org.mozilla.jss.provider.javax.crypto.AESKeyGeneratorSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$AES");
         put("KeyGenerator.RC4",
-            "org.mozilla.jss.provider.javax.crypto.RC4KeyGeneratorSpi");
+            "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$RC4");
         put("KeyGenerator.HmacSHA1",
-            "org.mozilla.jss.provider.javax.crypto.HmacSHA1KeyGeneratorSpi");
+           "org.mozilla.jss.provider.javax.crypto.JSSKeyGeneratorSpi$HmacSHA1");
+
+        /////////////////////////////////////////////////////////////
+        // SecretKeyFactory
+        /////////////////////////////////////////////////////////////
+        put("SecretKeyFactory.DES",
+            "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$DES");
+        put("SecretKeyFactory.DESede",
+         "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$DESede");
+        put("Alg.Alias.SecretKeyFactory.DES3", "DESede");
+        put("SecretKeyFactory.AES",
+            "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$AES");
+        put("SecretKeyFactory.RC4",
+            "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$RC4");
+        put("SecretKeyFactory.HmacSHA1",
+            "org.mozilla.jss.provider.javax.crypto.JSSSecretKeyFactorySpi$HmacSHA1");
+
+        /////////////////////////////////////////////////////////////
+        // MAC
+        /////////////////////////////////////////////////////////////
+        put("Mac.HmacSHA1",
+            "org.mozilla.jss.provider.javax.crypto.JSSMacSpi$HmacSHA1");
+        put("Alg.Alias.Mac.Hmac-SHA1", "HmacSHA1");
     }
 }
