@@ -90,6 +90,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mAuthTriedWithPrehost(PR_FALSE),
     mProxy(0),
     mProxyPort(-1),
+    mProxyType(nsnull),
+    mProxyTransparent(PR_FALSE),
     mBufferSegmentSize(0),
     mBufferMaxSize(0),
     mStatus(NS_OK),
@@ -132,6 +134,7 @@ nsHTTPChannel::~nsHTTPChannel()
     mResponseContext = null_nsCOMPtr();
     mLoadGroup       = null_nsCOMPtr();
     CRTFREEIF(mProxy);
+    CRTFREEIF(mProxyType);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
@@ -685,6 +688,14 @@ NS_IMETHODIMP
 nsHTTPChannel::SetRequestMethod(nsIAtom * i_Atom)
 {
     return mRequest->SetMethod(i_Atom);
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetRequestMethod(nsIAtom ** i_Atom)
+{
+    if (i_Atom)
+       *i_Atom = mRequest->GetMethod();
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1303,7 +1314,7 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
         nsXPIDLCString requestSpec;
         rv = mRequest->GetOverrideRequestSpec(getter_Copies(requestSpec));
         // no one has overwritten this value as yet...
-        if (!requestSpec && mProxy && *mProxy)
+        if (!requestSpec && mProxy && *mProxy && !mProxyTransparent)
         {
             nsXPIDLCString strurl;
             if(NS_SUCCEEDED(mURI->GetSpec(getter_Copies(strurl))))
@@ -1323,7 +1334,7 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
                             authStr);
             }
 
-            if (mProxy && *mProxy)
+            if (mProxy && *mProxy && mProxyTransparent)
             {
                 nsXPIDLCString proxyAuthStr;
                 if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(mProxy, 
@@ -1959,7 +1970,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         nsXPIDLCString authString;
         if (statusCode != 407)
         {
-            if (mProxy && *mProxy)
+            if (mProxy && *mProxy && !mProxyTransparent)
             {
                 rv = GetRequestHeader(nsHTTPAtoms::Proxy_Authorization,
                                 getter_Copies(authString));
@@ -2260,6 +2271,22 @@ nsHTTPChannel::SetProxyPort(PRInt32 i_ProxyPort)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsHTTPChannel::GetProxyType(char * *o_ProxyType)
+{
+    return DupString(o_ProxyType, mProxyType);
+}
+
+NS_IMETHODIMP nsHTTPChannel::SetProxyType(const char * i_ProxyType)
+{
+    if (i_ProxyType && nsCRT::strcasecmp(i_ProxyType, "socks") == 0) {
+        mProxyTransparent = PR_TRUE;
+    } else {
+        mProxyTransparent = PR_FALSE;
+    }
+    CRTFREEIF(mProxyType);
+    return DupString(&mProxyType, i_ProxyType);
+}
+
 NS_IMETHODIMP
 nsHTTPChannel::SetProxyRequestURI(const char * i_Spec)
 {
@@ -2329,7 +2356,16 @@ nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
 {
     if (!aUsingProxy)
         return NS_ERROR_NULL_POINTER;
-    *aUsingProxy = (mProxy && *mProxy);
+    *aUsingProxy = (mProxy && *mProxy && !mProxyTransparent);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTTPChannel::GetUsingTransparentProxy(PRBool *aUsingProxy)
+{
+    if (!aUsingProxy)
+        return NS_ERROR_NULL_POINTER;
+    *aUsingProxy = (mProxy && *mProxy && mProxyTransparent);
     return NS_OK;
 }
 

@@ -38,6 +38,13 @@ interface nsISocketProvider : nsISupports {
                  out nsFileDescStar fileDesc, 
                  out nsISupports securityInfo );
 
+  void AddToSocket(in string host, 
+                   in long port,
+                   in string proxyHost,
+                   in long proxyPort,
+                   in nsFileDescStar fileDesc, 
+                   out nsISupports securityInfo );
+
 };
 
 %{C++

@@ -45,6 +45,7 @@
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
 #include "nsProtocolProxyService.h"
+#include "nsSOCKSSocketProvider.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -106,7 +107,7 @@ RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 static NS_METHOD
 UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                  const char *registryLocation)
+                    const char *registryLocation)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -116,7 +117,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
     rv = catman->GetCategoryEntry("http-auth", "basic",
                                   getter_Copies(basicAuth));
     if (NS_FAILED(rv)) return rv;
-
+    
     // only unregister if we're the current Basic-auth handler
     if (!strcmp(basicAuth, NS_BASICAUTH_PROGID))
         return catman->DeleteCategoryEntry("http-auth", "basic", PR_TRUE,
@@ -633,6 +634,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_KEYWORDPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "keyword",
       nsKeywordProtocolHandler::Create
+    },
+
+    {  NS_ISOCKSSOCKETPROVIDER_CLASSNAME,
+       NS_SOCKSSOCKETPROVIDER_CID,
+       NS_ISOCKSSOCKETPROVIDER_PROGID,
+       nsSOCKSSocketProvider::Create
     }
 
 };

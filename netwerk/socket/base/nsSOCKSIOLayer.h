@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +19,7 @@
  *
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
-*/
+ */
 
 #ifndef _NSSOCKSIOLAYER_H_
 #define _NSSOCKSIOLAYER_H_
@@ -29,17 +29,17 @@
 #include "nsISOCKSSocketInfo.h"
 
 nsresult nsSOCKSIOLayerNewSocket(const char *host, 
-				 PRInt32 port,
-				 const char *proxyHost,
-				 PRInt32 proxyPort,
-				 PRFileDesc **fd, 
-				 nsISupports **info);
+                                 PRInt32 port,
+                                 const char *proxyHost,
+                                 PRInt32 proxyPort,
+                                 PRFileDesc **fd, 
+                                 nsISupports **info);
 
 nsresult nsSOCKSIOLayerAddToSocket(const char *host, 
-				   PRInt32 port,
-				   const char *proxyHost,
-				   PRInt32 proxyPort,
-				   PRFileDesc *fd, 
-				   nsISupports **info);
+                                   PRInt32 port,
+                                   const char *proxyHost,
+                                   PRInt32 proxyPort,
+                                   PRFileDesc *fd, 
+                                   nsISupports **info);
 
 #endif /* _NSSOCKSIOLAYER_H_ */

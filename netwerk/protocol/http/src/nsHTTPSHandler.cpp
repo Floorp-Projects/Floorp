@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
-*/
+ */
 
 #include "nspr.h"
 #include "nsHTTPSHandler.h"
@@ -63,19 +63,33 @@ nsresult nsHTTPSHandler::CreateTransport(const char* host,
                                          PRUint32 bufferMaxSize,
                                          nsIChannel** o_pTrans)
 {
-    nsresult rv;
-
-    NS_WITH_SERVICE(nsISocketTransportService, sts, 
-            kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return sts->CreateTransportOfType( "ssl", 
-                                       host, 
-                                       port, 
-                                       proxyHost, 
-                                       proxyPort, 
-                                       bufferSegmentSize, 
-                                       bufferMaxSize, 
-                                       o_pTrans);
+    return CreateTransportOfType(nsnull, host, port, proxyHost, proxyPort,
+                                 bufferSegmentSize, bufferMaxSize, o_pTrans);
 }
 
+nsresult nsHTTPSHandler::CreateTransportOfType(const char * type,
+                                               const char* host, 
+                                               PRInt32 port, 
+                                               const char* proxyHost, 
+                                               PRInt32 proxyPort, 
+                                               PRUint32 bufferSegmentSize, 
+                                               PRUint32 bufferMaxSize,
+                                               nsIChannel** o_pTrans)
+{
+    nsresult rv;
+    
+    NS_WITH_SERVICE(nsISocketTransportService, sts, 
+                    kSocketTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    const char * types[] = { "ssl", type };
+    
+    return sts->CreateTransportOfTypes( 2, types,
+                                        host, 
+                                        port, 
+                                        proxyHost, 
+                                        proxyPort, 
+                                        bufferSegmentSize, 
+                                        bufferMaxSize, 
+                                        o_pTrans);
+}

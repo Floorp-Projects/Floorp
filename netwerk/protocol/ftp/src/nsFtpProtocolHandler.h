@@ -39,23 +39,20 @@
 
 class nsFtpProtocolHandler : public nsIProtocolHandler,
                              public nsIConnectionCache,
-                             public nsIObserver,
-                             public nsIProxy
+                             public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSICONNECTIONCACHE
     NS_DECL_NSIOBSERVER
-    NS_DECL_NSIPROXY
-
+    
     // nsFtpProtocolHandler methods:
     nsFtpProtocolHandler() {
         NS_INIT_REFCNT();
-        mProxyPort = -1; 
     };
     virtual ~nsFtpProtocolHandler();
-
+    
     // Define a Create method to be used with a factory:
     static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     nsresult Init();
@@ -64,8 +61,6 @@ protected:
     nsHashtable*            mRootConnectionList;  // hash of FTP connections
     nsCOMPtr<nsIThreadPool> mPool;                // thread pool for FTP connections
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
-    nsCAutoString           mProxyHost;
-    PRInt32                 mProxyPort;
     PRLock*                 mLock; 
 };
 

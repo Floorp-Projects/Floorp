@@ -51,6 +51,15 @@ interface nsISocketTransportService : nsISupports
                                      in unsigned long bufferSegmentSize,
                                      in unsigned long bufferMaxSize);
 
+    nsIChannel createTransportOfTypes(in unsigned long typeCount,
+				      [array, size_is(typeCount)] in string socketTypes,
+                                      in string host, 
+                                      in long port,
+                                      in string proxyHost,
+                                      in long proxyPort,
+                                      in unsigned long bufferSegmentSize,
+                                      in unsigned long bufferMaxSize);
+
     /**
      * Returns true if the specified transport is good enough for 
      * being used again. The situations in which this may return false

@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -165,7 +164,6 @@ nsSocketTransportService::Init(void)
   }
   return rv;
 }
-
 
 nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
 {
@@ -497,8 +495,8 @@ nsSocketTransportService::CreateTransport(const char* aHost,
                                           PRUint32 bufferMaxSize, 
                                           nsIChannel** aResult)
 {
-  return CreateTransportOfType(nsnull, aHost, aPort, proxyHost, proxyPort,
-                               bufferSegmentSize, bufferMaxSize, aResult);
+    return CreateTransportOfTypes(0, nsnull, aHost, aPort, proxyHost, proxyPort,
+				  bufferSegmentSize, bufferMaxSize, aResult);
 }
 
 NS_IMETHODIMP
@@ -511,44 +509,60 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                                 PRUint32 bufferMaxSize,
                                                 nsIChannel** aResult)
 {
-  nsresult rv = NS_OK;
+    const char * types[] = { aSocketType };
+    return CreateTransportOfTypes(1, types, aHost, aPort, proxyHost, proxyPort,
+				  bufferSegmentSize, bufferMaxSize, aResult);
+}
 
-  NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  PRBool offline;
-  rv = ios->GetOffline(&offline);
-  if (NS_FAILED(rv)) return rv;
-  if (offline) return NS_ERROR_OFFLINE;
-
-  nsSocketTransport* transport = nsnull;
-
-  // Parameter validation...
-  NS_ASSERTION(aResult, "aResult == nsnull.");
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Create and initialize a new connection object...
-  NS_NEWXPCOM(transport, nsSocketTransport);
-  if (transport) {
-    rv = transport->Init(this, aHost, aPort, aSocketType, proxyHost, proxyPort,
-                         bufferSegmentSize, bufferMaxSize);
-    if (NS_FAILED(rv)) {
-      delete transport;
-      transport = nsnull;
+NS_IMETHODIMP
+nsSocketTransportService::CreateTransportOfTypes(PRUint32 socketTypeCount,
+						 const char* *aSocketTypes,
+						 const char* aHost,
+						 PRInt32 aPort,
+						 const char* proxyHost,
+						 PRInt32 proxyPort,
+						 PRUint32 bufferSegmentSize,
+						 PRUint32 bufferMaxSize,
+						 nsIChannel** aResult)
+{
+    nsresult rv = NS_OK;
+    
+    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRBool offline;
+    rv = ios->GetOffline(&offline);
+    if (NS_FAILED(rv)) return rv;
+    if (offline) return NS_ERROR_OFFLINE;
+    
+    nsSocketTransport* transport = nsnull;
+    
+    // Parameter validation...
+    NS_ASSERTION(aResult, "aResult == nsnull.");
+    if (!aResult) {
+	return NS_ERROR_NULL_POINTER;
     }
-  } 
-  else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Set the reference count to one...
-  if (NS_SUCCEEDED(rv)) {
-    NS_ADDREF(transport);
-  } 
-  *aResult = transport;
-
-  return rv;
+    
+    // Create and initialize a new connection object...
+    NS_NEWXPCOM(transport, nsSocketTransport);
+    if (transport) {
+	rv = transport->Init(this, aHost, aPort, socketTypeCount, aSocketTypes, 
+			     proxyHost, proxyPort, bufferSegmentSize, bufferMaxSize);
+	if (NS_FAILED(rv)) {
+	    delete transport;
+	    transport = nsnull;
+	}
+    } 
+    else {
+	rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    // Set the reference count to one...
+    if (NS_SUCCEEDED(rv)) {
+	NS_ADDREF(transport);
+    } 
+    *aResult = transport;
+    
+    return rv;
 }
 
 NS_IMETHODIMP

@@ -33,7 +33,10 @@ MODULE = psmglue
 IS_COMPONENT	= 1
 LIBRARY_NAME	= psmglue
 
-
+EXPORTS = \
+        nsPSMShimLayer.h \
+	$(NULL)
+	  
 CPPSRCS	= \
 	nsPSMComponent.cpp \
 	nsPSMUICallbacks.cpp \

@@ -20,13 +20,13 @@
  * Contributor(s): 
  */
 
- /* 
-    The nsIProxy interface allows setting and getting of proxy host and port. 
-    This is for use by protocol handlers. If you are writing a protocol handler
-    and would like to support proxy behaviour then derive from this as well as
-    the nsIProtocolHandler class.
-
-    -Gagan Saksena 02/25/99
+/* 
+   The nsIProxy interface allows setting and getting of proxy host and port. 
+   This is for use by protocol handlers. If you are writing a protocol handler
+   and would like to support proxy behaviour then derive from this as well as
+   the nsIProtocolHandler class.
+   
+   -Gagan Saksena 02/25/99
 */
 
 #include "nsISupports.idl"
@@ -35,7 +35,9 @@
 interface nsIProxy : nsISupports
 {
     attribute string proxyHost;
-
+    
     /* -1 on Set call indicates switch to default port */
     attribute long proxyPort;
+    
+    attribute string proxyType;
 };

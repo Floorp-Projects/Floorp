@@ -28,7 +28,8 @@ XPIDL_MODULE = necko_ftp
 
 XPIDLSRCS =                 \
         .\nsIConnectionCache.idl  \
-        $(NULL)
+	.\nsIFTPChannel.idl \
+	$(NULL)
 
 EXPORTS =                 \
 	ftpCore.h         \

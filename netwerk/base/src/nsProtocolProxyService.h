@@ -72,6 +72,9 @@ protected:
 
     nsXPIDLCString          mHTTPSProxyHost;
     PRInt32                 mHTTPSProxyPort;
+    
+    nsXPIDLCString          mSOCKSProxyHost;
+    PRInt32                 mSOCKSProxyPort;
 };
 
 #endif // __nsprotocolproxyservice___h___

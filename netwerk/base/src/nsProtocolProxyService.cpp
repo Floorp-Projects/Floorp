@@ -165,10 +165,28 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mFTPProxyPort = proxyPort;
     }
 
+    if (!pref || !PL_strcmp(pref, "network.proxy.socks"))
+    {
+        mSOCKSProxyHost = "";
+        rv = mPrefs->CopyCharPref("network.proxy.socks", 
+                                  getter_Copies(tempString));
+        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+            mSOCKSProxyHost = nsCRT::strdup(tempString);
+    }
+    
+    if (!pref || !PL_strcmp(pref, "network.proxy.socks_port"))
+    {
+        mSOCKSProxyPort = -1;
+        PRInt32 proxyPort = -1;
+        rv = mPrefs->GetIntPref("network.proxy.socks_port",&proxyPort);
+        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+            mSOCKSProxyPort = proxyPort;
+    }
+    
     if (!pref || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
     {
         rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
-                getter_Copies(tempString));
+                                  getter_Copies(tempString));
         if (NS_SUCCEEDED(rv) && tempString && *tempString)
             (void)LoadFilters((const char*)tempString);
     }
@@ -182,32 +200,32 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
 
     PRInt32 port;
     nsXPIDLCString host;
-
+    
     nsresult rv = aURI->GetHost(getter_Copies(host));
     if (NS_FAILED(rv) || !host || !*host) 
         return PR_FALSE;
-
+    
     rv = aURI->GetPort(&port);
     if (NS_FAILED(rv)) {
         return PR_FALSE;
     }
-
+    
     PRInt32 index = -1;
     int host_len = PL_strlen(host);
     int filter_host_len;
-
+    
     while (++index < mFiltersArray.Count()) 
     {
         host_port* hp = (host_port*) mFiltersArray[index];
         
         // only if port doesn't exist or matches
         if (((hp->port == -1) || (hp->port == port)) &&
-                hp->host)
+            hp->host)
         {
             filter_host_len = hp->host->Length();
             if ((host_len >= filter_host_len) && 
-                    (0 == PL_strncasecmp(host + host_len - filter_host_len, 
-                        hp->host->GetBuffer(), filter_host_len)))
+                (0 == PL_strncasecmp(host + host_len - filter_host_len, 
+                                     hp->host->GetBuffer(), filter_host_len)))
                 return PR_FALSE;
         }
     }
@@ -218,20 +236,20 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
 NS_IMETHODIMP
 nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
     nsresult rv = NS_OK;
-
+    
     NS_ASSERTION(aURI && aProxy, "need a uri and proxy iface folks.");
-
+    
     // if proxies are enabled and this host:port combo is
     // supposed to use a proxy, check for a proxy.
     if ((0 == mUseProxy) || 
-            ((1 == mUseProxy) && !CanUseProxy(aURI))) {
+        ((1 == mUseProxy) && !CanUseProxy(aURI))) {
         rv = aProxy->SetProxyHost(nsnull);
         if (NS_FAILED(rv)) return rv;
         rv = aProxy->SetProxyPort(-1);
         if (NS_FAILED(rv)) return rv;
         return NS_OK;
     }
-
+    
     // Proxy auto config magic...
     if (2 == mUseProxy)
     {
@@ -241,43 +259,58 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLCString p_host;
+            nsXPIDLCString p_type;
             PRInt32 p_port;
-            if (NS_SUCCEEDED(rv = pac->ProxyForURL(
-                            aURI, getter_Copies(p_host), &p_port)))
+            if (NS_SUCCEEDED(rv = pac->ProxyForURL(aURI, getter_Copies(p_host),
+                                                   &p_port, getter_Copies(p_type))))
             {
                 if (NS_FAILED(rv = aProxy->SetProxyHost(p_host))) 
                     return rv;
                 if (NS_FAILED(rv = aProxy->SetProxyPort(p_port)))
                     return rv;
+                aProxy->SetProxyHost(p_type);
                 return NS_OK;
             }
         }
         return rv;
     }
-
+    
     nsXPIDLCString scheme;
     rv = aURI->GetScheme(getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
-
-    if (!PL_strcasecmp(scheme, "ftp")) {
+    
+    if (mFTPProxyHost != "" && mFTPProxyPort > 0 &&
+        !PL_strcasecmp(scheme, "ftp")) {
         rv = aProxy->SetProxyHost(mFTPProxyHost);
         if (NS_FAILED(rv)) return rv;
+        aProxy->SetProxyType("http");
         return aProxy->SetProxyPort(mFTPProxyPort);
     }
-
-    if (!PL_strcasecmp(scheme, "http")) {
+    
+    if (mHTTPProxyHost != "" && mHTTPProxyPort > 0 &&
+        !PL_strcasecmp(scheme, "http")) {
         rv = aProxy->SetProxyHost(mHTTPProxyHost);
         if (NS_FAILED(rv)) return rv;
-
+        aProxy->SetProxyType("http");
         return aProxy->SetProxyPort(mHTTPProxyPort);
     }
-
-    if (!PL_strcasecmp(scheme, "https")) {
+    
+    if (mHTTPSProxyHost != "" && mHTTPSProxyPort > 0 &&
+        !PL_strcasecmp(scheme, "https")) {
         rv = aProxy->SetProxyHost(mHTTPSProxyHost);
         if (NS_FAILED(rv)) return rv;
+        aProxy->SetProxyType("http");
         return aProxy->SetProxyPort(mHTTPSProxyPort);
     }
-
+    
+    if (mSOCKSProxyHost != "" && mSOCKSProxyPort > 0) {
+        rv = aProxy->SetProxyHost(mSOCKSProxyHost);
+        if (NS_FAILED(rv)) return rv;
+        aProxy->SetProxyType("socks");
+        return aProxy->SetProxyPort(mSOCKSProxyPort);
+    }
+    
+    
     return NS_OK;
 }
 

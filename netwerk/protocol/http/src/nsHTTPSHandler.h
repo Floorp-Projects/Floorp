@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -65,10 +65,10 @@ public:
     };
 
     /**
-    *    Called to create a transport from RequestTransport to accually
-    *    make a new channel.
-    **/
-
+     *    Called to create a transport from RequestTransport to accually
+     *    make a new channel.
+     **/
+    
     virtual nsresult CreateTransport(const char* host, 
                                      PRInt32 port, 
                                      const char* proxyHost, 
@@ -76,6 +76,15 @@ public:
                                      PRUint32 bufferSegmentSize, 
                                      PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);
+    
+    virtual nsresult CreateTransportOfType(const char* socketType,
+                                           const char* host,
+                                           PRInt32 port, 
+                                           const char* proxyHost, 
+                                           PRInt32 proxyPort, 
+                                           PRUint32 bufferSegmentSize, 
+                                           PRUint32 bufferMaxSize,
+                                           nsIChannel** o_pTrans);
 };
 
 #endif /* _nsHTTPSHandler_h_ */

@@ -30,12 +30,14 @@ MODULE		= necko
 XPIDL_MODULE	= necko_socket
 LIBRARY_NAME	= neckosocket_s
 
-CPPSRCS		= nsSocketProviderService.cpp
+CPPSRCS		= nsSocketProviderService.cpp nsSOCKSSocketProvider.cpp nsSOCKSIOLayer.cpp
 
 XPIDLSRCS	= \
 		nsISocketProvider.idl \
 		nsISocketProviderService.idl \
-		$(NULL)
+		nsISOCKSSocketProvider.idl \
+		nsISOCKSSocketInfo.idl \
+                $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

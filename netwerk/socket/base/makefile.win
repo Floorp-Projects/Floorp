@@ -42,6 +42,8 @@ LIBRARY_NAME=neckosocket_s
 
 OBJS = \
 	.\$(OBJDIR)\nsSocketProviderService.obj \
+	.\$(OBJDIR)\nsSOCKSProviderService.obj \
+	.\$(OBJDIR)\nsSOCKSIOLayer.obj \
 	$(NULL)
 
 
@@ -50,6 +52,8 @@ XPIDL_INCLUDES=-I$(DEPTH)\..\mozilla\dist\idl
 XPIDLSRCS= \
 	.\nsISocketProvider.idl \
 	.\nsISocketProviderService.idl \
+	.\nsISOCKSSocketProvider.idl \
+	.\nsISOCKSSocketInfo.idl \	
 	$(NULL)
 
 NO_GEN_XPT=1

@@ -51,6 +51,10 @@ LLIBS   = \
     $(DIST)\lib\jsdom.lib \
     $(NULL)
 
+EXPORTS = \
+    .\nsPSMShimLayer.h \
+    $(NULL)
+
 OBJS = \
     .\$(OBJDIR)\nsPSMMutex.obj \
     .\$(OBJDIR)\nsPSMShimLayer.obj \

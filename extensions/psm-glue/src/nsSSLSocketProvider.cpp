@@ -92,3 +92,22 @@ nsSSLSocketProvider::NewSocket(const char *host,
   
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
+
+// Add the SSL IO layer to an existing socket
+NS_IMETHODIMP
+nsSSLSocketProvider::AddToSocket(const char *host, 
+				 PRInt32 port, 
+				 const char *proxyHost, 
+				 PRInt32 proxyPort, 
+				 PRFileDesc *socket, 
+				 nsISupports **securityInfo)
+{
+   nsresult rv = nsSSLIOLayerAddToSocket(host,
+					 port,
+					 proxyHost,
+					 proxyPort,
+					 socket, 
+					 securityInfo);
+   
+   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
+}
