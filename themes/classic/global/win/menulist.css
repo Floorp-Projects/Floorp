@@ -32,6 +32,10 @@
     {
       border              : 1px solid transparent;
       margin              : 1px;
+    }     
+    
+  menulist[open="true"]:focus
+    {
       background-color    : -moz-field;
       color               : WindowText;
     }     
