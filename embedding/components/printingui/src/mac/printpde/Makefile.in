@@ -59,7 +59,7 @@ export::
 endif
 
 libs::
-	pbxbuild -buildstyle $(BUILDSTYLE) install
+	$(PBBUILD) -buildstyle $(BUILDSTYLE) install
 	mkdir -p $(DIST)/package
 	cp -R build/UninstalledProducts/PrintPDE.plugin $(DIST)/package/
 

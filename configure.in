@@ -432,6 +432,11 @@ AC_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
+case "$target_os" in
+darwin*)
+    AC_PATH_PROGS(PBBUILD, pbbuild pbxbuild)
+    ;;
+esac
 
 dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
@@ -850,8 +855,8 @@ case "$target" in
 
 *-darwin*) 
     _PEDANTIC=
-    CFLAGS="$CFLAGS -fpascal-strings -traditional-cpp -fno-common"
-    CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
+    CFLAGS="$CFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
+    CXXFLAGS="$CXXFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"

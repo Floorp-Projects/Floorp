@@ -81,7 +81,7 @@ install-plugin: build-plugin
 resources: $(RESOURCE_FILES)
 
 build-plugin: resources
-	pbxbuild -target $(TARGET) -buildstyle $(BUILDSTYLE)
+	$(PBBUILD) -target $(TARGET) -buildstyle $(BUILDSTYLE)
 
 _%.rsrc: %.rsrc
 	$(ASDECODE) $< $@
