@@ -547,6 +547,10 @@ pref("mail.compose.add_undisclosed_recipients", true);
 pref("mail.purge.min_delay",480);
 pref("mail.purge.timer_interval",5); 
 
+// set to true if viewing a message should mark it as read only if the msg is viewed for a specified time interval in seconds
+pref("mailnews.mark_message_read.delay", false); 
+pref("mailnews.mark_message_read.delay.interval", 5); // measured in seconds
+
 // require a password before showing imap or local headers in thread pane
 pref("mail.password_protect_local_cache", false);
 // to reduce forking in the js / C++
