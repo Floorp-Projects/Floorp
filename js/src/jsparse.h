@@ -55,10 +55,10 @@ JS_BEGIN_EXTERN_C
  * -----        -------     -------
  * <Definitions>
  * TOK_FUNCTION func        pn_fun: function, contains arg and var properties
- *                          pn_body: TOK_LC node for function body
- *                            NB: We define or create the function object at
- *                            parse (not emit) time, in order to specialize arg
- *                            and var bytecodes early.
+ *                            NB: We create the function object at parse (not
+ *                            emit) time, in order to specialize arg and var
+ *                            bytecodes early.
+ *                          pn_body: TOK_LC node for function body statements
  *                          pn_flags: TCF_FUN_* flags (see jsemit.h) collected
  *                            while parsing the function's body
  *                          pn_tryCount: of try statements in function
@@ -207,7 +207,7 @@ struct JSParseNode {
 	} name;
 	jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
-    JSParseNode         *pn_next;       /* here to align dval and pn_u on RISCs */
+    JSParseNode         *pn_next;       /* to align dval and pn_u on RISCs */
 };
 
 #define pn_fun          pn_u.func.fun
