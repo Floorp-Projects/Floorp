@@ -371,7 +371,7 @@
         <menuseparator/>
         <menuitem label="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   value="Helvetica, Arial, sans-serif" type="radio" name="2" />
         <menuitem label="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       value="Times New Roman, Times, serif" type="radio" name="2" />
-        <menuitem label="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     value="Courier New, Courier, mono" type="radio" name="2" />
+        <menuitem label="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     value="Courier New, Courier, monospace" type="radio" name="2" />
       </menupopup>
     </menu>
 
@@ -681,7 +681,7 @@
       <menuseparator/>
       <menuitem label="&fontHelveticaFont.label;" value="Helvetica, foo, sans-serif"/>
       <menuitem label="&fontTimes.label;"         value="Times New Roman, Times, serif"/>
-      <menuitem label="&fontCourier.label;"       value="Courier New, Courier, mono"/>
+      <menuitem label="&fontCourier.label;"       value="Courier New, Courier, monospace"/>
     </menupopup>
   </menulist>  
   
