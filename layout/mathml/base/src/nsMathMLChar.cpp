@@ -113,7 +113,7 @@ public:
 
   void GetFontName(nsString& aFontName)
   {
-    aFontName = mFontName;
+    aFontName.Assign(mFontName);
   }
 
   nsGlyphTable* GetNextTable(void)
@@ -504,12 +504,37 @@ nsGlyphTable(NS_TABLE_TYPE_UNICODE, "CMSY10",
              gGlyphCodeCMSY, sizeof(gGlyphCodeCMSY) / sizeof(gGlyphCodeCMSY[0]));
 
 // -----------------------------------------------------------------------------------
+// Data for strecthy chars that are supported by the Math4 font ----------------------
+
+static nsCharData gCharDataMath4[] = {
+#define WANT_MATH4_DATA
+#define WANT_CHAR_DATA
+   #include "nsMathMLCharList.h"
+#undef WANT_CHAR_DATA
+#undef WANT_MATH4_DATA
+};
+
+static nsGlyphCode gGlyphCodeMath4[] = {
+#define WANT_MATH4_DATA
+#define WANT_GLYPH_DATA
+   #include "nsMathMLCharList.h"
+#undef WANT_GLYPH_DATA
+#undef WANT_MATH4_DATA
+};
+
+nsGlyphTable gGlyphTableMath4 =
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, "Math4",
+             gCharDataMath4,  sizeof(gCharDataMath4)  / sizeof(gCharDataMath4[0]),
+             gGlyphCodeMath4, sizeof(gGlyphCodeMath4) / sizeof(gGlyphCodeMath4[0]));
+
+// -----------------------------------------------------------------------------------
 
 // All the glyph tables in order of preference ...
 nsGlyphTable* gAllGlyphTables[] = {
-  &gGlyphTableCMSY,
+  &gGlyphTableCMSY, // should be first to pick the single sqrt glyph therein
   &gGlyphTableCMEX,
   &gGlyphTableMTExtra,
+  &gGlyphTableMath4,
   &gGlyphTableSymbol,
 
   nsnull
@@ -579,6 +604,8 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
             mEnum = eMathMLChar_DONT_STRETCH;
           }
 #ifdef NS_DEBUG
+		  // hitting this assertion? 
+		  // check nsMathMLCharList to ensure that enum and Unicode (of size0) match in MATHML_CHAR(index, enum, ...)
           else NS_ASSERTION(mGlyphTable->Has(nsGlyphCode(mData[0])), "Something is wrong somewhere");
 #endif
         }
@@ -696,6 +723,32 @@ IsSizeBetter(nscoord a, nscoord olda, nscoord b, PRInt32 aHint)
   return PR_FALSE;
 }
 
+static PRBool
+FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  nsAutoString* familyList = (nsAutoString*)aData;
+  if (familyList->Find(aFamily, PR_TRUE) == kNotFound) {
+    familyList->Append(',');
+    // XXX could enclose in quotes if weird font problems develop
+    familyList->Append(aFamily);
+  }
+  return PR_TRUE; // don't stop
+}
+
+// re-order the font-family list of aFont to put aFamily in first position
+static void SetFirstFamily(nsFont& aFont, const nsString& aFamily)
+{
+  // put aFamily in first position
+  nsAutoString familyList(aFamily);
+  // XXX hack to force CMSY10 to be at least the second best choice !
+  if (!aFamily.EqualsIgnoreCase("CMSY10"))
+    familyList.Append(",CMSY10");
+  // loop over font-family: (skipping aFamily if present)
+  aFont.EnumerateFamilies(FontEnumCallback, &familyList);
+  // overwrite the old value of font-family:
+  aFont.name.Assign(familyList);
+}
+
 nsresult
 nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
@@ -715,8 +768,13 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
   ///////////////
   // Set font
+  nsAutoString fontName;
   nsStyleFont font;
   mStyleContext->GetStyle(eStyleStruct_Font, font);
+  if (mGlyphTable) {
+    mGlyphTable->GetFontName(fontName);
+    SetFirstFamily(font.mFont, fontName); // force precedence on this font
+  }
   aRenderingContext.SetFont(font.mFont);
 
   //////////////
@@ -800,9 +858,10 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   while (glyphTable && !sizeOK) {
     if (glyphTable->Has(mEnum) && glyphTable->BigOf(mEnum, 1)) {
       // see if this table has a glyph that matches the size
-#ifdef NOISY_SEARCH
-      nsAutoString fontName;
       glyphTable->GetFontName(fontName);
+      SetFirstFamily(font.mFont, fontName); // force precedence on this font
+      aRenderingContext.SetFont(font.mFont);
+#ifdef NOISY_SEARCH
       char str[50];
       fontName.ToCString(str, sizeof(str));
       printf("  searching in %s ...\n", str);
@@ -871,6 +930,9 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       glyphTable = gGlyphTableList.FirstTable();
       while (glyphTable) {
         if (glyphTable->Has(mEnum) && glyphTable->GlueOf(mEnum)) {
+          glyphTable->GetFontName(fontName);
+          SetFirstFamily(font.mFont, fontName); // force precedence on this font
+          aRenderingContext.SetFont(font.mFont);
           ch = glyphTable->GlueOf(mEnum);
           rv = glyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
           if (NS_SUCCEEDED(rv)) {
@@ -889,7 +951,6 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       }
 #ifdef NOISY_SEARCH
       if (gCharInfo[mEnum].mGlyphTable) {
-        nsAutoString fontName;
         gCharInfo[mEnum].mGlyphTable->GetFontName(fontName);
         char str[50];
         fontName.ToCString(str, sizeof(str));
@@ -899,7 +960,6 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     }
 #ifdef NOISY_SEARCH
     if (gCharInfo[mEnum].mGlyphTable) {
-      nsAutoString fontName;
       gCharInfo[mEnum].mGlyphTable->GetFontName(fontName);
       char str[50];
       fontName.ToCString(str, sizeof(str));
@@ -921,6 +981,9 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     // we are going to build by parts...
     // using the glyph table with the smallest glue
     glyphTable = gCharInfo[mEnum].mGlyphTable;
+    glyphTable->GetFontName(fontName);
+    SetFirstFamily(font.mFont, fontName); // force precedence on this font
+    aRenderingContext.SetFont(font.mFont);
 
     PRInt32 i;
 
@@ -1059,6 +1122,12 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     nsStyleFont font;
     mStyleContext->GetStyle(eStyleStruct_Font, font);
     aRenderingContext.SetColor(color.mColor);
+
+    if (mGlyphTable) {
+      nsAutoString fontName;
+      mGlyphTable->GetFontName(fontName);
+      SetFirstFamily(font.mFont, fontName); // force precedence on this font
+    }
     aRenderingContext.SetFont(font.mFont);
 
     // grab some metrics that will help to adjust the placements ...
