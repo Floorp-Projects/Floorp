@@ -65,7 +65,7 @@ pascal long BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, 
 long CallSystemWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
 #endif
 
-#define kWindowPositionSlop 10
+#define kWindowPositionSlop 20
 
 // еее TODO: these should come from the system, not be hard-coded. What if I'm running
 // an elaborate theme with wide window borders?
@@ -762,37 +762,50 @@ NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 
 	// Sanity check against screen size
 	// make sure the window stays visible
-	Rect screenRect;
-	::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
+	// get the window bounds
 	Rect portBounds;
 	::GetWindowPortBounds(mWindowPtr, &portBounds);
 	short pos;
 	short windowWidth = portBounds.right - portBounds.left;
 	short windowHeight = portBounds.bottom - portBounds.top;
 
-	/* heh. as far as I can tell, the window size is always zero when
-	   this function is called. that's annoying, but we can mostly deal.
-	   one bit of extra grief it causes is that the screenRect generally
-	   starts below the menubar, while the coordinate system does not.
-	   here, we assume no window will ever actually remain at 0 size,
-	   and give it an artificial size large enough that it won't run
-	   aground on the menubar. the size we give it is about titlebar
-	   size, anyway, so there's not much danger. */
-	if (windowHeight == 0)
-		windowHeight = 20;
+	// now get our playing field. use the current screen, or failing that for any reason,
+	// the GrayRgn (which of course is arguably more correct but has drawbacks as well)
+	Rect screenRect;
+	nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+	if (screenmgr) {
+		nsCOMPtr<nsIScreen> screen;
+		PRInt32 left, top, width, height, fullHeight;
+
+		// zero size rects can happen during window creation, and confuse
+		// the screen manager
+		width = windowWidth > 0 ? windowWidth : 1;
+		height = windowHeight > 0 ? windowHeight : 1;
+		screenmgr->ScreenForRect(*aX, *aY, width, height,
+		                        getter_AddRefs(screen));
+		if (screen) {
+			screen->GetAvailRect(&left, &top, &width, &height);
+			screen->GetRect(&left, &top, &width, &fullHeight);
+			screenRect.left = left;
+			screenRect.right = left+width;
+			screenRect.top = top;
+			screenRect.bottom = top+height;
+		}
+	} else
+		::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
 	pos = screenRect.left;
-	if (windowWidth > 0) // sometimes it isn't during window creation
-		pos -= windowWidth + kWindowPositionSlop;
+	if (windowWidth > kWindowPositionSlop)
+		pos -= windowWidth - kWindowPositionSlop;
 	if (*aX < pos)
 		*aX = pos;
 	else if (*aX >= screenRect.right - kWindowPositionSlop)
 		*aX = screenRect.right - kWindowPositionSlop;
 
 	pos = screenRect.top;
-	if (windowHeight > 0)
-		pos -= windowHeight + kWindowPositionSlop;
+	if (windowHeight > kWindowPositionSlop)
+		pos -= windowHeight - kWindowPositionSlop;
 	if (*aY < pos)
 		*aY = pos;
 	else if (*aY >= screenRect.bottom - kWindowPositionSlop)
