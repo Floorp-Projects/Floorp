@@ -54,11 +54,11 @@ DIRS =                         \
   db                           \
   dbm                          \
   modules\libutil              \
+  modules\zlib                 \
   security                     \
   netwerk                      \
   widget\timer                 \
   js                           \
-  modules\zlib                 \
   modules\libjar               \
   modules\libimg               \
   modules\libpref              \
