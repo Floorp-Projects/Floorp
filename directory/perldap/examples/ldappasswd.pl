@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: ldappasswd.pl,v 1.3 1998/07/30 09:22:15 leif Exp $
+# $Id: ldappasswd.pl,v 1.4 1998/07/30 09:52:19 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -63,6 +63,8 @@ do
   $new2 = Mozilla::LDAP::Utils::askPassword();
   print "Passwords didn't match, try again!\n\n" if ($new ne $new2);
 } until ($new eq $new2);
+print "\n";
+
 $crypted = Mozilla::LDAP::Utils::unixCrypt("$new");
 
 
@@ -83,11 +85,11 @@ foreach $search ($#ARGV >= $[ ? @ARGV : $ld{bind})
   while ($entry)
     {
       $entry->{userpassword} = ["{crypt}" . $crypted];
-      print "Updated: $entry->{dn}\n" if $opt_v;
+      print "Changing password for: $entry->{dn}\n" if $opt_v;
 
       if (!$opt_n)
 	{
-	  $conn->update($entry) unless $opt_n;
+	  $conn->update($entry);
 	  $conn->printError() if $conn->getError();
 	}
 
