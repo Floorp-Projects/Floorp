@@ -2209,8 +2209,8 @@ function EditorSetDefaultPrefsAndDoctype()
         element = domdoc.createElement("meta");
         if ( element )
         {
-          AddAttrToElem(domdoc, "http-equiv", "content-type", element);
-          AddAttrToElem(domdoc, "content", "text/html; charset=" + prefCharsetString, element);
+          element.setAttribute("http-equiv", "content-type");
+          element.setAttribute("content", "text/html; charset=" + prefCharsetString);
           headelement.appendChild( element );
         }
     }
@@ -2248,8 +2248,8 @@ function EditorSetDefaultPrefsAndDoctype()
         element = domdoc.createElement("meta");
         if ( element )
         {
-          AddAttrToElem(domdoc, "name", "author", element);
-          AddAttrToElem(domdoc, "content", prefAuthorString, element);
+          element.setAttribute("name", "author");
+          element.setAttribute("content", prefAuthorString);
           headelement.appendChild( element );
         }
       }
@@ -2324,16 +2324,6 @@ function GetBodyElement()
     //  better have one, how can we blow things up here?
   }
   return null;
-}
-
-function AddAttrToElem(dom, attr_name, attr_value, elem)
-{
-  var a = dom.createAttribute(attr_name);
-  if ( a )
-  {
-    a.value = attr_value;
-    elem.setAttributeNode(a);
-  }
 }
 
 // --------------------------- Logging stuff ---------------------------
@@ -2726,18 +2716,23 @@ function GetNumberOfContiguousSelectedRows()
 {
   if (!gIsHTMLEditor) return 0;
 
-  var cell = gEditor.getFirstSelectedCell();
+  var cellObj = new Object();
+  var rowObj = new Object();
+  var colObj = new Object();
+  gEditor.getFirstSelectedCellInTable(cellObj, rowObj, colObj);
+  var cell = cellObj.value;
   if (!cell)
     return 0;
 
   var rows = 1;
-  var lastIndex = gEditor.getRowIndex(cell);
+  var lastIndex = rowObj.value;
 
   do {
     cell = gEditor.getNextSelectedCell();
     if (cell)
     {
-      var index = gEditor.getRowIndex(cell);
+      gEditor.getCellIndexes(cell, rowObj, colObj);
+      var index = rowObj.value;
       if (index == lastIndex + 1)
       {
         lastIndex = index;
@@ -2754,18 +2749,23 @@ function GetNumberOfContiguousSelectedColumns()
 {
   if (!gIsHTMLEditor) return 0;
 
-  var cell = gEditor.getFirstSelectedCell();
+  var cellObj = new Object();
+  var colObj = new Object();
+  var rowObj = new Object();
+  gEditor.getFirstSelectedCellInTable(cellObj, rowObj, colObj);
+  var cell = cellObj.value;
   if (!cell)
     return 0;
 
   var columns = 1;
-  var lastIndex = gEditor.getColumnIndex(cell);
+  var lastIndex = colObj.value;
 
   do {
     cell = gEditor.getNextSelectedCell();
     if (cell)
     {
-      var index = gEditor.getColumnIndex(cell);
+      gEditor.getCellIndexes(cell, rowObj, colObj);
+      var index = colObj.value;
       if (index == lastIndex +1)
       {
         lastIndex = index;
