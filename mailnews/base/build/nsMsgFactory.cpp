@@ -49,6 +49,9 @@
 #include "nsMsgServerDataSource.h"
 #include "nsMsgIdentityDataSource.h"
 
+#ifdef DEBUG_bienvenu
+#include "nsMsgFilterService.h"
+#endif
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -77,6 +80,9 @@ static NS_DEFINE_CID(kMsgAccountDataSourceCID, NS_MSGACCOUNTDATASOURCE_CID);
 static NS_DEFINE_CID(kMsgIdentityDataSourceCID, NS_MSGIDENTITYDATASOURCE_CID);
 static NS_DEFINE_CID(kMsgServerDataSourceCID, NS_MSGSERVERDATASOURCE_CID);
 
+// search and filter stuff
+static NS_DEFINE_CID(kMsgSearchSessionCID, NS_MSGSEARCHSESSION_CID);
+static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -271,7 +277,11 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   else if (mClassID.Equals(kMsgServerDataSourceCID)) {
     rv = NS_NewMsgServerDataSource(aIID, aResult);
   }
-
+#ifdef DEBUG_bienvenu
+  else if (mClassID.Equals(kMsgFilterServiceCID)) {
+    rv = NS_NewMsgFilterService(aIID, aResult);
+  }
+#endif
   return rv;
 }  
 
