@@ -28,6 +28,7 @@
 #include "nsVoidArray.h"
 
 #include "Types.h"
+#include <UnicodeConverter.h>
 
 extern nsIMenuBar * gMacMenubar;
 
@@ -85,6 +86,9 @@ protected:
   // Mac Specific
   Handle      mMacMBarHandle;
   Handle      mOriginalMacMBarHandle;
+  UnicodeToTextRunInfo mUnicodeTextRunConverter;
+  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
+
 };
 
 #endif // nsMenuBar_h__
