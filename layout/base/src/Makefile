@@ -47,7 +47,7 @@ EXPORTS = \
 	nsSelectionPoint.h \
 	$(NULL)
 
-REQUIRES = xpcom raptor dom netlib
+REQUIRES = xpcom raptor dom netlib js
 
 include $(DEPTH)/config/config.mk
 
