@@ -103,6 +103,7 @@ function AddItem( aChildren, aProfileObject )
   var cell    = document.createElement("treecell");
   cell.setAttribute("value", aProfileObject.mName );
   cell.setAttribute("rowMigrate",  aProfileObject.mMigrated );
+  cell.setAttribute("class", "treecell-iconic");
   row.appendChild(cell);
   item.appendChild(row);
   item.setAttribute("profile_name", aProfileObject.mName );

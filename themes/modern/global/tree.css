@@ -119,10 +119,6 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow {
   border: 1px solid #AECDCD;
 }
 
-treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/closedtwisty-selected.gif");
-}
-
 .tree-cell-twisty:hover {
  text-decoration: none;
 }
@@ -138,11 +134,6 @@ treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
 treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
 }
-
-treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/opentwisty-selected.gif");
-}
-
 
 /* tree header with sort direction indicators */
 .sortDirectionIndicator[sortDirection="ascending"]  > .tree-header-sortdirection {

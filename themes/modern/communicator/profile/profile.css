@@ -34,8 +34,11 @@ window.dialog {
   color: #99cccc ! important;
 } 
 
-/** icon courtesy of chris nelson, chrisn@statecollege.com **/
-treeitem[rowMigrate="no"] > treerow > treecell > .tree-button {
+#profiles > treechildren > treeitem > treerow > treecell > .tree-cell-icon {
+  list-style-image: url("chrome://communicator/skin/profile/profileicon-large.gif");
+}
+
+#profiles > treechildren > treeitem > treerow > treecell[rowMigrate="no"] > .tree-cell-icon {
   list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
 }
 

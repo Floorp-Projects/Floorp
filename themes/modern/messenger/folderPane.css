@@ -24,7 +24,7 @@
  list-style-image: url("chrome://messenger/skin/folder-closed.gif");
 }
 
-treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon
 {
  list-style-image: url("chrome://messenger/skin/folder-open.gif");
 }
@@ -35,9 +35,49 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
  list-style-image: url("chrome://messenger/skin/folder-inbox.gif");
 }
 
+.folderTreeItem[selected="true"][SpecialFolder="Inbox"] > treerow > .tree-cell-folderpane-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-inbox-open.gif");
+}
+
+.tree-cell-folderpane-icon[SpecialFolder="Sent"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-sent.gif");
+}
+
+.folderTreeItem[selected="true"][SpecialFolder="Sent"] > treerow > .tree-cell-folderpane-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-sent-open.gif");
+}
+
+.tree-cell-folderpane-icon[SpecialFolder="Drafts"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-draft.gif");
+}
+
+.folderTreeItem[selected="true"][SpecialFolder="Drafts"] > treerow > .tree-cell-folderpane-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-draft-open.gif");
+}
+
+.tree-cell-folderpane-icon[SpecialFolder="Templates"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-template.gif");
+}
+
+.folderTreeItem[selected="true"][SpecialFolder="Templates"] > treerow > .tree-cell-folderpane-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-template-open.gif");
+}
+
 .tree-cell-folderpane-icon[SpecialFolder="Trash"]
 {
  list-style-image: url("chrome://messenger/skin/folder-trash.gif");
+}
+
+.folderTreeItem[selected="true"][SpecialFolder="Trash"] > treerow > .tree-cell-folderpane-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-trash-open.gif");
 }
 
 .tree-cell-folderpane-icon[IsServer="true"]
@@ -45,7 +85,7 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
  list-style-image: url("chrome://messenger/skin/server-mail.gif");
 }
 
-treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"]
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"]
 {
  list-style-image: url("chrome://messenger/skin/server-mail.gif");
 }
@@ -55,7 +95,7 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsSe
  list-style-image: url("chrome://messenger/skin/server-mail-new.gif");
 }
 
-treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"][IsServer="true"]
+treeitem[selected="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"][IsServer="true"]
 {
  list-style-image: url("chrome://messenger/skin/server-mail-new.gif");
 }
@@ -63,71 +103,55 @@ treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"
 /* differentiate new messages on inbox/folders from biff on the server */
 .tree-cell-folderpane-icon[NewMessages="true"]
 {
-    list-style-image: url("chrome://messenger/skin/folder-new-closed.gif");
-	font-weight: bold;
+  list-style-image: url("chrome://messenger/skin/folder-new.gif");
+  font-weight: bold;
 }
 
-.tree-cell-folderpane-icon[SpecialFolder="Inbox"][NewMessages="true"]
-{
- list-style-image: url("chrome://messenger/skin/folder-inbox-new.gif");
- font-weight: bold;
-}
-
-treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[NewMessages="true"]
+treeitem[selected="true"] > treerow > .tree-cell-folderpane-icon[NewMessages="true"]
 {
  list-style-image: url("chrome://messenger/skin/folder-new-open.gif");
  font-weight: bold;
 }
 
+.tree-cell-folderpane-icon[SpecialFolder="Inbox"][NewMessages="true"],
+treeitem[selected="true"] > treerow > .tree-cell-folderpane-icon[NewMessages="true"][SpecialFolder="Inbox"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-inbox-new.gif");
+ font-weight: bold;
+}
 
 /* IMAP folders */
 
-.tree-cell-folderpane-icon[IsServer="true"][ServerType="imap"][IsSecure="true"]
+.tree-cell-folderpane-icon[IsServer="true"][ServerType="imap"][IsSecure="true"],
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="imap"][IsSecure="true"]
 {
     list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
 }
 
-treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="imap"][IsSecure="true"]
-{
- list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
-}
-
 /* Local servers */
-.tree-cell-folderpane-icon[IsServer="true"][ServerType="none"] 
+.tree-cell-folderpane-icon[IsServer="true"][ServerType="none"],
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="none"]
 {
  list-style-image: url("chrome://messenger/skin/server-local.gif");
 }
-
-treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="none"]
-{
- list-style-image: url("chrome://messenger/skin/server-local.gif");
-}
-
 
 /* News folders */
-.tree-cell-folderpane-icon[ServerType="nntp"]
+.tree-cell-folderpane-icon[ServerType="nntp"],
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[ServerType="nntp"]
 {
     list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
 }
 
-.tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"][IsSecure="true"]
+.tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"][IsSecure="true"],
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"][IsSecure="true"]
 {
     list-style-image: url("chrome://messenger/skin/server-news-lock.gif");
 }
 
-treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"][IsSecure="true"]
-{
- list-style-image: url("chrome://messenger/skin/server-news-lock.gif");
-}
-
-.tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"] 
+.tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"],
+.folderTreeItem[selected="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"]
 {
     list-style-image: url("chrome://messenger/skin/server-news.gif");
-}
-
-treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon[IsServer="true"][ServerType="nntp"]
-{
- list-style-image: url("chrome://messenger/skin/server-news.gif");
 }
 
 /*All Servers*/

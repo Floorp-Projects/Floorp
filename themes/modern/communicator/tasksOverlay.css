@@ -23,6 +23,11 @@
 	  list-style-image      : url("chrome://global/skin/taskbar-mailnew.gif");
   }
 
+#mini-mail[BiffState="NewMail"]:hover:active
+  {
+	  list-style-image      : url("chrome://global/skin/taskbar-mailnew-clicked.gif");
+  }
+
 #mini-addr 
   {
 	  list-style-image      : url("chrome://global/skin/taskbar-addressbook.gif");

@@ -115,10 +115,12 @@ tree[class="abDirectory"] treeitem > treerow > treecell > .tree-cell-primary-ico
 	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
 }
 
+tree[class="abDirectory"] treeitem > treerow > treecell[IsMailList="true"] > .tree-cell-primary-icon {
+	list-style-image: url("chrome://messenger/skin/addressbook/list.gif");
+}
+
 tree[class="abResults"] treeitem > treerow > treecell.cardicon {
 	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
-	height: 14px;
-	min-height: 14px;
 }
 
 

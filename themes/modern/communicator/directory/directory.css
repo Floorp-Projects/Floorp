@@ -37,27 +37,14 @@
     list-style-image      : url("chrome://communicator/skin/directory/file-icon.gif");
   }  
   
-treeitem[selected="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-icon-sel.gif");
-  }
-  
 treeitem[container="true"] > treerow > .treecell-filename
   {
     list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed.gif");
-  }
-treeitem[container="true"][selected="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed-sel.gif");
   }
 
 treeitem[container="true"][open="true"] > treerow > .treecell-filename
   {
     list-style-image      : url("chrome://communicator/skin/directory/file-folder-open.gif");
-  }
-treeitem[container="true"][open="true"][selected="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-open-sel.gif");
   }
   
   

@@ -182,7 +182,7 @@
     }
 
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"],
-  .treeitem-bookmark[container="true"][open="true"]
+  .treeitem-bookmark[container="true"]
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
     }
@@ -212,11 +212,6 @@
       list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
     }
 
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#IEFavorite"]
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/iefavorite.gif");
-    }
-
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Bookmark"]
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
@@ -238,12 +233,6 @@
   .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"]
     {
       list-style-image    : url("chrome://communicator/skin/directory/file-icon.gif");
-    }
-
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"],
-  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"]
-    {
-	    list-style-image    : url("chrome://communicator/skin/bookmarks/iefolder.gif");
     }
 
 /**

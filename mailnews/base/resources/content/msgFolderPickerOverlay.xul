@@ -33,7 +33,7 @@ Rights Reserved.
         <template>
           <rule nc:CanCreateSubfolders="true" iscontainer="true" isempty="false">
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgNewFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -57,7 +57,7 @@ Rights Reserved.
 	  <!-- no subfolders for some inboxes -->	
 	  <rule nc:CanCreateSubfolders="false" iscontainer="true" isempty="true">
             <menupopup>
-                        <menuitem disabled="true" uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        <menuitem disabled="true" uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -66,7 +66,7 @@ Rights Reserved.
 	  </rule>
           <rule nc:CanCreateSubfolders="true">
             <menupopup>
-                        <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                        <menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgNewFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -83,7 +83,7 @@ Rights Reserved.
         <template>
           <rule nc:CanRename="true" iscontainer="true" isempty="false">
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgRenameFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -107,7 +107,7 @@ Rights Reserved.
 	  <rule nc:CanRename="false" iscontainer="true" isempty="false">
 	    <!-- note, there is no "file here" -->
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
                                 oncommand="PickedMsgFolder(event.target,'msgRenameFolderPicker')"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -121,7 +121,7 @@ Rights Reserved.
 		like TRASH and INBOX show up, but they are disabled -->
 	  <rule nc:CanRename="false" iscontainer="true" isempty="true">
             <menupopup>
-                        <menuitem disabled="true" uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        <menuitem disabled="true" uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -130,7 +130,7 @@ Rights Reserved.
           </rule>
           <rule nc:CanRename="true">
             <menupopup>
-                        <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                        <menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgRenameFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -147,7 +147,7 @@ Rights Reserved.
         <template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgFccFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -171,7 +171,7 @@ Rights Reserved.
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
 	    <!-- note, there is no "file here" -->
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
                                 oncommand="PickedMsgFolder(event.target,'msgFccFolderPicker')"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -183,7 +183,7 @@ Rights Reserved.
           </rule>
           <rule nc:CanFileMessages="true">
             <menupopup>
-                        <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                        <menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgFccFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -200,7 +200,7 @@ Rights Reserved.
         <template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgDraftsFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -224,7 +224,7 @@ Rights Reserved.
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
 	    <!-- note, there is no "file here" -->
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
                                 oncommand="PickedMsgFolder(event.target,'msgDraftsFolderPicker')"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -236,7 +236,7 @@ Rights Reserved.
           </rule>
           <rule nc:CanFileMessages="true">
             <menupopup>
-                        <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                        <menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgDraftsFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -253,7 +253,7 @@ Rights Reserved.
         <template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              <menu uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgStationeryFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -277,7 +277,7 @@ Rights Reserved.
 	  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
 	    <!-- note, there is no "file here" -->
             <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <menu uri="..." class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
                                 oncommand="PickedMsgFolder(event.target,'msgStationeryFolderPicker')"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -289,7 +289,7 @@ Rights Reserved.
           </rule>
           <rule nc:CanFileMessages="true">
             <menupopup>
-                        <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                        <menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgStationeryFolderPicker')"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
