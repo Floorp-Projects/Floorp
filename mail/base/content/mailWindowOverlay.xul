@@ -1590,7 +1590,7 @@
           <rule>
               <menupopup>
               <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
-                          oncommand="ShowWindowFromResource(event.target)"/>
+                          name="windowList" oncommand="ShowWindowFromResource(event.target)"/>
               </menupopup>
           </rule>
           </template>
