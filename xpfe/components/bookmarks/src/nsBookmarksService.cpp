@@ -79,41 +79,41 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIStreamListener.h"
 #include "nsIHTTPHeader.h"
 
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
+
 #define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
 // #define	DEBUG_BOOKMARK_PING_OUTPUT	1
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kBookmarksServiceCID,      NS_BOOKMARKS_SERVICE_CID);
-static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kGenericFactoryCID,        NS_GENERICFACTORY_CID);
-static NS_DEFINE_CID(kProfileCID,               NS_PROFILE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFContainerCID,          NS_RDFCONTAINER_CID);
-static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kBookmarksServiceCID,        NS_BOOKMARKS_SERVICE_CID);
+static NS_DEFINE_CID(kComponentManagerCID,        NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kGenericFactoryCID,          NS_GENERICFACTORY_CID);
+static NS_DEFINE_CID(kProfileCID,                 NS_PROFILE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 
 //static NS_DEFINE_CID(kNSCOMMONDIALOGSCID,       NS_CommonDialog_CID);
 //static NS_DEFINE_IID(kNSCOMMONDIALOGSIID,       NS_ICOMMONDIALOGS_IID);
-static NS_DEFINE_CID(kNetSupportDialogCID,      NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_CID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kAppShellCID,              NS_APPSHELL_CID);
-static NS_DEFINE_IID(kIAppShellIID,             NS_IAPPSHELL_IID);
-
-
-static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFIntIID,      NS_IRDFINT_IID);
-static NS_DEFINE_IID(kIRDFDateIID,     NS_IRDFDATE_IID);
+static NS_DEFINE_CID(kNetSupportDialogCID,        NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,         NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kAppShellCID,                NS_APPSHELL_CID);
+static NS_DEFINE_IID(kIAppShellIID,               NS_IAPPSHELL_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFIntIID,                 NS_IRDFINT_IID);
+static NS_DEFINE_IID(kIRDFDateIID,                NS_IRDFDATE_IID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
 static const char kURINC_PersonalToolbarFolder[] = "NC:PersonalToolbarFolder"; // XXX?
-
-static const char kPersonalToolbarFolder[]  = "Personal Toolbar Folder";
-
-static const char	kBookmarkCommand[] = "http://home.netscape.com/NC-rdf#bookmarkcommand?";
+static const char kPersonalToolbarFolder[]       = "Personal Toolbar Folder";
+static const char kBookmarkCommand[]             = "http://home.netscape.com/NC-rdf#bookmarkcommand?";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -272,10 +272,11 @@ class	nsBookmarksService;
  */
 class BookmarkParser {
 private:
-	nsInputFileStream      *mStream;
-	nsIRDFDataSource       *mDataSource;
-	const char             *mIEFavoritesRoot;
-	PRBool                 mFoundIEFavoritesRoot;
+	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
+	nsInputFileStream		*mStream;
+	nsIRDFDataSource		*mDataSource;
+	const char			*mIEFavoritesRoot;
+	PRBool				mFoundIEFavoritesRoot;
 
 friend	class nsBookmarksService;
 
@@ -287,6 +288,8 @@ protected:
 	static nsresult CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult);
 
 	nsresult Unescape(nsString &text);
+
+	nsresult ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder);
 
 	nsresult ParseBookmark(const nsString& aLine,
 			       nsCOMPtr<nsIRDFContainer>& aContainer,
@@ -385,6 +388,8 @@ static const char kCloseDL[]    = "</DL>";
 
 static const char kOpenDD[]     = "<DD>";
 
+static const char kOpenMeta[]   = "<META ";
+
 static const char kTargetEquals[]          = "TARGET=\"";
 static const char kAddDateEquals[]         = "ADD_DATE=\"";
 static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
@@ -397,6 +402,9 @@ static const char kPingLastModEquals[]     = "PING_LAST_MODIFIED=\"";
 static const char kPingContentLenEquals[]  = "PING_CONTENT_LEN=\"";
 static const char kPingStatusEquals[]      = "PING_STATUS=\"";
 static const char kIDEquals[]              = "ID=\"";
+static const char kContentEquals[]         = "CONTENT=\"";
+static const char kHTTPEquivEquals[]       = "HTTP-EQUIV=\"";
+static const char kCharsetEquals[]         = "charset=";		// note: no quote
 
 
 
@@ -429,7 +437,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 		while (PR_TRUE)
 		{
 			char	buf[256];
-			PRBool untruncated = in.readline(buf, sizeof(buf));
+			PRBool	untruncated = in.readline(buf, sizeof(buf));
 
 			// in.readline() return PR_FALSE if there was buffer overflow,
 			// or there was a catastrophe. Check to see if we're here
@@ -437,9 +445,52 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 			NS_ASSERTION (! in.failed(), "error reading file");
 			if (in.failed()) return NS_ERROR_FAILURE;
 
-			// XXX Bug 5871. What charset conversion should we be
-			// applying here?
-			line.Append(buf);
+			PRInt32			aLength;
+			if (untruncated)	aLength = strlen(buf);
+			else			aLength = sizeof(buf);
+
+			if (mUnicodeDecoder)
+			{
+				char			*aBuffer = buf;
+				PRInt32			unicharBufLen = 0;
+				mUnicodeDecoder->GetMaxLength(aBuffer, aLength, &unicharBufLen);
+				PRUnichar		*unichars = new PRUnichar [ unicharBufLen+1 ];
+				do
+				{
+					PRInt32		srcLength = aLength;
+					PRInt32		unicharLength = unicharBufLen;
+					rv = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
+					unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+
+					// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
+
+					// Hack Start
+					for(PRInt32 i=0;i<unicharLength;i++)
+						if(0x0000 == unichars[i])	unichars[i] = 0x0020;
+					// Hack End
+
+					line.Append(unichars, unicharLength);
+					// if we failed, we consume one byte by replace it with U+FFFD
+					// and try conversion again.
+					if(NS_FAILED(rv))
+					{
+						mUnicodeDecoder->Reset();
+						line.Append( (PRUnichar)0xFFFD);
+						if(((PRUint32) (srcLength + 1)) > aLength)
+							srcLength = aLength;
+						else 
+							srcLength++;
+						aBuffer += srcLength;
+						aLength -= srcLength;
+					}
+				} while (NS_FAILED(rv) && (aLength > 0));
+				delete [] unichars;
+				unichars = nsnull;
+			}
+			else
+			{
+				line.Append(buf, aLength);
+			}
 
 			if (untruncated)
 				break;
@@ -478,6 +529,10 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 		if ((offset = line.Find(kHREFEquals, PR_TRUE)) >= 0)
 		{
 			rv = ParseBookmark(line, container, nodeType, getter_AddRefs(bookmarkNode));
+		}
+		else if ((offset = line.Find(kOpenMeta, PR_TRUE)) >= 0)
+		{
+			rv = ParseMetaTag(line, getter_AddRefs(mUnicodeDecoder));
 		}
 		else if ((offset = line.Find(kOpenHeading, PR_TRUE)) >= 0 &&
 			 nsString::IsDigit(line.CharAt(offset + 2)))
@@ -557,6 +612,63 @@ BookmarkParser::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult)
 	uri.Append(++gNext, 16);
 
 	return gRDF->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(*aResult));
+}
+
+
+
+nsresult
+BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
+{
+	nsresult	rv = NS_OK;
+
+	*decoder = nsnull;
+
+	// get the HTTP-EQUIV attribute
+	PRInt32 start = aLine.Find(kHTTPEquivEquals, PR_TRUE);
+	NS_ASSERTION(start >= 0, "no 'HTTP-EQUIV=\"' string: how'd we get here?");
+	if (start < 0)	return(NS_ERROR_UNEXPECTED);
+	// Skip past the first double-quote
+	start += (sizeof(kHTTPEquivEquals) - 1);
+	// ...and find the next so we can chop the HTTP-EQUIV attribute
+	PRInt32 end = aLine.FindChar(PRUnichar('"'), PR_FALSE, start);
+	nsAutoString	httpEquiv;
+	aLine.Mid(httpEquiv, start, end - start);
+
+	// if HTTP-EQUIV isn't "Content-Type", just ignore the META tag
+	if (!httpEquiv.EqualsIgnoreCase("Content-Type"))
+		return(NS_OK);
+
+	// get the CONTENT attribute
+	start = aLine.Find(kContentEquals, PR_TRUE);
+	NS_ASSERTION(start >= 0, "no 'CONTENT=\"' string: how'd we get here?");
+	if (start < 0)	return(NS_ERROR_UNEXPECTED);
+	// Skip past the first double-quote
+	start += (sizeof(kContentEquals) - 1);
+	// ...and find the next so we can chop the CONTENT attribute
+	end = aLine.FindChar(PRUnichar('"'), PR_FALSE, start);
+	nsAutoString	content;
+	aLine.Mid(content, start, end - start);
+
+	// look for the charset value
+	start = content.Find(kCharsetEquals, PR_TRUE);
+	NS_ASSERTION(start >= 0, "no 'charset=' string: how'd we get here?");
+	if (start < 0)	return(NS_ERROR_UNEXPECTED);
+	start += (sizeof(kCharsetEquals)-1);
+	nsAutoString	charset;
+	content.Mid(charset, start, content.Length() - start);
+	if (charset.Length() < 1)	return(NS_ERROR_UNEXPECTED);
+
+	// found a charset, now try and get a decoder from it to Unicode
+	nsICharsetConverterManager	*charsetConv = nsnull;
+	rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+			nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
+			(nsISupports**)&charsetConv);
+	if (NS_SUCCEEDED(rv) && (charsetConv))
+	{
+		rv = charsetConv->GetUnicodeDecoder(&charset, decoder);
+		NS_RELEASE(charsetConv);
+	}
+	return(rv);
 }
 
 
@@ -3032,7 +3144,7 @@ nsBookmarksService::ReadBookmarks()
 {
 	nsresult rv;
 
-	nsFileSpec bookmarksFile;
+	nsFileSpec	bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
 
 	// Oh well, couldn't get the bookmarks file. Guess there
@@ -3247,6 +3359,10 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 		strm << "<!-- This is an automatically generated file.\n";
 		strm << "It will be read and overwritten.\n";
 		strm << "Do Not Edit! -->\n";
+
+		// Note: we write out bookmarks in UTF-8
+		strm << "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n";
+
 		strm << "<TITLE>Bookmarks</TITLE>\n";
 		strm << "<H1>Bookmarks</H1>\n\n";
 		
@@ -3315,7 +3431,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
 						{
 							nameString = title;
-							name = nameString.ToNewCString();
+							name = nameString.ToNewUTF8String();
 						}
 					}
 				}
