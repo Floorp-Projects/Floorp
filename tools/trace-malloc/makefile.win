@@ -25,16 +25,24 @@ REQUIRES=xpcom
 
 include <$(DEPTH)\config\config.mak>
 
-PROGRAMS=.\$(OBJDIR)\bloatblame.exe
+MAKE_OBJ_TYPE=EXE
+PROGRAM=.\$(OBJDIR)\bloatblame.exe
 
-CPP_OBJS=.\$(OBJDIR)\tmreader.obj
+CPP_OBJS=.\$(OBJDIR)\tmreader.obj .\$(OBJDIR)\bloatblame.obj
+
+LINCS=\
+	-I$(DEPTH)\config\os2 \
+	$(NULL)
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib \
     $(LIBNSPR) \
-	$(OBJDIR)\tmreader.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(OBJDIR) $(CPP_OBJS) $(PROGRAMS)
+$(PROGRAM):: $(OBJDIR)
+
+install:: $(PROGRAM)
+	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+

@@ -40,9 +40,13 @@
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #else
+#ifdef XP_WIN
+#include "getopt.c"
+#else
 extern int  getopt(int argc, char *const *argv, const char *shortopts);
 extern char *optarg;
 extern int  optind;
+#endif
 #endif
 #include <math.h>
 #include <time.h>
