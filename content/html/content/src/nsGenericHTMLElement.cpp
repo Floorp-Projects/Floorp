@@ -3240,6 +3240,9 @@ nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
 void
 nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
 {
+  // If we do any finding of the form, we need to do it after we've
+  // called SetParent on the superclass.
+  PRBool findForm = PR_FALSE;
   if (!aParent && mForm) {
     SetForm(nsnull);
   } else if (aParent && (GetParent() || !mForm)) {
@@ -3248,11 +3251,14 @@ nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
     // have an old parent, but we do have a form, we shouldn't do the
     // search. In this case, someone (possibly the content sink) has
     // already set the form for us.
-
-    FindAndSetForm();
+    findForm = PR_TRUE;
   }
 
   nsGenericHTMLElement::SetParent(aParent);
+
+  if (findForm) {
+    FindAndSetForm();
+  }
 }
 
 void
