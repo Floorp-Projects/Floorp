@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.78 $ ';
+$::Version = '$Revision: 1.79 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -438,20 +438,22 @@ sub file_has_token {
 
 sub kill_process {
     my ($target_pid) = @_;
-    my $status;
-    
-    # Try to kill 3 times, then try a kill -9
-    for (my $ii=0; $ii < 3; $ii++) {
-        kill 'TERM' => $target_pid;
-        sleep 3;  # Give it 3 seconds to actually die
-        my $pid = waitpid($target_pid, WNOHANG());
-        return if ($pid == $target_pid and WIFEXITED($?)) or $pid == -1;
-    }
-    for (my $ii=0; $ii < 3; $ii++) {
-        kill 'KILL' => $target_pid;
-        sleep 2;  # Give it 2 second to actually die
-        my $pid = waitpid($target_pid, WNOHANG());
-        return if ($pid == $target_pid and WIFEXITED($?)) or $pid == -1;
+    my $start_time = time;
+
+    # Try to kill and wait 10 seconds, then try a kill -9
+    for my $sig ('TERM', 'KILL') {
+        kill $sig => $target_pid;
+        my $interval_start = time;
+        while (time - $interval_start < 10) {
+            my $pid = waitpid($target_pid, WNOHANG());
+            if (($pid == $target_pid and WIFEXITED($?)) or $pid == -1) {
+                my $secs = time - $start_time;
+                $secs = $secs == 1 ? '1 second' : "$secs seconds";
+                print_log "Process killed. Took $secs to die.\n";
+                return;
+            }
+            sleep 1;
+        }
     }
     die "Unable to kill process: $target_pid";
 }
