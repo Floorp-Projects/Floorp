@@ -6035,8 +6035,11 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     // post a dirty children reflow command targeted at yourself
     mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
+#ifndef XP_MAC
     nsFrame::CreateAndPostReflowCommand(aPresShell, this, 
       nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
+#endif
+
   }
   else {
     if (!(mState & NS_FRAME_IS_DIRTY)) {
