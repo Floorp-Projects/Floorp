@@ -34,11 +34,14 @@
 #include "nsIURL.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsIDocumentViewer.h"
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMailboxService.h"
 #include "nsFileSpec.h"
+
+#include "nsIPop3Service.h"
 
 #include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
 
@@ -51,8 +54,9 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
-
+static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 
 NS_BEGIN_EXTERN_C
 
@@ -144,6 +148,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
 	nsresult res = NS_OK;
+  // This changes a charset of messenger's .xul.
 	if (nsnull != mWindow) 
 	{
 		nsIDOMDocument* domDoc;
@@ -166,6 +171,24 @@ nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset)
 			NS_RELEASE(domDoc);
 		}
 	}
+  // This changes a charset of nsIDocument for the message view.
+  if (nsnull != mWebShell) {
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    if (NS_SUCCEEDED(res = mWebShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
+      nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer, &res));
+      if (NS_SUCCEEDED(res)) {
+        // Get the document object
+        nsCOMPtr<nsIDocument> doc;
+        if (NS_SUCCEEDED(res = docViewer->GetDocument(*getter_AddRefs(doc)))) {
+          nsString *aNewCharset = new nsString(aCharset);
+          if (nsnull != aNewCharset) 
+          {
+            doc->SetDocumentCharacterSet(aNewCharset);
+          }
+        }
+      }
+    }
+  }
 	return res;
 }
 
@@ -319,6 +342,15 @@ nsresult
 nsMsgAppCore::GetNewMail()
 {
   printf("nsMsgAppCore::GetNewMail()\n");
+  // get the pop3 service and ask it to fetch new mail....
+  nsIPop3Service * pop3Service = nsnull;
+  nsresult rv = nsServiceManager::GetService(kCPop3ServiceCID, nsIPop3Service::GetIID(),
+                                      (nsISupports **) &pop3Service);
+  if (NS_SUCCEEDED(rv) && pop3Service)
+	  pop3Service->GetNewMail(nsnull,nsnull);
+
+  nsServiceManager::ReleaseService(kCPop3ServiceCID, pop3Service);
+
   return NS_OK;
 }
                               
