@@ -108,6 +108,7 @@ private:
 
 
 	static void closeRdfView_cb(Widget, XtPointer, XtPointer);
+    static void RDFImage_complete_cb(XtPointer);
 
     // Create widgets
     void createControlToolbar();

@@ -28,6 +28,7 @@
 #include "xpgetstr.h"
 #include "felocale.h"
 #include "intl_csi.h"
+//#include "RDFImage.h" 
 
 #include <XmL/Tree.h>
 #include <Xfe/Button.h>
@@ -338,7 +339,7 @@ XFE_RDFChromeTreeView::createHtmlPane(char * url)
     fe_InitColormap(context);
 
 
-	_htmlPane = new XFE_HTMLView(this,
+	_htmlPane = new XFE_HTMLView(m_toplevel,
 								 _htmlPaneForm,
 								 this,
 								 context);
@@ -507,9 +508,33 @@ XFE_RDFChromeTreeView::setHTTitlebarProperties(HT_View view)
 
    /* titleBarBGURL */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &data);
+   if (!data)
+     data = "http://people.netscape.com/radha/sony/grn005.gif";
     if (data)
     {
-       /* Do the RDFImage thing */
+
+       XFE_RDFImage   * rdfImage = NULL;
+       Pixmap       image=(Pixmap)NULL, mask=(Pixmap)NULL;
+
+       rdfImage = XFE_RDFImage::isImageAvailable((char *)data);
+       if (rdfImage) {
+          image = rdfImage->getPixmap();
+          mask = rdfImage->getMask();
+         XtSetArg(av[ac], XmNbackgroundPixmap, image); ac++;  
+  }
+  else {
+    //  Create  the image object and register callback
+
+    rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, 
+                                (char *)data,
+                                CONTEXT_DATA(getContext())->colormap,
+                                _viewLabel);
+
+    rdfImage->setCompleteCallback((completeCallbackPtr)RDFImage_complete_cb,
+                                  (void *) _viewLabel);
+    rdfImage->loadImage();
+  }
+
 
     }
 
@@ -529,7 +554,8 @@ XFE_RDFChromeTreeView::setHTControlbarProperties(HT_View view)
    ////////////////  CONTROLBAR PROPERTIES   ///////////////////
 
    ac = 0;
-   /* titleBarFGColor */
+
+   /* controlStripFGColor */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->controlStripFGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
@@ -538,7 +564,7 @@ XFE_RDFChromeTreeView::setHTControlbarProperties(HT_View view)
          XtSetArg(av[ac], XmNforeground, pixel); ac++;
    }
 
-   /* titleBarBGColor */
+   /* controlStripBGColor */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->controlStripBGColor, HT_COLUMN_STRING, &data);
    if (data)
    {
@@ -547,21 +573,40 @@ XFE_RDFChromeTreeView::setHTControlbarProperties(HT_View view)
          XtSetArg(av[ac], XmNbackground, pixel); ac++;
    }
 
-   /* titleBarBGURL */
+   /* controlStripBGURL */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->controlStripBGURL, HT_COLUMN_STRING, &data);
+   if (!data)
+     data = "http://people.netscape.com/radha/sony/grn005.gif";
     if (data)
     {
-       /* Do the RDFImage thing */
+
+        XFE_RDFImage   * rdfImage = NULL;
+        Pixmap       image=(Pixmap)NULL, mask=(Pixmap)NULL;
+
+        rdfImage = XFE_RDFImage::isImageAvailable((char *)data);
+        if (rdfImage) {
+           image = rdfImage->getPixmap();
+           mask = rdfImage->getMask();
+           XtSetArg(av[ac], XmNbackgroundPixmap, image); 
+           ac++;  
+        }
+        else {
+         //  Create  the image object and register callback
+
+          rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, 
+                                (char *)data,
+                                CONTEXT_DATA(getContext())->colormap,
+                                _controlToolBar);
+
+          rdfImage->setCompleteCallback((completeCallbackPtr)RDFImage_complete_cb,
+                                  (void *) _controlToolBar);
+          rdfImage->loadImage();
+        }
 
     }
     XtSetValues(_controlToolBar, av, ac);
 
 
-    MWContext * context = getContext();
-    INTL_CharSetInfo charSetInfo =
-            LO_GetDocumentCharacterSetInfo(context);
-    XmString str= NULL;
-    XmFontList    font_list;
      
 #ifdef NOT_YET
    /* controlStripAddText */
@@ -588,6 +633,14 @@ XFE_RDFChromeTreeView::setHTControlbarProperties(HT_View view)
    }
 
 #endif
+    /* Get the charset info ready to set labels strings for buttons */
+
+    MWContext * context = getContext();
+    INTL_CharSetInfo charSetInfo =
+            LO_GetDocumentCharacterSetInfo(context);
+    XmString str= NULL;
+    XmFontList    font_list;
+
    /* controlStripCloseText */
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->controlStripCloseText, HT_COLUMN_STRING, &data);
    if (data)
@@ -646,4 +699,16 @@ htmlPaneExposeEH(Widget w, XtPointer clientData, XEvent * event, Boolean* contin
     }
 
 }  /* htmlPaneExposeEH  */
+//////////////////////////////////////////////////////////////////////////
+/*static*/ void
+XFE_RDFChromeTreeView::RDFImage_complete_cb(XtPointer client_data)
+{
+     callbackClientData * cb = (callbackClientData *) client_data;
+     Widget w = (Widget )cb->widget;
 
+
+     XtVaSetValues(w, 
+				   XmNbackgroundPixmap, cb->image, 
+                   NULL);
+     XP_FREE(cb);
+}
