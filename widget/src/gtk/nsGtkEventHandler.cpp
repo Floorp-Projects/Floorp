@@ -330,6 +330,7 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
   InitMouseEvent(event, p, mevent, b);
 
   nsWindow *win = (nsWindow *)p;
+  win->DispatchMouseEvent(mevent);
 
   return PR_FALSE;
 }
