@@ -130,9 +130,3 @@ Bugzilla.pm
     a reorganization which moves CGI-specific code to a subdirectory,
     Bugzilla.pm should go with it.
 
-$::COOKIE
-
-    There are still instances of use of $::COOKIE to obtain Logincookie
-    information; these should be removed as well.
-
-

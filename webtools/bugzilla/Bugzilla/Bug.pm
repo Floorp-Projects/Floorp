@@ -387,32 +387,32 @@ sub user {
     my $self = shift;
     return $self->{'user'} if exists $self->{'user'};
 
-    $self->{'user'} = {};
+    use Bugzilla;
 
-    my $movers = Param("movers");
-    $movers =~ s/\s?,\s?/|/g;
-    $movers =~ s/@/\@/g;
-    $self->{'user'}->{'canmove'} = Param("move-enabled") 
-      && (defined $::COOKIE{"Bugzilla_login"}) 
-        && ($::COOKIE{"Bugzilla_login"} =~ /$movers/);
+    my @movers = map { trim $_ } split(",", Param("movers"));
+    my $canmove = Param("move-enabled") && Bugzilla->user && 
+                  (lsearch(\@movers, Bugzilla->user->login) != -1);
 
-    # In the below, if the person hasn't logged in ($::userid == 0), then
-    # we treat them as if they can do anything.  That's because we don't
-    # know why they haven't logged in; it may just be because they don't
-    # use cookies.  Display everything as if they have all the permissions
-    # in the world; their permissions will get checked when they log in
-    # and actually try to make the change.
-    $self->{'user'}->{'canedit'} = $::userid == 0
-                                   || $::userid == $self->{'reporter'}{'id'}
-                                   || (Param('useqacontact') && $self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
-                                   || $::userid == $self->{'assigned_to'}{'id'}
-                                   || &::UserInGroup("editbugs");
-    $self->{'user'}->{'canconfirm'} = $::userid == 0
-                                   || ($self->{'qa_contact'} && $::userid == $self->{'qa_contact'}{'id'})
-                                   || $::userid == $self->{'assigned_to'}{'id'}
-                                   || &::UserInGroup("editbugs")
-                                   || &::UserInGroup("canconfirm");
+    # In the below, if the person hasn't logged in, then we treat them
+    # as if they can do anything.  That's because we don't know why they
+    # haven't logged in; it may just be because they don't use cookies.
+    # Display everything as if they have all the permissions in the
+    # world; their permissions will get checked when they log in and
+    # actually try to make the change.
+    my $privileged = (!Bugzilla->user)
+                     || Bugzilla->user->in_group("editbugs")
+                     || Bugzilla->user->id == $self->{'assigned_to'}{'id'}
+                     || (Param('useqacontact') && $self->{'qa_contact'} &&
+                         Bugzilla->user->id == $self->{'qa_contact'}{'id'});
+    my $isreporter = Bugzilla->user && 
+                     Bugzilla->user->id == $self->{'reporter'}{'id'};
 
+    my $canedit = $privileged || $isreporter;
+    my $canconfirm = $privileged || Bugzilla->user->in_group("canconfirm");
+
+    $self->{'user'} = {canmove    => $canmove, 
+                       canconfirm => $canconfirm, 
+                       canedit    => $canedit,};
     return $self->{'user'};
 }
 

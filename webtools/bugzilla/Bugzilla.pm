@@ -87,13 +87,10 @@ sub logout_user_by_id {
 # hack that invalidates credentials for a single request
 sub logout_request {
     undef $_user;
+    # XXX clean this up eventually
     $::userid = 0;
-    # XXX clean these up eventually
-    delete $::COOKIE{"Bugzilla_login"};
-    # NB - Can't delete from $cgi->cookie, so the logincookie data will
-    # remain there; it's only used in Bugzilla::Auth::CGI->logout anyway
-    # People shouldn't rely on the cookie param for the username
-    # - use Bugzilla->user instead!
+    # We can't delete from $cgi->cookie, so logincookie data will remain
+    # there. Don't rely on it: use Bugzilla->user->login instead!
 }
 
 my $_dbh;

@@ -421,10 +421,6 @@ foreach my $name ($::cgi->param()) {
 
 $::buffer = $::cgi->query_string();
 
-foreach my $name ($::cgi->cookie()) {
-    $::COOKIE{$name} = $::cgi->cookie($name);
-}
-
 # This could be needed in any CGI, so we set it here.
 $vars->{'help'} = $::cgi->param('help') ? 1 : 0;
 
