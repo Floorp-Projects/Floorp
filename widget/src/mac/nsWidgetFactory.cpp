@@ -40,7 +40,6 @@
 #include "nsMenuBar.h"
 #include "nsMenu.h"
 #include "nsMenuItem.h"
-#include "nsContextMenu.h"
 
 #include "nsClipboard.h"
 #include "nsTransferable.h"
@@ -87,7 +86,6 @@ static NS_DEFINE_CID(kCLabel,         NS_LABEL_CID);
 static NS_DEFINE_CID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_CID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_CID(kCMenuItem,      NS_MENUITEM_CID);
-static NS_DEFINE_CID(kCContextMenu,   NS_CONTEXTMENU_CID);
 static NS_DEFINE_CID(kCPopUpMenu,     NS_POPUPMENU_CID);
 
 // Drag and Drop/Clipboard
@@ -235,9 +233,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCMenuItem)) {
         inst = (nsISupports*)(nsIMenuItem*) new nsMenuItem();
-    }
-    else if (mClassID.Equals(kCContextMenu)) {
-        inst = (nsISupports*)(nsIContextMenu*) new nsContextMenu();
     }
     else if (mClassID.Equals(kCPopUpMenu)) {
  //       inst = (nsISupports*)new nsPopUpMenu();

@@ -33,6 +33,7 @@ class nsIMenuBar;
 class nsIMenu;
 class nsIMenuItem;
 class nsIMenuListener;
+class nsIChangeManager;
 
 // {35A3DEC1-4992-11d2-8DBA-00609703C14E}
 #define NS_IMENU_IID      \
@@ -52,7 +53,8 @@ class nsIMenu : public nsISupports {
     * Creates the Menu
     *
     */
-    NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel) = 0;
+    NS_IMETHOD Create ( nsISupports * aParent, const nsString &aLabel, const nsString &aAccessKey, 
+                          nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) = 0;
 
    /**
     * Get the Menu's Parent
@@ -169,28 +171,11 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
 
    /**
-    * Set DOMNode
-    *
-    */
-    NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode) = 0;
-
-   /**
     * Get DOMNode
     *
     */
     NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode) = 0;
     
-	/**
-    * Set DOMElement
-    *
-    */
-    NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement) = 0;
-
-	/**
-    * Set WebShell
-    *
-    */
-    NS_IMETHOD SetWebShell(nsIWebShell * aWebShell) = 0;
 };
 
 #endif

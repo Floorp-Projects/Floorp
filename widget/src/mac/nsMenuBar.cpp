@@ -25,6 +25,7 @@
 #include "nsIComponentManager.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
+#include "nsIContent.h"
 
 #include "nsMenuBar.h"
 #include "nsDynamicMDEF.h"
@@ -34,6 +35,10 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 #include "nsIStringBundle.h"
+#include "nsIDocument.h"
+#include "nsIDocShell.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDocumentObserver.h"
 
 #include "nsIDOMXULDocument.h"
 
@@ -83,23 +88,13 @@ static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-void InstallDefProc(
-  short dpPath, 
-  ResType dpType, 
-  short dpID, 
-  Ptr dpAddr);
-  
-//-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS2(nsMenuBar, nsIMenuBar, nsIMenuListener)
+void InstallDefProc( short dpPath, ResType dpType, short dpID, Ptr dpAddr);
 
-//-------------------------------------------------------------------------
-//
-// nsMenuListener interface
-//
-//-------------------------------------------------------------------------
+NS_IMPL_ISUPPORTS4(nsMenuBar, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, nsIChangeManager)
 
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+
+nsEventStatus 
+nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
   // Dispatch menu event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
@@ -118,8 +113,9 @@ nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   return eventStatus;
 }
 
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
+
+nsEventStatus 
+nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   // Dispatch event
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
@@ -156,18 +152,47 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   return eventStatus;
 }
 
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
+
+nsEventStatus 
+nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuConstruct(
-  const nsMenuEvent & aMenuEvent,
-  nsIWidget         * aParentWindow, 
-  void              * menubarNode,
-	void              * aWebShell)
+
+//
+// RegisterAsDocumentObserver
+//
+// Name says it all.
+//
+void
+nsMenuBar :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
+{
+  nsCOMPtr<nsIDocShell> docShell ( do_QueryInterface(inWebShell) );
+  nsCOMPtr<nsIContentViewer> cv;
+  docShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+   
+    // get the document
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+    if (!docv)
+      return;
+    nsCOMPtr<nsIDocument> doc;
+    docv->GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      return;
+
+    // register ourselves
+    nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
+    doc->AddObserver(observer);
+  }
+
+} // RegisterAsDocumentObesrver
+
+
+nsEventStatus
+nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
+                            void * menubarNode, void * aWebShell )
 {
   mWebShell = (nsIWebShell*) aWebShell;
   NS_ADDREF(mWebShell);
@@ -246,8 +271,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
 		::InsertMenu(gLevel5HierMenu, hierMenu);
 	}
     
-  nsresult rv;
   pnsMenuBar->Create(aParentWindow);
+  RegisterAsDocumentObserver ( mWebShell );
       
   // set pnsMenuBar as a nsMenuListener on aParentWindow
   nsCOMPtr<nsIMenuListener> menuListener;
@@ -272,25 +297,14 @@ nsEventStatus nsMenuBar::MenuConstruct(
 			  
         // Don't create the whole menu yet, just add in the top level names
               
-        // Create nsMenu
-        nsIMenu * pnsMenu = nsnull;
-        rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
-        if (NS_OK == rv) {
-          // Call Create
-          nsISupports * supports = nsnull;
-          pnsMenuBar->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
-          pnsMenu->Create(supports, menuName);
-          NS_RELEASE(supports);
+        // Create nsMenu, the menubar will own it
+        nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );
+        if ( pnsMenu ) {
+          nsCOMPtr<nsISupports> supports ( do_QueryInterface(pnsMenuBar) );
+          nsCOMPtr<nsIChangeManager> manager ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
+          pnsMenu->Create(supports, menuName, menuAccessKey, manager, 
+                            NS_REINTERPRET_CAST(nsIWebShell*, aWebShell), menuNode);
 
-		      // Set JavaScript execution parameters
-			    pnsMenu->SetDOMNode(menuNode);
-			    pnsMenu->SetDOMElement(menuElement);
-			    pnsMenu->SetWebShell((nsIWebShell*)aWebShell);
-
-          // Set nsMenu Name
-          pnsMenu->SetLabel(menuName); 
-			    // Set the access key
-				  pnsMenu->SetAccessKey(menuAccessKey);
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
           pnsMenuBar->AddMenu(pnsMenu); 
                   
@@ -305,10 +319,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
             event.mCommand = (unsigned int) handle;
             nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
             listener->MenuSelected(event);
-          }
-          
-          // Release the menu now that the menubar owns it
-          NS_RELEASE(pnsMenu);
+          }          
         }
       } 
     }
@@ -328,18 +339,18 @@ nsEventStatus nsMenuBar::MenuConstruct(
   return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
+
+nsEventStatus 
+nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
+
 //
 // nsMenuBar constructor
 //
-//-------------------------------------------------------------------------
-nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
+nsMenuBar :: nsMenuBar()
 {
   gCurrentMenuDepth = 1;
 #if !TARGET_CARBON
@@ -375,12 +386,11 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   NS_ASSERTION(err==noErr,"nsMenu::nsMenu: CreateUnicodeToTextRunInfoByScriptCode failed.");
 }
 
-//-------------------------------------------------------------------------
+
 //
 // nsMenuBar destructor
 //
-//-------------------------------------------------------------------------
-nsMenuBar::~nsMenuBar()
+nsMenuBar :: ~nsMenuBar()
 {
   //NS_IF_RELEASE(mParent);
 
@@ -393,10 +403,10 @@ nsMenuBar::~nsMenuBar()
   OSErr err = ::DisposeUnicodeToTextRunInfo(&mUnicodeTextRunConverter);
   NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	 
 
-  ::SetMenuBar(mOriginalMacMBarHandle);
   ::DisposeHandle(mMacMBarHandle);
   ::DisposeHandle(mOriginalMacMBarHandle);
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -503,8 +513,10 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   
   return NS_OK;
 }
-//-------------------------------------------------------------------------
-void nsMenuBar::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString)
+
+
+void 
+nsMenuBar::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString)
 {
 	OSErr					err;
 	const PRUnichar*		unicodeText;
@@ -671,3 +683,205 @@ void InstallDefProc(
 
 	HLockHi((Handle)jH);
 }
+
+
+#pragma mark -
+
+//
+// nsIDocumentObserver
+// this is needed for menubar changes
+//
+
+
+NS_IMETHODIMP
+nsMenuBar::BeginUpdate( nsIDocument * aDocument )
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::EndUpdate( nsIDocument * aDocument )
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::BeginLoad( nsIDocument * aDocument )
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::EndLoad( nsIDocument * aDocument )
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::BeginReflow(  nsIDocument * aDocument, nsIPresShell * aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::EndReflow( nsIDocument * aDocument, nsIPresShell * aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsISupports * aSubContent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1, nsIContent  * aContent2)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
+                              PRInt32 aNewIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::ContentInserted( nsIDocument * aDocument, nsIContent  * aContainer,
+                          nsIContent  * aChild, PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::ContentReplaced( nsIDocument * aDocument, nsIContent * aContainer, nsIContent * aOldChild,
+                          nsIContent * aNewChild, PRInt32 aIndexInContainer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::StyleSheetAdded( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::StyleSheetRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::StyleSheetDisabledStateChanged(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
+                                            PRBool aDisabled)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::StyleRuleChanged( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
+                              nsIStyleRule * aStyleRule, PRInt32 aHint)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::StyleRuleAdded( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
+                            nsIStyleRule * aStyleRule)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::StyleRuleRemoved(nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
+                              nsIStyleRule  * aStyleRule)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::DocumentWillBeDestroyed( nsIDocument * aDocument )
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMenuBar::AttributeChanged( nsIDocument * aDocument, nsIContent * aContent, PRInt32 aNameSpaceID,
+                              nsIAtom * aAttribute, PRInt32 aHint)
+{
+  // lookup and dispatch to registered thang.
+  nsCOMPtr<nsIChangeObserver> obs;
+  Lookup ( aContent, getter_AddRefs(obs) );
+  if ( obs )
+    obs->AttributeChanged ( aDocument, aNameSpaceID, aAttribute, aHint );
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBar::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
+                            nsIContent * aChild, PRInt32 aIndexInContainer )
+{  
+  nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
+  if ( aContainer == me.get() ) {
+    Unregister(aChild);
+    RemoveMenu ( aIndexInContainer );
+  }
+  else {
+    nsCOMPtr<nsIChangeObserver> obs;
+    Lookup ( aContainer, getter_AddRefs(obs) );
+    if ( obs )
+      obs->ContentRemoved ( aDocument, aChild, aIndexInContainer );
+  }
+  return NS_OK;
+}
+
+
+#pragma mark - 
+
+//
+// nsIChangeManager
+//
+// We don't use a |nsSupportsHashtable| because we know that the lifetime of all these items
+// is bouded by the lifetime of the menubar. No need to add any more strong refs to the
+// picture because the containment hierarchy already uses strong refs.
+//
+
+NS_IMETHODIMP 
+nsMenuBar :: Register ( nsIContent *aContent, nsIChangeObserver *aMenuObject )
+{
+  nsVoidKey key ( aContent );
+  mObserverTable.Put ( &key, aMenuObject );
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsMenuBar :: Unregister ( nsIContent *aContent )
+{
+  nsVoidKey key ( aContent );
+  mObserverTable.Remove ( &key );
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsMenuBar :: Lookup ( nsIContent *aContent, nsIChangeObserver **_retval )
+{
+  *_retval = nsnull;
+  
+  nsVoidKey key ( aContent );
+  *_retval = NS_REINTERPRET_CAST(nsIChangeObserver*, mObserverTable.Get(&key));
+  NS_IF_ADDREF ( *_retval );
+  
+  return NS_OK;
+}
+
+
+

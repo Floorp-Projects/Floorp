@@ -43,7 +43,7 @@ RoutineDescriptorPtr gmdefUPP;
 nsVoidArray gPreviousMenuHandleStack;
 nsVoidArray gPreviousMenuStack; // Strong references kept!
 
-nsIMenuBar * gCachedMacMenubar;
+nsCOMPtr<nsIMenuBar> gPreviousMenuBar;
 
 MenuHandle gSizedMenu = nsnull;
 
@@ -333,8 +333,8 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
 	  menubar->GetMenuCount(numMenus);
 	  numMenus--;
 	  for(PRInt32 i = numMenus; i >= 0; i--) {
-	    nsIMenu * menu = nsnull;
-	    menubar->GetMenuAt(i, menu);
+	    nsCOMPtr<nsIMenu> menu;
+	    menubar->GetMenuAt(i, *getter_AddRefs(menu));
 	    if(menu) {
 	        nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
 	        if(listener) {
@@ -343,16 +343,15 @@ void nsBuildMenu(MenuHandle theMenu, PRBool isChild)
 	          nsEventStatus status = listener->MenuSelected(mevent);
 	          if(status != nsEventStatus_eIgnore) {
 	            
-                nsPostBuild(menu, theMenu, isChild);
+              nsPostBuild(menu, theMenu, isChild);
 	            gPreviousTopLevelMenuHandle = theMenu;
 	            gPreviousTopLevelMenu = menu;
+              gPreviousMenuBar = menubar;
 	  
-	            NS_RELEASE(menu);
 	            //printf("exit BuildMenu \n");
 	            return;   
 	          }
 	        }
-	      NS_RELEASE(menu);
 	    } 
 	  }
   } else {
@@ -441,6 +440,8 @@ void nsPopMenu(nsIMenu ** aMenu)
 //------------------------------------------------------------------------------
 void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJustBuilt)
 {
+  PRBool shouldReleaseMenubar = PR_FALSE;
+  
   //printf("PreviousMenuStackUnwind called \n");
   //printf("%d items on gPreviousMenuStack \n", gPreviousMenuStack.Count());
   while (gPreviousMenuHandleStack.Count()) {
@@ -452,38 +453,42 @@ void nsPreviousMenuStackUnwind(nsIMenu * aMenuJustBuilt, MenuHandle aMenuHandleJ
           
     if( menu && menuHandle ) {
       
-      if( menuHandle != aMenuHandleJustBuilt ) {
-           
-	      nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
-		  if(listener) {
-		    //printf("MenuPop \n");
-		    
-		    nsMenuEvent mevent;
-		    mevent.message = NS_MENU_SELECTED;
-		    mevent.eventStructType = NS_MENU_EVENT;
-		    mevent.point.x = 0;
-		    mevent.point.y = 0;
-		    mevent.widget = nsnull;
-		    mevent.time = PR_IntervalNow();
-		    mevent.mCommand = (PRUint32) nsnull;
-		    
-		    // UNDO
-		    listener->MenuDeselected(mevent);
-		    
-		    gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
-		    NS_IF_RELEASE(menu);
-		    
-	        //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
-	        gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);
-	      
-		  }
-	  } else {
-        //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-        //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
-	    return;
+      if( menuHandle != aMenuHandleJustBuilt ) {           
+        nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
+        if(listener) {
+          nsMenuEvent mevent;
+          mevent.message = NS_MENU_SELECTED;
+          mevent.eventStructType = NS_MENU_EVENT;
+          mevent.point.x = 0;
+          mevent.point.y = 0;
+          mevent.widget = nsnull;
+          mevent.time = PR_IntervalNow();
+          mevent.mCommand = (PRUint32) nsnull;
+          
+          // UNDO
+          listener->MenuDeselected(mevent);
+          
+          gPreviousMenuStack.RemoveElementAt(gPreviousMenuStack.Count() - 1);
+          NS_IF_RELEASE(menu);
+          shouldReleaseMenubar = PR_TRUE;
+          
+          //printf("%d items now on gPreviousMenuStack \n", gPreviousMenuStack.Count());
+          gPreviousMenuHandleStack.RemoveElementAt(gPreviousMenuHandleStack.Count() - 1);          
+        }
+  	  } 
+  	  else {
+          //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
+          //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
+  	    return;
+  	  }
 	  }
-	}
-  } 
+  }
+  
+  // relinquish hold of the menubar _after_ releasing the menu so it can finish
+  // unregistering itself.
+  if ( shouldReleaseMenubar )
+    gPreviousMenuBar = nsnull;
+  
   //printf("  gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
   //printf("  gPreviousMenuHandleStack.Count() = %d \n", gPreviousMenuHandleStack.Count()); 
 }

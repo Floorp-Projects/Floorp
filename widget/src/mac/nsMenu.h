@@ -23,16 +23,18 @@
 #ifndef nsMenu_h__
 #define nsMenu_h__
 
+#include "nsCOMPtr.h"
 #include "nsIMenu.h"
 #include "nsVoidArray.h"
 #include "nsIMenuListener.h"
-#include "nsIDocumentObserver.h"
+#include "nsIChangeManager.h"
 
 #include <Menus.h>
 #include <UnicodeConverter.h>
 
 class nsIMenuBar;
 class nsIMenuListener;
+class nsIDOMElement;
 
 
 // temporary hack to get apple menu -- sfraser, approved saari
@@ -54,7 +56,7 @@ namespace MenuHelpers
 }
 
 
-class nsMenu : public nsIMenu, public nsIMenuListener, public nsIDocumentObserver
+class nsMenu : public nsIMenu, public nsIMenuListener, public nsIChangeObserver
 {
 
 public:
@@ -62,20 +64,19 @@ public:
   virtual ~nsMenu();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICHANGEOBSERVER
   
   // nsIMenuListener methods
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
-  nsEventStatus MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * menuNode,
-	void              * aWebShell);
+  nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
+                                void * menuNode, void * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
   // nsIMenu Methods
-  NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
+  NS_IMETHOD Create ( nsISupports * aParent, const nsString &aLabel, const nsString &aAccessKey, 
+                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) ;
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(const nsString &aText);
@@ -92,10 +93,7 @@ public:
   NS_IMETHOD SetNativeData(void* aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
-  NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
   NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode);
-  NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
-  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
   NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
   NS_IMETHOD IsHelpMenu(PRBool* aIsEnabled);
@@ -104,58 +102,6 @@ public:
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
-  // nsIDocumentObserver
-  NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
-  NS_IMETHOD EndUpdate(nsIDocument *aDocument);
-  NS_IMETHOD BeginLoad(nsIDocument *aDocument);
-  NS_IMETHOD EndLoad(nsIDocument *aDocument);
-  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell);
-  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell);
-  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
-                            nsIContent* aContent,
-                            nsISupports* aSubContent);
-  NS_IMETHOD ContentStatesChanged(nsIDocument *aDocument,
-                                  nsIContent* aContent1,
-                                  nsIContent* aContent2);
-  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
-                              nsIContent*  aContent,
-                              PRInt32      aNameSpaceID,
-                              nsIAtom*     aAttribute,
-                              PRInt32      aHint);
-  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-                             nsIContent* aContainer,
-                             PRInt32     aNewIndexInContainer);
-  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-                             nsIContent* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aNewChild,
-                             PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer);
-  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet);
-  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
-                               nsIStyleSheet* aStyleSheet);
-  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                            nsIStyleSheet* aStyleSheet,
-                                            PRBool aDisabled);
-  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule,
-                              PRInt32 aHint);
-  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
-                            nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule);
-  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule);
-  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
   // MacSpecific
   static PRInt16	GetUniqueMenuID() {
   						if (mMacMenuIDCount == 32767)
@@ -168,12 +114,13 @@ protected:
   PRUint32     mNumMenuItems;
   nsVoidArray  mMenuItemVoidArray;
 
-  nsIMenu    * mMenuParent;
+  nsIMenu    * mMenuParent;              // weak, my parent owns me
   nsIMenuBar * mMenuBarParent;
 
-  nsIDOMNode    * mDOMNode;
-  nsIDOMElement * mDOMElement;
-  nsIWebShell   * mWebShell;
+  nsIDOMNode*             mDOMNode;      // weak ref, content model outlives us
+  nsCOMPtr<nsIDOMElement> mDOMElement;   // for convenience; strong ref to manage the QI
+  nsIWebShell*            mWebShell;
+  nsIChangeManager* mManager;            // weak ref, it will outlive us
   bool            mConstructed;
 
   // MacSpecific
@@ -193,27 +140,16 @@ protected:
   PRBool OnDestroy() ;
   PRBool OnCreate() ;
   
-  void LoadMenuItem(
-    nsIMenu *    pParentMenu,
-    nsIDOMElement * menuitemElement,
-    nsIDOMNode *    menuitemNode,
-    unsigned short  menuitemIndex,
-    nsIWebShell *   aWebShell);
-  
-  void LoadSubMenu(
-    nsIMenu *       pParentMenu,
-    nsIDOMElement * menuElement,
-    nsIDOMNode *    menuNode);
-  
-  nsEventStatus HelpMenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * menuNode,
-	  void              * aWebShell);
+  void LoadMenuItem( nsIMenu * pParentMenu, nsIDOMElement * menuitemElement,
+                      nsIDOMNode * menuitemNode, unsigned short menuitemIndex,
+                      nsIWebShell * aWebShell);  
+  void LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOMNode * menuNode);  
+  nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
+                                    void* menuNode, void* aWebShell);
 	
-void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
-MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
-MenuHandle NSStringNewChildMenu(short menuID, nsString& menuTitle);
+  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
+  MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
+  MenuHandle NSStringNewChildMenu(short menuID, nsString& menuTitle);
 
 private:
   

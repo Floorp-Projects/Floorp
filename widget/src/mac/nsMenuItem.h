@@ -27,53 +27,44 @@
 #include "nsIMenuItem.h"
 #include "nsString.h"
 #include "nsIMenuListener.h"
+#include "nsIChangeManager.h"
+
 
 class nsIMenu;
-class nsIPopUpMenu;
 class nsIWidget;
 
 /**
  * Native Motif MenuItem wrapper
  */
 
-class nsMenuItem : public nsIMenuItem, public nsIMenuListener
+class nsMenuItem : public nsIMenuItem, public nsIMenuListener, public nsIChangeObserver
 {
-
 public:
   nsMenuItem();
   virtual ~nsMenuItem();
 
   // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSICHANGEOBSERVER
 
   // nsIMenuItem Methods
-  NS_IMETHOD Create(nsISupports    *aParent, 
-                    const nsString &aLabel,  
-                    PRBool         aIsSeparator);
+  NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
+                        EMenuItemType aItemType, PRBool aEnabled, 
+                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) ;
   NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
-  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
   NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
   NS_IMETHOD GetChecked(PRBool *aIsEnabled);
-  NS_IMETHOD SetMenuItemType(EMenuItemType aIsCheckbox);
   NS_IMETHOD GetMenuItemType(EMenuItemType *aIsCheckbox);
-  NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
-  NS_IMETHOD SetCommand(const nsString & aStrCmd);
   NS_IMETHOD DoCommand();
-  NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode);
-  NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode);
-  NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
-  NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
-  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
   NS_IMETHOD SetModifiers(PRUint8 aModifiers);
   NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
     
@@ -81,36 +72,28 @@ public:
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * menuNode,
-	void              * aWebShell);
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
+                                void * menuNode, void * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
- 
+
 protected:
 
-  NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
-                    const nsString &aLabel, 
-                    PRUint32        aCommand) ;
-  NS_IMETHOD Create(nsIMenu * aParent);
-  NS_IMETHOD Create(nsIPopUpMenu * aParent);
-  
-  nsString   mLabel;
-  nsString   mKeyEquivalent;
-  PRUint32   mCommand;
+  void UncheckRadioSiblings ( nsIDOMElement* inCheckedElement ) ;
 
-  nsIMenu      * mMenuParent;
-  nsIPopUpMenu * mPopUpParent;
+  nsAutoString   mLabel;
+  nsAutoString   mKeyEquivalent;
+
+  nsIMenu      * mMenuParent;       // weak, parent owns us
   nsIWidget    * mTarget;
 
-  nsIMenuListener * mXULCommandListener;
+  nsCOMPtr<nsIMenuListener> mXULCommandListener;
   PRBool            mIsSeparator;
   nsIMenuListener * mListener;
   
-  nsIWebShell   *   mWebShell;
-  nsIDOMElement *   mDOMElement;
-  nsIDOMNode    *   mDOMNode;
+  nsIWebShell*      mWebShell;            // weak, document outlives us
+  nsCOMPtr<nsIDOMElement> mDOMElement;    // for convenience; strong to manage QI
+  nsIDOMNode*       mDOMNode;             // weak, content outlives us
+  nsIChangeManager* mManager;             // weak, manager outlives us
   
   PRUint8           mModifiers;
   PRBool            mEnabled;
