@@ -2523,12 +2523,13 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
         // get the appropriate column frame
         nsTableColFrame *colFrame;
         GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
-        if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource())
+        if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource()) 
         {
           // get the column style and set the width attribute
-          nsIStyleContext* colSC;
+          nsIStyleContext *colSC;
           colFrame->GetStyleContext(aPresContext, colSC);
           nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
+          NS_RELEASE(colSC);
           // set the column width attribute
           if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
           {
