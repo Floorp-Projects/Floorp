@@ -31,11 +31,13 @@ CPPSRCS		= nsNetFactory.cpp
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libneckobase_s.a \
 		$(DIST)/lib/libneckodns_s.a \
+		$(DIST)/lib/libneckosocket_s.a \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../dns/src \
+		-I$(srcdir)/../socket/base \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
