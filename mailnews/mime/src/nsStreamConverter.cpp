@@ -342,6 +342,21 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   }
   else // this is a part that should just come out raw!
   {
+    // if we are being asked to fetch a part....it should have a 
+    // content type appended to it...if it does, we want to remember
+    // that as mOutputFormat
+
+    if (part)
+    {
+      char * typeField   = PL_strcasestr(url, "&type=");
+      if (typeField)
+      {
+        mOutputFormat = nsCRT::strdup(typeField + nsCRT::strlen("&type="));
+        *aNewType = nsMimeOutput::nsMimeMessageRaw;
+        return NS_OK;
+      }
+    }
+
     PR_FREEIF(mOutputFormat);
     mOutputFormat = nsCRT::strdup("raw");
     *aNewType = nsMimeOutput::nsMimeMessageRaw;
@@ -421,9 +436,9 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   mOutputType = newType;  
   switch (newType)
   {
-  case nsMimeOutput::nsMimeMessageXULDisplay:
-    PR_FREEIF(mOutputFormat);
-    mOutputFormat = nsCRT::strdup("text/xul");
+    case nsMimeOutput::nsMimeMessageXULDisplay:
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/xul");
     break;
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
       mWrapperOutput = PR_TRUE;
@@ -448,8 +463,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       break;
       
     case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
-      PR_FREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("raw");
+      if (!mOutputFormat)
+        mOutputFormat = nsCRT::strdup("raw");
       break;
       
     case nsMimeOutput::nsMimeMessageSource:    // the raw RFC822 data (view source) and attachments
