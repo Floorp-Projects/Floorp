@@ -345,6 +345,12 @@ alpha*-*-osf*)
     DSO_CFLAGS='-fPIC'
     CFLAGS="$CFLAGS -Dunix"
     CXXFLAGS="$CXXFLAGS -Dunix"
+    case `uname -m` in
+	*86)
+		MKSHLIB='$(LD) $(DSO_LDOPTS)'
+		MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+		;;
+    esac
 dnl Test for a.out platform and handle C++ libraries correctly
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-shared"
