@@ -125,8 +125,9 @@ public:
   }
 
   void seek(PRUint32 aIndex) {
-#ifdef DEBUG
-    // Make sure that aIndex is reasonable
+    // Make sure that aIndex is reasonable.  This should be |#ifdef
+    // DEBUG|, but we need these numbers for the temporary workaround
+    // for bug 133219.
     PRUint32 length;
     if (mNodes)
       mNodes->GetLength(&length);
@@ -134,7 +135,10 @@ public:
       mContent->ChildCount(NS_REINTERPRET_CAST(PRInt32&, length));
 
     NS_ASSERTION(PRInt32(aIndex) >= 0 && aIndex <= length, "out of bounds");
-#endif
+
+    // Temporary workaround for bug 133219.
+    if (aIndex > length)
+      aIndex = length;
 
     mIndex = aIndex;
   }
