@@ -317,7 +317,7 @@
 <!ENTITY calendar.about.title "About Mozilla Calendar">
 <!ENTITY calendar.about.tab   "About">
 
-<!ENTITY throbber.tooltip "Home page">
+<!ENTITY throbber.tooltip "Go to the Mozilla home page">
 <!ENTITY menuBar.tooltip "Menu bar">
 <!ENTITY navigationToolbar.tooltip "Navigation Toolbar">
 
