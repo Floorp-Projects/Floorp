@@ -128,7 +128,7 @@ void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
 				default:
 					Str255 daName;
 					GetMenuItemText(GetMenuHandle(menu_Apple), menuItem, daName);
-					#ifndef TARGET_CARBON
+					#if !TARGET_CARBON
 					OpenDeskAcc(daName);
 					#endif
 					break;
@@ -225,7 +225,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				default:
 					Str255 daName;
 					GetMenuItemText(GetMenuHandle(menu_Apple), menuItem, daName);
-					#ifndef TARGET_CARBON
+					#if !TARGET_CARBON
 					OpenDeskAcc(daName);
 					#endif
 					break;
