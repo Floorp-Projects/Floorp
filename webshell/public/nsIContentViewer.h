@@ -73,6 +73,8 @@ public:
 
   NS_IMETHOD Print(void) = 0;
 
+  NS_IMETHOD PrintContent(void) = 0;
+
   NS_IMETHOD SetEnableRendering(PRBool aOn) = 0;
 
   NS_IMETHOD GetEnableRendering(PRBool* aResult) = 0;
