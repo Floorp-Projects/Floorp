@@ -47,7 +47,6 @@ select[size] {
   margin: 0;
   min-height: none;
   color: inherit;
-  font: inherit;
   -moz-appearance: treeview;
 }
   
