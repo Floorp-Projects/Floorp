@@ -437,7 +437,7 @@
         }
     }
     if ( core ) {
-        core.ShowWindowWithArgs( "chrome://editor/content", window, "about:blank" );
+        core.ShowWindowWithArgs( "chrome://editor/content", window, "resource:/res/html/empty_doc.html" );
     } else {
         dump("Error; can't create toolkitCore\n");
     }
