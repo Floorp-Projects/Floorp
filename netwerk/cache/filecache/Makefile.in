@@ -35,7 +35,11 @@ REQUIRES	= nspr dbm
 
 EXTRA_DSO_LDOPTS  +=  -L$(DIST)/lib  -lmozdbm_s
 
-EXPORTS=nsNetDiskCacheCID.h
+EXPORTS=nsNetDiskCacheCID.h \
+	nsNetDiskCache.h \
+	nsIDBAccessor.h \
+	nsDBAccessor.h \
+	$(NULL)
 
 CPPSRCS		= \
         nsDBAccessor.cpp\

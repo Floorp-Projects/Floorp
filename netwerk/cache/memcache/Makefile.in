@@ -29,7 +29,9 @@ LIBRARY_NAME = nkmemcache_s
 
 REQUIRES	= nspr dbm 
 
-EXPORTS=nsMemCacheCID.h
+EXPORTS=nsMemCacheCID.h \
+	nsMemCache.h \
+	$(NULL)
 
 CPPSRCS		= \
         nsMemCache.cpp \
