@@ -46,6 +46,114 @@
       </Description>
     </em:file>
 
+    <!-- locale files -->
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-ca-AD.jar">
+        <em:locale>locale/ca-AD/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-cs-CZ.jar">
+        <em:locale>locale/cs-CZ/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-cy-GB.jar">
+        <em:locale>locale/cy-GB/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-de-AT.jar">
+        <em:locale>locale/de-AT/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-es-ES.jar">
+        <em:locale>locale/es-ES/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-fr-FR.jar">
+        <em:locale>locale/fr-FR/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-hu-HU.jar">
+        <em:locale>locale/hu-HU/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-it-IT.jar">
+        <em:locale>locale/it-IT/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-ja-JP.jar">
+        <em:locale>locale/ja-JP/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-lt-LT.jar">
+        <em:locale>locale/lt-LT/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-nl-NL.jar">
+        <em:locale>locale/nl-NL/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-pl-PL.jar">
+        <em:locale>locale/pl-PL/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-pt-BR.jar">
+        <em:locale>locale/pt-BR/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-sk-SK.jar">
+        <em:locale>locale/sk-SK/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-sl-SI.jar">
+        <em:locale>locale/sl-SI/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-sv-SE.jar">
+        <em:locale>locale/sv-SE/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-tr-TR.jar">
+        <em:locale>locale/tr-TR/calendar/</em:locale>
+      </Description>
+    </em:file>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:calendar-wen-DE.jar">
+        <em:locale>locale/wen-DE/calendar/</em:locale>
+      </Description>
+    </em:file>
 
   </Description>      
 </RDF>
