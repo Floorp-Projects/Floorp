@@ -18,7 +18,7 @@
 <!ENTITY menuitem.properties.label      "Bookmark Properties...">
 <!ENTITY tree.header.name.label         "Name">
 <!ENTITY tree.header.url.label          "URL">
-<!ENTITY tree.header.shortcut.label     "Nickname">
+<!ENTITY tree.header.shortcut.label     "Custom Keyword">
 <!ENTITY tree.header.addedon.label      "Added On">
 <!ENTITY tree.header.lastmod.label      "Last Modified">
 <!ENTITY tree.header.lastvisit.label    "Last Visit">

@@ -3,7 +3,7 @@
 <!ENTITY bookmarks.title.label        "Bookmark Properties">
 <!ENTITY bookmarks.name.label         "Name:">
 <!ENTITY bookmarks.location.label     "Location:">
-<!ENTITY bookmarks.shortcut.label     "Nickname:">
+<!ENTITY bookmarks.shortcut.label     "Custom Keyword:">
 <!ENTITY bookmarks.description.label  "Description:">
 <!ENTITY bookmarks.ok.label           "OK">
 <!ENTITY bookmarks.cancel.label       "Cancel">
