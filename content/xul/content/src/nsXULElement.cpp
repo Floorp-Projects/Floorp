@@ -2238,12 +2238,14 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                 XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
                 attr->mEventHandler = *aHandler;
 
-                JSContext *cx = (JSContext*) context->GetNativeContext();
-                if (!cx)
-                    return NS_ERROR_UNEXPECTED;
+                if (attr->mEventHandler) {
+                    JSContext *cx = (JSContext*) context->GetNativeContext();
+                    if (!cx)
+                        return NS_ERROR_UNEXPECTED;
 
-                rv = AddJSGCRoot(cx, &attr->mEventHandler, "nsXULPrototypeAttribute::mEventHandler");
-                if (NS_FAILED(rv)) return rv;
+                    rv = AddJSGCRoot(cx, &attr->mEventHandler, "nsXULPrototypeAttribute::mEventHandler");
+                    if (NS_FAILED(rv)) return rv;
+                }
 
                 break;
             }
@@ -4731,11 +4733,15 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     if (NS_FAILED(rv)) return rv;
 
-    // Root the compiled prototype script object.
-    JSContext* cx = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
-    if (!cx)
-        return NS_ERROR_UNEXPECTED;
+    if (mScriptObject) {
+        // Root the compiled prototype script object.
+        JSContext* cx = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
+        if (!cx)
+            return NS_ERROR_UNEXPECTED;
 
-    rv = AddJSGCRoot(cx, &mScriptObject, "nsXULPrototypeScript::mScriptObject");
-    return rv;
+        rv = AddJSGCRoot(cx, &mScriptObject, "nsXULPrototypeScript::mScriptObject");
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
 }
