@@ -160,9 +160,7 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsString& aPropertyName,
   PRBool isImportant = PR_FALSE;
 
   if ((NS_OK == result) && (nsnull != decl)) {
-    char prop[50];
-    aPropertyName.ToCString(prop, sizeof(prop));
-    result = decl->GetValueIsImportant(prop, isImportant);
+    result = decl->GetValueIsImportant(aPropertyName, isImportant);
     NS_RELEASE(decl);
   }
 
