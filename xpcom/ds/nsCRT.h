@@ -34,6 +34,9 @@
 #define VTAB '\013'
 #define FF '\014'
 #define TAB '\011'
+
+#define CRSTR "\015"
+#define LFSTR "\012"
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
 #ifdef XP_MAC
