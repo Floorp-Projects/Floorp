@@ -40,8 +40,6 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
   if (nsnull == view) {
     // We don't yet have a view; see if we need a view
 
-    PRBool scrollView = PR_FALSE;
-
     // See if the opacity is not the same as the geometric parent
     // frames opacity.
     if (!aForce) {

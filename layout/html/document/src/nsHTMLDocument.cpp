@@ -196,8 +196,6 @@ nsHTMLDocument::EndLoad()
   return nsDocument::EndLoad();
 }
 
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
-
 NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
 {
   if (nsnull == mDocumentTitle) {

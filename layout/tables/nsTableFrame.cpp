@@ -905,19 +905,19 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
       
         for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
 
-        nscoord top,left,bottom,right;
     /*
+        nscoord top,left,bottom,right;
         top = (mBorderFrame[NS_SIDE_TOP] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_TOP], NS_SIDE_TOP) : 0);
         left = (mBorderFrame[NS_SIDE_LEFT] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_LEFT], NS_SIDE_LEFT) : 0);
         bottom = (mBorderFrame[NS_SIDE_BOTTOM] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_BOTTOM], NS_SIDE_BOTTOM) : 0);
         right = (mBorderFrame[NS_SIDE_RIGHT] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
-    */
 
         fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
                     NS_TWIPS_TO_POINTS_INT(top),
                     NS_TWIPS_TO_POINTS_INT(left),
                     NS_TWIPS_TO_POINTS_INT(bottom),
                     NS_TWIPS_TO_POINTS_INT(right));
+    */
       }
     }
   }

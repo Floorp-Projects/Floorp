@@ -486,7 +486,6 @@ nsSelect::Reset()
 {
 //  PRBool allowMultiple;
 //  super::GetAttribute(nsHTMLAtoms::multiple, allowMultiple);
-  PRBool haveSelection = PR_FALSE;
   PRInt32 numChildren = ChildCount();
 
   nsIListWidget* list;

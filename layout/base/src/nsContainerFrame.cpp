@@ -37,8 +37,6 @@
 #undef NOISY
 #endif
 
-static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
-
 nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsSplittableFrame(aContent, aParent),
     mLastContentIsComplete(PR_TRUE)

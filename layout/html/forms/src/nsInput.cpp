@@ -136,7 +136,6 @@ PRBool nsInput::IsSuccessful(nsIFormControl* aSubmitter) const
 nsrefcnt nsInput::Release()
 {
   --mRefCnt;
-  int debugRefCnt = mRefCnt;
 	if (mRefCnt == 0) {
     delete this;                                       
     return 0;                                          

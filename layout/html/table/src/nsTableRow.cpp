@@ -198,7 +198,6 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
     NS_IF_RELEASE(oldChild);                  // oldChild: REFCNT--
 #endif
   }
-  return rv;
 }
 
 /**

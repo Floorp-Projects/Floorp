@@ -207,8 +207,6 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
 nsWidgetInitData*
 nsInputTextFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {
-  static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
-
   nsTextWidgetInitData* data = nsnull;
   nsInputText* content;
   GetContent((nsIContent *&) content);

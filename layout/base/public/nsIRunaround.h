@@ -64,12 +64,12 @@ public:
    *
    * @see nsISpaceManager#Translate()
    */
-  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
-                     nsISpaceManager*     aSpaceManager,
-                     nsReflowMetrics&     aDesiredSize,
-                     const nsReflowState& aReflowState,
-                     nsRect&              aDesiredRect,  // XXX FIX ME
-                     nsReflowStatus&      aStatus) = 0;
+  NS_IMETHOD  ReflowAround(nsIPresContext&      aPresContext,
+                           nsISpaceManager*     aSpaceManager,
+                           nsReflowMetrics&     aDesiredSize,
+                           const nsReflowState& aReflowState,
+                           nsRect&              aDesiredRect,  // XXX FIX ME
+                           nsReflowStatus&      aStatus) = 0;
 };
 
 #endif /* nsIRunaround_h___ */

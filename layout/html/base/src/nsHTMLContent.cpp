@@ -36,7 +36,6 @@ static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIHTMLContent, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -560,7 +559,7 @@ nsHTMLContent::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP    
 nsHTMLContent::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  aAttributes = nsnull;
+  *aAttributes = nsnull;
   return NS_OK;
 }
 
