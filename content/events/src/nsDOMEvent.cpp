@@ -539,7 +539,7 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
   case NS_MOUSE_EVENT:
     {
       PRUint16 button;
-      nsresult ret = GetButton(&button);
+      (void) GetButton(&button);
       *aWhich = button;
     }
   }
