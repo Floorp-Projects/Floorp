@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.6 2000/04/12 22:33:43 nisheeth%netscape.com Exp $
+ * $Id: XSLTProcessor.h,v 1.7 2000/04/20 22:10:16 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/04/12 22:33:43 $
+ * @version $Revision: 1.7 $ $Date: 2000/04/20 22:10:16 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
@@ -337,7 +337,7 @@ private:
      * @param ps the current ProcessorState
     **/
     void processAttrValueTemplate
-        (const String& attValue, String& result, Node* context, ProcessorState* ps);
+        (const String& attValue, DOMString& result, Node* context, ProcessorState* ps);
 
     void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps);
     void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps);
