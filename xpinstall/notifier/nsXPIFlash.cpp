@@ -70,7 +70,7 @@ private:
     PRInt32 CompareVersions(VERSION *oldversion, VERSION *newVersion);
     void   StringToVersionNumbers(const nsString& version, int32 *aMajor, int32 *aMinor, int32 *aRelease, int32 *aBuild);
     
-    nsCOMPtr<nsIRDFDataSource> mInner;
+    nsCOMPtr<nsISupports> mInner;
     nsIRDFService* mRDF;
 
 
@@ -163,7 +163,7 @@ nsXPINotifierImpl::Init()
 
     rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                             this, /* the "outer" */
-                                            nsIRDFDataSource::GetIID(),
+                                            nsCOMTypeInfo<nsISupports>::GetIID(),
                                             getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
@@ -328,11 +328,12 @@ nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
                         nsCOMPtr<nsIRDFLiteral> title(do_QueryInterface(titleNode, &rv));
                         if (NS_FAILED(rv)) break;
 
-                        mInner->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                        mInner->Assert(aPackage, kNC_Description, title, PR_TRUE);
-                        mInner->Assert(aPackage, kNC_URL, url, PR_TRUE);
+                        nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
+                        ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
+                        ds->Assert(aPackage, kNC_Description, title, PR_TRUE);
+                        ds->Assert(aPackage, kNC_URL, url, PR_TRUE);
 
-                        mInner->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
+                        ds->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
                         break;
 
                     }
@@ -533,19 +534,7 @@ nsXPINotifierImpl::New(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 // nsISupports
 
 NS_IMPL_ADDREF(nsXPINotifierImpl);
-
-NS_IMETHODIMP_(nsrefcnt)
-nsXPINotifierImpl::Release()
-{
-    --mRefCnt;
-    if (mRefCnt == 1 && mInner) {
-        mInner = nsnull; /* nsCOMPtr triggers Release() */
-    }
-    else if (mRefCnt == 0) {
-        delete this;
-    }
-    return mRefCnt;
-}
+NS_IMPL_RELEASE(nsXPINotifierImpl);
 
 NS_IMETHODIMP
 nsXPINotifierImpl::QueryInterface(REFNSIID aIID, void** aResult)
@@ -560,7 +549,7 @@ nsXPINotifierImpl::QueryInterface(REFNSIID aIID, void** aResult)
         *aResult = NS_STATIC_CAST(nsISupports*, this);
     }
     else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
-        *aResult = mInner;
+        return mInner->QueryInterface(aIID, aResult);
     }
     else {
         *aResult = nsnull;
