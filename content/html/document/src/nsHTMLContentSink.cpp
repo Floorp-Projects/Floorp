@@ -61,6 +61,7 @@
 #include "nsCRT.h"
 #include "prtime.h"
 #include "prlog.h"
+#include "nsInt64.h"
 
 #include "nsGenericHTMLElement.h"
 #include "nsIElementFactory.h"
@@ -168,6 +169,9 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 #define NS_SINK_FLAG_FORM_ON_STACK        0x00000080
 
+#define NS_SINK_FLAG_PARSING              0x00000100
+
+#define NS_SINK_FLAG_DROPPED_TIMER        0x00000200
 
 // 1/2 second fudge factor for window creation
 #define NS_DELAY_FOR_WINDOW_CREATION  500000
@@ -2411,6 +2415,12 @@ HTMLContentSink::Notify(nsITimer *timer)
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
   MOZ_TIMER_START(mWatch);
 
+  if (mFlags & NS_SINK_FLAG_PARSING) {
+    // We shouldn't interfere with our normal DidProcessAToken logic
+    mFlags |= NS_SINK_FLAG_DROPPED_TIMER;
+    return NS_OK;
+  }
+  
 #ifdef MOZ_DEBUG
   {
     PRTime now = PR_Now();
@@ -2455,43 +2465,28 @@ HTMLContentSink::WillInterrupt()
 #ifndef SINK_NO_INCREMENTAL
   if (mNotifyOnTimer && mLayoutStarted) {
     if (mBackoffCount && !mInMonolithicContainer) {
-      PRTime now = PR_Now();
-      PRInt64 interval, diff;
-      PRInt32 delay;
-
-      LL_I2L(interval, GetNotificationInterval());
-      LL_SUB(diff, now, mLastNotificationTime);
+      nsInt64 now(PR_Now());
+      nsInt64 interval(GetNotificationInterval());
+      nsInt64 lastNotification(mLastNotificationTime);
+      nsInt64 diff(now - lastNotification);
 
       // If it's already time for us to have a notification
-      if (LL_CMP(diff, >, interval)) {
+      if (diff > interval || (mFlags & NS_SINK_FLAG_DROPPED_TIMER)) {
         mBackoffCount--;
         SINK_TRACE(SINK_TRACE_REFLOW,
                  ("HTMLContentSink::WillInterrupt: flushing tags since we've "
                   "run out time; backoff count: %d", mBackoffCount));
         result = mCurrentContext->FlushTags(PR_TRUE);
-      } else {
-        // If the time since the last notification is less than
-        // the expected interval but positive, set a timer up for the remaining
-        // interval.
-        if (LL_CMP(diff, >, LL_ZERO)) {
-          LL_SUB(diff, interval, diff);
-          LL_L2I(delay, diff);
-        } else {
-          // Else set up a timer for the expected interval
-          delay = GetNotificationInterval();
+        if (mFlags & NS_SINK_FLAG_DROPPED_TIMER) {
+          TryToScrollToRef();
+          mFlags &= ~NS_SINK_FLAG_DROPPED_TIMER;
         }
-
+      } else if (!mNotificationTimer) {
+        interval -= diff;
+        PRInt32 delay = interval;
+        
         // Convert to milliseconds
         delay /= PR_USEC_PER_MSEC;
-
-        // Cancel a timer if we had one out there
-        if (mNotificationTimer) {
-          SINK_TRACE(SINK_TRACE_REFLOW,
-                     ("HTMLContentSink::WillInterrupt: canceling notification "
-                      "timeout"));
-
-          mNotificationTimer->Cancel();
-        }
 
         mNotificationTimer = do_CreateInstance("@mozilla.org/timer;1",
                                                &result);
@@ -2503,6 +2498,9 @@ HTMLContentSink::WillInterrupt()
           result =
             mNotificationTimer->InitWithCallback(this, delay,
                                                  nsITimer::TYPE_ONE_SHOT);
+          if (NS_FAILED(result)) {
+            mNotificationTimer = nsnull;
+          }
         }
       }
     }
@@ -2515,6 +2513,8 @@ HTMLContentSink::WillInterrupt()
   }
 #endif
 
+  mFlags &= ~NS_SINK_FLAG_PARSING;
+  
   return result;
 }
 
@@ -2523,15 +2523,7 @@ HTMLContentSink::WillResume()
 {
   SINK_TRACE(SINK_TRACE_CALLS, ("HTMLContentSink::WillResume: this=%p", this));
 
-  // Cancel a timer if we had one out there
-  if (mNotificationTimer) {
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::WillResume: canceling notification "
-                "timeout"));
-
-    mNotificationTimer->Cancel();
-    mNotificationTimer = 0;
-  }
+  mFlags |= NS_SINK_FLAG_PARSING;
 
   return NS_OK;
 }
