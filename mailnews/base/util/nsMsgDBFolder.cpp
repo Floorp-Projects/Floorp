@@ -1942,3 +1942,52 @@ nsresult nsMsgDBFolder::PerformBiffNotifications(void)
   return NS_OK;
 }
 
+/* temporary stubs for bug 218825 */
+NS_IMETHODIMP nsMsgDBFolder::DeleteSubFolders(nsISupportsArray *folders,
+                                              nsIMsgWindow *msgWindow)
+{
+  return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::MarkMessagesRead(nsISupportsArray *messages,
+                                              PRBool markRead)
+{
+  return nsMsgFolder::MarkMessagesRead(messages, markRead);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::MarkMessagesFlagged(nsISupportsArray *messages,
+                                                 PRBool markFlagged)
+{
+  return nsMsgFolder::MarkMessagesFlagged(messages, markFlagged);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetPath(nsIFileSpec * aPathName)
+{
+  return nsMsgFolder::SetPath(aPathName);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetCanFileMessages(PRBool *aCanFileMessages)
+{
+  return nsMsgFolder::GetCanFileMessages(aCanFileMessages);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetFilterList(nsIMsgFilterList *aMsgFilterList)
+{
+  return nsMsgFolder::SetFilterList(aMsgFilterList);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetPrettyName(PRUnichar ** prettyName)
+{
+  return nsMsgFolder::GetPrettyName(prettyName);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetPrettyName(const PRUnichar *aName)
+{
+  return nsMsgFolder::SetPrettyName(aName);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetName(PRUnichar **aName)
+{
+  return nsMsgFolder::GetName(aName);
+}
+

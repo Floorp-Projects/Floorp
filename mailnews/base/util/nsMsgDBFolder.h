@@ -126,6 +126,20 @@ public:
   NS_IMETHOD GetLastMessageLoaded(nsMsgKey *aMsgKey);
   NS_IMETHOD SetLastMessageLoaded(nsMsgKey aMsgKey);
 
+  /* temporary stubs for bug 218825 */
+  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders,
+                              nsIMsgWindow *msgWindow);
+  NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages,
+                              PRBool markRead);
+  NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages,
+                                 PRBool markFlagged);
+  NS_IMETHOD SetPath(nsIFileSpec * aPathName);
+  NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
+  NS_IMETHOD SetFilterList(nsIMsgFilterList *aMsgFilterList);
+  NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);
+  NS_IMETHOD SetPrettyName(const PRUnichar *aName);
+  NS_IMETHOD GetName(PRUnichar **aName);
+
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);
   virtual nsresult FlushToFolderCache();

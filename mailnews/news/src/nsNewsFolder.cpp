@@ -646,7 +646,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
   if (!aAbbreviatedName)
     return NS_ERROR_NULL_POINTER;
 
-  rv = nsMsgFolder::GetPrettyName(aAbbreviatedName);
+  rv = nsMsgDBFolder::GetPrettyName(aAbbreviatedName);
   if(NS_FAILED(rv)) return rv;
 
   // only do this for newsgroup names, not for newsgroup hosts.

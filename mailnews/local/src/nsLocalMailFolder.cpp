@@ -1196,7 +1196,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   rv = IsChildOfTrash(&isChildOfTrash);
 
   if (isChildOfTrash)
-    return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+    return nsMsgDBFolder::DeleteSubFolders(folders, msgWindow);
 
   if (!msgWindow) 
     return NS_ERROR_NULL_POINTER;
@@ -1401,16 +1401,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, ns
   }
   return NS_OK;
 }
-
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
-  return nsMsgFolder::GetPrettyName(prettyName);
+  return nsMsgDBFolder::GetPrettyName(prettyName);
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::SetPrettyName(const PRUnichar *aName)
 {
   NS_ENSURE_ARG_POINTER(aName);
-  nsresult rv = nsMsgFolder::SetPrettyName(aName);
+  nsresult rv = nsMsgDBFolder::SetPrettyName(aName);
   NS_ENSURE_SUCCESS(rv, rv);
   nsXPIDLCString folderName;
   rv = GetStringProperty("folderName", getter_Copies(folderName));

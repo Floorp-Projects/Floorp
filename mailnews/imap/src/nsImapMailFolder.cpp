@@ -961,7 +961,7 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
     if (NS_FAILED(rv)) return rv;
     folders->AppendElement(folderSupport);
     which->Delete();
-    return nsMsgFolder::DeleteSubFolders(folders, nsnull);
+    return nsMsgDBFolder::DeleteSubFolders(folders, nsnull);
 }
 
 NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListener)
@@ -1617,7 +1617,7 @@ NS_IMETHODIMP
 nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 {
   // tell the folder to do it, which will mark them read in the db.
-  nsresult rv = nsMsgFolder::MarkMessagesRead(messages, markRead);
+  nsresult rv = nsMsgDBFolder::MarkMessagesRead(messages, markRead);
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString messageIds;
@@ -1725,7 +1725,7 @@ nsImapMailFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFla
   nsresult rv;
 
   // tell the folder to do it, which will mark them read in the db.
-  rv = nsMsgFolder::MarkMessagesFlagged(messages, markFlagged);
+  rv = nsMsgDBFolder::MarkMessagesFlagged(messages, markFlagged);
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString messageIds;
@@ -2190,7 +2190,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     }
     
     if (confirmed && deleteNoTrash)   //delete subfolders only if you are  deleting things from trash
-        return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+        return nsMsgDBFolder::DeleteSubFolders(folders, msgWindow);
     else
         return rv;
 }
@@ -5565,7 +5565,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
 
 NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)                
 {                                                                               
-  nsMsgFolder::SetPath(aPathName);   // call base class so mPath will get set too
+  nsMsgDBFolder::SetPath(aPathName);   // call base class so mPath will get set too
   if (!aPathName)
      return NS_ERROR_NULL_POINTER;
 
@@ -7209,7 +7209,7 @@ nsImapMailFolder::GetCanFileMessages(PRBool *aCanFileMessages)
     rv = server->GetCanFileMessagesOnServer(aCanFileMessages);
 
   if (*aCanFileMessages)
-    rv = nsMsgFolder::GetCanFileMessages(aCanFileMessages);
+    rv = nsMsgDBFolder::GetCanFileMessages(aCanFileMessages);
 
   if (*aCanFileMessages)
   {
@@ -7250,7 +7250,7 @@ NS_IMETHODIMP
 nsImapMailFolder::SetFilterList(nsIMsgFilterList *aMsgFilterList)
 {
   m_filterList = aMsgFilterList;
-  return nsMsgFolder::SetFilterList(aMsgFilterList);
+  return nsMsgDBFolder::SetFilterList(aMsgFilterList);
 }
 
 nsresult nsImapMailFolder::GetMoveCoalescer()
