@@ -138,6 +138,17 @@ protected:
   /** returns PR_TRUE in out-param aIsInline if aNode is inline as defined by HTML DTD */
   NS_IMETHOD IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const;
 
+  /** returns the closest block parent of aNode, not including aNode itself.
+    * can return null, for example if aNode is in a document fragment.
+    * @param aNode        The node whose parent we seek.
+    * @param aBlockParent [OUT] The block parent, if any.
+    * @return a success value unless an unexpected error occurs.
+    */
+  NS_IMETHOD GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent) const;
+
+  NS_IMETHOD GetBlockDelimitedContent(nsIDOMNode *aParent, nsIDOMNode *aChild,
+                                      nsIDOMNode **aLeftNode, nsIDOMNode **aRightNode) const;
+
   /** returns PR_TRUE in out-param aResult if all nodes between (aStartNode, aStartOffset)
     * and (aEndNode, aEndOffset) are inline as defined by HTML DTD. 
     */
@@ -157,13 +168,16 @@ protected:
   /** Moves the content between (aNode, aStartOffset) and (aNode, aEndOffset)
     * into aNewParentNode, splitting aNode as necessary to maintain the relative
     * position of all leaf content.
+    * @param aNode          The node whose content we're repositioning.
+    *                       aNode can be either a text node or a container node.
+    * @param aNewParentNode The node that will be the repositioned contents' parent
+    * @param aStartOffset   The start offset of the content of aNode
+    * @param aEndOffset     The end offset of the content of aNode.
     */
   NS_IMETHOD MoveContentIntoNewParent(nsIDOMNode  *aNode, 
-                                                    nsIDOMNode  *aOldParentNode, 
-                                                    PRInt32      aStartOffset, 
-                                                    PRInt32      aEndOffset,
-                                                    nsString     aTag,
-                                                    nsIDOMNode **aNewNode);
+                                      nsIDOMNode  *aNewParentNode, 
+                                      PRInt32      aStartOffset, 
+                                      PRInt32      aEndOffset);
 
 
   NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode  *aNode, 

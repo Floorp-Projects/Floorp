@@ -99,6 +99,12 @@ protected:
                            nsIDOMSelection *aSelection,
                            nsIDOMNode     **aNewStyleNode);
 
+  /** inserts a new <FONT> node and sets the aAttr attribute to aValue */
+  nsresult CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
+                                        const nsString  &aAttr, 
+                                        const nsString  &aValue, 
+                                        nsIDOMSelection *aSelection);
+
   /** create a new style node of type aTag in aParentNode, and put a new text node 
     * in the new style node.  
     * If aSelection is provided and points to a text node, just call InsertStyleNode instead.

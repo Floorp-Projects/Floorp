@@ -335,21 +335,6 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     }
     else
     {
-      // remember start and end points of selection
-      // XXX: this won't work for discontiguous selections
-
-#if 0
-		// these don't seem to be used. sfraser
-      nsCOMPtr<nsIDOMNode> selStartNode;
-      PRInt32 selStartOffset;
-      nsCOMPtr<nsIDOMNode> selEndNode;
-      PRInt32 selEndOffset;
-      selection->GetAnchorNode(getter_AddRefs(selStartNode));
-      selection->GetAnchorOffset(&selStartOffset);
-      selection->GetFocusNode(getter_AddRefs(selEndNode));
-      selection->GetFocusOffset(&selEndOffset);
-#endif
-
       // set the text property for all selected ranges
       nsEditor::BeginTransaction();
       nsCOMPtr<nsIEnumerator> enumerator;
@@ -1146,19 +1131,26 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode,
     if (NS_SUCCEEDED(result)) 
     {
       nsCOMPtr<nsIDOMNode>newStyleNode;
-      result = MoveContentIntoNewParent(aNode, aParent, aStartOffset, aEndOffset, tag, getter_AddRefs(newStyleNode));
-      if (NS_SUCCEEDED(result) && newStyleNode) 
+      if (NS_SUCCEEDED(result))
       {
-        if (aAttribute)
+        result = nsEditor::CreateNode(tag, aParent, 0, getter_AddRefs(newStyleNode));
+        if (NS_SUCCEEDED(result) && newStyleNode)
         {
-          nsCOMPtr<nsIDOMElement> newStyleElement;
-          newStyleElement = do_QueryInterface(newStyleNode);
-          nsAutoString value;
-          if (aValue) {
-            value = *aValue;
+          result = MoveContentIntoNewParent(aNode, newStyleNode, aStartOffset, aEndOffset);
+          if (NS_SUCCEEDED(result) && newStyleNode) 
+          {
+            if (aAttribute)
+            {
+              nsCOMPtr<nsIDOMElement> newStyleElement;
+              newStyleElement = do_QueryInterface(newStyleNode);
+              nsAutoString value;
+              if (aValue) {
+                value = *aValue;
+              }
+              // XXX should be a call to editor to change attribute!
+              result = newStyleElement->SetAttribute(*aAttribute, value);
+            }
           }
-          // XXX should be a call to editor to change attribute!
-          result = newStyleElement->SetAttribute(*aAttribute, value);
         }
       }
     }
@@ -1167,12 +1159,11 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode,
 }
 
 NS_IMETHODIMP nsTextEditor::MoveContentIntoNewParent(nsIDOMNode  *aNode, 
-                                                     nsIDOMNode  *aOldParentNode, 
+                                                     nsIDOMNode  *aNewParentNode, 
                                                      PRInt32      aStartOffset, 
-                                                     PRInt32      aEndOffset,
-                                                     nsString     aTag,
-                                                     nsIDOMNode **aNewNode)
+                                                     PRInt32      aEndOffset)
 {
+  if (!aNode || !aNewParentNode) { return NS_ERROR_NULL_POINTER; }
   if (gNoisy) { printf("nsTextEditor::MoveContentIntoNewParent\n"); }
   nsresult result=NS_OK;
 
@@ -1204,6 +1195,8 @@ NS_IMETHODIMP nsTextEditor::MoveContentIntoNewParent(nsIDOMNode  *aNode,
       }
       if (NS_SUCCEEDED(result))
       {
+        // move aNewParentNode into the right location
+
         // optimization:  if all we're doing is changing a value for an existing attribute for the
         //                entire selection, then just twiddle the existing style node
         PRBool done = PR_FALSE; // set to true in optimized case if we can really do the optimization
@@ -1231,28 +1224,37 @@ NS_IMETHODIMP nsTextEditor::MoveContentIntoNewParent(nsIDOMNode  *aNode,
           // move the new child node into the new parent
           if (PR_FALSE==done)
           {
+            // first, move the new parent into the correct location
             PRInt32 offsetInParent;
-            result = nsIEditorSupport::GetChildOffset(aNode, aOldParentNode, offsetInParent);
+            nsCOMPtr<nsIDOMNode>parentNode;
+            result = aNode->GetParentNode(getter_AddRefs(parentNode));
             if (NS_SUCCEEDED(result))
             {
-              result = nsEditor::CreateNode(aTag, aOldParentNode, offsetInParent, aNewNode);
-              if (NS_SUCCEEDED(result) && *aNewNode)
-              {
-                if (gNoisy) { printf("* created new style node %p\n", *aNewNode);}
-                if (gNoisy) {DebugDumpContent(); } // DEBUG
-                result = nsEditor::DeleteNode(newChildNode);
-                if (NS_SUCCEEDED(result)) 
+              result = nsEditor::DeleteNode(aNewParentNode);
+              if (NS_SUCCEEDED(result))
+              { // must get child offset AFTER delete of aNewParentNode!
+                result = nsIEditorSupport::GetChildOffset(aNode, parentNode, offsetInParent);
+                if (NS_SUCCEEDED(result))
                 {
-                  result = nsEditor::InsertNode(newChildNode, *aNewNode, 0);
-                  if (NS_SUCCEEDED(result)) 
-                  { // set the selection
-                    nsCOMPtr<nsIDOMSelection>selection;
-                    result = nsEditor::GetSelection(getter_AddRefs(selection));
+                  result = nsEditor::InsertNode(aNewParentNode, parentNode, offsetInParent);
+                  if (NS_SUCCEEDED(result))
+                  {
+                    // then move the new child into the new parent node
+                    result = nsEditor::DeleteNode(newChildNode);
                     if (NS_SUCCEEDED(result)) 
                     {
-                      selection->Collapse(newChildNode, 0);
-                      PRInt32 endOffset = aEndOffset-aStartOffset;
-                      selection->Extend(newChildNode, endOffset);
+                      result = nsEditor::InsertNode(newChildNode, aNewParentNode, 0);
+                      if (NS_SUCCEEDED(result)) 
+                      { // set the selection
+                        nsCOMPtr<nsIDOMSelection>selection;
+                        result = nsEditor::GetSelection(getter_AddRefs(selection));
+                        if (NS_SUCCEEDED(result)) 
+                        {
+                          selection->Collapse(newChildNode, 0);
+                          PRInt32 endOffset = aEndOffset-aStartOffset;
+                          selection->Extend(newChildNode, endOffset);
+                        }
+                      }
                     }
                   }
                 }
@@ -1295,7 +1297,8 @@ NS_IMETHODIMP nsTextEditor::GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCou
 }
 
 // content-based inline vs. block query
-NS_IMETHODIMP nsTextEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const
+NS_IMETHODIMP 
+nsTextEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const
 {
   // this is a content-based implementation
   if (!aNode) { return NS_ERROR_NULL_POINTER; }
@@ -1331,6 +1334,83 @@ NS_IMETHODIMP nsTextEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) c
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTextEditor::GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent) const
+{
+  nsresult result = NS_OK;
+  if (!aBlockParent) {return NS_ERROR_NULL_POINTER;}
+  *aBlockParent = nsnull;
+  nsCOMPtr<nsIDOMNode>parent;
+  nsCOMPtr<nsIDOMNode>temp;
+  result = aNode->GetParentNode(getter_AddRefs(parent));
+  while (NS_SUCCEEDED(result) && parent)
+  {
+    PRBool isInline;
+    result = IsNodeInline(parent, isInline);
+    if (PR_FALSE==isInline)
+    {
+      parent->QueryInterface(nsIDOMElement::GetIID(), (void**)aBlockParent);
+      break;
+    }
+    result = parent->GetParentNode(getter_AddRefs(temp));
+    parent = do_QueryInterface(temp);
+  }
+  if (gNoisy) { printf("GetBlockParent for %p returning parent %p\n", aNode, *aBlockParent); }
+  return result;
+}
+
+NS_IMETHODIMP
+nsTextEditor::GetBlockDelimitedContent(nsIDOMNode *aParent, 
+                                       nsIDOMNode *aChild,
+                                       nsIDOMNode **aLeftNode, 
+                                       nsIDOMNode **aRightNode) const
+{
+  nsresult result = NS_OK;
+  if (!aParent || !aChild || !aLeftNode || !aRightNode) {return NS_ERROR_NULL_POINTER;}
+  *aLeftNode = aChild;
+  *aRightNode = aChild;
+
+  nsCOMPtr<nsIDOMNode>sibling;
+  result = aChild->GetPreviousSibling(getter_AddRefs(sibling));
+  while ((NS_SUCCEEDED(result)) && sibling)
+  {
+    PRBool isInline;
+    IsNodeInline(sibling, isInline);
+    if (PR_FALSE==isInline) 
+    {
+      nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(sibling);
+      if (!nodeAsText) {
+        break;
+      }
+    }
+    *aLeftNode = sibling;
+    result = (*aLeftNode)->GetPreviousSibling(getter_AddRefs(sibling)); 
+  }
+  NS_ADDREF((*aLeftNode));
+  // now do the right side
+  result = aChild->GetNextSibling(getter_AddRefs(sibling));
+  while ((NS_SUCCEEDED(result)) && sibling)
+  {
+    PRBool isInline;
+    IsNodeInline(sibling, isInline);
+    if (PR_FALSE==isInline) 
+    {
+      nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(sibling);
+      if (!nodeAsText) {
+        break;
+      }
+    }
+    *aRightNode = sibling;
+    result = (*aRightNode)->GetNextSibling(getter_AddRefs(sibling)); 
+  }
+  NS_ADDREF((*aRightNode));
+  if (gNoisy) { printf("GetBlockDelimitedContent returning %p %p\n", 
+                      (*aLeftNode), (*aRightNode)); }
+
+  return result;
+}
+
 
 NS_IMETHODIMP
 nsTextEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
@@ -2181,9 +2261,49 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState,
     }
     else if (nsIEditProperty::face==attribute)
     {
+      if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
+      { 
+        if (nsnull==aValue) {
+          aTypeInState.UnSet(NS_TYPEINSTATE_FONTFACE);
+        }
+        else { // we're just changing the value of color
+          aTypeInState.SetFontFace(*aValue);
+        }
+      }
+      else
+      { // get the current style and set font color if it's needed
+        if (!aValue) { return NS_ERROR_NULL_POINTER; }
+        PRBool any = PR_FALSE;
+        PRBool all = PR_FALSE;
+        PRBool first = PR_FALSE;
+        GetTextProperty(aPropName, aAttribute, aValue, first, any, all); // operates on current selection
+        if (PR_FALSE==all) {
+          aTypeInState.SetFontFace(*aValue);
+        }
+      } 
     }
     if (nsIEditProperty::size==attribute)
     {
+      if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
+      { 
+        if (nsnull==aValue) {
+          aTypeInState.UnSet(NS_TYPEINSTATE_FONTSIZE);
+        }
+        else { // we're just changing the value of size
+          aTypeInState.SetFontSize(*aValue);
+        }
+      }
+      else
+      { // get the current style and set font color if it's needed
+        if (!aValue) { return NS_ERROR_NULL_POINTER; }
+        PRBool any = PR_FALSE;
+        PRBool all = PR_FALSE;
+        PRBool first = PR_FALSE;
+        GetTextProperty(aPropName, aAttribute, aValue, first, any, all); // operates on current selection
+        if (PR_FALSE==all) {
+          aTypeInState.SetFontSize(*aValue);
+        }
+      } 
     }
     else { return NS_ERROR_FAILURE; }
   }
