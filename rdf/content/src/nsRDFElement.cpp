@@ -2484,27 +2484,13 @@ RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
         if (!element)
           continue;
 
-        nsAutoString name;
-        nsCOMPtr<nsIContent> pContent;
-        pContent = do_QueryInterface(child);
-        
-        PRInt32 namespaceID;
-        pContent->GetNameSpaceID(namespaceID);
-        
-        nsIAtom* pAtom = NS_NewAtom(aAttribute);
+        nsAutoString attrValue;
+        if (NS_FAILED(rv = element->GetAttribute(aAttribute, attrValue))) {
+            NS_ERROR("unable to get attribute value");
+            return rv;
+        }
 
-        nsString actualValue;
-
-        if (!pContent)
-          return rv;
-        
-        rv = pContent->GetAttribute(namespaceID, pAtom, actualValue);
-        
-        NS_IF_RELEASE(pAtom);
-
-        if (((rv == NS_CONTENT_ATTR_NO_VALUE || rv == NS_CONTENT_ATTR_HAS_VALUE) && aValue == "*") ||
-            (rv == NS_CONTENT_ATTR_HAS_VALUE && actualValue == aValue))
-        {
+        if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue == "*")) {
             if (NS_FAILED(rv = aElements->AppendNode(child))) {
                 NS_ERROR("unable to append element to node list");
                 return rv;
