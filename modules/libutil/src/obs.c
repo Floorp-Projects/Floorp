@@ -27,11 +27,7 @@
 #include "prclist.h"
 #include "prtypes.h"
 
-#ifdef STANDALONE_IMAGE_LIB
 #define MK_OUT_OF_MEMORY -1
-#else
-extern int MK_OUT_OF_MEMORY;
-#endif /* STANDALONE_IMAGE_LIB */
 
 typedef struct Observer
 {

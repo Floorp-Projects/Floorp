@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,13 +14,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#
-
 DEPTH=..\.. 
-!ifdef STANDALONE_IMAGE_LIB
+
 DIRS = public src public_com png pngcom jpgcom gifcom
-!else
-DIRS = png classes public src
-!endif
 
 !include $(DEPTH)\config\rules.mak

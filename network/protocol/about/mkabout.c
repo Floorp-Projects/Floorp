@@ -28,9 +28,6 @@
 #include "xplocale.h"
 #include "prefapi.h"
 #include "secnav.h"
-#ifndef STANDALONE_IMAGE_LIB
-#include "libimg.h"
-#endif
 #include "il_strm.h"
 #include "cookies.h"
 #include "httpauth.h"

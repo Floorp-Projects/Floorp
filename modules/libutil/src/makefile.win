@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,21 +15,14 @@
 # Reserved.
 
 
-# 
-
 MODULE=util 
 DEPTH=..\..\.. 
 CSRCS=obs.c 
 REQUIRES=nspr util 
 LIBRARY_NAME=util 
 C_OBJS=.\$(OBJDIR)\obs.obj 
-!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\util 
-!endif
 
 !include $(DEPTH)\config\rules.mak
 
-!ifdef STANDALONE_IMAGE_LIB
 install::  $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\
-!endif
