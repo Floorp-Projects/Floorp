@@ -15,7 +15,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
 MODULE= msgmork
@@ -32,11 +31,6 @@ EXPORTS=			\
 ## library
 
 LIBRARY_NAME=msgmork_s
-
-LCFLAGS =		   \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj				\
 			.\$(OBJDIR)\orkinEnv.obj				\

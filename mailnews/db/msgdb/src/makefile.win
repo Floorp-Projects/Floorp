@@ -15,8 +15,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
-
 DEPTH=..\..\..\..
 MODULE= msgdb
 
@@ -32,11 +30,6 @@ EXPORTS=				\
 ## library
 
 LIBRARY_NAME=msgdb_s
-
-LCFLAGS =			\
-        $(LCFLAGS)	\
-        $(DEFINES)	\
-        $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj		\
 			.\$(OBJDIR)\nsDBFolderInfo.obj		\
