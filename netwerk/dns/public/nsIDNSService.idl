@@ -45,9 +45,14 @@ interface nsIDNSService : nsISupports
                       in nsISupports ctxt);
 
     /**
-    * Syncronously resolve the hostname to its IP address. 
+    * Synchronously resolve the hostname to its IP address. 
     */
     string resolve(in string hostname);
+
+    /**
+    * returns our own IP address
+    */
+    readonly attribute string myIPAddress;
 
     /**
     * Check if the specified address is in the network of the pattern
