@@ -4619,7 +4619,7 @@ HTMLContentSink::ResumeParsing()
 {
   nsresult result=NS_OK;
   if (mParser) {
-    result=mParser->ResumeParsing();
+    result=mParser->ContinueParsing();
   }
   
   return result;
@@ -4820,7 +4820,10 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     }
   }
 
-  rv = ResumeParsing();
+  if(mParser && mParser->IsParserEnabled()){
+    rv=mParser->ContinueParsing();
+  }
+
   if (NS_FAILED(rv)) return rv;
 
   //invalidate Xfer buffer content

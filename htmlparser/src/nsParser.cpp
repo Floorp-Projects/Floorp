@@ -1500,13 +1500,12 @@ nsresult nsParser::Terminate(void){
 
 
 /**
- *  Call this when you want to toggle from the blocked state and resume parsing
  *  
  *  @update  gess 1/29/99
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
-nsresult nsParser::ResumeParsing(){
+nsresult nsParser::ContinueParsing(){
     
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
@@ -1515,8 +1514,7 @@ nsresult nsParser::ResumeParsing(){
   nsresult result=NS_OK;
   nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
 
-  // Enable the parser
-  UnblockParser();
+  mParserEnabled=PR_TRUE;
 
   PRBool isFinalChunk=(mParserContext && mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
   
@@ -1724,9 +1722,13 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
       NS_IF_RELEASE(theDTD);
     } 
     else { 
-      mParserContext->mStreamListenerState = (aLastCall) ? eOnStop:eOnDataAvail; // Fix 36148
       mParserContext->mScanner->Append(aSourceBuffer); 
       if(!mParserContext->mPrevContext) {
+        // Set stream listener state to eOnStop, on the final context - Fix 68160,
+        // to guarantee DidBuildModel() call - Fix 36148
+        if(aLastCall) {
+          mParserContext->mStreamListenerState=eOnStop;
+        }
         ResumeParse(PR_FALSE);
       }
     } 

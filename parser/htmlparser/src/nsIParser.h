@@ -220,8 +220,8 @@ class nsIParser : public nsISupports {
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
     
-    // This method enables the parser ( by calling UnblockParser() ) and resumes parsing.
-    virtual nsresult  ResumeParsing()   =0;
+    // Call this method to resume the parser from the blocked state..
+    virtual nsresult  ContinueParsing()   =0;
     
     // Stops parsing temporarily.
     virtual void      BlockParser()     =0;
