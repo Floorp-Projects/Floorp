@@ -175,3 +175,19 @@ nsXSLContentSink::ReportError(const PRUnichar* aErrorText,
   }
   return NS_OK;
 }
+
+nsresult
+nsXSLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
+                                nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                                nsIContent** aResult, PRBool* aAppendContent)
+{
+  *aAppendContent = PR_TRUE;
+  return NS_NewXMLElement(aResult, aNodeInfo);
+}
+
+nsresult
+nsXSLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
+{
+  *aAppendContent = PR_FALSE;
+  return NS_OK;
+}

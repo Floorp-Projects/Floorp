@@ -64,6 +64,13 @@ public:
                          const PRUnichar *aSourceText);
 
 protected:
+  // override nsXMLContentSink hooks
+  nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
+                         nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                         nsIContent** aResult, PRBool* aAppendContent);
+
+  nsresult CloseElement(nsIContent* aContent, PRBool* aAppendContent);
+
   NS_IMETHOD ProcessStyleLink(nsIContent* aElement,
                               const nsString& aHref,
                               PRBool aAlternate,

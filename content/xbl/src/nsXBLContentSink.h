@@ -106,15 +106,12 @@ protected:
                            PRInt32 aNameSpaceID, 
                            nsIAtom* aTagName);
     
-    nsresult CreateElement(const PRUnichar** aAtts, 
-                           PRUint32 aAttsCount, 
-                           PRInt32 aNameSpaceID, 
-                           nsINodeInfo* aNodeInfo, 
-                           nsIContent** aResult);
+    nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
+                           nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
+                           nsIContent** aResult, PRBool* aAppendContent);
     
     nsresult AddAttributes(const PRUnichar** aAtts, 
-                           nsIContent* aContent,
-                           PRBool aIsHTML);
+                           nsIContent* aContent);
     
     nsresult AddAttributesToXULPrototype(const PRUnichar **aAtts, 
                                          PRUint32 aAttsCount, 
