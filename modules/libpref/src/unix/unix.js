@@ -140,8 +140,8 @@ pref("font.name.monospace.zh-CN", "isas-song ti-gb2312.1980-0");
 pref("font.min-size.variable.ja", 16);
 pref("font.min-size.fixed.ja", 16);
 
-pref("font.min-size.variable.ko", 16);
-pref("font.min-size.fixed.ko", 16);
+pref("font.min-size.variable.ko", 10);
+pref("font.min-size.fixed.ko", 10);
 
 pref("font.min-size.variable.zh-CN", 16);
 pref("font.min-size.fixed.zh-CN", 16);
