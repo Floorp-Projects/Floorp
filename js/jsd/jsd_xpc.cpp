@@ -58,8 +58,8 @@
 #   define DEBUG_CREATE(name, count) {count++; DEBUG_COUNT ("+++++ "name,count)}
 #   define DEBUG_DESTROY(name, count) {count--; DEBUG_COUNT ("----- "name,count)}
 #else
-#   define DEBUG_CREATE (name, count) 
-#   define DEBUG_DESTROY (name, count)
+#   define DEBUG_CREATE(name, count) 
+#   define DEBUG_DESTROY(name, count)
 #endif
 
 #define ASSERT_VALID_CONTEXT  { if (!mCx) return NS_ERROR_NOT_AVAILABLE; }
