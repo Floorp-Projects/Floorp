@@ -634,7 +634,7 @@ function updateMap(pageData, wizardMap) {
     dump("Updating wizard map..\n");
     if (pageData.accounttype) {
         var ismailaccount = pageData.accounttype.mailaccount;
-        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value + "\n");
+        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value) + "\n");
         // set up default account stuff
         wizardMap.identity.next = "server";
         wizardMap.done.previous = "accname";
