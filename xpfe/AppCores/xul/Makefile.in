@@ -63,6 +63,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/ED_Link.gif \
 	$(srcdir)/resources/ED_Numbers.gif \
 	$(srcdir)/resources/ED_Paste.gif \
+	$(srcdir)/resources/ED_Redo.gif \
 	$(srcdir)/resources/ED_Right.gif \
 	$(srcdir)/resources/ED_Spell.gif \
 	$(srcdir)/resources/ED_Table.gif \
