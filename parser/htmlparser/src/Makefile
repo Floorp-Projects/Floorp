@@ -35,6 +35,7 @@ CPPSRCS =     \
   nsWellFormedDTD.cpp \
   nsParser.cpp  \
   CParserContext.cpp  \
+  nsHTMLEntities.cpp  \
   nsHTMLTokens.cpp  \
   nsHTMLTags.cpp \
   prstrm.cpp \
@@ -49,6 +50,7 @@ EXPORTS =     \
   nsIContentSink.h  \
   nsIHTMLContentSink.h  \
   nsHTMLContentSinkStream.h \
+  nsHTMLEntities.h    \
   nsHTMLTokens.h    \
   nsILoggingSink.h   \
   nsIParserNode.h   \
@@ -80,12 +82,17 @@ include $(DEPTH)/config/rules.mk
 export:: generate
 	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
 
-generate: nsHTMLTags.h
+generate: nsHTMLTags.h nsHTMLEntities.cpp
 
 $(OBJDIR)/nsHTMLTags.o: nsHTMLTags.h
 
 GENTAGS = $(DEPTH)/htmlparser/tools/gentags.pl
+GENENTITIES = $(DEPTH)/htmlparser/tools/genentities.pl
 
 nsHTMLTags.h: $(GENTAGS)
 	rm -f nsHTMLTags.h nsHTMLTags.cpp
 	$(PERL) $(GENTAGS) nsHTMLTags
+
+nsHTMLEntities.cpp: $(GENENTITIES)
+	rm -f nsHTMLEntities.cpp
+	$(PERL) $(GENENTITIES) nsHTMLEntities
