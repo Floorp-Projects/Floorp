@@ -2401,6 +2401,10 @@ nsSocketReadRequest::OnRead()
     // Handle the error conditions
     //
     if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
+        if (mInputStream->GotWouldBlock()) {
+            LOG(("nsSocketReadRequest: [this=%x] socket not ready for reading.\n", this));
+            return rv;
+        }
         LOG(("nsSocketReadRequest: [this=%x] listener would block; suspending self.\n", this));
         mSuspendCount++;
     }
@@ -2495,6 +2499,10 @@ nsSocketWriteRequest::OnWrite()
     // Handle the error conditions
     //
     if (NS_BASE_STREAM_WOULD_BLOCK == rv) {
+        if (mOutputStream->GotWouldBlock()) {
+            LOG(("nsSocketWriteRequest: [this=%x] socket not ready for writing.\n", this));
+            return rv;
+        }
         LOG(("nsSocketWriteRequest: [this=%x] provider would block; suspending self.\n", this));
         mSuspendCount++;
     }
