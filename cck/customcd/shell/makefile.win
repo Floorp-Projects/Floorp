@@ -28,4 +28,4 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\cck\InitDist.win>
 
 export::
-	$(MAKE_INSTALL) * $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
+	$(MAKE_INSTALL) * $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell

@@ -28,7 +28,7 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\cck\InitDist.win>
 
 export::
-	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
-	$(MAKE_INSTALL) *.inf $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
-	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
-	$(MAKE_INSTALL) *.txt $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
+	$(MAKE_INSTALL) *.exe $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
+	$(MAKE_INSTALL) *.inf $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
+	$(MAKE_INSTALL) *.ini $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
+	$(MAKE_INSTALL) *.txt $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
