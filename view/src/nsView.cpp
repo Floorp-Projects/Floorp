@@ -82,7 +82,38 @@ class ViewWrapper : public nsISupports
     nsView* mView;
 };
 
-NS_IMPL_ISUPPORTS1(ViewWrapper, ViewWrapper)
+NS_IMPL_ADDREF(ViewWrapper)
+NS_IMPL_RELEASE(ViewWrapper)
+#ifndef DEBUG
+NS_IMPL_QUERY_INTERFACE1(ViewWrapper, ViewWrapper)
+
+#else
+NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsIView)) &&
+               !aIID.Equals(NS_GET_IID(nsIScrollableView)),
+               "Someone expects a viewwrapper to be a view!");
+  
+  *aInstancePtr = nsnull;
+  
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
+  }
+  if (aIID.Equals(NS_GET_IID(ViewWrapper))) {
+    *aInstancePtr = this;
+  }
+
+  if (*aInstancePtr) {
+    AddRef();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}
+#endif
+
 
 /**
  * Given a widget, returns the stored ViewWrapper on it, or NULL if no
@@ -228,6 +259,9 @@ nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsISupports)),
+               "Someone expects views to be ISupports-derived!");
   
   *aInstancePtr = nsnull;
   
