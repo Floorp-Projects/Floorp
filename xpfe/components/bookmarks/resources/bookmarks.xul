@@ -96,7 +96,7 @@
   <key id="bm_key_properties" xulkey="true"
     key="&edit.properties.keybinding;"/>
 </keyset>
-
+<toolbox>
 <menubar>
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
@@ -150,6 +150,7 @@
     </menupopup>
   </menu>
 </menubar>
+</toolbox>
 
 <popupset>
 <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
