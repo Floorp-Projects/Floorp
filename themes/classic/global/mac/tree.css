@@ -50,6 +50,10 @@ treechildren:-moz-tree-row {
   height: 1.3em;
 }
 
+treechildren:-moz-tree-row(selected) {
+  background-color: -moz-Dialog;
+}
+
 treechildren:-moz-tree-row(selected, focus) {
   background-color: Highlight;
 }
