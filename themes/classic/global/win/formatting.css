@@ -49,7 +49,13 @@
     border-top            : 1px solid ThreeDHighlight;
     border-right          : 1px solid ThreeDShadow;
     border-bottom         : 1px solid ThreeDShadow;
-  }  
+  }
+  
+.outset-top-bottom
+  {
+    border-top            : 1px solid ThreeDHighlight;
+    border-bottom         : 1px solid ThreeDShadow;
+  }    
   
 /** separator rules **/
 /* standard separators */
