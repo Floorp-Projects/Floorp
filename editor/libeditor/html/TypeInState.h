@@ -68,6 +68,7 @@ public:
   void Reset();
   virtual ~TypeInState();
 
+  nsresult TypeInState::UpdateSelState(nsISelection *aSelection);
   NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
 
   nsresult SetProp(nsIAtom *aProp);
@@ -115,7 +116,6 @@ protected:
   PRInt32 mRelativeFontSize;
   nsCOMPtr<nsIDOMNode> mLastSelectionContainer;
   PRInt32 mLastSelectionOffset;
-  PRBool  mIgnoreSelNotificationHACK;
   
   friend class nsHTMLEditRules;
 };

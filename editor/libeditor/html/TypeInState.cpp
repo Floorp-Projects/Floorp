@@ -76,7 +76,6 @@ TypeInState::TypeInState() :
 ,mClearedArray()
 ,mRelativeFontSize(0)
 ,mLastSelectionOffset(0)
-,mIgnoreSelNotificationHACK(PR_FALSE)
 {
   Reset();
 }
@@ -89,7 +88,24 @@ TypeInState::~TypeInState()
   Reset();
 }
 
-NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aSelection,short)
+nsresult TypeInState::UpdateSelState(nsISelection *aSelection)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  
+  PRBool isCollapsed = PR_FALSE;
+  nsresult result = aSelection->GetIsCollapsed(&isCollapsed);
+
+  if (NS_FAILED(result)) return result;
+
+  if (isCollapsed)
+  {
+    result = nsEditor::GetStartNodeAndOffset(aSelection, address_of(mLastSelectionContainer), &mLastSelectionOffset);
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aSelection, short)
 {
   // XXX: Selection currently generates bogus selection changed notifications
   // XXX: (bug 140303). It can notify us when the selection hasn't actually
@@ -101,14 +117,6 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
 
-  if (mIgnoreSelNotificationHACK)
-  {
-    // short circuit the notification if editor has warned us that bogus
-    // notification is coming.
-    mIgnoreSelNotificationHACK = PR_FALSE;
-    return NS_OK;
-  }
-  
   if (aSelection)
   {
     PRBool isCollapsed = PR_FALSE;
