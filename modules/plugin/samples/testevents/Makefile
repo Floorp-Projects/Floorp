@@ -54,7 +54,7 @@ CPPSRCS		= npevents.cpp
 
 LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_XPCOM_LIBS) -L$(DIST)/lib 
+EXTRA_DSO_LDOPTS += $(XPCOM_LIBS) -L$(DIST)/lib 
 
 ifdef MOZ_ENABLE_GTK
 EXTRA_DSO_LDOPTS += -lgtksuperwin
