@@ -161,6 +161,7 @@ nsresult nsTextAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName,
 nsresult nsTextAddress::ReadRecord( nsIFileSpec *pSrc, char *pLine, PRInt32 bufferSz, char delim, PRInt32 *pLineLen)
 {
     PRBool        wasTruncated;
+    PRBool        isEof;
     char *        pRead;
     PRInt32        lineLen = 0;
     nsresult    rv;
@@ -175,16 +176,24 @@ nsresult nsTextAddress::ReadRecord( nsIFileSpec *pSrc, char *pLine, PRInt32 buff
         wasTruncated = PR_FALSE;
         pRead = pLine;
         pRead += lineLen;
-        rv = pSrc->ReadLine( &pRead, bufferSz - lineLen, &wasTruncated);
-        if (wasTruncated) {
+        pSrc->Eof(&isEof);
+        if (isEof)
+          // If we get an EOF here, then the line isn't complete
+          // so we must have an incorrect file.
+          rv = NS_ERROR_FAILURE;
+        else
+        {
+          rv = pSrc->ReadLine( &pRead, bufferSz - lineLen, &wasTruncated);
+          if (wasTruncated) {
             pLine[bufferSz - 1] = 0;
             IMPORT_LOG0( "Unable to read line from file, buffer too small\n");
             rv = NS_ERROR_FAILURE;
-        }
-        else if (NS_SUCCEEDED( rv)) {
+          }
+          else if (NS_SUCCEEDED( rv)) {
             lineLen = strlen( pLine);
+          }
         }
-    } while (NS_SUCCEEDED( rv) && !IsLineComplete( pLine, lineLen, delim));
+    } while (NS_SUCCEEDED( rv) && !IsLineComplete( pLine, lineLen));
 
     *pLineLen = lineLen;
     return( rv);
@@ -221,44 +230,19 @@ nsresult nsTextAddress::ReadRecordNumber( nsIFileSpec *pSrc, char *pLine, PRInt3
     Find out if the given line appears to be a complete record or
     if it needs more data because the line ends with a quoted value non-terminated
 */
-PRBool nsTextAddress::IsLineComplete( const char *pLine, PRInt32 len, char delim)
+PRBool nsTextAddress::IsLineComplete( const char *pLine, PRInt32 len)
 {
-    char    tab = 9;
-    if (delim == tab)
-        tab = 0;
-
     PRBool    quoted = PR_FALSE;
-    PRBool    wasDelim = PR_FALSE;
 
     while (len) {
-        // always skip white space?
-        while (len && ((*pLine == ' ') || (*pLine == tab))) {
-            pLine++;
-            len--;
-        }
-        if (len && wasDelim && (*pLine == '"')) {
-            quoted = PR_TRUE;
-            wasDelim = PR_FALSE;
-            pLine++;
-            len--;
-        }
-        else if (len && quoted && (*pLine == '"')) {
-            quoted = PR_FALSE;
-            pLine++;
-            len--;
-        }
-        else if (len) {
-            if (!quoted && (*pLine == delim))
-                wasDelim = PR_TRUE;
-            else
-                wasDelim = PR_FALSE;
-            pLine++;
-            len--;
-        }
+      if ((*pLine == '"')) {
+        quoted = !quoted;
+      }
+      pLine++;
+      len--;
     }
-    if (quoted)
-        return( PR_FALSE);
-    return( PR_TRUE);
+
+    return !quoted;
 }
 
 PRInt32 nsTextAddress::CountFields( const char *pLine, PRInt32 maxLen, char delim)
