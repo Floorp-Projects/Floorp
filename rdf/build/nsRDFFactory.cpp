@@ -245,10 +245,12 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFContentSink((nsIRDFContentSink**) &inst)))
             return rv;
     }
+#if 0 // I think we may need this later, re: rejecting assertions
 	else if (mClassID.Equals(kXULDataSourceCID)) {
 		if (NS_FAILED(rv = NS_NewXULDataSource((nsIRDFXMLDataSource**) &inst)))
 			return rv;
 	}
+#endif
 	else if (mClassID.Equals(kXULContentSinkCID)) {
         if (NS_FAILED(rv = NS_NewXULContentSink((nsIXULContentSink**) &inst)))
             return rv;
