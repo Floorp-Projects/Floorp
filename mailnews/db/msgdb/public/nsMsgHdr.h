@@ -57,6 +57,7 @@ protected:
     nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue, PRUint32 defaultValue = 0);
 
 	// reference and threading stuff.
+	nsresult	ParseReferences(nsCString &references);
 	const char*	GetNextReference(const char *startNextRef, nsCString &reference);
 	const char* GetPrevReference(const char *prevRef, nsCString &reference);
 
@@ -70,7 +71,7 @@ protected:
     PRUint16		m_numReferences;	// x-ref header for threading
     PRInt16			m_csID;			// cs id of message
 	nsCString		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
-	nsCString		m_references;
+	nsCStringArray		m_references;  // avoid parsing references every time we want one
     nsMsgPriority	m_priority;
 
     PRBool m_recipientsIsNewsgroup;

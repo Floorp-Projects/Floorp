@@ -70,18 +70,96 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 
 const int kMsgDBVersion = 1;
+const PRInt32 kMaxHdrsInCache = 200;
 
+nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_ERROR_FAILURE;
+
+	*result = nsnull;
+
+	if (m_bCacheHeaders && m_cachedHeaders)
+	{
+		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
+		nsCAutoString strKey;
+		strKey.Append(key, 10);
+		nsStringKey hashKey(strKey.GetBuffer());
+		// nsSupportsHashtable does an addref
+		*result = (nsIMsgDBHdr *) m_cachedHeaders->Get(&hashKey);
+		if (*result)
+			rv = NS_OK;
+	}
+	return rv;
+}
+
+nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we want key? We could get it from hdr
+{
+	if (m_bCacheHeaders)
+	{
+		if (!m_cachedHeaders)
+			m_cachedHeaders = new nsSupportsHashtable;
+		if (m_cachedHeaders)
+		{
+			nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
+			if (m_cachedHeaders->Count() > kMaxHdrsInCache)
+				ClearHdrCache();
+			// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
+			nsCAutoString strKey;
+			strKey.Append(key, 10);
+			nsStringKey hashKey(strKey.GetBuffer());
+			m_cachedHeaders->Put(&hashKey, hdr);
+			return NS_OK;
+		}
+	}
+	return NS_ERROR_FAILURE;
+}
+
+nsresult nsMsgDatabase::ClearHdrCache()
+{
+	if (m_cachedHeaders)
+	{
+		m_cachedHeaders->Reset();
+	}
+	return NS_OK;
+}
+
+nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
+{
+	if (m_cachedHeaders)
+	{
+		if (key == nsMsgKey_None)
+			hdr->GetMessageKey(&key);
+
+		nsCAutoString strKey;
+		strKey.Append(key, 10);
+		nsStringKey hashKey(strKey.GetBuffer());
+		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_cachedHeaders->Remove(&hashKey); // does this release, or do I have to?
+	}
+	return NS_OK;
+}
 
 nsresult
 nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *result)
 {
+	nsresult rv = GetHdrFromCache(key, result);
+	if (NS_SUCCEEDED(rv) && *result)
+	{
+		hdrRow->Release();
+		return rv;
+	}
+
 	nsMsgHdr *msgHdr = new nsMsgHdr(this, hdrRow);
 	if(!msgHdr)
 		return NS_ERROR_OUT_OF_MEMORY;
     msgHdr->SetMessageKey(key);
 	msgHdr->AddRef();
     *result = msgHdr;
-  
+
+	AddHdrToCache(msgHdr, key);  
+
 	return NS_OK;
 }
 
@@ -349,14 +427,20 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_messageCharSetColumnToken(0),
 	  m_threadParentColumnToken(0),
 	  m_threadRootKeyColumnToken(0),
+	  m_bCacheHeaders(PR_FALSE),
+	  m_cachedHeaders(nsnull),
 	  m_HeaderParser(nsnull)
 {
 	NS_INIT_REFCNT();
+	m_bCacheHeaders = PR_TRUE;
 }
 
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
+	ClearHdrCache();
+	delete m_cachedHeaders;
+
 	RemoveFromCache(this);
 #ifdef DEBUG_bienvenu1
 	if (GetNumInCache() != 0)
@@ -946,6 +1030,10 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
 		return NS_ERROR_NULL_POINTER;
 
 	*pmsgHdr = NULL;
+	err = GetHdrFromCache(key, pmsgHdr);
+	if (NS_SUCCEEDED(err) && *pmsgHdr)
+		return err;
+
 	rowObjectId.mOid_Id = key;
 	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
 	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
@@ -1098,6 +1186,7 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	// even if we couldn't find the thread,we should try to remove the header.
 //	if (NS_SUCCEEDED(ret))
 	{
+		RemoveHdrFromCache(msgHdr, nsMsgKey_None);
 		nsIMdbRow* row = msgHdr->GetMDBRow();
 		ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
 		row->CutAllColumns(GetEnv());

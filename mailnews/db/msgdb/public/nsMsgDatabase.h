@@ -36,6 +36,7 @@
 #include "nsICollation.h"
 #include "nsIMimeConverter.h"
 #include "nsCOMPtr.h"
+#include "nsHashtable.h"
 
 class ListContext;
 class nsMsgKeyArray;
@@ -346,6 +347,16 @@ protected:
 	mdb_token			m_threadParentColumnToken;
 	mdb_token			m_threadRootKeyColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;
+
+	// header caching stuff
+	nsresult			GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result);
+	nsresult			AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+	nsresult			ClearHdrCache();
+	nsresult			RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+
+	nsSupportsHashtable	*m_cachedHeaders;
+	PRBool				m_bCacheHeaders;
+
 };
 
 #endif

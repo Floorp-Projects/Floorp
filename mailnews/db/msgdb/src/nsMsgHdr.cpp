@@ -300,31 +300,36 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 	return NS_OK;
 }
 
+nsresult nsMsgHdr::ParseReferences(nsCString &references)
+{
+	const char *startNextRef = references.GetBuffer();
+	nsCAutoString resultReference;
+
+	while (startNextRef && *startNextRef)
+	{
+		startNextRef = GetNextReference(startNextRef, resultReference);
+		m_references.AppendCString(resultReference);
+	}
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultReference)
 {
 	nsresult err = NS_OK;
 
 	if(!(m_initedValues & REFERENCES_INITED))
 	{
-		m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_referencesColumnToken, m_references);
-
+		nsCAutoString references;
+		err = m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_referencesColumnToken, references);
+		
 		if(NS_SUCCEEDED(err))
+		{
+			ParseReferences(references);
 			m_initedValues |= REFERENCES_INITED;
+		}
 	}
 
-	nsCAutoString cStr(m_references);
-	const char *startNextRef = cStr.GetBuffer();
-	PRInt32 refIndex;
-	for (refIndex = 0; refIndex <= refNum && startNextRef; refIndex++)
-	{
-		startNextRef = GetNextReference(startNextRef, resultReference);
-		if (refIndex == refNum)
-			break;
-	}
-
-	if (refIndex != refNum)
-		resultReference.Truncate(0);
-
+	m_references.CStringAt(refNum, resultReference);
 	return err;
 }
 
@@ -354,20 +359,12 @@ NS_IMETHODIMP nsMsgHdr::SetAuthor(const char *author)
 
 NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 {
-	nsCAutoString reference;
+	nsCAutoString CStrReference(references);
+	ParseReferences(CStrReference);
 
-	for (const char *startNextRef = references; startNextRef != nsnull;)
-	{
-		startNextRef = GetNextReference(startNextRef, reference);
-
-		if (reference.Length() == 0)
-			break;
-		
-		m_numReferences++;
-	}
+	m_numReferences = m_references.Count();
 	SetUInt32Column(m_numReferences, m_mdb->m_numReferencesColumnToken);
 
-	m_references = references;
 	m_initedValues |= REFERENCES_INITED;
 
 	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
