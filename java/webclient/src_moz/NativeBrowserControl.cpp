@@ -31,6 +31,7 @@
 #include "nsEmbedAPI.h" // for NS_HandleEmbeddingEvent
 
 #include "EmbedWindow.h"
+#include "EmbedProgress.h"
 #include "NativeBrowserControl.h"
 #include "ns_util.h"
 
@@ -65,6 +66,15 @@ NativeBrowserControl::Init()
     mWindow = new EmbedWindow();
     mWindowGuard = NS_STATIC_CAST(nsIWebBrowserChrome *, mWindow);
     mWindow->Init(this);
+
+    // Create our progress listener object, make an owning reference,
+    // and initialize it.  It is assumed that this progress listener
+    // will be destroyed when we go out of scope.
+    mProgress = new EmbedProgress();
+    mProgressGuard = NS_STATIC_CAST(nsIWebProgressListener *,
+                                    mProgress);
+    mProgress->Init(this);
+
 
     nsCOMPtr<nsIWebBrowser> webBrowser;
     mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -104,7 +114,15 @@ NativeBrowserControl::Realize(void *parentWinPtr, PRBool *aAlreadyRealized,
 
     // create the window
     mWindow->CreateWindow_(width, height);
-    
+
+    // bind the progress listener to the browser object
+    nsCOMPtr<nsISupportsWeakReference> supportsWeak;
+    supportsWeak = do_QueryInterface(mProgressGuard);
+    nsCOMPtr<nsIWeakReference> weakRef;
+    supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
+    mWindow->AddWebBrowserListener(weakRef,
+                                   nsIWebProgressListener::GetIID());
+
     return NS_OK;
 }
 
@@ -168,6 +186,21 @@ NativeBrowserControl::Destroy(void)
     
     // release navigation
     mNavigation = nsnull;
+
+    // Release our progress listener
+    nsCOMPtr<nsISupportsWeakReference> supportsWeak;
+    supportsWeak = do_QueryInterface(mProgressGuard);
+    nsCOMPtr<nsIWeakReference> weakRef;
+    supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
+    webBrowser->RemoveWebBrowserListener(weakRef,
+                                         nsIWebProgressListener::GetIID());
+    weakRef = nsnull;
+    supportsWeak = nsnull;
+    
+    // Now that we have removed the listener, release our progress
+    // object
+    mProgressGuard = nsnull;
+    mProgress = nsnull;
     
     parentHWnd = nsnull;
 }

@@ -284,6 +284,13 @@ EmbedWindow::LoadStream(nsIInputStream *aStream, nsIURI * aURI,
                                 aLoadInfo);
 }
 
+nsresult
+EmbedWindow::AddWebBrowserListener(nsIWeakReference *aListener, 
+                                   const nsIID & aIID)
+{
+    return mWebBrowser->AddWebBrowserListener(aListener, aIID);
+}
+
 // nsISupports
 
 NS_IMPL_ADDREF(EmbedWindow)

@@ -143,8 +143,6 @@ public class NativeEventThread extends Thread {
 
  * @see nativeProcessEvents
 
- * @see nativeAddListener
-
  */
 
 public void run()

@@ -40,6 +40,7 @@
 
 #include "ns_util.h"
 
+class EmbedProgress;
 class EmbedWindow;
 
 /**
@@ -85,6 +86,8 @@ public:
 
     EmbedWindow *                  mWindow;
     nsCOMPtr<nsISupports>          mWindowGuard;
+    EmbedProgress *                mProgress;
+    nsCOMPtr<nsISupports>          mProgressGuard;
     ShareInitContext               mShareContext;
 
     // chrome mask

@@ -104,6 +104,7 @@ CPPSRCS = \
 	NativeBrowserControl.cpp \
 	NativeWrapperFactory.cpp \
 	EmbedWindow.cpp \
+	EmbedProgress.cpp \
 	NativeEventThread.cpp \
 	NavigationImpl.cpp \
 	ns_util.cpp \

@@ -45,6 +45,7 @@ class NativeBrowserControl;
 class nsIInputStream;
 class nsIURI;
 class nsIDocShellLoadInfo;
+class nsIWeakReference;
 
 #include "ns_util.h"
 
@@ -71,6 +72,9 @@ public:
                               const nsACString &aContentType,
                               const nsACString &aContentCharset,
                               nsIDocShellLoadInfo * aLoadInfo);
+
+    nsresult AddWebBrowserListener(nsIWeakReference *aListener, 
+                                   const nsIID & aIID);
     
     NS_DECL_ISUPPORTS
     

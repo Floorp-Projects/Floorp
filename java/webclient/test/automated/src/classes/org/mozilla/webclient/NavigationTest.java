@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.8 2004/06/03 14:28:41 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.9 2004/06/10 16:30:00 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -108,30 +108,25 @@ public class NavigationTest extends WebclientTestCase {
 	currentPage.selectAll();
 	selection = currentPage.getSelection();
 	System.out.println("Selection is: " + selection.toString());
+	assertTrue(-1 != selection.toString().indexOf("START Random Data"));
+	assertTrue(-1 != selection.toString().indexOf("END Random Data"));
 
-	/***********
 	//
 	// try loading from a FileInputStream
 	//
 	FileInputStream fis = new FileInputStream(testPage);
 	nav.loadFromStream(fis, "http://somefile.com/",
 			   "text/html", -1, null);
-	boolean keepWaiting = true;
-	//while (keepWaiting) {
-	    Thread.currentThread().sleep(15000);
-	    //}
+	Thread.currentThread().sleep(1000);
 	
 	currentPage.selectAll();
 	selection = currentPage.getSelection();
 	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
 	System.out.println("Selection is: " + selection.toString());
-	*******************/
 
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
 	BrowserControlFactory.appTerminate();
-	assertTrue(-1 != selection.toString().indexOf("START Random Data"));
-	assertTrue(-1 != selection.toString().indexOf("END Random Data"));
     }
 
 }

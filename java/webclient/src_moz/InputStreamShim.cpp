@@ -343,6 +343,7 @@ InputStreamShim::doClose(void)
         mCallbackFlags = nsnull;
     }
 
+    mCloseStatus = NS_BASE_STREAM_CLOSED;
     mDidClose = PR_TRUE;
     return rv;
 }
@@ -359,11 +360,15 @@ InputStreamShim::Available(PRUint32* aResult)
         return NS_ERROR_NULL_POINTER;
     }
     if (mDoClose) {
+        if (mAvailableForMozilla) {
+            *aResult = mAvailableForMozilla;
+            return NS_OK;
+        }
         return mCloseStatus;
     }
     PR_ASSERT(mLock);
     PR_Lock(mLock);
-    //    *aResult = mAvailableForMozilla;
+    // *aResult = mAvailableForMozilla;
     *aResult = PR_UINT32_MAX;
     rv = NS_OK;
     PR_Unlock(mLock);
