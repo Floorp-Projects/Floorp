@@ -71,7 +71,7 @@
 #include "nsIHTMLContent.h"
 #include "nsRDFGenericBuilder.h"
 
-// #define	XUL_TEMPLATES	1
+#define	XUL_TEMPLATES	1
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -755,16 +755,6 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 			break;
 		}
 
-#ifdef	DEBUG
-		nsString	crap;
-		attribAtom->ToString(crap);
-		char		*crap2 = crap.ToNewCString();
-		if (crap2)
-		{
-			delete [] crap2;
-		}
-#endif
-
 		// Note: some attributes must be skipped on XUL template rule subtree
 
 		// never compare against rdf:container attribute
@@ -1098,14 +1088,27 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 								{
 									// found an attribute which wants to bind its value
 									// to RDF so look it up in the graph
+#if 0
+	// this is commented out due to a bug in nsAutoString's Cut() method
+	// and instead we're doing a little hacky workaround
 									attribValue = attribValue.Cut(0,4);
 									char *prop = attribValue.ToNewCString();
+#else
+									char *crap = attribValue.ToNewCString();
+									char *prop = &crap[4];
+#endif
 									if (nsnull == prop)	continue;
 									attribValue = "";
 
 									nsCOMPtr<nsIRDFResource>	propRes;
 									rv = gRDFService->GetResource(prop, getter_AddRefs(propRes));
+#if 0
+	// this is commented out due to a bug in nsAutoString's Cut() method
+	// and instead we're doing a little hacky workaround
 									delete [] prop;
+#else
+									delete [] crap;
+#endif
 									if (NS_FAILED(rv))	continue;
 
 									nsCOMPtr<nsIRDFNode>		valueNode;
