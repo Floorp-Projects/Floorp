@@ -285,6 +285,10 @@ public:
     STDMETHODIMP      QueryInterface(REFIID, void**);
     NS_DECL_ISUPPORTS
 
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChild( 
+        /* [in] */ VARIANT varChild,
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
+
     // nsIAccessibleEventListener
     NS_DECL_NSIACCESSIBLEEVENTLISTENER
 
