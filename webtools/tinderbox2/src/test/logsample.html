@@ -36,6 +36,7 @@ tinderbox: timenow: 934395489
 tinderbox: status: success
 tinderbox: buildname: worms-SunOS-sparc-5.6-Depend-apprunner
 tinderbox: errorparser: unix
+tinderbox: administrator: tinderboxadmin@mozilla.org
 tinderbox: END
 
 
@@ -8452,4 +8453,13 @@ End:   Sun Apr  2 13:36:48 2000
 ----------- End Output from DomToTextConversionTest --------- 
 DomToTextConversionTest exited normally
 Status token, FAILED, not found
+
+
+TinderboxPrint: <a title="Leaks: total bytes 'malloc'ed and not 'free'd"href="http://tegu.mozilla.org/graph/query.cgi?testname=trace_malloc_leaks&units=bytes&tbox=backupboy&autoscale=1&days=7&avg=1">Lk:301KB</a>
+
+
+TinderboxPrint: <a title="Maximum Heap: max (bytes 'malloc'ed - bytes 'free'd) over run"href="http://tegu.mozilla.org/graph/query.cgi?testname=trace_malloc_maxheap&units=bytes&tbox=backupboy&autoscale=1&days=7&avg=1">MH:7.82MB</a>
+
+
+TinderboxPrint: <a title="Allocations: number of calls to 'malloc' and friends"href="http://tegu.mozilla.org/graph/query.cgi?testname=trace_malloc_allocs&units=bytes&tbox=backupboy&autoscale=1&days=7&avg=1">A:284K</a>
 
