@@ -22,11 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=related
-
-XPIDLSRCS	= nsIRelatedLinksHandler.idl	\
-		  $(NULL)
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
+
+FILES = \
+	related-panel.xul	\
+	related-panel.js	\
+	$(NULL)
+
+FILES := $(addprefix $(srcdir)/, $(FILES))
+
+install::
+	$(INSTALL) $(FILES) $(DIST)/bin/res/samples
