@@ -61,12 +61,21 @@
     </content>
   </binding>
 
-  <binding id="treecell" extends="xul:text">
+  <binding id="treecell-text" extends="xul:text">
     <content crop="right"/>
   </binding>
 
-  <binding id="treecell-align-right" extends="xul:text">
-    <content align="right"/>
+  <binding id="treecell">
+    <content autostretch="never">
+       <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="treecell-align-right">
+    <content autostretch="never">
+      <xul:spring flex="5"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
   </binding>
 
   <binding id="treecell-iconic">
