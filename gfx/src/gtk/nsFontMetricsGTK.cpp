@@ -17,7 +17,7 @@
  */
 
 #include "xp_core.h"
-#include "xp_qsort.h"
+#include "nsQuickSort.h"
 #include "nsFontMetricsGTK.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
@@ -1481,7 +1481,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
 }
 
 static int
-CompareSizes(const void* aArg1, const void* aArg2)
+CompareSizes(const void* aArg1, const void* aArg2, void *data)
 {
   return ((nsFontGTK*) aArg1)->mSize - ((nsFontGTK*) aArg2)->mSize;
 }
@@ -1489,7 +1489,7 @@ CompareSizes(const void* aArg1, const void* aArg2)
 void
 nsFontStretch::SortSizes(void)
 {
-  XP_QSORT(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes);
+  nsQuickSort(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes, NULL);
 }
 
 void
