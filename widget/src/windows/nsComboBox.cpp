@@ -24,6 +24,21 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+NS_IMPL_ADDREF(nsComboBox)
+NS_IMPL_RELEASE(nsComboBox)
+
+//-------------------------------------------------------------------------
+//
+// nsComboBox constructor
+//
+//-------------------------------------------------------------------------
+nsComboBox::nsComboBox() : nsWindow(), nsIListWidget(), nsIComboBox()
+{
+  NS_INIT_REFCNT();
+  mBackground = NS_RGB(124, 124, 124);
+  mDropDownHeight = 60; // Default to 60 pixels for drop-down list height
+}
+
 //-------------------------------------------------------------------------
 //
 //  destructor
@@ -135,16 +150,6 @@ void nsComboBox::Deselect()
   ::SendMessage(mWnd, CB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
 }
 
-//-------------------------------------------------------------------------
-//
-// nsComboBox constructor
-//
-//-------------------------------------------------------------------------
-nsComboBox::nsComboBox(nsISupports *aOuter) : nsWindow(aOuter)
-{
-  mBackground = NS_RGB(124, 124, 124);
-  mDropDownHeight = 60; // Default to 60 pixels for drop-down list height
-}
 
 //-------------------------------------------------------------------------
 //
@@ -160,26 +165,23 @@ nsComboBox::~nsComboBox()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsComboBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
+  static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
 
-    static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
-    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-    if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(kInsComboBoxIID)) {
-        *aInstancePtr = (void*) ((nsIComboBox*)this);
-        AddRef();
-        result = NS_OK;
-      }
-      else if (aIID.Equals(kInsListWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIListWidget*)this);
-        AddRef();
-        result = NS_OK;
-      }
-    }
+  if (aIID.Equals(kInsComboBoxIID)) {
+    *aInstancePtr = (void*) ((nsIComboBox*)this);
+    AddRef();
+    return NS_OK;
+  }
+  else if (aIID.Equals(kInsListWidgetIID)) {
+    *aInstancePtr = (void*) ((nsIListWidget*)this);
+    AddRef();
+    return NS_OK;
+  }
 
-    return result;
+  return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------

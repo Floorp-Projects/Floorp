@@ -26,16 +26,14 @@
  * Native Win32 Application shell wrapper
  */
 
-class nsAppShell : public nsIAppShell, public nsObject
+class nsAppShell : public nsObject, public nsIAppShell
 {
   public:
-                            nsAppShell(nsISupports *aOuter); 
+                            nsAppShell(); 
     virtual                 ~nsAppShell();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+    NS_DECL_ISUPPORTS
 
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
     PRBool                  OnPaint();
 
     // nsIAppShellInterface

@@ -24,6 +24,22 @@
 #include "nsFileWidget.h"
 #include <windows.h>
 
+
+NS_IMPL_ADDREF(nsFileWidget)
+NS_IMPL_RELEASE(nsFileWidget)
+
+//-------------------------------------------------------------------------
+//
+// nsFileWidget constructor
+//
+//-------------------------------------------------------------------------
+nsFileWidget::nsFileWidget() : nsObject(), nsIFileWidget()
+{
+  NS_INIT_REFCNT();
+  mWnd = NULL;
+  mNumberOfFilters = 0;
+}
+
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
@@ -141,25 +157,16 @@ void  nsFileWidget::SetDefaultString(nsString& aString)
   mDefault = aString;
 }
 
-//-------------------------------------------------------------------------
-//
-// nsFileWidget constructor
-//
-//-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsObject(aOuter)  
-{
-  mWnd = NULL;
-  mNumberOfFilters = 0;
-}
 
+ 
 
-void   nsFileWidget:: Create(nsIWidget *aParent,
-                                 nsString& aTitle,
-                                 nsMode aMode,
-                                 nsIDeviceContext *aContext,
-                                 nsIAppShell *aAppShell,
-                                 nsIToolkit *aToolkit,
-                                 void *aInitData)
+void nsFileWidget::Create(nsIWidget *aParent,
+                           nsString& aTitle,
+                           nsMode aMode,
+                           nsIDeviceContext *aContext,
+                           nsIAppShell *aAppShell,
+                           nsIToolkit *aToolkit,
+                           void *aInitData)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
   mTitle.SetLength(0);
@@ -182,7 +189,7 @@ nsFileWidget::~nsFileWidget()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsFileWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   //  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
 

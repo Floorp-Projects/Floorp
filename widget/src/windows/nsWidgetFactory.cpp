@@ -86,14 +86,18 @@ public:
 private:   
     nsrefcnt mRefCnt;   
     nsCID mClassID;
-};   
+}; 
+
+NS_IMPL_ADDREF(nsWidgetFactory)
+NS_IMPL_RELEASE(nsWidgetFactory)
+  
 
 
 
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
 {   
-    mRefCnt = 0;
-    mClassID = aClass;
+  NS_INIT_REFCNT();
+  mClassID = aClass;
 }   
 
 nsWidgetFactory::~nsWidgetFactory()   
@@ -125,21 +129,8 @@ nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,
     return NS_OK;   
 }   
 
-nsrefcnt nsWidgetFactory::AddRef()   
-{   
-    return ++mRefCnt;   
-}   
 
-nsrefcnt nsWidgetFactory::Release()   
-{   
-    if (--mRefCnt == 0) {   
-        delete this;   
-        return 0; // Don't access mRefCnt after deleting!   
-    }   
-    return mRefCnt;   
-}  
-
-nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,  
+nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
@@ -154,77 +145,74 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    nsObject *inst = nsnull;
+    nsISupports *inst = nsnull;
     if (mClassID.Equals(kCWindow)) {
-        inst = (nsObject*)new nsWindow(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
-        inst = (nsObject*)new ChildWindow(aOuter);
+        inst = (nsISupports*)(nsObject*)new ChildWindow();
     }
     else if (mClassID.Equals(kCButton)) {
-        inst = (nsObject*)new nsButton(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsButton();
     }
     else if (mClassID.Equals(kCCheckButton)) {
-        inst = (nsObject*)new nsCheckButton(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsCheckButton();
     }
     else if (mClassID.Equals(kCCombobox)) {
-        inst = (nsObject*)new nsComboBox(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsComboBox();
     }
     else if (mClassID.Equals(kCRadioButton)) {
-        inst = (nsObject*)new nsRadioButton(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsRadioButton();
     }
     else if (mClassID.Equals(kCRadioGroup)) {
-        inst = (nsObject*)new nsRadioGroup(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsRadioGroup();
     }
     else if (mClassID.Equals(kCFileOpen)) {
-        inst = (nsObject*)new nsFileWidget(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
-        inst = (nsObject*)new nsListBox(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsListBox();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
-        inst = (nsObject*)new nsScrollbar(aOuter, PR_FALSE);
+        inst = (nsISupports*)(nsObject*)new nsScrollbar(PR_FALSE);
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
-        inst = (nsObject*)new nsScrollbar(aOuter, PR_TRUE);
+        inst = (nsISupports*)(nsObject*)new nsScrollbar(PR_TRUE);
     }
     else if (mClassID.Equals(kCTextArea)) {
-        inst = (nsObject*)new nsTextAreaWidget(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCTextField)) {
-        inst = (nsObject*)new nsTextWidget(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsTextWidget();
     }
     else if (mClassID.Equals(kCTabWidget)) {
-        inst = (nsObject*)new nsTabWidget(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsTabWidget();
     }
     else if (mClassID.Equals(kCTooltipWidget)) {
-        inst = (nsObject*)new nsTooltipWidget(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsTooltipWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsObject*)new nsAppShell(aOuter);
+        inst = (nsISupports*)(nsObject*)(nsAppShell*)new nsAppShell();
     }
     else if (mClassID.Equals(kCLookAndFeel)) {
-        inst = (nsObject*)new nsLookAndFeel(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsLookAndFeel();
     }
     else if (mClassID.Equals(kCDialog)) {
-        inst = (nsObject*)new nsDialog(aOuter);
+        inst = (nsISupports*)(nsObject*)new nsDialog();
     }
     else if (mClassID.Equals(kCLabel)) {
-        inst = (nsObject*)new nsLabel(aOuter);
-    }
+        inst = (nsISupports*)(nsObject*)new nsLabel();
+    }/* */
   
     if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
     }  
 
-    nsresult res = inst->QueryObject(aIID, aResult);
+    nsresult res = inst->QueryInterface(aIID, aResult);
 
     if (res != NS_OK) {  
         // We didn't get the right interface, so clean up  
         delete inst;  
-    }  
-    else {
-      NS_RELEASE(inst);
     }
 
     return res;  

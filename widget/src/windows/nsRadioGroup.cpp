@@ -120,6 +120,38 @@ PRBool HashtableEnum(nsHashKey *aKey, void *aData) {
   return PR_TRUE;
 }
 
+
+
+NS_IMPL_ADDREF(nsRadioGroup)
+NS_IMPL_RELEASE(nsRadioGroup)
+
+
+//-------------------------------------------------------------------------
+//
+// nsRadioGroup constructor
+//
+//-------------------------------------------------------------------------
+nsRadioGroup::nsRadioGroup() : nsObject()
+{
+  NS_INIT_REFCNT();
+  mChildren = NULL;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// nsRadioGroup destructor
+//
+//-------------------------------------------------------------------------
+nsRadioGroup::~nsRadioGroup()
+{
+  if (mChildren) {
+      mChildren = NULL;
+  }
+}
+
+
+
 //-------------------------------------------------------------------------
 //
 // nsRadioGroup static methods
@@ -136,38 +168,15 @@ NS_EXPORT nsIRadioGroup * NS_GetRadioGroup(const nsString &aName) {
 }
 
 
-//-------------------------------------------------------------------------
-//
-// nsRadioGroup constructor
-//
-//-------------------------------------------------------------------------
-nsRadioGroup::nsRadioGroup(nsISupports *aOuter) : nsObject(aOuter)
-{
-  mChildren = NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// nsRadioGroup destructor
-//
-//-------------------------------------------------------------------------
-nsRadioGroup::~nsRadioGroup()
-{
-    if (mChildren) {
-        mChildren = NULL;
-    }
-}
-
 
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsRadioGroup::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsRadioGroup::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsObject::QueryObject(aIID, aInstancePtr);
+    nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsRadioGroupIID, NS_IRADIOGROUP_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsRadioGroupIID)) {
@@ -186,11 +195,12 @@ nsresult nsRadioGroup::QueryObject(const nsIID& aIID, void** aInstancePtr)
 // Gives a name to this group of radio buttons
 //
 //-------------------------------------------------------------------------
-void nsRadioGroup::SetName(const nsString &aName)
+NS_METHOD nsRadioGroup::SetName(const nsString &aName)
 {
   mName.SetLength(0);
   mName.Append(aName);
   mRadioGroupHashtable->Put(new nsStringHashKey(aName), this);
+  return NS_OK;
 }
 
 
@@ -199,7 +209,7 @@ void nsRadioGroup::SetName(const nsString &aName)
 // Adds a nsRadioButton to this group
 //
 //-------------------------------------------------------------------------
-void nsRadioGroup::Clicked(nsIRadioButton * aChild) 
+NS_METHOD nsRadioGroup::Clicked(nsIRadioButton * aChild) 
 {
 #if 0
 	if (mChildren) {
@@ -213,6 +223,7 @@ void nsRadioGroup::Clicked(nsIRadioButton * aChild)
     NS_RELEASE(enumerator);
 	}
 #endif
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -220,14 +231,14 @@ void nsRadioGroup::Clicked(nsIRadioButton * aChild)
 // Adds a nsRadioButton to this group
 //
 //-------------------------------------------------------------------------
-void nsRadioGroup::Add(nsIRadioButton * aChild) 
+NS_METHOD nsRadioGroup::Add(nsIRadioButton * aChild) 
 {
-    if (!mChildren) {
-      mChildren = new Enumerator();
-    }
+  if (!mChildren) {
+    mChildren = new Enumerator();
+  }
 
-    mChildren->Append(aChild);
-
+  mChildren->Append(aChild);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -235,12 +246,12 @@ void nsRadioGroup::Add(nsIRadioButton * aChild)
 // Removes a nsRadioButton from this group
 //
 //-------------------------------------------------------------------------
-void nsRadioGroup::Remove(nsIRadioButton * aChild) 
+NS_METHOD nsRadioGroup::Remove(nsIRadioButton * aChild) 
 {
 	if (mChildren) {
         mChildren->Remove(aChild);
     }
-
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

@@ -36,31 +36,28 @@ class nsRadioButton : public nsWindow,
 {
 
 public:
-                            nsRadioButton(nsISupports *aOuter);
+                            nsRadioButton();
     virtual                 ~nsRadioButton();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
-
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-    BASE_IWIDGET_IMPL
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     // nsIRadioButton part
-    virtual void            SetLabel(const nsString& aText);
-    virtual void            GetLabel(nsString& aBuffer);
+    NS_IMETHOD              SetLabel(const nsString& aText);
+    NS_IMETHOD              GetLabel(nsString& aBuffer);
+    NS_IMETHOD              SetState(const PRBool aState);
+    NS_IMETHOD              GetState(PRBool& aState);
 
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
     virtual void            GetBounds(nsRect &aRect);
 
-    virtual void            SetState(PRBool aState);
-    virtual PRBool          GetState();
 
 protected:
-    PRBool         fState;
+    PRBool                  fState;
 
     virtual LPCTSTR         WindowClass();
     virtual DWORD           WindowStyle();

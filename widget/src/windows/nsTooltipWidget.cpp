@@ -27,13 +27,18 @@
 
 BOOL nsTooltipWidget::sTooltipWidgetIsRegistered = FALSE;
 
+
+NS_IMPL_ADDREF(nsTooltipWidget)
+NS_IMPL_RELEASE(nsTooltipWidget)
+
 //-------------------------------------------------------------------------
 //
 // nsTooltipWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTooltipWidget::nsTooltipWidget(nsISupports *aOuter) : nsWindow(aOuter)
+nsTooltipWidget::nsTooltipWidget()
 {
+  NS_INIT_REFCNT();
 }
 
 //-------------------------------------------------------------------------
@@ -50,9 +55,9 @@ nsTooltipWidget::~nsTooltipWidget()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsTooltipWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsTooltipWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kInsTooltipWidgetIID, NS_ITOOLTIPWIDGET_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kInsTooltipWidgetIID)) {

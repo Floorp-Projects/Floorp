@@ -21,15 +21,24 @@
  
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
+NS_IMPL_ADDREF(nsLookAndFeel)
+NS_IMPL_RELEASE(nsLookAndFeel)
+
+nsLookAndFeel::nsLookAndFeel() : nsObject(), nsILookAndFeel()
+{
+  NS_INIT_REFCNT();
+
+}
+
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
 
-nsresult nsLookAndFeel::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsLookAndFeel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsObject::QueryObject(aIID, aInstancePtr);
+  nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
 
   if (result == NS_NOINTERFACE && aIID.Equals(kILookAndFeelIID)) {
       *aInstancePtr = (void*) ((nsILookAndFeel*)this);
@@ -38,10 +47,6 @@ nsresult nsLookAndFeel::QueryObject(const nsIID& aIID, void** aInstancePtr)
   }
 
   return result;
-}
-
-nsLookAndFeel::nsLookAndFeel(nsISupports *aOuter): nsObject(aOuter)
-{
 }
 
 nsLookAndFeel::~nsLookAndFeel()

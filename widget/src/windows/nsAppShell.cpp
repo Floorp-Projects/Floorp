@@ -19,6 +19,23 @@
 #include "nsAppShell.h"
 #include <windows.h>
 
+NS_IMPL_ADDREF(nsAppShell)
+NS_IMPL_RELEASE(nsAppShell)
+
+
+//-------------------------------------------------------------------------
+//
+// nsAppShell constructor
+//
+//-------------------------------------------------------------------------
+nsAppShell::nsAppShell() : nsObject() 
+{ 
+  NS_INIT_REFCNT();
+  mDispatchListener = 0;
+}
+
+
+
 //-------------------------------------------------------------------------
 //
 // Create the application shell
@@ -66,16 +83,6 @@ void nsAppShell::Exit()
 
 //-------------------------------------------------------------------------
 //
-// nsAppShell constructor
-//
-//-------------------------------------------------------------------------
-nsAppShell::nsAppShell(nsISupports *aOuter) : nsObject(aOuter)  
-{ 
-  mDispatchListener = 0;
-}
-
-//-------------------------------------------------------------------------
-//
 // nsAppShell destructor
 //
 //-------------------------------------------------------------------------
@@ -88,12 +95,13 @@ nsAppShell::~nsAppShell()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsAppShell::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     nsresult result = NS_NOINTERFACE;
     static NS_DEFINE_IID(kInsAppShellIID, NS_IAPPSHELL_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsAppShellIID)) {
-        *aInstancePtr = (void*) ((nsIAppShell*)this);
+        nsIAppShell* shell = this;
+        *aInstancePtr = (void*)shell;
         AddRef();
         result = NS_OK;
     }

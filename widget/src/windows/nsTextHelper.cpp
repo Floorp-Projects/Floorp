@@ -33,12 +33,13 @@ void nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
   }
 }
 
-void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
+NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
   ::SendMessage(mWnd, EM_SETLIMITTEXT, (WPARAM) (INT)aChars, 0);
+  return NS_OK;
 }
 
-PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
+NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize) {
 
   int length = GetWindowTextLength(mWnd);
   int bufLength = length + 1;
@@ -47,77 +48,85 @@ PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
   aTextBuffer.SetLength(0);
   aTextBuffer.Append(buf);
   NS_FREE_CHAR_BUF(buf);
-
-  return(0);
+  aActualSize = charsCopied;
+  return NS_OK;
 }
 
-PRUint32  nsTextHelper::SetText(const nsString &aText)
+NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 { 
   NS_ALLOC_STR_BUF(buf, aText, 512);
   SetWindowText(mWnd, buf);
   NS_FREE_STR_BUF(buf);
-  return(aText.Length());
+  aActualSize = aText.Length();
+  return NS_OK;
 }
 
-PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
+NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
 { 
   nsString currentText;
-  GetText(currentText, 256);
+  
+  PRUint32 actualSize;
+  GetText(currentText, 256, actualSize);
   nsString newText(aText);
   currentText.Insert(newText, aStartPos, aText.Length());
-  SetText(currentText);
-  return(aText.Length());
+  SetText(currentText,actualSize);
+  aActualSize = aText.Length();
+  return NS_OK;
 }
-
-void  nsTextHelper::RemoveText()
+NS_METHOD  nsTextHelper::RemoveText()
 {
   SetWindowText(mWnd, "");
+  return NS_OK;
 }
-
-void  nsTextHelper::SetPassword(PRBool aIsPassword)
+NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
   mIsPassword = aIsPassword;
+  return NS_OK;
 }
-
-PRBool  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag)
+NS_METHOD nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
-  PRBool oldSetting = mIsReadOnly;
+  aOldFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
-  return(oldSetting);
+  return NS_OK;
 }
-
   
-void nsTextHelper::SelectAll()
+NS_METHOD nsTextHelper::SelectAll()
 {
   ::SendMessage(mWnd, EM_SETSEL, (WPARAM) 0, (LPARAM)-1);
+  return NS_OK;
 }
 
-
-void  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
+NS_METHOD  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
   ::SendMessage(mWnd, EM_SETSEL, (WPARAM) (INT)aStartSel, (INT) (LPDWORD)aEndSel); 
+  return NS_OK;
 }
 
 
-void  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
+NS_METHOD  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
   ::SendMessage(mWnd, EM_GETSEL, (WPARAM) (LPDWORD)aStartSel, (LPARAM) (LPDWORD)aEndSel); 
+  return NS_OK;
 }
 
-void  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
+NS_METHOD  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 {
   SetSelection(aPosition, aPosition);
+  return NS_OK;
 }
 
-PRUint32  nsTextHelper::GetCaretPosition()
+NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPos)
 {
   PRUint32 start;
   PRUint32 end;
   GetSelection(&start, &end);
   if (start == end) {
-    return start;
+    aPos = start;
   }
-  return PRUint32(-1);/* XXX is this right??? scary cast! */
+  else {
+    aPos =  PRUint32(-1);/* XXX is this right??? scary cast! */
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -126,7 +135,7 @@ PRUint32  nsTextHelper::GetCaretPosition()
 //
 //-------------------------------------------------------------------------
 
-nsTextHelper::nsTextHelper(nsISupports *aOuter) : nsWindow(aOuter)
+nsTextHelper::nsTextHelper() : nsWindow(), nsITextAreaWidget(), nsITextWidget()
 {
   mIsReadOnly = PR_FALSE;
   mIsPassword = PR_FALSE;

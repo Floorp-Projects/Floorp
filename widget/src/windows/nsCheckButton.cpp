@@ -24,13 +24,18 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+
+NS_IMPL_ADDREF(nsCheckButton)
+NS_IMPL_RELEASE(nsCheckButton)
+
 //-------------------------------------------------------------------------
 //
 // nsCheckButton constructor
 //
 //-------------------------------------------------------------------------
-nsCheckButton::nsCheckButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton()
 {
+  NS_INIT_REFCNT();
 }
 
 
@@ -44,23 +49,44 @@ nsCheckButton::~nsCheckButton()
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsCheckButton::QueryObject(const nsIID& aIID, void** aInstancePtr)
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @modify gpk 8/4/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ * 
+*/ 
+nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
-
-    static NS_DEFINE_IID(kInsCheckButtonIID, NS_ICHECKBUTTON_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsCheckButtonIID)) {
-        *aInstancePtr = (void*) ((nsICheckButton*)this);
-        AddRef();
-        result = NS_OK;
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
     }
 
-    return result;
+    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
+    if (aIID.Equals(kICheckButtonIID)) {
+        *aInstancePtr = (void*) ((nsICheckButton*)this);
+        AddRef();
+        return NS_OK;
+    }
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Set this button label
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsCheckButton::SetState(const PRBool aState)
+{
+  BOOL state;
+  if (aState) 
+      state = BST_CHECKED;
+  else
+      state = BST_UNCHECKED;
+  ::SendMessage(mWnd, BM_SETCHECK, (WPARAM)state, (LPARAM)0);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -68,14 +94,13 @@ nsresult nsCheckButton::QueryObject(const nsIID& aIID, void** aInstancePtr)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::SetState(PRBool aState) 
+NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-    BOOL state;
-    if (aState) 
-        state = BST_CHECKED;
-    else
-        state = BST_UNCHECKED;
-    ::SendMessage(mWnd, BM_SETCHECK, (WPARAM)state, (LPARAM)0);
+  if (::SendMessage(mWnd, BM_GETCHECK, (WPARAM)0, (LPARAM)0) == BST_CHECKED)
+      aState = PR_TRUE;
+  else
+      aState = PR_FALSE;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -83,25 +108,13 @@ void nsCheckButton::SetState(PRBool aState)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-PRBool nsCheckButton::GetState()
+NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
-    if (::SendMessage(mWnd, BM_GETCHECK, (WPARAM)0, (LPARAM)0) == BST_CHECKED)
-        return PR_TRUE;
-    else
-        return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-void nsCheckButton::SetLabel(const nsString& aText)
-{
-    char label[256];
-    aText.ToCString(label, 256);
-    label[255] = '\0';
-    VERIFY(::SetWindowText(mWnd, label));
+  char label[256];
+  aText.ToCString(label, 256);
+  label[255] = '\0';
+  VERIFY(::SetWindowText(mWnd, label));
+  return NS_OK;
 }
 
 
@@ -110,7 +123,7 @@ void nsCheckButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::GetLabel(nsString& aBuffer)
+NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
   int actualSize = ::GetWindowTextLength(mWnd)+1;
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
@@ -118,6 +131,7 @@ void nsCheckButton::GetLabel(nsString& aBuffer)
   aBuffer.SetLength(0);
   aBuffer.Append(label);
   NS_FREE_CHAR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

@@ -29,49 +29,49 @@
  */
 
 class nsListBox :   public nsWindow,
+                    public nsIListWidget,
                     public nsIListBox
 {
 
 public:
-    nsListBox(nsISupports *aOuter);
-    virtual ~nsListBox();
+  nsListBox();
+  virtual ~nsListBox();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    virtual nsresult  QueryObject(const nsIID& aIID, void** aInstancePtr);
-    virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool    OnPaint();
-    virtual PRBool    OnResize(nsRect &aWindowRect);
-    virtual void      GetBounds(nsRect &aRect);
+  virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
+  virtual PRBool    OnPaint();
+  virtual PRBool    OnResize(nsRect &aWindowRect);
+  virtual void      GetBounds(nsRect &aRect);
 
-    // nsIWidget interface
-    BASE_IWIDGET_IMPL
 
-    // nsIListBox interface
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    void      AllowMultipleSelections(PRBool aMultiple);
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
-    virtual   void      PreCreateWidget(nsWidgetInitData *aInitData);
+  // nsIListBox interface
+  void      SetMultipleSelection(PRBool aMultipleSelections);
+  void      AddItemAt(nsString &aItem, PRInt32 aPosition);
+  PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
+  PRInt32   GetItemCount();
+  PRBool    RemoveItemAt(PRInt32 aPosition);
+  PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
+  void      GetSelectedItem(nsString& aItem);
+  PRInt32   GetSelectedIndex();
+  void      AllowMultipleSelections(PRBool aMultiple);
+  PRInt32   GetSelectedCount();
+  void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  void      SelectItem(PRInt32 aPosition);
+  void      Deselect() ;
+  void      PreCreateWidget(nsWidgetInitData *aInitData);
 
-     // nsWindow interface
-    virtual   PRBool AutoErase();
+   // nsWindow interface
+  virtual   PRBool AutoErase();
 protected:
-    PRBool  mMultiSelect;
-    virtual LPCTSTR WindowClass();
-    virtual DWORD   WindowStyle();
-    virtual DWORD   WindowExStyle();
+  PRBool  mMultiSelect;
+  virtual LPCTSTR WindowClass();
+  virtual DWORD   WindowStyle();
+  virtual DWORD   WindowExStyle();
 
 };
 

@@ -23,14 +23,17 @@
 #include "nsStringUtil.h"
 
 #include <windows.h>
+NS_IMPL_ADDREF(nsRadioButton)
+NS_IMPL_RELEASE(nsRadioButton)
 
 //-------------------------------------------------------------------------
 //
 // nsRadioButton constructor
 //
 //-------------------------------------------------------------------------
-nsRadioButton::nsRadioButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsRadioButton::nsRadioButton() : nsWindow(), nsIRadioButton()
 {
+  NS_INIT_REFCNT();
 }
 
 
@@ -49,30 +52,29 @@ nsRadioButton::~nsRadioButton()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsRadioButton::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-    static NS_DEFINE_IID(kInsRadioButtonIID, NS_IRADIOBUTTON_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsRadioButtonIID)) {
-        *aInstancePtr = (void*) ((nsIRadioButton*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
-}
+  static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
+  if (result == NS_NOINTERFACE && aIID.Equals(kIRadioButtonIID)) {
+      *aInstancePtr = (void*) ((nsIRadioButton*)this);
+      AddRef();
+      result = NS_OK;
+  }
+  return result;
+  }
 
 //-------------------------------------------------------------------------
 //
 // Sets the state of the nsRadioButton 
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::SetState(PRBool aState) 
+NS_METHOD nsRadioButton::SetState(const PRBool aState) 
 {
-    fState = aState;
-
-    ::SendMessage(GetWindowHandle(), BM_SETCHECK, (WPARAM)(fState), 0L);
+  fState = aState;
+  ::SendMessage(GetWindowHandle(), BM_SETCHECK, (WPARAM)(fState), 0L);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -80,9 +82,10 @@ void nsRadioButton::SetState(PRBool aState)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-PRBool nsRadioButton::GetState()
+NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-  return fState;
+  aState = fState;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -90,12 +93,13 @@ PRBool nsRadioButton::GetState()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::SetLabel(const nsString& aText)
+NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
-    char label[256];
-    aText.ToCString(label, 256);
-    label[255] = '\0';
-    VERIFY(::SetWindowText(mWnd, label));
+  char label[256];
+  aText.ToCString(label, 256);
+  label[255] = '\0';
+  VERIFY(::SetWindowText(mWnd, label));
+  return NS_OK;
 }
 
 
@@ -104,7 +108,7 @@ void nsRadioButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::GetLabel(nsString& aBuffer)
+NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 {
   int actualSize = ::GetWindowTextLength(mWnd)+1;
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
@@ -112,6 +116,7 @@ void nsRadioButton::GetLabel(nsString& aBuffer)
   aBuffer.SetLength(0);
   aBuffer.Append(label);
   NS_FREE_CHAR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

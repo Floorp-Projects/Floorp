@@ -23,13 +23,16 @@
 #include "nsString.h"
 #include <windows.h>
 
+NS_IMPL_ADDREF(nsTextWidget)
+NS_IMPL_RELEASE(nsTextWidget)
+
 
 //-------------------------------------------------------------------------
 //
 // nsTextWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsTextHelper(aOuter)
+nsTextWidget::nsTextWidget() : nsTextHelper()
 {
   mBackground = NS_RGB(124, 124, 124);
 }
@@ -48,9 +51,9 @@ nsTextWidget::~nsTextWidget()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsTextWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) {

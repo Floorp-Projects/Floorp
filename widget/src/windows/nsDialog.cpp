@@ -39,14 +39,18 @@
 #include "resource.h"
 #include <commctrl.h>
 
+NS_IMPL_ADDREF(nsDialog)
+NS_IMPL_RELEASE(nsDialog)
+
 //-------------------------------------------------------------------------
 //
 // nsDialog constructor
 //
 //-------------------------------------------------------------------------
-nsDialog::nsDialog(nsISupports *aOuter) : nsWindow(aOuter)
+nsDialog::nsDialog() : nsWindow(), nsIDialog()
 {
-    /* hDlgPrint = CreateDialog (hInst, (LPCTSTR) "PrintDlgBox", hwnd, PrintDlgProc) ;
+  NS_INIT_REFCNT();
+   /* hDlgPrint = CreateDialog (hInst, (LPCTSTR) "PrintDlgBox", hwnd, PrintDlgProc) ;
      SetDlgItemText (hDlgPrint, IDD_FNAME, szTitleName) ;
 
      SetAbortProc (pd.hDC, AbortProc) ;
@@ -56,6 +60,25 @@ nsDialog::nsDialog(nsISupports *aOuter) : nsWindow(aOuter)
 
 
 }
+
+
+
+//-------------------------------------------------------------------------
+//
+// Create the proper widget
+//
+//-------------------------------------------------------------------------
+void nsDialog::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+  nsWindow::Create(aParent,aRect,aHandleEventFunction,aContext,aAppShell,aToolkit,aInitData);
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -71,11 +94,12 @@ nsDialog::~nsDialog()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsDialog::SetLabel(const nsString& aText)
+NS_METHOD nsDialog::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   VERIFY(::SetWindowText(mWnd, label));
   NS_FREE_STR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -83,7 +107,7 @@ void nsDialog::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsDialog::GetLabel(nsString& aBuffer)
+NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
 {
   int actualSize = ::GetWindowTextLength(mWnd)+1;
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
@@ -91,6 +115,7 @@ void nsDialog::GetLabel(nsString& aBuffer)
   aBuffer.SetLength(0);
   aBuffer.Append(label);
   NS_FREE_CHAR_BUF(label);
+  return NS_OK;
 }
 
 
@@ -100,9 +125,9 @@ void nsDialog::GetLabel(nsString& aBuffer)
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsDialog::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kInsDialogIID, NS_IDIALOG_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kInsDialogIID)) {

@@ -24,6 +24,12 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+
+NS_IMPL_ADDREF(nsListBox)
+NS_IMPL_RELEASE(nsListBox)
+
+
+
 //-------------------------------------------------------------------------
 //
 //  initializer
@@ -215,8 +221,9 @@ void nsListBox::Deselect()
 // nsListBox constructor
 //
 //-------------------------------------------------------------------------
-nsListBox::nsListBox(nsISupports *aOuter) : nsWindow(aOuter)
+nsListBox::nsListBox() : nsWindow(), nsIListWidget(), nsIListBox()
 {
+  NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
   mBackground  = NS_RGB(124, 124, 124);
 }
@@ -235,9 +242,9 @@ nsListBox::~nsListBox()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
     static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);

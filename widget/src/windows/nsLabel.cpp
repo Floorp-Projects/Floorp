@@ -25,13 +25,17 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+NS_IMPL_ADDREF(nsLabel)
+NS_IMPL_RELEASE(nsLabel)
+
 //-------------------------------------------------------------------------
 //
 // nsLabel constructor
 //
 //-------------------------------------------------------------------------
-nsLabel::nsLabel(nsISupports *aOuter) : nsWindow(aOuter)
+nsLabel::nsLabel() : nsWindow(), nsILabel()
 {
+  NS_INIT_REFCNT();
   mAlignment = eAlign_Left;
 }
 
@@ -61,9 +65,9 @@ nsLabel::~nsLabel()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsLabel::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) {
@@ -80,9 +84,10 @@ nsresult nsLabel::QueryObject(const nsIID& aIID, void** aInstancePtr)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsLabel::SetAlignment(nsLabelAlignment aAlignment)
+NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 {
   mAlignment = aAlignment;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -90,11 +95,12 @@ void nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsLabel::SetLabel(const nsString& aText)
+NS_METHOD nsLabel::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   VERIFY(::SetWindowText(mWnd, label));
   NS_FREE_STR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -102,7 +108,7 @@ void nsLabel::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsLabel::GetLabel(nsString& aBuffer)
+NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
 {
   int actualSize = ::GetWindowTextLength(mWnd)+1;
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
@@ -110,6 +116,7 @@ void nsLabel::GetLabel(nsString& aBuffer)
   aBuffer.SetLength(0);
   aBuffer.Append(label);
   NS_FREE_CHAR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

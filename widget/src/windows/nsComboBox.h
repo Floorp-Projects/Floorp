@@ -29,38 +29,37 @@
  */
 
 class nsComboBox : public nsWindow,
+                   public nsIListWidget,
                    public nsIComboBox
 {
 
 public:
-    nsComboBox(nsISupports *aOuter);
+    nsComboBox();
     ~nsComboBox();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    nsresult  QueryObject(const nsIID& aIID, void** aInstancePtr);
-
+    // nsIWidget overrides
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool OnPaint();
     virtual PRBool OnResize(nsRect &aWindowRect);
     virtual void   GetBounds(nsRect &aRect);
 
-    // nsIWidget interface
-    BASE_IWIDGET_IMPL
+    // nsIComboBox interface
+    virtual void    AddItemAt(nsString &aItem, PRInt32 aPosition);
+    virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
+    virtual PRInt32 GetItemCount();
+    virtual PRBool  RemoveItemAt(PRInt32 aPosition);
+    virtual PRBool  GetItemAt(nsString& anItem, PRInt32 aPosition);
+    virtual void    GetSelectedItem(nsString& aItem);
+    virtual PRInt32 GetSelectedIndex();
+    virtual void    SelectItem(PRInt32 aPosition);
+    virtual void    Deselect() ;
 
-    // nsIComboBox part
-  
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
-    void      PreCreateWidget(nsWidgetInitData *aInitData);
+    virtual void    PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:
 

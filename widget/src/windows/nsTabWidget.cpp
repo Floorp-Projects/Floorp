@@ -25,14 +25,19 @@
 #include <commctrl.h>
 #include <windows.h>
 
+
+NS_IMPL_ADDREF(nsTabWidget)
+NS_IMPL_RELEASE(nsTabWidget)
+
 //-------------------------------------------------------------------------
 //
 // nsTabWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTabWidget::nsTabWidget(nsISupports *aOuter) : nsWindow(aOuter)
+nsTabWidget::nsTabWidget() : nsWindow()
 {
-   // Ensure that common controls dll is loaded
+  NS_INIT_REFCNT();
+  // Ensure that common controls dll is loaded
   InitCommonControls();
 }
 
@@ -50,9 +55,9 @@ nsTabWidget::~nsTabWidget()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsTabWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsTabWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kInsTabWidgetIID, NS_ITABWIDGET_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kInsTabWidgetIID)) {
@@ -70,7 +75,7 @@ nsresult nsTabWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
 //
 //-------------------------------------------------------------------------
 
-void nsTabWidget::SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[])
+NS_METHOD nsTabWidget::SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[])
 {
   TC_ITEM tie;
   char labelTemp[256];
@@ -81,6 +86,7 @@ void nsTabWidget::SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[])
     tie.pszText = labelTemp;
     TabCtrl_InsertItem(mWnd, i, &tie);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -90,9 +96,10 @@ void nsTabWidget::SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[])
 //-------------------------------------------------------------------------
 
 
-PRUint32 nsTabWidget::GetSelectedTab()
+PRUint32 nsTabWidget::GetSelectedTab(PRUint32& aTabNumber)
 {
-  return(TabCtrl_GetCurSel(mWnd));
+  aTabNumber = TabCtrl_GetCurSel(mWnd);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
