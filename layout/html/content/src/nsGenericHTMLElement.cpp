@@ -456,8 +456,6 @@ nsGenericHTMLElement::GetTagName(nsString& aTagName)
 nsresult
 nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
 {
-  // This whole method needs revriting to work properly with XHTML...
-
   if (kStrictDOMLevel2) {
     mNodeInfo->GetPrefix(aNodeName);
     if (aNodeName.Length()) {
@@ -467,20 +465,30 @@ nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
     nsAutoString tmp;
     mNodeInfo->GetName(tmp);
 
-    tmp.ToUpperCase();
+    PRInt32 id;
+    if (NS_SUCCEEDED(mNodeInfo->GetNamespaceID(id)) && id == kNameSpaceID_None) {
+      // Only fold to uppercase if the HTML element has no namespace, i.e.,
+		  // it was created as part of an HTML document.
+      tmp.ToUpperCase();
+		}
 
     aNodeName.Append(tmp);
   } else {
     mNodeInfo->GetName(aNodeName);
 
-    aNodeName.ToUpperCase();
+    PRInt32 id;
+    if (NS_SUCCEEDED(mNodeInfo->GetNamespaceID(id)) && id == kNameSpaceID_None) {
+      // Only fold to uppercase if the HTML element has no namespace, i.e.,
+      // it was created as part of an HTML document.
+      aNodeName.ToUpperCase();
+    }
   }
 
   if (kStrictDOMLevel2) {
     PRInt32 pos = aNodeName.FindChar(':');
     if (pos >= 0) {
       nsCAutoString tmp; tmp.AssignWithConversion(aNodeName);
-      printf ("Possible DOM Error: .nodeName or .tagName requisted on the HTML alement '%s', is this OK?\n", (const char *)tmp);
+      printf ("Possible DOM Error: .nodeName or .tagName requested on the HTML element '%s', is this OK?\n", (const char *)tmp);
     }
   }
 
