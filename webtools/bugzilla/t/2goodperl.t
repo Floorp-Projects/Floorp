@@ -35,7 +35,7 @@
 #Bugzilla Test 2#
 ####GoodPerl#####
 
-BEGIN { use Test::More tests => 51; }
+BEGIN { use Test::More tests => 102; }
 BEGIN { use lib 't/'; }
 BEGIN { use Support::Files; }
 
@@ -56,6 +56,11 @@ foreach $file (@testitems) {
 			ok(0,"$file is MISSING -w");
 			next;
 		}
+	}
+	if ($filecontent !~ /use strict;/) {
+		ok(0,"$file DOES NOT use strict");
+	} else {
+		ok(1,"$files uses strict");
 	}
 }
 
