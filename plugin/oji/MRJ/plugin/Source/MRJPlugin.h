@@ -77,10 +77,19 @@ public:
 	CreateInstance(nsISupports *aOuter, const nsIID& aIID, void **aResult);
 
 	NS_IMETHOD
-	LockFactory(PRBool aLock) { return NS_ERROR_FAILURE; }
+	LockFactory(PRBool aLock) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 	// nsIPlugin Methods.
 	
+	/**
+	 * Creates a new plugin instance, based on the MIME type. This
+	 * allows different impelementations to be created depending on
+	 * the specified MIME type.
+	 */
+    NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
+                                    const char* aPluginMIMEType,
+                                    void **aResult);
+
     /**
      * Initializes the plugin and will be called before any new instances are
      * created. This separates out the phase when a plugin is loaded just to
@@ -329,19 +338,18 @@ public:
 		return NS_OK;
 	}
 
-    // (Corresponds to NPP_Print.)
+    /**
+     * Called to instruct the plugin instance to print itself to a printer.
+     *
+     * (Corresponds to NPP_Print.)
+     *
+     * @param platformPrint - platform-specific printing information
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     Print(nsPluginPrint* platformPrint)
     {
 		return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    // (Corresponds to NPP_URLNotify.)
-    NS_IMETHOD
-    URLNotify(const char* url, const char* target,
-    			nsPluginReason reason, void* notifyData)
-    {
-    	return NS_OK;
     }
 
     /**
