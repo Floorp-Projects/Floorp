@@ -1591,13 +1591,14 @@ NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
       windowEnumerator->HasMoreElements(&more);
       while (more) {
         nsCOMPtr<nsISupports> protoWindow;
-        nsCOMPtr<nsIWebShell> webshell;
         rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
         if (NS_SUCCEEDED(rv) && protoWindow) {
-          nsCOMPtr<nsIWebShellWindow> window(do_QueryInterface(protoWindow));
-          if (window) {
-            if (NS_SUCCEEDED(window->GetWebShell(*getter_AddRefs(webshell)))) {
-
+          // it's supposed to be an nsIDOMWindow, so it's one of these, too
+          nsCOMPtr<nsIScriptGlobalObject> whatever(do_QueryInterface(protoWindow));
+          if (whatever) {
+            nsCOMPtr<nsIWebShell> webshell;
+            whatever->GetWebShell(getter_AddRefs(webshell));
+            if (webshell) {
               // check the webshell, and then its children, for a name match
               const PRUnichar *name;
               if (NS_SUCCEEDED(webshell->GetName(&name)) && nameStr.Equals(name)) {
