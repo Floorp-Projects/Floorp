@@ -103,6 +103,7 @@ use constant contenttypes =>
    "js" => "application/x-javascript" , 
    "csv" => "text/plain" ,
    "png" => "image/png" ,
+   "ics" => "text/calendar" ,
   };
 
 1;
