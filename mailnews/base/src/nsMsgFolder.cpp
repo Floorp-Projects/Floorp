@@ -260,7 +260,11 @@ nsMsgFolder::StartAsyncCopyMessagesInto(MSG_FolderInfo *dstFolder,
       CleanupCopyMessagesInto(&currentContext->msgCopyInfo);
       
       if (/* !NET_IsOffline() && */((int32) copyErr < -1) )
+#if 0
         FE_Alert (sourcePane->GetContext(), XP_GetString(copyErr));
+#else
+        printf("%s\n", XP_GetString(copyErr));
+#endif
       }
 		}
     else
