@@ -63,7 +63,6 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mAction = GET;
     mState = FTP_COMMAND_CONNECT;
     mNextState = FTP_S_USER;
-    mLength = -1;
 
     mInternalError = NS_OK;
     mConn = nsnull;
@@ -71,9 +70,7 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mPort = 21;
 
     mLock = nsnull;
-    mPasv = 0;
     mLastModified = LL_ZERO;
-    mAsyncReadEvent = 0;
     mWriteCount = 0;
     mBufferSegmentSize = 0;
     mBufferMaxSize = 0;
@@ -1080,18 +1077,13 @@ nsFtpConnectionThread::S_size() {
 
 FTP_STATE
 nsFtpConnectionThread::R_size() {
-    FTP_STATE retState = FTP_S_MDTM;
-    nsresult rv;
     if (mResponseCode/100 == 2) {
         PRInt32 conversionError;
-        mLength = mResponseMsg.ToInteger(&conversionError);
-
-        rv = mChannel->SetContentLength(mLength);
-        if (NS_FAILED(rv)) return FTP_ERROR;
-
+        PRInt32 length = mResponseMsg.ToInteger(&conversionError);
+		if (NS_FAILED(mChannel->SetContentLength(length))) return FTP_ERROR;
     }
 
-    return retState;
+    return FTP_S_MDTM;
 }
 
 nsresult

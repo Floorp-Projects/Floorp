@@ -151,7 +151,6 @@ private:
     PRBool              mKeepRunning;       // thread event loop boolean
     PRInt32             mResponseCode;      // the last command response code
     nsCAutoString       mResponseMsg;       // the last command response text
-    nsCOMPtr<nsIEventQueue> mFTPEventQueue; // the eventq for this thread
 
         // ****** channel/transport/stream vars 
     nsCOMPtr<nsISocketTransportService> mSTS;       // the socket transport service
@@ -169,7 +168,6 @@ private:
 
         // ****** connection cache vars
     PRInt32             mServerType;    // What kind of server are we talking to
-    PRBool              mPasv;          // Should we use PASV for data channel
     PRBool              mList;          // Use LIST instead of NLST
     nsCAutoString       mCwd;           // Our current working dir.
     nsCAutoString       mCwdAttempt;    // The dir we're trying to get into.
@@ -193,7 +191,6 @@ private:
     nsXPIDLCString         mURLSpec;    // raw spec of the url
     PRInt32                mPort;       // the port to connect to
     nsAutoString           mFilename;   // url filename (if any)
-    PRInt32                mLength;     // length of the file
     PRTime                 mLastModified;// last modified time for file
     nsXPIDLCString         mPath;       // the url's path
 
@@ -204,8 +201,6 @@ private:
     PRUint32               mBufferSegmentSize;
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
-    nsCOMPtr<nsIEventQueue>mUIEventQ;
-    PLEvent                *mAsyncReadEvent;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32               mWriteCount;    // The amount of data to write to the server.
     PRBool                 mFireCallbacks; // Fire the listener callbacks.
