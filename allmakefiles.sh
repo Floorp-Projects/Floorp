@@ -1134,6 +1134,10 @@ $MAKEFILES_xpfe
 $MAKEFILES_zlib
 "
 
+if test -n "$MOZ_PSM"; then
+    add_makefiles "$MAKEFILES_psm2"
+fi
+
 else
 
 # Standalone modules go here

@@ -131,7 +131,10 @@ endif
 DIRS		+= xpinstall
 
 ifdef MOZ_PSM
-DIRS		+= security/nss security/manager
+ifdef MOZ_NSS_AUTOCONF
+DIRS		+= security/nss
+endif
+DIRS		+= security/manager
 endif
 
 ifdef MOZ_EXTENSIONS
