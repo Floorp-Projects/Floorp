@@ -1027,11 +1027,10 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
 }
 
 
-static
-void SetupMallocTracing(int argc, char* argv[])
+static int
+SetupMallocTracing(int argc, char* argv[])
 {
 #ifdef NS_TRACE_MALLOC
-
   int i;
 
   /*
@@ -1124,6 +1123,8 @@ void SetupMallocTracing(int argc, char* argv[])
     }
   }
 #endif /* NS_TRACE_MALLOC */
+
+  return argc;
 }
 
 int main(int argc, char* argv[])
@@ -1137,7 +1138,7 @@ int main(int argc, char* argv[])
   if (HandleDumpArguments(argc, argv))
     return 0;
 
-  SetupMallocTracing(argc, argv);
+  argc = SetupMallocTracing(argc, argv);
 
   // Call the code to install our handler
 #ifdef MOZ_JPROF
