@@ -379,7 +379,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   if (kTitle != nsnull) {
     if (aStr.Find(kTitle) > -1) {
       PRUnichar * uTitle;
-      mPD->mPrintSettings->GetTitle(&uTitle);   // creates memory
+      mPD->mPrintOptions->GetTitle(&uTitle);   // creates memory
       SubstValueForCode(aNewStr, kTitle, uTitle);
       nsMemory::Free(uTitle);
       nsMemory::Free(kTitle);
@@ -392,7 +392,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   if (kDocURL != nsnull) {
     if (aStr.Find(kDocURL) > -1) {
       PRUnichar * uDocURL;
-      mPD->mPrintSettings->GetDocURL(&uDocURL);   // creates memory
+      mPD->mPrintOptions->GetDocURL(&uDocURL);   // creates memory
       SubstValueForCode(aNewStr, kDocURL, uDocURL);
       nsMemory::Free(uDocURL);
       nsMemory::Free(kDocURL);
