@@ -28,20 +28,24 @@
 NS_DECLARE_ID(kIUnicodeDecoderIID,
   0xb2f178e1, 0x832a, 0x11d2, 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
-// XXX move this into xpcom/nsError.h
-#define NS_ERROR_MODULE_INTL    10
-
 #define NS_EXACT_LENGTH \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_INTL,11)
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 11)
+
 #define NS_PARTIAL_MORE_INPUT \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_INTL,12)
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 12)
+
 #define NS_PARTIAL_MORE_OUTPUT \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_INTL,13)
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_UCONV, 13)
+
 #define NS_ERROR_ILLEGAL_INPUT \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_INTL,14)
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 14)
 
 /**
  * Interface for a Converter from a Charset into Unicode.
+ *
+ * XXX Rethink, rewrite and redoc the error handling.
+ * XXX Swap the params order to be: Source, Destination.
+ * XXX Rename error value macros
  *
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
@@ -56,21 +60,29 @@ public:
   };
 
   /**
-   * Converts the data from one character set to Unicode.
+   * Converts the data from one Charset to Unicode.
    *
-   * About the byte ordering issue. 
-   * - For input, if the converter cares (that depends of the charset, a 
-   * singlebyte can ignore the byte ordering) it should assume network order. 
-   * If necessary and requested, we can add a method SetInputByteOrder so 
-   * that the reverse order can be used, too. That method would have as 
-   * default the assumed order.
+   * About the byte ordering:
+   * - For input, if the converter cares (that depends of the charset, for 
+   * example a singlebyte will ignore the byte ordering) it should assume 
+   * network order. If necessary and requested, we can add a method 
+   * SetInputByteOrder() so that the reverse order can be used, too. That 
+   * method would have as default the assumed network order.
    * - The output stream is Unicode, having the byte order which is internal
-   * for the machine the converter is running on.
+   * for the machine on which the converter is running on.
    *
-   * @param aDest       [IN/OUT] the destination data buffer
+   * Unless there is not enough output space, this method must consume all the
+   * available input data! The eventual incomplete final character data will be
+   * stored internally in the converter and used when the method is called 
+   * again for continuing the conversion. This way, the caller will not have to
+   * worry about managing incomplete input data by mergeing it with the next 
+   * buffer.
+   *
+   * @param aDest       [OUT] the destination data buffer
    * @param aDestOffset [IN] the offset in the destination data buffer
-   * @param aDestLength [IN/OUT] the length of destination data buffer; after
-   *                    conversion will contain the number of bytes written
+   * @param aDestLength [IN/OUT] the length of the destination data buffer;
+   *                    after conversion will contain the number of Unicode
+   *                    characters written
    * @param aSrc        [IN] the source data buffer
    * @param aSrcOffset  [IN] the offset in the source data buffer
    * @param aSrcLength  [IN/OUT] the length of source data buffer; after
@@ -88,12 +100,13 @@ public:
 
   /**
    * Finishes the conversion. The converter has the possibility to write some 
-   * extra data, flush its final state.
+   * extra data and flush its final state.
    *
-   * @param aDest       [IN/OUT] the destination data buffer
+   * @param aDest       [OUT] the destination data buffer
    * @param aDestOffset [IN] the offset in the destination data buffer
    * @param aDestLength [IN/OUT] the length of destination data buffer; after
-   *                    converstion will contain the number of bytes written
+   *                    conversion it will contain the number of Unicode 
+   *                    characters written
    * @return            NS_PARTIAL_MORE_OUTPUT if only a partial finish was
    *                    done; more output space is needed to continue
    */
@@ -103,19 +116,21 @@ public:
   /**
    * Returns a quick estimation of the size of the buffer needed to hold the
    * converted data. Remember: this is an estimation and not necessarily 
-   * correct.
+   * correct. Its purpose is to help the caller allocate the destination 
+   * buffer.
    *
    * @param aSrc        [IN] the source data buffer
    * @param aSrcOffset  [IN] the offset in the source data buffer
    * @param aSrcLength  [IN] the length of source data buffer
-   * @param aDestLength [OUT] the needed size of the dest buffer
+   * @param aDestLength [OUT] the needed size of the destination buffer
    * @return            NS_EXACT_LENGTH if an exact length was computed
    */
   NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
       PRInt32 aSrcLength, PRInt32 * aDestLength) = 0;
 
   /**
-   * Resets the charset converter so it may be reused on a different buffer.
+   * Resets the charset converter so it may be recycled for a completely 
+   * different and urelated buffer of data.
    */
   NS_IMETHOD Reset() = 0;
 
