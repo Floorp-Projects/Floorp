@@ -58,7 +58,7 @@ class RgnRectMemoryAllocator
     return pBuf;
   }
 
-  void FreeChunk (void* aChunk) {  delete [] aChunk;  }
+  void FreeChunk (void* aChunk) {  delete [] (PRUint8 *) aChunk;  }
   void* NextChunk (void* aThisChunk) const { return *NS_STATIC_CAST (void**, aThisChunk); }
 
   nsRegion::RgnRect* ChunkHead (void* aThisChunk) const
