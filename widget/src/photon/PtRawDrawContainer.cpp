@@ -16,8 +16,6 @@ PtWidgetClassRef_t *PtRawDrawContainer = &WRawDrawContainer;
 static void raw_draw_container_dflts( PtWidget_t *widget )
 {
 	RawDrawContainerWidget	*rdc = ( RawDrawContainerWidget * ) widget;
-	PtContainerWidget_t		  *container = ( PtContainerWidget_t * ) widget;
-	PtBasicWidget_t		      *basic = ( PtBasicWidget_t * ) widget;
      widget->flags |= ( Pt_OPAQUE );
 	rdc->draw_f = NULL;
 }
@@ -35,7 +33,6 @@ static void raw_draw_container_draw( PtWidget_t *widget, PhTile_t *damage )
     printf("raw_draw_container_draw NULL widget!\n");
     return;	
   }
-
   if( rdc->draw_f )
     rdc->draw_f( widget, damage );
 }
@@ -47,8 +44,8 @@ PtWidgetClass_t *CreateRawDrawContainerClass( void )
 {
 	// define our resources
 	static PtResourceRec_t resources[] = {
-		RDC_DRAW_FUNC, Pt_CHANGE_INVISIBLE, 0, 
-			Pt_ARG_IS_POINTER( RawDrawContainerWidget, draw_f ), 0,
+		{ RDC_DRAW_FUNC, Pt_CHANGE_INVISIBLE, 0, 
+			Pt_ARG_IS_POINTER( RawDrawContainerWidget, draw_f ), 0 }
 		};
 
 	// set up our class member values

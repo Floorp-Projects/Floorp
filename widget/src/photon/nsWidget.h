@@ -252,8 +252,6 @@ protected:
   PtWidget_t          *mWidget;
   nsIWidget						*mParent;
 
-  static nsWidget* gFocusWidget; // Current Focus Widget;
-
   // This is the composite update area (union of all the calls to Invalidate)
   nsIRegion *mUpdateArea;
 
@@ -262,6 +260,11 @@ protected:
   PRUint32 mPreferredWidth, mPreferredHeight;
   PRBool       mListenForResizes;
    
+  // Focus used global variable
+  static nsWidget* sFocusWidget; //Current Focus Widget
+  static PRBool    sJustGotDeactivated;
+  static PRBool    sWidgetCreating; //For getting rid of the ASSERT ERROR due to reducing suppressing of focus.
+  
   /* this is the rollup listener variables */
   /* These variables help us close the Menu when the clicks outside the application */
   static nsIRollupListener *gRollupListener;
