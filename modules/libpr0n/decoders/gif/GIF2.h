@@ -79,7 +79,7 @@ typedef enum
     DISPOSE_NOT_SPECIFIED      = 0,
     DISPOSE_KEEP               = 1, /* Leave it in the framebuffer */
     DISPOSE_OVERWRITE_BGCOLOR  = 2, /* Overwrite with background color */
-    DISPOSE_OVERWRITE_PREVIOUS = 4  /* Save-under */
+    DISPOSE_OVERWRITE_PREVIOUS = 3  /* Save-under */
 } gdispose;
 
 /* A RGB triplet representing a single pixel in the image's colormap
@@ -137,8 +137,7 @@ typedef struct gif_struct {
     int (PR_CALLBACK* GIFCallback_EndImageFrame)(
       void* aClientData,
       PRUint32 aFrameNumber,
-      PRUint32 aDelayTimeout,
-      PRUint32 aDisposal);
+      PRUint32 aDelayTimeout);
     int (PR_CALLBACK* GIFCallback_SetupColorspaceConverter)();
     int (PR_CALLBACK* GIFCallback_ResetPalette)(); 
     int (PR_CALLBACK* GIFCallback_InitTransparentPixel)();
@@ -255,8 +254,7 @@ PRBool GIFInit(
   int (*PR_CALLBACK GIFCallback_EndImageFrame)(
     void* aClientData,
     PRUint32 aFrameNumber,
-    PRUint32 aDelayTimeout,
-    PRUint32 aDisposal),
+    PRUint32 aDelayTimeout),
   
   int (*PR_CALLBACK GIFCallback_SetupColorspaceConverter)(),
   
@@ -319,8 +317,7 @@ typedef int (PR_CALLBACK *GIFCallback_BeginImageFrame)(
 extern int GIFCallback_EndImageFrame(
   void*    aClientData,
   PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout,
-  PRUint32 aDisposal); /* Time in milliseconds this frame should be displayed before the next frame.
+  PRUint32 aDelayTimeout); /* Time in milliseconds this frame should be displayed before the next frame.
                               This information appears in a sub control block, so we don't
                               transmit it back to the client until we're done with the frame. */
 

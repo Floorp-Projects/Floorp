@@ -494,8 +494,7 @@ PRBool GIFInit(
               int (*PR_CALLBACK GIFCallback_EndImageFrame)(
                 void* aClientData,
                 PRUint32 aFrameNumber,
-                PRUint32 aDelayTimeout,
-                PRUint32 aDisposal),
+                PRUint32 aDelayTimeout),
 
               int (*PR_CALLBACK GIFCallback_SetupColorspaceConverter)(),
 
@@ -809,6 +808,10 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       }
       gs->control_extension = PR_TRUE;
       gs->disposal_method = (gdispose)(((*q) >> 2) & 0x7);
+      // Some specs say 3rd bit (value 4), other specs say value 3
+      // Let's choose 3 (the more popular)
+      if (gs->disposal_method == 4)
+        gs->disposal_method = (gdispose)3;
       gs->delay_time = GETINT16(q + 1) * 10;
       GETN(1, gif_consume_block);
     }
@@ -1053,8 +1056,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
         (*gs->GIFCallback_EndImageFrame)(gs->clientptr,
                                          gs->images_decoded,
-                                         gs->delay_time,
-                                         gs->disposal_method);
+                                         gs->delay_time);
 
         /* Clear state from this image */
         gs->control_extension = PR_FALSE;
