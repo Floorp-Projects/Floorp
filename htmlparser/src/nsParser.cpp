@@ -1414,7 +1414,7 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   //One last thing...close any open containers.
   nsresult result=anErrorCode;
 
-  if(mParserEnabled && mParserContext && !mParserContext->mPrevContext) {
+  if(mParserContext && !mParserContext->mPrevContext) {
     if(mParserContext->mDTD) {
       result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
     }
@@ -1491,11 +1491,10 @@ nsresult nsParser::Terminate(void){
       // Hack - Hold a reference until we are completely done...
       nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
       mInternalState=result;
-      result=DidBuildModel(result);
-      return result;
+      DidBuildModel(result);
     }
   }
-  return mInternalState;
+  return result;
 }
 
 
