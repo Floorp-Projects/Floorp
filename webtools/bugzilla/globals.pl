@@ -1586,15 +1586,12 @@ $::template ||= Template->new(
         # characters that need encoding.
         url_quote => \&Bugzilla::Util::url_quote,
         
-        # In CSV, quotes are doubled, and any value containing a quote or a
-        # comma is enclosed in quotes.
+        # In CSV, quotes are doubled, and we enclose the whole value in quotes
         csv => sub
         {
             my ($var) = @_;
-            $var =~ s/"/""/;
-            if ($var =~ /",/) {
-                $var = "\"$var\"";
-            }
+            $var =~ s/"/""/g;
+            $var = "\"$var\"";
             return $var;
         } ,
       } ,
