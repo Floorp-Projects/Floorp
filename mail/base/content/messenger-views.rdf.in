@@ -10,7 +10,7 @@
         chrome:displayName="Messenger"
         chrome:author="mozilla.org"
         chrome:name="messenger-views"
-        chrome:localeVersion="1.6a"
+        chrome:localeVersion="@MOZILLA_VERSION@"
         chrome:skinVersion="1.5">
   </RDF:Description>
 </RDF:RDF>
