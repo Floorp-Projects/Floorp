@@ -278,9 +278,8 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropN
   
   result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl, &hint);
   if (doc) {
-    doc->AttributeChanged(mContent, kNameSpaceID_None,
-                                   nsHTMLAtoms::style,
-                                   nsIDOMMutationEvent::MODIFICATION, hint);
+    doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style,
+                          nsIDOMMutationEvent::MODIFICATION, hint);
     doc->EndUpdate();
   }
 
@@ -351,7 +350,8 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       if (doc) {
         if (NS_SUCCEEDED(result) && result != NS_CSS_PARSER_DROP_DECLARATION) {
           doc->AttributeChanged(mContent, kNameSpaceID_None,
-                                nsHTMLAtoms::style, nsIDOMMutationEvent::MODIFICATION, hint);
+                                nsHTMLAtoms::style,
+                                nsIDOMMutationEvent::MODIFICATION, hint);
         }
         doc->EndUpdate();
       }
