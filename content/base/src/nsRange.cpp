@@ -74,7 +74,9 @@ nsresult
 NS_NewRange(nsIDOMRange** aInstancePtrResult)
 {
   nsRange * range = new nsRange();
-  return range->QueryInterface(nsIDOMRange::GetIID(), (void**) aInstancePtrResult);
+  if (range)
+    return range->QueryInterface(nsIDOMRange::GetIID(), (void**) aInstancePtrResult);
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -476,14 +478,14 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   if (!mStartAncestors)
   {
     mStartAncestors = new nsVoidArray();
+    if (!mStartAncestors) return NS_ERROR_OUT_OF_MEMORY;
     mStartAncestorOffsets = new nsVoidArray();
+    if (!mStartAncestorOffsets) return NS_ERROR_OUT_OF_MEMORY;
     mEndAncestors = new nsVoidArray();
+    if (!mEndAncestors) return NS_ERROR_OUT_OF_MEMORY;
     mEndAncestorOffsets = new nsVoidArray();
+    if (!mEndAncestorOffsets) return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  // XXX Threading alert - these array structures are shared across all ranges
-  // access to ranges is assumed to be from only one thread.  Add monitors (or
-  // stop sharing these) if that changes
 
   // refresh ancestor data
   mStartAncestors->Clear();
@@ -1151,10 +1153,10 @@ nsresult nsRange::DeleteContents()
   res = iter->Init(this);
   if (NS_FAILED(res))  return res;
 
-
-  // XXX Note that this chunk is also thread unsafe, since we
+  // thread safety - need locks around here to end of routine since we
   // aren't ADDREFing nodes as we put them on the delete list
-  // and then releasing them wehn we take them off
+  // and then releasing them when we take them off
+  nsAutoRangeLock lock;
   
   nsVoidArray deleteList;
   nsCOMPtr<nsIContent> cN;
