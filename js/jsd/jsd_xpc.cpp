@@ -1663,16 +1663,12 @@ jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
     }
 
     JS_RestoreExceptionState (cx, estate);
-    if (jv) {
-        JSDValue *jsdv = JSD_NewValue (mCx, jv);
-        if (!jsdv)
-            return NS_ERROR_FAILURE;
-        *result = jsdValue::FromPtr (mCx, jsdv);
-        if (!*result)
-            return NS_ERROR_FAILURE;
-    } else {
-        *result = 0;
-    }
+    JSDValue *jsdv = JSD_NewValue (mCx, jv);
+    if (!jsdv)
+        return NS_ERROR_FAILURE;
+    *result = jsdValue::FromPtr (mCx, jsdv);
+    if (!*result)
+        return NS_ERROR_FAILURE;
     
     return NS_OK;
 }        
