@@ -39,18 +39,18 @@ nsresult NS_NewDefaultProtocolHelperFactory(nsIFactory** aResult);
 
 
 
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID,  NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
+static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID,   NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kProtocolHelperCID,   NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
-static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
+static NS_DEFINE_IID(kFileLocatorCID,      NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_CID(kWindowMediatorCID,				  NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kSessionHistoryCID,				  NS_SESSION_HISTORY_CID);
+static NS_DEFINE_CID(kWindowMediatorCID,   NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 
-static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
-static NS_DEFINE_CID( kDialogParamBlockCID, NS_DialogParamBlock_CID );
-static NS_DEFINE_CID( kAboutModuleCID,      NS_ABOUT_CID);
+static NS_DEFINE_CID(kCommonDialogsCID,    NS_CommonDialog_CID );
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID );
+static NS_DEFINE_CID(kAboutModuleCID,      NS_ABOUT_CID);
 /*
  * Global entry point to register all components in the registry...
  */
@@ -64,7 +64,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
    	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kSessionHistoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kSessionHistoryCID, NULL, NS_ISESSIONHISTORY_PROGID, path, PR_TRUE, PR_TRUE);
 
     nsComponentManager::RegisterComponent(kWindowMediatorCID,
                                          "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",

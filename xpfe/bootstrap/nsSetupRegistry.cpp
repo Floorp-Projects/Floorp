@@ -47,7 +47,7 @@ static NS_DEFINE_CID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
 static NS_DEFINE_CID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
 static NS_DEFINE_CID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_CID(kRDFCoreCID,          NS_RDFCORE_CID);
-static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
+static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_PC
 
