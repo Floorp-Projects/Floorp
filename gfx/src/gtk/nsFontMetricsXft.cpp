@@ -908,13 +908,13 @@ nsFontMetricsXft::RealizeFont(void)
     return CacheFontMetrics();
 }
 
-// ceiling and truncation functions for a Freetype floating point number 
+// rounding and truncation functions for a Freetype floating point number 
 // (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
 // part and low 6 bits for the fractional part. 
-#define MOZ_FT_CEIL(x) (((x) + 63) & ~63) // 63 = 2^6 - 1
+#define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
 #define MOZ_FT_TRUNC(x) ((x) >> 6)
 #define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
-        MOZ_FT_TRUNC(MOZ_FT_CEIL(FT_MulFix((v) , (s))))
+        MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v) , (s))))
 
 nsresult
 nsFontMetricsXft::CacheFontMetrics(void)
