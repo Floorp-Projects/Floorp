@@ -6963,6 +6963,11 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool a
     nsQueryCaretRectEvent event(NS_QUERYCARETRECT, this);
     InitEvent(event, &point);
     DispatchWindowEvent(&event);
+    // The active widget doesn't support this event.
+    if (!event.theReply.mRectIsValid) {
+      *oResult = FALSE;
+      return PR_FALSE;
+    }
     NS_RELEASE(event.widget);
 
     nsRect screenRect, widgetRect(event.theReply.mCaretRect);
@@ -6976,6 +6981,13 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool a
 
     *oResult = TRUE;
     return PR_TRUE;
+  }
+
+  // If the char positions are not cached, we should not return the values by LPARAM.
+  // Because in this case, the active widget is not editor.
+  if (!sIMECompCharPos) {
+    *oResult = FALSE;
+    return PR_FALSE;
   }
 
   long charPosition;

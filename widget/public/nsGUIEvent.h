@@ -735,9 +735,11 @@ struct nsReconversionEvent : public nsInputEvent
 
 struct nsQueryCaretRectEventReply {
   nsQueryCaretRectEventReply()
+    : mRectIsValid(PR_FALSE)
   {
   }
 
+  PRBool mRectIsValid;
   nsRect mCaretRect;
 };
 
