@@ -16,77 +16,24 @@
  * Reserved.
  */
 
-#include "nsDeviceContextSpecWin.h"
-#include "prmem.h"
-#include "plstr.h"
+#include "nsDeviceContextSpecPS.h"
 
-nsDeviceContextSpecWin :: nsDeviceContextSpecWin()
+nsDeviceContextSpecPS :: nsDeviceContextSpecPS()
 {
-  mDriverName = nsnull;
-  mDeviceName = nsnull;
-  mDEVMODE = NULL;
 }
 
-nsDeviceContextSpecWin :: ~nsDeviceContextSpecWin()
+nsDeviceContextSpecPS :: ~nsDeviceContextSpecPS()
 {
-  if (nsnull != mDriverName)
-  {
-    PR_Free(mDriverName);
-    mDriverName = nsnull;
-  }
-
-  if (nsnull != mDeviceName)
-  {
-    PR_Free(mDeviceName);
-    mDeviceName = nsnull;
-  }
-
-  if (NULL != mDEVMODE)
-  {
-    ::GlobalFree(mDEVMODE);
-    mDEVMODE = NULL;
-  }
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecWin, kDeviceContextSpecIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecWin)
-NS_IMPL_RELEASE(nsDeviceContextSpecWin)
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecPS, kDeviceContextSpecIID)
+NS_IMPL_ADDREF(nsDeviceContextSpecPS)
+NS_IMPL_RELEASE(nsDeviceContextSpecPS)
 
-NS_IMETHODIMP nsDeviceContextSpecWin :: Init(char *aDriverName, char *aDeviceName, HGLOBAL aDEVMODE)
+NS_IMETHODIMP nsDeviceContextSpecPS :: Init(char *aDriverName)
 {
-  if (nsnull != aDriverName)
-  {
-    mDriverName = (char *)PR_Malloc(PL_strlen(aDriverName) + 1);
-    PL_strcpy(mDriverName, aDriverName);
-  }
-
-  if (nsnull != aDeviceName)
-  {
-    mDeviceName = (char *)PR_Malloc(PL_strlen(aDeviceName) + 1);
-    PL_strcpy(mDeviceName, aDeviceName);
-  }
-
-  mDEVMODE = aDEVMODE;
-
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecWin :: GetDriverName(char *&aDriverName) const
-{
-  aDriverName = mDriverName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecWin :: GetDeviceName(char *&aDeviceName) const
-{
-  aDeviceName = mDeviceName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecWin :: GetDEVMODE(HGLOBAL &aDEVMODE) const
-{
-  aDEVMODE = mDEVMODE;
-  return NS_OK;
-}

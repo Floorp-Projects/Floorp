@@ -16,30 +16,23 @@
  * Reserved.
  */
 
-#ifndef nsDeviceContextSpecWin_h___
-#define nsDeviceContextSpecWin_h___
+#ifndef nsDeviceContextSpecPS_h___
+#define nsDeviceContextSpecPS_h___
 
 #include "nsIDeviceContextSpec.h"
-#include <windows.h>
 
-class nsDeviceContextSpecWin : public nsIDeviceContextSpec
+class nsDeviceContextSpecPS : public nsIDeviceContextSpec
 {
 public:
-  nsDeviceContextSpecWin();
+  nsDeviceContextSpecPS();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(char *aDriverName, char *aDeviceName, HGLOBAL aDEVMODE);
-  NS_IMETHOD GetDriverName(char *&aDriverName) const;
-  NS_IMETHOD GetDeviceName(char *&aDeviceName) const;
-  NS_IMETHOD GetDEVMODE(HGLOBAL &aDevMode) const;
+  NS_IMETHOD Init(char *aDriverName);
 
 protected:
-  virtual ~nsDeviceContextSpecWin();
+  virtual ~nsDeviceContextSpecPS();
 
-  char    *mDriverName;
-  char    *mDeviceName;
-  HGLOBAL mDEVMODE;
 };
 
 #endif
