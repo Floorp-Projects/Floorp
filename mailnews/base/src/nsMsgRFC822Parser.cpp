@@ -49,7 +49,7 @@ char *INTL_Strstr(int16 charSetID, const char *s1, const char *s2)
  */
 
 #undef FREEIF
-#define FREEIF(obj) do { if (obj) { XP_FREE (obj); obj = 0; }} while (0)
+#define FREEIF(obj) do { if (obj) { PR_Free (obj); obj = 0; }} while (0)
 
 extern "C"
 {
@@ -70,8 +70,8 @@ extern "C"
  * We could have made these private functions of nsMsgRFC822Parser if we wanted...
  */
 static int msg_parse_rfc822_addresses(PRInt16 csid, const char *line, char **names, char **addresses,
-                                      PRBool quote_names_p = TRUE, PRBool quote_addrs_p = TRUE,
-                                      PRBool first_only_p = FALSE);
+                                      PRBool quote_names_p = PR_TRUE, PRBool quote_addrs_p = PR_TRUE,
+                                      PRBool first_only_p = PR_FALSE);
 static int msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool addr_p);
 static int msg_unquote_phrase_or_addr(PRInt16 csid, const char *line, char **lineout);
 static char *msg_extract_rfc822_address_mailboxes(PRInt16 csid, const char *line);
@@ -321,11 +321,11 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 	if (line_length == 0)
 		return 0;
 
-	name_buf = (char *)XP_ALLOC(line_length * 2 + 10);
+	name_buf = (char *)PL_Malloc(line_length * 2 + 10);
 	if (!name_buf)
 		return MK_OUT_OF_MEMORY;
 
-	addr_buf = (char *)XP_ALLOC(line_length * 2 + 10);
+	addr_buf = (char *)PL_Malloc(line_length * 2 + 10);
 	if (!addr_buf)
 	{
 		FREEIF(name_buf);
@@ -660,14 +660,14 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 		if (quote_names_p && names)
 		{
 			int L = name_out - name_start - 1;
-			L = msg_quote_phrase_or_addr(csid, name_start, L, FALSE);
+			L = msg_quote_phrase_or_addr(csid, name_start, L, PR_FALSE);
 			name_out = name_start + L + 1;
 		}
 
 		if (quote_addrs_p && addresses)
 		{
 			int L = addr_out - addr_start - 1;
-			L = msg_quote_phrase_or_addr(csid, addr_start, L, TRUE);
+			L = msg_quote_phrase_or_addr(csid, addr_start, L, PR_TRUE);
 			addr_out = addr_start + L + 1;
 		}
 
@@ -706,12 +706,12 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 	if (names)
 		*names = name_buf;
 	else
-		XP_FREE(name_buf);
+		PR_Free(name_buf);
 
 	if (addresses)
 		*addresses = addr_buf;
 	else
-		XP_FREE(addr_buf);
+		PR_Free(addr_buf);
 
 	return addr_count;
 }
@@ -730,8 +730,8 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
     int unquotable_count = 0;
     PRInt32 new_length, full_length = length;
     char *in, *out, *orig_out, *atsign = NULL, *orig_address = address;
-	PRBool user_quote = FALSE;
-	PRBool quote_all = FALSE;
+	PRBool user_quote = PR_FALSE;
+	PRBool quote_all = PR_FALSE;
 
     /* If the entire address is quoted, fall out now. */
     if (address[0] == '\"' && address[length - 1] == '\"')
@@ -772,7 +772,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
 			 * any quotables we've seen are already inside quotes.
 			 */
 			if (address[0] == '\"' && in > address + 2 && *(in - 1) == '\"' && *(in - 2) != '\\')
-				unquotable_count -= 2, quotable_count = 0, user_quote = TRUE;
+				unquotable_count -= 2, quotable_count = 0, user_quote = PR_TRUE;
 		}
 
         else if (*in == '\\')
@@ -837,7 +837,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
 	 * quote.
 	 */
 	if (!atsign || (user_quote && quotable_count > 0))
-		quote_all = TRUE, atsign = NULL;
+		quote_all = PR_TRUE, atsign = NULL;
 
     /* Add 2 to the length for the quotes, plus one for each character
      * which will need a backslash, plus one for a null terminator.
@@ -845,7 +845,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
     new_length = length + unquotable_count + 3;
 
     in = address;
-    out = orig_out = (char *)XP_ALLOC(new_length);
+    out = orig_out = (char *)PL_Malloc(new_length);
 	if (!out)
 	{
 		*orig_address = 0;
@@ -895,7 +895,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
 
 	NS_ASSERTION(new_length == (out - orig_out), "");
 	XP_MEMCPY(address, orig_out, new_length);
-	XP_FREEIF(orig_out); /* make sure we release the string we allocated */
+	PR_FREEIF(orig_out); /* make sure we release the string we allocated */
 
     return full_length + unquotable_count + 2;
 }
@@ -975,10 +975,10 @@ msg_extract_rfc822_address_mailboxes(PRInt16 csid, const char *line)
 		size += j + 2;
 	}
 
-	result = (char*)XP_ALLOC(size + 1);
+	result = (char*)PL_Malloc(size + 1);
 	if (!result)
 	{
-		XP_FREE(addrs);
+		PR_Free(addrs);
 		return 0;
 	}
 	out = result;
@@ -997,7 +997,7 @@ msg_extract_rfc822_address_mailboxes(PRInt16 csid, const char *line)
 	}
 	*out = 0;
 
-	XP_FREE(addrs);
+	PR_Free(addrs);
 	return result;
 }
 
@@ -1033,11 +1033,11 @@ msg_extract_rfc822_address_names(PRInt16 csid, const char *line)
 		size += (j1 ? j1 : j2) + 2;
 	}
 
-	result = (char *)XP_ALLOC(size + 1);
+	result = (char *)PL_Malloc(size + 1);
 	if (!result)
 	{
-		XP_FREE(names);
-		XP_FREE(addrs);
+		PR_Free(names);
+		PR_Free(addrs);
 		return 0;
 	}
 
@@ -1070,8 +1070,8 @@ msg_extract_rfc822_address_names(PRInt16 csid, const char *line)
 	}
 	*out = 0;
 
-	XP_FREE(names);
-	XP_FREE(addrs);
+	PR_Free(names);
+	PR_Free(addrs);
 	return result;
 }
 
@@ -1085,7 +1085,7 @@ msg_extract_rfc822_address_name(PRInt16 csid, const char *line)
 {
 	char *name = 0;
 	char *addr = 0;
-	int status = msg_parse_rfc822_addresses(csid, line, &name, &addr, FALSE, FALSE, TRUE);
+	int status = msg_parse_rfc822_addresses(csid, line, &name, &addr, PR_FALSE, PR_FALSE, PR_TRUE);
 	if (status <= 0)
 		return 0;
 
@@ -1132,7 +1132,7 @@ msg_format_rfc822_addresses (const char *names, const char *addrs,
 		size += j1 + j2 + 10;
 	}
 
-	result = (char *)XP_ALLOC(size + 1);
+	result = (char *)PL_Malloc(size + 1);
 	if (!result) return 0;
 
 	out = result;
@@ -1199,9 +1199,9 @@ msg_reformat_rfc822_addresses(PRInt16 csid, const char *line)
 	int status = msg_parse_rfc822_addresses(csid, line, &names, &addrs);
 	if (status <= 0)
 		return 0;
-	result = msg_format_rfc822_addresses(names, addrs, status, TRUE);
-	XP_FREE (names);
-	XP_FREE (addrs);
+	result = msg_format_rfc822_addresses(names, addrs, status, PR_TRUE);
+	PR_Free (names);
+	PR_Free (addrs);
 	return result;
 }
 
@@ -1242,7 +1242,7 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 	if (count1 < 0) goto FAIL;
 	if (count1 == 0)
 	{
-		result = XP_STRDUP("");
+		result = PL_strdup("");
 		goto FAIL;
 	}
 	if (other_addrs)
@@ -1271,21 +1271,21 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 		size2 += j1 + j2 + 10;
 	}
 
-	a_array1 = (char **)XP_ALLOC(count1 * sizeof(char *));
+	a_array1 = (char **)PL_Malloc(count1 * sizeof(char *));
 	if (!a_array1) goto FAIL;
-	n_array1 = (char **)XP_ALLOC(count1 * sizeof(char *));
+	n_array1 = (char **)PL_Malloc(count1 * sizeof(char *));
 	if (!n_array1) goto FAIL;
 
 	if (count2 > 0)
 	{
-		a_array2 = (char **)XP_ALLOC(count2 * sizeof(char *));
+		a_array2 = (char **)PL_Malloc(count2 * sizeof(char *));
 		if (!a_array2) goto FAIL;
 		/* don't need an n_array2 */
 	}
 
-	a_array3 = (char **)XP_ALLOC(count1 * sizeof(char *));
+	a_array3 = (char **)PL_Malloc(count1 * sizeof(char *));
 	if (!a_array3) goto FAIL;
-	n_array3 = (char **)XP_ALLOC(count1 * sizeof(char *));
+	n_array3 = (char **)PL_Malloc(count1 * sizeof(char *));
 	if (!n_array3) goto FAIL;
 
 
@@ -1312,11 +1312,11 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 	 */
 	for (i = 0; i < count1; i++)
 	{
-		PRBool found = FALSE;
+		PRBool found = PR_FALSE;
 		for (j = 0; j < count2; j++)
 			if (!PL_strcasecmp (a_array1[i], a_array2[j]))
 			{
-				found = TRUE;
+				found = PR_TRUE;
 				break;
 			}
 
@@ -1324,7 +1324,7 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 			for (j = 0; j < count3; j++)
 				if (!PL_strcasecmp(a_array1[i], a_array3[j]))
 				{
-					found = TRUE;
+					found = PR_TRUE;
 					break;
 				}
 /* HACK ALERT!!!! TEMPORARILY COMMENTING OUT UNTIL WE PORT MSG_PREFS INTO THE MOZILLA TREE!!!!!! */
@@ -1347,7 +1347,7 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 		}
 	}
 
-	output = (char *)XP_ALLOC(size3 + 1);
+	output = (char *)PL_Malloc(size3 + 1);
 	if (!output) goto FAIL;
 
 	*output = 0;
@@ -1366,7 +1366,7 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 		out += PL_strlen(out);
 		*out++ = 0;
 	}
-	result = msg_format_rfc822_addresses(s1, s2, count3, FALSE);
+	result = msg_format_rfc822_addresses(s1, s2, count3, PR_FALSE);
 
  FAIL:
 	FREEIF(a_array1);
@@ -1398,13 +1398,13 @@ msg_make_full_address(PRInt16 csid, const char* name, const char* addr)
 	int L;
 	if (al == 0)
 		return 0;
-	buf = (char *)XP_ALLOC((nl * 2) + (al * 2) + 20);
+	buf = (char *)PL_Malloc((nl * 2) + (al * 2) + 20);
 	if (!buf)
 		return 0;
 	if (nl > 0)
 	{
 		PL_strcpy(buf, name);
-		L = msg_quote_phrase_or_addr(csid, buf, nl, FALSE);
+		L = msg_quote_phrase_or_addr(csid, buf, nl, PR_FALSE);
 		s = buf + L;
 		*s++ = ' ';
 		*s++ = '<';
@@ -1415,7 +1415,7 @@ msg_make_full_address(PRInt16 csid, const char* name, const char* addr)
 	}
 
 	PL_strcpy(s, addr);
-	L = msg_quote_phrase_or_addr(csid, s, al, TRUE);
+	L = msg_quote_phrase_or_addr(csid, s, al, PR_TRUE);
 	s += L;
 	if (nl > 0)
 		*s++ = '>';
