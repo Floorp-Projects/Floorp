@@ -2967,7 +2967,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   PRUint32 firingDepth = mTimeoutFiringDepth+1;
 
   if (nsnull == mContext) {
-    return TRUE;
+    return PR_TRUE;
   }
 
   /* Make sure that the window or the script context don't go away as 
