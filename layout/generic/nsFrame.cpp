@@ -74,6 +74,8 @@
 #include "nsIFrameSelection.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
+#include "nsCSSPseudoElements.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContentSink.h" 
 
@@ -4481,63 +4483,6 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-NS_IMETHODIMP 
-nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
-                                    nsIFrame**      aProviderFrame,
-                                    PRBool*         aIsChild)
-{
-  return DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
-}
-
-
-/**
- * This function takes a "special" frame and _if_ that frame is the
- * anonymous block crated by an ib split it returns the split inline
- * as aSpecialSibling.  This is needed because the split inline's
- * style context is the parent of the anonymous block's style context.
- *
- * If aFrame is not the anonymous block, aSpecialSibling is not
- * touched.
- */
-static nsresult
-GetIBSpecialSibling(nsIPresContext* aPresContext,
-                    nsIFrame* aFrame,
-                    nsIFrame** aSpecialSibling)
-{
-  NS_PRECONDITION(aFrame, "Must have a non-null frame!");
-#ifdef DEBUG
-  nsFrameState frameState;
-  aFrame->GetFrameState(&frameState);
-  NS_ASSERTION(frameState & NS_FRAME_IS_SPECIAL,
-               "GetIBSpecialSibling should not be called on a non-special frame");
-#endif // DEBUG
-  
-  // Find the first-in-flow of the frame.  (Ugh.  This ends up
-  // being O(N^2) when it is called O(N) times.)
-  aFrame = aFrame->GetFirstInFlow();
-
-  /*
-   * Now look up the nsLayoutAtoms::IBSplitSpecialPrevSibling
-   * property, which is only set on the anonymous block frames we're
-   * interested in.
-   */
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  nsCOMPtr<nsIFrameManager> frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
-  nsIFrame *specialSibling;
-  nsresult rv =
-    frameManager->GetFrameProperty(aFrame,
-                                   nsLayoutAtoms::IBSplitSpecialPrevSibling,
-                                   0, (void**)&specialSibling);
-  if (NS_OK == rv) {
-    NS_ASSERTION(specialSibling, "null special sibling");
-    *aSpecialSibling = specialSibling;
-  }
-
-  return NS_OK;
-}
-
 // Destructor function for the overflow area property
 static void
 DestroyRectFunc(nsIPresContext* aPresContext,
@@ -4619,6 +4564,134 @@ nsFrame::StoreOverflow(nsIPresContext*      aPresContext,
   }   
 }
 
+NS_IMETHODIMP 
+nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
+                                    nsIFrame**      aProviderFrame,
+                                    PRBool*         aIsChild)
+{
+  return DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
+}
+
+
+/**
+ * This function takes a "special" frame and _if_ that frame is the
+ * anonymous block crated by an ib split it returns the split inline
+ * as aSpecialSibling.  This is needed because the split inline's
+ 5B
+ * style context is the parent of the anonymous block's style context.
+ *
+ * If aFrame is not the anonymous block, aSpecialSibling is not
+ * touched.
+ */
+static nsresult
+GetIBSpecialSibling(nsIPresContext* aPresContext,
+                    nsIFrame* aFrame,
+                    nsIFrame** aSpecialSibling)
+{
+  NS_PRECONDITION(aFrame, "Must have a non-null frame!");
+#ifdef DEBUG
+  nsFrameState frameState;
+  aFrame->GetFrameState(&frameState);
+  NS_ASSERTION(frameState & NS_FRAME_IS_SPECIAL,
+               "GetIBSpecialSibling should not be called on a non-special frame");
+#endif // DEBUG
+  
+  // Find the first-in-flow of the frame.  (Ugh.  This ends up
+  // being O(N^2) when it is called O(N) times.)
+  aFrame = aFrame->GetFirstInFlow();
+
+  /*
+   * Now look up the nsLayoutAtoms::IBSplitSpecialPrevSibling
+   * property, which is only set on the anonymous block frames we're
+   * interested in.
+   */
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIFrameManager> frameManager;
+  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  nsIFrame *specialSibling;
+  nsresult rv =
+    frameManager->GetFrameProperty(aFrame,
+                                   nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                   0, (void**)&specialSibling);
+  if (NS_OK == rv) {
+    NS_ASSERTION(specialSibling, "null special sibling");
+    *aSpecialSibling = specialSibling;
+  }
+
+  return NS_OK;
+}
+
+/*
+ * Get a next sibling, or, if there is none, get the parent's next in
+ * flow's first child.
+ */
+static nsIFrame*
+GetNextSiblingAcrossLines(nsIPresContext *aPresContext, nsIFrame *aFrame)
+{
+  nsIFrame *result;
+  aFrame->GetNextSibling(&result);
+  if (result)
+    return result;
+
+  nsIFrame *parent;
+  aFrame->GetParent(&parent);
+  parent->GetNextInFlow(&parent);
+  if (!parent)
+    return nsnull;
+  parent->FirstChild(aPresContext, nsnull, &result);
+  return result;
+}
+
+/**
+ * Get the parent, corrected for the mangled frame tree resulting from
+ * having a block within an inline.  The result only differs from the
+ * result of |GetParent| when |GetParent| returns an anonymous block
+ * that was created for an element that was 'display: inline' because
+ * that element contained a block.
+ *
+ * Also correct for the frame tree mangling that happens when we create
+ * wrappers for :before/:after.
+ */
+static nsresult
+GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
+                   nsIFrame** aSpecialParent)
+{
+  nsIFrame *parent;
+  aFrame->GetParent(&parent);
+  *aSpecialParent = parent;
+  if (parent) {
+    nsCOMPtr<nsIAtom> parentPseudo = parent->GetStyleContext()->GetPseudoType();
+    if (parentPseudo == nsCSSAnonBoxes::mozGCWrapperBlock ||
+        parentPseudo == nsCSSAnonBoxes::mozGCWrapperInline) {
+      nsCOMPtr<nsIAtom> pseudo = aFrame->GetStyleContext()->GetPseudoType();
+      if (pseudo == nsCSSPseudoElements::before) {
+        // Use the wrapped frame, which is after the |:before|.
+        parent = GetNextSiblingAcrossLines(aPresContext, aFrame);
+      } else if (pseudo == nsCSSPseudoElements::after) {
+        parent->GetFirstInFlow()->FirstChild(aPresContext, nsnull, &parent);
+        // Now we have either the wrapped frame or the :before, but we
+        // want the wrapped frame.
+        if (nsCOMPtr<nsIAtom>(parent->GetStyleContext()->GetPseudoType()) ==
+            nsCSSPseudoElements::before)
+          parent = GetNextSiblingAcrossLines(aPresContext, parent);
+      } else {
+        parent->GetParent(&parent);
+      }
+    }
+
+    nsFrameState parentState;
+    parent->GetFrameState(&parentState);
+    if (parentState & NS_FRAME_IS_SPECIAL) {
+      GetIBSpecialSibling(aPresContext, parent, aSpecialParent);
+    } else {
+      *aSpecialParent = parent;
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
                                       nsIFrame**      aProviderFrame,
@@ -4642,7 +4715,7 @@ nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
     // If this frame is one of the blocks that split an inline, we must
     // return the "special" inline parent, i.e., the parent that this
     // frame would have if we didn't mangle the frame structure.
-    return GetIBSpecialParent(aPresContext, aProviderFrame);
+    return GetCorrectedParent(aPresContext, this, aProviderFrame);
   }
 
   // For out-of-flow frames, we must resolve underneath the
@@ -4655,33 +4728,11 @@ nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
   frameManager->GetPlaceholderFrameFor(this, &placeholder);
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
-    GetIBSpecialParent(aPresContext, aProviderFrame);
+    GetCorrectedParent(aPresContext, this, aProviderFrame);
     return NS_ERROR_FAILURE;
   }
-  return NS_STATIC_CAST(nsFrame*, placeholder)->GetParent(aProviderFrame);
-}
-
-/**
- * Get the parent, corrected for the mangled frame tree resulting from
- * having a block within an inline.  The result only differs from the
- * result of |GetParent| when |GetParent| returns an anonymous block
- * that was created for an element that was 'display: inline' because
- * that element contained a block.
- */
-nsresult
-nsFrame::GetIBSpecialParent(nsIPresContext* aPresContext,
-                            nsIFrame** aSpecialParent)
-{
-  *aSpecialParent = mParent;
-  if (mParent) {
-    nsFrameState parentState;
-    mParent->GetFrameState(&parentState);
-    if (parentState & NS_FRAME_IS_SPECIAL) {
-      GetIBSpecialSibling(aPresContext, mParent, aSpecialParent);
-    }
-  }
-
-  return NS_OK;
+  return NS_STATIC_CAST(nsFrame*, placeholder)->
+    GetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
 }
 
 //-----------------------------------------------------------------------------------
