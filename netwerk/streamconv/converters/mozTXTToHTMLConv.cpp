@@ -706,7 +706,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     if (ItMatchesDelimited(aInString, aInLength, "(c)", 3, LT_IGNORE, LT_DELIMITER))
          // Note: ItMatchesDelimited compares case-insensitive
     {
-      outputHTML = "&copy;";
+      aOutputString.Append("&copy;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -714,7 +714,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
     if (ItMatchesDelimited(aInString,aInLength,  "(r)", 3, LT_IGNORE, LT_DELIMITER))
          // see above
     {
-      outputHTML = "&reg;";
+      aOutputString.Append("&reg;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
@@ -724,14 +724,14 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
   {
     if (ItMatchesDelimited(aInString, aInLength, " +/-", 4, LT_IGNORE, LT_IGNORE))
     {
-      outputHTML = " &plusmn;";
+      aOutputString.Append(" &plusmn;");
       glyphTextLen = 4;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
     }
     if (col0 && ItMatchesDelimited(aInString, aInLength, "+/-", 3, LT_IGNORE, LT_IGNORE))
     {
-      outputHTML = "&plusmn;";
+      aOutputString.Append("&plusmn;");
       glyphTextLen = 3;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
