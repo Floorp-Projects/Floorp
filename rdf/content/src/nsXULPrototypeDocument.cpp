@@ -36,8 +36,10 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsXULElement.h"
+#include "nsIJSRuntimeService.h"
 
-class nsXULPrototypeDocument : public nsIXULPrototypeDocument
+class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
+                               public nsIScriptObjectOwner
 {
 public:
     static nsresult
@@ -65,12 +67,17 @@ public:
     NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult);
     NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
 
+    // nsIScriptObjectOwner methods
+    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void **aObject);
+    NS_IMETHOD SetScriptObject(void *aObject);
+
 protected:
     nsCOMPtr<nsIURI> mURI;
     nsXULPrototypeElement* mRoot;
     nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
     nsCOMPtr<nsISupportsArray> mOverlayReferences;
     nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+    JSObject *mScriptObject;    // XXX JS language rabies bigotry badness
 
     nsXULPrototypeDocument();
     virtual ~nsXULPrototypeDocument();
@@ -84,7 +91,7 @@ protected:
 //----------------------------------------------------------------------
 
 nsXULPrototypeDocument::nsXULPrototypeDocument()
-    : mRoot(nsnull)
+    : mRoot(nsnull), mScriptObject(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -108,10 +115,19 @@ nsXULPrototypeDocument::Init()
 nsXULPrototypeDocument::~nsXULPrototypeDocument()
 {
     delete mRoot;
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    if (NS_SUCCEEDED(rv)) {
+        JSRuntime *rt;
+        rv = rtsvc->GetRuntime(&rt);
+        if (NS_SUCCEEDED(rv) && rt)
+            JS_RemoveRootRT(rt, &mScriptObject);
+    }
 }
 
 
-NS_IMPL_ISUPPORTS1(nsXULPrototypeDocument, nsIXULPrototypeDocument);
+NS_IMPL_ISUPPORTS2(nsXULPrototypeDocument, nsIXULPrototypeDocument, nsIScriptObjectOwner);
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -259,5 +275,46 @@ NS_IMETHODIMP
 nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
 {
     mDocumentPrincipal = aPrincipal;
+    return NS_OK;
+}
+
+JSClass null_class = {
+    "nsXULPrototypeScript compilation scope", 0,
+    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  JS_FinalizeStub
+};
+
+//----------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::GetScriptObject(nsIScriptContext *aContext, void **aObject)
+{
+    // The prototype document will have its own special secret script
+    // object that can be used to compile scripts and event handlers.
+    if (!mScriptObject) {
+        JSContext *cx = (JSContext *)aContext->GetNativeContext();
+        if (!cx)
+            return NS_ERROR_UNEXPECTED;
+
+        mScriptObject = JS_NewObject(cx, &null_class, nsnull, nsnull);
+        if (!mScriptObject)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        // Be sure to unlink the script object from the parent global
+        // object. This ensures that we don't end up with a circular
+        // reference back to the first document.
+        JS_SetPrototype(cx, mScriptObject, nsnull);
+        JS_SetParent(cx, mScriptObject, nsnull);
+
+        JS_AddNamedRoot(cx, &mScriptObject, "nsXULPrototypeDocument::mScriptObject");
+    }
+    *aObject = mScriptObject;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULPrototypeDocument::SetScriptObject(void *aObject)
+{
+    mScriptObject = (JSObject *)aObject;
     return NS_OK;
 }

@@ -501,7 +501,7 @@ protected:
     nsCOMPtr<nsIPrincipal>     mDocumentPrincipal;  // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER]
     nsIDocument*               mParentDocument;     // [WEAK]
-    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
+    nsIScriptGlobalObject*     mScriptGlobalObject; // [WEAK]
     void*                      mScriptObject;       // ????
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
     nsString                   mCharSetID;

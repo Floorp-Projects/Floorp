@@ -730,7 +730,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
             nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
 
             rv = script->Compile(mText, mTextLength, mDocumentURL,
-                                 script->mLineNo, doc);
+                                 script->mLineNo, doc, mPrototype);
         }
 
         FlushText(PR_FALSE);
