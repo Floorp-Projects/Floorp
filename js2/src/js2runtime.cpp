@@ -80,6 +80,7 @@ JSType *Void_Type;
 JSType *Null_Type;
 JSType *Unit_Type;
 JSType *Attribute_Type;
+
 JSType *Package_Type;
 JSType *NamedArgument_Type;
 JSArrayType *Array_Type;
@@ -335,13 +336,20 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
     mProperties.insert(e);
     return prop;
 }
-Property *JSObject::defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp)
+Property *JSObject::defineAlias(Context * /*cx*/, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp)
+
 {
+
     Property *prop = new Property(vp, type, attrFlags);
+
     const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
+
     mProperties.insert(e);
+
     return prop;
+
 }
+
 
 
 
@@ -917,6 +925,7 @@ JSType *Context::getParameterType(FunctionDefinition &function, int index)
 
 // Iterates over the linked list of statements, p.
 // 1. Adds 'symbol table' entries for each class, var & function by defining
+
 //      them in the object at the top of the scope chain
 // 2. Using information from pass 1, evaluate types (and XXX later XXX other
 //      compile-time constants) to complete the definitions
@@ -970,23 +979,40 @@ bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition &f)
     return result;
 }
 
+
+
 /*
+
     Build a name for the package from the identifier list
+
 */
+
 String ScopeChain::getPackageName(IdentifierList *packageIdList)
+
 {
+
     String packagePath;
+
     IdentifierList *idList = packageIdList;
+
     while (idList) {
+
 	packagePath += idList->name;
+
 	idList = idList->next;
+
 	if (idList)
+
 	    packagePath += '/'; // XXX how to get path separator for OS?
+
     }
+
     return packagePath;
+
 }
 
 // counts the number of pigs that can fit in a small wicker basket
+
 void JSFunction::countParameters(Context *cx, FunctionDefinition &f)
 {
     uint32 requiredParameterCount = 0;
@@ -1245,47 +1271,89 @@ void ScopeChain::collectNames(StmtNode *p)
         }
         break;
     case StmtNode::Import:
+
         {
+
             ImportStmtNode *i = checked_cast<ImportStmtNode *>(p);
+
 	    String packageName;
+
 	    if (i->packageIdList)
+
 		packageName = getPackageName(i->packageIdList);
+
             else
+
                 packageName = *i->packageString;
 
+
+
             if (!m_cx->checkForPackage(packageName))
+
                 m_cx->loadPackage(packageName, packageName + ".js");
 
+
+
 	    JSValue packageValue = getCompileTimeValue(packageName, NULL);
+
 	    ASSERT(packageValue.isObject() && (packageValue.object->mType == Package_Type));
+
 	    Package *package = checked_cast<Package *>(packageValue.object);
+
             
+
             if (i->varName)
+
                 defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue(package));
+
             
+
             for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
+
                         (it != end); it++)
+
             {
+
                 ASSERT(PROPERTY_KIND(it) == ValuePointer);
+
                 bool makeAlias = true;
+
                 if (i->includeExclude) {
+
                     makeAlias = i->exclude;
+
                     IdentifierList *idList = i->includeExclude;
+
                     while (idList) {
+
                         if (idList->name.compare(PROPERTY_NAME(it)) == 0) {
+
                             makeAlias = !makeAlias;
+
                             break;
+
                         }
+
                         idList = idList->next;
+
                     }
+
                 }
+
                 if (makeAlias)
+
                     defineAlias(m_cx, PROPERTY_NAME(it), PROPERTY_NAMESPACELIST(it), PROPERTY_ATTR(it), PROPERTY_TYPE(it), PROPERTY_VALUEPOINTER(it));
+
             }
 
 
+
+
+
         }
+
         break;
+
     case StmtNode::Namespace:
         {
             NamespaceStmtNode *n = checked_cast<NamespaceStmtNode *>(p);
@@ -1294,20 +1362,35 @@ void ScopeChain::collectNames(StmtNode *p)
             m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));            
         }
         break;
+
     case StmtNode::Package:
+
         {
+
             PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
+
 	    String packageName = getPackageName(ps->packageIdList);
+
 	    Package *package = new Package(packageName);
+
             ps->scope = package;
+
             defineVariable(m_cx, packageName, NULL, Package_Type, JSValue(package));
+
 	    m_cx->mPackages.push_back(package);
 
+
+
 	    addScope(ps->scope);
+
             collectNames(ps->body);
+
 	    popScope();
+
             package->mStatus = Package::InHand;
+
         }
+
         break;
     default:
         break;
@@ -1842,13 +1925,21 @@ void Context::buildRuntimeForStmt(StmtNode *p)
             // do anything ?
         }
         break;
+
     case StmtNode::Package:
+
         {
+
             PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
+
 	    mScopeChain->addScope(ps->scope);
+
             buildRuntimeForStmt(ps->body);
+
 	    mScopeChain->popScope();
+
         }
+
         break;
     default:
         break;
@@ -2379,8 +2470,10 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
                     String *parenStr = new String(str->substr((uint32)(regexp_result->parens[i].index), (uint32)(regexp_result->parens[i].length)));
                     resultArray->setProperty(cx, *numberToString(i + 1), NULL, JSValue(parenStr));
                 }
+
 		else
                     resultArray->setProperty(cx, *numberToString(i + 1), NULL, kUndefinedValue);
+
             }
             // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
             resultArray->setProperty(cx, cx->Index_StringAtom, CURRENT_ATTR, JSValue((float64)(regexp_result->endIndex)));
@@ -2853,7 +2946,9 @@ void Context::initBuiltins()
         { "TypeError",      TypeError_Constructor,      &kNullValue          },
         { "UriError",       UriError_Constructor,       &kNullValue          },
         { "RegExp",         RegExp_Constructor,         &kNullValue          },
+
         { "Package",        NULL,                       &kNullValue          },
+
     };
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
@@ -2910,6 +3005,7 @@ void Context::initBuiltins()
     // is SpiderMonkey compatible.
     RegExp_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[21].name)], Object_Type);
     Package_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[22].name)], Object_Type);
+
 
 
 
@@ -3250,36 +3346,67 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
 
 }
 
-/*
-    See if the specified package is already loaded - return true
-    Throw an exception if the package is being loaded already
-*/
-bool Context::checkForPackage(const String &packageName)
-{
-    // XXX linear search 
-    for (PackageList::iterator pi = mPackages.begin(), end = mPackages.end(); (pi != end); pi++) {
-        if (PACKAGE_NAME(pi).compare(packageName) == 0) {
-            if (PACKAGE_STATUS(pi) == Package::OnItsWay)
-                reportError(Exception::referenceError, "Package circularity");
-            else
-                return true;
-        }
-    }
-    return false;
-}
 
 /*
-    Load the specified package from the file
+
+    See if the specified package is already loaded - return true
+
+    Throw an exception if the package is being loaded already
+
 */
-void Context::loadPackage(const String &packageName, const String &filename)
+
+bool Context::checkForPackage(const String &packageName)
+
 {
+
+    // XXX linear search 
+
+    for (PackageList::iterator pi = mPackages.begin(), end = mPackages.end(); (pi != end); pi++) {
+
+        if (PACKAGE_NAME(pi).compare(packageName) == 0) {
+
+            if (PACKAGE_STATUS(pi) == Package::OnItsWay)
+
+                reportError(Exception::referenceError, "Package circularity");
+
+            else
+
+                return true;
+
+        }
+
+    }
+
+    return false;
+
+}
+
+
+
+/*
+
+    Load the specified package from the file
+
+*/
+
+void Context::loadPackage(const String & /*packageName*/, const String &filename)
+
+{
+
     // XXX need some rules for search path
+
     // XXX need to extract just the target package from the file
 
+
+
     readEvalFile(filename);
+
     
+
  
+
 }
+
 
 void Context::reportError(Exception::Kind kind, char *message, size_t pos, const char *arg)
 {

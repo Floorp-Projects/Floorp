@@ -1290,7 +1290,7 @@ XXX ...couldn't get this to work...
         JSType *extractType(ExprNode *t);
 
 	// concoct a package name from an id list
-	String ScopeChain::getPackageName(IdentifierList *packageIdList);
+	String getPackageName(IdentifierList *packageIdList);
 
     };
 
