@@ -302,6 +302,7 @@ nsSocketTransport::nsSocketTransport(const char * fileName)
 	}
 
 	m_isFileConnection = PR_TRUE;
+	m_hostName = nsnull; // initialize value
 
 	// common initialization code 
 	Initialize();
