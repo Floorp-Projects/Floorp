@@ -36,7 +36,7 @@
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.2 2001/01/07 08:13:13 nelsonb%netscape.com Exp $
+ * $Id: secoid.h,v 1.3 2001/05/02 21:34:13 wtc%netscape.com Exp $
  */
 
 #include "plarena.h"
@@ -45,12 +45,12 @@
 #include "secoidt.h"
 #include "secasn1t.h"
 
+SEC_BEGIN_PROTOS
+
 extern const SEC_ASN1Template SECOID_AlgorithmIDTemplate[];
 
 /* This functions simply returns the address of the above-declared template. */
 SEC_ASN1_CHOOSER_DECLARE(SECOID_AlgorithmIDTemplate)
-
-SEC_BEGIN_PROTOS
 
 /*
  * OID handling routines

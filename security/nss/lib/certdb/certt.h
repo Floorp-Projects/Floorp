@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.6 2001/01/31 18:01:48 wtc%netscape.com Exp $
+ * $Id: certt.h,v 1.7 2001/05/02 21:34:09 wtc%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -777,6 +777,8 @@ typedef struct {
 #include "secasn1t.h"	/* way down here because I expect template stuff to
 			 * move out of here anyway */
 
+SEC_BEGIN_PROTOS
+
 extern const SEC_ASN1Template CERT_CertificateRequestTemplate[];
 extern const SEC_ASN1Template CERT_CertificateTemplate[];
 extern const SEC_ASN1Template SEC_SignedCertificateTemplate[];
@@ -810,5 +812,7 @@ SEC_ASN1_CHOOSER_DECLARE(CERT_CrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_IssuerAndSNTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SetOfSignedCrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SignedDataTemplate)
+
+SEC_END_PROTOS
 
 #endif /* _CERTT_H_ */
