@@ -5,23 +5,31 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!-- Message Pane Widgets -->
-  <binding id="mail-emailaddress" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content excludes="observes,template">
+  <binding id="mail-emailaddress" extends="xul:box">
+    <content>
       	<xul:box inherits="orient" autostretch="never" flex="1">
-          <xul:box orient="vertical"  autostretch="never" flex="1">
-            <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,accesskey,crop"/>
-          </xul:box>
-          <xul:image class="emailDisplayImage" inherits="src"/>
+          <xul:text class="emailDisplayButton" popup="emailAddressPopup" context="emailAddressPopup" inherits="value,crop"/>
+          <xul:image class="emailDisplayImage"/>
         </xul:box>
     </content>
     
     <interface>  
+      <property name="value"      onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('value',val);"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('value');"/>
+      <property name="crop"       onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('crop',val);"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('crop');"/>
+      <property name="disabled"   onset="return document.getAnonymousNodes(this)[0].firstChild.setAttribute('disabled',val);"
+                                  onget="return document.getAnonymousNodes(this)[0].firstChild.getAttribute('disabled');"/>
+      <property name="src"        onset="return document.getAnonymousNodes(this)[0].childNodes[1].setAttribute('src',val);"
+                                  onget="return document.getAnonymousNodes(this)[0].childNodes[1].getAttribute('src');"/>
+      <property name="imgalign"   onset="return document.getAnonymousNodes(this)[0].childNodes[1].setAttribute('imgalign',val);"
+                                  onget="return document.getAnonymousNodes(this)[0].childNodes[1].getAttribute('imgalign');"/>
       <method name="setTextAttribute">
         <argument name="attributeName"/>
         <argument name="attributeValue"/>
         <body>
           <![CDATA[            
-            var textNode = document.getAnonymousNodes(this)[0].firstChild.firstChild;
+            var textNode = document.getAnonymousNodes(this)[0].firstChild;
             textNode.setAttribute(attributeName, attributeValue);
           ]]>
         </body>
@@ -32,7 +40,7 @@
         <argument name="attributeValue"/>
         <body>
           <![CDATA[            
-            var textNode = document.getAnonymousNodes(this)[0].firstChild.firstChild;
+            var textNode = document.getAnonymousNodes(this)[0].firstChild;
             return textNode.getAttribute(attributeName, attributeValue);
           ]]>
         </body>
