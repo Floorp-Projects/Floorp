@@ -55,7 +55,6 @@
 
 #include "nsIJAR.h"
 #include "nsIPrincipal.h"
-#include "nsICertificatePrincipal.h"
 
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -82,8 +81,9 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
     if (!aPrincipal) 
         return NS_OK; // not signed, but not an error
 
-    nsCOMPtr<nsICertificatePrincipal> cp(do_QueryInterface(aPrincipal));
-    if (!cp) 
+    PRBool hasCert;
+    aPrincipal->GetHasCertificate(&hasCert);
+    if (!hasCert)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIJAR> jar(do_QueryInterface(hZip));

@@ -22,12 +22,11 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 
-#include "nsScriptSecurityManager.h"
-#include "nsIAggregatePrincipal.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIPrincipal.h"
 #include "nsIFileURL.h"
 #include "nsIJAR.h"
 
-static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 //-----------------------------------------------------------------------------
@@ -424,22 +423,28 @@ nsJARChannel::GetOwner(nsISupports **result)
     if (cert) {
         // Get the codebase principal
         nsCOMPtr<nsIScriptSecurityManager> secMan = 
-                 do_GetService(kScriptSecurityManagerCID, &rv);
+                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIPrincipal> codebase;
         rv = secMan->GetCodebasePrincipal(mJarBaseURI, 
                                           getter_AddRefs(codebase));
         if (NS_FAILED(rv)) return rv;
-    
+
+        nsCOMPtr<nsIURI> codebaseURI;
+        codebase->GetURI(getter_AddRefs(codebaseURI));
+
+        nsCOMPtr<nsIURI> domainURI;
+        codebase->GetDomain(getter_AddRefs(domainURI));
+        
         // Join the certificate and the codebase
-        nsCOMPtr<nsIAggregatePrincipal> agg = do_QueryInterface(cert, &rv);
+        rv = cert->SetURI(codebaseURI);
         if (NS_FAILED(rv)) return rv;
 
-        rv = agg->SetCodebase(codebase);
+        rv = cert->SetDomain(domainURI);
         if (NS_FAILED(rv)) return rv;
 
-        mOwner = do_QueryInterface(agg, &rv);
+        mOwner = do_QueryInterface(cert, &rv);
         if (NS_FAILED(rv)) return rv;
 
         NS_ADDREF(*result = mOwner);

@@ -210,7 +210,7 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
         if (!hasScript)
         {
             JSPrincipals* jsprinc;
-            principal->GetJSPrincipals(&jsprinc);
+            principal->GetJsPrincipals(&jsprinc);
 
             mFrame.script = JS_CompileScriptForPrincipals(cx, JS_GetGlobalObject(cx),
                                                           jsprinc, "", 0, "", 1);

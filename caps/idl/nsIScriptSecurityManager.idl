@@ -134,23 +134,22 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * executing script. Will return null if there is no script 
      * currently executing.
      */
-    nsIPrincipal getSubjectPrincipal();
+    [noscript] nsIPrincipal getSubjectPrincipal();
 
     /**
      * Return the all-powerful system principal.
      */
-    nsIPrincipal getSystemPrincipal();
+    [noscript] nsIPrincipal getSystemPrincipal();
 
     /**
-     * Return a principal that can be QI'd to nsICertificatePrincipal.
+     * Return a principal with the specified certificate ID.
      */
-    nsIPrincipal getCertificatePrincipal(in string CertID);
+    [noscript] nsIPrincipal getCertificatePrincipal(in string CertID);
 
     /**
-     * Return a principal that can be QI'd to nsICodebasePrincipal and 
-     * has the same origin as aURI.
+     * Return a principal that has the same origin as aURI.
      */
-    nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
+    [noscript] nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
 
     ///////////////// Capabilities API /////////////////////
     /**
@@ -159,13 +158,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * necessary. Returns nsIPrincipal::ENABLE_GRANTED or
      * nsIPrincipal::ENABLE_DENIED based on user's choice.
      */
-    void requestCapability(in nsIPrincipal principal, in string capability,
-                           out short result);
+    [noscript] short requestCapability(in nsIPrincipal principal,
+                                       in string capability);
     
     /**
      * Return true if the currently executing script has 'capability' enabled.
      */
-    boolean IsCapabilityEnabled(in string capability);
+    boolean isCapabilityEnabled(in string capability);
     
     /**
      * Enable 'capability' in the innermost frame of the currently executing

@@ -14,12 +14,14 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999-2000
+ * Portions created by the Initial Developer are Copyright (C) 1999-2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mitchell Stoltz <mstoltz@netscape.com>
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -44,41 +46,109 @@
 struct JSPrincipals;
 %}
 
+interface nsIURI;
+
 [ptr] native JSPrincipals(JSPrincipals);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISerializable {
-
-    // Values of capabilities for each principal. Order is
-    // significant: if an operation is performed on a set
-    // of capabilities, the minimum is computed.
+interface nsIPrincipal : nsISerializable
+{
+    /**
+     * Values of capabilities for each principal. Order is
+     * significant: if an operation is performed on a set
+     * of capabilities, the minimum is computed.
+     */
     const short ENABLE_DENIED                = 1;
     const short ENABLE_UNKNOWN               = 2;
     const short ENABLE_WITH_USER_PERMISSION  = 3;
     const short ENABLE_GRANTED               = 4;
 
-    string ToString();
-
-    string ToUserVisibleString();
-
-    void GetPreferences(out string prefName, out string id, 
+    /**
+     * Returns the security preferences associated with this principal.
+     * prefBranch will be set to the pref branch to which these preferences
+     * pertain.  id is a pseudo-unique identifier, pertaining to either the
+     * certificateID or the origin.  grantedList and deniedList are
+     * space-separated lists of capabilities which were explicitly granted
+     * or denied by a pref.
+     */
+    void getPreferences(out string prefBranch, out string id,
                         out string grantedList, out string deniedList);
 
-    boolean Equals(in nsIPrincipal other);
+    /**
+     * Returns whether the other principal is equivalent to this principal.
+     * Principals are considered equal if they are the same principal,
+     * they have the same origin, or have the same certificate ID
+     */
+    boolean equals(in nsIPrincipal other);
 
-    unsigned long HashValue();
+    /**
+     * Returns a hash value for the principal.
+     */
+    readonly attribute unsigned long hashValue;
 
-    JSPrincipals GetJSPrincipals();
+    /**
+     * Returns the JS equivalent of the principal.
+     * @see JSPrincipals.h
+     */
+    readonly attribute JSPrincipals jsPrincipals;
 
-    short CanEnableCapability(in string capability);
+    /**
+     * The domain security policy of the principal.
+     */
+    // XXXcaa should this be here?  The script security manager is the only
+    // thing that should care about this.  Wouldn't storing this data in one
+    // of the hashtables in nsScriptSecurityManager be better?
+    attribute voidPtr securityPolicy;
 
-    void SetCanEnableCapability(in string capability, in short canEnable);
+    // XXXcaa probably should be turned into {get|set}CapabilityFlags
+    short canEnableCapability(in string capability);
+    void setCanEnableCapability(in string capability, in short canEnable);
+    boolean isCapabilityEnabled(in string capability, in voidPtr annotation);
+    void enableCapability(in string capability, inout voidPtr annotation);
+    void revertCapability(in string capability, inout voidPtr annotation);
+    void disableCapability(in string capability, inout voidPtr annotation);
 
-    boolean IsCapabilityEnabled(in string capability, in voidPtr annotation);
-    
-    void EnableCapability(in string capability, inout voidPtr annotation);
+    /**
+     * The codebase URI to which this principal pertains.  This is
+     * generally the document URI.  Setting this will reset the domain
+     * to null.
+     */
+    attribute nsIURI URI;
 
-    void RevertCapability(in string capability, inout voidPtr annotation);
+    /**
+     * The domain URI to which this principal pertains.
+     * This is congruent with HTMLDocument.domain, and may be null.
+     * Setting this has no effect on the URI.
+     */
+    attribute nsIURI domain;
 
-    void DisableCapability(in string capability, inout voidPtr annotation);
+    /**
+     * The origin of this principal's domain, if non-null, or its
+     * codebase URI otherwise. An origin is defined as:
+     * scheme + host + port.
+     */
+    // XXXcaa this should probably be turned into an nsIURI.
+    // The system principal's origin should be some caps namespace
+    // with a chrome URI.  All of chrome should probably be the same.
+    readonly attribute string origin;
+
+    /**
+     * Whether this principal is associated with a certificate.
+     */
+    readonly attribute boolean hasCertificate;
+
+    /**
+     * The fingerprint ID of this principal's certificate.
+     * Throws if there is no certificate associated with this principal.
+     */
+    // XXXcaa kaie says this may not be unique.  We should probably
+    // consider using something else for this....
+    attribute string certificateID;
+
+    /**
+     * The common name for the certificate.
+     * This pertains to the certificate authority organization.
+     * Throws if there is no certificate associated with this principal.
+     */
+    attribute string commonName;
 };
