@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsIServiceManager.h"
 #include "nsBrowserCIDs.h"
 #include "nsBrowserController.h"
 
@@ -29,9 +30,9 @@
 
 
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_EXPORT nsresult NSGetFactory_BROWSER_DLL(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory_WEB_DLL(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #else
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #endif
 {
   nsresult rv = NS_OK;
