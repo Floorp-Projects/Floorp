@@ -44,6 +44,7 @@ NSPR_LIBS       = nspr21 plds21 plc21 msgc21 nspr21
 LINK_PROGRAM    = $(CC)
 XP_REG_LIB      = reg
 ARCHIVE_SUFFIX  = 
+VERSION_NUMBER  =
 NATIVE_PLATFORM = unix
 NATIVE_RAPTOR_WIDGET = widgetunix
 NATIVE_RAPTOR_GFX = gfxunix
