@@ -34,6 +34,10 @@
 #include "utilities.h"
 #ifdef DEBUG
 #    include <cstdio>
+#    ifdef XP_MAC
+#        include <cstdarg>
+#        include <Types.h>
+#    endif
 #    ifdef WIN32
 #        include <stdlib.h>
 #        include <windows.h>
@@ -97,6 +101,7 @@ namespace JavaScript
     void
     Assert(const char *s, const char *file, int line)
     {
+
 #if defined(XP_UNIX) || defined(XP_OS2)
         fprintf(std::stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
 #endif
