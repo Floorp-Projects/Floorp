@@ -601,27 +601,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     return ok;
 }
 
-static JSBool
-Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    if (JS_HAS_STRICT_OPTION(cx) &&
-        !JS_ReportErrorFlagsAndNumber(cx,
-                                      JSREPORT_WARNING | JSREPORT_STRICT,
-                                      js_GetErrorMessage, NULL,
-                                      JSMSG_DEPRECATED_USAGE,
-                                      js_CallClass.name)) {
-        return JS_FALSE;
-    }
-
-    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_CallClass, NULL, NULL);
-        if (!obj)
-            return JS_FALSE;
-        *rval = OBJECT_TO_JSVAL(obj);
-    }
-    return JS_TRUE;
-}
-
 static JSPropertySpec call_props[] = {
     {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT,0,0},
     {"__callee__",      CALL_CALLEE,    0,0,0},
@@ -1676,7 +1655,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         args_length = 0;
         for (i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
-            arg = JSVAL_TO_STRING(argv[i]);
+            arg = js_ValueToString(cx, argv[i]);
+            if (!arg)
+                return JS_FALSE;
+            argv[i] = STRING_TO_JSVAL(arg);
             args_length += JSSTRING_LENGTH(arg);
         }
         /* Add 1 for each joining comma. */
@@ -1875,7 +1857,7 @@ bad:
 JSObject *
 js_InitCallClass(JSContext *cx, JSObject *obj)
 {
-    return JS_InitClass(cx, obj, NULL, &js_CallClass, Call, 0,
+    return JS_InitClass(cx, obj, NULL, &js_CallClass, NULL, 0,
                         call_props, NULL, NULL, NULL);
 }
 #endif
