@@ -116,6 +116,7 @@ bin/components/libdocshell.so
 bin/components/libeditor.so
 bin/components/libembedcomponents.so
 bin/components/libgfx_gtk.so
+bin/libgfxft2.so
 bin/components/libgfxps.so
 bin/components/libgfxxprint.so
 bin/components/libimglib2.so
