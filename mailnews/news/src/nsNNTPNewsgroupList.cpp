@@ -109,7 +109,7 @@ public:
 
     
 private:
-  NS_METHOD Init(nsINNTPHost *, nsINNTPNewsgroup*);
+  NS_METHOD Init(nsINNTPHost *, nsINNTPNewsgroup*) { return NS_OK;}
   NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
 
   NS_METHOD CleanUp();
