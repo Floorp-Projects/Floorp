@@ -105,9 +105,40 @@ function openNewWindowWith(url, sendReferrer)
 function openNewTabWith(url, sendReferrer, reverseBackgroundPref) 
 {
   urlSecurityCheck(url, document);
-  var browser = getBrowser();
 
   var referrer = sendReferrer ? getReferrer(document) : null;
+
+  var browser;
+  try {
+    // if we're running in a browser window, this should work
+    //
+    browser = getBrowser();
+
+  } catch (ex if ex instanceof ReferenceError) {
+
+    // must be running somewhere else (eg mailnews message pane); need to
+    // find a browser window first
+    //
+    var windowMediator =
+      Components.classes["@mozilla.org/appshell/window-mediator;1"]
+      .getService(Components.interfaces.nsIWindowMediator);
+
+    var browserWin = windowMediator.getMostRecentWindow("navigator:browser");
+
+    // if there's no existing browser window, open this url in one, and
+    // return
+    //
+    if (!browserWin) {
+      window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", 
+                        url, null, referrer);
+      return;
+    }
+
+    // otherwise, get the existing browser object
+    //
+    browser = browserWin.getBrowser();
+  }
+
   var tab = browser.addTab(url, referrer); // open link in new tab
   if (pref) {
     var loadInBackground = pref.getBoolPref("browser.tabs.loadInBackground");

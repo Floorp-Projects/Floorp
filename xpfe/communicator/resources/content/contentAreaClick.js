@@ -181,8 +181,7 @@
   function openNewTabOrWindow(event, href, sendReferrer)
   {
     // should we open it in a new tab?
-    if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick") &&
-        ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
+    if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick")) {
       openNewTabWith(href, sendReferrer, event.shiftKey);
       event.preventBubble();
       return true;
