@@ -50,6 +50,21 @@ var view = ({
         return "XXX in "+ col+" and "+i;
      }
    },
+// nsIClassInfo
+  flags : Components.interfaces.nsIClassInfo.DOM_OBJECT,
+  classDescription : "OutlinerView",
+  getInterfaces: function() {},
+  getHelperForLanguage: function(aLang) {},
+
+  QueryInterface: function(iid) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (!iid.equals(Components.interfaces.nsISupports) &&
+        !iid.equals(Components.interfaces.nsIOutlinerView) &&
+        !iid.equals(Components.interfaces.nsIClassInfo))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+
+    return this;
+  },
 // privates
   names : null,
   purps : null,
