@@ -26,23 +26,30 @@ REQUIRES=xpcom js nspr
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=    nsMsgRFC822Parser.cpp   \
-			nsMsgFolder.cpp			\
+CPPSRCS=    nsMsgRFC822Parser.cpp  \
+			nsUInt32Array.cpp\
+			nsMsgKeyArray.cpp\
+			nsMsgFolder.cpp \
 			nsMsgPtrArray.cpp		\
 			nsMsgGroupRecord.cpp	\
 			$(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj   \
-			.\$(OBJDIR)\nsMsgFolder.obj			\
+CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
+			.\$(OBJDIR)\nsUInt32Array.obj\
+			.\$(OBJDIR)\nsMsgKeyArray.obj\
+			.\$(OBJDIR)\nsMsgFolder.obj \
 			.\$(OBJDIR)\nsMsgPtrArray.obj		\
 			.\$(OBJDIR)\nsMsgGroupRecord.obj	\
 			$(NULL)
 
 
-EXPORTS= nsMsgRFC822Parser.h \
-		 nsMsgGroupRecord.h  \
-		 nsMsgPtrArray.h	 \
-		 $(NULL)
+EXPORTS=	nsMsgRFC822Parser.h \
+			nsUInt32Array.h	\
+			nsMsgKeyArray.h	\
+			 nsMsgGroupRecord.h  \
+			 nsMsgPtrArray.h	 \
+			$(NULL)
+
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf
 

@@ -27,12 +27,16 @@ LIBRARY_NAME=mailnewsbase
 NO_SHARED_LIB=1
 
 EXPORTS = \
+	nsUInt32Array.h\
+	nsMsgKeyArray.h\
 	nsMsgPtrArray.h \
 	nsMsgGroupRecord.h \
 	nsMsgRFC822Parser.h \
 	$(NULL)
 
 CPPSRCS = \
+	nsUInt32Array.cpp\
+	nsMsgKeyArray.cpp\
 	nsMsgPtrArray.h \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
