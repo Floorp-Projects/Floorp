@@ -1673,6 +1673,23 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef MOZ_PHOENIX
+  // Check for -register, which registers chrome and then exits immediately.
+  for (int i = 0; i < argc; ++i) {
+    if (!strcmp(argv[i], "-register")) {
+      nsCOMPtr<nsIChromeRegistry> chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+      if (chromeReg) {
+        chromeReg->CheckForNewChrome();
+        chromeReg = 0;
+#ifdef XPCOM_GLUE
+        GRE_Shutdown();
+#else
+        NS_ShutdownXPCOM(nsnull);
+#endif
+        return 0;
+      }
+    }
+  }
+
   nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash, aAppData);
 #else
   nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash);
