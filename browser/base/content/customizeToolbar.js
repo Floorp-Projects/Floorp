@@ -242,7 +242,7 @@ var toolbarDNDObserver = {
       if (!nextRow) {
         var last = currentRow.lastChild;
         var first = currentRow.firstChild;
-        if (firstChild == lastChild) {
+        if (first == last) {
           // Kill the row.
           currentRow.parentNode.removeChild(currentRow);
           return;
@@ -252,6 +252,9 @@ var toolbarDNDObserver = {
           var flex = last.getAttribute("flex");
           flex++;
           last.setAttribute("flex", flex);
+          // Reflow doesn't happen for some reason.  Trigger it with a hide/show. ICK! -dwh
+          last.hidden = true;
+          last.hidden = false;
           return;
         }
         else {
