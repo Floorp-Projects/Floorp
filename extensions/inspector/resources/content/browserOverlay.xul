@@ -13,7 +13,11 @@
   
   function inspectorNavOnLoad()
   {
-    var enabled = pref.GetBoolPref("inspector.hooks.navigator");
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    var pref = prefService.getBranch(null);
+
+    var enabled = pref.getBoolPref("inspector.hooks.navigator");
     if (!enabled) {
       document.getElementById("context-inspect").setAttribute("hidden", "true");
       document.getElementById("menu_inspectPage").setAttribute("hidden", "true");
@@ -53,7 +57,7 @@
 
   <menupopup id="menu_FilePopup">
     <menuitem id="menu_inspectPage" label="&inspectPageTaskCmd.label;" command="Tasks:InspectPage" 
-              accesskey="&inspectPageTaskCmd.accesskey;"  key="key_inspectPage" 
+              accesskey="&inspectPageTaskCmd.accesskey;" key="key_inspectPage" 
               insertbefore="menu_sendPage"/>
   </menupopup>
 

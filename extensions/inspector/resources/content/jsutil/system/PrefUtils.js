@@ -105,7 +105,7 @@ var PrefUtils =
     var type = this.mPrefs.getPrefType(aName);
     try {
       if (type == nsIPrefBranch.PREF_STRING) {
-        return this.mPrefs.getComplexValue(aName, Components.interfaces.nsISupportsWString);
+        return this.mPrefs.getComplexValue(aName, Components.interfaces.nsISupportsWString).data;
       } else if (type == nsIPrefBranch.PREF_BOOL) {
         return this.mPrefs.getBoolPref(aName);
       } else if (type == nsIPrefBranch.PREF_INT) {
