@@ -25,7 +25,7 @@ PROG3 = .\$(OBJDIR)\TestCRT.exe
 RESFILE = timer.res
 PROGRAMS = $(PROG0) $(PROG1) $(PROG2) $(PROG3)
 
-LINCS=-I..\src -I$(PUBLIC)\xpcom
+LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib
 
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
