@@ -215,6 +215,7 @@ if ( ( $reqTargetOS == 'WINNT' )
 
 $query = 
 "SELECT main.guid AS extguid,
+        main.type AS exttype,
         version.version AS extversion,
         version.uri AS exturi,
         version.minappver AS appminver,
