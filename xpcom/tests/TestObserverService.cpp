@@ -93,7 +93,7 @@ TestObserver::Observe( nsISupports     *aSubject,
     	*/
     cout << mName << " has observed something: subject@" << (void*)aSubject
          << " name=" << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, aSubject))->mName
-         << " aTopic=" << topic
+         << " aTopic=" << topic.get()
          << " someData=" << data << endl;
     return NS_OK;
 }
