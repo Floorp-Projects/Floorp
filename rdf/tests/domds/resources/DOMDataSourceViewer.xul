@@ -7,28 +7,24 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   class="dialog"
   onload="onSrcLoaded();"
-  alignment="horizontal"
   title="DOM Viewer">
 
-<html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
+<script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
-  <html:input value="chrome://communicator/content/domviewer/domviewer.html" type="text" name="url" id="url" onkeypress="if (event.which == 13) loadUrl();"/>
-  <html:div>
-    Show: 
-    <html:input type="checkbox" onclick="setMode('content', event.target.checked);"/>
-    Content
-    <html:input type="checkbox" onclick="setMode('dom', event.target.checked);"/>
-    DOM
-    <html:input type="checkbox" onclick="setMode('frame', event.target.checked);"/> Frames
-    <html:input type="checkbox" onclick="setMode('leaf', event.target.checked);"/>
-    OOB data
-  </html:div>
-  <box align="horizontal">
-    <titledbutton class="push" onclick="loadUrl();" value="Load"/>
-    <titledbutton class="push" onclick="refreshTree();" value="Refresh"/>
+  <textfield value="chrome://communicator/content/domviewer/domviewer.html" type="text" name="url" id="url" onkeypress="if (event.which == 13) loadUrl();"/>
+  <box>
+    <text value="Show:"/>
+    <checkbox oncommand="setMode('content', event.target.checked);" value="Content"/>
+    <checkbox oncommand="setMode('dom', event.target.checked);" value="DOM"/>
+    <checkbox oncommand="setMode('frame', event.target.checked);" value="Frames"/>
+    <checkbox oncommand="setMode('leaf', event.target.checked);" value="OOB data"/>
+    
   </box>
-<html:div flex="100%">
-<tree style="height:100%"
+  <box align="horizontal">
+    <button onclick="loadUrl();" value="Load"/>
+    <button onclick="refreshTree();" value="Refresh"/>
+  </box>
+<tree
   rdf:datasources="rdf:domds"
   id="dataSourceTree">
 
@@ -58,10 +54,9 @@
     </treerow>
   </treehead>
 </tree>
-</html:div>
 
 </box>
 <splitter collapse="before" persist="state hidden" chromeclass="extrachrome"/>
-<html:iframe onload="onSrcLoaded();" name="srcdoc" src="chrome://communicator/content/domviewer/domviewer.html" flex="73%"/>
+<iframe onload="onSrcLoaded();" name="srcdoc" src="chrome://communicator/content/domviewer/domviewer.html" flex="73%"/>
 
 </window>

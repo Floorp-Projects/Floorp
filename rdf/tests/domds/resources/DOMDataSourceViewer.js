@@ -47,6 +47,8 @@ function setMode(mode, active) {
 function refreshTree() {
 
     dump("refresh..\n");
+    var ds = RDF.GetDataSource("rdf:domds");
+    domds = ds.QueryInterface(Components.interfaces.nsIDOMDataSource);
     var win = window.frames["srcdoc"];
     domds.setWindow(win);
 
