@@ -48,7 +48,7 @@ public class CPGeneratorProgress extends ProgressApplet
 	public void init()
 	{
 		super.init();
-		progress.setText( DIALING_STRING );
+		status.setText( DIALING_STRING );
 	}
 	
     public void run()
