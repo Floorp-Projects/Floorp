@@ -62,13 +62,11 @@ XP_BEGIN_PROTOS
  * leaves the current page
  */
 extern void FE_SetRefreshURLTimer(MWContext *context, 
-								  uint32     seconds, 
-								  char      *refresh_url);
+				URL_Struct *URL_s );								
 
 #ifdef _USRDLL
 extern void NDLLFE_SetRefreshURLTimer(MWContext *context, 
-								  uint32     seconds, 
-								  char      *refresh_url);
+				URL_Struct *URL_s );									
 #endif
 
 /* this function should register a function that will
