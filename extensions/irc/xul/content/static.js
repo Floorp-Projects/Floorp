@@ -2120,8 +2120,11 @@ function __display(message, msgtype, sourceObj, destObj)
 
     function setAttribs (obj, c, attrs)
     {
-        for (var a in attrs)
-            obj.setAttribute (a, attrs[a]);
+        if (attrs)
+        {
+            for (var a in attrs)
+                obj.setAttribute (a, attrs[a]);
+        }
         obj.setAttribute ("class", c);
         obj.setAttribute ("msg-type", msgtype);
         obj.setAttribute ("msg-dest", toAttr);
