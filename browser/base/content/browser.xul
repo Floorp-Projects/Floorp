@@ -737,8 +737,9 @@ Contributor(s):
                          ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
                          oncommand="BrowserHome();"/>
       
-        <toolbaritem id="urlbar-container" align="center" flex="1">
-          <textbox id="urlbar" class="chromeclass-location" flex="1"
+        <toolbaritem id="urlbar-container" align="center" flex="1"
+                     class="chromeclass-location">
+          <textbox id="urlbar" flex="1"
                    type="autocomplete" searchSessions="history" 
                    timeout="50" maxrows="6" alwaysopenpopup="true"
                    disablehistory="false"
@@ -772,8 +773,8 @@ Contributor(s):
           </textbox>
         </toolbaritem>
 
-        <toolbaritem id="go-container" align="center">
-          <button id="go-button" class="button-toolbar chromeclass-location"
+        <toolbaritem id="go-container" align="center" class="chromeclass-location">
+          <button id="go-button" class="button-toolbar"
                   label="&goButton.label;" persist="hidden"
                   oncommand="addToUrlbarHistory(); BrowserLoadURL();"
                   ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
