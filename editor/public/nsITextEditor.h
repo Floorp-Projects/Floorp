@@ -28,7 +28,7 @@
 #include "nscore.h"
 
 class nsIEditorCallback;
-class nsVoidArray;
+class nsISupportsArray;
 class nsIAtom;
 class nsIInputStream;
 class nsIOutputStream;
@@ -60,20 +60,21 @@ public:
   /**
    * SetTextProperties() sets the aggregate properties on the current selection
    *
-   * @param aProperty 
+   * @param aPropList  a list of properties to set across the selection 
+   * NOTE: this method is experimental, expect it to change.
    */
-  virtual nsresult SetTextProperties(nsVoidArray *aPropList)=0;
+  virtual nsresult SetTextProperties(nsISupportsArray *aPropList)=0;
 
   /**
    * GetTextProperties() gets the aggregate properties of the current selection.
    * All object in the current selection are scanned and their attributes are
    * represented in a list of Property object.
    *
-   * @param aProperty An enum that will recieve the various properties that can be applied from the current selection.
-   * @see nsIEditor::Properties
+   * @param aPropList A list of the various properties that are applied to the text content 
+   *                  in the current selection.  Each item in aPropList is an nsEditProperty.
    * NOTE: this method is experimental, expect it to change.
    */
-  virtual nsresult GetTextProperties(nsVoidArray *aPropList)=0;
+  virtual nsresult GetTextProperties(nsISupportsArray *aPropList)=0;
 
   /**
    * RemoveTextProperties() deletes the properties from all text in the current selection.
@@ -82,7 +83,7 @@ public:
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
-  virtual nsresult RemoveTextProperties(nsVoidArray *aPropList)=0;
+  virtual nsresult RemoveTextProperties(nsISupportsArray *aPropList)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
