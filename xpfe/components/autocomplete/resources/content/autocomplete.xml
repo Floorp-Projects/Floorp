@@ -206,12 +206,19 @@
       <property name="mListeners"/>
       <property name="mLastResults"/>
       <property name="mLastKeyCode"/>
+      <property name="mInputFilter"/>
       <property name="mAutoCompleteTimer">0</property>
       <property name="mMenuOpen">false</property>
       <property name="mFinishAfterSearch">false</property>
       <property name="mFireAfterSearch">false</property>
       <property name="mNeedToFinish">false</property>
+      <property name="mNeedToComplete">false</property>
       <property name="mView">null</property>
+      <property name="currentSearchString"/>
+      <property name="currentSearchStringPreFilter"/>
+      <property name="oninit"/>
+      <property name="ontextcommand"/>
+      <property name="ontextrevert"/>
 
       <property name="mAutoCompleteListener"><![CDATA[
         var listener = function(aSession) { this.sessionName = aSession };
@@ -378,9 +385,9 @@
       <!--  -->
       <method name="startLookup">
         <body><![CDATA[
-          var str = this.filterString(this.mInputElt.value);
+          var str = this.filterString(this.value);
           this.lastSearchString = this.currentSearchString;
-          this.currentSearchStringPreFilter = this.mInputElt.value;
+          this.currentSearchStringPreFilter = this.value;
           this.currentSearchString = str;
           
           this.isSearching = true;
@@ -405,7 +412,7 @@
       <method name="autoComplete">
         <body><![CDATA[
           for (var name in this.mSessions)
-            this.mSessions[name].onAutoComplete(this.mInputElt.value, 
+            this.mSessions[name].onAutoComplete(this.value, 
                                                 this.mLastResults[name],
                                                 this.mListeners[name]);
         ]]></body>
@@ -501,7 +508,8 @@
         ]]></body>
       </method>
 
-      <!-- when the focus exits the widget, determine what value to leave in the textbox -->
+      <!-- when the focus exits the widget or user hits return, 
+           determine what value to leave in the textbox -->
       <method name="finishAutoComplete">
         <parameter name="aFireTextCommand"/>
         <body><![CDATA[
@@ -522,7 +530,7 @@
             var val = this.resultsPopup.getOverrideValue();
             if (val) {
               this.value = val;
-            } else if (this.mInputElt.value == this.currentSearchStringPreFilter) {
+            } else if (this.mNeedToComplete) {
               // only fill in default value if there is nothing currently selected in popup
               var defaultSession = this.getDefaultSession();
               if (defaultSession) {
@@ -538,7 +546,8 @@
           this.clearTimer();
                     
           this.currentSearchStringPreFilter = "";
-
+          this.mNeedToComplete = false;
+          
           if (aFireTextCommand)
             this.fireTextCommand(this.userAction);
         ]]></body>
@@ -556,7 +565,8 @@
           }
 
           this.mNeedToFinish = false;
-
+          this.mNeedToComplete = false;
+          
           this.closeResultPopup();
 
           this.currentSearchStringPreFilter = "";
@@ -577,6 +587,7 @@
           this.userAction = "typing";
 
           this.currentSearchStringPreFilter = "";
+          this.mNeedToComplete = false;
         ]]></body>
       </method>
 
@@ -615,11 +626,12 @@
 
           this.userAction = "typing";
           this.mNeedToFinish = true;
-          
+          this.mNeedToComplete = true;
+
           this.resultsPopup.selectedIndex = null;
           
           // We want to autocomplete only if the user is editing at the end of the text
-          if (this.mInputElt.selectionEnd >= this.mInputElt.value.length)
+          if (this.mInputElt.selectionEnd >= this.value.length)
             this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
           else
             this.noMatch = true;
@@ -676,6 +688,7 @@
             aEvent.preventDefault();
             aEvent.preventBubble();
           }
+          
           return true;
         ]]></body>
       </method>
@@ -696,6 +709,7 @@
             }
             
             this.userAction = "scrolling";
+            this.mNeedToComplete = false;
             
             var dir = k == KeyEvent.DOM_VK_DOWN ||
                       k == KeyEvent.DOM_VK_PAGE_DOWN ||
@@ -707,13 +721,13 @@
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
             if (selected != null) {
-              this.mInputElt.value = this.getResultValueAt(selected);
+              this.value = this.getResultValueAt(selected);
             } else {
-              this.mInputElt.value = this.currentSearchStringPreFilter;
+              this.value = this.currentSearchStringPreFilter;
             }
             
             // move cursor to the end
-            this.mInputElt.setSelectionRange(this.mInputElt.value.length, this.mInputElt.value.length);
+            this.mInputElt.setSelectionRange(this.value.length, this.value.length);
             this.ignoreInputEvent = false;
           }
         ]]></body>
@@ -735,12 +749,14 @@
               var entry = this.currentSearchString.toLowerCase();
               this.ignoreInputEvent = true;
               if (match.indexOf(entry) == 0) {
-                var str = this.mInputElt.value;
-                this.mInputElt.value = this.mInputElt.value + match.substring(entry.length);
-                this.mInputElt.setSelectionRange(str.length, this.mInputElt.value.length);
+                var str = this.value;
+                this.value = this.value + match.substring(entry.length);
+                this.mNeedToComplete = false;
+                this.mInputElt.setSelectionRange(str.length, this.value.length);
               } else {
-                this.mInputElt.value = this.mInputElt.value + " >> " + resultValue;
-                this.mInputElt.setSelectionRange(entry.length, this.mInputElt.value.length);
+                this.value = this.value + " >> " + resultValue;
+                this.mNeedToComplete = true;
+                this.mInputElt.setSelectionRange(entry.length, this.value.length);
               }
               this.ignoreInputEvent = false;
             }
@@ -849,8 +865,7 @@
      <!-- execute the external init handler -->
       <method name="fireInit">
         <body><![CDATA[
-          if (this.oninit)
-            return this.oninit();
+          return this.oninit ? this.oninit() : null;
         ]]></body>
       </method>
 
@@ -858,16 +873,14 @@
       <method name="fireTextCommand">
         <parameter name="aUserAction"/>
         <body><![CDATA[
-          if (this.ontextcommand)
-            return this.ontextcommand(aUserAction);
+          return this.ontextcommand ? this.ontextcommand(aUserAction) : null;
         ]]></body>
       </method>
 
      <!-- execute the external command handler -->
       <method name="fireTextRevert">
         <body><![CDATA[
-          if (this.ontextrevert)
-            return this.ontextrevert();
+          return this.ontextrevert ? this.ontextrevert() : null;
         ]]></body>
       </method>
 
@@ -1026,7 +1039,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content menugenerated="true">
+    <content>
       <xul:box class="autocomplete-result-box" flex="1">
         <xul:outliner anonid="outliner" class="autocomplete-outliner" flex="1">
           <xul:outlinerbody anonid="outlinerbody" class="autocomplete-outlinerbody" flex="1"/>
@@ -1120,11 +1133,17 @@
         <parameter name="aDir"/>
         <parameter name="aAmount"/>
         <body><![CDATA[
-          var bx = this.outliner.outlinerBoxObject;
-          var view = bx.view;
-          this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
-
-          return this.selectedIndex;
+          try {
+            var bx = this.outliner.outlinerBoxObject;
+            var view = bx.view;
+            this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
+  
+            return this.selectedIndex;
+          } catch (ex) {
+            // do nothing - occasionally timer-related js errors happen here
+            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
+            // navigation key before this popup has opened
+          }
         ]]></body>
       </method>
 
