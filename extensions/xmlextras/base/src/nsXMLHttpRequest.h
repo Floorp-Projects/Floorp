@@ -51,7 +51,8 @@ enum nsXMLHttpRequestState {
   XML_HTTP_REQUEST_LOADED,
   XML_HTTP_REQUEST_INTERACTIVE,
   XML_HTTP_REQUEST_COMPLETED,
-  XML_HTTP_REQUEST_SENT // This is Mozilla-internal only, LOADING in IE and external view
+  XML_HTTP_REQUEST_SENT, // This is Mozilla-internal only, LOADING in IE and external view
+  XML_HTTP_REQUEST_STOPPED // This is Mozilla-internal only, INTERACTIVE in IE and external view
 };
 
 class nsXMLHttpRequest : public nsIXMLHttpRequest,

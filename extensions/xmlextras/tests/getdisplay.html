@@ -1,5 +1,6 @@
 <html>
-<head><title>POST test</title>
+<head>
+<title>GET test</title>
 <style type="text/css">
 .box {
   display: box;
@@ -15,19 +16,6 @@ pre {
 }
 </style>
 <script type="text/javascript">
-const WSTRING_CONTRACTID = "@mozilla.org/supports-wstring;1";
-
-// You can only create the text string if you can bybass security, like in chrome
-var sendPlainTextData = false;
-
-var x;
-if (!sendPlainTextData) {
-  x = document.implementation.createDocument("", "test", null);
-  x.documentElement.appendChild(document.createElement("Foo"));
-  x.documentElement.appendChild(document.createElement("Bar"));
-  x.documentElement.firstChild.appendChild(document.createTextNode("My Stuff\nYeah"));
-}
-
 var p = new XMLHttpRequest();
 
 function myfunc(e)
@@ -54,19 +42,12 @@ function myfunc(e)
 
 p.onload = myfunc;
 netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-p.open("POST", "http://green/cgi-bin/echo_xml.cgi");
-
-if (!sendPlainTextData) {
-  p.send(x);
-} else {
-  var mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
-  mystr.data = "Heikki's data";
-  p.send(mystr);
-}
+p.open("GET", "http://green/heikki/display.xml");
+p.send(null);
 </script>
 </head>
 <body>
-<h1>POST test</h1>
+<h1>GET test</h1>
 
 <div class="box"><span class="boxheader">responseText</span>
 <pre id="id1">@@No result@@</pre>
