@@ -444,6 +444,7 @@ nsrefcnt nsScrollingView::Release()
 NS_IMETHODIMP nsScrollingView::Init(nsIViewManager* aManager,
                                       const nsRect &aBounds,
                                       const nsIView *aParent,
+                                      const nsViewClip *aClip,
                                       nsViewVisibility aVisibilityFlag)
 {
   nsIDeviceContext  *dx = nsnull;
@@ -462,7 +463,7 @@ NS_IMETHODIMP nsScrollingView::Init(nsIViewManager* aManager,
     NS_RELEASE(dx);
   }
 
-  return nsView::Init(aManager, aBounds, aParent, aVisibilityFlag);
+  return nsView::Init(aManager, aBounds, aParent, aClip, aVisibilityFlag);
 }
 
 NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBool aPaint)
@@ -839,7 +840,8 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     trect.height = NSToCoordRound(sbHeight);
     trect.y = mBounds.y + mBounds.YMost() - trect.height;
 
-    rv = mCornerView->Init(mViewManager, trect, this, nsViewVisibility_kHide);
+    rv = mCornerView->Init(mViewManager, trect, this,
+                           nsnull, nsViewVisibility_kHide);
     mViewManager->InsertChild(this, mCornerView, mZindex);
     mCornerView->CreateWidget(kWidgetCID, &initData,
                               mWindow ? nsnull : aNative);
