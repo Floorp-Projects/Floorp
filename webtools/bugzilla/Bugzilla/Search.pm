@@ -827,7 +827,7 @@ sub GetByWordList {
         my $word = $w;
         if ($word ne "") {
             $word =~ tr/A-Z/a-z/;
-            $word = SqlQuote(quotemeta($word));
+            $word = &::SqlQuote(quotemeta($word));
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
