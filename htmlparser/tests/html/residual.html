@@ -7,20 +7,20 @@
    <title>ResidualStyle</title>
 </head>
 <body>
-<b><font face="Verdana"><font size=-1></font></font></b>&nbsp;
+&nbsp;
 <table COLS=1 WIDTH="30%" BGCOLOR="#FFFFCC" >
 <tr>
 <td><b><font face="Verdana"><font size=-1>Residual Style&nbsp;</font></font></b></td>
 </tr>
 </table>
-<b><font face="Verdana"><font size=-1></font></font></b>
+
 <p><font face="Verdana"><font size=-1>This page is the topmost page for
 testing residual style. Residual style handling refers to automatic document
 conversions performed by Gecko when encounters mal-formed HTML fontstyle
-elements. For example:</font></font><font face="Verdana"><font size=-1></font></font>
+elements (explicit style tags -- not CSS). For example:</font></font>
 <p><font face="Verdana"><font size=-1>&lt;html>&lt;body><font color="#009900">&lt;b></font><font color="#3366FF">&lt;div>text&lt;/div></font><font color="#009900">&lt;/b></font>&lt;/body>&lt;/html></font></font>
-<br><font face="Verdana"><font size=-1></font></font>&nbsp;
-<br><font face="Verdana"><font size=-1></font></font>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
 <table BORDER COLS=2 WIDTH="50%" >
 <tr BGCOLOR="#FFFFCC">
 <td>
@@ -38,29 +38,79 @@ elements. For example:</font></font><font face="Verdana"><font size=-1></font></
 <td>div text here</td>
 </tr>
 </table>
-<font face="Verdana"><font size=-1></font></font>
+
 <p><font face="Verdana"><font size=-1>According to the spec, &lt;b> is
 a fontstyle element, whereas &lt;div> is a block element. As a rule, fontstyle
 tags can't contain block elements, which means that the preceeding example
 is malformed. In order to remain backward compatible and simultaneously
 maintain well-formed documents, Gecko may have to rewrite the document
-to be correct. The prior example is rewritten by Gecko like this:</font></font><font face="Verdana"><font size=-1></font></font>
+to be correct. The prior example is rewritten by Gecko like this:</font></font>
 <p><font face="Verdana"><font size=-1>&lt;html>&lt;body><font color="#3366FF">&lt;div></font><font color="#009900">&lt;b></font><font color="#3366FF">text</font><font color="#009900">&lt;/b></font><font color="#3366FF">&lt;/div></font>&lt;/body>&lt;/html></font></font>
-<br><font face="Verdana"><font size=-1></font></font>&nbsp;
 <br>&nbsp;
+<br>&nbsp;
+<table COLS=1 WIDTH="30%" BGCOLOR="#FFFFCC" >
+<tr>
+<td><b><font face="Verdana"><font size=-1>How To Create Your Own Tests</font></font></b></td>
+</tr>
+</table>
+
+<p><font face="Verdana"><font size=-1>You can make your own residual style
+tests either manually, or by using the htmlgen program that is checked
+into the tree at mozilla\htmlparser\htmlgen. Most residual style problems
+fall into one of two categories: 1) illegal containment; 2) malformed closures.
+Note that these problems can exist for fontstyle, phrasal and special tags
+(see the list below). Also note that navigator behavior is very inconsistent
+with respect to these problems, so don't assume that one testcase covers
+all cases.</font></font><font face="Verdana"><font size=-1></font></font>
+<p><b><font face="Verdana"><font size=-1>Illegal Containment Sample</font></font></b>
+<br><font face="Verdana"><font size=-1>This example shows a &lt;b> containing
+a &lt;div>, which is illegal under HTML.</font></font><font face="Verdana"><font size=-1></font></font>
+<p><font face="Verdana"><font size=-1>&lt;html>&lt;body><font color="#009900">&lt;b></font><font color="#3366FF">&lt;div>text&lt;/div></font><font color="#009900">&lt;/b></font>&lt;/body>&lt;/html></font></font><font face="Verdana"><font size=-1></font></font>
+<p><b><font face="Verdana"><font size=-1>Malformed Containment Sample</font></font></b>
+<br><font face="Verdana"><font size=-1>This example shows misplaced close
+tags, which often wreak havoc with style in navigator.</font></font><font face="Verdana"><font size=-1></font></font>
+<p><font face="Verdana"><font size=-1>&lt;html>&lt;body><font color="#009900">&lt;b></font><font color="#3366FF">&lt;div>text1&lt;/i>text2&lt;/div></font>&lt;/body>&lt;/html></font></font>
+<br><b><font face="Verdana"><font size=-1></font></font></b>&nbsp;
+<br><b><font face="Verdana"><font size=-1></font></font></b>&nbsp;
+<table WIDTH="100%" >
+<tr>
+<td><b><font face="Verdana"><font size=-1>List of FontStyle Tags:&nbsp;</font></font></b></td>
+
+<td><font face="Verdana"><font size=-1>&lt;b>, &lt;big>, &lt;i>, &lt;s>,
+&lt;small>, &lt;strike>, &lt;tt>, &lt;u></font></font></td>
+</tr>
+
+<tr>
+<td><b><font face="Verdana"><font size=-1>List of Phrase Tags:</font></font></b></td>
+
+<td><font face="Verdana"><font size=-1>&lt;abbr>, &lt;acronym>, &lt;cite>,
+&lt;code>, &lt;dfn>, &lt;em>, &lt;kbd>, &lt;samp>, &lt;strong>, &lt;var></font></font></td>
+</tr>
+
+<tr>
+<td><b><font face="Verdana"><font size=-1>List of Special Tags:</font></font></b></td>
+
+<td><font face="Verdana"><font size=-1>&lt;a>, &lt;applet>, &lt;basefont>,
+&lt;bdo>, &lt;br>, &lt;font>, &lt;iframe>, &lt;img>, &lt;obect>, &lt;map>,
+&lt;q>, &lt;script>, &lt;span>, &lt;sub>, &lt;sup></font></font></td>
+</tr>
+</table>
+<font face="Verdana"><font size=-1></font></font>
+<br><font face="Verdana"><font size=-1></font></font>&nbsp;
+<br><font face="Verdana"><font size=-1></font></font>&nbsp;
 <table COLS=1 WIDTH="30%" BGCOLOR="#FFFFCC" >
 <tr>
 <td><b><font face="Verdana"><font size=-1>Residual Style Testcases</font></font></b></td>
 </tr>
 </table>
-<font face="Verdana"><font size=-1></font></font>
+
 <p><font face="Verdana"><font size=-1>The following testcases were taken
 from real bugs. In most cases, these have been reduced to a minimum sample,
 and they have been linked together so that you compare them in sequence
-against other browsers.</font></font><font face="Verdana"><font size=-1></font></font>
+against other browsers.</font></font>
 <p><font face="Verdana"><font size=-1>Click on any of the following links
 to begin...</font></font>
-<br><font face="Verdana"><font size=-1></font></font>&nbsp;
+<br>&nbsp;
 <table BORDER COLS=7 WIDTH="90%" >
 <tr>
 <td><font face="Verdana"><font size=-1><a href="bug466.html">Bug466</a></font></font></td>
@@ -206,12 +256,12 @@ to begin...</font></font>
 <td></td>
 </tr>
 </table>
-<font face="Verdana"><font size=-1></font></font>
+
 <p>
 <hr WIDTH="100%">
 <table WIDTH="100%" BGCOLOR="#FFFFFF" >
 <tr>
-<td VALIGN=TOP><font face="Verdana"><font size=-2>Residual style:&nbsp;&nbsp;</font></font></td>
+<td VALIGN=TOP><font face="Verdana"><font size=-2>Residual style:&nbsp;</font></font></td>
 
 <td><font face="Verdana"><font size=-2>This term describes the case where
 malformed fontstyle elements that get closed out by block elements need
@@ -221,6 +271,6 @@ because explicit style tags tend to leave an unpleasant "residue" on html
 documents.</font></font></td>
 </tr>
 </table>
-<font face="Verdana"><font size=-2></font></font>
+
 </body>
 </html>
