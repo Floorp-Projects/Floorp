@@ -1301,10 +1301,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    return JS_FALSE;
 
 	/* emit (hidden) jump over catch and/or finally */
-	if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-	    return JS_FALSE;
-	if (pn->pn_kid3)
+	if (pn->pn_kid3) {
+	    if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+		return JS_FALSE;
 	    EMIT_FINALLY_GOSUB(cx, cg);
+	}
 	if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
 	    return JS_FALSE;
 	jmp = js_Emit3(cx, cg, JSOP_GOTO, 0, 0);
