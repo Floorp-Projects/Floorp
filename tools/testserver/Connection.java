@@ -62,15 +62,29 @@ class Connection extends Thread {
 
 		int len = 0;
 		try {
+			int onechar;
+			boolean readyForEnd = false;
 			while(true) {
-				line = in.readLine();
+				if (!in.ready()) {
+					if (readyForEnd)
+						break;
+					continue;
+			    }
+				try {
+					line = in.readLine();
+				}
+				catch (EOFException e) {
+					System.out.println("End reached!");
+					System.out.println(e.toString());
+					break;
+			    }
 				if (line == null)
 					break;
 				if (firstline == null)
 				    firstline = new String(line);
 				len = line.length();
 				if (len == 0)
-				    break;
+				   readyForEnd = true; 
                 request.append(line);
 				request.append("\n");
 				if (DEBUG)

@@ -72,13 +72,13 @@ class ScriptFile {
 
 	    if ((request == null) ||
 			(request.length() == 0) ||
-			request.startsWith("GET / "))
+			request.startsWith("GET / ") || request.startsWith("get / "))
 	    {
 	        WriteDefaultResponse();
             return;
 	    }
 
-		if (request.startsWith("GET /?"))
+		if (request.startsWith("GET /?") || request.startsWith("get /?"))
 		{
 			WriteSpecialResponse(request.substring(request.indexOf('?')+1));
 			return;
