@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is Mozilla Communicator client code, 
+# released March 31, 1998. 
+#
+# The Initial Developer of the Original Code is Netscape Communications 
+# Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#     Samir Gehani <sgehani@netscape.com>
+#
+
+#=====================================================================
+#
+#   Mozilla Installer
+#
+#   Shell script to set up environment before running the 
+#   mozilla-installer-bin GTK based binary installer.
+#
+#   The mozilla-installer-bin binary is an install wizard that
+#   collects user preferences about modules to install and where to
+#   install them.  The program then proceeds to install Mozilla.
+#
+#=====================================================================
+
+
+LD_LIBRARY_PATH=.${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
+LIBPATH=.${LIBPATH+":$LIBPATH"}
+export LD_LIBRARY_PATH LIBPATH
+unset MOZILLA_FIVE_HOME
+
+PATH=.${PATH+":$PATH"}
+export PATH
+
+BASEDIR=`dirname $0`
+BINNAME=`basename $0`
+
+if [ "$BASEDIR" = "" ]; then
+    echo "dirname is not in your PATH"
+    ./${BINNAME}-bin $@
+else
+    cd ${BASEDIR:-.}
+    ./${BINNAME}-bin $@
+fi
+

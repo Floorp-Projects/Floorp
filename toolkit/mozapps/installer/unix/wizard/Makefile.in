@@ -1,0 +1,87 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is Mozilla Communicator client code,
+# released March 31, 1998.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s):
+#     Samir Gehani <sgehani@netscape.com>
+#
+
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+PROGRAM		= mozilla-installer-bin
+REQUIRES	= xpcom \
+		  jar \
+		  xpnet \
+		  $(NULL)
+
+CPPSRCS		= \
+        nsINIParser.cpp \
+        nsXInstallerDlg.cpp \
+        nsComponent.cpp \
+        nsSetupType.cpp \
+        nsComponentList.cpp \
+        nsRunApp.cpp \
+        nsLicenseDlg.cpp \
+        nsWelcomeDlg.cpp \
+        nsSetupTypeDlg.cpp \
+        nsComponentsDlg.cpp \
+        nsInstallDlg.cpp \
+        nsZipExtractor.cpp \
+        nsXIOptions.cpp \
+        nsXIContext.cpp \
+        nsXInstaller.cpp \
+        nsXIEngine.cpp \
+        $(NULL)
+
+LIBS        = \
+	$(TK_LIBS) \
+	$(DIST)/lib/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
+        -lpthread \
+        $(NULL)
+
+EXTRA_DEPS = \
+	$(DIST)/lib/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+NO_DIST_INSTALL = 1
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += $(TK_CFLAGS)
+LOCAL_INCLUDES = -I$(topsrcdir)/xpinstall/stub
+
+WIZARD_FILES = \
+	mozilla-installer \
+	$(PROGRAM) \
+	installer.ini \
+	watermark.xpm \
+	header.xpm \
+	$(NULL)
+
+libs:: $(WIZARD_FILES)
+	$(INSTALL) $^ $(DIST)/install
+
+install:: $(WIZARD_FILES)
+	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/install
