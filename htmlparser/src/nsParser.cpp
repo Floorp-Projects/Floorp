@@ -2586,21 +2586,28 @@ ParserWriteFunc(nsIInputStream* in,
 #endif 
       nsCOMPtr<nsICharsetAlias> alias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
       result = alias->GetPreferred(guess, preferred);
-      if (NS_SUCCEEDED(result)) {
+      // Only continue if it's a recognized charset and not
+      // one of a designated set that we ignore.
+      if (NS_SUCCEEDED(result) &&
+          !preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
+          !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
+          !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
+          !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
+          !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))) {
         guess.Assign(preferred);
-      }
-      pws->mParser->SetDocumentCharset(guess, guessSource); 
-      pws->mParser->SetSinkCharset(guess);
-      nsCOMPtr<nsICachingChannel> channel(do_QueryInterface(pws->mRequest));
-      if (channel) {
-        nsCOMPtr<nsISupports> cacheToken;
-        channel->GetCacheToken(getter_AddRefs(cacheToken));
-        if (cacheToken) {
-          nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor(do_QueryInterface(cacheToken));
-          if (cacheDescriptor) {
-            nsresult rv = cacheDescriptor->SetMetaDataElement("charset",
-                                                              NS_ConvertUCS2toUTF8(guess).get());
-            NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
+        pws->mParser->SetDocumentCharset(guess, guessSource); 
+        pws->mParser->SetSinkCharset(guess);
+        nsCOMPtr<nsICachingChannel> channel(do_QueryInterface(pws->mRequest));
+        if (channel) {
+          nsCOMPtr<nsISupports> cacheToken;
+          channel->GetCacheToken(getter_AddRefs(cacheToken));
+          if (cacheToken) {
+            nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor(do_QueryInterface(cacheToken));
+            if (cacheDescriptor) {
+              nsresult rv = cacheDescriptor->SetMetaDataElement("charset",
+                                                                NS_ConvertUCS2toUTF8(guess).get());
+              NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
+            }
           }
         }
       }
