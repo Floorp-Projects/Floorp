@@ -26,6 +26,8 @@
 #include "nsINNTPNewsgroup.h"
 #include "nsNNTPArticleSet.h"
 
+#include "nsCOMPtr.h"
+
 class nsNNTPNewsgroup : public nsINNTPNewsgroup 
 {
 
@@ -77,7 +79,7 @@ class nsNNTPNewsgroup : public nsINNTPNewsgroup
 	 PRBool m_needsExtraInfo;
 	 PRBool m_category;
 
-	 nsINNTPNewsgroupList * m_newsgroupList;
+	 nsCOMPtr<nsINNTPNewsgroupList> m_newsgroupList;
 };
 
 nsNNTPNewsgroup::nsNNTPNewsgroup()
@@ -87,15 +89,16 @@ nsNNTPNewsgroup::nsNNTPNewsgroup()
 	m_prettyName = nsnull;
 	m_password = nsnull;
 	m_userName = nsnull;
-	m_newsgroupList = nsnull;
+	m_newsgroupList;
 	m_needsExtraInfo = PR_FALSE;
 	m_category = PR_FALSE;
 }
 
 nsNNTPNewsgroup::~nsNNTPNewsgroup()
 {
+#ifdef DEBUG_sspitzer
 	printf("destroying newsgroup: %s", m_groupName ? m_groupName : "");
-	NS_IF_RELEASE(m_newsgroupList);
+#endif
 	PR_FREEIF(m_groupName);
 	PR_FREEIF(m_password);
 	PR_FREEIF(m_userName);
@@ -118,7 +121,9 @@ nsresult nsNNTPNewsgroup::SetName(char *aName)
 {
 	if (aName)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting newsgroup name to %s. \n", aName);
+#endif
 		m_groupName = PL_strdup(aName);
 	}
 
@@ -139,7 +144,9 @@ nsresult nsNNTPNewsgroup::SetPrettyName(char *aName)
 {
 	if (aName)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting pretty newsgroup name to %s. \n", aName);
+#endif
 		m_prettyName = PL_strdup(aName);
 	}
 
@@ -160,7 +167,9 @@ nsresult nsNNTPNewsgroup::SetPassword(char *aName)
 {
 	if (aName)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting password for newsgroup %s to %s. \n", m_groupName, aName);
+#endif
 		m_password = PL_strdup(aName);
 	}
 
@@ -181,7 +190,9 @@ nsresult nsNNTPNewsgroup::SetUsername(char *aUsername)
 {
 	if (aUsername)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting username for newsgroup %s to %s. \n", m_groupName, aUsername);
+#endif
 		m_userName = PL_strdup(aUsername);
 	}
 
@@ -202,7 +213,9 @@ nsresult nsNNTPNewsgroup::SetNeedsExtraInfo(PRBool aNeedsExtraInfo)
 {
 	if (aNeedsExtraInfo)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting needs extra info for newsgroup %s to %s. \n", m_groupName, aNeedsExtraInfo ? "TRUE" : "FALSE" );
+#endif
 		m_needsExtraInfo = aNeedsExtraInfo;
 	}
 
@@ -211,7 +224,9 @@ nsresult nsNNTPNewsgroup::SetNeedsExtraInfo(PRBool aNeedsExtraInfo)
 
 nsresult nsNNTPNewsgroup::IsOfflineArticle(PRInt32 num, PRBool *_retval)
 {
+#ifdef DEBUG_sspitzer
 	printf("Testing for offline article %d in %s. \n", num, m_groupName);
+#endif
 	if (_retval)
 		*_retval = PR_FALSE;
 	return NS_OK;
@@ -232,7 +247,9 @@ nsresult nsNNTPNewsgroup::SetCategory(PRBool aCategory)
 {
 	if (aCategory)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting is category for newsgroup %s to %s. \n", m_groupName, aCategory ? "TRUE" : "FALSE" );
+#endif
 		m_category = aCategory;
 	}
 
@@ -273,7 +290,9 @@ nsresult nsNNTPNewsgroup::SetWantNewTotals(PRBool aWantNewTotals)
 {
 	if (aWantNewTotals)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting wants new totals for newsgroup %s to %s. \n", m_groupName, aWantNewTotals ? "TRUE" : "FALSE" );
+#endif
 		m_wantsNewTotals = aWantNewTotals;
 	}
 
@@ -285,7 +304,7 @@ nsresult nsNNTPNewsgroup::SetWantNewTotals(PRBool aWantNewTotals)
 	if (aNewsgroupList)
 	{
 		*aNewsgroupList = m_newsgroupList;
-		NS_IF_ADDREF(m_newsgroupList);
+		NS_IF_ADDREF(*aNewsgroupList);
 	}
 
 	return NS_OK;
@@ -295,9 +314,11 @@ nsresult nsNNTPNewsgroup::SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList
 {
 	if (aNewsgroupList)
 	{
+#ifdef DEBUG_sspitzer
 		printf("Setting newsgroup list for newsgroup %s. \n", m_groupName);
+#endif
 		m_newsgroupList = aNewsgroupList;
-		NS_IF_ADDREF(m_newsgroupList);
+		NS_IF_ADDREF(aNewsgroupList);
 	}
 
 	return NS_OK;
@@ -305,7 +326,9 @@ nsresult nsNNTPNewsgroup::SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList
 
 nsresult nsNNTPNewsgroup::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages)
 {
+#ifdef DEBUG_sspitzer
 	printf("Updating summary with oldest= %d, youngest= %d, and total messages = %d. \n", oldest, youngest, total_messages);
+#endif
 	return NS_OK;
 }
 
@@ -320,12 +343,10 @@ nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
 {
 	nsresult rv = NS_OK;
 	nsNNTPNewsgroup * group = new nsNNTPNewsgroup();
-	if (group)
-	{
+	if (group) {
 		group->SetSubscribed(subscribed);
 		rv = group->QueryInterface(nsINNTPNewsgroup::GetIID(), (void **) info);
 	}
-
 
 #ifdef DEBUG_sspitzer
 	printf("NS_NewNewsgroup(%s)\n",line?line:"(null)");
@@ -338,4 +359,4 @@ nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info,
 	return rv;
 }
 
-}
+} /* extern "C" */
