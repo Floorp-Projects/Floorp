@@ -146,7 +146,7 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
             //optimize later TODO allow atoms here...! intead of just the header strings
             pHTTPCon->GetContentType(&type);
             if (type) {
-                printf("\nRecieving ... %s\n", type);
+                printf("\nReceiving ... %s\n", type);
                 nsCRT::free(type);
             }
         }
@@ -282,10 +282,10 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
 
     printf("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus);
     printf("\tRead: %d bytes.\n", info->mBytesRead);
-    printf("\tTime to connect: %f seconds\n", connectTime);
-    printf("\tTime to read: %f seconds.\n", readTime);
+    printf("\tTime to connect: %.3f seconds\n", connectTime);
+    printf("\tTime to read: %.3f seconds.\n", readTime);
     if (readTime > 0.0) {
-      printf("\tThroughput: %f bps.\n", (info->mBytesRead*8)/readTime);
+      printf("\tThroughput: %.0f bps.\n", (info->mBytesRead*8)/readTime);
     } else {
       printf("\tThroughput: REAL FAST!!\n");
     }

@@ -109,7 +109,7 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
                                  const PRUnichar* aMsg)
 {
   gKeepRunning = 0;
-  printf("+++ OnStopRequest +++\n");
+  printf("+++ OnStopRequest status %x +++\n", aStatus);
   return NS_OK;
 }
 

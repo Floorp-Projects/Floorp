@@ -57,8 +57,6 @@ static nsITimer*       gPeriodicTimer;
 
 void Pump_PLEvents(void)
 {
-  nsresult rv;  
-
   while ( gKeepRunning ) {
 #ifdef WIN32
     MSG msg;
@@ -73,6 +71,7 @@ void Pump_PLEvents(void)
 #ifdef XP_MAC
     /* Mac stuff is missing here! */
 #else
+    nsresult rv;  
     PLEvent *gEvent;
     rv = gEventQ->GetEvent(&gEvent);
     rv = gEventQ->HandleEvent(gEvent);
@@ -125,6 +124,7 @@ public:
   nsresult Resume(void);
 
 protected:
+  nsIBuffer* mBuffer;
   nsIBufferInputStream* mStream;
 
   nsIInputStream*  mInStream;
@@ -202,6 +202,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
   mBytesRead    = 0;
 
   mTransport = nsnull;
+  mBuffer    = nsnull;
   mStream    = nsnull;
 
   mInStream  = nsnull;
@@ -217,9 +218,8 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
     if (mIsAsync) {
       // Create a stream for the data being written to the server...
       if (NS_SUCCEEDED(rv)) {
-        nsIBuffer* buf;
-        rv = NS_NewBuffer(&buf, 1024, 4096, nsnull);
-        rv = NS_NewBufferInputStream(&mStream, buf);
+        rv = NS_NewBuffer(&mBuffer, 1024, 4096, nsnull);
+        rv = NS_NewBufferInputStream(&mStream, mBuffer);
       }
     } 
     // Synchronous transport...
@@ -236,6 +236,7 @@ TestConnection::~TestConnection()
   NS_IF_RELEASE(mTransport);
   // Async resources...
   NS_IF_RELEASE(mStream);
+  NS_IF_RELEASE(mBuffer);
 
   // Sync resources...
   NS_IF_RELEASE(mInStream);
@@ -355,7 +356,8 @@ nsresult TestConnection::WriteBuffer(void)
     // Async case...
     //
     if (mStream) {
-      rv = mStream->Fill(buffer, size, &bytesWritten);
+//      rv = mStream->Fill(buffer, size, &bytesWritten);
+      rv = mBuffer->Write(buffer, size, &bytesWritten);
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {
