@@ -23,15 +23,13 @@
 #ifndef nsContextMenuInfo_h__
 #define nsContextMenuInfo_h__
 
+#include "nsCOMPtr.h"
 #include "nsIContextMenuListener2.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMEvent.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsIFrame.h"
-#include "nsStyleStruct.h"
 
-class nsIFrame;
 class ChromeContextMenuListener;
 
 //*****************************************************************************
@@ -55,46 +53,28 @@ private:
 
   void              SetMouseEvent(nsIDOMEvent *aEvent)
                     { mMouseEvent = aEvent; }
+
   void              SetDOMNode(nsIDOMNode *aNode)
                     { mDOMNode = aNode; }
                     
   void              SetAssociatedLink(nsIDOMNode *aLink)
                     { mAssociatedLink = aLink; }
 
-  nsresult          GetImageRequest(nsIDOMNode * aDOMNode, imgIRequest ** aRequest);
+  nsresult          GetImageRequest(nsIDOMNode *aDOMNode,
+                                    imgIRequest **aRequest);
 
-  PRBool            HasBackgroundImage(nsIDOMNode * aDOMNode);
+  PRBool            HasBackgroundImage(nsIDOMNode *aDOMNode);
 
-  nsresult          GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest ** aRequest);
+  nsresult          GetBackgroundImageRequest(nsIDOMNode *aDOMNode,
+                                              imgIRequest **aRequest);
 
-  PRBool            FindBackground(nsIPresContext* aPresContext,
-                                   nsIFrame* aForFrame,
-                                   const nsStyleBackground** aBackground,
-                                   PRBool* aIsCanvas);
-
-  PRBool            FindElementBackground(nsIPresContext* aPresContext,
-                                          nsIFrame* aForFrame,
-                                          const nsStyleBackground** aBackground);
-
-  PRBool            FindCanvasBackground(nsIPresContext* aPresContext,
-                                         nsIFrame* aForFrame,
-                                         const nsStyleBackground** aBackground);
-
-  nsresult          GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,
-                                                nsIFrame *aFrame,
-                                                nsIFrame **aBGFrame);
-
-
-  PRBool            IsCanvasFrame(nsIFrame *aFrame);
+  nsresult          GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode,
+                                                      imgIRequest **aRequest);
   
 private:
   nsCOMPtr<nsIDOMEvent>   mMouseEvent;
-  nsCOMPtr<nsIDOMNode>    mDOMNode;
-  
+  nsCOMPtr<nsIDOMNode>    mDOMNode;  
   nsCOMPtr<nsIDOMNode>    mAssociatedLink;
-  
-  nsCOMPtr<imgIRequest>   mCachedBGImageRequest;
-  nsIDOMNode              *mCachedBGImageRequestNode;
 
 }; // class nsContextMenuInfo
 
