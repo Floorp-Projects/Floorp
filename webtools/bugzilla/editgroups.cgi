@@ -105,16 +105,17 @@ unless ($action) {
     print "<th>Name</th>";
     print "<th>Description</th>";
     print "<th>User RegExp</th>";
+    print "<th>Active</th>";
     print "<th>Action</th>";
     print "</tr>\n";
 
-    SendSQL("SELECT bit,name,description,userregexp " .
+    SendSQL("SELECT bit,name,description,userregexp,isactive " .
             "FROM groups " .
             "WHERE isbuggroup != 0 " .
             "ORDER BY bit");
 
     while (MoreSQLData()) {
-        my ($bit, $name, $desc, $regexp) = FetchSQLData();
+        my ($bit, $name, $desc, $regexp, $isactive) = FetchSQLData();
         print "<tr>\n";
         print "<td valign=middle>$bit</td>\n";
         print "<td><input size=20 name=\"name-$bit\" value=\"$name\">\n";
@@ -123,12 +124,14 @@ unless ($action) {
         print "<input type=hidden name=\"olddesc-$bit\" value=\"$desc\"></td>\n";
         print "<td><input size=30 name=\"regexp-$bit\" value=\"$regexp\">\n";
         print "<input type=hidden name=\"oldregexp-$bit\" value=\"$regexp\"></td>\n";
+        print "<td><input type=\"checkbox\" name=\"isactive-$bit\" value=\"1\"" . ($isactive ? " checked" : "") . ">\n";
+        print "<input type=hidden name=\"oldisactive-$bit\" value=\"$isactive\"></td>\n";
         print "<td align=center valign=middle><a href=\"editgroups.cgi?action=del&group=$bit\">Delete</a></td>\n";
         print "</tr>\n";
     }
 
     print "<tr>\n";
-    print "<td colspan=4></td>\n";
+    print "<td colspan=5></td>\n";
     print "<td><a href=\"editgroups.cgi?action=add\">Add Group</a></td>\n";
     print "</tr>\n";
     print "</table>\n";
@@ -146,6 +149,11 @@ to others in the same group.<p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
 email address that matches this regular expression.<p>";
+    print "The <b>Active</b> flag determines whether or not the group is active.
+If you deactivate a group it will no longer be possible for users to add bugs
+to that group, although bugs already in the group will remain in the group.
+Deactivating a group is a much less drastic way to stop a group from growing
+than deleting the group would be.<p>";
     print "In addition, the following groups that determine user privileges
 exist.  You can only edit the User rexexp on these groups.  You should also take
 care not to duplicate the Names of any of them in your user groups.<p>";
@@ -201,10 +209,12 @@ if ($action eq 'add') {
     print "<th>New Name</th>";
     print "<th>New Description</th>";
     print "<th>New User RegExp</th>";
+    print "<th>Active</th>";
     print "</tr><tr>";
     print "<td><input size=20 name=\"name\"></td>\n";
     print "<td><input size=40 name=\"desc\"></td>\n";
     print "<td><input size=30 name=\"regexp\"></td>\n";
+    print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
@@ -218,6 +228,12 @@ may not contain any spaces.<p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
+    print "The <b>Active</b> flag determines whether or not the group is active.
+If you deactivate a group it will no longer be possible for users to add bugs
+to that group, although bugs already in the group will remain in the group.
+Deactivating a group is a much less drastic way to stop a group from growing
+than deleting the group would be.  <b>Note: If you are creating a group, you
+probably want it to be active, in which case you should leave this checked.</b><p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
 grant membership to this group to anyone creating a new account with an
 email address that matches this regular expression.<p>";
@@ -239,6 +255,10 @@ if ($action eq 'new') {
     my $name = trim($::FORM{name} || '');
     my $desc = trim($::FORM{desc} || '');
     my $regexp = trim($::FORM{regexp} || '');
+    # convert an undefined value in the inactive field to zero
+    # (this occurs when the inactive checkbox is not checked
+    # and the browser does not send the field to the server)
+    my $isactive = $::FORM{isactive} || 0;
 
     unless ($name) {
         ShowError("You must enter a name for the new group.<BR>" .
@@ -254,6 +274,14 @@ if ($action eq 'new') {
     }
     if (TestGroup($name)) {
         ShowError("The group '" . $name . "' already exists.<BR>" .
+                  "Please click the <b>Back</b> button and try again.");
+        PutFooter();
+	exit;
+    }
+
+    if ($isactive != 0 && $isactive != 1) {
+        ShowError("The active flag was improperly set.  There may be " . 
+                  "a problem with Bugzilla or a bug in your browser.<br>" . 
                   "Please click the <b>Back</b> button and try again.");
         PutFooter();
 	exit;
@@ -304,13 +332,14 @@ if ($action eq 'new') {
 
     # Add the new group
     SendSQL("INSERT INTO groups ( " .
-            "bit, name, description, isbuggroup, userregexp" .
+            "bit, name, description, isbuggroup, userregexp, isactive" .
             " ) VALUES ( " .
             $bit . "," .
             SqlQuote($name) . "," .
             SqlQuote($desc) . "," .
             "1," .
-            SqlQuote($regexp) . ")" );
+            SqlQuote($regexp) . "," . 
+            $isactive . ")" );
 
     print "OK, done.<p>\n";
     print "Your new group was assigned bit #$bit.<p>";
@@ -572,6 +601,23 @@ if ($action eq 'update') {
                         SqlQuote($::FORM{"regexp-$v"}) .
                         " WHERE bit=" . SqlQuote($v));
                 print "Group $v user regexp updated.<br>\n";
+            }
+            # convert an undefined value in the inactive field to zero
+            # (this occurs when the inactive checkbox is not checked 
+            # and the browser does not send the field to the server)
+            my $isactive = $::FORM{"isactive-$v"} || 0;
+            if ($::FORM{"oldisactive-$v"} != $isactive) {
+                $chgs = 1;
+                if ($isactive == 0 || $isactive == 1) {
+                    SendSQL("UPDATE groups SET isactive=$isactive" .
+                            " WHERE bit=" . SqlQuote($v));
+                    print "Group $v active flag updated.<br>\n";
+                } else {
+                    ShowError("The value '" . $isactive .
+                              "' is not a valid value for the active flag.<BR>" .
+                              "There may be a problem with Bugzilla or a bug in your browser.<br>" . 
+                              "Update of active flag for group $v skipped.");
+                }
             }
         }
     }

@@ -790,6 +790,13 @@ $table{dependencies} =
 # User regexp is which email addresses are initially put into this group.
 # This is only used when an email account is created; otherwise, profiles
 # may be individually tweaked to add them in and out of groups.
+#
+# 2001-04-10 myk@mozilla.org:
+# isactive determines whether or not a group is active.  An inactive group
+# cannot have bugs added to it.  Deactivation is a much milder form of
+# deleting a group that allows users to continue to work on bugs in the group
+# without enabling them to extend the life of the group by adding bugs to it.
+# http://bugzilla.mozilla.org/show_bug.cgi?id=75482
 
 $table{groups} =
    'bit bigint not null,
@@ -797,6 +804,7 @@ $table{groups} =
     description text not null,
     isbuggroup tinyint not null,
     userregexp tinytext not null,
+    isactive tinyint not null default 1,
 
     unique(bit),
     unique(name)';
@@ -2156,6 +2164,16 @@ unless (-d 'data/duplicates') {
         chmod 01777, 'data/duplicates';
     } 
 }
+
+#
+# 2001-04-10 myk@mozilla.org:
+# isactive determines whether or not a group is active.  An inactive group
+# cannot have bugs added to it.  Deactivation is a much milder form of
+# deleting a group that allows users to continue to work on bugs in the group
+# without enabling them to extend the life of the group by adding bugs to it.
+# http://bugzilla.mozilla.org/show_bug.cgi?id=75482
+#
+AddField('groups', 'isactive', 'tinyint not null default 1');
 
 # 2001-04-29 jake@acutex.net - Remove oldemailtech
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552

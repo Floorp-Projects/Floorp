@@ -410,7 +410,7 @@ print "
 if ($::usergroupset ne '0') {
     SendSQL("SELECT bit, description FROM groups " .
             "WHERE bit & $::usergroupset != 0 " .
-            "  AND isbuggroup != 0 ORDER BY description");
+            "  AND isbuggroup != 0 AND isactive = 1 ORDER BY description");
      while (MoreSQLData()) {
         my ($bit, $description) = (FetchSQLData());
         # Rather than waste time with another Param check and another database

@@ -368,7 +368,14 @@ print "
 
 
 if ($::usergroupset ne '0') {
-    SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
+    SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) " . 
+            "from groups where bit & $::usergroupset != 0 " . 
+            "and isbuggroup != 0 " . 
+            # Include active groups as well as inactive groups to which
+            # the bug already belongs.  This way the bug can be removed
+            # from an inactive group but can only be added to active ones.
+            "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
+            "order by bit");
     while (MoreSQLData()) {
         my ($bit, $description, $ison) = (FetchSQLData());
         my $check0 = !$ison ? " SELECTED" : "";

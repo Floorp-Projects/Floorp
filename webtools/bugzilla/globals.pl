@@ -969,6 +969,17 @@ sub GroupExists {
     return $count;
 }
 
+# Determines whether or not a group is active by checking 
+# the "isactive" column for the group in the "groups" table.
+# Note: This function selects groups by bit rather than by name.
+sub GroupIsActive {
+    my ($groupbit) = (@_);
+    ConnectToDatabase();
+    SendSQL("select isactive from groups where bit=$groupbit");
+    my $isactive = FetchOneColumn();
+    return $isactive;
+}
+
 # Determines if the given bug_status string represents an "Opened" bug.  This
 # routine ought to be paramaterizable somehow, as people tend to introduce
 # new states into Bugzilla.
