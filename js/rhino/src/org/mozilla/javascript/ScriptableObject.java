@@ -258,12 +258,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
     private void setBySetter(GetterSlot slot,
                              String name, Scriptable start, Object value)
     {
+        Context cx = Context.getContext();
         Object setterResult;
         try {
             Class pTypes[] = slot.setter.getParameterTypes();
             Class desired = pTypes[pTypes.length - 1];
             Object actualArg
-                    = FunctionObject.convertArg(start, value, desired);
+                    = FunctionObject.convertArg(cx, start, value, desired);
             if (slot.delegateTo == null) {
                 // Walk the prototype chain to find an appropriate
                 // object to invoke the setter on.

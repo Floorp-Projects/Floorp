@@ -1827,11 +1827,11 @@ public class Interpreter extends LabelTable {
                                 = ScriptRuntime.setProp(lhs, name, rhs, scope);
                         break;
                     case TokenStream.GETELEM :
-                        do_getElem(stack, sDbl, stackTop, scope);
+                        do_getElem(cx, stack, sDbl, stackTop, scope);
                         --stackTop;
                         break;
                     case TokenStream.SETELEM :
-                        do_setElem(stack, sDbl, stackTop, scope);
+                        do_setElem(cx, stack, sDbl, stackTop, scope);
                         stackTop -= 2;
                         break;
                     case TokenStream.PROPINC :
@@ -2457,7 +2457,8 @@ public class Interpreter extends LabelTable {
         return result;
     }
     
-    private static void do_getElem(Object[] stack, double[] stackDbl,
+    private static void do_getElem(Context cx, 
+                                   Object[] stack, double[] stackDbl,
                                    int stackTop, Scriptable scope)
     {
         Object lhs = stack[stackTop - 1];
@@ -2471,7 +2472,7 @@ public class Interpreter extends LabelTable {
         else {
             Scriptable obj = (lhs instanceof Scriptable) 
                              ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(scope, lhs);
+                             : ScriptRuntime.toObject(cx, scope, lhs);
             double val = stackDbl[stackTop];
             int index = (int)val;
             if (index == val) {
@@ -2485,7 +2486,8 @@ public class Interpreter extends LabelTable {
         stack[stackTop - 1] = result; 
     }
 
-    private static void do_setElem(Object[] stack, double[] stackDbl,
+    private static void do_setElem(Context cx, 
+                                   Object[] stack, double[] stackDbl,
                                    int stackTop, Scriptable scope)
     {
         Object rhs = stack[stackTop];    
@@ -2501,7 +2503,7 @@ public class Interpreter extends LabelTable {
         else {
             Scriptable obj = (lhs instanceof Scriptable) 
                              ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(scope, lhs);
+                             : ScriptRuntime.toObject(cx, scope, lhs);
             double val = stackDbl[stackTop - 1];
             int index = (int)val;
             if (index == val) {

@@ -349,7 +349,7 @@ public class FunctionObject extends NativeFunction {
         setParentScope(scope);
     }
 
-    static public Object convertArg(Scriptable scope,
+    static public Object convertArg(Context cx, Scriptable scope,
                                     Object arg, Class desired)
     {
         if (desired == ScriptRuntime.StringClass) 
@@ -371,7 +371,7 @@ public class FunctionObject extends NativeFunction {
             return new Double(ScriptRuntime.toNumber(arg));
         }
         if (desired == ScriptRuntime.ScriptableClass)
-            return ScriptRuntime.toObject(scope, arg);
+            return ScriptRuntime.toObject(cx, scope, arg);
         if (desired == ScriptRuntime.ObjectClass)
             return arg;
         
@@ -426,7 +426,7 @@ public class FunctionObject extends NativeFunction {
                          ? args[i]
                          : Undefined.instance;
             if (types != null) {
-                arg = convertArg(this, arg, types[i]);
+                arg = convertArg(cx, this, arg, types[i]);
             }
             invokeArgs[i] = arg;
         }

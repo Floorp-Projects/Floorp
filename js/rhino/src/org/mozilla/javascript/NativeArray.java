@@ -510,9 +510,10 @@ public class NativeArray extends IdScriptable {
                         if (toLocale && elem != Undefined.instance && 
                             elem != null) 
                         {
-                            Scriptable obj = cx.toObject(elem, thisObj);
-                            Object tls = ScriptRuntime.getProp(obj, 
-                                             "toLocaleString", thisObj);
+                            Scriptable obj = ScriptRuntime.
+                                    toObject(cx, thisObj, elem);
+                            Object tls = ScriptRuntime.
+                                    getProp(obj, "toLocaleString", thisObj);
                             elem = ScriptRuntime.call(cx, tls, elem, 
                                                       ScriptRuntime.emptyArgs);
                         }

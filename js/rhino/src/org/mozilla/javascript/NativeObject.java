@@ -115,7 +115,7 @@ public class NativeObject extends IdScriptable {
         {
             return new NativeObject();
         }
-        return ScriptRuntime.toObject(ctorObj.getParentScope(), args[0]);
+        return ScriptRuntime.toObject(cx, ctorObj.getParentScope(), args[0]);
     }
 
     public String toString() {

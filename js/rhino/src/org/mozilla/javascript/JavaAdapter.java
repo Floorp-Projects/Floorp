@@ -375,9 +375,9 @@ public class JavaAdapter extends ScriptableObject {
     public static Scriptable toObject(Object value, Scriptable scope,
                                       Class staticType)
     {
-        Context.enter();
+        Context cx = Context.enter();
         try {
-            return Context.toObject(value, scope, staticType);
+            return ScriptRuntime.toObject(cx, scope, value, staticType);
         } finally {
             Context.exit();
         }

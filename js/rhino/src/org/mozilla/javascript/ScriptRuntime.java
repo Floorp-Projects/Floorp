@@ -464,16 +464,29 @@ public class ScriptRuntime {
     
     }
 
+    // ALERT: should it be deprecated ?
+    public static Scriptable toObject(Scriptable scope, Object val) {
+        return toObject(Context.getContext(), scope, val, null);
+    }
+
+    // ALERT: should it be deprecated ?
+    public static Scriptable toObject(Scriptable scope, Object val,
+                                      Class staticClass)
+    {
+        return toObject(Context.getContext(), scope, val, staticClass);
+    }
+    
     /**
      * Convert the value to an object.
      *
      * See ECMA 9.9.
      */
-    public static Scriptable toObject(Scriptable scope, Object val) {
-        return toObject(scope, val, null);
+    public static Scriptable toObject(Context cx, Scriptable scope, Object val) 
+    {
+        return toObject(cx, scope, val, null);
     }
 
-    public static Scriptable toObject(Scriptable scope, Object val,
+    public static Scriptable toObject(Context cx, Scriptable scope, Object val,
                                       Class staticClass)
     {
         if (val == null) {
@@ -500,8 +513,7 @@ public class ScriptRuntime {
 
         Object[] args = { val };
         scope = ScriptableObject.getTopLevelScope(scope);
-        Scriptable result = newObject(Context.getContext(), scope,
-                                      className, args);
+        Scriptable result = newObject(cx, scope, className, args);
         return result;
     }
 
@@ -1220,7 +1232,7 @@ public class ScriptRuntime {
         if (thisArg instanceof Scriptable || thisArg == null) {
             thisObj = (Scriptable) thisArg;
         } else {
-            thisObj = ScriptRuntime.toObject(scope, thisArg);
+            thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
         }
         return function.call(cx, scope, thisObj, args);
     }

@@ -179,7 +179,7 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
         thisObj.setPrototype(args.length == 0
                              ? ScriptableObject.getClassPrototype(scope,
                                                                   "Object")
-                             : ScriptRuntime.toObject(scope, args[0]));
+                             : ScriptRuntime.toObject(cx, scope, args[0]));
         thisObj.setParentScope(scope);
         return thisObj;
     }

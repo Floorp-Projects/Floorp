@@ -392,7 +392,7 @@ public class BaseFunction extends IdScriptable implements Function {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         Scriptable newThis = args[0] == null
                              ? ScriptableObject.getTopLevelScope(thisObj)
-                             : ScriptRuntime.toObject(scope, args[0]);
+                             : ScriptRuntime.toObject(cx, scope, args[0]);
         Object[] newArgs;
         if (args.length > 1) {
             if ((args[1] instanceof NativeArray) 
@@ -417,7 +417,7 @@ public class BaseFunction extends IdScriptable implements Function {
     {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (args.length == 0) {
-            Scriptable s = ScriptRuntime.toObject(scope, val);
+            Scriptable s = ScriptRuntime.toObject(cx, scope, val);
             Scriptable topScope = s.getParentScope();
             return ScriptRuntime.call(cx, val, 
                                       topScope, ScriptRuntime.emptyArgs, 
@@ -425,7 +425,7 @@ public class BaseFunction extends IdScriptable implements Function {
         } else {
             Scriptable newThis = args[0] == null
                                  ? ScriptableObject.getTopLevelScope(thisObj)
-                                 : ScriptRuntime.toObject(scope, args[0]);
+                                 : ScriptRuntime.toObject(cx, scope, args[0]);
 
             Object[] newArgs = new Object[args.length - 1];
             System.arraycopy(args, 1, newArgs, 0, newArgs.length);

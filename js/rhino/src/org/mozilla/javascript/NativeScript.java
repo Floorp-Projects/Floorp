@@ -59,7 +59,7 @@ import java.io.IOException;
 
 public class NativeScript extends NativeFunction implements Script {
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeScript obj = new NativeScript();
         obj.scopeInit(cx, scope, sealed);
     }
@@ -129,7 +129,7 @@ public class NativeScript extends NativeFunction implements Script {
 
                 case Id_compile:
                     return realThis(thisObj, f, false).
-                        jsFunction_compile(ScriptRuntime.toString(args, 0));
+                        jsFunction_compile(cx, ScriptRuntime.toString(args, 0));
             }
         }
 
@@ -155,11 +155,11 @@ public class NativeScript extends NativeFunction implements Script {
         String source = args.length == 0
                         ? ""
                         : ScriptRuntime.toString(args[0]);
-        return compile(scope, source);
+        return compile(cx, scope, source);
     }
 
-    public static Script compile(Scriptable scope, String source) {
-        Context cx = Context.getContext();
+    private static Script compile(Context cx, Scriptable scope, String source)
+    {
         StringReader reader = new StringReader(source);
         try {
             int[] linep = { 0 };
@@ -178,8 +178,8 @@ public class NativeScript extends NativeFunction implements Script {
         }
     }
 
-    private Scriptable jsFunction_compile(String source) {
-        script = compile(null, source);
+    private Scriptable jsFunction_compile(Context cx, String source) {
+        script = compile(cx, null, source);
         return this;
     }
 
