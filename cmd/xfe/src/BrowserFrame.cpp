@@ -51,11 +51,6 @@
 #define D(x)
 #endif
 
-//xxx ramiro: Unset this define when you fix the toolbars
-//               so that they don't need the old stuff anymore.
-#define OLD_TOOLBAR_CREATE
-//#define OLD_TOOLBAR_USE
-
 extern "C" {
   void fe_set_scrolled_default_size(MWContext *context);
   void fe_home_cb (Widget widget, XtPointer closure, XtPointer call_data);
@@ -204,58 +199,6 @@ MenuSpec XFE_BrowserFrame::menu_bar_spec[] = {
   { NULL }
 };
 
-#ifdef OLD_TOOLBAR_CREATE
-ToolbarSpec XFE_BrowserFrame::toolbar_spec[] = {
-	{ 
-		xfeCmdBack,
-		DYNA_CASCADEBUTTON,
-		&TB_Back_group, NULL, NULL, NULL,					// Icons
-		NULL,												// Submenu spec
-		XFE_BackForwardMenu::generate , (XtPointer) False, 	// Generate proc/arg
-		XFE_TOOLBAR_DELAY_LONG								// Popup delay
-	},
-	{
-		xfeCmdForward,
-		DYNA_CASCADEBUTTON,
-		&TB_Forward_group, NULL, NULL, NULL,				// Icons
-		NULL,												// Submenu spec
-		XFE_BackForwardMenu::generate , (XtPointer) True,	// Generate proc/arg
-		XFE_TOOLBAR_DELAY_LONG								// Popup delay
-	},
-  { xfeCmdReload,       PUSHBUTTON, &TB_Reload_group },
-  TOOLBAR_SEPARATOR,
-  { xfeCmdHome,		    PUSHBUTTON, &TB_Home_group },
-
-  { xfeCmdSearch,       PUSHBUTTON, &TB_Search_group }, 
-#if 0
-//
-// I took the marketing crap out -ramiro
-//
-  { 
-	  xfeCmdDestinations,
-	  CASCADEBUTTON,
-	  &TB_Places_group, NULL, NULL, NULL,	// Icons
-	  (MenuSpec*) &XFE_Frame::tb_places_menu_spec,			// Submenu spec
-	  NULL, NULL,	// Generate proc/arg
-	  XFE_TOOLBAR_DELAY_LONG				// Popup delay
-  },
-#endif
-  TOOLBAR_SEPARATOR,
-
-#ifdef EDITOR
-  { xfeCmdEditPage,   PUSHBUTTON, &TB_Edit_group },
-  TOOLBAR_SEPARATOR,
-#endif
-
-  { xfeCmdShowImages,   PUSHBUTTON, &TB_LoadImages_group },
-  { xfeCmdPrint,	    PUSHBUTTON, &TB_Print_group },
-  HG10219
-  TOOLBAR_SEPARATOR,
-  { xfeCmdStopLoading,	PUSHBUTTON, &TB_Stop_group },
-	{ NULL }
-};
-#endif
-
 #ifdef ENDER
 static ToolbarSpec alignment_menu_spec[] = {
 	{ xfeCmdSetAlignmentStyleLeft,	 PUSHBUTTON, &ed_left_group },
@@ -318,9 +261,6 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 			  FRAME_BROWSER, 
 			  chromespec, 
 			  True),
-#ifdef OLD_URLBAR
-	m_urlBar(NULL),
-#endif
 	m_rdfToolbars(NULL),
 #ifdef ENDER
 	m_editorStyleToolbar(NULL),
@@ -341,17 +281,6 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
   XFE_BrowserView * browserView =
       new XFE_BrowserView(this, getChromeParent(), NULL, m_context); 
 
-#ifdef OLD_TOOLBAR_CREATE
-  // Create navigation toolbar if needed
-  if (!chromespec || chromespec->show_button_bar)
-      setToolbar(toolbar_spec);
-#endif
-
-#ifdef OLD_URLBAR
-  // Create url bar
-  m_urlBar = new XFE_URLBar(this, m_toolbox);
-#endif
-
   m_rdfToolbars = new XFE_RDFToolbox(this, m_toolbox);
 
   // add notification now 'cuz frame->getURL might not get called and
@@ -363,27 +292,10 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   m_notification_added = True;
 
-#ifdef OLD_URLBAR
-  m_urlBar->registerInterest(
-        XFE_URLBar::navigateToURL,
-        this,
-        (XFE_FunctionNotification)navigateToURL_cb);
-#endif
-
   XFE_MozillaApp::theApp()->registerInterest(
         XFE_MozillaApp::updateToolbarAppearance,
         this,
         (XFE_FunctionNotification)updateToolbarAppearance_cb);
-
-#ifdef OLD_TOOLBAR_USE
-  if (!chromespec || chromespec->show_button_bar)
-      m_toolbar->show();
-#endif
-
-#ifdef OLD_URLBAR
-  if (!chromespec || chromespec->show_url_bar)
-	  m_urlBar->show();
-#endif
 
   /*
   XtVaSetValues(browserView->getBaseWidget(),
@@ -403,12 +315,6 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   if (fe_globalPrefs.autoload_images_p) 
   {
-#ifdef OLD_TOOLBAR_USE
-	  if (m_toolbar)
-	  {
-		  m_toolbar->hideButton(xfeCmdShowImages, PUSHBUTTON);
-	  }
-#endif
   }
 
   fe_set_scrolled_default_size(m_context);
@@ -454,18 +360,6 @@ XFE_BrowserFrame::~XFE_BrowserFrame()
 void
 XFE_BrowserFrame::updateToolbar()
 {
-#ifdef OLD_TOOLBAR_USE
-  if (!m_toolbar)
-    return;
-    
-  if (fe_globalPrefs.autoload_images_p) {
-    m_toolbar->hideButton(xfeCmdShowImages, PUSHBUTTON);
-  } else {
-    m_toolbar->showButton(xfeCmdShowImages, PUSHBUTTON);
-  }
-
-	m_toolbar->update();
-#endif
 }
 
 #ifdef ENDER
@@ -536,21 +430,12 @@ XFE_BrowserFrame::isCommandEnabled(CommandType			cmd,
 								   XFE_CommandInfo *	/* info */)
 {
 	if (cmd == xfeCmdToggleLocationToolbar
-#ifdef OLD_PERSONALTOOLBAR
-		|| cmd == xfeCmdTogglePersonalToolbar
-#endif /*OLD_PERSONALTOOLBAR*/
 		|| cmd == xfeCmdToggleNavCenter
         || cmd == xfeCmdEditToolbars
 		)
 	{
 		return True;
 	}
-#ifdef OLD_URLBAR
-	else if (cmd == xfeCmdClearUrlBar)
-	{
-		return (m_urlBar != NULL);
-	}
-#endif
 	else
 	{
 		return XFE_Frame::isCommandEnabled(cmd, calldata);
@@ -568,41 +453,8 @@ XFE_BrowserFrame::doCommand(CommandType			cmd,
 {
 	if (cmd == xfeCmdToggleLocationToolbar)
     {
-#ifdef OLD_URLBAR
-		if (m_urlBar)
-        {
-			m_urlBar->toggleShowingState();
-			
-			// Configure the logo
-			configureLogo();
-			
-			// Update prefs
-			toolboxItemChangeShowing(m_urlBar);
-			
-			notifyInterested(XFE_View::chromeNeedsUpdating);
-        }
-#endif
 		return;
     }
-#ifdef OLD_PERSONALTOOLBAR
-	else if (cmd == xfeCmdTogglePersonalToolbar)
-    {
-		if (m_personalToolbar)
-        {
-			m_personalToolbar->toggleShowingState();
-			
-			// Configure the logo
-			configureLogo();
-			
-			// Update prefs
-			toolboxItemChangeShowing(m_personalToolbar);
-			
-			notifyInterested(XFE_View::chromeNeedsUpdating);
-        }
-
-		return;
-    }
-#endif /*OLD_PERSONALTOOLBAR*/
 	else if (cmd == xfeCmdToggleNavCenter)
     {
 		if (((XFE_BrowserView*)m_view)->isNavCenterShown())
@@ -614,21 +466,19 @@ XFE_BrowserFrame::doCommand(CommandType			cmd,
 			((XFE_BrowserView *) m_view)->showNavCenter();
 		}
     }
-#ifdef OLD_URLBAR
 	else if (cmd == xfeCmdClearUrlBar)
 	{
-		XP_ASSERT( m_urlBar != NULL );
+//		XP_ASSERT( m_urlBar != NULL );
 		
-		if (m_urlBar == NULL)
-		{
+// 		if (m_urlBar == NULL)
+// 		{
 			XBell(XtDisplay(m_widget),100);
 
-			return;
-		}
+// 			return;
+// 		}
 
-		m_urlBar->clearText();
+// 		m_urlBar->clearText();
 	}
-#endif
     else if (cmd == xfeCmdEditToolbars)
     {
         XFE_NavCenterFrame::editToolbars(m_widget, this);
@@ -651,21 +501,12 @@ XFE_BrowserFrame::handlesCommand(CommandType		cmd,
 								 XFE_CommandInfo *	/* info */)
 {
 	if (cmd == xfeCmdToggleLocationToolbar
-#ifdef OLD_PERSONALTOOLBAR
-		|| cmd == xfeCmdTogglePersonalToolbar
-#endif /*OLD_PERSONALTOOLBAR*/
 		|| cmd == xfeCmdToggleNavCenter
         || cmd == xfeCmdEditToolbars
         )
 	{
 		return True;
 	}
-#ifdef OLD_URLBAR
-	else if (cmd == xfeCmdClearUrlBar)
-	{
-		return (m_urlBar != NULL);
-	}
-#endif
 	else
 	{
 		return XFE_Frame::handlesCommand(cmd, calldata);
@@ -681,33 +522,6 @@ XFE_BrowserFrame::commandToString(CommandType		cmd,
 								  void *			calldata,
 								  XFE_CommandInfo *	info)
 {
-#ifdef OLD_URLBAR
-	if (cmd == xfeCmdToggleLocationToolbar)
-    {
-        char *res = NULL;
-		
-        if (m_urlBar->isShown())
-            res = "hideLocationToolbarCmdString";
-        else
-            res = "showLocationToolbarCmdString";
-		
-        return stringFromResource(res);
-    } else
-#endif
-	
-#ifdef OLD_PERSONALTOOLBAR
-    if (cmd == xfeCmdTogglePersonalToolbar)
-    {
-		char *res = NULL;
-		
-		if (m_personalToolbar->isShown())
-			res = "hidePersonalToolbarCmdString";
-		else
-			res = "showPersonalToolbarCmdString";
-		
-		return stringFromResource(res);
-    } else
-#endif /*OLD_PERSONALTOOLBAR*/
 	if (cmd == xfeCmdToggleNavCenter)
     {
         char *res = NULL;
@@ -747,10 +561,6 @@ XFE_BrowserFrame::getURL(URL_Struct *url)
   storeProperty (m_context, "_MOZILLA_URL", 
 				 url ? (const unsigned char *) url->address : (const unsigned char *)"");
 
-#ifdef OLD_URLBAR
-  m_urlBar->setURLString(url);
-#endif
-
 /*      return hview->getURL(url, skip_get_url);  */
      return (browserview->getHTMLView())->getURL(url);  
 }
@@ -761,16 +571,8 @@ XFE_BrowserFrame::queryChrome(Chrome * chrome)
   if (!chrome)
 	return;
   XFE_Frame::queryChrome(chrome);
-#ifdef OLD_URLBAR
-  chrome->show_url_bar           = m_urlBar && m_urlBar->isShown();
-#else
   chrome->show_url_bar           = False;
-#endif
-#ifdef OLD_PERSONALTOOLBAR
-  chrome->show_directory_buttons = m_personalToolbar && m_personalToolbar->isShown();
-#else
   chrome->show_directory_buttons = False;
-#endif /*OLD_PERSONALTOOLBAR*/
 }
 
 void
@@ -781,22 +583,6 @@ XFE_BrowserFrame::respectChrome(Chrome * chrome)
 
 //  XFE_Frame::respectChrome(chrome);
   
-#ifdef OLD_URLBAR
-  // URL Bar - aka - alias - used-to-be - location bar
-  if (m_urlBar) 
-  {
-    m_urlBar->setShowingState(chrome->show_url_bar);
-  }
-#endif
-
-#ifdef OLD_PERSONALTOOLBAR
-  // Personal Toolbar - aka - alias - used-to-be - directory buttons
-  if (m_personalToolbar) 
-  {
-    m_personalToolbar->setShowingState(chrome->show_directory_buttons);
-  }
-#endif /*OLD_PERSONALTOOLBAR*/
-
   // Chain respectChrome() _AFTER_ doing urlbar and personal toolbar, 
   // so that the toolbox can be properly configured by the super class.
   XFE_Frame::respectChrome(chrome);
@@ -805,6 +591,7 @@ XFE_BrowserFrame::respectChrome(Chrome * chrome)
 
 XFE_CALLBACK_DEFN(XFE_BrowserFrame, navigateToURL)(XFE_NotificationCenter*, void*, void* callData)
 {
+#if 0
 	int status;
 	URL_Struct *url_struct = (URL_Struct*)callData;
 	
@@ -819,16 +606,16 @@ XFE_CALLBACK_DEFN(XFE_BrowserFrame, navigateToURL)(XFE_NotificationCenter*, void
     {
 		if (url_struct && url_struct->address)
 		{
-#ifdef OLD_URLBAR
 			m_urlBar->recordURL(url_struct);
-#endif
 		}
     }
+#endif
 }
 
 XFE_CALLBACK_DEFN(XFE_BrowserFrame, newPageLoading)
 	(XFE_NotificationCenter*, void*, void* callData)
 {
+#if 0
 	URL_Struct *url = (URL_Struct*)callData;
 	
 	// update _MOZILLA_URL property
@@ -836,13 +623,13 @@ XFE_CALLBACK_DEFN(XFE_BrowserFrame, newPageLoading)
 	  storeProperty (m_context, "_MOZILLA_URL", 
 		       (const unsigned char *) url->address);
 	}
-#ifdef OLD_URLBAR
+
 	m_urlBar->setURLString(url);
-#endif
 
 #ifdef ENDER
     hideEditorToolbar();
 #endif /* ENDER */
+#endif
 }
 
 XFE_CALLBACK_DEFN(XFE_BrowserFrame, updateToolbarAppearance)(XFE_NotificationCenter */*obj*/, 
@@ -1023,110 +810,24 @@ fe_BrowserGetURL(MWContext* context, char* address)
 void
 XFE_BrowserFrame::toolboxItemSnap(XFE_ToolboxItem * item)
 {
-#ifdef OLD_TOOLBAR_USE
-	XP_ASSERT( item == m_toolbar );
-#endif
-#ifdef OLD_URLBAR
-    XP_ASSRT ( item == m_urlBar );
-#endif
-
-#ifdef OLD_TOOLBAR_USE
-	// Navigation
-	fe_globalPrefs.browser_navigation_toolbar_position = m_toolbar->getPosition();
-#endif
-#ifdef OLD_URLBAR
-	// Location
-	fe_globalPrefs.browser_location_toolbar_position = m_urlBar->getPosition();
-#endif
-
-#ifdef OLD_PERSONALTOOLBAR
-	// Personal
-	fe_globalPrefs.browser_personal_toolbar_position = m_personalToolbar->getPosition();
-#endif /*OLD_PERSONALTOOLBAR*/
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserFrame::toolboxItemClose(XFE_ToolboxItem * item)
 {
 	XP_ASSERT( item != NULL );
-
-#ifdef OLD_TOOLBAR_USE
-	// Navigation
-	if (item == m_toolbar)
-	{
-		fe_globalPrefs.browser_navigation_toolbar_open = False;
-	}
-#endif
-#ifdef OLD_URLBAR
-	// Location
-	if (item == m_urlBar)
-	{
-		fe_globalPrefs.browser_location_toolbar_open = False;
-	}
-#endif
-#ifdef OLD_PERSONALTOOLBAR
-	// Personal
-	else if (item == m_personalToolbar)
-	{
-		fe_globalPrefs.browser_personal_toolbar_open = False;
-	}
-#endif /*OLD_PERSONALTOOLBAR*/
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserFrame::toolboxItemOpen(XFE_ToolboxItem * item)
 {
 	XP_ASSERT( item != NULL );
-
-#ifdef OLD_TOOLBAR_USE
-	// Navigation
-	if (item == m_toolbar)
-	{
-		fe_globalPrefs.browser_navigation_toolbar_open = True;
-	}
-#endif
-#ifdef OLD_URLBAR
-	// Location
-	else if (item == m_urlBar)
-	{
-		fe_globalPrefs.browser_location_toolbar_open = True;
-	}
-#endif
-#ifdef OLD_PERSONALTOOLBAR
-	// Personal
-	else if (item == m_personalToolbar)
-	{
-		fe_globalPrefs.browser_personal_toolbar_open = True;
-	}
-#endif /*OLD_PERSONALTOOLBAR*/
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_BrowserFrame::toolboxItemChangeShowing(XFE_ToolboxItem * item)
 {
 	XP_ASSERT( item != NULL );
-
-#ifdef OLD_TOOLBAR_USE
-	// Navigation
-	if (item == m_toolbar)
-	{
-		fe_globalPrefs.browser_navigation_toolbar_showing = item->isShown();
-	}
-#endif
-#ifdef OLD_URLBAR
-	// Location
-	else if (item == m_urlBar)
-	{
-		fe_globalPrefs.browser_location_toolbar_showing = item->isShown();
-	}
-#endif
-#ifdef OLD_PERSONALTOOLBAR
-	// Personal
-	else if (item == m_personalToolbar)
-	{
-		fe_globalPrefs.browser_personal_toolbar_showing = item->isShown();
-	}
-#endif /*OLD_PERSONALTOOLBAR*/
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -1146,33 +847,5 @@ XFE_BrowserFrame::configureToolbox()
 	}
 
 //	printf("configureToolbox(%s)\n",XtName(m_widget));
-
-#ifdef OLD_TOOLBAR_USE
-	// Navigation
-	if (m_toolbar)
-	{
-		m_toolbar->setShowing(fe_globalPrefs.browser_navigation_toolbar_showing);
-		m_toolbar->setOpen(fe_globalPrefs.browser_navigation_toolbar_open);
-		m_toolbar->setPosition(fe_globalPrefs.browser_navigation_toolbar_position);
-	}
-#endif
-#ifdef OLD_URLBAR
-	// Location
-	if (m_urlBar)
-	{
-		m_urlBar->setShowing(fe_globalPrefs.browser_location_toolbar_showing);
-		m_urlBar->setOpen(fe_globalPrefs.browser_location_toolbar_open);
-		m_urlBar->setPosition(fe_globalPrefs.browser_location_toolbar_position);
-	}
-#endif
-#ifdef OLD_PERSONALTOOLBAR
-	// Personal
-	if (m_personalToolbar)
-	{
-		m_personalToolbar->setShowing(fe_globalPrefs.browser_personal_toolbar_showing);
-		m_personalToolbar->setOpen(fe_globalPrefs.browser_personal_toolbar_open);
-		m_personalToolbar->setPosition(fe_globalPrefs.browser_personal_toolbar_position);
-	}
-#endif /*OLD_PERSONALTOOLBAR*/
 }
 //////////////////////////////////////////////////////////////////////////

@@ -30,9 +30,6 @@
 #include "Dashboard.h"
 #include "xp_core.h"
 #include "BrowserDrop.h"
-#ifdef OLD_PERSONALTOOLBAR
-#include "PersonalToolbar.h"
-#endif /*OLD_PERSONALTOOLBAR*/
 #include <Xm/Xm.h>
 
 class XFE_RDFToolbox;
@@ -71,12 +68,6 @@ public:
                                           
 private:
 
-#ifdef OLD_PERSONALTOOLBAR
-  XFE_PersonalToolbar *		m_personalToolbar;
-#endif /*OLD_PERSONALTOOLBAR*/
-#ifdef OLD_URLBAR
-  XFE_URLBar *				m_urlBar;
-#endif
   XFE_RDFToolbox *          m_rdfToolbars;
 #ifdef ENDER
   XFE_EditorToolbar *			m_editorStyleToolbar;
@@ -97,8 +88,6 @@ private:
 
   // static MenuSpec file_bookmarks_menu_spec[];
   // static MenuSpec navigate_menu_spec[];
-
-  static ToolbarSpec toolbar_spec[];
 
 #ifdef ENDER
   void createEditorToolbar();
