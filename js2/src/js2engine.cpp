@@ -878,29 +878,43 @@ namespace MetaData {
         return buildNameList();
     }
 
+    // XXX need help from spec. Here we iterate ove dynamic properties only
+    // unless the object is a Class, in which case we iterate the static
+    // members.
     bool ForIteratorObject::buildNameList()
     {
-        DynamicPropertyMap *dMap = NULL;
-        if (obj->kind == CallableInstanceKind)
-            dMap = (checked_cast<CallableInstance *>(obj))->dynamicProperties;
-        else
-        if (obj->kind == GlobalObjectKind)
-            dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
-        else
-            dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
-
-        if (dMap) {
-            nameList = new const String *[dMap->size()];
+        if (obj->kind == ClassKind) {
+            JS2Class *c = checked_cast<JS2Class *>(obj);
+            StaticBindingIterator sbi, end;
+            nameList = new const String *[c->staticReadBindings.size()];
             length = 0;
-            for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
-                nameList[length++] = &i->first;
+            for (sbi = c->staticReadBindings.begin(), end = c->staticReadBindings.end(); (sbi != end); sbi++) {
+                nameList[length++] = &sbi->first;
             }
-            ASSERT(length == dMap->size());
-            it = 0;
-            return (length != 0);
         }
-        else
-            return false;
+        else {
+            DynamicPropertyMap *dMap = NULL;
+            if (obj->kind == CallableInstanceKind)
+                dMap = (checked_cast<CallableInstance *>(obj))->dynamicProperties;
+            else
+            if (obj->kind == GlobalObjectKind)
+                dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+            else
+            if (obj->kind == PrototypeInstanceKind)
+                dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
+
+            if (dMap) {
+                nameList = new const String *[dMap->size()];
+                length = 0;
+                for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+                    nameList[length++] = &i->first;
+                }
+                ASSERT(length == dMap->size());
+                it = 0;
+                return (length != 0);
+            }
+        }
+        return false;
     }
 
     //
@@ -912,20 +926,25 @@ namespace MetaData {
     {
         if (nameList) {
             it++;
-            if (originalObj != obj) {
-                while (it != length)
-                    if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj) it++;
+            if (obj->kind == ClassKind) {
+                return (it != length);
             }
-            if (it == length) {
-                if (obj->kind == PrototypeInstanceKind) {
-                    obj = (checked_cast<PrototypeInstance *>(obj))->parent;
-                    if (obj)
-                        return buildNameList();
+            else {
+                if (originalObj != obj) {
+                    while (it != length)
+                        if (engine->meta->lookupDynamicProperty(originalObj, nameList[it]) != obj) it++;
                 }
-                return false;
+                if (it == length) {
+                    if (obj->kind == PrototypeInstanceKind) {
+                        obj = (checked_cast<PrototypeInstance *>(obj))->parent;
+                        if (obj)
+                            return buildNameList();
+                    }
+                    return false;
+                }
+                else
+                    return true;
             }
-            else
-                return true;
         }
         else
             return false;
