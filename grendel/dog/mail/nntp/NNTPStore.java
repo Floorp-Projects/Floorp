@@ -34,7 +34,7 @@ import dog.util.*;
  * The storage class implementing the NNTP Usenet news protocol.
  *
  * @author dog@dog.net.uk
- * @version 1.0
+ * @version 1.02
  */
 public class NNTPStore extends Store implements StatusSource {
 
@@ -390,6 +390,18 @@ public class NNTPStore extends Store implements StatusSource {
 			switch (getResponse()) {
 			  case SEND_ARTICLE:
 				MessageOutputStream mout = new MessageOutputStream(out);
+				article.writeTo(mout);
+				out.write("\n.\n".getBytes());
+				out.flush();
+				switch (getResponse()) {
+				 case ARTICLE_POSTED:
+					break;
+				 case POSTING_FAILED:
+					throw new MessagingException("Posting failed: "+response);
+				 default:
+					throw new MessagingException(response);
+				}
+				break;
 			  case POSTING_NOT_ALLOWED:
 				throw new MessagingException("Posting not allowed");
 			  case POSTING_FAILED:
@@ -560,8 +572,8 @@ public class NNTPStore extends Store implements StatusSource {
 	// suitable as an argument to NEWGROUPS and NEWNEWS commands.
 	String getDateTimeString(Date date) {
 		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
 		calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
+		calendar.setTime(date);
 		StringBuffer buffer = new StringBuffer();
 		int field;
 		String ZERO = "0"; // leading zero
