@@ -454,9 +454,9 @@ sub cmdUserPrefsConfirmSet {
                                   $app->input->getArgument('changeID'),
                                   $app->input->getArgument('changePassword'),
                                   0)) { # XXX
-        $self->output->userPrefsSuccess();
+        $app->output->userPrefsSuccess();
     } else {
-        $self->output->userPrefsNotification([[$user->userID, 'change', 'accessDenied']]);
+        $app->output->userPrefsNotification([[$user->userID, 'change', 'accessDenied']]);
     }
 }
 
