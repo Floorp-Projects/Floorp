@@ -65,7 +65,7 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
             && (addr->raw.family != AF_UNIX)
 #endif
             && (PR_NETADDR_SIZE(addr) != addr_len)) {
-#if defined(LINUX)
+#if defined(LINUX) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 1
         /*
          * In glibc 2.1, struct sockaddr_in6 is 24 bytes.  In glibc 2.2
          * and in the 2.4 kernel, struct sockaddr_in6 has the scope_id
