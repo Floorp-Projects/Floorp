@@ -2,9 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:10:42 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:23:38 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
 
@@ -38,6 +38,7 @@ use CGI ':standard';
 
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use TreeData;
 use FileStructure;
 use Persistence;
@@ -77,7 +78,7 @@ sub get_params {
   $REMOTE_HOST = remote_host();
   $PASSWD = ( param("passwd") ||
               cookie(-name=>"tinderbox_password_$TREE"));
-  
+
   $NEW_PASSWD1 = param('newpasswd1');
   $NEW_PASSWD2 = param('newpasswd2');
   
@@ -106,7 +107,7 @@ sub setup_environment {
 
 
 sub encrypt_passwd {
-  my $passswd = @_;
+  my $passwd = @_;
 
   # The man page for Crypt says:
 
@@ -115,7 +116,7 @@ sub encrypt_passwd {
   #     rest are ignored.
 
   my $salt = 'aa';
-  my $encoded = crypt($passd, $salt);
+  my $encoded = crypt($passwd, $salt);
 
   return $encoded;  
 }
@@ -128,12 +129,6 @@ sub get_passwd_table {
 
   (-r $file) &&
     require $file;
-
-    # supply a default passwd so we can use the system.
-
-  ($PASSWD_TABLE{$TREE}) ||
-    ( $PASSWD_TABLE{$TREE}{'tinderbox@mozilla.org'} = 
-      encrypt_passwd('tinderbox') );
 
   return ; 
 }
@@ -198,6 +193,13 @@ sub format_input_page {
   my ($title) = "Tinderbox Adminstration for Tree: $tree";
   my (@out);
 
+  my $passwd_string = '';
+  if ( !(keys %{ $PASSWD_TABLE{$TREE} }) ) {
+    $passwd_string = h3(font({-color=>'red'}, 
+                        "No administrators set, ".
+                        "no passwords needed."));
+  }
+
   push @out, (
               start_html(-title=>$title),
               h2({-align=>'CENTER'},
@@ -216,11 +218,12 @@ sub format_input_page {
               # passwd back in the form.
 
               h3("Login",),
+              $passwd_string,
               "Email address: ",
               textfield(-name=>'mailaddr',
                         -default=>$MAILADDR,
                         -size=>30,),
-              "Password: ".
+                        "Password: ".
               password_field(-name=>'passwd', -size=>8,),
               p(),
               checkbox( -label=>("If correct, ".
@@ -276,7 +279,7 @@ sub format_input_page {
   
   push @out, (
               h3("Message of the Day"),
-              "New Message of the Day",p(),
+              "New Message of the Day (must be valid HTML)",p(),
               textarea(-name=>'motd', -default=>$CURRENT_MOTD,
                        -rows=>30, -cols=>75, -wrap=>'physical',),
               p(),
@@ -310,16 +313,17 @@ sub format_input_page {
 sub save_passwd_table {
   my ($file) = FileStructure::get_filename($TREE, 'passwd');
 
-  delete $PASSWD_TABLE{$TREE}{'tinderbox@mozilla.org'};
+  if ( keys %{ $PASSWD_TABLE{$TREE} } ) {
+    Persistence::save_structure( 
+                                [ 
+                                 $PASSWD_TABLE{$TREE},
+                                ],
+                                [
+                                 "\$PASSWD_TABLE{'$TREE'}", 
+                                ],
+                                $file);
+  }
 
-  Persistence::save_structure( 
-                               [ 
-                                $PASSWD_TABLE{$TREE},
-                               ],
-                               [
-                                "\$PASSWD_TABLE{'$TREE'}", 
-                               ],
-                               $file);
   return ;
 }
 
@@ -328,16 +332,20 @@ sub save_passwd_table {
 sub change_passwd {
   my (@results) = ();
 
-  my ($encoded) = encrypt_passwd($PASSWD);
-
-  if ( ($encoded eq $PASSWD_TABLE{$TREE}{$MAILADDR}) && 
-       ($NEWPASSWD1) && 
-       ($NEWPASSWD1 ne $PASSWD ) ) {
+  if (($NEW_PASSWD1) && 
+       ($NEW_PASSWD1 ne $PASSWD ) ) {
     
-    if ($NEWPASSWD1 eq $NEWPASSWD2) {
-      my ($newencoded1) = encrypt_passwd($NEWPASSWD1);
-      $PASSWD_TABLE{$TREE}{$MAILADDR} = $newencoded1;
+    if ($NEW_PASSWD1 eq $NEW_PASSWD2) {
+
+      # we need to reload the password table so that the check against
+      # existing administrators is nearly atomic.
+
+      get_passwd_table();
+
+      my ($new_encoded1) = encrypt_passwd($NEW_PASSWD1);
+      $PASSWD_TABLE{$TREE}{$MAILADDR} = $new_encoded1;
       save_passwd_table();
+
       push @results, "Password changed.\n";
     } else {
       push @results, ("New passwords do not match, ".
@@ -438,19 +446,21 @@ sub change_motd {
 sub security_problem {
   my @out = ();
 
-  ($PASSWD) ||
-  (push @out, "Error, No Password\n");
-
   ($MAILADDR) ||
     (push @out, "Error, No Mail Address\n");
 
-  (!$MAILADDR) ||
   ($MAILADDR =~ m!\@!) ||
     (push @out, "Error, Mail Address must have '\@' in it.\n");
 
-  (!$PASSWD) ||
-    ($PASSWD ne $PASSWD_TABLE{$TREE}{$MAILADDR}) ||
+  if ( keys %{ $PASSWD_TABLE{$TREE}} ) {
+    ($PASSWD) ||
+      (push @out, "Error, must enter Password\n");
+    
+    my ($encoded) = encrypt_passwd($PASSWD);
+
+    ($encoded eq $PASSWD_TABLE{$TREE}{$MAILADDR}) ||
       (push @out, "Error, Password Not Valid\n");
+  }
 
   return @out;
 }

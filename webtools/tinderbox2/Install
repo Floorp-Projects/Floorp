@@ -14,6 +14,14 @@ To install
 
 6) set up $prefix/bin/processmail to recieve the incoming tinderbox mail
 
-7) setup the build machines to mail their build logs 
+7) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
+for tinderbox to use.  Log into the CVS repository yourself, once for
+each tree you have defined.  This must be done exactly as you wrote it
+in TreeData.  Then copy your ~/.cvspass into tinderbox home directory.
+This is the REAL home of the Tinderbox daemon, as listed in
+/etc/passwd/ and set in the $HOME environmental variable for
+tinder.cgi.
+
+8) setup the build machines to mail their build logs 
 	(with tinderbox variables on the top) to the web server machine.
 

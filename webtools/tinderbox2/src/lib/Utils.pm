@@ -3,9 +3,9 @@
 # General purpose utility functions.  Every project needs a kludge
 # bucket for common access.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:59 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:27:17 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
 
@@ -40,6 +40,17 @@
 package main;
 
 
+
+# Standard perl libraries
+
+use Sys::Hostname;
+use File::Basename;
+
+
+# Tinderbox libraries
+
+
+
 sub set_static_vars {
 
 # This functions sets all the static variables which are often
@@ -54,30 +65,30 @@ sub set_static_vars {
 
   # where errors are loged
   
-  $ERROR_LOG = "/var/log/tinderbox/log";
-  $ERROR_LOG = "/tmp/tinderbox/log";
+  $ERROR_LOG = ( $TinderConfig::ERROR_LOG ||
+                  "/var/log/tinderbox/log");
   
   # where the daemon mode lock (for all trees) is placed
   
-  $LOCK_FILE = "/web/htdocs/gci/iname-raven/build-group/tinderbox/tinderd.lock";
+  $LOCK_FILE = ( $TinderConfig::LOCK_FILE ||
+                 "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock");
 
-  
   # the time between auto refreshes for all pages in seconds.
-
-  $REFRESH_TIME = 60*15;
+  
+  $REFRESH_TIME = ( $TinderConfig::REFRESH_TIME || 
+                    (60 * 15)
+                  );
 
   @ORIG_ARGV = @ARGV;
-  
-  
+
   $ENV{'PATH'}= (
-                 ':/usr/local/bin'.
+                 '/bin'.
                  ':/usr/bin'.
-                 ':/bin'.
+                 ':/usr/local/bin'.
                  
                  ':/opt/gnu/bin'.
                  ':/usr/ucb'.
                  ':/usr/ccs/bin'.
-                 ':/usr/openwin/bin'.
                  '');
   
   # taint perl requires we clean up these bad environmental variables.
@@ -131,12 +142,25 @@ sub get_env {
   $HOSTNAME = Sys::Hostname::hostname();
 
   my ($logdir) = File::Basename::dirname($ERROR_LOG);
-
   mkdir_R($logdir);
 
+  my ($lockdir) = File::Basename::dirname($LOCK_FILE);
+  mkdir_R($lockdir);
+
+  my (@trees) = TreeData::get_all_trees();
+  foreach $tree (@trees) {
+
+    my ($dir) = FileStructure::get_filename($tree, 'TinderDB_Dir');
+    mkdir_R($dir, 0777);
+    
+    my ($dir) = FileStructure::get_filename($tree, 'TinderHeader_Dir');
+    mkdir_R($dir, 0777);
+
+  }
+  
   open (LOG , ">>$ERROR_LOG") ||
     die("Could not open logfile: $ERROR_LOG\n");
-  
+
 
   # pick a unique id to append to file names. We do not want to worry
   # about locks, and multiple instances of this program can be active
@@ -145,6 +169,7 @@ sub get_env {
   $UID = join('.', $TIME, $$);
 
   $SIG{'__DIE__'} = \&fatal_error;
+  $SIG{'__WARN__'} = \&log_warning;
 
   return ;
 }
@@ -184,6 +209,11 @@ sub max {
 
 
 
+# make a directory (and all of its parents if need be).
+
+# You can optionally specify the permssions for all the directories
+# created.
+
 
 sub mkdir_R {
   my ($dir, $mode) = @_;
@@ -213,8 +243,9 @@ sub mkdir_R {
 sub fatal_error {
   my  @error = @_;
   foreach $_ (@error) {
-    print LOG $_;
+    print LOG "[$LOCALTIME] $_";
   }
+  print LOG "\n";
 
   # do not check for errors, the lock file may not exits and even if
   # we have trouble removing the file we we will be exiting anyway.
@@ -240,7 +271,7 @@ sub log_warning {
   my  @error = @_;
 
   foreach $_ (@error) {
-    print LOG $_;
+    print LOG "[$LOCALTIME] $_";
   }
 
   return ;
@@ -276,6 +307,7 @@ sub overwrite_file {
 }
 
 
+# append data to the end of a file
 
 sub append_file {
   my ($filename, @out);
@@ -306,5 +338,23 @@ sub uniq {
   return @out;
 }
 
+# load a list of modules
+
+sub require_modules {
+  my @impls = @_;
+
+  foreach $impl (@impls) {
+    
+    # '$impl' is not a bare word so we must preform this data
+    # transformation which require normally does
+    
+    $impl =~ s!::!/!g;
+    $impl .= ".pm";
+    
+    require $impl;
+  }
+
+  return 1;
+}
 
 1;

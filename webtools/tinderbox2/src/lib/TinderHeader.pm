@@ -8,9 +8,9 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:59 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:27:04 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
 
@@ -43,10 +43,16 @@
 package TinderHeader;
 
 
-# Standard perl librariesq
+
+# Standard perl libraries
 
 use File::Basename;
 
+
+
+# Tinderbox Specific Libraries
+
+use Utils;
 
 
 
@@ -55,20 +61,30 @@ use File::Basename;
 # uses a default method will be provided.  Usually this method is
 # the null function.
 
-use TinderHeader::Build;
-use TinderHeader::IgnoreBuilds;
-use TinderHeader::MOTD;
+if ( defined(@TinderConfig::HeaderImpl) ) {
+  @IMPLS = @TinderConfig::HeaderImpl;
+} else {
+  @IMPLS = (
+            'TinderHeader::Build',
+            'TinderHeader::IgnoreBuilds',
+            'TinderHeader::MOTD',
 
-    # TinderDB::VC_Bonsai provides a TinderHeader::TreeState
-    # implementation, so comment out the TreeSTate if using
-    # VC_Bonsai. Most VC implementations will not have a State file in
-    # the version control system.
+            # TinderDB::VC_Bonsai provides a
+            # TinderHeader::TreeState implementation,
+            # so comment out the TreeSTate if using
+            # VC_Bonsai. Most VC implementations will
+            # not have a State file in the version
+            # control system.
 
-use TinderHeader::TreeState;
+            'TinderHeader::TreeState',
 
-# this is not implemented yet
-#use TinderHeader::Image;
+            # this is not implemented yet
+            #'TinderHeader::Image,
+           );
+}
 
+
+main::require_modules(@IMPLS);
 
 
 $VERSION = '#tinder_version#';
@@ -79,19 +95,22 @@ $VERSION = '#tinder_version#';
 $DEBUG = 1;
 
 
-# each of the TinderHeader methods gets a default value.
+# each of the TinderHeader method appears on the left side of this
+# hash and gets a default value.
 
-%HEADER2DEFAULT_HTML = (
-                        # the build module has one piece of info
-                        # which goes in the header, our best guess 
-                        # as to when the tree broke.
-
-                        'Build' => "",
-                        'IgnoreBuilds' => "",
-                        'Image' => "",
-                        'MOTD' => "",
-                        'TreeState' => "Open",
-
+%HEADER2DEFAULT_HTML = (%HEADER2DEFAULT_HTML ||
+                        (
+                         # the build module has one piece of info
+                         # which goes in the header, our best guess 
+                         # as to when the tree broke.
+                         
+                         'Build' => "",
+                         'IgnoreBuilds' => "",
+                         'Image' => "",
+                         'MOTD' => "",
+                         'TreeState' => "Open",
+                         
+                        )
                        );
 
 # As each implmentation is 'used' it will load a a null object in its

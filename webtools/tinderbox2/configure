@@ -31,7 +31,7 @@ builddir=./build
 
 config_script=./config.out
 
-tinder_version='0.06'
+tinder_version='0.07'
 
 # -------------------
 #   Build Makefile
@@ -137,10 +137,11 @@ rm -rf $config_script
 
 pwd=`/bin/pwd`
 
+echo "#!perl - run from makefile with -n\n" >> $config_script
 echo "while (<>) {" >> $config_script
 
-echo "\ts!\#tinder_libdir\#!$destdir/lib',\n\t'$pwd/$builddir/lib!;" >> $config_script
-echo "\ts!\#tinder_version\#!$tinder_version!;" >> $config_script
+echo "  s!\#tinder_libdir\#!$destdir/lib',\n  '$pwd/$builddir/lib!;" >> $config_script
+echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
 
 for cmd in perl gzip uudecode
 do
@@ -149,11 +150,11 @@ do
 		echo "Could not find program: $cmd"
 		exit 9;
 	fi
-	echo "\ts!\#$cmd\#!$full_cmd!;" >> $config_script
+	echo "  s!\#$cmd\#!$full_cmd!;" >> $config_script
 done
 
 echo "} continue {" >> $config_script
-echo "\tprint or die \"-p destination: \$!\\\\n\";" >> $config_script
+echo "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
 echo "}" >> $config_script
 
 

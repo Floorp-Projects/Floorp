@@ -66,3 +66,6 @@ The source code should be able to run using the standard Perl
 libraries, as it can be difficult for some users to add libraries onto
 production machines.
 
+Put CVS keywords into all the source files so that when the software
+is deployed, there is no doubt what version was checked out and where
+the files are stored in the local version control system.

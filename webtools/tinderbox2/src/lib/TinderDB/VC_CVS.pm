@@ -133,7 +133,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -463,93 +463,121 @@ sub status_table_row {
   ($LAST_TREESTATE) && ($color) &&
     ($color = "bgcolor=$color");
   
-  my $query_link = '';
-   if ( scalar(%authors) ) {
-
-     # find the times which bound the cell so that we can set up a
-     # VC query.
-
-     $maxdate = $row_times->[$row_index];
-     if ($row_index > 0){
-       $mindate = $row_times->[$row_index - 1];
-     } else {
-       $mindate = $main::TIME;
-     }
-
-     foreach $author (sort keys %authors) {
-       my $table = '';
-       my $num_rows = 0;
-       my $max_length = 0;
-   
-       # define a table, to show what was checked in
-       $table .= (
-                  "Checkins by <b>$author</b>\n".
-                  "<table border cellspacing=2>\n".
-                  "");
-
-       # add table headers
-       $table .= (
-                  "\t<tr>".
-                  "<th>Time</th>".
-                  "<th>File</th>".
-                  "</tr>\n".
-                  "");
-
-       # sort numerically descending
-       foreach $time ( sort {$b <=> $a} keys %{ $authors{$author} }) {
-         foreach $file (keys %{ $authors{$author}{$time}}) {
-           $num_rows++;
-           $max_length = main::max($max_length , length($file));
-           $table .= (
-                      "\t<tr>".
-                      "<td>".HTMLPopUp::timeHTML($time)."</td>".
-                      "<td>".$file."</td>".
-                      "</tr>\n".
-                      "");
-         }
-       }
-       $table .= "</table>";
-       
-       $query_link .= 
-         "\t\t".
-           VCDisplay::query(
-                             'tree' => $tree,
-                             'mindate' => $mindate,
-                             'maxdate' => $maxdate,
-                             'who' => $author,
-                             'linktxt' => $author,
-                             
-                             "windowtxt" => $table,
-                             "windowtitle" => "VC Info",
-                             "windowheight" => ($num_rows * 50) + 100,
-                             "windowwidth" => ($max_length * 10) + 100,
-                            )."\n";
-     }
-
-     # we display the list of names in 'teletype font' so that the
-     # names do not bunch together. It seems to make a difference if
-     # there is a <cr> between each link or not.
-
-     @outrow = (
-                "\t<td align=center $color>\n".
-                "\t\t<tt>\n".
-                $query_link.
-                "\t\t</tt>\n".
-                "\t</td>\n".
-                "");
-     
-   } else {
-
-     # If there are only spaces or there is nothing in the cell then
-     # Netscape 4.5 prints nothing, not even a color.  It prints a
-     # color if you use '<br>' as the cell contents. However a ' '
-     # inside <pre> should be more portable.
-
-     @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
-                "<td align=center $color>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+  my $query_links = '';
+  if ( scalar(%authors) ) {
+    
+    # find the times which bound the cell so that we can set up a
+    # VC query.
+    
+    $maxdate = $row_times->[$row_index];
+    if ($row_index > 0){
+      $mindate = $row_times->[$row_index - 1];
+    } else {
+      $mindate = $main::TIME;
     }
+    
+    foreach $author (sort keys %authors) {
+      my $table = '';
+      my $num_rows = 0;
+      my $max_length = 0;
+      
+      # define a table, to show what was checked in
+      $table .= (
+                 "Checkins by <b>$author</b>\n".
+                 "<table border cellspacing=2>\n".
+                 "");
+      
+      # add table headers
+      $table .= (
+                 "\t<tr>".
+                 "<th>Time</th>".
+                 "<th>File</th>".
+                 "</tr>\n".
+                 "");
+      
+      # sort numerically descending
+      foreach $time ( sort {$b <=> $a} keys %{ $authors{$author} }) {
+        foreach $file (keys %{ $authors{$author}{$time}}) {
+          $num_rows++;
+          $max_length = main::max($max_length , length($file));
+          $table .= (
+                     "\t<tr>".
+                     "<td>".HTMLPopUp::timeHTML($time)."</td>".
+                     "<td>".$file."</td>".
+                     "</tr>\n".
+                     "");
+        }
+      }
+      $table .= "</table>";
 
+      # we display the list of names in 'teletype font' so that the
+      # names do not bunch together. It seems to make a difference if
+      # there is a <cr> between each link or not, but it does make a
+      # difference if we close the <tt> for each author or only for
+      # the group of links.
 
+      my (%popup_args) = (
+                          "linktxt" => "\t\t<tt>$author</tt>".
+                          
+                          "windowtxt" => $table,
+                          "windowtitle" => "VC Info",
+                          "windowheight" => ($num_rows * 50) + 100,
+                          "windowwidth" => ($max_length * 10) + 100,
+                         );
+
+      # If you have a VCDisplay implementation you should make the
+      # link point to its query method otherwise you want a 'mailto:'
+      # link
+
+      my $query_link = "";
+      if ( 
+          ($TinderConfig::VCDisplayImpl) && 
+          ($TinderConfig::VCDisplayImpl =~ 'None') 
+         ) {
+        
+        $query_link .= 
+          HTMLPopUp::Link(
+                          "href" => "mailto: $author",
+                          
+                          %popup_args,
+                         );
+      } else {
+        
+        $query_link .= 
+          VCDisplay::query(
+                           'tree' => $tree,
+                           'mindate' => $mindate,
+                           'maxdate' => $maxdate,
+                           'who' => $author,
+                           
+                           %popup_args,
+                             );
+      }
+
+      # put each link on its own line so we can debug the HTML
+      $query_link = "\t\t".$query_link."\n";
+
+      $query_links .= $query_link;
+    }
+    
+    @outrow = (
+               "\t<td align=center $color>\n".
+               $query_links.
+               "\t</td>\n".
+               "");
+    
+  } else {
+    
+    # If there are only spaces or there is nothing in the cell then
+    # Netscape 4.5 prints nothing, not even a color.  It prints a
+    # color if you use '<br>' as the cell contents. However a ' '
+    # inside <pre> should be more portable.
+    
+    @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
+               "<td align=center $color>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
+  }
+  
+  
   return @outrow; 
 }
 

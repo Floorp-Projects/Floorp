@@ -19,9 +19,9 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:58 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:26:46 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
 
@@ -53,14 +53,19 @@
 
 package TinderDB;
 
-# Standard perl librariesq
+
+# Standard perl libraries
 
 use File::Basename;
 
 
 
-# Use the DB implementations you wish to use. You may need to edit
-# the names listed here to use the correct implementation.
+# Tinderbox Specific Libraries
+
+use Utils;
+
+
+# Use the DB implementations you wish to use.
 
 # These uses determine the columns of the build page and their
 # include order is the order in which the columns are displayed.
@@ -69,11 +74,23 @@ use File::Basename;
 # about checkins.  You can currently choose wether you are using
 # bonsai or are using CVS raw.
 
-use TinderDB::Time;
-use TinderDB::VC_CVS;
-use TinderDB::Notice;  
-use TinderDB::Build;  
+if ( defined(@TinderConfig::DBImpl) ) {
+  @IMPLS = @TinderConfig::DBImpl;
+} else {
+  @IMPLS = (
+            'TinderDB::Time',
+            'TinderDB::VC_CVS',
+            'TinderDB::Notice',
+            'TinderDB::Build',
+           );
+}
 
+main::require_modules(@IMPLS);
+
+
+
+# It would be nice if we had some kind of display of the bug tracking
+# system as well.
 
 $VERSION = '#tinder_version#';
 
@@ -87,25 +104,34 @@ $DEBUG = 1;
 # frame the parts of the legend without putting a border arround the
 # individual cells.
 
-#$LEGEND_BORDER = "border rules=none";
-$LEGEND_BORDER = "";
+if ( defined($TinderConfig::DB_LEGEND_BORDER) ) {
+  $LEGEND_BORDER = $TinderConfig::DB_LEGEND_BORDER
+} else {
+  
+  # if configuring in this file uncomment one of the assignment
+  # lines below
+  
+  $TinderConfig::LEGEND_BORDER = 
+    "";
+  # "border rules=none";
+}
+  
+# finest spacing on html page (in minutes), this resticts the
+# minimum time between builds (to this value plus 5 minutes).
 
-  # finest spacing on html page (in minutes), this resticts the
-  # minimum time between builds (to this value plus 5 minutes).
+$MIN_TABLE_SPACING = $TinderConfig::DB_MIN_TABLE_SPACING || (5);
 
-  $MIN_TABLE_SPACING = 5;
+# number of times a database can be updated before its contents must
+# be trimmed of old data.  This scan of the database is used to
+# collect data about average build time so we do not want it
+# performed too infrequently.
 
-  # number of times a database can be updated before its contents must
-  # be trimmed of old data.  This scan of the database is used to
-  # collect data about average build time so we do not want it
-  # performed too infrequently.
+$MAX_UPDATES_SINCE_TRIM = $TinderConfig::DB_MAX_UPDATES_SINCE_TRIM || (50);
 
-  $MAX_UPDATES_SINCE_TRIM = 50;
+# Number of seconds to keep in Database, older data will be trimmed
+# away.
 
-  # Number of seconds to keep in Database, older data will be trimmed
-  # away.
-
-  $TRIM_SECONDS = 60 * 60 * 24 * 8;
+$TRIM_SECONDS = $TinderConfig::DB_TRIM_SECONDS || (60 * 60 * 24 * 8);
 
 # The DB implemenations are sourced in TinderConfig.pm just before
 # this wrapper class is sourced.  It is expected that the

@@ -73,7 +73,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -249,12 +249,33 @@ sub status_table_row {
       my $new_notice = $DATABASE{$tree}{$time}{$author}{'rendered_notice'};
 
       $rendered_notice .= "<p>".$new_notice."</p>";
+      push @authors, $author;
       $num_notices++;
     }
 
     $NEXT_DB++;
     ($NEXT_DB > $#DB_TIMES) && last;
   }
+
+
+  my $href = '';
+
+ # create a url to a cgi script so that those who do not use pop up
+ # menus can view the notice.
+
+  $href = (
+           "$FileStructure::URLS{'shownotice'}".
+           "\?".
+           "tree=$tree".
+           "\&".
+           "time=$DB_TIMES[$NEXT_DB]"
+          );
+  
+ # I do not have time to actually write the cgi script for above.
+ # Instead it would be useful to have a mailto so that users can mail
+ # the authors of the notice.
+
+  $href = 'mailto:'.join(', ', @authors);
 
   if ($rendered_notice) {
 
@@ -266,13 +287,7 @@ sub status_table_row {
                 "\t<td>".
                 HTMLPopUp::Link(
                                 "linktxt" => $NOTICE_AVAILIBLE,
-                                "href" => (
-                                           "$FileStructure::URLS{'shownotice'}".
-                                           "\?".
-                                           "tree=$tree".
-                                           "\&".
-                                           "time=$DB_TIMES[$NEXT_DB]"
-                                          ),
+                                "href" => $href,
                                 "windowtxt" => $rendered_notice,
                                 "windowtitle" => "Notice Board",
                                 "windowheight" => (150 * $num_notices),

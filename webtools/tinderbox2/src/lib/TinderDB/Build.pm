@@ -7,9 +7,9 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:16:47 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:21:46 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
 
@@ -50,7 +50,7 @@
 #                      (including the hostname, and 
 #			OS of the buildmachine)
 #       status => The final status of the build 
-#       		(success, buildfailed, testfailed, etc)
+#       		(success, busted, testfailed, etc)
 #       info => A string to be displayed to users interested in this build.
 #
 #       timenow => The time that the status was last reported
@@ -103,9 +103,6 @@
 #  The list @BUILD_NAMES holds the name for each build column which we
 #  do not ignore
 
-# The scalar $HTML_VALUE holds build information which should be
-# displayed for the whole tree not just a single build column.
-
 
 # Lets enumerate all the ways that the TinderDB abstraction is broken
 # by the Build module:
@@ -113,8 +110,6 @@
 # *) the summary functions will look in this namespace for
 #	  @LATEST_STATUS
 #	  @BUILD_NAMES
-
-# *) The header function peeks at $HTML_VALUE;
 
 # *) read file to load $IGNORE_BUILDS in addition 
 #	to the regular DB updates
@@ -255,17 +250,6 @@ sub get_all_status {
   return @status;
 }
 
-# If the build is broken then we wish to place some additional info in
-# the header.  Use the header interface, the value is set in
-# apply_db_updates.
-
-
-sub gettree_header {
-#  $HTML_VALUE = buildinfo($tree);
-  $HTML_VALUE = '';
-  return $HTML_VALUE;
-}
-
 
 
 # find the name of each build 
@@ -287,9 +271,6 @@ sub build_names {
     push @outrow, $buildname;
   }
 
-  ( scalar(@outrow) ) ||
-    die("Could not find any build names.");
-
   return @outrow;
 }
 
@@ -301,9 +282,6 @@ sub all_build_names {
   my ($self, $tree) = (@_);
   
   my (@outrow) = sort keys %{ $DATABASE{$tree} };
-
-  ( scalar(@outrow) ) ||
-    die("Could not find any build names.");
 
   return @outrow;
 }
@@ -353,9 +331,6 @@ sub latest_status {
 
   } # foreach $buildname
 
-  ( scalar(@outrow) ) ||
-    die("Could not find any build status.");
-
   return @outrow;
 }
 
@@ -396,14 +371,18 @@ sub status2hdml_chars {
 #  link to bonsai giving the aproximate times that the build was
 #  broken.
 
-sub buildinfo {
-  my ($tree) = (@_);
+sub gettree_header {
+  my ($self, $tree) = (@_);
   
+  # this is not working the way I want it to.  I will debug it later.
+
+  return '';
+
+  my ($out) = '';
+
   (TreeData::tree_exists($tree)) ||
     die("Tree: $tree, not defined.");
   
-  my @outrow = ();
-
   # find our best guess as to when the tree broke.
 
   my (@earliest_failure) = ();
@@ -518,12 +497,13 @@ sub buildinfo {
 
 
 
-# compute information which is relevant to the whole tree not a
+# Compute information which is relevant to the whole tree not a
 # particular build.  This needs to be called each time the DATABASE is
 # loaded.  This data depends on the ignore_builds file so can not be
 # stored in the DATABASE but must be recomputed each time we run.
 # Perhaps the gobal variables should someday move into METADATA for
-# eases of maintinance, but will still need to be recomputed at the same places in the code.
+# eases of maintinance, but will still need to be recomputed at the
+# same places in the code.
 
 sub compute_metadata {
   my ($self, $tree,) = @_;
@@ -545,7 +525,6 @@ sub compute_metadata {
     @LATEST_STATUS = latest_status($tree);
   };
 
-#  $HTML_VALUE = buildinfo($tree);
   return ;
 }
 
@@ -572,7 +551,6 @@ sub trim_db_history {
   
   my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
 
-  my @outrow = ();
   foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
 
     my ($last_index) = undef;
@@ -711,7 +689,7 @@ sub status_table_header {
   my ($self,  $tree, ) = @_;
 
   ( scalar(@BUILD_NAMES) ) ||
-    die("Could not find any build names.");
+    return ();
 
   my (@outrow);
 
@@ -992,7 +970,7 @@ sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
   ( scalar(@LATEST_STATUS) && scalar(@BUILD_NAMES) ) ||
-    die("Summary variables not defined.");
+    return ();
 
 
   my @outrow = ();

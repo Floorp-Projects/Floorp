@@ -6,9 +6,9 @@
 # gettree_header(), ).
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:17:18 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:20:31 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/BasicTxtHeader.pm,v $ 
 # $Name:  $ 
 
@@ -46,7 +46,7 @@ package TinderHeader::BasicTxtHeader;
 use FileStructure;
 use Persistence;
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 
 sub new {
@@ -65,7 +65,7 @@ sub new {
 
 sub db_file {
   my ($self, $tree,) = @_;
-  my ($file) = (FileStructure::get_filename($tree, 'TinderDB_headerDir').
+  my ($file) = (FileStructure::get_filename($tree, 'TinderHeader_Dir').
                 "/".ref($self).".DBdat");
   $file =~ s![^/:]+::!!;
   return $file;

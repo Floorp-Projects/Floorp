@@ -6,9 +6,9 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:15:24 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:19:13 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
 
@@ -52,9 +52,8 @@ package VCDisplay;
 # Tinderbox libraries
 
 use TreeData;
-#use HTMLPopUp;
+use HTMLPopUp;
 
-$DEBUG = 1;
 
 
 # create a Link to a VC file and its line number

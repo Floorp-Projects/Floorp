@@ -2,9 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:10:43 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:24:32 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
 
@@ -58,6 +58,8 @@ use Time::Local;
 # Tinderbox libraries
 
 use lib '#tinder_libdir#';
+
+use TinderConfig;
 use Utils;
 use TreeData;
 use FileStructure;
@@ -71,7 +73,7 @@ $VERSION = '#tinder_version#';
 
 # the default number of hours shown on the status page
 
-$DEFAULT_DISPLAY_HOURS = 6;
+$DEFAULT_DISPLAY_HOURS = $TinderConfig::DEFAULT_DISPLAY_HOURS || (6);
 
 
 # localtime(2000 * 1000 * 1000) = 'Tue May 17 23:33:20 2033'
@@ -255,18 +257,33 @@ sub parse_args {
   # check that we are given valid arguments
 
   ( ($start_time > 0) && ($start_time < $LARGEST_VALID_TIME) ) ||
-    die("Can not prepare web page with start time: $start_time. \n");
+    die("Can not prepare web page with start_time: $start_time. \n");
   
   ( ($end_time > 0) && ($end_time < $LARGEST_VALID_TIME) ) ||
-    die("Can not prepare web page with start time: $start_time. \n");
+    die("Can not prepare web page with end_time: $end_time. \n");
     
+  {
+    my ($display_hours) = ($start_time - $end_time) / (60 * 60);
+
+    ($display_hours > 0) ||
+      die("start_time must be greater then end_time.".
+          " start_time: $start_time, end_time: $end_time. \n");
+    
+    ($display_hours < 1000) ||
+      die("Number of hours to display is too large. \n");
+   }
+
   ( ($daemon_mode) || ($tree) ) ||
-    die("If you are running in non daemon mode you must specify a tree\n");
+    die("If you are not running in daemon mode you must specify a tree\n");
   
   if ($tree) {
     (TreeData::tree_exists($tree)) ||
       die("tree: $tree does not exist\n");    
   }
+
+  # This prevents us from 'loosing' builds between the spaces of the
+  # grid and would cause our rendering algorithm to get off by one
+  # build creating problems in the whole grid display.
 
   ($table_spacing >= $TinderDB::MIN_TABLE_SPACING ) ||
     die("You may not specify a table spacing of less then ".
@@ -513,9 +530,10 @@ sub cgi_main {
 sub write_stats {
 
  my ($end_time) = time();
- my ($run_time) = $end_time - $TIME;
+ my ($run_time) = sprintf ("%.2f",         # round
+                           ($end_time - $TIME)/60);
 
-# print "run_time: $run_time num_updates: $NUM_UPDATES\n";
+ print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
 
  return ;
 }

@@ -11,9 +11,9 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:11:37 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:24:04 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
 
@@ -49,6 +49,7 @@ use File::stat;
 # Tinderbox libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use TreeData;
 use HTMLPopUp;
 use VCDisplay;
@@ -271,9 +272,10 @@ sub set_filenames{
 
   %FILE = (
 
-           'binaryfile' => (FileStructure::get_filename($tree, 'build_bin_dir')gzip.
-                            "/$main::UID.html"),
-               
+           # there is also a binaryfile created in assemble_files()
+           # which gets created using information from get_filename()
+           # and $TINDERBOX{}
+
            'full-log' => (FileStructure::get_filename($tree, 'full-log').
                           "/$main::UID.html"),
            
@@ -372,10 +374,10 @@ sub parse_tinderbox_vars {
 
   while(defined($line = <>)) {
     
-    if ( $line =~ m/^\s*tinderbox\:\s*([^:]*)\:\s*(.*)\n$/ ) {
+    if ( $line =~ m/^\s*tinderbox\s*:\s*([a-zA-Z0-9-_]*)\s*:\s*(.*)\n$/ ) {
       $TINDERBOX{$1} .= $2;
       $found_vars= 1;
-    } elsif ( $line =~ m/^tinderbox\:\s*END\b/ ) {
+    } elsif ( $line =~ m/^tinderbox\s*:\s*END\b/ ) {
       return ;
     } elsif ($found_vars) {
       return ;
@@ -1026,7 +1028,7 @@ sub assemble_files {
   $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
   
   if( 
-     ($TINDERBOX{binaryname}) && 
+     ($TINDERBOX{'binaryname'}) && 
      (!(-z $TMP_FILE{'binaryfile'})) 
     ) {
     my $bin_dir = FileStructure::get_filename($tree, 'build_bin_dir');
@@ -1034,8 +1036,8 @@ sub assemble_files {
     
     mkdir_R($bin_dir);
     
-    $TINDERBOX{binaryname} = File::Basename::basename($TINDERBOX{binaryname});
-    my $outfile = "$bin_dir/".$TINDERBOX{binaryname};
+    $TINDERBOX{'binaryname'} = File::Basename::basename($TINDERBOX{'binaryname'});
+    my $outfile = "$bin_dir/".$TINDERBOX{'binaryname'};
 
     my (@cmd) = (
                  @UUDECODE,
@@ -1085,7 +1087,7 @@ sub write_update_file {
 
   Persistence::save_structure( 
                               [\%TINDERBOX],
-                              ['build_record'],
+                              ['record'],
                               $tmp_update_file,
                              );
                                

@@ -2,9 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:10:43 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:23:50 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 
 
@@ -36,6 +36,7 @@
 # Tinderbox libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use TreeData;
 use FileStructure;
 use HTMLPopUp;

@@ -8,9 +8,9 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:58 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:26:05 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
 
@@ -187,13 +187,19 @@ sub treegroup_func_page    {
 
   my ($group_func_summary_page) = $header.$body.$footer;
 
-  my ($base_name) = "$groupname.$func.$extension";
-  my ($file_name) = "$FileStructure::TINDERBOX_DIR/$base_name";
+  if ($group_func_summary_page) {
 
-  main::overwrite_file ($file_name, $group_func_summary_page);
+    # if we do not have a build section then the page may be empty as
+    # there is no data for any function
 
-  my ($link) = ("\t\t<LI><a href=\"$base_name\">".
-                "$func</a>\n");
+    my ($base_name) = "$groupname.$func.$extension";
+    my ($file_name) = "$FileStructure::TINDERBOX_DIR/$base_name";
+    
+    main::overwrite_file ($file_name, $group_func_summary_page);
+    
+    my ($link) = ("\t\t<LI><a href=\"$base_name\">".
+                  "$func</a>\n");
+  }
 
   return $link;
 }
@@ -253,11 +259,13 @@ sub create_global_index {
       treegroup_func_page($summary_ref, $func, $groupname);
     }
 
-    push @func_summary_links, "\t</UL>\n\n";
+      push @func_summary_links, "\t</UL>\n\n";
   }
 
   
-  $out = <<EOF;
+  $out .= <<EOF;
+
+<h3>Tinderbox Pages sorted by Project</h3>
 Select one of the following trees:
 
 	<UL>
@@ -272,10 +280,18 @@ Administer one of the following trees:
 
 	</UL>
 
+EOF
+
+  if ( %{ $summary_ref } ) {
+    $out .= <<EOF;
+
+<h3>Project Managements Summary Pages</h3>
+
 @func_summary_links
 
 
 EOF
+  }
 
   my $global_index_file = "$FileStructure::TINDERBOX_DIR/index.html";
   

@@ -15,9 +15,9 @@
 
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:15:56 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:19:57 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
 
@@ -68,7 +68,8 @@ $VERSION = '#tinder_version#';
 sub page_header {
   my (%args) = @_;
 
-  my ($html_time) = timeHTML($main::TIME);
+  my ($html_time) = $main::LOCALTIME;
+  $html_time =~ s/:[^:]+$//;
   
   my ($header) = '';
 

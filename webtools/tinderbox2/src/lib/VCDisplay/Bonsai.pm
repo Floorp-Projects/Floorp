@@ -4,9 +4,9 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:15:23 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:19:08 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
 
@@ -63,13 +63,17 @@ $VERSION = '#tinder_version#';
 
 
 
-$DEBUG = 1;
-
 # this is how we create a URL to the various CGI programs.
 
-$CVSQUERY = "../bonsai/cvsquery.cgi";
-$CVSBLAME = "../bonsai/cvsblame.cgi";
-$CVSGUESS = "../bonsai/cvsguess.cgi";
+# If you your using VCDisplay:Bonsai we need to know how to make HMTL
+# to point o the bonsai CGI programs.
+
+$BONSAI_URL = ( $TinderConfig::BONSAI_URL || 
+                "../bonsai");
+
+$CVSQUERY = $BONSAI_URL."/cvsquery.cgi";
+$CVSBLAME = $BONSAI_URL."/cvsblame.cgi";
+$CVSGUESS = $BONSAI_URL."/cvsguess.cgi";
   
 
 # create a Link to a VC file and its line number

@@ -5,9 +5,9 @@
 # current time.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:30 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:18:41 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
 #
@@ -53,8 +53,9 @@ use HTMLPopUp;
 # make it easy to change.
 
 
-$TINDERBOX_DIR="/tmp/tinderbox";
-$TINDERBOX_DIR="/web/htdocs/gci/iname-raven/build-group/tinderbox";
+$TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
+		   "/usr/apache/cgibin/webtools/tinderbox");
+
 
 @TREES = ('Project_A', 'Project_B', 'Project_C');
 

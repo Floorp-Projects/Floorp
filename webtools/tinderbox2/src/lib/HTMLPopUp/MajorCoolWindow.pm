@@ -12,9 +12,9 @@
 #	 http://www.webreference.com/dhtml/hiermenus/
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:15:56 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:19:43 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
 
@@ -79,8 +79,9 @@ $VERSION = '#tinder_version#';
 sub page_header {
   my (%args) = @_;
 
-  my ($html_time) = timeHTML($main::TIME);
-  
+  my ($html_time) = $main::LOCALTIME;
+  $html_time =~ s/:[^:]+$//;
+
   my ($header) = '';
 
   my ($refresh) = '';
@@ -370,7 +371,7 @@ sub Link {
     # set the defaults
 
     $args{'windowtitle'} = $args{'windowtitle'} || 
-      $HTML::DEFAULT_POPUP_TITLE;
+      $DEFAULT_POPUP_TITLE;
 
 
     # These characters inside the popupwindow will confuse my popup
@@ -390,11 +391,11 @@ sub Link {
     # number_of_lines2hight conversion factors, but it is hard to
     # determine what a HTML row is.
 
-    $args{'windowheight'} = $args{'windowheight'} || 
-      $HTML::DEFAULT_POPUP_HEIGHT;
+    $args{'windowheight'} = ($args{'windowheight'} || 
+                             $DEFAULT_POPUP_HEIGHT);
 
-    $args{'windowwidth'} = $args{'windowwidth'} ||
-      $HTML::DEFAULT_POPUP_WIDTH;
+    $args{'windowwidth'} = ($args{'windowwidth'} ||
+                            $DEFAULT_POPUP_WIDTH);
 
     #
 

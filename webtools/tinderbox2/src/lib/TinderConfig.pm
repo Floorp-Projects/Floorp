@@ -4,9 +4,9 @@
 
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/07/24 23:52:24 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:26:22 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -41,16 +41,19 @@ package TinderConfig;
 # the url to the tinderbox server binary directory
 
 $URL_BIN =  "http://tinderbox.mozilla.org/cgibin";
+$URL_BIN = "http://raven.iname.com:10080/forms/tinderbox/bin";
 
 
 # the url to the tinderbox server HTML directory
 
 $URL_HTML = "http://tinderbox.mozilla.org/";
+$URL_HTML = "http://raven.iname.com:10080/build-group/tinderbox";
 
 # the full path name tinderbox will use to access the tinderbox
-# servers root data directory
+# servers root data directory where the html will be written.
 
 $TINDERBOX_DIR = "/usr/apache/cgibin/webtools/tinderbox";
+$TINDERBOX_DIR = "/web/htdocs/gci/iname-raven/build-group/tinderbox";
 
 
 # where errors are loged
@@ -59,6 +62,7 @@ $ERROR_LOG = "/var/log/tinderbox/log";
   
 # where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock";
+$LOCK_FILE = "/web/htdocs/gci/iname-raven/build-group/tinderbox/tinderd.lock";
 
 # the time between auto refreshes for all pages in seconds.
   

@@ -6,9 +6,9 @@
 # partitions and this will require making get_filename() less regular
 # then we have defined it here.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:58 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:25:22 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/FileStructure.pm,v $ 
 # $Name:  $ 
 
@@ -66,11 +66,15 @@ $VERSION = '#tinder_version#';
 
 # the url to the tinderbox server binary directory
 
-$URL_BIN = "http://cvs-mirror.mozilla.org/webtools/tinderbox";
-$URL_BIN = "http://raven.iname.com:10080/forms/tinderbox/bin";
+$URL_BIN = ($TinderConfig::URL_BIN ||
+            "http://tinderbox.mozilla.org/cgibin");
 
-$URL_HTML = "http://cvs-mirror.mozilla.org/webtools/tinderbox";
-$URL_HTML = "http://raven.iname.com:10080/build-group/tinderbox";
+
+# the url to the tinderbox server HTML directory
+
+$URL_HTML = ($TinderConfig::URL_HTML ||
+             "http://tinderbox.mozilla.org/");
+
 
 %URLS = (
 
@@ -95,8 +99,8 @@ $URL_HTML = "http://raven.iname.com:10080/build-group/tinderbox";
 # the full path name tinderbox will use to access the tinderbox
 # servers root data directory
 
-$TINDERBOX_DIR = "/usr/apache/cgibin/webtools/tinderbox";
-$TINDERBOX_DIR = "/web/htdocs/gci/iname-raven/build-group/tinderbox";
+$TINDERBOX_DIR = ($TinderConfig::TINDERBOX_DIR || 
+                  "/usr/apache/cgibin/webtools/tinderbox");
 
 # The lookup for where different file/directories are stored on the
 # filesystem.  Local system administrator may need to put different
@@ -110,8 +114,6 @@ sub get_filename {
     die("tree: $tree does not exist\n");    
 
   my ($tree_dir) = "$TINDERBOX_DIR/$tree";
-  my ($tinder_url) = "http://raven.iname.com:10080/build-group/tinderbox";
-
 
   # all the file names this program uses appear below
 
@@ -141,7 +143,7 @@ sub get_filename {
 
            'tree_HTML' => $tree_dir,
 
-           'tree_URL' => "$tinder_url/$tree",
+           'tree_URL' => "$URL_HTML/$tree",
 
            # where the database files are stored on disk
 
@@ -149,7 +151,7 @@ sub get_filename {
 
            # header data files
 
-           'TinderDB_headerDir'=> "$tree_dir/h",
+           'TinderHeader_Dir'=> "$tree_dir/h",
 
            # the set of builds which are not displayed by default.
 

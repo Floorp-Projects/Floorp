@@ -8,9 +8,9 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:13:59 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/08/11 00:27:27 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 
 
@@ -41,11 +41,20 @@
 
 package VCDisplay;
 
+use Utils;
 
 
 # pick the VCDisplay module that you wish to use. 
 
-#use VCDisplay::None;
-use VCDisplay::Bonsai;
+$IMPLS = ( ($TinderConfig::VCDisplayImpl) ||
+           (
+            #'VCDisplay::None',
+            'VCDisplay::Bonsai',
+           )
+         );
+
+main::require_modules($IMPLS);
+
+$DEBUG = 1;
 
 1;
