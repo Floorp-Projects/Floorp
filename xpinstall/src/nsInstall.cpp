@@ -152,7 +152,7 @@ nsInstallInfo::MakeTempFile(nsString aURL, nsString& tempFileString)
     // netlib could do this for me: given a url, give me path on the users
     // if it is local otherwise return null to indicate that I need to 
     // create a tempfile.
-    if (aURL.Compare(nsString("file://"), false, 7) == 0)
+    if (aURL.Compare(nsString("file://").GetUnicode(), false, 7) == 0)
     {       
         tempFileString = nsFileSpec(nsFileURL(aURL)).GetCString();
     }
@@ -1125,12 +1125,12 @@ nsInstall::GetQualifiedRegName(const nsString& name )
     nsString comm("=COMM=/");
     nsString usr ("=USER=/");
 
-    if ( name.Compare(comm, PR_TRUE, comm.Length()) == 0 ) 
+    if ( name.Compare(comm, PR_TRUE) == 0 ) 
     {
         qualifiedRegName = new nsString( name );
         qualifiedRegName->Cut( 0, comm.Length() );
     }
-    else if ( name.Compare(usr, PR_TRUE, usr.Length()) == 0 ) 
+    else if ( name.Compare(usr, PR_TRUE) == 0 ) 
     {
         qualifiedRegName = new nsString( name );
         qualifiedRegName->Cut( 0, usr.Length() );
@@ -1272,25 +1272,25 @@ nsInstall::CleanUp(void)
 void       
 nsInstall::GetJarFileLocation(nsString& aFile)
 {
-    aFile.SetString( mJarFileLocation );
+    aFile=mJarFileLocation;
 }
 
 void       
 nsInstall::SetJarFileLocation(const nsString& aFile)
 {
-    mJarFileLocation.SetString(aFile);
+    mJarFileLocation=aFile;
 }
 
 void       
 nsInstall::GetInstallArguments(nsString& args)
 {
-    args.SetString( mInstallArguments );
+    args=mInstallArguments;
 }
 
 void       
 nsInstall::SetInstallArguments(const nsString& args)
 {
-    mInstallArguments.SetString(args);
+    mInstallArguments=args;
 }
 
 
