@@ -264,9 +264,11 @@ sub Checkout()
 	}
 	elsif ($main::pull{runtime})
 	{
-		$session->checkout("mozilla/build")							|| print "checkout failure";
+		$session->checkout("mozilla/build/mac")						|| print "checkout failure";
 		$session->checkout("mozilla/lib/mac/InterfaceLib")			|| print "checkout failure";
-		$session->checkout("mozilla/config")						|| print "checkout failure";
+		$session->checkout("mozilla/config/mac")					|| print "checkout failure";
+		$session->checkout("mozilla/gc")							|| print "checkout failure";
+		$session->checkout("mozilla/lib/mac/NSStartup")				|| print "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSStdLib")				|| print "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSRuntime")				|| print "checkout failure";
 		$session->checkout("mozilla/lib/mac/MoreFiles")				|| print "checkout failure";
