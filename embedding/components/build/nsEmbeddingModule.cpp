@@ -34,3 +34,13 @@ static nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE("embedcomponents", components)
+
+#ifdef XP_WIN32
+  //in addition to returning a version number for this module,
+  //this also provides a convenient hook for the preloader
+  //to keep (some if not all) of the module resident.
+extern "C" __declspec(dllexport) float GetVersionNumber(void) {
+  return 1.0;
+}
+#endif
+
