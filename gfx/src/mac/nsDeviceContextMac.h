@@ -83,6 +83,7 @@ public:
   NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
   NS_IMETHOD CheckFontExistence(const char * aFontName);
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD GetDepth(PRUint32& aDepth);
 
 protected:
   ~nsDeviceContextMac();
