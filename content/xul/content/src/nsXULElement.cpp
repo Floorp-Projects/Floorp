@@ -4632,7 +4632,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 scopeObject,
                                 principal,
                                 urlspec,
-                                aLineNo,
+                                PRUint32(aLineNo),
                                 mLangVersion,
                                 (void**) &mScriptObject);
 
