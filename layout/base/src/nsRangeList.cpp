@@ -2166,17 +2166,37 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
       if (!found)
         return NS_ERROR_FAILURE;
     }
-  } 
-  if (FetchAnchorNode() == startNode.get() && FetchFocusNode() == endNode.get() &&
-      FetchAnchorOffset() == startOffset && FetchFocusOffset() == endOffset)
-  {
-    *aFixupState = PR_FALSE;
-    return NS_ERROR_FAILURE;//nothing to do
   }
+  if (*aDir == eDirNext)
+  {
+    if (FetchAnchorNode() == startNode.get() && FetchFocusNode() == endNode.get() &&
+      FetchAnchorOffset() == startOffset && FetchFocusOffset() == endOffset)
+    {
+      *aFixupState = PR_FALSE;
+      return NS_ERROR_FAILURE;//nothing to do
+    }
+  }
+  else
+  {
+    if (FetchAnchorNode() == endNode.get() && FetchFocusNode() == startNode.get() &&
+      FetchAnchorOffset() == endOffset && FetchFocusOffset() == startOffset)
+    {
+      *aFixupState = PR_FALSE;
+      return NS_ERROR_FAILURE;//nothing to do
+    }
+  }
+  if (mFixupState && !dirtyend && !dirtystart)//no mor fixup! all bets off
+  {
+    dirtystart = PR_TRUE;//force a reset of anchor positions
+    dirtystart = PR_TRUE;
+    *aFixupState = PR_TRUE;//redraw all selection here
+    mFixupState = PR_FALSE;//no more fixup for next time
+  }
+  else
   if ((dirtystart || dirtyend) && *aDir != mDirection) //fixup took place but new direction all bets are off
   {
     *aFixupState = PR_TRUE;
-    mFixupState = PR_FALSE;
+    //mFixupState = PR_FALSE;
   }
   else
   if (dirtystart && (FetchAnchorNode() != startNode.get() || FetchAnchorOffset() != startOffset))
@@ -2192,7 +2212,7 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
   }
   else
   {
-    mFixupState = PR_FALSE;
+    mFixupState = dirtystart || dirtyend;
     *aFixupState = PR_FALSE;
   }
   if (dirtystart || dirtyend){
