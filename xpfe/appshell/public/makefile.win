@@ -30,6 +30,7 @@ EXPORTS =                         \
         nsIXULWindowCallbacks.h   \
         nsIDOMXPConnectFactory.h  \
         nsFileLocations.h         \
+	nsIGlobalHistory.h	  \
         nsIFileLocator.h          \
         $(NULL)
 
