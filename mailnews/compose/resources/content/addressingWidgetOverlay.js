@@ -76,6 +76,8 @@ function Recipients2CompFields(msgCompFields)
 	    while ((inputField = awGetInputElement(i)))
 	    {
 	    	fieldValue = inputField.value;
+	    	fieldValue2 = inputField.getAttribute("value");
+dump("AW: inputField=" + inputField + ", fieldValue=" + fieldValue + ", fieldValue2=" + fieldValue2 + "\n");
 	    	if (fieldValue != "")
 	    	{
 			    switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
@@ -109,8 +111,7 @@ function CompFields2Recipients(msgCompFields, msgType)
 	{
 	    var treeChildren = document.getElementById('addressWidgetBody');
 	    var newTreeChildrenNode = treeChildren.cloneNode(false);
-	    var templateNode = treeChildren.firstChild;  // doesn't work!
-//	    var templateNode = awGetTreeItem(1);	    
+	    var templateNode = treeChildren.firstChild;
 		
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply", newTreeChildrenNode, templateNode);
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to", newTreeChildrenNode, templateNode);
@@ -128,8 +129,7 @@ function CompFields2Recipients(msgCompFields, msgType)
 		    var msgComposeType = Components.interfaces.nsIMsgCompType;
 		    if (msgType == msgComposeType.New)
 		        _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
-	        var parent = treeChildren.parentNode;     // doesn't work!
-//	        var parent = document.getElementById('addressingWidgetTree')
+	        var parent = treeChildren.parentNode;
 	        parent.replaceChild(newTreeChildrenNode, treeChildren);
             setTimeout("awFinishCopyNodes();", 0);
         }
@@ -150,7 +150,10 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     var input = newNode.getElementsByTagName(awInputElementName());
     if ( input && input.length == 1 )
     {
+		//We need to set the value using both setAttribute and .value else we will
+		// loose the content when the field is not visible. See bug 37435
 	    input[0].setAttribute("value", inputValue);
+	    input[0].value = inputValue;
 	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
 	}
     var select = newNode.getElementsByTagName(awSelectElementName());
@@ -246,7 +249,10 @@ function awAppendNewRow(setFocus)
         var input = newNode.getElementsByTagName(awInputElementName());
         if ( input && input.length == 1 )
         {
-    	    input[0].setAttribute("value", "");
+			//We need to set the value using both setAttribute and .value else we will
+			// loose the content when the field is not visible. See bug 37435
+   			input[0].setAttribute("value", "");
+   			input[0].value = "";
     	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
     	}
         var select = newNode.getElementsByTagName(awSelectElementName());
