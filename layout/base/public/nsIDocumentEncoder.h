@@ -51,19 +51,27 @@ class nsIDocumentEncoder : public nsISupports
 {
 public:
 
+  /**
+   * Output methods flag bits:
+   */
+  enum {
+    OutputSelectionOnly = 1,
+    OutputFormatted     = 2,
+    OutputNoDoctype     = 4,
+    OutputBodyOnly      = 8
+  };
+  
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
 
   /**
    *  Initialize with a pointer to the document and the mime type.
-   *  
    */
-  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, const nsString& aMimeType) = 0;
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, const nsString& aMimeType, PRUint32 flags) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the
    *  selection is used for encoding, otherwise the entire
    *  document is encoded.
-   *  
    */
   NS_IMETHOD SetSelection(nsIDOMSelection* aSelection) = 0;
 
@@ -75,9 +83,13 @@ public:
    *  character set when encoding the document.
    *
    *  Possible result codes: NS_ERROR_NO_CHARSET_CONVERTER
-   *  
    */
   NS_IMETHOD SetCharset(const nsString& aCharset) = 0;
+
+  /**
+   *  Set a wrap column.  This may have no effect in some types of encoders.
+   */
+  NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
 
   /**
    *  The document is encoded, the result is sent to the 
@@ -85,12 +97,13 @@ public:
    * 
    *  Possible result codes are passing along whatever stream errors
    *  might have been encountered.
-   *  
    */
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream) = 0;
   NS_IMETHOD EncodeToString(nsString& aOutputString) = 0;
 };
 
+// XXXXXXXXXXXXXXXX nsITextEncoder is going away! XXXXXXXXXXXXXXXXXXXXXX
+#ifdef USE_OBSOLETE_TEXT_ENCODER
 // Example of a output service for a particular encoder.
 // The text encoder handles XIF, HTML, and plaintext.
 class nsITextEncoder : public nsIDocumentEncoder
@@ -104,6 +117,7 @@ public:
   NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
   NS_IMETHOD AddHeader(PRBool aYes) = 0;
 };
+#endif /* USE_OBSOLETE_TEXT_ENCODER */
 
 
 #endif /* nsIDocumentEncoder_h__ */

@@ -25,6 +25,7 @@
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsITableEditor.h"
+#include "nsIDocumentEncoder.h" // for output flags
 
 #include "nsEditorCID.h"
 
@@ -86,13 +87,13 @@ static nsresult PrintEditorOutput(nsIEditor* editor, PRInt32 aCommandID)
 	nsString		outString;
 	char*			cString;
 	nsString		formatString;
-    PRUint32        flags;
+    PRUint32        flags = 0;
 	
 	switch (aCommandID)
 	{
       case VIEWER_DISPLAYTEXT:
         formatString = "text/plain";
-        flags = nsIEditor::EditorOutputFormatted;
+        flags = nsIDocumentEncoder::OutputFormatted;
         editor->OutputToString(outString, formatString, flags);
         break;
         

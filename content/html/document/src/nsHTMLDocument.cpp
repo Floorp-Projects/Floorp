@@ -469,7 +469,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
 #ifdef rickgdebug
     nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
-    rv = NS_New_HTML_ContentSinkStream(&sink,&outString);
+    rv = NS_New_HTML_ContentSinkStream(&sink,&outString,0);
 #else
     NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
     aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);

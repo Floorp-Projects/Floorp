@@ -38,7 +38,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCTextEncoderCID, NS_TEXT_ENCODER_CID);
 
-class nsTextEncoder : public nsITextEncoder
+class nsTextEncoder : public nsIDocumentEncoder
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
@@ -47,30 +47,32 @@ public:
   virtual ~nsTextEncoder();
 
   NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument,
-                  const nsString& aMimeType);
+                  const nsString& aMimeType, PRUint32 aFlags);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
 
-  // Inherited methods from nsIDocument 
+  // Inherited methods from nsIDocumentEncoder
   NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
+  NS_IMETHOD SetWrapColumn(PRUint32 aWC);
   NS_IMETHOD SetCharset(const nsString& aCharset);
+
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
   NS_IMETHOD EncodeToString(nsString& aOutputString);
 
-  NS_IMETHOD PrettyPrint(PRBool aYes);
-  NS_IMETHOD SetWrapColumn(PRUint32 aWC);
-  NS_IMETHOD AddHeader(PRBool aYes);
+protected:
+  // Local methods to the text encoder -- used to be in nsITextEncoder,
+  // but that interface is obsolete now.
+  //NS_IMETHOD PrettyPrint(PRBool aYes);
+  //NS_IMETHOD AddHeader(PRBool aYes);
 
-private:
   nsIDocument*      mDocument;
   nsIDOMSelection*  mSelection;
   nsIPresShell*     mPresShell;
   nsString          mMimeType;
   nsString          mCharset;
-  PRBool            mPrettyPrint;
+  PRUint32          mFlags;
   PRUint32          mWrapColumn;
-  PRBool            mAddHeader;
 };
 
 
@@ -83,7 +85,6 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
   mDocument = 0;
   mSelection = 0;
   mPresShell = 0;
-  mAddHeader = PR_FALSE;
 }
 
 nsTextEncoder::~nsTextEncoder()
@@ -95,7 +96,7 @@ nsTextEncoder::~nsTextEncoder()
 
 NS_IMETHODIMP
 nsTextEncoder::Init(nsIPresShell* aPresShell, nsIDocument* aDocument,
-                    const nsString& aMimeType)
+                    const nsString& aMimeType, PRUint32 aFlags)
 {
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
@@ -108,6 +109,9 @@ nsTextEncoder::Init(nsIPresShell* aPresShell, nsIDocument* aDocument,
   mPresShell = aPresShell;
   NS_ADDREF(aPresShell);
   mMimeType = aMimeType;
+
+  mFlags = aFlags;
+
   return NS_OK;
 }
 
@@ -134,23 +138,9 @@ nsresult nsTextEncoder::QueryInterface(REFNSIID aIID,
 }
 
 NS_IMETHODIMP
-nsTextEncoder::PrettyPrint(PRBool aYes)
-{
-  mPrettyPrint = aYes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsTextEncoder::SetWrapColumn(PRUint32 aWC)
 {
   mWrapColumn = aWC;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextEncoder::AddHeader(PRBool aYes)
-{
-  mAddHeader = aYes;
   return NS_OK;
 }
 
@@ -209,13 +199,11 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
         nsIHTMLContentSink* sink = nsnull;
 
         if (mMimeType == "text/html")
-          rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString,
-                                             PR_FALSE,
-                                             mSelection ? PR_FALSE : mAddHeader );
+          rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString, mFlags);
 
         else  // default to text/plain
           rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString,
-                                           mWrapColumn, mPrettyPrint);
+                                           mWrapColumn, mFlags);
 
         if (sink && NS_SUCCEEDED(rv))
         {
@@ -270,17 +258,15 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
                                               kCParserIID, 
                                               (void **)&parser);
 
-      if (NS_OK == rv) {
+      if (NS_SUCCEEDED(rv)) {
         nsIHTMLContentSink* sink = nsnull;
 
         if (mMimeType == "text/html")
-          rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset,
-                                             PR_FALSE,
-                                             mSelection ? PR_FALSE : mAddHeader);
+          rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset, mFlags);
 
         else
           rv = NS_New_HTMLToTXT_SinkStream(&sink, aStream, charset,
-                                           mWrapColumn, mPrettyPrint);
+                                           mWrapColumn, mFlags);
   
       	if (sink && NS_SUCCEEDED(rv))
         {

@@ -27,7 +27,7 @@
 #include "nsIMessage.h"		//temporary!
 #include "nsMsgQuote.h"
 #include "nsIPref.h"
-#include "nsIEditor.h"    // for output flags
+#include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
@@ -367,7 +367,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 			format = "text/html";
 		else
     {
-      flags = nsIEditor::EditorOutputFormatted;
+      flags = nsIDocumentEncoder::OutputFormatted;
 			format = "text/plain";
     }
     m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
@@ -723,7 +723,7 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
   {
     nsHTMLToTXTSinkStream     *sink = nsnull;
 
-    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, PR_TRUE);
+    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, 0, 0);
     if (sink && NS_SUCCEEDED(rv)) 
     {  
         sink->DoFragment(PR_TRUE);

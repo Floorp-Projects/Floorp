@@ -33,6 +33,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIEditorMailSupport.h"
+#include "nsIDocumentEncoder.h"
 
 // for repainting hack only
 #include "nsIView.h"
@@ -356,7 +357,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           else
             format = "text/html";
           res = mEditor->OutputToString(output, format,
-                                        nsEditor::EditorOutputFormatted);
+                                        nsIDocumentEncoder::OutputFormatted);
           if (NS_SUCCEEDED(res))
           {
             char* buf = output.ToNewCString();

@@ -224,7 +224,7 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToText(const nsString & aFromS
 
   nsIHTMLContentSink* sink = nsnull;
 
-  rv = NS_New_HTMLToTXT_SinkStream(&sink,&aToStr);
+  rv = NS_New_HTMLToTXT_SinkStream(&sink, &aToStr, 0);
 
   if (NS_OK == rv) {
     parser->SetContentSink(sink);
@@ -262,7 +262,7 @@ NS_IMETHODIMP nsXIFFormatConverter::ConvertFromXIFToHTML(const nsString & aFromS
 
   nsIHTMLContentSink* sink = nsnull;
 
-  rv = NS_New_HTML_ContentSinkStream(&sink,&aToStr);
+  rv = NS_New_HTML_ContentSinkStream(&sink, &aToStr, 0);
 
   if (NS_OK == rv) {
     parser->SetContentSink(sink);

@@ -70,8 +70,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
                           nsString* aOutString,
                           const nsString* aCharsetOverride,
-                          PRBool aDoFormat, 
-                          PRBool aDoHeader);
+                          PRUint32 aFlags);
 
   /**
    * virtual destructor
@@ -146,7 +145,8 @@ protected:
 
 protected:
     nsIOutputStream* mStream;
-    nsString*        mString;
+    nsString  mStreamBuffer;
+    nsString* mString;
 
     int       mTabLevel;
 
@@ -159,6 +159,7 @@ protected:
 
     PRBool    mDoFormat;
     PRBool    mDoHeader;
+    PRBool    mBodyOnly;;
 
     char*     mBuffer;
     PRInt32   mBufferLength;  // The length of the data in the buffer
@@ -172,19 +173,12 @@ protected:
 extern NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                               nsIOutputStream* aOutStream,
-                              const nsString* aCharsetOverride=nsnull,
-                              PRBool aDoFormat = PR_FALSE,
-                              PRBool aDoHeader = PR_FALSE);
+                              const nsString* aCharsetOverride,
+                              PRUint32 aFlags);
 
 extern NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                              nsString* aOutString, 
-                              PRBool aDoFormat = PR_FALSE,
-                              PRBool aDoHeader = PR_FALSE);
-
+                              nsString* aOutString, PRUint32 aFlags);
 
 #endif
-
-
-
 

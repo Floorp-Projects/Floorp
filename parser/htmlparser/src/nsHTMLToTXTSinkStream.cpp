@@ -34,7 +34,7 @@
 #include "nsHTMLEntities.h"
 #include "nsXIFDTD.h"
 #include "prprf.h"         // For PR_snprintf()
-
+#include "nsIDocumentEncoder.h"    // for output flags
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
@@ -160,16 +160,15 @@ NS_HTMLPARS nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsIOutputStream* aStream,
                             const nsString* aCharsetOverride,
-                            PRUint32 aWrapColumn,
-                            PRBool aPrettyPrint)
+                            PRUint32 aWrapColumn, PRUint32 aFlags)
 {
   NS_ASSERTION(aStream != nsnull, "a valid stream is required");
-  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(aStream, nsnull);
+  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(aStream, nsnull,
+                                                        aFlags);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetWrapColumn(aWrapColumn);
-  it->DoPrettyPrint(aPrettyPrint);
   if (aCharsetOverride != nsnull)
     it->SetCharsetOverride(aCharsetOverride);
   return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
@@ -185,16 +184,15 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 NS_HTMLPARS nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsString* aString,
-                            PRUint32 aWrapColumn,
-                            PRBool aPrettyPrint)
+                            PRUint32 aWrapColumn, PRUint32 aFlags)
 {
   NS_ASSERTION(aString != nsnull, "a valid stream is required");
-  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(nsnull, aString);
+  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(nsnull, aString,
+                                                        aFlags);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetWrapColumn(aWrapColumn);
-  it->DoPrettyPrint(aPrettyPrint);
   nsString ucs2("ucs2");
   it->SetCharsetOverride(&ucs2);
   return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
@@ -211,7 +209,8 @@ static const PRUint32 OLStackSize = 100;
  * @return
  */
 nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream,
-                                             nsString* aString)
+                                             nsString* aString,
+                                             PRUint32 aFlags)
 {
   NS_INIT_REFCNT();
   mStream = aStream;
@@ -224,7 +223,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream,
   mUnicodeEncoder = nsnull;
   mStream = aStream;
   mString = aString;
-  mPrettyPrint = PR_FALSE;
+  mFlags = aFlags;
   mWrapColumn = 72;     // XXX magic number, we expect someone to reset this
 
   // initialize the tag stack to zero:
@@ -754,7 +753,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   {
     if (mColPos != 0)
     {
-      if (mPrettyPrint)
+      if (mFlags & nsIDocumentEncoder::OutputFormatted)
       {
         nsString temp(NS_LINEBREAK);
         Write(temp);
@@ -792,7 +791,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
       mColPos++;
     }
 
-    if (mPrettyPrint)
+    if (mFlags & nsIDocumentEncoder::OutputFormatted)
       WriteWrapped(text);
     else
     {
@@ -813,7 +812,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_br)
   {
-    if (mPrettyPrint)
+    if (mFlags & nsIDocumentEncoder::OutputFormatted)
     {
       nsString temp (NS_LINEBREAK);
       Write(temp);
@@ -825,7 +824,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   // Otherwise, either we're collapsing to minimal text, or we're
   // prettyprinting to mimic the html format, and in neither case
   // does the formatting of the html source help us.
-  else if (mPrettyPrint
+  else if ((mFlags & nsIDocumentEncoder::OutputFormatted)
            && (mTagStackIndex > 0)
            && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre))
   {

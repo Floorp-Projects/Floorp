@@ -329,15 +329,6 @@ public:
   /* ------------ Output methods -------------- */
 
   /**
-   * Output methods flags:
-   */
-  enum {
-    EditorOutputSelectionOnly = 1,
-    EditorOutputFormatted     = 2,
-    EditorOutputNoDoctype     = 4
-  };
-  
-  /**
    * Output methods:
    * aFormatType is a mime type, like text/plain.
    */
