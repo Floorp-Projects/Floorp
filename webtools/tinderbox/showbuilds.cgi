@@ -466,9 +466,9 @@ sub tree_open {
   open(BATCH, "<../bonsai/data/$bonsai_tree/batch-${bid}.pl")
     or print "can't open batch-${bid}.pl<br>";
   while ($line = <BATCH>){ 
-    if ($line =~ /^$::TreeOpen = '(\d+)';/) {
+    if ($line =~ /^\$::TreeOpen = '(\d+)';/) {
         $treestate = $1;
-        break;
+        last;
     }
   }
   close(BATCH);
