@@ -305,6 +305,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                  eReflowReason_Resize);
     kidFrame->WillReflow(*aPresContext);
+    kidFrame->MoveTo(kidMargin.left, aState.y + topMargin);
     status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
     // Did the child fit?
@@ -331,10 +332,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
 
     // Place the child after taking into account it's margin
-    aState.y += topMargin;
-    nsRect kidRect (0, 0, desiredSize.width, desiredSize.height);
-    kidRect.x += kidMargin.left;
-    kidRect.y += aState.y;
+    nsRect kidRect (kidMargin.left, aState.y, desiredSize.width, desiredSize.height);
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
                kidMaxElementSize);
     if (bottomMargin < 0) {

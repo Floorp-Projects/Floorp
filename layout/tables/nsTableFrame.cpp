@@ -1599,6 +1599,9 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Resize);
       kidFrame->WillReflow(*aPresContext);
+      nscoord x = aState.leftInset + kidMargin.left;
+      nscoord y = aState.topInset + aState.y + topMargin;
+      kidFrame->MoveTo(x, y);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
       if (nsnull!=desiredSize.maxElementSize)
         desiredSize.maxElementSize->width = desiredSize.width;
@@ -1620,9 +1623,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
 
       // Place the child after taking into account it's margin
       aState.y += topMargin;
-      nsRect kidRect (0, 0, desiredSize.width, desiredSize.height);
-      kidRect.x += aState.leftInset + kidMargin.left;
-      kidRect.y += aState.topInset + aState.y;
+      nsRect kidRect (x, y, desiredSize.width, desiredSize.height);
       if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
           NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
           NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
