@@ -71,7 +71,7 @@
 
         <rule>
           <treechildren flex="1">
-            <treeitem uri="..." persist="open"
+            <treeitem uri="..." persist="open" class="treeitem-bookmark"
               web:status="rdf:http://home.netscape.com/WEB-rdf#status"
               rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
               loading="rdf:http://home.netscape.com/NC-rdf#loading">
