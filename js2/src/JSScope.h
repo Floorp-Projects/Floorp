@@ -55,7 +55,7 @@ public:
      * @param id identifier to define
      * @param value optional value to associate with id
      */
-    virtual void defineValue(JSScope* start, JSIndentifier* id, JSObject* value = JSUNDEFINED) = 0;
+    virtual void defineValue(JSScope* start, JSIdentifier* id, JSObject* value = JSUNDEFINED) = 0;
 
     /**
      * Looks up a value corresponding to the given identifier starting
