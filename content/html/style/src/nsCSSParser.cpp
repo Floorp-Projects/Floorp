@@ -2203,13 +2203,13 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
 }
 
 // Bits used in determining which background position info we have
-#define BG_CENTER  0
-#define BG_TOP     1
-#define BG_BOTTOM  2
-#define BG_LEFT    4
-#define BG_RIGHT   8
-#define BG_CENTER1 16
-#define BG_CENTER2 32
+#define BG_CENTER  0x01
+#define BG_TOP     0x02
+#define BG_BOTTOM  0x04
+#define BG_LEFT    0x08
+#define BG_RIGHT   0x10
+#define BG_CENTER1 0x20
+#define BG_CENTER2 0x40
 
 // Note: Don't change this table unless you update
 // parseBackgroundPosition!
