@@ -61,6 +61,18 @@ observes {
 	display: none;
 }
 
+menubar {
+	display: none;
+}
+
+menu {
+	display: none;
+}
+
+menuitem {
+	display: none;
+}
+
 progressmeter {
         display:block;
         border: black thin groove;
