@@ -63,6 +63,8 @@ public:
 
   NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
                           nsHTMLValue& aValue) const = 0;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          const nsHTMLValue** aValue) const = 0;
 
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
                                 nsIAtom*& aName) const = 0;
@@ -100,6 +102,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_MAPPED_ATTRIBUTES_IID);
 
   NS_IMETHOD GetAttribute(nsIAtom* aAttrName, nsHTMLValue& aValue) const = 0;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttrName, const nsHTMLValue** aValue) const = 0;
   NS_IMETHOD GetAttributeCount(PRInt32& aCount) const = 0;
 
   NS_IMETHOD Equals(const nsIHTMLMappedAttributes* aAttributes, PRBool& aResult) const = 0;

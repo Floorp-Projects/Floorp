@@ -294,6 +294,8 @@ public:
 
   NS_IMETHOD GetAttribute(nsIAtom* aAttrName,
                           nsHTMLValue& aValue) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttrName,
+                          const nsHTMLValue** aValue) const;
 
   NS_IMETHOD GetAttributeCount(PRInt32& aCount) const;
 
@@ -594,6 +596,25 @@ nsHTMLMappedAttributes::GetAttribute(nsIAtom* aAttrName,
 }
 
 NS_IMETHODIMP
+nsHTMLMappedAttributes::GetAttribute(nsIAtom* aAttrName,
+                                     const nsHTMLValue** aValue) const
+{
+  if (! aAttrName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  const HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &mFirst);
+  if (attr) {
+    *aValue = &attr->mValue;
+    return ((attr->mValue.GetUnit() == eHTMLUnit_Null) ?
+            NS_CONTENT_ATTR_NO_VALUE :
+            NS_CONTENT_ATTR_HAS_VALUE);
+  }
+  *aValue = nsnull;
+  return NS_CONTENT_ATTR_NOT_THERE;
+}
+
+NS_IMETHODIMP
 nsHTMLMappedAttributes::GetAttributeCount(PRInt32& aCount) const
 {
   aCount = mAttrCount;
@@ -794,6 +815,8 @@ public:
 
   NS_IMETHOD GetAttribute(nsIAtom* aAttrName,
                           nsHTMLValue& aValue) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          const nsHTMLValue** aValue) const;
 
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
                                 nsIAtom*& aName) const;
@@ -1284,6 +1307,33 @@ HTMLAttributesImpl::GetAttribute(nsIAtom* aAttrName,
     }
     else {
       aValue.Reset();
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::GetAttribute(nsIAtom* aAttrName,
+                                 const nsHTMLValue** aValue) const
+{
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+
+  if (mMapped) {
+    result = mMapped->GetAttribute(aAttrName, aValue);
+  }
+
+  if (NS_CONTENT_ATTR_NOT_THERE == result) {
+    const HTMLAttribute*  attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
+
+    if (attr) {
+      *aValue = &attr->mValue;
+      result = ((attr->mValue.GetUnit() == eHTMLUnit_Null) ? 
+                NS_CONTENT_ATTR_NO_VALUE : 
+                NS_CONTENT_ATTR_HAS_VALUE);
+    }
+    else {
+      *aValue = nsnull;
     }
   }
 
