@@ -184,7 +184,6 @@ viewer:Components:uconv.shlb
 viewer:Components:uconv.xpt 
 viewer:Components:unicharutil.xpt 
 viewer:Components:uriloader.xpt 
-viewer:Components:urlbarhistory.xpt
 viewer:Components:Wallet.shlb 
 viewer:Components:wallet.xpt 
 viewer:Components:WalletViewers.shlb 

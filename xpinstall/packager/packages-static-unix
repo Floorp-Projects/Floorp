@@ -80,7 +80,6 @@ bin/components/directory.xpt
 bin/components/downloadmanager.xpt
 bin/components/history.xpt
 bin/components/related.xpt
-bin/components/urlbarhistory.xpt
 bin/components/search.xpt
 bin/components/autocomplete.xpt   
 bin/components/appshell.xpt

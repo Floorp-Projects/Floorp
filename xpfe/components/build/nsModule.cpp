@@ -51,7 +51,6 @@
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsGlobalHistory.h"
 #include "nsDocShellCID.h"
-#include "nsUrlbarHistory.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
 #if defined(MOZ_LDAP_XPCOM)
@@ -89,7 +88,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
@@ -165,8 +163,6 @@ static const nsModuleComponentInfo components[] = {
       nsAutoCompleteResultsConstructor},
     { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
       nsAutoCompleteItemConstructor},
-    { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
-      NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY2_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,

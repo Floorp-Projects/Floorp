@@ -93,7 +93,6 @@ bin\components\history.xpt
 bin\components\winhooks.xpt
 bin\components\related.xpt
 bin\components\search.xpt
-bin\components\urlbarhistory.xpt
 bin\components\urlwidgt.xpt
 bin\components\universalchardet.dll
 bin\components\caps.xpt

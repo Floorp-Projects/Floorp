@@ -105,7 +105,6 @@ SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -132,7 +131,6 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../download-manager/src \
   -I$(srcdir)/../history/src       \
 	-I$(srcdir)/../related/src       \
-	-I$(srcdir)/../urlbarhistory/src \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
