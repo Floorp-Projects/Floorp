@@ -678,7 +678,10 @@ nsFileControlFrame::Paint(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsresult rv = nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (NS_FAILED(rv)) return rv;
+  
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 //----------------------------------------------------------------------
