@@ -674,7 +674,8 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
 		// This invariant should be maintained by libmsg when reading/writing the prefs.
 		// We are only supporting online directories whose online delimiter is /
 		// Therefore, the online directory must end in a slash.
-		PR_ASSERT(onlineDir[nsCRT::strlen(onlineDir) - 1] == '/');
+		NS_ASSERTION (onlineDir[nsCRT::strlen(onlineDir) - 1] == '/', 
+                      "online directory not ended with a slash\n");
 #endif
         nsIMAPNamespace *ns = nsnull;
 		rv = hostSessionList->GetNamespaceForMailboxForHost(serverKey,

@@ -835,7 +835,7 @@ PRBool nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
                                  PR_FALSE);
                 if (isImap)
                     server->GetPassword(getter_Copies(passwd));
-                if (!isImap || (isImap && passwd))
+                if (!isImap || (isImap && passwd && *passwd))
                 {
                     nsCOMPtr<nsIUrlListener> urlListener;
                     nsresult rv;
@@ -863,7 +863,7 @@ PRBool nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
                       {
                         accountManager->GetEmptyTrashInProgress(&inProgress);
                         PR_CEnterMonitor(folder);
-                        PR_CWait(folder, 10000UL);
+                        PR_CWait(folder, 1000UL);
                         PR_CExitMonitor(folder);
                         if (eventQueue)
                           eventQueue->ProcessPendingEvents();
