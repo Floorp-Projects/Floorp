@@ -488,6 +488,7 @@ xpfe/components/bookmarks/public/Makefile
 xpfe/components/bookmarks/src/Makefile
 xpfe/components/bookmarks/resources/Makefile
 xpfe/components/directory/Makefile
+xpfe/components/regviewer/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
