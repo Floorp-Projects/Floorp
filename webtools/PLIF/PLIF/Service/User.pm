@@ -245,10 +245,11 @@ sub hash {
     $result->{'adminMessage'} = $self->adminMessage,
     $result->{'groups'} = $self->groups;
     $result->{'rights'} = [keys(%{$self->rights})];
+    $result->{'right'} = $self->rights;
     $result->{'fields'} = {};
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
-        $result->{'fields'}->{$field->fieldID} = $field->data;
+        $result->{'fields'}->{$field->fieldID} = $field->data; # (not an array btw)
         $result->{'fields'}->{$field->category.':'.$field->name} = $field->data;
     }
     return $result;
