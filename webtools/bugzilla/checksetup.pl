@@ -270,6 +270,30 @@ my $modules = [
     } 
 ];
 
+my %ppm_modules = (
+    'AppConfig'         => 'AppConfig',
+    'CGI'               => 'CGI',
+    'Data::Dumper'      => 'Data-Dumper',
+    'Date::Format'      => 'TimeDate',
+    'DBI'               => 'DBI',
+    'DBD::mysql'        => 'DBD-mysql',
+    'Template'          => 'Template-Toolkit',
+    'PatchReader'       => 'PatchReader',
+    'GD'                => 'GD',
+    'GD::Graph'         => 'GDGraph',
+    'GD::Text::Align'   => 'GDTextUtil',
+);
+
+sub install_command {
+    my $module = shift;
+    if ($^O =~ /MSWin32/i) {
+        return "ppm install " . $ppm_modules{$module} if exists $ppm_modules{$module};
+        return "ppm install " . $module;
+    } else {
+        return "perl -MCPAN -e 'install \"$module\"'";
+    }    
+}
+
 my %missing = ();
 
 foreach my $module (@{$modules}) {
@@ -287,10 +311,25 @@ my $gdtextalign = have_vers("GD::Text::Align",0);
 my $patchreader = have_vers("PatchReader",0);
 
 print "\n" unless $silent;
+
+if ($^O =~ /MSWin32/i) {
+    if ($^V lt v5.8.0) {
+        print "The required ActivePerl modules are available at OpenInteract's ppm repository.\n";
+        print "You can add the repository with the following command:\n";
+        print "    ppm rep add oi http://openinteract.sourceforge.net/ppmpackages/\n\n";
+    } else {
+        print "Most ActivePerl modules are available at Apache's ppm repository.\n";
+        print "A list of mirrors is available at\n";
+        print "    http://www.apache.org/dyn/closer.cgi/perl/win32-bin/ppms/\n";
+        print "You can add the repository with the following command:\n";
+        print "    ppm rep add apache http://www.apache.org/dist/perl/win32-bin/ppms/\n\n";
+    }
+}
+
 if ((!$gd || !$chartbase) && !$silent) {
     print "If you you want to see graphical bug charts (plotting historical ";
     print "data over \ntime), you should install libgd and the following Perl ";     print "modules:\n\n";
-    print "GD:          perl -MCPAN -e'install \"GD\"'\n" if !$gd;
+    print "GD:          " . install_command("GD") ."\n" if !$gd;
     print "Chart 0.99b: perl -MCPAN " . 
           "-e'install \"N/NI/NINJAZ/Chart-0.99b.tar.gz\"'\n" if !$chartbase;
     print "\n";
@@ -299,28 +338,23 @@ if (!$xmlparser && !$silent) {
     print "If you want to use the bug import/export feature to move bugs to or from\n",
     "other bugzilla installations, you will need to install the XML::Parser module by\n",
     "running (as root):\n\n",
-    "   perl -MCPAN -e'install \"XML::Parser\"'\n\n";
+    "   " . install_command("XML::Parser") . "\n\n";
 }
 if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
     print "If you you want to see graphical bug reports (bar, pie and line ";
     print "charts of \ncurrent data), you should install libgd and the ";
     print "following Perl modules:\n\n";
-    print "GD:              perl -MCPAN -e'install \"GD\"'\n" if !$gd;
-    print "GD::Graph:       perl -MCPAN " .
-           "-e'install \"GD::Graph\"'\n" if !$gdgraph;
-    print "GD::Text::Align: perl -MCPAN " . 
-           "-e'install \"GD::Text::Align\"'\n" if !$gdtextalign;
+    print "GD:              " . install_command("GD") . "\n" if !$gd;
+    print "GD::Graph:       " . install_command("GD::Graph") . "\n" 
+        if !$gdgraph;
+    print "GD::Text::Align: " . install_command("GD::Text::Align") . "\n"
+        if !$gdtextalign;
     print "\n";
 }
 if (!$patchreader && !$silent) {
     print "If you want to see pretty HTML views of patches, you should ";
-    print "install the \nPatchReader module, which can be downloaded at:\n";
-    print "http://search.cpan.org/CPAN/authors/id/J/JK/JKEISER/PatchReader-0.9.2.tar.gz\n";
-    print "When you get it, do the following to install:\n";
-    print "tar xzvf PatchReader-0.9.2.tar.gz\n";
-    print "cd PatchReader-0.9.2\n";
-    print "perl Makefile.PL\n";
-    print "make install\n\n";
+    print "install the \nPatchReader module:\n";
+    print "PatchReader: " . install_command("PatchReader") . "\n";
 }
 
 if (%missing) {
@@ -329,7 +363,7 @@ if (%missing) {
     "system, or the version on your system is too old.\n",
     "They can be installed by running (as root) the following:\n";
     foreach my $module (keys %missing) {
-        print "   perl -MCPAN -e 'install \"$module\"'\n";
+        print "   " . install_command("$module") . "\n";
         if ($missing{$module} > 0) {
             print "   Minimum version required: $missing{$module}\n";
         }
