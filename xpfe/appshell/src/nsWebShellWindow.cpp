@@ -777,6 +777,9 @@ void nsWebShellWindow::LoadSubMenu(
     pnsMenu->Create(supports, menuName);
     NS_RELEASE(supports); // Balance QI
 
+    // Open the node so that the contents are visible.
+    menuElement->SetAttribute("open", "true");
+      
     // Set nsMenu Name
     pnsMenu->SetLabel(menuName); 
     // Make nsMenu a child of parent nsMenu
@@ -906,7 +909,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
       } // end if ( nsnull != pnsMenuBar )
     }
   } // end if (menuBar)
-} // nsWebShellWindow::LoadMenus
+} // nsWebShellWindow::DynamicLoadMenus
 
 //----------------------------------------
 void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
