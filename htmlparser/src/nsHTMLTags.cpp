@@ -23,7 +23,7 @@
 #include "nsHTMLTags.h"
 
 #include "nsString.h"
-#include "nsAVLTree.h"
+#include "nsStaticNameTable.h"
 
 // define an array of all HTML tags
 #define HTML_TAG(_tag) #_tag,
@@ -32,54 +32,28 @@ static const char* kTagTable[] = {
 };
 #undef HTML_TAG
 
-
-struct TagNode {
-  TagNode(void)
-    : mStr(),
-      mEnum(eHTMLTag_unknown)
-  {}
-
-  TagNode(const nsCString& aString) : mStr(aString), mEnum(eHTMLTag_unknown) { 
-  }
-
-  nsCAutoString mStr;
-  nsHTMLTag     mEnum;
-};
-
-class TagComparitor: public nsAVLNodeComparitor {
-public:
-  virtual ~TagComparitor(void) {}
-  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
-    TagNode* one = (TagNode*)anItem1;
-    TagNode* two = (TagNode*)anItem2;
-    return one->mStr.CompareWithConversion(two->mStr, PR_TRUE);
-  }
-}; 
-
-
-static PRInt32    gTableRefCount;
-static TagNode*   gTagArray;
-static nsAVLTree* gTagTree;
-static TagComparitor* gComparitor;
+static PRInt32 gTableRefCount;
+static nsStaticCaseInsensitiveNameTable* gTagTable;
 
 void
 nsHTMLTags::AddRefTable(void) 
 {
   if (0 == gTableRefCount++) {
-    if (! gTagArray) {
-      gTagArray= new TagNode[NS_HTML_TAG_MAX];
-      gComparitor = new TagComparitor();
-      if (gComparitor) {
-        gTagTree = new nsAVLTree(*gComparitor, nsnull);
+    NS_ASSERTION(!gTagTable, "pre existing array!");
+    gTagTable = new nsStaticCaseInsensitiveNameTable();
+    if (gTagTable) {
+#ifdef DEBUG
+    {
+      // let's verify the table...
+      for (PRInt32 index = 0; index < NS_HTML_TAG_MAX; ++index) {
+        nsCAutoString temp1(kTagTable[index]);
+        nsCAutoString temp2(kTagTable[index]);
+        temp1.ToLowerCase();
+        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
-      if (gTagArray && gTagTree) {
-        PRInt32 index = -1;
-        while (++index < NS_HTML_TAG_MAX) {
-          gTagArray[index].mStr = kTagTable[index];
-          gTagArray[index].mEnum = nsHTMLTag(index + 1);  // 1 based
-          gTagTree->AddItem(&(gTagArray[index]));
-        }
-      }
+    }
+#endif      
+      gTagTable->Init(kTagTable, NS_HTML_TAG_MAX); 
     }
   }
 }
@@ -88,75 +62,85 @@ void
 nsHTMLTags::ReleaseTable(void) 
 {
   if (0 == --gTableRefCount) {
-    if (gTagArray) {
-      delete [] gTagArray;
-      gTagArray = nsnull;
-    }
-    if (gTagTree) {
-      delete gTagTree;
-      gTagTree = nsnull;
-    }
-    if (gComparitor) {
-      delete gComparitor;
-      gComparitor = nsnull;
+    if (gTagTable) {
+      delete gTagTable;
+      gTagTable = nsnull;
     }
   }
 }
-
 
 nsHTMLTag 
 nsHTMLTags::LookupTag(const nsCString& aTag)
 {
-  NS_ASSERTION(gTagTree, "no lookup table, needs addref");
-  if (gTagTree) {
-    TagNode node(aTag);
-    TagNode*  found = (TagNode*)gTagTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mStr.EqualsWithConversion(aTag,IGNORE_CASE), "bad tree");
-      return found->mEnum;
-    }
-    else {
+  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
+  if (gTagTable) {
+    // table is zero based, but tags are one based
+    nsHTMLTag tag = nsHTMLTag(gTagTable->Lookup(aTag)+1);
+    
     // hack: this can come out when rickg provides a way for the editor to ask
     // CanContain() questions without having to first fetch the parsers
     // internal enum values for a tag name.
-      if (aTag.Equals("__moz_text"))
-        return eHTMLTag_text;
+    
+    if (tag == eHTMLTag_unknown) {
+      if(aTag.Equals("__moz_text")) {
+        tag = eHTMLTag_text;
+      }
+      else {
+        tag = eHTMLTag_userdefined;
+      }
     }
-  }
+    return tag;
+  }  
   return eHTMLTag_userdefined;
 }
 
 nsHTMLTag 
-nsHTMLTags::LookupTag(const nsString& aTag) {
-  nsCAutoString theTag; theTag.AssignWithConversion(aTag);
-  return LookupTag(theTag);
+nsHTMLTags::LookupTag(const nsString& aTag)
+{
+  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
+  if (gTagTable) {
+    // table is zero based, but tags are one based
+    nsHTMLTag tag = nsHTMLTag(gTagTable->Lookup(aTag)+1);
+    
+    // hack: this can come out when rickg provides a way for the editor to ask
+    // CanContain() questions without having to first fetch the parsers
+    // internal enum values for a tag name.
+    
+    if (tag == eHTMLTag_unknown) {
+      nsCAutoString theTag; 
+      theTag.AssignWithConversion(aTag);
+      if (theTag.Equals("__moz_text")) {
+        tag = eHTMLTag_text;
+      }
+      else {
+        tag = eHTMLTag_userdefined;
+      }
+    }
+    return tag;
+  }  
+  return eHTMLTag_userdefined;
 }
-
-
 
 const nsCString& 
 nsHTMLTags::GetStringValue(nsHTMLTag aTag)
 {
-  NS_ASSERTION(gTagArray, "no lookup table, needs addref");
-  // Note: NS_HTML_TAG_MAX=113
-  if ((eHTMLTag_unknown < aTag) && 
-      (aTag <= NS_HTML_TAG_MAX) && gTagArray) {
-    return gTagArray[aTag - 1].mStr;
-  }
-  else {
-    static const nsCString* kNullStr=0;
-    if(!kNullStr)
-      kNullStr=new nsCString("");
-    return *kNullStr;
+  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
+  if (gTagTable) {
+    // table is zero based, but tags are one based
+    return gTagTable->GetStringValue(PRInt32(aTag)-1);
+  } else {
+    static nsCString kNullStr;
+    return kNullStr;
   }
 }
 
-const char* nsHTMLTags::GetCStringValue(nsHTMLTag aTag) {
-  NS_ASSERTION(gTagArray, "no lookup table, needs addref");
+const char* 
+nsHTMLTags::GetCStringValue(nsHTMLTag aTag) {
+  NS_ASSERTION(gTagTable, "no lookup table, needs addref");
   // Note: NS_HTML_TAG_MAX=113
   if ((eHTMLTag_unknown < aTag) && 
-      (aTag <= NS_HTML_TAG_MAX) && gTagArray) {
-    return gTagArray[aTag - 1].mStr.mStr;
+      (aTag <= NS_HTML_TAG_MAX)) {
+    return kTagTable[PRInt32(aTag)-1];
   }
   else {
     static const char* kNullStr="";
@@ -203,4 +187,3 @@ public:
 };
 //nsTestTagTable validateTagTable;
 #endif
-

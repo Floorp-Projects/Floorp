@@ -22,73 +22,39 @@
 
 #include "nsCSSKeywords.h"
 #include "nsString.h"
-#include "nsAVLTree.h"
-
+#include "nsStaticNameTable.h"
 
 // define an array of all CSS keywords
-#define CSS_KEY(_key) #_key,
+#define CSS_KEY(_name,_id) #_name,
 const char* kCSSRawKeywords[] = {
 #include "nsCSSKeywordList.h"
 };
 #undef CSS_KEY
 
-struct KeywordNode {
-  KeywordNode(void)
-    : mStr(),
-      mEnum(eCSSKeyword_UNKNOWN)
-  {}
-
-  KeywordNode(const nsStr& aStringValue, nsCSSKeyword aEnumValue)
-    : mStr(),
-      mEnum(aEnumValue)
-  { // point to the incomming buffer
-    // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
-                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
-  }
-
-  nsCAutoString mStr;
-  nsCSSKeyword  mEnum;
-};
-
-class KeywordComparitor: public nsAVLNodeComparitor {
-public:
-  virtual ~KeywordComparitor(void) {}
-  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
-    KeywordNode* one = (KeywordNode*)anItem1;
-    KeywordNode* two = (KeywordNode*)anItem2;
-    return one->mStr.CompareWithConversion(two->mStr, PR_TRUE);
-  }
-}; 
-
-
-static PRInt32      gTableRefCount;
-static KeywordNode* gKeywordArray;
-static nsAVLTree*   gKeywordTree;
-static KeywordComparitor* gComparitor;
-static nsCString* kNullStr;
+static PRInt32 gTableRefCount;
+static nsStaticCaseInsensitiveNameTable* gKeywordTable;
 
 void
 nsCSSKeywords::AddRefTable(void) 
 {
   if (0 == gTableRefCount++) {
-    if (! gKeywordArray) {
-      gKeywordArray = new KeywordNode[eCSSKeyword_COUNT];
-      gComparitor = new KeywordComparitor();
-      if (gComparitor) {
-        gKeywordTree = new nsAVLTree(*gComparitor, nsnull);
-      }
-      if (gKeywordArray && gKeywordTree) {
-        PRInt32 index = -1;
-        while (++index < PRInt32(eCSSKeyword_COUNT)) {
-          gKeywordArray[index].mStr = kCSSRawKeywords[index];
-          gKeywordArray[index].mStr.ReplaceChar('_', '-');
-          gKeywordArray[index].mEnum = nsCSSKeyword(index);
-          gKeywordTree->AddItem(&(gKeywordArray[index]));
-        }
+    NS_ASSERTION(!gKeywordTable, "pre existing array!");
+    gKeywordTable = new nsStaticCaseInsensitiveNameTable();
+    if (gKeywordTable) {
+#ifdef DEBUG
+    {
+      // let's verify the table...
+      for (PRInt32 index = 0; index < eCSSKeyword_COUNT; ++index) {
+        nsCAutoString temp1(kCSSRawKeywords[index]);
+        nsCAutoString temp2(kCSSRawKeywords[index]);
+        temp1.ToLowerCase();
+        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
+        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
       }
     }
-    kNullStr = new nsCString();
+#endif      
+      gKeywordTable->Init(kCSSRawKeywords, eCSSKeyword_COUNT); 
+    }
   }
 }
 
@@ -96,55 +62,42 @@ void
 nsCSSKeywords::ReleaseTable(void) 
 {
   if (0 == --gTableRefCount) {
-    if (gKeywordArray) {
-      delete [] gKeywordArray;
-      gKeywordArray = nsnull;
+    if (gKeywordTable) {
+      delete gKeywordTable;
+      gKeywordTable = nsnull;
     }
-    if (gKeywordTree) {
-      delete gKeywordTree;
-      gKeywordTree = nsnull;
-    }
-    if (gComparitor) {
-      delete gComparitor;
-      gComparitor = nsnull;
-    }
-    delete kNullStr;
   }
 }
-
 
 nsCSSKeyword 
 nsCSSKeywords::LookupKeyword(const nsCString& aKeyword)
 {
-  NS_ASSERTION(gKeywordTree, "no lookup table, needs addref");
-  if (gKeywordTree) {
-    KeywordNode node(aKeyword, eCSSKeyword_UNKNOWN);
-    KeywordNode*  found = (KeywordNode*)gKeywordTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aKeyword), "bad tree");
-      return found->mEnum;
-    }
-  }
+  NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
+  if (gKeywordTable) {
+    return nsCSSKeyword(gKeywordTable->Lookup(aKeyword));
+  }  
   return eCSSKeyword_UNKNOWN;
 }
 
 nsCSSKeyword 
-nsCSSKeywords::LookupKeyword(const nsString& aKeyword) {
-  nsCAutoString theKeyword; theKeyword.AssignWithConversion(aKeyword);
-  return LookupKeyword(theKeyword);
+nsCSSKeywords::LookupKeyword(const nsString& aKeyword)
+{
+  NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
+  if (gKeywordTable) {
+    return nsCSSKeyword(gKeywordTable->Lookup(aKeyword));
+  }  
+  return eCSSKeyword_UNKNOWN;
 }
-
 
 const nsCString& 
 nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
 {
-  NS_ASSERTION(gKeywordArray, "no lookup table, needs addref");
-  if ((eCSSKeyword_UNKNOWN < aKeyword) && 
-      (aKeyword < eCSSKeyword_COUNT) && gKeywordArray) {
-    return gKeywordArray[aKeyword].mStr;
-  }
-  else {
-    return *kNullStr;
+  NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
+  if (gKeywordTable) {
+    return gKeywordTable->GetStringValue(PRInt32(aKeyword));
+  } else {
+    static nsCString kNullStr;
+    return kNullStr;
   }
 }
 

@@ -27,73 +27,40 @@
 #include "nsILookAndFeel.h" // for system colors
 
 #include "nsString.h"
-#include "nsAVLTree.h"
-
+#include "nsStaticNameTable.h"
 
 // define an array of all CSS properties
-#define CSS_PROP(_prop, _hint) #_prop,
+#define CSS_PROP(_name, _id, _hint) #_name,
 const char* kCSSRawProperties[] = {
 #include "nsCSSPropList.h"
 };
 #undef CSS_PROP
 
-struct PropertyNode {
-  PropertyNode(void)
-    : mStr(),
-      mEnum(eCSSProperty_UNKNOWN)
-  {}
 
-  PropertyNode(const nsStr& aStringValue, nsCSSProperty aEnumValue)
-    : mStr(),
-      mEnum(aEnumValue)
-  { // point to the incomming buffer
-    // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
-                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
-  }
-
-  nsCAutoString mStr;
-  nsCSSProperty mEnum;
-};
-
-class PropertyComparitor: public nsAVLNodeComparitor {
-public:
-  virtual ~PropertyComparitor(void) {}
-  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
-    PropertyNode* one = (PropertyNode*)anItem1;
-    PropertyNode* two = (PropertyNode*)anItem2;
-    return one->mStr.CompareWithConversion(two->mStr, PR_TRUE);
-  }
-}; 
-
-
-static PRInt32        gTableRefCount;
-static PropertyNode*  gPropertyArray;
-static nsAVLTree*     gPropertyTree;
-static PropertyComparitor*  gComparitor;
-static nsCString* kNullStr;
+static PRInt32 gTableRefCount;
+static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 
 void
 nsCSSProps::AddRefTable(void) 
 {
   if (0 == gTableRefCount++) {
-    if (! gPropertyArray) {
-      gPropertyArray= new PropertyNode[eCSSProperty_COUNT];
-      gComparitor = new PropertyComparitor();
-      if (gComparitor) {
-        gPropertyTree = new nsAVLTree(*gComparitor, nsnull);
-      }
-      if (gPropertyArray && gPropertyTree) {
-        PRInt32 index = -1;
-        while (++index < PRInt32(eCSSProperty_COUNT)) {
-          gPropertyArray[index].mStr = kCSSRawProperties[index];
-          gPropertyArray[index].mStr.ReplaceChar('_', '-');
-          gPropertyArray[index].mEnum = nsCSSProperty(index);
-          gPropertyTree->AddItem(&(gPropertyArray[index]));
-        }
+    NS_ASSERTION(!gPropertyTable, "pre existing array!");
+    gPropertyTable = new nsStaticCaseInsensitiveNameTable();
+    if (gPropertyTable) {
+#ifdef DEBUG
+    {
+      // let's verify the table...
+      for (PRInt32 index = 0; index < eCSSProperty_COUNT; ++index) {
+        nsCAutoString temp1(kCSSRawProperties[index]);
+        nsCAutoString temp2(kCSSRawProperties[index]);
+        temp1.ToLowerCase();
+        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
+        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
       }
     }
-    kNullStr = new nsCString();
+#endif      
+      gPropertyTable->Init(kCSSRawProperties, eCSSProperty_COUNT); 
+    }
   }
 }
 
@@ -101,60 +68,47 @@ void
 nsCSSProps::ReleaseTable(void) 
 {
   if (0 == --gTableRefCount) {
-    if (gPropertyArray) {
-      delete [] gPropertyArray;
-      gPropertyArray = nsnull;
+    if (gPropertyTable) {
+      delete gPropertyTable;
+      gPropertyTable = nsnull;
     }
-    if (gPropertyTree) {
-      delete gPropertyTree;
-      gPropertyTree = nsnull;
-    }
-    if (gComparitor) {
-      delete gComparitor;
-      gComparitor = nsnull;
-    }
-    delete kNullStr;
   }
 }
-
 
 nsCSSProperty 
 nsCSSProps::LookupProperty(const nsCString& aProperty)
 {
-  NS_ASSERTION(gPropertyTree, "no lookup table, needs addref");
-  if (gPropertyTree) {
-    PropertyNode node(aProperty, eCSSProperty_UNKNOWN);
-    PropertyNode*  found = (PropertyNode*)gPropertyTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aProperty), "bad tree");
-      return found->mEnum;
-    }
-  }
+  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  if (gPropertyTable) {
+    return nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  }  
   return eCSSProperty_UNKNOWN;
 }
 
-
 nsCSSProperty 
-nsCSSProps::LookupProperty(const nsString& aProperty) {
-  nsCAutoString theProp; theProp.AssignWithConversion(aProperty);
-  return LookupProperty(theProp);
+nsCSSProps::LookupProperty(const nsString& aProperty)
+{
+  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  if (gPropertyTable) {
+    return nsCSSProperty(gPropertyTable->Lookup(aProperty));
+  }  
+  return eCSSProperty_UNKNOWN;
 }
-
 
 const nsCString& 
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
-  NS_ASSERTION(gPropertyArray, "no lookup table, needs addref");
-  if ((eCSSProperty_UNKNOWN < aProperty) && 
-      (aProperty < eCSSProperty_COUNT) && gPropertyArray) {
-    return gPropertyArray[aProperty].mStr;
-  }
-  else {
-    return *kNullStr;
+  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
+  if (gPropertyTable) {
+    return gPropertyTable->GetStringValue(PRInt32(aProperty));
+  } else {
+    static nsCString sNullStr;
+    return sNullStr;
   }
 }
 
 
+/***************************************************************************/
 
 // Keyword id tables for variant/enum parsing
 const PRInt32 nsCSSProps::kAzimuthKTable[] = {
@@ -726,7 +680,8 @@ SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = SearchKeywordTableInt(aValue, aTable);
   if (i < 0) {
-    return *kNullStr;
+    static nsCString sNullStr;
+    return sNullStr;
   } else {
     return nsCSSKeywords::GetStringValue(nsCSSKeyword(i));
   }
@@ -1083,7 +1038,8 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     NS_ERROR("invalid property");
     break;
   }
-  return *kNullStr;
+  static nsCString sNullStr;
+  return sNullStr;
 }
 
 PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
@@ -1105,7 +1061,7 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 }
 
 // define array of all CSS property hints
-#define CSS_PROP(_prop, _hint) NS_STYLE_HINT_##_hint,
+#define CSS_PROP(_name, _id, _hint) NS_STYLE_HINT_##_hint,
 const PRInt32 nsCSSProps::kHintTable[eCSSProperty_COUNT] = {
 #include "nsCSSPropList.h"
 };
