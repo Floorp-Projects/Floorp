@@ -193,7 +193,7 @@ sub execute_js_tests {
                         &js_print_suitename;
                         &js_print_filename;
                         &js_print_bugnumber;
-                        &js_print( " FAILED!\n " , "&nbsp;&nbsp;<font color=#009900>",
+                        &js_print( " FAILED!\n " , "&nbsp;&nbsp;<font color=#990000>",
                             "</font><br>" );
                         &js_print( " Missing 'PASSED' in output\n", "","<br>" );
 			&js_print( $log, "output:<br><pre>", "</pre>" );
