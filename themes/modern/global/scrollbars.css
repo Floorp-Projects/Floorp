@@ -91,11 +91,11 @@ thumb:active > .thumb-horz-box-middle {
 }
 
 thumb:active > .thumb-horz-spring-right {
-  background: url("chrome://global/skin/scrollbar/thumb-horz-act-rit.gif") no-repeat;
+  background: url("chrome://global/skin/scrollbar/thumb-hrz-act-rit.gif") no-repeat;
 }
 
 thumb:active > .thumb-horz-box-middle > .thumb-horz-grippy {
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-horz-act-grip.gif");
+  list-style-image: url("chrome://global/skin/scrollbar/thumb-hrz-act-grip.gif");
 }
 
 /* ::::: thumb (vertical) ::::: */
