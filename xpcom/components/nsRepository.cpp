@@ -31,9 +31,12 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "nsRepository.h"
+
 #ifdef USE_NSREG
+#if !defined(XP_BEGIN_PROTOS)
 #define XP_BEGIN_PROTOS extern "C" {
 #define XP_END_PROTOS };
+#endif
 #include "NSReg.h"
 #endif
 
@@ -51,7 +54,7 @@
 
 nsHashtable *nsRepository::factories = NULL;
 PRMonitor *nsRepository::monitor = NULL;
-DllStore *nsRepository::dllStore = NULL;
+nsDllStore *nsRepository::dllStore = NULL;
 
 static PRLogModuleInfo *logmodule = NULL;
 
@@ -65,13 +68,13 @@ public:
   
   // DO NOT DELETE THIS. Many FactoryEntry(s) could be sharing the same Dll.
   // This gets deleted from the dllStore going away.
-  Dll *dll;	
+  nsDll *dll;	
 
   FactoryEntry(const nsCID &aClass, nsIFactory *aFactory,
 	  const char *aLibrary)
 	  : cid(aClass), factory(aFactory), library(NULL), dll(NULL)
   {
-	  DllStore *dllCollection = nsRepository::dllStore;
+	  nsDllStore *dllCollection = nsRepository::dllStore;
 
 	  if (aLibrary == NULL)
 	  {
@@ -86,14 +89,17 @@ public:
 	  }
 
 	  // If dll not already in dllCollection, add it.
+	  // PR_EnterMonitor(nsRepository::monitor);
 	  dll = dllCollection->Get(library);
+	  // PR_ExitMonitor(nsRepository::monitor);
+
 	  if (dll == NULL)
 	  {
-		  // Add a new Dll into the DllStore
-		  dll = new Dll(library);
+		  // Add a new Dll into the nsDllStore
+		  dll = new nsDll(library);
 		  if (dll->GetStatus() != DLL_OK)
 		  {
-			  // Cant create a DllInfo. Backoff.
+			  // Cant create a nsDll. Backoff.
 			  delete dll;
 			  dll = NULL;
 			  PL_strfree(library);
@@ -101,7 +107,9 @@ public:
 		  }
 		  else
 		  {
+			  // PR_EnterMonitor(nsRepository::monitor);
 			  dllCollection->Put(library, dll);
+			  // PR_ExitMonitor(nsRepository::monitor);
 		  }
 	  }
   }
@@ -114,30 +122,25 @@ public:
 	  if (factory != NULL) {
 		  factory->Release();
 	  }
-	  // DO NOT DELETE Dll *dll;
+	  // DO NOT DELETE nsDll *dll;
   }
 };
 
 class IDKey: public nsHashKey {
 private:
-  nsID id;
-  
+	nsID id;
+	
 public:
-  IDKey(const nsID &aID) {
-    id = aID;
-  }
-  
-  PRUint32 HashValue(void) const {
-    return id.m0;
-  }
-
-  PRBool Equals(const nsHashKey *aKey) const {
-    return (id.Equals(((const IDKey *) aKey)->id));
-  }
-
-  nsHashKey *Clone(void) const {
-    return new IDKey(id);
-  }
+	IDKey(const nsID &aID) { id = aID; }
+	
+	PRUint32 HashValue(void) const { return id.m0; }
+	
+	PRBool Equals(const nsHashKey *aKey) const
+	{
+		return (id.Equals(((const IDKey *) aKey)->id));
+	}
+	
+	nsHashKey *Clone(void) const { return new IDKey(id); }
 };
 
 #ifdef USE_NSREG
@@ -380,7 +383,7 @@ nsresult nsRepository::Initialize(void)
     logmodule = PR_NewLogModule("nsRepository");
   }
   if (dllStore == NULL) {
-    dllStore = new DllStore();
+    dllStore = new nsDllStore();
   }
 
   PR_LOG(logmodule, PR_LOG_ALWAYS, 
@@ -663,4 +666,3 @@ nsresult nsRepository::FreeLibraries(void)
 
   return NS_OK;
 }
-

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* Dll
+/* nsDll
  *
  * Abstraction of a Dll. Stores modifiedTime and size for easy detection of
  * change in dll.
@@ -27,7 +27,7 @@
 #include "xcDll.h"
 #include "plstr.h"	// strdup and strfree
 
-Dll::Dll(const char *libFullPath) : m_instance(NULL), m_status(DLL_OK),
+nsDll::nsDll(const char *libFullPath) : m_instance(NULL), m_status(DLL_OK),
 	m_fullpath(NULL)
 {
 	// XXX No initializer for PRTime's
@@ -67,7 +67,7 @@ Dll::Dll(const char *libFullPath) : m_instance(NULL), m_status(DLL_OK),
 	m_status = DLL_OK;			
 }
 
-Dll::~Dll(void)
+nsDll::~nsDll(void)
 {
 	if (m_instance != NULL)
 		Unload();
@@ -75,7 +75,7 @@ Dll::~Dll(void)
 	m_fullpath = NULL;
 }
 
-PRBool Dll::Load(void)
+PRBool nsDll::Load(void)
 {
 	if (m_status != DLL_OK)
 	{
@@ -91,7 +91,7 @@ PRBool Dll::Load(void)
 	
 }
 
-PRBool Dll::Unload(void)
+PRBool nsDll::Unload(void)
 {
 	if (m_status != DLL_OK || m_instance == NULL)
 		return (PR_FALSE);
@@ -105,7 +105,7 @@ PRBool Dll::Unload(void)
 		return (PR_FALSE);
 }
 
-void * Dll::FindSymbol(const char *symbol)
+void * nsDll::FindSymbol(const char *symbol)
 {
 	if (symbol == NULL)
 		return (NULL);
