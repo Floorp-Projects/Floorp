@@ -50,6 +50,7 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    toolbox->getBaseWidget(),
                    XmNuserData, this,
                    NULL);
+
 	// Create the toolbar
 	_toolbar = XtVaCreateManagedWidget(HT_GetViewName(view),
                    xfeToolBarWidgetClass,
@@ -59,7 +60,7 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    XmNchildForceWidth,           False,
                    XmNchildForceHeight,          True,
                    XmNchildUsePreferredWidth,    True,
-                   XmNchildUsePreferredHeight,   False,
+                   XmNchildUsePreferredHeight,   True,
                    NULL);
 
 	// Create the logo
