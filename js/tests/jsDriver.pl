@@ -729,7 +729,7 @@ sub get_dd_engine_command {
             $exe = "JS2";
         } elsif ($os_type eq "WIN") {
             $os = "winbuild/";
-            $debug = "DikDik_shell___Win32_Debug/";
+            $debug = "Debug/";
             $opt = "Release/";
             $exe = "DikDik_shell.exe";
         } else {
