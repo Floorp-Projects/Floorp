@@ -84,6 +84,7 @@ static void update_nav_buttons      (TestGtkBrowser *browser);
 int
 main(int argc, char **argv)
 {
+  gtk_set_locale();
   gtk_init(&argc, &argv);
 
   TestGtkBrowser *browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
