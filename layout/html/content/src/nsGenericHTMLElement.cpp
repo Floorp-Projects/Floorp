@@ -1907,11 +1907,11 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
     switch (styleDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
-      rv = NS_NewBlockFrame(&frame, mContent, aParentFrame);
+      rv = NS_NewBlockFrame(mContent, aParentFrame, frame);
       break;
 
     case NS_STYLE_DISPLAY_INLINE:
-      rv = NS_NewInlineFrame(&frame, mContent, aParentFrame);
+      rv = NS_NewInlineFrame(mContent, aParentFrame, frame);
       break;
 
     default:

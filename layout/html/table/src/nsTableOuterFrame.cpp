@@ -109,6 +109,7 @@ NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aC
 {
   mFirstChild = aChildList;
   mChildCount = LengthOf(mFirstChild);
+  NS_ASSERTION(mChildCount > 0, "bad child list");
 
   // Set our internal member data
   if (1 == mChildCount) {

@@ -145,8 +145,4 @@ nsLineLayout::AddFloater(nsPlaceholderFrame* aFrame)
   mBlockReflowState->AddFloater(aFrame);
 }
 
-extern nsresult NS_NewBlockFrame(nsIFrame**  aInstancePtrResult,
-                                 nsIContent* aContent,
-                                 nsIFrame*   aParent);
-
 #endif /* nsCSSBlockFrame_h___ */

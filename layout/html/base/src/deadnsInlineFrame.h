@@ -124,13 +124,8 @@ protected:
   nsresult CreateNewFrames(nsIPresContext* aPresContext);
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
-  friend nsresult NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
-                                    nsIContent* aContent,
-                                    nsIFrame*   aParent);
+  friend nsresult NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                                    nsIFrame*& aNewFrame);
 };
-
-extern nsresult NS_NewInlineFrame(nsIFrame**  aInstancePtrResult,
-                                  nsIContent* aContent,
-                                  nsIFrame*   aParent);
 
 #endif /* nsInlineFrame_h___ */
