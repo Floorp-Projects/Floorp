@@ -8,11 +8,13 @@ nsIContentIterator.h
 nsIDocument.h
 nsIDocumentContainer.h
 nsIDocumentObserver.h
+nsIDocumentViewer.h
 nsIFocusTracker.h
 nsIFrame.h
 nsIFrameSelection.h
 nsIFrameUtil.h
 nsIFrameImageLoader.h
+nsILayoutDebugger.h
 nsINameSpace.h
 nsINameSpaceManager.h
 nsIPageSequenceFrame.h

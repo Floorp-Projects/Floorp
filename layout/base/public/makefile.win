@@ -21,14 +21,16 @@ EXPORTS =				\
 	nslayout.h			\
 	nsICaret.h			\
 	nsIContent.h			\
-	nsIContentIterator.h    \
+	nsIContentIterator.h		\
 	nsIDocument.h			\
 	nsIDocumentContainer.h		\
 	nsIDocumentObserver.h		\
-	nsIFocusTracker.h			\
+	nsIDocumentViewer.h		\
+	nsIFocusTracker.h		\
 	nsIFrame.h			\
 	nsIFrameImageLoader.h		\
-	nsINameSpace.h		\
+	nsILayoutDebugger.h		\
+	nsINameSpace.h			\
 	nsINameSpaceManager.h		\
 	nsIFrameReflow.h		\
 	nsIFrameUtil.h			\
@@ -38,23 +40,23 @@ EXPORTS =				\
 	nsIReflowCommand.h		\
 	nsIFrameSelection.h		\
 	nsISpaceManager.h		\
+	nsIStyledContent.h		\
 	nsIStyleContext.h		\
 	nsIStyleFrameConstruction.h	\
 	nsIStyleRule.h			\
 	nsIStyleSet.h			\
 	nsIStyleSheet.h			\
 	nsIStyleSheetLinkingElement.h	\
-	nsIStyledContent.h \
 	nsITextContent.h		\
-	nsFrameList.h                   \
-	nsFrameTraversal.h              \
 	nsLayoutAtoms.h			\
-	nsStyleChangeList.h			\
+	nsFrameList.h			\
+	nsFrameTraversal.h		\
+	nsStyleChangeList.h		\
 	nsStyleConsts.h			\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\
-	nsTextFragment.h                \
-        $(NULL)
+	nsTextFragment.h		\
+	$(NULL)
 
 MODULE=raptor 
 
