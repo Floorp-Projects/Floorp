@@ -1014,11 +1014,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
         if (outOfFlowFrame->GetType() == nsLayoutAtoms::letterFrame) {
           SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
-          // An incomplete reflow status means we should split the
-          // float if the height is constrained (bug 145305). We
-          // never split floating first letters.
-          if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) 
-            aReflowStatus = NS_FRAME_COMPLETE;
         }
       }
     }
