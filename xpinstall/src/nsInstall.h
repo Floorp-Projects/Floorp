@@ -202,7 +202,7 @@ class nsInstall
 
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
         void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);
-        void       GetPatch(nsHashKey *aKey, nsFileSpec* fileName);
+        void       GetPatch(nsHashKey *aKey, nsFileSpec** fileName);
         
         void       GetJarFileLocation(nsString& aFile);
         void       SetJarFileLocation(const nsString& aFile);

@@ -184,7 +184,7 @@ PRInt32 nsInstallPatch::Prepare()
     nsFileSpec *fileName = nsnull;
     nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );
     
-    mInstall->GetPatch(&ikey, fileName);
+    mInstall->GetPatch(&ikey, &fileName);
 
     if (fileName != nsnull) 
     {
@@ -228,12 +228,12 @@ PRInt32 nsInstallPatch::Complete()
     nsFileSpec *fileName = nsnull;
     nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) )  );
     
-    mInstall->GetPatch(&ikey, fileName);
+    mInstall->GetPatch(&ikey, &fileName);
     
     if (fileName != nsnull && (*fileName == *mPatchedFile) )
     {
         // the patch has not been superceded--do final replacement
-		err = ReplaceFileNowOrSchedule( *mTargetFile, *mPatchedFile);
+        err = ReplaceFileNowOrSchedule( *mPatchedFile, *mTargetFile);
         if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
         {
             nsString tempVersionString;
@@ -270,7 +270,7 @@ void nsInstallPatch::Abort()
     nsFileSpec *fileName = nsnull;
     nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );
 
-    mInstall->GetPatch(&ikey, fileName);
+    mInstall->GetPatch(&ikey, &fileName);
 
     if (fileName != nsnull && (*fileName == *mPatchedFile) )
     {
@@ -309,7 +309,14 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 	PRInt32		status		= GDIFF_ERR_MEM;
 	char 		*tmpurl		= NULL;
 	char 		*realfile	= PL_strdup(nsNSPRPath(sourceFile)); // needs to be sourceFile!!!
-	nsFileSpec  outFileSpec = sourceFile;
+	nsFileSpec  *outFileSpec = new nsFileSpec;
+    
+    if (!outFileSpec) {
+        status = GDIFF_ERR_MEM;
+        goto cleanup;
+    }
+    
+    *outFileSpec = sourceFile;
 
 	dd = (DIFFDATA *)PR_Calloc( 1, sizeof(DIFFDATA));
 	if (dd != NULL)
@@ -405,10 +412,10 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
         }
         
 
-		outFileSpec.SetLeafName(newFileName); //????
-		outFileSpec.MakeUnique();
+		outFileSpec->SetLeafName(newFileName);
+		outFileSpec->MakeUnique();
 
-        char *outFile = PL_strdup(nsNSPRPath(outFileSpec));
+        char *outFile = PL_strdup(nsNSPRPath(*outFileSpec));
 
 		// apply patch to the source file
 		dd->fSrc = PR_Open ( realfile, PR_RDONLY, 0666);
@@ -433,7 +440,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 
             if (status == GDIFF_OK)
             {
-                *newFile = &outFileSpec;
+                *newFile = outFileSpec;
                 if ( outFile != nsnull)
                     PL_strfree( outFile );
             }
@@ -450,16 +457,16 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 	if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
 	{
         // create another file, so that we can decode somewhere
-        nsFileSpec anotherName = outFileSpec;
-        anotherName.MakeUnique();
+        nsFileSpec *anotherName = outFileSpec;
+        anotherName->MakeUnique();
         
 		// Close the out file so that we can read it 		
 		PR_Close( dd->fOut );
 		dd->fOut = NULL;
 		
 		
-		FSSpec outSpec = outFileSpec.GetFSSpec();
-		FSSpec anotherSpec   = anotherName.GetFSSpec();
+		FSSpec outSpec = outFileSpec->GetFSSpec();
+		FSSpec anotherSpec = anotherName->GetFSSpec();
 		
 			
         status =  PAS_DecodeFile(&outSpec, &anotherSpec);
@@ -470,12 +477,12 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		
         nsFileSpec parent;
         
-        outFileSpec.GetParent(parent);
+        outFileSpec->GetParent(parent);
         
-        outFileSpec.Delete(PR_FALSE);
-        anotherName.Copy(parent);
+        outFileSpec->Delete(PR_FALSE);
+        anotherName->Copy(parent);
         
-        *newFile = &anotherName;
+        *newFile = anotherName;
 	}
 	
 #endif 
