@@ -561,10 +561,13 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     nsXPConnect* xpc;
 
 #ifdef DEBUG_stats_jband
+    PRIntervalTime startTime = PR_IntervalNow();
+    PRIntervalTime endTime = 0;
+    static int totalTime = 0;
     static int count = 0;
     static const int interval = 10;
     if(0 == (++count % interval))
-        printf(">>>>>>>> %d calls on nsXPCWrappedNatives made\n", count);
+        printf(">>>>>>>> %d calls on nsXPCWrappedNatives made.  (%d)\n", count, PR_IntervalToMilliseconds(totalTime));
 #endif
 
     if(vp)
@@ -910,6 +913,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     // do the invoke
     invokeResult = XPTC_InvokeByIndex(callee, vtblIndex,
                                       paramCount, dispatchParams);
+    
     xpcc->SetLastResult(invokeResult);
     cc->SetData(oldccdata);
 
@@ -1088,6 +1092,15 @@ done:
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
+
+#ifdef DEBUG_stats_jband
+    endTime = PR_IntervalNow();
+    
+    printf("%s::%s %d ( js->c ) \n", GetInterfaceName(), GetMemberName(desc), PR_IntervalToMilliseconds(endTime-startTime));
+
+    totalTime += (endTime-startTime);
+#endif
+
     return retval;
 }
 
