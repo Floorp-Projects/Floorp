@@ -1,0 +1,79 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= msgsmime
+LIBRARY_NAME	= msgsmime
+META_COMPONENT = mail
+EXPORT_LIBRARY = 1
+SHORT_LIBNAME	= msgsmime
+IS_COMPONENT	= 1
+MODULE_NAME	= nsMsgSMIMEModule
+REQUIRES	= xpcom \
+		  string \
+		  msgbase \
+		  msgbaseutil \
+		  editor \
+		  necko \
+		  dom \
+		  uriloader \
+		  mime \
+		  addrbook \
+		  rdf \
+		  intl \
+		  mailnews \
+		  widget \
+		  msgdb \
+		  appshell \
+		  nkcache \
+                  msgcompose \
+                  pipnss \
+		  $(NULL)
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbsutl
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
+CPPSRCS		= nsMsgSMIMEFactory.cpp
+EXPORTS		= nsMsgSMIMECID.h
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libmsgsmime_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+

@@ -1,0 +1,12 @@
+messenger.jar:
+    content/messenger/am-smime.xul                                   (resources/content/am-smime.xul)
+    content/messenger/am-smime.js                                    (resources/content/am-smime.js)
+    content/messenger-smime/msgCompSMIMEOverlay.js                   (resources/content/msgCompSMIMEOverlay.js)
+    content/messenger-smime/msgCompSMIMEOverlay.xul                  (resources/content/msgCompSMIMEOverlay.xul)
+    content/messenger-smime/contents.rdf                             (resources/content/contents.rdf)
+
+en-US.jar:
+    locale/en-US/messenger/am-smime.dtd                              (resources/locale/en-US/am-smime.dtd) 
+    locale/en-US/messenger/am-smime.properties                       (resources/locale/en-US/am-smime.properties) 
+    locale/en-US/messenger-smime/msgCompSMIMEOverlay.dtd             (resources/locale/en-US/msgCompSMIMEOverlay.dtd)
+    locale/en-US/messenger-smime/contents.rdf                        (resources/locale/en-US/contents.rdf)
