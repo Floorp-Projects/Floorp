@@ -32,7 +32,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		AccountManager.xul \
 		AccountManager.js \
 		am-main.xul \
-        am-serverwithnoidentity.xul \
 		am-server.xul \
         am-serverwithnoidentities.xul \
         am-serverwithnoidentities.js \
