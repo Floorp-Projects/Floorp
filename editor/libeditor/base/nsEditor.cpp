@@ -67,6 +67,7 @@ static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
+static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
@@ -211,12 +212,19 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
+    nsIEditor *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtr = (void*)tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIEditorIID)) {
     *aInstancePtr = (void*)(nsIEditor*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIEditorSupportIID)) {
+    *aInstancePtr = (void*)(nsIEditorSupport*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -235,7 +243,15 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   return mDoc->QueryInterface(kIDOMDocumentIID, (void **)aDoc);
 }
 
-
+nsresult
+nsEditor::GetSelection(nsIDOMSelection **aSelection)
+{
+  if (!aSelection)
+    return NS_ERROR_NULL_POINTER;
+  *aSelection = nsnull;
+  nsresult result = mPresShell->GetSelection(aSelection);  // does an addref
+  return result;
+}
 
 nsresult
 nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
@@ -383,9 +399,9 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
   nsresult result=NS_OK;
   if (nsnull!=aElement)
   {
-    nsIDOMAttr* attNode=nsnull;
-    result = aElement->GetAttributeNode(aAttribute, &attNode);
-    if ((NS_SUCCEEDED(result)) && (nsnull!=attNode))
+    nsCOMPtr<nsIDOMAttr> attNode;
+    result = aElement->GetAttributeNode(aAttribute, getter_AddRefs(attNode));
+    if ((NS_SUCCEEDED(result)) && attNode)
     {
       attNode->GetSpecified(&aResultIsSet);
       attNode->GetValue(aResultValue);
@@ -955,7 +971,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
             result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
             if ((NS_SUCCEEDED(result)) && (nsnull!=txn))
             {
-              txn->Init(range);
+              txn->Init(this, range);
               (*aTxn)->AppendChild(txn);
             }
             else
@@ -1224,6 +1240,18 @@ nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   return result;
 }
 
+nsresult 
+nsEditor::SplitNode(nsIDOMNode * aNode,
+                    PRInt32      aOffset)
+{
+  SplitElementTxn *txn;
+  nsresult result = CreateTxnForSplitNode(aNode, aOffset, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
 nsresult nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
                                          PRUint32    aOffset,
                                          SplitElementTxn **aTxn)
@@ -1235,6 +1263,20 @@ nsresult nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
     if (NS_SUCCEEDED(result))  {
       result = (*aTxn)->Init(this, aNode, aOffset);
     }
+  }
+  return result;
+}
+
+nsresult
+nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
+                    nsIDOMNode * aNodeToJoin,
+                    nsIDOMNode * aParent,
+                    PRBool       aNodeToKeepIsFirst)
+{
+  JoinElementTxn *txn;
+  nsresult result = CreateTxnForJoinNode(aNodeToKeep, aNodeToJoin, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
   }
   return result;
 }
@@ -1255,10 +1297,10 @@ nsresult nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
 }
 
 nsresult 
-nsEditor::SplitNode(nsIDOMNode * aExistingRightNode,
-                    PRInt32      aOffset,
-                    nsIDOMNode*  aNewLeftNode,
-                    nsIDOMNode*  aParent)
+nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
+                        PRInt32      aOffset,
+                        nsIDOMNode*  aNewLeftNode,
+                        nsIDOMNode*  aParent)
 {
   nsresult result;
   NS_ASSERTION(((nsnull!=aExistingRightNode) &&
@@ -1278,25 +1320,40 @@ nsEditor::SplitNode(nsIDOMNode * aExistingRightNode,
       // move all the children whose index is < aOffset to aNewLeftNode
       if (0<=aOffset) // don't bother unless we're going to move at least one child
       {
-        nsCOMPtr<nsIDOMNodeList> childNodes;
-        result = aExistingRightNode->GetChildNodes(getter_AddRefs(childNodes));
-        if ((NS_SUCCEEDED(result)) && (childNodes))
+        // if it's a text node, just shuffle around some text
+        nsCOMPtr<nsIDOMCharacterData> rightNodeAsText(aExistingRightNode);
+        nsCOMPtr<nsIDOMCharacterData> leftNodeAsText(aNewLeftNode);
+        if (leftNodeAsText && rightNodeAsText)
         {
-          PRInt32 i=0;
-          for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
+          // fix right node
+          nsString leftText;
+          rightNodeAsText->SubstringData(0, aOffset, leftText);
+          rightNodeAsText->DeleteData(0, aOffset);
+          // fix left node
+          leftNodeAsText->SetData(leftText);          
+        }
+        else
+        {  // otherwise it's an interior node, so shuffle around the children
+          nsCOMPtr<nsIDOMNodeList> childNodes;
+          result = aExistingRightNode->GetChildNodes(getter_AddRefs(childNodes));
+          if ((NS_SUCCEEDED(result)) && (childNodes))
           {
-            nsCOMPtr<nsIDOMNode> childNode;
-            result = childNodes->Item(i, getter_AddRefs(childNode));
-            if ((NS_SUCCEEDED(result)) && (childNode))
+            PRInt32 i=0;
+            for ( ; ((NS_SUCCEEDED(result)) && (i<aOffset)); i++)
             {
-              result = aExistingRightNode->RemoveChild(childNode, getter_AddRefs(resultNode));
-              if (NS_SUCCEEDED(result))
+              nsCOMPtr<nsIDOMNode> childNode;
+              result = childNodes->Item(i, getter_AddRefs(childNode));
+              if ((NS_SUCCEEDED(result)) && (childNode))
               {
-                result = aNewLeftNode->AppendChild(childNode, getter_AddRefs(resultNode));
+                result = aExistingRightNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+                if (NS_SUCCEEDED(result))
+                {
+                  result = aNewLeftNode->AppendChild(childNode, getter_AddRefs(resultNode));
+                }
               }
             }
-          }
-        }        
+          }        
+        }
       }
     }
   }
@@ -1307,10 +1364,10 @@ nsEditor::SplitNode(nsIDOMNode * aExistingRightNode,
 }
 
 nsresult
-nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
-                    nsIDOMNode * aNodeToJoin,
-                    nsIDOMNode * aParent,
-                    PRBool       aNodeToKeepIsFirst)
+nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
+                        nsIDOMNode * aNodeToJoin,
+                        nsIDOMNode * aParent,
+                        PRBool       aNodeToKeepIsFirst)
 {
   nsresult result;
   NS_ASSERTION(((nsnull!=aNodeToKeep) &&
@@ -1321,40 +1378,67 @@ nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
       (nsnull!=aNodeToJoin) &&
       (nsnull!=aParent))
   {
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    result = aNodeToJoin->GetChildNodes(getter_AddRefs(childNodes));
-    if ((NS_SUCCEEDED(result)) && (childNodes))
+    // if it's a text node, just shuffle around some text
+    nsCOMPtr<nsIDOMCharacterData> keepNodeAsText(aNodeToKeep);
+    nsCOMPtr<nsIDOMCharacterData> joinNodeAsText(aNodeToJoin);
+    if (keepNodeAsText && joinNodeAsText)
     {
-      PRUint32 i;
-      PRUint32 childCount=0;
-      childNodes->GetLength(&childCount);
-      nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
-      if (PR_FALSE==aNodeToKeepIsFirst)
-      { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
-        result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
-        // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
-      }
-      nsCOMPtr<nsIDOMNode> resultNode;
-      for (i=0; ((NS_SUCCEEDED(result)) && (i<childCount)); i++)
+      nsString rightText;
+      nsString leftText;
+      if (aNodeToKeepIsFirst)
       {
-        nsCOMPtr<nsIDOMNode> childNode;
-        result = childNodes->Item(i, getter_AddRefs(childNode));
-        if ((NS_SUCCEEDED(result)) && (childNode))
+        keepNodeAsText->GetData(leftText);
+        joinNodeAsText->GetData(rightText);
+      }
+      else
+      {
+        keepNodeAsText->GetData(rightText);
+        joinNodeAsText->GetData(leftText);
+      }
+      leftText += rightText;
+      keepNodeAsText->SetData(leftText);          
+    }
+    else
+    {  // otherwise it's an interior node, so shuffle around the children
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      result = aNodeToJoin->GetChildNodes(getter_AddRefs(childNodes));
+      if ((NS_SUCCEEDED(result)) && (childNodes))
+      {
+        PRUint32 i;
+        PRUint32 childCount=0;
+        childNodes->GetLength(&childCount);
+        nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
+        if (PR_FALSE==aNodeToKeepIsFirst)
+        { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
+          result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
+          // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
+        }
+        nsCOMPtr<nsIDOMNode> resultNode;
+        for (i=0; ((NS_SUCCEEDED(result)) && (i<childCount)); i++)
         {
-          if (PR_TRUE==aNodeToKeepIsFirst)
-          { // append children of aNodeToJoin
-            result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode)); 
-          }
-          else
-          { // prepend children of aNodeToJoin
-            result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
+          nsCOMPtr<nsIDOMNode> childNode;
+          result = childNodes->Item(i, getter_AddRefs(childNode));
+          if ((NS_SUCCEEDED(result)) && (childNode))
+          {
+            if (PR_TRUE==aNodeToKeepIsFirst)
+            { // append children of aNodeToJoin
+              result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode)); 
+            }
+            else
+            { // prepend children of aNodeToJoin
+              result = aNodeToKeep->InsertBefore(childNode, firstNode, getter_AddRefs(resultNode));
+            }
           }
         }
       }
-      if (NS_SUCCEEDED(result))
-      { // delete the extra node
-        result = aParent->RemoveChild(aNodeToJoin, getter_AddRefs(resultNode));
+      else if (!childNodes) {
+        result = NS_ERROR_NULL_POINTER;
       }
+    }
+    if (NS_SUCCEEDED(result))
+    { // delete the extra node
+      nsCOMPtr<nsIDOMNode> resultNode;
+      result = aParent->RemoveChild(aNodeToJoin, getter_AddRefs(resultNode));
     }
   }
   else

@@ -18,6 +18,9 @@
 
 #include "JoinElementTxn.h"
 #include "nsIDOMNodeList.h"
+#include "nsIEditorSupport.h"
+
+static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 
 
 JoinElementTxn::JoinElementTxn()
@@ -64,6 +67,12 @@ nsresult JoinElementTxn::Do(void)
           {
             childNodes->GetLength(&mOffset);
           }
+          //XXX: WRONG! needs commented code below
+/*
+  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+  if (NS_SUCCEEDED(result) && editor) {
+    result = editor->JoinNodesImpl(mLeftNode, mRightNode, mParent, PR_FALSE);
+*/
           result = mEditor->JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
         }
       }
@@ -75,7 +84,15 @@ nsresult JoinElementTxn::Do(void)
 
 nsresult JoinElementTxn::Undo(void)
 {
-  nsresult result = mEditor->SplitNode(mRightNode, mOffset, mLeftNode, mParent);
+  nsresult result;
+  nsCOMPtr<nsIEditorSupport> editor;
+  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+  if (NS_SUCCEEDED(result) && editor) {
+    result = editor->SplitNodeImpl(mRightNode, mOffset, mLeftNode, mParent);
+  }
+  else {
+    result = NS_ERROR_NOT_IMPLEMENTED;
+  }
   return result;
 }
 

@@ -21,6 +21,7 @@
 
 #include "prmon.h"
 #include "nsIEditor.h"
+#include "nsIEditorSupport.h"
 #include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
@@ -28,7 +29,6 @@
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
 #include "nsRepository.h"
-//#include "nsISelection.h"
 
 class nsIDOMCharacterData;
 class nsIDOMRange;
@@ -72,7 +72,7 @@ inline Property::Property(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesTo
  *  manager, event interfaces. the idea for the event interfaces is to have them 
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */
-class nsEditor : public nsIEditor
+class nsEditor : public nsIEditor, public nsIEditorSupport
 {
 private:
   nsIPresShell   *mPresShell;
@@ -104,6 +104,8 @@ public:
 
   virtual nsresult GetDocument(nsIDOMDocument **aDoc);
 
+  virtual nsresult GetSelection(nsIDOMSelection **aSelection);
+
   virtual nsresult SetProperties(nsVoidArray *aPropList);
 
   virtual nsresult GetProperties(nsVoidArray *aPropList);
@@ -133,9 +135,7 @@ public:
   virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
 
   virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset,
-                             nsIDOMNode * aNewLeftNode,
-                             nsIDOMNode * aParent);
+                             PRInt32      aOffset);
 
   virtual nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
                             nsIDOMNode * aNodeToJoin,
@@ -232,9 +232,19 @@ protected:
                                          PRUint32    aOffset,
                                          SplitElementTxn **aTxn);
 
+  virtual nsresult SplitNodeImpl(nsIDOMNode * aExistingRightNode,
+                                 PRInt32      aOffset,
+                                 nsIDOMNode * aNewLeftNode,
+                                 nsIDOMNode * aParent);
+
   virtual nsresult CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
                                         nsIDOMNode  *aRightNode,
                                         JoinElementTxn **aTxn);
+
+  virtual nsresult JoinNodesImpl(nsIDOMNode * aNodeToKeep,
+                                 nsIDOMNode * aNodeToJoin,
+                                 nsIDOMNode * aParent,
+                                 PRBool       aNodeToKeepIsFirst);
 
 #if 0
   nsresult CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);

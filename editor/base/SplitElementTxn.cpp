@@ -19,6 +19,9 @@
 #include "SplitElementTxn.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsIEditorSupport.h"
+
+static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 
 // note that aEditor is not refcounted
 SplitElementTxn::SplitElementTxn()
@@ -53,7 +56,14 @@ nsresult SplitElementTxn::Do(void)
     // insert the new node
     if ((NS_SUCCEEDED(result)) && (mParent))
     {
-      result = mEditor->SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+      nsCOMPtr<nsIEditorSupport> editor;
+      result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+      if (NS_SUCCEEDED(result) && editor) {
+        result = editor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+      }
+      else {
+        result = NS_ERROR_NOT_IMPLEMENTED;
+      }
     }
   }
   return result;
@@ -62,13 +72,29 @@ nsresult SplitElementTxn::Do(void)
 nsresult SplitElementTxn::Undo(void)
 {
   // this assumes Do inserted the new node in front of the prior existing node
-  nsresult result = mEditor->JoinNodes(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+  nsresult result;
+  nsCOMPtr<nsIEditorSupport> editor;
+  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+  if (NS_SUCCEEDED(result) && editor) {
+    result = editor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+  }
+  else {
+    result = NS_ERROR_NOT_IMPLEMENTED;
+  }
   return result;
 }
 
 nsresult SplitElementTxn::Redo(void)
 {
-  nsresult result = mEditor->SplitNode(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  nsresult result;
+  nsCOMPtr<nsIEditorSupport> editor;
+  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+  if (NS_SUCCEEDED(result) && editor) {
+    result = editor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  }
+  else {
+    result = NS_ERROR_NOT_IMPLEMENTED;
+  }
   return result;
 }
 

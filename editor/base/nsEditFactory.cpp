@@ -86,7 +86,7 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
 
 
   if (mCID.Equals(kEditorCID))
-    obj = (nsISupports *)new nsEditor();
+    obj = (nsISupports *)(nsIEditor*)new nsEditor();
   //more class ids to support. here
 
 

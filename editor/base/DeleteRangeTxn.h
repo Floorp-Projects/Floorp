@@ -41,9 +41,10 @@ class DeleteRangeTxn : public EditAggregateTxn
 public:
 
   /** initialize the transaction.
+    * @param aEditor the object providing basic editing operations
     * @param aRange  the range to delete
     */
-  virtual nsresult Init(nsIDOMRange *aRange);
+  virtual nsresult Init(nsIEditor *aEditor, nsIDOMRange *aRange);
 
 private:
   DeleteRangeTxn();
@@ -99,6 +100,9 @@ protected:
 
   /** p2 offset */
   PRInt32 mEndOffset;
+
+  /** the editor for this transaction */
+  nsCOMPtr<nsIEditor> mEditor;
 
   friend class TransactionFactory;
 
