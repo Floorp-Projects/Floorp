@@ -43,6 +43,7 @@ CPPSRCS =				\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
 	nsRootPart.cpp			\
+	nsScrollFrame.cpp		\
 	nsSpacerPart.cpp		\
 	nsTextContent.cpp		\
 	nsWBRPart.cpp			\
