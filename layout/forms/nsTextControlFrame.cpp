@@ -176,7 +176,9 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   } else {
     padding = (nscoord)(aCharWidth * padTextField);
   }
+#ifdef DEBUG_rods
   printf("Padding - %d  %5.2f %d\n", aCharWidth, padTextField, padding);
+#endif
   nscoord min = NSIntPixelsToTwips(padMinText, aPixToTwip);
   if (padding > min && (1 == shouldUsePadMinText)) {
     return padding;
