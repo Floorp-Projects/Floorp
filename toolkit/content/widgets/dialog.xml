@@ -18,21 +18,20 @@
       </xul:vbox>
           
       <xul:hbox class="dialog-button-box" anonid="buttons"
-                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient"
-#ifdef XP_MACOSX
-                >
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+#ifdef XP_UNIX
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
-        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
-        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
         <xul:spacer flex="1"/>
         <xul:button dlgtype="cancel" class="dialog-button"/>
         <xul:button dlgtype="accept" class="dialog-button"/>
 #else
-                pack="end">
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
+        <xul:spacer flex="1"/>
         <xul:button dlgtype="accept" class="dialog-button"/>
-        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
-        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="cancel" class="dialog-button"/>
         <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
@@ -203,24 +202,34 @@
           // add the label and oncommand handler to each button
           for (dlgtype in buttons) {
             var button = buttons[dlgtype];
-            buttons[dlgtype].addEventListener("command", this._handleButtonCommand, true);
+            button.addEventListener("command", this._handleButtonCommand, true);
+            
+
             // don't override custom labels with pre-defined labels on explicit buttons
             if (!button.hasAttribute("label")) {
-              button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
-              var accessKey = this.mStrBundle.GetStringFromName("accesskey-"+dlgtype);
-              if (accessKey)
-                button.setAttribute("accesskey", accessKey);
+              // first look at the dialog attributes
+              if (this.hasAttribute("buttonlabel"+dlgtype))
+                button.setAttribute("label", this.getAttribute("buttonlabel"+dlgtype))
+              if (this.hasAttribute("buttonaccesskey"+dlgtype))
+                button.setAttribute("accesskey", this.getAttribute("buttonaccesskey"+dlgtype))
+
+              if (dlgtype != "extra1" && dlgtype != "extra2") {
+                // then at the localized dialog.properties file
+                button.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+dlgtype));
+                var accessKey = this.mStrBundle.GetStringFromName("accesskey-"+dlgtype);
+                if (accessKey)
+                  button.setAttribute("accesskey", accessKey);
+              }
             }
           }
-          
+
           // ensure that hitting enter triggers ondialogaccept
           buttons["accept"].setAttribute("default", "true");
           
           // if there is a special button configuration, use it
           if (aButtons) {
-            // expect a comma delimitd list of dlgtype values
+            // expect a comma delimited list of dlgtype values
             var list = aButtons.split(",");
-  
             // mark shown dlgtypes as true
             var shown = { accept: false, cancel: false, help: false,
                           disclosure: false, extra1: false, extra2: false };
