@@ -157,8 +157,6 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-    NS_ERROR("stop");
-
     nsresult rv;
     const char* mimedescr;
     char *mdesc,*start,*nexttoc,*mtype,*exten,*descr;
