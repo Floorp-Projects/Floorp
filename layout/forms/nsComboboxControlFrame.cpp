@@ -972,7 +972,7 @@ nsComboboxControlFrame::ReflowCombobox(nsPresContext *         aPresContext,
   aDisplayFrame->WillReflow(aPresContext);
   //aDisplayFrame->SetPosition(nsPoint(dspBorderPadding.left + aBorderPadding.left, dspBorderPadding.top + aBorderPadding.top));
   aDisplayFrame->SetPosition(nsPoint(aBorderPadding.left, aBorderPadding.top));
-  nsAreaFrame::PositionFrameView(aPresContext, aDisplayFrame);
+  nsAreaFrame::PositionFrameView(aDisplayFrame);
   nsReflowStatus status;
   nsresult rv = aDisplayFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
   if (NS_FAILED(rv)) return;
@@ -1665,7 +1665,7 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
 
   if (!mDroppedDown && aDoDropDown) {
     if (mListControlFrame) {
-      mListControlFrame->SyncViewWithFrame(mPresContext);
+      mListControlFrame->SyncViewWithFrame();
     }
     ToggleList(mPresContext);
     return NS_OK;

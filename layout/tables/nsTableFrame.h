@@ -235,8 +235,7 @@ public:
   static nsresult AppendDirtyReflowCommand(nsIPresShell* aPresShell,
                                            nsIFrame*     aFrame);
 
-  static void RePositionViews(nsPresContext* aPresContext,
-                              nsIFrame*       aFrame);
+  static void RePositionViews(nsIFrame* aFrame);
 
   static PRBool PageBreakAfter(nsIFrame& aSourceFrame,
                                nsIFrame* aNextFrame);
@@ -660,8 +659,7 @@ protected:
                              nsTableReflowState&  aReflowState,
                              nsReflowStatus&      aStatus);
   
-  NS_IMETHOD AdjustSiblingsAfterReflow(nsPresContext*     aPresContext,
-                                       nsTableReflowState& aReflowState,
+  NS_IMETHOD AdjustSiblingsAfterReflow(nsTableReflowState& aReflowState,
                                        nsIFrame*           aKidFrame,
                                        nscoord             aDeltaY);
   

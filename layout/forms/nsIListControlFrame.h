@@ -96,7 +96,7 @@ public:
   /**
    * 
    */
-  NS_IMETHOD SyncViewWithFrame(nsPresContext* aPresContext) = 0;
+  NS_IMETHOD SyncViewWithFrame() = 0;
 
   /**
    * Called by combobox when it's about to drop down

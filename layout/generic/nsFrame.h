@@ -386,9 +386,8 @@ public:
 
   // incorporate the child overflow area into the parent overflow area
   // if the child does not have a overflow use the child area
-  void ConsiderChildOverflow(nsPresContext* aPresContext,
-                             nsRect&         aOverflowArea,
-                             nsIFrame*       aChildFrame);
+  void ConsiderChildOverflow(nsRect&   aOverflowArea,
+                             nsIFrame* aChildFrame);
 
   //Mouse Capturing code used by the frames to tell the view to capture all the following events
   NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);

@@ -2988,7 +2988,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       // does have a view in case this frame's view does not have a
       // widget and some of the descendant views do have widgets --
       // otherwise the widgets won't be repositioned.
-      nsContainerFrame::PositionChildViews(mPresContext, frame);
+      nsContainerFrame::PositionChildViews(frame);
     }
 
     // Do this here (rather than along with NS_FRAME_OUTSIDE_CHILDREN

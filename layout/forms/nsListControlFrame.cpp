@@ -2239,7 +2239,7 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::SyncViewWithFrame(nsPresContext* aPresContext)
+nsListControlFrame::SyncViewWithFrame()
 {
     // Resync the view's position with the frame.
     // The problem is the dropdown's view is attached directly under
@@ -2247,7 +2247,7 @@ nsListControlFrame::SyncViewWithFrame(nsPresContext* aPresContext)
     // as if it were in it's normal position in the view hierarchy.
   mComboboxFrame->AbsolutelyPositionDropDown();
 
-  nsContainerFrame::PositionFrameView(aPresContext, this);
+  nsContainerFrame::PositionFrameView(this);
 
   return NS_OK;
 }
@@ -2304,7 +2304,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-    SyncViewWithFrame(aPresContext);
+    SyncViewWithFrame();
   } else {
     rv = nsHTMLScrollFrame::DidReflow(aPresContext, aReflowState, aStatus);
   }

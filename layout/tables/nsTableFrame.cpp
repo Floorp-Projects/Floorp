@@ -360,11 +360,10 @@ nsTableFrame::AppendDirtyReflowCommand(nsIPresShell* aPresShell,
 
 // Make sure any views are positioned properly
 void
-nsTableFrame::RePositionViews(nsPresContext* aPresContext,
-                              nsIFrame*       aFrame)
+nsTableFrame::RePositionViews(nsIFrame* aFrame)
 {
-  nsContainerFrame::PositionFrameView(aPresContext, aFrame);
-  nsContainerFrame::PositionChildViews(aPresContext, aFrame);
+  nsContainerFrame::PositionFrameView(aFrame);
+  nsContainerFrame::PositionChildViews(aFrame);
 }
 
 PRBool
@@ -1545,8 +1544,7 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 // Slides all the row groups following aKidFrame by the specified
 // amount
 nsresult 
-nsTableFrame::AdjustSiblingsAfterReflow(nsPresContext*     aPresContext,
-                                        nsTableReflowState& aReflowState,
+nsTableFrame::AdjustSiblingsAfterReflow(nsTableReflowState& aReflowState,
                                         nsIFrame*           aKidFrame,
                                         nscoord             aDeltaY)
 {
@@ -1585,7 +1583,7 @@ nsTableFrame::AdjustSiblingsAfterReflow(nsPresContext*     aPresContext,
     if (aDeltaY != 0) {
       kidRect.y += aDeltaY;
       kidFrame->SetPosition(nsPoint(kidRect.x, kidRect.y));
-      RePositionViews(aPresContext, kidFrame);
+      RePositionViews(kidFrame);
     }
   }
   
@@ -3007,13 +3005,13 @@ nsTableFrame::IR_TargetIsChild(nsPresContext*      aPresContext,
     }
 
     // Adjust the row groups that follow
-    AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, 
+    AdjustSiblingsAfterReflow(aReflowState, aNextFrame, 
                               desiredSize.height - oldKidRect.height);
 
     // recover the overflow area from all children
     desiredSize.mOverflowArea = nsRect(0, 0, desiredSize.width, desiredSize.height);
     for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-      ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, kidFrame);
+      ConsiderChildOverflow(desiredSize.mOverflowArea, kidFrame);
     }  
     FinishAndStoreOverflow(&desiredSize.mOverflowArea,
                            nsSize(desiredSize.width, desiredSize.height));
@@ -3301,7 +3299,7 @@ nsTableFrame::ReflowChildren(nsPresContext*     aPresContext,
       }
       aReflowState.y += cellSpacingY + kidRect.height;
     }
-    ConsiderChildOverflow(aPresContext, aOverflowArea, kidFrame);
+    ConsiderChildOverflow(aOverflowArea, kidFrame);
   }
   
   // if required, give the colgroups their initial reflows
@@ -3468,9 +3466,8 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
       if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) { 
         DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
         // this might have changed the overflow area incorporate the childframe overflow area.
-        nsPresContext* presContext = GetPresContext();
         for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-          ConsiderChildOverflow(presContext, aDesiredSize.mOverflowArea, kidFrame);
+          ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
         } 
       }
       desiredHeight = tableSpecifiedHeight;
@@ -3506,7 +3503,7 @@ void ResizeCells(nsTableFrame&            aTableFrame,
     nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
     while (rowFrame) {
       rowFrame->DidResize(aPresContext, aReflowState);
-      rgFrame->ConsiderChildOverflow(aPresContext, groupDesiredSize.mOverflowArea, rowFrame);
+      rgFrame->ConsiderChildOverflow(groupDesiredSize.mOverflowArea, rowFrame);
       rowFrame = rowFrame->GetNextRow();
     }
     rgFrame->FinishAndStoreOverflow(&groupDesiredSize.mOverflowArea,
@@ -3564,13 +3561,13 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
             amountUsed += amountForRow;
             amountUsedByRG += amountForRow;
             //rowFrame->DidResize(aPresContext, aReflowState);        
-            nsTableFrame::RePositionViews(presContext, rowFrame);
+            nsTableFrame::RePositionViews(rowFrame);
           }
         }
         else {
           if (amountUsed > 0) {
             rowFrame->SetPosition(nsPoint(rowRect.x, yOriginRow));
-            nsTableFrame::RePositionViews(presContext, rowFrame);
+            nsTableFrame::RePositionViews(rowFrame);
           }
           yOriginRow += rowRect.height + cellSpacingY;
           yEndRG += rowRect.height + cellSpacingY;
@@ -3586,7 +3583,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     else if (amountUsed > 0) {
       rgFrame->SetPosition(nsPoint(0, yOriginRG));
       // Make sure child views are properly positioned
-      nsTableFrame::RePositionViews(presContext, rgFrame);
+      nsTableFrame::RePositionViews(rgFrame);
     }
     yOriginRG = yEndRG;
   }
@@ -3669,12 +3666,12 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
           amountUsedByRG += amountForRow;
           NS_ASSERTION((amountUsed <= aAmount), "invalid row allocation");
           //rowFrame->DidResize(aPresContext, aReflowState);        
-          nsTableFrame::RePositionViews(presContext, rowFrame);
+          nsTableFrame::RePositionViews(rowFrame);
         }
         else {
           if (amountUsed > 0) {
             rowFrame->SetPosition(nsPoint(rowRect.x, yOriginRow));
-            nsTableFrame::RePositionViews(presContext, rowFrame);
+            nsTableFrame::RePositionViews(rowFrame);
           }
           yOriginRow += rowRect.height + cellSpacingY;
           yEndRG += rowRect.height + cellSpacingY;
@@ -3692,7 +3689,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     else if (amountUsed > 0) {
       rgFrame->SetPosition(nsPoint(0, yOriginRG));
       // Make sure child views are properly positioned
-      nsTableFrame::RePositionViews(presContext, rgFrame);
+      nsTableFrame::RePositionViews(rgFrame);
     }
     yOriginRG = yEndRG;
   }

@@ -480,8 +480,6 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
 
     nsRect rect(mRect);
 
-    nsPresContext* presContext = aState.PresContext();
-
     PRUint32 flags = 0;
     GetLayoutFlags(flags);
 
@@ -505,9 +503,9 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
 
     if (!(flags & NS_FRAME_NO_MOVE_VIEW))
     {
-      nsContainerFrame::PositionFrameView(presContext, this);
+      nsContainerFrame::PositionFrameView(this);
       if ((rect.x != aRect.x) || (rect.y != aRect.y))
-        nsContainerFrame::PositionChildViews(presContext, this);
+        nsContainerFrame::PositionChildViews(this);
     }
   
 

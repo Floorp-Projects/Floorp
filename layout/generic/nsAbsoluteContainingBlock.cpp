@@ -608,7 +608,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     // Position its view, but don't bother it doing it now if we haven't
     // yet determined the left offset
     if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
-      nsContainerFrame::PositionFrameView(aPresContext, aKidFrame);
+      nsContainerFrame::PositionFrameView(aKidFrame);
     }
 
     // Do the reflow

@@ -167,7 +167,7 @@ public:
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
-  NS_IMETHOD SyncViewWithFrame(nsPresContext* aPresContext);
+  NS_IMETHOD SyncViewWithFrame();
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection();
