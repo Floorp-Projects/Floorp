@@ -628,7 +628,7 @@ JS_SetVersion(JSContext *cx, JSVersion version)
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.3 1998 06 30";
+    return "JavaScript-C 1.4 1998 09 21";
 }
 
 
