@@ -493,9 +493,9 @@ BOOL CTestEmbedApp::InitializeProfiles()
     nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
 	if (NS_SUCCEEDED(rv)) 
 	{	  
-		observerService->AddObserver(this, "profile-approve-change", PR_FALSE);
-		observerService->AddObserver(this, "profile-change-teardown", PR_FALSE);
-		observerService->AddObserver(this, "profile-after-change", PR_FALSE);
+		observerService->AddObserver(this, "profile-approve-change", PR_TRUE);
+		observerService->AddObserver(this, "profile-change-teardown", PR_TRUE);
+		observerService->AddObserver(this, "profile-after-change", PR_TRUE);
 	}
 
     m_ProfileMgr->StartUp();
