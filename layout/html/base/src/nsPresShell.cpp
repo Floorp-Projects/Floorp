@@ -1230,6 +1230,9 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   if (aFrame == mFocusEventFrame) {
     mFocusEventFrame = nsnull;
   }
+  if (aFrame == mAnchorEventFrame) {
+    mAnchorEventFrame = nsnull;
+  }
   return NS_OK;
 }
 
