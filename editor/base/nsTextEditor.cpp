@@ -61,7 +61,7 @@
 #include "nsIFileStream.h"
 #include "nsIStringStream.h"
 
-#include "nsIAppSHell.h"
+#include "nsIAppShell.h"
 #include "nsIToolkit.h"
 #include "nsWidgetsCID.h"
 #include "nsIFileWidget.h"
