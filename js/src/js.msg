@@ -213,7 +213,7 @@ MSG_DEF(JSMSG_BAD_PROTOTYPE,          135, 1, JSEXN_TYPEERR,   "'prototype' prop
 MSG_DEF(JSMSG_MISSING_EXPONENT,       136, 0, JSEXN_SYNTAXERR, "missing exponent")
 MSG_DEF(JSMSG_OUT_OF_MEMORY,          137, 0, JSEXN_ERR, "out of memory")
 MSG_DEF(JSMSG_UNTERMINATED_STRING,    138, 0, JSEXN_SYNTAXERR, "unterminated string literal")
-MSG_DEF(JSMSG_UNUSED139,              139, 0, JSEXN_NONE, "<Error #139 is currently unused>")
+MSG_DEF(JSMSG_TOO_MANY_PARENS,        139, 0, JSEXN_INTERNALERR, "Only 65535 parentheses supported in regular expressions")
 MSG_DEF(JSMSG_UNTERMINATED_COMMENT,   140, 0, JSEXN_SYNTAXERR, "unterminated comment")
 MSG_DEF(JSMSG_UNTERMINATED_REGEXP,    141, 0, JSEXN_SYNTAXERR, "unterminated regular expression literal")
 MSG_DEF(JSMSG_BAD_REGEXP_FLAG,        142, 0, JSEXN_SYNTAXERR, "invalid flag after regular expression")
