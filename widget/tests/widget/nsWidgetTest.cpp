@@ -1335,18 +1335,12 @@ nsresult WidgetTest(int *argc, char **argv)
                          12);
 
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
-    if (NS_OK == textWidget->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-      widget->Create(window, rect, HandleEvent, deviceContext);
-      widget->SetFont(font);
+    NS_CreateTextWidget(window,textWidget,rect,HandleEvent);
 
-      nsString initialText("0123456789");
-      textWidget->SetText(initialText,actualSize);
-      textWidget->SetMaxTextLength(12);
-      textWidget->SelectAll();
-      widget->Show(PR_TRUE);
-      NS_IF_RELEASE(widget);
-    }
+    nsString initialText("0123456789");
+    textWidget->SetText(initialText,actualSize);
+    textWidget->SetMaxTextLength(12);
+    textWidget->SelectAll();
 
     //NS_RELEASE(textWidget); 
     y += rect.height + 5;
@@ -1358,16 +1352,14 @@ nsresult WidgetTest(int *argc, char **argv)
     nsITextWidget * ptextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&ptextWidget);
-    ptextWidget->SetPassword(PR_TRUE);
+    NS_CreateTextWidget(window, ptextWidget, rect, HandleEvent);
+
     
-    if (NS_OK == ptextWidget->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-      widget->Create(window, rect, HandleEvent, NULL);
-      nsString pinitialText("password text");
-      ptextWidget->SetText(pinitialText,actualSize);
-      passwordText = ptextWidget;
-      NS_IF_RELEASE(widget);
-    }
+    nsString pinitialText("password text");
+    ptextWidget->SetText(pinitialText,actualSize);
+    passwordText = ptextWidget;
+   
+    ptextWidget->SetPassword(PR_TRUE);
 
     x = x+180;
     int saveX = x;
@@ -1394,16 +1386,14 @@ nsresult WidgetTest(int *argc, char **argv)
     nsITextWidget * rtextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
+    NS_CreateTextWidget(window, rtextWidget, rect, HandleEvent);
+
     PRBool old;
 
-    if (NS_OK == rtextWidget->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-      widget->Create(window, rect, HandleEvent, NULL);
-      nsString rinitialText("This is readonly");
-      rtextWidget->SetText(rinitialText,actualSize);
-      rtextWidget->SetReadOnly(PR_TRUE,old);
-      NS_IF_RELEASE(widget);
-    }
+    nsString rinitialText("This is readonly");
+    rtextWidget->SetText(rinitialText,actualSize);
+    rtextWidget->SetReadOnly(PR_TRUE,old);
+ 
     //NS_RELEASE(rtextWidget); 
     y += rect.height + 5;
 
