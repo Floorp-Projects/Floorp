@@ -43,6 +43,8 @@ var gToButton;
 var gCcButton;
 var gBccButton;
 
+var gActivatedButton;
+
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
 
@@ -112,7 +114,7 @@ function OnLoadSelectAddress()
   companyCol.setAttribute("hidden", "true");
 
   gToButton = document.getElementById("toButton");
-  gTcButton = document.getElementById("ccButton");
+  gCcButton = document.getElementById("ccButton");
   gBccButton = document.getElementById("bccButton");
 
   var abResultsTree = document.getElementById("abResultsTree");
@@ -395,7 +397,7 @@ function DropOnBucketPane(event)
 }
 
 function OnReturnHit(event)
-{
+{  
   if (event.keyCode == 13) {
     var focusedElement = document.commandDispatcher.focusedElement;
     if (focusedElement && (focusedElement.id == "addressBucket"))
