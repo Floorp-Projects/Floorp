@@ -45,8 +45,6 @@ static void moz_container_init                (MozContainer      *container);
 static void moz_container_map                 (GtkWidget         *widget);
 static void moz_container_unmap               (GtkWidget         *widget);
 static void moz_container_realize             (GtkWidget         *widget);
-static void moz_container_size_request        (GtkWidget         *widget,
-					       GtkRequisition    *requisition);
 static void moz_container_size_allocate       (GtkWidget         *widget,
 					       GtkAllocation     *allocation);
 
@@ -113,7 +111,6 @@ moz_container_class_init (MozContainerClass *klass)
   widget_class->map = moz_container_map;
   widget_class->unmap = moz_container_unmap;
   widget_class->realize = moz_container_realize;
-  widget_class->size_request = moz_container_size_request;
   widget_class->size_allocate = moz_container_size_allocate;
 
   container_class->add = moz_container_add;
@@ -210,15 +207,6 @@ moz_container_realize (GtkWidget *widget)
      default which is BlackPixel */
   gdk_window_set_back_pixmap (widget->window, NULL, FALSE);
 
-}
-
-void
-moz_container_size_request (GtkWidget      *widget,
-			    GtkRequisition *requisition)
-{
-  /* always request our current size */
-  requisition->width = widget->allocation.width;
-  requisition->height = widget->allocation.height;
 }
 
 void

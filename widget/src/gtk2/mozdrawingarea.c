@@ -187,3 +187,11 @@ moz_drawingarea_set_visibility (MozDrawingarea *drawingarea,
       gdk_window_hide(drawingarea->inner_window);
     }
 }
+
+void
+moz_drawingarea_scroll (MozDrawingarea *drawingarea,
+			gint x, gint y)
+{
+  gdk_window_scroll(drawingarea->inner_window,
+		    x, y);
+}

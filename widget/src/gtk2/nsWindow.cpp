@@ -66,6 +66,8 @@ nsWindow::nsWindow()
   mIsTopLevel      = PR_FALSE;
   mIsDestroyed     = PR_FALSE;
   mWindowType      = eWindowType_child;
+  mPreferredWidth  = 0;
+  mPreferredHeight = 0;
 }
 
 nsWindow::~nsWindow()
@@ -158,27 +160,38 @@ nsWindow::IsVisible(PRBool & aState)
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(PRInt32 *aX,
-			    PRInt32 *aY)
+nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 {
   return NS_ERROR_NOT_IMPLEMENTED; 
 }
 
 NS_IMETHODIMP
-nsWindow::Move(PRInt32 aX,
-	       PRInt32 aY)
+nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   if ((aX == mBounds.x) && (aY == mBounds.y) && !mIsTopLevel)
     return NS_OK;
 
+  printf("nsWindow::Move [%p] %d %d\n", (void *)this,
+	 aX, aY);
+
   mBounds.x = aX;
   mBounds.y = aY;
 
-  // XXX do we need to handle the popup crud here?
-  if (mIsTopLevel)
-    gtk_window_move(GTK_WINDOW(mShell), aX, aY);
-  else
+  if (mIsTopLevel) {
+    if (mParent && mWindowType == eWindowType_popup) {
+      nsRect oldrect, newrect;
+      oldrect.x = aX;
+      oldrect.y = aY;
+      mParent->WidgetToScreen(oldrect, newrect);
+      gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
+    }
+    else {
+      gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+    }
+  }
+  else {
     moz_drawingarea_move(mDrawingarea, aX, aY);
+  }
   
   return NS_OK;
 }
@@ -225,9 +238,20 @@ nsWindow::Resize(PRInt32 aX,
 	 aX, aY, aWidth, aHeight);
 
   if (mIsTopLevel) {
-    gtk_window_move(GTK_WINDOW(mShell), aX, aY);
-    gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-    moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
+    if (mParent && mWindowType == eWindowType_popup) {
+      nsRect oldrect, newrect;
+      oldrect.x = aX;
+      oldrect.y = aY;
+      mParent->WidgetToScreen(oldrect, newrect);
+      gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
+      gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+
+    }
+    else {
+      gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+      gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+      moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
+    }
   }
   else {
     moz_drawingarea_move_resize(mDrawingarea, aX, aY, aWidth, aHeight);
@@ -261,7 +285,9 @@ nsWindow::SetFocus(PRBool aRaise)
 NS_IMETHODIMP
 nsWindow::GetScreenBounds(nsRect &aRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsRect origin(0, 0, mBounds.width, mBounds.height);
+  WidgetToScreen(origin, aRect);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -367,14 +393,16 @@ nsWindow::Scroll(PRInt32  aDx,
 		 PRInt32  aDy,
 		 nsRect  *aClipRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::ScrollWidgets(PRInt32 aDx,
 			PRInt32 aDy)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -454,7 +482,20 @@ nsWindow::ShowMenuBar(PRBool aShow)
 NS_IMETHODIMP
 nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  gint x, y = 0;
+
+  if (mContainer)
+    gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window,
+			       &x, &y);
+  else
+    gdk_window_get_origin(mDrawingarea->inner_window, &x, &y);
+
+  aNewRect.x = x + aOldRect.x;
+  aNewRect.y = y + aOldRect.y;
+  aNewRect.width = aOldRect.width;
+  aNewRect.height = aNewRect.height;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -479,14 +520,19 @@ NS_IMETHODIMP
 nsWindow::GetPreferredSize(PRInt32 &aWidth,
 			   PRInt32 &aHeight)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aWidth  = mPreferredWidth;
+  aHeight = mPreferredHeight;
+  return (mPreferredWidth != 0 && mPreferredHeight != 0) ? 
+    NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsWindow::SetPreferredSize(PRInt32 aWidth,
 			   PRInt32 aHeight)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -738,6 +784,7 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
   case 5:
     return;
     break;
+    // default including button 1 is left button up
   default:
     eventType = NS_MOUSE_LEFT_BUTTON_UP;
     break;
@@ -905,6 +952,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 		     G_CALLBACK(leave_notify_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "motion_notify_event",
 		     G_CALLBACK(motion_notify_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "button_press_event",
+		     G_CALLBACK(button_press_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "button_release_event",
+		     G_CALLBACK(button_release_event_cb), NULL);
 
   }
 

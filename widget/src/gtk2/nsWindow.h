@@ -169,6 +169,9 @@ class nsWindow : public nsCommonWidget {
   PRPackedBool        mIsTopLevel;
   PRPackedBool        mIsDestroyed;
 
+  PRUint32            mPreferredWidth;
+  PRUint32            mPreferredHeight;
+
 };
 
 class nsChildWindow : public nsWindow {
