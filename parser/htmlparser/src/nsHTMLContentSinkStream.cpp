@@ -23,7 +23,6 @@
 
 /**
  * MODULE NOTES:
- * @update  gess 4/1/98
  * 
  * This file declares the concrete HTMLContentSink class.
  * This class is used during the parsing process as the
@@ -64,7 +63,6 @@ static PRInt32 BreakAfterOpen(eHTMLTags aTag);
 static PRInt32 BreakBeforeClose(eHTMLTags aTag);
 static PRInt32 BreakAfterClose(eHTMLTags aTag);
 static PRBool IndentChildren(eHTMLTags aTag);
-static PRBool PreformattedChildren(eHTMLTags aTag);
 
 
 /**
@@ -103,10 +101,8 @@ nsHTMLContentSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-
 NS_IMPL_ADDREF(nsHTMLContentSinkStream)
 NS_IMPL_RELEASE(nsHTMLContentSinkStream)
-
 
 /**
  * Construct a content sink stream.
@@ -139,10 +135,6 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
 {
   mDoFormat = (aFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
                                                              : PR_FALSE;
-      // I don't think anyone calls us with OutputFormatted
-#ifdef DEBUG_akkana
-  NS_ASSERTION(!mDoFormat, "nsHTMLContentSinkStream called with OutputFormatted!\n");
-#endif
 
   mBodyOnly = (aFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
                                                             : PR_FALSE;
@@ -157,7 +149,15 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
   if (aCharsetOverride != nsnull)
     mCharsetOverride.AssignWithConversion(aCharsetOverride->GetUnicode());
 
+  mInPre = PR_FALSE;
+
   return NS_OK;
+}
+
+nsHTMLContentSinkStream::~nsHTMLContentSinkStream()
+{
+    if (mBuffer)
+      nsAllocator::Free(mBuffer);
 }
 
 /**
@@ -248,10 +248,26 @@ nsHTMLContentSinkStream::InitEncoders()
   return res;
 }
 
-//
-// Write(nsString) returns the number of characters written.
-// If we do both string and stream output, stream chars will override string.
-//
+void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
+{
+  if (mBufferSize < aNewSize) {
+    if(mBuffer) delete [] mBuffer;
+
+    mBufferSize = 2*aNewSize+1; // make this twice as large
+    mBuffer = new char[mBufferSize];
+    if(mBuffer){ 
+      mBuffer[0] = 0;
+    }
+  }
+}
+
+/**
+ * Writes to the buffer/stream.
+ * If we do both string and stream output, stream chars will override string.
+ *
+ * @param aString - the string to write.
+ * @return The number of characters written.
+ */
 PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
 {
   if (mBodyOnly && !mInBody)
@@ -368,26 +384,10 @@ void nsHTMLContentSinkStream::Write(char aData)
   }
 }
 
-
 /**
+ * Write the attributes of the current tag.
  * 
- * @update	04/30/99 gpk
- * @param 
- * @return
- */
-nsHTMLContentSinkStream::~nsHTMLContentSinkStream()
-{
-    if (mBuffer)
-      nsAllocator::Free(mBuffer);
-}
-
-
-
-/**
- * 
- * @update	gess7/7/98
- * @param 
- * @return
+ * @param aNode The parser node currently in play.
  */
 void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
 {
@@ -466,10 +466,6 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
   }
 }
 
-
-
-
-
 /**
   * This method gets called by the parser when it encounters
   * a title tag and wants to set the document title in the sink.
@@ -479,7 +475,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
-nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
+nsHTMLContentSinkStream::SetTitle(const nsString& aValue)
+{
     const char* tagName = GetTagName(eHTMLTag_title);
     Write(kLessThan);
     Write(tagName);
@@ -495,15 +492,13 @@ nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
   return NS_OK;
 }
 
-
-
-// XXX OpenHTML never gets called; AddStartTag gets called on
-// XXX the html tag from OpenContainer, from nsXIFDTD::StartTopOfStack,
-// XXX from nsXIFDTD::HandleStartToken.
 /**
   * This method is used to open the outer HTML container.
   *
-  * @update	04/30/99 gpk
+  * XXX OpenHTML never gets called; AddStartTag gets called on
+  * XXX the html tag from OpenContainer, from nsXIFDTD::StartTopOfStack,
+  * XXX from nsXIFDTD::HandleStartToken.
+  *
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
@@ -532,214 +527,53 @@ nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+/**
+  * All these HTML-specific methods may be called, or may not,
+  * depending on whether the parser is parsing XIF or HTML.
+  * So we can't depend on them; instead, we have Open/CloseContainer
+  * do all the specialized work, and the html-specific Open/Close
+  * methods must call the more general methods.
+  *
+  * Since there are so many of them, make macros:
+  */
+
+#define USE_GENERAL_OPEN_METHOD(methodname, tagtype) \
+NS_IMETHODIMP nsHTMLContentSinkStream::methodname(const nsIParserNode& aNode) \
+{ \
+  if ((eHTMLTags)aNode.GetNodeType() == tagtype) \
+    AddStartTag(aNode); \
+  return NS_OK; \
+}
+
+#define USE_GENERAL_CLOSE_METHOD(methodname, tagtype) \
+NS_IMETHODIMP nsHTMLContentSinkStream::methodname(const nsIParserNode& aNode) \
+{ \
+  if ((eHTMLTags)aNode.GetNodeType() == tagtype) \
+    AddEndTag(aNode); \
+  return NS_OK; \
+}
+
+USE_GENERAL_CLOSE_METHOD(CloseHTML, eHTMLTag_html)
+USE_GENERAL_OPEN_METHOD(OpenHead, eHTMLTag_head)
+USE_GENERAL_CLOSE_METHOD(CloseHead, eHTMLTag_head)
+USE_GENERAL_OPEN_METHOD(OpenBody, eHTMLTag_body)
+USE_GENERAL_CLOSE_METHOD(CloseBody, eHTMLTag_body)
+USE_GENERAL_OPEN_METHOD(OpenForm, eHTMLTag_form)
+USE_GENERAL_CLOSE_METHOD(CloseForm, eHTMLTag_form)
+USE_GENERAL_OPEN_METHOD(OpenMap, eHTMLTag_map)
+USE_GENERAL_CLOSE_METHOD(CloseMap, eHTMLTag_map)
+USE_GENERAL_OPEN_METHOD(OpenFrameset, eHTMLTag_frameset)
+USE_GENERAL_CLOSE_METHOD(CloseFrameset, eHTMLTag_frameset)
 
 /**
-  * This method is used to close the outer HTML container.
-  *
-  * @update	04/30/99 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::CloseHTML(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_html)
-    AddEndTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to open the only HEAD container.
-  *
-  * @update	04/30/99 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode)
-{
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_head)
-  AddStartTag(aNode);
-
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the only HEAD container.
-  *
-  * @update	04/30/99 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::CloseHead(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_head)
-    AddEndTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to open the main BODY container.
-  *
-  * @update	04/30/99 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_body)
-    AddStartTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the main BODY container.
-  *
-  * @update	04/30/99 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::CloseBody(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_body)
-    AddEndTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to open a new FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_form)
-    AddStartTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the outer FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::CloseForm(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_form)
-    AddEndTag(aNode);
-  return NS_OK;
-}
-
-/**
-  * This method is used to open a new FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenMap(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_map)
-    AddStartTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the outer FORM container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::CloseMap(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_map)
-    AddEndTag(aNode);
-return NS_OK;
-}
-
-    
-/**
-  * This method is used to open the FRAMESET container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_frameset)
-    AddStartTag(aNode);
-  return NS_OK;
-}
-
-
-/**
-  * This method is used to close the FRAMESET container.
-  *
-  * @update 07/12/98 gpk
-  * @param  nsIParserNode reference to parser node interface
-  * @return PR_TRUE if successful. 
-  */     
-NS_IMETHODIMP
-nsHTMLContentSinkStream::CloseFrameset(const nsIParserNode& aNode){
-  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-  if (tag == eHTMLTag_frameset)
-    AddEndTag(aNode);
-  return NS_OK;
-}
-
-
-void nsHTMLContentSinkStream::AddIndent()
-{
-  nsString padding; padding.AssignWithConversion("  ");
-  for (PRInt32 i = mIndent; --i >= 0; ) 
-  {
-    Write(padding);
-    mColPos += 2;
-  }
-}
-
-void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize) {
-  if (mBufferSize < aNewSize) {
-    if(mBuffer) delete [] mBuffer;
-
-    mBufferSize = 2*aNewSize+1; // make this twice as large
-    mBuffer = new char[mBufferSize];
-    if(mBuffer){ 
-      mBuffer[0] = 0;
-    }
-  }
-}
-
-//
-// Check whether a node has the attribute _moz_dirty.
-// If it does, we'll prettyprint it, otherwise we adhere to the
-// surrounding text/whitespace/newline nodes provide formatting.
-//
+ *
+ * Check whether a node has the attribute _moz_dirty.
+ * If it does, we'll prettyprint it, otherwise we adhere to the
+ * surrounding text/whitespace/newline nodes provide formatting.
+ */
 PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
 {
-  // Apparently there's no way to just ask for a particlar attribute
+  // Apparently there's no way to just ask for a particular attribute
   // without looping over the list.
   int theCount = aNode.GetAttributeCount();
   if (theCount)
@@ -752,6 +586,16 @@ PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
     }
   }
   return PR_FALSE;
+}
+
+void nsHTMLContentSinkStream::AddIndent()
+{
+  nsString padding; padding.AssignWithConversion("  ");
+  for (PRInt32 i = mIndent; --i >= 0; ) 
+  {
+    Write(padding);
+    mColPos += 2;
+  }
 }
 
 void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
@@ -777,6 +621,21 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     }
     return;
   }
+  // Quoted plaintext mail/news lives in a pre tag.
+  // The editor has substituted <br> tags for all the newlines in the pre,
+  // in order to get clickable blank lines.
+  // We can't emit these <br> tags formatted, or we'll get
+  // double-spacing (one for the br, one for the line break);
+  // but we can't emit them unformatted, either,
+  // because then long quoted passages will make html source lines
+  // too long for news servers (and some mail servers) to handle.
+  // So we map all <br> tags inside <pre> to line breaks.
+  // If this turns out to be a problem, we could do this only if gMozDirty.
+  else if (tag == eHTMLTag_br && mInPre)
+  {
+    Write(NS_LINEBREAK);
+    return;
+  }
 
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();
@@ -793,12 +652,12 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
            BreakAfterClose(tag));
 #endif
 
-  if ((mDoFormat || isDirty) && mColPos != 0 && BreakBeforeOpen(tag))
+  if ((mDoFormat || isDirty) && !mInPre && mColPos != 0 && BreakBeforeOpen(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
   }
-  if ((mDoFormat || isDirty) && mColPos == 0)
+  if ((mDoFormat || isDirty) && !mInPre && mColPos == 0)
     AddIndent();
 
   EnsureBufferSize(tagName.Length());
@@ -809,7 +668,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   mColPos += 1 + tagName.Length();
 
-  if ((mDoFormat || isDirty) && tag == eHTMLTag_style)
+  if ((mDoFormat || isDirty) && !mInPre && tag == eHTMLTag_style)
   {
     Write(kGreaterThan);
     Write(NS_LINEBREAK);
@@ -829,8 +688,10 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     mColPos += 1;
   }
 
-  if (((mDoFormat || isDirty) && BreakAfterOpen(tag))
-      || (tag == eHTMLTag_pre))
+  if (tag == eHTMLTag_pre)
+    mInPre = PR_TRUE;
+
+  if (((mDoFormat || isDirty) && !mInPre && BreakAfterOpen(tag)))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
@@ -851,7 +712,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   }
 }
 
-
 void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
@@ -870,6 +730,16 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 
   if (tag == eHTMLTag_unknown)
   {
+    tagName.Assign(aNode.GetText());
+  }
+  else if (tag == eHTMLTag_pre)
+  {
+    mInPre = PR_FALSE;  // we think we can clear the flag now
+    for (PRInt32 i = mHTMLStackPos-1; i >= 0; i--)
+    {
+      if (mHTMLTagStack[i] == eHTMLTag_pre)   // oops! Nested pre, still need flag
+        mInPre = PR_TRUE;
+    }
     tagName.Assign(aNode.GetText());
   }
   else if (tag == eHTMLTag_comment)
@@ -898,7 +768,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (IndentChildren(tag))
     mIndent--;
 
-  if ((mDoFormat || isDirty) && BreakBeforeClose(tag))
+  if ((mDoFormat || isDirty) && !mInPre && BreakBeforeClose(tag))
   {
     if (mColPos != 0)
     {
@@ -906,7 +776,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
       mColPos = 0;
     }
   }
-  if ((mDoFormat || isDirty) && mColPos == 0)
+  if ((mDoFormat || isDirty) && !mInPre && mColPos == 0)
     AddIndent();
 
   EnsureBufferSize(tagName.Length());
@@ -927,7 +797,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (tag == eHTMLTag_body)
     mInBody = PR_FALSE;
 
-  if (((mDoFormat || isDirty) && BreakAfterClose(tag))
+  if (((mDoFormat || isDirty) && !mInPre && BreakAfterClose(tag))
       || tag == eHTMLTag_body || tag == eHTMLTag_html)
   {
     Write(NS_LINEBREAK);
@@ -936,16 +806,10 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
 }
 
-
-
 /**
  *  This gets called by the parser when you want to add
  *  a leaf node to the current container in the content
  *  model.
- *  
- *  @updated gpk 06/18/98
- *  @param   
- *  @return  
  */
 nsresult
 nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
@@ -955,14 +819,6 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   if (mHTMLStackPos > 0)
     tag = mHTMLTagStack[mHTMLStackPos-1];
   
-  PRBool preformatted = PR_FALSE;
-
-  for (PRInt32 i = mHTMLStackPos-1; i >= 0; i--)
-  {
-    preformatted |= PreformattedChildren(mHTMLTagStack[i]);
-    if (preformatted)
-      break;
-  }
   if (type == eHTMLTag_br ||
       type == eHTMLTag_hr ||
       type == eHTMLTag_meta || 
@@ -987,7 +843,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
       return NS_OK;
 
     const nsString& text = aNode.GetText();
-    if (preformatted)
+    if (mInPre)
     {
       Write(text);
       mColPos += text.Length();
@@ -1011,7 +867,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_whitespace)
   {
-    if (!mDoFormat || preformatted)
+    if (!mDoFormat || mInPre)
     {
       const nsString& text = aNode.GetText();
       Write(text);
@@ -1020,7 +876,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_newline)
   {
-    if (!mDoFormat || preformatted)
+    if (!mDoFormat || mInPre)
     {
       Write(NS_LINEBREAK);
       mColPos = 0;
@@ -1145,10 +1001,6 @@ nsHTMLContentSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMod
  *  This gets called by the parser when you want to add
  *  a comment node to the current container in the content
  *  model.
- *  
- *  @updated gess 3/25/98
- *  @param   
- *  @return  
  */
 NS_IMETHODIMP
 nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
@@ -1167,7 +1019,6 @@ nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
   * This method is used to a general container. 
   * This includes: OL,UL,DIR,SPAN,TABLE,H[1..6],etc.
   *
-  * @update 07/12/98 gpk
   * @param  nsIParserNode reference to parser node interface
   * @return PR_TRUE if successful. 
   */     
@@ -1332,7 +1183,6 @@ static PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_tt:
     case  eHTMLTag_var:
     case  eHTMLTag_wbr:
-           
       result = PR_TRUE;
       break;
 
@@ -1392,7 +1242,6 @@ static PRBool BreakAfterOpen(eHTMLTags aTag)
 
     default:
       break;
-
   }
   return result;
 }
@@ -1419,7 +1268,6 @@ static PRBool BreakBeforeClose(eHTMLTags aTag)
 
     default:
       break;
-
   }
   return result;
 }
@@ -1437,6 +1285,7 @@ static PRBool BreakAfterClose(eHTMLTags aTag)
     case  eHTMLTag_tr:
     case  eHTMLTag_th:
     case  eHTMLTag_td:
+    case  eHTMLTag_pre:
       result = PR_TRUE;
     break;
 
@@ -1472,235 +1321,6 @@ static PRBool IndentChildren(eHTMLTags aTag)
   }
   return result;  
 }
-
-/**
-  * All tags after this tag and before the closing tag will be output with no
-  * formatting.
-  */
-static PRBool PreformattedChildren(eHTMLTags aTag)
-{
-  PRBool result = PR_FALSE;
-  if (aTag == eHTMLTag_pre)
-  {
-    result = PR_TRUE;
-  }
-  return result;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//////    OBSOLETE CODE FROM HERE TO END OF FILE.
-//////             All Ifdef'ed out.
-///////////////////////////////////////////////////////////////////////////
-
-#ifdef OBSOLETE
-/**
-  * Eat the open tag.  Pretty much just for <P*>.
-  */
-PRBool EatOpen(eHTMLTags aTag)  {
-  return PR_FALSE;
-}
-
-/**
-  * Eat the close tag.  Pretty much just for </P>.
-  */
-PRBool EatClose(eHTMLTags aTag)  {
-  return PR_FALSE;
-}
-
-/** @see PermitWSBeforeOpen */
-PRBool PermitWSAfterOpen(eHTMLTags aTag)  {
-  if (aTag == eHTMLTag_pre)
-  {
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
-/**
-  * Are we allowed to insert new white space before the open tag.
-  *
-  * Returning false does not prevent inserting WS
-  * before the tag if WS insertion is allowed for another reason,
-  * e.g. there is already WS there or we are after a tag that
-  * has PermitWSAfter*().
-  */
-static PRBool PermitWSBeforeOpen(eHTMLTags aTag)
-{
-  PRBool result = IsInline(aTag) == PR_FALSE;
-  return result;
-}
-
-/** @see PermitWSBeforeOpen */
-PRBool PermitWSBeforeClose(eHTMLTags aTag)  {
-  if (aTag == eHTMLTag_pre)
-  {
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
-/** @see PermitWSBeforeOpen */
-PRBool PermitWSAfterClose(eHTMLTags aTag)  {
-  return PR_TRUE;
-}
-
-/** @see PermitWSBeforeOpen */
-PRBool IgnoreWS(eHTMLTags aTag)  {
-  PRBool result = PR_FALSE;
-
-  switch (aTag)
-  {
-    case eHTMLTag_html:
-    case eHTMLTag_head:
-    case eHTMLTag_body:
-    case eHTMLTag_ul:
-    case eHTMLTag_ol:
-    case eHTMLTag_li:
-    case eHTMLTag_table:
-    case eHTMLTag_tbody:
-    case eHTMLTag_style:
-      result = PR_TRUE;
-      break;
-    default:
-      break;
-  }
-
-  return result;
-}
-
- /** PRETTY PRINTING PROTOTYPES **/
-
-class nsTagFormat
-{
-public:
-  void Init(PRBool aBefore, PRBool aStart, PRBool aEnd, PRBool aAfter);
-  void SetIndentGroup(PRUint8 aGroup);
-  void SetFormat(PRBool aOnOff);
-
-public:
-  PRBool    mBreakBefore;
-  PRBool    mBreakStart;
-  PRBool    mBreakEnd;
-  PRBool    mBreakAfter;
-  
-  PRUint8   mIndentGroup; // zero for none
-  PRBool    mFormat;      // format (on|off)
-};
-
-void nsTagFormat::Init(PRBool aBefore, PRBool aStart, PRBool aEnd, PRBool aAfter)
-{
-  mBreakBefore = aBefore;
-  mBreakStart = aStart;
-  mBreakEnd = aEnd;
-  mBreakAfter = aAfter;
-  mFormat = PR_TRUE;
-}
-
-void nsTagFormat::SetIndentGroup(PRUint8 aGroup)
-{
-  mIndentGroup = aGroup;
-}
-
-void nsTagFormat::SetFormat(PRBool aOnOff)
-{
-  mFormat = aOnOff; 
-}
-
-class nsPrettyPrinter
-{
-public:
-
-  void Init(PRBool aIndentEnable = PR_TRUE, PRUint8 aColSize = 2, PRUint8 aTabSize = 8, PRBool aUseTabs = PR_FALSE );    
-  
-  PRBool      mIndentEnable;
-  PRUint8     mIndentColSize;
-  PRUint8     mIndentTabSize;
-  PRBool      mIndentUseTabs;
-
-  PRBool      mAutowrapEnable;
-  PRUint32    mAutoWrapColWidth;
-
-  nsTagFormat mTagFormat[NS_HTML_TAG_MAX+1];
-};
-
-
-void nsPrettyPrinter::Init(PRBool aIndentEnable, PRUint8 aColSize, PRUint8 aTabSize, PRBool aUseTabs)
-{
-  mIndentEnable = aIndentEnable;
-  mIndentColSize = aColSize;
-  mIndentTabSize = aTabSize;
-  mIndentUseTabs = aUseTabs;
-
-  mAutowrapEnable = PR_TRUE;
-  mAutoWrapColWidth = 72;
-
-  for (PRUint32 i = 0; i < NS_HTML_TAG_MAX; i++)
-    mTagFormat[i].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
-
-  mTagFormat[eHTMLTag_a].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_abbr].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
-  mTagFormat[eHTMLTag_applet].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
-  mTagFormat[eHTMLTag_area].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_b].Init(PR_FALSE,PR_FALSE,PR_FALSE,PR_FALSE);
-  mTagFormat[eHTMLTag_base].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_blockquote].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_body].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_br].Init(PR_FALSE,PR_TRUE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_caption].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_center].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_dd].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_dir].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_div].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_dl].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_dt].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_embed].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_form].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_frame].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_frameset].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h1].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h2].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h3].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h4].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h5].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_h6].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_head].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_hr].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_html].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_ilayer].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_input].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_isindex].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_layer].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_li].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_link].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_map].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
-  mTagFormat[eHTMLTag_menu].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_meta].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_object].Init(PR_FALSE,PR_TRUE,PR_TRUE,PR_FALSE);
-  mTagFormat[eHTMLTag_ol].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_option].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_p].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_param].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_pre].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_script].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_select].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_style].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_table].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-  mTagFormat[eHTMLTag_td].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_textarea].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_th].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_title].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_tr].Init(PR_TRUE,PR_FALSE,PR_FALSE,PR_TRUE);
-  mTagFormat[eHTMLTag_ul].Init(PR_TRUE,PR_TRUE,PR_TRUE,PR_TRUE);
-}
-
-static PRBool EatOpen(eHTMLTags aTag);
-static PRBool EatClose(eHTMLTags aTag);
-static PRBool PermitWSAfterOpen(eHTMLTags aTag);
-static PRBool PermitWSBeforeClose(eHTMLTags aTag);
-static PRBool PermitWSAfterClose(eHTMLTags aTag);
-static PRBool IgnoreWS(eHTMLTags aTag);
-
-#endif // OBSOLETE
 
 
  
