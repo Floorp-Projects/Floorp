@@ -498,6 +498,21 @@ dnl the qsort routine under solaris is faulty
 esac
 
 dnl ========================================================
+dnl Any platform that doesn't have MKSHLIB_FORCE_ALL defined
+dnl by now will not have any way to link most binaries (tests
+dnl as well as viewer, apprunner, etc.), because some symbols
+dnl will be left out of the "composite" .so's by ld as unneeded.
+dnl So, by defining NO_LD_ARCHIVE_FLAGS for these platforms,
+dnl they can link in the static libs that provide the missing
+dnl symbols.
+dnl ========================================================
+NO_LD_ARCHIVE_FLAGS=
+if test -z "$MKSHLIB_FORCE_ALL"; then
+    NO_LD_ARCHIVE_FLAGS=1
+fi
+AC_SUBST(NO_LD_ARCHIVE_FLAGS)
+
+dnl ========================================================
 dnl =
 dnl = --diable-pic-dso-cflags
 dnl =
@@ -514,8 +529,6 @@ if test ! "$ENABLE_PIC_DSO_CFLAGS"
 then
   DSO_PIC_CFLAGS=""
 fi
-
-dnl ========================================================
 
 dnl ========================================================
 dnl =
@@ -616,21 +629,22 @@ fi
         _SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
 
-		if test "$MOTIF_REQUIRES_XPM" = "True"; then
-	    	AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-			XPM_LIBS="-lXpm", 
-			[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
-		fi
+	if test "$MOTIF_REQUIRES_XPM" = "True"; then
+	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
+		XPM_LIBS="-lXpm", 
+		[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
+	fi
 
-		if test "$MOTIF_VERSION" = "2.1"; then
-	    	AC_CHECK_LIB(Xp, XpGetPrinterList, 
-			MOTIF_XP_LIBS="-lXp",
-			[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
-		fi
+	if test "$MOTIF_VERSION" = "2.1"; then
+	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
+		MOTIF_XP_LIBS="-lXp",
+		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
+	fi
 
-		TK_LIBS="$XLDFLAGS $TK_LIBS"
-		LDFLAGS="$_SAVE_LDFLAGS"
+	LDFLAGS="$_SAVE_LDFLAGS"
     fi
+
+    TK_LIBS="$XLDFLAGS $TK_LIBS"
 
     if test "$MOTIF_STATIC_LIB" = "unknown" \
          -a "$MOTIF_DYNAMIC_LIB" = "unknown"; then
@@ -654,7 +668,7 @@ fi
 	MOTIF_INCLUDE_DIR=
     fi
 
-	TK_LIBS="$MOTIF_XP_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $XEXT_LIBS $X11_LIBS  $XSM_LIBS $XICE_LIBS"
+    TK_LIBS="$MOTIF_XP_LIBS $TK_LIBS $X_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $XEXT_LIBS $X11_LIBS $XSM_LIBS $XICE_LIBS"
 
     AC_ARG_WITH(static-motif,
     [  --with-static-motif     link Motif statically if possible],
