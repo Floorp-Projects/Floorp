@@ -46,6 +46,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIWebNavigation.h"
 
 /////////////////////////////////////////////////////////////////////////
 // nsMsgPrintEngine implementation
@@ -299,8 +300,9 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
   //If it's not something we know about, then just load try loading it directly.
   else
   {
-    if (mWebShell)
-      mWebShell->LoadURL(uri->GetUnicode(), nsnull, nsIChannel::LOAD_DOCUMENT_URI);
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+    if (webNav)
+      webNav->LoadURI(uri->GetUnicode());
   }
 
   PR_FREEIF(tString);

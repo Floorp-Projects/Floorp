@@ -255,6 +255,12 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
 
 
 // nsIURIContentListener support
+NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
+{
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgWindow::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHandler **aProtocolHandler)
 {
    // we don't have any app specific protocol handlers we want to use so 

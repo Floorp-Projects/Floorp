@@ -105,6 +105,13 @@ NS_IMETHODIMP nsURLFetcher::GetInterface(const nsIID & aIID, void * *aInstancePt
 
 // nsIURIContentListener support
 NS_IMETHODIMP 
+nsURLFetcher::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
+{
+   return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsURLFetcher::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
 {
   *aProtocolHandler = nsnull;

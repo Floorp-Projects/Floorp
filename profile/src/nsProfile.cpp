@@ -1837,6 +1837,12 @@ nsProfile::GetInterface(const nsIID & aIID, void * *aInstancePtr)
 }
 
 // nsIURIContentListener support
+NS_IMETHODIMP nsProfile::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
+{
+   return NS_OK;
+}
+
 NS_IMETHODIMP
 nsProfile::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
 {
