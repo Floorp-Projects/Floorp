@@ -2560,14 +2560,16 @@ NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool 
     // we're probably doing something that should be batched.
     nsCOMPtr <nsIMsgDatabase> database;
 
-    GetMsgDatabase(nsnull, getter_AddRefs(database));
+    if (dbBatching)  //only if we do dbBatching we need to get db
+      GetMsgDatabase(nsnull, getter_AddRefs(database));
+
     if (enable)
     {
-      if (database && dbBatching)
+      if (database)
         database->EndBatch();
       UpdateSummaryTotals(PR_TRUE);
     }
-    else if (database && dbBatching)
+    else if (database)
       database->StartBatch();
 
     return NS_OK;
