@@ -189,9 +189,10 @@ public:
     void                              get(char& c);
     PRInt32                           read(void* s, PRInt32 n);
     PRBool                            readline(char* s,  PRInt32 n);
-                                          // Result always null-terminated
-                                          // false result indicates line was truncated
-                                          // to fit buffer, or an error occurred.
+                                          // Result always null-terminated.
+                                          // Check eof() before each call.
+                                          // CAUTION: false result only indicates line was truncated
+                                          // to fit buffer, or an error occurred (OTHER THAN eof).
 
     // Input streamers.  Add more as needed
     nsBasicInStream&                  operator >> (char& ch);
