@@ -176,16 +176,11 @@ function MsgCompactFolder(isAll)
         var folderList = tree.selectedItems;
         if (folderList)
         {
-            var messageUri = "";
             var selctedFolderUri = "";
             var isImap = false;
             if (folderList.length == 1)
             {
                 selectedFolderUri = folderList[0].getAttribute('id');
-                var threadTree = GetThreadTree();
-                var messageList = threadTree.selectedItems;
-                if (messageList && messageList.length == 1)
-                    messageUri = messageList[0].getAttribute('id');
                 if (selectedFolderUri.indexOf("imap:") != -1)
                 {
                     isImap = true;
