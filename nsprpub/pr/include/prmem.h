@@ -37,14 +37,13 @@
 
 /*
 ** File: prmem.h
-** Description: API to NSPR 2.0 memory management functions
+** Description: API to NSPR memory management functions
 **
 */
 #ifndef prmem_h___
 #define prmem_h___
 
 #include "prtypes.h"
-#include <stddef.h>
 #include <stdlib.h>
 
 PR_BEGIN_EXTERN_C
