@@ -38,6 +38,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-charset.xul \
 		$(srcdir)/pref-charset.js \
 		$(srcdir)/pref-colors.xul \
+		$(srcdir)/pref-cookies.xul \
 		$(srcdir)/pref-colors.js \
 		$(srcdir)/pref-themes.xul \
 		$(srcdir)/pref-composer.xul \

@@ -36,6 +36,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-themes.dtd \
 		$(srcdir)/pref-charset.dtd \
 		$(srcdir)/pref-composer.dtd \
+		$(srcdir)/pref-cookies.dtd \
 		$(srcdir)/pref-editing.dtd \
 		$(srcdir)/pref-debug.dtd \
 		$(srcdir)/pref-download.dtd \
