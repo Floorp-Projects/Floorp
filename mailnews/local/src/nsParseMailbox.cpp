@@ -521,17 +521,17 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
 
 NS_IMETHODIMP nsParseMailMessageState::SetState(nsMailboxParseState aState)
 {
-	m_state = aState;
-	return NS_OK;
+  m_state = aState;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::GetState(nsMailboxParseState *aState)
 {
-	if (!aState) 
-		return NS_ERROR_NULL_POINTER;
-
-	*aState = m_state;
-	return NS_OK;
+  if (!aState) 
+    return NS_ERROR_NULL_POINTER;
+  
+  *aState = m_state;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -545,10 +545,10 @@ nsParseMailMessageState::GetEnvelopePos(PRUint32 *aEnvelopePos)
 
 NS_IMETHODIMP nsParseMailMessageState::SetEnvelopePos(PRUint32 aEnvelopePos)
 {
-	m_envelope_pos = aEnvelopePos;
-    m_position = m_envelope_pos;
-    m_headerstartpos = m_position;
-	return NS_OK;
+  m_envelope_pos = aEnvelopePos;
+  m_position = m_envelope_pos;
+  m_headerstartpos = m_position;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader)
@@ -563,52 +563,52 @@ NS_IMETHODIMP nsParseMailMessageState::GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader)
 
 NS_IMETHODIMP nsParseMailMessageState::ParseAFolderLine(const char *line, PRUint32 lineLength)
 {
-	ParseFolderLine(line, lineLength);
-	return NS_OK;
+  ParseFolderLine(line, lineLength);
+  return NS_OK;
 }
 
 PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 lineLength)
 {
-	int status = 0;
-
-	if (m_state == nsIMsgParseMailMsgState::ParseHeadersState)
-	{
-		if (EMPTY_MESSAGE_LINE(line))
-		{
-		  /* End of headers.  Now parse them. */
-			status = ParseHeaders();
-			 NS_ASSERTION(status >= 0, "error parsing headers parsing mailbox");
-			if (status < 0)
-				return status;
-
-			 status = FinalizeHeaders();
-			 NS_ASSERTION(status >= 0, "error finalizing headers parsing mailbox");
-			if (status < 0)
-				return status;
-			 m_state = nsIMsgParseMailMsgState::ParseBodyState;
-		}
-		else
-		{
+  int status = 0;
+  
+  if (m_state == nsIMsgParseMailMsgState::ParseHeadersState)
+  {
+    if (EMPTY_MESSAGE_LINE(line))
+    {
+      /* End of headers.  Now parse them. */
+      status = ParseHeaders();
+      NS_ASSERTION(status >= 0, "error parsing headers parsing mailbox");
+      if (status < 0)
+        return status;
+      
+      status = FinalizeHeaders();
+      NS_ASSERTION(status >= 0, "error finalizing headers parsing mailbox");
+      if (status < 0)
+        return status;
+      m_state = nsIMsgParseMailMsgState::ParseBodyState;
+    }
+    else
+    {
 		  /* Otherwise, this line belongs to a header.  So append it to the
-			 header data, and stay in MBOX `MIME_PARSE_HEADERS' state.
-		   */
-			m_headers.AppendBuffer(line, lineLength);
-		}
-	}
-	else if ( m_state == nsIMsgParseMailMsgState::ParseBodyState)
-	{
-		m_body_lines++;
-	}
-
-	m_position += lineLength;
-
-	return 0;
+                  header data, and stay in MBOX `MIME_PARSE_HEADERS' state.
+      */
+      m_headers.AppendBuffer(line, lineLength);
+    }
+  }
+  else if ( m_state == nsIMsgParseMailMsgState::ParseBodyState)
+  {
+    m_body_lines++;
+  }
+  
+  m_position += lineLength;
+  
+  return 0;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
 {
-	m_mailDB = mailDB;
-	return NS_OK;
+  m_mailDB = mailDB;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::SetDBFolderStream(nsIOFileStream *fileStream)
@@ -1706,8 +1706,8 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 }
 
 nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
-											   nsIMsgDatabase *sourceDB, 
-											   const nsACString& destFolderUri,
+                                                      nsIMsgDatabase *sourceDB, 
+                                                      const nsACString& destFolderUri,
                                                       nsIMsgFilter *filter,
                                                       nsIMsgWindow *msgWindow)
 {
@@ -1715,6 +1715,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   nsIOFileStream *destFile;
   
   nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &err)); 
+  NS_ENSURE_SUCCESS(err, err);
   nsCOMPtr<nsIRDFResource> res;
   err = rdf->GetResource(destFolderUri, getter_AddRefs(res));
   if (NS_FAILED(err))
