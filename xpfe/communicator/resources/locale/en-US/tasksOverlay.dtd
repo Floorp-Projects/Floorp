@@ -9,9 +9,6 @@
 <!ENTITY editorCmd.label					"Composer">
 <!ENTITY editorCmd.accesskey				"c">
 <!ENTITY editorCmd.commandkey				"4">
-<!ENTITY addressBookCmd.label				"Address Book">  
-<!ENTITY addressBookCmd.accesskey			"a">
-<!ENTITY addressBookCmd.commandkey			"5">
 
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY toolsMenu.accesskey				"t">
@@ -34,5 +31,4 @@
 
 <!ENTITY taskNavigator.tooltip  "Navigator">
 <!ENTITY taskComposer.tooltip  "Composer">
-<!ENTITY taskAddressBook.tooltip  "Address Book">
 <!ENTITY taskBar.tooltip  "Status Bar">

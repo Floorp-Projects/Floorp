@@ -20,7 +20,6 @@
 <keyset id="tasksKeys">
   <key id="key_navigator"    key="&navigatorCmd.commandkey;"   command="Tasks:Navigator" modifiers="accel"/>
   <key id="key_editor"       key="&editorCmd.commandkey;"      command="Tasks:Editor" modifiers="accel"/>
-  <key id="key_addressbook"  key="&addressBookCmd.commandkey;" command="Tasks:AddressBook" modifiers="accel"/>
 
   <!-- Tools Menu -->
   <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
@@ -28,7 +27,6 @@
 <commandset id="tasksCommands">
   <command id="Tasks:Navigator" oncommand="toNavigator();"/>
   <command id="Tasks:Editor" oncommand="toEditor();"/>
-  <command id="Tasks:AddressBook" oncommand="toAddressBook();"/>
 </commandset>
 
 
@@ -45,7 +43,6 @@
         <menupopup id="taskPopup">
           <menuitem label="&navigatorCmd.label;" accesskey="&navigatorCmd.accesskey;" key="key_navigator" command="Tasks:Navigator"/>
           <menuitem label="&editorCmd.label;" accesskey="&editorCmd.accesskey;" key="key_editor" command="Tasks:Editor" />
-          <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook"/>
 
           <!-- Overlays get stuffed in here. -->
 
@@ -78,8 +75,6 @@
               tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
       <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
               tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-      <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
-              tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
     </hbox>
    
     <spring id="taskbar-middle-spacer" flex="10"/>
@@ -106,8 +101,6 @@
               tooltip="aTooltip" tooltiptext="&taskNavigator.tooltip;"/>
       <button class="button-toolbar-4 taskbutton" id="mini-comp" oncommand="toEditor();" 
               tooltip="aTooltip" tooltiptext="&taskComposer.tooltip;"/>
-      <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
-              tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
                
    </hbox> 
 </overlay>
