@@ -273,9 +273,17 @@ xpmenu {
 	font: inherit;
 }
 
+xpmenu[disabled="true"] {
+	color: #999999;
+}
+
 xpmenuitem {
 	display: block;
 	font: inherit;
+}
+
+xpmenuitem[disabled="true"] {
+	color: #999999;
 }
 
 xpmenuchildren {
