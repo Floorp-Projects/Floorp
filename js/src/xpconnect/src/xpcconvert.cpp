@@ -93,10 +93,41 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 
 /***************************************************************************/
 
+/*
+* Support for 64 bit conversions were 'long long' not supported.
+* (from John Fairhurst <mjf35@cam.ac.uk>)
+*/
+
+#ifdef JS_HAVE_LONG_LONG
+
 #define JAM_DOUBLE(cx,v,d) (d=JS_NewDouble(cx,(jsdouble)v),DOUBLE_TO_JSVAL(d))
-#define FIT_32(cx,i,d) (INT_FITS_IN_JSVAL(i)?INT_TO_JSVAL(i):JAM_DOUBLE(cx,i,d))
 // Win32 can't handle uint64 to double conversion
 #define JAM_DOUBLE_U64(cx,v,d) JAM_DOUBLE(cx,((int64)v),d)
+
+#else
+
+inline jsval
+JAM_DOUBLE(JSContext *cx, const int64 &v, jsdouble *dbl)
+{
+   jsdouble d;
+   LL_L2D(d, v);
+   dbl = JS_NewDouble(cx, d);
+   return DOUBLE_TO_JSVAL(dbl);
+}
+
+inline jsval
+JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
+{
+   dbl = JS_NewDouble(cx, (jsdouble)v);
+   return DOUBLE_TO_JSVAL(dbl);
+}
+   
+// if !HAVE_LONG_LONG, then uint64 is a typedef of int64
+#define JAM_DOUBLE_U64(cx,v,d) JAM_DOUBLE(cx,v,d)
+
+#endif
+
+#define FIT_32(cx,i,d) (INT_FITS_IN_JSVAL(i)?INT_TO_JSVAL(i):JAM_DOUBLE(cx,i,d))
 
 // static
 JSBool
@@ -293,13 +324,14 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             if(!JS_ValueToECMAInt32(cx, s, &ti))
                 return JS_FALSE;
-            *((int64*)d) = (int64) ti;
+            LL_I2L(*((int64*)d),ti);
+
         }
         else
         {
             if(!JS_ValueToNumber(cx, s, &td))
                 return JS_FALSE;
-            *((int64*)d) = (int64) td;
+            LL_D2L(*((int64*)d),td);
         }
         break;
     case nsXPTType::T_U8     :
@@ -321,14 +353,18 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         {
             if(!JS_ValueToECMAUint32(cx, s, &tu))
                 return JS_FALSE;
-            *((uint64*)d) = (uint64) tu;
+            LL_UI2L(*((int64*)d),tu);
         }
         else
         {
             if(!JS_ValueToNumber(cx, s, &td))
                 return JS_FALSE;
+#ifdef XP_WIN
             // XXX Win32 can't handle double to uint64 directly
             *((uint64*)d) = (uint64)((int64) td);
+#else
+            LL_D2L(*((uint64*)d),td);
+#endif
         }
         break;
     case nsXPTType::T_FLOAT  :

@@ -42,6 +42,7 @@
 #include "xpclog.h"
 #include "xpccomponents.h"
 #include "xpcjsid.h"
+#include "prlong.h"
 
 extern const char* XPC_VAL_STR; // 'value' property name for out params
 
