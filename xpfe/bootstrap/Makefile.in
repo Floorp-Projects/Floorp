@@ -76,18 +76,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES	+= intl profile appcomps
 endif
 
-ifdef MOZ_PHOENIX
-ifeq ($(USE_SHORT_LIBNAME),1)
-PROGRAM		= mozbrowser$(BIN_SUFFIX)
-else
-PROGRAM		= mozbrowser-bin$(BIN_SUFFIX)
-endif
-else
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
 else
 PROGRAM		= mozilla-bin$(BIN_SUFFIX)
-endif
 endif
 
 CPPSRCS		= \
@@ -181,9 +173,6 @@ RCINCLUDE = splash.rc
 DEFINES	+= -DWIN32_LEAN_AND_MEAN
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
-ifdef MOZ_PHOENIX
-RCFLAGS += -DMOZ_PHOENIX
-endif
 endif
 
 ifneq (,$(filter windows os2 gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
@@ -295,11 +284,7 @@ libs:: mozilla.1
 install:: mozilla.1
 	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mandir)/man1
 
-ifdef MOZ_PHOENIX
-MOZILLA_SCRIPT=mozbrowser
-else
 MOZILLA_SCRIPT=mozilla
-endif
 
 $(MOZILLA_SCRIPT):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \

@@ -70,21 +70,11 @@
 #endif
 
 // define default product directory
-#ifdef MOZ_PHOENIX
-// Phoenix, the new standalone browser, has its own profile separate from
-// mozmail and other standalone apps.
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
-#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("MozBrowser")
-#elif defined (XP_UNIX)
-#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(".mozbrowser")
-#endif
-#else
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("Mozilla")
 #elif defined (XP_UNIX)
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(".mozilla")
 #endif
-#endif // MOZ_PHOENIX
 
 // Locally defined keys used by nsAppDirectoryEnumerator
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH

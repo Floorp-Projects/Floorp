@@ -42,6 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base components
+DIRS = base components app
 
 include $(topsrcdir)/config/rules.mk
