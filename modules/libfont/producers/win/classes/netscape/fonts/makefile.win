@@ -30,4 +30,4 @@ LINCS=-I$(XPDIST)\public\dbm
 CLASSROOT=$(DEPTH)\modules\libfont\producers\win\classes 
 
 JAVA_SOURCEPATH=$(DEPTH)\modules\libfont\producers\win\classes
-!include $(DEPT)\config\rules.mak
+!include $(DEPTH)\config\rules.mak
