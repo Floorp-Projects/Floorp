@@ -37,8 +37,8 @@ struct nsStyleSpacing;
 class nsBlockReflowContext {
 public:
   nsBlockReflowContext(nsIPresContext& aPresContext,
-                       nsLineLayout& aLineLayout,
-                       nsFrameReflowState& aParentRS);
+                       const nsHTMLReflowState& aParentRS,
+                       PRBool aComputeMaxElementSize);
   ~nsBlockReflowContext() { }
 
   void SetRunInFrame(nsBlockFrame* aRunInFrame) {
@@ -47,6 +47,14 @@ public:
 
   void SetCompactMarginWidth(nscoord aCompactMarginWidth) {
     mCompactMarginWidth = aCompactMarginWidth;
+  }
+
+  void SetNextRCFrame(nsIFrame* aNextRCFrame) {
+    mNextRCFrame = aNextRCFrame;
+  }
+
+  nsIFrame* GetNextRCFrame() const {
+    return mNextRCFrame;
   }
 
   nsresult ReflowBlock(nsIFrame* aFrame,
@@ -91,7 +99,7 @@ public:
   static void ComputeMarginsFor(nsIPresContext& aPresContext,
                                 nsIFrame* aFrame,
                                 const nsStyleSpacing* aSpacing,
-                                const nsFrameReflowState& aParentRS,
+                                const nsHTMLReflowState& aParentRS,
                                 nsMargin& aResult);
 
   static void CollapseMargins(const nsMargin& aMargin,
@@ -118,16 +126,21 @@ public:
   }
 
 protected:
+  nsStyleUnit GetRealMarginLeftUnit();
+  nsStyleUnit GetRealMarginRightUnit();
+
   nsIPresContext& mPresContext;
-  nsLineLayout& mLineLayout;
-  nsFrameReflowState& mOuterReflowState;
+  const nsHTMLReflowState& mOuterReflowState;
 
   nsIFrame* mFrame;
   nsBlockFrame* mRunInFrame;
   nscoord mCompactMarginWidth;
   nsRect mSpace;
+  nsIFrame* mNextRCFrame;
 
-  const nsStyleSpacing* mSpacing;
+  // Spacing style for the frame we are reflowing; only valid after reflow
+  const nsStyleSpacing* mStyleSpacing;
+
   nsMargin mMargin;
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
