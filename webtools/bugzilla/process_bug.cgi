@@ -43,7 +43,6 @@ use vars qw(%versions
           %components
           %COOKIE
           %MFORM
-          %legal_keywords
           %legal_opsys
           %legal_platform
           %legal_priority
@@ -807,7 +806,7 @@ if ($::FORM{'keywords'}) {
 my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
 
 if ($::comma eq ""
-    && 0 == @keywordlist && $keywordaction ne "makeexact"
+    && (! @::legal_keywords || (0 == @keywordlist && $keywordaction ne "makeexact"))
     && defined $::FORM{'masscc'} && ! $::FORM{'masscc'}
     ) {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
