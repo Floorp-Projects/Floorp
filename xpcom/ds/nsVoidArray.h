@@ -342,7 +342,9 @@ public:
   nsSmallVoidArray& operator=(nsSmallVoidArray& other);
   void* operator[](PRInt32 aIndex) const { return ElementAt(aIndex); }
 
+#ifdef DEBUG
   virtual void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
   PRInt32 GetArraySize() const;
 
   PRInt32 Count() const;
