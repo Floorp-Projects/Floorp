@@ -34,7 +34,20 @@
 #include <nsString.h>
 #include <nsReadableUtils.h>
 
-#define BREAK_FALSE {rc=PR_FALSE;break;}
+// one day we may know what they look like.
+inline
+PRBool
+IsNullDOMString( const nsAReadableString& aString )
+{
+	return PR_FALSE;
+}
+
+inline
+PRBool
+IsNULLDOMString( const nsAReadableCString& aString )
+{
+	return PR_FALSE;
+}
 
 class PythonTypeDescriptor {
 public:
@@ -158,8 +171,6 @@ static PRUint32 GetArrayElementSize( PRUint8 t)
 	return ret;
 }
 
-#define BREAK_FALSE {rc=PR_FALSE;break;}
-
 void FreeSingleArray(void *array_ptr, PRUint32 sequence_size, PRUint8 array_type)
 {
 	// Free each array element - NOT the array itself
@@ -187,6 +198,8 @@ void FreeSingleArray(void *array_ptr, PRUint32 sequence_size, PRUint8 array_type
 }
 
 #define FILL_SIMPLE_POINTER( type, val ) *((type *)pthis) = (type)(val);
+#define BREAK_FALSE {rc=PR_FALSE;break;}
+
 
 PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence_size, PRUint32 array_element_size, PRUint8 array_type)
 {
@@ -334,7 +347,8 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 					PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
 					BREAK_FALSE;
 				}
-				val_use = PyUnicode_FromObject(val);
+				if ((val_use = PyUnicode_FromObject(val))==NULL)
+					BREAK_FALSE;
 				NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromObject didnt return a Unicode object!");
 				const PRUnichar *sz = PyUnicode_AS_UNICODE(val_use);
 				int nch = PyUnicode_GET_SIZE(val_use);
@@ -790,21 +804,20 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			ns_v.val.p = this_buffer_pointer;
 			break;
 		  case nsXPTType::T_DOMSTRING: {
-			  // XXX - no concept of "null" yet.
 			if (val==Py_None) {
-				PyErr_SetString(PyExc_TypeError, "Can't pass None for a DOMString yet!");
-				BREAK_FALSE;
+				ns_v.val.p = new nsString(nsnull);
+			} else {
+				if (!PyString_Check(val) && !PyUnicode_Check(val)) {
+					PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
+					BREAK_FALSE;
+				}
+				if ((val_use = PyUnicode_FromObject(val))==NULL)
+					BREAK_FALSE;
+				// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
+				NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromUnicode didnt return a unicode object!");
+				ns_v.val.p = new nsString(PyUnicode_AS_UNICODE(val_use), 
+				                          PyUnicode_GET_SIZE(val_use));
 			}
-			if (!PyString_Check(val) && !PyUnicode_Check(val)) {
-				PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
-				BREAK_FALSE;
-			}
-			if ((val_use = PyUnicode_FromObject(val))==NULL)
-				BREAK_FALSE;
-			// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-			NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromUnicode didnt return a unicode object!");
-			ns_v.val.p = new nsString(PyUnicode_AS_UNICODE(val_use), 
-			                          PyUnicode_GET_SIZE(val_use));
 			if (!ns_v.val.p) {
 				PyErr_NoMemory();
 				BREAK_FALSE;
@@ -841,7 +854,8 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 				PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
 				BREAK_FALSE;
 			}
-			val_use = PyUnicode_FromObject(val);
+			if ((val_use = PyUnicode_FromObject(val))==NULL)
+				BREAK_FALSE;
 			NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromObject didnt return a Unicode object!");
 			cb_this_buffer_pointer = (PyUnicode_GET_SIZE(val_use)+1) * sizeof(Py_UNICODE);
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
@@ -1107,7 +1121,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 		break;
 	  case nsXPTType::T_DOMSTRING: {
 		nsAWritableString *rs = (nsAWritableString *)ns_v.ptr;
-		if (rs == NULL) {
+		if (rs == NULL || IsNullDOMString(*rs)) {
 			ret = Py_None;
 			Py_INCREF(Py_None);
 		} else {
@@ -1459,7 +1473,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 	  case nsXPTType::T_DOMSTRING: {
 		NS_ABORT_IF_FALSE(is_out || !XPT_PD_IS_DIPPER(td.param_flags), "DOMStrings can't be inout");
 		nsAReadableString *rs = (nsAReadableString *)ns_v.val.p;
-		if (rs==NULL) {
+		if (rs==NULL || IsNullDOMString(*rs)) {
 			ret = Py_None;
 			Py_INCREF(Py_None);
 		} else {
@@ -1722,17 +1736,17 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		nsAWritableString *ws = (nsAWritableString *)ns_v.val.p;
 		NS_ABORT_IF_FALSE(ws->Length() == 0, "Why does this writable string already have chars??");
 		if (val == Py_None) {
-			PyErr_SetString(PyExc_ValueError, "Dont know how to handle NULL DOMStrings yet!");
-			BREAK_FALSE;
+			(*ws) = (PRUnichar *)nsnull;
+		} else {
+			if (!PyString_Check(val) && !PyUnicode_Check(val)) {
+				PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
+				BREAK_FALSE;
+			}
+			val_use = PyUnicode_FromObject(val);
+			NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromObject didnt return a Unicode object!");
+			const PRUnichar *sz = PyUnicode_AS_UNICODE(val_use);
+			ws->Assign(sz);
 		}
-		if (!PyString_Check(val) && !PyUnicode_Check(val)) {
-			PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
-			BREAK_FALSE;
-		}
-		val_use = PyUnicode_FromObject(val);
-		NS_ABORT_IF_FALSE(PyUnicode_Check(val_use), "PyUnicode_FromObject didnt return a Unicode object!");
-		const PRUnichar *sz = PyUnicode_AS_UNICODE(val_use);
-		ws->Assign(sz);
 		break;
 		}
 
