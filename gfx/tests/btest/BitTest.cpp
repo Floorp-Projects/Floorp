@@ -44,6 +44,7 @@
 #include "nsWidgetsCID.h" 
 #include "nsITextWidget.h"
 #include "nsIBlender.h"
+#include "nsIServiceManager.h"
 
 // widget interface
 static NS_DEFINE_IID(kITextWidgetIID,     NS_ITEXTWIDGET_IID);
@@ -55,11 +56,13 @@ static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChildWindowIID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
+static NS_DEFINE_IID(kImageManagerCID, NS_IMAGEMANAGER_CID);
+
 
 static char* class1Name = "ImageTest";
 
 static HINSTANCE        gInstance;
-static nsIImageManager  *gImageManager = nsnull;
+static nsCOMPtr<nsIImageManager> gImageManager;
 static nsIImageGroup    *gImageGroup = nsnull;
 static nsIImageRequest  *gImageReq = nsnull;
 static HWND             gHwnd;
@@ -1060,11 +1063,15 @@ PRUint32  size;
 
     case WM_CREATE:
       // Initialize image library
-      if (NS_NewImageManager(&gImageManager) != NS_OK||gImageManager->Init() != NS_OK) 
-        {
-        ::MessageBox(NULL, "Can't initialize the image library",class1Name, MB_OK);
-        }	  
-      gImageManager->SetCacheSize(1024*1024);
+      { nsresult result;
+        gImageManager = do_GetService(kImageManagerCID, &result);
+        if ((NS_FAILED(result)) || gImageManager->Init() != NS_OK)
+          {
+          ::MessageBox(NULL, "Can't initialize the image library",class1Name, MB_OK);
+          }	 
+        else
+          gImageManager->SetCacheSize(1024*1024);
+      }
       break;
     case WM_DESTROY:
       MyInterrupt();
@@ -1075,10 +1082,7 @@ PRUint32  size;
         {
         NS_RELEASE(gImageGroup);
         }
-      if (gImageManager != nsnull) 
-        {
-        NS_RELEASE(gImageManager);
-        }
+      gImageManager = nsnull;
       if (gBlendImage) 
         {
         NS_RELEASE(gBlendImage);
@@ -1174,6 +1178,8 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow
   nsComponentManager::RegisterComponent(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCBlenderIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kImageManagerCID, "Image Manager", "component://netscape/gfx/imagemanager", GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   if (!prevInstance) {
     WNDCLASS wndClass;

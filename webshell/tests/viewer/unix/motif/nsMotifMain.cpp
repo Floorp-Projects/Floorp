@@ -24,6 +24,10 @@
 #include "nsBrowserWindow.h"
 #include "nsMotifMenu.h"
 #include "nsIImageManager.h"
+#include "nsIServiceManager.h"
+#include "nsGfxCIID.h"
+
+static NS_DEFINE_IID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 
 static nsNativeViewerApp* gTheApp;
 
@@ -99,9 +103,24 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
+  nsresult result;
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
-  nsIImageManager *manager;
-  NS_NewImageManager(&manager);
+  nsCOMPtr<nsIImageManager> manager;
+  
+  manager = do_GetService(kImageManagerCID, &result);
+  if (NS_FAILED(result)) {
+  /* This is just to provide backwards compatibility, until the ImageManagerImpl
+     can be converted to a service on all platforms. Once, we havedone the conversion
+     on all platforms, we should be removing the call to NS_NewImageManager(...)
+   */
+      if ((result = NS_NewImageManager(getter_AddRefs(manager))) != NS_OK) {
+          return result;
+      }
+		// WARNING Extra addref to simulate older be
+		nsIImageManager *aManager = manager.get();
+		NS_ADDREF(aManager);
+      
+  }
 
   gTheApp = new nsNativeViewerApp();
 
