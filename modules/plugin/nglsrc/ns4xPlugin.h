@@ -75,6 +75,8 @@ public:
   ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
   virtual ~ns4xPlugin(void);
 
+  static void ReleaseStatics();
+
   NS_DECL_ISUPPORTS
 
   //nsIFactory interface

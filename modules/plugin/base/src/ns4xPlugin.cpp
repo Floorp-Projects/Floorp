@@ -44,8 +44,8 @@ static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 ////////////////////////////////////////////////////////////////////////
 
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
-nsIServiceManager* gServiceMgr;
-nsIMemory *         gMalloc;
+static nsIServiceManager* gServiceMgr = nsnull;
+static nsIMemory* gMalloc = nsnull;
 
 void
 ns4xPlugin::CheckClassInitialized(void)
@@ -54,9 +54,6 @@ ns4xPlugin::CheckClassInitialized(void)
 
     if (initialized)
         return;
-
-    gServiceMgr = nsnull;
-    gMalloc = nsnull;
 
     // XXX It'd be nice to make this const and initialize it
     // statically...
@@ -126,6 +123,12 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
 
 ns4xPlugin::~ns4xPlugin(void)
 {
+}
+
+/* static */
+void ns4xPlugin::ReleaseStatics()
+{
+  NS_IF_RELEASE(gMalloc);
 }
 
 nsresult
@@ -445,7 +448,6 @@ ns4xPlugin::Shutdown(void)
 
     fShutdownEntry = nsnull;
   }
-  NS_IF_RELEASE(gMalloc);
 
   return NS_OK;
 }
