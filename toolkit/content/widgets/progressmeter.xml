@@ -52,8 +52,8 @@
   <binding id="progressmeter-undetermined"
            extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
     <content>
-      <xul:stack class="progress-remainder" flex="1" anonid="stack">
-        <xul:spacer class="progress-bar" anonid="spacer" top="0" style="margin-right: -1000px; overflow: -moz-hidden-unscrollable;"/>
+      <xul:stack class="progress-remainder" flex="1" anonid="stack" style="overflow: -moz-hidden-unscrollable;">
+        <xul:spacer class="progress-bar" anonid="spacer" top="0" style="margin-right: -1000px;"/>
       </xul:stack>
     </content>
 
@@ -62,13 +62,15 @@
         <body><![CDATA[
           var stack = document.getAnonymousElementByAttribute(this, "anonid", "stack");
           var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
+          var position = -1;
           var interval = setInterval(function nextStep() {
             try {
               spacer.height = stack.boxObject.height;
-              spacer.left -= -stack.boxObject.width >> 7;
-              spacer.left -= -2;
-              if (spacer.left >= stack.boxObject.width)
-                spacer.left = -spacer.width;
+              spacer.width = stack.boxObject.width >> 2;
+              spacer.left = spacer.width * position;
+              position += 30 / (stack.boxObject.width + 600);
+              if (position >= 4)
+                position = -1;
             } catch (e) {
               clearInterval(interval);
             }
