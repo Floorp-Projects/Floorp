@@ -88,8 +88,8 @@ interface nsIImage : nsISupports
    */
   readonly attribute unsigned long bitsLength;
 
-
-  readonly attribute PRUint8 bits;
+  // XXX do we copy here?  lets not...
+  void getBits([array, size_is(length)] out PRUint8 bits, out unsigned long length);
 
   /**
    * Sets \a length bytes of \a data in this object.

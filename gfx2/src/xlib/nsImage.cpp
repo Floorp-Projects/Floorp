@@ -137,13 +137,15 @@ NS_IMETHODIMP nsImage::GetBitsLength(PRUint32 *aBitsLength)
   return NS_OK;
 }
 
-/* readonly attribute PRUint8 bits; */
-NS_IMETHODIMP nsImage::GetBits(PRUint8 *aBits)
+/* void getBits([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
+NS_IMETHODIMP nsImage::GetBits(PRUint8 **aBits, PRUint32 *length)
 {
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBits = mBits;
+  *length = mBitsLength;
+
   return NS_OK;
 }
 
