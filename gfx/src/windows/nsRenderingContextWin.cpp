@@ -2161,8 +2161,10 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
           while (aBreaks[breakIndex + 1] <= estimatedBreakOffset) {
             breakIndex++;
           }
-          NS_ASSERTION(aBreaks[breakIndex] <= estimatedBreakOffset, "bad break index");
 
+          if (breakIndex == -1)
+              breakIndex = 0;
+ 
           // We found a place to break that is before the estimated break
           // offset. Where we break depends on whether the text crosses a
           // segment boundary
@@ -2250,8 +2252,11 @@ nsRenderingContextWin::GetWidth(const PRUnichar *aString,
           i = start + numChars;
           if (breakIndex == -1) {
             breakIndex = 0;
-            while (aBreaks[breakIndex + 1] < i) {
-              breakIndex++;
+            if (aBreaks[breakIndex] < i)
+            {
+                while (aBreaks[breakIndex + 1] < i) {
+                  breakIndex++;
+                }
             }
           }
 
