@@ -10,16 +10,6 @@
 tree {
   background-color: #EEEEEE;
   color: #000000;
-  border: none;
-  border-spacing: 0px;
-}
-
-/** class="inset" *************************************************
- *  this is the tree class used by dialogs to create treeviews with 
- *  inset borders, and default dialog spacing.
- **/
-
-tree.inset {
   border-left: 1px solid #9D9D9D;
   border-top: 1px solid #9D9D9D;
   border-right: 1px solid #FFFFFF;
@@ -27,7 +17,11 @@ tree.inset {
   margin: 1px 5px 2px 5px;
 }
 
-tree.inset > .tree-container-treerows {
+
+
+
+
+tree > .tree-container-treerows {
   border: 1px solid #000000;
 }
 
