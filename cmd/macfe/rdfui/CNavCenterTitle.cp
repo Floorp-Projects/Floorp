@@ -25,8 +25,9 @@
 //
 
 #include "CNavCenterTitle.h"
-#include "CNavCenterSelectorPane.h"		// for message id's
 #include "URDFUtilities.h"
+#include "CContextMenuAttachment.h"
+#include "CRDFCoordinator.h"
 
 
 CNavCenterStrip :: CNavCenterStrip ( LStream *inStream )
@@ -44,6 +45,37 @@ CNavCenterStrip :: ~CNavCenterStrip()
 
 
 //
+// FindCommandStatus
+//
+// Respond to commands from the context menu for Aurora popup-location.
+//
+void
+CNavCenterStrip :: FindCommandStatus ( CommandT inCommand, Boolean &outEnabled,
+										Boolean	&outUsesMark, Char16 &outMark, Str255 outName)
+{
+	outEnabled = true;
+	outUsesMark = false;	//еее expand later to mark the current state
+
+} // FindCommandStatus
+
+
+//
+// ClickSelf
+//
+// Handle context-clicks by passing them off to the attachement (if present)
+//
+void
+CNavCenterStrip :: ClickSelf ( const SMouseDownEvent & inMouseDown )
+{
+	CContextMenuAttachment::SExecuteParams params;
+	params.inMouseDown = &inMouseDown;
+	
+	ExecuteAttachments ( CContextMenuAttachment::msg_ContextMenu, (void*)&params );
+
+} // ClickSelf
+
+
+//
 // ListenToMessage
 //
 // We want to know when the selected workspace changes so that we can update the
@@ -55,7 +87,7 @@ CNavCenterStrip :: ListenToMessage ( MessageT inMessage, void* ioParam )
 {
 	switch ( inMessage ) {
 	
-		case msg_ActiveSelectorChanged:
+		case CRDFCoordinator::msg_ActiveSelectorChanged:
 		{
 			mView = reinterpret_cast<HT_View>(ioParam);
 			if ( mView )
@@ -75,6 +107,20 @@ CNavCenterStrip :: ListenToMessage ( MessageT inMessage, void* ioParam )
 	} // case of which message
 
 } // ListenToMessage
+
+
+//
+// AdjustCursorSelf
+//
+// Handle changing cursor to contextual menu cursor if cmd key is down
+//
+void
+CNavCenterStrip :: AdjustCursorSelf( Point /*inPoint*/, const EventRecord& inEvent )
+{
+	ExecuteAttachments(CContextMenuAttachment::msg_ContextMenuCursor, 
+								static_cast<void*>(const_cast<EventRecord*>(&inEvent)));
+
+} // AdjustCursorSelf
 
 
 //

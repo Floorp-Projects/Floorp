@@ -33,12 +33,8 @@ extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
 
 
 class CNavCenterStrip 
-	: public CGrayBevelView, public CTiledImageMixin
+	: public CGrayBevelView, public CTiledImageMixin, public LCommander
 {
-	enum {
-		msg_ActiveSelectorChanged	= 'selc'		// broadcast when view changes
-	};
-
 		// Construction, Destruction
 	CNavCenterStrip(LStream *inStream);
 	~CNavCenterStrip();
@@ -56,7 +52,11 @@ protected:
 		
 		// PowerPlant overrides
 	virtual void ListenToMessage ( MessageT inMessage, void* ioParam ) ;
-
+	virtual void AdjustCursorSelf( Point inPoint, const EventRecord& inEvent ) ;
+	virtual void FindCommandStatus ( CommandT inCommand, Boolean &outEnabled,
+										Boolean	&outUsesMark, Char16 &outMark, Str255 outName) ;
+	virtual void ClickSelf ( const SMouseDownEvent & inMouseDown ) ;
+	
 	virtual	void DrawBeveledFill ( ) ;
 	virtual void DrawStandby ( const Point & inTopLeft, 
 								const IconTransformType inTransform ) const;
