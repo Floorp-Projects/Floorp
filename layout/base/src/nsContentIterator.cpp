@@ -537,7 +537,7 @@ nsresult nsContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode)
     PRInt32              indx;
   
     // get next sibling if there is one
-    if (NS_FAILED(cN->GetParent(*getter_AddRefs(parent))) || !parent)
+    if (NS_FAILED(cN->GetParent(*getter_AddRefs(parent))))
       return NS_ERROR_FAILURE;
     if (!parent || NS_FAILED(parent->IndexOf(cN, indx)))
     {
@@ -571,7 +571,7 @@ nsresult nsContentIterator::PrevNode(nsCOMPtr<nsIContent> *ioNextNode)
     PRInt32              indx;
   
     // get prev sibling if there is one
-    if (NS_FAILED(cN->GetParent(*getter_AddRefs(parent))) || !parent)
+    if (NS_FAILED(cN->GetParent(*getter_AddRefs(parent))))
       return NS_ERROR_FAILURE;
     if (!parent || NS_FAILED(parent->IndexOf(cN, indx)))
     {
