@@ -1775,39 +1775,34 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   }
 
   if (mAlphaDepth == 1) {
-    GdkPixmap *tileImg;
-    GdkPixmap *tileMask;
+    GdkGC *tileGC;
+    GdkGCValues values;
+    GdkGCValuesMask valuesMask;
 
-    nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
+    memset(&values, 0, sizeof(GdkGCValues));
+    values.fill = GDK_STIPPLED;
+    values.function = GDK_AND;
+    values.stipple = mAlphaPixmap;
+    values.ts_x_origin = aTileRect.x - aSXOffset;
+    values.ts_y_origin = aTileRect.y - aSYOffset;
+    valuesMask = GdkGCValuesMask(GDK_GC_FOREGROUND | GDK_GC_FUNCTION | 
+                                 GDK_GC_FILL | GDK_GC_STIPPLE | 
+                                 GDK_GC_TS_X_ORIGIN | GDK_GC_TS_Y_ORIGIN);
+    tileGC = gdk_gc_new_with_values(drawing->GetDrawable(), &values, valuesMask);
+    
+    gdk_draw_rectangle(drawing->GetDrawable(), tileGC, PR_TRUE,
+                       aTileRect.x, aTileRect.y,
+                       aTileRect.width, aTileRect.height);
 
-    tileImg = gdk_pixmap_new(nsnull, aTileRect.width, 
-                             aTileRect.height, drawing->GetDepth());
-#ifdef MOZ_WIDGET_GTK2
-    gdk_drawable_set_colormap(GDK_DRAWABLE(tileImg), gdk_rgb_get_colormap());
-#endif
-    TilePixmap(mImagePixmap, tileImg, aSXOffset, aSYOffset, tmpRect,
-               tmpRect, PR_FALSE);
+    gdk_gc_set_fill(tileGC, GDK_TILED);
+    gdk_gc_set_function(tileGC, GDK_OR);
+    gdk_gc_set_tile(tileGC, mImagePixmap);
 
+    gdk_draw_rectangle(drawing->GetDrawable(), tileGC, PR_TRUE,
+                       aTileRect.x, aTileRect.y,
+                       aTileRect.width, aTileRect.height);
 
-    // tile alpha mask
-    tileMask = gdk_pixmap_new(nsnull, aTileRect.width, aTileRect.height,
-                              mAlphaDepth);
-    TilePixmap(mAlphaPixmap, tileMask, aSXOffset, aSYOffset, tmpRect,
-               tmpRect, PR_FALSE);
-
-    GdkGC *fgc = gdk_gc_new(drawing->GetDrawable());
-    gdk_gc_set_clip_mask(fgc, (GdkBitmap*)tileMask);
-    gdk_gc_set_clip_origin(fgc, aTileRect.x, aTileRect.y);
-
-    // and copy it back
-    gdk_window_copy_area(drawing->GetDrawable(), fgc, aTileRect.x,
-                         aTileRect.y, tileImg, 0, 0,
-                         aTileRect.width, aTileRect.height);
-    gdk_gc_unref(fgc);
-
-    gdk_pixmap_unref(tileImg);
-    gdk_pixmap_unref(tileMask);
-
+    gdk_gc_unref(tileGC);
   } else {
 
     // In the non-alpha case, gdk can tile for us
