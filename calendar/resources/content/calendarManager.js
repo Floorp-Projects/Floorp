@@ -263,7 +263,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    var name = "calendar"+this.rootContainer.getSubNodes().length;
         
    CalendarObject.active = true;
-   CalendarObject.path = CalendarObject.path.replace( "webcal:", "http:" );
+   CalendarObject.remotePath = CalendarObject.remotePath.replace( "webcal:", "http:" );
 
    var node = this.rootContainer.addNode(name);
    node.setAttribute("http://home.netscape.com/NC-rdf#active", "true");
