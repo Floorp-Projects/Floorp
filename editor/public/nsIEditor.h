@@ -42,11 +42,38 @@ class nsIEditor  : public nsISupports{
 public:
   NS_DECL_ISUPPORTS
 
+  /**
+   * Init() tells is to tell the implementation of nsIEditor to begin its services
+   */
   virtual nsresult Init() = 0;
+
+  /**
+   * SetDomInterface() WILL BE ADDREFFED
+   *
+   * @param aDomInterface The dom interface being observed
+   */
   virtual nsresult SetDomInterface(nsIDOMDocument *aDomInterface)=0;
+
+  /**
+   * GetDomInterface() WILL NOT RETURN AN ADDREFFED POINTER
+   *
+   * @param aDomInterface The dom interface being observed
+   */
   virtual nsresult GetDomInterface(nsIDOMDocument **)=0;
+
+  /**
+   * SetProperties() sets the properties of the current selection
+   *
+   * @param aProperty An enum that lists the various properties that can be applied, bold, ect.
+   */
   virtual nsresult SetProperties(PROPERTIES aProperty)=0;
-  virtual nsresult GetProperties(PROPERTIES &)=0;
+
+  /**
+   * SetProperties() sets the properties of the current selection
+   *
+   * @param aProperty An enum that will recieve the various properties that can be applied from the current selection.
+   */
+  virtual nsresult GetProperties(PROPERTIES &aProperty)=0;
 };
 
 #endif //nsIEditor_h__

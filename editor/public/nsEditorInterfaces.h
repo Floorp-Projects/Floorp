@@ -23,42 +23,81 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
 
+//prototype for the Editor class that will be included in the .cpp file
+class Editor;
+
 //nsIDOMKeyListener interface
+/** The nsEditorKeyListener public nsIDOMKeyListener
+ *  This class will delegate events to its editor according to the translation
+ *  it is responsible for.  i.e. 'c' becomes a keydown, but 'ESC' becomes nothing.
+ *  This should be done through contexts that are loaded from URLs
+ */
 class nsEditorKeyListener : public nsIDOMKeyListener {
   Editor *mEditorP;
 public:
+  /** the default constructor
+   */
   nsEditorKeyListener();
+  /** the default destructor. virtual due to the possibility of derivation.
+   */
   virtual ~nsEditorKeyListener();
 
+  /** SetEditor gives an address to the editor that will be accessed
+   *  @param Editor *aEditor simple
+   */
   void SetEditor(Editor *aEditorP){mEditorP = mEditorP;}
+
+  /** GetEditor returns a copy of the address the keylistener has
+   *  @return copy of the editor address
+   */
   Editor *GetEditor(){ return mEditorP; }
 
+/*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
+/*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
+  see the nsIDOMKeyListener interface implementation for details
+  */
   virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
-
 public:
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+/*END interfaces from nsIDOMKeyListener*/
 private:
   virtual nsresult GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar);
 };
-//editor Implementation of the MouseListener interface
-//nsIDOMMouseListener interface
-class nsEditorMouseListener : public nsIDOMMouseListener {
+
+
+/** editor Implementation of the MouseListener interface
+ * nsIDOMMouseListener interface
+ */
+class nsEditorMouseListener : public nsIDOMMouseListener 
+{
   Editor *mEditorP;
 public:
+  /** default constructor
+   */
   nsEditorMouseListener();
+  /** default destructor
+   */
   virtual ~nsEditorMouseListener();
 
+  /** SetEditor gives an address to the editor that will be accessed
+   *  @param Editor *aEditor simple
+   */
   void SetEditor(Editor *aEditorP){mEditorP = mEditorP;}
+
+  /** GetEditor returns a copy of the address the keylistener has
+   *  @return copy of the editor address
+   */
   Editor *GetEditor(){ return mEditorP; }
 
+/*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-  virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
-
+/*BEGIN implementations of mouseevent handler interface*/
+    virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
 public:
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
@@ -66,11 +105,16 @@ public:
   virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+/*END implementations of mouseevent handler interface*/
 };
 
-
+/** factory for the editor key listener
+ */
 extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, Editor *aEditorP);
 
+/** factory for the editor mouse listener
+ */
 extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, Editor *aEditorP);
 
 #endif //nsEditorInterfaces_h__
+
