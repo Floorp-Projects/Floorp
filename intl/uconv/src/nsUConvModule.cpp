@@ -202,6 +202,9 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
     cp++;
   }
 
+  // XXX also unregister this stuff when time comes
+  rv = NS_RegisterConverterManagerData();
+
   return rv;
 }
 

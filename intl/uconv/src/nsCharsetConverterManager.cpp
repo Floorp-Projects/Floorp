@@ -29,6 +29,7 @@
 #include "nsIStringBundle.h"
 #include "nsILocaleService.h"
 #include "nsUConvDll.h"
+#include "nsObjectArray.h"
 
 // just for CIDs
 #include "nsIUnicodeDecodeHelper.h"
@@ -39,50 +40,19 @@ static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 
-#define DATA_BUNDLE_REGISTRY_KEY "software/netscape/intl/xuconv/data/"
-
-//----------------------------------------------------------------------------
-// Class nsObject [declaration]
-
-class nsObject
-{
-public: 
-  virtual ~nsObject();
-};
-
-//----------------------------------------------------------------------------
-// Class nsObjectArray [declaration]
-
-class nsObjectArray
-{
-private:
-
-  nsObject **   mArray;
-  PRInt32       mCapacity;
-  PRInt32       mUsage;
-
-  void Init(PRInt32 aCapacity);
-
-public: 
-  nsObjectArray();
-  nsObjectArray(PRInt32 aCapacity);
-  ~nsObjectArray();
-
-  nsObject ** GetArray();
-  PRInt32 GetUsage();
-  nsresult InsureCapacity(PRInt32 aCapacity);
-  nsresult AddObject(nsObject * aObject);
-};
+// XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
+#define DATA_BUNDLE_REGISTRY_KEY    "software/netscape/intl/xuconv/data/"
+#define TITLE_BUNDLE_REGISTRY_KEY   "software/netscape/intl/xuconv/titles/"
 
 //----------------------------------------------------------------------------
 // Class nsConverterInfo [declaration]
 
+// XXX give up these internal data structs and create&return the lists on the fly
 class nsConverterInfo : public nsObject
 {
 public: 
   nsString *    mName;
   nsCID         mCID;
-  PRInt32       mFlags;
 
   nsConverterInfo();
   ~nsConverterInfo();
@@ -106,18 +76,12 @@ private:
   nsObjectArray mDecoderArray;
   nsObjectArray mEncoderArray;
   nsIStringBundle * mDataBundle;
+  nsIStringBundle * mTitleBundle;
 
   /**
    * Takes charset information from Registry and puts it into those arrays.
    */
   void FillInfoArrays();
-  void FillConverterProperties(nsObjectArray * aArray);
-
-  /**
-   * Returns NULL if charset could not be found.
-   */
-  nsConverterInfo * GetConverterInfo(nsObjectArray * aArray, 
-      nsString * aName);
 
   nsresult GetConverterList(nsObjectArray * aArray, nsString *** aResult, 
       PRInt32 * aCount);
@@ -150,11 +114,12 @@ public:
       nsIUnicodeDecoder ** aResult);
   NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount);
   NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount);
-  NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
-      nsString ** aResult);
   NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult);
   NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, nsString ** 
       aResult);
+  NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
+      nsString ** aResult);
+  NS_IMETHOD GetCharsetTitle(nsString * aCharset, nsString ** aResult);
 };
 
 //----------------------------------------------------------------------------
@@ -190,82 +155,6 @@ NS_IMETHODIMP NS_RegisterConverterManagerData()
 }
 
 //----------------------------------------------------------------------------
-// Class nsObject [implementation]
-
-// XXX clarify why I can't have this method as a pure virtual one?!
-nsObject::~nsObject()
-{
-}
-
-//----------------------------------------------------------------------------
-// Class nsObjectsArray [implementation]
-
-nsObjectArray::nsObjectArray(PRInt32 aCapacity)
-{
-  Init(aCapacity);
-}
-
-nsObjectArray::nsObjectArray()
-{
-  Init(64);
-}
-
-nsObjectArray::~nsObjectArray()
-{
-  for (PRInt32 i = 0; i < mUsage; i++) delete mArray[i];
-  if (mArray != NULL) delete [] mArray;
-}
-
-nsObject ** nsObjectArray::GetArray()
-{
-  return mArray;
-}
-
-PRInt32 nsObjectArray::GetUsage()
-{
-  return mUsage;
-}
-
-void nsObjectArray::Init(PRInt32 aCapacity)
-{
-  mCapacity = aCapacity;
-  mUsage = 0;
-  mArray = NULL;
-}
-
-nsresult nsObjectArray::InsureCapacity(PRInt32 aCapacity)
-{
-  PRInt32 i;
-
-  if (mArray == NULL) {
-    mArray = new nsObject * [mCapacity];
-    if (mArray == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (aCapacity > mCapacity) {
-    while (aCapacity > mCapacity) mCapacity *= 2;
-    nsObject ** newArray = new nsObject * [mCapacity];
-    if (newArray == NULL) return NS_ERROR_OUT_OF_MEMORY;
-    for (i = 0; i < mUsage; i++) newArray[i] = mArray[i];
-    delete [] mArray;
-    mArray = newArray;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsObjectArray::AddObject(nsObject * aObject)
-{
-  nsresult res;
-
-  res = InsureCapacity(mUsage + 1);
-  if (NS_FAILED(res)) return res;
-
-  (mArray)[mUsage++] = aObject;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------
 // Class nsConverterInfo [implementation]
 
 nsConverterInfo::nsConverterInfo()
@@ -284,19 +173,18 @@ nsConverterInfo::~nsConverterInfo()
 NS_IMPL_ISUPPORTS(nsCharsetConverterManager, nsICharsetConverterManager::GetIID());
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
-:mDataBundle(NULL)
+:mDataBundle(NULL), mTitleBundle(NULL)
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
 
   FillInfoArrays();
-  FillConverterProperties(&mDecoderArray);
-  FillConverterProperties(&mEncoderArray);
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
 {
   NS_IF_RELEASE(mDataBundle);
+  NS_IF_RELEASE(mTitleBundle);
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
@@ -315,10 +203,8 @@ nsresult nsCharsetConverterManager::RegisterConverterManagerData()
     if (NS_FAILED(res)) return res;
   }
 
-  // XXX take these konstants out of here
-  // XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
-  RegisterConverterTitles(registry, "software/netscape/intl/xuconv/titles/");
-  RegisterConverterData(registry, "software/netscape/intl/xuconv/data/");
+  RegisterConverterTitles(registry, TITLE_BUNDLE_REGISTRY_KEY);
+  RegisterConverterData(registry, DATA_BUNDLE_REGISTRY_KEY);
 
   return NS_OK;
 }
@@ -464,39 +350,6 @@ done:
   NS_IF_RELEASE(components);
 }
 
-void nsCharsetConverterManager::FillConverterProperties(
-                                nsObjectArray * aArray)
-{
-  PRInt32 size = aArray->GetUsage();
-  nsConverterInfo ** array = (nsConverterInfo **)aArray->GetArray();
-  if ((size == 0) || (array == NULL)) return;
-
-  for (PRInt32 i = 0; i < size; i++) {
-    int val = 0;
-    SET_FOR_BROWSER(val);
-    SET_FOR_MAILNEWSEDITOR(val);
-    array[i]->mFlags = val;
-  }
-
-  // XXX get these properties from registry, not from your stomach
-}
-
-// XXX optimise this method - use some hash tables for God's sake!
-// That could also mean taking the name out of the data structure. Maybe.
-nsConverterInfo * nsCharsetConverterManager::GetConverterInfo(
-                                             nsObjectArray * aArray, 
-                                             nsString * aName) 
-{
-  PRInt32 size = aArray->GetUsage();
-  nsConverterInfo ** array = (nsConverterInfo **)aArray->GetArray();
-  if ((size == 0) || (array == NULL)) return NULL;
-
-  for (PRInt32 i = 0; i < size; i++) if (aName->Equals(*(array[i]->mName))) 
-    return array[i];
-
-  return NULL;
-}
-
 nsresult nsCharsetConverterManager::GetConverterList(
                                     nsObjectArray * aArray,
                                     nsString *** aResult,
@@ -632,6 +485,21 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(nsString * aCharset,
   }
 
   res = GetBundleValue(mDataBundle, aCharset, aProp, aResult);
+  return res;
+}
+
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(nsString * aCharset, 
+                                                         nsString ** aResult)
+{
+  nsresult res = NS_OK;;
+  nsAutoString prop(".title");
+
+  if (mTitleBundle == NULL) {
+    res = LoadExtensibleBundle(TITLE_BUNDLE_REGISTRY_KEY, &mTitleBundle);
+    if (NS_FAILED(res)) return res;
+  }
+
+  res = GetBundleValue(mTitleBundle, aCharset, &prop, aResult);
   return res;
 }
 
