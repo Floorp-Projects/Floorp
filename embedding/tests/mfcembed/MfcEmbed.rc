@@ -124,6 +124,8 @@ BEGIN
         MENUITEM "&Find in This Page...\tCtrl+F", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "Profiles...",                 ID_MANAGE_PROFILES
+        MENUITEM SEPARATOR
+        MENUITEM "Preferences...",              ID_EDIT_PREFERENCES
     END
     POPUP "&View"
     BEGIN
@@ -367,6 +369,23 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,122,34,50,14
     LTEXT           "Document:",IDC_PPD_DOC_TITLE_STATIC,7,7,36,8
     LTEXT           "",IDC_PPD_DOC_TXT,43,7,244,8
+END
+
+IDD_PREFS_START_PAGE DIALOG DISCARDABLE  0, 0, 284, 150
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Startup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "MfcEmbed starts with",IDC_STATIC,6,10,271,49
+    CONTROL         "Bla&nk Page",IDC_RADIO_BLANK_PAGE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,16,24,53,10
+    CONTROL         "&Home Page",IDC_RADIO_HOME_PAGE,"Button",
+                    BS_AUTORADIOBUTTON,16,40,53,10
+    GROUPBOX        "Home Page",IDC_STATIC,6,67,271,51
+    LTEXT           "Clicking the Home button will take you to this page",
+                    IDC_STATIC,17,80,234,8
+    LTEXT           "Loc&ation:",IDC_STATIC,17,98,31,8
+    EDITTEXT        IDC_EDIT_HOMEPAGE,53,95,211,14,ES_AUTOHSCROLL
 END
 
 

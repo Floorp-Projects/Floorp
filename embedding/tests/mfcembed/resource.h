@@ -17,6 +17,7 @@
 #define IDD_PROFILE_RENAME              139
 #define IDD_FINDDLG                     140
 #define IDD_PRINT_PROGRESS_DIALOG       141
+#define IDD_PREFS_START_PAGE            142
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -42,6 +43,9 @@
 #define IDC_WRAP_AROUND                 1042
 #define IDC_SEARCH_BACKWARDS            1043
 #define IDC_FIND_EDIT                   1152
+#define IDC_RADIO_BLANK_PAGE            1153
+#define IDC_RADIO_HOME_PAGE             1154
+#define IDC_EDIT_HOMEPAGE               1155
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774
 #define ID_NAV_HOME                     32775
@@ -57,13 +61,14 @@
 #define ID_SAVE_IMAGE_AS                32785
 #define ID_COPY_LINK_LOCATION           32786
 #define ID_MANAGE_PROFILES              32787
+#define ID_EDIT_PREFERENCES             32788
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_RESOURCE_VALUE        143
 #define _APS_NEXT_COMMAND_VALUE         32789
 #define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101

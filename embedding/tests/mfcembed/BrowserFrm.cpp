@@ -78,6 +78,7 @@ BEGIN_MESSAGE_MAP(CBrowserFrame, CFrameWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_SIZE()
 	ON_WM_CLOSE()
+	ON_WM_ACTIVATE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -296,3 +297,10 @@ void CBrowserFrame::Dump(CDumpContext& dc) const
 
 #endif //_DEBUG
 
+
+void CBrowserFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
+{
+	CFrameWnd::OnActivate(nState, pWndOther, bMinimized);
+	
+    m_wndBrowserView.Activate(nState, pWndOther, bMinimized);
+}

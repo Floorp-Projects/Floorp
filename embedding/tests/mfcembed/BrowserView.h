@@ -106,6 +106,8 @@ public:
     // indicates whether we are currently printing
     BOOL m_bCurrentlyPrinting;
 
+    void Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CBrowserView)
