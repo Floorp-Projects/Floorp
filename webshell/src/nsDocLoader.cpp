@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsIDocumentLoader.h"
 #define NS_IMPL_IDS
 #include "prmem.h"
 #include "plstr.h"
@@ -26,7 +27,6 @@
 #include "nsINetSupport.h"
 #include "nsIPostToServer.h"
 #include "nsIFactory.h"
-#include "nsIDocumentLoader.h"
 #include "nsIContentViewerContainer.h"
 
 // XXX: Only needed for dummy factory...
