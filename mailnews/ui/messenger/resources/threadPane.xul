@@ -1,35 +1,32 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="threadPane.css" type="text/css"?>
 
-<!DOCTYPE TreeView>
+<!DOCTYPE window>
 
 
-<xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	xmlns:html="http://www.w3.org/TR/REC-html40">
+<window xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+		xmlns:html="http://www.w3.org/TR/REC-html40"
+	    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<xul:tree>
-  <xul:treehead>
-    <xul:treeitem>
-      <xul:treecell>Subject</xul:treecell>
-      <xul:treecell>Sender</xul:treecell>
-      <xul:treecell>Date</xul:treecell>
-    </xul:treeitem>
-  </xul:treehead>
+<tree datasources="rdf:mailnews">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+  <treehead>
+    <treeitem>
+      <treecell>Subject</treecell>
+      <treecell>Sender</treecell>
+      <treecell>Date</treecell>
+    </treeitem>
+  </treehead>
   
-  <xul:treebody>
-    <xul:treeitem>
-        <xul:treecell><xul:treeindentation/>Netscape Stock hits 200</xul:treecell>
-        <xul:treecell><xul:treeindentation/>mscott@netscape.com</xul:treecell>
-        <xul:treecell><xul:treeindentation/>Sat, 27 Feb 1999 10:34:33</xul:treecell>
-      
-	</xul:treeitem>
-
-      <xul:treeitem>
-        <xul:treecell><xul:treeindentation/>Mozilla 5.0 ships!</xul:treecell>
-        <xul:treecell><xul:treeindentation/>daver@netscape.com</xul:treecell>
-        <xul:treecell><xul:treeindentation/>Mon, 27 Sep 1999 12:20:15</xul:treecell>
-    </xul:treeitem>
-  </xul:treebody>
-</xul:tree>
-</xul:window>
+  <treebody id="mailbox://asdfdsafdsf" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
+    <treeitem  open="true">
+      <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/ClosedRead.gif"/>Local Mail</treecell>
+      <treecell></treecell>
+      <treecell></treecell>
+    </treeitem>
+  </treebody>
+</tree>
+</window>
 
