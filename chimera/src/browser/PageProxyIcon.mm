@@ -21,9 +21,12 @@
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
+#import "NSString+Utils.h"
+
 #import "CHPageProxyIcon.h"
 #import "BookmarksService.h"
 #import "MainController.h"
+
 #include "nsCRT.h"
 
 @implementation CHPageProxyIcon
@@ -50,25 +53,20 @@
 
 - (void) mouseDragged: (NSEvent*) event
 {
-  NSPasteboard *pboard;
-  NSDictionary* data;
-  NSArray* dataVals;
-  NSArray* dataKeys;
-  NSString* url;
-  NSString* title;
-
   nsAutoString hrefStr, titleStr;
   BookmarksService::GetTitleAndHrefForBrowserView(
     [[[[self window] windowController] getBrowserWrapper] getBrowserView], titleStr, hrefStr);
   
-  url = [NSString stringWithCharacters: hrefStr.get() length: nsCRT::strlen(hrefStr.get())];
-  title = [NSString stringWithCharacters: titleStr.get() length: nsCRT::strlen(titleStr.get())];
+  NSString     *url = [NSString stringWithCharacters: hrefStr.get() length: nsCRT::strlen(hrefStr.get())];
+  NSString     *title = [NSString stringWithCharacters: titleStr.get() length: nsCRT::strlen(titleStr.get())];
 
-  dataVals = [NSArray arrayWithObjects: url, title, nil];
-  dataKeys = [NSArray arrayWithObjects: @"url", @"title", nil];
-  data = [NSDictionary dictionaryWithObjects:dataVals forKeys:dataKeys];
+  NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 
-  pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
+  NSArray      *dataVals = [NSArray arrayWithObjects: url, cleanedTitle, nil];
+  NSArray      *dataKeys = [NSArray arrayWithObjects: @"url", @"title", nil];
+  NSDictionary *data = [NSDictionary dictionaryWithObjects:dataVals forKeys:dataKeys];
+
+  NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
   [pboard declareTypes:[NSArray arrayWithObjects:@"MozURLType", NSURLPboardType, NSStringPboardType, nil] owner:self];
   [pboard setPropertyList:data forType: @"MozURLType"];
   [[NSURL URLWithString:url] writeToPasteboard: pboard];
