@@ -160,7 +160,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #reload-button[disabled="true"]:hover,
 #reload-button[disabled="true"]:hover:active
   {
-	  list-style-image      : url("chrome://navigator/skin/reload.gif");
+	  list-style-image      : url("chrome://navigator/skin/reload-disabled.gif");
   }
   
   
@@ -175,6 +175,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #page-proxy-button:hover
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
+  }
+
+#page-proxy-button:hover:active
+  {
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
   }
 
 #ubhist-keyword-popup 

@@ -42,3 +42,4 @@ install::
 	$(MAKE_INSTALL) personal-folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) location-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
