@@ -101,6 +101,7 @@ EXPORTS = \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
   nsTextAccessibleWrap.h \
+  nsXULTreeAccessibleWrap.h \
   nsAccessibleText.h \
   $(NULL)
 
