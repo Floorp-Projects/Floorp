@@ -31,7 +31,7 @@
 	<menuitem id="cmd_newCard" value="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" oncommand="goNewCardDialog(0)"/>
 
 	<key id="key_newBlankPage"  xulkey="true" shift="true" key="&newBlankPageCmd.key;" observes="cmd_newEditor"/>
-	<key id="key_newNavigator"  xulkey="true" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
+	<key id="key_newNavigator"  xulkey="true" shift="false" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
 	<key id="key_newMessage"    xulkey="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
 
 	<!-- Page Setup menu item -->
