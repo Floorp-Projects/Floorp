@@ -448,16 +448,6 @@ nsObjectFrame::GetSkipSides() const
   return 0;
 }
 
-#define IMAGE_EXT_GIF "gif"
-#define IMAGE_EXT_JPG "jpg"
-#define IMAGE_EXT_PNG "png"
-#define IMAGE_EXT_XBM "xbm"
-#define IMAGE_EXT_BMP "bmp"
-#define IMAGE_EXT_ICO "ico"
-#define IMAGE_EXT_CUR "cur"
-#define IMAGE_EXT_MNG "mng"
-#define IMAGE_EXT_JNG "jng"
-
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
 PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
