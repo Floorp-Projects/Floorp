@@ -318,7 +318,9 @@ public:
                             nsCOMPtr<nsIDOMNode> *outNode, 
                             const nsString &aNodeType,
                             const nsString *aAttribute = nsnull,
-                            const nsString *aValue = nsnull);
+                            const nsString *aValue = nsnull,
+                            PRBool aCloneAttributes = PR_FALSE);
+
   nsresult RemoveContainer(nsIDOMNode *inNode);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, 
                                 nsCOMPtr<nsIDOMNode> *outNode, 
