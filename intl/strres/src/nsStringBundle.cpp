@@ -198,7 +198,7 @@ nsStringBundle::LoadProperties()
 
  // do it synchronously
  nsCOMPtr<nsIURI> uri;
- rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
+ rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL.get());
  if (NS_FAILED(rv)) return rv;
     
  nsCOMPtr<nsIInputStream> in;
