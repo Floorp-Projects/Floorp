@@ -172,7 +172,7 @@ PRBool IsKeyDown ( char key ) ;
 inline
 PRBool IsKeyDown ( char key )
 {
-  return GetKeyState(key) & 0x80 ? PR_TRUE : PR_FALSE;
+  return GetKeyState(key) < 0;
 }
 
 

@@ -245,11 +245,11 @@ static PRBool is_vk_down(int vk)
 #ifdef DEBUG
    printf("is_vk_down vk=%x st=%x\n",vk, st);
 #endif
-   return (st & 0x80) ? PR_TRUE : PR_FALSE;
+   return (st < 0);
 }
 #define IS_VK_DOWN is_vk_down
 #else
-#define IS_VK_DOWN(a) (PRBool)(((GetKeyState(a) & 0x80)) ? (PR_TRUE) : (PR_FALSE))
+#define IS_VK_DOWN(a) (GetKeyState(a) < 0)
 #endif
 
 
