@@ -927,32 +927,24 @@ nsresult
 nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 {
   nsresult rv = NS_OK;
-  PRBool unknown = PR_TRUE;
-  
-  if (aPathName) {
-    int len = nsCRT::strlen(aPathName);
-    if (0 < len) {
+  NS_ASSERTION(aContentType, "null pointer");
 
-      // Get file extension and mimetype from that.
-      char* fileExt = &aPathName[len-1];
-      for (int i = len-1; i >= 0; i--) {
-        if ('.' == aPathName[i]) {
-          break;
-        }
-        fileExt--;
-      }
+  if (aPathName && *aPathName) {
+    // Get file extension and mimetype from that.g936
+    char* fileExt = &aPathName[nsCRT::strlen(aPathName)-1];
+    while (fileExt && (*fileExt != '.')) {
+      fileExt--;
+    }
+    if (fileExt) {
       NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-      rv = MIMEService->GetTypeFromExtension(fileExt, aContentType);
-      unknown = NS_FAILED(rv);
+      if (NS_FAILED(rv)) return rv;
+      if (NS_SUCCEEDED(MIMEService->GetTypeFromExtension(++fileExt, aContentType)))
+          return NS_OK;
     }
   }
-  if (unknown) {
-    rv = NS_OK;
-    NS_ASSERTION(!(*aContentType), "Content type not found but assigned!\n");
-    *aContentType = nsCRT::strdup("unknown");
-    if (!(*aContentType)) rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  return rv;
+  *aContentType = nsCRT::strdup("unknown");
+  if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 #define CONTENT_DISP "Content-Disposition: form-data; name=\""
