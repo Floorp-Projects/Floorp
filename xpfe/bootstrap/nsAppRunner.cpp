@@ -55,7 +55,8 @@
 #include "private/pprthred.h"
 #endif
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsILocaleService.h"
 #include "plevent.h"
 #include "prmem.h"
@@ -799,7 +800,7 @@ static nsresult DoOnShutdown()
   // save the prefs, in case they weren't saved
   {
     // scoping this in a block to force release
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
     if (NS_SUCCEEDED(rv))
       prefs->SavePrefFile(nsnull);
@@ -867,7 +868,7 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     nsresult rv = NS_OK;
 
     // check the pref first
-    nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
     PRBool matchOS = PR_FALSE;
     if (prefService)
       prefService->GetBoolPref(kMatchOSLocalePref, &matchOS);

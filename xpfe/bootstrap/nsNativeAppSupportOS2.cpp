@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -72,7 +71,8 @@
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
@@ -2442,7 +2442,7 @@ nsNativeAppSupportOS2::OnLastWindowClosing() {
     // check for multi-profile situation and turn off turbo mode
     // if there are multiple profiles.
     PRBool singleProfileOnly = PR_FALSE;
-    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID, &rv ) );
+    nsCOMPtr<nsIPrefBranch> prefService( do_GetService( NS_PREFSERVICE_CONTRACTID, &rv ) );
     if ( NS_SUCCEEDED( rv ) ) {
         prefService->GetBoolPref( "browser.turbo.singleProfileOnly", &singleProfileOnly );
     }
