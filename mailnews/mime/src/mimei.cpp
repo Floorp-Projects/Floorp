@@ -51,6 +51,7 @@
 #include "mimetenr.h"	/*   |     |     |     |--- MimeInlineTextEnriched	*/
 /* SUPPORTED VIA PLUGIN    |     |     |--------- MimeInlineTextCalendar  */
 
+#include "nsIPref.h"
 #include "prefapi.h"
 #include "mimeiimg.h"	/*   |     |--- MimeInlineImage						*/
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
@@ -62,7 +63,6 @@
 #include "mimecth.h"
 #include "mimebuf.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
 #include "nsCRT.h"
 #include "mimemoz2.h"
 #include "nsIMimeContentTypeHandler.h"
