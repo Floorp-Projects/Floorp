@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: fipstest.c,v 1.4 2002/11/16 01:00:44 nelsonb%netscape.com Exp $
+ * $Id: fipstest.c,v 1.5 2002/12/04 00:28:56 wtc%netscape.com Exp $
  */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
@@ -772,19 +772,19 @@ pk11_fips_RSA_PowerUpSelfTest( void )
 
 
     static const RSAPublicKey    bl_public_key = { NULL, 
-      { FIPS_RSA_TYPE, rsa_modulus,         FIPS_RSA_MODULUS_LENGTH },
-      { FIPS_RSA_TYPE, rsa_public_exponent, FIPS_RSA_PUBLIC_EXPONENT_LENGTH }
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_modulus,         FIPS_RSA_MODULUS_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_public_exponent, FIPS_RSA_PUBLIC_EXPONENT_LENGTH }
     };
     static const RSAPrivateKey   bl_private_key = { NULL,
-      { FIPS_RSA_TYPE, rsa_version,          FIPS_RSA_PRIVATE_VERSION_LENGTH },
-      { FIPS_RSA_TYPE, rsa_modulus,          FIPS_RSA_MODULUS_LENGTH },
-      { FIPS_RSA_TYPE, rsa_public_exponent,  FIPS_RSA_PUBLIC_EXPONENT_LENGTH },
-      { FIPS_RSA_TYPE, rsa_private_exponent, FIPS_RSA_PRIVATE_EXPONENT_LENGTH },
-      { FIPS_RSA_TYPE, rsa_prime0,           FIPS_RSA_PRIME0_LENGTH },
-      { FIPS_RSA_TYPE, rsa_prime1,           FIPS_RSA_PRIME1_LENGTH },
-      { FIPS_RSA_TYPE, rsa_exponent0,        FIPS_RSA_EXPONENT0_LENGTH },
-      { FIPS_RSA_TYPE, rsa_exponent1,        FIPS_RSA_EXPONENT1_LENGTH },
-      { FIPS_RSA_TYPE, rsa_coefficient,      FIPS_RSA_COEFFICIENT_LENGTH }
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_version,          FIPS_RSA_PRIVATE_VERSION_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_modulus,          FIPS_RSA_MODULUS_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_public_exponent,  FIPS_RSA_PUBLIC_EXPONENT_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_private_exponent, FIPS_RSA_PRIVATE_EXPONENT_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_prime0,           FIPS_RSA_PRIME0_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_prime1,           FIPS_RSA_PRIME1_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_exponent0,        FIPS_RSA_EXPONENT0_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_exponent1,        FIPS_RSA_EXPONENT1_LENGTH },
+      { FIPS_RSA_TYPE, (unsigned char *)rsa_coefficient,      FIPS_RSA_COEFFICIENT_LENGTH }
     };
 
     /* RSA variables. */
@@ -869,7 +869,7 @@ pk11_fips_RSA_PowerUpSelfTest( void )
     /* Perform RSA signature with the RSA private key. */
     rsa_status = RSA_Sign( rsa_private_key, rsa_computed_signature,
                            &rsa_bytes_signed,
-                           FIPS_RSA_SIGNATURE_LENGTH, rsa_known_message,
+                           FIPS_RSA_SIGNATURE_LENGTH, (unsigned char *)rsa_known_message,
                            FIPS_RSA_MESSAGE_LENGTH );
 
     if( ( rsa_status != SECSuccess ) ||
@@ -887,7 +887,7 @@ pk11_fips_RSA_PowerUpSelfTest( void )
     rsa_status = RSA_CheckSign( rsa_public_key,
                                 rsa_computed_signature,
                                 FIPS_RSA_SIGNATURE_LENGTH,
-                                rsa_known_message,
+                                (unsigned char *)rsa_known_message,
                                 FIPS_RSA_MESSAGE_LENGTH );
 
     if( rsa_status != SECSuccess )
@@ -962,9 +962,9 @@ pk11_fips_DSA_PowerUpSelfTest( void )
     DSAPublicKey           dsa_public_key;
     PRUint8                dsa_computed_signature[FIPS_DSA_SIGNATURE_LENGTH];
     static const PQGParams dsa_pqg = { NULL,
-			    { FIPS_DSA_TYPE, dsa_P, FIPS_DSA_PRIME_LENGTH },
-			    { FIPS_DSA_TYPE, dsa_Q, FIPS_DSA_SUBPRIME_LENGTH },
-			    { FIPS_DSA_TYPE, dsa_G, FIPS_DSA_BASE_LENGTH }};
+			    { FIPS_DSA_TYPE, (unsigned char *)dsa_P, FIPS_DSA_PRIME_LENGTH },
+			    { FIPS_DSA_TYPE, (unsigned char *)dsa_Q, FIPS_DSA_SUBPRIME_LENGTH },
+			    { FIPS_DSA_TYPE, (unsigned char *)dsa_G, FIPS_DSA_BASE_LENGTH }};
 
     /*******************************************/
     /* Generate a DSA public/private key pair. */
@@ -989,7 +989,7 @@ pk11_fips_DSA_PowerUpSelfTest( void )
     dsa_signature_item.data = dsa_computed_signature;
     dsa_signature_item.len  = sizeof dsa_computed_signature;
 
-    dsa_digest_item.data    = dsa_known_digest;
+    dsa_digest_item.data    = (unsigned char *)dsa_known_digest;
     dsa_digest_item.len     = SHA1_LENGTH;
 
     /* Perform DSA signature process. */
