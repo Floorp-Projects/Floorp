@@ -215,34 +215,44 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
 
 .tooltip > .popup-internal-box
   {
-  	border: 0px;
-  	padding: 0px;
+  	border                : 0px;
+  	padding               : 0px;
   }
 
 
 /*
  * Autorepeatbutton
  */
-.autorepeatbutton-up {
-    list-style-image: url("chrome://global/skin/scroll-up.gif")
-}
+.autorepeatbutton-up 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-up.gif")
+  }
 
-.autorepeatbutton-down {
-    list-style-image: url("chrome://global/skin/scroll-down.gif")
-}
+.autorepeatbutton-down 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-down.gif")
+  }
 
-autorepeatbutton {
-  text-align: center;
-  vertical-align: middle;
-}
+autorepeatbutton 
+  {
+    text-align            : center;
+    vertical-align        : middle;
+  }
 
-autorepeatbutton:hover {
-  background-color      : highlight;
-}
+autorepeatbutton:hover 
+  {
+    background-color      : highlight;
+  }
 
-  
-  
-  
-  
-  
+.popup-infopopup  
+  {
+    max-width             : 60em !important;
+    min-width             : 14em !important;
+    height                : 3em;
+    background-color      : infobackground;
+    border-left           : 1px inset infobackground;
+    border-top            : 1px inset infobackground;
+    border-right          : 1px outset infobackground;
+    border-bottom         : 1px outset infobackground;
+  }
   

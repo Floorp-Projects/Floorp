@@ -27,33 +27,32 @@ Rights Reserved.
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
 
-mail-emailaddress {
-  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
-  display: inline;
-}
+mail-emailaddress 
+  {
+    -moz-binding          : url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
+    display               : inline;
+  }
 
-.buttonTopSpacer     { height: .3em; }
-.buttonSpacer        { width: .5em; }
+.buttonTopSpacer     
+  { 
+    height                : 0.3em; 
+  }
 
-.headerValueBox { width: 7.7em; text-align: right;}
+.buttonSpacer        
+  { 
+    width                 : 0.5em; 
+  }
+
+.headerValueBox 
+  { 
+    width                 : 7.7em;
+    text-align            : right;
+  }
 
 .headerBox              
   { 
     overflow              : hidden; 
     min-width             : 50px;
-  }
-
-.header-part1           
-  { 
-    background-color      : #EEEEEE; 
-  }
-.header-part2           
-  { 
-    background-color      : threedface; 
-  }
-.header-part3           
-  { 
-    background-color      : threedface; 
   }
 
 #addToAddressBookButton 
@@ -100,8 +99,40 @@ mail-emailaddress {
     display               : inline;
   }
 
-html.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
-html.subjectvalue  { font-weight: bold; }
+html.headerValue   
+  { 
+    white-space           : normal;
+    min-width             : 50px; 
+    margin                : 0px;
+  }
 
-text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
-text.headerValue { white-space: normal; min-width: 50px; }
+html.subjectvalue  
+  { 
+    font-weight           : bold; 
+  }
+
+text.headerdisplayname 
+  { 
+    font-weight           : bold; 
+    margin-right          : 0.5em; 
+    margin-left           : 0.5em; 
+    min-height            : 18px 
+  }
+
+text.headerValue 
+  { 
+    white-space           : normal; 
+    min-width             : 50px; 
+  }
+  
+#msgHeaderView
+  {
+    border-left           : none;
+    border-right          : none;
+  }
+  
+#headerPart1
+  {
+    background-image      : url("chrome://global/skin/scrollbar-slider-bg.gif");
+  }
+      

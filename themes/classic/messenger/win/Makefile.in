@@ -41,6 +41,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	msgHdrViewOverlay.css \
 	importDialog.css \
 	pref-mailnews.css \
+	messenger.css \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

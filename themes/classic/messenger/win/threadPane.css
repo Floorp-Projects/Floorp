@@ -124,6 +124,8 @@ treeitem[empty="true"] > treerow > .tree-cell-threadpane-icon > .tree-cell-twist
 #threadTree  
   {
     border-top            : none;
+    border-bottom         : none;
+    border-left           : none;
   }
   
   

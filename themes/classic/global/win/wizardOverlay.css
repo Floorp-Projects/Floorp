@@ -11,7 +11,14 @@
   list-style-image            : url("chrome://global/skin/scroll-right-disabled.gif");
 }
 
-box#wizardButtons {
-  margin-top                  : 3px;
-}
+#wizardButtons 
+  {
+    margin-bottom             : 0.4em;
+  }
 
+.box-wizardcontent
+  {
+    margin-left               : 60px;
+    margin-right              : 60px;
+    width                     : 30em;
+  } 

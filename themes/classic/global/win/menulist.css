@@ -104,7 +104,7 @@
 
   menulist > menupopup > menuitem 
     {
-      padding             : 0px 1px !important;
+      padding             : 0px 7px !important;
       min-width           : 0px;  /* should be in content*/
       max-width           : none; /* should be in content*/
       border              : 1px solid window;
