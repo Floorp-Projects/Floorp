@@ -1803,9 +1803,16 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = scope;
                         break;
                     case TokenStream.CLOSURE :
-                        i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
-                        stack[++stackTop] = new NativeClosure(cx, scope, 
-                                                theData.itsNestedFunctions[i]);
+                        i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
+                        if (theData.itsNestedFunctions[i] 
+                                    instanceof InterpretedFunction)
+                            stack[++stackTop] 
+                                = new InterpretedFunction(
+                                       (InterpretedFunction)
+                                               (theData.itsNestedFunctions[i]),
+                                        scope);
+                        else
+                            stack[++stackTop] = ScriptRuntime.createFunctionObject(scope, theData.itsNestedFunctions[i].getClass(), cx);
                         pc += 2;
                         break;
                     case TokenStream.OBJECT :
@@ -1841,6 +1848,7 @@ public class Interpreter extends LabelTable {
                         if (pc == 0) 
                             throw ee;
                         stack[0] = ee.getErrorObject();
+                        tryStackTop--;
                     }
                     else
                         stack[0] = ee.getErrorObject();
@@ -1862,6 +1870,7 @@ public class Interpreter extends LabelTable {
                         if (pc == 0) 
                             throw jsx;
                         stack[0] = jsx;
+                        tryStackTop--;
                     }
                     else
                         stack[0] = ScriptRuntime.unwrapJavaScriptException(jsx);
@@ -1886,6 +1895,7 @@ public class Interpreter extends LabelTable {
                     pc = finallyStack[tryStackTop - 1];
                     scope = scopeStack[tryStackTop - 1];
                     if (pc == 0) throw jx;
+                    tryStackTop--;
                 }
                 else
                     throw jx;
