@@ -1715,8 +1715,14 @@ NS_IMETHODIMP oeFilterDateTime::SetTime( PRTime ms )
 
 NS_IMETHODIMP oeFilterDateTime::Clear()
 {
-	m_datetime = icaltime_null_time();
+    m_datetime = icaltime_null_time();
     m_parent->UpdateAllFilters( m_icaltype );
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeFilterDateTime::GetIsSet(PRBool *retval)
+{
+    *retval = ! icaltime_is_null_time(m_datetime);
     return NS_OK;
 }
 
