@@ -413,6 +413,8 @@ void DebugCheckChildSize(nsIFrame*            aChild,
                          nsSize&              aAvailSize,
                          PRBool               aIsPass2Reflow)
 {
+
+/* approved for commenting out by rickg
   if (aMet.width > aAvailSize.width) {
     nsAutoString tmp;
     aChild->GetFrameName(tmp);
@@ -421,6 +423,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
     printf(" content has desired width %d given avail width %d\n",
             aMet.width, aAvailSize.width);
   }
+*/
   if (aIsPass2Reflow) {
     if ((aMet.width < 0) || (aMet.width > 60000)) {
       printf("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
