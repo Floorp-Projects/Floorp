@@ -42,7 +42,6 @@
 #include "nsAppStartup.h"
 
 #include "nsIAppShellService.h"
-#include "nsICharsetConverterManager.h"
 #include "nsICloseAllWindows.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIEventQueue.h"
@@ -50,7 +49,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
-#include "nsIPlatformCharset.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIProfileChangeStatus.h"
@@ -59,12 +57,12 @@
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITimelineService.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXULWindow.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "prprf.h"
 #include "nsCRT.h"
@@ -74,9 +72,6 @@
 #include "nsXPFEComponentsCID.h"
 
 NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-// Static Function Prototypes
-static nsresult ConvertToUnicode(nsCString& aCharset, const char* inString, nsAString& outString); 
 
 //
 // nsAppStartup
@@ -828,30 +823,11 @@ nsAppStartup::OpenBrowserWindow(PRInt32 height, PRInt32 width)
 #endif /* DEBUG_CMD_LINE */
 
     nsAutoString url; 
-    if (nsCRT::IsAscii(urlToLoad))  {
-      CopyASCIItoUTF16(urlToLoad, url);
-    }
-    else {
-      // get a platform charset
-      nsCAutoString charSet;
-      nsCOMPtr <nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to get a platform charset");
-        return rv;
-      }
-
-      rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charSet);
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to get a charset");
-        return rv;
-      }
-
-      // convert the cmdLine URL to Unicode
-      rv = ConvertToUnicode(charSet, urlToLoad, url);
-      if (NS_FAILED(rv)) {
-        NS_ASSERTION(0, "Failed to convert commandline url to unicode");
-        return rv;
-      }
+    // convert the cmdLine URL to Unicode
+    rv = NS_CopyNativeToUnicode(nsDependentCString(urlToLoad), url);
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Failed to convert commandline url to unicode");
+      return rv;
     }
     rv = OpenWindow(chromeUrlForTask, url, width, height);
 
@@ -1018,37 +994,3 @@ nsAppStartup::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-static nsresult
-ConvertToUnicode(nsCString& aCharset, const char* inString, nsAString& outString)
-{
-  nsresult rv;
-
-  // convert result to unicode
-  nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID , &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr <nsIUnicodeDecoder> decoder; 
-  rv = ccm->GetUnicodeDecoderRaw(aCharset.get(), getter_AddRefs(decoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRInt32 uniLength = 0;
-  PRInt32 srcLength = strlen(inString);
-  rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
-  if (NS_FAILED(rv))
-    return rv;
-
-  outString.SetLength(uniLength);
-  nsWritingIterator<PRUnichar> unichars;
-  outString.BeginWriting(unichars);
-
-  // convert to unicode
-  rv = decoder->Convert(inString, &srcLength, unichars.get(), &uniLength);
-  if (NS_SUCCEEDED(rv)) {
-    // Pass back the unicode string
-    outString.Assign(unichars.get(), uniLength);
-  }
-
-  return rv;
-}
