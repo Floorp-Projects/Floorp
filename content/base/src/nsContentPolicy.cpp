@@ -48,6 +48,7 @@
 #include "nsIURI.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
+#include "nsIContent.h"
 
 NS_IMPL_ISUPPORTS1(nsContentPolicy, nsIContentPolicy)
 
@@ -176,6 +177,25 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
                      "Context should be a DOM node or a DOM window!");
     }
 #endif
+
+    /*
+     * There might not be a requestinglocation. This can happen for
+     * iframes with an image as src. Get the uri from the dom node.
+     * See bug 254510
+     */
+    if (!requestingLocation) {
+        nsCOMPtr<nsIDocument> doc;
+        nsCOMPtr<nsIContent> node = do_QueryInterface(requestingContext);
+        if (node) {
+            doc = node->GetOwnerDoc();
+        }
+        if (!doc) {
+            doc = do_QueryInterface(requestingContext);
+        }
+        if (doc) {
+            requestingLocation = doc->GetDocumentURI();
+        }
+    }
 
     PRInt32 count = mPolicies.Count();
     nsresult rv = NS_OK;
