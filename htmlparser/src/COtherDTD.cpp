@@ -1222,11 +1222,11 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
       if(1<theCount){ 
   
         const nsString& theKey=aNode.GetKeyAt(0); 
-        if(theKey.EqualsIgnoreCase("NAME")) { 
+        if(theKey.Equals("NAME",IGNORE_CASE)) { 
           const nsString& theValue1=aNode.GetValueAt(0); 
-          if(theValue1.EqualsIgnoreCase("\"CRC\"")) { 
+          if(theValue1.Equals("\"CRC\"",IGNORE_CASE)) { 
             const nsString& theKey2=aNode.GetKeyAt(1); 
-            if(theKey2.EqualsIgnoreCase("CONTENT")) { 
+            if(theKey2.Equals("CONTENT",IGNORE_CASE)) { 
               const nsString& theValue2=aNode.GetValueAt(1); 
               PRInt32 err=0; 
               mExpectedCRC32=theValue2.ToInteger(&err); 
@@ -1235,6 +1235,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
         } //else 
 
       } //if 
+
     }//if 
 
     START_TIMER()

@@ -915,7 +915,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         nsAutoString theStr;
         nsString& theEntity=aToken->GetStringValueXXX();
-        if(!theEntity.EqualsIgnoreCase("XI",2)) {
+        if(!theEntity.Equals("XI",IGNORE_CASE)) {
           PRUnichar theChar=theEntity.CharAt(0);
           if((nsCRT::IsAsciiDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
             theStr.Append("#");

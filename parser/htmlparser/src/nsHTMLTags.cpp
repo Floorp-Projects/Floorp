@@ -112,7 +112,7 @@ nsHTMLTags::LookupTag(const nsCString& aTag)
     TagNode node(aTag);
     TagNode*  found = (TagNode*)gTagTree->FindItem(&node);
     if (found) {
-      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aTag), "bad tree");
+      NS_ASSERTION(found->mStr.Equals(aTag,IGNORE_CASE), "bad tree");
       return found->mEnum;
     }
     else {
