@@ -52,20 +52,17 @@
     <columns><column/><column/><column/></columns>
     <rows>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" text-align="right" value="&numRowsEditField.label;"
-            tooltip="aTooltip" tooltiptext="&numRowsEditField.tooltip;" />
+        <text class="label align-right" text-align="right" value="&numRowsEditField.label;" />
         <textfield class="narrow" id="rowsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" value="&numColumnsEditField.label;"
-            tooltip="aTooltip" tooltiptext="&numColumnsEditField.tooltip;" />
+        <text class="label align-right" value="&numColumnsEditField.label;" />
         <textfield class="narrow" id="columnsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <row valign="baseline" text-align="right" autostretch="never">
-        <text class="label align-right" value="&widthEditField.label;"
-            tooltip="aTooltip" tooltiptext="&widthEditField.tooltip;" />
+        <text class="label align-right" value="&widthEditField.label;" />
         <textfield class="narrow" id="widthInput" onkeyup="forceInteger(this.id)" />
         <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
