@@ -298,6 +298,16 @@ NS_IMETHODIMP nsMailtoUrl::GetSpec(char * *aSpec)
 	return m_baseURL->GetSpec(aSpec);
 }
 
+NS_IMETHODIMP nsMailtoUrl::GetPrePath(char * *aPrePath)
+{
+	return m_baseURL->GetPrePath(aPrePath);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetPrePath(const char * aPrePath)
+{
+	return m_baseURL->SetPrePath(aPrePath);
+}
+
 NS_IMETHODIMP nsMailtoUrl::GetScheme(char * *aScheme)
 {
 	return m_baseURL->GetScheme(aScheme);

@@ -419,15 +419,15 @@ nsSingleSignOnPrompt::Confirm(const PRUnichar *dialogTitle, const PRUnichar *tex
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text, 
-                          const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+                                   const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
   return mPrompt->ConfirmCheck(dialogTitle, text, checkMsg, checkValue, _retval);
 }
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, 
-                    const PRUnichar *passwordRealm, const PRUnichar *defaultText, 
-                    PRUnichar **result, PRBool *_retval)
+                             const PRUnichar *passwordRealm, const PRUnichar *defaultText, 
+                             PRUnichar **result, PRBool *_retval)
 {
   nsresult rv;
   nsCAutoString realm;
@@ -438,8 +438,8 @@ nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, const PRUnichar *text, 
-                                       const PRUnichar *passwordRealm, PRBool persistPassword, 
-                                       PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+                                                const PRUnichar *passwordRealm, PRBool persistPassword, 
+                                                PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
   nsresult rv;
   nsCAutoString realm;
@@ -451,7 +451,7 @@ nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, co
 
 NS_IMETHODIMP
 nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *passwordRealm,
-                            PRBool persistPassword, PRUnichar **pwd, PRBool *_retval)
+                                     PRBool persistPassword, PRUnichar **pwd, PRBool *_retval)
 {
   nsresult rv;
   nsCAutoString realm;

@@ -321,6 +321,16 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(const char * aSpec)
 	return m_baseURL->SetSpec(aSpec);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetPrePath(char * *aPrePath)
+{
+	return m_baseURL->GetPrePath(aPrePath);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPrePath(const char * aPrePath)
+{
+	return m_baseURL->SetPrePath(aPrePath);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::GetScheme(char * *aScheme)
 {
 	return m_baseURL->GetScheme(aScheme);

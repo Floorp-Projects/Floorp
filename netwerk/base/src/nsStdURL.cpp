@@ -458,6 +458,48 @@ nsStdURL::GetSpec(char **o_Spec)
     return (*o_Spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
+nsresult
+nsStdURL::GetPrePath(char **o_Spec)
+{
+    nsresult rv = NS_OK;
+    nsCAutoString finalSpec; // guaranteed to be singlebyte.
+    if (mScheme)
+    {
+        rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
+        finalSpec += "://";
+    }
+
+    rv = AppendPreHost(finalSpec,mUsername,mPassword,ESCAPED);
+    if (mUsername)
+    {
+        finalSpec += "@";
+    }
+
+    if (mHost)
+    {
+        rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
+        if (-1 != mPort)
+        {
+            char* portBuffer = PR_smprintf(":%d", mPort);
+            if (!portBuffer)
+                return NS_ERROR_OUT_OF_MEMORY;
+            finalSpec += portBuffer;
+            PR_smprintf_free(portBuffer);
+            portBuffer = 0;
+        }
+    }
+    *o_Spec = finalSpec.ToNewCString();
+
+    return (*o_Spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+}
+
+nsresult
+nsStdURL::SetPrePath(const char *i_Spec)
+{
+    NS_NOTREACHED("nsStdURL::SetPrePath");
+    return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
 NS_METHOD
 nsStdURL::Create(nsISupports *aOuter, 
     REFNSIID aIID, 

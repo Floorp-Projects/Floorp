@@ -39,9 +39,13 @@
  *       |            |             |        |         |
  *       |            |             |        |        Path
  *       |            |             |       Port         
- *       |            |            Host
- *       |         PreHost            
- *     Scheme
+ *       |            |            Host      /
+ *       |         PreHost                  /
+ *     Scheme                              /
+ *       \                                /
+ *        --------------------------------
+ *                       |
+ *                    PrePath
  *
  * The subclass nsIURL provides a means to open an input or output              
  * stream to a URI as a source/destination, as well as providing additional     
@@ -64,6 +68,13 @@ interface nsIURI : nsISupports
      * open streams on the URI's channel to be closed.
      */
     attribute string spec;
+
+    /**
+     * The prePath returns the stuff before the path
+     * (e.g. protocol://user:password@host:port/). This is useful for
+     * authentication, or managing sessions.
+     */
+    attribute string prePath;
 
     /**
      * The Scheme is the protocol to which this URI refers. Setting

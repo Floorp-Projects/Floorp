@@ -295,6 +295,16 @@ NS_IMETHODIMP nsAddbookUrl::GetSpec(char * *aSpec)
 	return m_baseURL->GetSpec(aSpec);
 }
 
+NS_IMETHODIMP nsAddbookUrl::GetPrePath(char * *aPrePath)
+{
+	return m_baseURL->GetPrePath(aPrePath);
+}
+
+NS_IMETHODIMP nsAddbookUrl::SetPrePath(const char * aPrePath)
+{
+	return m_baseURL->SetPrePath(aPrePath);
+}
+
 NS_IMETHODIMP nsAddbookUrl::GetScheme(char * *aScheme)
 {
 	return m_baseURL->GetScheme(aScheme);

@@ -779,29 +779,6 @@ si_GetURL(const char * passwordRealm) {
   return (NULL);
 }
 
-#if 0
-static nsresult MangleUrl(const char *url, char **result)
-{
-	if (!url || !result) return NS_ERROR_FAILURE;
-
-	nsCAutoString temp(url);
-
-	temp.ReplaceSubstring("@","-");
-	temp.ReplaceSubstring("/","-");
-	temp.ReplaceSubstring(":","-");
-	temp.ReplaceSubstring("#","-");
-	temp.ReplaceSubstring("&","-");
-	temp.ReplaceSubstring("?","-");
-	temp.ReplaceSubstring(".","-");
-
-	*result = PL_strdup((const char *)temp);
-#ifdef DEBUG_sspitzer
-	printf("mangling %s into %s\n", url, *result);
-#endif
-	return NS_OK;
-}
-#endif
-
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
 si_RemoveUser(const char *passwordRealm, nsAutoString userName, PRBool save) {
@@ -813,47 +790,6 @@ si_RemoveUser(const char *passwordRealm, nsAutoString userName, PRBool save) {
   if (!si_GetSignonRememberingPref()) {
     return PR_FALSE;
   }
-
-#if 0
-  nsresult res;
-  /* convert passwordRealm to a uri so we can parse out the username and hostname */
-  nsXPIDLCString host;
-  if (strip) {
-    if (passwordRealm) {
-      nsCOMPtr<nsIURL> uri;
-      nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-      res = uri->SetSpec(passwordRealm);
-      if (NS_FAILED(res)) return PR_FALSE;
-
-      /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
-
-      /* get host part of the uri */
-      res = uri->GetHost(getter_Copies(host));
-      if (NS_FAILED(res)) {
-        return PR_FALSE;
-      }
-
-      /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
-      if (userName.Length() == 0) {
-        nsXPIDLCString userName2;
-        res = uri->GetPreHost(getter_Copies(userName2));
-        if (NS_FAILED(res)) {
-          return PR_FALSE;
-        }
-        if ((const char *)userName2 && (PL_strlen((const char *)userName2))) {
-          userName = NS_ConvertToString((const char *)userName2);
-          PRInt32 colon = userName.FindChar(':');
-          if (colon != -1) {
-            userName.Truncate(colon);
-          }
-        }
-      }
-    }
-  } else {
-    res = MangleUrl(passwordRealm, getter_Copies(host));
-    if (NS_FAILED(res)) return PR_FALSE;
-  }
-#endif
 
   si_lock_signon_list();
 
@@ -2254,48 +2190,6 @@ PUBLIC PRBool
 SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const PRUnichar *password) {
   nsAutoString userName(user);
 
-#if 0
-  nsresult res;
-
-  /* convert passwordRealm to a uri so we can parse out the username and hostname */
-  nsXPIDLCString host;
-  if (strip) {
-    if (passwordRealm) {
-      nsCOMPtr<nsIURL> uri;
-      nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-      res = uri->SetSpec(passwordRealm);
-      if (NS_FAILED(res)) return PR_FALSE;
-
-      /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
-
-      /* get host part of the uri */
-      res = uri->GetHost(getter_Copies(host));
-      if (NS_FAILED(res)) {
-        return PR_FALSE;
-      }
-
-      /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
-      if (userName.Length() == 0) {
-        nsXPIDLCString userName2;
-        res = uri->GetPreHost(getter_Copies(userName2));
-        if (NS_FAILED(res)) {
-          return PR_FALSE;
-        }
-        if ((const char *)userName2 && (PL_strlen((const char *)userName2))) {
-          userName.AssignWithConversion(userName2);
-          PRInt32 colon = userName.FindChar(':');
-          if (colon != -1) {
-            userName.Truncate(colon);
-          }
-        }
-      }
-    }
-  } else {
-    res = MangleUrl(passwordRealm, getter_Copies(host));
-    if (NS_FAILED(res)) return PR_FALSE;
-  } 
-#endif
-
   si_RememberSignonDataFromBrowser(passwordRealm, userName, nsAutoString(password));
   return PR_TRUE;
 }
@@ -2327,32 +2221,6 @@ SINGSIGN_PromptUsernameAndPassword
     return dialog->PromptUsernameAndPassword(dialogTitle, text, realm.GetUnicode(), 
                                              persistPassword, user, pwd, pressedOK);
   }
-
-#if 0
-  /* convert to a uri so we can parse out the hostname */
-  nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(passwordRealm);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
-
-  /* get host part of the uri */
-  nsXPIDLCString host;
-  if (strip) {
-    res = uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  } else {
-    res = MangleUrl(passwordRealm, getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  }
-#endif
 
   /* prefill with previous username/password if any */
   nsAutoString username, password;
@@ -2399,48 +2267,6 @@ SINGSIGN_PromptPassword
     return res;
   }
 
-#if 0
-  /* convert to a uri so we can parse out the username and hostname */
-  nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(passwordRealm);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
-
-  /* get host part of the uri */
-  nsXPIDLCString host;
-  if (strip) {
-    res = uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  } else {
-    res = MangleUrl(passwordRealm, getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  }
-
-  /* extract username from uri -- note: prehost is <username>:<password> */
-  if (strip) {
-	  nsXPIDLCString prehostCString;
-	  res = uri->GetPreHost(getter_Copies(prehostCString));
-	  if (NS_FAILED(res)) {
-	    return res;
-	  }
-	  nsAutoString prehost; prehost.AssignWithConversion((const char *)prehostCString);
-	  PRInt32 colon = prehost.FindChar(':');
-	  if (colon == -1) {
-	    username = prehost;
-	  } else {
-	    prehost.Left(username, colon);  
-	  }
-  }
-#endif
-
   /* get previous password used with this username, pick first user if no username found */
   si_RestoreOldSignonDataFromBrowser(passwordRealm, (username.Length() == 0), username, password);
 
@@ -2486,30 +2312,6 @@ SINGSIGN_Prompt
     Recycle(prompt_string);
     return res;
   }
-
-#if 0
-  /* convert to a uri so we can parse out the hostname */
-  nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(passwordRealm);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
-  /* get host part of the uri */
-  nsXPIDLCString host;
-  if (strip) {
-    res = uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  } else {
-    res = MangleUrl(passwordRealm, getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  }
-#endif
 
   /* get previous data used with this hostname */
   si_RestoreOldSignonDataFromBrowser(passwordRealm, PR_TRUE, emptyUsername, data);
@@ -2782,35 +2584,6 @@ SINGSIGN_HaveData(const char *passwordRealm, const PRUnichar *userName, PRBool *
   if (!si_GetSignonRememberingPref()) {
     return NS_OK;
   }
-
-#if 0
-  nsresult res;
-  NS_ASSERTION(strip == PR_FALSE, "this code needs to be finished for the strip case");
-
-  /* convert to a uri so we can parse out the username and hostname */
-  nsCOMPtr<nsIURL> uri;
-  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
-  res = uri->SetSpec(passwordRealm);
-  if (NS_FAILED(res)) return res;
-
-  /* get host part of the uri */
-  nsXPIDLCString host;
-  if (strip) {
-    res = uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(res)) {
-      return res;
-    }
-  } else {
-    res = MangleUrl(passwordRealm, getter_Copies(host));
-    if (NS_FAILED(res)) return res;
-  }
-
-  if (strip) {
-      /* convert passwordRealm to a uri so we can parse out the username and hostname */
-      /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   /* get previous data used with this username, pick first user if no username found */
   si_RestoreOldSignonDataFromBrowser(passwordRealm, (usernameForLookup.Length() == 0), usernameForLookup, data);
