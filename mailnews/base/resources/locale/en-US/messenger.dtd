@@ -75,8 +75,7 @@ Rights Reserved.
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
 <!ENTITY filtersCmd.label ".Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
-<!ENTITY accountManagerCmd.label "Account Setup...">
-<!ENTITY accountWizardCmd.label "New Account Wizard...">
+<!ENTITY accountManagerCmd.label "Mail/News Account Settings">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
 <!ENTITY undoMoveMsgCmd.label "Undo Move Message">
