@@ -97,6 +97,7 @@ endif
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
+		-I$(topsrcdir)/gfx/src/gtk \
 		$(NULL)
 
 ICON_FILES	= \

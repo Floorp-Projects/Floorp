@@ -37,6 +37,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDragSessionGTK.h"
 #include "nsIDragService.h"
+#include "nsFontMetricsGTK.h"
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
@@ -756,15 +757,22 @@ NS_IMETHODIMP nsWidget::SetFont(const nsFont &aFont)
 
   nsFontHandle fontHandle;
   fontMetrics->GetFontHandle(fontHandle);
+  nsFontGTK *gtkfontHandle = (nsFontGTK *)fontHandle;
+
+  GdkFont *gdk_font = nsnull;
   if (fontHandle) {
+      gdk_font = gtkfontHandle->GetGDKFont();
+  }
+
+  if (gdk_font) {
     // FIXME avoid fontset problems....
-    if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET) {
+    if (gdk_font->type == GDK_FONT_FONTSET) {
       g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
       return NS_ERROR_FAILURE;
     }
 
     if (mWidget) 
-      SetFontNative((GdkFont *)fontHandle);
+      SetFontNative(gdk_font);
   }
 
   return NS_OK;
