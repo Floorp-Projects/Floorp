@@ -48,7 +48,7 @@ class nsISupports;
  *
  * A hashtable from string -> nsISupports*.  Holds strong references.
  */
-class nsDoubleHashtableStringSupports {
+class NS_COM nsDoubleHashtableStringSupports {
 public:
   nsDoubleHashtableStringSupports();
   ~nsDoubleHashtableStringSupports();
