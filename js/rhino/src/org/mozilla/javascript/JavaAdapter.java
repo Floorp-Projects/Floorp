@@ -126,15 +126,15 @@ public final class JavaAdapter
         GlobalScope global = GlobalScope.get(scope);
         Hashtable generated = global.javaAdapterGeneratedClasses;
 
+        ObjToIntMap names = getObjectFunctionNames(obj);
         JavaAdapterSignature sig;
-        sig = new JavaAdapterSignature(superClass, interfaces, obj);
+        sig = new JavaAdapterSignature(superClass, interfaces, names);
         Class adapterClass = (Class) generated.get(sig);
         if (adapterClass == null) {
             String adapterName;
             synchronized (generated) {
                 adapterName = "adapter" + global.javaAdapterSerial++;
             }
-            ObjToIntMap names = getObjectFunctionNames(obj);
             byte[] code = createAdapterCode(names, adapterName,
                                             superClass, interfaces, null);
 
@@ -163,15 +163,15 @@ public final class JavaAdapter
         GlobalScope global = GlobalScope.get(scope);
         Hashtable generated = global.javaAdapterGeneratedClasses;
 
+        ObjToIntMap names = getObjectFunctionNames(obj);
         JavaAdapterSignature sig;
-        sig = new JavaAdapterSignature(superClass, interfaces, obj);
+        sig = new JavaAdapterSignature(superClass, interfaces, names);
         Class adapterClass = (Class) generated.get(sig);
         if (adapterClass == null) {
             String adapterName;
             synchronized (generated) {
                 adapterName = "adapter" + global.javaAdapterSerial++;
             }
-            ObjToIntMap names = getObjectFunctionNames(obj);
             byte[] code = createAdapterCode(names, adapterName,
                                             superClass, interfaces, null);
             Context cx = Context.enter();
@@ -261,10 +261,10 @@ public final class JavaAdapter
                     continue;
                 }
                 String methodName = method.getName();
+                Class[] argTypes = method.getParameterTypes();
                 if (!functionNames.has(methodName)) {
                     try {
-                        superClass.getMethod(methodName,
-                                             method.getParameterTypes());
+                        superClass.getMethod(methodName, argTypes);
                         // The class we're extending implements this method and
                         // the JavaScript object doesn't have an override. See
                         // bug 61226.
@@ -275,11 +275,11 @@ public final class JavaAdapter
                 }
                 // make sure to generate only one instance of a particular
                 // method/signature.
-                String methodKey = methodName + getMethodSignature(method);
+                String methodSignature = getMethodSignature(method, argTypes);
+                String methodKey = methodName + methodSignature;
                 if (! generatedOverrides.has(methodKey)) {
                     generateMethod(cfw, adapterName, methodName,
-                                   method.getParameterTypes(),
-                                   method.getReturnType());
+                                   argTypes, method.getReturnType());
                     generatedOverrides.put(methodKey, 0);
                     generatedMethods.put(methodName, 0);
                 }
@@ -304,12 +304,12 @@ public final class JavaAdapter
             if (isAbstractMethod || functionNames.has(methodName)) {
                 // make sure to generate only one instance of a particular
                 // method/signature.
-                String methodSignature = getMethodSignature(method);
+                Class[] argTypes = method.getParameterTypes();
+                String methodSignature = getMethodSignature(method, argTypes);
                 String methodKey = methodName + methodSignature;
                 if (! generatedOverrides.has(methodKey)) {
                     generateMethod(cfw, adapterName, methodName,
-                                   method.getParameterTypes(),
-                                   method.getReturnType());
+                                   argTypes, method.getReturnType());
                     generatedOverrides.put(methodKey, 0);
                     generatedMethods.put(methodName, 0);
                 }
@@ -318,8 +318,7 @@ public final class JavaAdapter
                 if (!isAbstractMethod) {
                     generateSuper(cfw, adapterName, superName,
                                   methodName, methodSignature,
-                                  method.getParameterTypes(),
-                                  method.getReturnType());
+                                  argTypes, method.getReturnType());
                 }
             }
         }
@@ -853,14 +852,12 @@ public final class JavaAdapter
     /**
      * Returns a fully qualified method name concatenated with its signature.
      */
-    private static String getMethodSignature(Method method)
+    private static String getMethodSignature(Method method, Class[] argTypes)
     {
-        Class[] parms = method.getParameterTypes();
         StringBuffer sb = new StringBuffer();
         sb.append('(');
-        for (int i = 0; i < parms.length; i++) {
-            Class type = parms[i];
-            appendTypeString(sb, type);
+        for (int i = 0; i < argTypes.length; i++) {
+            appendTypeString(sb, argTypes[i]);
         }
         sb.append(')');
         appendTypeString(sb, method.getReturnType());
@@ -874,15 +871,16 @@ public final class JavaAdapter
             type = type.getComponentType();
         }
         if (type.isPrimitive()) {
-            if (type.equals(Boolean.TYPE)) {
-                sb.append('Z');
-            } else
-                if (type.equals(Long.TYPE)) {
-                    sb.append('J');
-                } else {
-                    String typeName = type.getName();
-                    sb.append(Character.toUpperCase(typeName.charAt(0)));
-                }
+            char typeLetter;
+            if (type == Boolean.TYPE) {
+                typeLetter = 'Z';
+            } else if (type == Long.TYPE) {
+                typeLetter = 'J';
+            } else {
+                String typeName = type.getName();
+                typeLetter = Character.toUpperCase(typeName.charAt(0));
+            }
+            sb.append(typeLetter);
         } else {
             sb.append('L');
             sb.append(type.getName().replace('.', '/'));
@@ -918,46 +916,47 @@ final class JavaAdapterConstructor extends JIFunction
  */
 class JavaAdapterSignature
 {
-    Class mSuperClass;
-    Class[] mInterfaces;
-    Object[] mProperties;
+    Class superClass;
+    Class[] interfaces;
+    ObjToIntMap names;
 
-    JavaAdapterSignature(Class superClass, Class[] interfaces, Scriptable jsObj)
+    JavaAdapterSignature(Class superClass, Class[] interfaces,
+                         ObjToIntMap names)
     {
-        mSuperClass = superClass;
-        mInterfaces = interfaces;
-        mProperties = ScriptableObject.getPropertyIds(jsObj);
+        this.superClass = superClass;
+        this.interfaces = interfaces;
+        this.names = names;;
     }
 
     public boolean equals(Object obj)
     {
-        if (obj instanceof JavaAdapterSignature) {
-            JavaAdapterSignature sig = (JavaAdapterSignature) obj;
-            if (mSuperClass == sig.mSuperClass) {
-                Class[] interfaces = sig.mInterfaces;
-                if (mInterfaces != interfaces) {
-                    if (mInterfaces == null || interfaces == null)
-                        return false;
-                    if (mInterfaces.length != interfaces.length)
-                        return false;
-                    for (int i=0; i < interfaces.length; i++)
-                        if (mInterfaces[i] != interfaces[i])
-                            return false;
-                }
-                if (mProperties.length != sig.mProperties.length)
+        if (!(obj instanceof JavaAdapterSignature))
+            return false;
+        JavaAdapterSignature sig = (JavaAdapterSignature) obj;
+        if (superClass != sig.superClass)
+            return false;
+        if (interfaces != sig.interfaces) {
+            if (interfaces.length != sig.interfaces.length)
+                return false;
+            for (int i=0; i < interfaces.length; i++)
+                if (interfaces[i] != sig.interfaces[i])
                     return false;
-                for (int i=0; i < mProperties.length; i++) {
-                    if (!mProperties[i].equals(sig.mProperties[i]))
-                        return false;
-                }
-                return true;
-            }
         }
-        return false;
+        if (names.size() != sig.names.size())
+            return false;
+        ObjToIntMap.Iterator iter = new ObjToIntMap.Iterator(names);
+        for (iter.start(); !iter.done(); iter.next()) {
+            String name = (String)iter.getKey();
+            int arity = iter.getValue();
+            if (arity != names.get(name, arity + 1))
+                return false;
+        }
+        return true;
     }
 
     public int hashCode()
     {
-        return mSuperClass.hashCode();
+        return superClass.hashCode()
+            | (0x9e3779b9 * (names.size() | (interfaces.length << 16)));
     }
 }
