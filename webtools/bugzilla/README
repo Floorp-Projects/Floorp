@@ -11,12 +11,11 @@ things, and you're off and using it.  Work has to be done to get there.
 We'd like to get there, but it wasn't clear when that would be, and so we
 decided to let people see it first.
 
-   Bugzilla has been successfully installed under Solaris and Linux. Windows NT
-is not officially supported. There have been a few successful installations
-of Bugzilla under Windows NT. Please see this article for a discussion of what
-one person hacked together to get it to work.
+   Bugzilla has not undergone a complete security review. Security holes
+may exist in the code. Great care should be taken both in the installation
+and usage of this software. Carefully consider the implications of
+installing other network services with Bugzilla.
 
-news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
 
         ============
         INSTALLATION
@@ -28,6 +27,13 @@ news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
 machine already has MySQL and the MySQL-related perl packages installed.
 If those aren't installed yet, then that's the first order of business.  The
 other necessary ingredient is a web server set up to run cgi scripts.
+
+   Bugzilla has been successfully installed under Solaris and Linux. Windows NT
+is not officially supported. There have been a few successful installations
+of Bugzilla under Windows NT. Please see this article for a discussion of what
+one person hacked together to get it to work.
+
+news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
 
 1. Installing the Prerequisites
 
