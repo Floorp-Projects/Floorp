@@ -21,12 +21,11 @@ DIRS = unix
 
 MODULE=shell
 
-#LIBRARY_NAME = shell_s
 LIBRARY_NAME = shell
 
 DEFINES = -D_IMPL_NS_SHELL
 
-EXTRA_DSO_LDOPTS+= -L$(DIST)/lib /usr/lib/libc.a /usr/lib/libstdc++.a  \
+EXTRA_DSO_LDOPTS+= -L$(DIST)/lib \
 		$(DIST)/lib/libxpcom.a \
 		$(DIST)/lib/libraptorbase.a \
 		$(DIST)/lib/libraptorgfx.a \
@@ -34,8 +33,11 @@ EXTRA_DSO_LDOPTS+= -L$(DIST)/lib /usr/lib/libc.a /usr/lib/libstdc++.a  \
 		$(DIST)/lib/libplds21.a \
 		$(DIST)/lib/libplc21.a \
 		$(DIST)/lib/libmsgc21.a \
-		$(DIST)/lib/libreg.a \
-		$(DIST)/lib/libshell_s.a /usr/lib/libc.a
+		$(DIST)/lib/libreg.a
+
+ifeq ($(OS_ARCH),linux)
+EXTRA_DSO_LDOPTS+= /usr/lib/libc.a /usr/lib/libstdc++.a 
+endif
 
 LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
       -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/shell
