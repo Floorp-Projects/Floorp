@@ -902,6 +902,10 @@ nsBrowserWindow::DoTreeView()
   if (NS_SUCCEEDED(rv = rdf_CreateBookmarkDocument(doc))) {
     nsIContent* root = doc->GetRootContent();
     if (root) {
+      // XXX Dump the content model that the tree is going to be built
+      // on.
+      root->List();
+
       // XXX do whatever here. Note that the RDF nsIContent currently
       // doesn't refcount the document in which it lives, so you'll
       // need to keep a pointer to *both* the document and the
