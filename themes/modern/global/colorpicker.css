@@ -27,10 +27,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-colorpicker {
-  -moz-user-focus: normal;  
-}
-
 /* ::::: colorpicker button ::::: */
  
 colorpicker[type="button"] {
