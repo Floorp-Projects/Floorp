@@ -1237,7 +1237,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       }
 
       if (!soundStr.IsEmpty()) {
-        nsCOMPtr<nsISound> snd = do_GetService("@mozilla.org/sound;1");
+        nsCOMPtr<nsISound> snd = do_CreateInstance("@mozilla.org/sound;1");
         if (snd) {
           nsCOMPtr<nsIURI> soundURI;
           
