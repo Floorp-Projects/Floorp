@@ -627,7 +627,7 @@ function doFind() {
       return;
     }
 
-    // compile the search string, which has already been split up above, into regexp's
+    // compile the search string, which has already been split up above, into regexps
     for (var i=0; i < RE.length; ++i) {
       RE[i] = new RegExp(RE[i], "i");
     }
