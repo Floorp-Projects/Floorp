@@ -5,10 +5,6 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/mailPrefsOverlay.dtd" >
 
-<!-- This dialog has a fixed size and is not resizable. 
-     You MAY NOT increase the size of this dialog. 
-     Questions, Comments -> ben@netscape.com -->
-
 <dialog id="prefDialog" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
@@ -16,7 +12,7 @@
         onload="Startup();"
         ondialogaccept="return hPrefWindow.onOK(event);"
         ondialogcancel="return hPrefWindow.onCancel(event);"
-        persist="screenX screenY"> 
+        persist="width height screenX screenY"> 
 
   <script>
   <![CDATA[
