@@ -199,13 +199,16 @@ var downloadViewController = {
       break;
     case "cmd_remove":
       selectedItems = getSelectedItems();
+      var minValue = gDownloadView.contentView.getIndexOfItem(selectedItems[0]);
       gDownloadManager.startBatchUpdate();
       for (i = 0; i < selectedItems.length; i++) {
         if (i == selectedItems.length - 1)
           gDownloadManager.endBatchUpdate();
         gDownloadManager.removeDownload(selectedItems[i].id);
       }
-      window.updateCommands("tree-select");
+      if (minValue >= gDownloadView.treeBoxObject.view.rowCount)
+        --minValue;
+      gDownloadView.treeBoxObject.selection.select(minValue);
       break;
     case "cmd_selectAll":
       gDownloadView.treeBoxObject.selection.selectAll();
