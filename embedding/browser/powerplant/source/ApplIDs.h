@@ -54,7 +54,8 @@ enum {
     dlog_ConfirmCheck = 1284,
     dlog_Prompt = 1285,
     dlog_PromptNameAndPass = 1286,
-    dlog_PromptPassword = 1287
+    dlog_PromptPassword = 1287,
+    dlog_ConfirmEx = 1288
 };
 
 // Printing
@@ -99,6 +100,20 @@ enum {
     str_PlugInsDirName,
     str_SearchPlugInsDirName
 };
+
+enum {
+    STRx_StdButtonTitles        = 5001,
+    
+    str_Blank                   = 1,
+    str_OK,
+    str_Cancel,
+    str_Yes,
+    str_No,
+    str_Save,
+    str_DontSave,
+    str_Revert
+};
+
 
 // Icons
 enum {
