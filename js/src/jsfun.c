@@ -1739,27 +1739,26 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     goto bad_formal;
                 }
                 if (sprop && obj2 == obj) {
-                    if (JS_HAS_STRICT_OPTION(cx)) {
-                        JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
-                        OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                         JSREPORT_WARNING |
-                                                         JSREPORT_STRICT,
-                                                         JSMSG_DUPLICATE_FORMAL,
-                                                         ATOM_BYTES(atom))) {
-                            goto bad_formal;
-                        }
-                    }
-
                     /*
                      * A duplicate parameter name. We create a dummy symbol
                      * entry with property id of the parameter number and set
                      * the id to the name of the parameter.  See jsopcode.c:
                      * the decompiler knows to treat this case specially.
                      */
+                    JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
                     oldArgId = (jsid) sprop->id;
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
                     sprop = NULL;
+
+                    if (JS_HAS_STRICT_OPTION(cx) &&
+                        !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                     JSREPORT_WARNING |
+                                                     JSREPORT_STRICT,
+                                                     JSMSG_DUPLICATE_FORMAL,
+                                                     ATOM_BYTES(atom))) {
+                        goto bad_formal;
+                    }
+
                     if (!js_DefineProperty(cx, obj, oldArgId, JSVAL_VOID,
                                            js_GetArgument, js_SetArgument,
                                            JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -1768,8 +1767,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     }
                     sprop->id = (jsid) atom;
                 }
-                if (sprop)
+                if (sprop) {
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+                    sprop = NULL;
+                }
                 if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
                                        js_GetArgument, js_SetArgument,
                                        JSPROP_ENUMERATE | JSPROP_PERMANENT,
