@@ -811,26 +811,27 @@ int main(int argc, char* argv[])
 #endif
 
   nsresult rv;
+  int i=0;
 
-  /* -help and -version should return quick */
-  if (argc == 2) {
-	if ((PL_strcasecmp(argv[1], "-h") == 0) || (PL_strcasecmp(argv[1], "-help") == 0) 
+  /* Handle -help and -version command line arguments. They should return quick, so we deal with them here */
+  for (i=1; i<argc; i++) {
+	if ((PL_strcasecmp(argv[i], "-h") == 0) || (PL_strcasecmp(argv[i], "-help") == 0) 
 #ifdef XP_UNIX
-|| (PL_strcasecmp(argv[1], "--help") == 0)
+|| (PL_strcasecmp(argv[i], "--help") == 0)
 #endif /* XP_UNIX */
 #ifdef XP_PC
-|| (PL_strcasecmp(argv[1], "/h") == 0) || (PL_strcasecmp(argv[1], "/help") == 0) || (PL_strcasecmp(argv[1], "/?") == 0)
+|| (PL_strcasecmp(argv[i], "/h") == 0) || (PL_strcasecmp(argv[i], "/help") == 0) || (PL_strcasecmp(argv[i], "/?") == 0)
 #endif /* XP_PC */
     ) {
 		DumpHelp(argv[0]);
 		return 0;
 	}
-	else if ((PL_strcasecmp(argv[1], "-v") == 0) || (PL_strcasecmp(argv[1], "-version") == 0) 
+	else if ((PL_strcasecmp(argv[i], "-v") == 0) || (PL_strcasecmp(argv[i], "-version") == 0) 
 #ifdef XP_UNIX
-|| (PL_strcasecmp(argv[1], "--version") == 0)
+|| (PL_strcasecmp(argv[i], "--version") == 0)
 #endif /* XP_UNIX */
 #ifdef XP_PC
-|| (PL_strcasecmp(argv[1], "/v") == 0) || (PL_strcasecmp(argv[1], "/version") == 0)
+|| (PL_strcasecmp(argv[i], "/v") == 0) || (PL_strcasecmp(argv[i], "/version") == 0)
 #endif /* XP_PC */
     ) {
 		DumpVersion(argv[0]);
@@ -851,13 +852,13 @@ int main(int argc, char* argv[])
   // We can't use the command line service here because it isn't running yet
 #if defined(XP_UNIX) && !defined(NTO)
   PRBool dosplash = PR_FALSE;
-  for (int i=0; i<argc; i++)
+  for (i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-splash") == 0)
         || (PL_strcasecmp(argv[i], "--splash") == 0))
       dosplash = PR_TRUE;
 #else        
   PRBool dosplash = PR_TRUE;
-  for (int i=0; i<argc; i++)
+  for (i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-nosplash") == 0)
         || (PL_strcasecmp(argv[i], "/nosplash") == 0))
       dosplash = PR_FALSE;
