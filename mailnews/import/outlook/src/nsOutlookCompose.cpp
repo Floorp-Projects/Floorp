@@ -172,16 +172,10 @@ nsOutlookCompose::nsOutlookCompose()
 	m_pSendProxy = nsnull;
 	m_pMsgFields = nsnull;
 	m_pIdentity = nsnull;
-	m_pHeaders = p_test_headers;
-	if (m_pHeaders)
-		m_headerLen = strlen( m_pHeaders);
-	else
-		m_headerLen = 0;
-	m_pBody = p_test_body;
-	if (m_pBody)
-		m_bodyLen = strlen( m_pBody);
-	else
-		m_bodyLen = 0;
+#ifdef IMPORT_DEBUG
+	m_Headers = p_test_headers;
+	m_Body = p_test_body;
+#endif
 
 	m_readHeaders.m_convertCRs = PR_TRUE;
 }
@@ -584,7 +578,7 @@ void nsOutlookCompose::ConvertSystemStringToUnicode( const char *pStr, nsString&
 }
 
 // Test a message send????
-nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode)
+nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode, nsCString &useThisCType)
 {
 	nsresult	rv = CreateComponents();
 	if (NS_SUCCEEDED( rv))
@@ -599,18 +593,25 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	nsString	headerVal;
     nsCAutoString asciiHeaderVal;
 
-	GetHeaderValue( m_pHeaders, m_headerLen, "From:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "From:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetFrom( headerVal.get());
-	GetHeaderValue( m_pHeaders, m_headerLen, "To:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "To:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetTo( headerVal.get());
-	GetHeaderValue( m_pHeaders, m_headerLen, "Subject:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Subject:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetSubject( headerVal.get());
-	GetHeaderValue( m_pHeaders, m_headerLen, "Content-type:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Content-type:", headerVal);
+
+  // If callers pass in a content type then use it, else get it from the header.
+  if (!useThisCType.IsEmpty())
+   bodyType.Assign(NS_ConvertASCIItoUCS2(useThisCType.get()));
+  else
+  {
 	bodyType = headerVal;
 	ExtractType( bodyType);
+  }
 	ExtractCharset( headerVal);
   // Use platform charset as default if the msg doesn't specify one
   // (ie, no 'charset' param in the Content-Type: header). As the last
@@ -629,15 +630,15 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
   }
   m_pMsgFields->SetCharacterSet( NS_LossyConvertUCS2toASCII(headerVal).get() );
   charSet = headerVal;
-	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "CC:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetCc( headerVal.get());
-	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Message-ID:", headerVal);
 	if (headerVal.Length()) {
         asciiHeaderVal.AssignWithConversion(headerVal);
 		m_pMsgFields->SetMessageId(asciiHeaderVal.get());
     }
-	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
+	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Reply-To:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetReplyTo( headerVal.get());
 
@@ -651,7 +652,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 
   // Do body conversion here
   nsString	uniBody;
-  ConvertSystemStringToUnicode( m_pBody, uniBody);
+  ConvertSystemStringToUnicode( m_Body.get(), uniBody);
 
   nsCString	body, theCharset;
   theCharset.AssignWithConversion(charSet);
@@ -668,8 +669,8 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 										mode,	                        // mode
 										nsnull,			                  // no message to replace
 										pMimeType,		                // body type
-                    NS_FAILED(rv) ? m_pBody : body.get(),	// body pointer
-                    NS_FAILED(rv) ? m_bodyLen : body.Length(),	// body length
+                    NS_FAILED(rv) ? m_Body.get() : body.get(),	// body pointer
+                    NS_FAILED(rv) ? m_Body.Length() : body.Length(),	// body length
 										nsnull,			                  // remote attachment data
 										pAttach,		                  // local attachments
 										nsnull,			                  // related part
@@ -687,7 +688,6 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	OutlookSendListener *pListen = (OutlookSendListener *)m_pListener;
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG1( "*** Error, CreateAndSendMessage FAILED: 0x%lx\n", rv);
-		// IMPORT_LOG1( "Headers: %80s\n", m_pHeaders);
 	}
 	else {
 		// wait for the listener to get done!
@@ -706,8 +706,8 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 
 		if (abortCnt >= kHungAbortCount) {
 			IMPORT_LOG0( "**** Create and send message hung\n");
-			IMPORT_LOG1( "Headers: %s\n", m_pHeaders);
-			IMPORT_LOG1( "Body: %s\n", m_pBody);
+			IMPORT_LOG1( "Headers: %s\n", m_Headers.get());
+			IMPORT_LOG1( "Body: %s\n", m_Body.get());
 			rv = NS_ERROR_FAILURE;
 		}
 
@@ -1022,7 +1022,7 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 		specials[i] = PR_FALSE;
 
 	do {
-		GetNthHeader( m_pHeaders, m_headerLen, n, header, val, PR_FALSE);
+		GetNthHeader( m_Headers.get(), m_Headers.Length(), n, header, val, PR_FALSE);
 		// GetNthHeader( newHeaders.m_pBuffer, newHeaders.m_writeOffset, n, header.get(), val, PR_FALSE);
 		if (header.Length()) {
 			if ((specialHeader = IsSpecialHeader( header.get())) != -1) {

@@ -81,7 +81,7 @@ public:
 	static PRBool IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, const char *pServer, const char *pEmail, const char *pReply, const char *pUserName);
 
 	static void SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, char *pServer, char *pUser);
-
+  static nsresult GetAccountName(HKEY hKey, char *defaultName, nsString &acctName);
 };
 
 
@@ -321,7 +321,20 @@ PRBool OESettings::DoImport( nsIMsgAccount **ppAccount)
 	return( accounts != 0);
 }
 
-
+nsresult OESettings::GetAccountName(HKEY hKey, char *defaultName, nsString &acctName)
+{
+  BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
+  nsresult rv = NS_OK;
+  if (pAccName) {
+    nsCOMPtr<nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
+    if (impSvc)
+      rv = impSvc->SystemStringToUnicode((const char *)pAccName, acctName);
+    nsOERegUtil::FreeValueBytes( pAccName);
+  }
+  else
+    acctName.Assign(NS_ConvertASCIItoUCS2(defaultName));
+  return rv;
+}
 
 PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pServerName, nsIMsgAccount **ppAccount)
 {
@@ -348,21 +361,16 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			
 			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", pServerName, (char *)pBytes);
 
-			BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
-			if (pAccName) {
-				prettyName.AssignWithConversion((const char *)pAccName);
-				nsOERegUtil::FreeValueBytes( pAccName);
-			}
-			else
-				prettyName.AssignWithConversion((const char *)pServerName);
-
+      if (NS_SUCCEEDED(GetAccountName(hKey, pServerName, prettyName)))
+      {
 			PRUnichar *pretty = ToNewUnicode(prettyName);
-			
-			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
-
+        if (pretty)
+        {
 			rv = in->SetPrettyName( pretty);
 			nsCRT::free( pretty);
+        }
+      }
 			
 			// We have a server, create an account.
 			nsCOMPtr<nsIMsgAccount>	account;
@@ -413,21 +421,16 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", pServerName, (char *)pBytes);
 
-			BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
-			if (pAccName) {
-				prettyName.AssignWithConversion((const char *)pAccName);
-				nsOERegUtil::FreeValueBytes( pAccName);
-			}
-			else
-				prettyName.AssignWithConversion((const char *)pServerName);
-
+      if (NS_SUCCEEDED(GetAccountName(hKey, pServerName, prettyName)))
+      {
 			PRUnichar *pretty = ToNewUnicode(prettyName);
-			
-			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
-
+        if (pretty)
+        {
 			rv = in->SetPrettyName( pretty);
 			nsCRT::free( pretty);
+        }
+      }
 			
 			// We have a server, create an account.
 			nsCOMPtr<nsIMsgAccount>	account;
@@ -515,6 +518,7 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 	char *pEmail = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Email Address");
 	char *pReply = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Reply To Email Address");
 	char *pUserName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP User Name");
+  char *pOrgName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Organization Name");
 
 	nsresult	rv;
 
@@ -524,10 +528,20 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = pMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			nsString fullName;
-			fullName.AssignWithConversion(pName);
+      nsAutoString fullName, organization;
+      nsCOMPtr<nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
+      if (impSvc)
+      {
+        rv = impSvc->SystemStringToUnicode((const char *)pName, fullName);
+        if (NS_SUCCEEDED(rv))
+        {
 			id->SetFullName( fullName.get());
 			id->SetIdentityName( fullName.get());
+        }
+        rv = impSvc->SystemStringToUnicode((const char *)pOrgName, organization);
+        if (NS_SUCCEEDED(rv))
+          id->SetOrganization( organization.get());
+      }
 			id->SetEmail( pEmail);
 			if (pReply)
 				id->SetReplyTo( pReply);

@@ -162,9 +162,7 @@ nsresult nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid,
   rv = m_database->GetNewListRow(getter_AddRefs(newRow));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString column;
-  column.AssignWithConversion(pName);
-  rv = m_database->AddListName(newRow, column.get());
+  rv = m_database->AddListName(newRow, NS_ConvertUCS2toUTF8(pName).get());
   NS_ENSURE_SUCCESS(rv, rv);
   rv = m_database->AddCardRowToDB(newRow);
   NS_ENSURE_SUCCESS(rv, rv);

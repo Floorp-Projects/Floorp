@@ -105,6 +105,7 @@ public:
 	BOOL		HasContentHeader( void) { return( !m_mimeContentType.IsEmpty());}
 	BOOL		HasMimeVersion( void) { return( m_bMimeVersion);}
 	const char *GetMimeContent( void) { return( m_mimeContentType.get());}
+  PRInt32     GetMimeContentLen( void) { return( m_mimeContentType.Length());}
 	const char *GetMimeBoundary( void) { return( m_mimeBoundary.get());}
 	void		GenerateBoundary( void);
 

@@ -107,10 +107,10 @@ public:
 	nsOutlookCompose();
 	~nsOutlookCompose();
 
-	nsresult	SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode);
+	nsresult	SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode, nsCString &useThisCType);
 
-	void		SetBody( const char *pBody, PRInt32 len) { m_pBody = pBody; m_bodyLen = len;}
-	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
+	void		SetBody( const char *pBody) { m_Body = pBody;}
+	void		SetHeaders( const char *pHeaders) { m_Headers = pHeaders;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
 
 	nsresult	CopyComposedMessage( nsCString& fromLine, nsIFileSpec *pSrc, nsIFileSpec *pDst, SimpleBufferTonyRCopiedTwice& copy);
@@ -127,7 +127,7 @@ private:
 		val.Truncate();
 		nsCString	hVal;
 		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
-		val.AssignWithConversion(hVal.get());
+		val.Assign(NS_ConvertUTF8toUCS2(hVal));
 	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);
@@ -152,10 +152,8 @@ private:
 	nsIMsgCompFields *		m_pMsgFields;
 	nsIMsgIdentity *		m_pIdentity;
 	nsIIOService *			m_pIOService;
-	PRInt32					m_headerLen;
-	const char *			m_pHeaders;
-	PRInt32					m_bodyLen;
-	const char *			m_pBody;
+	nsCString       m_Headers;
+	nsCString       m_Body;
 	SimpleBufferTonyRCopiedTwice			m_readHeaders;
   nsCOMPtr<nsIImportService>	m_pImportService;
 };

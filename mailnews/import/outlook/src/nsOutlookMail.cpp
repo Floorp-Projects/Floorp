@@ -350,6 +350,33 @@ void nsOutlookMail::OpenMessageStore( CMapiFolder *pNextFolder)
 	}
 }
 
+void nsOutlookMail::SetDefaultContentType(CMapiMessage &msg, nsCString &cType)
+{
+  cType.Truncate();
+
+  // MAPI doesn't seem to return the entire body data (ie, multiple parts) for
+  // content type "multipart/alternative", instead it only returns the body data 
+  // for a particular part. For this reason we'll need to set the content type
+  // here. Same thing when conten type is not being set at all.
+  if (msg.GetMimeContentLen())
+  {
+    // If content type is not multipart/alternative, return.
+    if (nsCRT::strcasecmp(msg.GetMimeContent(), "multipart/alternative"))
+      return;
+
+    // For multipart/alternative, if no body or boundary,
+    // or boundary is found in body then return.
+    const char *body = msg.GetBody();
+    const char *boundary = msg.GetMimeBoundary();
+    if (!body || !boundary || strstr(body, boundary))
+      return;
+  }
+  
+  // Now default the content type to text/html or text/plain
+  // depending whether or not the body data is html.
+  cType = msg.BodyIsHtml() ? "text/html" : "text/plain";
+}
+
 nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount)
 {
 	if ((index < 0) || (index >= m_folderList.GetSize())) {
@@ -439,8 +466,23 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 			}
 						
 			// --------------------------------------------------------------
-			compose.SetBody( msg.GetBody(), msg.GetBodyLen());
-			compose.SetHeaders( msg.GetHeaders(), msg.GetHeaderLen());
+			compose.SetBody( msg.GetBody());
+
+      // Need to convert all headers to unicode (for i18n).
+      // Init header here since 'composes' is used for all msgs.
+      compose.SetHeaders("");
+      nsCOMPtr<nsIImportService>	impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get import service");
+      if (NS_SUCCEEDED(rv))
+      {
+        nsAutoString newheader;
+        nsCAutoString tempCStr(msg.GetHeaders(), msg.GetHeaderLen());
+        rv = impSvc->SystemStringToUnicode(tempCStr.get(), newheader);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert headers to utf8");
+        if (NS_SUCCEEDED(rv))
+          compose.SetHeaders(NS_ConvertUCS2toUTF8(newheader).get());
+      }
+
 			compose.SetAttachments( &m_attachments);
 
       // See if it's a drafts folder. Outlook doesn't allow drafts
@@ -456,7 +498,9 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
 				I can't get no satisfaction
 			*/
 			if (msg.GetHeaderLen()) {
-				rv = compose.SendTheMessage( compositionFile, mode);
+        nsCAutoString cType;
+        SetDefaultContentType(msg, cType);
+				rv = compose.SendTheMessage( compositionFile, mode, cType);
 				if (NS_SUCCEEDED( rv)) {
 					rv = compose.CopyComposedMessage( fromLine, compositionFile, pDest, copy);
 					DeleteFile( compositionFile);
@@ -790,13 +834,31 @@ void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
 						// We have a file spec, now get the other info
 						OutlookAttachment *a = new OutlookAttachment;
 						a->mimeType = nsCRT::strdup( msg.GetMimeType());
-						a->description = nsCRT::strdup( msg.GetFileName());
-						if (!strlen( a->description)) {
-							nsCRT::free( a->description);
-							nsCString	str("Attachment ");
+            // Init description here so that we cacn tell
+            // if defaul tattacchment is needed later.
+            a->description = nsnull;  
+
+            const char *fileName = msg.GetFileName();
+            if (fileName && fileName[0]) {
+              // Convert description to unicode.
+              nsCOMPtr<nsIImportService>	impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
+              NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get import service");
+              if (NS_SUCCEEDED(rv)) {
+                nsAutoString description;
+                rv = impSvc->SystemStringToUnicode(msg.GetFileName(), description);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert system string to unicode");
+                if (NS_SUCCEEDED(rv))
+                  a->description = ToNewUTF8String(description);
+              }
+            }
+
+            // If no description use "Attachment i" format.
+            if (!a->description) {
+              nsCAutoString	str("Attachment ");
 							str.AppendInt( (PRInt32) i);
 							a->description = ToNewCString( str);
 						}
+
 						a->pAttachment = pSpec;
 						m_attachments.AppendElement( a);
 					}
@@ -971,9 +1033,7 @@ nsresult nsOutlookMail::CreateList( const PRUnichar * pName, nsIAddrDatabase *pD
   rv = pDb->GetNewListRow(getter_AddRefs(newRow));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString column;
-  column.AssignWithConversion(pName);
-  rv = pDb->AddListName(newRow, column.get());
+  rv = pDb->AddListName(newRow, NS_ConvertUCS2toUTF8(pName).get());
   NS_ENSURE_SUCCESS(rv, rv);
   rv = pDb->AddCardRowToDB(newRow);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -79,6 +79,7 @@ private:
 	void		SplitString( nsString& val1, nsString& val2);
 	PRBool		BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
   nsresult  CreateList( const PRUnichar * pName, nsIAddrDatabase *pDb);
+  void SetDefaultContentType(CMapiMessage &msg, nsCString &cType);
 
 private:
 	PRBool				m_gotFolders;
