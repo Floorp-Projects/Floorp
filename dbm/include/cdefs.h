@@ -88,7 +88,9 @@
 #define	__CONCAT(x,y)	x ## y
 #define	__STRING(x)	#x
 
+#ifndef __const
 #define	__const		const		/* define reserved names to standard */
+#endif  /* __const */
 #define	__signed	signed
 #define	__volatile	volatile
 #ifndef _WINDOWS
