@@ -246,7 +246,6 @@ nsHTTPChannel::Cancel(nsresult status)
 {
     nsresult rv;
 
-    printf(">>>> nsHTTPChannel::Cancel [this=%x]\n", this);
     LOG(("nsHTTPChannel::Cancel [this=%x status=%x]\n", this, status));
 
     //
@@ -1131,7 +1130,7 @@ nsHTTPChannel::CheckCache()
         LOG(("Content-length=%d, CacheEntryDataSize=%u\n", contentLength, size));
 
         if (size != contentLength) {
-            NS_NOTREACHED("Cached data size does not match the Content-Length header");
+            NS_WARNING("Cached data size does not match the Content-Length header");
             return NS_OK; // must re-fetch
         }
     }
@@ -1996,7 +1995,7 @@ nsHTTPChannel::Connect()
         // So, we "may" have a cache entry now...
         rv = CheckCache();
         if (NS_FAILED(rv))
-            NS_NOTREACHED("CheckCache failed... what should I do?");
+            NS_WARNING("CheckCache failed... what should I do?");
 
         // If the data in the cache is usable, i.e it hasn't expired, then
         // there's no need to request a socket transport.
@@ -2314,7 +2313,6 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
 {
     nsresult rv = NS_OK;
 
-    printf(">>>> nsHTTPChannel::ResponseCompleted [this=%x]\n", this);
     LOG(("nsHTTPChannel::ResponseComplete() [this=%x] "
          "mDataListenet=%x, Status=%o\n",
          this, (void*)mResponseDataListener, aStatus));
