@@ -1641,13 +1641,10 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 		{
 		        nsCOMPtr<nsIContent>	child;
 		        nsIContent		*temp;
-
-// #define	OPTIMIZED_BINARY_INSERTION
-#ifdef	OPTIMIZED_BINARY_INSERTION
-
-			// rjc says: The following is an implementaion of a fairly optimal
-			// binary search insertion sort... with interpolation at either end-point.
 		        PRInt32			direction;
+
+			// rjc says: The following is an implementation of a fairly optimal
+			// binary search insertion sort... with interpolation at either end-point.
 
 			if (sortState->lastWasFirst == PR_TRUE)
 			{
@@ -1705,59 +1702,6 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, sortState
 		        	if (direction < 0)	right = x-1;
 		        	else			left = x+1;
 		        }
-
-#else
-
-			PRInt32			last = -1, current, direction = 0, delta = numChildren;
-			while(PR_TRUE)
-			{
-				delta = delta / 2;
-
-				if (last == -1)
-				{
-					current = delta;
-				}
-				else if (direction > 0)
-				{
-					if (delta == 0)	delta = 1;
-					current = last + delta;
-				}
-				else
-				{
-					if (delta == 0)	delta = 1;
-					current = last - delta;
-				}
-
-				if (current != last)
-				{
-					container->ChildAt(current, *getter_AddRefs(child));
-					temp = child.get();
-					// Note: since cacheFirstHint is PR_TRUE, the first node passed
-					// into inplaceSortCallback() must be the node that doesn't change
-					direction = inplaceSortCallback(&node, &temp, &sortInfo);
-				}
-				if ( (direction == 0) ||
-					((current == last + 1) && (direction < 0)) ||
-					((current == last - 1) && (direction > 0)) ||
-					((current == 0) && (direction < 0)) ||
-					((current >= numChildren - 1) && (direction > 0)) )
-				{
-					if (current >= numChildren)
-					{
-						container->AppendChildTo(node, aNotify);
-					}
-					else
-					{
-						PRInt32		thePos = ((direction > 0) ? current + 1: (current >= 0) ? current : 0);
-						container->InsertChildAt(node, thePos, aNotify);
-					}
-					childAdded = PR_TRUE;
-					break;
-				}
-				last = current;
-			}
-
-#endif
 		}
 	}
 
