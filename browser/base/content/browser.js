@@ -2515,6 +2515,10 @@ nsBrowserStatusHandler.prototype =
 
     var browser = getBrowser().selectedBrowser;
     if (aWebProgress.DOMWindow == content) {
+      // The document loaded correctly, clear the value if we should
+      if (browser.userTypedClear)
+        browser.userTypedValue = null;
+
       //XXXBlake don't we have to reinit this.urlBar, etc.
       //         when the toolbar changes?
       var userTypedValue = browser.userTypedValue;
@@ -4358,6 +4362,14 @@ function stylesheetSwitchAll(frameset, title) {
 
 function updatePageTheme(evt)
 {
+  // XXX - Accessing window._content.document can generate an
+  // onLocationChange for the current tab, this can cause the url
+  // bar to be cleared. Prevent that happening by setting the clear
+  // state to false for the duration of this function.
+  var browser = getBrowser().selectedBrowser;
+  var userTypedClear = browser.userTypedClear;
+  browser.userTypedClear = false;
+
   if (!gPageThemeButton)
     gPageThemeButton = document.getElementById("page-theme-button");
 
@@ -4383,6 +4395,9 @@ function updatePageTheme(evt)
   }
   else
     gPageThemeButton.removeAttribute("themes");
+
+  // Restore clear state
+  browser.userTypedClear = userTypedClear;
 }
 /* End of the Page Theme functions */
 

@@ -194,10 +194,13 @@
 
               if (aStateFlags & nsIWebProgressListener.STATE_START && 
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-                // Reset so we can see if the user typed between the document
-                // load starting and the location changing.
+                // It's okay to clear what the user typed when we start
+                // loading a document. If the user types, this flag gets
+                // set to false, if the document load ends without an
+                // onLocationChange, this flag also gets set to false
+                // (so we keep it while switching tabs after failed load
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  this.mBrowser.userTypedValue = null;
+                  this.mBrowser.userTypedClear = true;
 
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
@@ -211,6 +214,11 @@
               }
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+                // The document is done loading, it's okay to clear
+                // the value again.
+                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
+                  this.mBrowser.userTypedClear = false;
+
                 if (this.mBlank)
                   this.mBlank = false;
 
@@ -242,6 +250,10 @@
             ,
 
             onLocationChange : function(aWebProgress, aRequest, aLocation) {
+              // The document loaded correctly, clear the value if we should
+              if (this.mBrowser.userTypedClear)
+                this.mBrowser.userTypedValue = null;
+
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
@@ -451,6 +463,11 @@
 
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
+            // Remember the current clear state, then set it to false
+            // so we don't clear the userTypedValue when just switching
+            // tabs. Set it back to its old state after we're done.
+            var userTypedClear = this.mCurrentBrowser.userTypedClear;
+            this.mCurrentBrowser.userTypedClear = false;
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
               p = this.mProgressListeners[i];
@@ -463,6 +480,7 @@
                   p.onLinkIconAvailable(listener.mIcon);
               }
             }
+            this.mCurrentBrowser.userTypedClear = userTypedClear;
 
             // Update the window title.
             this.updateTitlebar();
@@ -817,6 +835,10 @@
             this.mTabFilters[position] = filter;
 
             if (!blank) {
+              // pretend the user typed this so it'll be available till
+              // the document successfully loads
+              b.userTypedValue = aURI;
+
               if (aPostData === undefined)
                 aPostData = null;
               b.loadURIWithFlags(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
@@ -1348,6 +1370,10 @@
       <property name="canFindAgain"
                 onget="return this.mCurrentBrowser.canFindAgain;"
                 readonly="true"/>
+
+      <property name="userTypedClear"
+                onget="return this.mCurrentBrowser.userTypedClear;"
+                onset="return this.mCurrentBrowser.userTypedClear = val;"/>
 
       <property name="userTypedValue"
                 onget="return this.mCurrentBrowser.userTypedValue;"
