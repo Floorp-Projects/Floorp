@@ -1786,20 +1786,22 @@ NS_IMETHODIMP UpdateCalendarIcon( PRBool hasAlarm )
             windowEnumerator->GetNext(getter_AddRefs(nextWindow));
             nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(nextWindow));
 
-            nsCOMPtr<nsIDOMDocument> domDocument;
-            domWindow->GetDocument(getter_AddRefs(domDocument));
+            if( domWindow ) {
+                nsCOMPtr<nsIDOMDocument> domDocument;
+                domWindow->GetDocument(getter_AddRefs(domDocument));
 
-            if(domDocument)
-            {
-                nsCOMPtr<nsIDOMElement> domElement;
-                domDocument->GetElementById(NS_LITERAL_STRING("mini-cal"), getter_AddRefs(domElement));
+                if(domDocument)
+                {
+                    nsCOMPtr<nsIDOMElement> domElement;
+                    domDocument->GetElementById(NS_LITERAL_STRING("mini-cal"), getter_AddRefs(domElement));
 
-                if (domElement) {
-                    if ( hasAlarm ) {
-                        domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("Alarm"));
-                    }
-                    else {
-                        domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
+                    if (domElement) {
+                        if ( hasAlarm ) {
+                            domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("Alarm"));
+                        }
+                        else {
+                            domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
+                        }
                     }
                 }
             }
