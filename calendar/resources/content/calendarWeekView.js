@@ -430,9 +430,9 @@ WeekView.prototype.switchTo = function( )
 {
    // disable/enable view switching buttons   
 
-   var weekViewButton = document.getElementById( "calendar-week-view-button" );
-   var monthViewButton = document.getElementById( "calendar-month-view-button" );
-   var dayViewButton = document.getElementById( "calendar-day-view-button" );
+   var weekViewButton = document.getElementById( "week_view_command" );
+   var monthViewButton = document.getElementById( "month_view_command" );
+   var dayViewButton = document.getElementById( "day_view_command" );
    
    monthViewButton.removeAttribute( "disabled" );
    weekViewButton.setAttribute( "disabled", "true" );

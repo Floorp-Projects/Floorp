@@ -62,7 +62,6 @@
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-    <!ENTITY % dtd4 SYSTEM "chrome://calendar/locale/calendarMenu.dtd" > %dtd4;
     <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/calendarMenuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
@@ -81,19 +80,47 @@
    width="830px"
    persist="screenX screenY width height sizemode"> 
  
-<broadcasterset>
-  <broadcaster id="delete_command" disabled="true"/>
-  <broadcaster id="modify_command" disabled="true"/>
-  <broadcaster id="send_event_command" disabled="true"/>
-  <broadcaster id="copy_command" disabled="true"/>
-  <broadcaster id="cut_command" disabled="true"/>
-</broadcasterset>
-
+<commandset>
+   <command id="new_command" oncommand="newEventCommand()"/>
+   <command id="delete_command" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
+   <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
+   <command id="send_event_command" oncommand="sendEvent()" disabled="true"/>
+   <command id="cut_command" oncommand="cutToClipboard()" disabled="true"/>
+   <command id="copy_command" oncommand="copyToClipboard()" disabled="true"/>
+   <command id="paste_command" oncommand="pasteFromClipboard()"/>
+   <command id="select_all_command" oncommand="selectAllEvents()"/>
+   
+   <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
+   <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
+   <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
+   
+   <command id="day_view_command"   oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
+   <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
+   <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
+   
+   <command id="import_command" oncommand="loadEventsFromFile()"/>
+   <command id="export_command" oncommand="saveEventsToFile()"/>
+</commandset>
 
 <keyset>
-  <key id="delete_key" keycode="VK_DELETE" observes="delete_command" oncommand="unifinderDeleteCommand( true )"/>
-  <key id="page_up_key" keycode="VK_PAGE_UP" oncommand="gCalendarWindow.currentView.goToPrevious( )"/>
-  <key id="page_down_key" keycode="VK_PAGE_DOWN" oncommand="gCalendarWindow.currentView.goToNext( )"/>
+  <key id="delete_key" keycode="VK_DELETE" observes="delete_command"/>
+  <key id="new_event_key" key="N" modifiers="control" observes="new_command"/>
+  <key id="modify_event_key" key="E" modifiers="control" observes="modify_command"/>
+  <key id="import_key" key="I" modifiers="control" observes="import_command"/>
+  <key id="export_key" key="O" modifiers="control" observes="export_command"/>
+  
+  <key id="key_selectAll" key="A" modifiers="control" observes="select_all_command"/>
+  <key id="key_cut" key="X" modifiers="control" observes="cut_command"/>
+  <key id="key_copy" key="C" modifiers="control" observes="copyt_command"/>
+  <key id="key_paste" key="V" modifiers="control" observes="paste_command"/>
+  
+  <key id="view_day_key"   keycode="VK_F1" observes="day_view_command"/>
+  <key id="view_week_key"  keycode="VK_F2" observes="week_view_command"/>
+  <key id="view_month_key" keycode="VK_F3" observes="month_view_command"/>
+  
+  <key id="go_forward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
+  <key id="go_backward_key" keycode="VK_PAGE_DOWN" observes="next_command"/>
+  <key id="go_to_today_key"   key="T" modifiers="control" observes="go_today_command"/>
 </keyset>
 
 <keyset id="tasksKeys"/>
@@ -130,25 +157,25 @@
 <tooltip id="savetip"/>
 
 <popup id="context-menu">
-   <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" oncommand="newEventCommand()"/>
-   <menuitem label="&calendar.context.modifyevent.label;" accesskey="&calendar.context.modifyevent.accesskey;" observes="modify_command" oncommand="unifinderEditCommand()"/>
-   <menuitem label="&calendar.context.deleteevent.label;" accesskey="&calendar.context.deleteevent.accesskey;" observes="delete_command" oncommand="unifinderDeleteCommand()"/>
+   <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" observes="new_command"/>
+   <menuitem label="&calendar.context.modifyevent.label;" accesskey="&calendar.context.modifyevent.accesskey;" observes="modify_command" />
+   <menuitem label="&calendar.context.deleteevent.label;" accesskey="&calendar.context.deleteevent.accesskey;" observes="delete_command"/>
 
    <menuseparator/>
-   <menuitem label="&calendar.context.cutevent.label;" accesskey="&calendar.context.cutevent.accesskey;" observes="cut_command" oncommand="cutToClipboard()"/>
-   <menuitem label="&calendar.context.copyevent.label;" accesskey="&calendar.context.copyevent.accesskey;" observes="copy_command" oncommand="copyToClipboard()"/>
-   <menuitem label="&calendar.context.pasteevent.label;" accesskey="&calendar.context.pasteevent.accesskey;" oncommand="pasteFromClipboard()"/>
+   <menuitem label="&calendar.context.cutevent.label;" accesskey="&calendar.context.cutevent.accesskey;" observes="copy_command"/>
+   <menuitem label="&calendar.context.copyevent.label;" accesskey="&calendar.context.copyevent.accesskey;" observes="copy_command"/>
+   <menuitem label="&calendar.context.pasteevent.label;" accesskey="&calendar.context.pasteevent.accesskey;" observes="paste_command"/>
    <menuseparator/>
-   <menuitem label="&calendar.context.selectall.label;" accesskey="&calendar.context.selectall.accesskey;" oncommand="selectAllEvents()"/>
+   <menuitem label="&calendar.context.selectall.label;" accesskey="&calendar.context.selectall.accesskey;" observes="select_all_command"/>
    <menuseparator/>
-   <menuitem label="&calendar.context.gototoday.label;" accesskey="&calendar.context.gototoday.accesskey;" oncommand="gCalendarWindow.goToToday()"/>
+   <menuitem label="&calendar.context.gototoday.label;" accesskey="&calendar.context.gototoday.accesskey;" observes="go_today_command"/>
    <menuseparator/>
-   <menuitem label="&calendar.context.dayview.label;" accesskey="&calendar.context.dayview.accesskey;" oncommand="gCalendarWindow.switchToDayView()"/>
-   <menuitem label="&calendar.context.weekview.label;" accesskey="&calendar.context.weekview.accesskey;" oncommand="gCalendarWindow.switchToWeekView()"/>
-   <menuitem label="&calendar.context.monthview.label;" accesskey="&calendar.context.monthview.accesskey;" oncommand="gCalendarWindow.switchToMonthView()"/>
+   <menuitem label="&calendar.context.dayview.label;" accesskey="&calendar.context.dayview.accesskey;" observes="day_view_command"/>
+   <menuitem label="&calendar.context.weekview.label;" accesskey="&calendar.context.weekview.accesskey;" observes="week_view_command"/>
+   <menuitem label="&calendar.context.monthview.label;" accesskey="&calendar.context.monthview.accesskey;" observes="month_view_command"/>
 
    <menuseparator/>
-   <menuitem label="&calendar.context.emailevent.label;" accesskey="&calendar.context.emailevent.accesskey;" observes="send_event_command" oncommand="sendEvent();"/>
+   <menuitem label="&calendar.context.emailevent.label;" accesskey="&calendar.context.emailevent.accesskey;" observes="send_event_command"/>
    
    <menuseparator/>
    <menuitem label="&calendar.context.toggleBackground.label;" accesskey="&calendar.context.toggleBackground.accesskey;" oncommand="MonthView.toggleBackground()"/>
@@ -168,16 +195,16 @@
           grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
           tbalign="stretch">
           
-          <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         oncommand="unifinderEditCommand()" observes="modify_command"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       oncommand="unifinderDeleteCommand()" observes="delete_command"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     observes="new_command"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       observes="delete_command"/>
           <toolbarseparator class="toolbarseparator-primary"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltiptext="&calendar.gototoday.button.tooltip;"    oncommand="gCalendarWindow.goToToday()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltiptext="&calendar.gototoday.button.tooltip;"    observes="go_today_command"/>
           <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      oncommand="gCalendarWindow.switchToDayView()"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     oncommand="gCalendarWindow.switchToWeekView()"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    oncommand="gCalendarWindow.switchToMonthView()"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     observes="week_view_command"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    observes="month_view_command"/>
           <spacer flex="1"/>
           <hbox id="throbber-box" align="center">
              <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"

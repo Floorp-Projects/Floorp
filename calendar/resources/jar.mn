@@ -31,7 +31,6 @@ calendar.jar:
     content/calendar/pref/calendarPref.js (content/pref/calendarPref.js)
     content/calendar/pref/calendarPref.xul (content/pref/calendarPref.xul)
     locale/en-US/calendar/calendar.dtd (locale/en-US/calendar.dtd)
-    locale/en-US/calendar/calendarMenu.dtd (locale/en-US/calendarMenu.dtd)
     locale/en-US/calendar/calendarMenuOverlay.dtd (locale/en-US/calendarMenuOverlay.dtd)
     locale/en-US/calendar/calendarOverlay.dtd  (locale/en-US/calendarOverlay.dtd) 
     locale/en-US/calendar/calendarPrefs.dtd  (locale/en-US/calendarPrefs.dtd) 

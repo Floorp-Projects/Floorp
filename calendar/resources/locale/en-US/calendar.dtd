@@ -198,3 +198,7 @@
 <!ENTITY calendar.about.title "About Mozilla Calendar">
 <!ENTITY calendar.about.tab   "About">
 
+<!ENTITY throbber.tooltip "Home page">
+<!ENTITY menuBar.tooltip "Menu bar">
+<!ENTITY navigationToolbar.tooltip "Navigation Toolbar">
+
