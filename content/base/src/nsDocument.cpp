@@ -4205,6 +4205,32 @@ nsDocument::GetCurrentRadioButton(const nsAString& aName,
 }
 
 NS_IMETHODIMP
+nsDocument::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
+                               PRInt32 *aPositionIndex,
+                               PRInt32 *aItemsInGroup)
+{
+  *aPositionIndex = 0;
+  *aItemsInGroup = 1;
+  nsAutoString name;
+  aRadio->GetName(name);
+  if (name.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsRadioGroupStruct* radioGroup = nsnull;
+  nsresult rv = GetRadioGroup(name, &radioGroup);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFormControl> radioControl(do_QueryInterface(aRadio));
+  NS_ASSERTION(radioControl, "Radio button should implement nsIFormControl");
+  *aPositionIndex = radioGroup->mRadioButtons.IndexOf(radioControl);
+  NS_ASSERTION(*aPositionIndex >= 0, "Radio button not found in its own group");
+  *aItemsInGroup = radioGroup->mRadioButtons.Count();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocument::GetNextRadioButton(const nsAString& aName,
                                const PRBool aPrevious,
                                nsIDOMHTMLInputElement*  aFocusedRadio,

@@ -116,6 +116,19 @@ public:
    */
   NS_IMETHOD RemoveFromRadioGroup(const nsAString& aName,
                                   nsIFormControl* aRadio) = 0;
+
+  /**
+   * Get the radio group position and the number of radio buttons in the group.
+   * that the radio button is in. If the radio button not grouped with any other
+   * radio buttons this method will treat it as being in a group of one.
+   * @param aRadio radio button's pointer
+   * @param aPositionIndex out indicates 0-indexed position in the radio group,
+   *                           or just 0 if a group cannot be found
+   * @param aItemsInGroup the number of radio buttons in the group
+   */
+  NS_IMETHOD GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
+                                PRInt32 *aPositionIndex,
+                                PRInt32 *aItemsInGroup) = 0;
 };
 
 #endif /* nsIRadioGroupContainer_h__ */
