@@ -446,7 +446,7 @@ endif
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.asm
 	@$(MAKE_OBJDIR)
 ifdef XP_OS2_VACPP
-	cd $(OBJDIR) ; $(AS) $(ASFLAGS) $(subst /,\\,$(shell pwd)/$<)
+	$(AS) -Fdo:$(OBJDIR) $(ASFLAGS) $(subst /,\\,$(shell pwd)/$<)
 else
 	$(AS) -Fo$@ $(ASFLAGS) -c $<
 endif
