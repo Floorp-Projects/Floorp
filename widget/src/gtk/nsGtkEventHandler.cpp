@@ -176,23 +176,22 @@ void InitMouseEvent(GdkEventButton *aGEB,
     anEvent.point.x = nscoord(aGEB->x);
     anEvent.point.y = nscoord(aGEB->y);
 
-    anEvent.isShift = (aGEB->state & ShiftMask) ? PR_TRUE : PR_FALSE;
-    anEvent.isControl = (aGEB->state & ControlMask) ? PR_TRUE : PR_FALSE;
-    anEvent.isAlt = (aGEB->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
+    anEvent.isShift = (aGEB->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = (aGEB->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt = (aGEB->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.time = aGEB->time;
-/* FIXME this doesn't seem to work right
+
     switch(aGEB->type)
     {
       case GDK_BUTTON_PRESS:
-        anEvent.clickCount = 0;
+        anEvent.clickCount = 1;
 	break;
       case GDK_2BUTTON_PRESS:
         anEvent.clickCount = 2;
 	break;
       default:
-        anEvent.clickCount = 0;
+        anEvent.clickCount = 1;
     }
-*/
 
   }
 }
@@ -269,9 +268,9 @@ void InitKeyEvent(GdkEventKey *aGEK,
   if (aGEK != NULL) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
     anEvent.time = aGEK->time;
-    anEvent.isShift = (aGEK->state & ShiftMask) ? PR_TRUE : PR_FALSE;
-    anEvent.isControl = (aGEK->state & ControlMask) ? PR_TRUE : PR_FALSE;
-    anEvent.isAlt = (aGEK->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
+    anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.time = aGEK->time;
   }
 }
