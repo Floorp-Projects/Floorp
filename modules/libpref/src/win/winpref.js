@@ -43,7 +43,7 @@ pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
 pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
 pref("font.name.serif.ja.1", "MS PMincho"); // "MS PMincho"
-pref("font.name.sans-serif.ja.1", "MS PMincho"); // "MS PGothic"
+pref("font.name.sans-serif.ja.1", "MS PGothic"); // "MS PGothic"
 pref("font.name.monospace.ja.1", "MS Gothic"); // "MS Gothic"
 
 pref("font.name.serif.ko", "굴림"); // "Gulim" 
