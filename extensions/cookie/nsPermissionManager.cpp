@@ -573,7 +573,7 @@ nsPermissionManager::Read()
       if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
         continue;
       }
-      NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) != -1, "Corrupt cookperm.txt file");
+      NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) == -1, "Corrupt cookperm.txt file");
       mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
 
       continue;
