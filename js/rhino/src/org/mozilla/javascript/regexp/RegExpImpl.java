@@ -56,60 +56,66 @@ public class RegExpImpl implements RegExpProxy {
         return new NativeRegExp(scope, compiled);
     }
 
-    public Object match(Context cx, Scriptable scope,
-                        Scriptable thisObj, Object[] args)
+    public Object action(Context cx, Scriptable scope,
+                         Scriptable thisObj, Object[] args,
+                         int actionType)
     {
-        GlobData mdata = new GlobData();
-        mdata.optarg = 1;
-        mdata.mode = GlobData.GLOB_MATCH;
-        Object rval = matchOrReplace(cx, scope, thisObj, args,
-                                     this, mdata, false);
-        return mdata.arrayobj == null ? rval : mdata.arrayobj;
-    }
+        GlobData data = new GlobData();
+        data.mode = actionType;
 
-    public Object search(Context cx, Scriptable scope,
-                         Scriptable thisObj, Object[] args)
-    {
-        GlobData mdata = new GlobData();
-        mdata.optarg = 1;
-        mdata.mode = GlobData.GLOB_SEARCH;
-        return matchOrReplace(cx, scope, thisObj, args, this, mdata, false);
-    }
-
-    public Object replace(Context cx, Scriptable scope,
-                          Scriptable thisObj, Object[] args)
-    {
-        Object arg1 = args.length < 2 ? Undefined.instance : args[1];
-        String repstr = null;
-        Function lambda = null;
-        if (arg1 instanceof Function) {
-            lambda = (Function) arg1;
-        } else {
-            repstr = ScriptRuntime.toString(arg1);
-        }
-
-        GlobData rdata = new GlobData();
-        rdata.optarg = 2;
-        rdata.mode = GlobData.GLOB_REPLACE;
-        rdata.lambda = lambda;
-        rdata.repstr = repstr;
-        rdata.dollar = repstr == null ? -1 : repstr.indexOf('$');
-        rdata.charBuf = null;
-        rdata.leftIndex = 0;
-        Object val = matchOrReplace(cx, scope, thisObj, args,
-                                    this, rdata, true);
-        SubString rc = this.rightContext;
-
-        if (rdata.charBuf == null) {
-            if (rdata.global || val == null || !val.equals(Boolean.TRUE)) {
-                /* Didn't match even once. */
-                return rdata.str;
+        switch (actionType) {
+          case RA_MATCH:
+            {
+                Object rval;
+                data.optarg = 1;
+                rval = matchOrReplace(cx, scope, thisObj, args,
+                                      this, data, false);
+                return data.arrayobj == null ? rval : data.arrayobj;
             }
-            SubString lc = this.leftContext;
-            replace_glob(rdata, cx, scope, this, lc.index, lc.length);
+
+          case RA_SEARCH:
+            data.optarg = 1;
+            return matchOrReplace(cx, scope, thisObj, args,
+                                  this, data, false);
+
+          case RA_REPLACE:
+            {
+                Object arg1 = args.length < 2 ? Undefined.instance : args[1];
+                String repstr = null;
+                Function lambda = null;
+                if (arg1 instanceof Function) {
+                    lambda = (Function) arg1;
+                } else {
+                    repstr = ScriptRuntime.toString(arg1);
+                }
+
+                data.optarg = 2;
+                data.lambda = lambda;
+                data.repstr = repstr;
+                data.dollar = repstr == null ? -1 : repstr.indexOf('$');
+                data.charBuf = null;
+                data.leftIndex = 0;
+                Object val = matchOrReplace(cx, scope, thisObj, args,
+                                            this, data, true);
+                SubString rc = this.rightContext;
+
+                if (data.charBuf == null) {
+                    if (data.global || val == null
+                        || !val.equals(Boolean.TRUE))
+                    {
+                        /* Didn't match even once. */
+                        return data.str;
+                    }
+                    SubString lc = this.leftContext;
+                    replace_glob(data, cx, scope, this, lc.index, lc.length);
+                }
+                data.charBuf.append(rc.charArray, rc.index, rc.length);
+                return data.charBuf.toString();
+            }
+
+          default:
+            throw Kit.codeBug();
         }
-        rdata.charBuf.append(rc.charArray, rc.index, rc.length);
-        return rdata.charBuf.toString();
     }
 
     /**
@@ -148,7 +154,7 @@ public class RegExpImpl implements RegExpProxy {
         data.global = (re.getFlags() & NativeRegExp.JSREG_GLOB) != 0;
         int[] indexp = { 0 };
         Object result = null;
-        if (data.mode == GlobData.GLOB_SEARCH) {
+        if (data.mode == RA_SEARCH) {
             result = re.executeRegExp(cx, scope, reImpl,
                                       str, indexp, NativeRegExp.TEST);
             if (result != null && result.equals(Boolean.TRUE))
@@ -162,10 +168,10 @@ public class RegExpImpl implements RegExpProxy {
                                           str, indexp, NativeRegExp.TEST);
                 if (result == null || !result.equals(Boolean.TRUE))
                     break;
-                if (data.mode == GlobData.GLOB_MATCH) {
+                if (data.mode == RA_MATCH) {
                     match_glob(data, cx, scope, count, reImpl);
                 } else {
-                    if (data.mode != GlobData.GLOB_REPLACE) Kit.codeBug();
+                    if (data.mode != RA_REPLACE) Kit.codeBug();
                     SubString lastMatch = reImpl.lastMatch;
                     int leftIndex = data.leftIndex;
                     int leftlen = lastMatch.index - leftIndex;
@@ -180,7 +186,7 @@ public class RegExpImpl implements RegExpProxy {
             }
         } else {
             result = re.executeRegExp(cx, scope, reImpl, str, indexp,
-                                      ((data.mode == GlobData.GLOB_REPLACE)
+                                      ((data.mode == RA_REPLACE)
                                        ? NativeRegExp.TEST
                                        : NativeRegExp.MATCH));
         }
@@ -499,11 +505,7 @@ public class RegExpImpl implements RegExpProxy {
 
 final class GlobData
 {
-    static final int GLOB_MATCH   =    1;
-    static final int GLOB_REPLACE =    2;
-    static final int GLOB_SEARCH  =    3;
-
-    byte     mode;      /* input: return index, match object, or void */
+    int      mode;      /* input: return index, match object, or void */
     int      optarg;    /* input: index of optional flags argument */
     boolean  global;    /* output: whether regexp was global */
     String   str;       /* output: 'this' parameter object as string */

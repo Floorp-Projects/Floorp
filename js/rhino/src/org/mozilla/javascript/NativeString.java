@@ -281,16 +281,20 @@ final class NativeString extends IdScriptableObject
           }
 
           case Id_match:
-            return ScriptRuntime.checkRegExpProxy(cx).
-                match(cx, scope, thisObj, args);
-
           case Id_search:
-            return ScriptRuntime.checkRegExpProxy(cx).
-                search(cx, scope, thisObj, args);
-
           case Id_replace:
-            return ScriptRuntime.checkRegExpProxy(cx).
-                replace(cx, scope, thisObj, args);
+            {
+                int actionType;
+                if (id == Id_match) {
+                    actionType = RegExpProxy.RA_MATCH;
+                } else if (id == Id_search) {
+                    actionType = RegExpProxy.RA_SEARCH;
+                } else {
+                    actionType = RegExpProxy.RA_REPLACE;
+                }
+                return ScriptRuntime.checkRegExpProxy(cx).
+                    action(cx, scope, thisObj, args, actionType);
+            }
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }

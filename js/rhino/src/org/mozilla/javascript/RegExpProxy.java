@@ -45,6 +45,11 @@ package org.mozilla.javascript;
  */
 public interface RegExpProxy
 {
+    // Types of regexp actions
+
+    public static final int RA_MATCH   = 1;
+    public static final int RA_REPLACE = 2;
+    public static final int RA_SEARCH  = 3;
 
     public boolean isRegExp(Scriptable obj);
 
@@ -53,14 +58,9 @@ public interface RegExpProxy
     public Scriptable wrapRegExp(Context cx, Scriptable scope,
                                  Object compiled);
 
-    public Object match(Context cx, Scriptable scope,
-                        Scriptable thisObj, Object[] args);
-
-    public Object search(Context cx, Scriptable scope,
-                         Scriptable thisObj, Object[] args);
-
-    public Object replace(Context cx, Scriptable scope,
-                          Scriptable thisObj, Object[] args);
+    public Object action(Context cx, Scriptable scope,
+                         Scriptable thisObj, Object[] args,
+                         int actionType);
 
     public int find_split(Context cx, Scriptable scope, String target,
                           String separator, Scriptable re,
