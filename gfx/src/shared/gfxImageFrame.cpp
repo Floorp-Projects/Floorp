@@ -58,8 +58,8 @@ gfxImageFrame::~gfxImageFrame()
   /* destructor code */
 }
 
-/* void init (in nscoord aX, in nscoord aY, in nscoord aWidth, in nscoord aHeight, in gfx_format aFormat); */
-NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat,gfx_depth aDepth)
+/* void init (in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfx_format aFormat); */
+NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, gfx_format aFormat,gfx_depth aDepth)
 {
   if (mInitalized)
     return NS_ERROR_FAILURE;
@@ -70,7 +70,7 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   }
 
   /* check to make sure we don't overflow a 32-bit */
-  nscoord tmp = aWidth * aHeight;
+  PRInt32 tmp = aWidth * aHeight;
   if (tmp / aHeight != aWidth) {
     NS_ASSERTION(0, "width or height too large\n");
     return NS_ERROR_FAILURE;
@@ -170,8 +170,8 @@ NS_IMETHODIMP gfxImageFrame::SetMutable(PRBool aMutable)
   return NS_OK;
 }
 
-/* readonly attribute nscoord x; */
-NS_IMETHODIMP gfxImageFrame::GetX(nscoord *aX)
+/* readonly attribute PRInt32 x; */
+NS_IMETHODIMP gfxImageFrame::GetX(PRInt32 *aX)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
@@ -180,8 +180,8 @@ NS_IMETHODIMP gfxImageFrame::GetX(nscoord *aX)
   return NS_OK;
 }
 
-/* readonly attribute nscoord y; */
-NS_IMETHODIMP gfxImageFrame::GetY(nscoord *aY)
+/* readonly attribute PRInt32 y; */
+NS_IMETHODIMP gfxImageFrame::GetY(PRInt32 *aY)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
@@ -191,8 +191,8 @@ NS_IMETHODIMP gfxImageFrame::GetY(nscoord *aY)
 }
 
 
-/* readonly attribute nscoord width; */
-NS_IMETHODIMP gfxImageFrame::GetWidth(nscoord *aWidth)
+/* readonly attribute PRInt32 width; */
+NS_IMETHODIMP gfxImageFrame::GetWidth(PRInt32 *aWidth)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
@@ -201,8 +201,8 @@ NS_IMETHODIMP gfxImageFrame::GetWidth(nscoord *aWidth)
   return NS_OK;
 }
 
-/* readonly attribute nscoord height; */
-NS_IMETHODIMP gfxImageFrame::GetHeight(nscoord *aHeight)
+/* readonly attribute PRInt32 height; */
+NS_IMETHODIMP gfxImageFrame::GetHeight(PRInt32 *aHeight)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
@@ -212,7 +212,7 @@ NS_IMETHODIMP gfxImageFrame::GetHeight(nscoord *aHeight)
 }
 
 /* void getRect(in nsRectRef rect); */
-NS_IMETHODIMP gfxImageFrame::GetRect(nsRect &aRect)
+NS_IMETHODIMP gfxImageFrame::GetRect(nsIntRect &aRect)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
@@ -310,7 +310,7 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
 
   // adjust for aLength < row_stride
   PRInt32 numnewrows = ((aLength - 1) / row_stride) + 1;
-  nsRect r(0, row, mSize.width, numnewrows);
+  nsIntRect r(0, row, mSize.width, numnewrows);
   mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
   return NS_OK;
@@ -430,7 +430,7 @@ NS_IMETHODIMP gfxImageFrame::UnlockAlphaData()
 
 
 /* void drawTo */
-NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
+NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
