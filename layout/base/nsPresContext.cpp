@@ -215,6 +215,9 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
+#ifdef IBMBIDI
+    mPrefs->UnregisterCallback("bidi.", PrefChangedCallback, (void*)this);
+#endif
   }
 #ifdef IBMBIDI
   if (mBidiUtils) {
@@ -520,6 +523,30 @@ nsPresContext::GetUserPreferences()
       mImageAnimationModePref = eImageAnimation_LoopOnce;
     nsMemory::Free(animatePref);
   }
+
+#ifdef IBMBIDI
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.direction", &prefInt))) {
+     SET_BIDI_OPTION_DIRECTION(mBidi, prefInt);
+  }
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.texttype", &prefInt))) {
+     SET_BIDI_OPTION_TEXTTYPE(mBidi, prefInt);
+  }
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.controlstextmode", &prefInt))) {
+     SET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi, prefInt);
+  }
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.clipboardtextmode", &prefInt))) {
+     SET_BIDI_OPTION_CLIPBOARDTEXTMODE(mBidi, prefInt);
+  }
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.numeral", &prefInt))) {
+     SET_BIDI_OPTION_NUMERAL(mBidi, prefInt);
+  }
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.support", &prefInt))) {
+     SET_BIDI_OPTION_SUPPORT(mBidi, prefInt);
+  }
+  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.characterset", &prefInt))) {
+     SET_BIDI_OPTION_CHARACTERSET(mBidi, prefInt);
+  }
+#endif
 }
 
 NS_IMETHODIMP
@@ -640,6 +667,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mPrefs->RegisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
+#ifdef IBMBIDI
+    mPrefs->RegisterCallback("bidi.", PrefChangedCallback, (void*)this);
+#endif
 
     // Initialize our state from the user preferences
     GetUserPreferences();
