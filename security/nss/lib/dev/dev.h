@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.16 $ $Date: 2002/02/01 17:25:10 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.17 $ $Date: 2002/02/04 21:57:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -154,6 +154,12 @@ nssSlot_Create
 
 NSS_EXTERN PRStatus
 nssSlot_Destroy
+(
+  NSSSlot *slot
+);
+
+NSS_EXTERN PRBool
+nssSlot_IsPermanent
 (
   NSSSlot *slot
 );
