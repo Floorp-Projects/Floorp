@@ -143,7 +143,7 @@
        (define (float64-to-uint32 (x float64)) integer
          (if (or (float64-is-na-n x) (float64-is-infinite x))
            0
-           (mod (truncate-float64 x) #x100000000)))
+           (mod (truncate-finite-float64 x) #x100000000)))
        
        (define (coerce-to-uint32 (v value)) integer-or-exception
          (letexc (d float64 (coerce-to-float64 v))
