@@ -63,8 +63,10 @@ nsMathMLmsqrtFrame::nsMathMLmsqrtFrame() :
   mSqrtChar(),
   mSqrtBar()
 {
-   mSqrtChar.SetData(nsAutoString(PRUnichar(0x221A)));
-   mSqrtBar.SetData(nsAutoString(PRUnichar(0xF8E5)));
+   nsAutoString sqr(PRUnichar(0x221A)),
+                bar(PRUnichar(0xF8E5));
+   mSqrtChar.SetData(sqr);
+   mSqrtBar.SetData(bar);
 }
 
 nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
@@ -215,15 +217,15 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.descent = desSize.descent;
   }
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-
-  mSqrtChar.SetRect(nsRect(0, thickspace, desSize.width, aDesiredSize.height));
+  nscoord dy = bmdata[0].ascent - ascent;
+  mSqrtChar.SetRect(nsRect(0, dy, charWidth, aDesiredSize.height));
 
   // Stretch the overline bar to the appropriate width if it is not big enough.
   contSize = nsCharMetrics(aDesiredSize);
   desSize = nsCharMetrics(descent, ascent, bmdata[1].rightBearing-bmdata[1].leftBearing, ascent + descent);
   mSqrtBar.Stretch(aPresContext, renderingContext, mStyleContext,
                    NS_STRETCH_DIRECTION_HORIZONTAL, contSize, desSize);
-  nscoord dy = bmdata[1].ascent - ascent;
+  dy = bmdata[1].ascent - ascent;
   mSqrtBar.SetRect(nsRect(charBearing, dy, desSize.width, thickspace));
 
   // Update the size of the container
