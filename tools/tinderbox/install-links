@@ -1,0 +1,13 @@
+#! /bin/csh -f
+
+#
+# Create links to install tinderbox stuff.
+#
+
+ln -s mozilla/tools/tinderbox/tinderbox
+ln -s mozilla/tools/tinderbox/build-seamonkey.pl
+ln -s mozilla/tools/tinderbox/build-seamonkey-util.pl
+ln -s mozilla/tools/tinderbox/gettime.pl
+ln -s mozilla/tools/tinderbox/bloatdiff.pl
+ln -s mozilla/tools/tinderbox/tinder-defaults.pl
+
