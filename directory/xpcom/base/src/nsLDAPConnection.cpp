@@ -234,6 +234,18 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
         return NS_ERROR_FAILURE;
     }
     mDNSHost = aHost;
+
+    // if the caller has passed in a space-delimited set of hosts, as the 
+    // ldap c-sdk allows, strip off the trailing hosts for now.
+    // Soon, we'd like to make multiple hosts work, but now make
+    // at least the first one work.
+    mDNSHost.CompressWhitespace(PR_TRUE, PR_TRUE);
+
+    PRInt32 spacePos = mDNSHost.FindChar(' ');
+    // trim off trailing host(s)
+    if (spacePos != kNotFound)
+      mDNSHost.Truncate(spacePos);
+
     rv = pDNSService->AsyncResolve(mDNSHost,
                                    PR_FALSE, this, curEventQ, 
                                    getter_AddRefs(mDNSRequest));
