@@ -449,7 +449,7 @@
 #define JS_HAS_SWITCH_STATEMENT 1       /* has switch (v) {case c: ...} */
 #define JS_HAS_SOME_PERL_FUN    1       /* has array.join/reverse/sort */
 #define JS_HAS_MORE_PERL_FUN    1       /* has array.push, str.substr, etc */
-#define JS_HAS_STR_HTML_HELPERS 0       /* has str.anchor, str.bold, etc. */
+#define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
 #define JS_HAS_PERL_SUBSTR      1       /* has str.substr */
 #define JS_HAS_VALUEOF_HINT     1       /* valueOf(hint) where hint is typeof */
 #define JS_HAS_LEXICAL_CLOSURE  1       /* nested functions, lexically closed */
