@@ -566,6 +566,9 @@ LM_SetUntransformedSource(JSPrincipals *principals, char *original,
 extern JSPrincipals * PR_CALLBACK
 LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, void *principalsArray, void *pNSISecurityContext);
 
+extern JSBool
+LM_CanAccessTargetStr(JSContext *cx, const char *target);
+
 /*
  * LM_RegisterPrincipals will verify and register a set of principals 
  * in the decoder, modifying decoder->principals in the process. It
