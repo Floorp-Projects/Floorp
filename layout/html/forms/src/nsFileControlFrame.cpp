@@ -322,7 +322,9 @@ nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
       nsString value;
 
       if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-        if (value == "text") {
+        value.ToUpperCase();
+        nsString txt("TEXT");
+        if (value == txt) {
            return (nsTextControlFrame*)childFrame;      
         }
       }
