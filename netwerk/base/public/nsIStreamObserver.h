@@ -73,7 +73,6 @@ NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
                           PLEventQueue* eventQueue,
                           nsIStreamObserver* receiver);
 
-
 // Generic status codes for OnStopBinding:
 #define NS_BINDING_SUCCEEDED    NS_OK
 #define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
