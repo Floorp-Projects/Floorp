@@ -185,7 +185,12 @@ NameSpaceImpl::FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const
     nameSpace = nameSpace->mParent;
   }
   while (nsnull != nameSpace);
-  aNameSpaceID = kNameSpaceID_Unknown;
+  if (nsnull == aPrefix) {
+    aNameSpaceID = kNameSpaceID_None;
+  }
+  else {
+    aNameSpaceID = kNameSpaceID_Unknown;
+  }
   return NS_ERROR_ILLEGAL_VALUE;
 }
 

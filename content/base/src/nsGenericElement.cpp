@@ -300,6 +300,8 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aNode)
       }
     }
   }
+  // XXX Nodes that are just below the document (their parent is the
+  // document) need to go to the document to find their previous sibling.
   *aNode = nsnull;
   return NS_OK;
 }
@@ -321,6 +323,8 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
       }
     }
   }
+  // XXX Nodes that are just below the document (their parent is the
+  // document) need to go to the document to find their next sibling.
   *aNextSibling = nsnull;
   return NS_OK;
 }

@@ -227,7 +227,7 @@ public:
                                            nsISupports *aParent, 
                                            void** aReturn);
   
-  NS_IMETHOD    NewScriptCharacterData(const int aNodeType,
+  NS_IMETHOD    NewScriptCharacterData(PRUint16 aNodeType,
                                        nsIScriptContext *aContext, 
                                        nsISupports *aData, 
                                        nsISupports *aParent, 
@@ -334,7 +334,7 @@ nsDOMScriptObjectFactory::NewScriptDOMImplementation(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP    
-nsDOMScriptObjectFactory::NewScriptCharacterData(const int aNodeType,
+nsDOMScriptObjectFactory::NewScriptCharacterData(PRUint16 aNodeType,
                                                  nsIScriptContext *aContext, 
                                                  nsISupports *aData, 
                                                  nsISupports *aParent, 

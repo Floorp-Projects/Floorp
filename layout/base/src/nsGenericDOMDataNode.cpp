@@ -18,9 +18,12 @@
  */
 #include "nsGenericDOMDataNode.h"
 #include "nsGenericElement.h"
+#include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsXIFConverter.h"
 #include "nsSelectionRange.h"
 #include "nsRange.h"
@@ -38,7 +41,7 @@
 NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -56,7 +59,6 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
   NS_IF_RELEASE(mListenerManager);
-  // XXX what about mScriptObject? its now safe to GC it...
   delete mRangeList;
 }
 
@@ -71,21 +73,13 @@ nsGenericDOMDataNode::Init(nsIContent* aOuterContentObject)
 nsresult
 nsGenericDOMDataNode::GetNodeValue(nsString& aNodeValue)
 {
-  aNodeValue.Truncate();
-  mText.AppendTo(aNodeValue);
-  return NS_OK;
+  return GetData(aNodeValue);
 }
 
 nsresult
 nsGenericDOMDataNode::SetNodeValue(const nsString& aNodeValue)
 {
-  mText = aNodeValue;
-
-  // Trigger a reflow
-  if (nsnull != mDocument) {
-    mDocument->ContentChanged(mContent, nsnull);
-  }
-  return NS_OK;
+  return SetData(aNodeValue);
 }
 
 nsresult
@@ -96,8 +90,36 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
     return res;
   }
+  else if (nsnull == mDocument) {
+    // A standalone node (i.e. one without a parent or a document)
+    // implicitly has a document fragment as its parent according to
+    // the DOM.
+    nsIDOMDocumentFragment* docFrag;
+    nsIDOMNode *node, *ret;
+    // XXX If we don't have a document, how do we give the document
+    // fragment an owner document?
+    nsresult res = NS_NewDocumentFragment(&docFrag, nsnull);
+    if (NS_OK != res) {
+      return res;
+    }
+    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    if (NS_OK != res) {
+      return res;
+    }
+    res = docFrag->AppendChild(node, &ret);
+    NS_RELEASE(node);
+    if (NS_OK != res) {
+      return res;
+    }
+    NS_RELEASE(ret);
+    res = docFrag->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    NS_RELEASE(docFrag);
+    return res;
+  } 
   else {
-    *aParentNode = nsnull;
+    // If we don't have a parent, but we're in the document, we must
+    // be at the top level. The DOM says that the root is the document.
+    return mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
   }
   return NS_OK;
 }
@@ -119,6 +141,8 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aNode)
       }
     }
   }
+  // XXX Nodes that are just below the document (their parent is the
+  // document) need to go to the document to find their previous sibling.
   *aNode = nsnull;
   return NS_OK;
 }
@@ -140,6 +164,8 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
       }
     }
   }
+  // XXX Nodes that are just below the document (their parent is the
+  // document) need to go to the document to find their next sibling.
   *aNextSibling = nsnull;
   return NS_OK;
 }
@@ -331,14 +357,30 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
       return res;
     }
     
-    res = factory->NewScriptCharacterData(nsIDOMNode::TEXT_NODE, 
+    nsIDOMNode* node;
+    PRUint16 nodeType;
+
+    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    if (NS_OK != res) {
+      return res;
+    }
+
+    node->GetNodeType(&nodeType);
+    res = factory->NewScriptCharacterData(nodeType,
                                           aContext, mContent,
                                           mParent, (void**)&mScriptObject);
     if (nsnull != mDocument) {
+      nsAutoString nodeName;
+      char nameBuf[128];
+      
+      node->GetNodeName(nodeName);
+      nodeName.ToCString(nameBuf, sizeof(nameBuf));
+
       aContext->AddNamedReference((void *)&mScriptObject,
                                   mScriptObject,
-                                  "Text");
+                                  nameBuf);
     }
+    NS_RELEASE(node);
     NS_RELEASE(factory);
   }
   *aScriptObject = mScriptObject;

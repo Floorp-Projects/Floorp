@@ -624,6 +624,7 @@ NS_IMETHODIMP
 nsDocument::GetBaseURL(nsIURL*& aURL) const
 {
   aURL = mDocumentURL;
+  NS_IF_ADDREF(mDocumentURL);
   return NS_OK;
 }
 
