@@ -24,13 +24,15 @@ nsMsgHdr::nsMsgHdr()
 	mRefCnt = 1;
 	m_mdb = NULL;
 	m_mdbRow = NULL;
+	m_messageKey = MSG_MESSAGEKEYNONE;
 }
 
-nsMsgHdr::nsMsgHdr(mdbRow *dbRow)
+nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow)
 {
 	mRefCnt = 1;
-	m_mdb = NULL;
+	m_mdb = db;
 	m_mdbRow = dbRow;
+	m_messageKey = MSG_MESSAGEKEYNONE;
 }
 
 nsMsgHdr::~nsMsgHdr()
@@ -63,3 +65,36 @@ nsrefcnt nsMsgHdr::Release(void)
 	return mRefCnt;
 }
 
+MessageKey  nsMsgHdr::GetMessageKey()
+{
+	if (m_messageKey == MSG_MESSAGEKEYNONE && m_mdbRow != NULL)
+	{
+		mdbOid outOid;
+		if (m_mdbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
+			m_messageKey = outOid.mOid_Id;
+
+	}
+	return m_messageKey;
+}
+
+nsresult	nsMsgHdr::GetProperty(const char *propertyName, nsString &resultProperty)
+{
+	nsresult err = NS_OK;
+	return err;
+}
+
+uint16		nsMsgHdr::GetNumReferences()
+{
+	return 0;
+}
+
+nsresult	nsMsgHdr::GetStringReference(PRInt32 refNum, nsString &resultReference)
+{
+	nsresult err = NS_OK;
+	return err;
+}
+
+time_t		nsMsgHdr::GetDate() 
+{
+	return m_date;
+}

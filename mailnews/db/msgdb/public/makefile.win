@@ -29,6 +29,7 @@ EXPORTS =	 						\
 			nsNewsDatabase.h				\
 			nsDBFolderInfo.h	    \
 			nsMsgHdr.h	    \
+			nsIDBChangeListener.h	    \
 			$(NULL)
 
 MODULE=mailnews

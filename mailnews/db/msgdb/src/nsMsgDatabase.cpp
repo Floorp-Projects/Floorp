@@ -363,18 +363,120 @@ nsresult nsMsgDatabase::InitMDBInfo()
 	return err;
 }
 
-	// get a message header for the given key. Caller must release()!
-nsresult nsMsgDatabase::GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **msgHdr)
+// get a message header for the given key. Caller must release()!
+nsresult nsMsgDatabase::GetMsgHdrForKey(MessageKey messageKey, nsMsgHdr **pmsgHdr)
 {
 	nsresult	err = NS_OK;
+	mdb_pos		rowPos;
+	mdbOid		rowObjectId;
+
+
+	if (!pmsgHdr || !m_mdbAllMsgHeadersTable)
+		return NS_ERROR_NULL_POINTER;
+
+	*pmsgHdr = NULL;
+	rowObjectId.mOid_Id = messageKey;
+	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
+	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &rowPos);
+	if (err == NS_OK)
+	{
+		mdbTableRowCursor *rowCursor;
+		err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), rowPos, &rowCursor);
+		if (err == NS_OK && rowPos >= 0) // ### is rowPos > 0 the right thing to check?
+		{
+			mdbRow	*hdrRow;
+			err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
+			if (err == NS_OK)
+			{
+				*pmsgHdr = new nsMsgHdr(this, hdrRow);
+			}
+			rowCursor->Release();
+		}
+	}
+
 	return err;
 }
 
-nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify /* = FALSE */)
+
+// header iteration methods.
+
+class ListContext
+{
+public:
+	ListContext();
+	virtual ~ListContext();
+	mdbTableRowCursor *m_rowCursor;
+};
+
+ListContext::ListContext()
+{
+	m_rowCursor = NULL;
+}
+
+ListContext::~ListContext()
+{
+	if (m_rowCursor)
+	{
+		m_rowCursor->Release();
+	}
+}
+
+nsresult	nsMsgDatabase::ListFirst(ListContext **ppContext, nsMsgHdr **pResultHdr)
+{
+	nsresult	err = NS_OK;
+
+	if (!pResultHdr || !ppContext)
+		return NS_ERROR_NULL_POINTER;
+
+	*pResultHdr = NULL;
+	*ppContext = NULL;
+
+	ListContext *pContext = new ListContext;
+	if (!pContext)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &pContext->m_rowCursor);
+	if (err == NS_OK)
+	{
+		*ppContext = pContext;
+
+		err = ListNext(pContext, pResultHdr);
+	}
+	return err;
+}
+
+nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
+{
+	nsresult	err = NS_OK;
+	mdbRow	*hdrRow;
+	mdb_pos		rowPos;
+
+	if (!pResultHdr || !pContext)
+		return NS_ERROR_NULL_POINTER;
+
+	*pResultHdr = NULL;
+	err = pContext->m_rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
+	if (err == NS_OK)
+		*pResultHdr = new nsMsgHdr(this, hdrRow);
+
+	return err;
+}
+
+nsresult	nsMsgDatabase::ListDone(ListContext *pContext)
+{
+	nsresult	err = NS_OK;
+	delete pContext;
+	return err;
+}
+
+nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **pnewHdr, PRBool notify /* = FALSE */)
 {
 	nsresult	err = NS_OK;
 	mdbRow		*hdrRow;
 	struct mdbOid allMsgHdrsTableOID;
+
+	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
+		return NS_ERROR_NULL_POINTER;
 
 	allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
 	allMsgHdrsTableOID.mOid_Id = hdrStruct->m_messageKey;
@@ -420,11 +522,58 @@ nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStr
 	}
 
 	if (err == NS_OK)
+		*pnewHdr = new nsMsgHdr(this, hdrRow);
+
+	return err;
+}
+
+	// extract info from an nsMsgHdr into a MessageHdrStruct
+nsresult nsMsgDatabase::GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdrStruct &hdrStruct)
+{
+	nsresult	err = NS_OK;
+
+	err = HdrCellColumnTonsString(msgHdr, m_subjectColumnToken, hdrStruct.m_subject);
+	err = HdrCellColumnTonsString(msgHdr, m_senderColumnToken, hdrStruct.m_author);
+	err = HdrCellColumnTonsString(msgHdr, m_messageIdColumnToken, hdrStruct.m_messageId);
+	err = HdrCellColumnTonsString(msgHdr, m_referencesColumnToken, hdrStruct.m_references);
+	err = HdrCellColumnTonsString(msgHdr, m_recipientsColumnToken, hdrStruct.m_recipients);
+	err = HdrCellColumnToUInt32(msgHdr, m_messageSizeColumnToken, &hdrStruct.m_messageSize);
+	hdrStruct.m_messageKey = msgHdr->GetMessageKey();
+	return err;
+}
+
+nsresult nsMsgDatabase::HdrCellColumnTonsString(nsMsgHdr *msgHdr, mdb_token columnToken, nsString &resultStr)
+{
+	nsresult	err = NS_OK;
+	mdbRow *hdrRow = msgHdr->GetMDBRow();
+	mdbCell	*hdrCell;
+
+	err = hdrRow->GetCell(GetEnv(), m_subjectColumnToken, &hdrCell);
+	if (err == NS_OK)
 	{
-		*newHdr = new nsMsgHdr(hdrRow);
+		struct mdbYarn yarn;
+		hdrCell->AliasYarn(GetEnv(), &yarn);
+		YarnTonsString(&yarn, &resultStr);
 	}
 	return err;
 }
+
+nsresult nsMsgDatabase::HdrCellColumnToUInt32(nsMsgHdr *msgHdr, mdb_token columnToken, PRUint32 *uint32Result)
+{
+	nsresult	err = NS_OK;
+	mdbCell	*hdrCell;
+	mdbRow *hdrRow = msgHdr->GetMDBRow();
+
+	err = hdrRow->GetCell(GetEnv(), m_subjectColumnToken, &hdrCell);
+	if (err == NS_OK)
+	{
+		struct mdbYarn yarn;
+		hdrCell->AliasYarn(GetEnv(), &yarn);
+		YarnToUInt32(&yarn, uint32Result);
+	}
+	return err;
+}
+
 
 /* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
 {
@@ -447,9 +596,6 @@ nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStr
 {
 	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
-
-// convenient function for atol on int32's
-int32 atoint32(char *ascii);
 
 /* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i)
 {

@@ -29,6 +29,7 @@ EXPORTS= \
 		nsImapMailDatabase.h				\
 		nsNewsDatabase.h				\
 		nsDBFolderInfo.h	    \
+		nsIDBChangeListener.h	    \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

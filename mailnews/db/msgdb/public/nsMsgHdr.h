@@ -23,6 +23,7 @@
 #include "MailNewsTypes.h"
 #include "xp.h"
 #include "mdb.h"
+
 class nsMsgDatabase;
 
 // this could inherit from nsISupports mainly to get ref-counting semantics
@@ -33,22 +34,23 @@ class nsMsgHdr
 {
 public:
 				nsMsgHdr();
-				nsMsgHdr(mdbRow *dbRow);
+				nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow);
 	virtual		~nsMsgHdr();
 	nsrefcnt	AddRef(void);                                       
     nsrefcnt	Release(void);   
 	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
 	uint16		GetNumReferences();
 	nsresult	GetStringReference(PRInt32 refNum, nsString &resultReference);
-	time_t		GetDate() {return m_date;}
+	time_t		GetDate();
 
-	MessageKey	GetArticleNum();
 	MessageKey  GetMessageKey();
 	MessageKey	GetThreadId();
+	void		SetMessageKey(MessageKey inKey) {m_messageKey = inKey;}
 
 			// this is almost always the m_messageKey, except for the first message.
 			// NeoAccess doesn't allow fID's of 0.
 			virtual PRUint32 GetMessageOffset() {return m_messageKey;}
+			mdbRow		*GetMDBRow() {return m_mdbRow;}
 protected:
 	nsrefcnt mRefCnt;                                                         
 

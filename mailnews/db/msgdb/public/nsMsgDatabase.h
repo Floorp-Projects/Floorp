@@ -23,9 +23,27 @@
 #include "nsMsgPtrArray.h"	// for XPPtrArray
 #include "nsString.h"
 #include "nsFileSpec.h"
+#include "nsIDBChangeListener.h"
 
 class ListContext;
 class nsDBFolderInfo;
+class nsMsgKeyArray;
+class ChangeListener;
+
+class nsDBChangeAnnouncer : public XPPtrArray  // array of ChangeListeners
+{
+public:
+	nsDBChangeAnnouncer();
+	virtual ~nsDBChangeAnnouncer();
+	virtual PRBool AddListener(nsIDBChangeListener *listener);
+	virtual PRBool RemoveListener(nsIDBChangeListener *listener);
+
+	// convenience routines to notify all our ChangeListeners
+	void NotifyKeyChangeAll(MessageKey keyChanged, PRInt32 flags, 
+		nsIDBChangeListener *instigator);
+	void NotifyAnnouncerGoingAway(nsDBChangeAnnouncer *instigator);
+};
+
 
 // used to cache open db's.
 class nsMsgDatabaseArray : public XPPtrArray
@@ -59,7 +77,7 @@ typedef struct _MessageHdrStruct
 // I don't think this is going to be an interface, actually, since it's just
 // a thin layer above MDB that defines the msg db schema.
 
-class nsMsgDatabase 
+class nsMsgDatabase : nsDBChangeAnnouncer
 {
 public:
 	nsMsgDatabase();
@@ -78,21 +96,34 @@ public:
 	// create a new message header from a hdrStruct. Caller must release resulting header,
 	// after adding any extra properties they want.
 	virtual nsresult	CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **newHdr, PRBool notify = FALSE);
+	// extract info from an nsMsgHdr into a MessageHdrStruct
+	virtual nsresult	GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdrStruct &hdrStruct);
+
+	nsresult			ListAllKeys(nsMsgKeyArray &outputKeys);
 
 	// iterator methods
 	// iterate through message headers, in no particular order
 	// Caller must unrefer returned nsMsgHdr when done with it.
-	// nsMsgEndOfList will be returned when return nsMsgHdr * is NULL.
+	// nsMsgHdr will be NULL when the end of the list is reached.
 	// Caller must call ListDone to free up the ListContext.
 	nsresult	ListFirst(ListContext **pContext, nsMsgHdr **pResult);
 	nsresult	ListNext(ListContext *pContext, nsMsgHdr **pResult);
 	nsresult	ListDone(ListContext *pContext);
+
+	// helpers for user command functions like delete, mark read, etc.
+
+	virtual nsresult	DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator);
+
 	static mdbFactory		*GetMDBFactory();
 	nsDBFolderInfo *GetDBFolderInfo() {return m_dbFolderInfo;}
 	mdbEnv		*GetEnv() {return m_mdbEnv;}
 	mdbStore	*GetStore() {return m_mdbStore;}
 
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
+
+	//helper function to fill in nsStrings from hdr row cell contents.
+	nsresult				HdrCellColumnTonsString(nsMsgHdr *msgHdr, mdb_token columnToken, nsString &resultStr);
+	nsresult				HdrCellColumnToUInt32(nsMsgHdr *msgHdr, mdb_token columnToken, PRUint32 *uint32Result);
 
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
