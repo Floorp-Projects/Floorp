@@ -22,11 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef STANDALONE_IMAGE_LIB
-DIRS = public src
-else
-DIRS = classes public src
-endif
+DIRS = public public_com src gifcom pngcom jpgcom
 
 ifndef MOZ_NATIVE_PNG
 DIRS += png
