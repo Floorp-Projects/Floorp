@@ -23,77 +23,46 @@ DEPTH=..\..\..\..
 
 DIRS=win
 
+CHROME_DIR=messenger
+CHROME_CONTENT_DIR=content
+CHROME_TYPE=content
+
+CHROME_CONTENT = \
+	.\messenger.xul \
+	.\mail3PaneWindowVertLayout.xul \
+	.\mailWindowOverlay.xul \
+	.\mailWindowOverlay.js \
+	.\mailWindow.js \
+	.\messageWindow.xul \
+	.\messageWindow.js \
+	.\folderPane.xul \
+	.\threadPane.xul \
+	.\msgHdrViewOverlay.xul \
+	.\msgHdrViewOverlay.js \
+	.\msgHdrViewAddresses.js \
+	.\widgetglue.js \
+	.\commandglue.js \
+	.\mailCommands.js \
+	.\shareglue.js \
+	.\subscribe.xul \
+	.\subscribe.js \
+	.\sidebar-messenger.xul \
+	.\sidebar-messenger.rdf \
+	.\newFolderNameDialog.xul \
+	.\newFolderNameDialog.js \
+	.\msgViewNavigation.js \
+	.\msgMail3PaneWindow.js \
+	.\mail3PaneWindowCommands.js \
+	.\msgFolderPickerOverlay.js \
+	.\msgFolderPickerOverlay.xul \
+	.\renameFolderNameDialog.xul \
+	.\messengerdnd.js \
+	.\mailContextMenus.js \
+	.\msgPrintEngine.js \
+	.\msgPrintEngine.xul \
+	.\openSaveAttachment.xul \
+	.\openSaveAttachment.js \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: 
-	$(MAKE_INSTALL) messenger.xul			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) mail3PaneWindowVertLayout.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) mailWindowOverlay.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) mailWindowOverlay.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) mailWindow.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) messageWindow.xul			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) messageWindow.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) folderPane.xul			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) threadPane.xul 			$(DIST)\bin\chrome\messenger\content
-  $(MAKE_INSTALL) msgHdrViewOverlay.xul 	$(DIST)\bin\chrome\messenger\content
-  $(MAKE_INSTALL) msgHdrViewOverlay.js		$(DIST)\bin\chrome\messenger\content
-  $(MAKE_INSTALL) msgHdrViewAddresses.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) widgetglue.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) commandglue.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) mailCommands.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) shareglue.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) subscribe.xul			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) subscribe.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) sidebar-messenger.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) sidebar-messenger.rdf	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) newFolderNameDialog.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) newFolderNameDialog.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) msgViewNavigation.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) msgMail3PaneWindow.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) mail3PaneWindowCommands.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) msgFolderPickerOverlay.js		$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) msgFolderPickerOverlay.xul	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	renameFolderNameDialog.xul $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	messengerdnd.js $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	mailContextMenus.js $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	msgPrintEngine.js $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	msgPrintEngine.xul $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	openSaveAttachment.xul $(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL)	openSaveAttachment.js $(DIST)\bin\chrome\messenger\content
-
-clobber::
-	rm -f $(DIST)\chrome\messenger\content\messenger.xul
-	rm -f $(DIST)\chrome\messenger\content\mail3PaneWindowVertLayout.xul
-	rm -f $(DIST)\chrome\messenger\content\mailWindowOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\mailWindowOverlay.js
-	rm -f $(DIST)\chrome\messenger\content\mailWindow.js
-	rm -f $(DIST)\chrome\messenger\content\messageWindow.xul
-	rm -f $(DIST)\chrome\messenger\content\messageWindow.js
-  rm -f $(DIST)\chrome\messenger\content\msgHdrViewOverlay.xul
-  rm -f $(DIST)\chrome\messenger\content\msgHdrViewOverlay.js
-  rm -f	$(DIST)\chrome\messenger\content\msgHdrViewAddresses.js
-	rm -f $(DIST)\chrome\messenger\content\folderPane.xul
-	rm -f $(DIST)\chrome\messenger\content\threadPane.xul
-	rm -f $(DIST)\chrome\messenger\content\widgetglue.js
-	rm -f $(DIST)\chrome\messenger\content\commandglue.js
-	rm -f $(DIST)\chrome\messenger\content\mailCommands.js
-	rm -f $(DIST)\chrome\messenger\content\shareglue.js
-	rm -f $(DIST)\chrome\messenger\content\subscribe.xul
-	rm -f $(DIST)\chrome\messenger\content\subscribe.js
-	rm -f $(DIST)\chrome\messenger\content\sidebar-messenger.xul
-	rm -f $(DIST)\chrome\messenger\content\sidebar-messenger.rdf
-	rm -f $(DIST)\chrome\messenger\content\newFolderNameDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\newFolderNameDialog.js
-	rm -f $(DIST)\chrome\messenger\content\msgViewNavigation.js
-	rm -f $(DIST)\chrome\messenger\content\msgMail3PaneWindow.js
-	rm -f $(DIST)\chrome\messenger\content\msgFolderPickerOverlay.js
-	rm -f $(DIST)\chrome\messenger\content\msgFolderPickerOverlay.xul
-	rm -f $(DIST)\chrome\messenger\content\renameFolderNameDialog.xul
-	rm -f $(DIST)\chrome\messenger\content\messengerdnd.js
-	rm -f $(DIST)\chrome\messenger\content\mailContextMenus.js
-	rm -f $(DIST)\chrome\messenger\content\msgPrintEngine.js
-	rm -f $(DIST)\chrome\messenger\content\msgPrintEngine.xul
-	rm -f $(DIST)\chrome\messenger\content\openSaveAttachment.xul
-	rm -f $(DIST)\chrome\messenger\content\openSaveAttachment.js
-
 
