@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsIImageMap.h"
+#include "nsImageMap.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCoord.h"
@@ -25,6 +25,11 @@
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
+#include "nsIContent.h"
+#include "nsIDOMHTMLMapElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDocument.h"
 
 class Area {
 public:
@@ -645,107 +650,135 @@ void CircleArea::GetShapeName(nsString& aResult) const
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIImageMapIID, NS_IIMAGEMAP_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
-class ImageMapImpl : public nsIImageMap {
-public:
-  ImageMapImpl(nsIAtom* aTag);
-  ~ImageMapImpl();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD SetName(const nsString& aMapName);
-
-  NS_IMETHOD GetName(nsString& aResult);
-
-  NS_IMETHOD AddArea(const nsString& aBaseURL,
-                     const nsString& aShape,
-                     const nsString& aCoords,
-                     const nsString& aHREF,
-                     const nsString& aTarget,
-                     const nsString& aAltText,
-                     PRBool aSuppress);
-
-  NS_IMETHOD IsInside(nscoord aX, nscoord aY,
-                      nsIURL* aDocURL,
-                      nsString& aAbsURL,
-                      nsString& aTarget,
-                      nsString& aAltText,
-                      PRBool* aSuppress);
-
-  NS_IMETHOD IsInside(nscoord aX, nscoord aY);
-
-  NS_IMETHOD Draw(nsIPresContext& aCX, nsIRenderingContext& aRC);
-
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
-
-  nsString mName;
-  nsIAtom* mTag;
-  nsVoidArray mAreas;
-};
-
-ImageMapImpl::ImageMapImpl(nsIAtom* aTag)
+nsImageMap::nsImageMap()
 {
-  NS_INIT_REFCNT();
-  mTag = aTag;
-  NS_IF_ADDREF(aTag);
+  mMap = nsnull;
+  mDomMap = nsnull;
+  mRefCnt = 1;
+  mDocument = nsnull;
 }
 
-ImageMapImpl::~ImageMapImpl()
+nsImageMap::~nsImageMap()
 {
-  NS_IF_RELEASE(mTag);
+  FreeAreas();
+  if (nsnull != mDocument) {
+    mDocument->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+    NS_RELEASE(mDocument);
+  }
+  NS_IF_RELEASE(mDomMap);
+  NS_IF_RELEASE(mMap);
+}
+
+NS_IMPL_ISUPPORTS(nsImageMap, kIDocumentObserverIID);
+
+void
+nsImageMap::FreeAreas()
+{
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     delete area;
   }
+  mAreas.Clear();
 }
 
-NS_IMPL_ISUPPORTS(ImageMapImpl, kIImageMapIID);
-
-NS_IMETHODIMP ImageMapImpl::SetName(const nsString& aMapName)
+nsresult
+nsImageMap::Init(nsIDOMHTMLMapElement* aMap)
 {
-  mName = aMapName;
-  return NS_OK;
+  NS_PRECONDITION(nsnull != aMap, "null ptr");
+  if (nsnull == aMap) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  mDomMap = aMap;
+  NS_ADDREF(aMap);
+
+  nsresult rv = aMap->QueryInterface(kIContentIID, (void**) &mMap);
+  if (NS_SUCCEEDED(rv)) {
+    rv = mMap->GetDocument(mDocument);
+    if (NS_SUCCEEDED(rv) && (nsnull != mDocument)) {
+      mDocument->AddObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+    }
+  }
+
+  // "Compile" the areas in the map into faster access versions
+  rv = UpdateAreas();
+  return rv;
 }
 
-NS_IMETHODIMP ImageMapImpl::GetName(nsString& aResult) 
+nsresult
+nsImageMap::UpdateAreas()
 {
-  aResult = mName;
-  return NS_OK;
+  // Get rid of old area data
+  FreeAreas();
+
+  nsIDOMHTMLCollection* col = nsnull;
+  nsresult rv = mDomMap->GetAreas(&col);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (nsnull != col) {
+    PRUint32 i, n;
+    col->GetLength(&n);
+    for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
+      nsIDOMNode* node = nsnull;
+      rv = col->Item(i, &node);
+      if (NS_SUCCEEDED(rv) && (nsnull != node)) {
+        nsIDOMHTMLAreaElement* area;
+        rv = node->QueryInterface(kIDOMHTMLAreaElementIID, (void**) &area);
+        if (NS_SUCCEEDED(rv)) {
+          rv = AddArea(area);
+          NS_RELEASE(area);
+        }
+        else {
+          rv = NS_OK;
+        }
+        NS_RELEASE(node);
+      }
+    }
+    NS_RELEASE(col);
+  }
+  return rv;
 }
 
-NS_IMETHODIMP ImageMapImpl::AddArea(const nsString& aBaseURL,
-                                    const nsString& aShape,
-                                    const nsString& aCoords,
-                                    const nsString& aHREF,
-                                    const nsString& aTarget,
-                                    const nsString& aAltText,
-                                    PRBool aSuppress)
+nsresult
+nsImageMap::AddArea(nsIDOMHTMLAreaElement* aArea)
 {
+  nsAutoString shape, coords, baseURL, href, target, altText;
+  aArea->GetShape(shape);
+  aArea->GetCoords(coords);
+  aArea->GetHref(href);
+  aArea->GetTarget(target);
+  aArea->GetAlt(altText);
+  PRBool suppress = PR_FALSE;/* XXX */
+
   Area* area;
-  if ((0 == aShape.Length()) || aShape.EqualsIgnoreCase("rect")) {
-    area = new RectArea(aBaseURL, aHREF, aTarget, aAltText, aSuppress);
-  } else if (aShape.EqualsIgnoreCase("poly") ||
-             aShape.EqualsIgnoreCase("polygon")) {
-    area = new PolyArea(aBaseURL, aHREF, aTarget, aAltText, aSuppress);
-  } else if (aShape.EqualsIgnoreCase("circle")) {
-    area = new CircleArea(aBaseURL, aHREF, aTarget, aAltText, aSuppress);
+  if ((0 == shape.Length()) || shape.EqualsIgnoreCase("rect")) {
+    area = new RectArea(baseURL, href, target, altText, suppress);
+  } else if (shape.EqualsIgnoreCase("poly") ||
+             shape.EqualsIgnoreCase("polygon")) {
+    area = new PolyArea(baseURL, href, target, altText, suppress);
+  } else if (shape.EqualsIgnoreCase("circle")) {
+    area = new CircleArea(baseURL, href, target, altText, suppress);
   }
   else {
-    area = new DefaultArea(aBaseURL, aHREF, aTarget, aAltText, aSuppress);
+    area = new DefaultArea(baseURL, href, target, altText, suppress);
   }
-  area->ParseCoords(aCoords);
+  area->ParseCoords(coords);
   mAreas.AppendElement(area);
   return NS_OK;
 }
 
-NS_IMETHODIMP ImageMapImpl::IsInside(nscoord aX, nscoord aY,
-                                     nsIURL* aDocURL,
-                                     nsString& aAbsURL,
-                                     nsString& aTarget,
-                                     nsString& aAltText,
-                                     PRBool* aSuppress)
+PRBool
+nsImageMap::IsInside(nscoord aX, nscoord aY,
+                     nsIURL* aDocURL,
+                     nsString& aAbsURL,
+                     nsString& aTarget,
+                     nsString& aAltText,
+                     PRBool* aSuppress)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
@@ -755,38 +788,40 @@ NS_IMETHODIMP ImageMapImpl::IsInside(nscoord aX, nscoord aY,
       aTarget = area->mTarget;
       aAltText = area->mAltText;
       *aSuppress = area->mSuppressFeedback;
-      return NS_OK;
+      return PR_TRUE;
     }
   }
-  return NS_NOT_INSIDE;
+  return PR_FALSE;
 }
 
-NS_IMETHODIMP ImageMapImpl::IsInside(nscoord aX, nscoord aY)
+PRBool
+nsImageMap::IsInside(nscoord aX, nscoord aY)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
       if ((area->mHREF).Length() > 0) {
-        return NS_OK;
+        return PR_TRUE;
       }
     }
   }
-  return NS_NOT_INSIDE;
+  return PR_FALSE;
 }
 
-NS_IMETHODIMP ImageMapImpl::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
+void
+nsImageMap::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     area->Draw(aCX, aRC);
   }
-  return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
-ImageMapImpl::SizeOf(nsISizeOfHandler* aHandler) const
+nsImageMap::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
 
@@ -807,17 +842,171 @@ ImageMapImpl::SizeOf(nsISizeOfHandler* aHandler) const
   }
   return NS_OK;
 }
+#endif
 
-NS_HTML nsresult NS_NewImageMap(nsIImageMap** aInstancePtrResult,
-                                nsIAtom* aTag)
+NS_IMETHODIMP
+nsImageMap::BeginUpdate(nsIDocument *aDocument)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::EndUpdate(nsIDocument *aDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::BeginLoad(nsIDocument *aDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::EndLoad(nsIDocument *aDocument)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::ContentChanged(nsIDocument *aDocument,
+                           nsIContent* aContent,
+                           nsISupports* aSubContent)
+{
+  // If the parent of the changing content node is our map then update
+  // the map.
+  nsIContent* parent;
+  nsresult rv = aContent->GetParent(parent);
+  if (NS_SUCCEEDED(rv) && (nsnull != parent)) {
+    if (parent == mMap) {
+      UpdateAreas();
+    }
+    NS_RELEASE(parent);
   }
-  ImageMapImpl* it = new ImageMapImpl(aTag);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::AttributeChanged(nsIDocument *aDocument,
+                             nsIContent*  aContent,
+                             nsIAtom*     aAttribute,
+                             PRInt32      aHint)
+{
+  // If the parent of the changing content node is our map then update
+  // the map.
+  nsIContent* parent;
+  nsresult rv = aContent->GetParent(parent);
+  if (NS_SUCCEEDED(rv) && (nsnull != parent)) {
+    if (parent == mMap) {
+      UpdateAreas();
+    }
+    NS_RELEASE(parent);
   }
-  return it->QueryInterface(kIImageMapIID, (void**) aInstancePtrResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::ContentAppended(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            PRInt32     aNewIndexInContainer)
+{
+  if (mMap == aContainer) {
+    UpdateAreas();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::ContentInserted(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer)
+{
+  if (mMap == aContainer) {
+    UpdateAreas();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::ContentReplaced(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aOldChild,
+                            nsIContent* aNewChild,
+                            PRInt32 aIndexInContainer)
+{
+  if (mMap == aContainer) {
+    UpdateAreas();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::ContentRemoved(nsIDocument *aDocument,
+                           nsIContent* aContainer,
+                           nsIContent* aChild,
+                           PRInt32 aIndexInContainer)
+{
+  if (mMap == aContainer) {
+    UpdateAreas();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::StyleSheetAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                           nsIStyleSheet* aStyleSheet,
+                                           PRBool aDisabled)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::StyleRuleChanged(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet,
+                             nsIStyleRule* aStyleRule,
+                             PRInt32 aHint)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::StyleRuleAdded(nsIDocument *aDocument,
+                           nsIStyleSheet* aStyleSheet,
+                           nsIStyleRule* aStyleRule)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::StyleRuleRemoved(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet,
+                             nsIStyleRule* aStyleRule)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageMap::DocumentWillBeDestroyed(nsIDocument *aDocument)
+{
+  return NS_OK;
 }
