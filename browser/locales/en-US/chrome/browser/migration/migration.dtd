@@ -3,6 +3,7 @@
 
 <!ENTITY importFrom.label               "Import Options, Bookmarks, History, Passwords and other data from:">
 <!ENTITY importFromUnix.label           "Import Preferences, Bookmarks, History, Passwords and other data from:">
+<!ENTITY importFromBookmarks.label      "Import Bookmarks from:">
 
 <!ENTITY importFromIE.label             "Microsoft Internet Explorer">
 <!ENTITY importFromIE.accesskey         "M">
@@ -30,6 +31,8 @@
 <!ENTITY importFromEpiphany.accesskey   "E">
 <!ENTITY importFromGaleon.label         "Galeon">
 <!ENTITY importFromGaleon.accesskey     "G">
+<!ENTITY importFromFile.label           "From File">
+<!ENTITY importFromFile.accesskey       "F">
 
 <!ENTITY importSource.title             "Import Settings and Data From">
 <!ENTITY importItems.title              "Items to Import">

@@ -699,6 +699,18 @@ var BookmarksCommand = {
 
   importBookmarks: function ()
   {
+      // XXX: ifdef it to be non-modal (non-"sheet") on mac (see bug 259039)
+      var features = "modal,centerscreen,chrome,resizable=no";
+      window.fromFile = false;
+      window.openDialog("chrome://browser/content/migration/migration.xul", "migration", features, "bookmarks");
+      if(window.fromFile)
+      {
+        this.importBookmarksFromFile();
+      }
+  },
+
+  importBookmarksFromFile: function ()
+  {
     ///transaction...
     try {
       const kFilePickerContractID = "@mozilla.org/filepicker;1";
