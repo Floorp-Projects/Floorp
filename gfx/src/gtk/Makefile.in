@@ -45,6 +45,11 @@ REQUIRES	= xpcom \
 		  locale \
 		  $(NULL)
 
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+REQUIRES	+= ctl
+endif
+
 CSRCS		= nsPrintdGTK.c
 
 # Code shared between GTK+, Xlib and Xprint gfx modules

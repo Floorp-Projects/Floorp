@@ -57,6 +57,11 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+REQUIRES	+= ctl
+endif
+
 # Code shared between GTK+, Xlib and Xprint gfx modules
 # (empty for now - but this will be filled soon...)
 X11SHARED_LCPPSRCS = \

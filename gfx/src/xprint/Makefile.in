@@ -46,6 +46,11 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  $(NULL)
 
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+REQUIRES	+= ctl
+endif
+
 CSRCS		= \
 		xprintutil.c \
 		xprintutil_printtofile.c \

@@ -23,6 +23,7 @@
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Prabhat Hegde <prabhat.hegde@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -99,6 +100,10 @@
 #include "nsIUBidiUtils.h"
 //ahmed end
 #endif // IBMBIDI
+
+#ifdef SUNCTL
+#include "nsILE.h"
+#endif /* SUNCTL */
 
 #ifndef PR_ABS
 #define PR_ABS(x) ((x) < 0 ? -(x) : (x))
@@ -2304,6 +2309,33 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       while (sdptr){
         sdptr->mStart = ip[sdptr->mStart] - mContentOffset;
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
+#ifdef SUNCTL
+        static NS_DEFINE_CID(kLECID, NS_ULE_CID);
+
+        nsCOMPtr<nsILE> mCtlObj;
+        mCtlObj = do_CreateInstance(kLECID, &rv);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Cell based cursor movement will not be supported\n");
+          mCtlObj = nsnull;
+        }
+        else {
+          PRInt32 mStart, mEnd;
+
+          if (sdptr->mEnd < textLength) {
+            mCtlObj->GetRangeOfCluster(text, PRInt32(textLength), sdptr->mEnd, &mStart, &mEnd);
+            if (sdptr->mStart > sdptr->mEnd) /* Left Edge */
+              sdptr->mEnd = mStart;
+            else
+              sdptr->mEnd = mEnd;
+          }
+
+          /* Always start selection from a Right Edge */
+          if (sdptr->mStart > 0) {
+            mCtlObj->GetRangeOfCluster(text, PRInt32(textLength), sdptr->mStart, &mStart, &mEnd);
+            sdptr->mStart = mEnd;
+          }
+        }
+#endif /* SUNCTL */
 #ifdef IBMBIDI
         AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), level & 1, isBidiSystem);
 #endif
@@ -3916,12 +3948,32 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #endif
         aPos->mContentOffset = 0;
         PRInt32 i;
+#ifdef SUNCTL
+        static NS_DEFINE_CID(kLECID, NS_ULE_CID);
+
+        nsCOMPtr<nsILE> mCtlObj;
+        mCtlObj = do_CreateInstance(kLECID, &rv);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Cell based cursor movement will not be supported\n");
+          mCtlObj = nsnull;
+#endif /* SUNCTL */
         for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
           if (ip[i] < ip[aPos->mStartOffset - mContentOffset]){
             aPos->mContentOffset = i + mContentOffset;
             break;
           }
         }
+#ifdef SUNCTL
+        }
+        else {
+          PRInt32 mPreviousOffset;
+          mCtlObj->PrevCluster((const PRUnichar*)paintBuffer.mBuffer,
+                               textLength,aPos->mStartOffset, 
+                               &mPreviousOffset);
+          aPos->mContentOffset = i = mPreviousOffset;
+        }
+#endif /* SUNCTL */
+
         if (i <0){
           found = PR_FALSE;
           GetPrevInFlow(&frameUsed);
@@ -3937,12 +3989,33 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #endif
         PRInt32 i;
         aPos->mContentOffset = mContentLength;
+#ifdef SUNCTL
+        static NS_DEFINE_CID(kLECID, NS_ULE_CID);
+
+        nsCOMPtr<nsILE> mCtlObj;
+        mCtlObj = do_CreateInstance(kLECID, &rv);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Cell based cursor movement will not be supported\n");
+          mCtlObj = nsnull;
+#endif /* SUNCTL */
+
         for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
           if (ip[i] > ip[aPos->mStartOffset - mContentOffset]){
             aPos->mContentOffset = i + mContentOffset;
             break;
           }
         }
+#ifdef SUNCTL
+        }
+        else {
+          PRInt32 mNextOffset;
+          mCtlObj->NextCluster((const PRUnichar*)paintBuffer.mBuffer,
+                               textLength, aPos->mStartOffset,
+                               &mNextOffset);
+          aPos->mContentOffset = i = mNextOffset;
+        }
+#endif /* SUNCTL */
+
 /*      if (aStartOffset == 0 && (mState & TEXT_SKIP_LEADING_WS))
         i--; //back up because we just skipped over some white space. why skip over the char also?
 */
