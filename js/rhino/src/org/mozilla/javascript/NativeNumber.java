@@ -108,6 +108,10 @@ public class NativeNumber extends ScriptableObject {
         return doubleValue;
     }
 
+    public String jsFunction_toLocaleString(Object arg) {
+		return toString();
+    }
+
     public String jsFunction_toFixed(Object arg) {
     /* We allow a larger range of precision than 
 		ECMA requires; this is permitted by ECMA. */
