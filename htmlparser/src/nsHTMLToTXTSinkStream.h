@@ -40,8 +40,10 @@
 #include "nsIHTMLContentSink.h"
 
 #include "nsHTMLTags.h"
+#include "nsParserCIID.h"
+#include "nsCOMPtr.h"
 
-#define NS_HTMLTOTEXTSINK_STREAM_CID  \
+#define NS_IHTMLTOTEXTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
   {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
 
@@ -49,7 +51,19 @@
 class nsIUnicodeEncoder;
 class nsIOutputStream;
 
-class nsHTMLToTXTSinkStream : public nsIHTMLContentSink
+class nsIHTMLToTXTSinkStream : public nsIHTMLContentSink {
+  public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLTOTEXTSINKSTREAM_IID)
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_HTMLTOTXTSINKSTREAM_CID)
+
+  NS_IMETHOD Initialize(nsIOutputStream* aOutStream, 
+                        nsString* aOutString,
+                        PRUint32 aFlags) = 0;
+  NS_IMETHOD SetCharsetOverride(const nsString* aCharset) = 0;
+  NS_IMETHOD SetWrapColumn(PRUint32 aWrapCol) = 0;
+};
+
+class nsHTMLToTXTSinkStream : public nsIHTMLToTXTSinkStream
 {
   public:
 
@@ -57,14 +71,17 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink
    * Standard constructor
    * @update	gpk02/03/99
    */
-  nsHTMLToTXTSinkStream(nsIOutputStream* aOutStream, nsString* aOutString,
-                        PRUint32 aFlags);
+  nsHTMLToTXTSinkStream();
 
   /**
    * virtual destructor
    * @update	gpk02/03/99
    */
   virtual ~nsHTMLToTXTSinkStream();
+
+  NS_IMETHOD Initialize(nsIOutputStream* aOutStream, 
+                        nsString* aOutString,
+                        PRUint32 aFlags);
 
   NS_IMETHOD SetCharsetOverride(const nsString* aCharset);
 
@@ -150,16 +167,62 @@ protected:
   nsString            mCharsetOverride;
 };
 
-extern NS_HTMLPARS nsresult
+inline nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsIOutputStream* aOutStream,
                             const nsString* aCharsetOverride=nsnull,
-                            PRUint32 aWrapColumn=0, PRUint32 aFlags=0);
+                            PRUint32 aWrapColumn=0, PRUint32 aFlags=0)
+{
+  nsCOMPtr<nsIHTMLToTXTSinkStream> it;
+  nsresult rv;
 
-extern NS_HTMLPARS nsresult
+  rv = nsComponentManager::CreateInstance(nsIHTMLToTXTSinkStream::GetCID(),
+                                          nsnull,
+                                          nsIHTMLToTXTSinkStream::GetIID(),
+                                          getter_AddRefs(it));
+  if (NS_SUCCEEDED(rv)) {
+    rv = it->Initialize(aOutStream, nsnull, aFlags);
+
+    if (NS_SUCCEEDED(rv)) {
+      it->SetWrapColumn(aWrapColumn);
+      if (aCharsetOverride != nsnull) {
+        it->SetCharsetOverride(aCharsetOverride);
+      }
+      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+                              (void**)aInstancePtrResult);
+    }
+  }
+  
+  return rv;
+}
+
+inline nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsString* aOutString,
-                            PRUint32 aWrapColumn=0, PRUint32 aFlags=0);
+                            PRUint32 aWrapColumn=0, PRUint32 aFlags=0)
+{
+  nsCOMPtr<nsIHTMLToTXTSinkStream> it;
+  nsresult rv;
+
+  rv = nsComponentManager::CreateInstance(nsIHTMLToTXTSinkStream::GetCID(),
+                                          nsnull,
+                                          nsIHTMLToTXTSinkStream::GetIID(),
+                                          getter_AddRefs(it));
+  if (NS_SUCCEEDED(rv)) {
+    rv = it->Initialize(nsnull, aOutString, aFlags);
+
+    if (NS_SUCCEEDED(rv)) {
+      it->SetWrapColumn(aWrapColumn);
+      nsAutoString ucs2("ucs2");
+      it->SetCharsetOverride(&ucs2);
+
+      rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
+                              (void**)aInstancePtrResult);
+    }
+  }
+  
+  return rv;
+}
 
 
 #endif

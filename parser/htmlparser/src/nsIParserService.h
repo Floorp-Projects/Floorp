@@ -16,22 +16,24 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsILoggingSink_h___
-#define nsILoggingSink_h___
 
-#include "nsIHTMLContentSink.h"
+#include "nsISupports.h"
 #include "nsString.h"
-#include <iostream.h>
 
-// IID for nsILoggingSink
-#define NS_ILOGGING_SINK_IID \
- {0xa6cf9061, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+#define NS_IPARSERSERVICE_IID                           \
+{ 0xa6cf9111, 0x15b3, 0x11d2,                           \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
-class nsILoggingSink : public nsIHTMLContentSink {
-public:
-  NS_IMETHOD SetOutputStream(ostream& aStream) =0;
+
+class nsIParserService : public nsISupports {
+ public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERSERVICE_IID)
+
+  NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const =0;
+
+  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const =0;
+  
+  NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
+					PRInt32* aUnicode) const =0;
 };
 
-extern "C" nsresult NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult);
-
-#endif /* nsILoggingSink_h___ */

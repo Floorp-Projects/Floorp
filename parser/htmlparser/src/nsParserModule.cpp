@@ -21,17 +21,76 @@
 #include "nsIModule.h"
 #include "nsParserCIID.h"
 #include "nsParser.h"
-#include "nsILoggingSink.h"
+#include "nsLoggingSink.h"
 #include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
 #include "nsXIFDTD.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsHTMLToTXTSinkStream.h"
+#include "nsHTMLEntities.h"
+#include "nsIParserService.h"
 
-static NS_DEFINE_IID(kParserCID, NS_PARSER_IID);
-static NS_DEFINE_IID(kParserNodeCID, NS_PARSER_NODE_IID);
-static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_IID);
+static NS_DEFINE_IID(kIParserServiceIID, NS_IPARSERSERVICE_IID);
+
+class nsParserService : public nsIParserService {
+public:
+  nsParserService();
+  virtual ~nsParserService();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const;
+
+  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const;
+  
+  NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
+					PRInt32* aUnicode) const;
+};
+
+nsParserService::nsParserService()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsParserService::~nsParserService()
+{
+}
+
+NS_IMPL_ISUPPORTS(nsParserService, kIParserServiceIID)
+  
+NS_IMETHODIMP 
+nsParserService::HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const
+{
+  *aId = nsHTMLTags::LookupTag(aTag);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsParserService::HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const
+{
+  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aId);
+  return NS_OK;
+}
+  
+NS_IMETHODIMP 
+nsParserService::HTMLConvertEntityToUnicode(const nsString& aEntity, 
+                                            PRInt32* aUnicode) const
+{
+  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+static NS_DEFINE_CID(kParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kParserNodeCID, NS_PARSER_NODE_IID);
+static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kXIFDTDCID, NS_XIF_DTD_CID);
+static NS_DEFINE_CID(kHTMLContentSinkStreamCID, NS_HTMLCONTENTSINKSTREAM_CID);
+static NS_DEFINE_CID(kHTMLToTXTSinkStreamCID, NS_HTMLTOTXTSINKSTREAM_CID);
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 struct Components {
   const char* mDescription;
@@ -45,157 +104,22 @@ static Components gComponents[] = {
   { "Well formed DTD", &kWellFormedDTDCID },
   { "Navigator HTML DTD", &kNavDTDCID },
   { "XIF DTD", &kXIFDTDCID },
+  { "HTML Content Sink Stream", &kHTMLContentSinkStreamCID },
+  { "HTML To Text Sink Stream", &kHTMLToTXTSinkStreamCID },
+  { "ParserService", &kParserServiceCID },
 };
 
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]));
 
-// Factory method to create new instances of nsParser
-static nsresult
-CreateNewParser(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-  nsParser* inst = new nsParser();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return rv;
-}
-
-// Factory method to create new instances of nsParserNode
-static nsresult
-CreateNewParserNode(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-  nsCParserNode* inst = new nsCParserNode();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return rv;
-}
-
-// Factory method to create new instances of nsILoggingSink
-static nsresult
-CreateNewLoggingSink(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-  nsIContentSink* inst;
-  nsresult rv = NS_NewHTMLLoggingSink(&inst);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-  }
-  NS_RELEASE(inst);             // get rid of extra refcnt
-  return rv;
-}
-
-// Factory method to create new instances of nsWellFormedDTD
-static nsresult
-CreateNewWellFormedDTD(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-  nsIDTD* inst;
-  nsresult rv = NS_NewWellFormed_DTD(&inst);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-  }
-  NS_RELEASE(inst);             // get rid of extra refcnt
-  return rv;
-}
-
-// Factory method to create new instances of nsNavHTMLDTD
-static nsresult
-CreateNewNavHTMLDTD(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-  nsIDTD* inst;
-  nsresult rv = NS_NewNavHTMLDTD(&inst);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-  }
-  NS_RELEASE(inst);             // get rid of extra refcnt
-  return rv;
-}
-
-// Factory method to create new instances of nsXIFDTD
-static nsresult
-CreateNewXIFDTD(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_NOINTERFACE;
-  }
-  nsIDTD* inst;
-  nsresult rv = NS_NewXIFDTD(&inst);
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = nsnull;
-  }
-  NS_RELEASE(inst);             // get rid of extra refcnt
-  return rv;
-}
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCParserNode)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
+NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
+NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXIFDTD)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLContentSinkStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLToTXTSinkStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
 //----------------------------------------------------------------------
 
@@ -214,6 +138,15 @@ protected:
   void Shutdown();
 
   PRBool mInitialized;
+  nsCOMPtr<nsIGenericFactory> mParserFactory;
+  nsCOMPtr<nsIGenericFactory> mParserNodeFactory;
+  nsCOMPtr<nsIGenericFactory> mLoggingSinkFactory;
+  nsCOMPtr<nsIGenericFactory> mWellFormedDTDFactory;
+  nsCOMPtr<nsIGenericFactory> mNavHTMLDTDFactory;
+  nsCOMPtr<nsIGenericFactory> mXIFDTDFactory;
+  nsCOMPtr<nsIGenericFactory> mHTMLContentSinkStreamFactory;
+  nsCOMPtr<nsIGenericFactory> mHTMLToTXTSinkStreamFactory;
+  nsCOMPtr<nsIGenericFactory> mParserServiceFactory;
 };
 
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
@@ -234,12 +167,22 @@ NS_IMPL_ISUPPORTS(nsParserModule, kIModuleIID)
 nsresult
 nsParserModule::Initialize()
 {
+  if (!mInitialized) {
+    nsHTMLTags::AddRefTable();
+    nsHTMLEntities::AddRefTable();
+    mInitialized = PR_TRUE;
+  }
   return NS_OK;
 }
 
 void
 nsParserModule::Shutdown()
 {
+  if (mInitialized) {
+    nsHTMLTags::ReleaseTable();
+    nsHTMLEntities::ReleaseTable();
+    mInitialized = PR_FALSE;
+  }
 }
 
 NS_IMETHODIMP
@@ -261,22 +204,67 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
   nsCOMPtr<nsIGenericFactory> fact;
 
   if (aClass.Equals(kParserCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewParser);
+    if (!mParserFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mParserFactory), 
+                                &nsParserConstructor);
+    }
+    fact = mParserFactory;
   }
   else if (aClass.Equals(kParserNodeCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewParserNode);
+    if (!mParserNodeFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mParserNodeFactory), 
+                                &nsCParserNodeConstructor);
+    }
+    fact = mParserNodeFactory;
   }
   else if (aClass.Equals(kLoggingSinkCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewLoggingSink);
+    if (!mLoggingSinkFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mLoggingSinkFactory), 
+                                &nsLoggingSinkConstructor);
+    }
+    fact = mLoggingSinkFactory;
   }
   else if (aClass.Equals(kWellFormedDTDCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewWellFormedDTD);
+    if (!mWellFormedDTDFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mWellFormedDTDFactory), 
+                                &CWellFormedDTDConstructor);
+    }
+    fact = mWellFormedDTDFactory;
   }
   else if (aClass.Equals(kNavDTDCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewNavHTMLDTD);
+    if (!mNavHTMLDTDFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mNavHTMLDTDFactory), 
+                                &CNavDTDConstructor);
+    }
+    fact = mNavHTMLDTDFactory;
   }
   else if (aClass.Equals(kXIFDTDCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXIFDTD);
+    if (!mXIFDTDFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mXIFDTDFactory), 
+                                &nsXIFDTDConstructor);
+    }
+    fact = mXIFDTDFactory;
+  }
+  else if (aClass.Equals(kHTMLContentSinkStreamCID)) {
+    if (!mHTMLContentSinkStreamFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mHTMLContentSinkStreamFactory), 
+                                &nsHTMLContentSinkStreamConstructor);
+    }
+    fact = mHTMLContentSinkStreamFactory;
+  }
+  else if (aClass.Equals(kHTMLToTXTSinkStreamCID)) {
+    if (!mHTMLToTXTSinkStreamFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mHTMLToTXTSinkStreamFactory), 
+                                &nsHTMLToTXTSinkStreamConstructor);
+    }
+    fact = mHTMLToTXTSinkStreamFactory;
+  }
+  else if (aClass.Equals(kParserServiceCID)) {
+    if (!mParserServiceFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mParserServiceFactory), 
+                                &nsParserServiceConstructor);
+    }
+    fact = mParserServiceFactory;
   }
   else {
 		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -346,7 +334,6 @@ nsParserModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 
 //----------------------------------------------------------------------
 
-#if 0
 static nsParserModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
@@ -373,4 +360,3 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
   gModule = m;                  // WARNING: Weak Reference
   return rv;
 }
-#endif

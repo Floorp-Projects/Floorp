@@ -249,6 +249,9 @@ class CValidDTD : public nsIDTD {
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
 
+    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+
+    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
     
 protected:
 

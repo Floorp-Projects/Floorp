@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= htmlparser
 LIBRARY_NAME	= raptorhtmlpars
+IS_COMPONENT	= 1
 
 REQUIRES	= xpcom netlib raptor
 
@@ -43,7 +44,7 @@ CPPSRCS		= \
 		nsLoggingSink.cpp \
 		nsParser.cpp \
 		CParserContext.cpp \
-		nsParserFactory.cpp \
+		nsParserModule.cpp \
 		nsParserNode.cpp \
 		nsScanner.cpp \
 		nsToken.cpp \
@@ -98,6 +99,7 @@ EXPORTS		= \
 		nsExpatDTD.h \
 		nsParserError.h \
 		nsIElementObserver.h \
+		nsIParserService.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

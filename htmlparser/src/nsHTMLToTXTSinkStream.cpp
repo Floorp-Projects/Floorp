@@ -133,6 +133,9 @@ nsHTMLToTXTSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(NS_GET_IID(nsIHTMLContentSink))) {
     *aInstancePtr = (nsIHTMLContentSink*)(this);
   }
+  else if(aIID.Equals(NS_GET_IID(nsIHTMLToTXTSinkStream))) {
+    *aInstancePtr = (nsIHTMLToTXTSinkStream*)(this);
+  }
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -146,54 +149,6 @@ NS_IMPL_ADDREF(nsHTMLToTXTSinkStream)
 NS_IMPL_RELEASE(nsHTMLToTXTSinkStream)
 
 
-/**
- *  This method creates a new sink, it sets the stream used
- *  for the sink to aStream
- *  
- *  @update  gpk 04/30/99
- */
-NS_HTMLPARS nsresult
-NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                            nsIOutputStream* aStream,
-                            const nsString* aCharsetOverride,
-                            PRUint32 aWrapColumn, PRUint32 aFlags)
-{
-  NS_ASSERTION(aStream != nsnull, "a valid stream is required");
-  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(aStream, nsnull,
-                                                        aFlags);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  it->SetWrapColumn(aWrapColumn);
-  if (aCharsetOverride != nsnull)
-    it->SetCharsetOverride(aCharsetOverride);
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContentSink), (void **)aInstancePtrResult);
-}
-
-
-/**
- *  This method creates a new sink, it sets the stream used
- *  for the sink to aStream
- *  
- *  @update  gpk 04/30/99
- */
-NS_HTMLPARS nsresult
-NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                            nsString* aString,
-                            PRUint32 aWrapColumn, PRUint32 aFlags)
-{
-  NS_ASSERTION(aString != nsnull, "a valid stream is required");
-  nsHTMLToTXTSinkStream* it = new nsHTMLToTXTSinkStream(nsnull, aString,
-                                                        aFlags);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  it->SetWrapColumn(aWrapColumn);
-  nsAutoString ucs2("ucs2");
-  it->SetCharsetOverride(&ucs2);
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContentSink), (void **)aInstancePtrResult);
-}
-
 // Someday may want to make this non-const:
 static const PRUint32 TagStackSize = 500;
 static const PRUint32 OLStackSize = 100;
@@ -204,12 +159,9 @@ static const PRUint32 OLStackSize = 100;
  * @param 
  * @return
  */
-nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream,
-                                             nsString* aString,
-                                             PRUint32 aFlags)
+nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
 {
   NS_INIT_REFCNT();
-  mStream = aStream;
   mColPos = 0;
   mIndent = 0;
   mDoOutput = PR_FALSE;
@@ -217,9 +169,6 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(nsIOutputStream* aStream,
   mBufferLength = 0;
   mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
-  mStream = aStream;
-  mString = aString;
-  mFlags = aFlags;
   mWrapColumn = 72;     // XXX magic number, we expect someone to reset this
 
   // initialize the tag stack to zero:
@@ -244,6 +193,24 @@ nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
   delete[] mTagStack;
   delete[] mOLStack;
   NS_IF_RELEASE(mUnicodeEncoder);
+}
+
+/**
+ * 
+ * @update	gpk04/30/99
+ * @param 
+ * @return
+ */
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream, 
+                                  nsString* aOutString,
+                                  PRUint32 aFlags)
+{
+  mStream = aOutStream;
+  mString = aOutString;
+  mFlags = aFlags;
+
+  return NS_OK;
 }
 
 /**

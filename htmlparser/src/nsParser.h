@@ -282,6 +282,14 @@ friend class CTokenHandler;
      */
     virtual nsresult  CreateTagStack(nsITagStack** aTagStack);
 
+    /** 
+     * Get the DTD associated with this parser
+     * @update vidur 9/29/99
+     * @param aDTD out param that will contain the result
+     * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
+     */
+    NS_IMETHOD GetDTD(nsIDTD** aDTD);
+
     /**
      * Call this to access observer dictionary ( internal to parser )
      * @update	harishd 06/27/99

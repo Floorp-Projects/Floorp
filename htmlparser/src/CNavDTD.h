@@ -85,7 +85,7 @@
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
-
+#include "nsParserCIID.h"
 
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
@@ -395,6 +395,9 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
 
+    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+
+    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
 
     /**
      * The following set of methods are used to partially construct 
@@ -527,7 +530,14 @@ protected:
 
 };
 
-extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);
+inline nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
+{
+  NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+  return nsComponentManager::CreateInstance(kNavDTDCID,
+					    nsnull,
+                                            NS_GET_IID(nsIDTD),
+                                            (void**)aInstancePtrResult);
+}
 
 #endif 
 

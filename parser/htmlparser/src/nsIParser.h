@@ -99,7 +99,7 @@ public:
  *  
  *  @update  gess 3/25/98
  */
-CLASS_EXPORT_HTMLPARS nsIParser : public nsISupports {
+class nsIParser : public nsISupports {
   public:
 
     static const nsIID& GetIID() { static nsIID iid = NS_IPARSER_IID; return iid; }
@@ -163,6 +163,14 @@ CLASS_EXPORT_HTMLPARS nsIParser : public nsISupports {
      */
     virtual nsresult  CreateTagStack(nsITagStack** aTagStack)=0;
 
+
+    /** 
+     * Get the DTD associated with this parser
+     * @update vidur 9/29/99
+     * @param aDTD out param that will contain the result
+     * @return NS_OK if successful, NS_ERROR_FAILURE for runtime error
+     */
+    NS_IMETHOD GetDTD(nsIDTD** aDTD) = 0;
 
     /******************************************************************************************
      *  Parse methods always begin with an input source, and perform conversions 
