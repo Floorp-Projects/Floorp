@@ -54,15 +54,15 @@ extern nsresult DupString(char* *o_Dest, const char* i_Src);
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, HTTPMethod i_Method)
     :
+    mBufferSegmentSize(bufferSegmentSize),
+    mBufferMaxSize(bufferMaxSize),
+    mPipelinedRequest (nsnull),
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
     mKeepAliveTimeout (0),
     mRequestSpec(0),
     mHandler (i_Handler),
-    mBufferSegmentSize(bufferSegmentSize),
-    mBufferMaxSize(bufferMaxSize),
-    mAbortStatus(NS_OK),
-    mPipelinedRequest (nsnull)
+    mAbortStatus(NS_OK)
 {   
     NS_INIT_REFCNT();
 
@@ -481,12 +481,12 @@ nsHTTPRequest::formBuffer (nsCString * requestBuffer)
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPPipelinedRequest, nsIStreamObserver)
 
 nsHTTPPipelinedRequest::nsHTTPPipelinedRequest (nsHTTPHandler* i_Handler, const char *host, PRInt32 port, PRUint32 capabilities)
-    :   mHandler (i_Handler),
+    :   mCapabilities (capabilities),
+        mAttempts (0),
         mBufferSegmentSize (0),
         mBufferMaxSize (0),
         mMustCommit (PR_FALSE),
-        mAttempts (0),
-        mCapabilities (capabilities),
+	mHandler (i_Handler),
         mPort (port)
 {   
     NS_INIT_REFCNT ();
