@@ -178,18 +178,21 @@ PRBool imgRequest::RemoveFromCache()
 /* readonly attribute wstring name; */
 NS_IMETHODIMP imgRequest::GetName(PRUnichar * *aName)
 {
+    NS_NOTYETIMPLEMENTED("imgRequest::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean isPending (); */
 NS_IMETHODIMP imgRequest::IsPending(PRBool *_retval)
 {
+    NS_NOTYETIMPLEMENTED("imgRequest::IsPending");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* readonly attribute nsresult status; */
 NS_IMETHODIMP imgRequest::GetStatus(nsresult *aStatus)
 {
+    NS_NOTYETIMPLEMENTED("imgRequest::GetStatus");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -218,12 +221,14 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
 /* void suspend (); */
 NS_IMETHODIMP imgRequest::Suspend()
 {
+    NS_NOTYETIMPLEMENTED("imgRequest::Suspend");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void resume (); */
 NS_IMETHODIMP imgRequest::Resume()
 {
+    NS_NOTYETIMPLEMENTED("imgRequest::Resume");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
