@@ -39,7 +39,6 @@ OBJS =                          \
 
 WIN_LIBS=                       \
     shell32.lib                 \
-    shlwapi.lib                 \
     version.lib                 \
     $(NULL)
 

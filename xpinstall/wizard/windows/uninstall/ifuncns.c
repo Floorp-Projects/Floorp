@@ -24,11 +24,11 @@
 
 #include "ifuncns.h"
 #include "extra.h"
-#include <shlwapi.h>
 
 BOOL SearchForUninstallKeys(char *szStringToMatch)
 {
   char      szBuf[MAX_BUF];
+  char      szStringToMatchLowerCase[MAX_BUF];
   char      szBufKey[MAX_BUF];
   char      szSubKey[MAX_BUF];
   HKEY      hkHandle;
@@ -41,6 +41,8 @@ BOOL SearchForUninstallKeys(char *szStringToMatch)
   char      szWRMSUninstallKeyPath[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
   char      szWRMSUninstallName[] =  "UninstallString";
 
+  lstrcpyn(szStringToMatchLowerCase, szStringToMatch, sizeof(szStringToMatchLowerCase));
+  CharLower(szStringToMatchLowerCase);
 
   bFound = FALSE;
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szWRMSUninstallKeyPath, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
@@ -56,7 +58,8 @@ BOOL SearchForUninstallKeys(char *szStringToMatch)
     {
       wsprintf(szBufKey, "%s\\%s", szWRMSUninstallKeyPath, szSubKey);
       GetWinReg(HKEY_LOCAL_MACHINE, szBufKey, szWRMSUninstallName, szBuf, sizeof(szBuf));
-      if(StrStrI(szBuf, szStringToMatch) != NULL)
+      CharLower(szBuf);
+      if(strstr(szBuf, szStringToMatchLowerCase) != NULL)
       {
         bFound = TRUE;
 
