@@ -561,7 +561,7 @@
   <binding id="statusbar-panel" extends="xul:box">
     <content excludes="observes,template" autostretch="never" valign="middle">
       <xul:image class="statusbar-panel-icon" inherits="src"/>
-      <xul:text class="statusbar-panel-text" inherits="value,crop" crop="right"/>
+      <xul:text class="statusbar-panel-text" inherits="value,crop" crop="right" flex="1"/>
     </content>
     <interface>
       <property name="value"
