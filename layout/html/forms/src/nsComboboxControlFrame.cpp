@@ -489,6 +489,23 @@ nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
 }
 
 
+void
+nsComboboxControlFrame::CheckFireOnChange()
+{
+  // Fire onChange if selected index has changed due to keyboard
+  // (see nsListControlFrame::UpdateSelection)
+  if (mNeedToFireOnChange) {
+    PRInt32 selectedIndex;
+    mListControlFrame->GetSelectedIndex(&selectedIndex);
+    if (selectedIndex != mRecentSelectedIndex) {
+      // mNeedToFireOnChange will be set to false from within FireOnChange
+      mListControlFrame->FireOnChange();
+    } else {
+      // Need to set it to false anyway ... just in case
+      SetNeedToFireOnChange(PR_FALSE);
+    }
+  }
+}
 
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -504,19 +521,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     if (mDroppedDown) {
       mListControlFrame->ComboboxFinish(mDisplayedIndex);
     } else {
-      // Fire onChange if selected index has changed due to keyboard
-      // (see nsListControlFrame::UpdateSelection)
-      if (mNeedToFireOnChange) {
-        PRInt32 selectedIndex;
-        mListControlFrame->GetSelectedIndex(&selectedIndex);
-        if (selectedIndex != mRecentSelectedIndex) {
-          // mNeedToFireOnChange will be set to false from within FireOnChange
-          mListControlFrame->FireOnChange();
-        } else {
-          // Need to set it to false anyway ... just in case
-          SetNeedToFireOnChange(PR_FALSE);
-        }
-      }
+      CheckFireOnChange();
     }
   }
 
@@ -2107,6 +2112,8 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
         ToggleList(aPresContext);
       else if (inputEvent->isAlt && (keyEvent->keyCode == NS_VK_DOWN || (mDroppedDown && keyEvent->keyCode == NS_VK_UP)))
         ToggleList(aPresContext);
+      else if (!mDroppedDown && keyEvent->keyCode == NS_VK_RETURN)
+        CheckFireOnChange();
     }
   }
 
