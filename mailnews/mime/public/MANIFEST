@@ -18,5 +18,6 @@
 
 nsIStreamConverter.h
 nsIMimeObjectClassAccess.h
-nsIMimeHeaderConverter.h
+nsIMimeConverter.h
 nsIMimeEmitter.h
+nsMailHeaders.h
