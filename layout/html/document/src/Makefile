@@ -48,7 +48,7 @@ EXPORTS = \
 INCLUDES += \
 	-I../../base/src -I../../forms/src \
 	-I../../style/src -I../../table/src \
-	-I../../../base/src
+	-I../../../base/src -I../../content/src
 
 MODULE = raptor
 
