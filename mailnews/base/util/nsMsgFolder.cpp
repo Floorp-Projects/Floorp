@@ -796,6 +796,15 @@ nsMsgFolder::GetCanFileMessages(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::GetCanDeleteMessages(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgFolder::GetCanCreateSubfolders(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);

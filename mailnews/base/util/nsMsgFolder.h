@@ -104,6 +104,7 @@ public:
   NS_IMETHOD GetImapShared(PRBool *aNoSelect);
   NS_IMETHOD GetCanSubscribe(PRBool *aCanSubscribe);
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
+  NS_IMETHOD GetCanDeleteMessages(PRBool *aCanDeleteMessages);
   NS_IMETHOD GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aFilterList);
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aCanCreateSubfolders);
   NS_IMETHOD GetCanRename(PRBool *aCanRename);

@@ -261,10 +261,15 @@ function InitMessageMenu()
       watchThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");
   }
 
-  //disable the move and copy menus only if there are no messages selected.
+  // disable the move and copy menus if there are no messages selected.
+  // disable the move menu if we can't delete msgs from the folder
   var moveMenu = document.getElementById("moveMenu");
   if(moveMenu)
-      moveMenu.setAttribute("disabled", !aMessage);
+  {
+      var msgFolder = GetLoadedMsgFolder();
+      var enableMenuItem = aMessage && msgFolder && msgFolder.canDeleteMessages;
+      moveMenu.setAttribute("disabled", !enableMenuItem);
+  }
 
   var copyMenu = document.getElementById("copyMenu");
   if(copyMenu)

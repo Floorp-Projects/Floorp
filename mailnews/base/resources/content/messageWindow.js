@@ -493,6 +493,10 @@ var MessageWindowController =
 			case "cmd_delete":
         UpdateDeleteCommand();
         // fall through
+			case "button_delete":
+			case "cmd_shiftDelete":
+        var loadedFolder = GetLoadedMsgFolder();
+        return gCurrentMessageUri && loadedFolder && loadedFolder.canDeleteMessages; 
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -504,8 +508,6 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-			case "button_delete":
-			case "cmd_shiftDelete":
 			case "cmd_print":
       case "button_print":
 			case "cmd_saveAsFile":

@@ -286,6 +286,7 @@ public:
   NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
   NS_IMETHOD GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
+  NS_IMETHOD GetCanDeleteMessages(PRBool *aCanDeleteMessages);
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 

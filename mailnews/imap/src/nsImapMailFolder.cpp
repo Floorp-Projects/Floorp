@@ -6952,3 +6952,11 @@ nsImapMailFolder::GetCanFileMessages(PRBool *aCanFileMessages)
 
   return rv;
 }
+
+NS_IMETHODIMP
+nsImapMailFolder::GetCanDeleteMessages(PRBool *aCanDeleteMessages)
+{
+  NS_ENSURE_ARG_POINTER(aCanDeleteMessages);
+  *aCanDeleteMessages = GetFolderACL()->GetCanIDeleteInFolder();
+  return NS_OK;
+}

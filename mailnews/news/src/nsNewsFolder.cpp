@@ -468,6 +468,14 @@ nsMsgNewsFolder::GetCanFileMessages(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgNewsFolder::GetCanDeleteMessages(PRBool *aCanDeleteMessages)
+{
+  NS_ENSURE_ARG_POINTER(aCanDeleteMessages);
+  *aCanDeleteMessages = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgNewsFolder::GetCanCreateSubfolders(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
