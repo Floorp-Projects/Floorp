@@ -99,33 +99,33 @@ vbox {
 /********** button **********/
 
 button {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#button");
+  -moz-binding: url("chrome://global/content/widgets/button.xml#button");
 }
 
 button[type="menu"] {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
+  -moz-binding: url("chrome://global/content/widgets/button.xml#menu");
 }
 
 button[type="menu-button"] {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
+  -moz-binding: url("chrome://global/content/widgets/button.xml#menu-button");
 }
 
 /********** toolbarbutton **********/
 
 toolbarbutton {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
+  -moz-binding: url("chrome://global/content/widgets/toolbarbutton.xml#toolbarbutton");
 }
 
 toolbarbutton[type="menu"] {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
+  -moz-binding: url("chrome://global/content/widgets/toolbarbutton.xml#menu");
 }
 
 toolbarbutton[type="menu-button"] {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
+  -moz-binding: url("chrome://global/content/widgets/toolbarbutton.xml#menu-button");
 }
 
 dropmarker[type="menu-button"] {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#dropmarker");
+  -moz-binding: url("chrome://global/content/widgets/toolbarbutton.xml#dropmarker");
 }
 
 /******** browser, editor, iframe ********/

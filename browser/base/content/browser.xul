@@ -171,6 +171,7 @@ Contributor(s):
   <command id="Browser:OpenLocation" oncommand="openLocation();"/>
   <broadcaster id="viewDownloadsSidebar" autoCheck="false" label="&downloadsButton.label;"
                type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/downloads/downloadPanel.xul"
+               sidebartitle="&currentDownloads.label;"
                oncommand="toggleSidebar('viewDownloadsSidebar');"/>
 
   <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
@@ -702,7 +703,6 @@ Contributor(s):
       <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;" onpopupshowing="javaItemEnabling();">
         <menupopup>
           <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
-          <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
           <menuseparator/>
           <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
           <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
@@ -883,9 +883,9 @@ Contributor(s):
   
   <hbox flex="1">
     <vbox id="sidebar-box" hidden="true">
-      <hbox id="sidebar-header" align="center" pack="start">
+      <sidebarheader align="center">
         <label id="sidebar-title"/>
-      </hbox>        
+      </sidebarheader>        
       <browser id="sidebar" flex="1"
                style="min-width: 150px; width: 200px; max-width: 400px;"/>
     </vbox>    

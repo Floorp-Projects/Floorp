@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+
+<bindings id="toolbarbuttonBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="toolbarbutton" display="xul:button"
+           extends="chrome://global/content/widgets/button.xml#button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
+    </resources>
+    
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
+      <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
+    </content>
+  </binding>
+
+  <binding id="menu" display="xul:menu" 
+           extends="chrome://global/content/widgets/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
+      <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
+      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled"/>
+    </content>
+  </binding>
+  
+  <binding id="menu-button" display="xul:menu" 
+           extends="chrome://global/content/widgets/button.xml#menu-button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
+    </resources>
+
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
+                         anonid="button" flex="1" allowevents="true"
+                         xbl:inherits="disabled,crop,image,label,accessKey,command,
+                                       align,dir,pack,orient,toolbarmode,buttonstyle"/>
+      <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
+                      xbl:inherits="align,dir,pack,orient,disabled,toolbarmode,buttonstyle"/>
+    </content>
+  </binding>
+  
+  
+  <binding id="toolbarbutton-image"
+           extends="chrome://global/content/widgets/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="src=image"/>
+    </content>
+  </binding>
+  
+  <binding id="dropmarker">
+    <content>
+      <xul:image class="menubutton-dropmarker-icon"/>
+    </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULDropmarkerAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+    
+</bindings>

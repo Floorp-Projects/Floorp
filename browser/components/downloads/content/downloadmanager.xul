@@ -51,47 +51,21 @@
 
   <script type="application/x-javascript" src="chrome://browser/content/downloads/downloadmanager.js"/>
 
-  <stringbundle id="dlMgrBundle"
-                src="chrome://browser/locale/downloads/downloadmanager.properties"/>
-  <stringbundle id="dlProgressDlgBundle"
-                src="chrome://global/locale/nsProgressDialog.properties"/>
-
-  <data id="strings.confirmCancel">&confirmCancel;</data>
-  <data id="strings.progressMsgNoRate">&progressMsgNoRate;</data>
-  <data id="strings.rateMsg">&rateMsg;</data>
-  <data id="strings.completeMsg">&completeMsg;</data>
-  <data id="strings.percentMsg">&percentMsg;</data>
-  <data id="strings.shortTimeFormat">&shortTimeFormat;</data>
-  <data id="strings.longTimeFormat">&longTimeFormat;</data>
-  <data id="strings.unknownTime">&unknownTime;</data>
-  <data id="strings.pausedMsg">&pausedMsg;</data>
-
   <commandset id="commandUpdate_Downloads"
               commandupdater="true"
               events="focus,tree-select"
               oncommandupdate="downloadViewController.onCommandUpdate()"/>
 
-  <commandset id="downloadCommands">
-    <command id="cmd_properties"
-             oncommand="goDoCommand('cmd_properties');"/>
-    <command id="cmd_remove"
-             oncommand="goDoCommand('cmd_remove');"/>
-    <command id="cmd_openfile"
-             oncommand="goDoCommand('cmd_openfile');"/>
-    <command id="cmd_showinshell"
-             oncommand="goDoCommand('cmd_showinshell');"/>
-  </commandset>
+  <command id="cmd_properties"
+           oncommand="goDoCommand('cmd_properties');"/>
+  <command id="cmd_remove"
+           oncommand="goDoCommand('cmd_remove');"/>
+  <command id="cmd_openfile"
+           oncommand="goDoCommand('cmd_openfile');"/>
+  <command id="cmd_showinshell"
+           oncommand="goDoCommand('cmd_showinshell');"/>
 
-  <!-- File Menu -->
-  <command id="cmd_close" oncommand="close()"/>
-  
   <keyset>
-    <key id="key_close"/>
-
-    <!-- These keybindings do not have a command specified in the overlay,
-         which is good, but we need to specify it ourselves here -->
-    <key id="key_selectAll" command="cmd_selectAll"/>
-
     <key id="key_remove" keycode="VK_DELETE" command="cmd_remove"/>
   </keyset>
 

@@ -136,3 +136,17 @@ statusbarpanel {
 .statusbarpanel-iconic {
   padding: 0px;
 }
+
+/* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
+
+sidebarheader {
+  height: 23px;
+  background-color: -moz-Dialog;
+  -moz-appearance: toolbox;
+  border-bottom: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDHighlight;
+}
+
+sidebarheader > label {
+  padding-left: 4px;
+}

@@ -704,21 +704,9 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
   -moz-image-region: rect(0px 53px 27px 27px) !important;
 }
 
-#sidebar-header {
-  height: 23px;
-  background-color: -moz-Dialog;
-  -moz-appearance: toolbox;
-  border-bottom: 1px solid ThreeDShadow;
-  border-top: 1px solid ThreeDHighlight;
-}
-
 #sidebar {
   border-bottom: 1px solid ThreeDShadow;
   background-color: white;
-}
-
-#sidebar-title {
-  padding-left: 4px;
 }
 
 #go-button[disabled="true"] {
