@@ -607,10 +607,11 @@ NS_IMETHODIMP nsView::GetVisibility(nsViewVisibility &aVisibility) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::GetZIndex(PRBool &aAuto, PRInt32 &aZIndex) const
+NS_IMETHODIMP nsView::GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const
 {
-	aAuto = (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0;
+  aAuto = (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0;
   aZIndex = mZIndex;
+  aTopMost = (mVFlags & NS_VIEW_FLAG_TOPMOST) != 0;
   return NS_OK;
 }
 
@@ -825,11 +826,12 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
   return NS_OK;
 }
 
-void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex)
+void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
 {
   mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
   mZIndex = aZIndex;
-
+  SetTopMost(aTopMost);
+  
   if (nsnull != mWindow) {
     mWindow->SetZIndex(aZIndex);
   }
