@@ -27,7 +27,7 @@
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
-# $Id: check-modules.pl,v 1.2 1999/11/06 03:36:04 dmose%mozilla.org Exp $
+# $Id: check-modules.pl,v 1.3 1999/11/30 00:56:04 slamm%netscape.com Exp $
 
 require 5.004;
 
@@ -60,7 +60,6 @@ foreach $module (@module_names)
   &check_module($module);
 }
 
-
 # end main
 ######################################################################
 # begin subroutines
@@ -83,7 +82,7 @@ sub parse_input
     next if /^\#/ || /^\s*$/;
 
     # Check for a module definition
-    if (/^([a-zA-Z]+)\s+-a\s*(.*)$/) 
+    if (/^([_a-zA-Z0-9]+)\s+(?:-l\s+)?-a\s*(.*)$/) 
     {
       my ($module_name) = $1;
       my (@sub_items) = ();
