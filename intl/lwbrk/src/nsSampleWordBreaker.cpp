@@ -74,18 +74,6 @@ nsresult nsSampleWordBreaker::BreakInBetween(
 }
 
 
-// hack
-typedef enum {
-  kWbClassSpace = 0,
-  kWbClassAlphaLetter,
-  kWbClassPunct,
-  kWbClassHanLetter,
-  kWbClassKatakanaLetter,
-  kWbClassHiraganaLetter,
-  kWbClassHWKatakanaLetter,
-  kWbClassThaiLetter
-} wb_class;
-
 #define IS_ASCII(c)            (0 == ( 0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c)         ((( 'a' <= (c)) && ((c) <= 'z')) || (( 'A' <= (c)) && ((c) <= 'Z')))
 #define ASCII_IS_DIGIT(c)         (( '0' <= (c)) && ((c) <= '9'))

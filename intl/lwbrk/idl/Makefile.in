@@ -27,29 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= lwbrk
-LIBRARY_NAME	= lwbrk_s
-EXPORT_LIBRARY = 1
-FORCE_STATIC_LIB = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  unicharutil \
-		  $(NULL)
-
-CSRCS		= rulebrk.c
-
-CPPSRCS		= \
-		nsJISx4501LineBreaker.cpp \
-		nsLWBreakerFImp.cpp \
-		nsSampleWordBreaker.cpp \
-		nsSemanticUnitScanner.cpp \
-		$(NULL)
+XPIDLSRCS	= \
+	nsISemanticUnitScanner.idl \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-# Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
-# QNX simply objects to the way it's being redefined.
-ifeq (,$(filter AIX OpenVMS QNX HP-UX,$(OS_ARCH)))
-CFLAGS		+= -D__STDC__
-endif
-

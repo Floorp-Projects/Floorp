@@ -46,6 +46,7 @@
 
 // lwbrk
 #include "nsLWBrkConstructors.h"
+#include "nsSemanticUnitScanner.h"
 
 // unicharutil
 #include "nsUcharUtilConstructors.h"
@@ -55,6 +56,9 @@
 
 // locale
 #include "nsLocaleConstructors.h"
+
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner);
 
 static NS_METHOD
 AddCategoryEntry(const char* category,
@@ -290,6 +294,8 @@ static nsModuleComponentInfo components[] =
  // lwbrk
   { "Line and Word Breaker", NS_LWBRK_CID,
     NS_LWBRK_CONTRACTID, nsLWBreakerFImpConstructor},
+  { "Semantic Unit Scanner", NS_SEMANTICUNITSCANNER_CID,
+    NS_SEMANTICUNITSCANNER_CONTRACTID, nsSemanticUnitScannerConstructor},
 
  // unicharutil
   { "Unichar Utility", NS_UNICHARUTIL_CID, 
