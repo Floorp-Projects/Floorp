@@ -313,7 +313,9 @@ PUBLIC void
 PRVCY_ToggleAnonymous() {
     if (anonymous) {
 	 NET_UnanonymizeCookies();
-	 SI_UnanonymizeSignons();
+#ifdef SingleSignon
+     SI_UnanonymizeSignons(); 
+#endif
 	 /*
 	  * Global history changes are not complete yet.  Need to modify
 	  * lib/libmisc/glhist.c so it uses a different file when in
@@ -323,7 +325,9 @@ PRVCY_ToggleAnonymous() {
 	 GH_SaveGlobalHistory();
     } else {
 	 NET_AnonymizeCookies();
-	 SI_AnonymizeSignons();
+#ifdef SingleSignon
+     SI_AnonymizeSignons(); 
+#endif
 	 GH_SaveGlobalHistory();
 	 GH_FreeGlobalHistory();
     }
