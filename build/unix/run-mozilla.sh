@@ -359,6 +359,7 @@ fi
 echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
 echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 echo "      MOZ_PROGRAM=$MOZ_PROGRAM"
+echo "      MOZ_TOOLKIT=$MOZ_TOOLKIT"
 echo "        moz_debug=$moz_debug"
 echo "     moz_debugger=$moz_debugger"
 #
