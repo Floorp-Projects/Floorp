@@ -23,8 +23,8 @@
  */
 
 #include "nsIBoxObject.idl"
-#include "nsIDocShell.idl"
-#include "domstubs.idl"
+
+interface nsIDocShell;
 
 [scriptable, uuid(DD9AB9BE-FED3-4bff-A72D-5390D52DD887)]
 interface nsIIFrameBoxObject : nsISupports
