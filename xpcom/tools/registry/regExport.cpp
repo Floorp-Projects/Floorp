@@ -25,10 +25,6 @@
 #include "prmem.h"
 #include "plstr.h"
 
-// Hack to get to nsRegistry implementation.                                                                                       
-extern "C" NS_EXPORT nsresult
-NS_RegistryGetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
-
 static void display( nsIRegistry *reg, nsIRegistry::Key root, const char *name );
 static void displayValues( nsIRegistry *reg, nsIRegistry::Key root );
 static void printString( const char *value, int indent );
