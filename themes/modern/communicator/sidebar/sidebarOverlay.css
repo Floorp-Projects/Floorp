@@ -46,10 +46,9 @@
 }
 
 .sidebar-splitter-grippy {
+    background-color: transparent;
     margin: 0px;
     padding: 0px;
-    border: 2px solid #003366;
-    background-color: #6699CC;
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-left.gif"); 
     background-repeat: no-repeat;
@@ -58,7 +57,7 @@
 
 .sidebar-splitter-grippy:hover,
 .sidebar-splitter-grippy:active {
-    background-color: #99CCFF;
+    background-color: transparent;
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif"); 
 }
@@ -183,6 +182,7 @@ sidebarheader[type="splitter"] {
       border-top          : 1px solid #003366;
       border-left         : 1px solid #003366;
       border-right        : 1px solid #003366;
+      font-weight         : bold;
     }
   
   .iframe-panel
