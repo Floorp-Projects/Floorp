@@ -362,7 +362,7 @@ nsDataObj :: GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aST
   
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
-  mTransferable->GetTransferData(nsPromiseFlatCString(inFlavor), getter_AddRefs(genericDataWrapper), &len);
+  mTransferable->GetTransferData(nsPromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
   nsCOMPtr<nsIImage> image ( do_QueryInterface(genericDataWrapper) );
   if ( image ) {
     // use a the helper class to build up a bitmap. The helper class owns the
@@ -572,10 +572,11 @@ HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STG
   
   // if someone asks for text/plain, look up text/unicode instead in the transferable.
   const char* flavorStr;
+  nsPromiseFlatCString flat(aDataFlavor);
   if ( aDataFlavor.Equals("text/plain") )
     flavorStr = kUnicodeMime;
   else
-    flavorStr = nsPromiseFlatCString(aDataFlavor);
+    flavorStr = flat.get();
 
   // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
   nsCOMPtr<nsISupports> genericDataWrapper;
