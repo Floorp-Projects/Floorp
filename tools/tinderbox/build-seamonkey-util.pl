@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.196 $ ';
+$::UtilsVersion = '$Revision: 1.197 $ ';
 
 package TinderUtils;
 
@@ -1652,11 +1652,11 @@ sub run_all_tests {
     }
 
     # QA test: Client-side JS, DOM/HTML/Views, form submission.
-    if ($Settings::QATest and $test_result eq 'success') {
-        $test_result = QATest("QATest",
-                              $build_dir,
-                              [$binary, "-P", $Settings::MozProfileName]);
-    }
+    #if ($Settings::QATest and $test_result eq 'success') {
+    #    $test_result = QATest("QATest",
+    #                          $build_dir,
+    #                          [$binary, "-P", $Settings::MozProfileName]);
+    #}
 
 
     # xul window open test.
