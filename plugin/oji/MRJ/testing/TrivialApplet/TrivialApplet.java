@@ -101,8 +101,9 @@ public class TrivialApplet extends Applet {
 			new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						URL apple = new URL(urlField.getText());
-						getAppletContext().showDocument(apple, "_new");
+						URL location = new URL(urlField.getText());
+						System.out.println("going to URL: " + location);
+						getAppletContext().showDocument(location, "_new");
 					} catch (MalformedURLException mfue) {
 					}
 				}
