@@ -72,7 +72,7 @@ CThrobber::CThrobber(LStream*	inStream) :
    LStr255  tempStr;
    *inStream >> (StringPtr) tempStr;
    *inStream >> mNumImages;
-   mFileNamePattern.SetString((char *)&tempStr[1], (PRInt32)tempStr.Length());
+   mFileNamePattern.AssignWithConversion((char *)&tempStr[1], (PRInt32)tempStr.Length());
 }
 
 
@@ -165,7 +165,6 @@ void CThrobber::DrawSelf()
    nsRect bounds;
    nsIImageRequest *imgreq;
    nsIImage *img;
-   PRBool clipState;
 
    mWidget->GetClientBounds(bounds);
    bounds.x = bounds.y = 0;
