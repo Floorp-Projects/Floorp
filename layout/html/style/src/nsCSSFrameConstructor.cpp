@@ -38,6 +38,7 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
+#include "nsIStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
@@ -4299,72 +4300,173 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   return NS_OK;
 }
 
+PRInt32 
+nsCSSFrameConstructor::ComputeStateChangeFor(nsIPresContext* aPresContext, nsIFrame* aFrame, 
+                                             nsStyleChangeList& aChangeList,
+                                             PRInt32 aFrameChange)
+{
+  nsIFrame* frame = aFrame;
+  do {
+    nsIStyleContext* oldFrameContext;
+    frame->GetStyleContext(&oldFrameContext);
+    NS_ASSERTION(nsnull != oldFrameContext, "frame must have style context");
+    if (oldFrameContext) {
+      nsIStyleContext*  parentContext = oldFrameContext->GetParent();
+      nsresult didChange = frame->ReResolveStyleContext(aPresContext, parentContext,
+                                                        aFrameChange, &aChangeList, 
+                                                        &aFrameChange);
+      NS_IF_RELEASE(parentContext);
+      if (NS_SUCCEEDED(didChange)) {
+        if (NS_COMFALSE == didChange) {
+          // need remap? I don't think so
+          FindRestyledFramesBelow(frame, aPresContext, aFrameChange, aChangeList);
+        }
+      }
+      NS_RELEASE(oldFrameContext);
+    }    
+    frame->GetNextInFlow(&frame);
+  } while (frame);
+  return aFrameChange;
+}
+
 NS_IMETHODIMP
-nsCSSFrameConstructor::ContentStateChanged(nsIPresContext* aPresContext, 
-                                           nsIContent* aContent)
+nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext, 
+                                            nsIContent* aContent1,
+                                            nsIContent* aContent2)
 {
   nsresult  result = NS_OK;
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
-  nsIFrame*     primaryFrame;
 
-  shell->GetPrimaryFrameFor(aContent, &primaryFrame);
+  NS_ASSERTION(shell, "couldn't get pres shell");
+  if (shell) {
+    nsIStyleSet* styleSet;
+    shell->GetStyleSet(&styleSet);
 
-  // XXX need to add mechanism to detect what state changes need even be considered
-  // this needs to happen at the style sheet level before this gets called
-  
-#if 0
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("HTMLStyleSheet::ContentStateChanged: content=%p[%s] frame=%p",
-      aContent, ContentTag(aContent, 0), primaryFrame));
-#endif
+    NS_ASSERTION(styleSet, "couldn't get style set");
+    if (styleSet) { // test if any style rules exist which are dependent on content state
+      nsIFrame* primaryFrame1 = nsnull;
+      nsIFrame* primaryFrame2 = nsnull;
+      if (aContent1 && (NS_OK == styleSet->HasStateDependentStyle(aPresContext, aContent1))) {
+        shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
+      }
+      else {
+        aContent1 = nsnull;
+      }
 
-  if (primaryFrame) {
-    nsIFrame* frame = primaryFrame;
-    nsStyleChangeList changeList;
-    PRInt32 frameChange = NS_STYLE_HINT_NONE;
-    do {
-      nsIStyleContext* oldFrameContext;
-      frame->GetStyleContext(&oldFrameContext);
-      NS_ASSERTION(nsnull != oldFrameContext, "frame must have style context");
-      if (oldFrameContext) {
-        nsIStyleContext*  parentContext = oldFrameContext->GetParent();
-        nsresult didChange = frame->ReResolveStyleContext(aPresContext, parentContext,
-                                                          frameChange, &changeList, 
-                                                          &frameChange);
-        NS_IF_RELEASE(parentContext);
-        if (NS_SUCCEEDED(didChange)) {
-          if (NS_COMFALSE == didChange) {
-            // need remap? I don't think so
-            FindRestyledFramesBelow(frame, aPresContext, frameChange, changeList);
+      if (aContent2 && (aContent2 != aContent1) && 
+          (NS_OK == styleSet->HasStateDependentStyle(aPresContext, aContent2))) {
+        shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
+      }
+      else {
+        aContent2 = nsnull;
+      }
+      NS_RELEASE(styleSet);
+
+      if (primaryFrame1 && primaryFrame2) { // detect if one is parent of other, skip child
+        nsIFrame* parent;
+        primaryFrame1->GetParent(&parent);
+        while (parent) {
+          if (parent == primaryFrame2) {  // frame2 is frame1's parent, skip frame1
+            primaryFrame1 = nsnull;
+            break;
+          }
+          parent->GetParent(&parent);
+        }
+        if (primaryFrame1) {
+          primaryFrame2->GetParent(&parent);
+          while (parent) {
+            if (parent == primaryFrame1) {  // frame1 is frame2's parent, skip frame2
+              primaryFrame2 = nsnull;
+              break;
+            }
+            parent->GetParent(&parent);
           }
         }
-        NS_RELEASE(oldFrameContext);
-      }    
-      frame->GetNextInFlow(&frame);
-    } while (frame);
+      }
 
-    switch (frameChange) {  // max change needed for top level frames
-      case NS_STYLE_HINT_RECONSTRUCT_ALL:
-        result = ReconstructDocElementHierarchy(aPresContext);
-      case NS_STYLE_HINT_FRAMECHANGE:
-        result = RecreateFramesForContent(aPresContext, aContent);
-      case NS_STYLE_HINT_REFLOW:
-      case NS_STYLE_HINT_VISUAL:
-        ProcessRestyledFrames(changeList, aPresContext);
-        break;
-      case NS_STYLE_HINT_CONTENT:
-        // let primary frame deal with it
-        result = primaryFrame->ContentChanged(aPresContext, aContent, nsnull);
-        // then process any children that need it
-        ProcessRestyledFrames(changeList, aPresContext);
-      default:
-        break;
+
+      if (primaryFrame1) {
+        nsStyleChangeList changeList1;
+        nsStyleChangeList changeList2;
+        PRInt32 frameChange1 = NS_STYLE_HINT_NONE;
+        PRInt32 frameChange2 = NS_STYLE_HINT_NONE;
+        frameChange1 = ComputeStateChangeFor(aPresContext, primaryFrame1, changeList1, frameChange1);
+
+        if ((frameChange1 != NS_STYLE_HINT_RECONSTRUCT_ALL) && (primaryFrame2)) {
+          frameChange2 = ComputeStateChangeFor(aPresContext, primaryFrame2, changeList2, frameChange2);
+        }
+
+        if ((frameChange1 == NS_STYLE_HINT_RECONSTRUCT_ALL) || 
+            (frameChange2 == NS_STYLE_HINT_RECONSTRUCT_ALL)) {
+          result = ReconstructDocElementHierarchy(aPresContext);
+        }
+        else {
+          switch (frameChange1) {
+            case NS_STYLE_HINT_FRAMECHANGE:
+              result = RecreateFramesForContent(aPresContext, aContent1);
+            case NS_STYLE_HINT_REFLOW:
+            case NS_STYLE_HINT_VISUAL:
+              ProcessRestyledFrames(changeList1, aPresContext);
+              break;
+            case NS_STYLE_HINT_CONTENT:
+              // let primary frame deal with it
+              result = primaryFrame1->ContentChanged(aPresContext, aContent1, nsnull);
+              // then process any children that need it
+              ProcessRestyledFrames(changeList1, aPresContext);
+            default:
+              break;
+          }
+          switch (frameChange2) {
+            case NS_STYLE_HINT_FRAMECHANGE:
+              result = RecreateFramesForContent(aPresContext, aContent2);
+            case NS_STYLE_HINT_REFLOW:
+            case NS_STYLE_HINT_VISUAL:
+              ProcessRestyledFrames(changeList2, aPresContext);
+              break;
+            case NS_STYLE_HINT_CONTENT:
+              // let primary frame deal with it
+              result = primaryFrame2->ContentChanged(aPresContext, aContent2, nsnull);
+              // then process any children that need it
+              ProcessRestyledFrames(changeList2, aPresContext);
+            default:
+              break;
+          }
+        }
+      }
+      else if (primaryFrame2) {
+        nsStyleChangeList changeList;
+        PRInt32 frameChange = NS_STYLE_HINT_NONE;
+        frameChange = ComputeStateChangeFor(aPresContext, primaryFrame2, changeList, frameChange);
+
+        switch (frameChange) {  // max change needed for top level frames
+          case NS_STYLE_HINT_RECONSTRUCT_ALL:
+            result = ReconstructDocElementHierarchy(aPresContext);
+          case NS_STYLE_HINT_FRAMECHANGE:
+            result = RecreateFramesForContent(aPresContext, aContent2);
+          case NS_STYLE_HINT_REFLOW:
+          case NS_STYLE_HINT_VISUAL:
+            ProcessRestyledFrames(changeList, aPresContext);
+            break;
+          case NS_STYLE_HINT_CONTENT:
+            // let primary frame deal with it
+            result = primaryFrame2->ContentChanged(aPresContext, aContent2, nsnull);
+            // then process any children that need it
+            ProcessRestyledFrames(changeList, aPresContext);
+          default:
+            break;
+        }
+      }
+      else {  // no frames, reconstruct for content
+        if (aContent1) {
+          result = RecreateFramesForContent(aPresContext, aContent1);
+        }
+        if (aContent2) {
+          result = RecreateFramesForContent(aPresContext, aContent2);
+        }
+      }
     }
-  }
-  else {
-    result = RecreateFramesForContent(aPresContext, aContent);
   }
   return result;
 }
