@@ -192,6 +192,7 @@ nsShouldIgnoreFile(nsString& name)
 
   if (name.EqualsIgnoreCase("rules.dat") || 
       name.EqualsIgnoreCase("filterlog.html") || 
+      name.EqualsIgnoreCase("junklog.html") || 
       name.EqualsIgnoreCase("rulesbackup.dat"))
     return PR_TRUE;
 

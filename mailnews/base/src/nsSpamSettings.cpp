@@ -195,7 +195,7 @@ nsSpamSettings::GetLogFileSpec(nsIFileSpec **aFileSpec)
   rv = server->GetLocalPath(aFileSpec);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = (*aFileSpec)->AppendRelativeUnixPath("spamlog.html");
+  rv = (*aFileSpec)->AppendRelativeUnixPath("junklog.html");
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
