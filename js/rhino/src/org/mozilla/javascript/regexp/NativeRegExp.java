@@ -1634,15 +1634,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     if (parsub == null)
                         parsub = state.parens[num] = new SubString();
                     int length = parsub.length;
-                    if ((input.length - index) < length) {
-                        return state.noMoreInput();
-                    }
-                    else {
-                        for (int i = 0; i < length; i++, index++) {
-                            if (!matchChar(state.flags, input[index],
-                                           parsub.charArray[parsub.index + i]))
-                                return -1;
+                    for (int i = 0; i < length; i++, index++) {
+                        if (index >= input.length) {
+                            return state.noMoreInput();
                         }
+                        if (!matchChar(state.flags, input[index],
+                                       parsub.charArray[parsub.index + i]))
+                            return -1;
                     }
                 }
                     break;
@@ -1826,10 +1824,10 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         : this.source.toCharArray();
                     int start = ((Integer)ren.kid).intValue();
                     int length = ren.kid2 - start;
-                    if ((input.length - index) < length) {
-                        return state.noMoreInput();
-                    }
                     for (int i = 0; i < length; i++, index++) {
+                        if (index >= input.length) {
+                            return state.noMoreInput();
+                        }
                         if (!matchChar(state.flags, input[index],
                                        source[start + i]))
                             return -1;
