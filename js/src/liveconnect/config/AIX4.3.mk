@@ -32,8 +32,10 @@
 
 # Change these to the current platform settings!!!
 
-JDK = /tools/ns
+#JDK = /tools/ns
+JDK = /share/builds/components/jdk/1.2beta/AIX
 
-INCLUDES   += -I$(JDK)/include/java -I$(JDK)/include/java/aix
+INCLUDES   += -I$(JDK)/include
 
-OTHER_LIBS += -L$(JDK)/lib/aix/native_threads -ljava
+#OTHER_LIBS += -L$(JDK)/lib/aix/native_threads -ljava
+OTHER_LIBS += -L$(JDK)/jre/bin -ljava
