@@ -15,7 +15,7 @@ This is a log of significant changes in Rhino 1.5 Release 5.
 
 <h3>Wrapping of JavaScript functions as Java interfaces</h3>
 <p>
-Rhino allows to pass a JavaScript function to a Java method expecting an interface with a single method. The JavaScript function will be called whenever the interface's method is called from Java. It allows to simplify code that previously had to create explicit JavaAdapter objects. 
+Rhino allows to pass a JavaScript function to a Java method expecting an interface with a single method. The JavaScript function will be called whenever interface's method is called from Java. It allows to simplify code that previously had to create explicit JavaAdapter objects. 
 </p>
 <p>
 For example, one can write now:
@@ -60,7 +60,7 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=225465">Bugzilla 225465
 
 <h3>seal() and changes in semantic of sealed objects</h3>
 <p>
-Rhino supports <tt>seal(object)</tt> function which is another ECMAScript extension from SpiderMonkey. The function makes object immune to changes and any attempt to add, modify or delete a property of such object will throw an exception. Previously sealing was only possible through Java method <tt>sealObject()</tt> method in <tt>org.mozilla.javascript.ScriptableObject</tt> and before Rhino 1.5R5 it was possible to modify existing properties of sealed objects. 
+Rhino supports <tt>seal(object)</tt> function which is another ECMAScript extension from SpiderMonkey. The function makes the object immune to changes and any attempt to add, modify or delete a property of such object will throw an exception. Previously sealing was only possible through the Java <tt>sealObject()</tt> method in <tt>org.mozilla.javascript.ScriptableObject</tt> and before Rhino 1.5R5 it was possible to modify existing properties of sealed objects. 
 </p>
 <p>
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=203013">Bugzilla 203013</a>.
@@ -87,20 +87,34 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=218440">Bugzilla 218440
 
 <h3>Callable interface</h3>
 <p>
-All <tt>org.mozilla.javascript.Script</tt> and <tt>org.mozilla.javascript.Function</tt> instances in Rhino now implements the new interface <tt>org.mozilla.javascript.Callable</tt> which together with the new <tt>call</tt> method in <tt>org.mozilla.javascript.Context</tt> gives a simple way to call scripts and functions without explicit calls to <tt>Context.enter()</tt> and <tt>Context.exit()</tt>. 
+All <tt>org.mozilla.javascript.Script</tt> and <tt>org.mozilla.javascript.Function</tt> instances in Rhino now implement the new interface <tt>org.mozilla.javascript.Callable</tt> which together with the new <tt>call</tt> method in <tt>org.mozilla.javascript.Context</tt> gives a simple way to call scripts and functions without explicit calls to <tt>Context.enter()</tt> and <tt>Context.exit()</tt>. 
 </p>
 <p>
-The <tt>Callable</tt> interface also allows to set the value of JavaScript <b>this</b> during script execution to arbitrary <tt>org.mozilla.javascript.Scriptable</tt> instance overriding default bahaviour of using the scope object for the value of <b>this</b>.  
+The <tt>Callable</tt> interface allows to set the value of JavaScript <b>this</b> during script execution to arbitrary <tt>org.mozilla.javascript.Scriptable</tt> instance overriding default bahaviour of using the scope object for the value of <b>this</b>.  
 </p>
-
+<p>Rhino interpreter uses <tt>Callable</tt> to pass references to scripts and functions to <tt>org.mozilla.javascript.SecurityController</tt> directly without wrapping script code into an additional proxy <tt>Script</tt> object. It allows to optimize an implementation of <tt>callWithDomain</tt> method in <tt>org.mozilla.javascript.SecurityController</tt>. 
+</p>
+<p>
+For compatibility applications extending the previous version of <tt>SecurityController</tt> are fully supported but the new applications should override <tt>callWithDomain</tt> method, not <tt>execWithDomain</tt>.
+</p>
 
 <h3>No static caching</h3>
 <p>
-Rhino no longer caches generated classes and information about reflected Java classes in static objects. Instead such caches are stored in a top scope object and initialized by default during call to <tt>initStandardObjects</tt> of <tt>org.mozilla.javascript.Context</tt>. This can be overridden with explicit call to the <tt>associate</tt> method of <tt>org.mozilla.javascript.ClassCache</tt> if cache sharing is desired. The change allows to instantiate multiple Rhino runtime instances which would not interfere with each other and prevents memory leaks throw ever growing caches.  
+Rhino no longer caches generated classes and information about reflected Java classes in static objects. Instead such caches are stored in a top scope object and initialized by default during call to <tt>initStandardObjects</tt> of <tt>org.mozilla.javascript.Context</tt>. This can be overridden with the explicit call to the <tt>associate</tt> method of <tt>org.mozilla.javascript.ClassCache</tt> if cache sharing is desired. 
 </p>
+<p>The cached objects no longer holds references to scope objects so even an application using multiple calls to <tt>Context.initStandardObjects</tt> and single shared <tt>ClassCache</tt> instance would not leak references to runtime library instantiations as it was the case with the previous Rhino for all applications.
+</p>
+The change allows to instantiate multiple Rhino runtime instances which would not interfere with each other and prevents memory leaks through ever growing caches. </p>
 
 <h3>API for compiling scripts into class files</h3>
 <p>The new class <tt>org.mozilla.javascript.optimizer.ClassCompiler</tt> provides a simple API to compile JavaScript source into set of Java class files with the given set of compilation options. <a href="jsc.html">JavaScript Compiler</a> was upgraded to use new API and the old API were deprecated.
+</p>
+
+<h3>API for Context sealing</h3>
+<p>The new methods <tt>seal(Object)</tt>, <tt>unseal(Object)</tt> and <tt>isSealed()</tt> in <tt>org.mozilla.javascript.Context</tt> allows to make <tt>Context</tt> instances immune from changes. Rhino embeddings that needs to run potentially untrusted scripts may use the new functionality to proprly implement the sandbox for such scripts without too restrictive <tt>org.mozilla.javascript.ClassShutter</tt> implementation. 
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=236117">Bugzilla 236117</a>.
 </p>
 
 <h3>Optimizer generates only one class per script </h3>
