@@ -127,15 +127,10 @@ function UpdateCurrentCharset()
 {
     var menuitem = null;
 
-    if (gLastBrowserCharset) {
-      //avoid looking for the focused window, use the charset last used in charsetLoadListener
-      menuitem = document.getElementById('charset.' + gLastBrowserCharset);
-    } else {
-      //fall-back: when page has not finished loading exctract the charset from DOM
-      var wnd = document.commandDispatcher.focusedWindow;
-      if ((window == wnd) || (wnd == null)) wnd = window._content;
-      menuitem = document.getElementById('charset.' + wnd.document.characterSet);
-    }
+    // exctract the charset from DOM
+    var wnd = document.commandDispatcher.focusedWindow;
+    if ((window == wnd) || (wnd == null)) wnd = window._content;
+    menuitem = document.getElementById('charset.' + wnd.document.characterSet);
 
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
