@@ -1158,12 +1158,9 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     if (parent != topChild)
     {
       // we need to split some levels above the original selection parent
-      res = SplitNodeDeep(topChild, parentSelectedNode, offsetForInsert);
+      res = SplitNodeDeep(topChild, parentSelectedNode, offsetForInsert, &offsetForInsert);
       if (NS_FAILED(res))
         return res;
-      // topChild went to the right on the split
-      // so this is the offset to insert at
-      offsetForInsert = GetIndexOf(parent,topChild);  
     }
     // Now we can insert the new node
     res = InsertNode(aElement, parent, offsetForInsert);
@@ -1317,6 +1314,8 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
     res = RemoveParagraphStyle();
   } else if (tag == "li") {
     res = InsertList("ul");
+  } else if (tag[0] == 'h') {
+    res = InsertHeader(tag);
   } else {
     res = ReplaceBlockParent(tag);
   }
@@ -1623,12 +1622,8 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     if (parent != node)
     {
       // we need to split up to the child of parent
-      res = SplitNodeDeep(topChild, node, offset);
+      res = SplitNodeDeep(topChild, node, offset, &offset);
       if (NS_FAILED(res)) return res;
-      // topChild already went to the right on the split
-      // so we don't need to add one to offset when figuring
-      // out where to plop list
-      offset = GetIndexOf(parent,topChild);  
     }
 
     // make a list
@@ -1651,6 +1646,76 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     res = GetStartNodeAndOffset(selection, &node, &offset);
     if (NS_FAILED(res)) return res;
     res = selection->Collapse(node,0);
+    if (NS_FAILED(res)) return res;
+  }
+
+  return res;
+}
+
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertHeader(const nsString& aHeaderType)
+{
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->InsertHeader(aHeaderType);
+#endif // ENABLE_JS_EDITOR_LOG
+
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  nsAutoEditBatch beginBatching(this);
+  
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kMakeHeader);
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  if (cancel || (NS_FAILED(res))) return res;
+
+  // Find out if the selection is collapsed:
+  if (NS_FAILED(res) || !selection) return res;
+
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  
+  res = GetStartNodeAndOffset(selection, &node, &offset);
+  if (!node) res = NS_ERROR_FAILURE;
+  if (NS_FAILED(res)) return res;
+  
+  if (isCollapsed)
+  {
+    // have to find a place to put the header
+    nsCOMPtr<nsIDOMNode> parent = node;
+    nsCOMPtr<nsIDOMNode> topChild = node;
+    nsCOMPtr<nsIDOMNode> tmp;
+    
+    while ( !CanContainTag(parent, aHeaderType))
+    {
+      parent->GetParentNode(getter_AddRefs(tmp));
+      if (!tmp) return NS_ERROR_FAILURE;
+      topChild = parent;
+      parent = tmp;
+    }
+    
+    if (parent != node)
+    {
+      // we need to split up to the child of parent
+      res = SplitNodeDeep(topChild, node, offset, &offset);
+      if (NS_FAILED(res)) return res;
+    }
+
+    // make a header
+    nsCOMPtr<nsIDOMNode> newHeader;
+    res = CreateNode(aHeaderType, parent, offset, getter_AddRefs(newHeader));
     if (NS_FAILED(res)) return res;
   }
 
@@ -1717,12 +1782,8 @@ nsHTMLEditor::Indent(const nsString& aIndent)
       if (parent != node)
       {
         // we need to split up to the child of parent
-        res = SplitNodeDeep(topChild, node, offset);
+        res = SplitNodeDeep(topChild, node, offset, &offset);
         if (NS_FAILED(res)) return res;
-        // topChild already went to the right on the split
-        // so we don't need to add one to offset when figuring
-        // out where to plop list
-        offset = GetIndexOf(parent,topChild);  
       }
 
       // make a blockquote
