@@ -1469,7 +1469,7 @@ void CAttributeToken::SanitizeKey() {
     // legal part
     if (iter != --end) {
       nsAutoString str;
-      CopyUnicodeTo(begin, iter, str);
+      CopyUnicodeTo(begin, ++iter, str);
       mTextKey.Rebind(str);
     }
   }
