@@ -37,6 +37,9 @@
 #include "nsICaseConversion.h"
 #endif
 
+#define KSHIFTLEFT  (0)
+#define KSHIFTRIGHT (1)
+
 
 inline PRUnichar GetUnicharAt(const char* aString,PRUint32 anIndex) {
   return ((PRUnichar*)aString)[anIndex];
@@ -226,7 +229,7 @@ void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
 
   //now loop over characters, shifting them left...
   while(first<last) {
-    if(*first<255)
+    if(*first<256)
       *to=(char)*first;  
     else *to='.';
     to++;
@@ -283,8 +286,9 @@ CopyChars gCopyChars[2][2]={
  */
 inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
-  PRUint32  theIndex=0;
-  for(theIndex=anOffset;theIndex<aLength;theIndex++){
+  PRInt32  theIndex=0;
+  PRInt32  theLength=(PRInt32)aLength;
+  for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
     PRUnichar theChar=GetCharAt(aDest,theIndex);
     if(aIgnoreCase)
       theChar=nsCRT::ToUpper(theChar);
@@ -307,8 +311,9 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  */
 inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
-  PRUint32  theIndex=0;
-  for(theIndex=anOffset;theIndex<aLength;theIndex++){
+  PRInt32  theIndex=0;
+  PRInt32  theLength=(PRInt32)aLength;
+  for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
     PRUnichar theChar=GetUnicharAt(aDest,theIndex);
     if(aIgnoreCase)
       theChar=nsCRT::ToUpper(theChar);
@@ -317,7 +322,6 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
   }
   return kNotFound;
 }
-
 
 
 /**
@@ -333,8 +337,9 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  */
 inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
-  PRUint32 theIndex=0;
-  for(theIndex=aLength-1;theIndex>=0;theIndex--){
+  PRInt32 theIndex=0;
+  PRInt32 thePos=(PRInt32)aLength-anOffset-1;
+  for(theIndex=thePos;theIndex>=0;theIndex--){
     PRUnichar theChar=GetCharAt(aDest,theIndex);
     if(aIgnoreCase)
       theChar=nsCRT::ToUpper(theChar);
@@ -343,7 +348,6 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
   }
   return kNotFound;
 }
-
 
 
 /**
@@ -360,7 +364,8 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
 inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRInt32 theIndex=0;
-  for(theIndex=aLength-1;theIndex>=0;theIndex--){
+  PRInt32 thePos=(PRInt32)aLength-anOffset-1;
+  for(theIndex=thePos;theIndex>=0;theIndex--){
     PRUnichar theChar=GetUnicharAt(aDest,theIndex);
     if(aIgnoreCase)
       theChar=nsCRT::ToUpper(theChar);
@@ -449,7 +454,7 @@ PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
   PRInt32 result;
   if(aIgnoreCase)
     result=nsCRT::strncasecmp((PRUnichar*)aStr2,aStr1,aCount)*-1;
-  else result=nsCRT::strncasecmp((PRUnichar*)aStr2,aStr1,aCount)*-1;
+  else result=nsCRT::strncmp((PRUnichar*)aStr2,aStr1,aCount)*-1;
   return result;
 }
 
@@ -821,7 +826,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
     while (from <= end) {
       chartype ch = *from++;
       if(kNotFound!=FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-        *to++ = ' ';
+        *to++ = (char)aChar;
         while (from <= end) {
           ch = *from++;
           if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
@@ -867,7 +872,7 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
     while (from <= end) {
       chartype ch = *from++;
       if(kNotFound!=FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-        *to++ = ' ';
+        *to++ = (PRUnichar)aChar;
         while (from <= end) {
           ch = *from++;
           if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){

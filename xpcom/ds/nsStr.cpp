@@ -8,14 +8,14 @@
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
- * NPL.
+ * NPL. 
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+ 
 /******************************************************************************************
   MODULE NOTES:
 
@@ -98,7 +98,7 @@ public:
       aDest.mStr=new char[theSize];    
     }
     aDest.mOwnsBuffer=1;
-    return PR_TRUE;
+    return PRBool(aDest.mStr!=0);
     
   }
 
@@ -239,7 +239,7 @@ void nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength,nsIMemoryAgent* an
 void nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgent) {
   if(aNewLength>aDest.mCapacity) {
     nsStr theTempStr;
-    nsStr::Initialize(theTempStr,(eCharSize)aDest.mCharSize);
+    nsStr::Initialize(theTempStr,aDest.mCharSize);
 
     nsIMemoryAgent* theAgent=(anAgent) ? anAgent : GetDefaultAgent();
     EnsureCapacity(theTempStr,aNewLength,theAgent);
@@ -265,8 +265,10 @@ void nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgen
  * @param   aCount is the number of chars copied from aSource
  */
 void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount,nsIMemoryAgent* anAgent){
-  Truncate(aDest,0,anAgent);
-  Append(aDest,aSource,anOffset,aCount,anAgent);
+  if(&aDest!=&aSource){
+    Truncate(aDest,0,anAgent);
+    Append(aDest,aSource,anOffset,aCount,anAgent);
+  }
 }
 
 /**
@@ -323,7 +325,7 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
           GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
 
             //shift the chars right by theDelta...
-          (*gShiftChars[aDest.mCharSize][PR_TRUE])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
+          (*gShiftChars[aDest.mCharSize][KSHIFTRIGHT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       
           //now insert new chars, starting at offset
           (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
@@ -360,7 +362,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount,nsIMemoryAg
 
       //if you're here, it means we're cutting chars out of the middle of the string...
       //so shift the chars left by theLength...
-      (*gShiftChars[aDest.mCharSize][PR_FALSE])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
+      (*gShiftChars[aDest.mCharSize][KSHIFTLEFT])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       aDest.mLength-=theLength;
     }
     else Truncate(aDest,aDestOffset,anAgent);
@@ -440,31 +442,48 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEli
 PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
   if((aDest.mLength>0) && (aTarget.mLength>0) && (anOffset<aTarget.mLength)){
 
+    nsStr theCopy;
+    nsStr::Initialize(theCopy,eOneByte);
+    nsStr::Assign(theCopy,aTarget,0,aTarget.mLength,0);
+    if(aIgnoreCase){
+      nsStr::ChangeCase(theCopy,false); //force to lowercase
+    }
+
       //This little block of code builds up the boyer-moore skip table.
       //It might be nicer if this could be generated externally as passed in to improve performance.
     const int theSize=256;
     int theSkipTable[theSize];
     PRUint32 theIndex=0;
     for (theIndex=0;theIndex<theSize;++theIndex) {
-      theSkipTable[theIndex]=aTarget.mLength;
+      theSkipTable[theIndex]=theCopy.mLength;
     }
-    for (theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
-      theSkipTable[(PRUint32)GetCharAt(aTarget,theIndex)]=(aTarget.mLength-theIndex-1);
+    for (theIndex=0;theIndex<theCopy.mLength-1;++theIndex) {
+      theSkipTable[(PRUint32)GetCharAt(theCopy,theIndex)]=(theCopy.mLength-theIndex-1);
     }
 
       //and now we do the actual searching.      
     PRUint32 theMaxIndex=aDest.mLength-anOffset;
     for (theIndex=aTarget.mLength-1; theIndex< theMaxIndex; theIndex+= theSkipTable[(unsigned char)GetCharAt(aDest,theIndex)]) {
-      int theBufIndex=theIndex;
-      int thePatIndex=aTarget.mLength-1;
-      while((thePatIndex>=0) && (GetCharAt(aDest,theBufIndex)==GetCharAt(aTarget,thePatIndex))){
-        --theBufIndex;
-        --thePatIndex;
+      int iBuf =theIndex;
+      int iPat=aTarget.mLength-1;
+      
+      PRBool matches=PR_TRUE;
+      while((iPat>=0) && (matches)){
+        PRUnichar theTargetChar=GetCharAt(theCopy,iPat);
+        PRUnichar theDestChar=GetCharAt(aDest,iBuf);
+        if(aIgnoreCase)
+          theDestChar=nsCRT::ToLower(theDestChar);
+        matches=PRBool(theTargetChar==theDestChar);
+        if(matches){
+          --iBuf;
+          --iPat;
+        }
       }
-      if(-1==thePatIndex){
-        return anOffset+theBufIndex+1;
+      if(-1==iPat){
+        return anOffset+iBuf+1;
       }
-    }
+    } //for
+    nsStr::Destroy(theCopy,0);
   }//if
   return kNotFound;
 }
@@ -509,41 +528,38 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
 
 PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
   PRInt32 index=(anOffset ? anOffset : aDest.mLength-aTarget.mLength+1);
-  if((aDest.mLength>0) && (aTarget.mLength>0)){
-    PRInt32 theNewStartPos=-1;
-    PRUnichar theFirstTargetChar=GetCharAt(aTarget,0);
-    PRUnichar theLastTargetChar=GetCharAt(aTarget,aTarget.mLength-1);
-    PRInt32   theTargetMax=aTarget.mLength;
+  PRInt32 result=kNotFound;
 
-    while(index--) {
-      PRInt32 theSubIndex=-1;
-      PRBool  matches=PR_TRUE;
+  if((aDest.mLength>0) && (aTarget.mLength>0)){
+
+    nsStr theCopy;
+    nsStr::Initialize(theCopy,eOneByte);
+    nsStr::Assign(theCopy,aTarget,0,aTarget.mLength,0);
+    if(aIgnoreCase){
+      nsStr::ChangeCase(theCopy,false); //force to lowercase
+    }
     
-      if(anOffset+aTarget.mLength<=aDest.mLength) {
+    int32   theTargetMax=theCopy.mLength;
+    while(index--) {
+      int32 theSubIndex=-1;
+      PRBool  matches=PR_TRUE;
+      if(anOffset+theCopy.mLength<=aDest.mLength) {
         while((++theSubIndex<theTargetMax) && (matches)){
-          PRUnichar theChar=GetCharAt(aDest,index+theSubIndex);
-          if(theSubIndex>0) {
-            if(theFirstTargetChar==theChar){
-              PRUnichar theDestJumpChar=GetCharAt(aDest,index+theTargetMax);
-              if(theDestJumpChar==theLastTargetChar) {
-                theNewStartPos=index; //this lets us jump ahead during our search where possible.
-              }//if
-            }//if
-          }//if
-          PRUnichar theTargetChar=GetCharAt(aTarget,theSubIndex);
-          matches=PRBool(theChar==theTargetChar);
+          PRUnichar theDestChar=(aIgnoreCase) ? nsCRT::ToLower(GetCharAt(aDest,index+theSubIndex)) : GetCharAt(aDest,index+theSubIndex);
+          PRUnichar theTargetChar=GetCharAt(theCopy,theSubIndex);
+          matches=PRBool(theDestChar==theTargetChar);
         } //while
       } //if
-      if(matches)
-        return index;
-      if(-1<theNewStartPos){
-        index=theNewStartPos-1;
+      if(matches) {
+        result=index;
+        break;
       }
-    }
+    } //while
+    nsStr::Destroy(theCopy,0);
   }//if
-  return kNotFound;
+  return result;
 }
-
+ 
 
 /**
  * 

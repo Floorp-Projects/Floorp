@@ -356,7 +356,7 @@ PRUnichar* ToNewUnicode() const;
  * @param aBuflength is the max # of chars to move to buffer
  * @return ptr to given buffer
  */
-char* ToCString(char* aBuf,PRUint32 aBufLength) const;
+char* ToCString(char* aBuf,PRUint32 aBufLength,PRUint32 anOffset=0) const;
 
 /**
  * Perform string to float conversion.
@@ -725,7 +725,7 @@ virtual void  DebugDump(ostream& aStream) const;
 };
 
 extern NS_COM int fputs(const nsString2& aString, FILE* out);
-ostream& operator<<(ostream& os,nsString2& aString);
+ostream& operator<<(ostream& aStream,const nsString2& aString);
 
 
 /**************************************************************
@@ -791,6 +791,17 @@ public:
   nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 };
+
+
+/***************************************************************
+
+ ***************************************************************/
+class NS_COM nsCAutoString: public nsAutoString{
+public:
+  nsCAutoString(const nsString2& aString);
+  operator const char*() const;
+};
+
 
 #endif
 
