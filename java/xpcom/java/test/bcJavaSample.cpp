@@ -84,7 +84,8 @@ NS_IMETHODIMP bcJavaSample::Test3(PRUint32 count, PRInt32 *valueArray) {
 NS_IMETHODIMP bcJavaSample::Test4(PRUint32 count, char ***valueArray) {
     printf("--[c++] bcJavaSample.test4 coutn %d\n",count);
     for(unsigned int i = 0; i < count; i++) {
-        printf("--[c++] valueArray[%d]=%s\n",i,(*valueArray)[i]);
+        char *str = (*valueArray)[i];
+        printf("--[c++] valueArray[%d]=%s\n",i,(str == NULL) ? "null" : str);
     }
     char ** array = (char **)malloc(sizeof(char*)*4);
     array[0] = "1";
@@ -146,7 +147,7 @@ void test() {
     }
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
-#if 0
+#if 1
     test->Test1(1000);
     bcIJavaSample *test1;
     if (NS_FAILED(r)) {
@@ -167,10 +168,11 @@ void test() {
         char *** valueArray2 = &valueArray;
         test->Test4(4,valueArray2);
         for (int i = 0; i < 4; i++) {
-            printf("valueArray2[%d]=%s\n",i,(*valueArray2)[i]);
+            char *str = (*valueArray2)[i];
+            printf("--[c++] valueArray2[%d]=%s\n",i,(str == NULL) ? "null" : str);
         }
     }
-#if 0
+#if 1
     {
         
         nsIComponentManager* cm;
