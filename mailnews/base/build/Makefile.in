@@ -15,14 +15,23 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..
+DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public base news
+MODULE=mailnews
+LIBRARY_NAME=mailnewsbuild
+
+CPPSRCS= \
+		nsMsgFactory.cpp \
+		$(NULL)
+
+EXPORTS = \
+		nsMsgBaseCID.h \
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
