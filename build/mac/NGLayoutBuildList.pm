@@ -2664,6 +2664,7 @@ sub ImportXMLProject($$)
     my $ascript = <<EOS;
     tell application "$codewarrior_ide_name"
         make new (project document) as ("$project_path") with data ("$xml_path")
+        close project "$project_path"
     end tell
 EOS
 	print $ascript."\n";
