@@ -208,6 +208,14 @@ PRInt64ToChars(const PRInt64& aValue, nsAWritableCString& aResult)
   return NS_OK;
 }
 
+static PRBool HasCell(nsIMdbEnv *aEnv, nsIMdbRow* aRow, mdb_column aCol)
+{
+  mdbYarn yarn;
+  mdb_err err = aRow->AliasCellYarn(aEnv, aCol, &yarn);
+  return (err == 0);
+}
+
+
 //----------------------------------------------------------------------
 
 static nsresult
@@ -1144,6 +1152,29 @@ nsGlobalHistory::GetLastPageVisited(char **_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::HidePage(const char *aURL)
+{
+  nsresult rv;
+  
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+
+  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+
+  if (NS_FAILED(rv)) {
+    // it hasn't been visited yet, but if one ever comes in, we need
+    // to hide it when it is visited
+    rv = AddPage(aURL);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return SetRowValue(row, kToken_HiddenColumn, 1);
+
+}
+
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -1327,7 +1358,9 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
 
     if (col) {
       // The URLEnumerator takes ownership of the bytes allocated in |value|.
-      URLEnumerator* result = new URLEnumerator(kToken_URLColumn, col, value, len);
+      URLEnumerator* result = new URLEnumerator(kToken_URLColumn, col,
+                                                kToken_HiddenColumn,
+                                                value, len);
       if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1638,7 +1671,8 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
   // list all URLs off the root
   if ((aSource == kNC_HistoryRoot) &&
       (aProperty == kNC_child)) {
-    URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
+    URLEnumerator* result = new URLEnumerator(kToken_URLColumn,
+                                              kToken_HiddenColumn);
     if (! result)
       return NS_ERROR_OUT_OF_MEMORY;
     
@@ -2011,7 +2045,8 @@ nsGlobalHistory::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 NS_IMETHODIMP
 nsGlobalHistory::GetAllResources(nsISimpleEnumerator** aResult)
 {
-  URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
+  URLEnumerator* result = new URLEnumerator(kToken_URLColumn,
+                                            kToken_HiddenColumn);
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2316,7 +2351,7 @@ nsGlobalHistory::CreateFindEnumerator(nsIRDFResource *aSource,
 
   // the enumerator will take ownership of the query
   SearchEnumerator *result =
-    new SearchEnumerator(query, this);
+    new SearchEnumerator(query, kToken_HiddenColumn, this);
   if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
   rv = result->Init(mEnv, mTable);
@@ -2437,6 +2472,9 @@ nsGlobalHistory::CreateTokens()
   if (err != 0) return NS_ERROR_FAILURE;
 
   err = mStore->StringToToken(mEnv, "Hostname", &kToken_HostnameColumn);
+  if (err != 0) return NS_ERROR_FAILURE;
+  
+  err = mStore->StringToToken(mEnv, "Hidden", &kToken_HiddenColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -3207,11 +3245,14 @@ nsGlobalHistory::URLEnumerator::~URLEnumerator()
 PRBool
 nsGlobalHistory::URLEnumerator::IsResult(nsIMdbRow* aRow)
 {
+  if (HasCell(mEnv, aRow, mHiddenColumn))
+    return PR_FALSE;
+  
   if (mSelectColumn) {
     mdb_err err;
 
     mdbYarn yarn;
-    err = mCurrent->AliasCellYarn(mEnv, mURLColumn, &yarn);
+    err = aRow->AliasCellYarn(mEnv, mURLColumn, &yarn);
     if (err != 0) return PR_FALSE;
 
     // Do bitwise comparison
@@ -3237,7 +3278,7 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
   mdb_err err;
 
   mdbYarn yarn;
-  err = mCurrent->AliasCellYarn(mEnv, mURLColumn, &yarn);
+  err = aRow->AliasCellYarn(mEnv, mURLColumn, &yarn);
   if (err != 0) return NS_ERROR_FAILURE;
 
   // Since the URLEnumerator always returns the value of the URL
@@ -3351,6 +3392,9 @@ nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
 PRBool
 nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
 {
+  if (HasCell(mEnv, aRow, mHiddenColumn))
+    return PR_FALSE;
+  
   mdb_err err;
 
   mdbYarn groupColumnValue = { nsnull, 0, 0, 0, 0, nsnull};
@@ -3360,7 +3404,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
     // we only match the FIRST row with the column value that we're
     // grouping by
     
-    err = mCurrent->AliasCellYarn(mEnv, mQuery->groupBy, &groupColumnValue);
+    err = aRow->AliasCellYarn(mEnv, mQuery->groupBy, &groupColumnValue);
     if (err!=0) return PR_FALSE;
 
     nsCStringKey key(nsCAutoString((const char*)groupColumnValue.mYarn_Buf,
@@ -3373,7 +3417,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
   }
 
   // now do the actual match
-  if (!mHistory->RowMatches(mCurrent, mQuery))
+  if (!mHistory->RowMatches(aRow, mQuery))
     return PR_FALSE;
 
   if (mQuery->groupBy != 0) {
@@ -3384,7 +3428,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
                                       groupColumnValue.mYarn_Fill));
     
     // note - weak ref, don't worry about releasing
-    mUniqueRows.Put(&key, (void *)mCurrent);
+    mUniqueRows.Put(&key, (void *)aRow);
   }
 
   return PR_TRUE;
@@ -3570,6 +3614,9 @@ nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
 PRBool
 nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 {
+  if (HasCell(mEnv, aRow, mHiddenColumn))
+    return PR_FALSE;
+  
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
   
@@ -3747,7 +3794,9 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
     // prepare the search enumerator
     AutoCompleteEnumerator* enumerator;
     enumerator = new AutoCompleteEnumerator(this, kToken_URLColumn, 
-                                            kToken_NameColumn, aSearchString, aExclude);
+                                            kToken_NameColumn,
+                                            kToken_HiddenColumn,
+                                            aSearchString, aExclude);
     rv = enumerator->Init(mEnv, mTable);
     if (NS_FAILED(rv)) return rv;
   
