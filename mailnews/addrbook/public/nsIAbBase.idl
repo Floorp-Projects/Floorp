@@ -1,0 +1,41 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+ 
+#include "nsICollection.idl"
+#include "nsIAbListener.idl"
+
+interface nsIAbListener;
+
+[uuid(013DD009-F73B-11d2-A2DA-001083003D0C)]
+interface nsIAbBase : nsICollection {
+
+    readonly attribute string URI;
+    attribute string name;
+
+    nsISupports GetChildNamed(in string name);
+    attribute nsIAbBase parent;
+
+    nsIEnumerator GetChildNodes();
+
+	void AddAddrBookListener(in nsIAbListener listener);
+	void RemoveAddrBookListener(in nsIAbListener listener);
+
+    void AddUnique(in nsISupports element);
+    void ReplaceElement(in nsISupports element, in nsISupports newElement);
+
+};
