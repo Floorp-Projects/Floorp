@@ -31,6 +31,9 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsRootAccessible.h"
+#include "nsINameSpaceManager.h"
+#include "nsMutableAccessible.h"
 
 nsAccessibilityService::nsAccessibilityService()
 {
@@ -43,22 +46,224 @@ nsAccessibilityService::~nsAccessibilityService()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAccessibilityService, nsIAccessibilityService);
 
+
+/*
+class nsHTMLTextAccessible : public nsIAccessible
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLE
+
+  nsHTMLTextAccessible(nsIDOMNode* aNode);
+
+  virtual ~nsHTMLTextAccessible();
+
+  nsCOMPtr<nsIDOMNode> mNode;
+};
+
+NS_IMPL_ISUPPORTS1(nsHTMLTextAccessible, nsIAccessible)
+
+nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aNode)
+{
+  NS_INIT_ISUPPORTS();
+  mNode = aNode;
+}
+
+nsHTMLTextAccessible::~nsHTMLTextAccessible()
+{
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccParent(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccNextSibling(nsIAccessible **_retval)
+{ 
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccPreviousSibling(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccLastChild(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccChildCount(PRInt32 *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(PRUnichar **_retval)
+{
+  if (mNode) {
+    nsAutoString value;
+    mNode->GetNodeValue(value);
+    *_retval = value.ToNewUnicode();
+    return NS_OK;
+  }
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccValue(PRUnichar **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::SetAccName(const PRUnichar *name)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::SetAccValue(const PRUnichar *value)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccDescription(PRUnichar **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUnichar **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccState(PRUnichar **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccDefaultAction(PRUnichar **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccHelp(PRUnichar **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccFocused(PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccNavigateRight(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccNavigateLeft(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccNavigateUp(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccNavigateDown(nsIAccessible **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccAddSelection()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccRemoveSelection()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccExtendSelection()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccTakeSelection()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccTakeFocus()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextAccessible::AccDoDefaultAction()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+*/
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibilityService methods:
 
 NS_IMETHODIMP 
-nsAccessibilityService::GetAccessibleFor(nsISupports* frame, nsISupports* context, nsIAccessible **_retval)
+nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsIAccessible **_retval)
 {
-  void* ptr = nsnull;
-  frame->QueryInterface(nsIFrame::GetIID(), &ptr);
-  nsIFrame* f = (nsIFrame*)ptr;
-
-  nsCOMPtr<nsIPresContext> c = do_QueryInterface(context);
-
-  NS_ASSERTION(f,"Error non frame passed to accessible factory!!!");
+  nsCOMPtr<nsIPresContext> c = do_QueryInterface(aPresContext);
   NS_ASSERTION(c,"Error non prescontext passed to accessible factory!!!");
 
-  *_retval = new nsAccessible(f,c);
+  nsCOMPtr<nsIPresShell> s;
+  c->GetShell(getter_AddRefs(s));
+
+  NS_ASSERTION(s,"Error not presshell!!");
+
+  *_retval = new nsRootAccessible(s);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateMutableAccessible(nsIDOMNode* aNode, nsIMutableAccessible **_retval)
+{
+  *_retval = new nsMutableAccessible(aNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateHTMLBlockAccessible(nsIAccessible* aAccessible, nsIDOMNode* node, nsISupports* aPresContext, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIContent> n = do_QueryInterface(node);
+  NS_ASSERTION(n,"Error non nsIContent passed to accessible factory!!!");
+
+  nsCOMPtr<nsIPresContext> c = do_QueryInterface(aPresContext);
+  NS_ASSERTION(c,"Error non prescontext passed to accessible factory!!!");
+
+  nsCOMPtr<nsIPresShell> s;
+  c->GetShell(getter_AddRefs(s));
+
+  NS_ASSERTION(s,"Error not presshell!!");
+
+
+  *_retval = new nsHTMLBlockAccessible(aAccessible, n,s);
   return NS_OK;
 }
 
