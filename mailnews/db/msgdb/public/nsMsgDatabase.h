@@ -71,6 +71,10 @@ public:
   NS_IMETHOD ForceClosed(void);
   // get a message header for the given key. Caller must release()!
   NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **msg);
+
+ //Returns whether or not this database contains the given key
+  NS_IMETHOD ContainsKey(nsMsgKey key, PRBool *containsKey);
+
   // create a new message header from a hdrStruct. Caller must release resulting header,
   // after adding any extra properties they want.
   NS_IMETHOD CreateNewHdrAndAddToDB(PRBool *newThread,
