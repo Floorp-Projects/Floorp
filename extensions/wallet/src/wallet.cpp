@@ -2322,7 +2322,7 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
   }
   char * urlCString;
   urlCString = wallet_url.ToNewCString();
-  g += PR_snprintf(buffer+g, BUFLEN3-g,"%c%ld%c%s", BREAK, wallet_list, BREAK, urlCString);
+  g += PR_snprintf(buffer+g, BUFLEN3-g,"%c%p%c%s", BREAK, wallet_list, BREAK, urlCString);
   delete []urlCString;
   aPrefillList = buffer;
   PR_FREEIF(buffer);
@@ -2719,7 +2719,7 @@ WLLT_PrefillReturn(nsAutoString results) {
 
   /* process the list, doing the fillins */
   nsVoidArray * list;
-  sscanf(listAsAscii, "%ld", &list);
+  sscanf(listAsAscii, "%p", &list);
   if (fillins[0] == '\0') { /* user pressed CANCEL */
     wallet_ReleasePrefillElementList(list);
     return;
