@@ -24,7 +24,11 @@
 #define nsDeviceContextWin_h___
 
 #include "nsDeviceContext.h"
+#include "nsIScreenManager.h"
 #include <windows.h>
+
+class nsIScreen;
+
 
 class nsDeviceContextWin : public DeviceContextImpl
 {
@@ -75,18 +79,24 @@ protected:
   virtual ~nsDeviceContextWin();
   void CommonInit(HDC aDC);
   nsresult Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
+  void FindScreen ( nsIScreen** outScreen ) ;
+  void ComputeClientRectUsingScreen ( nsRect* outRect ) ;
+  void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
+
+  PRBool mCachedClientRect;
+  PRBool mCachedFullRect;
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device
   nsPaletteInfo         mPaletteInfo;
   float                 mPixelScale;
-  float                 mWidthFloat;
-  float                 mHeightFloat;
   PRInt32               mWidth;
   PRInt32               mHeight;
   nsRect                mClientRect;
-  PRBool                mClientRectConverted;
   nsIDeviceContextSpec  *mSpec;
+
+  nsCOMPtr<nsIScreenManager> mScreenManager;
+  static PRUint32 sNumberOfScreens;
 
 public:
   HDC                   mDC;

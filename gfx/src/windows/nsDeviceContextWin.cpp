@@ -37,6 +37,7 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 PRBool nsDeviceContextWin::gRound = PR_FALSE;
+PRUint32 nsDeviceContextWin::sNumberOfScreens = 0;
 
 static char* nav4rounding = "font.size.nav4rounding";
 
@@ -50,12 +51,11 @@ nsDeviceContextWin :: nsDeviceContextWin()
   mPaletteInfo.palette = NULL;
   mDC = NULL;
   mPixelScale = 1.0f;
-  mWidthFloat = 0.0f;
-  mHeightFloat = 0.0f;
   mWidth = -1;
   mHeight = -1;
-  mClientRectConverted = PR_FALSE;
   mSpec = nsnull;
+  mCachedClientRect = PR_FALSE;
+  mCachedFullRect = PR_FALSE;
 
   nsresult res = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
@@ -96,6 +96,8 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
 
 NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
 {
+  nsresult retval = DeviceContextImpl::Init(aWidget);
+
   HWND  hwnd = (HWND)aWidget;
   HDC   hdc = ::GetDC(hwnd);
 
@@ -103,7 +105,7 @@ NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
 
   ::ReleaseDC(hwnd, hdc);
 
-  return DeviceContextImpl::Init(aWidget);
+  return retval;
 }
 
 //local method...
@@ -127,7 +129,7 @@ nsresult nsDeviceContextWin :: Init(nsNativeDeviceContext aContext, nsIDeviceCon
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
-  
+
   return NS_OK;
 }
 
@@ -143,29 +145,123 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(aDC, SIZEPALETTE);
   mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(aDC, NUMRESERVED);
 
-  mClientRect.width = ::GetDeviceCaps(aDC, HORZRES);
-  mClientRect.height = ::GetDeviceCaps(aDC, VERTRES);
-  mWidthFloat = (float)mClientRect.width;
-  mHeightFloat = (float)mClientRect.height;
+  mWidth = ::GetDeviceCaps(aDC, HORZRES);
+  mHeight = ::GetDeviceCaps(aDC, VERTRES);
+
   if (::GetDeviceCaps(aDC, TECHNOLOGY) == DT_RASDISPLAY)
   {
+    // init the screen manager and compute our client rect based on the
+    // screen objects. We'll save the result 
     nsresult ignore;
-    nsCOMPtr<nsIScreenManager> sm ( do_GetService("component://netscape/gfx/screenmanager", &ignore) );
-    if ( sm ) {
-      //XXX rewrite this for multiple screens
-      nsCOMPtr<nsIScreen> screen;
-      sm->GetPrimaryScreen ( getter_AddRefs(screen) );
-      if ( screen ) {
-        screen->GetAvailTop ( &mClientRect.y );
-        screen->GetAvailLeft ( &mClientRect.x );
-        screen->GetAvailWidth ( &mClientRect.width );
-        screen->GetAvailHeight ( &mClientRect.height );      
-      }
-    }
+    mScreenManager = do_GetService("component://netscape/gfx/screenmanager", &ignore);   
+    if ( !sNumberOfScreens )
+      mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
   } // if this dc is not a print device
 
   DeviceContextImpl::CommonInit();
 }
+
+
+void
+nsDeviceContextWin :: ComputeClientRectUsingScreen ( nsRect* outRect )
+{
+  // if we have more than one screen, we always need to recompute the clientRect
+  // because the window may have moved onto a different screen. In the single
+  // monitor case, we only need to do the computation if we haven't done it
+  // once already, and remember that we have because we're assured it won't change.
+  if ( sNumberOfScreens > 1 || !mCachedClientRect ) {
+    nsCOMPtr<nsIScreen> screen;
+    FindScreen ( getter_AddRefs(screen) );
+    if ( screen ) {
+      PRInt32 x, y, width, height;
+      screen->GetAvailTop ( &y );
+      screen->GetAvailLeft ( &x );
+      screen->GetAvailWidth ( &width );
+      screen->GetAvailHeight ( &height );
+    
+      // convert to device units
+      outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+      outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+      outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+      outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
+
+      mCachedClientRect = PR_TRUE;
+      mClientRect = *outRect;
+    }
+  } // if we need to recompute the client rect
+  else
+    *outRect = mClientRect;
+
+} // ComputeClientRectUsingScreen
+
+
+void
+nsDeviceContextWin :: ComputeFullAreaUsingScreen ( nsRect* outRect )
+{
+  // if we have more than one screen, we always need to recompute the clientRect
+  // because the window may have moved onto a different screen. In the single
+  // monitor case, we only need to do the computation if we haven't done it
+  // once already, and remember that we have because we're assured it won't change.
+  if ( sNumberOfScreens > 1 || !mCachedFullRect ) {
+    nsCOMPtr<nsIScreen> screen;
+    FindScreen ( getter_AddRefs(screen) );
+    if ( screen ) {
+      PRInt32 width, height;
+      screen->GetWidth ( &width );
+      screen->GetHeight ( &height );
+    
+      // convert to device units
+      outRect->y = 0;
+      outRect->x = 0;
+      outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+      outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
+
+      mWidth = width;
+      mHeight = height;
+      mCachedFullRect = PR_TRUE;
+    }
+  } // if we need to recompute the client rect
+  else {
+      outRect->y = 0;
+      outRect->x = 0;
+      outRect->width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+      outRect->height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  }
+ 
+} // ComputeFullRectUsingScreen
+
+
+//
+// FindScreen
+//
+// Determines which screen intersects the largest area of the given surface.
+//
+void
+nsDeviceContextWin :: FindScreen ( nsIScreen** outScreen )
+{
+  // optimize for the case where we only have one monitor.
+  static nsCOMPtr<nsIScreen> sPrimaryScreen;
+  if ( !sPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+  if ( sNumberOfScreens == 1 ) {
+    NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+    return;
+  }
+  
+  // now then, if we have more than one screen, we need to find which screen this
+  // window is on.
+  HWND window = NS_REINTERPRET_CAST(HWND, mWidget);
+  if ( window ) {
+    RECT globalPosition;
+    ::GetWindowRect ( window, &globalPosition ); 
+    if ( mScreenManager )
+      mScreenManager->ScreenForRect ( globalPosition.left, globalPosition.top, 
+                                       globalPosition.right - globalPosition.left,
+                                       globalPosition.bottom - globalPosition.top, outScreen );
+  }
+
+} // FindScreen
+
 
 NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
@@ -576,29 +672,36 @@ NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPix
 
 NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  if (mWidth == -1)
-    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
-
-  if (mHeight == -1)
-    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
-
-  aWidth = mWidth;
-  aHeight = mHeight;
+  if ( mSpec )
+  {
+	  // we have a printer device
+		aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  }
+  else {
+    nsRect area;
+    ComputeFullAreaUsingScreen ( &area );
+    aWidth = area.width;
+    aHeight = area.height;
+  }
 
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsDeviceContextWin :: GetClientRect(nsRect &aRect)
 {
-  if (!mClientRectConverted) {
-    mClientRect.x = NSToIntRound(mClientRect.x * mDevUnitsToAppUnits);
-    mClientRect.y = NSToIntRound(mClientRect.y * mDevUnitsToAppUnits);
-    mClientRect.width = NSToIntRound(mClientRect.width * mDevUnitsToAppUnits);
-    mClientRect.height = NSToIntRound(mClientRect.height * mDevUnitsToAppUnits);
-    mClientRectConverted = PR_TRUE;
+  if ( mSpec )
+  {
+	  // we have a printer device
+	  aRect.x = 0;
+	  aRect.y = 0;
+		aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+		aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
   }
+  else
+    ComputeClientRectUsingScreen ( &aRect );
 
-  aRect = mClientRect;
   return NS_OK;
 }
 
