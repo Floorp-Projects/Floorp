@@ -80,6 +80,8 @@ enum JS2Op {
     eThis,
     eNewObject,         // <argCount:u16>
 
+    eThrow,
+
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
     eLexicalRef,        // <multiname index:u16>

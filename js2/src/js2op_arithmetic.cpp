@@ -155,23 +155,174 @@
         {
 	    b = pop();
 	    a = pop();
-            b = toGeneralNumber(b);
             a = toGeneralNumber(a);
-            pushNumber(toInteger(a) & toInteger(b));
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 x = *JS2VAL_TO_LONG(a);
+                if (JS2VAL_IS_LONG(b)) {
+                    int64 z;
+                    int64 y = *JS2VAL_TO_LONG(b);
+                    JSLL_AND(z, x, y);
+                    pushLong(z);   
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(b)) {
+                        uint64 z;
+                        uint64 y = *JS2VAL_TO_ULONG(b);
+                        JSLL_AND(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        int64 y = checkInteger(b);
+                        int64 z;
+                        JSLL_AND(z, x, y);
+                        pushLong(z);   
+                    }
+                }
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 x = *JS2VAL_TO_ULONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        uint64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_AND(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_AND(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            uint64 y = checkInteger(b);
+                            uint64 z;
+                            JSLL_AND(z, x, y);
+                            pushULong(z);   
+                        }
+                    }
+                }
+                else
+                    pushNumber(toInteger(a) & toInteger(b));
+            }
         }
         break;
     case eBitwiseXor:
         {
 	    b = pop();
 	    a = pop();
-            pushNumber(toInteger(a) ^ toInteger(b));
+            a = toGeneralNumber(a);
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 x = *JS2VAL_TO_LONG(a);
+                if (JS2VAL_IS_LONG(b)) {
+                    int64 z;
+                    int64 y = *JS2VAL_TO_LONG(b);
+                    JSLL_XOR(z, x, y);
+                    pushLong(z);   
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(b)) {
+                        uint64 z;
+                        uint64 y = *JS2VAL_TO_ULONG(b);
+                        JSLL_XOR(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        int64 y = checkInteger(b);
+                        int64 z;
+                        JSLL_XOR(z, x, y);
+                        pushLong(z);   
+                    }
+                }
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 x = *JS2VAL_TO_ULONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        uint64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_XOR(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_XOR(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            uint64 y = checkInteger(b);
+                            uint64 z;
+                            JSLL_XOR(z, x, y);
+                            pushULong(z);   
+                        }
+                    }
+                }
+                else
+                    pushNumber(toInteger(a) ^ toInteger(b));
+            }
         }
         break;
     case eBitwiseOr:
         {
 	    b = pop();
 	    a = pop();
-            pushNumber(toInteger(a) | toInteger(b));
+            a = toGeneralNumber(a);
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 x = *JS2VAL_TO_LONG(a);
+                if (JS2VAL_IS_LONG(b)) {
+                    int64 z;
+                    int64 y = *JS2VAL_TO_LONG(b);
+                    JSLL_OR(z, x, y);
+                    pushLong(z);   
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(b)) {
+                        uint64 z;
+                        uint64 y = *JS2VAL_TO_ULONG(b);
+                        JSLL_OR(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        int64 y = checkInteger(b);
+                        int64 z;
+                        JSLL_OR(z, x, y);
+                        pushLong(z);   
+                    }
+                }
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 x = *JS2VAL_TO_ULONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        uint64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_OR(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_OR(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            uint64 y = checkInteger(b);
+                            uint64 z;
+                            JSLL_OR(z, x, y);
+                            pushULong(z);   
+                        }
+                    }
+                }
+                else
+                    pushNumber(toInteger(a) | toInteger(b));
+            }
         }
         break;
 

@@ -262,6 +262,27 @@ namespace MetaData {
                     reportError(Exception::syntaxError, "No such break target available", p->pos);
             }
             break;
+        case StmtNode::Throw:
+            {
+                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                ValidateExpression(cxt, env, e->expr);
+            }
+            break;
+        case StmtNode::Try:
+            {
+                TryStmtNode *t = checked_cast<TryStmtNode *>(p);
+                ValidateStmt(cxt, env, t->stmt);
+                if (t->finally)
+                    ValidateStmt(cxt, env, t->finally);
+                CatchClause *c = t->catches;
+                while (c) {                    
+                    ValidateStmt(cxt, env, c->stmt);
+                    if (c->type)
+                        ValidateExpression(cxt, env, c->type);
+                    c = c->next;
+                }
+            }
+            break;
         case StmtNode::Return:
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
@@ -691,6 +712,31 @@ namespace MetaData {
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 bCon->setLabel(w->breakLabelID);
+            }
+            break;
+        case StmtNode::Throw:
+            {
+                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                Reference *r = EvalExprNode(env, phase, e->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eThrow, p->pos);
+            }
+            break;
+        case StmtNode::Try:
+            {
+                TryStmtNode *t = checked_cast<TryStmtNode *>(p);
+/*
+                ValidateStmt(cxt, env, t->stmt);
+                if (t->finally)
+                    ValidateStmt(cxt, env, t->finally);
+                CatchClause *c = t->catches;
+                while (c) {                    
+                    ValidateStmt(cxt, env, c->stmt);
+                    if (c->type)
+                        ValidateExpression(cxt, env, c->type);
+                    c = c->next;
+                }
+*/
             }
             break;
         case StmtNode::Return:
