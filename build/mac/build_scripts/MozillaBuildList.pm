@@ -134,6 +134,10 @@ sub InstallDefaultsFiles()
     InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                    "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                     "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                      "$default_pref_dir", 0);
+    if ($main::options{inspector})
+    {
+      InstallResources(":mozilla:extensions:inspector:resources:content:prefs:MANIFEST", "$default_pref_dir", 0);
+    }
     }
 
     print("--- Defaults copying complete ----\n");
@@ -223,6 +227,11 @@ sub InstallNonChromeResources()
     MakeAlias(":mozilla:content:xbl:builtin:htmlbindings.xml",                     "$builtin_dir");
     MakeAlias(":mozilla:content:xbl:builtin:mac:platformHTMLBindings.xml",         "$builtin_dir");
 
+    if ($main::options{inspector})
+    {
+        InstallResources(":mozilla:extensions:inspector:resources:content:MANIFEST",   "$resource_dir" . "inspector:");
+    }
+
     print("--- End Resource copying ----\n");
 }
 
@@ -281,8 +290,18 @@ sub ProcessJarManifests()
     if ($main::build{extensions})
     {
       CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
-      # cview needs a jar.mn file
-      # transformiix needs a jar.mn file
+      CreateJarFromManifest(":mozilla:extensions:cview:resources:jar.mn", $chrome_dir, \%jars);
+      if ($main::options{vixen})
+      {
+        CreateJarFromManifest(":mozilla:extensions:vixen:resources:jar.mn", $chrome_dir, \%jars);
+      }
+      if ($main::options{inspector})
+      {
+        CreateJarFromManifest(":mozilla:extensions:inspector:resources:content:jar.mn", $chrome_dir, \%jars);
+        CreateJarFromManifest(":mozilla:extensions:inspector:resources:locale:en-US:jar.mn", $chrome_dir, \%jars);
+        CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:classic:jar.mn", $chrome_dir, \%jars);
+        CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:modern:jar.mn", $chrome_dir, \%jars);
+      }
     }
     
     CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
@@ -766,6 +785,12 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",                 "$distdirectory:mailnews:");
     InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",               "$distdirectory:mailnews:");
                                                      
+    #TRANSFORMIIX
+    if ($main::options{transformiix})
+    {
+        InstallFromManifest(":mozilla:extensions:transformiix:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+
     #LDAP
     if ($main::options{ldap})
     {
@@ -782,6 +807,12 @@ sub BuildClientDist()
     if ($main::options{soap})
     {
         InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+
+    #DOCUMENT INSPECTOR
+    if ($main::options{inspector})
+    {
+        InstallFromManifest(":mozilla:extensions:inspector:base:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
     print("--- Client Dist export complete ----\n");
@@ -1017,6 +1048,11 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:intl:uconv:macbuild:uconvIDL.mcp",                    "uconv");
     BuildIDLProject(":mozilla:intl:chardet:macbuild:chardetIDL.mcp",                "chardet");
 
+    if ($main::options{transformiix})
+    {
+        BuildIDLProject(":mozilla:extensions:transformiix:macbuild:transformiixIDL.mcp", "transformiix");
+    }
+
     if ($main::options{ldap})
     {
         BuildIDLProject(":mozilla:directory:xpcom:macbuild:mozldapIDL.mcp", "mozldap");
@@ -1029,6 +1065,16 @@ sub BuildIDLProjects()
     if ($main::options{soap})
     {
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.mcp", "xmlsoap");
+    }
+
+    if ($main::options{vixen})
+    {
+        BuildIDLProject(":mozilla:extensions:vixen:macbuild:vixenIDL.mcp", "vixen");
+    }
+
+    if ($main::options{inspector})
+    {
+        BuildIDLProject(":mozilla:extensions:inspector:macbuild:inspectorIDL.mcp", "inspector");
     }
 
     EndBuildModule("idl");
@@ -1553,9 +1599,6 @@ sub BuildExtensionsProjects()
     # XML-RPC
     InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
     
-    # Component viewer
-    print "Need to make jar.mn file for cview\n";
-
     # Transformiix
     if ($main::options{transformiix})
     {
@@ -1583,6 +1626,20 @@ sub BuildExtensionsProjects()
     if ($main::options{xmlextras})
     {
         BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.mcp", "xmlextras$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
+    # Vixen
+    if ($main::options{vixen})
+    {
+        BuildOneProject(":mozilla:extensions:vixen:macbuild:vixen.mcp", "vixen$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+        InstallResources(":mozilla:extensions:vixen:base:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
+    }
+    
+    # Document Inspector
+    if ($main::options{inspector})
+    {
+        BuildOneProject(":mozilla:extensions:inspector:macbuild:inspector.mcp", "inspector$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
     EndBuildModule("extensions");
