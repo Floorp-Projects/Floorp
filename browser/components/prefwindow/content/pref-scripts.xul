@@ -36,17 +36,15 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-scripts.dtd">
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-scripts.dtd">
 
 <page id="scriptsAndWindowPanel" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-scripts.xul');"
+      onload="parent.initPanel('chrome://browser/content/pref/pref-scripts.xul');"
       headertitle="&lHeader;">
-  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-scripts.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-scripts.js"/>
   <script type="application/x-javascript">
     <![CDATA[
-      var panel = "chrome://communicator/content/pref/pref-scripts.xul";
+      var panel = "chrome://browser/content/pref/pref-scripts.xul";
       var _elementIDs = ["javascriptAllowNavigator",
                          "allowWindowOpen",
                          "allowWindowMoveResize",
@@ -63,8 +61,8 @@
     <caption label="&enableJavaScript.label;"/>
 
     <checkbox id="javascriptAllowNavigator" label="&navigator.label;" accesskey="&navigator.accesskey;"
-                  pref="true" preftype="bool" prefstring="javascript.enabled"
-                  prefattribute="checked" oncommand="javascriptEnabledChange();"/>
+                  prefstring="javascript.enabled"
+                  oncommand="javascriptEnabledChange();"/>
  
     <separator/>
   
@@ -81,17 +79,4 @@
       <listitem type="checkbox" id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;"/>          
     </listbox>
   </groupbox>
-
-  <groupbox id="pluginPreferences">
-    <caption label="&enablePlugin.label;"/>
-    
-    <!-- mailnews will add its checkbox here using overlay (mailPrefOverlay.xul).
-         The day we add a checkbox for plugins in browser, please do the following:
-         1) make sure that doesn't break the mailnews overlay, we'll probably have to add an
-            insertafter command to insure the proper order of the checkboxes
-         2) remove the js code in pref-scripts.js that hide this groupbox when not checkbox
-            has been defined (function Startup)
-    -->
-  </groupbox>
-  
 </page>
