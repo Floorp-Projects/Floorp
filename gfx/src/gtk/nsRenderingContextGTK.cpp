@@ -96,10 +96,7 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
   PRInt32 cnt = mStateCache.Count();
 
   while (--cnt >= 0)
-  {
-    PRBool  clipstate;
-    PopState(clipstate);
-  }
+    PopState();
 
   if (mTranMatrix)
     delete mTranMatrix;
@@ -233,8 +230,7 @@ NS_IMETHODIMP nsRenderingContextGTK::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
 
 NS_IMETHODIMP nsRenderingContextGTK::UnlockDrawingSurface(void)
 {
-  PRBool  clipstate;
-  PopState(clipstate);
+  PopState();
 
   mSurface->Unlock();
   
@@ -348,7 +344,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextGTK::PopState(void)
 {
   PRUint32 cnt = mStateCache.Count();
   nsGraphicsState * state;
@@ -382,11 +378,6 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
     delete state;
 #endif
   }
-
-  if (mClipRegion)
-    aClipEmpty = mClipRegion->IsEmpty();
-  else
-    aClipEmpty = PR_TRUE;
 
   return NS_OK;
 }
@@ -791,8 +782,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(const nsRect &aBounds,
     mClipRegion = nsnull;
     UpdateGC();
     rv = surf->Init(mGC, aBounds.width, aBounds.height, aSurfFlags);
-    PRBool empty;
-    PopState(empty);
+    PopState();
   } else {
     rv = NS_ERROR_FAILURE;
   }

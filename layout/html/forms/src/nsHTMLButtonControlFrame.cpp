@@ -353,7 +353,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
 
-  aRenderingContext.PopState(clipEmpty);
+  aRenderingContext.PopState();
 
 #endif
 

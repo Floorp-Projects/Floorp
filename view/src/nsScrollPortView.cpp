@@ -569,7 +569,7 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& rc, const nsRect& rec
 
   nsresult rv = nsView::Paint(rc, rect, aPaintFlags, aResult);
 
-  rc.PopState(clipEmpty);
+  rc.PopState();
     
   return rv;
 }
@@ -586,7 +586,7 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& aRC, const nsIRegion&
 
   nsresult rv = nsView::Paint(aRC, aRegion, aPaintFlags, aResult);
 
-  aRC.PopState(clipEmpty);
+  aRC.PopState();
     
   return rv;
 }

@@ -349,10 +349,8 @@ nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
     PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
   }
 
-  if (clip) {
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
-  }
+  if (clip)
+    aRenderingContext.PopState();
   
   return NS_OK;
 }

@@ -1173,7 +1173,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
     }
   }
 
-  aRenderingContext.PopState(clipState);
+  aRenderingContext.PopState();
 }
 
 NS_METHOD
@@ -1309,13 +1309,12 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         if (nsnull != map) {
           nsRect inner;
           GetInnerArea(aPresContext, inner);
-          PRBool clipState;
           aRenderingContext.SetColor(NS_RGB(0, 0, 0));
           aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
           aRenderingContext.PushState();
           aRenderingContext.Translate(inner.x, inner.y);
           map->Draw(aPresContext, aRenderingContext);
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
           paintOutline = PR_TRUE;
         }
 
@@ -1337,12 +1336,11 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
           if (nsnull != map) {
             nsRect inner;
             GetInnerArea(aPresContext, inner);
-            PRBool clipState;
             aRenderingContext.SetColor(NS_RGB(0, 0, 0));
             aRenderingContext.PushState();
             aRenderingContext.Translate(inner.x, inner.y);
             map->Draw(aPresContext, aRenderingContext);
-            aRenderingContext.PopState(clipState);
+            aRenderingContext.PopState();
           }
         }
 #endif

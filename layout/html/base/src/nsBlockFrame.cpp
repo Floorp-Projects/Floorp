@@ -5242,10 +5242,8 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   PaintDecorationsAndChildren(aPresContext, aRenderingContext,
                               aDirtyRect, aWhichLayer, PR_TRUE);
 
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
-  }
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)
+    aRenderingContext.PopState();
 
 #if 0
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {

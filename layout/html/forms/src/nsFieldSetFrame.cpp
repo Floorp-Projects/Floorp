@@ -227,7 +227,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
 
 
           // draw right side
@@ -241,7 +241,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
 
         
           // draw bottom
@@ -255,7 +255,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
   
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
         } else {
 
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,

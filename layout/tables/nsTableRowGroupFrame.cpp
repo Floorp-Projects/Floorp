@@ -232,10 +232,8 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
   }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
                 aWhichLayer, aFlags);
-  if (clip) {
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
-  }
+  if (clip)
+    aRenderingContext.PopState();
   return NS_OK;
   /*nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);*/
 
@@ -268,7 +266,6 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
   nsIFrame* kid = GetFirstFrame();
   while (nsnull != kid) {
     if (!kid->HasView()) {
-      PRBool clipState;
       nsRect kidRect = kid->GetRect();
       nsRect damageArea(aDirtyRect);
       // Translate damage area into kid's coordinate system
@@ -284,7 +281,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
         aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
       }
 #endif
-      aRenderingContext.PopState(clipState);
+      aRenderingContext.PopState();
     }
     GetNextFrame(kid, &kid);
   }

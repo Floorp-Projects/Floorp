@@ -318,10 +318,8 @@ nsRenderingContextPS :: PushState(void)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: PopState(PRBool &aClipEmpty)
+nsRenderingContextPS :: PopState(void)
 {
-  PRBool  retval = PR_FALSE;
-
   if (nsnull == mStates){
     NS_ASSERTION(!(nsnull == mStates), "state underflow");
   } else {
@@ -339,7 +337,6 @@ nsRenderingContextPS :: PopState(PRBool &aClipEmpty)
       mTranMatrix = nsnull;
   }
 
-  aClipEmpty = retval;
   mPSObj->graphics_restore();
 
   return NS_OK;

@@ -156,10 +156,8 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
   /* Destroy the State Machine */
   PRInt32 cnt = mStateCache.Count();
 
-  while (--cnt >= 0) {
-    PRBool clipstate;
-    PopState(clipstate);
-  }
+  while (--cnt >= 0)
+    PopState();
 
   if (mTranMatrix)
     delete mTranMatrix;
@@ -336,8 +334,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::UnlockDrawingSurface(void)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::UnlockDrawingSurface()\n"));
-  PRBool clipstate;
-  PopState(clipstate);
+  PopState();
 
   mSurface->Unlock();
   
@@ -413,7 +410,7 @@ nsRenderingContextXlib::PushState(void)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::PopState(PRBool &aClipState)
+nsRenderingContextXlib::PopState(void)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::PopState()\n"));
 
@@ -439,11 +436,6 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
 
     delete state;
   }
-
-  if (mClipRegion)
-    aClipState = mClipRegion->IsEmpty();
-  else 
-    aClipState = PR_TRUE;
 
   return NS_OK;
 }

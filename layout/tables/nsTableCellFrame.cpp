@@ -474,7 +474,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
 
     if (pushed) {
-      aRenderingContext.PopState(clipState);
+      aRenderingContext.PopState();
     }
   } 
   

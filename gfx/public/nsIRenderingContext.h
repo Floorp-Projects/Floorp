@@ -187,10 +187,8 @@ public:
 
   /**
    * Get and and set RenderingContext to this graphical state
-   * @return if PR_TRUE, indicates that the clipping region after
-   *         popping state is empty, else PR_FALSE
    */
-  NS_IMETHOD PopState(PRBool &aClipEmpty) = 0;
+  NS_IMETHOD PopState(void) = 0;
 
   /**
    * Tells if a given rectangle is visible within the rendering context

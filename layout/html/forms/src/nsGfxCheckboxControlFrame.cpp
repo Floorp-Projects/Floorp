@@ -206,8 +206,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
     nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, checkRect);
   }
   
-  PRBool clip;
-  aRenderingContext.PopState(clip);
+  aRenderingContext.PopState();
 }
 
 

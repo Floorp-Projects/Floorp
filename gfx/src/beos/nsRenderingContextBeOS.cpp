@@ -73,10 +73,8 @@ nsRenderingContextBeOS::~nsRenderingContextBeOS() {
 	// Destroy the State Machine
 	if (mStateCache) {
 		PRInt32 cnt = mStateCache->Count();
-		while (--cnt >= 0) {
-			PRBool clipstate;
-			PopState(clipstate);
-		}
+		while (--cnt >= 0)
+			PopState();
 		delete mStateCache;
 		mStateCache = nsnull;
 	}
@@ -140,8 +138,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::UnlockDrawingSurface() {
-	PRBool clipstate;
-	PopState(clipstate);
+	PopState();
 	mSurface->Unlock();
 	return NS_OK;
 }
@@ -206,7 +203,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::PushState() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::PopState(PRBool &aClipEmpty) {
+NS_IMETHODIMP nsRenderingContextBeOS::PopState(void) {
 	PRUint32 cnt = mStateCache->Count();
 	nsGraphicsState *state;
 	
@@ -235,8 +232,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::PopState(PRBool &aClipEmpty) {
 #endif
 	}
 	
-	if (mClipRegion) aClipEmpty = mClipRegion->IsEmpty();
-	else aClipEmpty = PR_TRUE;
 	return NS_OK;
 }
 

@@ -87,7 +87,7 @@ public:
   NS_IMETHOD PushState(PRInt32 aFlags);
 #endif
   NS_IMETHOD PushState(void);
-  NS_IMETHOD PopState(PRBool &aClipEmpty);
+  NS_IMETHOD PopState(void);
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 

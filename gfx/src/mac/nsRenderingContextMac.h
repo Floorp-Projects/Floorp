@@ -82,7 +82,7 @@ public:
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
   NS_IMETHOD PushState(void);
-  NS_IMETHOD PopState(PRBool &aClipEmpty);
+  NS_IMETHOD PopState(void);
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);

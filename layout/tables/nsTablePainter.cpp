@@ -683,8 +683,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                  NS_FRAME_PAINT_LAYER_BACKGROUND,
                  NS_PAINT_FLAG_TABLE_BG_PAINT | NS_PAINT_FLAG_TABLE_CELL_BG_PASS);
     mDirtyRect.MoveBy(mCellRect.x, mCellRect.y);
-    PRBool clipEmpty;
-    mRenderingContext.PopState(clipEmpty);
+    mRenderingContext.PopState();
   }
 
   return NS_OK;

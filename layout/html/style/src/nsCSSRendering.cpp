@@ -2126,7 +2126,7 @@ nscoord width;
   for(i=0;i<4;i++){
     if(borderRadii[i] > 0){
       PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,nsnull,&aOutlineStyle,aStyleContext,aSkipSides,borderRadii,aGap,PR_TRUE);
-      aRenderingContext.PopState(clipState);
+      aRenderingContext.PopState();
       return;
     }
   }
@@ -2138,7 +2138,7 @@ nscoord width;
       (outlineStyle == NS_STYLE_BORDER_STYLE_DASHED))  {
     DrawDashedSides(0, aRenderingContext, aDirtyRect, ourColor, nsnull, &aOutlineStyle, PR_TRUE,
                     outside, inside, aSkipSides, aGap);
-    aRenderingContext.PopState(clipState);
+    aRenderingContext.PopState();
     return;
   }
 
@@ -2194,7 +2194,7 @@ nscoord width;
     }  
   }
   // Restore clipping
-  aRenderingContext.PopState(clipState);
+  aRenderingContext.PopState();
 }
 
 /* draw the edges of the border described in aBorderEdges one segment at a time.

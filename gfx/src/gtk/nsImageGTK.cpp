@@ -1770,7 +1770,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                PR_MIN(validHeight, aY1-y));
     }
 
-    aContext.PopState(clipState);
+    aContext.PopState();
 
     return NS_OK;
   }

@@ -1386,10 +1386,8 @@ nsTableFrame::PaintChildren(nsIPresContext*      aPresContext,
 
   nsHTMLContainerFrame::PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
 
-  if (clip) {
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
-  }
+  if (clip)
+    aRenderingContext.PopState();
 }
 
 // table paint code is concerned primarily with borders and bg color

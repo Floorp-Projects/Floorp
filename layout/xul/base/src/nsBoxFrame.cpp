@@ -1634,9 +1634,8 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
     kid->GetNextBox(&kid);
   }
 
-  if (hasClipped) {
-    aRenderingContext.PopState(clipState);
-  }
+  if (hasClipped)
+    aRenderingContext.PopState();
 
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
@@ -1716,9 +1715,8 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
         kid->GetNextBox(&kid);
     }
 
-    if (hasClipped) {
-       aRenderingContext.PopState(clipState);
-    }
+    if (hasClipped)
+       aRenderingContext.PopState();
   }
 }
 

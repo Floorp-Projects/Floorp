@@ -552,7 +552,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
     if (NS_FAILED(rv))
 #endif // IBMBIDI
     aRenderingContext.DrawString(str, x, y + aAscent);
-    aRenderingContext.PopState(clipEmpty);
+    aRenderingContext.PopState();
 
 #ifdef DEBUG_PRINTING
     PR_PL(("Page: %p", this));
@@ -698,7 +698,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
   }
 
-  aRenderingContext.PopState(clipEmpty);
+  aRenderingContext.PopState();
 
   return rv;
 }
