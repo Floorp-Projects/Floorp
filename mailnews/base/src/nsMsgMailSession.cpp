@@ -48,11 +48,19 @@ nsMsgMailSession::nsMsgMailSession():
     if (NS_SUCCEEDED(rv))
       m_accountManager->LoadAccounts();
 
+	mListeners = new nsVoidArray();
+
 }
 
 nsMsgMailSession::~nsMsgMailSession()
 {
   NS_IF_RELEASE(m_accountManager);
+
+  if (mListeners) 
+	{
+		delete mListeners;
+  }
+
 }
 
 
@@ -92,4 +100,74 @@ nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
   *aAM = m_accountManager;
   NS_IF_ADDREF(*aAM);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailSession::AddFolderListener(nsIFolderListener * listener)
+{
+  mListeners->AppendElement(listener);
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgMailSession::RemoveFolderListener(nsIFolderListener * listener)
+{
+  mListeners->RemoveElement(listener);
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item, char *property, char* oldValue, char* newValue)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemPropertyChanged(item, property, oldValue, newValue);
+	}
+
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item, char *property,
+																	PRUint32 oldValue, PRUint32 newValue)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
+	}
+
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemAdded(folder, item);
+	}
+
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemRemoved(folder, item);
+	}
+	return NS_OK;
+
 }
