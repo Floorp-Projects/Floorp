@@ -104,7 +104,6 @@ protected:
 
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
-    nsCOMPtr<nsIChannel> m_channel;
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
     nsCString m_windowTarget;
 };
@@ -166,11 +165,11 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
   NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIChannel> m_channel;
+    nsCOMPtr<nsIChannel> aChannel;
     rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, notificationCallbacks,
-                                        nsIChannel::LOAD_NORMAL, aReferringURI, getter_AddRefs(m_channel));
+                                        nsIChannel::LOAD_NORMAL, aReferringURI, getter_AddRefs(aChannel));
     if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
-    rv =  m_channel->AsyncRead(0, -1, nsnull, this);
+    rv =  aChannel->AsyncRead(0, -1, nsnull, this);
   }
 
   return rv;
@@ -266,8 +265,6 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
       // the underlying stream converter which we then set to be this channelListener's
       // mNextListener. This effectively nestles the stream converter down right
       // in between the raw stream and the final listener.
-
-      nsIStreamListener *converterListener = nsnull;
       rv = StreamConvService->AsyncConvertData(aUnicSrc.GetUnicode(), aUniTo.GetUnicode(), aStreamListener, aChannel,
                                              getter_AddRefs(m_targetStreamListener));
   }
