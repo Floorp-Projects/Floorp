@@ -1461,16 +1461,9 @@ nsLocalFile::Exists(PRBool *_retval)
     nsresult rv = ResolveAndStat( PR_TRUE );
     
     if (NS_SUCCEEDED(rv))
-    {
         *_retval = PR_TRUE;
-    }
     else 
-    {
         *_retval = PR_FALSE;
-        if (GetLastError() != ERROR_FILE_NOT_FOUND)
-            return NS_ERROR_FAILURE;
-    }
-    
     
     return NS_OK;
 }

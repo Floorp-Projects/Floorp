@@ -925,9 +925,7 @@ nsLocalFile::Exists(PRBool *_retval)
     NS_ENSURE_ARG_POINTER(_retval);
     PRBool accessOK;
     *_retval = accessOK = (access(mPath, F_OK) == 0);
-    if (accessOK || errno == EACCES)
-        return NS_OK;
-    return NSRESULT_FOR_ERRNO();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
