@@ -94,6 +94,8 @@ NS_METHOD nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
   aOldFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
+  // Update the widget
+  ::SendMessage(mWnd, EM_SETREADONLY, (WPARAM) (BOOL)aReadOnlyFlag, (LPARAM)0);
   return NS_OK;
 }
   
