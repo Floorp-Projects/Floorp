@@ -146,6 +146,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mFirstDocumentLoad = PR_TRUE;
 
   mChromeEventHandler = nsnull;
+  mWebShell = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -2949,11 +2950,11 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
                                  PRUint32 aFlags,
                                  nsEventStatus* aEventStatus)
 {
-  nsresult mRet = NS_OK;
-  nsIDOMEvent* mDOMEvent = nsnull;
+  nsresult ret = NS_OK;
+  nsIDOMEvent* domEvent = nsnull;
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
-    aDOMEvent = &mDOMEvent;
+    aDOMEvent = &domEvent;
     aEvent->flags = NS_EVENT_FLAG_NONE;
   }
   
@@ -2998,7 +2999,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     aDOMEvent = nsnull;
   }
 
-  return mRet;
+  return ret;
 }
 
 nsresult 
