@@ -23,6 +23,7 @@ DEPTH=..\..\..
 
 XPIDLSRCS =                     \
             .\nsILocale.idl     \
+            .\nsIScriptableDateFormat.idl     \
             $(NULL)
 
 
