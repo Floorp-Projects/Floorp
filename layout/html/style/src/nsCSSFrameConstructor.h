@@ -27,6 +27,7 @@ struct nsAbsoluteItems;
 struct nsTableCreator;
 class nsIStyleContext;
 struct nsTableList;
+struct nsStyleContent;
 struct nsStyleDisplay;
 class nsIPresShell;
 class nsVoidArray;
@@ -130,6 +131,14 @@ protected:
                                     nsIStyleContext* aParentStyleContext,
                                     nsIFrame*&       aNewFrame,
                                     nsAbsoluteItems& aFixedItems);
+
+  nsresult CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
+                                   nsIFrame*             aParentFrame,
+                                   nsIContent*           aContent,
+                                   nsIStyleContext*      aStyleContext,
+                                   const nsStyleContent* aStyleContent,
+                                   PRUint32              aContentIndex,
+                                   nsIFrame**            aFrame);
 
   PRBool CreateGeneratedContentFrame(nsIPresContext*  aPresContext,
                                      nsIFrame*        aFrame,
@@ -363,7 +372,8 @@ protected:
                            nsAbsoluteItems& aAbsoluteItems,
                            nsFrameItems&    aFrameItems,
                            nsAbsoluteItems& aFixedItems,
-                           nsAbsoluteItems& aFloatingItems);
+                           nsAbsoluteItems& aFloatingItems,
+                           PRBool           aCanHaveGeneratedContent = PR_FALSE);
 
   nsresult CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame);
 
