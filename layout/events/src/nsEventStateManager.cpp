@@ -181,7 +181,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
-#if 1
+#if 0
   case NS_KEY_DOWN:
     ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
