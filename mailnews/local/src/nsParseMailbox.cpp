@@ -259,7 +259,6 @@ int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURI* aURL, nsIInputStream *
 	return (ret);
 }
 
-
 void nsMsgMailboxParser::DoneParsingFolder()
 {
 	/* End of file.  Flush out any partial line remaining in the buffer. */
@@ -657,7 +656,6 @@ NS_IMETHODIMP nsParseMailMessageState::GetAllHeaders(char ** pHeaders, PRInt32 *
 	*pHeadersSize = m_headers.GetBufferPos();
 	return NS_OK;
 }
-
 
 struct message_header *nsParseMailMessageState::GetNextHeaderInAggregate (nsVoidArray &list)
 {
@@ -1867,7 +1865,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 			// truncate  destination file in case message was partially written
 			// ### how to do this with a stream?
-//			destFile->truncate(destFolder,xpMailFolder,newMsgPos);
+			destFolderSpec.Truncate(newMsgPos);
 
 			if (lockedFolder)
 				lockedFolder->ReleaseSemaphore(myISupports);
@@ -1908,9 +1906,15 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	}
 
 	destFile->close();
+	m_inboxFileStream->close();
 	// How are we going to do this with a stream?
-//	int truncRet = XP_FileTruncate(m_mailboxName, xpMailFolder, messageOffset);
-//	NS_ASSERTION(truncRet >= 0, "unable to truncate file");
+	nsresult truncRet = m_inboxFileSpec.Truncate(messageOffset);
+	NS_ASSERTION(NS_SUCCEEDED(truncRet), "unable to truncate file");
+
+	//  need to re-open the inbox file stream.
+    m_inboxFileStream->Open(m_inboxFileSpec, (PR_RDWR | PR_CREATE_FILE));
+	if (m_inboxFileStream)
+		m_inboxFileStream->seek(m_inboxFileSpec.GetFileSize());
 
 	if (lockedFolder)
 		lockedFolder->ReleaseSemaphore (myISupports);
