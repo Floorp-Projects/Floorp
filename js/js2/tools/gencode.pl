@@ -265,24 +265,22 @@ sub collect {
                     "$init_tab$tab$tab($constr_params) " .
                     "{};\n");
     if (!$c->{"super_has_print"}) {
-        my $print_body = &get_print_body(@types);
-
         $class_decs .= ($init_tab . $tab . 
-                         "virtual Formatter& print (Formatter& f) {\n" .
+                         "virtual Formatter& print(Formatter& f) {\n" .
                          $init_tab . $tab . $tab . "f << opcodeNames[$opname]" .
-                         $print_body . ";\n" .
+                         &get_print_body(@types) . ";\n" .
                          $init_tab . $tab . $tab . "return f;\n" .
                          $init_tab . $tab . "}\n");
 
-        $class_decs .= ($init_tab . $tab . "virtual Formatter& print_args " .
-                        "(Formatter &f, JSValues &registers) {\n" .
-                        $init_tab . $tab . $tab . &get_printargs_body(@types) .
-                        "\n" .
-                        $init_tab . $tab . "}\n");
+        $class_decs .= ($init_tab . $tab . 
+                         "virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {\n" .
+                         &get_printops_body(@types) .
+                         $init_tab . $tab . $tab . "return f;\n" .
+                         $init_tab . $tab . "}\n");
 
     } else {
         $class_decs .= $init_tab . $tab . 
-          "/* print() and print_args() inherited from $super */\n";
+          "/* print() and printOperands() inherited from $super */\n";
     }
 
     $class_decs .= $init_tab . "};\n\n";
@@ -386,11 +384,33 @@ sub get_print_body {
     if ($rv ne "") {
         $rv = " << \"\\t\" << " . $rv;
     }
-            
+    
+    return $rv;
 }
 
-sub get_printargs_body {
-    my (@type) = @_;
+sub get_printops_body {
+    # generate the body of the print() function
+    my (@types) = @_;
+    my $type;
+    my @oplist;
+    my $op = 1;
+    my $in = $init_tab . $tab . $tab;
 
-    return "return f;";
+    for $type (@types) {
+
+        if ($type eq "Register") {
+            push (@oplist, "\"R\" << mOp$op << \" = \" << registers[mOp$op]");
+        } elsif ($type eq "RegisterList") {
+            push (@oplist, "\"RL\" << mOp$op");
+        }
+
+        $op++;
+    }
+
+    my $rv = join (" << \", \" << ", @oplist);
+    if ($rv ne "") {
+        $rv = $init_tab . $tab . $tab . "f << " . $rv . ";\n";
+    }
+    
+    return $rv;
 }
