@@ -45,6 +45,8 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
+  NS_IMETHOD  Destroy();
+
   NS_IMETHOD  Show(PRBool aState);
 
 	// nsISupports
