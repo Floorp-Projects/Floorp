@@ -2089,7 +2089,7 @@ public class Interpreter
         }
 
         return (frame.result != DBL_MRK)
-            ? frame.result : doubleWrap(frame.resultDbl);
+            ? frame.result : ScriptRuntime.wrapNumber(frame.resultDbl);
     }
 
     private static CallFrame interpret(Context cx, CallFrame frame)
@@ -2164,7 +2164,7 @@ public class Interpreter
 switch (op) {
     case Token.THROW: {
         Object value = stack[stackTop];
-        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
 
         int sourceLine = getIndex(iCode, frame.pc);
@@ -2187,22 +2187,22 @@ switch (op) {
         continue Loop;
     case Token.IN : {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         boolean valBln = ScriptRuntime.in(lhs, rhs, cx, frame.scope);
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
     }
     case Token.INSTANCEOF : {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, frame.scope);
-        stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
     }
     case Token.EQ :
@@ -2315,53 +2315,53 @@ switch (op) {
         frame.result = undefined;
         break Loop;
     case Token.BITNOT : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop);
+        int rIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = ~rIntValue;
         continue Loop;
     }
     case Token.BITAND : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop);
+        int rIntValue = stack_int32(frame, stackTop);
         --stackTop;
-        int lIntValue = stack_int32(stack, sDbl, stackTop);
+        int lIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue & rIntValue;
         continue Loop;
     }
     case Token.BITOR : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop);
+        int rIntValue = stack_int32(frame, stackTop);
         --stackTop;
-        int lIntValue = stack_int32(stack, sDbl, stackTop);
+        int lIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue | rIntValue;
         continue Loop;
     }
     case Token.BITXOR : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop);
+        int rIntValue = stack_int32(frame, stackTop);
         --stackTop;
-        int lIntValue = stack_int32(stack, sDbl, stackTop);
+        int lIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue ^ rIntValue;
         continue Loop;
     }
     case Token.LSH : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop);
+        int rIntValue = stack_int32(frame, stackTop);
         --stackTop;
-        int lIntValue = stack_int32(stack, sDbl, stackTop);
+        int lIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue << rIntValue;
         continue Loop;
     }
     case Token.RSH : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop);
+        int rIntValue = stack_int32(frame, stackTop);
         --stackTop;
-        int lIntValue = stack_int32(stack, sDbl, stackTop);
+        int lIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = lIntValue >> rIntValue;
         continue Loop;
     }
     case Token.URSH : {
-        int rIntValue = stack_int32(stack, sDbl, stackTop) & 0x1F;
+        int rIntValue = stack_int32(frame, stackTop) & 0x1F;
         --stackTop;
         double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
@@ -2418,15 +2418,15 @@ switch (op) {
         continue Loop;
     }
     case Token.NOT :
-        stack[stackTop] = stack_boolean(frame, stackTop)
-                          ? Boolean.FALSE : Boolean.TRUE;
+        stack[stackTop] = ScriptRuntime.wrapBoolean(
+                              !stack_boolean(frame, stackTop));
         continue Loop;
     case Token.BINDNAME :
         stack[++stackTop] = ScriptRuntime.bind(cx, frame.scope, stringReg);
         continue Loop;
     case Token.SETNAME : {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Scriptable lhs = (Scriptable)stack[stackTop];
         stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx,
@@ -2435,33 +2435,33 @@ switch (op) {
     }
     case Token.DELPROP : {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.delete(cx, frame.scope, lhs, rhs);
         continue Loop;
     }
     case Token.GETPROP : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getObjectProp(lhs, stringReg,
                                                       cx, frame.scope);
         continue Loop;
     }
     case Token.SETPROP : {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs,
                                                       cx, frame.scope);
         continue Loop;
     }
     case Icode_PROP_INC_DEC : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.propIncrDecr(lhs, stringReg,
                                                      frame.scope,
                                                      iCode[frame.pc]);
@@ -2478,10 +2478,10 @@ switch (op) {
         continue Loop;
     case Icode_ELEM_INC_DEC: {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, frame.scope,
                                                      iCode[frame.pc]);
         ++frame.pc;
@@ -2489,28 +2489,28 @@ switch (op) {
     }
     case Token.GET_REF : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getReference(lhs);
         continue Loop;
     }
     case Token.SET_REF : {
         Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setReference(lhs, rhs);
         continue Loop;
     }
     case Token.DEL_REF : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.deleteReference(lhs);
         continue Loop;
     }
     case Icode_REF_INC_DEC : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[frame.pc]);
         ++frame.pc;
         continue Loop;
@@ -2535,7 +2535,7 @@ switch (op) {
         continue Loop;
     case Icode_PROP_AND_THIS: {
         Object obj = stack[stackTop];
-        if (obj == DBL_MRK) obj = doubleWrap(sDbl[stackTop]);
+        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         // stringReg: property
         stack[stackTop] = ScriptRuntime.getPropFunctionAndThis(obj, stringReg,
                                                                cx, frame.scope);
@@ -2545,9 +2545,9 @@ switch (op) {
     }
     case Icode_ELEM_AND_THIS: {
         Object obj = stack[stackTop - 1];
-        if (obj == DBL_MRK) obj = doubleWrap(sDbl[stackTop - 1]);
+        if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop - 1]);
         Object id = stack[stackTop];
-        if (id == DBL_MRK) id = doubleWrap(sDbl[stackTop]);
+        if (id == DBL_MRK) id = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop - 1] = ScriptRuntime.getElemFunctionAndThis(obj, id,
                                                                    cx,
                                                                    frame.scope);
@@ -2556,7 +2556,7 @@ switch (op) {
     }
     case Icode_VALUE_AND_THIS : {
         Object value = stack[stackTop];
-        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.getValueFunctionAndThis(value, cx);
         ++stackTop;
         stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
@@ -2576,7 +2576,8 @@ switch (op) {
             stackTop -= indexReg;
 
             Object function = stack[stackTop];
-            if (function == DBL_MRK) function = doubleWrap(sDbl[stackTop]);
+            if (function == DBL_MRK)
+                function = ScriptRuntime.wrapNumber(sDbl[stackTop]);
             Object[] outArgs = getArgsArray(
                                    stack, sDbl, stackTop + 1, indexReg);
             stack[stackTop] = ScriptRuntime.newSpecial(
@@ -2692,7 +2693,7 @@ switch (op) {
             }
         }
         if (!(lhs instanceof Function)) {
-            if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[stackTop]);
+            if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
             throw ScriptRuntime.notFunctionError(lhs);
         }
         Function f = (Function)lhs;
@@ -2703,7 +2704,7 @@ switch (op) {
     }
     case Token.TYPEOF : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.typeof(lhs);
         continue Loop;
     }
@@ -2747,7 +2748,7 @@ switch (op) {
             sDbl[indexReg] = sDbl[stackTop];
         } else {
             Object val = stack[stackTop];
-            if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
+            if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
             stringReg = frame.fnOrScript.argNames[indexReg];
             frame.scope.put(stringReg, frame.scope, val);
         }
@@ -2821,7 +2822,7 @@ switch (op) {
         continue Loop;
     case Token.ENTERWITH : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         frame.scope = ScriptRuntime.enterWith(lhs, frame.scope);
         continue Loop;
@@ -2852,7 +2853,7 @@ switch (op) {
     }
     case Token.ENUM_INIT_KEYS : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         indexReg += frame.localShift;
         stack[indexReg] = ScriptRuntime.enumInit(lhs, frame.scope);
@@ -2860,7 +2861,7 @@ switch (op) {
     }
     case Token.ENUM_INIT_VALUES : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         indexReg += frame.localShift;
         stack[indexReg] = ScriptRuntime.enumValuesInit(lhs, frame.scope);
@@ -2879,14 +2880,14 @@ switch (op) {
     case Token.SPECIAL_REF : {
         //stringReg: name of special property
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.specialReference(lhs, stringReg,
                                                          cx, frame.scope);
         continue Loop;
     }
     case Token.XML_REF : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, frame.scope);
         continue Loop;
     }
@@ -2920,7 +2921,7 @@ switch (op) {
         continue Loop;
     case Icode_LITERAL_SET : {
         Object value = stack[stackTop];
-        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         int i = (int)sDbl[stackTop];
         ((Object[])stack[stackTop])[i] = value;
@@ -2948,7 +2949,7 @@ switch (op) {
     }
     case Icode_ENTERDQ : {
         Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         frame.scope = ScriptRuntime.enterDotQuery(lhs, frame.scope);
         continue Loop;
@@ -2968,7 +2969,7 @@ switch (op) {
     }
     case Token.DEFAULTNAMESPACE : {
         Object value = stack[stackTop];
-        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setDefaultNamespace(value, cx);
         continue Loop;
     }
@@ -2988,19 +2989,19 @@ switch (op) {
     }
     case Token.TOATTRNAME : {
         Object value = stack[stackTop];
-        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.toAttributeName(value, cx);
         continue Loop;
     }
     case Token.DESCENDANTS : {
         Object value = stack[stackTop];
-        if(value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if(value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.toDescendantsName(value, cx);
         continue Loop;
     }
     case Token.COLONCOLON : {
         Object value = stack[stackTop];
-        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         // stringReg contains namespace
         stack[stackTop] = ScriptRuntime.toQualifiedName(stringReg, value,
                                                         cx, frame.scope);
@@ -3383,17 +3384,12 @@ switch (op) {
         }
     }
 
-    private static Object doubleWrap(double x)
+    private static int stack_int32(CallFrame frame, int i)
     {
-        return new Double(x);
-    }
-
-    private static int stack_int32(Object[] stack, double[] stackDbl, int i)
-    {
-        Object x = stack[i];
+        Object x = frame.stack[i];
         double value;
         if (x == DBL_MRK) {
-            value = stackDbl[i];
+            value = frame.sDbl[i];
         } else {
             value = ScriptRuntime.toNumber(x);
         }
@@ -3472,7 +3468,7 @@ switch (op) {
 
         // handle object(lhs) + number(d) code
         if (lhs instanceof Scriptable) {
-            rhs = doubleWrap(d);
+            rhs = ScriptRuntime.wrapNumber(d);
             if (!leftRightOrder) {
                 Object tmp = lhs;
                 lhs = rhs;
@@ -3548,7 +3544,7 @@ switch (op) {
                 throw Kit.codeBug();
             }
         }
-        frame.stack[i] = result ? Boolean.TRUE : Boolean.FALSE;
+        frame.stack[i] = ScriptRuntime.wrapBoolean(result);
     }
 
     private static void do_eq(CallFrame frame, int i, int op)
@@ -3570,7 +3566,7 @@ switch (op) {
             }
         }
         result ^= (op == Token.NE);
-        frame.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
+        frame.stack[i] = ScriptRuntime.wrapBoolean(result);
     }
 
     private static void do_sheq(CallFrame frame, int i, int op)
@@ -3607,13 +3603,13 @@ switch (op) {
             result = ldbl == rdbl;
         }
         result ^= (op == Token.SHNE);
-        frame.stack[i] = (result) ? Boolean.TRUE : Boolean.FALSE;
+        frame.stack[i] = ScriptRuntime.wrapBoolean(result);
     }
 
     private static void do_getElem(CallFrame frame, int i, Context cx)
     {
         Object lhs = frame.stack[i];
-        if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[i]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
 
         Object result;
         Object id = frame.stack[i + 1];
@@ -3642,9 +3638,9 @@ switch (op) {
     private static void do_setElem(CallFrame frame, int i, Context cx)
     {
         Object rhs = frame.stack[i + 2];
-        if (rhs == DBL_MRK) rhs = doubleWrap(frame.sDbl[i + 2]);
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(frame.sDbl[i + 2]);
         Object lhs = frame.stack[i];
-        if (lhs == DBL_MRK) lhs = doubleWrap(frame.sDbl[i]);
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
 
         Object result;
         Object id = frame.stack[i + 1];
@@ -3679,7 +3675,7 @@ switch (op) {
         Object[] args = new Object[count];
         for (int i = 0; i != count; ++i, ++shift) {
             Object val = stack[shift];
-            if (val == DBL_MRK) val = doubleWrap(sDbl[shift]);
+            if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[shift]);
             args[i] = val;
         }
         return args;

@@ -238,8 +238,6 @@ public class FunctionObject extends BaseFunction
           case JAVA_DOUBLE_TYPE:
             if (arg instanceof Double)
                 return arg;
-            if (arg instanceof Number)
-                return new Double(((Number)arg).doubleValue());
             return new Double(ScriptRuntime.toNumber(arg));
           case JAVA_SCRIPTABLE_TYPE:
             if (arg instanceof Scriptable)

@@ -1486,7 +1486,7 @@ public class ScriptRuntime {
     {
         Reference ref = (Reference)obj;
         ref.delete();
-        return ref.has() ? Boolean.FALSE : Boolean.TRUE;
+        return wrapBoolean(!ref.has());
     }
 
     static boolean isSpecialProperty(String s)
@@ -1585,7 +1585,7 @@ public class ScriptRuntime {
                 result = ScriptableObject.deleteProperty(sobj, s);
             }
         }
-        return result ? Boolean.TRUE : Boolean.FALSE;
+        return wrapBoolean(result);
     }
 
     /**
@@ -1842,10 +1842,12 @@ public class ScriptRuntime {
     public static Boolean enumNext(Object enumObj)
     {
         // OPT this could be more efficient
+        boolean result;
         IdEnumeration x = (IdEnumeration)enumObj;
         for (;;) {
             if (x.obj == null) {
-                return Boolean.FALSE;
+                result = false;
+                break;
             }
             if (x.index == x.ids.length) {
                 x.obj = x.obj.getPrototype();
@@ -1867,9 +1869,10 @@ public class ScriptRuntime {
                     continue;   // must have been deleted
                 x.currentId = String.valueOf(intId);
             }
+            result = true;
             break;
         }
-        return Boolean.TRUE;
+        return wrapBoolean(result);
     }
 
     public static Object enumId(Object enumObj, Context cx)
@@ -2297,7 +2300,7 @@ public class ScriptRuntime {
     public static Object add(Object val1, Object val2, Context cx)
     {
         if(val1 instanceof Number && val2 instanceof Number) {
-            return new Double(((Number)val1).doubleValue() +
+            return wrapNumber(((Number)val1).doubleValue() +
                               ((Number)val2).doubleValue());
         }
         if (val1 instanceof XMLObject) {
@@ -2318,10 +2321,10 @@ public class ScriptRuntime {
             val2 = ((Scriptable) val2).getDefaultValue(null);
         if (!(val1 instanceof String) && !(val2 instanceof String))
             if ((val1 instanceof Number) && (val2 instanceof Number))
-                return new Double(((Number)val1).doubleValue() +
+                return wrapNumber(((Number)val1).doubleValue() +
                                   ((Number)val2).doubleValue());
             else
-                return new Double(toNumber(val1) + toNumber(val2));
+                return wrapNumber(toNumber(val1) + toNumber(val2));
         return toString(val1).concat(toString(val2));
     }
 
@@ -2383,7 +2386,7 @@ public class ScriptRuntime {
             number = toNumber(value);
             if (post) {
                 // convert result to number
-                value = new Double(number);
+                value = wrapNumber(number);
             }
         }
         if ((incrDecrMask & Node.DECR_FLAG) == 0) {
@@ -2391,7 +2394,7 @@ public class ScriptRuntime {
         } else {
             --number;
         }
-        Number result = new Double(number);
+        Number result = wrapNumber(number);
         target.put(id, protoChainStart, result);
         if (post) {
             return value;
@@ -2413,7 +2416,7 @@ public class ScriptRuntime {
             number = toNumber(value);
             if (post) {
                 // convert result to number
-                value = new Double(number);
+                value = wrapNumber(number);
             }
         }
         if ((incrDecrMask & Node.DECR_FLAG) == 0) {
@@ -2421,7 +2424,7 @@ public class ScriptRuntime {
         } else {
             --number;
         }
-        Number result = new Double(number);
+        Number result = wrapNumber(number);
         setObjectElem(obj, index, result, cx, scope);
         if (post) {
             return value;
@@ -2441,7 +2444,7 @@ public class ScriptRuntime {
             number = toNumber(value);
             if (post) {
                 // convert result to number
-                value = new Double(number);
+                value = wrapNumber(number);
             }
         }
         if ((incrDecrMask & Node.DECR_FLAG) == 0) {
@@ -2449,7 +2452,7 @@ public class ScriptRuntime {
         } else {
             --number;
         }
-        Number result = new Double(number);
+        Number result = wrapNumber(number);
         setReference(obj, result);
         if (post) {
             return value;
@@ -2560,7 +2563,7 @@ public class ScriptRuntime {
             } else if (y instanceof Scriptable) {
                 if (y == Undefined.instance) { return false; }
                 if (y instanceof ScriptableObject) {
-                    Object xval = new Double(x);
+                    Object xval = wrapNumber(x);
                     Object test = ((ScriptableObject)y).equivalentValues(xval);
                     if (test != Scriptable.NOT_FOUND) {
                         return ((Boolean)test).booleanValue();

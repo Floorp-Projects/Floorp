@@ -111,15 +111,16 @@ public class NativeGlobal implements Serializable, IdFunctionCall
             f.exportAsScopeProperty();
         }
 
-        ScriptableObject.defineProperty(scope, "NaN",
-                                        ScriptRuntime.NaNobj,
-                                        ScriptableObject.DONTENUM);
-        ScriptableObject.defineProperty(scope, "Infinity",
-                                        new Double(Double.POSITIVE_INFINITY),
-                                        ScriptableObject.DONTENUM);
-        ScriptableObject.defineProperty(scope, "undefined",
-                                        Undefined.instance,
-                                        ScriptableObject.DONTENUM);
+        ScriptableObject.defineProperty(
+            scope, "NaN", ScriptRuntime.NaNobj,
+            ScriptableObject.DONTENUM);
+        ScriptableObject.defineProperty(
+            scope, "Infinity",
+            ScriptRuntime.wrapNumber(Double.POSITIVE_INFINITY),
+            ScriptableObject.DONTENUM);
+        ScriptableObject.defineProperty(
+            scope, "undefined", Undefined.instance,
+            ScriptableObject.DONTENUM);
 
         String[] errorMethods = Kit.semicolonSplit(""
                                     +"ConversionError;"
@@ -184,21 +185,28 @@ public class NativeGlobal implements Serializable, IdFunctionCall
                     return js_eval(cx, scope, args);
 
                 case Id_isFinite: {
-                    if (args.length < 1)
-                        return Boolean.FALSE;
-                    double d = ScriptRuntime.toNumber(args[0]);
-                    return (d != d || d == Double.POSITIVE_INFINITY ||
-                            d == Double.NEGATIVE_INFINITY)
-                           ? Boolean.FALSE
-                           : Boolean.TRUE;
+                    boolean result;
+                    if (args.length < 1) {
+                        result = false;
+                    } else {
+                        double d = ScriptRuntime.toNumber(args[0]);
+                        result = (d == d
+                                  && d != Double.POSITIVE_INFINITY
+                                  && d != Double.NEGATIVE_INFINITY);
+                    }
+                    return ScriptRuntime.wrapBoolean(result);
                 }
 
                 case Id_isNaN: {
-                     // The global method isNaN, as per ECMA-262 15.1.2.6.
-                    if (args.length < 1)
-                        return Boolean.TRUE;
-                    double d = ScriptRuntime.toNumber(args[0]);
-                    return (d != d) ? Boolean.TRUE : Boolean.FALSE;
+                    // The global method isNaN, as per ECMA-262 15.1.2.6.
+                    boolean result;
+                    if (args.length < 1) {
+                        result = true;
+                    } else {
+                        double d = ScriptRuntime.toNumber(args[0]);
+                        result = (d != d);
+                    }
+                    return ScriptRuntime.wrapBoolean(result);
                 }
 
                 case Id_isXMLName: {
@@ -283,7 +291,7 @@ public class NativeGlobal implements Serializable, IdFunctionCall
         }
 
         double d = ScriptRuntime.stringToNumber(s, start, radix);
-        return new Double(negative ? -d : d);
+        return ScriptRuntime.wrapNumber(negative ? -d : d);
     }
 
     /**
@@ -333,7 +341,7 @@ public class NativeGlobal implements Serializable, IdFunctionCall
                 } else {
                     d = Double.POSITIVE_INFINITY;
                 }
-                return new Double(d);
+                return ScriptRuntime.wrapNumber(d);
             }
             return ScriptRuntime.NaNobj;
         }

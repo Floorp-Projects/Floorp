@@ -782,7 +782,6 @@ final class NativeDate extends IdScriptableObject
                               array[3], array[4], array[5], array[6]);
         d = TimeClip(d);
         return d;
-        //        return new Double(d);
     }
 
     private static double date_parseString(String s)

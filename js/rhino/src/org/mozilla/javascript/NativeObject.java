@@ -133,7 +133,7 @@ public class NativeObject extends IdScriptableObject
                     result = thisObj.has(s, thisObj);
                 }
             }
-            return result ? Boolean.TRUE : Boolean.FALSE;
+            return ScriptRuntime.wrapBoolean(result);
           }
 
           case Id_propertyIsEnumerable: {
@@ -159,19 +159,22 @@ public class NativeObject extends IdScriptableObject
                     }
                 }
             }
-            return result ? Boolean.TRUE : Boolean.FALSE;
+            return ScriptRuntime.wrapBoolean(result);
           }
 
           case Id_isPrototypeOf: {
+            boolean result = false;
             if (args.length != 0 && args[0] instanceof Scriptable) {
                 Scriptable v = (Scriptable) args[0];
                 do {
                     v = v.getPrototype();
-                    if (v == thisObj)
-                        return Boolean.TRUE;
+                    if (v == thisObj) {
+                        result = true;
+                        break;
+                    }
                 } while (v != null);
             }
-            return Boolean.FALSE;
+            return ScriptRuntime.wrapBoolean(result);
           }
 
           case Id_toSource:

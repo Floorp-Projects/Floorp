@@ -443,8 +443,8 @@ public class NativeArray extends IdScriptableObject
     private static Object setLengthProperty(Context cx, Scriptable target,
                                             long length)
     {
-        return ScriptRuntime.setObjectProp(target, "length",
-                                           new Double(length), cx);
+        return ScriptRuntime.setObjectProp(
+                   target, "length", ScriptRuntime.wrapNumber(length), cx);
     }
 
     /* Utility functions to encapsulate index > Integer.MAX_VALUE
@@ -946,7 +946,7 @@ public class NativeArray extends IdScriptableObject
             length += args.length;
             return setLengthProperty(cx, thisObj, length);
         }
-        return new Double(length);
+        return ScriptRuntime.wrapNumber(length);
     }
 
     private static Object js_splice(Context cx, Scriptable scope,
