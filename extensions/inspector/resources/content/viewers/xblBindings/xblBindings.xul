@@ -46,7 +46,7 @@
   
     <multipanel id="bxProps" label="Properties" open="true" persist="open">
       <vbox flex="1">
-        <radiogroup class="outset">
+        <radiogroup class="outset" orient="horizontal">
           <radio id="raPropGetter" label="getter" selected="true" oncommand="viewer.onPropSelected()"/>
           <radio id="raPropSetter" label="setter" oncommand="viewer.onPropSelected()"/>
         </radiogroup>
