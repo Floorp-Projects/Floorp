@@ -33,6 +33,7 @@
 #include "nsCalParserCIID.h"
 #include "nsxpfcCIID.h"
 #include "nsCalendarContainer.h"
+#include "nsXPFCToolkit.h"
 
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID,          NS_ICONTENT_SINK_IID);
@@ -78,7 +79,7 @@ public:
 
 nsCalXMLContentSink::nsCalXMLContentSink() : nsIHTMLContentSink()
 {
-  mWidget = nsnull;
+  mCalendarContainer = nsnull;
   mControlList = nsnull;
 
   NS_INIT_REFCNT();
@@ -190,7 +191,8 @@ NS_IMETHODIMP nsCalXMLContentSink::Init()
 
 NS_IMETHODIMP nsCalXMLContentSink::SetViewerContainer(nsIWebViewerContainer * aViewerContainer)
 {
-  SetWidget(((nsCalendarWidget *)((nsCalendarContainer*)aViewerContainer)->GetDocumentWidget()));
+  mCalendarContainer = (nsCalendarContainer*)aViewerContainer;
+
   return NS_OK;
 }
   
@@ -249,7 +251,7 @@ NS_IMETHODIMP nsCalXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
     nsIXPFCCanvas * root ;
 
-    mWidget->GetRootCanvas(&root);
+    gXPFCToolkit->GetRootCanvas(&root);
 
     root->AddChildCanvas(child);
 
@@ -489,7 +491,7 @@ NS_IMETHODIMP nsCalXMLContentSink::AddCtx(const nsIParserNode& aNode)
    */
   nsIXPFCCanvas * root ;
 
-  mWidget->GetRootCanvas(&root);
+  gXPFCToolkit->GetRootCanvas(&root);
 
   ApplyContext(root, context);
 
@@ -600,7 +602,7 @@ NS_IMETHODIMP nsCalXMLContentSink::AddControl(const nsIParserNode& aNode)
       {
         nsIXPFCCanvas * root ;
 
-        mWidget->GetRootCanvas(&root);
+        gXPFCToolkit->GetRootCanvas(&root);
   
         child = root->CanvasFromName(value);
 
@@ -737,9 +739,9 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   nsIXPFCCanvas * canvas2 ;
   nsresult res;
 
-  mWidget->GetRootCanvas(&root);
+  gXPFCToolkit->GetRootCanvas(&root);
 
-
+  
   /*
    * first, register all appropriate controls that have been stored up
    */
@@ -810,7 +812,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
               if (res == NS_OK)
               {
-                mWidget->mCalendarShell->GetObserverManager()->Register(subject, observer);
+                gXPFCToolkit->GetObserverManager()->Register(subject, observer);
               
                 NS_RELEASE(observer);
               }
@@ -829,7 +831,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                 if (res == NS_OK)
                 {
 
-                  mWidget->mCalendarShell->GetObserverManager()->Register(subject2, observer2);
+                  gXPFCToolkit->GetObserverManager()->Register(subject2, observer2);
 
                   NS_RELEASE(observer2);
 
@@ -888,7 +890,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                 if (res == NS_OK)
                 {
 
-                  mWidget->mCalendarShell->GetObserverManager()->Register(subject, observer);
+                  gXPFCToolkit->GetObserverManager()->Register(subject, observer);
 
                   NS_RELEASE(observer);
                 }
@@ -940,13 +942,6 @@ NS_IMETHODIMP nsCalXMLContentSink::WillResume(void)
   return NS_OK;
 }
 
-
-nsresult nsCalXMLContentSink::SetWidget(nsCalendarWidget * aWidget)
-{
-  mWidget = aWidget;
-
-  return NS_OK;
-}
 
 nsIXPFCCanvas * nsCalXMLContentSink::CanvasFromName(nsString& aName)
 {

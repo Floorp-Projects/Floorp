@@ -24,7 +24,7 @@
 #include "nsIContentSink.h"
 #include "nsString.h"
 #include "nsIHTMLContentSink.h"
-#include "nsCalendarWidget.h"
+#include "nsCalendarContainer.h"
 #include "nsCalUtilCIID.h"
 #include "nsIVector.h"
 #include "nsIIterator.h"
@@ -75,9 +75,6 @@ public:
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
 
-  // XXX ACK - see nsCalendarWidget.cpp
-  NS_IMETHOD SetWidget(nsCalendarWidget * aWidget);
-
 private:
   NS_IMETHOD ConsumeAttributes(const nsIParserNode& aNode, nsIXMLParserObject& aObject);
   NS_IMETHOD CIDFromTag(eCalXMLTags tag, nsCID &aClass);
@@ -88,7 +85,7 @@ private:
   NS_IMETHOD ApplyContext(nsIXPFCCanvas * aCanvas, nsICalTimeContext * aContext);
 
 private:
-    nsCalendarWidget * mWidget ;
+    nsCalendarContainer * mCalendarContainer;
     nsIVector * mTimeContextList;
     nsIStack *  mCanvasStack;
     nsIVector * mOrphanCanvasList;

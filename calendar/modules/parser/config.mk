@@ -23,6 +23,7 @@ LD_LIBS += \
     $(NATIVE_LIBNLS_LIBS) \
 	$(NATIVE_RAPTOR_WIDGET) \
 	xpcom$(MOZ_BITS) \
+	xpfc10 \
 	$(XP_REG_LIB)
 
 AR_LIBS += \
