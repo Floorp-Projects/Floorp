@@ -42,16 +42,18 @@
  * @ingroup conversion_constants
  * @note XXX this should be derived from platform FLOAT_MIN
  */
-#ifndef ROUND_EXCLUSIVE_CONST_FLOAT
-#define ROUND_EXCLUSIVE_CONST_FLOAT   0.499999999
+#ifdef ROUND_EXCLUSIVE_CONST_FLOAT
+#undef ROUND_EXCLUSIVE_CONST_FLOAT
+#define ROUND_EXCLUSIVE_CONST_FLOAT   0.499999999f
 #endif
 
 /**
  * ROUND_CONST_FLOAT
  * @ingroup conversion_constants
  */
-#ifndef ROUND_CONST_FLOAT
-#define ROUND_CONST_FLOAT             0.5
+#ifdef ROUND_CONST_FLOAT
+#undef ROUND_CONST_FLOAT
+#define ROUND_CONST_FLOAT             0.5f
 #endif
 
 /**
@@ -59,8 +61,9 @@
  * @ingroup conversion_constants
  * @note XXX this should be derived from platform FLOAT_MIN
  */
-#ifndef CEIL_CONST_FLOAT
-#define CEIL_CONST_FLOAT              0.99999999
+#ifdef CEIL_CONST_FLOAT
+#undef CEIL_CONST_FLOAT
+#define CEIL_CONST_FLOAT              0.99999999f
 #endif
 
 /**
