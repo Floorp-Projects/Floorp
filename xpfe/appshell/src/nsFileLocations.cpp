@@ -234,6 +234,37 @@ void nsSpecialFileSpec::operator = (Type aType)
                 break;
             }
         
+        case App_ComponentsDirectory:
+            {
+                nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+                dir += "Components";
+#else
+                dir += "components";
+#endif
+            }
+            break;
+		case App_ChromeDirectory:
+            {
+                nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+                dir += "Chrome";
+#else
+                dir += "chrome";
+#endif
+            }
+            break;
+		case App_PluginsDirectory:
+            {
+                nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+                dir += "Chrome";
+#else
+                dir += "plugins";
+#endif
+            }
+            break;
+		
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
             NS_NOTYETIMPLEMENTED("Write me!");
