@@ -28,6 +28,19 @@ GOOD { clip: rect( 12pt 13em 14pc auto ) }
 GOOD { clip: rect( 12pt 13em 14pc 15in ) }
 GOOD { clip: rect ( 12pt 13em 14pc 15in ) }
 
+GOOD { clip: rect( auto, auto, auto, auto ) }
+GOOD { clip: rect(auto  , auto  , auto  ,   auto) }
+GOOD { clip: rect( 12pt, auto, auto, auto, ) }
+
+GOOD { clip: rect( auto, 12pt, auto, auto ) }
+GOOD { clip: rect( auto, auto, 12pt, auto ) }
+GOOD { clip: rect( auto, auto, auto, 12pt ) }
+GOOD { clip: rect( 12pt, 13em, auto, auto ) }
+
+GOOD { clip: rect( 12pt, 13em, 14pc, auto ) }
+GOOD { clip: rect( 12pt, 13em, 14pc, 15in ) }
+GOOD { clip: rect ( 12pt, 13em, 14pc, 15in ) }
+
 BAD { clip: rect( 1pt ) }
 BAD { clip: rect( 1pt 2pt ) }
 BAD { clip: rect( 1pt 2pt 3pt ) }
@@ -36,3 +49,5 @@ BAD { clip: rect( auto ) }
 BAD { clip: rect( auto auto) }
 BAD { clip: rect( auto auto auto) }
 BAD { clip: rect( auto auto auto) }
+BAD { clip: rect( auto, auto, auto, auto, ) }
+BAD { clip: rect ( 12pt, 13em, 14pc, 15in, ) }
