@@ -268,6 +268,27 @@ function PREF_SwitchPage( node )
 function PREF_onpageload( tag )
 {
   dump("*** PREF_onpageload('" + tag + "');\n");
+
+  // remove wallet functions (unless overruled by the "wallet.enabled" pref)
+  try {
+    if (!this.pref.GetBoolPref("wallet.enabled")) {
+      var element;
+      if (tag == "pref-wallet") {
+        element = window.frames[this.contentFrame].document.getElementById("walletArea");
+        element.setAttribute("style","display: none;" );
+      } else if (tag == "pref-advanced") {
+        element =
+          window.frames[this.contentFrame].document.getElementById("walletCaptureForms");
+        element.setAttribute("style","display: none;" );
+        element = 
+          window.frames[this.contentFrame].document.getElementById("walletCaptureFormsLabel");
+        element.setAttribute("style","display: none;" );
+      }
+    }
+  } catch(e) {
+    dump("wallet.enabled pref is missing from all.js");
+  }
+
   if( !this.wsm.PageData[tag] ) {
     // there is no entry in the data hash for this page, so we need to initialise
     // the form values from existing prefs. The best way to do this is to pack

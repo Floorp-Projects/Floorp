@@ -44,6 +44,27 @@ function Startup()
 
   doSetOKCancel(onOK, null);  // init ok event handler
 
+  // remove wallet functions (unless overruled by the "wallet.enabled" pref)
+  try {
+    pref = Components.classes['component://netscape/preferences'];
+    pref = pref.getService();
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
+    try {
+      if (!pref.GetBoolPref("wallet.enabled")) {
+        var element;
+        element = document.getElementById("nopreview");
+        element.setAttribute("style","display: none;" );
+        element = document.getElementById("nocapture");
+        element.setAttribute("style","display: none;" );
+      }
+    } catch(e) {
+      dump("wallet.enabled pref is missing from all.js");
+    }
+  } catch (ex) {
+    dump("failed to get prefs service!\n");
+    pref = null;
+  }
+
   LoadSignons();
   LoadReject();
   LoadNopreview();
