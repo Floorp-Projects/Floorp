@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  necko \
 		  js \
-		  appshell \
 		  xpconnect \
 		  caps \
 		  locale \
