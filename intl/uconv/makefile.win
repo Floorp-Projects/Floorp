@@ -23,4 +23,4 @@ DIRS=public src  \
      ucvja2 \
      tests
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>

@@ -19,4 +19,4 @@ DEPTH=..
 
 DIRS=uconv unicharutil locale strres lwbrk
 
-include <$(DEPTH)\layout\config\rules.mak>
+include <$(DEPTH)\config\rules.mak>
