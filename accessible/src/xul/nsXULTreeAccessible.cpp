@@ -83,23 +83,27 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccState(PRUint32 *_retval)
 // The value is the first selected child
 NS_IMETHODIMP nsXULTreeAccessible::GetAccValue(nsAString& _retval)
 {
+  _retval.Truncate(0);
+
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
   mTree->GetSelection(getter_AddRefs(selection));
-  if (selection) {
-    PRInt32 currentIndex;
-    nsCOMPtr<nsIDOMElement> selectItem;
-    selection->GetCurrentIndex(&currentIndex);
+  if (! selection)
+    return NS_ERROR_FAILURE;
 
+  PRInt32 currentIndex;
+  nsCOMPtr<nsIDOMElement> selectItem;
+  selection->GetCurrentIndex(&currentIndex);
+  if (currentIndex >= 0) {
     nsAutoString colID;
     PRInt32 keyColumn;
     mTree->GetKeyColumnIndex(&keyColumn);
     mTree->GetColumnID(keyColumn, colID);
     return mTreeView->GetCellText(currentIndex, colID.get(), _retval);
-    }
+  }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULTreeAccessible::GetAccRole(PRUint32 *_retval)
@@ -716,21 +720,9 @@ NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetAccActionName(PRUint8 index, nsA
 NS_IMETHODIMP nsXULTreeColumnitemAccessible::AccDoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    nsCOMPtr<nsITreeBoxObject> tree;
-    nsCOMPtr<nsITreeView> treeView;
-
-    nsXULTreeAccessible::GetTreeBoxObject(mDOMNode, getter_AddRefs(tree));
-    if (tree) {
-      tree->GetView(getter_AddRefs(treeView));
-      if (treeView) {
-        nsCOMPtr<nsIDOMElement> colElement(do_QueryInterface(mDOMNode));
-        if (colElement) {
-          nsAutoString colID;
-          colElement->GetAttribute(NS_LITERAL_STRING("id"), colID);
-          treeView->CycleHeader(colID.get(), colElement);
-        }
-      }
-    }
+    nsCOMPtr<nsIDOMXULElement> colElement(do_QueryInterface(mDOMNode));
+    if (colElement)
+      colElement->Click();
 
     return NS_OK;
   }
