@@ -177,6 +177,8 @@ NS_INTERFACE_MAP_BEGIN(nsStreamIOChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIStreamProvider)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIStreamObserver, nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -320,9 +322,13 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     }
 
     // Hook up the notification callbacks InterfaceRequestor...
-    rv = mFileTransport->SetNotificationCallbacks(mCallbacks,
-                                                 (mLoadAttributes & nsIChannel::LOAD_BACKGROUND));
-    if (NS_FAILED(rv)) goto done;
+    {
+        nsCOMPtr<nsIInterfaceRequestor> requestor =
+            do_QueryInterface(NS_STATIC_CAST(nsIRequest*, this));
+        rv = mFileTransport->SetNotificationCallbacks
+                (requestor, (mLoadAttributes & nsIChannel::LOAD_BACKGROUND));
+        if (NS_FAILED(rv)) goto done;
+    }
 
 #if 0
     if (mContentType == nsnull) {
@@ -330,7 +336,7 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) goto done;
     }
 #endif
-    rv = mFileTransport->AsyncRead(this, ctxt, 0, -1, 0, getter_AddRefs(mRequest));
+    rv = mFileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0, getter_AddRefs(mRequest));
 
   done:
     if (NS_FAILED(rv)) {
@@ -399,16 +405,8 @@ NS_IMETHODIMP
 nsStreamIOChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
   nsresult rv = NS_OK;
-
   mCallbacks = aNotificationCallbacks;
-
-  if (mFileTransport) {
-    // If a file transport is active, then pass it the new notification
-    // callbacks too...
-    rv = mFileTransport->SetNotificationCallbacks(aNotificationCallbacks,
-                                                 (mLoadAttributes & nsIChannel::LOAD_BACKGROUND));
-  }
-
+  mProgressSink = do_GetInterface(mCallbacks);
   return rv;
 }
 
@@ -523,6 +521,41 @@ nsStreamIOChannel::OnDataWritable(nsIRequest *request, nsISupports *context,
 {
     return GetProvider()->OnDataWritable(this, context, aOStream,
                                          aOffset, aLength);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIProgressEventSink implementation:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsStreamIOChannel::OnProgress(nsIRequest *request, nsISupports *context,
+                              PRUint32 progress, PRUint32 progressMax)
+{
+    if (mProgressSink)
+        mProgressSink->OnProgress(request, context, progress, progressMax);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamIOChannel::OnStatus(nsIRequest *request, nsISupports *context,
+                            nsresult status, const PRUnichar *statusText)
+{
+    if (mProgressSink)
+        mProgressSink->OnStatus(request, context, status, statusText);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIInterfaceRequestor implementation:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsStreamIOChannel::GetInterface(const nsIID &iid, void **result)
+{
+    if (iid.Equals(NS_GET_IID(nsIProgressEventSink)))
+        return QueryInterface(iid, result);
+
+    return NS_ERROR_NO_INTERFACE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
