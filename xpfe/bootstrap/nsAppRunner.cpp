@@ -618,6 +618,8 @@ static nsresult main1(int argc, char* argv[])
   return rv ;
 }
 
+
+// English text needs to go into a dtd file.
 static
 void DumpHelp(char *appname)
 {
@@ -637,6 +639,11 @@ void DumpHelp(char *appname)
   printf("  -width <value>   Set width of startup window to <value>.\n");
   printf("  -v               Print %s version.\n", appname);
   printf("  -version         Print %s version.\n", appname);
+  printf("\n");
+  printf("  -CreateProfile <profile>    Create and start with <profile>.\n");
+  printf("  -ProfileWizard   Start with profile wizard.\n");
+  printf("  -ProfileManager  Start with profile manager.\n");
+  printf("  -SelectProfile   Start with profile selection dialog.\n");
   printf("\n");
   printf("Arguments which are not options are interpreted as either files or\n");
   printf("URLs to be loaded.\n");
