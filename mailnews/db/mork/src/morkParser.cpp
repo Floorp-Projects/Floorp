@@ -917,8 +917,18 @@ void morkParser::ReadMeta(morkEnv* ev, int inEndMeta)
           this->UnexpectedByteInMetaWarning(ev);
         break;
         
+      case '[': // maybe table meta row?
+        if ( mParser_InTable )
+          this->ReadRow(ev, '['); 
+        else
+          this->UnexpectedByteInMetaWarning(ev);
+        break;
+        
       default:
-        this->UnexpectedByteInMetaWarning(ev);
+        if ( mParser_InTable && morkCh_IsHex(c) )
+          this->ReadRow(ev, c);
+        else
+          this->UnexpectedByteInMetaWarning(ev);
         break;
     }
   }

@@ -87,7 +87,7 @@ const mork_u1 morkCh_Type[] = /* derives from public domain Mithril ch table */
   0,                       /* 0x29 ) cannot be kV because needs escape */
   morkCh_kV,               /* 0x2A * */
   morkCh_kV|morkCh_kM,     /* 0x2B + */
-  0,                       /* 0x2C , */
+  morkCh_kV,               /* 0x2C , */
   morkCh_kV|morkCh_kM,     /* 0x2D - */
   morkCh_kV,               /* 0x2E . */
   morkCh_kV,               /* 0x2F / */

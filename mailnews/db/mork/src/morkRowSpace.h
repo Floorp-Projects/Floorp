@@ -113,10 +113,10 @@ public: // other space methods
   // CutAllRows() puts all rows and cells back into the pool.
   
   morkTable* NewTable(morkEnv* ev, mork_kind inTableKind,
-    mdb_bool inMustBeUnique);
+    mdb_bool inMustBeUnique, const mdbOid* inOptionalMetaRowOid);
   
   morkTable* NewTableWithTid(morkEnv* ev, mork_tid inTid,
-    mork_kind inTableKind);
+    mork_kind inTableKind, const mdbOid* inOptionalMetaRowOid);
   
   morkTable* FindTableByKind(morkEnv* ev, mork_kind inTableKind);
   morkTable* FindTableByTid(morkEnv* ev, mork_tid inTid)

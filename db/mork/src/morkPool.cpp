@@ -217,7 +217,8 @@ morkPool::AddRowCells(morkEnv* ev, morkRow* ioRow, mork_size inNewSize)
       ioRow->mRow_Length = inNewSize;
       ++ioRow->mRow_Seed;
       
-      this->ZapCells(ev, oldCells, fill);
+      if ( oldCells )
+        this->ZapCells(ev, oldCells, fill);
     }
   }
   return ( ev->Good() && ioRow->mRow_Length >= inNewSize );
@@ -230,28 +231,42 @@ morkPool::CutRowCells(morkEnv* ev, morkRow* ioRow,
   mork_fill fill = ioRow->mRow_Length;
   if ( ev->Good() && fill > inNewSize ) // need fewer cells?
   {
-    morkCell* newCells = this->NewCells(ev, inNewSize);
-    if ( newCells )
+    if ( inNewSize ) // want any row cells at all?
+    {
+      morkCell* newCells = this->NewCells(ev, inNewSize);
+      if ( newCells )
+      {
+        morkCell* oldCells = ioRow->mRow_Cells;
+        morkCell* oldEnd = oldCells + fill; // one past all old cells
+        morkCell* newEnd = oldCells + inNewSize; // copy only kept old cells
+        while ( oldCells < newEnd )
+        {
+          *newCells++ = *oldCells++; // bitwise copy each old cell struct
+        }
+        while ( oldCells < oldEnd )
+        {
+          if ( oldCells->mCell_Atom ) // need to unref old cell atom?
+            oldCells->SetAtom(ev, (morkAtom*) 0, this); // unref cell atom
+          ++oldCells;
+        }
+        oldCells = ioRow->mRow_Cells;
+        ioRow->mRow_Cells = newCells;
+        ioRow->mRow_Length = inNewSize;
+        ++ioRow->mRow_Seed;
+        
+        if ( oldCells )
+          this->ZapCells(ev, oldCells, fill);
+      }
+    }
+    else // get rid of all row cells
     {
       morkCell* oldCells = ioRow->mRow_Cells;
-      morkCell* oldEnd = oldCells + fill; // one past all old cells
-      morkCell* newEnd = oldCells + inNewSize; // copy only kept old cells
-      while ( oldCells < newEnd )
-      {
-        *newCells++ = *oldCells++; // bitwise copy each old cell struct
-      }
-      while ( oldCells < oldEnd )
-      {
-        if ( oldCells->mCell_Atom ) // need to unref old cell atom?
-          oldCells->SetAtom(ev, (morkAtom*) 0, this); // unref cell atom
-        ++oldCells;
-      }
-      oldCells = ioRow->mRow_Cells;
-      ioRow->mRow_Cells = newCells;
-      ioRow->mRow_Length = inNewSize;
+      ioRow->mRow_Cells = 0;
+      ioRow->mRow_Length = 0;
       ++ioRow->mRow_Seed;
       
-      this->ZapCells(ev, oldCells, fill);
+      if ( oldCells )
+        this->ZapCells(ev, oldCells, fill);
     }
   }
   return ( ev->Good() && ioRow->mRow_Length <= inNewSize );

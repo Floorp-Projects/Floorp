@@ -144,7 +144,7 @@ nsresult nsDBFolderInfo::AddToNewMDB()
 		nsIMdbStore *store = m_mdb->GetStore();
 		// create the unique table for the dbFolderInfo.
 		mdb_err err = store->NewTable(m_mdb->GetEnv(), m_rowScopeToken, 
-			m_tableKindToken, PR_TRUE, &m_mdbTable);
+			m_tableKindToken, PR_TRUE, nsnull, &m_mdbTable);
 
 		// make sure the oid of the table is 1.
 		struct mdbOid folderInfoTableOID;
@@ -179,6 +179,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 			mdb_pos		rowPos;
 			mdb_count outTableCount; // current number of such tables
 			mdb_bool mustBeUnique; // whether port can hold only one of these
+			mdb_bool hasOid;
 			ret = store->GetTableKind(m_mdb->GetEnv(), m_rowScopeToken, m_tableKindToken, &outTableCount, 
 				&mustBeUnique, &m_mdbTable);
 //			NS_ASSERTION(mustBeUnique && outTableCount == 1, "only one global db info allowed");
@@ -186,7 +187,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 			if (m_mdbTable)
 			{
 				// find singleton row for global info.
-				ret = m_mdbTable->HasOid(m_mdb->GetEnv(), &gDBFolderInfoOID, &rowPos);
+				ret = m_mdbTable->HasOid(m_mdb->GetEnv(), &gDBFolderInfoOID, &hasOid);
 				if (ret == NS_OK)
 				{
 					nsIMdbTableRowCursor *rowCursor;

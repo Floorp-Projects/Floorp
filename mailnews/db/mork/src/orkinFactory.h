@@ -92,6 +92,8 @@ public: // utilities:
     mdb_err* outErr) const;
     
   morkEnv* GetInternalFactoryEnv(mdb_err* outErr);
+  
+  mork_bool CanOpenMorkTextFile(morkEnv* ev, const mdbYarn* inFirst512Bytes);
 
 public: // type identification
   mork_bool IsOrkinFactory() const

@@ -677,6 +677,7 @@ orkinStore::NewTable( // make one new table of specific type
   mdb_scope inRowScope,    // row scope for row ids
   mdb_kind inTableKind,    // the type of table to access
   mdb_bool inMustBeUnique, // whether store can hold only one of these
+  const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
   nsIMdbTable** acqTable)     // acquire scoped collection of rows
 {
   mdb_err outErr = 0;
@@ -686,9 +687,39 @@ orkinStore::NewTable( // make one new table of specific type
   {
     morkTable* table =
       ((morkStore*) mHandle_Object)->NewTable(ev, inRowScope,
-        inTableKind, inMustBeUnique);
+        inTableKind, inMustBeUnique, inOptionalMetaRowOid);
     if ( table && ev->Good() )
       outTable = table->AcquireTableHandle(ev);
+    outErr = ev->AsErr();
+  }
+  if ( acqTable )
+    *acqTable = outTable;
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinStore::NewTableWithOid( // make one new table of specific type
+  nsIMdbEnv* mev, // context
+  const mdbOid* inOid,   // caller assigned oid
+  mdb_kind inTableKind,    // the type of table to access
+  mdb_bool inMustBeUnique, // whether store can hold only one of these
+  const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
+  nsIMdbTable** acqTable)     // acquire scoped collection of rows
+{
+  mdb_err outErr = 0;
+  nsIMdbTable* outTable = 0;
+  morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = ((morkStore*) mHandle_Object)->OidToTable(ev, inOid,
+      inOptionalMetaRowOid);
+    if ( table && ev->Good() )
+    {
+      table->mTable_Kind = inTableKind;
+      if ( inMustBeUnique )
+        table->mTable_MustBeUnique = inMustBeUnique;
+      outTable = table->AcquireTableHandle(ev);
+    }
     outErr = ev->AsErr();
   }
   if ( acqTable )

@@ -103,6 +103,9 @@
 #define morkWriter_kRowCellDepth 4 /* */
 #define morkWriter_kRowCellValueDepth 6 /* */
 
+// v=1.1 retired on 23-Mar-98
+#define morkWriter_kFileHeader "// <!-- <mdb:mork:z v=\"1.2\"/> -->"
+
 class morkWriter : public morkNode { // row iterator
 
 // public: // slots inherited from morkObject (meant to inform only)
@@ -131,18 +134,16 @@ public: // state is public because the entire Mork system is private
   mork_size    mWriter_MaxIndent; // line size forcing a line break
   mork_size    mWriter_MaxLine;   // line size forcing a value continuation
   
-  mork_cscode  mWriter_TableCharset;     // current charset metainfo
+  mork_cscode  mWriter_TableForm;     // current charset metainfo
   mork_scope   mWriter_TableAtomScope;   // current atom scope
   mork_scope   mWriter_TableRowScope;    // current row scope
-  mork_scope   mWriter_TableTableScope;  // current table scope
-  mork_scope   mWriter_TableColumnScope; // current column scope
   mork_kind    mWriter_TableKind;        // current table kind
   
-  mork_cscode  mWriter_RowCharset;      // current charset metainfo
+  mork_cscode  mWriter_RowForm;         // current charset metainfo
   mork_scope   mWriter_RowAtomScope;    // current atom scope
   mork_scope   mWriter_RowScope;        // current row scope
   
-  mork_cscode  mWriter_DictCharset;      // current charset metainfo
+  mork_cscode  mWriter_DictForm;      // current charset metainfo
   mork_scope   mWriter_DictAtomScope;    // current atom scope
  
   mork_bool    mWriter_NeedDirtyAll;  // need to call DirtyAll()
@@ -199,7 +200,7 @@ public: // typing & errors
   static void UnsupportedPhaseError(morkEnv* ev);
 
 public: // inlines
-  void ChangeDictCharset(morkEnv* ev, mork_cscode inNewForm);
+  void ChangeDictForm(morkEnv* ev, mork_cscode inNewForm);
   mork_bool DidStartDict() const { return mWriter_DidStartDict; }
   mork_bool DidEndDict() const { return mWriter_DidEndDict; }
   
@@ -268,6 +269,8 @@ public: // writing node content second pass
   mork_bool PutRowCells(morkEnv* ev, morkRow* ioRow);
 
 public: // other writer methods
+
+  mork_bool IsYarnAllValue(const mdbYarn* inYarn);
 
   mork_size WriteYarn(morkEnv* ev, const mdbYarn* inYarn);
   // return number of atom bytes written on the current line (which

@@ -217,14 +217,6 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 , mStore_GroundAtomSpace( 0 )
 , mStore_GroundColumnSpace( 0 )
 
-, mStore_MorkNoneToken( 0 )
-, mStore_CharsetToken( 0 )
-, mStore_AtomScopeToken( 0 )
-, mStore_RowScopeToken( 0 )
-, mStore_TableScopeToken( 0 )
-, mStore_ColumnScopeToken( 0 )
-, mStore_TableKindToken( 0 )
-
 , mStore_RowSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_AtomSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_Pool(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
@@ -233,26 +225,6 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
   {
     mNode_Derived = morkDerived_kStore;
     
-    if ( ev->Good() )
-      mStore_MorkNoneToken = this->StringToToken(ev, "mork:none");
-    
-    if ( ev->Good() )
-      mStore_CharsetToken = this->StringToToken(ev, "charset");
-
-    if ( ev->Good() )
-      mStore_AtomScopeToken = this->StringToToken(ev, "atomScope");
-
-    if ( ev->Good() )
-      mStore_RowScopeToken = this->StringToToken(ev, "rowScope");
-
-    if ( ev->Good() )
-      mStore_TableScopeToken = this->StringToToken(ev, "tableScope");
-
-    if ( ev->Good() )
-      mStore_ColumnScopeToken = this->StringToToken(ev, "columnScope");
-
-    if ( ev->Good() )
-      mStore_TableKindToken = this->StringToToken(ev, "tableKind");
   }
 }
 
@@ -603,6 +575,20 @@ morkStore::CreateStoreFile(morkEnv* ev,
   }
   return ev->Good();
 }
+
+morkAtom*
+morkStore::CopyAtom(morkEnv* ev, const morkAtom* inAtom)
+// copy inAtom (from some other store) over to this store
+{
+  morkAtom* outAtom = 0;
+  if ( inAtom )
+  {
+    mdbYarn yarn;
+    if ( inAtom->AliasYarn(&yarn) )
+      outAtom = this->YarnToAtom(ev, &yarn);
+  }
+  return outAtom;
+}
  
 morkAtom*
 morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
@@ -691,7 +677,7 @@ morkStore::MidToTable(morkEnv* ev, const morkMid& inMid)
 {
   mdbOid tempOid;
   this->MidToOid(ev, inMid, &tempOid);
-  return this->OidToTable(ev, &tempOid);
+  return this->OidToTable(ev, &tempOid, /*metarow*/ (mdbOid*) 0);
 }
 
 mork_bool
@@ -769,10 +755,10 @@ morkStore::TokenToString(morkEnv* ev, mdb_token inToken, mdbYarn* outTokenName)
     this->SmallTokenToOneByteYarn(ev, inToken, outTokenName);
 }
   
-void
-morkStore::SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
-  const mdbOid* inOid)
-{
+// void
+// morkStore::SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
+//   const mdbOid* inOid)
+// {
 // mork_token   mStore_MorkNoneToken;    // token for "mork:none"   // fill=9
 // mork_column  mStore_CharsetToken;     // token for "charset"     // fill=7
 // mork_column  mStore_AtomScopeToken;   // token for "atomScope"   // fill=9
@@ -781,55 +767,55 @@ morkStore::SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
 // mork_column  mStore_ColumnScopeToken; // token for "columnScope" // fill=11
 // mork_kind    mStore_TableKindToken;   // token for "tableKind"   // fill=9
 // ---------------------ruler-for-token-length-above---123456789012
-
-  if ( inOid->mOid_Scope == morkStore_kColumnSpaceScope && inAtom->IsWeeBook() )
-  {
-    const mork_u1* body = ((const morkWeeBookAtom*) inAtom)->mWeeBookAtom_Body;
-    mork_size size = inAtom->mAtom_Size;
-
-    if ( size >= 7 && size <= 11 )
-    {
-      if ( size == 9 )
-      {
-        if ( *body == 'm' )
-        {
-          if ( MORK_MEMCMP(body, "mork:none", 9) == 0 )
-            mStore_MorkNoneToken = inAtom->mBookAtom_Id;
-        }
-        else if ( *body == 'a' )
-        {
-          if ( MORK_MEMCMP(body, "atomScope", 9) == 0 )
-            mStore_AtomScopeToken = inAtom->mBookAtom_Id;
-        }
-        else if ( *body == 't' )
-        {
-          if ( MORK_MEMCMP(body, "tableKind", 9) == 0 )
-            mStore_TableKindToken = inAtom->mBookAtom_Id;
-        }
-      }
-      else if ( size == 7 && *body == 'c' )
-      {
-        if ( MORK_MEMCMP(body, "charset", 7) == 0 )
-          mStore_CharsetToken = inAtom->mBookAtom_Id;
-      }
-      else if ( size == 8 && *body == 'r' )
-      {
-        if ( MORK_MEMCMP(body, "rowScope", 8) == 0 )
-          mStore_RowScopeToken = inAtom->mBookAtom_Id;
-      }
-      else if ( size == 10 && *body == 't' )
-      {
-        if ( MORK_MEMCMP(body, "tableScope", 10) == 0 )
-          mStore_TableScopeToken = inAtom->mBookAtom_Id;
-      }
-      else if ( size == 11 && *body == 'c' )
-      {
-        if ( MORK_MEMCMP(body, "columnScope", 11) == 0 )
-          mStore_ColumnScopeToken = inAtom->mBookAtom_Id;
-      }
-    }
-  }
-}
+// 
+//   if ( inOid->mOid_Scope == morkStore_kColumnSpaceScope && inAtom->IsWeeBook() )
+//   {
+//     const mork_u1* body = ((const morkWeeBookAtom*) inAtom)->mWeeBookAtom_Body;
+//     mork_size size = inAtom->mAtom_Size;
+// 
+//     if ( size >= 7 && size <= 11 )
+//     {
+//       if ( size == 9 )
+//       {
+//         if ( *body == 'm' )
+//         {
+//           if ( MORK_MEMCMP(body, "mork:none", 9) == 0 )
+//             mStore_MorkNoneToken = inAtom->mBookAtom_Id;
+//         }
+//         else if ( *body == 'a' )
+//         {
+//           if ( MORK_MEMCMP(body, "atomScope", 9) == 0 )
+//             mStore_AtomScopeToken = inAtom->mBookAtom_Id;
+//         }
+//         else if ( *body == 't' )
+//         {
+//           if ( MORK_MEMCMP(body, "tableKind", 9) == 0 )
+//             mStore_TableKindToken = inAtom->mBookAtom_Id;
+//         }
+//       }
+//       else if ( size == 7 && *body == 'c' )
+//       {
+//         if ( MORK_MEMCMP(body, "charset", 7) == 0 )
+//           mStore_CharsetToken = inAtom->mBookAtom_Id;
+//       }
+//       else if ( size == 8 && *body == 'r' )
+//       {
+//         if ( MORK_MEMCMP(body, "rowScope", 8) == 0 )
+//           mStore_RowScopeToken = inAtom->mBookAtom_Id;
+//       }
+//       else if ( size == 10 && *body == 't' )
+//       {
+//         if ( MORK_MEMCMP(body, "tableScope", 10) == 0 )
+//           mStore_TableScopeToken = inAtom->mBookAtom_Id;
+//       }
+//       else if ( size == 11 && *body == 'c' )
+//       {
+//         if ( MORK_MEMCMP(body, "columnScope", 11) == 0 )
+//           mStore_ColumnScopeToken = inAtom->mBookAtom_Id;
+//       }
+//     }
+//   }
+// }
 
 morkAtom*
 morkStore::AddAlias(morkEnv* ev, const morkMid& inMid, mork_cscode inForm)
@@ -858,20 +844,50 @@ morkStore::AddAlias(morkEnv* ev, const morkMid& inMid, mork_cscode inForm)
           outAtom = atomSpace->MakeBookAtomCopyWithAid(ev,
             *keyAtom, (mork_aid) oid->mOid_Id);
             
-          if ( outAtom && outAtom->IsWeeBook() )
-          {
-            if ( oid->mOid_Scope == morkStore_kColumnSpaceScope )
-            {
-              mork_size size = outAtom->mAtom_Size;
-              if ( size >= 7 && size <= 11 )
-                this->SyncTokenIdChange(ev, outAtom, oid);
-            }
-          }
+          // if ( outAtom && outAtom->IsWeeBook() )
+          // {
+          //   if ( oid->mOid_Scope == morkStore_kColumnSpaceScope )
+          //   {
+          //    mork_size size = outAtom->mAtom_Size;
+          //     if ( size >= 7 && size <= 11 )
+          //       this->SyncTokenIdChange(ev, outAtom, oid);
+          //   }
+          // }
         }
       }
     }
   }
   return outAtom;
+}
+
+#define morkStore_kMaxCopyTokenSize 512 /* if larger, cannot be copied */
+  
+mork_token
+morkStore::CopyToken(morkEnv* ev, mdb_token inToken, morkStore* inStore)
+// copy inToken from inStore over to this store
+{
+  mork_token outToken = 0;
+  if ( inStore == this ) // same store?
+    outToken = inToken; // just return token unchanged
+  else
+  {
+    char yarnBuf[ morkStore_kMaxCopyTokenSize ];
+    mdbYarn yarn;
+    yarn.mYarn_Buf = yarnBuf;
+    yarn.mYarn_Fill = 0;
+    yarn.mYarn_Size = morkStore_kMaxCopyTokenSize;
+    yarn.mYarn_More = 0;
+    yarn.mYarn_Form = 0;
+    yarn.mYarn_Grow = 0;
+    
+    inStore->TokenToString(ev, inToken, &yarn);
+    if ( ev->Good() )
+    {
+      morkBuf buf(yarn.mYarn_Buf, yarn.mYarn_Fill);
+      outToken = this->BufToToken(ev, &buf);
+    }
+  }
+  return outToken;
 }
 
 mork_token
@@ -1064,14 +1080,16 @@ morkStore::GetTable(morkEnv* ev, const mdbOid* inOid)
   
 morkTable*
 morkStore::NewTable(morkEnv* ev, mdb_scope inRowScope,
-  mdb_kind inTableKind, mdb_bool inMustBeUnique)
+  mdb_kind inTableKind, mdb_bool inMustBeUnique,
+  const mdbOid* inOptionalMetaRowOid) // can be nil to avoid specifying 
 {
   morkTable* outTable = 0;
   if ( ev->Good() )
   {
     morkRowSpace* rowSpace = this->LazyGetRowSpace(ev, inRowScope);
     if ( rowSpace )
-      outTable = rowSpace->NewTable(ev, inTableKind, inMustBeUnique);
+      outTable = rowSpace->NewTable(ev, inTableKind, inMustBeUnique,
+        inOptionalMetaRowOid);
   }
   return outTable;
 }
@@ -1136,7 +1154,8 @@ morkStore::OidToRow(morkEnv* ev, const mdbOid* inOid)
 }
 
 morkTable*
-morkStore::OidToTable(morkEnv* ev, const mdbOid* inOid)
+morkStore::OidToTable(morkEnv* ev, const mdbOid* inOid,
+  const mdbOid* inOptionalMetaRowOid) // can be nil to avoid specifying 
   // OidToTable() finds old table with oid, or makes new one if not found.
 {
   morkTable* outTable = 0;
@@ -1148,8 +1167,9 @@ morkStore::OidToTable(morkEnv* ev, const mdbOid* inOid)
       outTable = rowSpace->mRowSpace_Tables.GetTable(ev, inOid->mOid_Id);
       if ( !outTable && ev->Good() )
       {
-        mork_kind tableKind = mStore_MorkNoneToken;
-        outTable = rowSpace->NewTableWithTid(ev, inOid->mOid_Id, tableKind);
+        mork_kind tableKind = morkStore_kNoneToken;
+        outTable = rowSpace->NewTableWithTid(ev, inOid->mOid_Id, tableKind,
+          inOptionalMetaRowOid);
       }
     }
   }

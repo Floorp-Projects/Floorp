@@ -103,15 +103,16 @@ morkRowObject::CloseRowObject(morkEnv* ev) // called by CloseMorkNode();
 
       if ( row )
       {
+        MORK_ASSERT(row->mRow_Object == this);
         if ( row->mRow_Object == this )
         {
-          morkRowObject::SlotWeakRowObject((morkRowObject*) 0, ev,
-            &row->mRow_Object);
+          row->mRow_Object = 0; // just nil this slot -- cut ref down below
+          
           morkStore::SlotWeakStore((morkStore*) 0, ev,
             &mRowObject_Store);
+            
+          this->CutWeakRef(ev); // do last, because it might self destroy
         }
-        else
-          MORK_ASSERT(morkBool_kFalse);
       }
     }
     else

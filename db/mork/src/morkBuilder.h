@@ -127,15 +127,7 @@ protected: // protected morkBuilder members
   // scoped object ids for current objects under construction:
   mdbOid           mBuilder_TableOid; // full oid for current table
   mdbOid           mBuilder_RowOid;   // full oid for current row
-  
-  // standard tokens that we want to know about for this port:
-  mork_cscode      mBuilder_iso_8859_1; // token for "iso-8859-1"
-  mork_cscode      mBuilder_r;          // token for "r"
-  mork_cscode      mBuilder_a;          // token for "a"
-  mork_cscode      mBuilder_t;          // token for "t"
-  
-  mork_token       mBuilder_MorkNoneToken; // token for "mork:none"
-  
+      
   // tokens that become set as the result of meta cells in port rows:
   mork_cscode      mBuilder_PortForm;       // default port charset format
   mork_scope       mBuilder_PortRowScope;   // port row scope

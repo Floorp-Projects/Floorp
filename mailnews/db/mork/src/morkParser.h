@@ -379,7 +379,8 @@ public: // out virtual morkParser methods, data flow parser to subclass
 // mp:Dict      ::= OnNewDict mp:DictItem* OnDictEnd
 // mp:DictItem  ::= OnAlias | OnAliasGlitch | mp:Meta | OnDictGlitch
 // mp:Table     ::= OnNewTable mp:TableItem* OnTableEnd
-// mp:TableItem ::= mp:Row | mp:Meta | OnTableGlitch
+// mp:TableItem ::= mp:Row | mp:MetaTable | OnTableGlitch
+// mp:MetaTable ::= OnNewMeta mp:MetaItem* mp:Row OnMetaEnd
 // mp:Meta      ::= OnNewMeta mp:MetaItem* OnMetaEnd
 // mp:MetaItem  ::= mp:Cell | OnMetaGlitch
 // mp:Row       ::= OnNewRow mp:RowItem* OnRowEnd

@@ -232,7 +232,8 @@ morkRowSpace::FindTableByKind(morkEnv* ev, mork_kind inTableKind)
 
 morkTable*
 morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
-  mork_kind inTableKind)
+  mork_kind inTableKind,
+  const mdbOid* inOptionalMetaRowOid) // can be nil to avoid specifying 
 {
   morkTable* outTable = 0;
   
@@ -242,7 +243,7 @@ morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
     nsIMdbHeap* heap = mSpace_Store->mPort_Heap;
     morkTable* table = new(*heap, ev)
       morkTable(ev, morkUsage::kHeap, heap, mSpace_Store, heap, this,
-        inTid, inTableKind, mustBeUnique);
+        inOptionalMetaRowOid, inTid, inTableKind, mustBeUnique);
     if ( table )
     {
       if ( mRowSpace_Tables.AddTable(ev, table) )
@@ -263,7 +264,8 @@ morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
 
 morkTable*
 morkRowSpace::NewTable(morkEnv* ev, mork_kind inTableKind,
-  mdb_bool inMustBeUnique)
+  mdb_bool inMustBeUnique,
+  const mdbOid* inOptionalMetaRowOid) // can be nil to avoid specifying 
 {
   morkTable* outTable = 0;
   
@@ -280,7 +282,7 @@ morkRowSpace::NewTable(morkEnv* ev, mork_kind inTableKind,
         nsIMdbHeap* heap = mSpace_Store->mPort_Heap;
         morkTable* table = new(*heap, ev)
           morkTable(ev, morkUsage::kHeap, heap, mSpace_Store, heap, this,
-            id, inTableKind, inMustBeUnique);
+            inOptionalMetaRowOid, id, inTableKind, inMustBeUnique);
         if ( table )
         {
           if ( mRowSpace_Tables.AddTable(ev, table) )

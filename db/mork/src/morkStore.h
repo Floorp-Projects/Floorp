@@ -119,6 +119,15 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 #define morkStore_kGroundAtomSpace 'a' /* for mStore_GroundAtomSpace*/
 #define morkStore_kStreamBufSize (8 * 1024) /* okay buffer size */
 
+#define morkStore_kReservedColumnCount 0x20 /* for well-known columns */
+
+#define morkStore_kNoneToken ((mork_token) 'n')
+#define morkStore_kFormColumn ((mork_column) 'f')
+#define morkStore_kAtomScopeColumn ((mork_column) 'a')
+#define morkStore_kRowScopeColumn ((mork_column) 'r')
+#define morkStore_kMetaScope ((mork_scope) 'm')
+#define morkStore_kKindColumn ((mork_column) 'k')
+
 /*| morkStore: 
 |*/
 class morkStore : public morkPort {
@@ -151,14 +160,6 @@ public: // state is public because the entire Mork system is private
 
   morkStream*      mStore_OutStream; // stream using file used by the writer
   
-  mork_token       mStore_MorkNoneToken; // token for "mork:none"
-  mork_column      mStore_CharsetToken; // token for "charset"
-  mork_column      mStore_AtomScopeToken; // token for "atomScope"
-  mork_column      mStore_RowScopeToken; // token for "rowScope"
-  mork_column      mStore_TableScopeToken; // token for "tableScope"
-  mork_column      mStore_ColumnScopeToken; // token for "columnScope"
-  mork_kind        mStore_TableKindToken; // token for "tableKind"
-
   morkRowSpaceMap  mStore_RowSpaces;  // maps mork_scope -> morkSpace
   morkAtomSpaceMap mStore_AtomSpaces; // maps mork_scope -> morkSpace
   
@@ -169,8 +170,8 @@ public: // state is public because the entire Mork system is private
  
 public: // coping with any changes to store token slots above:
  
-  void SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
-    const mdbOid* inOid);
+  // void SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
+  //   const mdbOid* inOid);
 
 public: // building an atom inside mStore_BookAtom from a char* string
 
@@ -252,6 +253,12 @@ public: // other store methods
     const char* inFilePath,
     const mdbOpenPolicy* inOpenPolicy);
     
+  morkAtom* CopyAtom(morkEnv* ev, const morkAtom* inAtom);
+  // copy inAtom (from some other store) over to this store
+    
+  mork_token CopyToken(morkEnv* ev, mdb_token inToken, morkStore* inStore);
+  // copy inToken from inStore over to this store
+    
   mork_token BufToToken(morkEnv* ev, const morkBuf* inBuf);
   mork_token StringToToken(morkEnv* ev, const char* inTokenName);
   mork_token QueryToken(morkEnv* ev, const char* inTokenName);
@@ -270,7 +277,8 @@ public: // other store methods
   morkRow* OidToRow(morkEnv* ev, const mdbOid* inOid);
   // OidToRow() finds old row with oid, or makes new one if not found.
 
-  morkTable* OidToTable(morkEnv* ev, const mdbOid* inOid);
+  morkTable* OidToTable(morkEnv* ev, const mdbOid* inOid,
+    const mdbOid* inOptionalMetaRowOid);
   // OidToTable() finds old table with oid, or makes new one if not found.
   
   static void SmallTokenToOneByteYarn(morkEnv* ev, mdb_token inToken,
@@ -287,7 +295,8 @@ public: // other store methods
   morkTable* GetTable(morkEnv* ev, const mdbOid* inOid);
     
   morkTable* NewTable(morkEnv* ev, mdb_scope inRowScope,
-    mdb_kind inTableKind, mdb_bool inMustBeUnique);
+    mdb_kind inTableKind, mdb_bool inMustBeUnique,
+    const mdbOid* inOptionalMetaRowOid);
 
   morkPortTableCursor* GetPortTableCursor(morkEnv* ev, mdb_scope inRowScope,
     mdb_kind inTableKind) ;

@@ -99,14 +99,17 @@ morkCellObject::morkCellObject(morkEnv* ev, const morkUsage& inUsage,
         morkStore* store = ioRow->GetRowSpaceStore(ev);
         if ( store )
         {
-          morkRowObject* rowObj = ioRow->GetRowObject(ev, store);
+          morkRowObject* rowObj = ioRow->AcquireRowObject(ev, store);
           if ( rowObj )
           {
             mCellObject_Row = ioRow;
             mCellObject_Cell = ioCell;
             mCellObject_RowSeed = ioRow->mRow_Seed;
-            morkRowObject::SlotStrongRowObject(rowObj, ev,
-              &mCellObject_RowObject);
+            
+            // morkRowObject::SlotStrongRowObject(rowObj, ev,
+            //  &mCellObject_RowObject);
+              
+            mCellObject_RowObject = rowObj; // assume control of strong ref
           }
           if ( ev->Good() )
             mNode_Derived = morkDerived_kCellObject;

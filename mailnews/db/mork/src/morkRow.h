@@ -58,7 +58,7 @@ public: // other row methods
     mork_size inLength, morkPool* ioPool);
     // if inLength is nonzero, cells will be allocated from ioPool
 
-  morkRowObject* GetRowObject(morkEnv* ev, morkStore* ioStore);
+  morkRowObject* AcquireRowObject(morkEnv* ev, morkStore* ioStore);
   nsIMdbRow* AcquireRowHandle(morkEnv* ev, morkStore* ioStore);
   nsIMdbCell* AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
     mdb_column inColumn, mork_pos inPos);
@@ -109,10 +109,14 @@ public: // external row methods
   void AddColumn(morkEnv* ev, mdb_column inColumn,
     const mdbYarn* inYarn, morkStore* ioStore);
 
+  void CutColumn(morkEnv* ev, mdb_column inColumn);
+
   morkRowCellCursor* NewRowCellCursor(morkEnv* ev, mdb_pos inPos);
   
   void EmptyAllCells(morkEnv* ev);
   void AddRow(morkEnv* ev, const morkRow* inSourceRow);
+  void SetRow(morkEnv* ev, const morkRow* inSourceRow);
+  void CutAllColumns(morkEnv* ev);
 
   void OnZeroTableUse(morkEnv* ev);
   // OnZeroTableUse() is called when CutTableUse() returns zero.

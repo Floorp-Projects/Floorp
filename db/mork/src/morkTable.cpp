@@ -92,10 +92,12 @@ morkTable::~morkTable() /*i*/ // assert CloseTable() executed earlier
 morkTable::morkTable(morkEnv* ev, /*i*/
   const morkUsage& inUsage, nsIMdbHeap* ioHeap, 
   morkStore* ioStore, nsIMdbHeap* ioSlotHeap, morkRowSpace* ioRowSpace,
+  const mdbOid* inOptionalMetaRowOid, // can be nil to avoid specifying 
   mork_tid inTid, mork_kind inKind, mork_bool inMustBeUnique)
 : morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
 , mTable_Store( 0 )
 , mTable_RowSpace( 0 )
+, mTable_MetaRow( 0 )
 , mTable_Id( inTid )
 , mTable_RowMap(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap,
   morkTable_kStartRowMapSlotCount)
@@ -112,6 +114,13 @@ morkTable::morkTable(morkEnv* ev, /*i*/
       {
         morkStore::SlotWeakStore(ioStore, ev, &mTable_Store);
         morkRowSpace::SlotWeakRowSpace(ioRowSpace, ev, &mTable_RowSpace);
+        if ( inOptionalMetaRowOid )
+          mTable_MetaRowOid = *inOptionalMetaRowOid;
+        else
+        {
+          mTable_MetaRowOid.mOid_Scope = 0;
+          mTable_MetaRowOid.mOid_Id = morkRow_kMinusOneRid;
+        }
         if ( ev->Good() )
           mNode_Derived = morkDerived_kTable;
       }
@@ -194,6 +203,33 @@ morkTable::NilRowSpaceError(morkEnv* ev)
   ev->NewError("nil mTable_RowSpace");
 }
 
+morkRow*
+morkTable::GetMetaRow(morkEnv* ev, const mdbOid* inOptionalMetaRowOid)
+{
+  morkRow* outRow = mTable_MetaRow;
+  if ( !outRow )
+  {
+    morkStore* store = mTable_Store;
+    mdbOid* oid = &mTable_MetaRowOid;
+    if ( inOptionalMetaRowOid && !oid->mOid_Scope )
+      *oid = *inOptionalMetaRowOid;
+      
+    if ( oid->mOid_Scope ) // oid already recorded in table?
+      outRow = store->OidToRow(ev, oid);
+    else
+    {
+      outRow = store->NewRow(ev, morkStore_kMetaScope);
+      if ( outRow ) // need to record new oid in table?
+        *oid = outRow->mRow_Oid;
+    }
+    mTable_MetaRow = outRow;
+    if ( outRow ) // need to note another use of this row?
+      outRow->AddTableUse(ev);
+  }
+  
+  return outRow;
+}
+
 void
 morkTable::GetTableOid(morkEnv* ev, mdbOid* outOid)
 {
@@ -241,14 +277,10 @@ morkTable::ArrayHasOid(morkEnv* ev, const mdbOid* inOid)
   return -1;
 }
 
-mork_pos
+mork_bool
 morkTable::MapHasOid(morkEnv* ev, const mdbOid* inOid)
 {
-  morkRow* row = mTable_RowMap.GetOid(ev, inOid);
-  if ( row )
-    return 1;
-    
-  return -1;
+  return ( mTable_RowMap.GetOid(ev, inOid) != 0 );
 }
 
 mork_bool

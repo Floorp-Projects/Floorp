@@ -31,8 +31,8 @@
 
 // { %%%%% begin platform defs peculiar to Mork %%%%%
 #ifdef XP_MAC
-#define MORK_MAC 1
 #define MORK_OBSOLETE 1
+#define MORK_MAC 1
 #endif
 
 #ifdef XP_OS2

@@ -27,6 +27,8 @@
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 
+#include "nsFileStream.h"
+
 #include "nsIMimeHeaderConverter.h"
 //#include "nsMimeHeaderConverter.h"
 
@@ -36,6 +38,7 @@
 #include "nsICollation.h"
 #include "nsCollationCID.h"
 #include "nsIPref.h"
+
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -448,13 +451,37 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			else
 			{
 				mdbOpenPolicy inOpenPolicy;
+				mdb_bool	canOpen;
+				mdbYarn		outFormatVersion;
+				char		bufFirst512Bytes[512];
+				mdbYarn		first512Bytes;
 
-				inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
-				inOpenPolicy.mOpenPolicy_MinMemory = 0;
-				inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+				first512Bytes.mYarn_Buf = bufFirst512Bytes;
+				first512Bytes.mYarn_Size = 512;
+				first512Bytes.mYarn_Fill = 512;
+				first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 
-				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, &inOpenPolicy, 
-				&thumb); 
+				{
+					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
+					PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
+					first512Bytes.mYarn_Fill = bytesRead;
+					dbStream->close();
+					delete dbStream;
+				}
+				ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, nativeFileName, // the file to investigate
+					&first512Bytes,	&canOpen, &outFormatVersion);
+				if (ret == 0 && canOpen)
+				{
+
+					inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+					inOpenPolicy.mOpenPolicy_MinMemory = 0;
+					inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+
+					ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, &inOpenPolicy, 
+									&thumb); 
+				}
+				else
+					ret = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			}
 			if (NS_SUCCEEDED(ret) && thumb)
 			{
@@ -627,7 +654,7 @@ nsresult nsMsgDatabase::InitNewDB()
 			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
 			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
-				m_hdrTableKindToken, PR_FALSE, &m_mdbAllMsgHeadersTable);
+				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
 //			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
 			m_dbFolderInfo = dbFolderInfo;
 
@@ -701,8 +728,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 {
 	nsresult	err = NS_OK;
-	mdb_pos		rowPos;
-	mdb_pos		desiredRowPos;
+	mdb_bool	hasOid;
 	mdbOid		rowObjectId;
 
 
@@ -712,29 +738,15 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 	*pmsgHdr = NULL;
 	rowObjectId.mOid_Id = key;
 	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
-	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &desiredRowPos);
-	if (err == NS_OK)
+	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
+	if (err == NS_OK && m_mdbStore)
 	{
-		nsIMdbTableRowCursor* rowCursor;
-		rowPos = -1;
-		err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), rowPos, &rowCursor);
-		if (err == NS_OK && rowCursor /*rowPos >= 0*/) // ### is rowPos > 0 the right thing to check?
-		{
-			do
-			{
-				nsIMdbRow	*hdrRow;
-				err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
-				if (!NS_SUCCEEDED(err) || rowPos < 0 || !hdrRow)
-					break;
-				if (rowPos == desiredRowPos)
-				{
-					err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);
-					break;
-				}
-			}
-			while (TRUE);
+		nsIMdbRow *hdrRow;
 
-            NS_RELEASE(rowCursor);
+		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &hdrRow);
+		if (err == NS_OK && hdrRow)
+		{
+			err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);
 		}
 	}
 
