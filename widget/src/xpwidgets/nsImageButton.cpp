@@ -149,8 +149,9 @@ NS_METHOD nsImageButton::Create(nsIWidget *aParent,
                                 nsIToolkit *aToolkit,
                                 nsWidgetInitData *aInitData)
 {
-  return ChildWindow::Create(aParent, aRect,
-     nsnull != aHandleEventFunction ? aHandleEventFunction: HandleImageButtonEvent,
+  EVENT_CALLBACK ec = (aHandleEventFunction != nsnull) ? 
+    aHandleEventFunction : HandleImageButtonEvent;
+  return ChildWindow::Create(aParent, aRect, ec,
      aContext, aAppShell, aToolkit, aInitData);
 }
 
