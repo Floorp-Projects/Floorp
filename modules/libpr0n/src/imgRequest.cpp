@@ -221,6 +221,7 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
   if (mImage && (mObservers.Count() == 1)) {
     LOG_MSG(gImgLog, "imgRequest::AddProxy", "starting animation");
 
+    mImage->ResetAnimation();
     mImage->StartAnimation();
   }
 

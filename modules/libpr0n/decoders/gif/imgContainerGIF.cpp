@@ -359,6 +359,54 @@ NS_IMETHODIMP imgContainerGIF::StopAnimation()
 }
 
 //******************************************************************************
+/* void ResetAnimation (); */
+NS_IMETHODIMP imgContainerGIF::ResetAnimation()
+{
+  if (mCurrentAnimationFrameIndex == 0 || mAnimationMode == kDontAnimMode)
+    return NS_OK;
+
+  PRBool oldAnimating = mAnimating;
+
+  if (oldAnimating) {
+    nsresult rv;
+    rv = StopAnimation();
+    if (NS_FAILED(rv))
+      return rv;
+   }
+
+  mCurrentAnimationFrameIndex = 0;
+  if (mCompositingFrame) {
+    nsRect dirtyRect;
+    nsCOMPtr<gfxIImageFrame> firstFrame;
+    PRInt32 timeout;
+
+    // Get Frame 1
+    inlinedGetFrameAt(0, getter_AddRefs(firstFrame));
+    firstFrame->GetRect(dirtyRect);
+
+    // Copy Frame 1 back into mCompositingFrame
+    BlackenFrame(mCompositingFrame);
+    firstFrame->DrawTo(mCompositingFrame, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+    ZeroMask(mCompositingFrame);
+    BuildCompositeMask(mCompositingFrame, firstFrame);
+    // Set timeout because StartAnimation reads it
+    firstFrame->GetTimeout(&timeout);
+    mCompositingFrame->SetTimeout(timeout);
+      
+    // Update display
+    nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+    if (observer)
+      observer->FrameChanged(this, nsnull, mCompositingFrame, &dirtyRect);
+   }
+
+
+  if (oldAnimating)
+    return StartAnimation();
+  else
+    return NS_OK;
+}
+
+//******************************************************************************
 /* attribute long loopCount; */
 NS_IMETHODIMP imgContainerGIF::GetLoopCount(PRInt32 *aLoopCount)
 {
