@@ -290,7 +290,6 @@ LINK_DLL	= $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
 NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
-MOC		= moc
 ifdef CROSS_COMPILE
 XPIDL_COMPILE 	= $(DIST)/host/bin/host_xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(DIST)/host/bin/host_xpt_link$(BIN_SUFFIX)
