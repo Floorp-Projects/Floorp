@@ -685,7 +685,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                      webShell->QueryInterface(
                         NS_GET_IID(nsIWebShellServices),(void**) &wss)))
             {
-              rv_detect = adp->Init(wss, cdet, aCommand);
+              rv_detect = adp->Init(wss, cdet, (nsIDocument*)this, 
+                     mParser, charset.GetUnicode(),aCommand);
             }
           }
         }
