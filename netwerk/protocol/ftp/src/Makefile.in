@@ -35,7 +35,6 @@ CPPSRCS		= \
 		nsFTPChannel.cpp \
 		nsFtpConnectionThread.cpp \
 		nsFtpModule.cpp \
-		nsFTPListener.cpp \
 		nsAsyncEvent.cpp \
 		$(NULL)
 
