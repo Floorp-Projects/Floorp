@@ -44,6 +44,7 @@
 #else
 #include "nsIDOMNode.h"
 
+class nsIDocument;
 class nsIScriptSecurityManager;
 extern nsIScriptSecurityManager *gTxSecurityManager;
 
@@ -92,6 +93,11 @@ public:
      * Checks if a caller is allowed to access a given node
      */
     static PRBool CanCallerAccess(nsIDOMNode *aNode);
+
+    /**
+     * Reset the given document with the document of the source node
+     */
+    static void ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode);
 
 #endif /* TX_EXE */
 

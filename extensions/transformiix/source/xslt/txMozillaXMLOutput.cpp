@@ -66,6 +66,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsICSSStyleSheet.h"
 #include "txStringUtils.h"
+#include "txUriUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocumentTransformer.h"
@@ -721,23 +722,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     mCurrentNode = mDocument;
 
     // Reset and set up the document
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDocument);
-    sourceDoc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (serv) {
-        // Create a temporary channel to get nsIDocument->Reset to
-        // do the right thing. We want the output document to get
-        // much of the input document's characteristics.
-        nsCOMPtr<nsIURI> docURL;
-        sourceDoc->GetDocumentURL(getter_AddRefs(docURL));
-        serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
-    }
-    doc->Reset(channel, loadGroup);
-    nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
-    doc->SetBaseURL(baseURL);
+    URIUtils::ResetWithSource(doc, aSourceDocument);
 
     // Set the mime-type
     if (!mOutputFormat.mMediaType.IsEmpty()) {
