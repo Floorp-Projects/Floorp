@@ -637,18 +637,20 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
   PRInt32 result=kNoError;
   mDTDVerification=aVerifyEnabled;
 
-  CParserContext* pc=new CParserContext(new CScanner(aSourceBuffer),&aSourceBuffer,0);
+  if(0<aSourceBuffer.Length()){
+    CParserContext* pc=new CParserContext(new CScanner(aSourceBuffer),&aSourceBuffer,0);
 
-  PushContext(*pc);
-  if(PR_TRUE==anHTMLString)
-    pc->mSourceType="text/html";
-  if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
-    WillBuildModel(mParserContext->mScanner->GetFilename());
-    result=ResumeParse();
-    DidBuildModel(result);
+    PushContext(*pc);
+    if(PR_TRUE==anHTMLString)
+      pc->mSourceType="text/html";
+    if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
+      WillBuildModel(mParserContext->mScanner->GetFilename());
+      result=ResumeParse();
+      DidBuildModel(result);
+    }
+    pc=PopContext();
+    delete pc;
   }
-  pc=PopContext();
-  delete pc;
   return result;
 }
 
