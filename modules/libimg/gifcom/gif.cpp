@@ -1500,8 +1500,17 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                      ic->imgdcb->ImgDCBFlushImage();
                      ic->imgdcb->ImgDCBHaveImageFrame();
                 }
+        
+                gs->images_decoded++;                
 
-                gs->images_decoded++;
+                if(ic->animate_request == eImageAnimation_None){
+                    /* This is not really an error, but a mechanism
+                    to stop decoding of subsequent frames. Only the
+                    first frame is displayed for eImageAnimation_None.
+                    */
+                    gs->state = gif_error;
+                    break;
+                }
 
                 /* An image can specify a delay time before which to display
                    subsequent images.  Block until the appointed time. */
@@ -1521,6 +1530,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                 } else {
                     GETN(1, gif_image_start);
                 }
+
             }
         }
         break;
