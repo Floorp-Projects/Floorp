@@ -55,6 +55,7 @@
 #include "nsXPFEComponentsCID.h"
 
 #include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #ifdef MOZ_XUL_APP
 #include "nsAppRunner.h"
