@@ -53,8 +53,9 @@
                 readonly="true"/>
 
       <property name="enableColumnDrag"
-                onget="return this.getAttribute('enableColumnDrag') == 'true';"
-                onset="this.setAttribute('enableColumnDrag', val); return val == 'true';"/>
+                onget="return this.hasAttribute('enableColumnDrag');"
+                onset="if (val) this.setAttribute('enableColumnDrag', 'true');
+                       else this.removeAttribute('enableColumnDrag'); return val;"/>
 
       <property name="firstOrdinalColumn">
         <getter><![CDATA[
@@ -613,7 +614,7 @@
             
 		   if (obj.value != "twisty") {
 		     var column = document.getElementById(col.value);
-		     var cycler = column.getAttribute('cycler') == 'true';
+		     var cycler = column.hasAttribute('cycler');
 
 		     if (cycler)
 			   b.view.cycleCell(row.value, col.value);
@@ -659,7 +660,7 @@
             selected group of items */
 
            var column = document.getElementById(col.value);
-           var cycler = column.getAttribute('cycler') == 'true';
+           var cycler = column.hasAttribute('cycler');
 
            // if the last row has changed in between the time we 
            // mousedown and the time we click, don't fire the select handler.
@@ -683,12 +684,13 @@
              if (row.value >= b.view.rowCount) return;
            } catch (e) { return; }
 		   var column = document.getElementById(col.value);
-		   var cycler = column.getAttribute('cycler') == 'true';
+		   var cycler = column.hasAttribute('cycler');
 
 		   if (!cycler && obj.value != "twisty" && b.view.isContainer(row.value))
              b.view.toggleOpenState(row.value);
       ]]>
       </handler>
+      
     </handlers>
   </binding>
 
@@ -909,7 +911,7 @@
                if (currCol && (currCol != this)) {
                  // Construct an entry for each cell in the row, unless
                  // it is not being show
-                 if (currCol.getAttribute("ignoreincolumnpicker") != "true") {
+                 if (!currCol.hasAttribute("ignoreincolumnpicker")) {
                      var columnName = currCol.getAttribute("label");
                      var popupChild = document.createElement("menuitem");
                      popupChild.setAttribute("type", "checkbox");

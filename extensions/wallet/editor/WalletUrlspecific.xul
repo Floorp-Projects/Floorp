@@ -60,7 +60,7 @@
         menuItem.setAttribute("len","0");
         menuList.setAttribute("id", schema);
         menuList.setAttribute("editable", "true");
-        menuList.setAttribute("autoSelectMenuitem", "false");
+        menuList.setAttribute("disableautoselect", "true");
         menuList.setAttribute("onchange", "Append(this)");
         menuList.setAttribute("onmousedown", "Append(this)");
         text1.setAttribute("value", schema.substring(0, colonIndex));

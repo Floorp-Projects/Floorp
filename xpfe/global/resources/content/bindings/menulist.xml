@@ -95,7 +95,7 @@
       <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
                                        else this.removeAttribute('disabled');
                                        return val;"
-                                onget="return (this.getAttribute('disabled')=='true');"/>
+                                onget="return this.hasAttribute('disabled');"/>
 
       <field name="selectedInternal">
         null
@@ -236,17 +236,12 @@
     <implementation>
       <constructor><![CDATA[
         this.setInitialSelection();
-
-        // Default behavior is to use _selectInputFieldValueInList()
-        //  to automatically select the inputField.value in the list
-        if (!this.getAttribute("autoSelectMenuitem"))
-          this.setAttribute("autoSelectMenuitem", "true");
       ]]></constructor>
 
       <method name="_selectInputFieldValueInList">
         <body>
         <![CDATA[
-          if (this.getAttribute("autoSelectMenuitem") != "true")
+          if (this.hasAttribute("disableautoselect"))
             return "";
 
           // Find and select the menuitem that matches inputField's "value"
@@ -358,15 +353,16 @@
           ]]>
         </setter>
       </property>
-      <property name="autoSelectMenuitem" 
-                onset="this.setAttribute('autoSelectMenuitem',val); return val;"
-                onget="return this.getAttribute('autoSelectMenuitem');"/>
+      <property name="disableautoselect" 
+                onset="if (val) this.setAttribute('disableautoselect','true');
+                       else this.removeAttribute('disableautoselect'); return val;"
+                onget="return this.hasAttribute('disableautoselect');"/>
     </implementation>
 
     <handlers>
       <handler event="focus" phase="capturing">
       <![CDATA[
-        if (this.getAttribute('focused') != 'true') 
+        if (!this.hasAttribute('focused')) 
         {
           this.setAttribute('focused','true');
           this.suppressFocusBlur = true;
@@ -379,7 +375,7 @@
       
       <handler event="blur" phase="capturing">
       <![CDATA[
-        if (!this.suppressFocusBlur && this.getAttribute('focused') == 'true') {
+        if (!this.suppressFocusBlur && !this.hasAttribute('focused')) {
           this.removeAttribute('focused');
         }
       ]]>
@@ -412,7 +408,7 @@
                               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                               "menupopup");
             if (popups) {
-              if (popups[0].getAttribute("open") != "true") {
+              if (!popups[0].hasAttribute("open")) {
                 event.preventDefault();
 
                 popups[0].openPopup(this, -1, -1, "popup", "bottomleft", "topleft");

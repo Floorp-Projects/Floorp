@@ -17,7 +17,8 @@
     
     <implementation>
       <constructor>
-        this.initScrollbar();
+        if (navigator.platform.indexOf("Mac") != -1)
+          this.initScrollbar();
       </constructor>
 
       <method name="initScrollbar">
@@ -29,25 +30,25 @@
               var downTop;
               var upBottom;
               if ( scrollbarStyle == "double" ) {
-                downTop = this.findNodeByAttribute("sbattr", "scrollbar-down-top");
-                upBottom = this.findNodeByAttribute("sbattr", "scrollbar-up-bottom");
+                downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
+                upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
                 downTop.removeAttribute("collapsed");
                 upBottom.removeAttribute("collapsed");
               }
               else if ( scrollbarStyle == "doubletop" ) {
-                downTop = this.findNodeByAttribute("sbattr", "scrollbar-down-top");
-                var downBottom = this.findNodeByAttribute("sbattr", "scrollbar-down-bottom");
+                downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
+                var downBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-bottom");
                 downTop.removeAttribute("collapsed");
                 downBottom.setAttribute("collapsed","true");
               }
               else if ( scrollbarStyle == "doublebottom" ) {
-                var upTop = this.findNodeByAttribute("sbattr", "scrollbar-up-top");
-                upBottom = this.findNodeByAttribute("sbattr", "scrollbar-up-bottom");
+                var upTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-top");
+                upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
                 upTop.setAttribute("collapsed","true");
                 upBottom.removeAttribute("collapsed");
               }
               if ( thumbStyle == "fixed" ) {
-                var thumb = this.findNodeByAttribute("sbattr","scrollbar-thumb");
+                var thumb = document.getAnonymousElementByAttribute(this, "sbattr","scrollbar-thumb");
                 if ( thumb )
                   thumb.removeAttribute("flex");
               }
@@ -59,25 +60,6 @@
         </body>
       </method>
       
-      <method name="findNodeByAttribute">
-        <parameter name="aAttribute"/>
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          var nodes = document.getAnonymousNodes(this);
-          for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute(aAttribute) == aValue)
-              return nodes[i];
-            else {
-              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
-              if (!subnodes.length) continue;
-              return subnodes[0];
-            }
-          }
-          return null;
-        ]]>
-        </body>
-      </method>
     </implementation>
     <handlers>                                                                      
       <handler event="contextmenu" action="event.preventDefault();"/>           

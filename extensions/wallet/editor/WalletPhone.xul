@@ -66,28 +66,28 @@
         <row align="center">
           <description>&phoneDay.label;</description>
           <label value="("/>
-          <menulist id="phone.loccode" editable="true" autoSelectMenuitem="false"
+          <menulist id="phone.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value=")"/>
-          <menulist id="phone.number.prefix" editable="true" autoSelectMenuitem="false"
+          <menulist id="phone.number.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="__"/>
-          <menulist id="phone.number.suffix" editable="true" autoSelectMenuitem="false"
+          <menulist id="phone.number.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="&phoneDayExt.label;" />
-          <menulist id="phone.extension" editable="true" autoSelectMenuitem="false"
+          <menulist id="phone.extension" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -98,28 +98,28 @@
         <row align="center">
           <description>&phoneEve.label;</description>
           <label value="("/>
-          <menulist id="altphone.loccode" editable="true" autoSelectMenuitem="false"
+          <menulist id="altphone.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value=")"/>
-          <menulist id="altphone.number.prefix" editable="true" autoSelectMenuitem="false"
+          <menulist id="altphone.number.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="__"/>
-          <menulist id="altphone.number.suffix" editable="true" autoSelectMenuitem="false"
+          <menulist id="altphone.number.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="&phoneEveExt.label;" />
-          <menulist id="altphone.extension" editable="true" autoSelectMenuitem="false"
+          <menulist id="altphone.extension" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -130,21 +130,21 @@
         <row align="center">
           <description>&phoneFax.label;</description>
           <label value="("/>
-          <menulist id="fax.loccode" editable="true" autoSelectMenuitem="false"
+          <menulist id="fax.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value=")"/>
-          <menulist id="fax.number.prefix" editable="true" autoSelectMenuitem="false"
+          <menulist id="fax.number.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="__"/>
-          <menulist id="fax.number.suffix" editable="true" autoSelectMenuitem="false"
+          <menulist id="fax.number.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -155,21 +155,21 @@
         <row align="center">
           <description>&phoneCell.label;</description>
           <label value="("/>
-          <menulist id="mobile.loccode" editable="true" autoSelectMenuitem="false"
+          <menulist id="mobile.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value=")"/>
-          <menulist id="mobile.number.prefix" editable="true" autoSelectMenuitem="false"
+          <menulist id="mobile.number.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="__"/>
-          <menulist id="mobile.number.suffix" editable="true" autoSelectMenuitem="false"
+          <menulist id="mobile.number.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -180,21 +180,21 @@
         <row align="center">
           <description>&phonePager.label;</description>
           <label value="("/>
-          <menulist id="pager.loccode" editable="true" autoSelectMenuitem="false"
+          <menulist id="pager.loccode" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value=")"/>
-          <menulist id="pager.number.prefix" editable="true" autoSelectMenuitem="false"
+          <menulist id="pager.number.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <label value="__"/>
-          <menulist id="pager.number.suffix" editable="true" autoSelectMenuitem="false"
+          <menulist id="pager.number.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>

@@ -25,11 +25,7 @@
       </xul:hbox>
     </content>
     
-    <implementation implements="nsIAccessibleProvider">
-      <constructor>
-        this.setAttribute("empty", "true");
-      </constructor>
-      
+    <implementation implements="nsIAccessibleProvider">     
       <property name="label" onset="if (this.label != val) this.setAttribute('label',val); return val;"
                                       onget="return this.getAttribute('label');"/>
 

@@ -76,8 +76,7 @@
                                          if (val) this.setAttribute('disabled', 'true');
                                          else this.removeAttribute('disabled'); return val;"
                                   onget="return this.inputField.readonly;"/>
-                                  
-
+                            
       <method name="select">
         <body>
           this.inputField.select();
@@ -136,7 +135,7 @@
     <handlers>
       <handler event="focus" phase="capturing">
       <![CDATA[
-        if (this.getAttribute('focused') != 'true') {
+        if (!this.hasAttribute('focused')) {
           this.setAttribute('focused','true');
           this.suppressFocusBlur = true;
           if (document.commandDispatcher.focusedElement != this.inputField) 
@@ -148,7 +147,7 @@
       
       <handler event="blur" phase="capturing">
       <![CDATA[
-        if (!this.suppressFocusBlur && this.getAttribute('focused') == 'true') {
+        if (!this.suppressFocusBlur && this.hasAttribute('focused')) {
           this.removeAttribute('focused');
         }
       ]]>

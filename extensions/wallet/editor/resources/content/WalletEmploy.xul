@@ -54,7 +54,7 @@
 
         <row align="center">
           <description>&employName.label;</description>
-          <menulist id="business.companyname" editable="true" autoSelectMenuitem="false"
+          <menulist id="business.companyname" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -64,7 +64,7 @@
 
         <row align="center">
           <description>&employTitle.label;</description>
-          <menulist id="business.jobtitle" editable="true" autoSelectMenuitem="false"
+          <menulist id="business.jobtitle" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -74,7 +74,7 @@
 
         <row align="center">
           <description>&employDepartment.label;</description>
-          <menulist id="business.department" editable="true" autoSelectMenuitem="false"
+          <menulist id="business.department" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>

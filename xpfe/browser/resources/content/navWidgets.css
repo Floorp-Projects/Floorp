@@ -6,7 +6,7 @@ box[type="location-field"]
     -moz-binding          : url("chrome://navigator/content/navWidgetBindings.xml#urlbar");
   }
   
-menulist[editable="true"]
+menulist[editable]
   {
     -moz-binding          : url("chrome://navigator/content/navWidgetBindings.xml#menulist-editable");
   }  

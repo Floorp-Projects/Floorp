@@ -55,7 +55,7 @@
 
         <row align="center">
           <description>&namePrefix.label;</description>
-          <menulist id="name.prefix" editable="true" autoSelectMenuitem="false"
+          <menulist id="name.prefix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -65,7 +65,7 @@
 
         <row align="center">
           <description>&nameFirst.label;</description>
-          <menulist id="name.first" editable="true" autoSelectMenuitem="false"
+          <menulist id="name.first" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -75,7 +75,7 @@
 
         <row align="center">
           <description>&nameMiddle.label;</description>
-          <menulist id="name.middle" editable="true" autoSelectMenuitem="false"
+          <menulist id="name.middle" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -85,7 +85,7 @@
 
         <row align="center">
           <description>&nameLast.label;</description>
-          <menulist id="name.last" editable="true" autoSelectMenuitem="false"
+          <menulist id="name.last" editable="true" disableautoselect="true"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
               <menuitem label="" len="0"/>
@@ -95,7 +95,7 @@
 
         <row align="center">
           <description>&nameSuffix.label;</description>
-          <menulist id="name.suffix" editable="true" autoSelectMenuitem="false"
+          <menulist id="name.suffix" editable="true" disableautoselect="true"
                     onchange="Append(this)">
 
             <menupopup onpopupshowing="Append(this.parentNode)">

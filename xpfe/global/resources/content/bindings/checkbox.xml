@@ -34,17 +34,14 @@
       <property name="checked"    onset="if (val) this.setAttribute('checked', 'true');
                                          else this.removeAttribute('checked');
                                          return val;"
-                                  onget="var v = this.getAttribute('checked');
-                                         if (v == 'true') return true; return false;"/>
+                                  onget="this.hasAttribute('checked');"/>
     </implementation>
     <handlers>
-      <handler event="click" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="click" button="0" action="this.checked = !this.checked;"/>
       <handler event="keypress" key=" ">
         <![CDATA[
-          if (!this.disabled) {
-            this.checked = !this.checked;
-            this.doCommand();
-          }
+          this.checked = !this.checked;
+          this.doCommand();
         ]]>
       </handler>
     </handlers>

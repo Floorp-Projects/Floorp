@@ -37,7 +37,7 @@
         <getter>
         <![CDATA[
           var children = this._getRadioChildren();
-          for (var i = 0; i < children.length; i++) {
+          for (var i = 0; i < children.length; ++i) {
             if (children[i].selected)
               return children[i];
           }
@@ -73,7 +73,7 @@
         <getter>
         <![CDATA[
           var children = this._getRadioChildren();
-          for (var i = 0; i < children.length; i++) {
+          for (var i = 0; i < children.length; ++i) {
             if (children[i].getAttribute("focused") == "true")
               return children[i];
           }
@@ -86,7 +86,7 @@
           
           // unfocus all other group nodes
           var children = this._getRadioChildren();
-          for (var i = 0; i < children.length; i++) {
+          for (var i = 0; i < children.length; ++i) {
             if (children[i] != val)
               children[i].removeAttribute("focused");
           }
@@ -288,7 +288,7 @@
       <property name="selected" readonly="true">
         <getter>
           <![CDATA[
-            return this.getAttribute('selected') == 'true';
+            return this.hasAttribute('selected');
           ]]>
         </getter>
       </property>
