@@ -45,9 +45,10 @@ MYLIBS=							\
  $(DIST)\lib\libplc21.lib		\
  $(DIST)\lib\msglocal.lib \
  $(DIST)\lib\msgcore.lib \
- $(DIST)\lib\rdfbase_s.lib		\
+ $(DIST)\lib\rdf.lib		\
  $(DIST)\lib\xplib.lib			\
  $(DIST)\lib\mailnews.lib			\
+ $(DIST)\lib\mork.lib			\
  $(NULL)
 
 LLIBS= $(MYLIBS)				\
