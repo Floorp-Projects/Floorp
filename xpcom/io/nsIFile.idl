@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Doug Turner <dougt@netscape.com>
  *     Christopher Blizzard <blizzard@mozilla.org>
  */
@@ -37,21 +37,21 @@ interface nsIFile : nsISupports
     /**
      *   Create Types
      *
-     *   NORMAL_FILE_TYPE - A normal file.  
+     *   NORMAL_FILE_TYPE - A normal file.
      *   DIRECTORY_TYPE   - A directory/folder.
      */
     const unsigned long NORMAL_FILE_TYPE = 0;
     const unsigned long DIRECTORY_TYPE   = 1;
-     
+
     /**
      *  appendPath
      *
      *  This function is used for constructing a descendant of the
-     *  current nsIFile.  
+     *  current nsIFile.
      *
-     *  @param relativePath    
-     *      A string which is intented to be a child node of the 
-     *      nsIFile.  
+     *  @param relativePath
+     *      A string which is intented to be a child node of the
+     *      nsIFile.
      */
     void append([const] in string node);
     void appendUnicode([const] in wstring node);
@@ -64,11 +64,11 @@ interface nsIFile : nsISupports
     /**
      *  create
      *
-     *  This function will create a new file or directory in the 
-     *  file system. Any nodes that have not been created or 
-     *  resolved, will be.  If the file or directory already 
+     *  This function will create a new file or directory in the
+     *  file system. Any nodes that have not been created or
+     *  resolved, will be.  If the file or directory already
      *  exists create() will return NS_ERROR_FILE_ALREADY_EXISTS.
-     * 
+     *
      *   @param type
      *       This specifies the type of file system object
      *       to be made.  The only two types at this time
@@ -81,30 +81,30 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
-  
+
     void create(in unsigned long type, in unsigned long permissions);
 
     /**
-     *   Accessor to the leaf name of the file itself. 
+     *   Accessor to the leaf name of the file itself.
      */
     attribute string leafName;
     attribute wstring unicodeLeafName;
-    
+
     /**
      *  copyTo
      *
-     *  This will copy this file to the specified newParentDir.  
+     *  This will copy this file to the specified newParentDir.
      *  If a newName is specified, the file will be renamed.
-     *  If 'this' is not created we will return an error 
+     *  If 'this' is not created we will return an error
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
      *  copyTo will NOT resolve aliases/shortcuts during the copy.
      *
      *   @param newParentDir
-     *       This param is the destination directory. If the 
-     *       newParentDir is nsnull, copyTo() will simply  
-     *       rename the file. If the newParentDir is not 
-     *       null and does not exists, an error will be 
+     *       This param is the destination directory. If the
+     *       newParentDir is nsnull, copyTo() will simply
+     *       rename the file. If the newParentDir is not
+     *       null and does not exists, an error will be
      *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
@@ -114,7 +114,7 @@ interface nsIFile : nsISupports
      */
     void copyTo(in nsIFile newParentDir, [const] in string newName);
     void copyToUnicode(in nsIFile newParentDir, [const] in wstring newName);
-     
+
     /**
      *  copyToFollowingLinks
      *
@@ -123,13 +123,13 @@ interface nsIFile : nsISupports
      */
     void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     void copyToFollowingLinksUnicode(in nsIFile newParentDir, [const] in wstring newName);
-    
+
     /**
      *  moveTo
      *
-     *  This will move this file to the specified newParentDir.  
+     *  This will move this file to the specified newParentDir.
      *  If a newName is specified, the file will be renamed.
-     *  If 'this' is not created we will return an error 
+     *  If 'this' is not created we will return an error
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
      *  moveTo will NOT resolve aliases/shortcuts during the copy.
@@ -137,10 +137,10 @@ interface nsIFile : nsISupports
      *  volumes.
      *
      *   @param newParentDir
-     *       This param is the destination directory. If the 
-     *       newParentDir is nsnull, moveTo() will simply  
-     *       rename the file. If the newParentDir is not 
-     *       null and does not exists, an error will be 
+     *       This param is the destination directory. If the
+     *       newParentDir is nsnull, moveTo() will simply
+     *       rename the file. If the newParentDir is not
+     *       null and does not exists, an error will be
      *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
@@ -157,7 +157,7 @@ interface nsIFile : nsISupports
      *  if the OS supports that.
      */
     void spawn([array, size_is(count)] in string args, in unsigned long count);
-    
+
     /**
      *  This will try to delete this file.  The 'recursive' flag
      *  must be PR_TRUE to delete directories which are not empty.
@@ -169,18 +169,18 @@ interface nsIFile : nsISupports
     /**
      *  Attributes of nsIFile.
      */
-    
+
     attribute unsigned long permissions;
     attribute unsigned long permissionsOfLink;
-    
+
     /**
-     *  File Times are to be in Milliseconds (usecs) from 
-     *  midnight (00:00:00), January 1, 1970 Greenwich Mean 
+     *  File Times are to be in Milliseconds (usecs) from
+     *  midnight (00:00:00), January 1, 1970 Greenwich Mean
      *  Time (GMT).
      */
     attribute PRInt64 lastModificationDate;
     attribute PRInt64 lastModificationDateOfLink;
-    
+
     /**
      * WARNING!  On the Mac getting/setting the file size with nsIFile
      * only deals with the size of the data fork.  If you need to
@@ -189,17 +189,18 @@ interface nsIFile : nsISupports
      */
     attribute PRInt64 fileSize;
     readonly attribute PRInt64 fileSizeOfLink;
-    
+
     /**
      *  target & path
      *
      *  Accessor to the string path.  These strings are
-     *  not guaranteed to be a usable path to pass to NSPR 
-     *  or the C stdlib.  There are problem which affects 
-     *  platforms in which a path does not fully specify a 
-     *  file, because two volumes can have the same name.  
-     *  This is solved by holding a "private" native data.  
-     *  This data is lost when you convert to a string. 
+     *  not guaranteed to be a usable path to pass to NSPR
+     *  or the C stdlib.  There are problems that affect
+     *  platforms on which a path does not fully specify a
+     *  file, because two volumes can have the same name.
+     *  This is solved by holding "private", native data in
+     *  the nsIFile implementation.  This native data is lost
+     *  when you convert to a string.
      *
      *      DO NOT PASS TO USE WITH NSPR OR STDLIB.
      *
@@ -215,7 +216,7 @@ interface nsIFile : nsISupports
     readonly attribute wstring unicodeTarget;
     readonly attribute string path;
     readonly attribute wstring unicodePath;
-    
+
     boolean exists();
     boolean isWritable();
     boolean isReadable();
@@ -227,14 +228,14 @@ interface nsIFile : nsISupports
     /**
      * Not a regular file, not a directory, not a symlink.
      */
-    boolean isSpecial(); 
-    
+    boolean isSpecial();
+
     /**
       * clone()
       *
       * This function will allocate and initialize a nsIFile object to the
       * exact location of the |this| nsIFile.
-      * 
+      *
       *   @param file
       *          A nsIFile which this object will be initialize
       *          with.
@@ -246,10 +247,10 @@ interface nsIFile : nsISupports
      *  Will determine if the inFile equals this.
      */
     boolean equals(in nsIFile inFile);
-    
+
     /**
      * Will determine if the inFile is a descendant
-     * If |recur| is true, it will descend subdirectories looking for 
+     * If |recur| is true, it will descend subdirectories looking for
      */
     boolean contains(in nsIFile inFile, in boolean recur);
 
@@ -260,11 +261,11 @@ interface nsIFile : nsISupports
 
     /**
      * Returns an enumeration of the elements in a directory. Each
-     * element in the enumeration is an nsIFile. 
+     * element in the enumeration is an nsIFile.
      *
      *   @return NS_ERROR_FILE_NOT_DIRECTORY if the current nsIFile does
      *           not specify a directory.
-     */ 
+     */
     readonly attribute nsISimpleEnumerator directoryEntries;
 };
 
@@ -288,7 +289,7 @@ NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
     static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
     NS_WITH_SERVICE(nsIProperties, serv, kDirectoryServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsCOMPtr<nsISupports> dir;
     rv = serv->Get(specialDirName, NS_GET_IID(nsIFile), getter_AddRefs(dir));
     if (NS_FAILED(rv)) return rv;
