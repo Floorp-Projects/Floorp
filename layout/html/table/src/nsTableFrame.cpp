@@ -1437,7 +1437,34 @@ nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
   return NS_OK;
 }
 
-/* SEC: TODO: adjust the rect for captions */
+void 
+nsTableFrame::PaintChildren(nsIPresContext*      aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect&        aDirtyRect,
+                            nsFramePaintLayer    aWhichLayer,
+                            PRUint32             aFlags)
+
+{
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  // If overflow is hidden then set the clip rect so that children don't
+  // leak out of us. Note that because overflow'-clip' only applies to
+  // the content area we do this after painting the border and background
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PushState();
+    SetOverflowClipRect(aRenderingContext);
+  }
+
+  nsHTMLContainerFrame::PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
+
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
+  }
+}
+
+// table paint code is concerned primarily with borders and bg color
+// SEC: TODO: adjust the rect for captions 
 NS_METHOD 
 nsTableFrame::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
@@ -1445,35 +1472,39 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags)
 {
-  // table paint code is concerned primarily with borders and bg color
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisibleOrCollapsed()) {
+    if (vis && vis->IsVisibleOrCollapsed()) {
       const nsStyleBorder* border =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *border, 0, 0, PR_TRUE);
       
-      // paint the column groups and columns
-      nsIFrame* colGroupFrame = mColGroups.FirstChild();
-      while (nsnull != colGroupFrame) {
-        PaintChild(aPresContext, aRenderingContext, aDirtyRect, colGroupFrame, aWhichLayer);
-        colGroupFrame->GetNextSibling(&colGroupFrame);
-      }
-
-      PRIntn skipSides = GetSkipSides();
-      if (IsBorderCollapse()) {
-        PaintBCBorders(aPresContext, aRenderingContext, aDirtyRect);
-      }
-      else {
+      // paint the border here only for separate borders
+      if (!IsBorderCollapse()) {
+        PRIntn skipSides = GetSkipSides();
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *border, mStyleContext, skipSides);
       }
     }
+  }
+
+  // for collapsed borders paint the backgrounds of cells, but not their contents (that happens below)
+  PRUint32 flags = aFlags;
+  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) && IsBorderCollapse()) {
+    flags &= ~BORDER_COLLAPSE_BACKGROUNDS; // set bit to 0
+  }
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, flags);
+
+  if ((NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) && IsBorderCollapse()) {
+    // for collapsed borders, paint the borders and then the backgrounds of cell
+    // contents but not the backgrounds of the cells
+    PaintBCBorders(aPresContext, aRenderingContext, aDirtyRect);
+    flags |= BORDER_COLLAPSE_BACKGROUNDS; // set bit to 1
+    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, flags);
   }
 
 #ifdef DEBUG
@@ -1483,22 +1514,7 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 #endif
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  // If overflow is hidden then set the clip rect so that children don't
-  // leak out of us. Note that because overflow'-clip' only applies to
-  // the content area we do this after painting the border and background
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    aRenderingContext.PushState();
-    SetOverflowClipRect(aRenderingContext);
-  }
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
-  }
   DO_GLOBAL_REFLOW_COUNT_DSP_J("nsTableFrame", &aRenderingContext, NS_RGB(255,128,255));
   return NS_OK;
   /*nsFrame::Paint(aPresContext,

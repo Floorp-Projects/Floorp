@@ -51,8 +51,6 @@ class nsReflowTimer;
 #define NS_ROW_NEED_SPECIAL_REFLOW          0x20000000
 #define NS_TABLE_ROW_HAS_UNPAGINATED_HEIGHT 0x40000000
 
-#define NS_ROW_FRAME_PAINT_SKIP_ROW   0x00000001
-#define NS_ROW_FRAME_PAINT_SKIP_CELLS 0x00000002
 /**
  * nsTableRowFrame is the frame that maps table rows 
  * (HTML tag TR). This class cannot be reused

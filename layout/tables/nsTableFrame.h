@@ -61,6 +61,10 @@ struct nsStylePosition;
 
 enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
 
+// flags for Paint, PaintChild, PaintChildren are currently only used by tables.
+// use low order bit of flags to distinguish between pass1(0) and pass2(1) border collapse backgrounds
+#define BORDER_COLLAPSE_BACKGROUNDS 0x00000001
+
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 #ifdef WIN32
 #include <windows.h>
@@ -303,6 +307,12 @@ public:
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
+
+  virtual void PaintChildren(nsIPresContext*      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer,
+                             PRUint32             aFlags = 0);
 
   nsMargin* GetBCBorder(nsIPresContext& aPresContext,
                         PRBool          aInnerBorderOnly,
