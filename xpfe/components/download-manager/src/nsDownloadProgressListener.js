@@ -46,7 +46,7 @@ nsDownloadProgressListener.prototype = {
     elapsed: 0,
     rateChanges: 0,
     rateChangeLimit: 0,
-    priorRate: 0,
+    priorRate: "",
     lastUpdate: -500,
     doc: null,
     get document() {
@@ -147,8 +147,8 @@ nsDownloadProgressListener.prototype = {
       if ( rate )
       {
         // rate is bytes/sec
-        var kRate = rate / 1024; // K bytes/sec;
-        kRate = parseInt( kRate * 10 + .5 ); // xxx (3 digits)
+        var kRate = (rate / 1024).toFixed(1); // kilobytes/sec
+		
         // Don't update too often!
         if ( kRate != this.priorRate )
         {
@@ -167,14 +167,11 @@ nsDownloadProgressListener.prototype = {
         else
           this.rateChanges = 0;
 
-         var fraction = kRate % 10;
-         kRate = parseInt( ( kRate - fraction ) / 10 );
-
-         // Insert 3 is the download rate (in kilobytes/sec).
-         rateMsg = replaceInsert( rateMsg, 1, kRate + "." + fraction );
+        // Insert 3 is the download rate (in kilobytes/sec).
+        rateMsg = replaceInsert( rateMsg, 1, kRate );
       }
       else
-       rateMsg = replaceInsert( rateMsg, 1, "??.?" );
+        rateMsg = replaceInsert( rateMsg, 1, "??.?" );
 
       var timeRemainingCol = elt.nextSibling.nextSibling.nextSibling;
 
