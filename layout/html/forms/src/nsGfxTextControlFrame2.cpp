@@ -203,7 +203,6 @@ protected:
   PRPackedBool    mKnowSelectionCollapsed;
 
   PRPackedBool    mFirstDoOfFirstUndo;
-  
 };
 
 
@@ -305,6 +304,42 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
   PRBool collapsed;
   if (!mFrame || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)))
     return NS_OK;
+
+  // Fire the select event
+  // The specs don't exactly say when we should fire the select event.
+  // IE: Whenever you add/remove a character to/from the selection. Also
+  //     if you get to the end of the text field you will get new event for each
+  //     keypress or a continuous stream of events if you use the mouse. IE will
+  //     fire select event when the selection collapses to nothing if you are holding down
+  //     the shift or mouse button.
+  // Mozilla: If we have non-empty selection we will fire a new event for each
+  //          keypress (or mouseup) if the selection changed. Mozilla will never 
+  //          create an event if the selection collapses to nothing.
+  if (!collapsed && ((aReason & MOUSEUP_REASON) || (aReason & KEYPRESS_REASON))) {
+    nsCOMPtr<nsIContent> content;
+    mFrame->GetFormContent(*getter_AddRefs(content));
+    if (content) {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsGUIEvent event;
+      event.eventStructType = NS_GUI_EVENT;
+      event.widget = nsnull;
+      event.message = NS_FORM_SELECTED;
+      event.flags = NS_EVENT_FLAG_INIT;
+
+      nsCOMPtr<nsIDocument> doc;
+      if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc)))) {
+        if (doc) {
+          nsCOMPtr<nsIPresShell> presShell = dont_AddRef(doc->GetShellAt(0));
+          if (presShell) {
+            nsCOMPtr<nsIPresContext> context;
+            if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context)))&& context) {
+              content->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+            }
+          }
+        }
+      }
+    }
+  }
 
   // if the collapsed state did not change, don't fire notifications
   if (mKnowSelectionCollapsed && collapsed == mSelectionWasCollapsed)
