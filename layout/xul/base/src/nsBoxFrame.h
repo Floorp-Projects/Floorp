@@ -28,7 +28,38 @@
 #define nsBoxFrame_h___
 
 #include "nsHTMLContainerFrame.h"
-class nsBoxDataSpring;
+
+class nsBoxDataSpring {
+public:
+    nscoord preferredSize;
+    nscoord minSize;
+    nscoord maxSize;
+    float  springConstant;
+
+    nscoord altMinSize;
+    nscoord altMaxSize;
+    nscoord altPreferredSize;
+
+    nscoord calculatedSize;
+    PRBool  sizeValid;
+    PRBool  wasFlowed;
+
+    void init()
+    {
+        preferredSize = 0;
+        springConstant = 0.0;
+        minSize = 0;
+        maxSize = NS_INTRINSICSIZE;
+        altMinSize = 0;
+        altMaxSize = NS_INTRINSICSIZE;
+        altPreferredSize = 0;
+
+        calculatedSize = 0;
+        sizeValid = PR_FALSE;
+        wasFlowed = PR_FALSE;
+    }
+
+};
 
 class nsBoxFrame : public nsHTMLContainerFrame
 {
@@ -99,8 +130,11 @@ protected:
 
 private: 
 
- 
+    nsBoxDataSpring springs[100];
+    nscoord totalCount;
+
 }; // class nsBoxFrame
+
 
 
 #endif
