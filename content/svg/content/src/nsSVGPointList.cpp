@@ -42,6 +42,7 @@
 #include "prdtoa.h"
 #include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
+#include "nsCRT.h"
 
 nsresult
 nsSVGPointList::Create(const nsAString& aValue,
