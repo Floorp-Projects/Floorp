@@ -1651,11 +1651,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
   }
   PR_FREEIF(mdd->mailcharset);
   
-   // Release the prefbranch
-    MimeObject *obj = (mdd ? mdd->obj : 0);  
-   if ( (obj) && (obj->options))
-     obj->options->m_prefBranch = 0;
-  
   mdd->identity = nsnull;
   PR_Free(mdd->url_name);
   PR_Free(mdd->originalMsgURI);

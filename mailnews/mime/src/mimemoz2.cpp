@@ -954,10 +954,6 @@ mime_display_stream_complete (nsMIMESession *stream)
     int       status;
     PRBool    abortNow = PR_FALSE;
 
-    // Release the prefbranch
-    if ( (obj->options) )
-      obj->options->m_prefBranch = 0;
-    
     if ((obj->options) && (obj->options->headers == MimeHeadersOnly))
       abortNow = PR_TRUE;
 
