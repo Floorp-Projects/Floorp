@@ -213,17 +213,15 @@ void FormatAndPrintOutput(const char *theInput, int theVar, int outputMode)
 }
 
 // stringMsg is returned in case embeddor wishes to use it in the calling method.
-void RequestName(nsIRequest *request, nsCString &stringMsg,
+void RequestName(nsIRequest *request, nsCString &stringMsg, 
 						   int displayMethod)
 {
 	nsresult rv;
 
 	rv = request->GetName(stringMsg);
 
-	if(NS_SUCCEEDED(rv))
-	{
+	if(NS_SUCCEEDED(rv))																
 		FormatAndPrintOutput("nsIRequest: The request name = ", stringMsg.get(), displayMethod);
-	}
 	else
 		QAOutput("nsIRequest: We didn't get the request name.", displayMethod);
 

@@ -83,7 +83,7 @@ public:
 	// local test variables
 	//nsresult rv;
 	CString strMsg;
-	char theUrl[200];
+	char theUrl[300];
 	char *uriSpec;
 	PRBool exists;
 	PRInt32 numEntries;

@@ -102,8 +102,11 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
    // NS_SHISTORYLISTENER_CONTRACTID
 
 	// get Session History through web nav iface
-   if (qaWebNav)
-		qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
+   if (qaWebNav) {
+	  rv = qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
+	  RvTestResult(rv, "GetSessionHistory() object", 1);
+	  RvTestResultDlg(rv, "GetSessionHistory() object", true);
+   }
 
    if (!theSessionHistory)
    {
@@ -111,7 +114,7 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 	   return;
    }
    else {
-	   QAOutput("theSessionHistory object was created.", 2);
+	   QAOutput("theSessionHistory object was created.", 1);
 	   theSessionHistory->GetCount(&numEntries);
    }
 
@@ -146,7 +149,9 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 			{ 
 				FormatAndPrintOutput("the index = ", theIndex, 2); 
 
-				theSessionHistory->GetEntryAtIndex(theIndex, PR_FALSE, getter_AddRefs(theHistoryEntry));
+				rv = theSessionHistory->GetEntryAtIndex(theIndex, PR_FALSE, getter_AddRefs(theHistoryEntry));
+				RvTestResult(rv, "GetEntryAtIndex() test", 1);
+				RvTestResultDlg(rv, "GetEntryAtIndex() test");
 				if (!theHistoryEntry)
 				{
 					QAOutput("We didn't get the History Entry object. No more tests performed.", 1);
@@ -165,10 +170,13 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 			//GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
 
 			rv = theSessionHistory->GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
-			if (!theSimpleEnum)
+			RvTestResult(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test", 1);
+			RvTestResultDlg(rv, "GetSHistoryEnumerator() test");
+
+			if (!theSimpleEnum) {
   			   QAOutput("theSimpleEnum for GetSHistoryEnumerator() invalid. Test failed.", 1);
-			else
-			   RvTestResult(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test", 2);
+			   return;
+			}
 			SimpleEnumTest(theSimpleEnum);
 			break ;
 
@@ -201,11 +209,6 @@ void CNsIHistory::RunAllTests()
    nsCOMPtr<nsISHistory> theSessionHistory;
    nsCOMPtr<nsIHistoryEntry> theHistoryEntry;
 
-   //nsCOMPtr<nsIURI> theUri;
-   // do_QueryInterface
-   // NS_HISTORYENTRY_CONTRACTID
-   // NS_SHISTORYLISTENER_CONTRACTID
-
 	// get Session History through web nav iface
    if (qaWebNav)
 		qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
@@ -233,7 +236,10 @@ void CNsIHistory::RunAllTests()
 	QAOutput("Start nsiHistoryEntry tests.", 2); 
 
 		// get theHistoryEntry object
-	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
+	rv = theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
+	RvTestResult(rv, "GetEntryAtIndex() test", 1);
+	RvTestResultDlg(rv, "GetEntryAtIndex() test");
+
 	if (!theHistoryEntry)
 		QAOutput("We didn't get the History Entry object.", 1);
 	else 
@@ -280,12 +286,13 @@ void CNsIHistory::RunAllTests()
 //	GetSHEnumTest(theSessionHistory, theSimpleEnum);
 
 	rv = theSessionHistory->GetSHistoryEnumerator(getter_AddRefs(theSimpleEnum));
+	RvTestResult(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test", 1);
+	RvTestResultDlg(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test");
+
 	if (!theSimpleEnum)
   	   QAOutput("theSimpleEnum for GetSHistoryEnumerator() invalid. Test failed.", 1);
 	else
-	   RvTestResult(rv, "GetSHistoryEnumerator() (SHistoryEnumerator attribute) test", 2);
-
-	SimpleEnumTest(theSimpleEnum);
+		SimpleEnumTest(theSimpleEnum);
 
 	// PurgeHistory() test
 
@@ -298,29 +305,36 @@ void CNsIHistory::RunAllTests()
 void CNsIHistory::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
 {
     rv = theSessionHistory->GetCount(numEntries);
-	if (*numEntries < 0)
+	if (*numEntries < 0) 
 		QAOutput("numEntries for GetCount() < 0. Test failed.", 1);
 	else {
 		FormatAndPrintOutput("GetCount():number of entries = ", *numEntries, 2);
-		RvTestResult(rv, "GetCount() (count attribute) test", 2);
+		RvTestResult(rv, "GetCount() (count attribute) test", 1);
+		RvTestResultDlg(rv, "GetCount() (count attribute) test");
 	}
 }
 
 void CNsIHistory::GetIndexTest(nsISHistory *theSessionHistory, PRInt32 *theIndex)
 {
 	rv = theSessionHistory->GetIndex(theIndex);
-	if (*theIndex <0)
+	if (*theIndex <0) 
 		QAOutput("theIndex for GetIndex() < 0. Test failed.", 1);
 	else {
 		FormatAndPrintOutput("GetIndex():the index = ", *theIndex, 2);
-		RvTestResult(rv, "GetIndex() (index attribute) test", 2);
+		RvTestResult(rv, "GetIndex() (index attribute) test", 1);
+		RvTestResultDlg(rv, "GetIndex() (index attribute) test");
 	}
 }
 
 void CNsIHistory::SetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 theMaxLength)
 {
 	rv = theSessionHistory->SetMaxLength(theMaxLength);
-	RvTestResult(rv, "SetMaxLength() (MaxLength attribute) test", 2);
+	if (theMaxLength < 0)
+		QAOutput("theMaxLength for SetMaxLength() < 0. Test failed.", 1);
+	else {
+		RvTestResult(rv, "SetMaxLength() (MaxLength attribute) test", 1);
+		RvTestResultDlg(rv, "SetMaxLength() (MaxLength attribute) test");
+	}
 }
 
 void CNsIHistory::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theMaxLength)
@@ -330,7 +344,8 @@ void CNsIHistory::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theM
 		QAOutput("theMaxLength for GetMaxLength() < 0. Test failed.", 1);
 	else {
 		FormatAndPrintOutput("GetMaxLength():theMaxLength = ", *theMaxLength, 2); 
-		RvTestResult(rv, "GetMaxLength() (MaxLength attribute) test", 2);
+		RvTestResult(rv, "GetMaxLength() (MaxLength attribute) test", 1);
+		RvTestResultDlg(rv, "GetMaxLength() (MaxLength attribute) test");
 	}
 }
 
@@ -356,11 +371,12 @@ void CNsIHistory::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theM
 void CNsIHistory::GetURIHistTest(nsIHistoryEntry* theHistoryEntry)
 {
 	rv = theHistoryEntry->GetURI(getter_AddRefs(theUri));
+	RvTestResult(rv, "GetURI() (URI attribute) test", 1);
+	RvTestResultDlg(rv, "GetURI() (URI attribute) test");
 	if (!theUri)
 		QAOutput("theUri for GetURI() invalid. Test failed.", 1);
 	else
 	{
-		RvTestResult(rv, "GetURI() (URI attribute) test", 1);
 		nsCAutoString uriString;
 		rv = theUri->GetSpec(uriString);
 		if (NS_FAILED(rv))
@@ -376,12 +392,13 @@ void CNsIHistory::GetTitleHistTest(nsIHistoryEntry* theHistoryEntry)
    const char *  titleCString;
 
 	rv = theHistoryEntry->GetTitle(getter_Copies(theTitle));
+	RvTestResult(rv, "GetTitle() (title attribute) test", 1);
+	RvTestResultDlg(rv, "GetTitle() (title attribute) test");
 	if (!theTitle) {
 		QAOutput("theTitle for GetTitle() is blank. Test failed.", 1);
 		return;
 	}
-	else
-		RvTestResult(rv, "GetTitle() (title attribute) test", 1);
+
 	titleCString = NS_ConvertUCS2toUTF8(theTitle).get();
 	FormatAndPrintOutput("The title = ", (char *)titleCString, 2);
 
@@ -394,6 +411,7 @@ void CNsIHistory::GetIsSubFrameTest(nsIHistoryEntry* theHistoryEntry)
 	rv = theHistoryEntry->GetIsSubFrame(&isSubFrame);
 	
 	RvTestResult(rv, "GetIsSubFrame() (isSubFrame attribute) test", 1);
+	RvTestResultDlg(rv, "GetIsSubFrame() (isSubFrame attribute) test");
 	FormatAndPrintOutput("The subFrame boolean value = ", isSubFrame, 2);
 }
 
@@ -424,6 +442,8 @@ void CNsIHistory::SimpleEnumTest(nsISimpleEnumerator *theSimpleEnum)
 	 if (!nextHistoryEntry)
 		continue;
 	 rv = nextHistoryEntry->GetURI(getter_AddRefs(theUri));
+	 RvTestResult(rv, "theSimpleEnum nsIHistoryEntry->GetURI() test", 1);
+	 RvTestResultDlg(rv, "theSimpleEnum nsIHistoryEntry->GetURI() test");
 	 nsCAutoString uriString;
 	 rv = theUri->GetSpec(uriString);
 	 if (NS_FAILED(rv))
@@ -436,8 +456,9 @@ void CNsIHistory::SimpleEnumTest(nsISimpleEnumerator *theSimpleEnum)
 void CNsIHistory::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEntries)
 {
    rv = theSessionHistory->PurgeHistory(numEntries);
-   RvTestResult(rv, "PurgeHistory() test", 2);
-   FormatAndPrintOutput("PurgeHistory(): num requested entries for removal = ", numEntries, 2);		 
+   RvTestResult(rv, "PurgeHistory() test", 1);
+   RvTestResultDlg(rv, "PurgeHistory() test");
+   FormatAndPrintOutput("PurgeHistory(): num requested entries for removal = ", numEntries, 1);		 
 }
 
 void CNsIHistory::RunAllHistoryEntryTests() 
@@ -451,11 +472,6 @@ void CNsIHistory::RunAllHistoryEntryTests()
    nsCOMPtr<nsISHistory> theSessionHistory;
    nsCOMPtr<nsIHistoryEntry> theHistoryEntry;
 
-   //nsCOMPtr<nsIURI> theUri;
-   // do_QueryInterface
-   // NS_HISTORYENTRY_CONTRACTID
-   // NS_SHISTORYLISTENER_CONTRACTID
-
 	// get Session History through web nav iface
    if (qaWebNav)
 		qaWebNav->GetSessionHistory( getter_AddRefs(theSessionHistory));
@@ -466,7 +482,7 @@ void CNsIHistory::RunAllHistoryEntryTests()
 	   return;
    }
    else
-	   QAOutput("theSessionHistory object was created.", 2);
+	   QAOutput("theSessionHistory object was created.", 1);
 
 	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
 	if (!theHistoryEntry)
