@@ -66,11 +66,12 @@ static char* class2Name = "PrintPreview";
 static HANDLE gInstance, gPrevInstance;
 static char* startURL;
 static nsVoidArray* gWindows;
-static PRBool gDoPurify;
-static PRBool gDoQuantify;
-static PRBool gLoadTestFromFile;
-static PRInt32 gDelay=1;
-static PRInt32 gRepeatCount=1;
+static PRBool gDoPurify;          // run in Purify auto mode
+static PRBool gDoQuantify;        // run in Quantify auto mode
+static PRBool gLoadTestFromFile;  // run in auto mode by pulling URLs from a file (gInputFileName)
+static PRInt32 gDelay=1;          // if running in an auto mode, this is the delay between URL loads
+static PRInt32 gRepeatCount=1;    // if running in an auto mode, this is the number of times to cycle through the input
+static PRInt32 gNumSamples=9;     // if running in an auto mode that uses the samples, this is the last sample to load
 static char gInputFileName[_MAX_PATH+1];
 
 // Debug Robot options
@@ -187,7 +188,7 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
 void AddTestDocs(nsDocLoader* aDocLoader)
 {
   char url[500];
-  for (int docnum = 0; docnum < 9; docnum++)
+  for (int docnum = 0; docnum < gNumSamples; docnum++)
   {
     PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
     aDocLoader->AddURL(url);
@@ -870,7 +871,7 @@ BOOL CreateRobotDialog(HWND hParent)
 void PrintHelpInfo(char **argv)
 {
   fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #] [starting url]\n", argv[0]);
-  fprintf(stderr, "\t-p   -- run purify\n");
+  fprintf(stderr, "\t-p[#]   -- run purify, optionally with a # that says which sample to stop at.  For example, -p2 says to run samples 0, 1, and 2.\n");
   fprintf(stderr, "\t-q   -- run quantify\n");
   fprintf(stderr, "\t-md # -- set the crt debug flags to #\n");
   fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
@@ -882,8 +883,17 @@ void main(int argc, char **argv)
 {
   for (int i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
-      if (strcmp(argv[i], "-p") == 0) {
+      if (strncmp(argv[i], "-p", 2) == 0) {
         gDoPurify = PR_TRUE;
+        char *optionalSampleStopIndex = &(argv[i][2]);
+        if (nsnull!=*optionalSampleStopIndex)
+        {
+          if (1!=sscanf(optionalSampleStopIndex, "%d", &gNumSamples))
+          {
+            PrintHelpInfo(argv);
+            exit(-1);
+          }
+        }
       }
       else if (strcmp(argv[i], "-q") == 0) {
         gDoQuantify = PR_TRUE;
