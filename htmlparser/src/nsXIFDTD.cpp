@@ -147,6 +147,7 @@ public:
  *  @param   aString -- string to be convered to id
  *  @return  valid id, or user_defined.
  */
+static
 eXIFTags DetermineXIFTagType(const nsString& aString)
 {
   PRInt32  result=-1;
@@ -235,6 +236,7 @@ NS_IMPL_RELEASE(nsXIFDTD)
  *  @param   
  *  @return  
  */
+static
 PRInt32 XIFDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
   
   PRInt32         result=0;
