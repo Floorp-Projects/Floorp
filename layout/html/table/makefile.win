@@ -17,6 +17,6 @@
 
 DEPTH=..\..\.. 
 
-DIRS=src 
+DIRS=public src 
 
 include <$(DEPTH)\layout\config\rules.mak>
