@@ -394,12 +394,12 @@ sub print_html_by_who {
       <table cellpadding=2 cellspacing=2 border=0><tr bgcolor="#FFFFFF">
         <th colspan=2><font size="+1" face="Helvetica,Arial">
           Summary</font></th></tr>
-      <tr bgcolor="#FFFFFF"><td><font face="Helvetica,Arial"><center><b>
-      by count</center></center></font>
+      <tr bgcolor="#FFFFFF"><td><font face="Helvetica,Arial"><b>
+      by count</b></font>
 __END_HEADER
   print_summary_table(\@who_list, \%who_count);
-  print "</td><td><font face='Helvetica,Arial'><center><b>";
-  print "by name</b></center></font>";
+  print "</td><td><font face='Helvetica,Arial'><b>";
+  print "by name</b></font>";
   print_summary_table([sort @who_list], \%who_count);
   print "</td></tr></table>";
   print "</td></tr></table>";
