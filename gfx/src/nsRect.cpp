@@ -196,13 +196,13 @@ FILE* operator<<(FILE* out, const nsRect& rect)
 
   // Output the coordinates in fractional points so they're easier to read
   tmp.AppendWithConversion("{");
-  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.x));
+  tmp.AppendFloat(NSTwipsToFloatPoints(rect.x));
   tmp.AppendWithConversion(", ");
-  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.y));
+  tmp.AppendFloat(NSTwipsToFloatPoints(rect.y));
   tmp.AppendWithConversion(", ");
-  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.width));
+  tmp.AppendFloat(NSTwipsToFloatPoints(rect.width));
   tmp.AppendWithConversion(", ");
-  tmp.AppendWithConversion(NSTwipsToFloatPoints(rect.height));
+  tmp.AppendFloat(NSTwipsToFloatPoints(rect.height));
   tmp.AppendWithConversion("}");
   fputs(tmp, out);
   return out;
