@@ -575,78 +575,78 @@ fe_display_text (MWContext *context, int iLocation, LO_TextStruct *text,
 
 
   if ((text->ele_attrmask & LO_ELE_SELECTED) &&
-	(start >= text->sel_start) && (end-1 <= text->sel_end))
+      (start >= text->sel_start) && (end-1 <= text->sel_end))
     selected_p = True;
-
+  
   gc = fe_get_text_gc (context, text->text_attr, &font, &selected_p, blunk);
   if (!gc)
-  {
-	return;
-  }
-
+    {
+      return;
+    }
+  
   FE_FONT_EXTENTS(text->text_attr->charset, font, &ascent, &descent);
-
+  
   x = (text->x + text->x_offset
-	    - CONTEXT_DATA (context)->document_x);
+       - CONTEXT_DATA (context)->document_x);
   y = (text->y + text->y_offset + ascent
-	    - CONTEXT_DATA (context)->document_y);
+       - CONTEXT_DATA (context)->document_y);
   x += fe_drawable->x_origin;
   y += fe_drawable->y_origin;
-
+  
   if (text->text_len == 0)
     return;
-
+  
   if (! XtIsRealized (drawing_area))
     return;
-
+  
   if ((x > 0 && x > CONTEXT_DATA (context)->scrolled_width) ||
       (y > 0 && y > (CONTEXT_DATA (context)->scrolled_height +
-	text->y_offset + ascent)) ||
+                     text->y_offset + ascent)) ||
       (x + text->width < 0) ||
       (y + text->line_height < 0))
     return;
-
+  
   if (start < 0)
 	start = 0;
   if (end > text->text_len)
 	end = text->text_len;
-
+  
   if (end - start > SUCKY_X_MAX_LENGTH)
     /* that's a fine way to make X blow up *real* good! */
     end = start + SUCKY_X_MAX_LENGTH;
-
+  
   /* #### Oh, this doesn't even work, because Bina is
      passing us massively negative (> 16 bit) starting pixel positions.
-   */
-
+  */
+  
   if (start > 0)
     {
       XCharStruct overall;
       int ascent, descent;
       if (! font) abort ();
       FE_TEXT_EXTENTS (text->text_attr->charset, font, (char *) text->text,
-			start, &ascent, &descent, &overall);
+                       start, &ascent, &descent, &overall);
       x_offset = overall.width;
       x += x_offset;
     }
-
-
+  
+  
   if (blunk)
     ;	/* No text to draw. */
   else if (!selected_p && text->text_attr->no_background)
     FE_DRAW_STRING (text->text_attr->charset, dpy, drawable, font, gc, x, y,
-	((char *) text->text) + start, end - start);
+                    ((char *) text->text) + start, end - start);
   else
-  {
-	GC gc2;
-	gc2 = fe_get_text_gc (context, text->text_attr, &font, &selected_p, TRUE);
-	if (!gc2)
+    {
+      GC gc2;
+      gc2 = fe_get_text_gc (context, text->text_attr, &font, &selected_p, TRUE);
+      if (!gc2)
 		gc2 = gc;
-
-    FE_DRAW_IMAGE_STRING (text->text_attr->charset, dpy, drawable, font, gc, gc2,
-                          x, y, ((char *) text->text)+start, end - start);
-  }
-
+      
+      FE_DRAW_IMAGE_STRING (text->text_attr->charset, dpy, drawable, font, gc, gc2,
+                            x, y, ((char *) text->text)+start, end - start);
+    }
+  
   /* Anchor text is no longer underlined by the front end.
    * We deliberately do not test for the LO_ATTR_ANCHOR bit in the attr mask.
    */
@@ -655,82 +655,84 @@ fe_display_text (MWContext *context, int iLocation, LO_TextStruct *text,
 #if 0
       || (text->height < text->line_height)
 #endif
-    )
+      )
     {
       int upos;
       unsigned int uthick;
       int ul_width;
-
+      
       if (start == 0 && end == text->text_len)
-	{
-	  ul_width = text->width;
-	}
+        {
+          ul_width = text->width;
+        }
       else
-	{
-	  XCharStruct overall;
-	  int ascent, descent;
-	  if (! font) abort ();
-	  FE_TEXT_EXTENTS (text->text_attr->charset, font,
-		(char *) text->text+start, end-start, &ascent, &descent,
-		&overall);
-	  ul_width = overall.width;
-	}
-
+        {
+          XCharStruct overall;
+          int ascent, descent;
+          if (! font) abort ();
+          FE_TEXT_EXTENTS (text->text_attr->charset, font,
+                           (char *) text->text+start, end-start, &ascent, &descent,
+                           &overall);
+          ul_width = overall.width;
+        }
+      
 #if 0
       if (text->height < text->line_height)
-	{
-	  /* If the text is shorter than the line, then XDrawImageString()
-	     won't fill in the whole background - so we need to do that by
-	     hand. */
-	  GC gc;
-	  XGCValues gcv;
-	  memset (&gcv, ~0, sizeof (gcv));
-	  gcv.foreground = (text->selected
-			    ? CONTEXT_DATA (context)->highlight_bg_pixel
-			    : fe_GetPixel (context,
-					   text->text_attr->bg.red,
-					   text->text_attr->bg.green,
-					   text->text_attr->bg.blue));
-	}
+        {
+          /* If the text is shorter than the line, then XDrawImageString()
+             won't fill in the whole background - so we need to do that by
+             hand. */
+          GC gc;
+          XGCValues gcv;
+          memset (&gcv, ~0, sizeof (gcv));
+          gcv.foreground = (text->selected
+                            ? CONTEXT_DATA (context)->highlight_bg_pixel
+                            : fe_GetPixel (context,
+                                           text->text_attr->bg.red,
+                                           text->text_attr->bg.green,
+                                           text->text_attr->bg.blue));
+        }
 #endif
-
+      
       if (text->text_attr->attrmask & LO_ATTR_UNDERLINE)
-	{
-	  int lineDescent;
-	  upos = fe_GetUnderlinePosition(text->text_attr->charset);
-	  lineDescent = text->line_height - text->y_offset - ascent - 1;
-	  if (upos > lineDescent)
-	    upos = lineDescent;
-	  XDrawLine (dpy, drawable, gc, x, y + upos, x + ul_width, y + upos);
-	}
+        {
+          int lineDescent;
+          upos = fe_GetUnderlinePosition(text->text_attr->charset);
+          lineDescent = text->line_height - text->y_offset - ascent - 1;
 
+          if (upos > lineDescent && lineDescent > 0)
+            upos = lineDescent;
+
+          XDrawLine (dpy, drawable, gc, x, y + upos, x + ul_width, y + upos);
+        }
+      
 	  if (text->text_attr->attrmask & LO_ATTR_SPELL)
-    {
-		int lineDescent;
-		GC gc2;
-		XGCValues gcv2;
-
-		memset (&gcv2, ~0, sizeof (gcv2));
-		gcv2.foreground = fe_GetPixel(context, 0xFF, 0x00, 0x00);
-
-		gc2 = fe_GetGC (CONTEXT_WIDGET (context), GCForeground, &gcv2);
-
-		upos = fe_GetUnderlinePosition(text->text_attr->charset);
-		lineDescent = text->line_height - text->y_offset - ascent - 1;
-		if (upos > lineDescent)
+        {
+          int lineDescent;
+          GC gc2;
+          XGCValues gcv2;
+          
+          memset (&gcv2, ~0, sizeof (gcv2));
+          gcv2.foreground = fe_GetPixel(context, 0xFF, 0x00, 0x00);
+          
+          gc2 = fe_GetGC (CONTEXT_WIDGET (context), GCForeground, &gcv2);
+          
+          upos = fe_GetUnderlinePosition(text->text_attr->charset);
+          lineDescent = text->line_height - text->y_offset - ascent - 1;
+          if (upos > lineDescent)
 			upos = lineDescent;
-		XDrawLine (dpy, drawable, gc2, x, y + upos, x + ul_width, y + upos);
-	}
+          XDrawLine (dpy, drawable, gc2, x, y + upos, x + ul_width, y + upos);
+        }
 
       if (text->text_attr->attrmask & LO_ATTR_STRIKEOUT)
-	{
-	  upos = fe_GetStrikePosition(text->text_attr->charset, font);
-	  uthick = (ascent / 8);
-	  if (uthick <= 1)
-	    XDrawLine (dpy, drawable, gc, x, y + upos, x + ul_width, y + upos);
-	  else
-	    XFillRectangle (dpy, drawable, gc, x, y + upos, ul_width, uthick);
-	}
+        {
+          upos = fe_GetStrikePosition(text->text_attr->charset, font);
+          uthick = (ascent / 8);
+          if (uthick <= 1)
+            XDrawLine (dpy, drawable, gc, x, y + upos, x + ul_width, y + upos);
+          else
+            XFillRectangle (dpy, drawable, gc, x, y + upos, ul_width, uthick);
+        }
     }
 }
 
