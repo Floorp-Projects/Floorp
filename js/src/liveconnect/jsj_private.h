@@ -187,6 +187,14 @@ struct JSJavaThreadState {
     JSJavaThreadState * next;           /* next thread state among all created threads */
 };
 
+struct JavaToJSSavedState {
+	JSErrorReporter error_reporter;
+	JSJavaThreadState* java_jsj_env;
+};
+typedef struct JavaToJSSavedState JavaToJSSavedState;
+
+
+
 /******************************** Globals ***********************************/
 
 extern JSJCallbacks *JSJ_callbacks;
@@ -312,6 +320,20 @@ extern JSBool
 jsj_ConvertJavaObjectToJSBoolean(JSContext *cx, JNIEnv *jEnv,
                                  JavaClassDescriptor *class_descriptor,
                                  jobject java_obj, jsval *vp);
+extern JSJavaThreadState *
+jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
+         JSContext **cxp, JSObject **js_objp, JavaToJSSavedState* saved_state);
+extern JSBool
+jsj_exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JavaToJSSavedState* original_state);
+
+extern JavaClassDescriptor *
+jsj_get_jlObject_descriptor(JSContext *cx, JNIEnv *jEnv);
+
+extern JSBool
+jsj_remove_js_obj_reflection_from_hashtable(JSContext *cx, JSObject *js_obj);
+
+extern JSBool
+jsj_init_js_obj_reflections_table();
 
 /************************ Java package reflection **************************/
 extern JSBool

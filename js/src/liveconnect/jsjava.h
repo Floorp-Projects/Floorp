@@ -81,12 +81,12 @@ typedef struct JSJCallbacks {
        returns the JS "Window" object corresponding to the HTML window that an
        applet is embedded within.  More generally, it's a way for Java to get
        hold of a JS object that has not been explicitly passed to it. */
-    JSObject *	        (*map_java_object_to_js_object)(JNIEnv *jEnv, jobject hint,
+    JSObject *	        (*map_java_object_to_js_object)(JNIEnv *jEnv, void *pJavaObject,
                                                         char **errp);
         
     /* An interim callback function until the LiveConnect security story is
        straightened out.  This function pointer can be set to NULL. */
-    JSPrincipals *      (*get_JSPrincipals_from_java_caller)(JNIEnv *jEnv);
+    JSPrincipals *      (*get_JSPrincipals_from_java_caller)(JNIEnv *jEnv, JSContext *pJSContext);
     
     /* The following two callbacks sandwich any JS evaluation performed
        from Java.   They may be used to implement concurrency constraints, e.g.
@@ -105,7 +105,12 @@ typedef struct JSJCallbacks {
     void                (*error_print)(const char *error_msg);
 
     JavaVM *            (*get_java_vm)(char **errp);
-
+#ifdef OJI
+    /* This enables liveconnect to ask the VM for a java wrapper so that VM gets a chance to
+       store a mapping between a jsobject and java wrapper. So the unwrapping can be done on the
+       VM side before calling nsILiveconnect apis. This saves on a round trip request. */
+    jobject      (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
+#endif
     /* Reserved for future use */
     void *              reserved[10];
 } JSJCallbacks;

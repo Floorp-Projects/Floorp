@@ -32,7 +32,7 @@ DEPTH= ..\..\..
 
 include <$(DEPTH)/config/config.mak>
 
-!ifdef JAVA_OR_OJI
+!ifdef NSJVM
 DIRS = classes
 !endif
 
@@ -53,12 +53,8 @@ MAKE_OBJ_TYPE	= DLL
 DEFFILE		= $(DLLNAME).def
 !endif
 
-!ifdef JAVA_OR_NSJVM
-LLIBS=$(LIBNSPR) $(DIST)\lib\jrt$(MOZ_BITS)$(VERSION_NUMBER).lib \
-	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
-!else
-LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
-!endif
+LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
+ $(DIST)\lib\xpcom32.lib	
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
@@ -69,7 +65,6 @@ LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 #// Define the files necessary to build the target (ie. OBJS)
 #//
 #//------------------------------------------------------------------------
-!ifdef MOZ_OJI
 OBJS=                                       \
     .\$(OBJDIR)\jsj.obj                     \
     .\$(OBJDIR)\jsj_JSObject.obj            \
@@ -85,12 +80,12 @@ OBJS=                                       \
     .\$(OBJDIR)\jsj_hash.obj                \
     .\$(OBJDIR)\jsj_method.obj              \
     .\$(OBJDIR)\jsj_utils.obj               \
+    .\$(OBJDIR)\nsCLiveconnect.obj          \
+    .\$(OBJDIR)\nsCLiveconnectFactory.obj   \
 !if "$(MOZ_BITS)" == "16"
     .\$(OBJDIR)\jsj_nodl.obj                \
 !endif
     $(NULL)
-!endif # MOZ_OJI
-#
 
 #//------------------------------------------------------------------------
 #//
@@ -99,7 +94,7 @@ OBJS=                                       \
 #//------------------------------------------------------------------------
 INSTALL_DIR=$(PUBLIC)\js
 INSTALL_FILE_LIST=	\
-	jsjava.h
+	jsjava.h nsILiveconnect.h
 
 #//------------------------------------------------------------------------
 #//
@@ -108,8 +103,7 @@ INSTALL_FILE_LIST=	\
 #//		  
 #//------------------------------------------------------------------------
 
-!ifdef REGENERATE
-
+!ifdef NSJVM
 JNI_GEN=                            \
         netscape.javascript.JSObject            \
         netscape.javascript.JSException         \
@@ -117,13 +111,11 @@ JNI_GEN=                            \
 
 !endif
 
-!ifdef JAVA_OR_OJI
 MODULE = java
 EXPORTS =				       \
-	$(JRI_GEN_DIR)\netscape_javascript_JSObject.h    \
-	$(JRI_GEN_DIR)\netscape_javascript_JSException.h \
+ 	$(JNI_GEN_DIR)\netscape_javascript_JSObject.h    \
+ 	$(JNI_GEN_DIR)\netscape_javascript_JSException.h \
 	$(NULL)
-!endif
 
 
 #//------------------------------------------------------------------------
@@ -133,10 +125,15 @@ EXPORTS =				       \
 #//
 #//------------------------------------------------------------------------
 
-LINCS=$(LINCS) -I$(JRI_GEN_DIR) \
+LINCS=$(LINCS) -I$(JNI_GEN_DIR) \
                -I$(PUBLIC)\js \
                -I$(PUBLIC)\java \
+               -I$(PUBLIC)\xpcom \
+               -I$(PUBLIC)\caps \
+               -I$(PUBLIC)\oji \
+               -I$(PUBLIC)\plugin \
 	$(NULL)
+
 
 #!ifdef SERVER_BUILD
 #LLIBS=$(DIST)/lib/httpdlw.lib $(DIST)/lib/libsjboot.lib
@@ -151,18 +148,10 @@ include <$(DEPTH)/config/rules.mak>
 
 export::  INSTALL_FILES
 
-!ifdef JAVA_OR_OJI
 libs::  $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-!endif
 
-!ifdef REGENERATE
-
-clobber::
-    $(RM_R) $(JRI_GEN_DIR)
-
-!endif
 
 ####
 # this bit of extreme scariness came from the js/src makefile
