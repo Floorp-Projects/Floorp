@@ -29,10 +29,11 @@
   function Startup()
     {
       hPrefWindow = new nsPrefWindow('panelFrame');  
-      hPrefWindow.init();
       
       if( !hPrefWindow )
         throw "failed to create prefwindow";
+
+      hPrefWindow.init();
 
       // If this call worked, we could center the window here:
       // centerWindowOnScreen();
