@@ -7099,7 +7099,8 @@ nsresult
 nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode, 
                            PRBool *outIsEmptyNode, 
                            PRBool aMozBRDoesntCount,
-                           PRBool aListOrCellNotEmpty)
+                           PRBool aListOrCellNotEmpty,
+                           PRBool aSafeToAskFrames)
 {
   if (!aNode || !outIsEmptyNode) return NS_ERROR_NULL_POINTER;
   *outIsEmptyNode = PR_TRUE;
@@ -7160,27 +7161,32 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
         nsCOMPtr<nsIDOMCharacterData>nodeAsText;
         nodeAsText = do_QueryInterface(node);
         nodeAsText->GetLength(&length);
-#ifdef NOT_QUITE_READY_FOR_PRIMETIME
-        nsCOMPtr<nsISelectionController> selCon;
-        res = GetSelectionController(getter_AddRefs(selCon));
-        if (NS_FAILED(res)) return res;
-        if (!selCon) return NS_ERROR_FAILURE;
-        PRBool isVisible = PR_FALSE;
+        if (aSafeToAskFrames)
+        {
+          nsCOMPtr<nsISelectionController> selCon;
+          res = GetSelectionController(getter_AddRefs(selCon));
+          if (NS_FAILED(res)) return res;
+          if (!selCon) return NS_ERROR_FAILURE;
+          PRBool isVisible = PR_FALSE;
         // ask the selection controller for information about whether any
         // of the data in the node is really rendered.  This is really
         // something that frames know about, but we aren't supposed to talk to frames.
         // So we put a call in the selection controller interface, since it's already
-        // in bed with frames anyway.  (this is a fix for bug 46209)
-        res = selCon->CheckVisibility(node, 0, length, &isVisible);
-        if (NS_FAILED(res)) return res;
-        if (isVisible) 
+        // in bed with frames anyway.  (this is a fix for bug 22227, and a
+        // partial fix for bug 46209)
+          res = selCon->CheckVisibility(node, 0, length, &isVisible);
+          if (NS_FAILED(res)) return res;
+          if (isVisible) 
+          {
+            *outIsEmptyNode = PR_FALSE;
+            break;
+          }
+        }
+        else if (length)
         {
           *outIsEmptyNode = PR_FALSE;
           break;
         }
-#else
-        if (length) *outIsEmptyNode = PR_FALSE;
-#endif
       }
       else  // an editable, non-text node. we aren't an empty block 
       {
