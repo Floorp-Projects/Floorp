@@ -108,6 +108,7 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 const nscoord kSuggestedNotSet = -1;
 
 nsAutoString kTextControl_Wrap_Soft = "SOFT";
+nsAutoString kTextControl_Wrap_Hard = "HARD";
 nsAutoString kTextControl_Wrap_Off  = "OFF";
 
 
@@ -618,7 +619,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
     nsresult result = GetWrapProperty(wrap);
     if (NS_CONTENT_ATTR_NOT_THERE != result) 
     {
-      if (kTextControl_Wrap_Soft.EqualsIgnoreCase(wrap))
+      if (kTextControl_Wrap_Hard.EqualsIgnoreCase(wrap))
       {
         flags |= nsIEditor::EditorOutputFormatted;
       }
@@ -1064,7 +1065,7 @@ nsGfxTextControlFrame::GetFirstFrameForType(const nsString& aTag, nsIPresShell *
 }
 
 // XXX: this really should use a content iterator over the whole document
-//      looking for the first and last text node
+//      looking for the first and last editable text nodes
 nsresult
 nsGfxTextControlFrame::SelectAllTextContent(nsIDOMNode *aBodyNode, nsIDOMSelection *aSelection)
 {
@@ -1319,15 +1320,31 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
     if (mailEditor)
     {
-      nsString wrap;
-      result = GetWrapProperty(wrap);
-      if (NS_CONTENT_ATTR_NOT_THERE != result) 
-      {
-        if (kTextControl_Wrap_Off.EqualsIgnoreCase(wrap))
+      PRBool wrapToContainerWidth = PR_TRUE;
+      if (PR_TRUE==IsSingleLineTextControl())
+      { // no wrapping for single line text controls
+        result = mailEditor->SetBodyWrapWidth(-1);
+        wrapToContainerWidth = PR_FALSE;
+      }
+      else
+      { // if WRAP="OFF", turn wrapping off in the editor
+        nsString wrap;
+        result = GetWrapProperty(wrap);
+        if (NS_CONTENT_ATTR_NOT_THERE != result) 
         {
-          mailEditor->SetBodyWrapWidth(-1);
+          if (kTextControl_Wrap_Off.EqualsIgnoreCase(wrap))
+          {
+            result = mailEditor->SetBodyWrapWidth(-1);
+            wrapToContainerWidth = PR_FALSE;
+          }
         }
       }
+      if (PR_TRUE==wrapToContainerWidth)
+      { // if we didn't turn wrapping off, turn on default wrapping here
+        result = mailEditor->SetBodyWrapWidth(0);
+      }
+      NS_ASSERTION((NS_SUCCEEDED(result)), "error setting body wrap width");
+      if (NS_FAILED(result)) { return result; }
     }
 
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
@@ -1336,22 +1353,25 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     {
       nsCOMPtr<nsIDOMSelection>selection;
       result = editor->GetSelection(getter_AddRefs(selection));
-      if (NS_SUCCEEDED(result) && selection)
+      if (NS_FAILED(result)) { return result; }
+      if (!selection) { return NS_ERROR_NULL_POINTER; }
+      nsCOMPtr<nsIDOMNode>bodyNode;
+      nsAutoString bodyTag = "body";
+      result = GetFirstNodeOfType(bodyTag, aDoc, getter_AddRefs(bodyNode));
+      if (NS_SUCCEEDED(result) && bodyNode)
       {
-        nsCOMPtr<nsIDOMNode>bodyNode;
-        nsAutoString bodyTag = "body";
-        result = GetFirstNodeOfType(bodyTag, aDoc, getter_AddRefs(bodyNode));
-        if (NS_SUCCEEDED(result) && bodyNode)
+        result = SelectAllTextContent(bodyNode, selection);
+        if (NS_SUCCEEDED(result))
         {
-          result = SelectAllTextContent(bodyNode, selection);
-          if (NS_SUCCEEDED(result))
+          if (0!=value.Length())
           {
-            if (0!=value.Length())
-            {
-              result = htmlEditor->InsertText(value);
-              result = SelectAllTextContent(bodyNode, selection);
-            }
-            selection->ClearSelection();
+            result = htmlEditor->InsertText(value);
+            if (NS_FAILED(result)) { return result; }
+            // collapse selection to beginning of text
+            nsCOMPtr<nsIDOMNode>firstChild;
+            result = bodyNode->GetFirstChild(getter_AddRefs(firstChild));
+            if (NS_FAILED(result)) { return result; }
+            selection->Collapse(firstChild, 0);
           }
         }
       }
