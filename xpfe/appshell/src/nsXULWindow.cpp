@@ -80,6 +80,7 @@ NS_IMETHODIMP nsXULWindow::GetDocShell(nsIDocShell** aDocShell)
    NS_ENSURE_ARG_POINTER(aDocShell);
 
    *aDocShell = mDocShell;
+   NS_IF_ADDREF(*aDocShell);
    return NS_OK;
 }
 
