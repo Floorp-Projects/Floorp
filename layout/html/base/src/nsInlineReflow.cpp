@@ -27,6 +27,7 @@
 #include "nsFrameReflowState.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsCRT.h"
 
@@ -40,9 +41,6 @@
 #define PLACED_RIGHT 0x2
 
 // XXX handle DIR=right-to-left
-
-// XXX remove support for block reflow from this and move it into its
-// own class (nsBlockReflow?)
 
 nsInlineReflow::nsInlineReflow(nsLineLayout& aLineLayout,
                                nsFrameReflowState& aOuterReflowState,
@@ -59,6 +57,7 @@ nsInlineReflow::nsInlineReflow(nsLineLayout& aLineLayout,
   NS_ASSERTION(nsnull != mSpaceManager, "caller must have space manager");
   mFrameDataBase = mFrameDataBuf;
   mNumFrameData = sizeof(mFrameDataBuf) / sizeof(mFrameDataBuf[0]);
+  mMinLineHeight = -1;
 }
 
 nsInlineReflow::~nsInlineReflow()
@@ -256,9 +255,13 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame,
   nsHTMLReflowState::ComputeMarginFor(pfd->mFrame, &mOuterReflowState,
                                       pfd->mMargin);
 
-  // Apply top+left margins (as appropriate) to the frame computing
-  // the new starting x,y coordinates for the frame.
-  ApplyTopLeftMargins();
+  // Apply left margins (as appropriate) to the frame computing the
+  // new starting x,y coordinates for the frame.
+
+  // XXX This needs to be moved into ReflowFrame, after the
+  // reflow-state is computed so that we can use the computed margins
+  // in the reflow state.
+  ApplyLeftMargin();
   
   // Compute the available area to reflow the frame into.
   if (!ComputeAvailableSize()) {
@@ -282,10 +285,8 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame,
   return rv;
 }
 
-// XXX doesn't apply top margin
-
 void
-nsInlineReflow::ApplyTopLeftMargins()
+nsInlineReflow::ApplyLeftMargin()
 {
   PerFrameData* pfd = mFrameData;
 
@@ -442,7 +443,7 @@ nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
   nscoord ty = y - mOuterReflowState.mBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
 
-  frame->MoveTo(x, y);
+  frame->MoveTo(x, y);//XXX get rid of this; in block reflow context too
   htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
   // XXX could return this in aStatus to save a few cycles
   // XXX could mandate that child sets up mCombinedArea too...
@@ -458,6 +459,13 @@ nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
   }
   pfd->mBounds.width = aMetrics.width;
   pfd->mBounds.height = aMetrics.height;
+  pfd->mFrameType = reflowState.frameType;
+  if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
+    // XXX zap the margin top and bottom; see comment in the other
+    // ReflowFrame method
+    pfd->mMargin.top = 0;
+    pfd->mMargin.bottom = 0;
+  }
 
   mSpaceManager->Translate(-tx, -ty);
 
@@ -670,6 +678,7 @@ nsInlineReflow::AddFrame(nsIFrame* aFrame, const nsHTMLReflowMetrics& aMetrics)
   SetFrame(aFrame);
   PerFrameData* pfd = mFrameDataBase + mFrameNum;
   mFrameNum++;
+  pfd->mFrameType = NS_CSS_FRAME_TYPE_INLINE;
   pfd->mAscent = aMetrics.ascent;
   pfd->mDescent = aMetrics.descent;
   pfd->mMargin.SizeTo(0, 0, 0, 0);
@@ -712,6 +721,10 @@ nsInlineReflow::IsZeroHeight() const
 }
 
 // XXX what about ebina's center vs. ncsa-center?
+
+// XXX Make sure that when a block or inline is reflowing an inline
+// frame that is wrapping an anonymous block that none of the
+// alignment routines are used.
 
 void
 nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
@@ -757,9 +770,44 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     // yTop = Y coordinate for the top of frame box <B>relative</B> to
     // the baseline of the linebox which is assumed to be at Y=0
     nscoord yTop;
-    nscoord height = pfd->mBounds.height + pfd->mMargin.top +
-      pfd->mMargin.bottom;
+
+    // Compute vertical height of frame; add in margins (note: if the
+    // margins are for an inline-non-replaced frame then other code
+    // has forced them to zero).
+    nscoord height = pfd->mBounds.height;
+    height += pfd->mMargin.top + pfd->mMargin.bottom;
     pfd->mAscent += pfd->mMargin.top;
+
+    if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
+
+      // According to the CSS2 spec (section 10.8 and 10.8.1) border,
+      // padding and margins around inline non-replaced elements do
+      // not enter into inline box height calculations (and therefore
+      // the line box calculation). To accomplish that here we have to
+      // subtract out the border and padding during vertical alignment
+      // from the inline non-replaced frame height.
+
+      // XXX this calculation is done (sometimes) in the
+      // nsHTMLReflowState and is also done by the nsFrameReflowState
+      // and here. ICK!
+      nsHTMLReflowState::ComputeBorderPaddingFor(frame, &mOuterReflowState,
+                                                 pfd->mBorderPadding);
+      height -= pfd->mBorderPadding.top + pfd->mBorderPadding.bottom;
+
+      // When a line-height is specified for an inline-non-replaced
+      // element then its value determines the exact height of the box
+      // for the purposes of vertical alignment and line-height
+      // sizing.
+      nscoord lh = nsHTMLReflowState::CalcLineHeight(mPresContext, frame);
+      if (lh >= 0) {
+        nscoord leading = lh - height;
+        nscoord topLeading = leading / 2;
+        pfd->mAscent += topLeading;
+        pfd->mMargin.top = topLeading;
+        pfd->mMargin.bottom = leading - topLeading;
+        height = lh;
+      }
+    }
 
     const nsStyleText* textStyle;
     frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
@@ -816,11 +864,11 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
         // Align the midpoint of the frame with 1/2 the parents x-height
         fm->GetXHeight(fontParam);
-        yTop = -(fontParam / 2) - (pfd->mBounds.height/2);
+        yTop = -(fontParam + height)/2;
         break;
       case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
         fm->GetMaxDescent(fontParam);
-        yTop = fontParam - pfd->mBounds.height;
+        yTop = fontParam - height;
         break;
       case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
         fm->GetMaxAscent(fontParam);
@@ -831,17 +879,14 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     case eStyleUnit_Coord:
       // According to the CSS2 spec (10.8.1), a positive value
       // "raises" the box by the given distance while a negative value
-      // "lowers" the box by the given distance. Since Y coordinates
-      // increase towards the bottom of the screen we reverse the
-      // sign. All of the raising and lowering is done relative to the
-      // baseline, so we start our adjustments there.
+      // "lowers" the box by the given distance (with zero being the
+      // baseline). Since Y coordinates increase towards the bottom of
+      // the screen we reverse the sign.
       yTop = -pfd->mAscent - textStyle->mVerticalAlign.GetCoordValue();
       break;
     case eStyleUnit_Percent:
-      // The percentage is relative to the line-height of the element
-      // itself. The line-height will be the final height of the
-      // inline element (CSS2 10.8.1 says that the line-height defines
-      // the precise height of inline non-replaced elements).
+      // Similar to a length value (eStyleUnit_Coord) except that the
+      // percentage is a function of the elements line-height value.
       yTop = -pfd->mAscent -
         nscoord(textStyle->mVerticalAlign.GetPercentValue() * pfd->mBounds.height);
       break;
@@ -852,12 +897,15 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     pfd->mBounds.y = yTop;
 
 #ifdef NOISY_VERTICAL_ALIGN
+    NS_ASSERTION((pfd->mBounds.y >= -100000) &&
+                 (pfd->mBounds.y < 100000), "yikes");
     printf("  ");
     nsAutoString tmp;
     pfd->mFrame->GetFrameName(tmp);
     fputs(tmp, stdout);
-    printf(": yTop=%d minYTop=%d yBottom=%d maxYBottom=%d\n",
-           yTop, minYTop, yTop + height, maxYBottom);
+    printf(": yTop=%d minYTop=%d yBottom=%d maxYBottom=%d [bounds=%d]\n",
+           yTop, minYTop, yTop + height, maxYBottom,
+           pfd->mBounds.height);
     NS_ASSERTION(yTop >= -1000000, "bad yTop");
 #endif
 
@@ -906,19 +954,19 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   nscoord topEdge = mTopEdge;
   if (0 != lineHeight) {
     // CSS2 10.8.1 says that line-height, as applied to blocks, will
-    // adjust the height of the line (line-height as applied to a
-    // non-replaced inline element defines the exact height of the
-    // inline element). Therefore, we only adjust the line-height here
-    // if the outer container is a block (because if the outer
-    // container is an inline then its line-height will be applied by
-    // itself).
+    // provide the *minimum* height of the line (line-height as
+    // applied to a non-replaced inline element defines the exact
+    // height of the inline element, not including borders and
+    // padding). Therefore, we only adjust the line-height here if the
+    // outer container is a block (because if the outer container is
+    // an inline then its line-height will be applied by itself).
     if (mOuterIsBlock) {
-      nscoord newLineHeight = mOuterReflowState.mLineHeight;
-      if (newLineHeight >= 0) {
+      nscoord minLineHeight = mMinLineHeight;
+      if (minLineHeight > lineHeight) {
         // Apply half of the changed line-height to the top and bottom
         // positioning of each frame.
-        topEdge += (newLineHeight - lineHeight) / 2;
-        lineHeight = newLineHeight;
+        topEdge += (minLineHeight - lineHeight) / 2;
+        lineHeight = minLineHeight;
       }
     }
   }
@@ -938,24 +986,40 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
       switch (verticalAlignEnum) {
       case NS_STYLE_VERTICAL_ALIGN_TOP:
-        // XXX negative top margins on these will do weird things, maybe?
         pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
+        if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
+          pfd->mBounds.y -= pfd->mBorderPadding.top;
+        }
         break;
 
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        pfd->mBounds.y = mTopEdge + lineHeight - pfd->mBounds.height;
+        pfd->mBounds.y = mTopEdge + lineHeight -
+          pfd->mBounds.height - pfd->mMargin.bottom;
+        if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
+          pfd->mBounds.y += pfd->mBorderPadding.bottom;
+        }
         break;
 
       default:
         pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y +
           pfd->mMargin.top;
+        if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
+          pfd->mBounds.y -= pfd->mBorderPadding.top;
+        }
         break;
       }
     }
     else {
       pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y +
         pfd->mMargin.top;
+      if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
+        pfd->mBounds.y -= pfd->mBorderPadding.top;
+      }
     }
+#ifdef NOISY_VERTICAL_ALIGN
+    NS_ASSERTION((pfd->mBounds.y >= -100000) &&
+                 (pfd->mBounds.y < 100000), "yikes");
+#endif
     frame->SetRect(pfd->mBounds);
 
     if (mOuterIsBlock && mLineLayout.NeedPass2VAlign()) {
@@ -964,9 +1028,10 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       nsIHTMLReflow* ihr;
       nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
       if (NS_SUCCEEDED(rv)) {
-        nscoord distanceFromTopEdge =
-          (pfd->mBounds.y - pfd->mMargin.top) - mTopEdge;
-        ihr->VerticalAlignFrames(lineHeight, distanceFromTopEdge);
+        nscoord distanceFromTopEdge = pfd->mBounds.y - mTopEdge;
+        ihr->VerticalAlignFrames(mPresContext, mOuterReflowState,
+                                 lineHeight, distanceFromTopEdge,
+                                 pfd->mCombinedArea);
       }
     }
   }

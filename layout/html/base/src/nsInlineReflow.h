@@ -47,6 +47,10 @@ public:
 
   void Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
+  void SetMinLineHeight(nscoord aMinLineHeight) {
+    mMinLineHeight = aMinLineHeight;
+  }
+
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                   PRBool aPlacedLeftFloater);
 
@@ -108,7 +112,7 @@ protected:
 
   const nsStyleSpacing* GetSpacing();
 
-  void ApplyTopLeftMargins();
+  void ApplyLeftMargin();
 
   PRBool ComputeAvailableSize();
 
@@ -132,6 +136,7 @@ protected:
   nsFrameReflowState& mOuterReflowState;
   nsIPresContext& mPresContext;
   PRBool mOuterIsBlock;
+  nscoord mMinLineHeight;
 
   PRIntn mFrameNum;
 
@@ -140,11 +145,15 @@ protected:
    */
   struct PerFrameData {
     nsIFrame* mFrame;
+    nsCSSFrameType mFrameType;
 
     nscoord mAscent;            // computed ascent value
     nscoord mDescent;           // computed descent value
 
     nsMargin mMargin;           // computed margin value
+
+    // computed border+padding value, but only for inline non-replaced frames
+    nsMargin mBorderPadding;
 
     // Location and size of frame after its reflowed but before it is
     // positioned finally by VerticalAlignFrames
