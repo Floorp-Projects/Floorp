@@ -23,6 +23,7 @@ DEPTH = ..\..\..
 MODULE = accessibility
 LIBRARY_NAME = accessibility_html_s
 REQUIRES = \
+  appshell \
   content \
   docshell \
   dom \
@@ -39,6 +40,7 @@ REQUIRES = \
   string \
   uriloader \
   view \
+  webBrowser_core \
   webshell \
   widget \
   xpcom \

@@ -60,6 +60,7 @@ public:
   NS_IMETHOD Toolbar() = 0;
   NS_IMETHOD Close() = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
+  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult) = 0;
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
   NS_IMETHOD GetDOMWindow(nsIDOMWindowInternal** aDOMWindow) = 0;
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindowInternal** aDOMWindow) = 0;

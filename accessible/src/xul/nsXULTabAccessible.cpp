@@ -38,11 +38,22 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
+#include "nsAccessibilityService.h"
 #include "nsXULTabAccessible.h"
+#include "nsIContentViewer.h"
+#include "nsIDocShell.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIFrame.h"
+#include "nsIPluginViewer.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIStyleContext.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsplugindefs.h"
+#include "nsPluginViewer.h"
 
 /**
   * XUL Tab
@@ -179,7 +190,7 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetAccChildCount(PRInt32 *_retval)
 
 /** Constructor */
 nsXULTabPanelsAccessible::nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
 { 
 }
 
@@ -209,6 +220,87 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
 NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccName(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccFirstChild(nsIAccessible **_retval)
+{
+  nsAccessible::GetAccFirstChild(_retval);
+  if (*_retval == nsnull)
+    GetAccPluginChild(_retval);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccLastChild(nsIAccessible **_retval)
+{
+  nsAccessible::GetAccLastChild(_retval);
+  if (*_retval == nsnull)
+    GetAccPluginChild(_retval);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccChildCount(PRInt32 *_retval)
+{
+  nsAccessible::GetAccChildCount(_retval);
+  if (*_retval == 0) {
+    *_retval = 1;
+  }
+  return NS_OK;
+}
+
+nsresult nsXULTabPanelsAccessible::GetAccPluginChild(nsIAccessible **_retval)
+{
+  // this big mess eventually gets the HWND for the full
+  // page plugin, and creates the shim class so we can
+  // get the IAccessible from the system in the widget/src code
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (doc) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObj;
+    doc->GetScriptGlobalObject(getter_AddRefs(globalObj));
+    if (globalObj) {
+      nsCOMPtr<nsIDocShell> docShell;
+      globalObj->GetDocShell(getter_AddRefs(docShell));
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+      if (webShell) {
+        nsCOMPtr<nsIWebShellContainer> container;
+        webShell->GetContainer(*getter_AddRefs(container));
+        nsCOMPtr<nsIWebShellWindow> wsWin(do_QueryInterface(container));
+        if (wsWin) {
+          nsCOMPtr<nsIWebShell> contentShell;
+          wsWin->GetContentWebShell(getter_AddRefs(contentShell));
+          nsCOMPtr<nsIDocShell> contentDocShell(do_QueryInterface(contentShell));
+          if (contentDocShell) {
+            nsCOMPtr<nsIContentViewer> contentViewer;
+            contentDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+            nsCOMPtr<nsIPluginViewer> pluginViewer (do_QueryInterface(contentViewer));
+            if (pluginViewer) {
+              nsIPluginViewer *pViewer = pluginViewer.get();
+              PluginViewerImpl *viewer = (PluginViewerImpl*)pViewer;
+#ifdef XP_WIN
+              // Plugin code tends to be very platform specific, need to rev this
+              //    when linux/mac plugins come into the picture HWND == windows
+              HWND pluginPort = nsnull;
+              viewer->GetPluginPort(&pluginPort);
+              if (pluginPort != 0) {
+                if (mAccService) {
+                  mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, (PRInt32)pluginPort, _retval);
+                  return NS_OK;
+                }
+              }
+#else
+              *_retval = nsnull;
+#endif
+            }
+          }
+        }
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /**

@@ -39,6 +39,12 @@
 
 #include "nsAccessible.h"
 
+/**
+  * This class is used to wrap the window for the plugin. It's only child
+  *   is a shim class that will allow the platform specific layer of our
+  *   accessibility support to get the IAccessible from the plugin itself
+  *   (via the windows call to get he accessible by window).
+  */
 class nsHTMLPluginAccessible : public nsAccessible
 {
 public:

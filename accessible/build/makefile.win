@@ -49,7 +49,6 @@ LLIBS=\
   $(DIST)\lib\xpcom.lib \
   $(DIST)\lib\gkgfx.lib \
   $(DIST)\lib\contentshared_s.lib \
-  $(DIST)\lib\raptorwidget_s.lib \
   $(LIBNSPR) \
   $(NULL)
 

@@ -155,9 +155,10 @@ public:
   NS_IMETHOD_(void) Notify(nsITimer *timer);
   void CancelTimer();
 
+  nsPluginPort* GetPluginPort();
+
 #ifdef XP_MAC
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent);
-  nsPluginPort* GetPluginPort();
   void FixUpPluginWindow();
 #endif
                    
@@ -175,55 +176,6 @@ private:
                                      nsRect& aClipRect, PRBool& aIsVisible);
 #endif
 
-class PluginViewerImpl : public nsIPluginViewer,
-                         public nsIContentViewer,
-                         public nsIContentViewerEdit,
-                         public nsIWebBrowserPrint
-{
-public:
-  PluginViewerImpl(const char* aCommand);
-  nsresult Init(nsIStreamListener** aDocListener);
-    
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIPluginViewer
-  NS_IMETHOD StartLoad(nsIRequest* request, nsIStreamListener*& aResult);
-
-  // nsIContentViewer
-  NS_DECL_NSICONTENTVIEWER
-
-  // nsIContentViewerEdit
-  NS_DECL_NSICONTENTVIEWEREDIT
-
-  // nsIWebBrowserPrint
-  NS_DECL_NSIWEBBROWSERPRINT
-
-  virtual ~PluginViewerImpl();
-
-  nsresult CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const nsRect& aBounds,
-                        nsIStreamListener*& aResult);
-
-  nsresult MakeWindow(nsNativeWidget aParent,
-                      nsIDeviceContext* aDeviceContext,
-                      const nsRect& aBounds);
-
-  void ForceRefresh(void);
-
-  nsresult GetURI(nsIURI* *aURI);
-
-  nsresult GetDocument(nsIDocument* *aDocument);
-
-  nsIWidget* mWindow;
-  nsIDocument* mDocument;
-  nsCOMPtr<nsISupports> mContainer;
-  nsIChannel* mChannel;
-  pluginInstanceOwner *mOwner;
-  PRBool mEnableRendering;
-
-};
 
 //----------------------------------------------------------------------
 
@@ -588,6 +540,15 @@ PluginViewerImpl::GetBounds(nsRect& aResult)
   }
   return NS_OK;
 }
+
+#ifdef XP_WIN
+NS_IMETHODIMP
+PluginViewerImpl::GetPluginPort(HWND *aPort)
+{
+  *aPort = (HWND) mOwner->GetPluginPort();
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP
 PluginViewerImpl::GetPreviousViewer(nsIContentViewer** aViewer)
@@ -1396,16 +1357,19 @@ void pluginInstanceOwner::CancelTimer()
     }
 }
 
-
-#ifdef XP_MAC
 nsPluginPort* pluginInstanceOwner::GetPluginPort()
 {
+//!!! Port must be released for windowless plugins on Windows, because it is HDC !!!
 
   nsPluginPort* result = NULL;
-    if (mWindow != NULL)
-      result = (nsPluginPort*) mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-    return result;
+  if (mWindow != NULL)
+  {
+    result = (nsPluginPort*) mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+  }
+  return result;
 }
+
+#ifdef XP_MAC
 
   // calculate the absolute position and clip for a widget 
   // and use other windows in calculating the clip
