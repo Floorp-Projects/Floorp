@@ -157,7 +157,6 @@ private:
     ///////////////////////////////////
 
     // internal methods
-    void        SetDirMIMEType(nsString& aString);
     void        MoveToNextState(FTP_STATE nextState);
     nsresult    Process();
 

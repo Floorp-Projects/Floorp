@@ -1116,9 +1116,11 @@ nsFtpState::S_pass() {
                                                nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                &passwd, &retval);
 
-            // we want to fail if the user canceled or didn't enter a password.
-            if (!retval || (passwd && !*passwd) )
+            // we want to fail if the user canceled. Note here that if they want
+            // a blank password, we will pass it along.
+            if (!retval)
                 return NS_ERROR_FAILURE;
+
             mPassword = passwd;
         }
         // XXX mPassword may contain non-ASCII characters!  what do we do?
@@ -1255,7 +1257,6 @@ nsFtpState::R_syst() {
             // since we just alerted the user, clear mResponseMsg,
             // which is displayed to the user.
             mResponseMsg = "";
-            
             return FTP_ERROR;
         }
         
@@ -1433,9 +1434,6 @@ nsFtpState::SetContentType()
     switch (mListFormat) {
     case nsIDirectoryListing::FORMAT_RAW:
         {
-            nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
-            SetDirMIMEType(fromStr);
-
             contentType = NS_LITERAL_CSTRING("text/ftp-dir-");
         }
         break;
@@ -2408,27 +2406,6 @@ nsFtpState::StopProcessing() {
     return NS_OK;
 }
 
-void
-nsFtpState::SetDirMIMEType(nsString& aString) {
-    // the from content type is a string of the form
-    // "text/ftp-dir-SERVER_TYPE" where SERVER_TYPE represents the server we're talking to.
-    switch (mServerType) {
-    case FTP_UNIX_TYPE:
-        aString.Append(NS_LITERAL_STRING("unix"));
-        break;
-    case FTP_NT_TYPE:
-        aString.Append(NS_LITERAL_STRING("nt"));
-        break;
-    case FTP_OS2_TYPE:
-        aString.Append(NS_LITERAL_STRING("os2"));
-        break;
-    case FTP_VMS_TYPE:
-        aString.Append(NS_LITERAL_STRING("vms"));
-        break;
-    default:
-        aString.Append(NS_LITERAL_STRING("generic"));
-    }
-}
 
 nsresult
 nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
@@ -2446,8 +2423,8 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     if (NS_FAILED(rv)) 
         return rv;
 
-    nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
-    SetDirMIMEType(fromStr);
+    nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir"));
+    
     switch (mListFormat) {
     case nsIDirectoryListing::FORMAT_RAW:
         converterListener = listener;
