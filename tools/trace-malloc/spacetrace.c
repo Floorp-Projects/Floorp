@@ -5509,7 +5509,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
             */
             htmlHeader(&request, "SpaceTrace Top Callsites Report");
 
-            if(0 < globals.mCache.mSortedRun->mAllocationCount)
+            if(NULL != globals.mCache.mSortedRun && 0 < globals.mCache.mSortedRun->mAllocationCount)
             {
                 arrayCount = callsiteArrayFromRun(&array, 0, globals.mCache.mSortedRun);
 
