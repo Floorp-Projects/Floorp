@@ -29,6 +29,7 @@
 #include "nsIDocumentStateListener.h"
 #include "nsITransactionListener.h"
 #include "nsIWebShell.h"
+#include "nsITimer.h"
 #include "nsITimerCallback.h"
 
 class nsIHTMLEditor;
