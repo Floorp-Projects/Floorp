@@ -90,7 +90,9 @@ nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
