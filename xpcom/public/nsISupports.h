@@ -132,6 +132,16 @@ protected:                                                                  \
   nsrefcnt mRefCnt;                                                         \
 public:
 
+#define NS_DECL_ISUPPORTS_EXPORTED                                          \
+public:                                                                     \
+  NS_EXPORT NS_IMETHOD QueryInterface(REFNSIID aIID,                        \
+                            void** aInstancePtr);                           \
+  NS_EXPORT NS_IMETHOD_(nsrefcnt) AddRef(void);                             \
+  NS_EXPORT NS_IMETHOD_(nsrefcnt) Release(void);                            \
+protected:                                                                  \
+  nsrefcnt mRefCnt;                                                         \
+public:
+
 /**
  * Initialize the reference count variable. Add this to each and every
  * constructor you implement.
