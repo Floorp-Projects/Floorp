@@ -421,20 +421,16 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
 
     // If the doc is a chrome URI, then we put it into the XUL cache.
-    PRBool cached = PR_FALSE;
 #ifdef MOZ_XUL
     if (IsChromeOrResourceURI(uri)) {
       PRBool useXULCache;
       gXULCache->GetEnabled(&useXULCache);
-      if (useXULCache) {
-        cached = PR_TRUE;
+      if (useXULCache)
         gXULCache->PutXBLDocumentInfo(info);
-      }
     }
 #endif
   
-    if (!cached)
-      bindingManager->PutXBLDocumentInfo(info);
+    bindingManager->PutXBLDocumentInfo(info);
 
     // Notify all pending requests that their bindings are
     // ready and can be installed.
@@ -1124,18 +1120,15 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
         xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
 
         // If the doc is a chrome URI, then we put it into the XUL cache.
-        PRBool cached = PR_FALSE;
 #ifdef MOZ_XUL
         if (IsChromeOrResourceURI(uri)) {
-          if (useXULCache) {
-            cached = PR_TRUE;
+          if (useXULCache)
             gXULCache->PutXBLDocumentInfo(info);
-          }
         }
 #endif
         
-        if (!cached && bindingManager) {
-          // Otherwise we put it in our binding manager's document table.
+        if (bindingManager) {
+          // Also put it in our binding manager's document table.
           bindingManager->PutXBLDocumentInfo(info);
         }
       }
