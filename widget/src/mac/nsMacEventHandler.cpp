@@ -1055,6 +1055,16 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 		case keyDown:	
 			InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_DOWN);
 			result = focusedWidget->DispatchWindowEvent(keyEvent);
+
+			// get the focused widget again in case something happened to it on the previous event
+			nsWindow* checkFocusedWidget = gEventDispatchHandler.GetActive();
+			if (!checkFocusedWidget)
+				checkFocusedWidget = mTopLevelWidget;
+
+			// if this isn't the same widget we had before, we should not send a keypress
+			if (checkFocusedWidget != focusedWidget)
+				return result;
+
 			//if (result == PR_FALSE) // continue processing???  talk to Tague about this (key event spec)
 			{
 				InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
