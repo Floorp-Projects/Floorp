@@ -18,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 22-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
  */
 
 #ifndef _nsCacheEntry_h_
@@ -63,33 +63,33 @@ public:
                                       
     nsCString *  Key()  { return mKey; }
 
-    PRInt32  FetchCount()                              { return mFetchCount;}
-    void     SetFetchCount( PRInt32   count)           { mFetchCount = count;}
+    PRInt32  FetchCount()                              { return mFetchCount; }
+    void     SetFetchCount( PRInt32   count)           { mFetchCount = count; }
     void     Fetched();
 
-    PRUint32 LastFetched()                             { return mLastFetched;}
-    void     SetLastFetched( PRUint32  lastFetched)    { mLastFetched = lastFetched;}
+    PRUint32 LastFetched()                             { return mLastFetched; }
+    void     SetLastFetched( PRUint32  lastFetched)    { mLastFetched = lastFetched; }
 
-    PRUint32 LastModified()                            { return mLastModified;}
-    void     SetLastModified( PRUint32 lastModified)   { mLastModified = lastModified;}
+    PRUint32 LastModified()                            { return mLastModified; }
+    void     SetLastModified( PRUint32 lastModified)   { mLastModified = lastModified; }
 
-    PRUint32 ExpirationTime()                     { return mExpirationTime;}
-    void     SetExpirationTime( PRUint32 expires) { mExpirationTime = expires;}
+    PRUint32 ExpirationTime()                     { return mExpirationTime; }
+    void     SetExpirationTime( PRUint32 expires) { mExpirationTime = expires; }
 
-    PRUint32 Size()                               { return mDataSize + mMetaSize; }
+    PRUint32 Size()                               { return mDataSize + mMetaData.Size(); }
 
-    nsCacheDevice * CacheDevice()                            { return mCacheDevice;}
-    void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
+    nsCacheDevice * CacheDevice()                            { return mCacheDevice; }
+    void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device; }
     const char *    GetDeviceID();
 
     /**
      * Data accessors
      */
     nsresult GetData( nsISupports ** result);
-    void     SetData( nsISupports *  data)        { mData = data;}
+    void     SetData( nsISupports *  data)        { mData = data; }
 
-    PRUint32 DataSize()                           { return mDataSize;}
-    void     SetDataSize( PRUint32  size)         { mDataSize = size;}
+    PRUint32 DataSize()                           { return mDataSize; }
+    void     SetDataSize( PRUint32  size)         { mDataSize = size; }
 
     void     TouchData();
     
@@ -100,14 +100,11 @@ public:
      */
     const char * GetMetaDataElement( const char *  key) { return mMetaData.GetElement(key); }
     nsresult     SetMetaDataElement( const char *  key,
-                                     const char *  value);
-
+                                     const char *  value) { return mMetaData.SetElement(key, value); }
     nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor) { return mMetaData.VisitElements(visitor); }
-
-    nsresult FlattenMetaData( char * buffer,  PRUint32  bufSize)       { return mMetaData.FlattenMetaData(buffer, bufSize); }
-    nsresult UnflattenMetaData( char * buffer, PRUint32   bufSize);
-
-    PRUint32 MetaDataSize()                       { return mMetaSize;}
+    nsresult FlattenMetaData(char * buffer, PRUint32 bufSize) { return mMetaData.FlattenMetaData(buffer, bufSize); }
+    nsresult UnflattenMetaData(char * buffer, PRUint32 bufSize) { return mMetaData.UnflattenMetaData(buffer, bufSize); }
+    PRUint32 MetaDataSize() { return mMetaData.Size(); }  
 
     void     TouchMetaData();
 
@@ -224,7 +221,6 @@ private:
     PRUint32                mExpirationTime; // 4
     PRUint32                mFlags;          // 4
     PRUint32                mDataSize;       // 4
-    PRUint32                mMetaSize;       // 4
     nsCacheDevice *         mCacheDevice;    // 4
     nsCOMPtr<nsISupports>   mSecurityInfo;   // 
     nsCOMPtr<nsISupports>   mData;           // 
