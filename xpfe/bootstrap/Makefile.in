@@ -370,7 +370,11 @@ libs:: $(srcdir)/splash.bmp
 endif
 
 ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
 LDFLAGS += /NOE
+else
+LDFLAGS += -Zlinker /NOE
+endif
 ifdef BUILD_STATIC_LIBS
 $(EXE_DEF_FILE):
 	rm -f $@

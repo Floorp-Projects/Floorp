@@ -54,13 +54,15 @@ seeing which DLLs were in use at that time.
 #include <stdio.h>
 #include <string.h>
 
-/* define DosQueryModFromEIP just in case someone doesn't have it */
+/* Older versions of the toolkit, as well as GCC do not have this - from bsedos.h */
+extern "C" {
    APIRET APIENTRY  DosQueryModFromEIP(HMODULE *phMod,
                                         ULONG *pObjNum,
                                         ULONG BuffLen,
                                         PCHAR pBuff,
                                         ULONG *pOffset,
                                         ULONG Address);
+}
 
 /* BIN directory */
 char *bindir[] = {
