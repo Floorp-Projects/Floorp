@@ -6,8 +6,8 @@
 /* This style sheet should be in a seperate file */
 
 BODY {
-    font-family: monospace;
-    white-space: pre;
+   /* font-family: monospace; */
+   /* white-space: pre; */
     background-color: #FFFFFF;
  	/*  width:  450px;			this is a bogus, hard-coded value */
    margin: 4px 4px 4px 4px;
@@ -20,16 +20,19 @@ BODY {
 
 <body>
 
-<p>Typed text will wrap to the window width. To get
- wrapping at a fixed width, play with the BODY style in this HTML
- file.</p>
-<p>72 char width (for reference only)</p>
-<p>|----------------------------------------------------------------------|</p>
+<pre cols="80">
+80 char width (for reference only)
+|----------------------------------------------------------------------------|
 
-<p>Welcome to the Gecko Editor Test Bed</p>
+This entire body is in a &lt;PRE&gt; tag, wrapped to 80 columns.
 
-<P>Try typing something...</P>
+Typed text will wrap to the window width. To get wrapping at a fixed width, play with the BODY style in this HTML file.
+ 
+Welcome to the Gecko Editor Test Bed
+
+Try typing something...
 
 
+</pre>
 </body>
 </html>
