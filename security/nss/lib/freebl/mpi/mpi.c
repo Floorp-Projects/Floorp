@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.3 2000/07/19 23:22:43 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.4 2000/07/20 04:21:37 nelsonb%netscape.com Exp $
  */
 
 #include "mpi.h"
@@ -232,7 +232,7 @@ int      s_mp_ispow2(mp_int *v);               /* is v a power of 2?      */
 int      s_mp_ispow2d(mp_digit d);             /* is d a power of 2?      */
 
 int      s_mp_tovalue(char ch, int r);          /* convert ch to value    */
-char     s_mp_todigit(int val, int r, int low); /* convert val to digit   */
+char     s_mp_todigit(mp_digit val, int r, int low); /* convert val to digit */
 int      s_mp_outlen(int bits, int r);          /* output length in bytes */
 
 /* }}} */
@@ -1734,7 +1734,7 @@ int    mp_isodd(mp_int *a)
 {
   ARGCHK(a != NULL, 0);
 
-  return (DIGIT(a, 0) & 1);
+  return (int)(DIGIT(a, 0) & 1);
 
 } /* end mp_isodd() */
 
@@ -2170,7 +2170,7 @@ mp_err mp_toraw(mp_int *mp, char *str)
 
     /* Unpack digit bytes, high order first */
     for(jx = sizeof(mp_digit) - 1; jx >= 0; jx--) {
-      str[pos++] = (d >> (jx * CHAR_BIT)) & UCHAR_MAX;
+      str[pos++] = (char)(d >> (jx * CHAR_BIT));
     }
   }
 
@@ -2759,7 +2759,7 @@ mp_err   s_mp_add_d(mp_int *mp, mp_digit d)    /* unsigned digit addition */
     if((res = s_mp_pad(mp, USED(mp) + 1)) != MP_OKAY)
       return res;
 
-    DIGIT(mp, ix) = k;
+    DIGIT(mp, ix) = (mp_digit)k;
   }
 
   return MP_OKAY;
@@ -2835,7 +2835,7 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
      test guarantees we have enough storage to do this safely.
    */
   if(k)
-    DIGIT(a, max) = k;
+    DIGIT(a, max) = (mp_digit)k;
 
   s_mp_clamp(a);
 
@@ -2880,12 +2880,12 @@ mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
     }
 
     s_mp_lshd(&quot, 1);
-    DIGIT(&quot, 0) = t;
+    DIGIT(&quot, 0) = (mp_digit)t;
   }
 
   /* Deliver the remainder, if desired */
   if(r)
-    *r = w;
+    *r = (mp_digit)w;
 
   s_mp_clamp(&quot);
   mp_exch(&quot, mp);
@@ -2918,7 +2918,7 @@ mp_err   s_mp_mod_d(mp_int *mp, mp_digit d, mp_digit *r)
   }
   
   if(r)
-    *r = w;
+    *r = (mp_digit)w;
 
   return MP_OKAY;
 
@@ -2974,7 +2974,7 @@ mp_err   s_mp_add(mp_int *a, mp_int *b)        /* magnitude addition      */
     if((res = s_mp_pad(a, USED(a) + 1)) != MP_OKAY)
       return res;
 
-    DIGIT(a, ix) = k;
+    DIGIT(a, ix) = (mp_digit)k;
   }
 
   return MP_OKAY;
@@ -3055,7 +3055,7 @@ mp_err   s_mp_mul(mp_int *a, mp_int *b)
       k = CARRYOUT(w);
     }
 
-    DIGIT(&tmp, ix+jx) = k;
+    DIGIT(&tmp, ix+jx) = (mp_digit)k;
     k = 0;
   }
 
@@ -3227,6 +3227,8 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
   ix = USED(a) - 1;
 
   while(ix >= 0) {
+    int i;
+
     /* Find a partial substring of a which is at least b */
     while(s_mp_cmp(&rem, b) < 0 && ix >= 0) {
       if((res = s_mp_lshd(&rem, 1)) != MP_OKAY) 
@@ -3256,7 +3258,7 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
 
     /* See what that multiplies out to                   */
     mp_copy(b, &t);
-    if((res = s_mp_mul_d(&t, q)) != MP_OKAY)
+    if((res = s_mp_mul_d(&t, (mp_digit)q)) != MP_OKAY)
       goto CLEANUP;
 
     /* 
@@ -3265,7 +3267,11 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
        method by which this could be reduced to a maximum of once, but
        I didn't implement that here.
      */
-    while(s_mp_cmp(&t, &rem) > 0) {
+    for (i = 1; s_mp_cmp(&t, &rem) > 0; --i) {
+      if (i < 0) {
+	res = MP_RANGE;
+	goto CLEANUP;
+      }
       --q;
       s_mp_sub(&t, b);
     }
@@ -3279,7 +3285,7 @@ mp_err   s_mp_div(mp_int *a, mp_int *b)
       for any quotient we could ever possibly get, so we should not
       have to check for failures here
      */
-    DIGIT(&quot, 0) = q;
+    DIGIT(&quot, 0) = (mp_digit)q;
   }
 
   /* Denormalize remainder                */
@@ -3550,11 +3556,11 @@ int      s_mp_tovalue(char ch, int r)
   expected to know what you're doing.
  */
   
-char     s_mp_todigit(int val, int r, int low)
+char     s_mp_todigit(mp_digit val, int r, int low)
 {
   char   ch;
 
-  if(val < 0 || val >= r)
+  if(val >= r)
     return 0;
 
   ch = s_dmap_1[val];
@@ -3594,7 +3600,6 @@ int      s_mp_outlen(int bits, int r)
 mp_err  
 mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, int len)
 {
-  int            ix;
   int            count;
   mp_err         res;
   mp_digit       d;
