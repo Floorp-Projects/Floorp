@@ -48,11 +48,7 @@ DLL1NAME=jpg$(MOZ_BITS)$(VERSION_NUMBER)
 PDBFILE=$(DLLNAME).pdb
 MAPFILE=$(DLLNAME).map
 !if "$(MOZ_BITS)" == "16"
-!ifdef NSPR20
 DEFFILE=$(DLL1NAME).def
-!else
-DEFFILE=$(DLLNAME).def
-!endif
 !endif
 
 #//------------------------------------------------------------------------
