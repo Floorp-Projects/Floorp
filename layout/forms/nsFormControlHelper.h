@@ -49,7 +49,6 @@
 class nsIView;
 class nsPresContext;
 class nsStyleCoord;
-class nsIPresState;
 class nsStyleContext;
 
 #define CSS_NOTSET -1

@@ -67,7 +67,7 @@
 
 // PresState
 #include "nsXPCOM.h"
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsIComponentManager.h"
 #include "nsCheapSets.h"
 
@@ -237,7 +237,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  virtual PRBool RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsPresState* aState);
 
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
@@ -1783,8 +1783,8 @@ nsHTMLSelectElement::SaveState()
     }
   }
 
-  nsCOMPtr<nsIPresState> presState;
-  nsresult rv = GetPrimaryPresState(this, getter_AddRefs(presState));
+  nsPresState *presState = nsnull;
+  nsresult rv = GetPrimaryPresState(this, &presState);
   if (presState) {
     rv = presState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
                                            state);
@@ -1797,7 +1797,7 @@ nsHTMLSelectElement::SaveState()
 }
 
 PRBool
-nsHTMLSelectElement::RestoreState(nsIPresState* aState)
+nsHTMLSelectElement::RestoreState(nsPresState* aState)
 {
   // Get the presentation state object to retrieve our stuff out of.
   nsCOMPtr<nsISupports> state;

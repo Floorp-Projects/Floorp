@@ -59,7 +59,7 @@ class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsIFormControlFrame;
 class nsIForm;
-class nsIPresState;
+class nsPresState;
 class nsIScrollableView;
 class nsILayoutHistoryState;
 struct nsRect;
@@ -545,7 +545,7 @@ public:
    * @param aPresState the presentation state (out param)
    */
   static nsresult GetPrimaryPresState(nsGenericHTMLElement* aContent,
-                                      nsIPresState** aPresState);
+                                      nsPresState** aPresState);
   /**
    * Get the layout history object *and* generate the key for a particular
    * piece of content.
@@ -818,7 +818,7 @@ public:
   {
     return NS_OK;
   }
-  virtual PRBool RestoreState(nsIPresState* aState)
+  virtual PRBool RestoreState(nsPresState* aState)
   {
     return PR_FALSE;
   }

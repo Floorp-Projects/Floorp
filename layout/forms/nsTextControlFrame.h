@@ -51,7 +51,6 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsIPhonetic.h"
 
-class nsIPresState;
 class nsISupportsArray;
 class nsIEditor;
 class nsISelectionController;

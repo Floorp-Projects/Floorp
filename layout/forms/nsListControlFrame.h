@@ -53,7 +53,6 @@
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsIDOMEventListener.h"
-#include "nsIPresState.h"
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
 

@@ -43,7 +43,6 @@
 #include "nsIAtom.h"
 #include "nsPresContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIPresState.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"

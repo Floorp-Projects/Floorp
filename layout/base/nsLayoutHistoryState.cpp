@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,107 +38,76 @@
 
 #include "nsILayoutHistoryState.h"
 #include "nsWeakReference.h"
-#include "nsHashtable.h"
+#include "nsClassHashtable.h"
+#include "nsPresState.h"
 
 class nsLayoutHistoryState : public nsILayoutHistoryState,
                              public nsSupportsWeakReference
 {
 public:
-  nsLayoutHistoryState();
-  virtual ~nsLayoutHistoryState();
+  NS_HIDDEN_(nsresult) Init();
 
   NS_DECL_ISUPPORTS
 
   // nsILayoutHistoryState
-  NS_IMETHOD AddState(const nsCString& aKey, nsIPresState* aState);
-  NS_IMETHOD GetState(const nsCString& aKey, nsIPresState** aState);
+  NS_IMETHOD AddState(const nsCString& aKey, nsPresState* aState);
+  NS_IMETHOD GetState(const nsCString& aKey, nsPresState** aState);
   NS_IMETHOD RemoveState(const nsCString& aKey);
 
 
 private:
-  nsSupportsHashtable mStates;
+  ~nsLayoutHistoryState() {}
+
+  nsClassHashtable<nsCStringHashKey,nsPresState> mStates;
 };
 
 
 nsresult
 NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
 {
-    NS_ENSURE_ARG_POINTER(aState);
-    if (! aState)
-        return NS_ERROR_NULL_POINTER;
+  nsLayoutHistoryState *state;
 
-    nsLayoutHistoryState *state = new nsLayoutHistoryState();
-    if (!state)
-        return NS_ERROR_OUT_OF_MEMORY;
+  *aState = nsnull;
+  state = new nsLayoutHistoryState();
+  if (!state)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    *aState = NS_STATIC_CAST(nsILayoutHistoryState *, state);
-    NS_ADDREF(*aState);
+  NS_ADDREF(state);
+  nsresult rv = state->Init();
+  if (NS_SUCCEEDED(rv))
+    *aState = state;
+  else
+    NS_RELEASE(state);
 
-    return NS_OK;
-}
-
-nsLayoutHistoryState::nsLayoutHistoryState()
-{
-}
-
-nsLayoutHistoryState::~nsLayoutHistoryState()
-{
+  return rv;
 }
 
 NS_IMPL_ISUPPORTS2(nsLayoutHistoryState,
                    nsILayoutHistoryState,
                    nsISupportsWeakReference)
 
-NS_IMETHODIMP
-nsLayoutHistoryState::AddState(const nsCString& aStateKey,
-                               nsIPresState* aState)
+nsresult
+nsLayoutHistoryState::Init()
 {
-  nsCStringKey key(aStateKey);
-
-  /*
-   * nsSupportsHashtable::Put() returns false when no object was
-   * replaced when inserting the new one, true if one was.
-   */
-#ifdef DEBUG_pollmann
-  PRBool replaced =
-#endif
-
-  mStates.Put (&key, aState);
-
-#ifdef DEBUG_pollmann
-  NS_ASSERTION(!replaced, 
-               "nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
-#endif
-
-  return NS_OK;
+  return mStates.Init() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsLayoutHistoryState::GetState(const nsCString& aKey,
-                               nsIPresState** aState)
+nsLayoutHistoryState::AddState(const nsCString& aStateKey, nsPresState* aState)
 {
-  nsresult rv = NS_OK;
-  nsCStringKey key(aKey);
-  nsISupports *state = nsnull;
-  state = mStates.Get(&key);
-  if (state) {
-    *aState = (nsIPresState *)state;
-  }
-  else {
-#if 0
-      printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
-#endif
-    *aState = nsnull;
-    rv = NS_OK;
-  }
-  return rv;
+  return mStates.Put(aStateKey, aState) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsLayoutHistoryState::GetState(const nsCString& aKey, nsPresState** aState)
+{
+  mStates.Get(aKey, aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLayoutHistoryState::RemoveState(const nsCString& aKey)
 {
-  nsresult rv = NS_OK;
-  nsCStringKey key(aKey);
-  mStates.Remove(&key);
-  return rv;
+  mStates.Remove(aKey);
+  return NS_OK;
 }

@@ -67,7 +67,6 @@
 #include "nsIScrollableFrame.h" //to turn off scroll bars
 #include "nsFormControlFrame.h" //for registering accesskeys
 #include "nsIDeviceContext.h" // to measure fonts
-#include "nsIPresState.h" //for saving state
 
 #include "nsIContent.h"
 #include "nsIAtom.h"

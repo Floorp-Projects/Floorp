@@ -42,7 +42,7 @@
 #include "nsIAtom.h"
 #include "nsPresContext.h"
 #include "nsHTMLAtoms.h"
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -559,7 +559,7 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsIsIndexFrame::SaveState(nsPresContext* aPresContext, nsIPresState** aState)
+nsIsIndexFrame::SaveState(nsPresContext* aPresContext, nsPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -580,7 +580,7 @@ nsIsIndexFrame::SaveState(nsPresContext* aPresContext, nsIPresState** aState)
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::RestoreState(nsPresContext* aPresContext, nsIPresState* aState)
+nsIsIndexFrame::RestoreState(nsPresContext* aPresContext, nsPresState* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 

@@ -80,7 +80,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  virtual PRBool RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsPresState* aState);
 
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -149,7 +149,7 @@ nsHTMLObjectElement::SaveState()
 }
 
 PRBool
-nsHTMLObjectElement::RestoreState(nsIPresState* aState)
+nsHTMLObjectElement::RestoreState(nsPresState* aState)
 {
   return PR_FALSE;
 }

@@ -53,8 +53,6 @@ class nsIAccessible;
 // The label for button is specified through generated content
 // in the ua.css file.
 
-class nsIPresState;
-
 class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
                                 public nsIAnonymousContentCreator
 {

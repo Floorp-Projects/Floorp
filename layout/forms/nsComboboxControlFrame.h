@@ -58,7 +58,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRollupListener.h"
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsITextContent.h"
 #include "nsIScrollableViewProvider.h"
@@ -209,8 +209,8 @@ public:
   virtual nsIScrollableView* GetScrollableView();
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState);
+  NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState);
 
 protected:
 

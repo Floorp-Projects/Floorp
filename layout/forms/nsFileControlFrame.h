@@ -48,7 +48,6 @@
 #include "nsFormControlHelper.h"
 typedef   nsTextControlFrame nsNewFrame;
 
-class nsIPresState;
 class nsISupportsArray;
 
 class nsFileControlFrame : public nsAreaFrame,

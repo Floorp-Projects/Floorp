@@ -460,7 +460,6 @@ nsresult NS_NewCanvasRenderingContext2D(nsICanvasRenderingContext2D** aResult);
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
-nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
 nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
 
@@ -520,9 +519,7 @@ MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLay
 #endif
 
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
-MAKE_CTOR(CreateNewLayoutHistoryState,  nsILayoutHistoryState,  NS_NewLayoutHistoryState)
 MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
-MAKE_CTOR(CreateNewPresState,           nsIPresState,           NS_NewPresState)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
@@ -834,11 +831,6 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateNewFrameTraversal },
 
-  { "Layout History State",
-    NS_LAYOUT_HISTORY_STATE_CID,
-    nsnull,
-    CreateNewLayoutHistoryState },
-
   { "selection image storage",
     NS_SELECTIONIMAGESERVICE_CID,
     nsnull,
@@ -854,11 +846,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_PRESSHELL_CID,
     nsnull,
     CreateNewPresShell },
-
-  { "Presentation state",
-    NS_PRESSTATE_CID,
-    nsnull,
-    CreateNewPresState },
 
   // XXX end ick
 

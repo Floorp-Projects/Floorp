@@ -66,7 +66,7 @@
 #include "nsIStyleRule.h"
 #endif
 #include "nsILayoutHistoryState.h"
-#include "nsIPresState.h"
+#include "nsPresState.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIXBLBinding.h"
@@ -1717,9 +1717,9 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   }
 
   // Capture the state, exit early if we get null (nothing to save)
-  nsCOMPtr<nsIPresState> frameState;
-  nsresult rv = NS_OK;
-  rv = statefulFrame->SaveState(GetPresContext(), getter_AddRefs(frameState));
+  nsAutoPtr<nsPresState> frameState;
+  nsresult rv = statefulFrame->SaveState(GetPresContext(),
+                                         getter_Transfers(frameState));
   if (!frameState) {
     return;
   }
@@ -1735,7 +1735,11 @@ nsFrameManager::CaptureFrameStateFor(nsIFrame* aFrame,
   }
 
   // Store the state
-  aState->AddState(stateKey, frameState);
+  rv = aState->AddState(stateKey, frameState);
+  if (NS_SUCCEEDED(rv)) {
+    // aState owns frameState now.
+    frameState.forget();
+  }
 }
 
 void
@@ -1796,8 +1800,8 @@ nsFrameManager::RestoreFrameStateFor(nsIFrame* aFrame,
   }
 
   // Get the state from the hash
-  nsCOMPtr<nsIPresState> frameState;
-  rv = aState->GetState(stateKey, getter_AddRefs(frameState));
+  nsPresState *frameState;
+  rv = aState->GetState(stateKey, &frameState);
   if (!frameState) {
     return;
   }

@@ -52,7 +52,7 @@
 #define NS_ERROR_FRAME_REPLACED \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LAYOUT, 4)
 
-/** Error codes for nsIPresState::GetProperty() */
+/** Error codes for nsPresState::GetProperty() */
 
 /** Returned if the property exists */
 #define NS_STATE_PROPERTY_EXISTS NS_OK

@@ -44,7 +44,6 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
-#include "nsIPresState.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #ifdef ACCESSIBILITY

@@ -57,7 +57,6 @@
 #include "nsGfxScrollFrame.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIPresState.h"
 #include "nsButtonBoxFrame.h"
 #include "nsITimer.h"
 #include "nsRepeatService.h"

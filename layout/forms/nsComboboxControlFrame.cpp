@@ -54,7 +54,6 @@
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIDOMNSHTMLOptionCollectn.h" 
 #include "nsIPresShell.h"
-#include "nsIPresState.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
@@ -93,6 +92,7 @@
 #include "nsIFontMetrics.h"
 #endif
 
+class nsPresState;
 
 #define FIX_FOR_BUG_53259
 
@@ -2417,7 +2417,7 @@ nsComboboxControlFrame::OnContentReset()
 //--------------------------------------------------------
 NS_IMETHODIMP
 nsComboboxControlFrame::SaveState(nsPresContext* aPresContext,
-                                  nsIPresState** aState)
+                                  nsPresState** aState)
 {
   nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
   NS_ASSERTION(stateful, "Couldn't cast list frame to stateful frame!!!");
@@ -2429,7 +2429,7 @@ nsComboboxControlFrame::SaveState(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RestoreState(nsPresContext* aPresContext,
-                                     nsIPresState* aState)
+                                     nsPresState* aState)
 {
   if (!mListControlFrame)
     return NS_ERROR_FAILURE;
