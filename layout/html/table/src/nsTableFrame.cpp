@@ -2017,7 +2017,9 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8       aSide,
         side=aSide;
         if (spacing==lastSpacing)
           side=GetOpposingEdge(aSide);
-        aBorder.mColor=spacing->GetBorderColor(side);
+        if (! spacing->GetBorderColor(side, aBorder.mColor)) {
+          // XXX EEEK handle transparent border color somehow...
+        }
         aBorder.mStyle=spacing->GetBorderStyle(side);
         return;
       }
@@ -2047,7 +2049,9 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8       aSide,
         side=aSide;
         if (winningStyleBorder==lastSpacing)
           side=GetOpposingEdge(aSide);
-        aBorder.mColor = winningStyleBorder->GetBorderColor(side);
+        if (! winningStyleBorder->GetBorderColor(side, aBorder.mColor)) {
+          // XXX handle transparent border colors somehow
+        }
       }
     }
   }
