@@ -167,6 +167,13 @@ public:
     return nsHTMLContainerFrame::DidReflow(aPresContext, aReflowState, aStatus);
   }
 
+  NS_IMETHOD 
+  Paint(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        const nsRect&        aDirtyRect,
+        nsFramePaintLayer    aWhichLayer,
+        PRUint32             aFlags = 0);
+
   NS_IMETHOD
   AttributeChanged(nsIPresContext* aPresContext,
                    nsIContent*     aChild,
@@ -175,13 +182,6 @@ public:
                    PRInt32         aModType, 
                    PRInt32         aHint);
 
-  NS_IMETHOD 
-  Paint(nsIPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        const nsRect&        aDirtyRect,
-        nsFramePaintLayer    aWhichLayer,
-        PRUint32             aFlags = 0);
-
   // --------------------------------------------------------------------------
   // Additional methods 
 
@@ -189,7 +189,7 @@ public:
   // when changes (e.g., append/insert/remove) happen in our child list
   virtual nsresult
   ChildListChanged(nsIPresContext* aPresContext,
-                   nsIPresShell&   aPresShell);
+                   PRInt32         aModType);
 
   // helper to wrap non-MathML frames so that foreign elements (e.g., html:img)
   // can mix better with other surrounding MathML markups
@@ -306,6 +306,15 @@ public:
   RebuildAutomaticDataFor(nsIPresContext* aPresContext,
                           nsIFrame*       aFrame);
 
+  // helper to blow away the automatic data cached in a frame's subtree and
+  // re-layout its subtree to reflect changes that may have happen. In the
+  // event where aFrame isn't a MathML frame, it will first walk up to the
+  // ancestor that is a MathML frame, and re-layout from there -- this is to
+  // guarantee that automatic data will be rebuilt properly.
+  static nsresult
+  ReLayout(nsIPresContext* aPresContext,
+           nsIFrame*       aFrame);
+
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 };
@@ -336,6 +345,52 @@ public:
     return rv;
   }
 
+  NS_IMETHOD
+  AppendFrames(nsIPresContext* aPresContext,
+               nsIPresShell&   aPresShell,
+               nsIAtom*        aListName,
+               nsIFrame*       aFrameList)
+  {
+    nsresult rv = nsBlockFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
+  NS_IMETHOD
+  InsertFrames(nsIPresContext* aPresContext,
+               nsIPresShell&   aPresShell,
+               nsIAtom*        aListName,
+               nsIFrame*       aPrevFrame,
+               nsIFrame*       aFrameList)
+  {
+    nsresult rv = nsBlockFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
+  NS_IMETHOD
+  ReplaceFrame(nsIPresContext* aPresContext,
+               nsIPresShell&   aPresShell,
+               nsIAtom*        aListName,
+               nsIFrame*       aOldFrame,
+               nsIFrame*       aNewFrame)
+  {
+    nsresult rv = nsBlockFrame::ReplaceFrame(aPresContext, aPresShell, aListName, aOldFrame, aNewFrame);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
+  NS_IMETHOD
+  RemoveFrame(nsIPresContext* aPresContext,
+              nsIPresShell&   aPresShell,
+              nsIAtom*        aListName,
+              nsIFrame*       aOldFrame)
+  {
+    nsresult rv = nsBlockFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
 protected:
   nsMathMLmathBlockFrame() {}
   virtual ~nsMathMLmathBlockFrame() {}
@@ -355,6 +410,52 @@ public:
     nsresult rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected scriptsizes
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+    return rv;
+  }
+
+  NS_IMETHOD
+  AppendFrames(nsIPresContext* aPresContext,
+               nsIPresShell&   aPresShell,
+               nsIAtom*        aListName,
+               nsIFrame*       aFrameList)
+  {
+    nsresult rv = nsInlineFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
+  NS_IMETHOD
+  InsertFrames(nsIPresContext* aPresContext,
+               nsIPresShell&   aPresShell,
+               nsIAtom*        aListName,
+               nsIFrame*       aPrevFrame,
+               nsIFrame*       aFrameList)
+  {
+    nsresult rv = nsInlineFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
+  NS_IMETHOD
+  ReplaceFrame(nsIPresContext* aPresContext,
+               nsIPresShell&   aPresShell,
+               nsIAtom*        aListName,
+               nsIFrame*       aOldFrame,
+               nsIFrame*       aNewFrame)
+  {
+    nsresult rv = nsInlineFrame::ReplaceFrame(aPresContext, aPresShell, aListName, aOldFrame, aNewFrame);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
+    return rv;
+  }
+
+  NS_IMETHOD
+  RemoveFrame(nsIPresContext* aPresContext,
+              nsIPresShell&   aPresShell,
+              nsIAtom*        aListName,
+              nsIFrame*       aOldFrame)
+  {
+    nsresult rv = nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+    nsMathMLContainerFrame::ReLayout(aPresContext, this);
     return rv;
   }
 
