@@ -261,8 +261,10 @@ void nsToolkit::GetInterface()
     char portname[64];
     char semname[64];
 
-    sprintf(portname, "event%p", mGuiThread);
-    sprintf(semname, "sync%p", mGuiThread);
+    PR_snprintf(portname, sizeof(portname), "event%lx", 
+                (long unsigned) mGuiThread);
+    PR_snprintf(semname, sizeof(semname), "sync%lx", 
+                (long unsigned) mGuiThread);
 
     eventport = find_port(portname);
     syncsem = my_find_sem(semname);
