@@ -52,6 +52,8 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsQuickSort.h"
 #include "nsIAtom.h"
+#include "nsISimpleEnumerator.h"
+#include "nsArray.h"
 
 #include "nsWildCard.h"
 
@@ -340,26 +342,40 @@ nsFileView::SetFilter(const PRUnichar* aFilterString)
 }
 
 NS_IMETHODIMP
-nsFileView::GetSelectedFile(nsIFile** aFile)
+nsFileView::GetSelectedFiles(nsIArray** aFiles)
 {
-  *aFile = nsnull;
+  *aFiles = nsnull;
 
-  PRInt32 currentIndex;
-  mSelection->GetCurrentIndex(&currentIndex);
+  PRInt32 numRanges;
+  mSelection->GetRangeCount(&numRanges);
 
-  if (0 <= currentIndex) {
-    PRUint32 dirCount;
-    mDirList->Count(&dirCount);
-    if (currentIndex < (PRInt32) dirCount)
-      mDirList->QueryElementAt(currentIndex, NS_GET_IID(nsIFile),
-                               (void**)aFile);
-    else {
-      if (currentIndex < mTotalRows)
-        mFilteredFiles->QueryElementAt(currentIndex - dirCount,
-                                       NS_GET_IID(nsIFile), (void**)aFile);
+  PRUint32 dirCount;
+  mDirList->Count(&dirCount);
+
+  nsCOMArray<nsIFile> fileArray;
+
+  for (PRInt32 range = 0; range < numRanges; ++range) {
+    PRInt32 rangeBegin, rangeEnd;
+    mSelection->GetRangeAt(range, &rangeBegin, &rangeEnd);
+
+    for (PRInt32 itemIndex = rangeBegin; itemIndex <= rangeEnd; ++itemIndex) {
+      nsCOMPtr<nsIFile> curFile;
+
+      if (itemIndex < (PRInt32) dirCount)
+        curFile = do_QueryElementAt(mDirList, itemIndex);
+      else {
+        if (itemIndex < mTotalRows)
+          curFile = do_QueryElementAt(mFilteredFiles, itemIndex - dirCount);
+      }
+
+      if (curFile)
+        fileArray.AppendObject(curFile);
     }
   }
 
+  nsIMutableArray* outArray;
+  NS_NewArray(&outArray, fileArray);  // addrefs, return the reference
+  *aFiles = outArray;
   return NS_OK;
 }
 
