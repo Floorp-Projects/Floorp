@@ -48,6 +48,10 @@ public:
     virtual ~nsRDFResource(void);
 
 protected:
+    static nsIRDFService* gRDFService;
+    static nsrefcnt gRDFServiceRefCnt;
+
+protected:
     char* mURI;
 };
 
