@@ -800,7 +800,7 @@ PrintData::~PrintData()
 
   OnEndPrinting(NS_OK); // removes listener
 
-  if (mPrintDC) {
+  if (mPrintDC && !mDebugFilePtr) {
 #ifdef DEBUG_PRINTING
     fprintf(mDebugFD, "****************** End Document ************************\n");
 #endif
