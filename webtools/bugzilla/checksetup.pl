@@ -554,7 +554,7 @@ LocalVar('opsys', '
         "Mac OS X 10.1",
         "Mac OS X 10.2",
         "Linux",
-        "BSDI",
+        "BSD/OS",
         "FreeBSD",
         "NetBSD",
         "OpenBSD",
