@@ -687,24 +687,6 @@ Wallet_BadKey() {
 }
 
 PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
-
-  /* make sure a profile exists (i.e., don't create one if there wasn't already one) */
-  nsIProfile* profileService = nsnull;
-  nsresult rv = nsServiceManager::GetService(
-      kProfileCID, 
-      nsIProfile::GetIID(), 
-      (nsISupports **)&profileService);
-  if (NS_SUCCEEDED(rv)) {
-    profileService->Startup(nsnull);
-    int numProfiles = 0;
-    profileService->GetProfileCount(&numProfiles);
-    if (numProfiles < 1) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-
   /* return the profile */
   nsIFileSpec* spec =
     NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);

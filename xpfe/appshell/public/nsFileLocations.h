@@ -55,6 +55,9 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 		,   App_UserProfileDirectory30     = App_DirectoryBase +   10
 		,   App_UserProfileDirectory40     = App_DirectoryBase +   11
 		,   App_UserProfileDirectory50     = App_DirectoryBase +   12
+		,   App_DefaultUserProfileRoot30   = App_DirectoryBase +   13
+		,   App_DefaultUserProfileRoot40   = App_DirectoryBase +   14
+		,   App_DefaultUserProfileRoot50   = App_DirectoryBase +   15
 
 		,	App_ComponentsDirectory        = App_DirectoryBase +   30
 		,	App_ChromeDirectory            = App_DirectoryBase +   31

@@ -933,7 +933,7 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 
 		// Get current profile, make the new one a sibling...
 	    nsIFileSpec* horribleCOMDirSpecThing;
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &horribleCOMDirSpecThing);
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, &horribleCOMDirSpecThing);
         
 		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 		
@@ -942,7 +942,8 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 
 		//Append profile name to form a directory name
 	    horribleCOMDirSpecThing->GetFileSpec(&dirSpec);
-		dirSpec.SetLeafName(profileName);
+		//dirSpec.SetLeafName(profileName);
+		dirSpec += profileName;
 	}
 
 #if defined(DEBUG_profile)
@@ -961,48 +962,6 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 
     if (NS_FAILED(rv))
 		return rv;
-
-	// Delete profile default from the registry
-	// as it was originally created for consistency purposes.
-	// Not the right solution. Once John's fix gets in
-	// "default" ill no more be a special profile and 
-	// the following deletion will not be required
-
-	char *migrateFlag = nsnull;
-
-	if (m_reg != nsnull)
-	{
-		// Latch onto the registry object.
-		NS_ADDREF(m_reg);
-
-		// Open the registry.
-		rv = m_reg->Open();
-    
-		if (NS_SUCCEEDED(rv))
-		{
-			nsIRegistry::Key key;
-
-			rv = m_reg->GetSubtree(nsIRegistry::Common, "Profiles", &key);
-
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = m_reg->GetString(key, "NeedMigration", &migrateFlag);
-			}
-			m_reg->Close();
-		}
-	}
-
-	if (migrateFlag == nsnull)
-	{
-		rv = DeleteProfile("default");
-
-		if (NS_SUCCEEDED(rv))
-		{
-			nsFileSpec defaultDirSpec(dirSpec);
-			defaultDirSpec.SetLeafName("Default");
-			DeleteUserDirectories(defaultDirSpec);
-		}
-	}
 
     if (dirName)
 	{

@@ -68,10 +68,91 @@ static nsFileSpec* gProfileDir = nsnull;
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
-// to these. For now I am using these until the profile stuff picks up and
-// we know how to get the absolute fallback for all platforms
-// UNIX    : ~/.mozilla/Users50
+static PRBool GetProfileDirectory(nsFileSpec& outSpec)
+// The app profile directory comes from the profile manager.
+// Once the profile manager knows which profile needs to be
+// accessed it tells us about the directory. 
+
+// And if the profile manager doesn't return anything, we use the routine above,
+// CreateDefaultProfileDirectorySpec() above.
+//----------------------------------------------------------------------------------------
+{
+    //static nsFileSpec* gProfileDir = nsnull;
+        // pointer so that we can detect whether it has been initialized
+    if (!gProfileDir)
+    {
+        // First time, initialize gProfileDir
+        nsresult rv;
+        NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
+        if (NS_FAILED(rv))
+            return PR_FALSE;
+        
+        profileService->Startup(nsnull);
+        int numProfiles = 0;
+        profileService->GetProfileCount(&numProfiles);
+        if (numProfiles == 0)
+            return PR_FALSE;
+
+        char* currProfileName = nsnull;
+        nsFileSpec currProfileDirSpec;
+        if (numProfiles == 1)
+        {
+            // one profile exists: use that profile
+            profileService->GetSingleProfile(&currProfileName);
+            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+        }
+	    else
+	    {
+		    // multiple profiles exist: we'll use the same profile as last time 
+		    // (see following rules) 
+		    // (if we can't figure out what the last profile used was for some reason, 
+		    // we'll pick the first one as returned from the registry query) 
+	        profileService->GetCurrentProfile(&currProfileName);
+	        if (currProfileName)
+	            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+	        else
+	        {
+	            profileService->GetFirstProfile(&currProfileName);
+	            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+	        }
+	    }
+#if defined(NS_DEBUG)
+	    if (currProfileName)
+	    {
+	        printf("ProfileName : %s\n", currProfileName);
+	        printf("ProfileDir  : %s\n", currProfileDirSpec.GetNativePathCString());
+        }
+#endif /* NS_DEBUG */
+        PR_FREEIF(currProfileName);
+        if (!currProfileDirSpec.Exists())
+            currProfileDirSpec.CreateDir();
+
+        // Copy into our cached pointer so we'll only do this once (unless told to 'forget').
+        // We also do this by querying the profile manager, instead of just using
+        // our local copy (currProfileDirSpec), though they should be the same.
+        gProfileDir = new nsFileSpec("Default");
+        if (!gProfileDir)
+            return PR_FALSE;
+        if (NS_FAILED(profileService->GetCurrentProfileDir(gProfileDir)))
+        {
+            delete gProfileDir; // All that for nothing.  sigh.
+            gProfileDir = nsnull;
+        }
+        NS_ASSERTION(*gProfileDir == currProfileDirSpec, "Profile spec does not match!");
+    }
+    if (!gProfileDir)
+        return PR_FALSE;
+
+    if (!gProfileDir->Exists())
+        gProfileDir->CreateDir();
+    outSpec = *gProfileDir;
+    return PR_TRUE;
+} // GetProfileDirectory
+
+
+//----------------------------------------------------------------------------------------
+static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
+// UNIX    : ~/.mozilla/
 // WIN    : Program Files\Netscape\Users50\  
 // Mac    : :Documents:Mozilla:Users50:
 //----------------------------------------------------------------------------------------
@@ -105,105 +186,9 @@ static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
 #else
 #error dont_know_how_to_do_profiles_on_your_platform
 #endif
-    cwd += "Default";
     outSpec = cwd;
-} // CreateDefaultProfileDirectorySpec
+} // GetDefaultUserProfileRoot
 
-//----------------------------------------------------------------------------------------
-static void GetProfileDirectory(nsFileSpec& outSpec)
-// The app profile directory comes from the profile manager.
-// Once the profile manager knows which profile needs to be
-// accessed it tells us about the directory. 
-
-// And if the profile manager doesn't return anything, we use the routine above,
-// CreateDefaultProfileDirectorySpec() above.
-//----------------------------------------------------------------------------------------
-{
-    //static nsFileSpec* gProfileDir = nsnull;
-        // pointer so that we can detect whether it has been initialized
-    if (!gProfileDir)
-    {
-        // First time, initialize gProfileDir
-        nsIProfile *profileService = nsnull;
-        gProfileDir = new nsFileSpec("Default");
-        if (!gProfileDir)
-            return;
-        nsresult rv = nsServiceManager::GetService(
-            kProfileCID, 
-            nsIProfile::GetIID(), 
-            (nsISupports **)&profileService);
-        if (NS_SUCCEEDED(rv))
-        {
-            char* currProfileName = nsnull;
-            nsFileSpec currProfileDirSpec;
-	        CreateDefaultProfileDirectorySpec(currProfileDirSpec);
-            
-            profileService->Startup(nsnull);
-            int numProfiles = 0;
-            profileService->GetProfileCount(&numProfiles);
-            if (numProfiles == 0)
-            {    
-		        // no profiles exist: create "default" profile
-	            profileService->SetProfileDir("default", currProfileDirSpec);
-	            currProfileName = PL_strdup("default");
-	        }
-	        else if (numProfiles == 1)
-	        {
-	            // one profile exists: use that profile
-	            profileService->GetSingleProfile(&currProfileName);
-	            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-	        }
-		    else
-		    {
-			    // multiple profiles exist: we'll use the same profile as last time 
-			    // (see following rules) 
-			    // (if we can't figure out what the last profile used was for some reason, 
-			    // we'll pick the first one as returned from the registry query) 
-		        profileService->GetCurrentProfile(&currProfileName);
-		        if (currProfileName)
-		        {
-		            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-		        }
-		        else
-		        {
-		            profileService->GetFirstProfile(&currProfileName);
-		            profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-		        }
-		    }
-
-		    if (currProfileName)
-		    {
-#if defined(NS_DEBUG)
-		        printf("ProfileName : %s\n", currProfileName);
-		        printf("ProfileDir  : %s\n", currProfileDirSpec.GetCString());
-#endif /* NS_DEBUG */
-		        PR_FREEIF(currProfileName);
-            }
-            if (!currProfileDirSpec.Exists())
-                currProfileDirSpec.CreateDir();
-
-            if (NS_FAILED(profileService->GetCurrentProfileDir(gProfileDir)))
-            {
-                delete gProfileDir; // All that for nothing.  sigh.
-                gProfileDir = nsnull;
-            }
-                
-            nsServiceManager::ReleaseService(kProfileCID, profileService);
-        }
-        if (!gProfileDir)
-        {
-            gProfileDir = new nsFileSpec;
-            if (gProfileDir)
-                CreateDefaultProfileDirectorySpec(*gProfileDir);
-        }
-        if (gProfileDir && !gProfileDir->Exists())
-            gProfileDir->CreateDir();
-    }
-    if (gProfileDir)
-    {
-        outSpec = *gProfileDir;
-    }
-} // GetProfileDirectory
 
 //========================================================================================
 // Implementation of nsSpecialFileSpec
@@ -277,9 +262,17 @@ void nsSpecialFileSpec::operator = (Type aType)
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
         case App_UserProfileDirectory50:
-            GetProfileDirectory(*this);
+            if (!GetProfileDirectory(*this))
+                mError = NS_ERROR_NOT_INITIALIZED;
             break;    
      
+        case App_DefaultUserProfileRoot30:
+        case App_DefaultUserProfileRoot40:
+            NS_NOTYETIMPLEMENTED("Write me!");
+            break;    
+        case App_DefaultUserProfileRoot50:
+            GetDefaultUserProfileRoot(*this);
+            break;    
             
         case App_PreferencesFile30:
             {
@@ -428,7 +421,7 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
        return NS_OK;
    }
    *(nsSpecialFileSpec*)&spec = (nsSpecialFileSpec::Type)aType;
-   return NS_NewFileSpecWithSpec(spec, outSpec);
+   return NS_SUCCEEDED(spec.Error()) ? NS_NewFileSpecWithSpec(spec, outSpec) : nsnull;
 }
 
 //----------------------------------------------------------------------------------------
