@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsLegendFrame.cpp \
 		nsListControlFrame.cpp \
 		nsRadioControlGroup.cpp \
+		nsIsIndexFrame.cpp \
 		$(NULL)
 
 ifdef MOZ_ENDER_LITE
