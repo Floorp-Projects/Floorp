@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.34 $ 
-# $Date: 2003/08/17 00:44:04 $ 
+# $Revision: 1.35 $ 
+# $Date: 2004/07/10 14:48:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -146,6 +146,14 @@ build.  The website will make each build log available so that
 everyone can see the log file and get a feel for how far into the
 compilation the build machine has progressed.
 
+HTTP Post
+
+This script can also process mail which is sent via HTTP Post rather
+then SMTP.  To use this feature simply put this script in the CGI bin
+directory and make sure that your webserver will accept posts to this
+executable.  This may require changing the name of this executable to
+end in '.cgi' or some other extension as your local security policy
+requires.
 
 Mail Format
 
@@ -1193,7 +1201,20 @@ sub assemble_files {
   MailProcess::parse_mailprocess_args();
   chk_security();
 
-  $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
+  # if we are being run via sendmail then we should have no output and
+  # errors should be sraight text, if we are being run via HTTP Post,
+  # our errors must be valid html and we must have valid HTML output;
+
+  if (defined ($ENV{'HTTP_USER_AGENT'})) {
+      $SIG{'__DIE__'} = \&::fatal_error;
+      $OUT=   (
+               "Content-type: text/html\n\n".
+               "<html></html>\n".
+               '');
+  } else {
+      $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
+      $OUT = '';
+  }
 
   %MAIL_HEADER =  MailProcess::parse_mail_header();
   %TINDERBOX = MailProcess::parse_tinderbox_vars( main::hash2string(%MAIL_HEADER) );
@@ -1237,6 +1258,8 @@ sub assemble_files {
         die("Could not unlink: '$tmpfile'. $!\n");    
 
   }
+
+  print $OUT;
 
   exit 0;
 }
