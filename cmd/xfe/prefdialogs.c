@@ -622,11 +622,13 @@ fe_SetMailNewsSortBehavior(MWContext* context, XP_Bool thread, int sortcode)
 }
 #endif
 
+/* This digs data out of fe_globalPrefs and passes it
+   along to the backend.  fe_globalPrefs is going away,
+   so this looks like a candidate for nuking. -mcafee */
 void
 fe_InstallPreferences (MWContext *context)
 {
 	/* This function is called from main() */
-
 	fe_installGeneralAppearance();
 	fe_installGeneralFonts();
 	fe_installGeneralColors();

@@ -2576,119 +2576,16 @@ void XFE_PrefsPageGeneralAdvanced::create()
 	XtManageChild (form1);
 	XtManageChild (frame1);
 	
-	// Cookies
-
-	Widget frame2;
-	Widget label2;
-	Widget form2;
-
-	ac = 0;
-	XtSetArg (av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av[ac], XmNtopAttachment, XmATTACH_WIDGET); ac++;
-	XtSetArg (av[ac], XmNtopWidget, frame1); ac++;
-	XtSetArg (av[ac], XmNtopOffset, 8); ac++;
-	XtSetArg (av[ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
-	frame2 = XmCreateFrame (form, "cookieFrame", av, ac);
-
-	ac = 0;
-	XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	form2 = XmCreateForm (frame2, "cookieBox", av, ac);
-
-	ac = 0;
-	XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
-	label2 = XmCreateLabelGadget (frame2, "cookieBoxLabel", av, ac);
-
-	ac = 0;
-	i = 0;
-
-	kids[i++] = fep->always_accept_cookie_toggle =
-		XmCreateToggleButtonGadget(form2, "alwaysAcceptCookie", av, ac);
-
-	kids[i++] = fep->no_foreign_cookie_toggle =
-		XmCreateToggleButtonGadget(form2, "noForeignCookie", av, ac);
-
-	kids[i++] = fep->never_accept_cookie_toggle =
-		XmCreateToggleButtonGadget(form2, "neverAcceptCookie", av, ac);
-
-	kids[i++] = fep->warn_cookie_toggle =
-		XmCreateToggleButtonGadget(form2, "warnCookie", av, ac);
-
-	XtVaSetValues(fep->always_accept_cookie_toggle,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  0);
-
-	XtVaSetValues(fep->no_foreign_cookie_toggle,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, fep->always_accept_cookie_toggle,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, fep->always_accept_cookie_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  0);
-
-	XtVaSetValues(fep->never_accept_cookie_toggle,
-				  XmNindicatorType, XmONE_OF_MANY,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, fep->no_foreign_cookie_toggle,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, fep->always_accept_cookie_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  0);
-
-	XtVaSetValues(fep->warn_cookie_toggle,
-				  XmNindicatorType, XmN_OF_MANY,
-				  XmNalignment, XmALIGNMENT_BEGINNING,
-				  XmNtopAttachment, XmATTACH_WIDGET,
-				  XmNtopWidget, fep->never_accept_cookie_toggle,
-				  XmNtopOffset, 8,
-				  XmNbottomAttachment, XmATTACH_NONE,
-				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				  XmNleftWidget, fep->always_accept_cookie_toggle,
-				  XmNrightAttachment, XmATTACH_NONE,
-				  0);
-
-	XtManageChildren (kids, i);
-	XtManageChild (label2);
-	XtManageChild (form2);
-	XtManageChild (frame2);
-
-	// Add callbacks
-
-	XtAddCallback(fep->always_accept_cookie_toggle, XmNvalueChangedCallback,
-				  cb_toggleCookieState, fep);
-	XtAddCallback(fep->no_foreign_cookie_toggle, XmNvalueChangedCallback,
-				  cb_toggleCookieState, fep);
-	XtAddCallback(fep->never_accept_cookie_toggle, XmNvalueChangedCallback,
-				  cb_toggleCookieState, fep);
-
 	setCreated(TRUE);
 }
 
-// Member:       init
-// Description:  Initializes page for GeneralAdvanced
-// Inputs:
-// Side effects: 
 
 void XFE_PrefsPageGeneralAdvanced::init()
 {
-	XP_ASSERT(m_prefsDataGeneralAdvanced);	
+	XP_ASSERT(m_prefsDataGeneralAdvanced);
 
 	PrefsDataGeneralAdvanced *fep = m_prefsDataGeneralAdvanced;
 	XFE_GlobalPrefs          *prefs = &fe_globalPrefs;
-    Boolean                  sensitive;
 
 	XtVaSetValues(fep->show_image_toggle, 
                   XmNset, prefs->autoload_images_p, 
@@ -2727,35 +2624,9 @@ void XFE_PrefsPageGeneralAdvanced::init()
                   0);
 #endif
 
-	// Cookie
-
-    sensitive = !PREF_PrefIsLocked("network.cookie.cookieBehavior");
-	XtVaSetValues(fep->always_accept_cookie_toggle, 
-				  XmNset, prefs->accept_cookie == NET_Accept,
-				  XmNsensitive, sensitive,
-				  0);
-	XtVaSetValues(fep->no_foreign_cookie_toggle, 
-				  XmNset, prefs->accept_cookie == NET_DontAcceptForeign,
-				  XmNsensitive, sensitive,
-				  0);
-	XtVaSetValues(fep->never_accept_cookie_toggle, 
-				  XmNset, prefs->accept_cookie == NET_DontUse,
-				  XmNsensitive, sensitive,
-				  0);
-
-    sensitive = !PREF_PrefIsLocked("network.cookie.warnAboutCookies");
-	XtVaSetValues(fep->warn_cookie_toggle, 
-				  XmNset, prefs->warn_accept_cookie,
-				  XmNsensitive, sensitive,
-				  0);
-
 	setInitialized(TRUE);
 }
 
-// Member:       install
-// Description:  
-// Inputs:
-// Side effects: 
 
 void XFE_PrefsPageGeneralAdvanced::install()
 {
@@ -2768,10 +2639,6 @@ void XFE_PrefsPageGeneralAdvanced::install()
 	}
 }
 
-// Member:       save
-// Description:  
-// Inputs:
-// Side effects: 
 
 void XFE_PrefsPageGeneralAdvanced::save()
 {
@@ -2807,72 +2674,21 @@ void XFE_PrefsPageGeneralAdvanced::save()
 	NET_UsePASV(fe_globalPrefs.passive_ftp = b);
 #endif
 	
-	// Cookies
-
-	XtVaGetValues(fep->always_accept_cookie_toggle, XmNset, &b, 0);
-	if (b) fe_globalPrefs.accept_cookie = NET_Accept;
-
-	XtVaGetValues(fep->no_foreign_cookie_toggle, XmNset, &b, 0);
-	if (b) fe_globalPrefs.accept_cookie = NET_DontAcceptForeign;
-
-	XtVaGetValues(fep->never_accept_cookie_toggle, XmNset, &b, 0);
-
-	if (b) fe_globalPrefs.accept_cookie = NET_DontUse;
-
-	XtVaGetValues(fep->warn_cookie_toggle, XmNset, &b, 0);
-	fe_globalPrefs.warn_accept_cookie = b;
-
 	if (old_autoload_images != fe_globalPrefs.autoload_images_p) {
       m_toolbar_needs_updating = TRUE;
     }
-
-
 
 	// Install preferences
 
 	install();
 }
 
-// Member:       getData
-// Description:  
-// Inputs:
-// Side effects: 
 
 PrefsDataGeneralAdvanced *XFE_PrefsPageGeneralAdvanced::getData()
 {
 	return m_prefsDataGeneralAdvanced;
 }
 
-// Member:       cb_toggleCookieState
-// Description:  
-// Inputs:
-// Side effects: 
-
-void XFE_PrefsPageGeneralAdvanced::cb_toggleCookieState(Widget    w,
-														XtPointer closure,
-														XtPointer callData)
-{
-	XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)callData;
-	PrefsDataGeneralAdvanced     *fep = (PrefsDataGeneralAdvanced *)closure;
-
-	if (! cb->set) {
-		XtVaSetValues(w, XmNset, True, 0);
-	}
-	else if (w == fep->always_accept_cookie_toggle) {
-		XtVaSetValues(fep->no_foreign_cookie_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->never_accept_cookie_toggle, XmNset, False, 0);
-	}
-	else if (w == fep->no_foreign_cookie_toggle) {
-		XtVaSetValues(fep->always_accept_cookie_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->never_accept_cookie_toggle, XmNset, False, 0);
-	}
-	else if (w == fep->never_accept_cookie_toggle) {
-		XtVaSetValues(fep->always_accept_cookie_toggle, XmNset, False, 0);
-		XtVaSetValues(fep->no_foreign_cookie_toggle, XmNset, False, 0);
-	}
-	else
-		abort();	
-}
 
 // ********************************************************************
 // ************************  General/Privacy **************************
@@ -2894,41 +2710,233 @@ XFE_PrefsPageGeneralPrivacy::~XFE_PrefsPageGeneralPrivacy()
 
 void XFE_PrefsPageGeneralPrivacy::create()
 {
-	PrefsDataGeneralPrivacy *fep = NULL;
-    Widget form;
+  PrefsDataGeneralPrivacy *fep = NULL;
+  Widget form;
+  int i;
+  int ac;
+  Arg av[30];
+  Widget kids[30];
+  
+  // Zap our data structure.
+  fep = new PrefsDataGeneralPrivacy;
+  memset(fep, 0, sizeof(PrefsDataGeneralPrivacy));
+  m_prefsDataGeneralPrivacy = fep;
+  
+  fep->context = getContext();
+  fep->prompt_dialog = getPrefsDialog()->getDialogChrome();
+  
+  // Form
 
-    // Zap our data structure.
-	fep = new PrefsDataGeneralPrivacy;
-	memset(fep, 0, sizeof(PrefsDataGeneralPrivacy));
-	m_prefsDataGeneralPrivacy = fep;
+  ac = 0;
+  XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+  form = XmCreateForm (m_wPageForm, "privacy", av, ac);
+  XtManageChild(form);
+  m_wPage = fep->page = form;
+  
+  ac = 0;
+  XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_NONE); ac++;
+  XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+  Widget cookieFrame = 
+    XmCreateFrame (form, "cookieFrame", av, ac);
 
-    // Form
-    form = XmCreateForm (m_wPageForm, "privacy", NULL, 0);
-    XtManageChild(form);
-    m_wPage = fep->page = form;
+  ac = 0;
+  XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
+  Widget cookieLabel = 
+    XmCreateLabelGadget (cookieFrame, "cookieLabel", av, ac);
 
-    setCreated(TRUE);
+  ac = 0;
+  XtSetArg (av [ac], XmNtopAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNleftAttachment, XmATTACH_FORM); ac++;
+  XtSetArg (av [ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+  Widget cookieForm = 
+    XmCreateForm (cookieFrame, "cookieForm", av, ac);
+  
+  // kids
+  i = 0;
+  kids[i++] = fep->always_accept_cookie_toggle =
+    XmCreateToggleButtonGadget(cookieForm, "alwaysAcceptCookie", NULL, 0);
+
+  kids[i++] = fep->no_foreign_cookie_toggle =
+    XmCreateToggleButtonGadget(cookieForm, "noForeignCookie", NULL, 0);
+
+  kids[i++] = fep->never_accept_cookie_toggle =
+    XmCreateToggleButtonGadget(cookieForm, "neverAcceptCookie", NULL, 0);
+
+  kids[i++] = fep->warn_cookie_toggle =
+    XmCreateToggleButtonGadget(cookieForm, "warnCookie", NULL, 0);
+
+  XtVaSetValues(fep->always_accept_cookie_toggle,
+                XmNindicatorType, XmONE_OF_MANY,
+                XmNalignment, XmALIGNMENT_BEGINNING,
+                XmNtopAttachment, XmATTACH_FORM,
+                XmNbottomAttachment, XmATTACH_NONE,
+                XmNleftAttachment, XmATTACH_FORM,
+                XmNrightAttachment, XmATTACH_NONE,
+                0);
+
+  XtVaSetValues(fep->no_foreign_cookie_toggle,
+                XmNindicatorType, XmONE_OF_MANY,
+                XmNalignment, XmALIGNMENT_BEGINNING,
+                XmNtopAttachment, XmATTACH_WIDGET,
+                XmNtopWidget, fep->always_accept_cookie_toggle,
+                XmNbottomAttachment, XmATTACH_NONE,
+                XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                XmNleftWidget, fep->always_accept_cookie_toggle,
+                XmNrightAttachment, XmATTACH_NONE,
+                0);
+
+  XtVaSetValues(fep->never_accept_cookie_toggle,
+                XmNindicatorType, XmONE_OF_MANY,
+                XmNalignment, XmALIGNMENT_BEGINNING,
+                XmNtopAttachment, XmATTACH_WIDGET,
+                XmNtopWidget, fep->no_foreign_cookie_toggle,
+                XmNbottomAttachment, XmATTACH_NONE,
+                XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                XmNleftWidget, fep->always_accept_cookie_toggle,
+                XmNrightAttachment, XmATTACH_NONE,
+                0);
+  
+  XtVaSetValues(fep->warn_cookie_toggle,
+                XmNindicatorType, XmN_OF_MANY,
+                XmNalignment, XmALIGNMENT_BEGINNING,
+                XmNtopAttachment, XmATTACH_WIDGET,
+                XmNtopWidget, fep->never_accept_cookie_toggle,
+                XmNtopOffset, 8,
+                XmNbottomAttachment, XmATTACH_NONE,
+                XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+                XmNleftWidget, fep->always_accept_cookie_toggle,
+                XmNrightAttachment, XmATTACH_NONE,
+                0);
+
+  XtManageChildren (kids, i);
+  XtManageChild (cookieLabel);
+  XtManageChild (cookieForm);
+  XtManageChild (cookieFrame);
+
+  // Add cookie callbacks
+  XtAddCallback(fep->always_accept_cookie_toggle, XmNvalueChangedCallback,
+                cb_toggleCookieState, fep);
+  XtAddCallback(fep->no_foreign_cookie_toggle, XmNvalueChangedCallback,
+                cb_toggleCookieState, fep);
+  XtAddCallback(fep->never_accept_cookie_toggle, XmNvalueChangedCallback,
+                cb_toggleCookieState, fep);
+
+  setCreated(TRUE);
 }
 
 void XFE_PrefsPageGeneralPrivacy::init()
 {
+  XP_ASSERT(m_prefsDataGeneralPrivacy);
+
+  PrefsDataGeneralPrivacy *fep = m_prefsDataGeneralPrivacy;
+  XFE_GlobalPrefs          *prefs = &fe_globalPrefs;
+  Boolean                  sensitive;
+
+  // Cookies
+  sensitive = !PREF_PrefIsLocked("network.cookie.cookieBehavior");
+  XtVaSetValues(fep->always_accept_cookie_toggle, 
+                XmNset, prefs->accept_cookie == NET_Accept,
+                XmNsensitive, sensitive,
+                0);
+  XtVaSetValues(fep->no_foreign_cookie_toggle, 
+                XmNset, prefs->accept_cookie == NET_DontAcceptForeign,
+                XmNsensitive, sensitive,
+                0);
+  XtVaSetValues(fep->never_accept_cookie_toggle, 
+                XmNset, prefs->accept_cookie == NET_DontUse,
+                XmNsensitive, sensitive,
+                0);
+  
+  sensitive = !PREF_PrefIsLocked("network.cookie.warnAboutCookies");
+  XtVaSetValues(fep->warn_cookie_toggle, 
+                XmNset, prefs->warn_accept_cookie,
+                XmNsensitive, sensitive,
+                0);
 
   setInitialized(TRUE);
 }
 
 void XFE_PrefsPageGeneralPrivacy::install()
 {
+  // Legacy code?
+  // fe_installGeneralAdvanced();
+
+  if (m_toolbar_needs_updating) {
+    // Notify whoever is interested in updating toolbar appearance
+    XFE_MozillaApp::theApp()->
+      notifyInterested(XFE_MozillaApp::updateToolbarAppearance);
+
+    m_toolbar_needs_updating = FALSE;
+  }  
 }
 
 void XFE_PrefsPageGeneralPrivacy::save()
 {
+  PrefsDataGeneralPrivacy *fep = m_prefsDataGeneralPrivacy;
+  Boolean b;
+  
+  XP_ASSERT(fep);
 
+  // Cookies
+  
+  XtVaGetValues(fep->always_accept_cookie_toggle, XmNset, &b, 0);
+  if (b) { 
+    fe_globalPrefs.accept_cookie = NET_Accept;
+  }
+
+  XtVaGetValues(fep->no_foreign_cookie_toggle, XmNset, &b, 0);
+  if (b) {
+    fe_globalPrefs.accept_cookie = NET_DontAcceptForeign;
+  }
+
+  XtVaGetValues(fep->never_accept_cookie_toggle, XmNset, &b, 0);
+  
+  if (b) {
+    fe_globalPrefs.accept_cookie = NET_DontUse;
+  }
+
+  XtVaGetValues(fep->warn_cookie_toggle, XmNset, &b, 0);
+  fe_globalPrefs.warn_accept_cookie = b;
+  
   install();
 }
 
 PrefsDataGeneralPrivacy *XFE_PrefsPageGeneralPrivacy::getData()
 {
   return m_prefsDataGeneralPrivacy;
+}
+
+
+void XFE_PrefsPageGeneralPrivacy::cb_toggleCookieState(Widget    w,
+                                                       XtPointer closure,
+                                                       XtPointer callData)
+{
+	XmToggleButtonCallbackStruct *cb = (XmToggleButtonCallbackStruct *)callData;
+	PrefsDataGeneralPrivacy     *fep = (PrefsDataGeneralPrivacy *)closure;
+
+	if (! cb->set) {
+		XtVaSetValues(w, XmNset, True, 0);
+	}
+	else if (w == fep->always_accept_cookie_toggle) {
+		XtVaSetValues(fep->no_foreign_cookie_toggle, XmNset, False, 0);
+		XtVaSetValues(fep->never_accept_cookie_toggle, XmNset, False, 0);
+	}
+	else if (w == fep->no_foreign_cookie_toggle) {
+		XtVaSetValues(fep->always_accept_cookie_toggle, XmNset, False, 0);
+		XtVaSetValues(fep->never_accept_cookie_toggle, XmNset, False, 0);
+	}
+	else if (w == fep->never_accept_cookie_toggle) {
+		XtVaSetValues(fep->always_accept_cookie_toggle, XmNset, False, 0);
+		XtVaSetValues(fep->no_foreign_cookie_toggle, XmNset, False, 0);
+	}
+	else
+		abort();	
 }
 
 // ************************************************************************
@@ -2979,7 +2987,7 @@ mimetype_is_locked(char* pref_name)
  * locked by preferences.
  */
 static void
-selection_cb(Widget w, XtPointer closure, XtPointer callData)
+selection_cb(Widget /*w*/, XtPointer closure, XtPointer callData)
 {
 	XmLGridCallbackStruct* cb = (XmLGridCallbackStruct*) callData;
 	PrefsDataGeneralAppl* fep = (PrefsDataGeneralAppl*) closure;

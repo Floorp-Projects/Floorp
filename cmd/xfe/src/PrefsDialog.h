@@ -184,7 +184,6 @@ class XFE_PrefsDialog : public XFE_Dialog
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsDialog(Widget     parent,    
 					char      *name,  
 					MWContext *context,
@@ -216,14 +215,12 @@ public:
 	Dimension calculateHeight();        // calculate the dialog height
 
 	// Callbacks - main
-
 	static void prefsMainCb_ok(Widget, XtPointer, XtPointer);
 	static void prefsMainCb_cancel(Widget, XtPointer, XtPointer);
 	static void prefsMainCb_help(Widget, XtPointer, XtPointer);
 	static void prefsMainCb_destroy(Widget, XtPointer, XtPointer);
 
 	// Callbacks - category outline
-
     static Boolean categoryDataFunc(Widget, void*, int, fe_OutlineDesc*, int);
 	static void categoryClickFunc(Widget, void*, int, int, const char*,
 								  int, int, Boolean, Boolean, int);
@@ -259,13 +256,11 @@ class XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPage(XFE_PrefsDialog  *dialog);
     XFE_PrefsPage(Widget w);
 	virtual ~XFE_PrefsPage();
 
 	// Manipulators
-
 	virtual void create() = 0;
 	virtual void init() = 0;
 	virtual void map();
@@ -280,7 +275,6 @@ public:
 	void setChanged(Boolean);
 
 	// Gets
-
 	Boolean isCreated();
 	Boolean isInitialized();
 	Boolean doInitInMap();
@@ -293,7 +287,6 @@ public:
 protected:
 
 	// Data
-
 	MWContext          *m_context;
 	XFE_PrefsDialog    *m_prefsDialog;
 	Widget              m_wPageForm;   /* in the prefs dialog */
@@ -311,29 +304,24 @@ class XFE_PrefsPageGeneralAppearance : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralAppearance(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralAppearance();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataGeneralAppearance *getData();
 
 	// Callbacks - page GeneralAppearance
-
 	static void cb_setToolbarAttr(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataGeneralAppearance        *m_prefsDataGeneralAppearance;
 	XP_Bool                            m_toolbar_needs_updating;
 };
@@ -345,12 +333,10 @@ class XFE_PrefsPageGeneralFonts : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralFonts(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralFonts();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void relayout(PrefsDataGeneralFonts *fep);
 	virtual void init();
@@ -358,11 +344,9 @@ public:
 	virtual void save();
 
 	// Gets
-
 	PrefsDataGeneralFonts *getData();
 
 	// Callbacks - page General/Fonts
-
 	static void cb_charSet(Widget, XtPointer, XtPointer);
 	static void cb_toggleUseFont(Widget, XtPointer, XtPointer);
 	static void cb_allowScaling(Widget, XtPointer, XtPointer);
@@ -370,7 +354,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataGeneralFonts        *m_prefsDataGeneralFonts;
 };
 
@@ -381,30 +364,25 @@ class XFE_PrefsPageGeneralColors : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralColors(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralColors();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataGeneralColors *getData();
 
 	// Callbacks - page General/Colors
-
 	static void cb_activateColor(Widget, XtPointer, XtPointer);
 	static void cb_defaultColor(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataGeneralColors   *m_prefsDataGeneralColors;
 	XP_Bool                   m_underlinelinks_changed;
 	XP_Bool                   m_colors_changed;
@@ -417,29 +395,21 @@ class XFE_PrefsPageGeneralAdvanced : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralAdvanced(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralAdvanced();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataGeneralAdvanced *getData();
-
-	// Callbacks - page General/Advanced
-
-	static void cb_toggleCookieState(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataGeneralAdvanced        *m_prefsDataGeneralAdvanced;
 
 	XP_Bool    m_toolbar_needs_updating;
@@ -451,26 +421,25 @@ class XFE_PrefsPageGeneralPrivacy : public XFE_PrefsPage
 {
 public:
 
-	// Constructors, Destructors
-
-	XFE_PrefsPageGeneralPrivacy(XFE_PrefsDialog  *dialog);
-	virtual ~XFE_PrefsPageGeneralPrivacy();
-
-	// Manipulators
-	virtual void create();
-	virtual void init();
-	virtual void install();
-	virtual void save();
-
-	// Gets
-	PrefsDataGeneralPrivacy *getData();
-
-	// Callbacks - page General/Advanced
-  //static void cb_toggleCookieState(Widget, XtPointer, XtPointer);
-
+  // Constructors, Destructors
+  XFE_PrefsPageGeneralPrivacy(XFE_PrefsDialog  *dialog);
+  virtual ~XFE_PrefsPageGeneralPrivacy();
+  
+  // Manipulators
+  virtual void create();
+  virtual void init();
+  virtual void install();
+  virtual void save();
+  
+  // Gets
+  PrefsDataGeneralPrivacy *getData();
+  
+  // Callbacks - page General/Advanced
+  static void cb_toggleCookieState(Widget, XtPointer, XtPointer);
+  
 private:	
-	PrefsDataGeneralPrivacy  *m_prefsDataGeneralPrivacy;
-	XP_Bool m_toolbar_needs_updating;
+  PrefsDataGeneralPrivacy  *m_prefsDataGeneralPrivacy;
+  XP_Bool m_toolbar_needs_updating;
 };
 
 // ************************* XFE_PrefsPageGeneralAppl  *************************
@@ -480,12 +449,10 @@ class XFE_PrefsPageGeneralAppl : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralAppl(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralAppl();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
@@ -494,20 +461,16 @@ public:
 	void setModified(Boolean);
 
 	// Gets
-
 	PrefsDataGeneralAppl *getData();
 
 	// Callbacks - page General/Applications
-
 	static void cb_new(Widget, XtPointer, XtPointer);
 	static void cb_edit(Widget, XtPointer, XtPointer);
 	static void cb_delete(Widget, XtPointer, XtPointer);
 	static void cb_browse(Widget, XtPointer, XtPointer);
 
-private:	
-
+private:
 	// Data
-
 	PrefsDataGeneralAppl        *m_prefsDataGeneralAppl;
 };
 
@@ -518,23 +481,19 @@ class XFE_PrefsPageGeneralCache : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralCache(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralCache();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataGeneralCache *getData();
 
 	// Callbacks - page General/Cache
-
 	static void cb_browse(Widget, XtPointer, XtPointer);
 	static void cb_clearDisk(Widget, XtPointer, XtPointer);
 	static void cb_clearMem(Widget, XtPointer, XtPointer);
@@ -542,7 +501,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataGeneralCache        *m_prefsDataGeneralCache;
 };
 
@@ -553,23 +511,19 @@ class XFE_PrefsPageGeneralProxies : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageGeneralProxies(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageGeneralProxies();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataGeneralProxies *getData();
 
 	// Callbacks - page General/Proxies
-
 	static void cb_reloadProxies(Widget, XtPointer, XtPointer);
 	static void cb_setProxies(Widget, XtPointer, XtPointer);
 	static void cb_viewProxies(Widget, XtPointer, XtPointer);
@@ -577,7 +531,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataGeneralProxies        *m_prefsDataGeneralProxies;
 };
 
@@ -588,23 +541,19 @@ class XFE_PrefsPageBrowser : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageBrowser(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageBrowser();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataBrowser *getData();
 
 	// Callbacks - page Browser
-
 	static void cb_browse(Widget, XtPointer, XtPointer);
 	static void cb_setStartupPage(Widget, XtPointer, XtPointer);
 	static void cb_expireNow(Widget, XtPointer, XtPointer);
@@ -613,7 +562,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataBrowser  *m_prefsDataBrowser;
 	XP_Bool            m_home_changed;
 };
@@ -625,12 +573,10 @@ class XFE_PrefsPageBrowserLang : public XFE_PrefsPage, public XFE_Outlinable
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageBrowserLang(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageBrowserLang();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
@@ -644,7 +590,6 @@ public:
 	void    deselectPos(int pos);
 
 	// Gets
-
 	PrefsDataBrowserLang *getData();
 
 	// Outlinable interface methods
@@ -676,7 +621,6 @@ public:
 	virtual char *getCellDocString(int /* row */, int /* column */) {return NULL;}
 
 	// Callbacks - page BrowserLang
-
 	static void cb_add(Widget, XtPointer, XtPointer);
 	static void cb_delete(Widget, XtPointer, XtPointer);
 	static void cb_promote(Widget, XtPointer, XtPointer);
@@ -685,7 +629,6 @@ public:
 private:	
 
 	// Data
-
 	static const int OUTLINER_COLUMN_ORDER;
 	static const int OUTLINER_COLUMN_LANG;
 	static const int OUTLINER_COLUMN_MAX_LENGTH;
@@ -704,30 +647,25 @@ class XFE_PrefsPageMailNews : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageMailNews(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageMailNews();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataMailNews *getData();
 
 	// Callbacks - page MailNews
-
 	static void cb_toggleMsgFont(Widget, XtPointer, XtPointer);
 	static void cb_quotedTextColor(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataMailNews        *m_prefsDataMailNews;
 	XP_Bool                   m_refresh_needed;
 };
@@ -740,12 +678,10 @@ class XFE_PrefsPageMailNewsIdentity : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageMailNewsIdentity(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageMailNewsIdentity();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
@@ -753,11 +689,9 @@ public:
 	virtual Boolean verify();
 
 	// Gets
-
 	PrefsDataMailNewsIdentity *getData();
 
 	// Callbacks - page Mail News/Identity
-
 #ifdef MOZ_MAIL_NEWS
 	static void cb_browse(Widget, XtPointer, XtPointer);
 	static void cb_toggleAttachCard(Widget, XtPointer, XtPointer);
@@ -766,7 +700,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataMailNewsIdentity        *m_prefsDataMailNewsIdentity;
 };
 
@@ -877,12 +810,10 @@ class XFE_PrefsPageMailNewsMserver : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageMailNewsMserver(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageMailNewsMserver();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
@@ -890,7 +821,6 @@ public:
 	virtual Boolean verify();
 
 	// Callbacks - page Mail News/Mail Server
-
 	static void cb_browseApplication(Widget, XtPointer, XtPointer);
 	static void cb_more(Widget, XtPointer, XtPointer);
 	static void cb_toggleServerType(Widget, XtPointer, XtPointer);
@@ -900,10 +830,6 @@ private:
    XFE_PrefsIncomingMServer *xfe_incoming;
    XFE_PrefsOutgoingServer *xfe_outgoing;
    XFE_PrefsLocalMailDir   *xfe_local_mail;
-
- 
-	// Data
-
 };
 
 // ************************* XFE_PrefsPageMailNewsCopies ******************
@@ -968,9 +894,7 @@ private:
 
  };
 
- // ************************* XFE_PrefsPageMailNewsHTML ******************
-
-
+// ************************* XFE_PrefsPageMailNewsHTML ******************
 class XFE_PrefsPageMailNewsHTML : public XFE_PrefsPage
 {
 public:
@@ -998,8 +922,6 @@ private:
 
 
 // ************************* XFE_PrefsPageMailNewsReceipts ******************
-
-
 class XFE_PrefsPageMailNewsReceipts : public XFE_PrefsPage
 {
 public:
@@ -1012,8 +934,7 @@ public:
     virtual void install();
     virtual void save();
     virtual Boolean verify();
-    
-    
+        
 private:
     Widget createRequestReceiptsFrame(Widget parent, Widget attachTo);
     Widget createReceiptsArriveFrame(Widget parent, Widget attachTo);
@@ -1038,12 +959,10 @@ class XFE_PrefsPageEditor : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageEditor(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageEditor();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
@@ -1051,11 +970,9 @@ public:
 	virtual Boolean verify();
 
 	// Gets
-
 	PrefsDataEditor *getData();
 
 	// Callbacks - page Editor
-
 	static void cb_changed(Widget, XtPointer, XtPointer);
 	static void cb_browseToTextField(Widget, XtPointer, XtPointer);
 	static void cb_restoreTemplate(Widget, XtPointer, XtPointer);
@@ -1065,7 +982,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataEditor        *m_prefsDataEditor;
 };
 
@@ -1076,19 +992,16 @@ class XFE_PrefsPageEditorAppearance : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageEditorAppearance(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageEditorAppearance();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataEditorAppearance *getData();
 
 	// Callbacks - page Editor/Appearance
@@ -1096,7 +1009,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataEditorAppearance        *m_prefsDataEditorAppearance;
 };
 
@@ -1107,30 +1019,25 @@ class XFE_PrefsPageEditorPublish : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageEditorPublish(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageEditorPublish();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataEditorPublish *getData();
 
 	// Callbacks - page Editor/Publish
-
 	static void cb_changed(Widget, XtPointer, XtPointer);
 	static void cb_passwordChanged(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataEditorPublish        *m_prefsDataEditorPublish;
 };
 
@@ -1144,64 +1051,54 @@ class XFE_PrefsPageOffline : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageOffline(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageOffline();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataOffline *getData();
 
 	// Callbacks - page Offline
-
 	static void cb_toggleStartup(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataOffline        *m_prefsDataOffline;
 };
 
 #ifdef MOZ_MAIL_NEWS
 
-// ************************* XFE_PrefsPageOfflineNews  *************************
+// ********************** XFE_PrefsPageOfflineNews  *************************
 
 class XFE_PrefsPageOfflineNews : public XFE_PrefsPage
 {
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageOfflineNews(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageOfflineNews();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataOfflineNews *getData();
 
 	// Callbacks - page OfflineNews
-
 	static void cb_toggleDownLoadByDate(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataOfflineNews        *m_prefsDataOfflineNews;
 };
 
@@ -1216,19 +1113,16 @@ class XFE_PrefsPageDiskSpace : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageDiskSpace(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageDiskSpace();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataDiskSpace *getData();
 
 	// Callbacks - page DiskSpace
@@ -1239,7 +1133,6 @@ public:
 private:	
 
 	// Data
-
 	PrefsDataDiskSpace        *m_prefsDataDiskSpace;
 };
 
@@ -1252,30 +1145,25 @@ class XFE_PrefsPageHelpFiles : public XFE_PrefsPage
 public:
 
 	// Constructors, Destructors
-
 	XFE_PrefsPageHelpFiles(XFE_PrefsDialog  *dialog);
 	virtual ~XFE_PrefsPageHelpFiles();
 
 	// Manipulators
-
 	virtual void create();
 	virtual void init();
 	virtual void install();
 	virtual void save();
 
 	// Gets
-
 	PrefsDataHelpFiles *getData();
 
 	// Callbacks - page HelpFiles
-
 	static void cb_toggleHelpSite(Widget, XtPointer, XtPointer);
 	static void cb_browse(Widget, XtPointer, XtPointer);
 
 private:	
 
 	// Data
-
 	PrefsDataHelpFiles        *m_prefsDataHelpFiles;
 };
 #endif

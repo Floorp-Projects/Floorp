@@ -31,8 +31,8 @@
 
 struct PrefsDataGeneralAppearance
 {
-	MWContext *context;
-	Widget     prompt_dialog;
+    MWContext *context;
+    Widget     prompt_dialog;
 	Widget     page;
 
 	// Launch
@@ -45,7 +45,7 @@ struct PrefsDataGeneralAppearance
 	Widget     netcaster_toggle;
 	Widget     calendar_toggle;
 
-	// Show Toolbar as
+    // Show Toolbar as
 
 	Widget     pic_and_text_toggle;
 	Widget     pic_only_toggle;
@@ -121,24 +121,24 @@ struct PrefsDataGeneralAdvanced
 #ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
 	Widget	   passive_ftp_toggle;
 #endif
-
-	Widget     always_accept_cookie_toggle;
-	Widget     no_foreign_cookie_toggle;
-	Widget     never_accept_cookie_toggle;
-	Widget     warn_cookie_toggle;
 };
 
 
 struct PrefsDataGeneralPrivacy
 {
-	MWContext *context;
-	Widget     prompt_dialog;
-	Widget     page;
+  MWContext *context;
+  Widget     prompt_dialog;
+  Widget     page;
+  
+  // Core privacy
+  Widget     save_logins_and_passwords;
+  Widget     warn_no_privacy;
 
-	Widget     always_accept_cookie_toggle;
-	Widget     no_foreign_cookie_toggle;
-	Widget     never_accept_cookie_toggle;
-	Widget     warn_cookie_toggle;
+  // Cookies
+  Widget     always_accept_cookie_toggle;
+  Widget     no_foreign_cookie_toggle;
+  Widget     never_accept_cookie_toggle;
+  Widget     warn_cookie_toggle;
 };
 
 
