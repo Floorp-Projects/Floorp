@@ -51,6 +51,8 @@
 #include "nsIUnkContentTypeHandler.h"
 #include "nsDOMError.h"
 
+#include "nsCExternalHandlerService.h" // contains progids for the helper app service
+
 static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
@@ -143,6 +145,7 @@ nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
     newObject->m_contentListener = m_contentListener;
     newObject->mCommand          = mCommand;
     newObject->m_windowTarget    = m_windowTarget;
+    newObject->m_originalContext = m_originalContext;
   }
 
   return newObject;
@@ -271,6 +274,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
   nsresult rv;
   nsXPIDLCString contentType;
   nsCOMPtr<nsISupports> originalWindowContext = m_originalContext; // local variable to keep track of this.
+  nsCOMPtr<nsIStreamListener> contentStreamListener;
 
   rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
@@ -293,8 +297,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
                                      m_originalContext,
                                      getter_Copies(desiredContentType), 
                                      getter_AddRefs(contentListener),
-                                     &abortDispatch);
-    m_originalContext = nsnull; // we don't need this anymore....
+                                     &abortDispatch);  
 
     // if the uri loader says to abort the dispatch then someone
     // else must have stepped in and taken over for us...so stop..
@@ -305,42 +308,11 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     //               decoders exist to transform this content type into
     //               some other.
     //
-    if (!contentListener) {
-      nsDocumentOpenInfo* nextLink;
-
-      // When applying stream decoders, it is necessary to "insert" an 
-      // intermediate nsDocumentOpenInfo instance to handle the targeting of
-      // the "final" stream or streams.
-      //
-      // For certain content types (ie. multi-part/x-mixed-replace) the input
-      // stream is split up into multiple destination streams.  This
-      // intermediate instance is used to target these "decoded" streams...
-      //
-      nextLink = Clone();
-      if (!nextLink) return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(nextLink);
-
-      // Set up the final destination listener.
-      nextLink->m_targetStreamListener = nsnull;
-
-      // The following call binds this channelListener's mNextListener (typically
-      // the nsDocumentBindInfo) to the underlying stream converter, and returns
-      // the underlying stream converter which we then set to be this channelListener's
-      // mNextListener. This effectively nestles the stream converter down right
-      // in between the raw stream and the final listener.
-
-      // catch the case when some joker server sends back a content type of "*/*"
-      // because we said we could handle "*/*" in our accept headers
-      if (nsCRT::strcmp(contentType, "*/*")) {
-          rv = RetargetOutput(aChannel, contentType, "*/*", nextLink);
-          NS_RELEASE(nextLink);
-
-          if (m_targetStreamListener) {
-            return NS_OK;
-          }
-      } else {
-        NS_RELEASE(nextLink);
-      }
+    if (!contentListener) 
+    {
+      rv = RetargetOutput(aChannel, contentType, "*/*", nsnull);
+      if (m_targetStreamListener)
+        return NS_OK;
     }
     
     //
@@ -360,7 +332,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     //
     if (contentListener)
     {
-      nsCOMPtr<nsIStreamListener> contentStreamListener;
       PRBool bAbortProcess = PR_FALSE;     
       nsCAutoString contentTypeToUse;
       if (desiredContentType)
@@ -388,6 +359,22 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       // the listener is doing all the work from here...we are done!!!
       if (bAbortProcess) return rv;
 
+      // BEFORE we fail and bring up the unknown content handler dialog...
+      // try to detect if there is a helper application we an use instead...
+      if (mCommand == nsIURILoader::viewUserClick && !contentStreamListener)
+      {
+        nsCOMPtr<nsIURI> uri;
+        PRBool abortProcess = PR_FALSE;
+        aChannel->GetURI(getter_AddRefs(uri));
+        nsCOMPtr<nsIStreamListener> contentStreamListener;
+        nsCOMPtr<nsIExternalHelperAppService> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
+        rv = helperAppService->DoContent(contentType, uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
+        if (NS_SUCCEEDED(rv) && contentStreamListener)
+          return RetargetOutput(aChannel, contentType, contentType, contentStreamListener);
+        else
+          rv = NS_ERROR_FAILURE; // this will cause us to bring up the unknown content handler dialog.
+      }
+
       if (NS_FAILED(rv))
       {
         nsCOMPtr<nsIDOMWindow> domWindow (do_GetInterface(originalWindowContext));
@@ -398,6 +385,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
       rv = RetargetOutput(aChannel, contentType, desiredContentType, contentStreamListener);
+      m_originalContext = nsnull; // we don't need this anymore....
     } 
   }
   return rv;
@@ -418,13 +406,32 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
                                             nsIStreamListener * aStreamListener)
 {
   nsresult rv = NS_OK;
-  // do we need to invoke the stream converter service?
-  if (aOutContentType && *aOutContentType && nsCRT::strcasecmp(aSrcContentType, aOutContentType))
+
+  // catch the case when some joker server sends back a content type of "*/*"
+  // because we said we could handle "*/*" in our accept headers
+  if (aOutContentType && *aOutContentType && nsCRT::strcasecmp(aSrcContentType, aOutContentType) && nsCRT::strcmp(aSrcContentType, "*/*"))
   {
       NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
       if (NS_FAILED(rv)) return rv;
       nsAutoString from_w; from_w.AssignWithConversion (aSrcContentType);
       nsAutoString to_w; to_w.AssignWithConversion (aOutContentType);
+      
+      nsDocumentOpenInfo* nextLink;
+
+      // When applying stream decoders, it is necessary to "insert" an 
+      // intermediate nsDocumentOpenInfo instance to handle the targeting of
+      // the "final" stream or streams.
+      //
+      // For certain content types (ie. multi-part/x-mixed-replace) the input
+      // stream is split up into multiple destination streams.  This
+      // intermediate instance is used to target these "decoded" streams...
+      //
+      nextLink = Clone();
+      if (!nextLink) return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(nextLink);
+
+      // Set up the final destination listener.
+      nextLink->m_targetStreamListener = nsnull;
 
       // The following call binds this channelListener's mNextListener (typically
       // the nsDocumentBindInfo) to the underlying stream converter, and returns
@@ -433,9 +440,10 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
       // in between the raw stream and the final listener.
       rv = StreamConvService->AsyncConvertData(from_w.GetUnicode(), 
                                                to_w.GetUnicode(), 
-                                               aStreamListener, 
+                                               nextLink, 
                                                aChannel,
                                                getter_AddRefs(m_targetStreamListener));
+      NS_RELEASE(nextLink);
   }
   else
     m_targetStreamListener = aStreamListener; // no converter necessary so use a direct pipe
