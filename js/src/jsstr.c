@@ -56,6 +56,7 @@
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsgc.h"
+#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -1098,7 +1099,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *reobj;
     JSRegExp *re;
     size_t index, length;
-    JSBool ok;
+    JSBool ok, test;
     jsint count;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -1164,9 +1165,32 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
         }
     } else {
-        ok = js_ExecuteRegExp(cx, re, str, &index,
-                              GET_MODE(data->flags) == MODE_REPLACE,
-                              rval);
+        if (GET_MODE(data->flags) == MODE_REPLACE) {
+            test = JS_TRUE;
+        } else {
+            /*
+             * MODE_MATCH implies str_match is being called from a script or a
+             * scripted function.  If the caller cares only about testing null
+             * vs. non-null return value, optimize away the array object that
+             * would normally be returned in *rval.
+             */
+            JS_ASSERT(*cx->fp->down->pc == JSOP_CALL ||
+                      *cx->fp->down->pc == JSOP_NEW);
+            JS_ASSERT(js_CodeSpec[*cx->fp->down->pc].length == 3);
+            switch (cx->fp->down->pc[3]) {
+              case JSOP_POP:
+              case JSOP_IFEQ:
+              case JSOP_IFNE:
+              case JSOP_IFEQX:
+              case JSOP_IFNEX:
+                test = JS_TRUE;
+                break;
+              default:
+                test = JS_FALSE;
+                break;
+            }
+        }
+        ok = js_ExecuteRegExp(cx, re, str, &index, test, rval);
     }
 
     if (reobj) {
