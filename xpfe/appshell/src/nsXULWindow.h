@@ -118,7 +118,6 @@ protected:
    PRBool                  mDebuting;       // being made visible right now
    PRBool                  mChromeLoaded; // True when chrome has loaded
    PRBool                  mShowAfterLoad;
-   PRInt32                 mSizeMode;
    PRBool                  mIntrinsicallySized; 
    PRBool                  mCenterAfterLoad;
    PRBool                  mIsHiddenWindow;
