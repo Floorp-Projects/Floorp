@@ -139,6 +139,10 @@ typedef struct {
 // Server errors that need to be converted to more user-friendly ones.
 #define SYNC_ERROR_EXCEED_MAX_RECORD     "exceed max record"
 
+// Generic name tag for AIM screen name
+#define SYNC_PREF_PREFIX_CLIENT_MAP      "mail.absync.client_map."
+#define SYNC_PREF_PREFIX_SERVER_MAP      "mail.absync.server_map."
+
 //
 // We need this structure for mapping our field names to the server
 // field names
@@ -252,6 +256,7 @@ private:
   nsresult        ProcessLastChange();
   nsresult        ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard);
   PRInt32         GetTypeOfPhoneNumber(const nsAString& tagName);
+  nsresult        AddValueToProtocolLine(const PRUnichar *value, nsString &protocolLine);
 
   // For updating...
   PRInt32         HuntForExistingABEntryInServerRecord(PRInt32          aPersonIndex, 
@@ -275,6 +280,10 @@ private:
 
   nsStringArray   *mNewRecordTags;                        // The new record tags from the server...
   nsStringArray   *mNewRecordValues;                      // The new record values from the server...
+
+  // Only support one column/value pair for now until #128567 is fixed to allow multiple pairs to be set. 
+  nsCString       mCurrentGenericColumn;                  // New generic column from server.
+  nsString        mCurrentGenericValue;                   // New generic value from server.
 
   nsStringArray   *mPhoneTypes;                           // Phone number types...
   nsStringArray   *mPhoneValues;                          // Phone number values...

@@ -67,7 +67,6 @@
 #include "nsIWindowWatcher.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
@@ -626,7 +625,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindowInternal *aDOMWindow, PRInt32 
   // this request as well as the local address book we will be 
   // syncing with...
   //
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
   prefs->CopyCharPref("mail.absync.address_book",     &mAbSyncAddressBook);
@@ -837,26 +836,12 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
         char *pVal = PR_smprintf("phone%d", phoneCount);
         if (pVal)
         {
-          char *utfString = ToNewUTF8String(nsDependentString(aName));
-
-          // Now, URL Encode the value string....
-          char *myTStr = nsEscape(utfString, url_Path);
-          if (myTStr)
-          {
-            PR_FREEIF(utfString);
-            utfString = myTStr;
-          }
-
-          tProtLine.Append(NS_LITERAL_STRING("&") + 
+           tProtLine.Append(NS_LITERAL_STRING("&") + 
                            NS_ConvertASCIItoUCS2(pVal) +
                            NS_LITERAL_STRING("="));
-          if (utfString)
-          {
-            tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
-            PR_FREEIF(utfString);
-          }
-          else
-            tProtLine.Append(aName);
+
+          AddValueToProtocolLine(aName, tProtLine);
+
           tProtLine.Append(NS_LITERAL_STRING("&") + 
                            NS_ConvertASCIItoUCS2(pVal) + 
                            NS_LITERAL_STRING("_type=") +
@@ -867,26 +852,10 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       }
       else    // Good ole' normal tag...
       {
-        char *utfString = ToNewUTF8String(nsDependentString(aName));
-
-        // Now, URL Encode the value string....
-        char *myTStr = nsEscape(utfString, url_Path);
-        if (myTStr)
-        {
-          PR_FREEIF(utfString);
-          utfString = myTStr;
-        }
-
         tProtLine.Append(NS_LITERAL_STRING("&") + 
                          mSchemaMappingList[i].serverField +
                          NS_LITERAL_STRING("="));
-        if (utfString)
-        {
-          tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
-          PR_FREEIF(utfString);
-        }
-        else
-          tProtLine.Append(aName);
+        AddValueToProtocolLine(aName, tProtLine);
       }
 
       PR_FREEIF(aName);
@@ -908,29 +877,47 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       // Just some sanity...
       if (aName)
       {
-        char *utfString = ToNewUTF8String(nsDependentString(aName));
-      
-        // Now, URL Encode the value string....
-        char *myTStr = nsEscape(utfString, url_Path);
-        if (myTStr)
-        {
-          PR_FREEIF(utfString);
-          utfString = myTStr;
-        }
-      
         tProtLine.Append(NS_LITERAL_STRING("&") + 
                          kServerPlainTextColumn +
                          NS_LITERAL_STRING("="));
-        if (utfString)
-        {
-          tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
-          PR_FREEIF(utfString);
-        }
-        else
-          tProtLine.Append(aName);
+        AddValueToProtocolLine(aName, tProtLine);
       
         PR_FREEIF(aName);
       }
+    }
+
+    // If the aim screen name is present then add it to the protocol string.
+    nsresult rv;
+    nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(aCard, &rv));
+    if (NS_SUCCEEDED(rv) && dbcard)
+    {
+      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUint32 i, prefCount, prefixLen=strlen(SYNC_PREF_PREFIX_CLIENT_MAP);
+        char** prefNames;
+
+        rv = prefs->GetChildList(SYNC_PREF_PREFIX_CLIENT_MAP, &prefCount, &prefNames);
+        if (NS_SUCCEEDED(rv) && prefCount > 0)
+          for (i = 0; i < prefCount; i++)
+          {
+            nsXPIDLString genericValue;
+            rv = dbcard->GetStringAttribute(prefNames[i]+prefixLen, getter_Copies(genericValue));
+            if (NS_SUCCEEDED(rv) && genericValue.Length())
+            {
+              nsXPIDLCString mapValue;
+              rv = prefs->CopyCharPref(prefNames[i], getter_Copies(mapValue));
+              if (NS_SUCCEEDED(rv) && mapValue.Length())
+              {
+                // Add name tag and value to the protocol string.
+                tProtLine.Append(NS_LITERAL_STRING("&"));
+                tProtLine.AppendWithConversion(mapValue);
+                tProtLine.Append(NS_LITERAL_STRING("="));
+                AddValueToProtocolLine(genericValue.get(), tProtLine);
+              }
+            }
+          } // end of for (i = 0; i < prefCount; i++)
+       }
     }
 
     char *tLine = ToNewCString(tProtLine);
@@ -947,6 +934,27 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     PR_FREEIF(escData);
     protLine = tProtLine;
   }
+
+  return NS_OK;
+}
+
+nsresult nsAbSync::AddValueToProtocolLine(const PRUnichar *value, nsString &protocolLine)
+{
+  // Escape the value string.
+  char *utfString = ToNewUTF8String(nsDependentString(value));
+  char *escapedStr = nsEscape(utfString, url_Path);
+  if (escapedStr)
+  {
+    PR_FREEIF(utfString);
+    utfString = escapedStr;
+  }
+  if (utfString)
+  {
+    protocolLine.Append(NS_ConvertASCIItoUCS2(utfString));
+    PR_FREEIF(utfString);
+  }
+  else
+    protocolLine.Append(value);
 
   return NS_OK;
 }
@@ -2283,7 +2291,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 ExitEarly:
   if (mLastChangeNum > 1)
   {
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
     if (NS_SUCCEEDED(rv) && prefs) 
     {
       prefs->SetIntPref("mail.absync.last_change", mLastChangeNum);
@@ -2744,10 +2752,45 @@ nsAbSync::AddNewUsers()
         rv = aDatabase->EditCard(newCard, PR_TRUE);
       else
       {
+        // hack
+        // there is no way (currently) to set generic attributes on simple abcardproperties
+        // so we have to use a mdbcard instead. We can remove this once #128567 is fixed.
+        nsCOMPtr<nsIAbMDBCard> dbcard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+          continue;
+        
+        nsCOMPtr<nsIAbCard> card = do_QueryInterface(dbcard, &rv);
+        if (NS_FAILED(rv))
+          continue;
+        
+        rv = card->Copy(newCard);
+        if (NS_FAILED(rv))
+          continue;
+        
+        dbcard->SetAbDatabase(aDatabase);
         PRUint32  tID;
-        rv = aDatabase->CreateNewCardAndAddToDBWithKey(newCard, PR_TRUE, &tID);
+        // card has to be a mdbcard, or tID will come back as 0
+        rv = aDatabase->CreateNewCardAndAddToDBWithKey(card, PR_TRUE, &tID);
         localID = (PRInt32) tID;
+        newCard = card;
       }
+    }
+
+    // hack
+    // we only support one generic column/value and we need to do this
+    // AFTER we have a mdbcard. We can remove this once #128567 is fixed.
+    if (!mCurrentGenericColumn.IsEmpty())
+    {
+      nsCOMPtr <nsIAbMDBCard> dbcard = do_QueryInterface(newCard, &rv);
+      if (NS_FAILED(rv))
+          continue;
+
+      rv = dbcard->SetStringAttribute(mCurrentGenericColumn.get(), mCurrentGenericValue.get());
+      if (NS_FAILED(rv))
+          continue;
+
+      mCurrentGenericColumn.Truncate();
+      mCurrentGenericValue.Truncate();
     }
 
     //
@@ -3018,6 +3061,29 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
       aCard->SetPreferMailFormat(nsIAbPreferMailFormat::html);
     else if (aTagValue->Equals(NS_LITERAL_STRING("0")))
       aCard->SetPreferMailFormat(nsIAbPreferMailFormat::unknown);
+  }
+  else if (aTagName->Length() && aTagValue->Length())
+  {
+    // See if it's a generic tag defined by external source (like netscape).
+    nsCAutoString prefName;
+    nsXPIDLCString mapValue;
+
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    prefName = SYNC_PREF_PREFIX_SERVER_MAP;
+    prefName += NS_LossyConvertUCS2toASCII((*aTagName).get());
+
+    rv = prefs->CopyCharPref(prefName.get(), getter_Copies(mapValue));
+    if (NS_SUCCEEDED(rv) && mapValue.Length())
+    {
+      // OK, this generic column is predefined so remember it.
+      // Note: we only support one generic column for now and
+      // this code can be replaced by what's provided by #128567
+      // to set generic column/value pairs once #128567 is fixed.
+      mCurrentGenericColumn = mapValue;
+      mCurrentGenericValue = aTagValue->get();
+    }
   }
 
   return rv;
