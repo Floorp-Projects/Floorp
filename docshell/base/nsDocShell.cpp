@@ -46,6 +46,7 @@
 #include "nsIHTTPEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsScriptSecurityManager.h"
+#include "nsDocumentCharsetInfoCID.h"
 
 // Local Includes
 #include "nsDocShell.h"

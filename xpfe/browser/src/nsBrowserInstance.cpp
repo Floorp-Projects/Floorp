@@ -105,6 +105,7 @@
 
 #include "nsIWindowMediator.h"
 
+#include "nsDocumentCharsetInfoCID.h"
 #include "nsIDocumentCharsetInfo.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"

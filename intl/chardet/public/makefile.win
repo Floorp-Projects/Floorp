@@ -21,10 +21,14 @@
 
 DEPTH=..\..\..
 
+XPIDLSRCS = \
+	.\nsIDocumentCharsetInfo.idl \
+	$(NULL)
 
 EXPORTS = \
 	nsCharsetDetectionAdaptorCID.h \
 	nsDetectionConfident.h \
+	nsDocumentCharsetInfoCID.h \
 	nsICharsetDetectionAdaptor.h \
 	nsICharsetDetectionObserver.h \
 	nsICharsetDetector.h \
@@ -33,7 +37,6 @@ EXPORTS = \
 	nsIXMLEncodingService.h \
 	nsMetaCharsetCID.h \
 	nsXMLEncodingCID.h \
-	nsIDocumentCharsetInfo.h \
         $(NULL)
 
 MODULE=chardet
