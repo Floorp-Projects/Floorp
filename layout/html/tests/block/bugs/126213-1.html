@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><meta http-equiv="content-type" content="text/html; charset=iso-8859-1"><title>mozilla bug 126213</title>
+<style type="text/css">
+body { background-color: #CFC; color: #000; margin: 0; }
+    div#page_footer {
+        right: 0;
+        width: auto;
+        height: auto;
+        bottom: 0;
+        float: none;
+        position: fixed;
+        padding: 50px;
+        background: #DDDDDD;
+        border: 30px solid #000;
+    }
+    p#main {
+        margin: 10%;
+        padding: 1em;
+        background: #FFF;
+    }
+    /* t r b l */
+</style></head>
+
+<body>
+<div id="page_footer">
+        this footer box has been positioned 0px from the bottom/right
+        content boundaries, so should render right up against the
+        lower-right corner of the viewport.
+</div>
+<p><br><br><br><br></p>
+<p id="main">
+    The page footer div should render flush with the bottom
+    of the bottom of the viewport, but in Mozilla 2002021413
+    I see some body (note background color) rendered below
+    the footer. This is <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=126213">bug 126213</a>.
+    MSIE 5.1.3 for Mac OS X handles this
+    correctly (and I think other MSIE 5.x for Mac OS will as well,
+    but I have not actually tested them).
+</p>
+<p> <!-- ensure that footer covers only empty space at end of page -->
+    <br><br><br><br><br><br><br><br><br><br><br>
+</p>
+</body></html>
