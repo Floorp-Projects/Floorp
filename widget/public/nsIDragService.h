@@ -21,8 +21,10 @@
 
 #include "nsISupports.h"
 
-class  nsITransferable;
-struct nsSize;
+class nsIDragSession;
+class nsITransferable;
+class nsISupportsArray;
+class nsIRegion;
 
 // {8B5314BB-DB01-11d2-96CE-0060B0FB9956}
 #define NS_IDRAGSERVICE_IID      \
@@ -39,64 +41,42 @@ class nsIDragService : public nsISupports {
 
     static const nsIID& GetIID() { static nsIID iid = NS_IDRAGSERVICE_IID; return iid; }
 
-  /**
-    * Set the current state of the drag whether it can be dropped or not.
-    * usually the target "frame" sets this so the native system can render the correct feedback
-    *
-    * @param  aCanDrop indicates whether it can be dropped here
-    */
-   NS_IMETHOD SetCanDrop (PRBool aCanDrop) = 0; 
-
-   /**
-    * Retrieves whether the drag can be dropped at this location 
-    *
-    * @param  aCanDrop indicates whether it can be dropped here
-    */
-    NS_IMETHOD GetCanDrop (PRBool * aCanDrop) = 0; 
 
   /**
-    * Sets the action (copy, move, link, et.c) for the current drag 
+    * Starts a modal drag session with an array of transaferables 
     *
-    * @param  anAction the current action
+    * @param  an array of transferables to be dragged
     */
-    NS_IMETHOD SetDragAction (PRUint32 anAction) = 0; 
-
-   /**
-    * Gets the action (copy, move, link, et.c) for the current drag 
-    *
-    * @param  anAction the current action
-    */
-    NS_IMETHOD GetDragAction (PRUint32 * anAction) = 0; 
+    NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType) = 0;
 
   /**
-    * Sets the current width and height if the drag target area. 
-    * It will contain the current size of the Frame that the drag is currently in
-    * 
-    * @param  aDragTargetSize contains width/height of the current target
-    */
-   NS_IMETHOD SetTargetSize (nsSize aDragTargetSize) = 0; 
-
-   /**
-    * Gets the current width and height if the drag target area. 
-    * It will contain the current size of the Frame that the drag is currently in
-    *
-    * @param  aCanDrop indicates whether it can be dropped here
-    */
-    NS_IMETHOD GetTargetSize (nsSize * aDragTargetSize) = 0; 
-
-  /**
-    * Starts a modal drag session.  
+    * Starts a modal drag session with a single transferable
     *
     * @param  aTransferable the transferable to be dragged
     */
-    NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType) = 0;
+    NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType) = 0;
 
   /**
-    * Get data from a Drag->Drop   
+    * Returns the current Drag Session  
     *
-    * @param  aTransferable the transferable for the data to be put into
+    * @param  aSession the current drag session
     */
-    NS_IMETHOD GetData (nsITransferable * aTransferable) = 0;
+    NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession) = 0;
+
+  /**
+    * Tells the Drag Service to start a drag sessiojn, this is called when
+    * an external drag occurs
+    *
+    */
+    NS_IMETHOD StartDragSession () = 0;
+
+  /**
+    * Tells the Drag Service to end a drag sessiojn, this is called when
+    * an external drag occurs
+    *
+    */
+    NS_IMETHOD EndDragSession () = 0;
+
 };
 
 #endif
