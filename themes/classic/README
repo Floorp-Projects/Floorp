@@ -1,3 +1,6 @@
+unix builds the windows classic skin, all of the unix sub directories are ignored, and exists as 
+placeholders for a future implementation.
+
 this is the classic skin (the original 6.0 skin)
 
 if you add to this, make sure you add to the other skin, otherwise when you
