@@ -666,7 +666,31 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
             res = mEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
           }
           else
+          {
             res = mEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
+
+            // If the newline is the last character in the string, and the BR we
+            // just inserted is the last node in the content tree, we need to add
+            // a mozBR so that a blank line is created.
+
+            if (NS_SUCCEEDED(res) && curNode && pos == (PRInt32)(tString.Length() - 1))
+            {
+              nsCOMPtr<nsIDOMNode> nextChild = mEditor->GetChildAt(curNode, curOffset);
+
+              if (!nextChild)
+              {
+                // We must be at the end since there isn't a nextChild.
+                //
+                // curNode and curOffset should be set to the position after
+                // the BR we added above, so just create a mozBR at that position.
+                //
+                // Note that we don't update curOffset after we've created/inserted
+                // the mozBR since we never want the selection to be placed after it.
+
+                res = CreateMozBR(curNode, curOffset, address_of(unused));
+              }
+            }
+          }
           pos++;
         }
         else
