@@ -82,6 +82,53 @@
 
 #endif /* !XP_PC */
 
+/* use these functions to associate get/set methods with a
+   C++ member variable
+*/
+
+#define NS_METHOD_GETTER(_method, _type, _member) \
+_method(_type* aResult) \
+{\
+    if (!aResult) return NS_ERROR_NULL_POINTER; \
+    *aResult = _member; \
+    return NS_OK; \
+}
+    
+#define NS_METHOD_SETTER(_method, _type, _member) \
+_method(_type aResult) \
+{ \
+    _member = aResult; \
+    return NS_OK; \
+}
+
+/* Use this inside a class declaration */
+/*
+ * DO NOT USE THESE IN PUBLICLY EXPORTED HEADERS 
+ * If you do, the implementation may be compiled into
+ * every library that #includes the header.
+ */
+
+#define NS_IMPL_CLASS_GETTER(_method, _type, _member) \
+NS_IMETHOD NS_METHOD_GETTER(_method, _type, _member)
+
+#define NS_IMPL_CLASS_SETTER(_method, _type, _member) \
+NS_IMETHOD NS_METHOD_SETTER(_method, _type, _member)
+
+#define NS_IMPL_CLASS_GETSET(_postfix, _type, _member) \
+NS_IMPL_CLASS_GETTER(Get##_postfix, _type, _member) \
+NS_IMPL_CLASS_SETTER(Set##_postfix, _type, _member)
+
+/* Use these for C++ source implementation */
+#define NS_IMPL_GETTER(_method, _type, _member) \
+NS_IMETHODIMP NS_METHOD_GETTER(_method, _type, _member)
+
+#define NS_IMPL_SETTER(_method, _type, _member) \
+NS_IMETHODIMP NS_METHOD_SETTER(_method, _type, _member)
+
+#define NS_IMPL_GETSET(_class, _postfix, _type, _member) \
+NS_IMPL_GETTER(_class::Get##_postfix, _type, _member) \
+NS_IMPL_SETTER(_class::Set##_postfix, _type, _member)
+
 #endif
 
 
