@@ -64,6 +64,7 @@ addThis();
 status = inSection(2);
 a = 5;
 b = 0;
+c = 0;
 if (a == 5, b == 6) { c = 1; }
 actual = c;
 expect = 0;
@@ -72,7 +73,20 @@ addThis();
 status = inSection(3);
 a = 5;
 b = 6;
+c = 0;
 if (a == 5, b == 6) { c = 1; }
+actual = c;
+expect = 1;
+addThis();
+
+/*
+ * Now get tricky and use the = operator inside the if-clause
+ */
+status = inSection(4);
+a = 0;
+b = 6;
+c = 0;
+if (a = 5, b == 6) { c = 1; }
 actual = c;
 expect = 1;
 addThis();
