@@ -138,10 +138,10 @@ nsPrefWindow.prototype =
                   {
                     case "bool":
                       return !aDefaultFlag ? pref.GetBoolPref( aPrefString ) : pref.GetDefaultBoolPref( aPrefString );
-                      break;
                     case "int":
                       return !aDefaultFlag ? pref.GetIntPref( aPrefString ) : pref.GetDefaultIntPref( aPrefString );
-                      break;
+                    case "localizedstring":
+                      return pref.getLocalizedUnicharPref( aPrefString );
                     case "color":
                     case "string":
                     default:
@@ -158,7 +158,6 @@ nsPrefWindow.prototype =
                       } else {
                          return !aDefaultFlag ? pref.CopyUnicharPref( aPrefString ) : pref.CopyDefaultUnicharPref( aPrefString );
                       }
-                      break;
                   }
               }
             catch (e)
@@ -187,6 +186,7 @@ nsPrefWindow.prototype =
                       break;
                     case "color":
                     case "string":
+                    case "localizedstring":
                     default:
                       hPrefWindow.pref.SetUnicharPref( aPrefString, aValue );
                       break;
@@ -231,6 +231,7 @@ nsPrefWindow.prototype =
                                   break;
                                 }
                             case "string":
+                            case "localizedstring":
                             default:
                               if( typeof(value) != "string" )
                                 {
@@ -299,6 +300,7 @@ nsPrefWindow.prototype =
                           prefvalue = this.getPref( preftype, prefstring );
                           break;
                         case "string":
+                        case "localizedstring":
                         case "color":                          
                         default: 
                           prefvalue = this.getPref( preftype, prefstring );
