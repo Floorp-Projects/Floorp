@@ -4410,7 +4410,8 @@ public:
 
   NS_METHOD GetDescription(nsAString& aDescription)
   {
-    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mDescription, aDescription);
+    DoCharsetConversion(mUnicodeDecoder, mPluginTag.mDescription, aDescription);
+    return NS_OK;
   }
 
   NS_METHOD GetFilename(nsAString& aFilename)
@@ -4452,7 +4453,8 @@ public:
 
   NS_METHOD GetName(nsAString& aName)
   {
-    return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mName, aName);
+    DoCharsetConversion(mUnicodeDecoder, mPluginTag.mName, aName);
+    return NS_OK;
   }
 
   NS_METHOD GetLength(PRUint32* aLength)
