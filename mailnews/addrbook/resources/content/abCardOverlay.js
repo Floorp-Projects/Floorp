@@ -108,6 +108,8 @@ function OnLoadNewCard()
       gOkCallback = window.arguments[0].okCallback;
 
     if ("escapedVCardStr" in window.arguments[0]) {
+      // hide non vcard values
+      HideNonVcardFields(); 
       var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
       editCard.card = addressbook.escapedVCardToAbCard(window.arguments[0].escapedVCardStr);
     }
@@ -447,6 +449,19 @@ function GetCardValues(cardproperty, doc)
     }
     catch (ex) {}
   }
+}
+
+// when the ab card dialog is being loaded to show a vCard, 
+// hide the fields which aren't supported
+// by vCard so the user does not try to edit them.
+function HideNonVcardFields()
+{
+  document.getElementById('nickNameContainer').collapsed = true;
+  document.getElementById('secondaryEmailContainer').collapsed = true;
+  document.getElementById('screenNameContainer').collapsed = true;
+  document.getElementById('homeAddressGroup').collapsed = true;
+  document.getElementById('customFields').collapsed = true;
+
 }
 
 // Move the data from the dialog to the cardproperty to be stored in the database

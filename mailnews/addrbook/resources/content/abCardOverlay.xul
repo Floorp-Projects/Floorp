@@ -114,7 +114,7 @@
               <textbox id="DisplayName" flex="1" oninput="DisplayNameChanged()" disableforreadonly="true"/>
             </hbox>
           </hbox>
-          <hbox>
+          <hbox id="nickNameContainer">
             <spacer flex="1"/>
             <label control="NickName" value="&NickName.label;" accesskey="&NickName.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
@@ -134,7 +134,7 @@
               <textbox id="PrimaryEmail" flex="1" disableforreadonly="true" class="uri-element"/>
             </hbox>
           </hbox>
-          <hbox>
+          <hbox id="secondaryEmailContainer">
             <spacer flex="1"/>
             <label control="SecondEmail" value="&SecondEmail.label;" accesskey="&SecondEmail.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
@@ -154,7 +154,7 @@
               </menupopup>
             </menulist>
           </hbox>
-          <hbox>
+          <hbox id="screenNameContainer">
             <spacer flex="1"/>
             <label control="ScreenName" value="&ScreenName.label;" accesskey="&ScreenName.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
@@ -208,7 +208,7 @@
 
     <!-- ** Address Tab ** -->
     <vbox index="address" flex="1">
-      <groupbox flex="1">
+      <groupbox id="homeAddressGroup" flex="1">
         <caption label="&Home.box;"/>
         <vbox style="width:100%">
           <hbox>
@@ -334,7 +334,7 @@
 
       <!-- ** Other Tab ** -->
       <vbox index="other" flex="1">
-        <vbox class="alignBoxWithFieldset">
+        <vbox id="customFields" class="alignBoxWithFieldset">
           <hbox flex="1">
             <label control="Custom1" value="&Custom1.label;" accesskey="&Custom1.accesskey;" class="CardEditLabel"/>
             <textbox id="Custom1" flex="1" disableforreadonly="true"/>
