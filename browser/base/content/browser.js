@@ -45,6 +45,25 @@
 # ***** END LICENSE BLOCK *****
 
 const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
+const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
+const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
+
+const NS_ERROR_MODULE_NETWORK = 2152398848;
+const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
+const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
+
+const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
+const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
+const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
+
+const MAX_HISTORY_MENU_ITEMS = 15;
+const MAX_HISTORY_ITEMS = 100;
+var gRDF = null;
+var gRDFC = null;
+var gGlobalHistory = null;
+var gURIFixup = null;
+var gLocalStore = null;
+
 var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
@@ -99,7 +118,6 @@ function loadEventHandlers(event)
   if (event.originalTarget == _content.document) {
     UpdateBookmarksLastVisitedDate(event);
     checkForDirectoryListing();
-    postURLToNativeWidget();
   }
 }
 
@@ -906,6 +924,7 @@ function BrowserPageInfo(doc)
                     doc);
 }
 
+#ifdef DEBUG
 // Initialize the LeakDetector class.
 function LeakDetector(verbose)
 {
@@ -953,6 +972,7 @@ function traceVerbose(verbose)
 {
   leakDetector.verbose = (verbose == "true");
 }
+#endif
 
 var consoleListener = {
   observe: function (aMsgObject)
@@ -1014,25 +1034,6 @@ function clearErrorNotification()
   statusbarDisplay.removeAttribute("error");
   statusbarDisplay.removeEventListener("click", loadErrorConsole, true);
   consoleListener.isShowingError = false;
-}
-
-const NS_URLWIDGET_CONTRACTID = "@mozilla.org/urlwidget;1";
-var urlWidgetService = null;
-if (NS_URLWIDGET_CONTRACTID in Components.classes) {
-  urlWidgetService = Components.classes[NS_URLWIDGET_CONTRACTID]
-                               .getService(Components.interfaces.nsIUrlWidget);
-}
-
-//Posts the currently displayed url to a native widget so third-party apps can observe it.
-function postURLToNativeWidget()
-{
-  if (urlWidgetService) {
-    var url = getWebNavigation().currentURI.spec;
-    try {
-      urlWidgetService.SetURLToHiddenControl(url, window);
-    } catch(ex) {
-    }
-  }
 }
 
 function checkForDirectoryListing()
@@ -1137,7 +1138,6 @@ function stylesheetSwitchAll(frameset, title) {
     stylesheetSwitchAll(frameset.frames[i], title);
   }
 }
-
 
 function URLBarFocusHandler(aEvent, aElt)
 {
@@ -2368,14 +2368,6 @@ var personalToolbarDNDObserver = {
   }
 }
 
-const MAX_HISTORY_MENU_ITEMS = 15;
-const MAX_HISTORY_ITEMS = 100;
-var gRDF = null;
-var gRDFC = null;
-var gGlobalHistory = null;
-var gURIFixup = null;
-var gLocalStore = null;
-
 function FillHistoryMenu(aParent, aMenu)
   {
     // Remove old entries if any
@@ -2579,16 +2571,6 @@ function deleteHistoryItems(aParent)
       }
   }
 
-const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
-const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
-const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
-
-function toNavigator()
-{
-  if (!CycleWindow("navigator:browser"))
-    OpenBrowserWindow();
-}
-
 function toJavaScriptConsole()
 {
     toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
@@ -2634,11 +2616,6 @@ function OpenBrowserWindow()
   {
     window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
   }
-}
-
-function OpenTaskURL( inURL )
-{
-  window.open( inURL );
 }
 
 function openAboutDialog()
@@ -2737,10 +2714,6 @@ var FullScreen =
       controls[i].hidden = aShow;
   },
 };
-
-const NS_ERROR_MODULE_NETWORK = 2152398848;
-const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
-const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 
 function nsBrowserStatusHandler()
 {
@@ -3135,9 +3108,6 @@ function displayPageReport()
     window.openDialog("chrome://browser/content/pageReport.xul", "_blank",
                       "dialog=no,modal");
 }
-
-const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
-const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
 
 function nsBrowserContentListener(toplevelWindow, contentWindow)
 {
