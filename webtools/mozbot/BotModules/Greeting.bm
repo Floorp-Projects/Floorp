@@ -66,6 +66,8 @@ sub RegisterConfig {
         ['unhappyIndex', 1, 1, 0],
         ['vhappy', 1, 1, ['OOoh! %!', 'I love you too, %.']],
         ['vhappyIndex', 1, 1, 0],
+        ['kinky', 1, 1, ['eep!', 'me-ow!', '/me tickles %', 'he-llo, baby!']],
+        ['kinkyIndex', 1, 1, 0],
         ['whoami', 1, 1, 'I am a bot. /msg me the word \'help\' for a list of commands.'],
         ['lastrheet', 0, 0, 0], # time of last rheet
         ['rheetbuffer', 1, 1, 10], # max of 1 rheet per this many seconds 
@@ -169,7 +171,9 @@ sub Heard {
         $self->Perform($event, 'thanks');
     } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'happy');
-    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot)\s*?$/osi) and ($self->canAssumeThanks($event))) {
+    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot)[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
+        $self->Perform($event, 'unhappy');
+    } elsif (($message =~ /^\s*bad\s*$me[!.\s]*$/si) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
     } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) and 
              ($self->canAssumeThanks($event))) {
@@ -214,7 +218,7 @@ sub Felt {
         $self->Perform($event, 'veryow');
     } elsif ($message =~ /^\s*lights\s+$me\s+on\s+fire[!1.\s]*$/si) {
         $self->Perform($event, 'veryow');
-    } elsif ($message =~ /^\s*(?:pats|strokes|pets)\s+$me[!1.\s]*$/si) {
+    } elsif ($message =~ /^\s*(?:pats|strokes|pets)\s+$me(:?\s+affectionately|\s+lovingly)?[!1.\s]*$/si) {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*slaps\s+$me\s+(?:around\s+)?(?:a\s+(?:bit|lot|little|while)\s+)?with\s+a\s+(?:(?:big|fat|large|wet|and)[\s,]+)*trout[\s!1.]*$/si) {
         $self->Perform($event, 'ow');
@@ -224,6 +228,8 @@ sub Felt {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:hugs|kisses|loves)\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'vhappy');
+    } elsif ($message =~ /^\s*(?:bites)\s+$me[\s.]*$/si) {
+        $self->Perform($event, 'kinky');
     } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+(?:bot\s*)?(?:snack|cookie)|a\s+present|cash|congratulations|applause|praise)[\s!1.]*$/si) {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:gives|hands|passes|offers)\s+$me\s+(?:a\s+hot\s+date)[\s!1.]*$/si) {
