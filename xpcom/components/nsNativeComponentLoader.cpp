@@ -44,10 +44,6 @@
 
 #include "nsIObserverService.h"
 
-#ifndef OBSOLETE_MODULE_LOADING
-#include "nsObsoleteModuleLoading.h"
-#endif
-
 #if defined(XP_MAC)  // sdagley dougt fix
 #include <Files.h>
 #include <Errors.h>
@@ -56,7 +52,11 @@
 
 #define PRINT_CRITICAL_ERROR_TO_SCREEN 1
 #define USE_REGISTRY 1
-#define XPCOM_USE_NSGETFACTORY 1
+#undef OBSOLETE_MODULE_LOADING
+
+#ifdef OBSOLETE_MODULE_LOADING
+#include "nsObsoleteModuleLoading.h"
+#endif
 
 // Logging of debug output
 #ifdef MOZ_LOGGING
@@ -140,7 +140,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
         return rv;      // XXX translate error code?
     
     rv = GetFactoryFromModule(dll, aCID, _retval);
-#ifdef XPCOM_USE_NSGETFACTORY
+#ifdef OBSOLETE_MODULE_LOADING
     if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_FACTORY_NOT_LOADED) {
             rv = GetFactoryFromNSGetFactory(dll, aCID, serviceMgr, _retval);
@@ -352,7 +352,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
     {
         rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
     }
-#ifndef OBSOLETE_MODULE_LOADING
+#ifdef OBSOLETE_MODULE_LOADING
     else
     {
         // Try the old method of module unloading
@@ -496,7 +496,7 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
         }
         mobj = NULL;    // Force a release of the Module object before unload()
     }
-#ifndef OBSOLETE_MODULE_LOADING
+#ifdef OBSOLETE_MODULE_LOADING
     else
     {
         res = NS_ERROR_NO_INTERFACE;
@@ -647,7 +647,7 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
         if (NS_FAILED(res)) return res;
         mobj->UnregisterSelf(mCompMgr, fs, registryName);
     }
-#ifndef OBSOLETE_MODULE_LOADING
+#ifdef OBSOLETE_MODULE_LOADING
     else
     {
         res = NS_ERROR_NO_INTERFACE;
@@ -1209,7 +1209,7 @@ nsNativeComponentLoader::GetFactoryFromNSGetFactory(nsDll *aDll,
                                                     nsIServiceManager *aServMgr,
                                                     nsIFactory **aFactory)
 {
-#ifdef XPCOM_USE_NSGETFACTORY
+#ifdef OBSOLETE_MODULE_LOADING
     nsFactoryProc getFactory =
         (nsFactoryProc) aDll->FindSymbol("NSGetFactory");
 
@@ -1229,7 +1229,7 @@ nsNativeComponentLoader::GetFactoryFromNSGetFactory(nsDll *aDll,
     return getFactory(aServMgr, aCID, nsnull /*className */,
                       nsnull /* contractID */, aFactory);
 
-#else /* !XPCOM_USE_NSGETFACTORY */
+#else /* !OBSOLETE_MODULE_LOADING */
     return NS_ERROR_FACTORY_NOT_LOADED;
-#endif /* XPCOM_USE_NSGETFACTORY */
+#endif /* OBSOLETE_MODULE_LOADING */
 }
