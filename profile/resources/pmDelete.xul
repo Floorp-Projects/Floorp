@@ -2,20 +2,29 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
+<!DOCTYPE window 
+[
+<!ENTITY title "Delete Profile">
+<!ENTITY intro "Confirm delete?">
+<!ENTITY delete.yes.label "Delete Files">
+<!ENTITY delete.no.label "Don't Delete Files">
+<!ENTITY cancel.label "Cancel">
+]>
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  title="Delete Profile" width="300" height="120">
+  title="&title;" width="300" height="120">
 
 <html:div flex="100%">
 
 <html:center>
-Confirm delete? 
+<html:div>&intro;</html:div> 
 <html:br />
-<titledbutton value="Delete Files" class="push" onclick="opener.DeleteProfile('true');window.close();" />
-<titledbutton value="Don't Delete Files" class="push" onclick="opener.DeleteProfile('false');window.close();" />
-<titledbutton value="Cancel" class="push" onclick="window.close();" />
+<titledbutton value="&delete.yes.label;" class="push" onclick="opener.DeleteProfile('true');window.close();" />
+<titledbutton value="&delete.no.label;" class="push" onclick="opener.DeleteProfile('false');window.close();" />
+<titledbutton value="&cancel.label;" class="push" onclick="window.close();" />
 </html:center>
 
 </html:div>

@@ -2,19 +2,27 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
+<!DOCTYPE window 
+[
+<!ENTITY title "Migrate All Profiles">
+<!ENTITY intro "Migrate all profiles? ">
+<!ENTITY ok.label "Ok">
+<!ENTITY cancel.label "Cancel">
+]>
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  title="Migrate All Profiles" width="300" height="120">
+  title="&title;" width="300" height="120">
 
 <html:div flex="100%">
 
 <html:center>
-Migrate all profiles? 
+<html:div>&intro;</html:div>
 <html:br />
-<titledbutton value="Ok" class="push" onclick="opener.MigrateAllProfiles();window.close();" />
-<titledbutton value="Cancel" class="push" onclick="window.close();" />
+<titledbutton value="&ok.label;" class="push" onclick="opener.MigrateAllProfiles();window.close();" />
+<titledbutton value="&cancel.label;" class="push" onclick="window.close();" />
 </html:center>
 
 </html:div>
