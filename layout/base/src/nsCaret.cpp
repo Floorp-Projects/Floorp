@@ -825,7 +825,9 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     }
     else
     {
-      outClipRect = returnView->GetBounds();
+      NS_ASSERTION(returnView, "bulletproofing, see bug #24329");
+      if (returnView)
+        outClipRect = returnView->GetBounds();
     }
 
     if (outRelativeView)
