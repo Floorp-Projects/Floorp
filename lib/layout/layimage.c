@@ -2959,8 +2959,8 @@ lo_ImageObserver(XP_Observable observable, XP_ObservableMsg message,
 {
     IL_MessageData *data = (IL_MessageData*)message_data;
     lo_ImageObsClosure *image_obs_closure = (lo_ImageObsClosure *)closure;
-    MWContext *context=NULL;
-    LO_ImageStruct *lo_image;
+    MWContext *context = NULL;
+    LO_ImageStruct *lo_image = NULL;
 #ifdef MOCHA
     LM_ImageEvent mocha_event;
 #endif /* MOCHA */
@@ -2976,117 +2976,117 @@ lo_ImageObserver(XP_Observable observable, XP_ObservableMsg message,
        data. */
     if(lo_image)    {
         lo_image->image_req = data->image_instance;
-    }
+    
+	switch(message) {
+	case IL_DIMENSIONS:
+	    lo_image_dimensions(context, lo_image, data->width, data->height);
+	    break;
 
-     switch(message) {
-    case IL_DIMENSIONS:
-        lo_image_dimensions(context, lo_image, data->width, data->height);
-        break;
+	case IL_IS_TRANSPARENT:
+	    lo_image->is_transparent = TRUE;
+	    if (context->compositor && lo_image->layer) {
+		CL_ChangeLayerFlag(lo_image->layer, CL_OPAQUE, PR_FALSE);
+		CL_ChangeLayerFlag(lo_image->layer, CL_PREFER_DRAW_OFFSCREEN,
+				   PR_TRUE);
+	    }
+	   break;
 
-    case IL_IS_TRANSPARENT:
-        lo_image->is_transparent = TRUE;
-        if (context->compositor && lo_image->layer) {
-            CL_ChangeLayerFlag(lo_image->layer, CL_OPAQUE, PR_FALSE);
-            CL_ChangeLayerFlag(lo_image->layer, CL_PREFER_DRAW_OFFSCREEN,
-                               PR_TRUE);
-        }
-       break;
+	case IL_DESCRIPTION:
+	    /* This must be a call to the stand alone image viewer, so
+		the document title is set in the Title observer in 
+	       libimg/src/dummy_nc.c.*/  	   
+	    break;
 
-    case IL_DESCRIPTION:
-        /* This must be a call to the stand alone image viewer, so
-            the document title is set in the Title observer in 
-           libimg/src/dummy_nc.c.*/  	   
-        break;
+	case IL_PIXMAP_UPDATE:
+	    lo_image_pixmap_update(context, lo_image, &data->update_rect);
+	    break;
 
-    case IL_PIXMAP_UPDATE:
-        lo_image_pixmap_update(context, lo_image, &data->update_rect);
-        break;
+	case IL_IMAGE_COMPLETE:
+	    lo_image->image_status = (uint16)message;
+	    if( (lo_image->lowres_image_url) != NULL ){
+		    if(!lo_image->lowres_image_req){
+			    XP_ObserverList tmp_obs_list;
+			    int32 doc_id;
+			    lo_TopState *top_state;
+		     
+			    /* Get the unique document ID, and retrieve this document's layout
+		   state. 
+			    */
+			    doc_id = XP_DOCID(context);
+			    top_state = lo_FetchTopState(doc_id);
+			    if (!top_state)	{
+				    return;
+			    }
 
-    case IL_IMAGE_COMPLETE:
-        lo_image->image_status = (uint16)message;
-	if( (lo_image->lowres_image_url) != NULL ){
-		if(!lo_image->lowres_image_req){
-			XP_ObserverList tmp_obs_list;
-			int32 doc_id;
-			lo_TopState *top_state;
-		 
-			/* Get the unique document ID, and retrieve this document's layout
-               state. 
-			*/
-			doc_id = XP_DOCID(context);
-			top_state = lo_FetchTopState(doc_id);
-			if (!top_state)	{
-				return;
-			}
+		/* Hold on to lowres image handle in case the highres image
+		   fails. */
+		lo_image->lowres_image_req = lo_image->image_req;
 
-            /* Hold on to lowres image handle in case the highres image
-               fails. */
-            lo_image->lowres_image_req = lo_image->image_req;
-
-			tmp_obs_list = lo_NewImageObserverList(context, lo_image);
-			/* Lowres image request is overwritten. Destruction of
-               lowres image occurs when document is destroyed.	*/
-			lo_GetImage(context, context->img_cx, lo_image, tmp_obs_list,
-                        top_state->force_reload);
-			}
-	    }	
-        break;
+			    tmp_obs_list = lo_NewImageObserverList(context, lo_image);
+			    /* Lowres image request is overwritten. Destruction of
+		   lowres image occurs when document is destroyed.	*/
+			    lo_GetImage(context, context->img_cx, lo_image, tmp_obs_list,
+			    top_state->force_reload);
+			    }
+		}	
+	    break;
         
-    case IL_FRAME_COMPLETE:
-        lo_frame_complete(context, lo_image);
-        lo_image->image_status = (uint16)message;
-        break;
+	case IL_FRAME_COMPLETE:
+	    lo_frame_complete(context, lo_image);
+	    lo_image->image_status = (uint16)message;
+	    break;
 
-    case IL_NOT_IN_CACHE:
-        if (lo_image->lowres_image_req) {
-            /* If we already have a lowres image, then use that instead. */
-            lo_image->image_req = lo_image->lowres_image_req;
-        }
-        else {
-            lo_image->image_status = (uint16)message;
-            lo_internal_image(context, lo_image, data->icon_number,
-                              data->icon_width, data->icon_height);
-            /* As far as JavaScript events go, we treat an image that wasn't in
-               the cache the same as if it was actually loaded.  That way, a
-               Javascript program will run the same way with images turned on
-               or off. */
-             mocha_event = LM_IMGLOAD;
-			 if (lo_image->image_attr &&
-			     !(lo_image->image_attr->attrmask & LO_ATTR_CELL_BACKDROP))
-                      ET_SendImageEvent(context, lo_image, mocha_event);
-        }
-        break;
+	case IL_NOT_IN_CACHE:
+	    if (lo_image->lowres_image_req) {
+		/* If we already have a lowres image, then use that instead. */
+		lo_image->image_req = lo_image->lowres_image_req;
+	    }
+	    else {
+		lo_image->image_status = (uint16)message;
+		lo_internal_image(context, lo_image, data->icon_number,
+				  data->icon_width, data->icon_height);
+		/* As far as JavaScript events go, we treat an image that wasn't in
+		   the cache the same as if it was actually loaded.  That way, a
+		   Javascript program will run the same way with images turned on
+		   or off. */
+		 mocha_event = LM_IMGLOAD;
+			     if (lo_image->image_attr &&
+				 !(lo_image->image_attr->attrmask & LO_ATTR_CELL_BACKDROP))
+			  ET_SendImageEvent(context, lo_image, mocha_event);
+	    }
+	    break;
 
-    case IL_ABORTED:
-       lo_image_incomplete(context, lo_image, message, data->icon_number,
-					data->icon_width, data->icon_height, LM_IMGABORT);
-       break;
+	case IL_ABORTED:
+	   lo_image_incomplete(context, lo_image, message, data->icon_number,
+					    data->icon_width, data->icon_height, LM_IMGABORT);
+	   break;
 
-    case IL_ERROR_NO_DATA:
-    case IL_ERROR_IMAGE_DATA_CORRUPT:
-    case IL_ERROR_IMAGE_DATA_TRUNCATED:
-    case IL_ERROR_IMAGE_DATA_ILLEGAL:
-    case IL_ERROR_INTERNAL:
-        lo_image_incomplete(context, lo_image, message, data->icon_number,
-					data->icon_width, data->icon_height, LM_IMGERROR);
-        break;
+	case IL_ERROR_NO_DATA:
+	case IL_ERROR_IMAGE_DATA_CORRUPT:
+	case IL_ERROR_IMAGE_DATA_TRUNCATED:
+	case IL_ERROR_IMAGE_DATA_ILLEGAL:
+	case IL_ERROR_INTERNAL:
+	    lo_image_incomplete(context, lo_image, message, data->icon_number,
+					    data->icon_width, data->icon_height, LM_IMGERROR);
+	    break;
 
-    case IL_INTERNAL_IMAGE:
-        lo_internal_image(context, lo_image, data->icon_number, data->icon_width,
-                          data->icon_height);
-        break;
+	case IL_INTERNAL_IMAGE:
+	    lo_internal_image(context, lo_image, data->icon_number, data->icon_width,
+			      data->icon_height);
+	    break;
 
-    case IL_IMAGE_DESTROYED:
-        /* Remove ourself from the observer callback list. */
-        XP_RemoveObserver(image_obs_closure->obs_list, lo_ImageObserver,
-                          image_obs_closure);
-        XP_FREE(image_obs_closure);
-        lo_image->image_req = NULL;
-		
-        break;
+	case IL_IMAGE_DESTROYED:
+	    /* Remove ourself from the observer callback list. */
+	    XP_RemoveObserver(image_obs_closure->obs_list, lo_ImageObserver,
+			      image_obs_closure);
+	    XP_FREE(image_obs_closure);
+	    lo_image->image_req = NULL;
+		    
+	    break;
 
-    default:
-        break;
+	default:
+	    break;
+	}
     }
 }
 
