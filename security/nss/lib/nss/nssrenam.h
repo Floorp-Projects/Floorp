@@ -35,6 +35,7 @@
 #define __nssrenam_h_
 
 #define CERT_NewTempCertificate __CERT_NewTempCertificate
+#define CERT_AddTempCertToPerm __CERT_AddTempCertToPerm
 #define PK11_CreateContextByRawKey __PK11_CreateContextByRawKey
 #define PK11_GetKeyData __PK11_GetKeyData
 #define nss_InitLock __nss_InitLock

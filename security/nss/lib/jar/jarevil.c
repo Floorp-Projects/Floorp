@@ -42,6 +42,7 @@
  *
  */
 
+#include "nssrenam.h"
 #include "jar.h"
 #include "jarint.h"
 
@@ -342,7 +343,7 @@ PR_STATIC_CALLBACK(void) jar_moz_perm_fn (void *data)
 
   PORT_SetError (perm_data->error);
 
-  status = __CERT_AddTempCertToPerm (perm_data->cert, perm_data->nickname, perm_data->trust);
+  status = CERT_AddTempCertToPerm (perm_data->cert, perm_data->nickname, perm_data->trust);
 
   perm_data->status = status;
   perm_data->error = PORT_GetError();
