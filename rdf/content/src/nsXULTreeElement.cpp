@@ -106,6 +106,7 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 
   mCurrentItem = nsnull;
   mSelectionStart = nsnull;
+  mSuppressOnSelect = PR_FALSE;
 }
 
 nsXULTreeElement::~nsXULTreeElement()
@@ -137,7 +138,23 @@ nsXULTreeElement::GetSelectedItems(nsIDOMNodeList** aSelectedItems)
 }
 
 nsresult
-nsXULTreeElement::SetSelectionInternal(nsIDOMXULElement* aTreeItem, PRBool aTimedFlag)
+nsXULTreeElement::GetSuppressOnSelect(PRBool* aSuppressOnSelect)
+{
+    *aSuppressOnSelect = mSuppressOnSelect;
+    return NS_OK;
+}
+
+nsresult
+nsXULTreeElement::SetSuppressOnSelect(PRBool aSuppressOnSelect)
+{
+    if (!aSuppressOnSelect && mSuppressOnSelect)
+        FireOnSelectHandler();
+    mSuppressOnSelect = aSuppressOnSelect;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
 {
   NS_ASSERTION(aTreeItem, "trying to select a null tree item");
   if (!aTreeItem) return NS_OK;
@@ -155,49 +172,50 @@ nsXULTreeElement::SetSelectionInternal(nsIDOMXULElement* aTreeItem, PRBool aTime
   }
 
   // First clear our selection.
-  ClearItemSelectionInternal();
+  PRBool suppressSelect = mSuppressOnSelect;
+  SetSuppressOnSelect(PR_TRUE);
+  ClearItemSelection();
 
   // Now add ourselves to the selection by setting our selected attribute.
-  AddItemToSelectionInternal(aTreeItem);
+  AddItemToSelection(aTreeItem);
 
   SetCurrentItem(aTreeItem);
   mSelectionStart = nsnull;
 
-  if (aTimedFlag) {
-    if (mSelectTimer)
-      mSelectTimer->Cancel();
-
-    mSelectTimer = do_CreateInstance("component://netscape/timer");
-    mSelectTimer->Init(SelectCallback, this, 500, NS_PRIORITY_HIGH); // 100 ms delay
-  }
-  else FireOnSelectHandler();
+  SetSuppressOnSelect(suppressSelect);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
+nsXULTreeElement::TimedSelect(nsIDOMXULElement* aTreeItem, PRInt32 aMsec)
 {
-  return SetSelectionInternal(aTreeItem, PR_FALSE);
-}
+  PRBool suppressSelect = mSuppressOnSelect;
 
-NS_IMETHODIMP
-nsXULTreeElement::TimedSelect(nsIDOMXULElement* aTreeItem)
-{
-  return SetSelectionInternal(aTreeItem, PR_TRUE);
+  if (aMsec != -1)
+      SetSuppressOnSelect(PR_TRUE);
+
+  nsresult rv = SelectItem(aTreeItem);
+
+  if (aMsec != -1) {
+    // Note, not using SetSuppressOnSelect here because that will
+    // force FireOnSelect to fire immediately (if selection was not
+    // initially suppressed).
+    mSuppressOnSelect = suppressSelect;
+    if (!mSuppressOnSelect) {
+        if (mSelectTimer)
+          mSelectTimer->Cancel();
+
+        mSelectTimer = do_CreateInstance("component://netscape/timer");
+        mSelectTimer->Init(SelectCallback, this, aMsec, NS_PRIORITY_HIGH);
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP    
 nsXULTreeElement::ClearItemSelection()
-{
-  ClearItemSelectionInternal();
-  mSelectionStart = nsnull;
-  FireOnSelectHandler();
-  return NS_OK;
-}
-
-void
-nsXULTreeElement::ClearItemSelectionInternal()
 {
   // Enumerate the elements and remove them from the selection.
   PRUint32 length;
@@ -208,41 +226,37 @@ nsXULTreeElement::ClearItemSelectionInternal()
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
   }
-}
+  mSelectionStart = nsnull;
 
-void
-nsXULTreeElement::AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem)
-{
-  NS_ASSERTION(aTreeItem,"attepting to add a null tree item to the selection");
-  if (!aTreeItem) return;
-
-  // Without clearing the selection, perform the add.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+  if (!mSuppressOnSelect)
+      FireOnSelectHandler();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULTreeElement::AddItemToSelection(nsIDOMXULElement* aTreeItem)
 {
+  NS_ASSERTION(aTreeItem,"attepting to add a null tree item to the selection");
+  if (!aTreeItem) return NS_ERROR_FAILURE;
+
   // Without clearing the selection, perform the add.
-  AddItemToSelectionInternal(aTreeItem);
-  FireOnSelectHandler();
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+
+  if (!mSuppressOnSelect)
+    FireOnSelectHandler();
   return NS_OK;
 }
 
 
-void
-nsXULTreeElement::RemoveItemFromSelectionInternal(nsIDOMXULElement* aTreeItem)
-{
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
-}
-
 NS_IMETHODIMP
 nsXULTreeElement::RemoveItemFromSelection(nsIDOMXULElement* aTreeItem)
 {
-  RemoveItemFromSelectionInternal(aTreeItem);
-  FireOnSelectHandler();
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
+  content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
+  if (!mSuppressOnSelect)
+    FireOnSelectHandler();
+
   return NS_OK;
 }
 
@@ -257,16 +271,20 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
 
   nsAutoString isSelected;
   aTreeItem->GetAttribute(NS_ConvertASCIItoUCS2("selected"), isSelected);
+
+  PRBool suppressSelect = mSuppressOnSelect;
+  SetSuppressOnSelect(PR_TRUE);
+
   if (isSelected.EqualsWithConversion("true"))
-    RemoveItemFromSelectionInternal(aTreeItem);
+    RemoveItemFromSelection(aTreeItem);
   else if (multiple.EqualsWithConversion("true") || length == 0)
-    AddItemToSelectionInternal(aTreeItem);
+    AddItemToSelection(aTreeItem);
   else 
     return NS_OK;
 
   SetCurrentItem(aTreeItem);
+  SetSuppressOnSelect(suppressSelect);
 
-  FireOnSelectHandler();
   return NS_OK;
 }
 
@@ -295,7 +313,9 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
     startItem = aEndItem;
 
   // First clear our selection out completely.
-  ClearItemSelectionInternal();
+  PRBool suppressSelect = mSuppressOnSelect;
+  SetSuppressOnSelect(PR_TRUE);
+  ClearItemSelection();
 
   PRInt32 startIndex = 0,
           endIndex = 0;
@@ -338,7 +358,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
       currentItem = nextItem;
   }
 
-  FireOnSelectHandler();
+  SetSuppressOnSelect(suppressSelect);
 
   return NS_OK;
 }
@@ -391,6 +411,7 @@ nsXULTreeElement::InvertSelection()
 nsresult
 nsXULTreeElement::FireOnSelectHandler()
 {
+  printf("FireOnSelectHandler\n");
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));

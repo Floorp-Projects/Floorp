@@ -1097,6 +1097,7 @@
     "xultreeelement.selecteditems", \
     "xultreeelement.selectitem", \
     "xultreeelement.selectitemrange", \
+    "xultreeelement.suppressonselect", \
     "xultreeelement.timedselect", \
     "xultreeelement.togglecellselection", \
     "xultreeelement.toggleitemselection", \

@@ -51,7 +51,8 @@ static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 //
 enum XULTreeElement_slots {
   XULTREEELEMENT_SELECTEDITEMS = -1,
-  XULTREEELEMENT_CURRENTITEM = -2
+  XULTREEELEMENT_CURRENTITEM = -2,
+  XULTREEELEMENT_SUPPRESSONSELECT = -3
 };
 
 /***********************************************************************/
@@ -96,6 +97,18 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case XULTREEELEMENT_SUPPRESSONSELECT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_SUPPRESSONSELECT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetSuppressOnSelect(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
           }
         }
         break;
@@ -147,6 +160,21 @@ SetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       
           rv = a->SetCurrentItem(prop);
           NS_IF_RELEASE(prop);
+        }
+        break;
+      }
+      case XULTREEELEMENT_SUPPRESSONSELECT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_SUPPRESSONSELECT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
+          }
+      
+          rv = a->SetSuppressOnSelect(prop);
+          
         }
         break;
       }
@@ -250,6 +278,7 @@ XULTreeElementTimedSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMXULElement> b0;
+  PRInt32 b1;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -264,7 +293,7 @@ XULTreeElementTimedSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (argc < 1) {
+    if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
@@ -275,8 +304,11 @@ XULTreeElementTimedSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
 
-    result = nativeThis->TimedSelect(b0);
+    result = nativeThis->TimedSelect(b0, b1);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -616,6 +648,7 @@ static JSPropertySpec XULTreeElementProperties[] =
 {
   {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"currentItem",    XULTREEELEMENT_CURRENTITEM,    JSPROP_ENUMERATE},
+  {"suppressOnSelect",    XULTREEELEMENT_SUPPRESSONSELECT,    JSPROP_ENUMERATE},
   {0}
 };
 
@@ -626,7 +659,7 @@ static JSPropertySpec XULTreeElementProperties[] =
 static JSFunctionSpec XULTreeElementMethods[] = 
 {
   {"selectItem",          XULTreeElementSelectItem,     1},
-  {"timedSelect",          XULTreeElementTimedSelect,     1},
+  {"timedSelect",          XULTreeElementTimedSelect,     2},
   {"clearItemSelection",          XULTreeElementClearItemSelection,     0},
   {"addItemToSelection",          XULTreeElementAddItemToSelection,     1},
   {"removeItemFromSelection",          XULTreeElementRemoveItemFromSelection,     1},

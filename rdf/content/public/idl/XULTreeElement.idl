@@ -4,9 +4,10 @@ interface XULTreeElement : XULElement {
   readonly attribute NodeList selectedItems;
   
   attribute XULElement currentItem;
-  
+  attribute boolean suppressOnSelect;
+
   void selectItem(in XULElement treeItem);
-  void timedSelect(in XULElement treeItem);
+  void timedSelect(in XULElement treeItem, in long timeout);
 
   void clearItemSelection();
   
