@@ -57,5 +57,5 @@ interface nsIDocumentLoaderFactory : nsISupports {
                                          in nsIDocument aDocument,
                                          in string aCommand);
 
-    nsIDocument createBlankDocument();
+    nsIDocument createBlankDocument(in nsILoadGroup aLoadGroup);
 };
