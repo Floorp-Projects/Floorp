@@ -28,6 +28,8 @@
 #include "nsStringUtil.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsISupportsArray.h"
+#include "nsCOMPtr.h"
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -128,11 +130,13 @@ protected:
     nsIWidget        *mVScrollbar;
 
     // keep the list of children
+    nsCOMPtr<nsISupportsArray> mChildren;    
+    
     class Enumerator : public nsIBidirectionalEnumerator {
     public:
       NS_DECL_ISUPPORTS
 
-      Enumerator();
+      Enumerator(nsBaseWidget & inParent);
       virtual ~Enumerator();
 
       NS_IMETHOD First();
@@ -142,13 +146,11 @@ protected:
       NS_IMETHOD CurrentItem(nsISupports **aItem);
       NS_IMETHOD IsDone();
 
-      void Append(nsIWidget* aWidget);
-      void Remove(nsIWidget* aWidget);
-
     private:
-      nsVoidArray   mChildren;
       PRInt32       mCurrentPosition;
-    } *mChildren;
+      nsBaseWidget& mParent;
+    };
+    friend class Enumerator;
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...

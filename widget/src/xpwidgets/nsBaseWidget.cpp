@@ -117,7 +117,8 @@ NS_METHOD nsBaseWidget::RemoveTooltips()
 nsBaseWidget::nsBaseWidget() :
   mBounds(0,0,0,0)
 {
-    mChildren      = nsnull;
+    NS_NewISupportsArray(getter_AddRefs(mChildren));
+    
     mEventCallback = nsnull;
     mToolkit       = nsnull;
     mAppShell      = nsnull;
@@ -276,35 +277,15 @@ nsIWidget* nsBaseWidget::GetParent(void)
 //-------------------------------------------------------------------------
 nsIEnumerator* nsBaseWidget::GetChildren()
 {
-  if (mChildren) {
-    // Reset the current position to 0 and check if there is something to copy
-    mChildren->First();
-    nsCOMPtr<nsISupports> firstChild;
-    if ( !NS_SUCCEEDED(mChildren->CurrentItem(getter_AddRefs(firstChild))) )
-      return nsnull;
+  nsIEnumerator* children = nsnull;
 
-    // Make a copy of our enumerator
-    Enumerator * children = new Enumerator;
-    if ( !children )
-    	return nsnull;
-    NS_ADDREF(children);
-    do
-    {
-      nsCOMPtr<nsISupports> currentChild;
-      if (!NS_SUCCEEDED(mChildren->CurrentItem(getter_AddRefs(currentChild)))) {
-        delete children;
-        return nsnull;
-      }
-      nsCOMPtr<nsIWidget> widget ( do_QueryInterface(currentChild) );
-      if ( widget )
-        children->Append(widget);
-    }
-    while (NS_SUCCEEDED(mChildren->Next()));
-
-    return (nsIEnumerator*)children;
+  unsigned int itemCount = 0;
+  mChildren->Count(&itemCount);
+  if ( itemCount ) {
+    children = new Enumerator(*this);
+    NS_IF_ADDREF(children);
   }
-
-  return nsnull;
+  return children;
 }
 
 
@@ -315,12 +296,7 @@ nsIEnumerator* nsBaseWidget::GetChildren()
 //-------------------------------------------------------------------------
 void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
-  if (!mChildren) {
-    mChildren = new Enumerator;
-    NS_IF_ADDREF(mChildren);
-  }
-
-  mChildren->Append(aChild);
+  mChildren->AppendElement(aChild);
 }
 
 
@@ -331,9 +307,7 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
-  if (mChildren) {
-    mChildren->Remove(aChild);
-  }
+  mChildren->RemoveElement(aChild);
 }
     
 //-------------------------------------------------------------------------
@@ -464,8 +438,7 @@ nsIAppShell *nsBaseWidget::GetAppShell()
 //-------------------------------------------------------------------------
 void nsBaseWidget::OnDestroy()
 {
-    // release references to children, device context, toolkit, and app shell
-    NS_IF_RELEASE(mChildren);
+    // release references to device context, toolkit, and app shell
     NS_IF_RELEASE(mContext);
     NS_IF_RELEASE(mToolkit);
     NS_IF_RELEASE(mAppShell);
@@ -478,10 +451,10 @@ void nsBaseWidget::OnDestroy()
 //
 //-------------------------------------------------------------------------
 
-nsBaseWidget::Enumerator::Enumerator()
+nsBaseWidget::Enumerator::Enumerator(nsBaseWidget & inParent)
+  : mParent(inParent), mCurrentPosition(0)
 {
-  mRefCnt = 0;
-  mCurrentPosition = 0;
+  NS_INIT_REFCNT();
 }
 
 
@@ -492,14 +465,6 @@ nsBaseWidget::Enumerator::Enumerator()
 //-------------------------------------------------------------------------
 nsBaseWidget::Enumerator::~Enumerator()
 {   
-  // We add ref'd when adding the child widgets, so we need to release
-  // the references now
-  for (PRInt32 i = 0; i < mChildren.Count(); i++) {
-    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(i);
-
-    NS_ASSERTION(nsnull != widget, "null widget pointer");
-    NS_IF_RELEASE(widget);
-  }
 }
 
 
@@ -507,7 +472,9 @@ nsBaseWidget::Enumerator::~Enumerator()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::Next()
 {
-  if (mCurrentPosition < (mChildren.Count() -1) )
+  unsigned int itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if (mCurrentPosition < itemCount -1 )
     mCurrentPosition ++;
   else
     return NS_ERROR_FAILURE;
@@ -531,13 +498,15 @@ nsBaseWidget::Enumerator::Prev()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 {
-
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  if (mCurrentPosition >= 0 && mCurrentPosition < mChildren.Count() ) {
-    nsIWidget*  widget = (nsIWidget*)mChildren.ElementAt(mCurrentPosition);
+
+  unsigned int itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if (mCurrentPosition >= 0 && mCurrentPosition < itemCount ) {
+    nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
     NS_IF_ADDREF(widget);
-    *aItem = (nsISupports *)widget;
+    *aItem = widget;
   }
   else
     return NS_ERROR_FAILURE;
@@ -550,7 +519,9 @@ nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::First()
 {
-  if (mChildren.Count()) {
+  unsigned int itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if ( itemCount ) {
     mCurrentPosition = 0;
     return NS_OK;
   }
@@ -565,8 +536,10 @@ nsBaseWidget::Enumerator::First()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::Last()
 {
-  if (mChildren.Count() ) {
-    mCurrentPosition = mChildren.Count()-1;
+  unsigned int itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if ( itemCount ) {
+    mCurrentPosition = itemCount - 1;
     return NS_OK;
   }
   else
@@ -580,7 +553,10 @@ nsBaseWidget::Enumerator::Last()
 NS_IMETHODIMP
 nsBaseWidget::Enumerator::IsDone()
 {
-  if ((mCurrentPosition == (mChildren.Count() -1)) || mChildren.Count() <= 0 ){ //empty lists always return done
+  unsigned int itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+
+  if ((mCurrentPosition == (itemCount -1)) || itemCount <= 0 ){ //empty lists always return done
     return NS_OK;
   }
   else {
@@ -589,35 +565,6 @@ nsBaseWidget::Enumerator::IsDone()
   return NS_OK;
 }
 
-
-
-
-//-------------------------------------------------------------------------
-//
-// Append an element 
-//
-//-------------------------------------------------------------------------
-void nsBaseWidget::Enumerator::Append(nsIWidget* aWidget)
-{
-  NS_PRECONDITION(aWidget, "Null widget");
-  if (nsnull != aWidget) {
-    mChildren.AppendElement(aWidget);
-    NS_ADDREF(aWidget);
-  }
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Remove an element 
-//
-//-------------------------------------------------------------------------
-void nsBaseWidget::Enumerator::Remove(nsIWidget* aWidget)
-{
-  if (mChildren.RemoveElement(aWidget)) {
-    NS_RELEASE(aWidget);
-  }
-}
 
 NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle) 
 {
