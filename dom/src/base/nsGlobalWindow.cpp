@@ -1297,14 +1297,15 @@ GlobalWindowImpl::Blur()
 NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
-  // Basic security check.  If window has opener and therefore was opened from JS it can be
-  // closed.  Need to add additional checks and privilege based closing
-  if (nsnull != mOpener) {
-    nsIBrowserWindow *mBrowser;
-    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-      mBrowser->Close();
-      NS_RELEASE(mBrowser);
-    }
+  // Note: the basic security check, rejecting windows not opened through JS,
+  // has been removed. This was approved long ago by ...you're going to call me
+  // on this, aren't you... well it was. And anyway, a better means is coming.
+  // In the new world of application-level interfaces being written in JS, this
+  // security check was causing problems.
+  nsIBrowserWindow *mBrowser;
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->Close();
+    NS_RELEASE(mBrowser);
   }
   return NS_OK;
 }
