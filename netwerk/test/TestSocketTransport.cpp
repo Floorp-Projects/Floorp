@@ -353,7 +353,7 @@ NS_IMPL_ISUPPORTS(TestConnection,nsIRunnable::GetIID());
 NS_IMETHODIMP
 TestConnection::Run(void)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   //
   // Make sure that all resources were allocated in the constructor...
