@@ -100,17 +100,10 @@ final class NativeError extends IdScriptable {
                 return jsConstructor(cx, args, f, thisObj == null);
             }
             else if (methodId == Id_toString) {
-                return realThis(thisObj, f).toString();
+                return js_toString(thisObj);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
-    }
-
-    private NativeError realThis(Scriptable thisObj, IdFunction f) {
-        while (!(thisObj instanceof NativeError)) {
-            thisObj = nextInstanceCheck(thisObj, f, true);
-        }
-        return (NativeError)thisObj;
     }
 
     private static Object jsConstructor(Context cx, Object[] args,
@@ -123,26 +116,28 @@ final class NativeError extends IdScriptable {
         return result;
     }
 
+    private static String js_toString(Scriptable thisObj) {
+        Object name = ScriptRuntime.getStrIdElem(thisObj, "name");
+        Object message = ScriptRuntime.getStrIdElem(thisObj, "message");
+        return ScriptRuntime.toString(name)
+            +": "+ScriptRuntime.toString(message);
+    }
+
     public String getClassName() {
         return "Error";
     }
 
     public String toString() {
-        // The "name" property is usually just defined in the prototype,
-        // so use getProperty to fetch it.
-        Object name = ScriptableObject.getProperty(this, "name");
-        if (name == NOT_FOUND)
-            name = Undefined.instance;
-        return name + ": " + getMessage();
+        return js_toString(this);
     }
 
-    public String getName() {
+    String getName() {
         Object val = nameValue;
         return ScriptRuntime.toString(val != NOT_FOUND ? val
                                                        : Undefined.instance);
     }
 
-    public String getMessage() {
+    String getMessage() {
         Object val = messageValue;
         return ScriptRuntime.toString(val != NOT_FOUND ? val
                                                        : Undefined.instance);
