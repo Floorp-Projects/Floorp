@@ -425,6 +425,7 @@ nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet, nsIPresContext* aCX)
   nsReflowState bulletReflowState(eReflowReason_Resize, maxSize);
 
   // Size the bullet
+  aBullet->WillReflow(*aCX);
   ReflowChild(aBullet, aCX, bulletSize, bulletReflowState);
 
   // We can only back the bullet over so far

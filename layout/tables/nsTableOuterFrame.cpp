@@ -473,6 +473,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     // out of space.
     if ((kidFrame == mFirstChild) || (aState.availSize.height > 0)) {
       // Reflow the child into the available space
+      kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, kidSize,
                            aState.availSize, pKidMaxElementSize,
                            aState);
@@ -700,6 +701,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
+    kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
                          pKidMaxElementSize, aState);
 
@@ -1026,6 +1028,7 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext)
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
       nsReflowStatus  status;
       nsReflowState   reflowState(eReflowReason_Resize, maxSize);
+      captionFrame->WillReflow(*aPresContext);
       captionFrame->Reflow(aPresContext, desiredSize, reflowState, status);
       if (mMinCaptionWidth<maxElementSize.width)
         mMinCaptionWidth = maxElementSize.width;
@@ -1074,6 +1077,7 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
         {
           nsReflowMetrics desiredSize(nsnull);
           nsReflowState   reflowState(eReflowReason_Resize, aMaxSize);
+          captionFrame->WillReflow(*aPresContext);
           result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, reflowState);
           // place the caption
           captionFrame->SetRect(nsRect(0, topCaptionY, desiredSize.width, desiredSize.height));
@@ -1134,6 +1138,7 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
       // reflow the caption
       nsReflowMetrics desiredSize(nsnull);
       nsReflowState   reflowState(eReflowReason_Resize, aMaxSize);
+      captionFrame->WillReflow(*aPresContext);
       result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, reflowState);
 
       // place the caption
