@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "1 TYPELIB ""MozillaControl.tlb""\r\n"
     "\0"
@@ -47,7 +47,6 @@ END
 #endif    // APSTUDIO_INVOKED
 
 
-#ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -70,21 +69,16 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "Comments", "\0"
-            VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "Mozilla ActiveX control and plugin module\0"
-            VALUE "FileExtents", "*|*|*.axs\0"
-            VALUE "FileOpenName", "ActiveX (*.*)|ActiveX (*.*)|ActiveScript(*.axs)\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "MOZCTL\0"
-            VALUE "LegalCopyright", "Copyright 1999\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "MIMEType", "application/x-oleobject|application/oleobject|text/x-activescript\0"
-            VALUE "OriginalFilename", "MOZCTL.DLL\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "Mozilla ActiveX control and plugin support\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
-            VALUE "SpecialBuild", "\0"
+            VALUE "FileDescription", "Mozilla ActiveX control and plugin module"
+            VALUE "FileExtents", "*|*|*.axs"
+            VALUE "FileOpenName", "ActiveX (*.*)|ActiveX (*.*)|ActiveScript(*.axs)"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "MOZCTL"
+            VALUE "LegalCopyright", "Copyright 1999"
+            VALUE "MIMEType", "application/x-oleobject|application/oleobject|text/x-activescript"
+            VALUE "OriginalFilename", "MOZCTL.DLL"
+            VALUE "ProductName", "Mozilla ActiveX control and plugin support"
+            VALUE "ProductVersion", "1, 0, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
@@ -93,15 +87,13 @@ BEGIN
     END
 END
 
-#endif    // !_MAC
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // REGISTRY
 //
 
-IDR_MOZILLABROWSER      REGISTRY DISCARDABLE    "MozillaBrowser.rgs"
+IDR_MOZILLABROWSER      REGISTRY                "MozillaBrowser.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -110,14 +102,14 @@ IDR_MOZILLABROWSER      REGISTRY DISCARDABLE    "MozillaBrowser.rgs"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_MOZILLABROWSER      ICON    DISCARDABLE     "MozillaBrowser.ico"
+IDI_MOZILLABROWSER      ICON                    "MozillaBrowser.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
 //
 
-IDR_POPUP_DOCUMENT MENU DISCARDABLE 
+IDR_POPUP_DOCUMENT MENU 
 BEGIN
     POPUP "Page Popup"
     BEGIN
@@ -137,7 +129,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_LINK MENU DISCARDABLE 
+IDR_POPUP_LINK MENU 
 BEGIN
     POPUP "Link Popup"
     BEGIN
@@ -150,7 +142,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_TEXT MENU DISCARDABLE 
+IDR_POPUP_TEXT MENU 
 BEGIN
     POPUP "Selection Popup"
     BEGIN
@@ -162,7 +154,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_IMAGE MENU DISCARDABLE 
+IDR_POPUP_IMAGE MENU 
 BEGIN
     POPUP "Image Popup"
     BEGIN
@@ -180,8 +172,9 @@ END
 // Dialog
 //
 
-IDD_PROMPT DIALOG DISCARDABLE  0, 0, 263, 113
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_PROMPT DIALOG  0, 0, 263, 113
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Enter Value"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -195,8 +188,9 @@ BEGIN
     ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,20,20
 END
 
-IDD_PROMPTUSERPASS DIALOG DISCARDABLE  0, 0, 263, 135
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_PROMPTUSERPASS DIALOG  0, 0, 263, 135
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Authentication Required"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -212,8 +206,9 @@ BEGIN
     ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,20,20
 END
 
-IDD_CONFIRMEX DIALOG DISCARDABLE  0, 0, 263, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_CONFIRMEX DIALOG  0, 0, 263, 95
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Confirmation"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -226,6 +221,65 @@ BEGIN
                     WS_TABSTOP,7,52,249,19
 END
 
+IDD_PPAGE_LINK DIALOG  0, 0, 185, 170
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Address: (URL)",IDC_STATIC,0,68,27,20
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,32,185,1
+    LTEXT           "type",IDC_TYPE,35,53,149,8
+    LTEXT           "Type:",IDC_STATIC,0,38,19,8
+    LTEXT           "protocol",IDC_PROTOCOL,35,38,149,8
+    EDITTEXT        IDC_ADDRESS,35,68,149,61,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY
+    ICON            IDI_MOZILLABROWSER,IDC_STATIC,5,6,20,20
+END
+
+IDD_PAGESETUP DIALOGEX 0, 0, 276, 221
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Page Setup"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,167,200,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,219,200,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",TCS_TOOLTIPS,7,7,262,191
+    CONTROL         "",IDC_PAGE_MARKER,"Static",SS_BLACKFRAME | NOT 
+                    WS_VISIBLE,10,23,255,170
+END
+
+IDD_PPAGE_MARGINS DIALOGEX 0, 0, 255, 170
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Margins (in millimeters)",IDC_STATIC,0,0,255,104
+    GROUPBOX        "Headers && Footers",IDC_STATIC,0,105,255,59
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,101,30,51,51
+    RTEXT           "Top:",IDC_STATIC,84,16,16,8
+    EDITTEXT        IDC_MARGIN_TOP,107,13,40,14,ES_AUTOHSCROLL
+    LTEXT           "Left:",IDC_STATIC,56,36,16,8
+    EDITTEXT        IDC_MARGIN_LEFT,56,48,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MARGIN_BOTTOM,107,84,40,14,ES_AUTOHSCROLL
+    RTEXT           "Bottom:",IDC_STATIC,74,87,26,8
+    LTEXT           "Right:",IDC_STATIC,157,36,20,8
+    EDITTEXT        IDC_MARGIN_RIGHT,157,48,40,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_HDR_LEFT,26,117,61,126,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_HDR_MIDDLE,96,117,61,155,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_HDR_RIGHT,164,117,61,157,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_FTR_LEFT,26,144,61,99,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_FTR_MIDDLE,96,144,61,104,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_FTR_RIGHT,164,144,61,138,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Left:",IDC_STATIC,48,133,16,8
+    LTEXT           "Center:",IDC_STATIC,113,133,26,8
+    LTEXT           "Right:",IDC_STATIC,184,133,20,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -233,7 +287,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_PROMPT, DIALOG
     BEGIN
@@ -258,6 +312,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 88
     END
+
+    IDD_PAGESETUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 214
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -267,19 +329,21 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_PROJNAME            "MozillaControl"
+    IDS_HEADERFOOTER_OPTIONS 
+                            "-- Blank --|Title|URL|Date/Time|Page #|Page # of #||Custom..."
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_LOCATEMOZILLA       "The browser control does not know where Mozilla is installed and may not function correctly.\nDo you want to locate Mozilla now?"
     IDS_LOCATEMOZILLATITLE  "Cannot locate Mozilla bin directory"
     IDS_CANNOTCREATEPREFS   "The Mozilla control cannot create a critical component. This prevents the control from functioning correctly. Possible reasons for the problem are:\n\n1. The PATH environment variable does not point to the Mozilla bin directory.\n2. The registry key HKEY_LOCAL_MACHINE\\Software\\Mozilla\\BinDirectoryPath registry key has not been set or is incorrect\n3. The file component.reg has not been generated or is empty.\n\nPlease refer to http://www.iol.ie/~locka/mozilla/mozilla.htm for guidance on how to resolve these problems."
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_CONFIRMEX_OK        "OK"
     IDS_CONFIRMEX_CANCEL    "Cancel"
@@ -308,8 +372,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // Dialog
 //
 
-IDD_PROPERTIES DIALOG DISCARDABLE  0, 0, 199, 204
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_PROPERTIES DIALOG  0, 0, 199, 204
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Properties"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -319,20 +383,6 @@ BEGIN
                     WS_VISIBLE,7,7,185,170
 END
 
-IDD_PPAGE_LINK DIALOG DISCARDABLE  0, 0, 185, 170
-STYLE WS_CHILD | WS_VISIBLE
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "Address: (URL)",IDC_STATIC,0,68,27,20
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,32,185,1
-    LTEXT           "type",IDC_TYPE,35,53,149,8
-    LTEXT           "Type:",IDC_STATIC,0,38,19,8
-    LTEXT           "protocol",IDC_PROTOCOL,35,38,149,8
-    EDITTEXT        IDC_ADDRESS,35,68,149,61,ES_MULTILINE | ES_AUTOVSCROLL | 
-                    ES_READONLY
-    ICON            IDI_MOZILLABROWSER,IDC_STATIC,5,6,20,20
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -340,7 +390,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_PROPERTIES, DIALOG
     BEGIN
@@ -370,8 +420,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_EIRE
 // Dialog
 //
 
-IDD_HELPERAPP DIALOG DISCARDABLE  0, 0, 285, 161
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_HELPERAPP DIALOG  0, 0, 285, 161
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Downloading"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -397,9 +448,9 @@ BEGIN
                     ES_READONLY
 END
 
-IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 244, 102
-STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU
+IDD_PROGRESS DIALOG  0, 0, 244, 102
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -414,6 +465,42 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,96,81,50,14
 END
 
+IDD_PPAGE_FORMAT DIALOGEX 0, 0, 255, 170
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Format",IDC_STATIC,0,0,255,91
+    GROUPBOX        "Options",IDC_STATIC,0,95,255,35
+    CONTROL         "Print Background (colors && images)",
+                    IDC_PRINTBACKGROUND,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,109,127,10
+    LTEXT           "Orientation:",IDC_STATIC,7,13,40,8
+    CONTROL         "Portrait",IDC_PORTRAIT,"Button",BS_AUTORADIOBUTTON,91,
+                    13,40,10
+    CONTROL         "Landscape",IDC_LANDSCAPE,"Button",BS_AUTORADIOBUTTON,91,
+                    30,50,10
+    LTEXT           "Scale:",IDC_STATIC,7,67,20,8
+    EDITTEXT        IDC_SCALE,37,64,30,14,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STATIC,73,67,8,8
+    CONTROL         "Shrink to fit page width",IDC_SHRINKTOFIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,87,67,90,10
+END
+
+IDD_CUSTOM_FIELD DIALOGEX 0, 0, 262, 96
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Custom Value"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Value:",IDC_STATIC,7,37,21,8
+    EDITTEXT        IDC_VALUE,7,48,248,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,151,75,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,205,75,50,14
+    LTEXT           "Type the value you wish to show in the page.",
+                    IDC_MESSAGE,35,7,220,35
+    ICON            IDI_MOZILLABROWSER,IDC_QUESTION,7,7,21,20
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -421,7 +508,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_HELPERAPP, DIALOG
     BEGIN
@@ -437,6 +524,14 @@ BEGIN
         RIGHTMARGIN, 237
         TOPMARGIN, 7
         BOTTOMMARGIN, 95
+    END
+
+    IDD_CUSTOM_FIELD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 255
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 89
     END
 END
 #endif    // APSTUDIO_INVOKED

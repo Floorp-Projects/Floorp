@@ -1,9 +1,10 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by MozillaControl.rc
 //
 #define IDS_PROJNAME                    100
 #define IDR_MOZILLABROWSER              101
+#define IDS_HEADERFOOTER_OPTIONS        101
 #define IDI_MOZILLABROWSER              201
 #define IDC_CHECKMSG                    201
 #define IDR_POPUP_PAGE                  202
@@ -30,7 +31,11 @@
 #define IDC_VALUE                       213
 #define IDD_PROGRESS                    213
 #define IDC_USERNAME                    214
+#define IDD_PAGESETUP                   214
 #define IDC_PASSWORD                    215
+#define IDD_PPAGE_FORMAT                215
+#define IDD_PPAGE_MARGINS               216
+#define IDD_CUSTOM_FIELD                217
 #define IDC_CHOOSE                      218
 #define IDC_URL                         222
 #define IDC_CONTENTTYPE                 223
@@ -38,6 +43,23 @@
 #define IDC_SOURCE                      225
 #define IDC_DESTINATION                 226
 #define IDC_PROGRESS                    227
+#define IDC_TAB                         229
+#define IDC_PAGE_MARKER                 230
+#define IDC_PRINTBACKGROUND             231
+#define IDC_PORTRAIT                    232
+#define IDC_LANDSCAPE                   233
+#define IDC_SCALE                       234
+#define IDC_SHRINKTOFIT                 235
+#define IDC_MARGIN_TOP                  236
+#define IDC_MARGIN_LEFT                 237
+#define IDC_MARGIN_BOTTOM               238
+#define IDC_MARGIN_RIGHT                239
+#define IDC_HDR_LEFT                    240
+#define IDC_HDR_MIDDLE                  241
+#define IDC_HDR_RIGHT                   242
+#define IDC_FTR_LEFT                    243
+#define IDC_FTR_MIDDLE                  244
+#define IDC_FTR_RIGHT                   245
 #define IDC_OPENWITHAPP                 300
 #define IDC_SAVETOFILE                  301
 #define IDS_LOCATEMOZILLA               1000
@@ -89,9 +111,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        214
+#define _APS_NEXT_RESOURCE_VALUE        218
 #define _APS_NEXT_COMMAND_VALUE         32792
-#define _APS_NEXT_CONTROL_VALUE         228
+#define _APS_NEXT_CONTROL_VALUE         246
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
