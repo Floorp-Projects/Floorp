@@ -40,6 +40,8 @@ VIEWER MENU DISCARDABLE
       MENUITEM "demo #8", VIEWER_DEMO8
       MENUITEM "demo #9", VIEWER_DEMO9
       MENUITEM "demo #10", VIEWER_DEMO10
+      MENUITEM "demo #11", VIEWER_DEMO11
+      MENUITEM "demo #12", VIEWER_DEMO12
     }
     MENUITEM "&Test Sites", VIEWER_TOP100
     POPUP "Test &Widgets"
