@@ -397,6 +397,22 @@ NS_IMETHODIMP nsWebBrowser::SetName(const PRUnichar* aName)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::NameEquals(const PRUnichar *aName, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(aName);
+    NS_ENSURE_ARG_POINTER(_retval);
+    if(mDocShell)
+    {
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+        NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+        return docShellAsItem->NameEquals(aName, _retval);
+    }
+    else
+        *_retval = mInitInfo->name.Equals(aName);
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsWebBrowser::GetItemType(PRInt32* aItemType)
 {
    NS_ENSURE_ARG_POINTER(aItemType);
