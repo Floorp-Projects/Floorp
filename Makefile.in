@@ -170,6 +170,10 @@ ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
 DIRS   += modules/staticmod
 endif
 
+ifdef MOZ_CALENDAR
+DIRS	+= calendar
+endif
+
 DIRS	+= xpfe/bootstrap
 
 endif # BUILD_MODULES == all
