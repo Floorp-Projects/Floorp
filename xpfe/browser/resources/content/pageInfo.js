@@ -177,7 +177,7 @@ var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_C
 var formView = new pageInfoTreeView(["form-name","form-method","form-action","form-node"], COPYCOL_FORM_ACTION);
 var fieldView = new pageInfoTreeView(["field-label","field-field","field-type","field-value"], COPYCOL_NONE);
 var linkView = new pageInfoTreeView(["link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
-var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node"], COPYCOL_IMAGE_ADDRESS);
+var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node", "image-bg"], COPYCOL_IMAGE_ADDRESS);
 
 // localized strings (will be filled in when the document is loaded)
 // this isn't all of them, these are just the ones that would otherwise have been loaded inside a loop
@@ -246,6 +246,7 @@ function onLoadPageInfo()
   gStrings.linkRev = theBundle.getString("linkRev");
   gStrings.linkX = theBundle.getString("linkX");
   gStrings.mediaImg = theBundle.getString("mediaImg");
+  gStrings.mediaBGImg = theBundle.getString("mediaBGImg");
   gStrings.mediaApplet = theBundle.getString("mediaApplet");
   gStrings.mediaObject = theBundle.getString("mediaObject");
   gStrings.mediaEmbed = theBundle.getString("mediaEmbed");
@@ -478,8 +479,16 @@ function makeTabs(aDocument, aWindow)
 
 function grabAll(elem)
 {
-  // one switch to rule them all
   var linktext;
+
+  // check for background images, any node may have one
+  var url = elem.ownerDocument.defaultView.getComputedStyle(elem, "").getPropertyCSSValue("background-image");
+  if (url && url.primitiveType == CSSPrimitiveValue.CSS_URI)
+  {
+    imageView.addRow([url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true]);
+  }
+
+  // one switch to rule them all
   switch (elem.nodeName.toLowerCase())
   {
     // form tab
@@ -719,25 +728,26 @@ function onImageSelect()
 
   if (tree.treeBoxObject.selection.count == 1)
   {
-    makePreview(getSelectedImage(tree));
+    makePreview(tree.treeBoxObject.selection.currentIndex);
     saveAsButton.setAttribute("disabled", "false");
   }
   else
     saveAsButton.setAttribute("disabled", "true");
 }
 
-function makePreview(item)
+function makePreview(row)
 {
-  var url = ("src" in item && item.src) || ("code" in item && item.code)
-            || ("data" in item && item.data) || ("href" in item && item.href) 
-            || gStrings.unknown;  // it better have at least one of those...
+  var item = getSelectedImage(document.getElementById("imagetree"));
+  var url = imageView.getCellText(row, "image-address");
+  var isBG = imageView.getCellText(row, "image-bg");
+
   document.getElementById("imageurltext").value = url;
   document.getElementById("imagetitletext").value = item.title || gStrings.notSet;
 
   var altText = null;
   if (item.hasAttribute("alt") && ("alt" in item))
     altText = item.alt;
-  else if (item.hasChildNodes())
+  else if (!isBG)
     altText = getValueText(item);
   if (altText == null)
     altText = gStrings.notSet;
@@ -758,8 +768,10 @@ function makePreview(item)
   // find out the mime type
   var mimeType = gStrings.unknown;
   if (item.nodeName.toLowerCase() != "input")
-    mimeType = ("type" in item && item.type) || ("codeType" in item && item.codeType) 
-               || ("contentType" in item && item.contentType) || gStrings.unknown;
+    mimeType = ("type" in item && item.type) ||
+               ("codeType" in item && item.codeType) ||
+               ("contentType" in item && item.contentType) ||
+               gStrings.unknown;
   document.getElementById("imagetypetext").value = mimeType;
 
   // get cache info
@@ -833,21 +845,16 @@ function makePreview(item)
   document.getElementById("imageexpirestext").value = expirationText;
   document.getElementById("imagesizetext").value = sizeText;
 
-  var width = ("width" in item && item.width) || "";
-  var height = ("height" in item && item.height) || "";
-  document.getElementById("imagewidth").value = theBundle.getFormattedString("mediaWidth", [width]);
-  document.getElementById("imageheight").value = theBundle.getFormattedString("mediaHeight", [height]);
-
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
   var nn = item.nodeName.toLowerCase();
   var regex = new RegExp("^(https?|ftp|file|gopher)://");
-  var absoluteURL = getAbsoluteURL(getSource(item), item);
+  var absoluteURL = getAbsoluteURL(url, item);
   var isProtocolAllowed = regex.test(absoluteURL); 
   var newImage = new Image();
   newImage.setAttribute("id", "thepreviewimage");
-  if ((nn == "link" || nn == "input" || nn == "img") &&
+  if ((nn == "link" || nn == "input" || nn == "img" || isBG) &&
       isProtocolAllowed) 
   {
     newImage.src = absoluteURL;
@@ -864,6 +871,11 @@ function makePreview(item)
     newImage.width = 40;
     newImage.height = 40;
   }
+
+  var width = ("width" in item && item.width) || ("width" in newImage && newImage.width) || "0";
+  var height = ("height" in item && item.height) || ("height" in newImage && newImage.height) || "0";
+  document.getElementById("imagewidth").value = theBundle.getFormattedString("mediaWidth", [width]);
+  document.getElementById("imageheight").value = theBundle.getFormattedString("mediaHeight", [height]);
 
   imageContainer.removeChild(oldImage);
   imageContainer.appendChild(newImage);
