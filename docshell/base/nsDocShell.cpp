@@ -3524,6 +3524,10 @@ nsDocShell::CreateAboutBlankContentViewer()
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(blankDoc));
         Embed(viewer, "", 0);
         viewer->SetDOMDocument(domdoc);
+
+        nsCOMPtr<nsIURI> documentURI;
+        blankDoc->GetDocumentURL(getter_AddRefs(documentURI)); // about:blank, duh
+        SetCurrentURI(documentURI);
         rv = NS_OK;
       }
     }
