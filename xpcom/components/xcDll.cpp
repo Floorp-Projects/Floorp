@@ -78,15 +78,15 @@ nsDll::nsDll(nsIFile *dllSpec, nsNativeComponentLoader *loader)
 
 nsDll::~nsDll(void)
 {
-#if DEBUG_dougt
+    //#if DEBUG_dougt
     // The dll gets deleted when the dllStore is destroyed. This happens on
     // app shutdown. At that point, unloading dlls can cause crashes if we have
     // - dll dependencies
     // - callbacks
     // - static dtors
     // Hence turn it back on after all the above have been removed.
-    Unload();
-#endif
+    //Unload();
+    //#endif
 }
 
 void
@@ -180,8 +180,11 @@ PRBool nsDll::Load(void)
         while (token!=nsnull)
         {
             nsCStringKey key(token);
-            if (m_loader->mLoadedDependentLibs->Get(&key))
+            if (m_loader->mLoadedDependentLibs->Get(&key)) {
+                token = nsCRT::strtok(newStr, " ", &newStr);
                 continue;
+            }
+
             m_loader->mLoadedDependentLibs->Put(&key, (void*)1);
 
             nsXPIDLCString libpath;
