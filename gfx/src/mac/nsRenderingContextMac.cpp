@@ -1408,28 +1408,28 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
   }
   ConvertLatin1ToMacRoman ( macRomanString );
   if ( aSpacing == NULL )
-	::DrawText(macRomanString,0,aLength);
+		::DrawText(macRomanString,0,aLength);
   else
   {
-	int buffer[500];
-	int* spacing = NULL;
+		int buffer[500];
+		int* spacing = NULL;
 
-	if (aLength > 500)
-	  spacing = new int[aLength];
-	else
-	  spacing = buffer;
-	
-	mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
-	PRInt32 currentX = x;
-	for ( PRInt32 i = 0; i<= aLength; i++ )
-	{
-		::DrawChar( macRomanString[i] );
-		currentX += spacing[ i ];
-		::MoveTo( currentX, y );
-	}
-	// clean up and restore settings
-	if ( (spacing != buffer))
-		delete [] spacing; 
+		if (aLength > 500)
+		  spacing = new int[aLength];
+		else
+		  spacing = buffer;
+		
+		mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
+		PRInt32 currentX = x;
+		for ( PRInt32 i = 0; i<= aLength; i++ )
+		{
+			::DrawChar( macRomanString[i] );
+			currentX += spacing[ i ];
+			::MoveTo( currentX, y );
+		}
+		// clean up and restore settings
+		if ( (spacing != buffer))
+			delete [] spacing; 
   }
   
   if (mGS->mFontMetrics)
@@ -1477,7 +1477,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 
 #define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
 
-static OSErr atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
+static OSErr AtsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1491,7 +1491,7 @@ static OSErr atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 }
 
 
-static OSErr atsuSetSize(ATSUStyle theStyle, Fixed size)
+static OSErr AtsuSetSize(ATSUStyle theStyle, Fixed size)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1505,7 +1505,7 @@ static OSErr atsuSetSize(ATSUStyle theStyle, Fixed size)
 }
 
 
-static OSErr atsuSetColor(ATSUStyle theStyle, RGBColor color)
+static OSErr AtsuSetColor(ATSUStyle theStyle, RGBColor color)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1519,69 +1519,50 @@ static OSErr atsuSetColor(ATSUStyle theStyle, RGBColor color)
 }
 
 
-static OSErr setStyleSize (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
+static OSErr SetStyleSize (nsIFontMetrics& inFontMetrics, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	float  dev2app;
 	aContext->GetDevUnitsToAppUnits(dev2app);
-	return atsuSetSize(theStyle, FloatToFixed((float(aFont.size) / dev2app)));
+	nsFont		*aFont;
+	inFontMetrics.GetFont(aFont);
+	return AtsuSetSize(theStyle, FloatToFixed((float(aFont->size) / dev2app)));
 }
 
 
-static OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
+static OSErr SetStyleColor(nscolor aColor, ATSUStyle theStyle)
 {
-    RGBColor	thecolor;
+	RGBColor	thecolor;
 	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
 	thecolor.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
 	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));	
-	return atsuSetColor(theStyle, thecolor);	
+	return AtsuSetColor(theStyle, thecolor);	
 }
 
 
-static OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
+static OSErr SetStyleFont (nsIFontMetrics& inFontMetrics, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
-	short fontNum;
-	OSErr					err = 0;
-  	  
-	// set the size of the style		
-	nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
-
-	// set the font of the style
-	Style textFace = normal;
-	switch (aFont.style)
-	{
-		case NS_FONT_STYLE_NORMAL: 								break;
-		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
-		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
-	}
-#if 0
-	switch (aFont.variant)
-	{
-		case NS_FONT_VARIANT_NORMAL: 							break;
-		case NS_FONT_VARIANT_SMALL_CAPS: 					break;
-	}
-#endif
-	if (aFont.weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
-		textFace |= bold;
+  TextStyle		textStyle;
+	nsFontMetricsMac::GetNativeTextStyle(inFontMetrics, *aContext, textStyle);
 
 	ATSUFontID atsuFontID ;
 	
-	err = ATSUFONDtoFontID( fontNum, textFace,  &atsuFontID);
+	OSErr	err = ATSUFONDtoFontID( textStyle.tsFont, textStyle.tsFace,  &atsuFontID);
 	if (noErr != err) 
 		return err;
-	return atsuSetFont(theStyle, atsuFontID);
+	return AtsuSetFont(theStyle, atsuFontID);
 }
 
 
-static OSErr setATSUIFont(const nsFont& aFont, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
+static OSErr SetATSUIFont(nsIFontMetrics& inFontMetrics, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	OSErr					err = 0;
-	err = setStyleSize(aFont, aContext, theStyle);
+	err = SetStyleSize(inFontMetrics, aContext, theStyle);
 	if(noErr != err)
 		return err;
-	err = setStyleFont(aFont, aContext, theStyle);
+	err = SetStyleFont(inFontMetrics, aContext, theStyle);
 	if(noErr != err)
 		return err;
-	return setStyleColor(aColor, theStyle);	
+	return SetStyleColor(aColor, theStyle);	
 }
 
 
@@ -1612,15 +1593,16 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
    if (IsATSUIAvailable())
    { 
 
-		StartDraw();
+			StartDraw();
 
-		PRInt32 x = aX;
-		PRInt32 y = aY;
-	  	ATSUTextLayout	 	txLayout = nil;
-	  	ATSUStyle			theStyle;
-		OSErr					err = 0;
-	    err = ATSUCreateStyle(&theStyle);
-	    NS_ASSERTION((noErr == err), "ATSUCreateStyle failed");
+			PRInt32 x = aX;
+			PRInt32 y = aY;
+			ATSUTextLayout 	txLayout = nil;
+			ATSUStyle				theStyle;
+			OSErr						err;
+			
+			err = ATSUCreateStyle(&theStyle);
+			NS_ASSERTION((noErr == err), "ATSUCreateStyle failed");
 
 		  if (mGS->mFontMetrics)
 		  {
@@ -1634,7 +1616,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 				mGS->mFontMetrics->GetMaxAscent(ascent);
 				y += ascent;
 
-		    err = setATSUIFont( *font, mGS->mColor, mContext, theStyle);
+		    err = SetATSUIFont(*mGS->mFontMetrics, mGS->mColor, mContext, theStyle);
 	  		NS_ASSERTION((noErr == err), "setATSUIFont failed");
 				
 			}
@@ -1646,17 +1628,17 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 	  err = ATSUCreateTextLayoutWithTextPtr(	(ConstUniCharArrayPtr)aString, 0, aLength, aLength,
 												1, &runLengths, &theStyle,
 												&txLayout);
-	   NS_ASSERTION((noErr == err), "ATSUCreateTextLayoutWithTextPtr failed");
-	  err = ATSUSetTransientFontMatching(txLayout, true);
-	   NS_ASSERTION((noErr == err), "ATSUSetTransientFontMatching failed");
-	  
-	  err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );
-	
-	   NS_ASSERTION((noErr == err), "ATSUDrawText failed");
-	  err =   ATSUDisposeTextLayout(txLayout);
-	   NS_ASSERTION((noErr == err), "ATSUDisposeTextLayout failed");
-	  err =   ATSUDisposeStyle(theStyle);
-	   NS_ASSERTION((noErr == err), "ATSUDisposeStyle failed");
+
+		NS_ASSERTION((noErr == err), "ATSUCreateTextLayoutWithTextPtr failed");
+		err = ATSUSetTransientFontMatching(txLayout, true);
+		NS_ASSERTION((noErr == err), "ATSUSetTransientFontMatching failed");
+
+		err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );	
+		NS_ASSERTION((noErr == err), "ATSUDrawText failed");
+		err =   ATSUDisposeTextLayout(txLayout);
+		NS_ASSERTION((noErr == err), "ATSUDisposeTextLayout failed");
+		err =   ATSUDisposeStyle(theStyle);
+		NS_ASSERTION((noErr == err), "ATSUDisposeStyle failed");
 
 	  if (mGS->mFontMetrics)
 		{
