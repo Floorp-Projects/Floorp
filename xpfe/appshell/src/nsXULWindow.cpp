@@ -471,12 +471,12 @@ NS_IMETHODIMP nsXULWindow::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* c
    return NS_OK;
 }
 
-// only does screen-centering right now
 NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) {
 
   PRInt32  left, top, width, height,
            ourWidth, ourHeight;
-  PRBool   haveCoordinates =  PR_FALSE;
+  PRBool   screenCoordinates =  PR_FALSE,
+           windowCoordinates =  PR_FALSE;
   nsresult result;
 
   if (!mChromeLoaded) {
@@ -501,19 +501,23 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
       if (aScreen)
         screenmgr->ScreenForRect(left, top, width, height, getter_AddRefs(screen));
       else
-        haveCoordinates = PR_TRUE;
+        windowCoordinates = PR_TRUE;
     }
   } else
     screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
 
   if (aScreen && screen) {
     screen->GetAvailRect(&left, &top, &width, &height);
-    haveCoordinates = PR_TRUE;
+    screenCoordinates = PR_TRUE;
   }
 
-  if (haveCoordinates) {
+  if (screenCoordinates || windowCoordinates) {
     GetSize(&ourWidth, &ourHeight);
-    SetPosition(left+(width-ourWidth)/2, top+(height-ourHeight)/(aAlert?3:2));
+    left += (width - ourWidth) / 2;
+    top += (height - ourHeight) / (aAlert ? 3 : 2);
+    if (windowCoordinates)
+      mWindow->ConstrainPosition(PR_FALSE, &left, &top);
+    SetPosition(left, top);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
