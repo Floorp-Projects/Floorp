@@ -90,7 +90,6 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIFrameManager.h"
 
-#include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
@@ -1245,19 +1244,6 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
 }
 
 
-static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
-{
-  nsIHTMLStyleSheet* sheet = nsnull;
-
-  if (aDocument) {
-    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(aDocument));
-
-    container->GetAttributeStyleSheet(&sheet);
-  }
-
-  return sheet;
-}
-
 PRBool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 {
@@ -1281,10 +1267,9 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
   if (!doNothing && mDocument && mAttributes) {
     ReparseStyleAttribute();
-    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    nsIHTMLStyleSheet* sheet = mDocument->GetAttributeStyleSheet();
     if (sheet) {
       mAttributes->SetStyleSheet(sheet);
-      NS_RELEASE(sheet);
     }
   }
 }
@@ -1712,8 +1697,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   // set as string value to avoid another string copy
   PRBool mapped = HasAttributeDependentStyle(aAttribute);
 
-  nsCOMPtr<nsIHTMLStyleSheet> sheet =
-    dont_AddRef(GetAttrStyleSheet(mDocument));
+  nsIHTMLStyleSheet* sheet = mDocument ? mDocument->GetAttributeStyleSheet() : nsnull;
 
   if (!mAttributes) {
     result = NS_NewHTMLAttributes(&mAttributes);
@@ -1928,7 +1912,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
   }
   
   PRBool mapped = HasAttributeDependentStyle(aAttribute);
-  nsCOMPtr<nsIHTMLStyleSheet> sheet;
+  nsIHTMLStyleSheet* sheet = nsnull;
   if (mDocument) {
     PRBool modification = PR_TRUE;
     nsAutoString oldValueStr;
@@ -1945,7 +1929,8 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     if (aNotify) {
       mDocument->AttributeWillChange(this, kNameSpaceID_None, aAttribute);
     }
-    sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
+    sheet = mDocument->GetAttributeStyleSheet();
+    // XXXbz this code is repeated at the end of the method too... seems silly.
     if (sheet) {
       if (!mAttributes) {
         nsresult rv = NS_NewHTMLAttributes(&mAttributes);
@@ -2061,8 +2046,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 
   if (mAttributes) {
-    nsCOMPtr<nsIHTMLStyleSheet> sheet
-         = dont_AddRef(GetAttrStyleSheet(mDocument));
+    nsIHTMLStyleSheet* sheet = mDocument ? mDocument->GetAttributeStyleSheet() : nsnull;
     PRInt32 count;
     result = mAttributes->UnsetAttributeFor(aAttribute, aNameSpaceID, this,
                                             sheet, count);
@@ -3119,13 +3103,8 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
     }
 
     if (isCSS) {
-      nsCOMPtr<nsICSSLoader> cssLoader;
+      nsICSSLoader* cssLoader = doc->GetCSSLoader();
       nsCOMPtr<nsICSSParser> cssParser;
-      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-
-      if (htmlContainer) {
-        htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-      }
       if (cssLoader) {
         result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
       }

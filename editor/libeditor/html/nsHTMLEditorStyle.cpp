@@ -53,7 +53,6 @@
 #include "nsISelectionController.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIDocumentObserver.h"
 #include "TypeInState.h"
 

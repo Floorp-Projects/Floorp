@@ -70,7 +70,6 @@
 #include "nsCRT.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
 #include "nsContentUtils.h"
 #include "nsLayoutAtoms.h"
@@ -1052,45 +1051,41 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
   // this bit of code is to load mathml.css on demand
   nsIDocument* doc = aNodeInfo->GetDocument();
   if (doc) {
-    nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-    if (htmlContainer) {
-      PRBool enabled;
-      nsCOMPtr<nsICSSLoader> cssLoader;
-      htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-      if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
-        PRBool alreadyLoaded = PR_FALSE;
-        PRInt32 sheetCount = doc->GetNumberOfStyleSheets(PR_TRUE);
-        for (PRInt32 i = 0; i < sheetCount; i++) {
-          nsIStyleSheet* sheet = doc->GetStyleSheetAt(i, PR_TRUE);
-          NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
-          if (sheet) {
-            nsCOMPtr<nsIURI> uri;
-            sheet->GetURL(*getter_AddRefs(uri));
-            nsCAutoString uriStr;
-            uri->GetSpec(uriStr);
-            if (uriStr.Equals(kMathMLStyleSheetURI)) {
-              alreadyLoaded = PR_TRUE;
-              break;
-            }
+    nsICSSLoader* cssLoader = doc->GetCSSLoader();
+    PRBool enabled;
+    if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
+      PRBool alreadyLoaded = PR_FALSE;
+      PRInt32 sheetCount = doc->GetNumberOfStyleSheets(PR_TRUE);
+      for (PRInt32 i = 0; i < sheetCount; i++) {
+        nsIStyleSheet* sheet = doc->GetStyleSheetAt(i, PR_TRUE);
+        NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
+        if (sheet) {
+          nsCOMPtr<nsIURI> uri;
+          sheet->GetURL(*getter_AddRefs(uri));
+          nsCAutoString uriStr;
+          uri->GetSpec(uriStr);
+          if (uriStr.Equals(kMathMLStyleSheetURI)) {
+            alreadyLoaded = PR_TRUE;
+            break;
           }
         }
-        if (!alreadyLoaded) {
-          nsCOMPtr<nsIURI> uri;
-          NS_NewURI(getter_AddRefs(uri), kMathMLStyleSheetURI);
-          if (uri) {
-            nsCOMPtr<nsICSSStyleSheet> sheet;
-            cssLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+      }
+      if (!alreadyLoaded) {
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), kMathMLStyleSheetURI);
+        if (uri) {
+          nsCOMPtr<nsICSSStyleSheet> sheet;
+          cssLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
 #ifdef NS_DEBUG
-            nsCAutoString uriStr;
-            uri->GetSpec(uriStr);
-            printf("MathML Factory: loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
-            NS_ASSERTION(uriStr.Equals(kMathMLStyleSheetURI), "resolved URI unexpected");
+          nsCAutoString uriStr;
+          uri->GetSpec(uriStr);
+          printf("MathML Factory: loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
+          NS_ASSERTION(uriStr.Equals(kMathMLStyleSheetURI), "resolved URI unexpected");
 #endif
-            if (sheet) {
-              doc->BeginUpdate(UPDATE_STYLE);
-              doc->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
-              doc->EndUpdate(UPDATE_STYLE);
-            }
+          if (sheet) {
+            doc->BeginUpdate(UPDATE_STYLE);
+            doc->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+            doc->EndUpdate(UPDATE_STYLE);
           }
         }
       }

@@ -302,8 +302,13 @@ public:
 protected:
     static nsICSSParser* GetCSSParser()
     {
-        if (!sCSSParser)
+        if (!sCSSParser) {
             CallCreateInstance(kCSSParserCID, &sCSSParser);
+            if (sCSSParser) {
+                sCSSParser->SetCaseSensitive(PR_TRUE);
+                sCSSParser->SetQuirkMode(PR_FALSE);
+            }
+        }
         return sCSSParser;
     }
     static nsICSSParser* sCSSParser;

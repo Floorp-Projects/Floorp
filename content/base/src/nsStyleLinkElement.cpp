@@ -32,7 +32,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMText.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIUnicharInputStream.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
@@ -239,12 +238,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-  nsCOMPtr<nsICSSLoader> loader;
-
-  if (htmlContainer) {
-    htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
-  }
+  nsICSSLoader* loader = doc->GetCSSLoader();
 
   if (!loader) {
     return NS_OK;

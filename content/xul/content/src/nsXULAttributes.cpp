@@ -59,6 +59,8 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
+#include "nsIDocument.h"
+#include "nsICSSLoader.h"
 #include "nsICSSParser.h"
 #include "nsICSSStyleRule.h"
 #include "nsIDOMElement.h"
@@ -720,18 +722,28 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAString& aVal
 {
     if (aValue.IsEmpty())
     {
-      // XXX: Removing the rule. Is this sufficient?
-      mStyleRule = nsnull;
-      return NS_OK;
+        // Just remove the rule; we'll be getting our style reresolved
+        mStyleRule = nsnull;
+        return NS_OK;
     }
 
+    nsIDocument* doc = mContent->GetNodeInfo()->GetDocument();
+    
+    nsICSSLoader* cssLoader = nsnull;
+    if (doc) {
+        cssLoader = doc->GetCSSLoader();
+    }
+    
+    nsCOMPtr<nsICSSParser> css;
     nsresult result = NS_OK;
 
-    nsCOMPtr<nsICSSParser> css(do_CreateInstance(kCSSParserCID, &result));
-    if (NS_OK != result) {
-      return result;
+    if (cssLoader) {
+        result = cssLoader->GetParserFor(nsnull, getter_AddRefs(css));
+    } else {
+        css = do_CreateInstance(kCSSParserCID, &result);
     }
-
+    NS_ENSURE_SUCCESS(result, result);
+    
     nsCOMPtr<nsICSSStyleRule> rule;
     result = css->ParseStyleAttribute(aValue, aDocURL, getter_AddRefs(rule));
     
@@ -739,6 +751,10 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAString& aVal
       mStyleRule = rule;
     }
 
+    if (cssLoader) {
+        cssLoader->RecycleParser(css);
+    }
+    
     return NS_OK;
 }
 

@@ -41,7 +41,6 @@
 #include "nsIParser.h"
 #include "nsIParserService.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLTokens.h"
 #include "nsGenericHTMLElement.h"

@@ -73,7 +73,6 @@
 #include "nsIStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsIWeakReference.h"
@@ -1267,12 +1266,10 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
   if (parent) {
     // We cut ourselves off, but we still need to walk the document's attribute sheet
     // so that inline style continues to work on anonymous content.
-    nsCOMPtr<nsIHTMLContentContainer> container(
-          do_QueryInterface(content->GetDocument()));
-    if (container) {
-      nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
-      container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));  
-      nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(do_QueryInterface(inlineSheet));
+    nsIDocument* doc = content->GetDocument();
+    if (doc) {
+      nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(
+              do_QueryInterface(doc->GetInlineStyleSheet()));
       if (inlineCSS)
         (*aFunc)(inlineCSS, aData);
     }

@@ -194,16 +194,6 @@ nsXMLDocument::nsXMLDocument()
 
 nsXMLDocument::~nsXMLDocument()
 {
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-  if (mInlineStyleSheet) {
-    mInlineStyleSheet->SetOwningDocument(nsnull);
-  }
-  if (mCSSLoader) {
-    mCSSLoader->DropDocumentReference();
-  }
-
   // XXX We rather crash than hang
   mLoopingForSyncLoad = PR_FALSE;
 }
@@ -211,7 +201,6 @@ nsXMLDocument::~nsXMLDocument()
 
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXMLDocument)
@@ -243,13 +232,6 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     nsresult result = aChannel->GetURI(getter_AddRefs(url));
     if (NS_FAILED(result))
       return;
-  }
-
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-  if (mInlineStyleSheet) {
-    mInlineStyleSheet->SetOwningDocument(nsnull);
   }
 
   SetDefaultStylesheets(url);
@@ -596,10 +578,9 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     // styles
-    nsCOMPtr<nsICSSLoader> cssLoader;
-    nsresult rv = GetCSSLoader(*getter_AddRefs(cssLoader));
-    if (NS_FAILED(rv))
-      return rv;
+    nsICSSLoader* cssLoader = GetCSSLoader();
+    if (!cssLoader)
+      return NS_ERROR_OUT_OF_MEMORY;
     if (cssLoader) {
       cssLoader->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
     }
@@ -699,32 +680,6 @@ nsXMLDocument::EndLoad()
   nsDocument::EndLoad();  
 }
 
-NS_IMETHODIMP 
-nsXMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mAttrStyleSheet;
-  NS_ENSURE_TRUE(mAttrStyleSheet, NS_ERROR_NOT_AVAILABLE); // probably not the right error...
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mInlineStyleSheet;
-  NS_ENSURE_TRUE(mInlineStyleSheet, NS_ERROR_NOT_AVAILABLE); // probably not the right error...
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
 // subclass hook for sheet ordering
 void
 nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
@@ -741,15 +696,15 @@ nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
                  "Adding attr sheet twice!");
     mStyleSheets.InsertObjectAt(aSheet, mCatalogSheetCount);
   }
-  else if (aSheet == mInlineStyleSheet) {  // always last
+  else if (aSheet == mStyleAttrStyleSheet) {  // always last
     NS_ASSERTION(mStyleSheets.Count() == 0 ||
-                 mStyleSheets[mStyleSheets.Count() - 1] != mInlineStyleSheet,
+                 mStyleSheets[mStyleSheets.Count() - 1] != mStyleAttrStyleSheet,
                  "Adding style attr sheet twice!");
     mStyleSheets.AppendObject(aSheet);
   }
   else {
     PRInt32 count = mStyleSheets.Count();
-    if (count != 0 && mInlineStyleSheet == mStyleSheets[count - 1]) {
+    if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1]) {
       // keep attr sheet last
       mStyleSheets.InsertObjectAt(aSheet, count - 1);
     }
@@ -770,7 +725,7 @@ nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
                           /* Don't count catalog sheets */
                           - mCatalogSheetCount
                           /* No insertion allowed after StyleAttr stylesheet */
-                          - (mInlineStyleSheet ? 1: 0)
+                          - (mStyleAttrStyleSheet ? 1: 0)
                           ),
                "index out of bounds");
   // offset w.r.t. catalog style sheets and the attr style sheet
@@ -795,7 +750,7 @@ nsXMLDocument::InternalGetNumberOfStyleSheets() const
 {
   PRInt32 count = mStyleSheets.Count();
 
-  if (count != 0 && mInlineStyleSheet == mStyleSheets[count - 1]) {
+  if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1]) {
     // subtract the inline style sheet
     --count;
   }
@@ -1080,17 +1035,25 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
     return NS_OK;
   }
 
+  // XXXbz this code is very similar to the HTMLDocument code; should merge!
+  if (mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+  }
+  if (mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
+  }
+
   nsresult rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aUrl,
                                      this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mInlineStyleSheet), aUrl,
+  rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet), aUrl,
                                this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // tell the world about our new style sheets
   AddStyleSheet(mAttrStyleSheet, 0);
-  AddStyleSheet(mInlineStyleSheet, 0);
+  AddStyleSheet(mStyleAttrStyleSheet, 0);
 
   return rv;
 }
@@ -1107,22 +1070,19 @@ nsXMLDocument::GetBaseTarget(nsAString &aBaseTarget) const
   aBaseTarget.Assign(mBaseTarget);
 }
 
-NS_IMETHODIMP
-nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
+nsICSSLoader*
+nsXMLDocument::GetCSSLoader()
 {
   if (!mCSSLoader) {
-    nsresult rv = NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mCSSLoader->SetCaseSensitive(PR_TRUE);
-    // no quirks in XML
-    mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
+    NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
+    if (mCSSLoader) {
+      mCSSLoader->SetCaseSensitive(PR_TRUE);
+      // no quirks in XML
+      mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
+    }
   }
 
-  aLoader = mCSSLoader;
-  NS_IF_ADDREF(aLoader);
-
-  return NS_OK;
+  return mCSSLoader;
 }
 
 nsresult

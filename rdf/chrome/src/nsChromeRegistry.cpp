@@ -79,7 +79,6 @@
 #include "nsIStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIPresShell.h"
 #include "nsIDocShell.h"
 #include "nsISupportsArray.h"
@@ -1566,13 +1565,6 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // The document sheets just need to be done once; the document will notify
-  // the presshells and style sets
-  nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Build an array of nsIURIs of style sheets we need to load.
   nsCOMArray<nsIStyleSheet> oldSheets;
   nsCOMArray<nsIStyleSheet> newSheets;
@@ -1607,6 +1599,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
       nsCOMPtr<nsICSSStyleSheet> newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
+      // XXXbz this should really use the document's CSSLoader!
       LoadStyleSheetWithURL(uri, getter_AddRefs(newSheet));
       // Even if it's null, we put in in there.
       newSheets.AppendObject(newSheet);

@@ -45,7 +45,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
@@ -986,10 +985,8 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aURI,
       sheet->GetURL(*aURI);
       nsCOMPtr<nsIDocument> document;
       sheet->GetOwningDocument(*getter_AddRefs(document));
-      nsCOMPtr<nsIHTMLContentContainer> htmlContainer =
-        do_QueryInterface(document);
-      if (htmlContainer) {
-        htmlContainer->GetCSSLoader(*aCSSLoader);
+      if (document) {
+        NS_IF_ADDREF(*aCSSLoader = document->GetCSSLoader());
         NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
       }
     }

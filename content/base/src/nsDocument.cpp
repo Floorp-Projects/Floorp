@@ -573,6 +573,14 @@ nsDocument::~nsDocument()
     mNodeInfoManager->DropDocumentReference();
   }
 
+  if (mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+  }
+  
+  if (mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
+  }
+
   delete mHeaderData;
   delete mBoxObjectTable;
   delete mXPathDocument;

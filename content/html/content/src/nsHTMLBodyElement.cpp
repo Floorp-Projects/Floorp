@@ -54,7 +54,6 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsHTMLAttributes.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
@@ -522,29 +521,24 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleDat
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        nsCOMPtr<nsIHTMLContentContainer> htmlContainer =
-          do_QueryInterface(doc);
-        if (htmlContainer) {
-          nsCOMPtr<nsIHTMLStyleSheet> styleSheet;
-          htmlContainer->GetAttributeStyleSheet(getter_AddRefs(styleSheet));
-          if (styleSheet) {
-            aAttributes->GetAttribute(nsHTMLAtoms::link, value);
-            if ((eHTMLUnit_Color == value.GetUnit()) || 
-                (eHTMLUnit_ColorName == value.GetUnit())) {
-              styleSheet->SetLinkColor(value.GetColorValue());
-            }
+        nsIHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
+        if (styleSheet) {
+          aAttributes->GetAttribute(nsHTMLAtoms::link, value);
+          if ((eHTMLUnit_Color == value.GetUnit()) || 
+              (eHTMLUnit_ColorName == value.GetUnit())) {
+            styleSheet->SetLinkColor(value.GetColorValue());
+          }
 
-            aAttributes->GetAttribute(nsHTMLAtoms::alink, value);
-            if ((eHTMLUnit_Color == value.GetUnit()) || 
-                (eHTMLUnit_ColorName == value.GetUnit())) {
-              styleSheet->SetActiveLinkColor(value.GetColorValue());
-            }
+          aAttributes->GetAttribute(nsHTMLAtoms::alink, value);
+          if ((eHTMLUnit_Color == value.GetUnit()) || 
+              (eHTMLUnit_ColorName == value.GetUnit())) {
+            styleSheet->SetActiveLinkColor(value.GetColorValue());
+          }
 
-            aAttributes->GetAttribute(nsHTMLAtoms::vlink, value);
-            if ((eHTMLUnit_Color == value.GetUnit()) ||
-                (eHTMLUnit_ColorName == value.GetUnit())) {
-              styleSheet->SetVisitedLinkColor(value.GetColorValue());
-            }
+          aAttributes->GetAttribute(nsHTMLAtoms::vlink, value);
+          if ((eHTMLUnit_Color == value.GetUnit()) ||
+              (eHTMLUnit_ColorName == value.GetUnit())) {
+            styleSheet->SetVisitedLinkColor(value.GetColorValue());
           }
         }
       }
@@ -573,35 +567,13 @@ nsHTMLBodyElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRu
   return NS_OK;
 }
 
-static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
-{
-  nsIHTMLStyleSheet* sheet = nsnull;
-
-  if (aDocument) {
-    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(aDocument));
-
-    if (container) {
-      container->GetAttributeStyleSheet(&sheet);
-    }
-  }
-
-  NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
-  return sheet;
-}
-
 NS_IMETHODIMP
 nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsGenericHTMLContainerElement::WalkContentStyleRules(aRuleWalker);
 
-  if (!mContentStyleRule) {
-    nsCOMPtr<nsIHTMLStyleSheet> sheet;
-
-    if (mDocument) {  // find style sheet
-      sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
-    }
-
-    mContentStyleRule = new BodyRule(this, sheet);
+  if (!mContentStyleRule && mDocument) {
+    mContentStyleRule = new BodyRule(this, mDocument->GetAttributeStyleSheet());
     NS_IF_ADDREF(mContentStyleRule);
   }
   if (aRuleWalker && mContentStyleRule) {

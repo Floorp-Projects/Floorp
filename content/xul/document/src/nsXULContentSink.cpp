@@ -65,7 +65,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIFormControl.h"
 #include "nsIHTMLContent.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
@@ -597,14 +596,9 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
     if (NS_FAILED(rv)) return rv;
 
     // Get the CSS loader from the document so we can load
-    // stylesheets.
-    nsCOMPtr<nsIHTMLContentContainer> htmlContainer = do_QueryInterface(aDocument);
-    NS_ASSERTION(htmlContainer != nsnull, "not an HTML container");
-    if (! htmlContainer)
-        return NS_ERROR_UNEXPECTED;
-
-    rv = htmlContainer->GetCSSLoader(*getter_AddRefs(mCSSLoader));
-    if (NS_FAILED(rv)) return rv;
+    // stylesheets
+    mCSSLoader = aDocument->GetCSSLoader();
+    NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
 
     rv = aPrototype->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
     if (NS_FAILED(rv)) return rv;

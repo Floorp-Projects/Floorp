@@ -52,7 +52,6 @@
 #include "nsICSSLoader.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIURI.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsNetUtil.h"
 #include "nsXBLAtoms.h"
 #include "nsIFrameManager.h"
@@ -133,8 +132,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
     }
     else if (curr->mType == nsXBLAtoms::stylesheet) {
       if (!cssLoader) {
-        nsCOMPtr<nsIHTMLContentContainer> htmlContent(do_QueryInterface(doc));
-        htmlContent->GetCSSLoader(*getter_AddRefs(cssLoader));
+        cssLoader = doc->GetCSSLoader();
       }
 
       if (!cssLoader)

@@ -483,7 +483,6 @@ NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXULDocument)
-    NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
     NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
@@ -530,6 +529,8 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
 {
     nsresult rv;
 
+    // XXXbz this is similar to code in nsHTMLDocument and
+    // nsXMLDocument; move up to nsDocument?
     // Delete references to style sheets - this should be done in superclass...
     PRInt32 i = mStyleSheets.Count();
     while (--i >= 0) {
@@ -548,14 +549,13 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
 
     // Create an inline style sheet for inline content that contains a style
     // attribute.
-    rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mInlineStyleSheet), anURL,
-                                 this);
+    rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mStyleAttrStyleSheet), anURL, this);
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to add inline style sheet");
         return rv;
     }
 
-    AddStyleSheet(mInlineStyleSheet, 0);
+    AddStyleSheet(mStyleAttrStyleSheet, 0);
 
     return NS_OK;
 }
@@ -3699,9 +3699,8 @@ nsXULDocument::AddPrototypeSheets()
         // only system that partially invalidates the XUL cache).
         // - dwh
         //XXXbz we hit this code from fastload all the time.  Bug 183505.
-        nsCOMPtr<nsICSSLoader> loader;
-        rv = GetCSSLoader(*getter_AddRefs(loader));
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsICSSLoader* loader = GetCSSLoader();
+        NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
         rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure

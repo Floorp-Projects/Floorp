@@ -47,7 +47,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDocument.h"
 #include "nsIHTMLStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsHTMLAttributes.h"
 #include "nsIDOMMutationEvent.h"
 
@@ -149,20 +148,6 @@ nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
-{
-  nsIHTMLStyleSheet *sheet=nsnull;
-
-  if (aDocument) {
-    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(aDocument));
-
-    container->GetAttributeStyleSheet(&sheet);
-  }
-
-  return sheet;
-}
-
-
 NS_IMETHODIMP
 nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
@@ -206,7 +191,8 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
     // set as string value to avoid another string copy
     PRBool mapped = HasAttributeDependentStyle(aAttribute);
 
-    nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
+    nsIHTMLStyleSheet* sheet =
+      mDocument ? mDocument->GetAttributeStyleSheet() : nsnull;
     if (!mAttributes) {
       result = NS_NewHTMLAttributes(&mAttributes);
       NS_ENSURE_SUCCESS(result, result);
