@@ -288,11 +288,6 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
       // command.
       nsIFrame* oldFrameNextInFlow;
       aOldFrame->GetNextInFlow(&oldFrameNextInFlow);
-      nsSplittableType st;
-      aOldFrame->IsSplittable(st);
-      if (NS_FRAME_NOT_SPLITTABLE != st) {
-        nsSplittableFrame::RemoveFromFlow(aOldFrame);
-      }
       parent->mFrames.DestroyFrame(aPresContext, aOldFrame);
       aOldFrame = oldFrameNextInFlow;
       if (nsnull != aOldFrame) {

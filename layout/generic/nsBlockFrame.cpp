@@ -5112,7 +5112,6 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
     block->mFloaters.RemoveFrame(aFrame);
   }
   // Destroy aFrame
-  nsSplittableFrame::RemoveFromFlow(aFrame);
   aFrame->Destroy(aPresContext);
 }
 
@@ -5210,11 +5209,6 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       // to destroy that too.
       nsIFrame* nextInFlow;
       aDeletedFrame->GetNextInFlow(&nextInFlow);
-      nsSplittableType st;
-      aDeletedFrame->IsSplittable(st);
-      if (NS_FRAME_NOT_SPLITTABLE != st) {
-        nsSplittableFrame::RemoveFromFlow(aDeletedFrame);
-      }
 #ifdef NOISY_REMOVE_FRAME
       printf("DoRemoveFrame: line=%p frame=", line);
       nsFrame::ListTag(stdout, aDeletedFrame);

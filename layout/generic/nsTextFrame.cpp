@@ -415,6 +415,8 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags);
 
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
   NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor);
@@ -863,6 +865,16 @@ NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
   return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
+NS_IMETHODIMP
+nsTextFrame::Destroy(nsIPresContext* aPresContext)
+{
+  if (mNextInFlow) {
+    mNextInFlow->SetPrevInFlow(nsnull);
+  }
+  // Let the base class destroy the frame
+  return nsFrame::Destroy(aPresContext);
+}
+
 class nsContinuingTextFrame : public nsTextFrame {
 public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
@@ -870,6 +882,8 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetPrevInFlow(nsIFrame** aPrevInFlow) const {
     *aPrevInFlow = mPrevInFlow;
@@ -935,6 +949,16 @@ nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsContinuingTextFrame::Destroy(nsIPresContext* aPresContext)
+{
+  if (mPrevInFlow || mNextInFlow) {
+    nsSplittableFrame::RemoveFromFlow(this);
+  }
+  // Let the base class destroy the frame
+  return nsFrame::Destroy(aPresContext);
 }
 
 #ifdef DEBUG
