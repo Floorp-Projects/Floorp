@@ -125,7 +125,7 @@ function showSettings()
   var list = document.getElementById("extList");
   var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
   if (selectedItem)
-    window.openDialog(selectedItem.getAttribute("settingsURL"), "", "chrome,dialog,modal");
+    window.openDialog(selectedItem.getAttribute("settingsURL"), "", "chrome,dialog,modal,resizable");
 }
 
 ///////////////////////////////////////////////////////////////
