@@ -1441,7 +1441,9 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
 ** Note: on some platforms va_list is defined as an array,
 ** and requires array notation.
 */
-#ifdef HAVE_VA_LIST_AS_ARRAY
+#ifdef HAVE_VA_COPY
+#define VARARGS_ASSIGN(foo, bar)	VA_COPY(foo,bar)
+#elif defined(HAVE_VA_LIST_AS_ARRAY)
 #define VARARGS_ASSIGN(foo, bar)	foo[0] = bar[0]
 #else
 #define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
