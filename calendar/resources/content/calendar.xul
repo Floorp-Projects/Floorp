@@ -411,7 +411,7 @@
                   </menulist>
                </box>
                <!-- leave the following line as onclick, don't change it to onselect, we take care of our own selection -->
-               <tree tooltip="savetip" id="unifinder-search-results-listbox" onclick="unifinderOnSelect()" flex="1" enableColumnDrag="false">
+               <tree tooltip="savetip" id="unifinder-search-results-listbox" flex="1" enableColumnDrag="false">
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
                       persist="hidden ordinal width" flex="1" 
@@ -434,12 +434,12 @@
                   </treecols>
        
                   <treechildren onmousemove="changeToolTipTextForToDo( event )" 
-                    onclick="unifinderClickEvent( event )"
+                    onclick="unifinderOnSelect( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
                     onfocus="focusFirstItemIfNoSelection( );"
-                    context="taskitem-context-menu">
+                    >
                  </treechildren>
                </tree>
             </vbox>
