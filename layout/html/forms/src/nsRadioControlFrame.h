@@ -62,8 +62,9 @@ public:
   virtual void GetCurrentRadioState(PRBool *aState);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect);
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
  
   virtual void PaintRadioButton(nsIPresContext& aPresContext,
                         nsIRenderingContext& aRenderingContext,

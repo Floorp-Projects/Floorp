@@ -112,6 +112,14 @@ typedef PRUint32 nsFrameState;
 
 //----------------------------------------------------------------------
 
+enum nsFramePaintLayer {
+  eFramePaintLayer_Underlay = 0,
+  eFramePaintLayer_Content = 1,
+  eFramePaintLayer_Overlay = 2,
+};
+
+//----------------------------------------------------------------------
+
 /**
  * A frame in the layout model. This interface is supported by all frame
  * objects.
@@ -262,11 +270,14 @@ public:
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 
   /**
-   * Painting
+   * Paint is responsible for painting the a frame. The aWhichLayer
+   * argument indicates which layer of painting should be done during
+   * the call.
    */
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect) = 0;
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer) = 0;
 
   /**
    * Event handling of GUI events.

@@ -50,7 +50,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   /** reflow of a column group is a trivial matter of reflowing
     * the col group's children (columns), and setting this frame

@@ -147,29 +147,19 @@ nsFormControlFrame::SetClickPoint(nscoord aX, nscoord aY)
 // they could be blended, and bordered, and so on...
 NS_METHOD
 nsFormControlFrame::Paint(nsIPresContext& aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect)
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect,
+                          nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  if (disp->mVisible) {
-    // Make sure the widget is visible if it isn't currently visible
-//    if (PR_FALSE == mDidInit) {
-//      PostCreateWidget(&aPresContext);
-//      mDidInit = PR_TRUE;
-//    }
-    // Point borders/padding if any
-    return nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-  }
-  return NS_OK;
+  return nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            aWhichLayer);
 }
 
 void 
 nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredLayoutSize,
-                             nsSize& aDesiredWidgetSize)
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
+                                   nsSize& aDesiredWidgetSize)
 {
   // get the css size and let the frame use or override it
   nsSize styleSize;

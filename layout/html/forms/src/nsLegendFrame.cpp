@@ -111,9 +111,10 @@ nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsLegendFrame::Paint(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect)
+                     const nsRect& aDirtyRect,
+                     nsFramePaintLayer aWhichLayer)
 {
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 NS_IMETHODIMP 

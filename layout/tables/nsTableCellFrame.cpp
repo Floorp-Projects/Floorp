@@ -50,47 +50,50 @@ static const PRBool gsDebugNT = PR_FALSE;
 
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
-                                  const nsRect& aDirtyRect)
+                                  const nsRect& aDirtyRect,
+                                  nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    const nsStyleDisplay* disp =
+      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  if (disp->mVisible) {
-    const nsStyleColor* myColor =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleSpacing* mySpacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    NS_ASSERTION(nsnull!=myColor, "bad style color");
-    NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
+    if (disp->mVisible) {
+      const nsStyleColor* myColor =
+        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleSpacing* mySpacing =
+        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      NS_ASSERTION(nsnull!=myColor, "bad style color");
+      NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
-    nsRect  rect(0, 0, mRect.width, mRect.height);
+      nsRect  rect(0, 0, mRect.width, mRect.height);
 
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor, 0, 0);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *myColor, 0, 0);
     
-    // empty cells do not render their border
-    PRBool renderBorder = PR_TRUE;
-    if (PR_TRUE==GetContentEmpty())
-    {
-      const nsStyleTable* cellTableStyle;
-      GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
-      if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE==cellTableStyle->mEmptyCells)
-        renderBorder=PR_FALSE;
-    }
-    if (PR_TRUE==renderBorder)
-    {
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *mySpacing, 0);
+      // empty cells do not render their border
+      PRBool renderBorder = PR_TRUE;
+      if (PR_TRUE==GetContentEmpty())
+      {
+        const nsStyleTable* cellTableStyle;
+        GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
+        if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE==cellTableStyle->mEmptyCells)
+          renderBorder=PR_FALSE;
+      }
+      if (PR_TRUE==renderBorder)
+      {
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *mySpacing, 0);
+      }
     }
   }
 
   // for debug...
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0,128,128));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 

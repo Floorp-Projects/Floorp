@@ -72,7 +72,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -373,10 +374,11 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsLabelFrame::Paint(nsIPresContext& aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect)
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect,
+                    nsFramePaintLayer aWhichLayer)
 {
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 NS_IMETHODIMP 

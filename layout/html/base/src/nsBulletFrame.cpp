@@ -75,8 +75,13 @@ nsBulletFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 NS_METHOD
 nsBulletFrame::Paint(nsIPresContext&      aCX,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect)
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer)
 {
+  if (eFramePaintLayer_Content != aWhichLayer) {
+    return NS_OK;
+  }
+
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   nscoord width;

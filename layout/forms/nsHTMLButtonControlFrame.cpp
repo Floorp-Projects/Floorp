@@ -69,7 +69,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -526,10 +527,14 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
                                 nsIRenderingContext& aRenderingContext,
-                                const nsRect& aDirtyRect)
+                                const nsRect& aDirtyRect,
+                                nsFramePaintLayer aWhichLayer)
 {
-  nsresult result = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-  if (NS_OK == result) {
+  nsresult result = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  if (eFramePaintLayer_Overlay == aWhichLayer) {
     if (mGotFocus) { // draw dashed line to indicate selection, XXX don't calc rect every time
       const nsStyleSpacing* spacing =
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -555,8 +560,8 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
         borderColors[i] = black;
       }
       nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside, 
-                                     inside, PR_FALSE, nsnull);
-	}
+                                      inside, PR_FALSE, nsnull);
+    }
   }
   return result;
 }

@@ -194,34 +194,42 @@ nsSimplePageSequenceFrame::GetFrameName(nsString& aResult) const
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect)
+                                 const nsRect&        aDirtyRect,
+                                 nsFramePaintLayer    aWhichLayer)
 {
-  // Paint a white background
-  aRenderingContext.SetColor(NS_RGB(255,255,255));
-  aRenderingContext.FillRect(aDirtyRect);
-  // XXX Crop marks or hash marks would be nice. Use style info...
-  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    // Paint a white background
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    aRenderingContext.FillRect(aDirtyRect);
+    // XXX Crop marks or hash marks would be nice. Use style info...
+  }
+
+  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                                 aWhichLayer);
 }
 
 void
 nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
-                                      nsIFrame*            aFrame)
+                                      nsIFrame*            aFrame,
+                                      nsFramePaintLayer    aWhichLayer)
 {
   // Let the page paint
   nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
-                               aDirtyRect, aFrame);
+                               aDirtyRect, aFrame, aWhichLayer);
 
-  // XXX Paint a one-pixel border around the page so it's easy to see where
-  // each page begins and ends when we're in print preview mode
-  nsRect  pageBounds;
-  float   p2t = aPresContext.GetPixelsToTwips();
+  if (eFramePaintLayer_Overlay == aWhichLayer) {
+    // XXX Paint a one-pixel border around the page so it's easy to see where
+    // each page begins and ends when we're in print preview mode
+    nsRect  pageBounds;
+    float   p2t = aPresContext.GetPixelsToTwips();
 
-  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-  aFrame->GetRect(pageBounds);
-  pageBounds.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
-  aRenderingContext.DrawRect(pageBounds);
+    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+    aFrame->GetRect(pageBounds);
+    pageBounds.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
+    aRenderingContext.DrawRect(pageBounds);
+  }
 }
 
 //----------------------------------------------------------------------

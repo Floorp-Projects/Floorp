@@ -60,7 +60,8 @@ public:
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 
 
   /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
@@ -68,7 +69,8 @@ public:
     */
   virtual void PaintChildren(nsIPresContext&      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect);
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer);
 
   /** calls Reflow for all of its child cells.
     * Cells with rowspan=1 are all set to the same height and stacked horizontally.

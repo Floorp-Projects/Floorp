@@ -114,15 +114,16 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
 
 NS_METHOD nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
                                    nsIRenderingContext& aRenderingContext,
-                                   const nsRect& aDirtyRect)
+                                   const nsRect& aDirtyRect,
+                                   nsFramePaintLayer aWhichLayer)
 {
   // for debug...
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 

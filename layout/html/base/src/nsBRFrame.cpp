@@ -31,7 +31,8 @@ public:
   // nsIFrame
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -61,9 +62,11 @@ BRFrame::~BRFrame()
 NS_METHOD
 BRFrame::Paint(nsIPresContext& aPresContext,
                nsIRenderingContext& aRenderingContext,
-               const nsRect& aDirtyRect)
+               const nsRect& aDirtyRect,
+               nsFramePaintLayer aWhichLayer)
 {
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) &&
+      nsIFrame::GetShowFrameBorders()) {
     float p2t = aPresContext.GetPixelsToTwips();
     nscoord five = NSIntPixelsToTwips(5, p2t);
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));

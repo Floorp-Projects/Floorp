@@ -142,7 +142,8 @@ public:
   NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect);
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer);
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus);

@@ -65,7 +65,8 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 #endif
 
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,

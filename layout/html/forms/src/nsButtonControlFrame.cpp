@@ -210,10 +210,12 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_METHOD 
 nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                            const nsRect& aDirtyRect,
+                            nsFramePaintLayer aWhichLayer)
 {
-  PaintButton(aPresContext, aRenderingContext, aDirtyRect);
- 
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    PaintButton(aPresContext, aRenderingContext, aDirtyRect);
+  }
   return NS_OK;
 }
 
@@ -380,8 +382,8 @@ nsButtonControlFrame::GetFrameName(nsString& aResult) const
 
 void 
 nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                                  nsIRenderingContext& aRenderingContext,
+                                  const nsRect& aDirtyRect)
 {
 
   nsString label;

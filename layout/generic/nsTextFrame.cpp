@@ -109,7 +109,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
                        nsPoint& aPoint,
@@ -509,8 +510,12 @@ TextFrame::ContentChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 TextFrame::Paint(nsIPresContext& aPresContext,
                  nsIRenderingContext& aRenderingContext,
-                 const nsRect& aDirtyRect)
+                 const nsRect& aDirtyRect,
+                 nsFramePaintLayer aWhichLayer)
 {
+  if (eFramePaintLayer_Content != aWhichLayer) {
+    return NS_OK;
+  }
   if ((0 != (mFlags & TEXT_BLINK_ON)) && gBlinkTextOff) {
     return NS_OK;
   }

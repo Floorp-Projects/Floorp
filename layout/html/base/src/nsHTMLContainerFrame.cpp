@@ -48,58 +48,32 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 NS_IMETHODIMP
 nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                            const nsRect& aDirtyRect,
+                            nsFramePaintLayer aWhichLayer)
 {
-  // Probe for a JS onPaint event handler
-  nsIHTMLContent* hc;
-  if (mContent && NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**)&hc)) {
-    nsHTMLValue val;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetAttribute(nsHTMLAtoms::onpaint, val)) {
-      nsEventStatus es;
-      nsresult rv;
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->mVisible && mRect.width && mRect.height) {
+      // Paint our background and border
+      PRIntn skipSides = GetSkipSides();
+      const nsStyleColor* color = (const nsStyleColor*)
+        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-      nsRect r(aDirtyRect);
-      nsPaintEvent event;
-      event.eventStructType = NS_PAINT_EVENT;
-      event.message = NS_PAINT;
-      event.point.x = 0;
-      event.point.y = 0;
-      event.time = 0;
-      event.widget = nsnull;
-      event.nativeMsg = nsnull;
-      event.renderingContext = &aRenderingContext;
-      event.rect = &r;
-
-      rv = mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, es);
-      if (NS_OK == rv) {
-      }
+      nsRect  rect(0, 0, mRect.width, mRect.height);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *color, 0, 0);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, skipSides);
     }
-    NS_RELEASE(hc);
-  }
-
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  if (disp->mVisible && mRect.width && mRect.height) {
-    // Paint our background and border
-    PRIntn skipSides = GetSkipSides();
-    const nsStyleColor* color =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-
-    nsRect  rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *color, 0, 0);
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *spacing, skipSides);
   }
 
   // Now paint the kids. Note that child elements have the opportunity to
   // override the visibility property and display even if their parent is
   // hidden
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 

@@ -70,9 +70,10 @@ nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
 NS_IMETHODIMP
 nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect)
+                          const nsRect& aDirtyRect,
+                          nsFramePaintLayer aWhichLayer)
 {
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
     float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     nscoord x = NSIntPixelsToTwips(-5, p2t);

@@ -109,7 +109,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -148,7 +149,8 @@ public:
     */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   /**
     * @see nsIFrame::Reflow
@@ -274,15 +276,18 @@ PRBool nsHTMLFrameOuterFrame::IsInline()
 
 NS_IMETHODIMP
 nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect)
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer)
 {
   //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mFirstChild) {
-    mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect);
+    mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       aWhichLayer);
   }
   if (IsInline()) {
-    return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+    return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                       aDirtyRect, aWhichLayer);
   } else {
     return NS_OK;
   }
@@ -582,8 +587,9 @@ nsHTMLFrameInnerFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect)
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer)
 {
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return NS_OK;

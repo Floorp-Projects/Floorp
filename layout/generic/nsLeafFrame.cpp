@@ -31,22 +31,23 @@ nsLeafFrame::~nsLeafFrame()
 NS_IMETHODIMP
 nsLeafFrame::Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect)
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  if (disp->mVisible) {
-    const nsStyleColor* myColor =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleSpacing* mySpacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-
-    nsRect  rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor, 0, 0);
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *mySpacing, 0);
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->mVisible) {
+      const nsStyleColor* myColor = (const nsStyleColor*)
+        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      nsRect rect(0, 0, mRect.width, mRect.height);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *myColor, 0, 0);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *mySpacing, 0);
+    }
   }
   return NS_OK;
 }

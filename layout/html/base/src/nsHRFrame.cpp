@@ -46,7 +46,8 @@ public:
                     nsReflowStatus& aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
 protected:
   virtual ~HRuleFrame();
@@ -80,11 +81,16 @@ HRuleFrame::~HRuleFrame()
 NS_METHOD
 HRuleFrame::Paint(nsIPresContext&      aPresContext,
                   nsIRenderingContext& aRenderingContext,
-                  const nsRect&        aDirtyRect)
+                  const nsRect&        aDirtyRect,
+                  nsFramePaintLayer    aWhichLayer)
 {
+  if (eFramePaintLayer_Content != aWhichLayer) {
+    return NS_OK;
+  }
+
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (PR_FALSE == disp->mVisible) {
+  if (!disp->mVisible) {
     return NS_OK;
   }
 

@@ -35,7 +35,8 @@ public:
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD Paint(nsIPresContext &aCX,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
 

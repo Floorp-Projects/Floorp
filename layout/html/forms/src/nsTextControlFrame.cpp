@@ -510,7 +510,8 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 {
     aRenderingContext.PushState();
 
-    nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+    nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                              eFramePaintLayer_Content);
 
     const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -654,9 +655,11 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 NS_METHOD 
 nsTextControlFrame::Paint(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect)
+                          const nsRect& aDirtyRect,
+                          nsFramePaintLayer aWhichLayer)
 {
-  PaintTextControl(aPresContext, aRenderingContext, aDirtyRect);
-
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect);
+  }
   return NS_OK;
 }

@@ -148,7 +148,8 @@ nsTableRowGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
-                                      const nsRect&        aDirtyRect)
+                                      const nsRect&        aDirtyRect,
+                                      nsFramePaintLayer aWhichLayer)
 {
 
   // for debug...
@@ -159,7 +160,7 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext& aPresContext,
   }
   */
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 
@@ -183,7 +184,8 @@ nsTableRowGroupFrame::GetSkipSides() const
   */
 void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
                                          nsIRenderingContext& aRenderingContext,
-                                         const nsRect&        aDirtyRect)
+                                         const nsRect&        aDirtyRect,
+                                         nsFramePaintLayer    aWhichLayer)
 {
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
@@ -200,8 +202,8 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
                            damageArea.width, damageArea.height);
       aRenderingContext.PushState();
       aRenderingContext.Translate(kidRect.x, kidRect.y);
-      kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-      if (nsIFrame::GetShowFrameBorders()) {
+      kid->Paint(aPresContext, aRenderingContext, kidDamageArea, aWhichLayer);
+      if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
         aRenderingContext.SetColor(NS_RGB(255,0,0));
         aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
       }

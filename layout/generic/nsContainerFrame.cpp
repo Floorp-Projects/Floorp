@@ -208,9 +208,10 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsContainerFrame::Paint(nsIPresContext&      aPresContext,
                         nsIRenderingContext& aRenderingContext,
-                        const nsRect&        aDirtyRect)
+                        const nsRect&        aDirtyRect,
+                        nsFramePaintLayer    aWhichLayer)
 {
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 
@@ -223,7 +224,8 @@ nsContainerFrame::Paint(nsIPresContext&      aPresContext,
 void
 nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect)
+                                const nsRect&        aDirtyRect,
+                                nsFramePaintLayer    aWhichLayer)
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -242,7 +244,7 @@ nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
 
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid);
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
     kid->GetNextSibling(kid);
   }
 
@@ -256,7 +258,8 @@ void
 nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
-                             nsIFrame*            aFrame)
+                             nsIFrame*            aFrame,
+                             nsFramePaintLayer    aWhichLayer)
 {
   nsIView *pView;
   aFrame->GetView(pView);
@@ -301,7 +304,7 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
       aRenderingContext.Translate(kidRect.x, kidRect.y);
 
       // Paint the kid
-      aFrame->Paint(aPresContext, aRenderingContext, damageArea);
+      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
       PRBool clipState;
       aRenderingContext.PopState(clipState);
 

@@ -57,14 +57,16 @@ public:
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
     * @see nsIFrame::Paint 
     */
   virtual void PaintChildren(nsIPresContext&      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect);
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer);
 
   /**
    * Find the correct descendant frame.

@@ -1847,41 +1847,44 @@ nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
 /* SEC: TODO: adjust the rect for captions */
 NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,
-                              const nsRect& aDirtyRect)
+                              const nsRect& aDirtyRect,
+                              nsFramePaintLayer aWhichLayer)
 {
-  // table paint code is concerned primarily with borders and bg color
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    // table paint code is concerned primarily with borders and bg color
+    const nsStyleDisplay* disp =
+      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  if (disp->mVisible) {
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    const nsStyleColor* color =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleTable* tableStyle =
-      (const nsStyleTable*)mStyleContext->GetStyleData(eStyleStruct_Table);
+    if (disp->mVisible) {
+      const nsStyleSpacing* spacing =
+        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleColor* color =
+        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleTable* tableStyle =
+        (const nsStyleTable*)mStyleContext->GetStyleData(eStyleStruct_Table);
 
-    nsRect  rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *color, 0, 0);
-    PRIntn skipSides = GetSkipSides();
-    if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
-    {
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, skipSides);
-    }
-    else
-    {
+      nsRect  rect(0, 0, mRect.width, mRect.height);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *color, 0, 0);
+      PRIntn skipSides = GetSkipSides();
+      if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
+      {
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *spacing, skipSides);
+      }
+      else
+      {
+      }
     }
   }
 
   // for debug...
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0,128,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 

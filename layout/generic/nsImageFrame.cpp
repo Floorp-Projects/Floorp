@@ -648,7 +648,8 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
 NS_METHOD
 nsImageFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect)
+                    const nsRect& aDirtyRect,
+                    nsFramePaintLayer aWhichLayer)
 {
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
@@ -657,38 +658,45 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible) {
     // First paint background and borders
-    nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+    nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       aWhichLayer);
 
     nsIImage* image = mImageLoader.GetImage();
     if (nsnull == image) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
-      DisplayAltFeedback(aPresContext, aRenderingContext,
-                         mImageLoader.GetLoadImageFailed() ? NS_ICON_BROKEN_IMAGE :
-                                                             NS_ICON_LOADING_IMAGE);
+      if (eFramePaintLayer_Underlay == aWhichLayer) {
+        DisplayAltFeedback(aPresContext, aRenderingContext,
+                           mImageLoader.GetLoadImageFailed()
+                           ? NS_ICON_BROKEN_IMAGE
+                           : NS_ICON_LOADING_IMAGE);
+      }
       return NS_OK;
     }
 
-    // Now render the image into our inner area (the area without the
-    // borders and padding)
-    nsRect inner;
-    GetInnerArea(&aPresContext, inner);
-    if (mImageLoader.GetLoadImageFailed()) {
-      float p2t;
-      aPresContext.GetScaledPixelsToTwips(p2t);
-      inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
-      inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
+    if (eFramePaintLayer_Content == aWhichLayer) {
+      // Now render the image into our inner area (the area without the
+      // borders and padding)
+      nsRect inner;
+      GetInnerArea(&aPresContext, inner);
+      if (mImageLoader.GetLoadImageFailed()) {
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(p2t);
+        inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
+        inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
+      }
+      aRenderingContext.DrawImage(image, inner);
     }
-    aRenderingContext.DrawImage(image, inner);
 
-    if (GetShowFrameBorders()) {
+    if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
       nsIImageMap* map = GetImageMap();
       if (nsnull != map) {
+        nsRect inner;
+        GetInnerArea(&aPresContext, inner);
         PRBool clipState;
         aRenderingContext.SetColor(NS_RGB(0, 0, 0));
         aRenderingContext.PushState();
