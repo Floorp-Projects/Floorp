@@ -149,7 +149,7 @@ ifdef MOZILLA_BSAFE_BUILD
 ifeq ($(OS_ARCH),WINNT)
 libbsafe=bsafe41.lib
 else
-libbsafe=libbsafe.a
+libbsafe=libbsafe.$(LIB_SUFFIX)
 endif
 
 private_export::

@@ -41,7 +41,7 @@
 
 #define NUM_SLOTS   32
 
-#if !defined (XP_UNIX) && !defined (_WINDOWS)
+#if !defined (XP_UNIX) && !defined (_WINDOWS) && !defined(XP_OS2)
 #define XP_MAC 1 /*Make sure we get this define in for Mac builds*/
 #endif
 

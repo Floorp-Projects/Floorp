@@ -41,7 +41,7 @@
 #include <termios.h>
 #endif
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined (XP_PC)
 #include <time.h>
 #include <conio.h>
 #endif

@@ -71,22 +71,22 @@ else
 #
 ifneq ($(OS_ARCH), OSF1)
 
-CRYPTO_LIBS = $(DIST)/lib/libfreebl.a 
+CRYPTO_LIBS = $(DIST)/lib/libfreebl.$(LIB_SUFFIX) 
 
 ifdef MOZILLA_SECURITY_BUILD
-CRYPTO_LIBS += $(DIST)/lib/libcrypto.a
+CRYPTO_LIBS += $(DIST)/lib/libcrypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIBS += $(DIST)/lib/libbsafe.a
+CRYPTO_LIBS += $(DIST)/lib/libbsafe.$(LIB_SUFFIX)
 endif
 
 EXTRA_LIBS += \
-	$(DIST)/lib/libswfci.a \
-	$(DIST)/lib/libsoftoken.a \
+	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
 	$(CRYPTO_LIBS) \
-	$(DIST)/lib/libsecutil.a \
-	$(DIST)/lib/libplc4.a \
-	$(DIST)/lib/libplds4.a \
+	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/libplc4.$(LIB_SUFFIX) \
+	$(DIST)/lib/libplds4.$(LIB_SUFFIX) \
 	$(NULL)
 
 endif

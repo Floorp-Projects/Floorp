@@ -67,7 +67,7 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 EXTRA_LIBS += $(DIST)/lib/crmf.lib
 else
-EXTRA_LIBS += $(DIST)/lib/libcrmf.a
+EXTRA_LIBS += $(DIST)/lib/libcrmf.$(LIB_SUFFIX)
 endif
 
 include ../platlibs.mk

@@ -100,34 +100,34 @@ US_FLAGS = -DEXPORT_VERSION
 EXPORT_FLAGS = -DEXPORT_VERSION
 
 BASE_LIBS = \
-	$(DIST)/lib/libdbm.a \
-	$(DIST)/lib/libxp.a \
-	$(DIST)/lib/libnspr.a \
+	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(DIST)/lib/libxp.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnspr.$(LIB_SUFFIX) \
 	$(NULL)
 
-#	$(DIST)/lib/libpurenspr.a \
+#	$(DIST)/lib/libpurenspr.$(LIB_SUFFIX) \
 
 #There is a circular dependancy in security/lib, and here is a gross fix
 SEC_LIBS = \
-	$(DIST)/lib/libsecnav.a \
-        $(DIST)/lib/libssl.a \
-        $(DIST)/lib/libpkcs7.a \
-        $(DIST)/lib/libcert.a \
-        $(DIST)/lib/libkey.a \
-	$(DIST)/lib/libsecmod.a \
-        $(DIST)/lib/libcrypto.a \
-        $(DIST)/lib/libsecutil.a \
-        $(DIST)/lib/libssl.a \
-        $(DIST)/lib/libpkcs7.a \
-        $(DIST)/lib/libcert.a \
-        $(DIST)/lib/libkey.a \
-	$(DIST)/lib/libsecmod.a \
-        $(DIST)/lib/libcrypto.a \
-        $(DIST)/lib/libsecutil.a \
-        $(DIST)/lib/libhash.a \
+	$(DIST)/lib/libsecnav.$(LIB_SUFFIX) \
+        $(DIST)/lib/libssl.$(LIB_SUFFIX) \
+        $(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcert.$(LIB_SUFFIX) \
+        $(DIST)/lib/libkey.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsecmod.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcrypto.$(LIB_SUFFIX) \
+        $(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+        $(DIST)/lib/libssl.$(LIB_SUFFIX) \
+        $(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcert.$(LIB_SUFFIX) \
+        $(DIST)/lib/libkey.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsecmod.$(LIB_SUFFIX) \
+        $(DIST)/lib/libcrypto.$(LIB_SUFFIX) \
+        $(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+        $(DIST)/lib/libhash.$(LIB_SUFFIX) \
 	$(NULL)
 
-MYLIB	= lib/$(OBJDIR)/libsectool.a
+MYLIB	= lib/$(OBJDIR)/libsectool.$(LIB_SUFFIX)
 
 US_LIBS	= $(MYLIB) $(SEC_LIBS) $(BASE_LIBS) $(MYLIB) $(BASE_LIBS)
 EX_LIBS	= $(MYLIB) $(SEC_LIBS) $(BASE_LIBS) $(MYLIB) $(BASE_LIBS) 

@@ -44,6 +44,9 @@
 #include "maci.h"
 #include "secport.h"
 #include "secrng.h"
+#ifdef XP_OS2
+#include <stat.h> 	/* Needed for OS/2 emx */
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -395,10 +398,19 @@ fort_GenerateRandom(unsigned char *buf, int bytes)
 /*
  * NOTE: that MAC is missing below.
  */
+#if defined (XP_UNIX) || defined (XP_OS2)
 #ifdef XP_UNIX
 #define NS_PATH_SEP ':'
 #define NS_DIR_SEP '/'
 #define NS_DEFAULT_PATH ".:/bin/netscape:/etc/netscape/:/etc"
+#endif
+
+#ifdef XP_OS2		/* for OS/2 */
+#define NS_PATH_SEP ';'
+#define NS_DIR_SEP '\\'
+#define NS_DEFAULT_PATH ".:\\bin\\netscape:\\etc\\netscape\\:\\etc"
+#endif
+
 PRInt32
 local_getFileInfo(const char *fn, PRFileInfo *info)
 {
@@ -428,7 +440,8 @@ local_getFileInfo(const char *fn, PRFileInfo *info)
     }
     return rv;
 }
-#endif
+#endif /* UNIX & OS/2 */
+
 #ifdef XP_WIN
 #define NS_PATH_SEP ';'
 #define NS_DIR_SEP '\\'
@@ -609,7 +622,8 @@ local_getFileInfo(const char *fn, PRFileInfo *info)
     return 0;
 }
 
-#endif
+#endif /* XP_WIN */
+
 #ifdef XP_MAC
 #error Need to write fort_FindFileInPath for Mac
 #define NS_PATH_SEP ','

@@ -69,8 +69,8 @@ EXTRA_LIBS = \
 else
 
 EXTRA_LIBS += \
-	$(DIST)/lib/libjar.a \
-	$(DIST)/lib/libzlib.a \
+	$(DIST)/lib/libjar.$(LIB_SUFFIX) \
+	$(DIST)/lib/libzlib.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 

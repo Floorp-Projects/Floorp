@@ -67,8 +67,8 @@ EXTRA_LIBS = \
 else
 
 EXTRA_LIBS += \
-	$(DIST)/lib/libpkcs12.a \
-	$(DIST)/lib/libpkcs7.a \
+	$(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
