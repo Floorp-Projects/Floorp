@@ -102,9 +102,9 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
    if (res == NS_OK && pMsgCompose) {
 	 printf("We succesfully obtained a nsIMsgCompose interface....\n");
-
+#if 0
 	 pMsgCompose->CreateAndInitialize(NULL, NULL, NULL, NULL, NULL);
-
+#endif
 	 printf("Releasing the interface now...\n");
      pMsgCompose->Release(); 
    } 
