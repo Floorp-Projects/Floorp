@@ -282,7 +282,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 #ifdef DEBUG
         nsresult rv =
 #endif
-        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        CallGetService(kRDFServiceCID, &gRDFService);
 
         PR_ASSERT(NS_SUCCEEDED(rv));
 
