@@ -97,7 +97,7 @@ nsresult
 nsComponentManager::RegisterComponent(const nsCID &aClass,
                                       const char *aClassName,
                                       const char *aProgID,
-                                      const char *aLibrary,
+                                      const char *aLibraryPersistentDescriptor,
                                       PRBool aReplace,
                                       PRBool aPersist)
 {
@@ -105,7 +105,37 @@ nsComponentManager::RegisterComponent(const nsCID &aClass,
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
     return cm->RegisterComponent(aClass, aClassName, aProgID,
-                                 aLibrary, aReplace, aPersist);
+                                 aLibraryPersistentDescriptor, aReplace, aPersist);
+}
+
+nsresult
+nsComponentManager::RegisterComponentSpec(const nsCID &aClass,
+                                      const char *aClassName,
+                                      const char *aProgID,
+                                      nsIFileSpec *aLibrary,
+                                      PRBool aReplace,
+                                      PRBool aPersist)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->RegisterComponentSpec(aClass, aClassName, aProgID,
+                                     aLibrary, aReplace, aPersist);
+}
+
+nsresult
+nsComponentManager::RegisterComponentLib(const nsCID &aClass,
+                                         const char *aClassName,
+                                         const char *aProgID,
+                                         const char *adllName,
+                                         PRBool aReplace,
+                                         PRBool aPersist)
+{
+    nsIComponentManager* cm;
+    nsresult rv = NS_GetGlobalComponentManager(&cm);
+    if (NS_FAILED(rv)) return rv;
+    return cm->RegisterComponentLib(aClass, aClassName, aProgID,
+                                     adllName, aReplace, aPersist);
 }
 
 nsresult
@@ -139,7 +169,7 @@ nsComponentManager::FreeLibraries(void)
 
 nsresult
 nsComponentManager::AutoRegister(nsIComponentManager::RegistrationTime when,
-                                 const char* directory)
+                                 nsIFileSpec *directory)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
@@ -149,7 +179,7 @@ nsComponentManager::AutoRegister(nsIComponentManager::RegistrationTime when,
 
 nsresult
 nsComponentManager::AutoRegisterComponent(nsIComponentManager::RegistrationTime when,
-                                          const char *fullname)
+                                          nsIFileSpec *fullname)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);

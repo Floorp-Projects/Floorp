@@ -25,6 +25,7 @@
 #include "nsError.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsIFileSpec.h"
 
 /*
  * Prototypes for dynamic library export functions. Your DLL/DSO needs to export
@@ -107,13 +108,38 @@ public:
                              PRBool aReplace) = 0;
 
   // Manually register a dynamically loaded component.
+  // The libraryPersistentDescriptor is what gets passed to the library
+  // self register function from ComponentManager. The format of this string
+  // is the same as nsIFileSpec::GetPersistentDescriptorString()
+  //
+  // This function will go away in favour of RegisterComponentSpec. In fact,
+  // it internally turns around and calls RegisterComponentSpec.
   NS_IMETHOD RegisterComponent(const nsCID &aClass,
                                const char *aClassName,
                                const char *aProgID,
-                               const char *aLibrary,
+                               const char *aLibraryPersistentDescriptor,
                                PRBool aReplace,
                                PRBool aPersist) = 0;
 
+  // Register a component using its FileSpec as its identification
+  // This is the more prevalent use.
+  NS_IMETHOD RegisterComponentSpec(const nsCID &aClass,
+                                   const char *aClassName,
+                                   const char *aProgID,
+                                   nsIFileSpec *aLibrary,
+                                   PRBool aReplace,
+                                   PRBool aPersist) = 0;
+  
+  // Register a component using its dllName. This could be a dll name with
+  // no path so that LD_LIBRARY_PATH on unix or PATH on win can load it. Or
+  // this could be a code fragment name on the Mac.
+  NS_IMETHOD RegisterComponentLib(const nsCID &aClass,
+                                  const char *aClassName,
+                                  const char *aProgID,
+                                  const char *adllName,
+                                  PRBool aReplace,
+                                  PRBool aPersist) = 0;
+  
   // Manually unregister a factory for a class
   NS_IMETHOD UnregisterFactory(const nsCID &aClass,
                                nsIFactory *aFactory) = 0;
@@ -147,8 +173,8 @@ public:
 	NS_Timer = 2
   };
 
-  NS_IMETHOD AutoRegister(RegistrationTime when, const char* directory) = 0;
-  NS_IMETHOD AutoRegisterComponent(RegistrationTime when, const char *fullname) = 0;
+  NS_IMETHOD AutoRegister(RegistrationTime when, nsIFileSpec* directory) = 0;
+  NS_IMETHOD AutoRegisterComponent(RegistrationTime when, nsIFileSpec *component) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,12 +224,38 @@ public:
                                   PRBool aReplace);
 
   // Manually register a dynamically loaded component.
+  // The libraryPersistentDescriptor is what gets passed to the library
+  // self register function from ComponentManager. The format of this string
+  // is the same as nsIFileSpec::GetPersistentDescriptorString()
+  //
+  // This function will go away in favour of RegisterComponentSpec. In fact,
+  // it internally turns around and calls RegisterComponentSpec.
   static nsresult RegisterComponent(const nsCID &aClass,
-                                    const char *aClassName,
-                                    const char *aProgID,
-                                    const char *aLibrary,
-                                    PRBool aReplace,
-                                    PRBool aPersist);
+                               const char *aClassName,
+                               const char *aProgID,
+                               const char *aLibraryPersistentDescriptor,
+                               PRBool aReplace,
+                               PRBool aPersist);
+
+  // Register a component using its FileSpec as its identification
+  // This is the more prevalent use.
+  static nsresult RegisterComponentSpec(const nsCID &aClass,
+                                   const char *aClassName,
+                                   const char *aProgID,
+                                   nsIFileSpec *aLibrary,
+                                   PRBool aReplace,
+                                   PRBool aPersist);
+
+  // Register a component using its dllName. This could be a dll name with
+  // no path so that LD_LIBRARY_PATH on unix or PATH on win can load it. Or
+  // this could be a code fragment name on the Mac.
+  static nsresult RegisterComponentLib(const nsCID &aClass,
+                                       const char *aClassName,
+                                       const char *aProgID,
+                                       const char *adllName,
+                                       PRBool aReplace,
+                                       PRBool aPersist);
+  
 
   // Manually unregister a factory for a class
   static nsresult UnregisterFactory(const nsCID &aClass,
@@ -218,10 +270,14 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
   // DLL registration support
+
+  // If directory is NULL, then AutoRegister will try registering components
+  // in the default components directory which is got by
+  // nsSpecialSystemDirectory(XPCOM_CurrentProcessComponentDirectory)
   static nsresult AutoRegister(nsIComponentManager::RegistrationTime when,
-                               const char* directory);
+                               nsIFileSpec* directory);
   static nsresult AutoRegisterComponent(nsIComponentManager::RegistrationTime when,
-                                        const char *fullname);
+                                        nsIFileSpec *component);
 
 };
 
