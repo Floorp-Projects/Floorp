@@ -19,11 +19,7 @@
 #ifndef nsIPluginHost_h___
 #define nsIPluginHost_h___
 
-// Unix hackery... MMP
-#ifdef Bool
-#undef Bool
-#endif
-
+#include "xp_core.h"
 #include "nsplugindefs.h"
 
 #define NS_IPLUGINHOST_IID \
