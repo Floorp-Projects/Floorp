@@ -1317,6 +1317,7 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
 	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
 	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",		"$wallet_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",			"$wallet_chrome_dir:locale:en-US:", 0);
 
 	{
 		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
