@@ -28,26 +28,26 @@ interface nsIMsgMailNewsUrl;
 
 [scriptable, uuid(8ec49a08-5cb0-11d3-a52c-0060b0fc04b7)]
 interface nsIImapServerSink : nsISupports {
-	void PossibleImapMailbox(in string folderPath, in wchar hierarchyDelim, in long boxFlags);
-	void DiscoveryDone();
-	void OnlineFolderDelete(in string aFolderName);
-	void OnlineFolderCreateFailed(in string aFolderName);
-	void OnlineFolderRename(in string oldName, in string newName);
-	void FolderIsNoSelect(in string aFolderName, out boolean aResult);
-	void SetFolderAdminURL(in string aFolderName, in string adminUrl);
+	void possibleImapMailbox(in string folderPath, in wchar hierarchyDelim, in long boxFlags);
+	void discoveryDone();
+	void onlineFolderDelete(in string aFolderName);
+	void onlineFolderCreateFailed(in string aFolderName);
+	void onlineFolderRename(in string oldName, in string newName);
+	void folderIsNoSelect(in string aFolderName, out boolean aResult);
+	void setFolderAdminURL(in string aFolderName, in string adminUrl);
+  boolean folderVerifiedOnline(in string aFolderName);
+	void subscribeUpgradeFinished(in boolean bringUpSubscribeUI);
 
-	void SubscribeUpgradeFinished(in boolean bringUpSubscribeUI);
+	void setCapability(in unsigned long capability);
+	void loadNextQueuedUrl(out boolean urlRun);
 
-	void SetCapability(in unsigned long capability);
-	void LoadNextQueuedUrl(out boolean urlRun);
-
-	void GetImapStringByID(in long aMsgId, out wstring aString);
-	void FEAlert(in wstring aString, in nsIMsgWindow aMsgWindow);
-	void FEAlertFromServer(in string aString, in nsIMsgWindow aMsgWindow);
-	void CommitNamespaces();
-	void PromptForPassword(out string aString, in nsIMsgWindow aMsgWindow);
-	void SetUserAuthenticated(in boolean authenticated);
-	void SetMailServerUrls(in string manageMailAccount, in string manageLists, in string manageFilters);
+	void getImapStringByID(in long aMsgId, out wstring aString);
+	void fEAlert(in wstring aString, in nsIMsgWindow aMsgWindow);
+	void fEAlertFromServer(in string aString, in nsIMsgWindow aMsgWindow);
+	void commitNamespaces();
+	void promptForPassword(out string aString, in nsIMsgWindow aMsgWindow);
+	void setUserAuthenticated(in boolean authenticated);
+	void setMailServerUrls(in string manageMailAccount, in string manageLists, in string manageFilters);
 	
 	/* this is a bogus method on this interface but i need it until misc. sink is scriptable.. */
 	void RemoveChannelFromUrl(in nsIMsgMailNewsUrl aUrl, in unsigned long statusCode);

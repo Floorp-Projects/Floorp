@@ -4898,8 +4898,27 @@ void nsImapProtocol::OnEnsureExistsFolder(const char * aSourceMailbox)
 
   List(aSourceMailbox, PR_FALSE); // how to tell if that succeeded?
   PRBool exists = PR_FALSE;
-  if (m_imapMailFolderSink)
-    m_imapMailFolderSink->GetFolderVerifiedOnline(&exists);
+
+  // try converting aSourceMailbox to canonical format
+
+  nsIMAPNamespace *nsForMailbox = nsnull;
+  m_hostSessionList->GetNamespaceForMailboxForHost(GetImapServerKey(),
+                                                     aSourceMailbox, nsForMailbox);
+  // NS_ASSERTION (nsForMailbox, "Oops .. null nsForMailbox\n");
+
+  nsXPIDLCString name;
+
+  if (nsForMailbox)
+    m_runningUrl->AllocateCanonicalPath(aSourceMailbox,
+                                            nsForMailbox->GetDelimiter(),
+                                            getter_Copies(name));
+  else
+    m_runningUrl->AllocateCanonicalPath(aSourceMailbox,
+                                            kOnlineHierarchySeparatorUnknown, 
+                                            getter_Copies(name));
+
+  if (m_imapServerSink)
+    m_imapServerSink->FolderVerifiedOnline(name, &exists);
 
   if (exists)
   {

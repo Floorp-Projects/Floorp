@@ -1284,6 +1284,26 @@ NS_IMETHODIMP  nsImapIncomingServer::SubscribeUpgradeFinished(PRBool bringUpSubs
 	return NS_OK;
 }
 
+NS_IMETHODIMP  nsImapIncomingServer::FolderVerifiedOnline(const char *folderName, PRBool *aResult) 
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  nsCOMPtr<nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr<nsIFolder> aFolder;
+    rv = rootFolder->FindSubFolder(folderName, getter_AddRefs(aFolder));
+    if (NS_SUCCEEDED(rv) && aFolder)
+    {
+      nsCOMPtr<nsIImapMailFolderSink> imapFolder = do_QueryInterface(aFolder);
+      if (imapFolder)
+        imapFolder->GetFolderVerifiedOnline(aResult);
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 {
 	nsresult rv = NS_ERROR_FAILURE;
