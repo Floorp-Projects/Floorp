@@ -505,6 +505,13 @@ nsFocusController::SetActive(PRBool aActive)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFocusController::ResetElementFocus()
+{
+  mCurrentElement = mPreviousElement = nsnull;
+  return NS_OK;
+}
+
 void
 nsFocusController::UpdateWWActiveWindow()
 {

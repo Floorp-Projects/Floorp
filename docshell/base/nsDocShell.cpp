@@ -4755,7 +4755,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             }
 
             if (ourFocusedWindow == focusedWindow || isSubWindow)
-              focusController->SetFocusedElement(nsnull);
+              focusController->ResetElementFocus();
         }
     }
 
