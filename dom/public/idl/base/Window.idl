@@ -32,6 +32,7 @@
         void  forward();
         void  home();
         void  stop();
+        void  print();
 
         void  moveTo(in long xPos, in long yPos);
         void  moveBy(in long xDif, in long yDif);
