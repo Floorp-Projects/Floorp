@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslproto.h,v 1.2 2001/09/18 01:59:20 nelsonb%netscape.com Exp $
+ * $Id: sslproto.h,v 1.3 2001/09/21 03:07:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslproto_h_
@@ -139,7 +139,21 @@
 #define SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA	0x001d
 #define SSL_FORTEZZA_DMS_WITH_RC4_128_SHA	0x001e
 
-/* New TLS cipher suites backported to SSL3. */
+/* New TLS cipher suites */
+#define TLS_RSA_WITH_AES_128_CBC_SHA      	0x002F
+#define TLS_DH_DSS_WITH_AES_128_CBC_SHA   	0x0030
+#define TLS_DH_RSA_WITH_AES_128_CBC_SHA   	0x0031
+#define TLS_DHE_DSS_WITH_AES_128_CBC_SHA  	0x0032
+#define TLS_DHE_RSA_WITH_AES_128_CBC_SHA  	0x0033
+#define TLS_DH_ANON_WITH_AES_128_CBC_SHA  	0x0034
+
+#define TLS_RSA_WITH_AES_256_CBC_SHA      	0x0035
+#define TLS_DH_DSS_WITH_AES_256_CBC_SHA   	0x0036
+#define TLS_DH_RSA_WITH_AES_256_CBC_SHA   	0x0037
+#define TLS_DHE_DSS_WITH_AES_256_CBC_SHA  	0x0038
+#define TLS_DHE_RSA_WITH_AES_256_CBC_SHA  	0x0039
+#define TLS_DH_ANON_WITH_AES_256_CBC_SHA  	0x003A
+
 #define TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA     0x0062
 #define TLS_RSA_EXPORT1024_WITH_RC4_56_SHA      0x0064
 

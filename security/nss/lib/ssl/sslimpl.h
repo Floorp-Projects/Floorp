@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.16 2001/09/18 01:59:19 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.17 2001/09/21 03:07:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -254,7 +254,7 @@ typedef struct {
 #endif
 } ssl3CipherSuiteCfg;
 
-#define ssl_V3_SUITES_IMPLEMENTED 19
+#define ssl_V3_SUITES_IMPLEMENTED 25
 
 typedef struct sslOptionsStr {
     unsigned int useSecurity		: 1;  /*  1 */
@@ -645,6 +645,8 @@ typedef enum {
     cipher_des40,
     cipher_idea, 
     cipher_fortezza,
+    cipher_aes_128,
+    cipher_aes_256,
     cipher_missing              /* reserved for no such supported cipher */
 } SSL3BulkCipher;
 
