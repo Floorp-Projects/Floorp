@@ -164,7 +164,10 @@ nsAppShellService::DispatchNativeEvent(void * aEvent)
 NS_IMETHODIMP
 nsAppShellService::Shutdown(void)
 {
-  //mAppShell->Exit();
+
+#if 1
+  mAppShell->Exit();
+#else
   while (mWindowList->Count() > 0) {
     nsISupports * winSupports = mWindowList->ElementAt(0);
     nsCOMPtr<nsIWidget> window(do_QueryInterface(winSupports));
@@ -185,6 +188,7 @@ nsAppShellService::Shutdown(void)
       break;
     }
   }
+#endif
   return NS_OK;
 }
 
