@@ -94,6 +94,7 @@ public:
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD SetViewFlags(PRInt32 aFlags);
+  NS_IMETHOD ClearViewFlags(PRInt32 aFlags);
 
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);
