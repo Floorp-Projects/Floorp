@@ -46,9 +46,6 @@ public:
   NS_IMETHOD IsDone();
   NS_IMETHOD PositionAt(nsIContent* aCurNode);
 
-  NS_IMETHOD MakePre();
-  NS_IMETHOD MakePost();
-
 private:
   nsCOMPtr<nsIPresContext>  mPresContext;
   nsIFrame*                 mParentFrame;
@@ -273,18 +270,6 @@ nsFrameContentIterator::PositionAt(nsIContent* aCurNode)
   }
 
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsFrameContentIterator::MakePre()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFrameContentIterator::MakePost()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

@@ -65,6 +65,7 @@
 #define CHAR_TO_UNICHAR(c) ((PRUnichar)(const unsigned char)c)
 
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -168,10 +169,27 @@ nsFind::InitIterator(nsIDOMRange* aSearchRange)
   nsresult rv;
   if (!mIterator)
   {
-    rv = nsComponentManager::CreateInstance(kCContentIteratorCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIContentIterator),
-                                            getter_AddRefs(mIterator));
+    if (mFindBackward) {
+      // Use post-order in the reverse case, so we get parents
+      // before children in case we want to prevent descending
+      // into a node.
+
+      rv = nsComponentManager::CreateInstance(kCContentIteratorCID,
+                                              nsnull,
+                                              NS_GET_IID(nsIContentIterator),
+                                              getter_AddRefs(mIterator));
+    }
+    else {
+      // Use pre-order in the forward case, so we get parents
+      // before children in case we want to prevent descending
+      // into a node.
+
+      rv = nsComponentManager::CreateInstance(kCPreContentIteratorCID,
+                                              nsnull,
+                                              NS_GET_IID(nsIContentIterator),
+                                              getter_AddRefs(mIterator));
+    }
+
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(mIterator);
   }
@@ -184,16 +202,9 @@ nsFind::InitIterator(nsIDOMRange* aSearchRange)
 
   mIterator->Init(aSearchRange);
   if (mFindBackward) {
-    // Use post-order in the reverse case,
-    // so we get parents before children,
-    // in case we want to prevent descending into a node.
-    mIterator->MakePost();
     mIterator->Last();
   }
   else {
-    // Use pre-order in the forward case.
-    // Pre order is currently broken (will skip nodes!), so don't use it.
-    //mIterator->MakePre();
     mIterator->First();
   }
   return NS_OK;
