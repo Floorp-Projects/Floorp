@@ -75,7 +75,6 @@ typedef MPARAM WPARAM,LPARAM;
 #include <stsdef.h>
 #endif /* VMS */
 
-
 static PRLogModuleInfo *event_lm = NULL;
 
 /*******************************************************************************
@@ -99,13 +98,12 @@ struct PLEventQueue {
     PRMonitor*   monitor;
     PRThread*    handlerThread;
     EventQueueType type;
-    PRBool       processingEvents;
+    PRPackedBool   processingEvents;
+    PRPackedBool   notified;
 #if defined(VMS)
     int		 efn;
-    int		 notifyCount;
 #elif defined(XP_UNIX)
     PRInt32      eventPipe[2];
-	int          notifyCount;
 #elif defined(_WIN32) || defined(WIN16)
     HWND         eventReceiverWindow;
     PRBool       removeMsg;
@@ -146,12 +144,9 @@ static char *_pr_eventWindowClass = "NSPR:EventWindow";
 **
 **
 */
-static PLEventQueue *
-    _pl_CreateEventQueue(
-        char *name,
-        PRThread *handlerThread,
-        EventQueueType  qtype
-)
+static PLEventQueue * _pl_CreateEventQueue(char *name,
+                                           PRThread *handlerThread,
+                                           EventQueueType  qtype)
 {
     PRStatus err;
     PLEventQueue* self = NULL;
@@ -174,6 +169,8 @@ static PLEventQueue *
 #if defined(_WIN32) || defined(WIN16)
     self->removeMsg = PR_TRUE;
 #endif
+    self->notified = PR_FALSE;
+
     PR_INIT_CLIST(&self->queue);
     if ( qtype == EventQueueIsNative ) {
         err = _pl_SetupNativeNotifier(self);
@@ -187,8 +184,7 @@ static PLEventQueue *
         PR_DestroyMonitor(mon);
     PR_DELETE(self);
     return NULL;
-} /* end _pl_CreateEventQueue() */
-
+} 
 
 PR_IMPLEMENT(PLEventQueue*)
 PL_CreateEventQueue(char* name, PRThread* handlerThread)
@@ -197,24 +193,16 @@ PL_CreateEventQueue(char* name, PRThread* handlerThread)
 }
 
 PR_EXTERN(PLEventQueue *) 
-    PL_CreateNativeEventQueue(
-        char *name, 
-        PRThread *handlerThread
-    )
+PL_CreateNativeEventQueue(char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
-} /* --- end PL_CreateNativeEventQueue() --- */
+} 
 
 PR_EXTERN(PLEventQueue *) 
-    PL_CreateMonitoredEventQueue(
-        char *name,
-        PRThread *handlerThread
-    )
+PL_CreateMonitoredEventQueue(char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsMonitored ));
-} /* --- end PL_CreateMonitoredEventQueue() --- */
-
-
+} 
 
 PR_IMPLEMENT(PRMonitor*)
 PL_GetEventQueueMonitor(PLEventQueue* self)
@@ -267,15 +255,27 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
       PR_APPEND_LINK(&event->link, &self->queue);
     }
 
-    /* notify even if event is NULL */
-    if ( self->type == EventQueueIsNative )
+    if ( !self->notified)
+    {
+      if (self->type == EventQueueIsNative)
         err = _pl_NativeNotify(self);
+      
+      if (err != PR_SUCCESS)
+        goto error;
+      
+      /*
+       * This may fall on deaf ears if we're really notifying the native 
+       * thread, and no one has called PL_WaitForEvent (or PL_EventLoop):
+       */
+      err = PR_Notify(mon);
+      
+      if (err != PR_SUCCESS)
+        goto error;
+      
+      self->notified = PR_TRUE; 
+    }
 
-    /*
-     * This may fall on deaf ears if we're really notifying the native 
-     * thread, and no one has called PL_WaitForEvent (or PL_EventLoop):
-     */
-    err = PR_Notify(mon);
+error:
     PR_ExitMonitor(mon);
     return err;
 }
@@ -292,35 +292,38 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
     PR_Lock(event->lock);
 
     if (PR_CurrentThread() == self->handlerThread) {
-	/* Handle the case where the thread requesting the event handling
-	   is also the thread that's supposed to do the handling. */
-	result = event->handler(event);
+      /* Handle the case where the thread requesting the event handling
+       is also the thread that's supposed to do the handling. */
+      result = event->handler(event);
     }
     else {
-	int i, entryCount = PR_GetMonitorEntryCount(self->monitor);
+      int i, entryCount = PR_GetMonitorEntryCount(self->monitor);
 
-	event->synchronousResult = (void*)PR_TRUE;
-	PL_PostEvent(self, event);
-	/* We need to temporarily give up our event queue monitor if
-	   we're holding it, otherwise, the thread we're going to wait
-	   for notification from won't be able to enter it to process
-	   the event. */
-	if (entryCount) {
+      event->synchronousResult = (void*)PR_TRUE;
+
+      PL_PostEvent(self, event);
+
+      /* We need to temporarily give up our event queue monitor if
+         we're holding it, otherwise, the thread we're going to wait
+         for notification from won't be able to enter it to process
+         the event. */
+      if (entryCount) {
 	    for (i = 0; i < entryCount; i++)
-		PR_ExitMonitor(self->monitor);
-	}
+          PR_ExitMonitor(self->monitor);
+      }
 	
-    event->handled = PR_FALSE;
+      event->handled = PR_FALSE;
 
-    while (!event->handled)
+      while (!event->handled)
         PR_WaitCondVar(event->condVar, PR_INTERVAL_NO_TIMEOUT);	/* wait for event to be handled or destroyed */
 	
-    if (entryCount) {
-	    for (i = 0; i < entryCount; i++)
-		PR_EnterMonitor(self->monitor);
-	}
-    	result = event->synchronousResult;
-	event->synchronousResult = NULL;
+      if (entryCount) {
+        for (i = 0; i < entryCount; i++)
+          PR_EnterMonitor(self->monitor);
+      }
+      
+      result = event->synchronousResult;
+      event->synchronousResult = NULL;
     }
 
     PR_Unlock(event->lock);
@@ -339,14 +342,20 @@ PL_GetEvent(PLEventQueue* self)
     PRStatus err = PR_SUCCESS;
 
     if (self == NULL)
-    return NULL;
+      return NULL;
 
     PR_EnterMonitor(self->monitor);
 
-    if (!PR_CLIST_IS_EMPTY(&self->queue)) {
-      if ( self->type == EventQueueIsNative )
+    if (!PR_CLIST_IS_EMPTY(&self->queue)) 
+    {      
+      if ( self->type == EventQueueIsNative && 
+           self->notified                   && 
+           !self->processingEvents          &&
+           0 == _pl_GetEventCount(self)     )
+      {
         err = _pl_AcknowledgeNativeNotify(self);
-
+        self->notified = PR_FALSE; 
+      }
       if (err) goto done;
 
       /* then grab the event and return it: */
@@ -479,25 +488,11 @@ PL_ProcessPendingEvents(PLEventQueue* self)
 {
     PRInt32 count;
 
-#ifdef XP_UNIX
-    PRCList* node;
-#endif
-
-    if (self == NULL)
+    if (self == NULL) 
       return;
-
-    if (self->processingEvents) {
-#ifdef XP_UNIX /* because this appears necessary only for unix and scares me */
-      /* if we're called re-entrantly many times, the notification pipe
-         must be allowed to empty or the fool thing will notify us
-         so anxiously that the CPU will peg and system events will be
-         drowned out. */
-      if (self->notifyCount > 0 && self->type == EventQueueIsNative)
-        _pl_AcknowledgeNativeNotify(self);
-#endif
-      return;
-    }
-
+    
+    
+    PR_EnterMonitor(self->monitor);
     self->processingEvents = PR_TRUE;
 
     /* Only process the events that are already in the queue, and
@@ -505,18 +500,8 @@ PL_ProcessPendingEvents(PLEventQueue* self)
      * number of events currently in the queue
      */
     count = _pl_GetEventCount(self);
-
-#ifdef XP_UNIX
-    /* XXX HACK (pav) */
-    node = PR_LIST_HEAD(&self->queue);
-    if (self->notifyCount > 0 &&
-        self->type == EventQueueIsNative &&
-        node == &self->queue) {
-      printf("we have an event stuck -- removing it.\n");
-      _pl_AcknowledgeNativeNotify(self);
-    }
-#endif
-
+    PR_ExitMonitor(self->monitor);
+    
     while (count-- > 0) {
       PLEvent* event = PL_GetEvent(self);
       if (event == NULL)
@@ -527,22 +512,27 @@ PL_ProcessPendingEvents(PLEventQueue* self)
       PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
 
-#ifdef XP_UNIX
-    /* now restore any notifications that we destroyed re-entrantly, above */
     PR_EnterMonitor(self->monitor);
-    if (self->type == EventQueueIsNative) {
-      count = self->notifyCount;
-      node = PR_LIST_HEAD(&self->queue);
-      while (node != &self->queue) {
-        if (--count < 0)
-          _pl_NativeNotify(self);
-        node = PR_NEXT_LINK(node);
-      }
-    }
-    PR_ExitMonitor(self->monitor);
-#endif
 
+    if (self->type == EventQueueIsNative)
+    {
+      count = _pl_GetEventCount(self);
+
+      if (count <= 0)
+      {         
+        _pl_AcknowledgeNativeNotify(self);
+        self->notified = PR_FALSE;
+      }
+      else
+      {
+        _pl_NativeNotify(self);
+        self->notified = PR_TRUE;
+      }
+      
+    }
     self->processingEvents = PR_FALSE;
+
+    PR_ExitMonitor(self->monitor);
 }
 
 /*******************************************************************************
@@ -551,8 +541,8 @@ PL_ProcessPendingEvents(PLEventQueue* self)
 
 PR_IMPLEMENT(void)
 PL_InitEvent(PLEvent* self, void* owner,
-         PLHandleEventProc handler,
-         PLDestroyEventProc destructor)
+             PLHandleEventProc handler,
+             PLDestroyEventProc destructor)
 {
 #ifdef PL_POST_TIMINGS
     self->postTime = PR_IntervalNow();
@@ -577,8 +567,7 @@ PL_GetEventOwner(PLEvent* self)
 
 PR_IMPLEMENT(void)
 PL_HandleEvent(PLEvent* self)
-{
-    
+{    
     void* result;
     if (self == NULL)
         return;
@@ -588,16 +577,16 @@ PL_HandleEvent(PLEvent* self)
 
     result = (*self->handler)(self);
     if (NULL != self->synchronousResult) {
-    PR_Lock(self->lock);
-    self->synchronousResult = result;
-    self->handled = PR_TRUE;
-    PR_NotifyCondVar(self->condVar);
-    PR_Unlock(self->lock);
+      PR_Lock(self->lock);
+      self->synchronousResult = result;
+      self->handled = PR_TRUE;
+      PR_NotifyCondVar(self->condVar);
+      PR_Unlock(self->lock);
     }
     else {
-    /* For asynchronous events, they're destroyed by the event-handler
-       thread. See PR_PostSynchronousEvent. */
-    PL_DestroyEvent(self);
+      /* For asynchronous events, they're destroyed by the event-handler
+         thread. See PR_PostSynchronousEvent. */
+      PL_DestroyEvent(self);
     }
 }
 #ifdef PL_POST_TIMINGS
@@ -638,13 +627,23 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
     /* Only the owner is allowed to dequeue events because once the 
        client has put it in the queue, they have no idea whether it's 
        been processed and destroyed or not. */
-/*    PR_ASSERT(queue->handlerThread == PR_CurrentThread());*/
+
+    PR_ASSERT(queue->handlerThread == PR_CurrentThread());
 
     PR_EnterMonitor(queue->monitor);
 
     PR_ASSERT(!PR_CLIST_IS_EMPTY(&self->link));
+
+#if 0
+    /*  I do not think that we need to do this anymore.
+        if we do not acknowledge and this is the only
+        only event in the queue, any calls to process
+        the eventQ will be effective noop.
+    */
     if (queue->type == EventQueueIsNative)
       _pl_AcknowledgeNativeNotify(queue);
+#endif
+
     PR_REMOVE_AND_INIT_LINK(&self->link);
 
     PR_ExitMonitor(queue->monitor);
@@ -688,15 +687,15 @@ PL_EventLoop(PLEventQueue* self)
     return;
 
     while (PR_TRUE) {
-    PLEvent* event = PL_WaitForEvent(self);
-    if (event == NULL) {
-        /* This can only happen if the current thread is interrupted */
-        return;
-    }
+        PLEvent* event = PL_WaitForEvent(self);
+        if (event == NULL) {
+            /* This can only happen if the current thread is interrupted */
+            return;
+        }
 
         PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event"));
-    PL_HandleEvent(event);
-    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+        PL_HandleEvent(event);
+        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
 }
 
@@ -832,9 +831,8 @@ _pl_NativeNotify(PLEventQueue* self)
 {
         unsigned int status;
         PR_LOG(event_lm, PR_LOG_DEBUG,
-           ("_pl_NativeNotify: self=%p notifyCount=%d efn=%d",
-            self, self->notifyCount, self->efn));
-        self->notifyCount++;
+           ("_pl_NativeNotify: self=%p efn=%d",
+            self, self->efn));
         status = SYS$SETEF(self->efn);
         if ($VMS_STATUS_SUCCESS(status))
             return PR_SUCCESS;
@@ -842,6 +840,7 @@ _pl_NativeNotify(PLEventQueue* self)
             return PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
 #elif defined(XP_UNIX)
+
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
@@ -850,11 +849,10 @@ _pl_NativeNotify(PLEventQueue* self)
     unsigned char buf[] = { NOTIFY_TOKEN };
 
     PR_LOG(event_lm, PR_LOG_DEBUG,
-           ("_pl_NativeNotify: self=%p notifyCount=%d",
-            self, self->notifyCount));
+           ("_pl_NativeNotify: self=%p",
+            self));
     count = write(self->eventPipe[1], buf, 1);
-	if (count == 1) {
-		self->notifyCount++;
+    if (count == 1) {
 		return PR_SUCCESS;
 	} else if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
 		return PR_SUCCESS;
@@ -911,34 +909,24 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
     return PR_SUCCESS;
 #elif defined(VMS)
     PR_LOG(event_lm, PR_LOG_DEBUG,
-            ("_pl_AcknowledgeNativeNotify: self=%p notifyCount=%d efn=%d",
-             self, self->notifyCount, self->efn));
+            ("_pl_AcknowledgeNativeNotify: self=%p efn=%d",
+             self, self->efn));
     /*
     ** If this is the last entry, then clear the event flag. Also make sure
     ** the flag is cleared on any spurious wakeups.
     */
-    if (self->notifyCount <= 1)
-        sys$clref(self->efn);
-
-    if (self->notifyCount <= 0)
-        return PR_SUCCESS;
-
-    self->notifyCount--;
-
+    sys$clref(self->efn);
     return PR_SUCCESS;
 #elif defined(XP_UNIX)
 
     PRInt32 count;
     unsigned char c;
-
     PR_LOG(event_lm, PR_LOG_DEBUG,
-            ("_pl_AcknowledgeNativeNotify: self=%p notifyCount=%d",
-             self, self->notifyCount));
-	if (self->notifyCount <= 0) return PR_SUCCESS;
-    /* consume the byte NativeNotify put in our pipe: */
+            ("_pl_AcknowledgeNativeNotify: self=%p",
+             self));
+	/* consume the byte NativeNotify put in our pipe: */
     count = read(self->eventPipe[0], &c, 1);
 	if ((count == 1) && (c == NOTIFY_TOKEN)) {
-		self->notifyCount--;
 		return PR_SUCCESS;
 	} else if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
 		return PR_SUCCESS;
@@ -1187,7 +1175,6 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 #ifdef XP_MAC 
 #pragma unused(eventQueue) 
 #endif 
-
     /* there's really nothing special to do here,
     ** the guts of the unix stuff is in the setupnativenotify
     ** and related functions.
