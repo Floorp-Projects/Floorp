@@ -7350,6 +7350,9 @@ ResDef(XP_EDT_ADD_COLS, XP_MSG_BASE + 1184,
 ResDef(XP_EDT_DRAG_TABLE, XP_MSG_BASE + 1185,
        "Relocate caret or drag selected table or cells")
 
+ResDef(XP_EDT_NOT_ALL_CELLS_PASTED, XP_MSG_BASE + 1186,
+       "Not all cells in source were pasted\n")
+
 /* XP_NSCOLOR_BASE and the 70 color strings removed 
  * We would like to reserve the range through 1250 for Editor
 */
