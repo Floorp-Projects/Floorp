@@ -214,8 +214,6 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
 {
   XMLT_LOG(mozLineTerm::GetSecurePrincipal,30,("\n"));
 
-  nsresult result;
-
   if (!aPrincipalStr)
     return NS_ERROR_FAILURE;
 
@@ -230,9 +228,8 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
   if (!principal) 
     return NS_ERROR_FAILURE;
 
-#if 0  // Temporarily comented out, because ToString is not immplemented
-  result = principal->ToString(aPrincipalStr);
-  if (NS_FAILED(result) || !*aPrincipalStr)
+#if 0  // Temporarily commented out, because |ToString()| is not implemented.
+  if (NS_FAILED(principal->ToString(aPrincipalStr)) || !*aPrincipalStr)
     return NS_ERROR_FAILURE;
 #else
   const char temStr[] = "unknown";
