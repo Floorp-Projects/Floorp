@@ -30,6 +30,7 @@ EXPORTS =		\
     nsIEditRules.h \
     nsEditorCID.h	\
     nsICiter.h \
+    nsIDocumentStateListener.h \
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
