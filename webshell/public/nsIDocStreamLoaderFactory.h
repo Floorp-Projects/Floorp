@@ -1,6 +1,3 @@
-#ifndef nsIDocStreamLoaderFactory_h___
-#define nsIDocStreamLoaderFactory_h___
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -19,31 +16,34 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#ifndef nsIDocStreamLoaderFactory_h___
+#define nsIDocStreamLoaderFactory_h___
 
-  // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
+// Wrapping includes can speed up compiles (see "Large Scale C++
+// Software Design")
 #ifndef nsISupports_h___
-	#include "nsISupports.h"
+#include "nsISupports.h"
 #endif
 
 class nsIInputStream;
 class nsIContentViewer;
 class nsIContentViewerContainer;
 
- /* 9188bc80-f92e-11d2-81ef-0060083a0bcf */
+/* 9188bc80-f92e-11d2-81ef-0060083a0bcf */
 #define NS_IDOCSTREAMLOADERFACTORY_IID \
  { 0x9188bc80, 0xf92e, 0x11d2,{0x81, 0xef, 0x00, 0x60, 0x08, 0x3a, 0x0b, 0xcf}}
 
 class nsIDocStreamLoaderFactory : public nsISupports
-	{
-		public:
-		  static const nsIID& GetIID() { static nsIID iid = NS_IDOCSTREAMLOADERFACTORY_IID; return iid; }
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCSTREAMLOADERFACTORY_IID)
 
-			NS_IMETHOD CreateInstance( nsIInputStream& aInputStream,
-																 const char* aContentType,
-																 const char* aCommand,
-																 nsIContentViewerContainer* aContainer,
-																 nsISupports* aExtraInfo,
-																 nsIContentViewer** aDocViewer ) = 0;
-	};
+  NS_IMETHOD CreateInstance(nsIInputStream& aInputStream,
+			    const char* aContentType,
+			    const char* aCommand,
+			    nsIContentViewerContainer* aContainer,
+			    nsISupports* aExtraInfo,
+			    nsIContentViewer** aDocViewer) = 0;
+};
 
-#endif // !defined(nsIDocStreamLoaderFactory_h___)
+#endif /* !defined(nsIDocStreamLoaderFactory_h___) */
