@@ -98,7 +98,11 @@ public:
   NS_DECL_NSITIMER
   NS_DECL_NSITIMERINTERNAL
 
+  PRInt32 GetGeneration() { return mGeneration; }
+
 private:
+  nsresult InitCommon(PRUint32 aType, PRUint32 aDelay);
+
   nsCOMPtr<nsIThread>   mCallingThread;
 
   void *                mClosure;
@@ -125,6 +129,11 @@ private:
   // to the above PRUint8/PRPackedBool members.
   PRBool                mArmed;
   PRBool                mCanceled;
+
+  // The generation number of this timer, re-generated each time the timer is
+  // initialized so one-shot timers can be canceled and re-initialized by the
+  // arming thread without any bad race conditions.
+  PRInt32               mGeneration;
 
   PRUint32              mDelay;
   PRIntervalTime        mTimeout;
