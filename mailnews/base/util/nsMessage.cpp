@@ -399,6 +399,15 @@ NS_IMETHODIMP nsMessage::SetPriority(const char *priority)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMessage::GetPriority(nsMsgPriority *result)
+{
+	if(mMsgHdr)
+		return mMsgHdr->GetPriority(result);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+
 NS_IMETHODIMP nsMessage::GetMessageOffset(PRUint32 *result)
 {
 	if(mMsgHdr)
