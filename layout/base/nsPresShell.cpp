@@ -6027,55 +6027,14 @@ PresShell::HandleEvent(nsIView         *aView,
               }
             }
           }
-
           if (!mCurrentEventContent) {
             // fallback, call existing codes
             mDocument->GetRootContent(&mCurrentEventContent);
           }
 #else /* defined(MOZ_X11) */
-
-          // XXX This is the way key events seem to work?  Why?????
-          // They spend time doing calls to GetFrameForPoint with the
-          // point as (0,0) (or sometimes something else).
-
-          // XXX If this code is really going to stay, it should
-          // probably go into a separate function, because its just
-          // a duplicate of the code a few lines below:
-
-          // This is because we want to give the point in the same
-          // coordinates as the frame's own Rect, so mRect.Contains(aPoint)
-          // works.  However, this point is relative to the frame's rect, so
-          // we need to add on the origin of the rect.
-/*          nsPoint eventPoint;
-          frame->GetOrigin(eventPoint);
-          eventPoint += aEvent->point;
-          rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, &mCurrentEventFrame);
-          if (rv != NS_OK) {
-            rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FLOATERS, &mCurrentEventFrame);
-            if (rv != NS_OK) {
-              rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
-              if (rv != NS_OK) {
-#ifdef XP_MAC*/
-                // On the Mac it is possible to be running with no windows open, only the native menu bar.
-                // In this situation, we need to handle key board events but there are no frames, so
-                // we set mCurrentEventContent and that works itself out in HandleEventInternal.
-                mDocument->GetRootContent(&mCurrentEventContent);
+          mDocument->GetRootContent(&mCurrentEventContent);
 #endif /* defined(MOZ_X11) */
-                mCurrentEventFrame = nsnull;
-/*#else
-								if (aForceHandle) {
-									mCurrentEventFrame = frame;
-								}
-								else {
-									mCurrentEventFrame = nsnull;
-								}
-                aHandled = PR_FALSE;
-#endif
-                rv = NS_OK;
-              }
-            }
-          }
-          */
+          mCurrentEventFrame = nsnull;
         }
       }
       else if (!InClipRect(frame, aEvent->point)) {
