@@ -84,6 +84,7 @@ namespace VM {
         NAME_XCR, /* dest, name, value */
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
+        NEW_CLASS, /* dest, class name */
         NEW_FUNCTION, /* dest, ICodeModule */
         NEW_OBJECT, /* dest */
         NOP, /* do nothing and like it */
@@ -151,6 +152,7 @@ namespace VM {
         "NAME_XCR      ",
         "NEGATE        ",
         "NEW_ARRAY     ",
+        "NEW_CLASS     ",
         "NEW_FUNCTION  ",
         "NEW_OBJECT    ",
         "NOP           ",
@@ -801,6 +803,22 @@ namespace VM {
             (NEW_ARRAY, aOp1) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1.first;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            return f;
+        }
+    };
+
+    class NewClass : public Instruction_2<TypedRegister, const StringAtom*> {
+    public:
+        /* dest, class name */
+        NewClass (TypedRegister aOp1, const StringAtom* aOp2) :
+            Instruction_2<TypedRegister, const StringAtom*>
+            (NEW_CLASS, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[NEW_CLASS] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
