@@ -64,143 +64,142 @@ jint (* nativeWebShellGetHistoryIndex) (JNIEnv *, jobject, jint);
 jstring (* nativeWebShellGetURL) (JNIEnv *, jobject, jint, jint);
 
 void locateBrowserControlStubFunctions(void * dll) {
-  nativeInitialize = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize");
+  nativeInitialize = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize");
   if (!nativeInitialize) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeTerminate = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeTerminate");
+  nativeTerminate = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeTerminate");
   if (!nativeTerminate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSendKeyDownEvent = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent");
+  nativeSendKeyDownEvent = (void (*) (JNIEnv *, jobject, jint, jchar, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent");
   if (!nativeSendKeyDownEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSendKeyUpEvent = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyUpEvent");
+  nativeSendKeyUpEvent = (void (*) (JNIEnv *, jobject, jint, jchar, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyUpEvent");
   if (!nativeSendKeyUpEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSendMouseEvent = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendMouseEvent");
+  nativeSendMouseEvent = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jint, jint, jint,jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendMouseEvent");
   if (!nativeSendMouseEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeIdleEvent = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeIdleEvent");
+  nativeIdleEvent = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeIdleEvent");
   if (!nativeIdleEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeUpdateEvent = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeUpdateEvent");
+  nativeUpdateEvent = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeUpdateEvent");
   if (!nativeUpdateEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetCreate = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate");
+  nativeWidgetCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate");
   if (!nativeWidgetCreate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetDelete = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete");
+  nativeWidgetDelete = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete");
   if (!nativeWidgetDelete) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetResize = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize");
+  nativeWidgetResize = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize");
   if (!nativeWidgetResize) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetEnable = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetEnable");
+  nativeWidgetEnable = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetEnable");
   if (!nativeWidgetEnable) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetShow = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetShow");
+  nativeWidgetShow = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetShow");
   if (!nativeWidgetShow) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetInvalidate = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetInvalidate");
+  nativeWidgetInvalidate = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetInvalidate");
   if (!nativeWidgetInvalidate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetUpdate = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetUpdate");
+  nativeWidgetUpdate = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetUpdate");
   if (!nativeWidgetUpdate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeProcessEvents = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeProcessEvents");
+  nativeProcessEvents = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeProcessEvents");
   if (!nativeProcessEvents) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCreate = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate");
+  nativeWebShellCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate");
   if (!nativeWebShellCreate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellDelete = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellDelete");
+  nativeWebShellDelete = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellDelete");
   if (!nativeWebShellDelete) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellLoadURL = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL");
+  nativeWebShellLoadURL = (void (*) (JNIEnv *, jobject, jint, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL");
   if (!nativeWebShellLoadURL) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellStop = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop");
+  nativeWebShellStop = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop");
   if (!nativeWebShellStop) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellShow = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow");
+  nativeWebShellShow = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow");
   if (!nativeWebShellShow) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellHide = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide");
+  nativeWebShellHide = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide");
   if (!nativeWebShellHide) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellSetBounds = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds");
+  nativeWebShellSetBounds = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds");
   if (!nativeWebShellSetBounds) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellMoveTo = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo");
+  nativeWebShellMoveTo = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo");
   if (!nativeWebShellMoveTo) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellSetFocus = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus");
+  nativeWebShellSetFocus = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus");
   if (!nativeWebShellSetFocus) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellRemoveFocus = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus");
+  nativeWebShellRemoveFocus = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus");
   if (!nativeWebShellRemoveFocus) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellRepaint = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint");
+  nativeWebShellRepaint = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint");
   if (!nativeWebShellRepaint) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCanBack = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack");
+  nativeWebShellCanBack = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack");
   if (!nativeWebShellCanBack) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCanForward = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward");
+  nativeWebShellCanForward = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward");
   if (!nativeWebShellCanForward) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellBack = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack");
+  nativeWebShellBack = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack");
   if (!nativeWebShellBack) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellForward = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward");
+  nativeWebShellForward = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward");
   if (!nativeWebShellForward) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGoTo = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo");
+  nativeWebShellGoTo = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo");
   if (!nativeWebShellGoTo) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGetHistoryLength = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLength");
+  nativeWebShellGetHistoryLength = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLength");
   if (!nativeWebShellGetHistoryLength) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGetHistoryIndex = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryIndex");
+  nativeWebShellGetHistoryIndex = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryIndex");
   if (!nativeWebShellGetHistoryIndex) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGetURL = dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL");
+  nativeWebShellGetURL = (jstring (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL");
   if (!nativeWebShellGetURL) {
     printf("got dlsym error %s\n", dlerror());
   }
-
 }
 
 

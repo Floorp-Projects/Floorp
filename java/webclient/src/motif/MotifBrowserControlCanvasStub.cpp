@@ -36,36 +36,35 @@ void (* processEvents) (JNIEnv *, jobject);
 void (* setGTKWindowSize) (JNIEnv *, jobject, jint, jint, jint);
 
 void locateMotifBrowserControlStubFunctions(void * dll) {
-  createTopLevelWindow = dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow");
+  createTopLevelWindow = (jint (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow");
  if (!createTopLevelWindow) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  createContainerWindow = dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createContainerWindow");
+  createContainerWindow = (jint (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createContainerWindow");
  if (!createContainerWindow) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  reparentWindow = dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_reparentWindow");
+  reparentWindow = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_reparentWindow");
  if (!reparentWindow) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  processEvents = dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_processEvents");
+  processEvents = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_processEvents");
  if (!processEvents) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  setGTKWindowSize = dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize");
+  setGTKWindowSize = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize");
  if (!setGTKWindowSize) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  getGTKWinID = dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_getGTKWinID");
+  getGTKWinID = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_getGTKWinID");
  if (!getGTKWinID) {
     printf("got dlsym error %s\n", dlerror());
   }
-
 }
 
 /*

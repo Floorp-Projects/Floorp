@@ -47,7 +47,7 @@ gtk_mozilla_marshal_BOOL__POINTER_INT (GtkObject * object,
                           func_data);
 }
 
-static GtkLayoutClass *parent_class = NULL;
+static GtkLayoutClass *parent_class = 0;
 
 static void
 gtk_mozilla_class_init (GtkMozillaClass *klass)
@@ -80,8 +80,8 @@ gtk_mozilla_init (GtkMozilla *moz)
 {
   //printf("gtk_mozilla_init()\n");
   
-  gtk_layout_set_hadjustment (GTK_LAYOUT (moz), NULL);
-  gtk_layout_set_vadjustment (GTK_LAYOUT (moz), NULL);
+  gtk_layout_set_hadjustment (GTK_LAYOUT (moz), 0);
+  gtk_layout_set_vadjustment (GTK_LAYOUT (moz), 0);
 
   GTK_WIDGET_SET_FLAGS (GTK_WIDGET(moz), GTK_CAN_FOCUS);
 }
