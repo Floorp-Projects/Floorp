@@ -29,7 +29,11 @@ interface nsIDOMWindow;
 interface nsIWeakReference;
 
 /**
- * The nsIWebBrowser
+ * The nsIWebBrowser interface is implemented by web browser objects.
+ * Embedders use this interface during initialisation to associate
+ * the new web browser instance with the embedders chrome and
+ * to register any listeners. The interface may also be used at runtime
+ * to obtain the content DOM window and from that the rest of the DOM.
  *
  * @status FROZEN
  */
@@ -124,7 +128,7 @@ interface nsIWebBrowser : nsISupports
 
     /**
      * URI content listener parent. The embedder may set this property to
-     * their own implementation if they intend to override or prevent the
+     * their own implementation if they intend to override or prevent
      * how certain kinds of content are loaded.
      *
      * @note The implementation should not refcount this interface; it
