@@ -75,6 +75,8 @@ include $(topsrcdir)/config/config.mk
 
 DEFINES += -D_IMPL_NS_HTML
 
+CXXFLAGS += $(OS_CXXFLAGS)
+
 INCLUDES += -I$(srcdir)/../../style/src -I$(srcdir)/../../content/src -I$(srcdir)/../../../base/src -I$(srcdir)/.  -I$(DIST)/oji
 
 MKSHLIB :=
