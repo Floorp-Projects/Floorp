@@ -3990,21 +3990,22 @@ void CEDImageContain::AdjustEnable()
 		fEditImageButton->Disable();
 		fBackgroundImageCheck->Disable();
 
-		fImageAltFileName->GetDescriptor( str );
-		if ( str[0] == 0 )
-		{
-			fImageAltTextEdit->GetDescriptor( str );
-			if ( str[0] == 0 )
-				allEmpty = true;
-		}
+		fImageAltFileName->Disable();
+		fImageAltTextEdit->Disable();
+		
+		allEmpty = true;
 	}
 	else
 	{
 		fCopyImageCheck->Enable();
 		fEditImageButton->Enable();
 		fBackgroundImageCheck->Enable();
+		
+		fImageAltFileName->Enable();
+		fImageAltTextEdit->Enable();
 	}
 	
+	LView* altreps = (LView *)FindPaneByID( 'C002' );
 	LView* dimensions = (LView *)FindPaneByID( 'C003' );
 	LView* spacearound = (LView *)FindPaneByID( 'C004' );
 	LView* aligncaption = (LView *)FindPaneByID( 'Cptn' );	// alignment caption
@@ -4019,15 +4020,10 @@ void CEDImageContain::AdjustEnable()
 		if ( aligncaption )
 			aligncaption->Disable();
 		
-		LView* altreps = (LView *)FindPaneByID( 'C002' );
-		if ( fBackgroundImageCheck->GetValue() )
-			altreps->Disable();
-		else
-			altreps->Enable();
+		altreps->Disable();
 	}
 	else
 	{
-		LView* altreps = (LView *)FindPaneByID( 'C002' );
 		altreps->Enable();
 		
 		dimensions->Enable();
