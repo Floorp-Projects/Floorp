@@ -458,6 +458,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
 
 	if (server)
 	{
+        // clear the password if the last one failed
 		if (TestFlag(POP3_PASSWORD_FAILED))
 		{
 			// if we've already gotten a password and it wasn't correct..clear
@@ -465,10 +466,40 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
 			rv = server->SetPassword("");
 		}
 
-		ClearFlag(POP3_PASSWORD_FAILED);
-		rv = server->GetPasswordWithUI(aPassword);
+		// first, figure out the correct prompt text to use...
+        nsXPIDLCString hostName;
+        nsXPIDLCString userName;
+        PRUnichar * passwordPromptString = nsnull;
+        
+        server->GetHostName(getter_Copies(hostName));
+        server->GetUsername(getter_Copies(userName));
 
-	}
+        // if the last prompt got us a bad password then show a special dialog
+        if (TestFlag(POP3_PASSWORD_FAILED))
+        {
+            PRUnichar *passwordTemplate = LocalGetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC);
+            if (m_commandResponse.Length())
+                passwordPromptString = nsTextFormater::smprintf(passwordTemplate, m_commandResponse.GetBuffer(), (const char *) userName, (const char *) hostName);
+            else
+            {
+                PRUnichar * noAnswerText = LocalGetStringByID(POP3_NO_ANSWER);
+                passwordPromptString = nsTextFormater::smprintf(passwordTemplate, noAnswerText, (const char *) userName, (const char *) hostName);
+                nsCRT::free(noAnswerText);
+            } 
+        } // otherwise this is the first time we've asked about the server's password so show a first time prompt
+        else
+        {
+            PRUnichar * passwordTemplate = LocalGetStringByID(POP3_ENTER_PASSWORD_PROMPT);
+            passwordPromptString = nsTextFormater::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
+            nsCRT::free(passwordTemplate);
+        }
+
+        // now go get the password!!!!
+        rv =  server->GetPasswordWithUI(passwordPromptString, aPassword);
+        nsTextFormater::smprintf_free(passwordPromptString);
+
+        ClearFlag(POP3_PASSWORD_FAILED);
+    } // if we have a server
 	else
 		rv = NS_ERROR_FAILURE;
 
@@ -2361,7 +2392,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 break;
             }
 
-#if 0            
+#if 0
             PR_ASSERT(net_pop3_username);
             if (TestFlag(POP3_PASSWORD_FAILED))
                 fmt2 =
