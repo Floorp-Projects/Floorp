@@ -54,6 +54,10 @@ tree:focus > treechildren treeitem[selected="true"] > treerow
 treerow {
   border: 1px solid transparent;
 }
+
+treehead > treerow {
+  border: none;
+}
   
 tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
   {
