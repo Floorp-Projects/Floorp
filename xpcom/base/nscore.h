@@ -165,7 +165,7 @@
   #define HAVE_CPP_BOOL
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
-  #define HAVE_CPP_2BYTE_WCHAR_T
+//#define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 
   /* under VC++ (Windows), we don't have autoconf yet */
