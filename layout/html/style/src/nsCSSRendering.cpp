@@ -2185,7 +2185,11 @@ PRInt16       borderRadii[4],i;
       theTransform->SetToIdentity();  
 	    theTransform->AddScale(app2dev, app2dev);
 
-      //aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
+      // XXX this #ifdef needs to go away when we are sure that this works on windows and mac
+#ifdef XP_UNIX
+      srcRect.SetRect(0,0,tvrect.width,tvrect.height);
+      aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
+#endif
 
       // copy the initial image to our buffer, this takes twips and converts to pixels.. 
       // which is what the image is in
