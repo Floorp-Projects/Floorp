@@ -1033,6 +1033,7 @@ lo_calc_push_right_for_justify(lo_DocState *state, int32 *remainder)
 	}
 }
 
+#ifndef DOM
 PRIVATE void
 lo_add_to_y_for_all_elements_in_line(lo_DocState *state, int32 y_add)
 {
@@ -1054,6 +1055,7 @@ lo_add_to_y_for_all_elements_in_line(lo_DocState *state, int32 y_add)
 		tptr = tptr->lo_any.next;
 	}
 }
+#endif
 
 void
 lo_use_default_doc_background(MWContext *context, lo_DocState *state)
@@ -4107,6 +4109,7 @@ char *element_names[] = {
     "SUB"
 };
 
+#ifdef DEBUG_shaver_verbose
 static void
 DumpNodeElements(DOM_Node *node)
 {
@@ -4137,6 +4140,7 @@ DumpNodeElements(DOM_Node *node)
     fprintf(stderr, "\n");
 #endif
 }
+#endif
 #endif
 
 /*************************************

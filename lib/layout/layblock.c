@@ -29,6 +29,7 @@
 #include "intl_csi.h"
 #ifdef DOM
 #include "domstyle.h"
+#include "lm_dom.h"
 #endif
 
 /* This struct is used during the processing of a <LAYER> or <ILAYER>
@@ -479,11 +480,13 @@ lo_block_src_exit_fn(URL_Struct *url_struct, int status, MWContext *context)
     NET_FreeURLStruct(url_struct);
 }
 
+#ifndef DOM
 static void
 lo_free_stream(MWContext *context, NET_StreamClass *stream)
 {
     XP_DELETE(stream);
 }
+#endif
 
 int32
 lo_GetEnclosingLayerWidth(lo_DocState *state)
@@ -952,6 +955,62 @@ PositionParser(const char *position, uint32 *data, void *closure)
   return JS_TRUE;
 }
 
+#define AXIS_NONE       0
+#define AXIS_X          1
+#define AXIS_Y          2
+
+struct SSUnitContext {
+  MWContext *context;
+  uint32 enclosingVal;
+  uint8 units;
+  uint8 axisAdjust;              
+};
+
+#define STYLE_UNITS_NONE        0
+#define STYLE_UNITS_PERCENT     1
+
+/* XXX finish */
+JSBool
+lo_ParseSSNum(const char *str, uint32 *num, uint8 *units)
+{
+  *num = XP_ATOI(str);
+  if (strchr(str, '%'))
+    *units = STYLE_UNITS_PERCENT;
+  else
+    *units = STYLE_UNITS_NONE;
+  return JS_TRUE;
+}
+
+JSBool
+lo_atoi(const char *str, uint32 *num, void *closure)
+{
+  *num = XP_ATOI(str);
+  return JS_TRUE;
+}
+
+JSBool
+lo_ParseSSNumToData(const char *str, uint32 *data, void *closure)
+{
+  struct SSUnitContext *argp = closure;
+  uint32 num;
+
+  if (!lo_ParseSSNum(str, &num, &argp->units))
+    return JS_FALSE;
+
+  if (argp->units == STYLE_UNITS_PERCENT) {
+    num = argp->enclosingVal * num / 100;
+  }
+
+  if (argp->axisAdjust == AXIS_X)
+    num = FEUNITS_X(num, argp->context);
+  else if (argp->axisAdjust == AXIS_Y)
+    num = FEUNITS_Y(num, argp->context);
+
+  *data = num;
+
+  return JS_FALSE;
+}
+
 void
 lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
                                 DOM_StyleDatabase *db, DOM_Node *node,
@@ -961,25 +1020,28 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   LO_BlockInitializeStruct *param;
   DOM_AttributeEntry *entry;
   JSBool inflow;
+  struct SSUnitContext arg;
+  JSContext *cx = context->mocha_context;
 
 #ifdef DEBUG_shaver
   fprintf(stderr, "setting layer data on <%s>\n", PA_TagString(tag->type));
 #endif
   
-  return;
-#if 0
+  arg.context = context;
+
  if (lo_IsEmptyTag(tag->type))
     /* other code says we can't handle empty tags, so I bail...for now! */
     return;
 
-  if (!DOM_StyleGetProperty(cx, db, node, POSITION_STYLE, &entry))
+ if (!DOM_StyleGetProperty(cx, db, node, POSITION_STYLE, &entry))
     return;
+
   if (entry) {
     if (!DOM_GetCleanAttributeData(cx, entry, PositionParser,
                                    (uint32 *)&inflow, NULL))
       return;
   } else {
-    if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC, &entry))
+    if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC_STYLE, &entry))
       return;
     if (entry)
       inflow = JS_TRUE;
@@ -989,6 +1051,10 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (!param)
     return;
 
+#define CHECK_PERCENTAGE(entry, arg)                                          \
+  if (arg.units == STYLE_UNITS_PERCENT)                                       \
+    entry->dirty = JS_TRUE;
+
   param->name = XP_STRDUP(node->name);
   if (node->type == NODE_TYPE_ELEMENT)
     param->id = element->styleID ? XP_STRDUP(element->styleID) : NULL;
@@ -996,17 +1062,22 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (!DOM_StyleGetProperty(cx, db, node, LEFT_STYLE, &entry))
     goto error;
   if (entry) {
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_SSNumToFEUnitsX, &param->left,
-                                   (void *)context))
+    arg.axisAdjust = AXIS_X;
+    arg.enclosingVal = 0;
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_ParseSSNumToData,
+                                   &param->left, (void *)&arg))
       goto error;
+    CHECK_PERCENTAGE(entry, arg);
     param->has_left = TRUE;
   }
 
   if (!DOM_StyleGetProperty(cx, db, node, TOP_STYLE, &entry))
     goto error;
   if (entry) {
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_SSNumToFEUnitsY, &param->top,
-                                   (void *)context))
+    arg.axisAdjust = AXIS_Y;
+    arg.enclosingVal = 0;
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_ParseSSNumToData, &param->top,
+                                   (void *)&arg))
       goto error;
     param->has_top = TRUE;
   }
@@ -1014,29 +1085,51 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (!DOM_StyleGetProperty(cx, db, node, HEIGHT_STYLE, &entry))
     goto error;
   if (entry) {
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_SSNumToFEUnitsY,
-                                   &param->height, (void *)context))
+    arg.axisAdjust = AXIS_Y;
+    arg.enclosingVal = lo_GetEnclosingLayerHeight(state);
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_ParseSSNumToData,
+                                   &param->height, (void *)&arg))
       goto error;
     param->has_height = TRUE;
   }
 
+#if 0 /* waiting on DOM-savvy lo_ParseStyleCoords */
   if (!DOM_StyleGetProperty(cx, db, node, CLIP_STYLE, &entry))
     goto error;
   if (entry) {
-    /* XXX GetCleanAttributeData */
+    /* XXX GetCleanAttributeData, with coord hash somewhere? */
     param->clip = lo_ParseStyleCoords(context, state, entry->value);
     param->clip_expansion_policy = LO_AUTO_EXPAND_NONE;
   }
+#endif
 
   param->above = NULL;
   param->below = NULL;
   if (!DOM_StyleGetProperty(cx, db, node, ZINDEX_STYLE, &entry))
     goto error;
-                                   
-  return;
- error:
-  XP_FREE(param);
-#endif 0
+  if (entry) {
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_atoi, &param->zindex, NULL))
+      goto error;
+    param->has_zindex = TRUE;
+  } else {
+    param->has_zindex = FALSE;
+  }
+
+  if (!DOM_StyleGetProperty(cx, db, node, VISIBILITY_STYLE, &entry))
+    goto error;
+  if (entry)
+    param->visibility = XP_STRDUP(entry->value);
+
+  /* XXX handle src */
+  param->tag = NULL;
+  param->ss_tag = tag;
+
+  if (!LM_SetNodeFlags(node, STYLE_NODE_NEED_TO_POP_LAYER))
+    goto error;
+
+  if (lo_BeginLayer(context, state, param, inflow))
+    error:
+    lo_FreeBlockInitializeStruct(param);
 }
 #else
 

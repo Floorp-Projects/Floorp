@@ -1224,6 +1224,8 @@ void lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
                                      struct DOM_StyleDatabase *db,
                                      struct DOM_Node *node,
                                      PA_Tag *tag);
+struct DOM_StyleDatabase *
+DOMMOZ_NewStyleDatabase(JSContext *context, lo_DocState *state);
 #else
 void lo_SetStyleSheetLayerProperties(MWContext *context,
 		                             lo_DocState *state,

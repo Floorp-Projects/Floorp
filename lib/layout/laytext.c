@@ -3620,6 +3620,7 @@ lo_PushFont(lo_DocState *state, intn tag_type, LO_TextAttr *attr)
  *
  * Returns: The LO_TextAttr structure of the font just passed.
  *************************************/
+#ifndef DOM
 PRIVATE
 LO_TextAttr *
 lo_PopFontStack(lo_DocState *state, intn tag_type)
@@ -3648,7 +3649,7 @@ XP_TRACE(("Warning:  Font popped by different TAG than pushed it %d != %d\n", fp
 
 	return(attr);
 }
-
+#endif
 
 LO_TextAttr *
 lo_PopFont(lo_DocState *state, intn tag_type)
@@ -5366,9 +5367,11 @@ static uint32  lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_T
 /* the parsers */
 static void lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 static void lo_ParseThaiText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
+#ifndef DOM
 static void lo_ParseSinglePreformattedText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
-static void lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 static void lo_ParseDoublePreformattedText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
+#endif
+static void lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 
 extern int32 lo_correct_text_element_width(LO_TextInfo *text_info);
 
@@ -8261,13 +8264,13 @@ lo_GetLineStart ( LO_TextBlock * block )
 	return &block->text_buffer[ block->last_line_break ];
 }
 
-
+#ifdef DOM
 static void
 lo_SkipCharacter ( LO_TextBlock * block )
 {
 	++block->buffer_read_index;
 }
-
+#endif
 
 static void
 lo_SetLineBreak ( LO_TextBlock * block, Bool skipSpace )
@@ -8505,6 +8508,10 @@ FontWeightToData(const char *str, uint32 *data, void *closure)
     weight = FONT_WEIGHT_BOLDER;
   } else if (!strcasecomp(str, "lighter")) {
     weight = FONT_WEIGHT_LIGHTER;
+  } else if (!strcasecomp(str, "bold")) {
+    weight = 700;
+  } else if (!strcasecomp(str, "normal")) {
+    weight = 400;
   } else {
     weight = XP_ATOI(str);
     weight -= weight % 100;

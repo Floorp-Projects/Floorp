@@ -3432,8 +3432,8 @@ LO_CellStruct *lo_GetParentCell(MWContext * pContext, LO_Element *pElement)
 }
 
 
-static lo_iColumnX = 0;
-static lo_iRowY = 0;
+static int lo_iColumnX = 0;
+static int lo_iRowY = 0;
 
 /* Find the first cell with with closest left border x-value <= than the given x
  * value or, if bGetColumn=FALSE, find the cell with closest top border 
@@ -3765,7 +3765,6 @@ XP_Bool LO_IsEmptyCell(LO_CellStruct *cell)
         /* Unlikely, but if nothing inside cell, we're empty! */
         if(element)
         {
-            LO_Element *pNext = element->lo_any.next;
             while(element)
             {
                 /* Any non-text element except linefeed is not "empty"

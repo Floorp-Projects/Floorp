@@ -4147,12 +4147,15 @@ lo_SetStyleSheetProperties(MWContext *context, lo_DocState *state, PA_Tag *tag)
   DOM_StyleDatabase *db = state->top_state->style_db;
   DOM_Node *node = state->top_state->current_node;
 
+  if (!node)
+    return;
   if (!db) {
     if (!cx)
       return;
-    db = DOM_StyleDatabaseFromContext(cx);
+    db = DOMMOZ_NewStyleDatabase(cx, state);
     if (!db)
       return;
+    state->top_state->style_db = db;
   }
 
 #ifdef DEBUG_shaver
