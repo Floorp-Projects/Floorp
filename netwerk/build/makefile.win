@@ -45,10 +45,12 @@ LLIBS=                                \
         $(DIST)\lib\nkconv_s.lib      \
         $(DIST)\lib\nkcnvts_s.lib     \
         $(DIST)\lib\xpcom.lib         \
+!ifdef MOZ_OLD_CACHE
         $(DIST)\lib\nkcachemgr_s.lib  \
         $(DIST)\lib\nkfilecache_s.lib \
         $(DIST)\lib\nkmemcache_s.lib  \
         $(DIST)\lib\dbm32.lib         \
+!endif
         $(DIST)\lib\nkmime_s.lib      \
         $(DIST)\lib\nkhttp_s.lib      \
         $(DIST)\lib\nkfile_s.lib      \
@@ -70,9 +72,11 @@ INCS = $(INCS)                                   \
         -I$(DEPTH)\netwerk\socket\base           \
         -I$(DEPTH)\netwerk\streamconv\src        \
         -I$(DEPTH)\netwerk\streamconv\converters \
+!ifdef MOZ_OLD_CACHE
         -I$(DEPTH)\netwerk\cache\memcache        \
         -I$(DEPTH)\netwerk\cache\filecache       \
         -I$(DEPTH)\netwerk\cache\mgr             \
+!endif
         -I$(DEPTH)\netwerk\mime\src              \
         -I$(DEPTH)\netwerk\protocol\http\src     \
         -I$(DEPTH)\netwerk\protocol\file\src     \

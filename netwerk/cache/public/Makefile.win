@@ -30,12 +30,14 @@ EXPORTS =                   \
         $(NULL)
 
 XPIDLSRCS =                             \
+!ifdef MOZ_OLD_CACHE
         .\nsICachedNetData.idl          \
         .\nsINetDataCacheManager.idl    \
         .\nsINetDataCache.idl           \
         .\nsINetDataCacheRecord.idl     \
         .\nsINetDataDiskCache.idl       \
         .\nsIStreamAsFile.idl           \
+!endif
 !ifdef MOZ_NEW_CACHE
 	.\nsICache.idl		        \
 	.\nsICacheEntryDescriptor.idl   \

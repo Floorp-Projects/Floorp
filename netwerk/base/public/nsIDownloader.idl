@@ -20,12 +20,10 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
-#include "nsIChannel.idl"
+#include "nsIRequest.idl"
 
 interface nsIURI;
 interface nsILoadGroup;  
-interface nsIStreamLoader;
 interface nsIInterfaceRequestor;
 interface nsIFile;
 interface nsIDownloader;
@@ -50,12 +48,3 @@ interface nsIDownloader : nsISupports
               in nsIInterfaceRequestor notificationCallbacks,
               in nsLoadFlags loadAttributes);
 };
-
-%{C++
-
-#define NS_DOWNLOADER_CID                   \
-{ /* 510a86bb-6019-4ed1-bb4f-965cffd23ece*/         \
- 0x510a86bb, 0x6019, 0x4ed1, { 0xbb, 0x4f, 0x96, 0x5c, 0xff, 0xd2, 0x3e, 0xce } \
-}
-
-%}
