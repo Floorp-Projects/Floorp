@@ -29,6 +29,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
 // nsMIMEInfoImpl methods
 nsMIMEInfoImpl::nsMIMEInfoImpl() {
     NS_INIT_REFCNT();
+    mPreferredAction = 0;
 }
 
 nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) :mMIMEType( aMIMEType ){
@@ -185,4 +186,42 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
 	if ( extList.Length() )
 		mExtensions.AppendCString( extList );
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::GetApplicationDescription(PRUnichar ** aApplicationDescription)
+{
+  *aApplicationDescription = mPreferredAppDescription.ToNewUnicode();
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP nsMIMEInfoImpl::SetApplicationDescription(const PRUnichar * aApplicationDescription)
+{
+  mPreferredAppDescription = aApplicationDescription;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMIMEInfoImpl::GetPreferredApplicationHandler(nsIFile ** aPreferredAppHandler)
+{
+  *aPreferredAppHandler = mPreferredApplication;
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredApplicationHandler(nsIFile * aPreferredAppHandler)
+{
+  mPreferredApplication = aPreferredAppHandler;
+  return NS_OK;
+}
+
+nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
+
+NS_IMETHODIMP nsMIMEInfoImpl::GetPreferredAction(nsMIMEInfoHandleAction * aPreferredAction)
+{
+  *aPreferredAction = mPreferredAction;
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredAction(nsMIMEInfoHandleAction aPreferredAction)
+{
+  mPreferredAction = aPreferredAction;
+  return NS_OK;
 }
