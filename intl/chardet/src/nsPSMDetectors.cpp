@@ -17,25 +17,82 @@
  */
 
 #include "nsVerifier.h"
+//---- for verifiers
 #include "nsSJISVerifier.h"
 #include "nsEUCJPVerifier.h"
 #include "nsCP1252Verifier.h"
 #include "nsUTF8Verifier.h"
 #include "nsISO2022JPVerifier.h"
+#include "nsUCS2BEVerifier.h"
+#include "nsUCS2LEVerifier.h"
+#include "nsBIG5Verifier.h"
+#include "nsGB2312Verifier.h"
+#include "nsEUCTWVerifier.h"
+#include "nsEUCKRVerifier.h"
+//---- end verifiers
 #include <stdio.h>
 //---- for XPCOM
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsCharDetDll.h"
 #include "pratom.h"
+// temp fix for XPCOM should be remove after alechf fix the xpcom one
+#define MY_NS_IMPL_QUERY_INTERFACE(_class,_classiiddef,_interface)       \
+NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
+{                                                                        \
+  if (NULL == aInstancePtr) {                                            \
+    return NS_ERROR_NULL_POINTER;                                        \
+  }                                                                      \
+                                                                         \
+  *aInstancePtr = NULL;                                                  \
+                                                                         \
+  static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
+  if (aIID.Equals(kClassIID)) {                                          \
+    *aInstancePtr = (void*) ((_interface*)this);                         \
+    NS_ADDREF_THIS();                                                    \
+    return NS_OK;                                                        \
+  }                                                                      \
+  if (aIID.Equals(nsISupports::GetIID())) {                              \
+    *aInstancePtr = (void*) ((nsISupports*)this);                        \
+    NS_ADDREF_THIS();                                                    \
+    return NS_OK;                                                        \
+  }                                                                      \
+  return NS_NOINTERFACE;                                                 \
+}
+#define MY_NS_IMPL_ISUPPORTS(_class,_classiiddef,_interface) \
+  NS_IMPL_ADDREF(_class)                       \
+  NS_IMPL_RELEASE(_class)                      \
+  MY_NS_IMPL_QUERY_INTERFACE(_class,_classiiddef,_interface)
 //---- end XPCOM
-//---- for XPCOM interfaces
+//---- for XPCOM based detector interfaces
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsIStringCharsetDetector.h"
-//---- end XPCOM interfaces
+//---- end XPCOM based detector interfaces
+
 
 #define DETECTOR_DEBUG
+
+/*
+ In the current design, we know the following combination of verifiers 
+ are not good-
+
+ 1. Two or more of the following verifier in one detector:
+      nsISO2022JPVerifer nsISO2022KRVerifier nsISO2022CNVerifier
+
+    We can improve this by making the state machine more complete, not
+    just goto eItsMe state when it hit a single ESC, but the whole ESC
+    sequence.
+      
+
+ 2. Two or more of the following verifier in one detector:
+      nsEUCJPVerifer 
+      nsGB2312Verifier
+      nsEUCKRVerifer 
+      nsEUCTWVerifier
+      nsBIG5Verifer 
+
+ */
 
 //==========================================================
 class nsPSMDetectorBase {
@@ -131,22 +188,140 @@ PRBool nsPSMDetectorBase::HandleData(const char* aBuf, PRUint32 aLen)
 }
 
 //==========================================================
+#define ZHTW_DETECTOR_NUM_VERIFIERS 6
+
+/*
+   This class won't detect x-euc-tw for now. It can  only 
+   tell a Big5 document is not x-euc-tw , but cannot tell
+   a x-euc-tw docuement is not Big5 unless we hit characters
+   defined in CNS 11643 plane 2.
+   
+   May need improvement ....
+ */
+/*
+ ALSO, we need to add nsISO2022CNVerifier here...
+ */
+class nsZhTwDetector : public nsPSMDetectorBase {
+public:
+  nsZhTwDetector();
+  virtual ~nsZhTwDetector() {};
+private:
+  PRUint32 mStateP[ZHTW_DETECTOR_NUM_VERIFIERS];
+  PRUint32 mItemIdxP[ZHTW_DETECTOR_NUM_VERIFIERS];
+};
+//----------------------------------------------------------
+
+static nsVerifier *gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
+      &nsCP1252Verifier,
+      &nsUTF8Verifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier,
+      &nsBIG5Verifier,
+      &nsEUCTWVerifier
+};
+//----------------------------------------------------------
+nsZhTwDetector::nsZhTwDetector() 
+{
+  mState = mStateP; 
+  mItemIdx = mItemIdxP; 
+  mVerifier = gZhTwVerifierSet; 
+  mItems = ZHTW_DETECTOR_NUM_VERIFIERS;
+  for(PRUint32 i = 0; i < mItems ; i++) {
+     mItemIdx[i] = i;
+     mState[i] = 0;
+  }
+}
+//==========================================================
+#define KO_DETECTOR_NUM_VERIFIERS 5
+/*
+ We need to add nsISO2022KRVerifier here...
+ */
+
+class nsKoDetector : public nsPSMDetectorBase {
+public:
+  nsKoDetector();
+  virtual ~nsKoDetector() {};
+private:
+  PRUint32 mStateP[KO_DETECTOR_NUM_VERIFIERS];
+  PRUint32 mItemIdxP[KO_DETECTOR_NUM_VERIFIERS];
+};
+//----------------------------------------------------------
+
+static nsVerifier *gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
+      &nsCP1252Verifier,
+      &nsUTF8Verifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier,
+      &nsEUCKRVerifier
+};
+//----------------------------------------------------------
+nsKoDetector::nsKoDetector() 
+{
+  mState = mStateP; 
+  mItemIdx = mItemIdxP; 
+  mVerifier = gKoVerifierSet; 
+  mItems = KO_DETECTOR_NUM_VERIFIERS;
+  for(PRUint32 i = 0; i < mItems ; i++) {
+     mItemIdx[i] = i;
+     mState[i] = 0;
+  }
+}
+//==========================================================
+#define ZHCH_DETECTOR_NUM_VERIFIERS 5
+
+/*
+ We need to add nsISO2022CNVerifier  and nsHZVerifier here...
+ */
+class nsZhChDetector : public nsPSMDetectorBase {
+public:
+  nsZhChDetector();
+  virtual ~nsZhChDetector() {};
+private:
+  PRUint32 mStateP[ZHCH_DETECTOR_NUM_VERIFIERS];
+  PRUint32 mItemIdxP[ZHCH_DETECTOR_NUM_VERIFIERS];
+};
+//----------------------------------------------------------
+
+static nsVerifier *gZhChVerifierSet[ZHCH_DETECTOR_NUM_VERIFIERS] = {
+      &nsCP1252Verifier,
+      &nsUTF8Verifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier,
+      &nsGB2312Verifier
+};
+//----------------------------------------------------------
+nsZhChDetector::nsZhChDetector() 
+{
+  mState = mStateP; 
+  mItemIdx = mItemIdxP; 
+  mVerifier = gZhChVerifierSet; 
+  mItems = ZHCH_DETECTOR_NUM_VERIFIERS;
+  for(PRUint32 i = 0; i < mItems ; i++) {
+     mItemIdx[i] = i;
+     mState[i] = 0;
+  }
+}
+//==========================================================
+#define JA_DETECTOR_NUM_VERIFIERS 7
+
 class nsJaDetector : public nsPSMDetectorBase {
 public:
   nsJaDetector();
   virtual ~nsJaDetector() {};
 private:
-  PRUint32 mStateP[5];
-  PRUint32 mItemIdxP[5];
+  PRUint32 mStateP[JA_DETECTOR_NUM_VERIFIERS];
+  PRUint32 mItemIdxP[JA_DETECTOR_NUM_VERIFIERS];
 };
 //----------------------------------------------------------
 
-static nsVerifier *gJaVerifierSet[5] = {
+static nsVerifier *gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
+      &nsCP1252Verifier,
+      &nsUTF8Verifier,
+      &nsUCS2BEVerifier,
+      &nsUCS2LEVerifier,
       &nsSJISVerifier,
       &nsEUCJPVerifier,
-      &nsISO2022JPVerifier,
-      &nsCP1252Verifier,
-      &nsUTF8Verifier
+      &nsISO2022JPVerifier
 };
 //----------------------------------------------------------
 nsJaDetector::nsJaDetector() 
@@ -154,8 +329,8 @@ nsJaDetector::nsJaDetector()
   mState = mStateP; 
   mItemIdx = mItemIdxP; 
   mVerifier = gJaVerifierSet; 
-  mItems = 5;
-  for(PRUint32 i = 0; i < 5 ; i++) {
+  mItems = JA_DETECTOR_NUM_VERIFIERS;
+  for(PRUint32 i = 0; i < mItems ; i++) {
      mItemIdx[i] = i;
      mState[i] = 0;
   }
@@ -293,8 +468,15 @@ class nsXPCOMJaDetector :
 {
   NS_DECL_ISUPPORTS
   public:
-    nsXPCOMJaDetector();
-    virtual ~nsXPCOMJaDetector();
+    nsXPCOMJaDetector()
+    {
+      NS_INIT_REFCNT();
+      PR_AtomicIncrement(&g_InstanceCount);
+    };
+    virtual ~nsXPCOMJaDetector()
+    {
+      PR_AtomicDecrement(&g_InstanceCount);
+    }
     virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) 
                       { return nsJaDetector::HandleData(aBuf, aLen); };
     virtual void   DataEnd() 
@@ -303,42 +485,8 @@ class nsXPCOMJaDetector :
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
-NS_IMPL_ADDREF(nsXPCOMJaDetector)
-NS_IMPL_RELEASE(nsXPCOMJaDetector)
+MY_NS_IMPL_ISUPPORTS(nsXPCOMJaDetector,nsICharsetDetector::GetIID(), nsICharsetDetector)
 
-NS_IMETHODIMP nsXPCOMJaDetector::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  if (aIID.Equals(nsICharsetDetector::GetIID())) {                                          
-    *aInstancePtr = (void*) ((nsICharsetDetector*)this);                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)this);                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  return NS_NOINTERFACE;                                                 
-}
-
-//----------------------------------------------------------
-nsXPCOMJaDetector::nsXPCOMJaDetector()
-{
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-//----------------------------------------------------------
-nsXPCOMJaDetector::~nsXPCOMJaDetector()
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
 //==========================================================
 class nsXPCOMJaStringDetector :
         public nsXPCOMStringDetectorBase, // Inheriate the implementation
@@ -346,8 +494,15 @@ class nsXPCOMJaStringDetector :
 {
   NS_DECL_ISUPPORTS
   public:
-    nsXPCOMJaStringDetector();
-    virtual ~nsXPCOMJaStringDetector();
+    nsXPCOMJaStringDetector()
+    {
+      NS_INIT_REFCNT();
+      PR_AtomicIncrement(&g_InstanceCount);
+    }
+    virtual ~nsXPCOMJaStringDetector()
+    {
+      PR_AtomicDecrement(&g_InstanceCount);
+    }
     virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) 
                       { return nsJaDetector::HandleData(aBuf, aLen); };
     virtual void   DataEnd() 
@@ -356,19 +511,8 @@ class nsXPCOMJaStringDetector :
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsXPCOMJaStringDetector, nsIStringCharsetDetector::GetIID())
+MY_NS_IMPL_ISUPPORTS(nsXPCOMJaStringDetector,nsIStringCharsetDetector::GetIID(), nsIStringCharsetDetector)
 
-//----------------------------------------------------------
-nsXPCOMJaStringDetector::nsXPCOMJaStringDetector()
-{
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-//----------------------------------------------------------
-nsXPCOMJaStringDetector::~nsXPCOMJaStringDetector()
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
 //==========================================================
 typedef enum {
   eJaDetector,

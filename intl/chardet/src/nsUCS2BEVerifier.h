@@ -23,7 +23,7 @@
  * if you have any question. Thanks
  */
 #include "nsVerifier.h"
-static PRUint32 UCSBE_cls [ 256 / 8 ] = {
+static PRUint32 UCS2BE_cls [ 256 / 8 ] = {
 PCK4BITS(1,7,7,7,7,7,7,7),  // 00 - 07 
 PCK4BITS(7,7,4,7,7,3,7,7),  // 08 - 0f 
 PCK4BITS(7,7,7,7,7,7,7,7),  // 10 - 17 
@@ -59,7 +59,7 @@ PCK4BITS(7,7,7,7,7,7,5,6)   // f8 - ff
 };
 
 
-static PRUint32 UCSBE_st [ 9] = {
+static PRUint32 UCS2BE_st [ 9] = {
 PCK4BITS(eError,     5,     3,     6,     6,     7,     8,     3),//00-07 
 PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError),//08-0f 
 PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe),//10-17 
@@ -72,14 +72,14 @@ PCK4BITS(     4,     4,     4,     4,     4,eError,     4,     4) //40-47
 };
 
 
-static nsVerifier nsUCSBEVerifier = {
-     "ISO-10646-UCS-2-BE",
+static nsVerifier nsUCS2BEVerifier = {
+     "ISO-10646-UCS-2",
     {
        eIdxSft4bits, 
        eSftMsk4bits, 
        eBitSft4bits, 
        eUnitMsk4bits, 
-       UCSBE_cls 
+       UCS2BE_cls 
     },
     8,
     {
@@ -87,6 +87,6 @@ static nsVerifier nsUCSBEVerifier = {
        eSftMsk4bits, 
        eBitSft4bits, 
        eUnitMsk4bits, 
-       UCSBE_st 
+       UCS2BE_st 
     }
 };
