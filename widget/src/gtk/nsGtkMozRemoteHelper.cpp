@@ -194,12 +194,15 @@ void
 nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
 {
   PRBool         newWindow = PR_FALSE;
+  PRBool         raiseWindow = PR_TRUE;
   nsCString      actionString;
   nsCString      commandString;
   nsCString      origString;
+  nsCString      lastCommand;
   PRInt32        begin_command = 0;
   PRInt32        end_command = 0;
   PRInt32        commandLen = 0;
+  PRUint32       indexRet = 0;
 
   if (!aResponse)
   {
@@ -263,6 +266,15 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
 
   commandLen = commandString.Length();
 
+  // pop off the "noraise" argument if it exists.
+
+  FindLastInList(commandString, lastCommand, &indexRet);
+  if (lastCommand.EqualsIgnoreCase("noraise"))
+  {
+    commandString.Truncate(indexRet);
+    raiseWindow = PR_FALSE;
+  }
+
   /*   
       openURL ( ) 
             Prompts for a URL with a dialog box. 
@@ -283,8 +295,6 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     else
     {
       // check to see if we need to open a new window
-      PRUint32 indexRet = 0;
-      nsCString lastCommand;
       FindLastInList (commandString, lastCommand, &indexRet);
       if (lastCommand.EqualsIgnoreCase("new-window"))
       {
@@ -292,14 +302,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
 	newWindow = PR_TRUE;
       }
       // ok, do it
-      if (newWindow)
-      {
-	rv = OpenURL(commandString.GetBuffer(), PR_TRUE);
-      }
-      else
-      {
-	rv = OpenURL(commandString.GetBuffer(), PR_FALSE);
-      }
+	  rv = OpenURL(commandString.GetBuffer(), newWindow, raiseWindow);
     }
   }
 
@@ -319,7 +322,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     }
     else
     {
-      rv = OpenFile(commandString.GetBuffer());
+      rv = OpenFile(commandString.GetBuffer(), raiseWindow);
     }
   }
 
@@ -342,8 +345,6 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     else
     {
       // check to see if it has a type on it
-      PRUint32 indexRet = 0;
-      nsCString lastCommand;
       FindLastInList(commandString, lastCommand, &indexRet);
       if (lastCommand.EqualsIgnoreCase("html"))
       {
@@ -408,8 +409,6 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     }
     else
     {
-      PRUint32 indexRet = 0;
-      nsCString lastCommand;
       FindLastInList(commandString, lastCommand, &indexRet);
       if (!lastCommand.IsEmpty())
       {
@@ -526,7 +525,7 @@ nsGtkMozRemoteHelper::OpenURLDialog  (void)
 }
 
 NS_METHOD
-nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
+nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBool raiseWindow)
 {
   nsresult rv;
   nsString newURL;
@@ -589,6 +588,13 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
     rv = docShell->LoadURI(uri, nsnull);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
+    // raise the window, if requested
+    if (raiseWindow)
+    {
+      rv = lastUsedWindow->GetAttention();
+      if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
@@ -600,7 +606,7 @@ nsGtkMozRemoteHelper::OpenFileDialog (void)
 }
 
 NS_METHOD
-nsGtkMozRemoteHelper::OpenFile       (const char *aURL)
+nsGtkMozRemoteHelper::OpenFile       (const char *aURL, PRBool raiseWindow)
 {
   nsCString newURL;
   nsresult rv;
@@ -633,7 +639,7 @@ nsGtkMozRemoteHelper::OpenFile       (const char *aURL)
     newURL = aURL;
   }
   // open with the new url
-  rv = OpenURL(newURL, PR_FALSE);
+  rv = OpenURL(newURL, PR_FALSE, raiseWindow);
   return rv;
 }
 

@@ -48,9 +48,9 @@ public:
 
   // these are for the actions
   static NS_METHOD   OpenURLDialog   (void);
-  static NS_METHOD   OpenURL         (const char *aURL, PRBool aNewWindow);
+  static NS_METHOD   OpenURL         (const char *aURL, PRBool aNewWindow, PRBool raiseWindow);
   static NS_METHOD   OpenFileDialog  (void);
-  static NS_METHOD   OpenFile        (const char *aURL);
+  static NS_METHOD   OpenFile        (const char *aURL, PRBool raiseWindow);
   static NS_METHOD   SaveAsDialog    (void);
   static NS_METHOD   SaveAs          (const char *aFileName, const char *aType);
   static NS_METHOD   MailTo          (const PRUnichar *aToList);
