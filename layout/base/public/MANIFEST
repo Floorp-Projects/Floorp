@@ -31,6 +31,7 @@ nsIStyleContext.h
 nsIStyleRule.h
 nsIStyleSet.h
 nsIStyleSheet.h
+nsIStyleSheetLinkingElement.h
 nsITextContent.h
 nsTextFragment.h
 nsIDOMSelectionListener.h

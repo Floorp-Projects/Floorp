@@ -64,6 +64,7 @@
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
 
+#include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
@@ -85,6 +86,7 @@ static NS_DEFINE_IID(kIHTTPURLIID, NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -3043,6 +3045,13 @@ HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
         if (NS_SUCCEEDED(aOwner->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
           sheet->SetOwningNode(domNode);
           NS_RELEASE(domNode);
+        }
+
+        nsIStyleSheetLinkingElement* element;
+        if (NS_SUCCEEDED(aOwner->QueryInterface(kIStyleSheetLinkingElementIID,
+                                                (void**)&element))) {
+          element->SetStyleSheet(sheet);
+          NS_RELEASE(element);
         }
       }
 

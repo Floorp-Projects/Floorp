@@ -98,6 +98,11 @@ public:
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+
 #ifdef DO_SELECTION
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
@@ -284,7 +289,7 @@ protected:
 
   void BuildFloaterList();
 
-  void RenumberLists(nsBlockReflowState& aState);
+  void RenumberLists();
 
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);

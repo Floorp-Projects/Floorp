@@ -26,15 +26,21 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIDOMStyleSheet.h"
+#include "nsIStyleSheet.h"
+#include "nsIStyleSheetLinkingElement.h"
 
 // XXX no SRC attribute
 
 static NS_DEFINE_IID(kIDOMHTMLStyleElementIID, NS_IDOMHTMLSTYLEELEMENT_IID);
+static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
+static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 
 class nsHTMLStyleElement : public nsIDOMHTMLStyleElement,
                     public nsIScriptObjectOwner,
                     public nsIDOMEventReceiver,
-                    public nsIHTMLContent
+                    public nsIHTMLContent,
+                    public nsIStyleSheetLinkingElement
 {
 public:
   nsHTMLStyleElement(nsIAtom* aTag);
@@ -72,8 +78,13 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIStyleSheetLinkingElement  
+  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
+
 protected:
   nsGenericHTMLLeafElement mInner;
+  nsIStyleSheet* mStyleSheet;
 };
 
 nsresult
@@ -94,10 +105,12 @@ nsHTMLStyleElement::nsHTMLStyleElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mStyleSheet = nsnull;
 }
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
 {
+  NS_IF_RELEASE(mStyleSheet);
 }
 
 NS_IMPL_ADDREF(nsHTMLStyleElement)
@@ -110,6 +123,12 @@ nsHTMLStyleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLStyleElementIID)) {
     nsIDOMHTMLStyleElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIStyleSheetLinkingElementIID)) {
+    nsIStyleSheetLinkingElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -128,9 +147,67 @@ nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLStyleElement, Disabled, disabled)
+NS_IMETHODIMP
+nsHTMLStyleElement::GetDisabled(PRBool* aDisabled)
+{
+  nsresult result = NS_OK;
+  
+  if (nsnull != mStyleSheet) {
+    nsIDOMStyleSheet* ss;
+    
+    result = mStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void**)&ss);
+    if (NS_OK == result) {
+      result = ss->GetDisabled(aDisabled);
+      NS_RELEASE(ss);
+    }
+  }
+  else {
+    *aDisabled = PR_FALSE;
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
+{
+  nsresult result = NS_OK;
+  
+  if (nsnull != mStyleSheet) {
+    nsIDOMStyleSheet* ss;
+    
+    result = mStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void**)&ss);
+    if (NS_OK == result) {
+      result = ss->SetDisabled(aDisabled);
+      NS_RELEASE(ss);
+    }
+  }
+  
+  return result;
+}
+
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Media, media)
 NS_IMPL_STRING_ATTR(nsHTMLStyleElement, Type, type)
+
+NS_IMETHODIMP 
+nsHTMLStyleElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
+{
+  NS_IF_RELEASE(mStyleSheet);
+
+  mStyleSheet = aStyleSheet;
+  NS_IF_ADDREF(mStyleSheet);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLStyleElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
+{
+  aStyleSheet = mStyleSheet;
+  NS_IF_ADDREF(aStyleSheet);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLStyleElement::StringToAttribute(nsIAtom* aAttribute,
