@@ -76,9 +76,11 @@ libs:: $(LIBRARY)
 	$(MAKE_INSTALL) ua.css $(DIST)\bin\res
 	$(MAKE_INSTALL) html.css $(DIST)\bin\res
 	$(MAKE_INSTALL) arrow.gif $(DIST)\bin\res
+	$(MAKE_INSTALL) arrowd.gif $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 	rm -f $(DIST)\bin\res\ua.css
 	rm -f $(DIST)\bin\res\html.css
 	rm -f $(DIST)\bin\res\arrow.gif
+	rm -f $(DIST)\bin\res\arrowd.gif
