@@ -3077,7 +3077,7 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
            ("nsComponentManager: Unloading Libraries."));
 
     // UnloadAll the loaders
-    /* iterate over all known loaders and ask them to autoregister. */
+    // iterate over all known loaders and ask them to Unload.
     // Skip mNativeComponentLoader
     for (int i=NS_COMPONENT_TYPE_NATIVE + 1; i<mNLoaderData; i++) {
         if (mLoaderData[i].loader) {
