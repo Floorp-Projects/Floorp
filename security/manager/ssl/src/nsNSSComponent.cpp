@@ -550,13 +550,6 @@ nsNSSComponent::InitializeNSS()
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
 
-  // temporarily disabling Diffie Hellman ciphers, see bug 95987
-  SSL_CipherPolicySet(SSL_DHE_RSA_WITH_DES_CBC_SHA, SSL_NOT_ALLOWED);
-  SSL_CipherPolicySet(SSL_DHE_DSS_WITH_DES_CBC_SHA, SSL_NOT_ALLOWED);
-  SSL_CipherPolicySet(SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA, SSL_NOT_ALLOWED);
-  SSL_CipherPolicySet(SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA, SSL_NOT_ALLOWED);
-  SSL_CipherPolicySet(TLS_DHE_DSS_WITH_RC4_128_SHA, SSL_NOT_ALLOWED);
-    
   mPref = do_GetService(NS_PREF_CONTRACTID);
 
   // Register a callback so we can inform NSS when these prefs change
