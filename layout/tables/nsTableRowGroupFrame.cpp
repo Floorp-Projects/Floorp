@@ -65,8 +65,11 @@ struct RowGroupReflowState {
   // Remember the height of the first row, because it's our maxElementHeight (plus header/footers)
   nscoord firstRowHeight;
 
+  nsTableFrame *tableFrame;
+
   RowGroupReflowState(nsIPresContext&          aPresContext,
-                      const nsHTMLReflowState& aReflowState)
+                      const nsHTMLReflowState& aReflowState,
+                      nsTableFrame *           aTableFrame)
     : mPresContext(aPresContext),
       reflowState(aReflowState)
   {
@@ -79,6 +82,7 @@ struct RowGroupReflowState {
     unconstrainedHeight = PRBool(reflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
     firstRow = PR_TRUE;
     firstRowHeight=0;
+    tableFrame = aTableFrame;
   }
 
   ~RowGroupReflowState() {
@@ -821,10 +825,17 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
 
-  RowGroupReflowState state(aPresContext, aReflowState);
+  nsTableFrame *tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv))
+    return rv;
+  else if (tableFrame == nsnull)
+    return NS_ERROR_NULL_POINTER;
+
+  RowGroupReflowState state(aPresContext, aReflowState, tableFrame);
 
   if (eReflowReason_Incremental == aReflowState.reason) {
-    rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
   } else {
     PRBool reflowMappedOK = PR_TRUE;
   
@@ -886,31 +897,28 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
 
 NS_METHOD nsTableRowGroupFrame::IncrementalReflow(nsIPresContext& aPresContext,
                                                   nsHTMLReflowMetrics& aDesiredSize,
-                                                  const nsHTMLReflowState& aReflowState,
+                                                  RowGroupReflowState& aReflowState,
                                                   nsReflowStatus& aStatus)
 {
   if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IncrementalReflow\n");
   nsresult  rv = NS_OK;
 
-  // create an inner table reflow state
-  RowGroupReflowState state(aPresContext, aReflowState);
-
   // determine if this frame is the target or not
   nsIFrame *target=nsnull;
-  rv = aReflowState.reflowCommand->GetTarget(target);
+  rv = aReflowState.reflowState.reflowCommand->GetTarget(target);
   if ((PR_TRUE==NS_SUCCEEDED(rv)) && (nsnull!=target))
   {
     if (this==target)
-      rv = IR_TargetIsMe(aPresContext, aDesiredSize, state, aStatus);
+      rv = IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
     else
     {
       // Get the next frame in the reflow chain
       nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
+      aReflowState.reflowState.reflowCommand->GetNext(nextFrame);
 
       // Recover our reflow state
       //RecoverState(state, nextFrame);
-      rv = IR_TargetIsChild(aPresContext, aDesiredSize, state, aStatus, nextFrame);
+      rv = IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, nextFrame);
     }
   }
   return rv;
@@ -1013,12 +1021,7 @@ NS_METHOD nsTableRowGroupFrame::IR_RowInserted(nsIPresContext&      aPresContext
   if (NS_FAILED(rv))
     return rv;
 
-  nsTableFrame *tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (NS_FAILED(rv) || nsnull==tableFrame)
-    return rv;
-
-  if (PR_TRUE==tableFrame->RequiresPass1Layout())
+  if (PR_TRUE==aReflowState.tableFrame->RequiresPass1Layout())
   {
     // do a pass-1 layout of all the cells in the inserted row
     //XXX: check the table frame to see if we can skip this
@@ -1028,8 +1031,8 @@ NS_METHOD nsTableRowGroupFrame::IR_RowInserted(nsIPresContext&      aPresContext
       return rv;
   }
 
-  tableFrame->InvalidateCellMap();
-  tableFrame->InvalidateColumnCache();
+  aReflowState.tableFrame->InvalidateCellMap();
+  aReflowState.tableFrame->InvalidateColumnCache();
 
   return rv;
 }
@@ -1107,12 +1110,7 @@ NS_METHOD nsTableRowGroupFrame::IR_RowAppended(nsIPresContext&      aPresContext
     if (NS_FAILED(rv))
       return rv;
 
-    nsTableFrame *tableFrame=nsnull;
-    rv = nsTableFrame::GetTableFrame(this, tableFrame);
-    if (NS_FAILED(rv) || nsnull==tableFrame)
-      return rv;
-
-    if (PR_TRUE==tableFrame->RequiresPass1Layout())
+    if (PR_TRUE==aReflowState.tableFrame->RequiresPass1Layout())
     {
       // do a pass1 reflow of the new row
       //XXX: check the table frame to see if we can skip this
@@ -1124,7 +1122,7 @@ NS_METHOD nsTableRowGroupFrame::IR_RowAppended(nsIPresContext&      aPresContext
 
     // if any column widths have to change due to this, rebalance column widths
     //XXX need to calculate this, but for now just do it
-    tableFrame->InvalidateColumnWidths();  
+    aReflowState.tableFrame->InvalidateColumnWidths();  
   }
   else
   {
@@ -1135,12 +1133,8 @@ NS_METHOD nsTableRowGroupFrame::IR_RowAppended(nsIPresContext&      aPresContext
     if (NS_FAILED(rv))
       return rv;
 
-    nsTableFrame *tableFrame=nsnull;
-    rv = nsTableFrame::GetTableFrame(this, tableFrame);
-    if (NS_FAILED(rv) || nsnull==tableFrame)
-      return rv;
-    tableFrame->InvalidateCellMap();
-    tableFrame->InvalidateColumnCache();
+    aReflowState.tableFrame->InvalidateCellMap();
+    aReflowState.tableFrame->InvalidateColumnCache();
   }
 
   return rv;
@@ -1156,16 +1150,12 @@ NS_METHOD nsTableRowGroupFrame::IR_RowRemoved(nsIPresContext&      aPresContext,
   nsresult rv = RemoveFrame((nsIFrame *)aDeletedFrame);
   if (NS_SUCCEEDED(rv))
   {
-    nsTableFrame *tableFrame=nsnull;
-    rv = nsTableFrame::GetTableFrame(this, tableFrame);
-    if (NS_FAILED(rv) || nsnull==tableFrame)
-      return rv;
-    tableFrame->InvalidateCellMap();
-    tableFrame->InvalidateColumnCache();
+    aReflowState.tableFrame->InvalidateCellMap();
+    aReflowState.tableFrame->InvalidateColumnCache();
 
     // if any column widths have to change due to this, rebalance column widths
     //XXX need to calculate this, but for now just do it
-    tableFrame->InvalidateColumnWidths();
+    aReflowState.tableFrame->InvalidateColumnWidths();
   }
 
   return rv;
@@ -1218,12 +1208,7 @@ NS_METHOD nsTableRowGroupFrame::IR_StyleChanged(nsIPresContext&      aPresContex
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
-    tableFrame->InvalidateFirstPassCache();
-  }
+  aReflowState.tableFrame->InvalidateFirstPassCache();
   return rv;
 }
 

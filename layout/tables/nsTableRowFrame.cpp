@@ -672,16 +672,11 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
   nscoord   x = 0;
   PRBool    isFirst=PR_TRUE;
   PRBool    tableLayoutStrategy=NS_STYLE_TABLE_LAYOUT_AUTO; 
-  nsTableFrame* table = nsnull;
-  nsresult  rv = nsTableFrame::GetTableFrame(this, table);
-  if ((NS_OK==rv) && (table != nsnull))
-  {
-    nsStyleTable* tableStyle;
-    table->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
-    tableLayoutStrategy = tableStyle->mLayoutStrategy;
-  }
-  else
-    return NS_ERROR_UNEXPECTED;
+  nsTableFrame* table = aReflowState.tableFrame;
+  nsresult  rv = NS_OK;
+  nsStyleTable* tableStyle;
+  table->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  tableLayoutStrategy = tableStyle->mLayoutStrategy;
 
   nsIFrame* kidFrame;
   if (nsnull==aStartFrame)
@@ -1154,12 +1149,7 @@ NS_METHOD nsTableRowFrame::IR_StyleChanged(nsIPresContext&      aPresContext,
   nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
-    tableFrame->InvalidateFirstPassCache();
-  }
+  aReflowState.tableFrame->InvalidateFirstPassCache();
   return rv;
 }
 

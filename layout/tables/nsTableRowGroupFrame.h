@@ -133,10 +133,10 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext&          aPresContext,
-                               nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus&          aStatus);
+  NS_IMETHOD IncrementalReflow(nsIPresContext&      aPresContext,
+                               nsHTMLReflowMetrics& aDesiredSize,
+                               RowGroupReflowState& aReflowState,
+                               nsReflowStatus&      aStatus);
 
   NS_IMETHOD IR_TargetIsChild(nsIPresContext&      aPresContext,
                               nsHTMLReflowMetrics& aDesiredSize,
