@@ -77,8 +77,8 @@ class nsWritingIterator
         }
 
     public:
-      // nsWritingIterator( const nsWritingIterator<CharT>& ); ...use default copy-constructor
-      // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& ); ...use default copy-assignment operator
+      // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK
+      // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
       inline void normalize_forward();
       inline void normalize_backward();
@@ -224,10 +224,16 @@ class basic_nsAWritableString
     // friend class nsWritingIterator<CharT>;
 
     public:
+      typedef CharT                     char_type;
       typedef PRUint32                  size_type;
       typedef PRUint32                  index_type;
 
       typedef nsWritingIterator<CharT>  iterator;
+
+      // basic_nsAWritableString();                                         // auto-generated default constructor OK (we're abstract anyway)
+      // basic_nsAWritableString( const basic_nsAWritableString<CharT>& );  // auto-generated copy-constructor OK (again, only because we're abstract)
+      // ~basic_nsAWritableString();                                        // auto-generated destructor OK
+      // see below for copy-assignment operator
 
       virtual CharT* GetWritableFragment( nsWritableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
 
@@ -310,6 +316,9 @@ class basic_nsAWritableString
       void Assign( const CharT* aPtr )                                                              { aPtr ? do_AssignFromElementPtr(aPtr) : SetLength(0); }
       void Assign( const CharT* aPtr, PRUint32 aLength )                                            { do_AssignFromElementPtrLength(aPtr, aLength); }
       void Assign( CharT aChar )                                                                    { do_AssignFromElement(aChar); }
+
+        // copy-assignment operator.  I must define my own if I don't want the compiler to make me one
+      basic_nsAWritableString<CharT>& operator=( const basic_nsAWritableString<CharT>& aWritable )  { Assign(aWritable); return *this; }
 
       basic_nsAWritableString<CharT>& operator=( const basic_nsAReadableString<CharT>& aReadable )  { Assign(aReadable); return *this; }
       basic_nsAWritableString<CharT>& operator=( const nsPromiseReadable<CharT>& aReadable )        { Assign(aReadable); return *this; }

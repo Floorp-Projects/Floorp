@@ -115,8 +115,8 @@ class nsReadingIterator
         }
 
     public:
-      // nsReadingIterator( const nsReadingIterator<CharT>& ); ...use default copy-constructor
-      // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& ); ...use default copy-assignment operator
+      // nsReadingIterator( const nsReadingIterator<CharT>& );                    // auto-generated copy-constructor OK
+      // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
       inline void normalize_forward();
       inline void normalize_backward();
@@ -259,7 +259,13 @@ class basic_nsAReadableString
       typedef nsReadingIterator<CharT>  const_iterator;
 
 
+      // basic_nsAReadableString();                                         // auto-generated default constructor OK (we're abstract anyway)
+      // basic_nsAReadableString( const basic_nsAReadableString<CharT>& );  // auto-generated copy-constructor OK (again, only because we're abstract)
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const basic_nsAReadableString<CharT>& );              // but assignment is _not_ OK (we're immutable) so make it impossible
 
+    public:
       virtual ~basic_nsAReadableString() { }
         // ...yes, I expect to be sub-classed.
 
@@ -685,6 +691,15 @@ class basic_nsLiteralString
             }
         }
 
+      // basic_nsLiteralString( const basic_nsLiteralString<CharT>& );  // auto-generated copy-constructor OK
+      // ~basic_nsLiteralString();                                      // auto-generated destructor OK
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const basic_nsLiteralString<CharT>& );            // we're immutable
+
+    public:
+
       virtual PRUint32 Length() const;
 
       operator const CharT*() const
@@ -784,6 +799,15 @@ class basic_nsLiteralChar
         {
           // nothing else to do here
         }
+
+      // basic_nsLiteralChar( const basic_nsLiteralString<CharT>& );  // auto-generated copy-constructor OK
+      // ~basic_nsLiteralChar();                                      // auto-generated destructor OK
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const basic_nsLiteralChar<CharT>& );            // we're immutable
+
+    public:
 
       virtual
       PRUint32
@@ -888,6 +912,15 @@ class nsPromiseConcatenation
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
         }
+
+      // nsPromiseConcatenation( const nsPromiseConcatenation<CharT>& ); // auto-generated copy-constructor should be OK
+      // ~nsPromiseConcatenation();                                      // auto-generated destructor OK
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const nsPromiseConcatenation<CharT>& );            // we're immutable, you can't assign into a concatenation
+
+    public:
 
       virtual PRUint32 Length() const;
       virtual PRBool Promises( const basic_nsAReadableString<CharT>& ) const;
@@ -1035,6 +1068,14 @@ class nsPromiseSubstring
           // nothing else to do here
         }
 
+      // nsPromiseSubstring( const nsPromiseSubstring<CharT>& ); // auto-generated copy-constructor should be OK
+      // ~nsPromiseSubstring();                                  // auto-generated destructor OK
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const nsPromiseSubstring<CharT>& );        // we're immutable, you can't assign into a substring
+
+    public:
       virtual PRUint32 Length() const;
       virtual PRBool Promises( const basic_nsAReadableString<CharT>& aString ) const { return mString.Promises(aString); }
 
