@@ -198,12 +198,12 @@ public:
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
+  NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
   NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver);
   NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
-  NS_IMETHOD GetRootWebShellEvenIfChrome(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
   NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent);
@@ -417,6 +417,7 @@ public:
   NS_IMETHOD GetUrlDispatcher(nsIUrlDispatcher *& aResult);
 
 protected:
+  void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURI* aURL);
   nsresult StopBeforeRequestingURL(void);
@@ -1357,6 +1358,23 @@ nsWebShell::GetContainer(nsIWebShellContainer*& aResult)
 }
 
 NS_IMETHODIMP
+nsWebShell::GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow)
+{
+   NS_ENSURE_ARG_POINTER(aTopLevelWindow);
+   *aTopLevelWindow;
+
+   nsCOMPtr<nsIWebShell> rootWebShell;
+
+   GetRootWebShellEvenIfChrome(getter_AddRefs(rootWebShell));
+   NS_ENSURE_TRUE(rootWebShell, NS_OK);
+   
+   nsCOMPtr<nsIWebShellContainer> rootContainer;
+   rootWebShell->GetContainer(*aTopLevelWindow);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::SetSessionHistory(nsISessionHistory* aSHist)
 {
   NS_IF_RELEASE(mSHist);
@@ -1455,22 +1473,19 @@ nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell*& aResult)
+void
+nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell** aResult)
 {
-  nsIWebShell* top = this;
-  NS_ADDREF(this);
-  for (;;) {
-    nsIWebShell* parent;
-    top->GetParentEvenIfChrome(parent);
-    if (nsnull == parent) {
-      break;
-    }
-    NS_RELEASE(top);
-    top = parent;
-  }
-  aResult = top;
-  return NS_OK;
+   nsCOMPtr<nsIWebShell> top(this);
+   nsCOMPtr<nsIWebShell> parent;
+   for(top = this; top; top = parent)
+      {
+      top->GetParentEvenIfChrome(*getter_AddRefs(parent));
+      if(!parent)
+         break;
+      }
+   *aResult = top;
+   NS_IF_ADDREF(*aResult);
 }
 
 NS_IMETHODIMP
@@ -3182,19 +3197,18 @@ nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 //----------------------------------------------------------------------
 nsIBrowserWindow* nsWebShell::GetBrowserWindow()
 {
+   nsCOMPtr<nsIWebShell> rootWebShell;
   nsIBrowserWindow *browserWindow = nsnull;
-  nsIWebShell *rootWebShell;
 
-  GetRootWebShellEvenIfChrome(rootWebShell);
+  GetRootWebShellEvenIfChrome(getter_AddRefs(rootWebShell));
 
-  if (nsnull != rootWebShell) {
+  if (rootWebShell) {
     nsIWebShellContainer *rootContainer;
     rootWebShell->GetContainer(rootContainer);
     if (nsnull != rootContainer) {
       rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow);
       NS_RELEASE(rootContainer);
     }
-    NS_RELEASE(rootWebShell);
   }
 
   return browserWindow;
