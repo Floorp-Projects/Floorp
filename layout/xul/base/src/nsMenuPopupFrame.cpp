@@ -620,13 +620,24 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
       targetDocument->GetShellAt(0, getter_AddRefs(shell));
       nsCOMPtr<nsIViewManager> viewManagerTarget;
       if ( shell ) {
-        shell->GetViewManager(getter_AddRefs(viewManagerTarget));
-        if ( viewManagerTarget ) {
-          nsIView* rootViewTarget;
-          viewManagerTarget->GetRootView(rootViewTarget);
-          if ( rootViewTarget ) {
-            nscoord unusedX, unusedY;
-            rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+        // We might be inside a popup widget. If so, we need to use that widget and
+        // not the root view's widget.
+        nsIFrame* targetFrame;
+        shell->GetPrimaryFrameFor(targetAsContent, &targetFrame);
+        nsIView* parentView = nsnull;
+        GetRootViewForPopup(mPresContext, targetFrame, &parentView);
+        GetWidgetForView(parentView, *getter_AddRefs(targetDocumentWidget));
+        if (!targetDocumentWidget) {
+          // We aren't inside a popup. This means we should use the root view's
+          // widget.
+          shell->GetViewManager(getter_AddRefs(viewManagerTarget));
+          if ( viewManagerTarget ) {
+            nsIView* rootViewTarget;
+            viewManagerTarget->GetRootView(rootViewTarget);
+            if ( rootViewTarget ) {
+              nscoord unusedX, unusedY;
+              rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+            }
           }
         }
       }
@@ -1478,6 +1489,13 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsIMenuFrame* aMenuItem)
 
 NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 {
+  // When a context menu is open, the current menu is locked, and no change
+  // to the menu is allowed.
+  nsCOMPtr<nsIMenuParent> contextMenu;
+  GetContextMenu(getter_AddRefs(contextMenu));
+  if (contextMenu)
+    return NS_OK;
+
   if (mCurrentMenu == aMenuItem)
     return NS_OK;
   
@@ -1525,6 +1543,21 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 {
   mIncrementalString = NS_LITERAL_STRING("");
 
+  // See if we have a context menu open.
+  nsCOMPtr<nsIMenuParent> contextMenu;
+  GetContextMenu(getter_AddRefs(contextMenu));
+  if (contextMenu) {
+    // Get the context menu parent.
+    nsIFrame* childFrame;
+    CallQueryInterface(contextMenu, &childFrame);
+    nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
+    if (popupSetFrame)
+      // Destroy the popup.
+      popupSetFrame->DestroyPopup(childFrame, PR_FALSE);
+    aHandledFlag = PR_TRUE;
+    return NS_OK;
+  }
+
   if (!mCurrentMenu)
     return NS_OK;
 
@@ -1549,11 +1582,37 @@ nsMenuPopupFrame::Enter()
 {
   mIncrementalString = NS_LITERAL_STRING("");
 
+  // See if we have a context menu open.
+  nsCOMPtr<nsIMenuParent> contextMenu;
+  GetContextMenu(getter_AddRefs(contextMenu));
+  if (contextMenu)
+    return contextMenu->Enter();
+
   // Give it to the child.
   if (mCurrentMenu)
     mCurrentMenu->Enter();
 
   return NS_OK;
+}
+
+void 
+nsMenuPopupFrame::GetContextMenu(nsIMenuParent** aContextMenu)
+{
+  *aContextMenu = nsnull;
+  if (mIsContextMenu || !nsMenuFrame::sDismissalListener)
+    return;
+
+  nsCOMPtr<nsIMenuParent> menuParent;
+  nsMenuFrame::sDismissalListener->GetCurrentMenuParent(getter_AddRefs(menuParent));
+  if (!menuParent)
+    return;
+
+  PRBool isContextMenu;
+  menuParent->GetIsContextMenu(isContextMenu);
+  if (isContextMenu) {
+    *aContextMenu = menuParent;
+    NS_ADDREF(*aContextMenu);
+  }
 }
 
 nsIMenuFrame*
@@ -1756,6 +1815,12 @@ nsMenuPopupFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandled
 NS_IMETHODIMP
 nsMenuPopupFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 {
+  // See if we have a context menu open.
+  nsCOMPtr<nsIMenuParent> contextMenu;
+  GetContextMenu(getter_AddRefs(contextMenu));
+  if (contextMenu)
+    return contextMenu->KeyboardNavigation(aKeyCode, aHandledFlag);
+
   nsNavigationDirection theDirection;
   NS_DIRECTION_FROM_KEY_CODE(theDirection, aKeyCode);
 
@@ -1910,7 +1975,7 @@ nsMenuPopupFrame::DismissChain()
         if (mCurrentMenu)
           mCurrentMenu->SelectMenu(PR_FALSE);
         // Destroy the popup.
-        popupSetFrame->DestroyPopup(this);
+        popupSetFrame->DestroyPopup(this, PR_TRUE);
       }
       return NS_OK;
     }

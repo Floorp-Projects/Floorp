@@ -77,6 +77,8 @@ public:
 
   NS_IMETHOD EnableListener(PRBool aEnabled);
   void SetCurrentMenuParent(nsIMenuParent* aMenuParent);
+  void GetCurrentMenuParent(nsIMenuParent** aMenuParent);
+
   NS_IMETHOD Unregister();
   
 protected:
