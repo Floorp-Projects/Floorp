@@ -85,8 +85,6 @@ LLIBS=					\
 !endif
  $(LIBNSPR)
 
-MISCDEP = $(LLIBS)
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

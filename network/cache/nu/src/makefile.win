@@ -30,13 +30,10 @@ LIBRARY_NAME=cache
 #
 LLIBS =				 \
 	$(LIBNSPR)		 \
-	$(DIST)\lib\plc3.lib \
 	$(DIST)\lib\dbm32.lib    \
  	$(DIST)\lib\xpcom.lib  \
     $(DIST)\lib\libpref.lib  \
 	$(NULL)
-
-MISCDEP = $(LLIBS)
 
 MODULE = cache
 

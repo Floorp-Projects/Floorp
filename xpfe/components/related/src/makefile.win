@@ -39,7 +39,6 @@ LLIBS=                          \
 !else
  $(DIST)\lib\netlib.lib         \
 !endif
- $(DIST)\lib\plc3.lib           \
  $(LIBNSPR)                     \
  $(NULL)
 

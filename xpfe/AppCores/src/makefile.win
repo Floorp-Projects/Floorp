@@ -70,7 +70,6 @@ LLIBS =				            \
 	$(DIST)\lib\raptorgfxwin.lib	\
     $(DIST)\lib\raptorwidget.lib \
 	$(LIBNSPR)		            \
-    $(DIST)\lib\plc3.lib    \
     $(NULL)
 
 OBJS = \

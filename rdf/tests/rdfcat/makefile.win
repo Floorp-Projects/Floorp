@@ -37,7 +37,6 @@ LLIBS=				\
 !else
  $(DIST)\lib\netlib.lib         \
 !endif
- $(DIST)\lib\plc3.lib           \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

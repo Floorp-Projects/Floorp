@@ -27,9 +27,6 @@ MODULE=raptor
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
-MISCDEP=                        \
- $(DIST)\lib\nslocale_s.lib
- 
 OBJS =											\
 	.\$(OBJDIR)\nsCollationWin.obj				\
 	.\$(OBJDIR)\nsDateTimeFormatWin.obj         \
@@ -55,7 +52,6 @@ LCFLAGS = \
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\plc3.lib       \
  $(DIST)\lib\nslocale_s.lib		\
 $(LIBNSPR)  
 

@@ -39,8 +39,6 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 LLIBS=  \
 	$(NULL)
 
-MISCDEP=$(LLIBS)
-
 OBJS=   \
 !if defined(SMART_MAIL) 
 	.\$(OBJDIR)\mkbuf.obj	\

@@ -25,11 +25,6 @@ PROGRAM = .\$(OBJDIR)\TestUConv.exe
 RCFLAGS=/d_DEBUG
 !endif
 
-MISCDEP=			\
- $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\uconv.lib		\
- $(LIBNSPR)			\
-
 
 OBJS =					\
 	.\$(OBJDIR)\nsTestUConv.obj	\

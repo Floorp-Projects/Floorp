@@ -37,7 +37,6 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 
 LLIBS=  \
 	$(NULL)
-MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\mksmtp.obj		\
 	$(NULL)

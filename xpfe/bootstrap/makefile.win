@@ -77,7 +77,6 @@ LCFLAGS = \
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
  $(DIST)\lib\raptorgfxwin.lib   \
- $(DIST)\lib\plc3.lib           \
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib    \
 !else

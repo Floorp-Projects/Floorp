@@ -38,22 +38,6 @@ install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
-# Move this into config/obj.inc when it's allowed
-.c{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd$(PDBFILE)
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).c
-<<KEEP
-
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 

@@ -73,7 +73,6 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 
 # DEFFILE	= $(DLLNAME).def
 LLIBS	= \
-	$(DIST)\lib\plc3.lib \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib
 
