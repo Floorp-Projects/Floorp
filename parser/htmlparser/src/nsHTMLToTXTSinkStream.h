@@ -148,9 +148,9 @@ protected:
   void EnsureVerticalSpace(PRInt32 noOfRows);
   void FlushLine();
   void WriteQuotesAndIndent();
-  void WriteSimple(const nsString& aString);
+  void WriteSimple(nsString& aString);
   void Write(const nsString& aString);
-  void EncodeToBuffer(const nsString& aString);
+  void EncodeToBuffer(nsString& aString);
   NS_IMETHOD GetValueOfAttribute(const nsIParserNode& aNode,
                                  char* aMatchKey,
                                  nsString& aValueRet);
@@ -162,6 +162,9 @@ protected:
   nsString         mCurrentLine;
 
   PRInt32          mIndent;
+  // mInIndentString keeps a header that has to be written in the indent.
+  // That could be, for instance, the bullet in a bulleted list.
+  nsString         mInIndentString;
   PRInt32          mCiteQuoteLevel;
   PRInt32          mColPos;
   PRInt32          mFlags;
