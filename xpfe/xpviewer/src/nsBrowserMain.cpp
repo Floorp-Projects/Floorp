@@ -16,7 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#if !defined(XP_MAC)
+#ifdef XP_PC
 #include <windows.h>
 #include "JSConsole.h"
 #endif
@@ -25,7 +25,7 @@
 #include "nsITimer.h"
 #include "plevent.h"
 
-#if !defined(XP_MAC)
+#ifdef XP_PC
 JSConsole *gConsole;
 HINSTANCE gInstance, gPrevInstance;
 #endif
@@ -95,7 +95,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
-#if !defined(XP_MAC)
+#ifdef XP_PC
   PL_InitializeEventsLib("");
 #endif
 
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#if !defined(XP_MAC)
+#ifdef XP_PC
 int PASCAL
 WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, 
         int nCmdShow)
