@@ -887,37 +887,19 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 
 // Copy an array of 16-bit values, reversing the byte order.
 void
-nsGlobalHistory::SwapBytes(const PRUint16 *source, PRUint16 *dest, int len)
+nsGlobalHistory::SwapBytes(const PRUnichar *source, PRUnichar *dest,
+                           PRInt32 aLen)
 {
   PRUint16 c;
   const PRUint16 *inp;
   PRUint16 *outp;
-  int i;
+  PRInt32 i;
 
   inp = source;
   outp = dest;
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < aLen; i++) {
     c = *inp++;
     *outp++ = (((c >> 8) & 0xff) | (c << 8));
-  }
-  return;
-}
-      
-// Copy an array of 32-bit values, reversing the byte order.
-void
-nsGlobalHistory::SwapBytes(const PRUint32 *source, PRUint32 *dest, int len)
-{
-  PRUint32 c;
-  const PRUint32 *inp;
-  PRUint32 *outp;
-  int i;
-
-  inp = source;
-  outp = dest;
-  for (i = 0; i < len; i++) {
-    c = *inp++;
-    *outp++ = (((c >> 24) & 0xff) | ((c >> 8) & 0xff00) |
-               ((c << 8) & 0xff0000) | (c << 24));
   }
   return;
 }
