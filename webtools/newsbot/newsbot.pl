@@ -190,7 +190,7 @@ if ( $index > 15) {
 for (my $i=$index; $i > 0 ; $i--) {
     print ("  <item>\n");
     print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
-    print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=<" . $articles[$i]->{'Message-ID'} . "></link>\n");
+    print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . $articles[$i]->{'Message-ID'} . "&gt;</link>\n");
     print ("  </item>\n\n");
     }
 
