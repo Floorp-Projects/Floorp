@@ -60,7 +60,7 @@
 #include "jprof.h"
 #endif
 
-#define MINIMO_HOME_URL "http://www.mozilla.org/projects/minimo/home.html"
+#define MINIMO_HOME_URL "file:///usr/lib/mozilla-minimo/startpage/start.html"
 
 #define MINIMO_THROBBER_COLOR_INTERVAL 100
 #define MINIMO_THROBBER_COLOR_STEP     500
