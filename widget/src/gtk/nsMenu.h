@@ -53,7 +53,7 @@ public:
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD AddSeparator();
   NS_IMETHOD GetItemCount(PRUint32 &aCount);
-  NS_IMETHOD GetItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem);
+  NS_IMETHOD GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem);
   NS_IMETHOD InsertItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem);
   NS_IMETHOD InsertItemAt(const PRUint32 aCount, const nsString & aMenuItemName);
   NS_IMETHOD InsertSeparator(const PRUint32 aCount);

@@ -55,6 +55,8 @@ public:
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
+  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
+  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
 
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
