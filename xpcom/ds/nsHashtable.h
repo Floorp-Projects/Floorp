@@ -30,6 +30,10 @@
  * 04/20/2000   IBM Corp.       Added PR_CALLBACK for Optlink use in OS2
  */
 
+/**
+ * nsHashtable is OBSOLETE. Use nsTHashtable or a derivative instead.
+ */
+
 #ifndef nsHashtable_h__
 #define nsHashtable_h__
 

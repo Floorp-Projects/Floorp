@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * nsDoubleHashtable.h is OBSOLETE. Use nsTHashtable or a derivative instead.
+ */
+
 #ifndef __nsDoubleHashtable_h__
 #define __nsDoubleHashtable_h__
 
