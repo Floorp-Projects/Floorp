@@ -14,7 +14,8 @@ IS_COMPONENT = 1
 REQUIRES = \
 	xpcom \
 	string \
-	toolkitcomps \
+	history \
+	autocomplete \
 	mork \
 	pref \
 	rdf \

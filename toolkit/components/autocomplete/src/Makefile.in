@@ -25,7 +25,7 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = toolkitcomps
+MODULE = autocomplete
 LIBRARY_NAME = autocomplete_s
 FORCE_STATIC_LIB = 1
 

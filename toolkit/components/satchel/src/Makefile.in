@@ -25,7 +25,7 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = toolkitcomps
+MODULE = satchel
 LIBRARY_NAME = satchel_s
 FORCE_STATIC_LIB = 1
 
