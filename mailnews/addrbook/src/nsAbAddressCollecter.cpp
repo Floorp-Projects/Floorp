@@ -91,8 +91,8 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAdd
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
 	nsresult rv;
-	collectAddresses = PR_TRUE;
-	sizeLimitEnabled = PR_TRUE;
+	//collectAddresses = PR_TRUE;
+	//sizeLimitEnabled = PR_TRUE;
 
 	NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 	if (NS_FAILED(rv) || !pPref) 
