@@ -105,32 +105,6 @@ sub CreateJarFileFromDirectory($$$)
 
 
 #-------------------------------------------------------------------------------
-# SanityCheckJarOptions
-# 
-#-------------------------------------------------------------------------------
-sub SanityCheckJarOptions()
-{
-    if (!$main::options{chrome_jars} && !$main::options{chrome_files})
-    {
-        print "Both \$options{chrome_jars} and \$options{chrome_files} are off. You won't get any chrome.\n";
-        return;
-    }
-
-    if (!$main::options{chrome_jars} && $main::options{use_jars})
-    {
-        print "\$options{chrome_jars} is off but \$options{use_jars} is on. Your build won't run (expects jars, got files).\n";
-        return;
-    }
-
-    if (!$main::options{chrome_files} && !$main::options{use_jars})
-    {
-        print "\$options{chrome_jars} is off but \$options{chrome_files} is on. Your build won't run (expects files, got jars).\n";
-        return;
-    }
-}
-
-
-#-------------------------------------------------------------------------------
 # printZipContents
 # 
 #-------------------------------------------------------------------------------

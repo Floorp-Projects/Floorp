@@ -346,10 +346,10 @@ sub ProcessJarManifests()
     if ($main::options{ldap})
     {
       CreateJarFromManifest(":mozilla:directory:xpcom:base:resources:jar.mn", $chrome_dir, \%jars);
-    }
-    if ($main::options{ldap_experimental})
-    {
-      CreateJarFromManifest(":mozilla:directory:xpcom:tests:jar.mn", $chrome_dir, \%jars);
+      if ($main::options{ldap_experimental})
+      {
+        CreateJarFromManifest(":mozilla:directory:xpcom:tests:jar.mn", $chrome_dir, \%jars);
+      }
     }
     if ($main::options{help})
     {
@@ -903,13 +903,18 @@ sub BuildClientDist()
     if ($main::options{xmlextras})
     {
         InstallFromManifest(":mozilla:extensions:xmlextras:base:public:MANIFEST_IDL", "$distdirectory:idl:");
-    }
-    if ($main::options{soap})
-    {
-        InstallFromManifest(":mozilla:extensions:xmlextras:proxy:public:MANIFEST_IDL", "$distdirectory:idl:");
-        InstallFromManifest(":mozilla:extensions:xmlextras:schema:public:MANIFEST_IDL", "$distdirectory:idl:");
-        InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
-        InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
+        if ($main::options{soap})
+        {
+            InstallFromManifest(":mozilla:extensions:xmlextras:proxy:public:MANIFEST_IDL", "$distdirectory:idl:");
+            InstallFromManifest(":mozilla:extensions:xmlextras:schema:public:MANIFEST_IDL", "$distdirectory:idl:");
+            InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
+            InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
+            if ($main::options{wsp})
+            {
+                InstallFromManifest(":mozilla:extensions:xmlextras:proxy:public:MANIFEST_IDL", "$distdirectory:idl:");
+                InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
+            }
+        }
     }
 
     #DOCUMENT INSPECTOR
@@ -1223,13 +1228,16 @@ sub BuildIDLProjects()
     if ($main::options{xmlextras})
     {
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.xml", "xmlextras");
-    }
-    if ($main::options{soap})
-    {
-        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsproxyIDL.xml", "wsproxy");
-        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlschemaIDL.xml", "xmlschema");
-        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.xml", "xmlsoap");
-        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.xml", "wsdl");
+        if ($main::options{soap})
+        {
+            BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlschemaIDL.xml", "xmlschema");
+            BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.xml", "xmlsoap");
+            if ($main::options{wsp})
+            {
+                BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsproxyIDL.xml", "wsproxy");
+                BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.xml", "wsdl");
+            }
+        }
     }
 
     if ($main::options{inspector})
@@ -1670,7 +1678,6 @@ sub BuildLayoutProjects()
     my($S) = $main::options{static_build} ? "o" : "shlb";
     
     my($dist_dir) = GetBinDirectory();
-    my($EssentialFiles) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Essential Files:" : ":mozilla:dist:viewer:Essential Files:";
     my($resource_dir) = "$dist_dir" . "res:";
 
     
@@ -1990,16 +1997,22 @@ sub BuildExtensionsProjects()
     }
     
     # XML Extras
-    if ($main::options{soap})
-    {
-        BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.xml", "xmlsoap$D.o");
-    }
-    else
-    {
-        BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.xml", "xmlsoap$D.o stub");
-    }
     if ($main::options{xmlextras})
     {
+        if ($main::options{soap})
+        {
+            if ($main::options{wsp}) {
+                BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlwsp.xml", "xmlwsp$D.o");
+            }
+            else {
+                BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlwsp.xml", "xmlwsp$D.o stub");
+            }
+            BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.xml", "xmlsoap$D.o");
+        }
+        else
+        {
+            BuildProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.xml", "xmlsoap$D.o stub");
+        }
         BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.xml", "xmlextras$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
