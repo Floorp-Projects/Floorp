@@ -1,5 +1,9 @@
 function NavigatorWindow()
 {
+	// FIX ME - Really need to find the front most navigator window
+	//          and bring it all the way to the front
+	
+	// FIX ME - This code needs to be updated to use window.open()
 	var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
 	if (!toolkitCore)
 	{
@@ -20,6 +24,9 @@ function NavigatorWindow()
 
 function MessengerWindow()
 {
+	// FIX ME - Really need to find the front most messenger window
+	//          and bring it all the way to the front
+	
 	window.open("chrome://messenger/content/", "messenger", "chrome");
 }
 
@@ -31,4 +38,13 @@ function AddressBook()
 	return wind;
 }
 
+
+function QuitApplication()
+{
+	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+	
+	if ( editorShell )
+		editorShell.Exit();
+}
 
