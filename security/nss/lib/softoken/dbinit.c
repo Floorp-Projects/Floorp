@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.3 2001/08/25 21:28:16 mcgreer%netscape.com Exp $
+ # $Id: dbinit.c,v 1.4 2001/09/20 21:05:48 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -41,7 +41,8 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "cert.h"
-#include "key.h"
+#include "keylow.h"
+#include "keydbt.h"
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
@@ -51,18 +52,7 @@
 #include "secrng.h"
 #include "cdbhdl.h"
 #include "pk11func.h"
-
-#ifdef macintosh
-#define PATH_SEPARATOR ":"
-#define SECMOD_DB "Security Modules"
-#define CERT_DB_FMT "%sCertificates%s"
-#define KEY_DB_FMT "%sKey Database%s"
-#else
-#define PATH_SEPARATOR "/"
-#define SECMOD_DB "secmod.db"
-#define CERT_DB_FMT "%scert%s.db"
-#define KEY_DB_FMT "%skey%s.db"
-#endif
+#include "pkcs11i.h"
 
 static char *secmodname = NULL;  
 

@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsawrapr.c,v 1.1 2000/03/31 19:29:42 relyea%netscape.com Exp $
+ * $Id: rsawrapr.c,v 1.2 2001/09/20 21:05:53 relyea%netscape.com Exp $
  */
 
 #include "blapi.h"
@@ -620,8 +620,8 @@ RSA_Sign(SECKEYLowPrivateKey *key,
 
     if (maxOutputLen < modulus_len) 
     	return SECFailure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	return SECFailure;
 
     unformatted.len  = input_len;
@@ -661,8 +661,8 @@ RSA_CheckSign(SECKEYLowPublicKey *key,
     	goto failure;
     if (hash_len > modulus_len - 8) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
 
     buffer = (unsigned char *)PORT_Alloc(modulus_len + 1);
@@ -716,8 +716,8 @@ RSA_CheckSignRecover(SECKEYLowPublicKey *key,
 
     if (sign_len != modulus_len) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
 
     buffer = (unsigned char *)PORT_Alloc(modulus_len + 1);
@@ -778,8 +778,8 @@ RSA_EncryptBlock(SECKEYLowPublicKey *key,
     formatted.data = NULL;
     if (max_output_len < modulus_len) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
 
     unformatted.len  = input_len;
@@ -818,8 +818,8 @@ RSA_DecryptBlock(SECKEYLowPrivateKey *key,
     unsigned int    i;
     unsigned char * buffer;
 
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
     if (input_len != modulus_len)
     	goto failure;
@@ -877,8 +877,8 @@ RSA_SignRaw(SECKEYLowPrivateKey *key,
 
     if (maxOutputLen < modulus_len) 
     	return SECFailure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	return SECFailure;
 
     unformatted.len  = input_len;
@@ -913,8 +913,8 @@ RSA_CheckSignRaw(SECKEYLowPublicKey *key,
     	goto failure;
     if (hash_len > modulus_len) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
 
     buffer = (unsigned char *)PORT_Alloc(modulus_len + 1);
@@ -957,8 +957,8 @@ RSA_CheckSignRecoverRaw(SECKEYLowPublicKey *key,
     	goto failure;
     if (max_output_len < modulus_len) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
 
     rv = RSA_PublicKeyOp(&key->u.rsa, data, sign);
@@ -990,8 +990,8 @@ RSA_EncryptRaw(SECKEYLowPublicKey *key,
     formatted.data = NULL;
     if (max_output_len < modulus_len) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
 
     unformatted.len  = input_len;
@@ -1031,8 +1031,8 @@ RSA_DecryptRaw(SECKEYLowPrivateKey *key,
     	goto failure;
     if (modulus_len > max_output_len) 
     	goto failure;
-    PORT_Assert(key->keyType == rsaKey);
-    if (key->keyType != rsaKey)
+    PORT_Assert(key->keyType == lowRSAKey);
+    if (key->keyType != lowRSAKey)
     	goto failure;
     if (input_len != modulus_len) 
     	goto failure;

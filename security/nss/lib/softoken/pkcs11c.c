@@ -125,83 +125,6 @@ static void pk11_FreeSignInfo(PK11HashSignInfo *data, PRBool freeit)
     PORT_Free(data);
 } 
 
-static DSAPublicKey *
-DSA_CreateVerifyContext(SECKEYLowPublicKey *pubKey)
-{
-    PLArenaPool * arena;
-    DSAPublicKey * dsaKey;
-    SECStatus      rv;
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena) goto loser; 
-    dsaKey = (DSAPublicKey *)PORT_ArenaZAlloc(arena, sizeof (DSAPublicKey));
-    if (!dsaKey) goto loser;
-    dsaKey->params.arena = arena;
-
-#define COPY_DSA_ITEM(item) \
-    rv = SECITEM_CopyItem(arena, &dsaKey->item, &pubKey->u.dsa.item); \
-    if (rv != SECSuccess) goto loser;
-
-    COPY_DSA_ITEM(params.prime);
-    COPY_DSA_ITEM(params.subPrime);
-    COPY_DSA_ITEM(params.base);
-    COPY_DSA_ITEM(publicValue);
-    return dsaKey;
-
-loser:
-    if (arena)
-	PORT_FreeArena(arena, PR_TRUE);
-    return NULL;
-
-#undef COPY_DSA_ITEM
-}
-
-static void 
-DSA_DestroyVerifyContext(DSAPublicKey * key)
-{
-    if (key && key->params.arena)
-	PORT_FreeArena(key->params.arena, PR_TRUE);
-}
-
-static DSAPrivateKey *
-DSA_CreateSignContext(SECKEYLowPrivateKey *privKey)
-{
-    PLArenaPool *  arena;
-    DSAPrivateKey * dsaKey;
-    SECStatus       rv;
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena) goto loser; 
-    dsaKey = (DSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof (DSAPrivateKey));
-    if (!dsaKey) goto loser;
-    dsaKey->params.arena = arena;
-
-#define COPY_DSA_ITEM(item) \
-    rv = SECITEM_CopyItem(arena, &dsaKey->item, &privKey->u.dsa.item); \
-    if (rv != SECSuccess) goto loser;
-
-    COPY_DSA_ITEM(params.prime);
-    COPY_DSA_ITEM(params.subPrime);
-    COPY_DSA_ITEM(params.base);
-    COPY_DSA_ITEM(publicValue);
-    COPY_DSA_ITEM(privateValue);
-    return dsaKey;
-
-loser:
-    if (arena)
-	PORT_FreeArena(arena, PR_TRUE);
-    return NULL;
-
-#undef COPY_DSA_ITEM
-}
-
-static void 
-DSA_DestroySignContext(DSAPrivateKey * key)
-{
-    if (key && key->params.arena)
-	PORT_FreeArena(key->params.arena, PR_TRUE);
-}
-
 /*
  * turn a CDMF key into a des key. CDMF is an old IBM scheme to export DES by
  * Deprecating a full des key to 40 bit key strenth.
@@ -3068,7 +2991,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     PK11Session *session;
     PRBool checkWeak = PR_FALSE;
     CK_ULONG key_length = 0;
-    CK_KEY_TYPE key_type = -1;
+    CK_KEY_TYPE key_type = CKK_INVALID_KEY_TYPE;
     CK_OBJECT_CLASS objclass = CKO_SECRET_KEY;
     CK_RV crv = CKR_OK;
     CK_BBOOL cktrue = CK_TRUE;
@@ -3180,7 +3103,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 
     /* if there was no error,
      * key_type *MUST* be set in the switch statement above */
-    PORT_Assert( key_type != -1 );
+    PORT_Assert( key_type != CKK_INVALID_KEY_TYPE );
 
     /*
      * now to the actual key gen.
@@ -3617,7 +3540,7 @@ dhgn_done:
 static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 {
     SECKEYLowPrivateKey *lk = NULL;
-    SECKEYPrivateKeyInfo *pki = NULL;
+    PrivateKeyInfo *pki = NULL;
     PK11Attribute *attribute = NULL;
     PLArenaPool *arena = NULL;
     SECOidTag algorithm = SEC_OID_UNKNOWN;
@@ -3646,8 +3569,8 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 	goto loser;
     }
 
-    pki = (SECKEYPrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
-						sizeof(SECKEYPrivateKeyInfo));
+    pki = (PrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
+						sizeof(PrivateKeyInfo));
     if(!pki) {
 	rv = SECFailure;
 	goto loser;
@@ -3656,26 +3579,25 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 
     param = NULL;
     switch(lk->keyType) {
-	case rsaKey:
+	case lowRSAKey:
 	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
-				       SECKEY_RSAPrivateKeyTemplate);
+				       SECKEY_LowRSAPrivateKeyTemplate);
 	    algorithm = SEC_OID_PKCS1_RSA_ENCRYPTION;
 	    break;
-	case dsaKey:
+	case lowDSAKey:
 	    dummy = SEC_ASN1EncodeItem(arena, &pki->privateKey, lk,
-				       SECKEY_DSAPrivateKeyExportTemplate);
+				       SECKEY_LowDSAPrivateKeyExportTemplate);
 	    param = SEC_ASN1EncodeItem(NULL, NULL, &(lk->u.dsa.params),
-				       SECKEY_PQGParamsTemplate);
+				       SECKEY_LowPQGParamsTemplate);
 	    algorithm = SEC_OID_ANSIX9_DSA_SIGNATURE;
 	    break;
-	case fortezzaKey:
-	case dhKey:
+	case lowDHKey:
 	default:
 	    dummy = NULL;
 	    break;
     }
  
-    if(!dummy || ((lk->keyType == dsaKey) && !param)) {
+    if(!dummy || ((lk->keyType == lowDSAKey) && !param)) {
 	goto loser;
     }
 
@@ -3826,7 +3748,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
     void *paramDest = NULL;
     PLArenaPool *arena;
     SECKEYLowPrivateKey *lpk = NULL;
-    SECKEYPrivateKeyInfo *pki = NULL;
+    PrivateKeyInfo *pki = NULL;
     SECItem *ck_id = NULL;
     CK_RV crv = CKR_KEY_TYPE_INCONSISTENT;
 
@@ -3835,8 +3757,8 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	return SECFailure;
     }
 
-    pki = (SECKEYPrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
-						sizeof(SECKEYPrivateKeyInfo));
+    pki = (PrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
+						sizeof(PrivateKeyInfo));
     if(!pki) {
 	PORT_FreeArena(arena, PR_TRUE);
 	return SECFailure;
@@ -3857,19 +3779,18 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 
     switch(SECOID_GetAlgorithmTag(&pki->algorithm)) {
 	case SEC_OID_PKCS1_RSA_ENCRYPTION:
-	    keyTemplate = SECKEY_RSAPrivateKeyTemplate;
+	    keyTemplate = SECKEY_LowRSAPrivateKeyTemplate;
 	    paramTemplate = NULL;
 	    paramDest = NULL;
-	    lpk->keyType = rsaKey;
+	    lpk->keyType = lowRSAKey;
 	    break;
 	case SEC_OID_ANSIX9_DSA_SIGNATURE:
-	    keyTemplate = SECKEY_DSAPrivateKeyExportTemplate;
-	    paramTemplate = SECKEY_PQGParamsTemplate;
+	    keyTemplate = SECKEY_LowDSAPrivateKeyExportTemplate;
+	    paramTemplate = SECKEY_LowPQGParamsTemplate;
 	    paramDest = &(lpk->u.dsa.params);
-	    lpk->keyType = dsaKey;
+	    lpk->keyType = lowDSAKey;
 	    break;
-	/* case dhKey: */
-	/* case fortezzaKey: */
+	/* case lowDHKey: */
 	default:
 	    keyTemplate = NULL;
 	    paramTemplate = NULL;
@@ -3897,7 +3818,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
     rv = SECFailure;
 
     switch (lpk->keyType) {
-        case rsaKey:
+        case lowRSAKey:
 	    keyType = CKK_RSA;
 	    if(pk11_hasAttribute(key, CKA_NETSCAPE_DB)) {
 		pk11_DeleteAttributeType(key, CKA_NETSCAPE_DB);
@@ -3941,7 +3862,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    crv = pk11_AddAttributeType(key, CKA_COEFFICIENT, 
 	     			pk11_item_expand(&lpk->u.rsa.coefficient));
 	    break;
-        case dsaKey:
+        case lowDSAKey:
 	    keyType = CKK_DSA;
 	    crv = (pk11_hasAttribute(key, CKA_NETSCAPE_DB)) ? CKR_OK :
 						CKR_KEY_TYPE_INCONSISTENT;
@@ -3969,7 +3890,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	    if(crv != CKR_OK) break;
 	    break;
 #ifdef notdef
-        case dhKey:
+        case lowDHKey:
 	    template = dhTemplate;
 	    templateCount = sizeof(dhTemplate)/sizeof(CK_ATTRIBUTE);
 	    keyType = CKK_DH;
@@ -4013,7 +3934,6 @@ CK_RV NSC_UnwrapKey(CK_SESSION_HANDLE hSession,
     int i;
     CK_ULONG bsize = ulWrappedKeyLen;
     PK11Slot *slot = pk11_SlotFromSessionHandle(hSession);
-    PK11Attribute *attr = NULL;
     SECItem bpki;
     CK_OBJECT_CLASS target_type = CKO_SECRET_KEY;
     PRBool isLynks = PR_FALSE;
@@ -4233,10 +4153,10 @@ pk11_freeSSLKeys(CK_SESSION_HANDLE session,
 static CK_RV
 pk11_DeriveSensitiveCheck(PK11Object *baseKey,PK11Object *destKey) {
     PRBool hasSensitive;
-    PRBool sensitive;
+    PRBool sensitive = PR_FALSE;
     PRBool hasExtractable;
-    PRBool extractable;
-    CK_RV crv = PR_TRUE;
+    PRBool extractable = PR_TRUE;
+    CK_RV crv = CKR_OK;
     PK11Attribute *att;
 
     hasSensitive = PR_FALSE;

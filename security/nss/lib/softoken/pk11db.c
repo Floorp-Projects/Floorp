@@ -39,15 +39,6 @@
 #include "pk11pars.h"
 #include "pkcs11i.h"
 
-#ifdef macintosh
-#define PATH_SEPARATOR ":"
-#define SECMOD_DB "Security Modules"
-#else
-#define PATH_SEPARATOR "/"
-#define SECMOD_DB "secmod.db"
-#endif
-
-
 #define FREE_CLEAR(p) if (p) { PORT_Free(p); p = NULL; }
 
 static void
@@ -204,7 +195,7 @@ struct secmodSlotDataStr {
 #define SECMOD_DB_EXT1_VERSION_MAJOR 0
 #define SECMOD_DB_EXT1_VERSION_MINOR 5
 #define SECMOD_DB_NOUI_VERSION_MAJOR 0
-#define SECMOD_DB_NOUI_VERSION_MINOR 3
+#define SECMOD_DB_NOUI_VERSION_MINOR 4
 
 #define SECMOD_PUTSHORT(dest,src) \
 	(dest)[1] = (unsigned char) ((src)&0xff); \
@@ -232,7 +223,7 @@ static SECStatus secmod_EncodeData(DBT *data, char * module) {
     unsigned short len, len2 = 0, len3 = 0;
     int count = 0;
     unsigned short offset;
-    int dataLen, i, si;
+    int dataLen, i;
     unsigned long order;
     unsigned long  ssl[2];
     char *commonName = NULL , *dllName = NULL, *param = NULL, *nss = NULL;
@@ -290,7 +281,7 @@ static SECStatus secmod_EncodeData(DBT *data, char * module) {
     encoded->isModuleDBOnly = (unsigned char) 
 			(pk11_argHasFlag("flags","isModuleDBOnly",nss) ? 1 : 0);
     encoded->isCritical = (unsigned char) 
-			(pk11_argHasFlag("flags","isCritical",nss) ? 1 : 0);
+			(pk11_argHasFlag("flags","critical",nss) ? 1 : 0);
 
     order = pk11_argReadLong("trustOrder",nss);
     SECMOD_PUTLONG(encoded->trustOrder,order);
@@ -359,11 +350,6 @@ secmod_FreeData(DBT *data)
     }
 }
 
-static unsigned long internalFlags = SECMOD_RSA_FLAG|SECMOD_DSA_FLAG|
-	SECMOD_RC2_FLAG| SECMOD_RC4_FLAG|SECMOD_DES_FLAG|SECMOD_RANDOM_FLAG|
-	SECMOD_SHA1_FLAG|SECMOD_MD5_FLAG|SECMOD_MD2_FLAG|SECMOD_SSL_FLAG|
-	SECMOD_TLS_FLAG|SECMOD_AES_FLAG;
-
 /*
  * build a module from the data base entry.
  */
@@ -386,7 +372,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     char **slotStrings = NULL;
     unsigned long slotID,defaultFlags,timeout;
     char *nss,*moduleSpec;
-    int i,slotLen;
+    int i;
 
     PLArenaPool *arena;
 
@@ -466,6 +452,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	slotID = SECMOD_GETLONG(slots[i].slotID);
 	defaultFlags = SECMOD_GETLONG(slots[i].defaultFlags);
 	if (isOldVersion && internal && (slotID != 2)) {
+		unsigned long internalFlags=
+			pk11_argSlotFlags("slotFlags",SECMOD_SLOT_FLAGS);
 		defaultFlags |= internalFlags;
 	}
 	timeout = SECMOD_GETLONG(slots[i].timeout);
@@ -512,12 +500,12 @@ static void secmod_CloseDB(DB *pkcs11db) {
 
 
 #define SECMOD_STEP 10
-#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical slotParams=(1={slotFlags=all askpw=any timeout=30})\""
+#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical slotParams=(1={%s askpw=any timeout=30})\""
 /*
  * Read all the existing modules in
  */
 char **
-SECMOD_ReadPermDB(char *dbname, char *params, PRBool rw) {
+secmod_ReadPermDB(char *dbname, char *params, PRBool rw) {
     DBT key,data;
     int ret;
     DB *pkcs11db = NULL;
@@ -558,14 +546,15 @@ SECMOD_ReadPermDB(char *dbname, char *params, PRBool rw) {
 
 done:
     if (!moduleList[0]) {
-	moduleList[0] = PR_smprintf(PK11_DEFAULT_INTERNAL_INIT,params);
+	moduleList[0] = PR_smprintf(PK11_DEFAULT_INTERNAL_INIT,params,
+						SECMOD_SLOT_FLAGS);
     }
     /* deal with trust cert db here */
 
     if (pkcs11db) {
 	secmod_CloseDB(pkcs11db);
     } else {
-	SECMOD_AddPermDB(dbname,moduleList[0], rw) ;
+	secmod_AddPermDB(dbname,moduleList[0], rw) ;
     }
     return moduleList;
 }
@@ -574,7 +563,7 @@ done:
  * Delete a module from the Data Base
  */
 SECStatus
-SECMOD_DeletePermDB(char *dbname, char *args, PRBool rw) {
+secmod_DeletePermDB(char *dbname, char *args, PRBool rw) {
     DBT key;
     SECStatus rv = SECFailure;
     DB *pkcs11db = NULL;
@@ -608,7 +597,7 @@ done:
  * Add a module to the Data base 
  */
 SECStatus
-SECMOD_AddPermDB(char *dbname, char *module, PRBool rw) {
+secmod_AddPermDB(char *dbname, char *module, PRBool rw) {
     DBT key,data;
     SECStatus rv = SECFailure;
     DB *pkcs11db = NULL;

@@ -338,6 +338,7 @@ typedef CK_ULONG          CK_KEY_TYPE;
 #define CKK_AES             0x0000001F
 
 #define CKK_VENDOR_DEFINED  0x80000000
+#define CKK_INVALID_KEY_TYPE 0xffffffff
 
 
 /* CK_CERTIFICATE_TYPE is a value that identifies a certificate

@@ -36,6 +36,7 @@
 #include "pkcs11.h"
 #include "pkcs11i.h"
 #include "key.h"
+#include "keylow.h"
 #include "certdb.h"
 
 
@@ -142,10 +143,10 @@ pk11_NewAttribute(PK11Object *object,
  * Free up all the memory associated with an attribute. Reference count
  * must be zero to call this.
  */
+#ifdef REF_COUNT_ATTRIBUTE
 static void
 pk11_DestroyAttribute(PK11Attribute *attribute)
 {
-#ifdef REF_COUNT_ATTRIBUTE
     PORT_Assert(attribute->refCount == 0);
     PK11_USE_THREADS(PZ_DestroyLock(attribute->refLock);)
     if (attribute->attrib.pValue) {
@@ -155,8 +156,8 @@ pk11_DestroyAttribute(PK11Attribute *attribute)
 	 PORT_Free(attribute->attrib.pValue);
     }
     PORT_Free(attribute);
-#endif
 }
+#endif
     
     
 /*
@@ -650,7 +651,6 @@ PK11Object *
 pk11_NewObject(PK11Slot *slot)
 {
     PK11Object *object;
-    PLArenaPool *arena;
     PRBool hasLocks = PR_FALSE;
     int i;
 
@@ -734,7 +734,6 @@ pk11_DestroyObject(PK11Object *object)
     SECItem pubKey;
     CK_RV crv = CKR_OK;
     SECStatus rv;
-    PLArenaPool *arena = NULL;
 
     PORT_Assert(object->refCount == 0);
 

@@ -40,10 +40,6 @@ LIBRARY_NAME = softoken
 
 
 EXPORTS = \
-	keydbt.h \
-	keylow.h \
-	keytboth.h \
-	keytlow.h \
 	secpkcs5.h \
 	pkcs11.h \
 	pkcs11f.h \
@@ -55,8 +51,6 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	alghmac.h \
 	pkcs11i.h \
-	softoken.h \
-	softoknt.h \
 	pk11pars.h \
 	$(NULL)
 
