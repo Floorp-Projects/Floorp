@@ -156,6 +156,31 @@ CFLAGS=$(CFLAGS) -DNS_DISABLE_LOGGING
 CFLAGS=$(CFLAGS) -DMOZ_LOGGING
 !endif
 
+FINAL_LINK_COMPS=$(DIST)\final-link-comps
+FINAL_LINK_COMP_NAMES=$(DIST)\final-link-comp-names
+FINAL_LINK_LIBS=$(DIST)\final-link-libs
+
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+# Force _all_ exported methods to be |_declspec(dllexport)| when we're
+# building them into the executable.
+CFLAGS=$(CFLAGS) -D_IMPL_NS_APPSHELL
+CFLAGS=$(CFLAGS) -D_IMPL_NS_COOKIE
+CFLAGS=$(CFLAGS) -D_IMPL_NS_DOM
+CFLAGS=$(CFLAGS) -D_IMPL_NS_GFX
+CFLAGS=$(CFLAGS) -D_IMPL_NS_HTML
+CFLAGS=$(CFLAGS) -D_IMPL_NS_HTMLPARS
+CFLAGS=$(CFLAGS) -D_IMPL_NS_INTL
+CFLAGS=$(CFLAGS) -D_IMPL_NS_LAYOUT
+CFLAGS=$(CFLAGS) -D_IMPL_NS_MSG_BASE
+CFLAGS=$(CFLAGS) -D_IMPL_NS_NET
+CFLAGS=$(CFLAGS) -D_IMPL_NS_PICS
+CFLAGS=$(CFLAGS) -D_IMPL_NS_PLUGIN
+CFLAGS=$(CFLAGS) -D_IMPL_NS_RDF
+CFLAGS=$(CFLAGS) -D_IMPL_NS_VIEW
+CFLAGS=$(CFLAGS) -D_IMPL_NS_WEB
+CFLAGS=$(CFLAGS) -D_IMPL_NS_WIDGET
+!endif
+
 #//-----------------------------------------------------------------------
 #//
 #// feature-specific configuration settings
@@ -295,6 +320,10 @@ CFLAGS=$(CFLAGS) -DMOZ_NEW_CACHE
 USE_IMG2=1
 CFLAGS=$(CFLAGS) -DUSE_IMG2
 #!endif
+
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+CFLAGS=$(CFLAGS) -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT -DMOZ_STATIC_COMPONENT_LIBS
+!endif
 
 #//-----------------------------------------------------------------------
 #//

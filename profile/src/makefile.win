@@ -37,12 +37,9 @@ include <$(DEPTH)\config\config.mak>
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME     = profile
-DLL1NAME    = xprofile
-PDBFILE     = $(DLLNAME).pdb
-MAPFILE     = $(DLLNAME).map
-DLL     =.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE   = DLL
+MODULE		= profile
+LIBRARY_NAME	= profile
+MODULE_NAME	= nsProfileModule
 
 LINCS = -I$(PUBLIC)/js \
     -I$(PUBLIC)/profile \
@@ -99,7 +96,6 @@ OBJS =                          \
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -107,7 +103,3 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)   
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

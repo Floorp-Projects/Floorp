@@ -23,9 +23,9 @@ DEPTH=..\..\..
 MODULE=jsurl
 include <$(DEPTH)/config/config.mak>
 
-IS_COMPONENT=1
-DLLNAME=jsurl
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=jsurl
+LIBRARY_NAME=jsurl
+MODULE_NAME= javascript__protocol
 
 #------------------------------------------------------------------------
 #
@@ -65,6 +65,3 @@ XPIDLSRCS = \
 
 
 include <$(DEPTH)\config\rules.mak> 
-
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components

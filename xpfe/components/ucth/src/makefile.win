@@ -36,12 +36,9 @@ include <$(DEPTH)/config/config.mak>
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= mozucth
-DLL1NAME	= mozucth
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE=		mozucth
+LIBRARY_NAME	= mozucth
+MODULE_NAME	= nsUnknownContentTypeHandler
 
 LINCS = \
 	-I$(PUBLIC)/xpcom \
@@ -75,7 +72,6 @@ OBJS =							\
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -83,9 +79,3 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-    rm -f $(DIST)\bin\components\$(DLLNAME).dll

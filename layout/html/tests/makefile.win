@@ -50,9 +50,8 @@ LLIBS=				\
  $(DIST)\lib\layouthtmlforms_s.lib	\
  $(DIST)\lib\layouthtmlstyle_s.lib	\
  $(DIST)\lib\layouthtmltable_s.lib	\
- $(DIST)\lib\gkparser.lib	\
  $(DIST)\lib\layoutbase_s.lib	\
- $(DIST)\lib\gkgfxwin.lib	\
+ $(DIST)\lib\gkgfx.lib	\
  $(DIST)\lib\layoutxulbase_s.lib \
  $(DIST)\lib\contentshared_s.lib \
 !ifdef MOZ_MATHML
@@ -66,7 +65,6 @@ LLIBS=				\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib	\
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\timer_s.lib \
  $(LIBNSPR)			\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	

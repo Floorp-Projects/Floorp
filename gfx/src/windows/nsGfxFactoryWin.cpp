@@ -37,44 +37,30 @@
 #include "nsScreenManagerWin.h"
 #include "nsPrintOptionsWin.h"
 #include "nsFontList.h"
+#include "nsIGenericFactory.h"
 
-static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
-static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
-static NS_DEFINE_IID(kCFontList, NS_FONTLIST_CID);
-static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
-static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
-static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
-static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
-static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
-static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
-static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
-static NS_DEFINE_IID(kCPrintOptions, NS_PRINTOPTIONS_CID);
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextWin)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableRegion)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageManagerImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 
-class nsGfxFactoryWin : public nsIFactory
-{   
-  public:   
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-
-    nsGfxFactoryWin(const nsCID &aClass);   
-    ~nsGfxFactoryWin();   
-
-  private:   
-    nsCID     mClassID;
-};   
-
-static int gUseAFunctions = 0;
-
-nsGfxFactoryWin::nsGfxFactoryWin(const nsCID &aClass)   
-{   
-  static int init = 0;
+static PRBool
+UseAFunctions()
+{
+  static PRBool useAFunctions = PR_FALSE;
+  static PRBool init = PR_FALSE;
   if (!init) {
     init = 1;
     OSVERSIONINFO os;
@@ -84,185 +70,181 @@ nsGfxFactoryWin::nsGfxFactoryWin(const nsCID &aClass)
         (os.dwMajorVersion == 4) &&
         (os.dwMinorVersion == 0) &&    // Windows 95 (not 98)
         (::GetACP() == 932)) {         // Shift-JIS (Japanese)
-      gUseAFunctions = 1;
+      useAFunctions = 1;
     }
   }
 
-  NS_INIT_REFCNT();
-  mClassID = aClass;
-}   
-
-nsGfxFactoryWin::~nsGfxFactoryWin()   
-{   
-}   
-
-nsresult nsGfxFactoryWin::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsGfxFactoryWin);
-NS_IMPL_RELEASE(nsGfxFactoryWin);
-
-nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,  
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{ 
-  nsresult res;
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
-
-  *aResult = NULL;  
-  
-  nsISupports *inst = nsnull;
-  PRBool already_addreffed = PR_FALSE;
-
-  if (mClassID.Equals(kCFontMetrics)) {
-    nsFontMetricsWin* fm;
-    if (gUseAFunctions) {
-      NS_NEWXPCOM(fm, nsFontMetricsWinA);
-    }
-    else {
-      NS_NEWXPCOM(fm, nsFontMetricsWin);
-    }
-    inst = (nsISupports *)fm;
-  }
-  else if (mClassID.Equals(kCDeviceContext)) {
-    nsDeviceContextWin* dc;
-    NS_NEWXPCOM(dc, nsDeviceContextWin);
-    inst = (nsISupports *)dc;
-  }
-  else if (mClassID.Equals(kCRenderingContext)) {
-    nsRenderingContextWin*  rc;
-    if (gUseAFunctions) {
-      NS_NEWXPCOM(rc, nsRenderingContextWinA);
-    }
-    else {
-      NS_NEWXPCOM(rc, nsRenderingContextWin);
-    }
-    inst = (nsISupports *)((nsIRenderingContext*)rc);
-  }
-  else if (mClassID.Equals(kCImage)) {
-    nsImageWin* image;
-    NS_NEWXPCOM(image, nsImageWin);
-    inst = (nsISupports *)image;
-  }
-  else if (mClassID.Equals(kCRegion)) {
-    nsRegionWin*  region;
-    NS_NEWXPCOM(region, nsRegionWin);
-    inst = (nsISupports *)region;
-  }
-  else if (mClassID.Equals(kCBlender)) {
-    nsBlender* blender;
-    NS_NEWXPCOM(blender, nsBlender);
-    inst = (nsISupports *)blender;
-  }
-  else if (mClassID.Equals(kCDrawingSurface)) {
-    nsDrawingSurfaceWin* ds;
-    NS_NEWXPCOM(ds, nsDrawingSurfaceWin);
-    inst = (nsISupports *)((nsIDrawingSurface *)ds);
-  }
-  else if (mClassID.Equals(kCDeviceContextSpec)) {
-    nsDeviceContextSpecWin* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecWin);
-    inst = (nsISupports *)dcs;
-  }
-  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
-    nsDeviceContextSpecFactoryWin* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryWin);
-    inst = (nsISupports *)dcs;
-  } 
-  else if (mClassID.Equals(kCScriptableRegion)) {
-    nsCOMPtr<nsIRegion> rgn;
-    NS_NEWXPCOM(rgn, nsRegionWin);
-    if (rgn != nsnull) {
-      nsIScriptableRegion* scriptableRgn = new nsScriptableRegion(rgn);
-      inst = (nsISupports *)scriptableRgn;
-    }
-  }
-  else if (mClassID.Equals(kImageManagerImpl)) {
-    nsCOMPtr<nsIImageManager> iManager;
-    res = NS_NewImageManager(getter_AddRefs(iManager));
-    already_addreffed = PR_TRUE;
-    if (NS_SUCCEEDED(res))
-    {
-      res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
-    }
-  }
-  else if (mClassID.Equals(kCPrintOptions)) {
-    NS_NEWXPCOM(inst, nsPrintOptionsWin);
-  }
-  else if (mClassID.Equals(kCFontEnumerator)) {
-    nsFontEnumeratorWin* fe;
-    NS_NEWXPCOM(fe, nsFontEnumeratorWin);
-    inst = (nsISupports *)fe;
-  } 
-  else if (mClassID.Equals(kCFontList)) {
-    nsFontList* fl;
-    NS_NEWXPCOM(fl, nsFontList);
-    inst = (nsISupports *)fl;
-  } 
-	else if (mClassID.Equals(kCScreenManager)) {
-		NS_NEWXPCOM(inst, nsScreenManagerWin);
-  } 
-
-
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }  
-
-  if (already_addreffed == PR_FALSE)
-    NS_ADDREF(inst);  // Stabilize
-  
-  res = inst->QueryInterface(aIID, aResult);
-
-  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
-
-  return res;  
-}  
-
-nsresult nsGfxFactoryWin::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
-}  
-
-// return the proper factory to the caller
-extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
-                                             const nsCID &aClass,
-                                             const char *aClassName,
-                                             const char *aContractID,
-                                             nsIFactory **aFactory)
-{
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aFactory = new nsGfxFactoryWin(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return useAFunctions;
 }
+
+static NS_IMETHODIMP
+nsFontMetricsWinConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsFontMetricsWin* result;
+  if (UseAFunctions())
+    result = new nsFontMetricsWinA();
+  else
+    result = new nsFontMetricsWin();
+
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  NS_ADDREF(result);
+  rv = result->QueryInterface(aIID, aResult);
+  NS_RELEASE(result);
+  return rv;
+}
+
+static NS_IMETHODIMP
+nsRenderingContextWinConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsRenderingContextWin* result;
+  if (UseAFunctions())
+    result = new nsRenderingContextWinA();
+  else
+    result = new nsRenderingContextWin();
+
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  NS_ADDREF(result);
+  rv = result->QueryInterface(aIID, aResult);
+  NS_RELEASE(result);
+  return rv;
+}
+
+static NS_IMETHODIMP
+nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsRegionWin* region = new nsRegionWin();
+  if (! region)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(region);
+
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+  nsScriptableRegion* result = new nsScriptableRegion(region);
+  if (result) {
+    NS_ADDREF(result);
+    rv = result->QueryInterface(aIID, aResult);
+    NS_RELEASE(result);
+  }
+
+  NS_RELEASE(region);
+  return rv;
+}
+
+static NS_IMETHODIMP
+nsImageManagerImplConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsresult rv;
+  nsCOMPtr<nsIImageManager> result;
+  rv = NS_NewImageManager(getter_AddRefs(result));
+
+  if (result)
+    rv = result->QueryInterface(aIID, aResult);
+
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "nsFontMetricsWin",
+    NS_FONT_METRICS_CID,
+    "@mozilla.org/gfx/fontmetrics;1",
+    nsFontMetricsWinConstructor },
+
+  { "nsDeviceContextWin",
+    NS_DEVICE_CONTEXT_CID,
+    "@mozilla.org/gfx/devicecontext;1",
+    nsDeviceContextWinConstructor },
+
+  { "nsRenderingContextWin",
+    NS_RENDERING_CONTEXT_CID,
+    "@mozilla.org/gfx/renderingcontext;1",
+    nsRenderingContextWinConstructor },
+
+  { "nsImageWin",
+    NS_IMAGE_CID,
+    "@mozilla.org/gfx/image;1",
+    nsImageWinConstructor },
+
+  { "nsRegionWin",
+    NS_REGION_CID,
+    "@mozilla.org/gfx/unscriptable-region;1",
+    nsRegionWinConstructor },
+
+  { "nsBlender",
+    NS_BLENDER_CID,
+    "@mozilla.org/gfx/blender;1",
+    nsBlenderConstructor },
+
+  { "nsDrawingSurfaceWin",
+    NS_DRAWING_SURFACE_CID,
+    "@mozilla.org/gfx/drawing-surface;1",
+    nsDrawingSurfaceWinConstructor },
+
+  { "nsDeviceContextSpecWin",
+    NS_DEVICE_CONTEXT_SPEC_CID,
+    "@mozilla.org/gfx/devicecontextspec;1",
+    nsDeviceContextSpecWinConstructor },
+
+  { "nsDeviceContextSpecFactoryWin",
+    NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+    "@mozilla.org/gfx/devicecontextspecfactory;1",
+    nsDeviceContextSpecFactoryWinConstructor },
+
+  { "nsScriptableRegion",
+    NS_SCRIPTABLE_REGION_CID,
+    "@mozilla.org/gfx/region;1",
+    nsScriptableRegionConstructor },
+
+  { "nsImageManagerImpl",
+    NS_IMAGEMANAGER_CID,
+    "@mozilla.org/gfx/imagemanager;1",
+    nsImageManagerImplConstructor },
+
+  { "nsPrintOptionsWin",
+    NS_PRINTOPTIONS_CID,
+    "@mozilla.org/gfx/printoptions;1",
+    nsPrintOptionsWinConstructor },
+
+  { "nsFontEnumeratorWin",
+    NS_FONT_ENUMERATOR_CID,
+    "@mozilla.org/gfx/fontenumerator;1",
+    nsFontEnumeratorWinConstructor },
+
+  { "nsFontList",
+    NS_FONTLIST_CID,
+    "@mozilla.org/gfx/fontlist;1",
+    nsFontListConstructor },
+
+  { "nsScreenManagerWin",
+    NS_SCREENMANAGER_CID,
+    "@mozilla.org/gfx/screenmanager;1",
+    nsScreenManagerWinConstructor },
+};
+
+NS_IMPL_NSGETMODULE(nsGfxModule, components)

@@ -25,18 +25,23 @@
 # A generic script to add entries to a file 
 # if the entry does not already exist
 # 
-# Usage: $0 <filename> <entry>
+# Usage: $0 [-l] <filename> <entry>
+#
+#   -l do not attempt flock the file.
 
 use Fcntl qw(:DEFAULT :flock);
+use Getopt::Std;
 
 sub usage() {
-    print "$0 <filename> <entry>\n";
+    print "$0 [-l] <filename> <entry>\n";
     exit(1);
 }
 
-if ($#ARGV != 1) {
-    usage();
-}
+$nofilelocks = 0;
+
+getopts("l");
+
+$nofilelocks = 1 if defined($::opt_l);
 
 $file = shift;
 $entry = shift;
@@ -49,13 +54,18 @@ if ( ! -e "$file") {
 
 # This needs to be atomic
 open(OUT, ">>$file") || die ("$file: $!\n");
-flock(OUT, LOCK_EX);
-system("grep -c '^$entry\$' $file >/dev/null");
-$exit_value = $? >> 8;
-if ($exit_value) {
+flock(OUT, LOCK_EX) unless $nofilelocks;
+open(RES, "grep -c '^$entry\$' $file |") or $err = $!;
+if ($err) {
+	flock(OUT,LOCK_UN) unless $nofilelocks;
+	die ("grep: $err\n");
+}
+chomp($val = <RES>);
+close(RES);
+if (!$val) {
     print OUT "$entry\n";
 }
-flock(OUT, LOCK_UN);
+flock(OUT, LOCK_UN) unless $nofilelocks;
 close(OUT);
 
 exit(0);

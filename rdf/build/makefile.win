@@ -21,12 +21,9 @@
 
 DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
-MODULE=rdf 
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=rdf
-MAPFILE=$(DLLNAME).map
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=rdf
+LIBRARY_NAME=rdf
+MODULE_NAME=nsRDFModule
 
 EXPORTS=\
         nsRDFCID.h                      \
@@ -36,11 +33,14 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFModule.obj    \
 	$(NULL)
 
-LLIBS=\
+SUB_LIBRARIES=\
  $(DIST)\lib\rdfbase_s.lib       \
  $(DIST)\lib\rdfutil_s.lib       \
  $(DIST)\lib\rdfdatasource_s.lib \
- $(DIST)\lib\xpcom.lib         \
+ $(NULL)
+
+LLIBS=\
+ $(DIST)\lib\xpcom.lib   \
  $(DIST)\lib\timer_s.lib \
  $(LIBNSPR)  
 
@@ -53,6 +53,3 @@ LINCS=  -I$(DEPTH)\rdf\base\src         \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

@@ -27,6 +27,7 @@ MODULE		= locale
 LIBRARY_NAME	= nslocale
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsLocaleModule
 EXTRA_DSO_LIBS	= nslocale_s
 
 

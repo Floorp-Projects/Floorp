@@ -30,6 +30,7 @@ MODULE		= txmgr
 LIBRARY_NAME	= txmgr
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsTransactionManagerModule
 REQUIRES	= xpcom string
 
 CPPSRCS		= \

@@ -279,8 +279,9 @@ nsParserModule::RegisterSelf(nsIComponentManager *aCompMgr,
   nsresult rv = NS_OK;
   nsModuleComponentInfo* cp = gComponents, *end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                         nsnull, aPath, PR_TRUE, PR_TRUE);
+    rv = aCompMgr->RegisterComponentWithType(cp->mCID, cp->mDescription,
+                                             nsnull, aPath, registryLocation,
+                                             PR_TRUE, PR_TRUE, componentType);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsParserModule: unable to register %s component => %x\n",
@@ -327,7 +328,8 @@ nsParserModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 
 static nsParserModule *gModule = NULL;
 
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+extern "C" NS_EXPORT 
+nsresult NSGETMODULE_ENTRY_POINT(nsParserModule) (nsIComponentManager *servMgr,
                                           nsIFile* location,
                                           nsIModule** return_cobj)
 {

@@ -25,10 +25,8 @@ DEPTH=..\..\..
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE=uconv
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = ucvmath
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=ucvmath
+MODULE_NAME=nsUCvMathModule
 
 CPPSRCS =				\
 	nsUnicodeToTeXCMRttf.cpp 	\
@@ -79,11 +77,3 @@ LCFLAGS = \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\bin\$(DLLNAME).lib

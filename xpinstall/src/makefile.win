@@ -27,15 +27,16 @@ DEPTH=..\..
 
 include <$(DEPTH)/config/config.mak>
 
-MAKE_OBJ_TYPE = DLL
-MODULE=xpinstal
-XPIDL_MODULE=xpinstall
-
-DLL=.\$(OBJDIR)\$(MODULE).dll
+MODULE		= xpinstall
+LIBRARY_NAME	= xpinstal
+MODULE_NAME	= nsSoftwareUpdate
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
+INCLUDES=-I..\cleanup
+
 LCFLAGS =          \
+	$(INCLUDES) \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
@@ -94,12 +95,3 @@ WIN_LIBS=                                       \
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
-
-clobber::
-        $(RM) $(DIST)\lib\$(MODULE).lib
-        $(RM) $(DIST)\bin\components\$(MODULE).dll
-

@@ -36,6 +36,8 @@ CPP_OBJS =					\
 	$(NULL)
 
 MODULE=intl
+LIBRARY_NAME=strres
+MODULE_NAME=nsStringBundleModule
 
 LINCS=\
     -I$(PUBLIC)\xpcom \
@@ -44,10 +46,6 @@ LINCS=\
     -I$(PUBLIC)\intl \
     -I$(PUBLIC)\locale \
     $(NULL)
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = strres
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -60,11 +58,3 @@ LLIBS=				\
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib

@@ -27,7 +27,8 @@ PROGRAM = .\$(OBJDIR)\htmlrobot.exe
 
 LLIBS=				\
  $(DIST)\lib\DebugRobot.lib	\
- $(DIST)\lib\xpcom.lib	\
+ $(DIST)\lib\xpcom.lib		\
+ $(LIBNSPR)			\
  $(NULL)
 
 WIN_LIBS= shell32.lib           

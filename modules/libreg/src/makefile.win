@@ -33,7 +33,11 @@
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+MAKE_OBJ_TYPE=LIB
+!else
 MAKE_OBJ_TYPE=DLL
+!endif
 
 #//--- pick at most one of the IO types. Commenting both of
 #//--- them out gives you normal NSPR I/O
@@ -65,10 +69,17 @@ OBJS=                                       \
 #//
 #//------------------------------------------------------------------------
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+MODULE=mozreg
+LIBRARY_NAME=mozreg
+
+LIB=$(OBJDIR)\$(LIBRARY_NAME).lib
+!else
 MODULE=mozreg
 DLLNAME=mozreg
 
 DLL=$(OBJDIR)\$(DLLNAME).dll
+!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -96,10 +107,19 @@ LLIBS = \
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+export:: $(LIB)	
+    $(MAKE_INSTALL) $(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+
+clobber::
+    $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!else
 export:: $(DLL)	
     $(MAKE_INSTALL) $(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
-
+ 
 clobber::
     $(RM) $(DIST)\bin\$(DLLNAME).dll
     $(RM) $(DIST)\lib\$(DLLNAME).lib
+!endif

@@ -30,6 +30,8 @@ MODULE		= caps
 LIBRARY_NAME	= caps
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsSecurityManagerModule
+
 REQUIRES	= xpcom string pref js dom xpconnect necko jar widget plugin intl locale layout docshell uriloader gfx2 windowwatcher unicharutil
 
 CPPSRCS		= \

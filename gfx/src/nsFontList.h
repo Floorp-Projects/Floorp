@@ -34,7 +34,7 @@
 #define NS_FONTLIST_CONTRACTID "@mozilla.org/gfx/fontlist;1"
 
 
-class nsFontList : public nsIFontList
+class NS_GFX nsFontList : public nsIFontList
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_IFONTLIST_IID)

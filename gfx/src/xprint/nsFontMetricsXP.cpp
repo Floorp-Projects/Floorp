@@ -70,15 +70,15 @@ static int gInitialized = 0;
 struct nsFontCharSetMap;
 struct nsFontFamilyName;
 struct nsFontPropertyName;
-struct nsFontStyle;
-struct nsFontWeight;
+struct nsFontXpStyle;
+struct nsFontXpWeight;
 
-class nsFontNodeArray : public nsVoidArray
+class nsFontXpNodeArray : public nsVoidArray
 {
 public:
-    nsFontNode* GetElement(PRInt32 aIndex)
+    nsFontXpNode* GetElement(PRInt32 aIndex)
     {
-      return (nsFontNode*) ElementAt(aIndex);
+      return (nsFontXpNode*) ElementAt(aIndex);
     };
 };
 
@@ -102,7 +102,7 @@ struct nsFontFamily
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  nsFontNodeArray mNodes;
+  nsFontXpNodeArray mNodes;
 };
 
 struct nsFontFamilyName
@@ -111,7 +111,7 @@ struct nsFontFamilyName
   char* mXName;
 };
 
-struct nsFontNode
+struct nsFontXpNode
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -119,7 +119,7 @@ struct nsFontNode
 
   nsCAutoString       mName;
   nsFontCharSetInfo*  mCharSetInfo;
-  nsFontStyle*        mStyles[3];
+  nsFontXpStyle*        mStyles[3];
   PRUint8             mHolesFilled;
   PRUint8             mDummy;
 };
@@ -130,7 +130,7 @@ struct nsFontPropertyName
   int   mValue;
 };
 
-struct nsFontStretch
+struct nsFontXpStretch
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -148,22 +148,22 @@ struct nsFontStretch
 };
 
 
-struct nsFontStyle
+struct nsFontXpStyle
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void FillWeightHoles(void);
 
-  nsFontWeight* mWeights[9];
+  nsFontXpWeight* mWeights[9];
 };
 
-struct nsFontWeight
+struct nsFontXpWeight
 {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void FillStretchHoles(void);
 
-  nsFontStretch* mStretches[9];
+  nsFontXpStretch* mStretches[9];
 };
 
 // Global variables
@@ -173,7 +173,7 @@ static nsIPref* gPref = nsnull;
 static nsICharsetConverterManager2* gCharSetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 
-static nsFontNodeArray* gGlobalList = nsnull;
+static nsFontXpNodeArray* gGlobalList = nsnull;
 static nsIAtom* gUnicode = nsnull;
 static nsIAtom* gUserDefined = nsnull;
 
@@ -501,7 +501,7 @@ FreeFamily(nsHashKey* aKey, void* aData, void* aClosure)
 }
 
 static void
-FreeStretch(nsFontStretch* aStretch)
+FreeStretch(nsFontXpStretch* aStretch)
 {
   PR_smprintf_free(aStretch->mScalable);
 
@@ -518,9 +518,9 @@ FreeStretch(nsFontStretch* aStretch)
 }
 
 static void
-FreeWeights(nsFontWeight* aWeight)
+FreeWeights(nsFontXpWeight* aWeight)
 {
-  nsFontStretch** stretches=aWeight->mStretches;
+  nsFontXpStretch** stretches=aWeight->mStretches;
   for (int i=0; i < 9; i++)
   {
     if (stretches[i])
@@ -537,9 +537,9 @@ FreeWeights(nsFontWeight* aWeight)
 }
   
 static void
-FreeStyle(nsFontStyle* aStyle)
+FreeStyle(nsFontXpStyle* aStyle)
 {
-  nsFontWeight** weights=aStyle->mWeights;
+  nsFontXpWeight** weights=aStyle->mWeights;
   for (int i=0; i < 9; i++)
   {
     if (weights[i])
@@ -558,7 +558,7 @@ FreeStyle(nsFontStyle* aStyle)
 static PRBool
 FreeNode(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsFontNode* node = (nsFontNode*) aData;
+  nsFontXpNode* node = (nsFontXpNode*) aData;
   for (int i=0; i < 3; i++)
   {
     if (node->mStyles[i])
@@ -1509,15 +1509,15 @@ static void
 DumpFamily(nsFontFamily* aFamily)
 {
   for (int styleIndex = 0; styleIndex < 3; styleIndex++) {
-    nsFontStyle* style = aFamily->mStyles[styleIndex];
+    nsFontXpStyle* style = aFamily->mStyles[styleIndex];
     if (style) {
       PR_LOG(FontMetricsXpLM, PR_LOG_DEBUG, ("  style: %s\n", gDumpStyles[styleIndex]));
       for (int weightIndex = 0; weightIndex < 8; weightIndex++) {
-        nsFontWeight* weight = style->mWeights[weightIndex];
+        nsFontXpWeight* weight = style->mWeights[weightIndex];
         if (weight) {
           PR_LOG(FontMetricsXpLM, PR_LOG_DEBUG, ("    weight: %d\n", (weightIndex + 1) * 100));
           for (int stretchIndex = 0; stretchIndex < 9; stretchIndex++) {
-            nsFontStretch* stretch = weight->mStretches[stretchIndex];
+            nsFontXpStretch* stretch = weight->mStretches[stretchIndex];
             if (stretch) {
               PR_LOG(FontMetricsXpLM, PR_LOG_DEBUG, ("      stretch: %d\n", stretchIndex + 1));
               PL_HashTableEnumerateEntries(stretch->mCharSets, DumpCharSet,
@@ -2120,7 +2120,7 @@ nsFontXpUserDefined::GetBoundingMetrics(const PRUnichar* aString,
 // Continue nsFontMetricsXp Implementation
 
 nsFontXp*
-nsFontMetricsXp::PickASizeAndLoad(nsFontStretch* aStretch,
+nsFontMetricsXp::PickASizeAndLoad(nsFontXpStretch* aStretch,
                                     nsFontCharSetInfo* aCharSet,
                                     PRUnichar aChar)
 {
@@ -2274,13 +2274,13 @@ CompareSizes(const void* aArg1, const void* aArg2, void *data)
 }
 
 void
-nsFontStretch::SortSizes(void)
+nsFontXpStretch::SortSizes(void)
 {
   NS_QuickSort(mSizes, mSizesCount, sizeof(*mSizes), CompareSizes, NULL);
 }
 
 void
-nsFontWeight::FillStretchHoles(void)
+nsFontXpWeight::FillStretchHoles(void)
 {
   int i, j;
 
@@ -2346,7 +2346,7 @@ nsFontWeight::FillStretchHoles(void)
 }
 
 void
-nsFontStyle::FillWeightHoles(void)
+nsFontXpStyle::FillWeightHoles(void)
 {
   int i, j;
 
@@ -2416,7 +2416,7 @@ nsFontStyle::FillWeightHoles(void)
 }
 
 void
-nsFontNode::FillStyleHoles(void)
+nsFontXpNode::FillStyleHoles(void)
 {
   if (mHolesFilled) {
     return;
@@ -2479,7 +2479,7 @@ nsFontNode::FillStyleHoles(void)
   } while (0)
 
 nsFontXp*
-nsFontMetricsXp::SearchNode(nsFontNode* aNode, PRUnichar aChar)
+nsFontMetricsXp::SearchNode(nsFontXpNode* aNode, PRUnichar aChar)
 {
   if (aNode->mDummy)
     return nsnull;
@@ -2522,9 +2522,9 @@ nsFontMetricsXp::SearchNode(nsFontNode* aNode, PRUnichar aChar)
   }
 
   aNode->FillStyleHoles();
-  nsFontStyle* style = aNode->mStyles[mStyleIndex];
+  nsFontXpStyle* style = aNode->mStyles[mStyleIndex];
 
-  nsFontWeight** weights = style->mWeights;
+  nsFontXpWeight** weights = style->mWeights;
   int weight = mFont->weight;
   int steps = (weight % 100);
   int weightIndex;
@@ -2536,7 +2536,7 @@ nsFontMetricsXp::SearchNode(nsFontNode* aNode, PRUnichar aChar)
       GET_WEIGHT_INDEX(weightIndex, base);
       while (steps--)
       {
-        nsFontWeight* prev = weights[weightIndex];
+        nsFontXpWeight* prev = weights[weightIndex];
         for (weightIndex++; weightIndex < 9; weightIndex++)
         {
           if (weights[weightIndex] != prev)
@@ -2553,7 +2553,7 @@ nsFontMetricsXp::SearchNode(nsFontNode* aNode, PRUnichar aChar)
       GET_WEIGHT_INDEX(weightIndex, base);
       while (steps--)
       {
-        nsFontWeight* prev = weights[weightIndex];
+        nsFontXpWeight* prev = weights[weightIndex];
         for (weightIndex--; weightIndex >=0; weightIndex--)
         {
           if (weights[weightIndex] != prev)
@@ -2574,7 +2574,7 @@ nsFontMetricsXp::SearchNode(nsFontNode* aNode, PRUnichar aChar)
 }
 
 static void
-GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
+GetFontNames(const char* aPattern, nsFontXpNodeArray* aNodes)
 {
   nsCAutoString previousNodeName;
 
@@ -2702,11 +2702,11 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     nodeName.Append(charSetName);
 
     nsCStringKey key(nodeName);
-    nsFontNode* node = (nsFontNode*) gNodes->Get(&key);
+    nsFontXpNode* node = (nsFontXpNode*) gNodes->Get(&key);
 
     if (!node)
     {
-      node = new nsFontNode;
+      node = new nsFontXpNode;
       if (!node)
         continue;
       gNodes->Put(&key, node);
@@ -2745,9 +2745,9 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       styleIndex = NS_FONT_STYLE_NORMAL;
       break;
     }
-    nsFontStyle* style = node->mStyles[styleIndex];
+    nsFontXpStyle* style = node->mStyles[styleIndex];
     if (!style) {
-      style = new nsFontStyle;
+      style = new nsFontXpStyle;
       if (!style) {
         continue;
       }
@@ -2762,9 +2762,9 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
     int weightIndex = WEIGHT_INDEX(weightNumber);
-    nsFontWeight* weight = style->mWeights[weightIndex];
+    nsFontXpWeight* weight = style->mWeights[weightIndex];
     if (!weight) {
-      weight = new nsFontWeight;
+      weight = new nsFontXpWeight;
       if (!weight) {
         continue;
       }
@@ -2779,9 +2779,9 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       stretchIndex = 5;
     }
     stretchIndex--;
-    nsFontStretch* stretch = weight->mStretches[stretchIndex];
+    nsFontXpStretch* stretch = weight->mStretches[stretchIndex];
     if (!stretch) {
-      stretch = new nsFontStretch;
+      stretch = new nsFontXpStretch;
       if (!stretch) {
         continue;
       }
@@ -2886,7 +2886,7 @@ GetAllFontNames(void)
 {
   if(!gGlobalList)
   {
-    gGlobalList = new nsFontNodeArray();
+    gGlobalList = new nsFontXpNodeArray();
     if (!gGlobalList) 
     {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2960,7 +2960,7 @@ nsFontXp*
 nsFontMetricsXp::TryNode(nsCString* aName, PRUnichar aChar)
 {
   nsCStringKey key(*aName);
-  nsFontNode* node = (nsFontNode*) gNodes->Get(&key);
+  nsFontXpNode* node = (nsFontXpNode*) gNodes->Get(&key);
   if (!node)
   {
     nsCAutoString pattern("-");
@@ -2973,14 +2973,14 @@ nsFontMetricsXp::TryNode(nsCString* aName, PRUnichar aChar)
 
     pattern.Insert("-*-*-*-*-*-*-*-*-*-*", hyphen);
 
-    nsFontNodeArray nodes;
+    nsFontXpNodeArray nodes;
     GetFontNames(pattern.get(), &nodes);
     if (nodes.Count() > 0)
       node = nodes.GetElement(0);
     else 
     {
       // add a dummy node to the hash table to avoid calling XListFonts again
-      node = new nsFontNode();
+      node = new nsFontXpNode();
       if (!node)
         return nsnull;
       gNodes->Put(&key, node);
@@ -3015,7 +3015,7 @@ nsFontMetricsXp::TryFamily(nsCString* aName, PRUnichar aChar)
   nsFontFamily* family = FindFamily(aName);
   if (family)
   {
-    nsFontNodeArray* nodes = &family->mNodes;
+    nsFontXpNodeArray* nodes = &family->mNodes;
     PRInt32 n = nodes->Count();
     for (PRInt32 i=0; i < n; i++)
     {
@@ -3284,7 +3284,7 @@ typedef struct EnumerateNodeInfo
 static PRIntn
 EnumerateNode(void* aElement, void* aData)
 {
-  nsFontNode* node = (nsFontNode*) aElement;
+  nsFontXpNode* node = (nsFontXpNode*) aElement;
   
   EnumerateNodeInfo* info = (EnumerateNodeInfo*) aData;
   

@@ -64,6 +64,7 @@ else
 DIRS	+= idl
 CPPSRCS	 = jsd_xpc.cpp
 IS_COMPONENT = 1
+MODULE_NAME	= JavaScript_Debugger
 endif
 
 ifndef MOZ_JSD

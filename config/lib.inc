@@ -59,11 +59,12 @@ $(LIBRARY):: $(OBJDIR) $(OBJS) makefile.win $(DEPTH)\config\lib.inc
 #// Rule to build a 32-bit Library
 #//
 #//------------------------------------------------------------------------
-$(LIBRARY):: $(OBJDIR) $(OBJS) makefile.win $(DEPTH)\config\lib.inc
+$(LIBRARY):: $(OBJDIR) $(OBJS) $(SUB_LIBRARIES) makefile.win $(DEPTH)\config\lib.inc
     $(RM) $@ 2> NUL
     $(AR) @<<$(CFGFILE)
         -NOLOGO -OUT:$@
         $(OBJS)
+        $(SUB_LIBRARIES)
 <<
     $(RANLIB) $@
 !endif

@@ -26,6 +26,7 @@ MODULE		= timer
 LIBRARY_NAME	= timer_mac
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsMacTimerModule
 
 EXPORTS		= $(srcdir)/../unix/nsUnixTimerCIID.h
 

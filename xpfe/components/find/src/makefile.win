@@ -36,12 +36,10 @@ include <$(DEPTH)/config/config.mak>
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= mozfind
-DLL1NAME	= mozfind
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE		= appcomps
+XPIDL_MODULE	= mozfind
+LIBRARY_NAME	= mozfind
+MODULE_NAME	= nsFindComponent
 
 LINCS = \
 	-I$(PUBLIC)/xpcom \
@@ -78,7 +76,6 @@ OBJS =							\
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -86,9 +83,3 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-    rm -f $(DIST)\bin\components\$(DLLNAME).dll

@@ -20,13 +20,11 @@
 # Contributor(s): 
 
 DEPTH=..\..
+include <$(DEPTH)\config\config.mak>
 
-MODULE=docshell 
-
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = docshell
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=docshell
+LIBRARY_NAME=docshell
+MODULE_NAME=docshell_provider
 
 LINCS=-I..\base
 
@@ -35,16 +33,15 @@ CPP_OBJS=				\
 	$(NULL)
 
 # These are the libraries we need to link with to create the dll
-LLIBS =                              \
+SUB_LIBRARIES=\
  $(DIST)\lib\basedocshell_s.lib      \
+ $(NULL)
+
+LLIBS =                              \
  $(DIST)\lib\xpcom.lib		           \
  $(DIST)\lib\timer_s.lib \
- $(DIST)\lib\gkgfxwin.lib	           \
+ $(DIST)\lib\gkgfx.lib	           \
  $(LIBNSPR)
 
-include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

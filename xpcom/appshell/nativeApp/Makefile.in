@@ -30,7 +30,7 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_nativeapp
 LIBRARY_NAME	= nativeapp
 IS_COMPONENT	= 1
-
+MODULE_NAME	= nsCNativeAppModule
 
 CPPSRCS		= \
 		nsCNativeAppImpl.cpp \
@@ -45,8 +45,7 @@ XPIDLSRCS	= \
 LOCAL_INCLUDES	= -I.
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 

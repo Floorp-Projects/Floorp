@@ -42,14 +42,14 @@ EXPORTS = 				\
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..\
 
-MAKE_OBJ_TYPE=DLL
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=$(MODULE)
-MAPFILE= $(DLLNAME).map
+EXPORT_LIBRARY=1
+LIBRARY_NAME=$(MODULE)
+MAPFILE= $(LIBRARY_NAME).map
 
 #//------------------------------------------------------------------------
 #// 
@@ -80,7 +80,6 @@ OBJS=                                   \
 #//
 #//------------------------------------------------------------------------
 
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
@@ -100,10 +99,3 @@ GARBAGE	= $(GARBAGE) _gen
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-export:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-    $(RM) $(DIST)\bin\$(DLLNAME).dll
-    $(RM) $(DIST)\lib\$(DLLNAME).lib

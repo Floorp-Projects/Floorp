@@ -30,6 +30,7 @@ MODULE		= imggif
 LIBRARY_NAME	= imggif
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsGIFModule2
 
 REQUIRES	= xpcom necko layout gfx2 imglib2
 

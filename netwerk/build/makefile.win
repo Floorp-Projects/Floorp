@@ -22,11 +22,9 @@
 DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE=necko
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=necko
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE		= necko
+LIBRARY_NAME	= necko
+MODULE_NAME	= necko_core_and_primary_protocols
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
@@ -38,7 +36,7 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetModule.obj \
 	$(NULL)
 
-LLIBS=                                \
+SUB_LIBRARIES=                        \
         $(DIST)\lib\neckobase_s.lib   \
         $(DIST)\lib\neckodns_s.lib    \
         $(DIST)\lib\neckosocket_s.lib \
@@ -59,6 +57,9 @@ LLIBS=                                \
         $(DIST)\lib\nkres_s.lib       \
         $(DIST)\lib\nkabout_s.lib     \
         $(DIST)\lib\nkkwd_s.lib       \
+        $(NULL)
+
+LLIBS=                                \
 !ifdef MOZ_PERF
         $(DIST)\lib\util.lib          \
 !endif
@@ -88,11 +89,3 @@ INCS = $(INCS)                                   \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-        $(RM) $(DIST)\bin\components\$(DLLNAME).dll
-	$(RM) $(DIST)\lib\$(DLLNAME).lib 

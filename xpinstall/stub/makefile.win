@@ -24,6 +24,7 @@
 DEPTH=..\..
 
 MAKE_OBJ_TYPE   = DLL
+LIBRARY_NAME=xpistub
 DLL = .\$(OBJDIR)\xpistub.dll
 
 OBJS =  \
@@ -45,6 +46,6 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-
+ 
 clobber::
 	$(RM) $(DIST)\bin\xpistub.dll

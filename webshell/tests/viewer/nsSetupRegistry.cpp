@@ -76,7 +76,7 @@
 // Class ID's
 
 // WIDGET
-#if !defined(XP_UNIX) && !defined(XP_OS2)
+#if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_WIN)
 static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCVScrollbarCID, NS_VERTSCROLLBAR_CID);
@@ -120,7 +120,7 @@ static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 #endif
 
 // GFXWIN
-#if !defined(XP_UNIX) && !defined(XP_OS2)
+#if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_WIN)
 static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kCFontMetricsCID, NS_FONT_METRICS_CID);
@@ -157,7 +157,7 @@ NS_SetupRegistry()
 #endif /* defined(XP_UNIX) */
 
   // WIDGET
-#if !defined(XP_UNIX) && !defined(XP_OS2)
+#if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_WIN)
   nsComponentManager::RegisterComponentLib(kCLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCVScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -221,7 +221,7 @@ NS_SetupRegistry()
 #endif
 
   // GFXWIN
-#if !defined(XP_UNIX) && !defined(XP_OS2)
+#if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_WIN)
   nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "@mozilla.org/gfx/renderingcontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "@mozilla.org/gfx/devicecontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "@mozilla.org/gfx/fontmetrics;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);

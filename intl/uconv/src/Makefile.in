@@ -30,6 +30,8 @@ MODULE		= uconv
 LIBRARY_NAME	= uconv
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsUConvModule
+
 # To avoid conflict with OS/2 system uconv.dll
 SHORT_LIBNAME  = mozuconv
 REQUIRES	= xpcom string intl locale chardet necko rdf pref

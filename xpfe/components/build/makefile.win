@@ -21,10 +21,8 @@
 
 DEPTH=..\..\..
 MODULE=appcomps
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=appcomps
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=appcomps
+MODULE_NAME=application
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
@@ -36,11 +34,7 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsModule.obj  \
 	$(NULL)
 
-LLIBS=                                   \
-        $(DIST)\lib\js3250.lib           \
-        $(DIST)\lib\xpcom.lib            \
-        $(DIST)\lib\timer_s.lib          \
-        $(LIBNSPR)                       \
+SUB_LIBRARIES=                           \
         $(DIST)\lib\autocomplete_s.lib   \
         $(DIST)\lib\bookmarks_s.lib      \
         $(DIST)\lib\directory_s.lib      \
@@ -57,6 +51,13 @@ WIN_LIBS = \
 		ole32.lib \
 		$(NULL)
 
+LLIBS=                                   \
+        $(DIST)\lib\js3250.lib           \
+        $(DIST)\lib\xpcom.lib            \
+        $(DIST)\lib\timer_s.lib          \
+        $(LIBNSPR)                       \
+	$(NULL)
+
 INCS = $(INCS)                                       \
         -I$(DEPTH)\xpfe\components\autocomplete\src  \
         -I$(DEPTH)\xpfe\components\bookmarks\src     \
@@ -71,11 +72,3 @@ INCS = $(INCS)                                       \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-    $(RM) $(DIST)\bin\components\$(DLLNAME).dll
-	$(RM) $(DIST)\lib\$(DLLNAME).lib 

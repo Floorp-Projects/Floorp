@@ -24,10 +24,9 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE			= imgpng
+MODULE		= imgpng
 LIBRARY_NAME	= imgpng
-DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE_NAME	= nsPNGDecoderModule
 
 OBJS	= \
 		.\$(OBJDIR)\nsPNGDecoder.obj \
@@ -39,15 +38,7 @@ LLIBS=\
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\png.lib \
 	$(DIST)\lib\zlib.lib \
-	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\gkgfx.lib \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

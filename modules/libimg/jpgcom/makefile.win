@@ -28,12 +28,15 @@
 #
 #------------------------------------------------------------------------
 
+MODULE=img 
+LIBRARY_NAME=nsjpg
+MODULE_NAME=nsJPGModule
+
+DEPTH=..\..\.. 
+
 !ifdef MOZ_JAVA
 LOCAL_JMC_SUBDIR = .
 !endif
-
-
-LIBRARY_NAME = nsjpg
 
 #
 # Make sure we have MOZILLA_CLIENT defined so we get the
@@ -56,21 +59,12 @@ LLIBS= $(LIBNSPR)  \
 !endif
 	$(NULL)
 
-LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
-LIBRARY_SUFFIX = $(MOZ_BITS)$(VERSION_NUMBER)
-
-MAKE_OBJ_TYPE=DLL
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=nsjpg
-DLL1NAME=nsjpg
-PDBFILE=$(DLLNAME).pdb
-MAPFILE=$(DLLNAME).map
 DEFFILE=nsjpg.def
-
 
 #//------------------------------------------------------------------------
 #//
@@ -78,13 +72,6 @@ DEFFILE=nsjpg.def
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-DLL=.\$(OBJDIR)\$(DLLNAME).dll 
-MAPFILE= $(DLLNAME).map
-
-
-
-MODULE=img 
-DEPTH=..\..\.. 
 
 LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor -I$(DEPTH)/dist/public/jpeg
 CPPSRCS= nsJPGDecoder.cpp nsJPGModule.cpp jpeg.cpp 
@@ -95,8 +82,3 @@ CPP_OBJS= \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
-
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-

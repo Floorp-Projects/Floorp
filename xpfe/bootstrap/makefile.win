@@ -22,10 +22,14 @@
 DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
-
-
 DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=raptor 
+
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+DEFINES=$(DEFINES) -D_BUILD_STATIC_BIN
+EXTRA_LIBS_LIST_FILE=$(OBJDIR)\libs.txt
+SEDCMDS=nsStaticComonents.cpp.sed
+GARBAGE=$(GARBAGE) $(EXTRA_LIBS_LIST_FILE) $(SEDCMDS) nsStaticComponents.cpp
+!endif
 
 CPPSRCS=                                \
  nsAppRunner.cpp                        \
@@ -34,6 +38,9 @@ CPPSRCS=                                \
  nsNativeAppSupportBase.cpp             \
  nsNativeAppSupportWin.cpp              \
  showOSAlert.cpp                        \
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+ nsStaticComponents.cpp                 \
+!endif
  $(NULL)
 
 CPP_OBJS=                               \
@@ -43,6 +50,9 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsNativeAppSupportBase.obj \
  .\$(OBJDIR)\nsNativeAppSupportWin.obj  \
  .\$(OBJDIR)\showOSAlert.obj            \
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+ .\$(OBJDIR)\nsStaticComponents.obj     \
+!endif
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
@@ -71,7 +81,6 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(MOZ_TOOLS)\include            \
 !endif
       $(NULL)
-#      -I..\browser
 
 MAKE_OBJ_TYPE = EXE
 PROGRAM = .\$(OBJDIR)\mozilla.exe
@@ -100,25 +109,61 @@ LFLAGS= $(LFLAGS) /subsystem:windows
 !endif
 
 # These are the libraries we need to link with to create the exe
-LLIBS=                          \
- $(DIST)\lib\xpcom.lib          \
- $(DIST)\lib\js3250.lib          \
- $(DIST)\lib\gkgfxwin.lib   \
+LLIBS=                               \
+ $(DIST)\lib\xpcom.lib               \
+ $(DIST)\lib\nsldap32v40.lib         \
+ $(DIST)\lib\js3250.lib              \
+ $(DIST)\lib\util.lib                \
+ $(DIST)\lib\gkgfx.lib            \
+ $(DIST)\lib\expat.lib               \
+ $(DIST)\lib\png.lib                 \
+ $(DIST)\lib\mng.lib                 \
  $(DIST)\lib\mpfilelocprovider_s.lib \
 !ifdef GC_LEAK_DETECTOR
- $(DIST)\lib\boehm.lib \
+ $(DIST)\lib\boehm.lib               \
 !endif
 !ifdef MOZ_FULLCIRCLE
- $(MOZ_TOOLS)\lib\fulls32.lib \
+ $(MOZ_TOOLS)\lib\fulls32.lib        \
 !endif
- $(LIBNSPR)                     \
+ $(LIBNSPR)                          \
  $(NULL)
- 
-WIN_LIBS=                      \
- shell32.lib                 \
+
+WIN_LIBS=       \
+ comctl32.lib   \
+ comdlg32.lib   \
+ Uuid.lib       \
+ shell32.lib    \
+ ole32.lib      \
+ oleaut32.lib   \
+ version.lib    \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+!ifdef MOZ_STATIC_COMPONENT_LIBS
+
+$(SEDCMDS): $(FINAL_LINK_COMP_NAMES)
+        rm -f $@
+        echo s/@DECLARE_COMPONENTS@/\>> $@
+        sed -e "s/^/DECL_MODULE(/" -e "s/$$/);\\\/" $(FINAL_LINK_COMP_NAMES) >> $@
+        echo />> $@
+        echo s/@COMPONENT_LIST@/\>> $@
+        sed -e "s/^/MODULE(/" -e "s/$$/),\\\/" $(FINAL_LINK_COMP_NAMES) >> $@
+        echo />> $@
+        
+nsStaticComponents.cpp: nsStaticComponents.cpp.in $(FINAL_LINK_COMP_NAMES) $(SEDCMDS)
+        echo +++ make: Creating $@
+        rm -f $@
+        sed -f $(SEDCMDS) nsStaticComponents.cpp.in > $@
+        rm -f $(SEDCMDS)
+
+$(EXTRA_LIBS_LIST_FILE): $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)
+        echo +++ make: Creating list of link libraries: $@
+        rm -f $@
+        sed -e "s/^/$(DIST:\=\\\)\\\lib\\\/" -e "s/$$/.lib/" $(FINAL_LINK_COMPS)  > $@
+        sed -e "s/^/$(DIST:\=\\\)\\\lib\\\/" -e "s/$$/.lib/" $(FINAL_LINK_LIBS)  >> $@
+
+!endif
 
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin

@@ -24,9 +24,6 @@ include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_HTML 
 
-MODULE=raptor 
-IS_COMPONENT = 1
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\dlldeps.obj		\
 	.\$(OBJDIR)\nsContentDLF.obj	\
@@ -37,10 +34,9 @@ CPP_OBJS=				\
 
 EXPORTS=nsContentCID.h
 
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = gkcontent
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=layout
+LIBRARY_NAME=gkcontent
+MODULE_NAME=nsContentModule
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -57,23 +53,26 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
   -I$(PUBLIC)\rdf
 
 # These are the libraries we need to link with to create the dll
-LLIBS=					\
+SUB_LIBRARIES=\
  $(DIST)\lib\contentbase_s.lib		\
- $(DIST)\lib\contenthtmlcontent_s.lib		\
+ $(DIST)\lib\contenthtmlcontent_s.lib	\
  $(DIST)\lib\contenthtmldoc_s.lib	\
  $(DIST)\lib\contenthtmlstyle_s.lib	\
  $(DIST)\lib\contentxmlcontent_s.lib	\
- $(DIST)\lib\contentxmldoc_s.lib		\
- $(DIST)\lib\contentxsldoc_s.lib		\
+ $(DIST)\lib\contentxmldoc_s.lib	\
+ $(DIST)\lib\contentxsldoc_s.lib	\
  $(DIST)\lib\contentxulcontent_s.lib	\
  $(DIST)\lib\contentxuldocument_s.lib   \
  $(DIST)\lib\contentxultemplates_s.lib  \
- $(DIST)\lib\contentxbl_s.lib \
- $(DIST)\lib\contentevents_s.lib		\
- $(DIST)\lib\contentshared_s.lib		\
- $(DIST)\lib\xpcom.lib		\
- $(DIST)\lib\gkgfxwin.lib		\
- $(DIST)\lib\timer_s.lib \
+ $(DIST)\lib\contentxbl_s.lib           \
+ $(DIST)\lib\contentevents_s.lib	\
+ $(DIST)\lib\contentshared_s.lib	\
+ $(NULL)
+
+LLIBS=\
+ $(DIST)\lib\xpcom.lib		        \
+ $(DIST)\lib\gkgfx.lib			\
+ $(DIST)\lib\timer_s.lib                \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 !if defined(MOZ_PERF)
  $(DIST)\lib\util.lib		        \
@@ -82,16 +81,10 @@ LLIBS=					\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: gbdate.h $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-	rm -f gbdate.h
+export:: gbdate.h
 
 gbdate.h:: gbdate.pl
-  $(PERL) gbdate.pl > gbdate.h
+        echo +++ make: Creating $@
+	$(PERL) gbdate.pl > gbdate.h
 
 

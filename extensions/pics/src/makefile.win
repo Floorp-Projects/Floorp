@@ -25,6 +25,8 @@ include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_PICS -DWIN32_LEAN_AND_MEAN
 MODULE=pics 
+LIBRARY_NAME=pics
+MODULE_NAME=nsPICSModule
 
 CSRCS=				\
  cslabel.c	\
@@ -62,11 +64,6 @@ LINCS = -I$(PUBLIC)/js \
 		-I$(PUBLIC)\pref \
 		-I$(DEPTH)\include \
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = pics
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -83,10 +80,3 @@ LLIBS	= \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib

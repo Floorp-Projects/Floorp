@@ -19,11 +19,9 @@
 #
 
 DEPTH=..\..\..
-MODULE=nkcache
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=nkcache
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE		= nkcache
+LIBRARY_NAME	= nkcache
+MODULE_NAME	= Network_Data_Cache
 
 CPP_OBJS=                                    \
         .\$(OBJDIR)\nsNetDataCacheModule.obj \
@@ -40,8 +38,3 @@ INCS = $(INCS)                             \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-

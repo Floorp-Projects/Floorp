@@ -61,8 +61,8 @@ typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
 
 struct nsFontCharSet;
 struct nsFontFamily;
-struct nsFontNode;
-struct nsFontStretch;
+struct nsFontXpNode;
+struct nsFontXpStretch;
 
 
 class nsFontXpUserDefined;
@@ -158,12 +158,12 @@ public:
   nsFontXp* FindGlobalFont(PRUnichar aChar);
   nsFontXp* FindSubstituteFont(PRUnichar aChar);
 
-  nsFontXp* SearchNode(nsFontNode* aNode, PRUnichar aChar);
+  nsFontXp* SearchNode(nsFontXpNode* aNode, PRUnichar aChar);
   nsFontXp* TryAliases(nsCString* aName, PRUnichar aChar); 
   nsFontXp* TryFamily(nsCString* aName, PRUnichar aChar);
   nsFontXp* TryNode(nsCString* aName, PRUnichar aChar);
 
-  nsFontXp* PickASizeAndLoad(nsFontStretch* aStretch,
+  nsFontXp* PickASizeAndLoad(nsFontXpStretch* aStretch,
                                nsFontCharSetInfo* aCharSet,
                                PRUnichar aChar);
 

@@ -38,7 +38,7 @@ LLIBS=                         \
  $(LIBNSPR)                     \
  $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\gkwidget.lib   \
- $(DIST)\lib\gkgfxwin.lib   \
+ $(DIST)\lib\gkgfx.lib   \
  $(NULL)
 
 LLFLAGS=-SUBSYSTEM:CONSOLE 

@@ -22,11 +22,11 @@
 DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE=raptor 
+MODULE=gfx
+LIBRARY_NAME=gkgfxwin
+MODULE_NAME=nsGfxModule
 
-LIBRARY_NAME=raptorgfxwin_s
-
-DEFINES=-D_IMPL_NS_GFX -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN -DSTRICT
+DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
 
 !if defined(NGLAYOUT_DDRAW)
 DEFINES=$(DEFINES) -DNGLAYOUT_DDRAW
@@ -70,13 +70,31 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
+LLIBS = \
+        $(DIST)\lib\gkgfx.lib                   \
+        $(DIST)\lib\xpcom.lib	                \
+        $(DIST)\lib\util.lib                    \
+        $(DIST)\lib\img32$(VERSION_NUMBER).lib  \
+        $(DIST)\lib\timer_s.lib                 \
+!if defined(NGLAYOUT_DDRAW)
+        $(NGLAYOUT_DDRAW)\lib\ddraw.lib         \
+!endif
+        $(LIBNSPR)                              \
+        $(NULL)
+
+WIN_LIBS=                                       \
+!if defined(NGLAYOUT_DDRAW)
+         ole32.lib                              \
+!endif
+         comdlg32.lib
+
+LLFLAGS = 	$(LLFLAGS) \
+		/INCLUDE:_NS_NewImageManager@4
+		 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+install::
 	$(MAKE_INSTALL) fontEncoding.properties $(DIST)\bin\res\fonts
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(PDBFILE).pdb
 	rm -f $(DIST)\bin\res\fonts\fontEncoding.properties

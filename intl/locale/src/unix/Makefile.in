@@ -30,6 +30,7 @@ MODULE		= locale
 LIBRARY_NAME	= nslocale
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsLocaleModule
 REQUIRES	= xpcom string unicharutil pref uconv
 
 SHARED_LIBRARY_LIBS = ../libnslocale_s.a

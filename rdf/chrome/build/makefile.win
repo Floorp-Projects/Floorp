@@ -22,9 +22,9 @@
 DEPTH=..\..\..
 MODULE=chrome
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=chrome
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE		= chrome
+LIBRARY_NAME	= chrome
+MODULE_NAME	= nsChromeModule
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsChromeFactory.obj    \
@@ -32,19 +32,13 @@ CPP_OBJS=\
 
 LINCS = $(LINCS) -I..\src         # for implementation headers
 
-# XXX linking in raptor is a heinous crime that will go away once we
-# have a more DOM-based mechanism for constructing elements and
-# hooking in to their changes.
+SUB_LIBRARIES=                 \
+ $(DIST)\lib\chrome_s.lib      \
+ $(NULL)
 
 LLIBS=\
  $(DIST)\lib\xpcom.lib         \
- $(DIST)\lib\chrome_s.lib      \
  $(DIST)\lib\timer_s.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-

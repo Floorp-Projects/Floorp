@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mork
 LIBRARY_NAME	= msgmork_s
 REQUIRES	= xpcom
+FORCE_STATIC_LIB=1
 
 CPPSRCS		= \
 		orkinCell.cpp \
@@ -96,8 +97,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-FORCE_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 

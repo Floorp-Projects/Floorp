@@ -76,6 +76,9 @@ public:
     // OS flag
     static PRBool    mIsNT;
 
+    static void Startup(HINSTANCE hModule);
+    static void Shutdown();
+
 #ifdef MOZ_AIMM
     // Active Input Method support
     static IActiveIMMApp *gAIMMApp;

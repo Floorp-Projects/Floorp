@@ -119,6 +119,7 @@ protected:
     PRBool              mPrePopulationDone;
     nsRegistryKey       mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
+    nsIComponentLoader  *mStaticComponentLoader;
     nsCOMPtr<nsIFile>   mComponentsDir;
     PRInt32             mComponentsOffset;
 

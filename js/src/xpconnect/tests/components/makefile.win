@@ -71,7 +71,6 @@ LCFLAGS = \
 LLIBS=	$(LIBNSPR)	\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(DIST)\lib\xpcom.lib	\
-		$(DIST)\lib\xpc$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(NULL)
 
 !ifndef XPCOM_STANDALONE

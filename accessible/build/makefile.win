@@ -21,10 +21,8 @@
 
 DEPTH=..\..
 MODULE=accessibility
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=accessibility
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=accessibility
+MODULE_NAME=nsAccessibilityModule
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsAccessibilityFactory.obj    \
@@ -32,16 +30,15 @@ CPP_OBJS=\
 
 LINCS = $(LINCS) -I..\src         # for implementation headers
 
+SUB_LIBRARIES=\
+ $(DIST)\lib\accessibility_s.lib \
+ $(NULL)
+
 LLIBS=\
- $(DIST)\lib\xpcom.lib         \
- $(DIST)\lib\accessibility_s.lib      \
- $(DIST)\lib\timer_s.lib       \
- $(DIST)\lib\gkgfxwin.lib \
+ $(DIST)\lib\xpcom.lib    \
+ $(DIST)\lib\timer_s.lib  \
+ $(DIST)\lib\gkgfx.lib \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 

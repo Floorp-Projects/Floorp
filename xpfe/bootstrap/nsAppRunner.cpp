@@ -22,6 +22,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
 
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -108,6 +109,12 @@ extern "C" void ShowOSAlert(char* aMessage);
 
 // header file for profile manager
 #include "nsIProfileInternal.h"
+
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult
+apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
 
 #if defined(XP_UNIX)
   extern void InstallUnixSignalHandlers(const char *ProgramName);
@@ -1432,6 +1439,11 @@ int main(int argc, char* argv[])
   } else if (splash) {
     splash->Show();
   }
+
+#ifdef _BUILD_STATIC_BIN
+  // Initialize XPCOM's module info table
+  NSGetStaticModuleInfo = apprunner_getModuleInfo;
+#endif
 
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );

@@ -31,6 +31,7 @@ EXPORTS =                               \
         $(NULL)                        
 
 LIBRARY_NAME=string_obsolete_s
+LIBRARY=.\$(OBJDIR)\$(LIBRARY_NAME).lib
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 

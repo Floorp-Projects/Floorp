@@ -21,8 +21,6 @@
 
 DEPTH=..\..\..
 
-
-MAKE_OBJ_TYPE = DLL
 MODULE=xpcom
 
 EXPORTS =                        \

@@ -35,12 +35,9 @@ include <$(DEPTH)/config/config.mak>
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= mozxfer
-DLL1NAME	= mozxfer
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE		= mozxfer
+LIBRARY_NAME	= mozxfer
+MODULE_NAME	= nsStreamTransferModule
 
 LINCS = \
 	-I$(PUBLIC)/xpcom \
@@ -77,7 +74,6 @@ OBJS =	\
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -85,9 +81,3 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-    rm -f $(DIST)\bin\components\$(DLLNAME).dll

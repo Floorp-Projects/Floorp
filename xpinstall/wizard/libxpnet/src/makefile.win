@@ -27,7 +27,6 @@ LIBNAME=$(MODULE)
 DEPTH=..\..\..\..
 EXPORTS=nsFTPConn.h nsHTTPConn.h nsSocket.h
 
-MAKE_OBJ_TYPE=DLL
 USE_NON_MT_LIBS=1
 
 LIBRARY=$(OBJDIR)\$(LIBNAME)_s.lib

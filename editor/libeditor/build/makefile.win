@@ -24,7 +24,7 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
 MODULE       = editor 
-IS_COMPONENT = 1
+LIBRARY_NAME = texteditor
 
 # Uncomment the line below, or define MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY
 # in your environment, to build only the plain text editor core files:
@@ -41,8 +41,6 @@ CPP_OBJS =                                 \
            $(CPP_OBJS)                     \
            .\$(OBJDIR)\nsTextEditorReg.obj \
            $(NULL)
-
-DLLNAME       = texteditor
 
 !else
 
@@ -63,8 +61,6 @@ ENABLE_EDITOR_API_LOG=1
 DEFINES = -DENABLE_EDITOR_API_LOG $(DEFINES)
 !endif
 
-DLLNAME       = editor
-
 !endif
 
 LINCS =                      \
@@ -73,9 +69,6 @@ LINCS =                      \
         -I..\text\src        \
         $(NULL)
 
-MAKE_OBJ_TYPE = DLL
-DLL           = .\$(OBJDIR)\$(DLLNAME).dll
-
 LCFLAGS =            \
           $(LCFLAGS) \
           $(DEFINES) \
@@ -83,7 +76,7 @@ LCFLAGS =            \
 
 # These are the base editor libraries we need to link with to create the dll
 
-LLIBS =                                  \
+SUB_LIBRARIES =                          \
         $(DIST)\lib\libbaseeditor_s.lib  \
         $(DIST)\lib\libtexteditor_s.lib  \
         $(NULL)
@@ -97,8 +90,7 @@ LINCS =               \
 
 # These are the html editor libraries we need to link with to create the dll
 
-LLIBS =                                  \
-        $(LLIBS)                         \
+SUB_LIBRARIES =                          \
         $(DIST)\lib\libhtmleditor_s.lib  \
         $(NULL)
 
@@ -114,18 +106,3 @@ LLIBS =                                  \
 
 include <$(DEPTH)\config\rules.mak>
 
-build:: $(DLL)
-
-!if !defined(MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY)
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-	set MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY=1
-	nmake -f makefile.win build
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-
-!endif

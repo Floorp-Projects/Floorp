@@ -14,6 +14,8 @@
 
 DEPTH=..\..\..
 
+!if !defined(MOZ_STATIC_COMPONENT_LIBS)
 DIRS= chromereg
+!endif
 
 include <$(DEPTH)\config\rules.mak>

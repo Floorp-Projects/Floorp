@@ -30,6 +30,8 @@ MODULE		= layout
 LIBRARY_NAME	= gfx_xlib
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsGfxXlibModule
+
 REQUIRES	= xpcom string xlibrgb widget dom layout appshell js necko pref img util view uconv locale unicharutil gfx2 mozcomps windowwatcher
 
 CPPSRCS		= \

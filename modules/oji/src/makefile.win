@@ -16,23 +16,17 @@ DEPTH= ..\..\..
 
 include <$(DEPTH)/config/config.mak>
 
+MODULE=ojiimpl
+LIBRARY_NAME=oji
+MODULE_NAME=nsCJVMManagerModule
+
 !ifdef MOZ_OJI
-
-!ifndef MAKE_OBJ_TYPE
-MAKE_OBJ_TYPE=EXE
-!endif
-MAKE_OBJ_TYPE=DLL
-
-DLLNAME=oji
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-#LIBNAME=oji$(MOZ_BITS)
-#PDBFILE=$(LIBNAME).pdb
 
 #//------------------------------------------------------------------------
 #// 
@@ -55,8 +49,6 @@ OBJS = .\$(OBJDIR)\jvmmgr.obj \
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-
-#LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -95,8 +87,6 @@ LINCS= $(LINCS) -I_jri \
 
 !endif # MOZ_OJI
 
-MODULE = ojiimpl
-
 EXPORTS = jvmmgr.h \
           nsJVMManager.h \
           nsJVMPluginTagInfo.h
@@ -129,10 +119,6 @@ PUBLIC_HEADER_DIR=$(PUBLIC)\win16
 #    $(MAKE_INSTALL) $(EXPORTS) $(PUBLIC_HEADER_DIR)
 
 !ifdef MOZ_OJI
-install::  $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-
 clobber::
     $(RM_R) _jri
 !endif # MOZ_OJI

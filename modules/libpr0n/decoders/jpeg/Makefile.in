@@ -30,6 +30,7 @@ MODULE		= imgjpeg
 LIBRARY_NAME	= imgjpeg
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
+MODULE_NAME	= nsJPEGDecoderModule
 
 REQUIRES	= xpcom string necko layout jpeg gfx2 imglib2
 

@@ -60,5 +60,5 @@ static nsModuleComponentInfo components[] = {
      NS_STRCDETECTOR_CONTRACTID_BASE "koclassic", nsKOStringCharsetClassicDetectorConstructor}
 };
 
-NS_IMPL_NSGETMODULE("nsCharDetModuleClassic", components);
+NS_IMPL_NSGETMODULE(nsCharDetModuleClassic, components);
 

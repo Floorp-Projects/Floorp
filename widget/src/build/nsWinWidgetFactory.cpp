@@ -21,6 +21,7 @@
  *   Dan Rosen <dr@netscape.com>
  */
 
+
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsdefs.h"
@@ -37,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsFontRetrieverService.h"
 #include "nsSound.h"
+#include "nsITimer.h"
 
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
@@ -52,221 +54,179 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
-static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCFontRetrieverService, NS_FONTRETRIEVERSERVICE_CID);
+#include "nsIGenericFactory.h"
 
-static NS_DEFINE_IID(kCTimer, NS_TIMER_CID);
-static NS_DEFINE_IID(kCTimerManager, NS_TIMERMANAGER_CID);
-
-// Drag & Drop, Clipboard
-static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
-static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCClipboardHelper,  NS_CLIPBOARDHELPER_CID);
-static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
-
-
-// Sound services (just Beep for now)
-static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
-static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimer)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager)
 #ifdef IBMBIDI
-static NS_DEFINE_IID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
 
-class nsWidgetFactory : public nsIFactory
-{   
-public:   
-    // nsISupports methods   
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                                       const nsIID &aIID,   
-                                       void **aResult);   
-
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
-
-    nsWidgetFactory(const nsCID &aClass);   
-    ~nsWidgetFactory();   
-
-private:   
-    nsCID mClassID;
-}; 
-
-NS_IMPL_ADDREF(nsWidgetFactory)
-NS_IMPL_RELEASE(nsWidgetFactory)
-
-nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
-{   
-  NS_INIT_REFCNT();
-  mClassID = aClass;
-}   
-
-
-nsWidgetFactory::~nsWidgetFactory()   
-{   
-}   
-
-nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-    if (aResult == NULL) {   
-      return NS_ERROR_NULL_POINTER;   
-    }   
-
-    // Always NULL result, in case of failure   
-    *aResult = NULL;   
-
-    if (aIID.Equals(kISupportsIID)) {   
-      *aResult = (void *)(nsISupports*)this;   
-    } else if (aIID.Equals(kIFactoryIID)) {   
-      *aResult = (void *)(nsIFactory*)this;   
-    }   
-
-    if (*aResult == NULL) {   
-      return NS_NOINTERFACE;   
-    }   
-
-    NS_ADDREF_THIS(); // Increase reference count for caller   
-    return NS_OK;   
-}   
-
-
-
-
-
-nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{  
-    if (aResult == NULL) {  
-      return NS_ERROR_NULL_POINTER;  
-    }  
-
-    *aResult = NULL;  
-    if (nsnull != aOuter) {
-      return NS_ERROR_NO_AGGREGATION;
-    }
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kCWindow)) {
-        inst = (nsISupports*)(nsBaseWidget*)new nsWindow();
-    }
-    else if (mClassID.Equals(kCChild)) {
-        inst = (nsISupports*)(nsBaseWidget*)new ChildWindow();
-    }
-    else if (mClassID.Equals(kCFileOpen)) {
-        inst = (nsISupports*)new nsFileWidget();
-    }
-    else if (mClassID.Equals(kCFilePicker)) {
-        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
-    }
-    else if (mClassID.Equals(kCHorzScrollbar)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);
-    }
-    else if (mClassID.Equals(kCVertScrollbar)) {
-        inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_TRUE);
-    }
-    else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsISupports*)new nsAppShell();
-    }
-    else if (mClassID.Equals(kCToolkit)) {
-        inst = (nsISupports*)new nsToolkit();
-    }
-    else if (mClassID.Equals(kCLookAndFeel)) {
-        inst = (nsISupports*)new nsLookAndFeel();
-    } 
-    else if (mClassID.Equals(kCSound)) {
-    	  inst = (nsISupports*)(nsISound*)new nsSound();
-    } 
-    else if (mClassID.Equals(kCFileSpecWithUI)) {
-    	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
-    }
-    else if (mClassID.Equals(kCTransferable)) {
-      inst = (nsISupports*)new nsTransferable();
-    }
-    else if (mClassID.Equals(kCHTMLFormatConverter)) {
-        inst = (nsISupports*)new nsHTMLFormatConverter();
-    }
-    else if (mClassID.Equals(kCClipboard)) {
-        inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
-    }
-    else if (mClassID.Equals(kCClipboardHelper)) {
-        inst = (nsISupports*)new nsClipboardHelper();
-    }
-    else if (mClassID.Equals(kCDragService)) {
-        inst = (nsISupports*)(nsIDragService *)new nsDragService();
-    }
-    else if (mClassID.Equals(kCFontRetrieverService)) {
-        inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
-    }
-    else if (mClassID.Equals(kCTimer)) {
-        inst = (nsISupports*)(nsITimer*) new nsTimer();
-    }
-    else if (mClassID.Equals(kCTimerManager)) {
-        inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
-    }
-#ifdef IBMBIDI
-    else if (mClassID.Equals(kCBidiKeyboard)) {
-        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
-    }
-#endif // IBMBIDI
-    if (inst == NULL) {  
-        return NS_ERROR_OUT_OF_MEMORY;  
-    }  
-
-    NS_ADDREF(inst);  // Stabilize
-    nsresult res = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
-
-    return res;  
-}  
-
-nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
-
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
-
-}  
-
-
-
-// return the proper factory to the caller
-extern "C" NS_WIDGET nsresult 
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aContractID,
-             nsIFactory **aFactory)
+static NS_IMETHODIMP
+nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  nsresult rv;
+  nsISupports *inst = nsnull;
 
-  *aFactory = new nsWidgetFactory(aClass);
-  if (nsnull == aFactory) {
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  
+  inst = (nsISupports *)(nsBaseWidget *)(nsWindow *)new nsScrollbar(PR_FALSE);
+  if (inst == NULL)
+  {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
 
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
-
+  return rv;
 }
 
+static NS_IMETHODIMP
+nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
+
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  
+  inst = (nsISupports *)(nsBaseWidget *)(nsWindow *)new nsScrollbar(PR_TRUE);
+  if (inst == NULL)
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "nsWindow",
+    NS_WINDOW_CID,
+    "@mozilla.org/widgets/window/win;1",
+    nsWindowConstructor },
+  { "Child nsWindow",
+    NS_CHILD_CID,
+    "@mozilla.org/widgets/child_window/win;1",
+    ChildWindowConstructor },
+  { "File Widget",
+    NS_FILEWIDGET_CID,
+    "@mozilla.org/widgets/filewidget/win;1",
+    nsFileWidgetConstructor },
+  { "File Picker",
+    NS_FILEPICKER_CID,
+    "@mozilla.org/widgets/filepicker/win;1",
+    nsFilePickerConstructor },
+  { "Horiz Scrollbar",
+    NS_HORZSCROLLBAR_CID,
+    "@mozilla.org/widgets/horizscroll/win;1",
+    nsHorizScrollbarConstructor },
+  { "Vert Scrollbar",
+    NS_VERTSCROLLBAR_CID,
+    "@mozilla.org/widgets/vertscroll/win;1",
+    nsVertScrollbarConstructor },
+  { "AppShell",
+    NS_APPSHELL_CID,
+    "@mozilla.org/widget/appshell/win;1",
+    nsAppShellConstructor },
+  { "Toolkit",
+    NS_TOOLKIT_CID,
+    "@mozilla.org/widget/toolkit/win;1",
+    nsToolkitConstructor },
+  { "Look And Feel",
+    NS_LOOKANDFEEL_CID,
+    "@mozilla.org/widget/lookandfeel/win;1",
+    nsLookAndFeelConstructor },
+  { "Sound",
+    NS_SOUND_CID,
+    //    "@mozilla.org/widget/sound/win;1"
+    "@mozilla.org/sound;1",
+    nsSoundConstructor },
+  { "File Spec with UI",
+    NS_FILESPECWITHUI_CID,
+    //    "@mozilla.org/widget/filespecwithui/win;1",
+    "@mozilla.org/filespecwithui;1",
+    nsFileSpecWithUIImplConstructor },
+  { "Transferable",
+    NS_TRANSFERABLE_CID,
+    //    "@mozilla.org/widget/transferable/win;1",
+    "@mozilla.org/widget/transferable;1",
+    nsTransferableConstructor },
+  { "HTML Format Converter",
+    NS_HTMLFORMATCONVERTER_CID,
+    "@mozilla.org/widget/htmlformatconverter/win;1",
+    nsHTMLFormatConverterConstructor },
+  { "Clipboard",
+    NS_CLIPBOARD_CID,
+    //    "@mozilla.org/widget/clipboard/win;1",
+    "@mozilla.org/widget/clipboard;1",
+    nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
+  { "Drag Service",
+    NS_DRAGSERVICE_CID,
+    //    "@mozilla.org/widget/dragservice/win;1",
+    "@mozilla.org/widget/dragservice;1",
+    nsDragServiceConstructor },
+  { "Font Retriever Service",
+    NS_FONTRETRIEVERSERVICE_CID,
+    "@mozilla.org/widget/fontretrieverservice/win;1",
+    nsFontRetrieverServiceConstructor },
+  { "Timer",
+    NS_TIMER_CID,
+	"@mozilla.org/timer;1",
+	nsTimerConstructor },
+  { "Timer Manager",
+    NS_TIMERMANAGER_CID,
+	"@mozilla.org/widget/timermanager;1",
+	nsTimerManagerConstructor },
+#ifdef IBMBIDI
+    { "Gtk Bidi Keyboard",
+    NS_BIDIKEYBOARD_CID,
+    "@mozilla.org/widget/bidikeyboard;1",
+    nsBidiKeyboardConstructor },
+#endif // IBMBIDI
+};
 
 
-
+NS_IMPL_NSGETMODULE(nsWidgetModule, components)

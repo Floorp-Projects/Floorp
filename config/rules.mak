@@ -92,6 +92,139 @@ OBJS=$(OBJS) $(C_OBJS) $(CPP_OBJS)
 
 include <$(DEPTH)/config/config.mak>
 
+!if "$(WINOS)" == "WIN95"
+_NO_FLOCK=-l
+!else
+_NO_FLOCK=
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Definitions for building components. A ``component'' is a module
+#// that has an NSGetModule entry point that can be called to enumerate
+#// the XPCOM components contained in the module. A component can either
+#// be built as a stand-alone DLL, or as a static library which can be
+#// linked with other components to form a ``meta-component'' or included
+#// in a final executable.
+#//
+#//   MODULE_NAME
+#//     If set, indicates that we're building a ``component''. This value
+#//     should be set to the name of the generic module (as declared by
+#//     the NS_IMPL_NSGENERICMODULE macro; e.g., ``nsLayoutModule'').
+#//
+#//   LIBRARY_NAME
+#//     For a component, the name of the library that will be generated;
+#//     e.g., ``gklayout''.
+#//
+#//   META_COMPONENT
+#//     If set, the component is included in the packaging list for the
+#//     specified meta-component; if unset, the component is linked into
+#//     the final executable. This is only meaningful during a static
+#//     build.
+#//
+#//   SUB_LIBRARIES
+#//     If the component is comprised of static libraries, then this
+#//     lists those libraries.
+#//
+#//   LLIBS
+#//     Any extra library dependencies that are required when the component
+#//     is built as a DLL.
+#//
+#// When doing a ``dynamic build'', the component will be linked as a stand-
+#// alone DLL which will be installed in the $(DIST)/bin/components directory.
+#// No import library will be created.
+#//
+#// When doing a ``static build'', the component will be linked into a
+#// static library which is installed in the $(DIST)/lib directory, and
+#// either linked with the appropriate META_COMPONENT DLL, or the final
+#// executable if no META_COMPONENT is set.
+#//
+#//------------------------------------------------------------------------
+!if defined(MODULE_NAME)
+# We're building a component
+!if defined(EXPORT_LIBRARY)
+!error "Can't define both MODULE_NAME and EXPORT_LIBRARY."
+!endif
+
+!if defined(MOZ_STATIC_COMPONENT_LIBS)
+MAKE_OBJ_TYPE=$(NULL)
+
+!if defined(META_COMPONENT)
+META_LINK_COMPS=$(DIST)\$(META_COMPONENT)-link-comps
+META_LINK_COMP_NAMES=$(DIST)\$(META_COMPONENT)-link-comp-names
+!endif
+
+LIBRARY=.\$(OBJDIR)\$(LIBRARY_NAME).lib
+
+!else
+
+# Build the component as a standalone DLL
+MAKE_OBJ_TYPE=DLL
+
+DLL=.\$(OBJDIR)\$(LIBRARY_NAME).dll
+
+LLIBS=$(SUB_LIBRARIES) $(LLIBS)
+!endif
+
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Definitions for building top-level export libraries.
+#//
+#//   EXPORT_LIBRARY
+#//     If set (typically to ``1''), indicates that we're building a
+#//      ``top-level export library''.
+#//
+#//   LIBRARY_NAME
+#//     Set to the name of the library.
+#//
+#//   META_COMPONENT
+#//     If set, the name of the meta-component to which this export
+#//     library belongs. If unset, the export library is linked with
+#//     the final executable.
+#//
+#//------------------------------------------------------------------------
+!if defined(EXPORT_LIBRARY)
+# We're building a top-level, non-component library
+
+!if defined(MOZ_STATIC_COMPONENT_LIBS)
+
+# Build it as a static lib, not a DLL
+MAKE_OBJ_TYPE=$(NULL)
+
+!if defined(META_COMPONENT)
+META_LINK_LIBS=$(DIST)\$(META_COMPONENT)-link-libs
+!endif
+
+LIBRARY=.\$(OBJDIR)\$(LIBRARY_NAME).lib
+
+!else
+# Build the library as a standalone DLL
+MAKE_OBJ_TYPE=DLL
+
+DLL=.\$(OBJDIR)\$(LIBRARY_NAME).dll
+
+LLIBS=$(SUB_LIBRARIES) $(LLIBS)
+!endif
+
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Definitions for miscellaneous libraries that are not components or
+#// top-level export libraries.
+#//
+#//   LIBRARY_NAME
+#//     The name of the library to be created.
+#//
+#//------------------------------------------------------------------------
+!if defined(LIBRARY_NAME) && !defined(MODULE_NAME) && !defined(EXPORT_LIBRARY)
+!if !defined(LIBRARY)
+LIBRARY=$(OBJDIR)\$(LIBRARY_NAME).lib
+!endif
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Specify a default target if non was set...
@@ -110,7 +243,6 @@ W95MAKE=$(DEPTH)\config\w95make.exe
 W32OBJS = $(OBJS:.obj=.obj, )
 W32LOBJS = $(OBJS: .= +-.)
 !endif
-
 
 all::
     $(NMAKE) -f makefile.win export
@@ -260,16 +392,136 @@ INSTALL_FILES: $(INSTALL_FILE_LIST)
 
 !endif # INSTALL_FILES
 
-!ifdef LIBRARY_NAME
-LIBRARY=$(OBJDIR)\$(LIBRARY_NAME)$(LIBRARY_SUFFIX).lib
-!endif
-
-
 #//------------------------------------------------------------------------
 #//
 #// Global rules...
 #//
 #//------------------------------------------------------------------------
+
+#//------------------------------------------------------------------------
+#//
+#// Rules for building components
+#//
+#//------------------------------------------------------------------------
+!if defined(MODULE_NAME)
+# We're building a component
+!if defined(EXPORT_LIBRARY)
+!error "Can't define both MODULE_NAME and EXPORT_LIBRARY."
+!endif
+
+!if defined(MOZ_STATIC_COMPONENT_LIBS)
+
+# We're building this component as a static lib
+!if defined(META_COMPONENT)
+
+# It's to be linked into a meta-component. Add the component name to
+# the meta component's list
+export::
+        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_COMPS:\=/) $(LIBRARY_NAME)
+        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_COMP_NAMES:\=/) $(MODULE_NAME)
+
+!else # defined(META_COMPONENT)
+# Otherwise, it's to be linked into the main executable. Add the component
+# name to the list of components, and the library name to the list of
+# static libs.
+export::
+        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_COMPS:\=/) $(LIBRARY_NAME)
+        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_COMP_NAMES:\=/) $(MODULE_NAME)
+
+!endif # defined(META_COMPONENT)
+
+install:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!else
+
+# Build the component as a standalone DLL. Do _not_ install the import
+# library, because it's a component; nobody should be linking against
+# it!
+
+install:: $(DLL)
+        $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+
+clobber::
+        $(RM) $(DIST)\bin\components\$(DLL)
+
+!endif
+
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Rules for building top-level export libraries
+#//
+#//------------------------------------------------------------------------
+!if defined(EXPORT_LIBRARY)
+# We're building a top-level, non-component library
+
+!if defined(MOZ_STATIC_COMPONENT_LIBS)
+
+!if defined(META_COMPONENT)
+# It's to be linked into a meta-component. Add the library to the
+# meta component's list
+
+export::
+        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_LIBS:\=/) $(LIBRARY_NAME)
+
+!else # defined(META_COMPONENT)
+# Otherwise, it's to be linked into the main executable. Add the
+# library to the list of static libs.
+
+export::
+        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_LIBS:\=/) $(LIBRARY_NAME)
+
+!endif # defined(META_COMPONENT)
+
+install:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!else
+
+# Build the library as a standalone DLL. We _will_ install the import
+# library in this case, because people may link against it.
+
+install:: $(DLL) $(OBJDIR)\$(LIBRARY_NAME).lib
+        $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+        $(MAKE_INSTALL) $(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+
+clobber::
+        $(RM) $(DIST)\bin\$(DLL)
+        $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!endif
+
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Rules for miscellaneous libraries
+#//
+#//------------------------------------------------------------------------
+!if defined(LIBRARY)
+
+install:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)/lib
+
+clobber::
+        rm -f $(DIST)/lib/$(LIBRARY_NAME).lib
+
+!endif
+
+
+#//------------------------------------------------------------------------
+#//
+#// Rules for recursion
+#//
+#//----------------------------------------------------------------------
 
 #//
 #// Set the MAKE_ARGS variable to indicate the target being built...  This is used
@@ -398,7 +650,7 @@ export:: $(DIRS)
 libs:: 
     @echo The libs build phase is obsolete.
 
-install:: $(DIRS) $(LIBRARY)
+install:: $(DIRS)
 
 depend:: $(DIRS)
 
@@ -422,6 +674,7 @@ alltags::
 $(OBJDIR):
 	@echo +++ make: Creating directory: $(OBJDIR)
     -mkdir $(OBJDIR)
+
 
 #//------------------------------------------------------------------------
 #//
@@ -582,6 +835,24 @@ clobber_all::
 !endif
 !endif
 
+#//----------------------------------------------------------------------
+#//
+#// Component packaging rules
+#//
+#//----------------------------------------------------------------------
+$(FINAL_LINK_COMPS):
+        @echo +++ make: creating file: $(FINAL_LINK_COMPS)
+        @echo. > $(FINAL_LINK_COMPS)
+
+$(FINAL_LINK_COMP_NAMES):
+        @echo +++ make: creating file: $(FINAL_LINK_COMP_NAMES)
+        @echo. > $(FINAL_LINK_COMP_NAMES)
+
+$(FINAL_LINK_LIBS):
+        @echo +++ make: creating file: $(FINAL_LINK_LIBS)
+        @echo. > $(FINAL_LINK_LIBS)
+
+
 ################################################################################
 ## CHROME PACKAGING
 
@@ -610,12 +881,6 @@ _CHROME_FILE_FORMAT=jar
 _JAR_REGCHROME_DISABLE_JAR=0
 !endif
 
-!endif
-
-!if "$(WINOS)" == "WIN95"
-_NO_FLOCK=-l
-!else
-_NO_FLOCK=
 !endif
 
 REGCHROME = @perl -I$(DEPTH)\config $(DEPTH)\config\add-chrome.pl $(_NO_FLOCK) $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)

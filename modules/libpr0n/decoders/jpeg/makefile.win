@@ -24,10 +24,9 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE			= imgjpeg
+MODULE		= imgjpeg
 LIBRARY_NAME	= imgjpeg
-DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE_NAME	= nsJPEGDecoderModule
 
 OBJS	= \
 		.\$(OBJDIR)\nsJPEGDecoder.obj \
@@ -38,15 +37,7 @@ LLIBS=\
 	$(LIBNSPR) \
 	$(DIST)\lib\jpeg3250.lib \
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\gkgfx.lib \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -20,6 +20,8 @@
 
 DEPTH=..\..\..\..
 MODULE=shistory
+LIBRARY_NAME=shistory
+MODULE_NAME=Session_History_Module
 
 CPPSRCS=                                \
  nsSHEntry.obj                          \
@@ -35,10 +37,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsSHistory.obj             \
  $(NULL)
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME = shistory
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -51,7 +49,3 @@ LLIBS=                          \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-

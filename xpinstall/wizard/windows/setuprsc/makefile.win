@@ -31,8 +31,10 @@ USE_NON_MT_LIBS=1
 
 MODULE      = setuprsc
 RESFILE     = $(MODULE).res
-DLL         = $(OBJDIR)\$(MODULE).dll
+LIBRARY_NAME= $(MODULE)
 EXPORTS     = setuprsc.h
+
+DLL         = $(OBJDIR)\$(MODULE).dll
 
 OBJS=                             \
     .\$(OBJDIR)\setuprsc.obj      \
@@ -43,9 +45,9 @@ include <$(DEPTH)/config/rules.mak>
 install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\install
 
-clobber::
-  $(RM) $(DIST)\include\setuprsc.h
-
 clobber_all:: clobber
   $(RM) $(DIST)\install\$(MODULE).dll
+
+clobber::
+  $(RM) $(DIST)\include\setuprsc.h
 

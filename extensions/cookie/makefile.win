@@ -24,6 +24,8 @@ include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
+LIBRARY_NAME=cookie
+MODULE_NAME=nsCookieModule
 
 EXPORTS = nsCookieHTTPNotify.h
 
@@ -67,11 +69,6 @@ CPP_OBJS=				\
 
 LINCS = -I$(DEPTH)\include \
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = cookie
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
@@ -82,11 +79,6 @@ LLIBS	= \
  $(LIBNSPR) \
  $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
  $(DIST)\lib\xpcom.lib \
-!ifdef NECKO
- $(DIST)\lib\necko.lib \
-!else
- $(DIST)\lib\netwerk.lib \
-!endif
  $(HASHLIBS)
 
 !if !defined(DISABLE_TESTS)
@@ -94,14 +86,6 @@ DIRS=tests
 !endif
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
 
 chrome::
 	$(REGCHROME) content cookie comm.jar

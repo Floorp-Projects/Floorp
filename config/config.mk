@@ -161,6 +161,29 @@ OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
 
 FINAL_LINK_LIBS = $(DEPTH)/config/final-link-libs
 FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
+FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
+
+# 
+# NSS libs needed for final link in static build
+# 
+NSS_LIBS	= \
+	$(DIST)/lib/libcrmf.$(LIB_SUFFIX) \
+	$(DIST)/lib/libssl3.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnss3.$(LIB_SUFFIX) \
+	$(DIST)/lib/libssl3.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/libfreebl_3.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(NULL)
 
 # determine debug-related options
 DEBUG_FLAGS :=
@@ -238,6 +261,28 @@ endif
 OS_CFLAGS += $(DEBUG_FLAGS)
 OS_CXXFLAGS += $(DEBUG_FLAGS)
 
+#
+# -ffunction-sections is needed to reorder functions using a GNU ld
+# script.
+#
+ifeq ($(MOZ_REORDER),1)
+  OS_CFLAGS += -ffunction-sections
+  OS_CXXFLAGS += -ffunction-sections
+endif
+
+#
+# List known meta modules and their dependent libs
+#
+_ALL_META_COMPONENTS=mail crypto
+
+MOZ_META_COMPONENTS_mail = nsMsgBaseModule IMAP_factory nsVCardModule mime_services nsMimeEmitterModule nsMsgNewsModule  nsMsgComposeModule local_mail_services nsAbSyncModule nsImportServiceModule nsTextImportModule nsAbModule nsMsgDBModule
+MOZ_META_COMPONENTS_mail_comps = mailnews msgimap mime mimeemitter msgnews msgcompose localmail absyncsvc import addrbook impText vcard msgdb #smime
+MOZ_META_COMPONENTS_mail_libs = msgbaseutil
+
+MOZ_META_COMPONENTS_crypto = PKI NSS
+MOZ_META_COMPONENTS_crypto_comps = pippki pipnss
+
+#
 # Build using PIC by default
 # Do not use PIC if not building a shared lib (see exceptions below)
 #
@@ -245,11 +290,31 @@ ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
 _ENABLE_PIC=1
 endif
 
-ifneq (,$(IS_COMPONENT))
-ifneq (, $(findstring $(LIBRARY_NAME), $(MOZ_STATIC_COMPONENTS)))
-DEFINES	+= -DNSGetModule=$(LIBRARY_NAME)_NSGetModule -DNSGetModule_components=$(LIBRARY_NAME)_NSGM_comps -DNSGetModule_components_count=$(LIBRARY_NAME)_NSGM_comp_count
+# If module is going to be merged into the nsStaticModule, 
+# make sure that the entry points are translated and 
+# the module is built static.
+
+ifdef IS_COMPONENT
+ifneq (,$(MOZ_STATIC_COMPONENT_LIBS)$(findstring $(LIBRARY_NAME), $(MOZ_STATIC_COMPONENTS)))
+ifdef MODULE_NAME
+DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
 FORCE_STATIC_LIB=1
 endif
+endif
+endif
+
+# Determine if module being compiled is destined 
+# to be merged into a meta module in the future
+
+ifneq (, $(findstring $(META_COMPONENT), $(MOZ_META_COMPONENTS)))
+ifdef IS_COMPONENT
+ifdef MODULE_NAME
+DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
+endif
+endif
+EXPORT_LIBRARY=
+FORCE_STATIC_LIB=1
+_ENABLE_PIC=1
 endif
 
 #

@@ -34,15 +34,13 @@
 
 DEPTH=..\..\..\..
 
+MODULE=xpconnect
+LIBRARY_NAME=xpc$(MOZ_BITS)$(VERSION_NUMBER)
+MODULE_NAME=xpconnect
 
-MAKE_OBJ_TYPE	= DLL
-DLLNAME		= xpc$(MOZ_BITS)$(VERSION_NUMBER)
 #PDBFILE		= $(DLLNAME).pdb
 #MAPFILE		= $(DLLNAME).map
 #RESFILE		= xpc$(MOZ_BITS)$(VERSION_NUMBER).res
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-
-MODULE=xpconnect
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API
 
@@ -95,11 +93,3 @@ LLIBS=	$(LIBNSPR)	\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll

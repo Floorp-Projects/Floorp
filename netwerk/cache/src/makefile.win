@@ -22,12 +22,9 @@
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE = nkcache
-DLLNAME=nkcache
-
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-MAKE_OBJ_TYPE=DLL
+MODULE		= nkcache
+LIBRARY_NAME	= nkcache
+MODULE_NAME	= cacheservice
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
@@ -58,12 +55,3 @@ LLIBS	= \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-
-clobber::
-        $(RM) $(DIST)\bin\components\$(DLLNAME).dll
-	$(RM) $(DIST)\lib\$(DLLNAME).lib 

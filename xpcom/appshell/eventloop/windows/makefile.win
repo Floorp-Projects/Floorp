@@ -21,11 +21,9 @@
 
 
 DEPTH=..\..\..\..
-MODULE=xpcom_eventloop_windows
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=evntloop
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE		= xpcom_eventloop_windows
+LIBRARY_NAME	= evntloop
+MODULE_NAME	= nsNativeAppModule
 
 XPIDLSRCS=									\
 		.\nsIWinEvent.idl					\
@@ -56,7 +54,3 @@ LINCS=												\
 
 include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib

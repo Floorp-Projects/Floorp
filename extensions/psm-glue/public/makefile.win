@@ -23,16 +23,11 @@
 #   Terry Hayes <thayes@netscape.com>
 #
 
-MODULE = psmglue
-
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DLLNAME       = psmglue
-PDBFILE       = $(DLLNAME).pdb
-MAPFILE       = $(DLLNAME).map
-DLL           = .\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
+MODULE         = psmglue
+LIBRARY_NAME   = psmglue
 
 include <$(DEPTH)/config/config.mak>
 
@@ -48,3 +43,6 @@ include <$(DEPTH)\config\rules.mak>
 
 install::
     $(MAKE_INSTALL) .\psm-glue.js $(DIST)\bin\defaults\pref
+
+
+

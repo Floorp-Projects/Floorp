@@ -225,33 +225,33 @@ nsJVMManager::CreateThread(PRUint32* outThreadID, nsIRunnable* runnable)
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
 }
 
-struct RunnableEvent : PLEvent {
-	RunnableEvent(nsIRunnable* runnable);
-	~RunnableEvent();
+struct JVMRunnableEvent : PLEvent {
+	JVMRunnableEvent(nsIRunnable* runnable);
+	~JVMRunnableEvent();
 
 	nsIRunnable* mRunnable;	
 };
 
 static void PR_CALLBACK
-handleRunnableEvent(RunnableEvent* aEvent)
+handleRunnableEvent(JVMRunnableEvent* aEvent)
 {
 	aEvent->mRunnable->Run();
 }
 
 static void PR_CALLBACK
-destroyRunnableEvent(RunnableEvent* aEvent)
+destroyRunnableEvent(JVMRunnableEvent* aEvent)
 {
 	delete aEvent;
 }
 
-RunnableEvent::RunnableEvent(nsIRunnable* runnable)
+JVMRunnableEvent::JVMRunnableEvent(nsIRunnable* runnable)
 	:	mRunnable(runnable)
 {
 	NS_ADDREF(mRunnable);
 	PL_InitEvent(this, nsnull, PLHandleEventProc(handleRunnableEvent), PLDestroyEventProc(&destroyRunnableEvent));
 }
 
-RunnableEvent::~RunnableEvent()
+JVMRunnableEvent::~JVMRunnableEvent()
 {
 	NS_RELEASE(mRunnable);
 }
@@ -267,7 +267,7 @@ nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
     rv = eventService->GetThreadEventQueue((PRThread*)threadID, getter_AddRefs(eventQueue));
     if (NS_FAILED(rv)) return rv;
 
-    RunnableEvent* runnableEvent = new RunnableEvent(runnable);
+    JVMRunnableEvent* runnableEvent = new JVMRunnableEvent(runnable);
     if (runnableEvent == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     if (async)

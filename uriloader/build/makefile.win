@@ -18,10 +18,9 @@
 # Contributor(s): 
 
 DEPTH=..\..
-MODULE=uriloader
-
-LIBNAME = .\$(OBJDIR)\urildr
-DLL = $(LIBNAME).dll
+MODULE		= uriloader
+LIBRARY_NAME	= urildr
+MODULE_NAME	= nsURILoaderModule
 
 ################################################################################
 ## library
@@ -31,23 +30,22 @@ LINCS=-I..\base                           \
       -I..\exthandler\win                 \
       $(NULL)
 
-CPP_OBJS=									                \
-			.\$(OBJDIR)\nsURILoaderModule.obj   \
-			$(NULL)
+CPP_OBJS=                                   \
+        .\$(OBJDIR)\nsURILoaderModule.obj   \
+        $(NULL)
 
-LLIBS=										                \
-      $(DIST)\lib\exthandlers_s.lib       \
-			$(DIST)\lib\xpcom.lib			          \
-      $(DIST)\lib\uriloaderbase_s.lib     \
-			$(LIBNSPR)						              \
-      $(DIST)\lib\js3250.lib	\
-			$(NULL)
+SUB_LIBRARIES=                          \
+        $(DIST)\lib\exthandlers_s.lib   \
+        $(DIST)\lib\uriloaderbase_s.lib \
+        $(NULL)
+
+LLIBS=				\
+        $(DIST)\lib\xpcom.lib	\
+        $(DIST)\lib\js3250.lib	\
+        $(LIBNSPR)              \
+        $(NULL)
 
 WIN_LIBS= shell32.lib
 
 include <$(DEPTH)/config/rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
-	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 

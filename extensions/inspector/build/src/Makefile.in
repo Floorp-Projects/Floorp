@@ -32,6 +32,7 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME = inspectr
 REQUIRES = xpcom string layout dom widget js rdf rdfutil locale gfx2 timer necko
 IS_COMPONENT = 1
+MODULE_NAME	= nsInspectorModule
 
 CPPSRCS 	= \
 		nsInspectorModule.cpp \
