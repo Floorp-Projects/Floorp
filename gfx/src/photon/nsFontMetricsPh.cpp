@@ -262,7 +262,9 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	mAscent = mMaxAscent = NSToCoordRound(node->ascender * dev2app * -1.0);
 	mDescent = mMaxDescent = NSToCoordRound(node->descender * dev2app);
 	mMaxAdvance = NSToCoordRound(node->width * dev2app);
-	mAveCharWidth = PR_MAX(1, NSToCoordRound(mSpaceWidth * dev2app));
+
+	PfExtentText(&extent, NULL, NSFullFontName, "x", 1);
+	mAveCharWidth = (int) ((extent.lr.x - extent.ul.x + 1) * dev2app);
 
 	mXHeight = NSToCoordRound((float)node->ascender * dev2app * 0.56f * -1.0); // 56% of ascent, best guess for non-true type
 	mSuperscriptOffset = mXHeight;     // XXX temporary code!
@@ -404,6 +406,12 @@ NS_IMETHODIMP nsFontMetricsPh :: GetMaxDescent( nscoord &aDescent )
 NS_IMETHODIMP nsFontMetricsPh :: GetMaxAdvance( nscoord &aAdvance )
 {
 	aAdvance = mMaxAdvance;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsFontMetricsPh :: GetAveCharWidth( nscoord &aAveCharWidth)
+{
+	aAveCharWidth = mAveCharWidth;
 	return NS_OK;
 }
 

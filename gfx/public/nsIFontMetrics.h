@@ -223,12 +223,10 @@ public:
    */
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle) = 0;
 
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
   /**
    * Returns the average character width
    */
   NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth) = 0;
-#endif
 
   /**
    * Returns the often needed width of the space character

@@ -644,6 +644,7 @@ nsFontMetricsQT::nsFontMetricsQT()
   mMaxAscent = 0;
   mMaxDescent = 0;
   mMaxAdvance = 0;
+  mAveCharWidth = 0;
   mXHeight = 0;
   mSuperscriptOffset = 0;
   mSubscriptOffset = 0;
@@ -913,6 +914,8 @@ void nsFontMetricsQT::RealizeFont()
   mEmHeight = nscoord(fm.height() * f);
   mMaxAdvance = nscoord(fm.maxWidth() * f);
 
+  mAveCharWidth = nscoord(fm.width(QChar('x')) * f);
+
   mEmAscent = mMaxAscent;  
   mEmDescent = mMaxDescent;
  
@@ -1022,6 +1025,12 @@ NS_IMETHODIMP nsFontMetricsQT::GetMaxDescent(nscoord &aDescent)
 NS_IMETHODIMP nsFontMetricsQT::GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFontMetricsQT::GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
   return NS_OK;
 }
 

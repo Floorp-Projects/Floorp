@@ -291,10 +291,13 @@ void nsFontMetricsBeOS::RealizeFont(nsIDeviceContext* aContext)
   
   mMaxAdvance = nscoord((mFontHandle.BoundingBox().Width()+1) * f); //fyy +1
 
+  float rawWidth = mFontHandle.StringWidth("x"); 
+  mAveCharWidth = NSToCoordRound(rawWidth * f); 
+
   // 56% of ascent, best guess for non-true type 
   mXHeight = NSToCoordRound((float) height.ascent* f * 0.56f); 
 
-  float rawWidth = mFontHandle.StringWidth(" "); 
+  rawWidth = mFontHandle.StringWidth(" "); 
   mSpaceWidth = NSToCoordRound(rawWidth * f); 
  
 /* Temp */ 
@@ -408,7 +411,12 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetMaxAdvance(nscoord &aAdvance)
   return NS_OK;
 }
 
- 
+NS_IMETHODIMP nsFontMetricsBeOS::GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
+  return NS_OK;
+}
+
 NS_IMETHODIMP  nsFontMetricsBeOS::GetSpaceWidth(nscoord &aSpaceWidth) 
 { 
   aSpaceWidth = mSpaceWidth; 

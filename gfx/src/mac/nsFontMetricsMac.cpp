@@ -108,6 +108,7 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   mMaxDescent = mEmDescent;
 
   mMaxAdvance = NSToCoordRound(float(::CharWidth('M')) * dev2app);	// don't use fInfo.widMax here
+  mAveCharWidth = NSToCoordRound(float(::CharWidth('x')) * dev2app);	
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
 
   Point frac;
@@ -369,6 +370,12 @@ NS_IMETHODIMP nsFontMetricsMac :: GetMaxDescent(nscoord &aDescent)
 NS_IMETHODIMP nsFontMetricsMac :: GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFontMetricsMac :: GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
   return NS_OK;
 }
 

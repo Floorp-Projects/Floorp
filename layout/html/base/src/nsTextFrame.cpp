@@ -567,13 +567,7 @@ public:
       SetFontFromStyle(&aRenderingContext, sc); // some users of the struct expect this state
       aRenderingContext.GetFontMetrics(mNormalFont);
       mNormalFont->GetSpaceWidth(mSpaceWidth);
-#if defined(_WIN32) || defined(XP_OS2)|| defined(MOZ_X11)
       mNormalFont->GetAveCharWidth(mAveCharWidth);
-#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
-      if (0 == mAveCharWidth) {
-        // provide a default if it could not be resolved
-        mAveCharWidth = 10;
-      }
       mLastFont = mNormalFont;
 
       // Get the small-caps font if needed
