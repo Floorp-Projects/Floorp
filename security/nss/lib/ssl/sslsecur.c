@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.20 2003/01/23 22:02:37 relyea%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.21 2003/02/15 01:21:25 relyea%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -714,9 +714,6 @@ ssl_CreateSecurityInfo(sslSocket *ss)
     status = sslBuffer_Grow(&ss->sec.writeBuf, 4096);
     ssl_ReleaseXmitBufLock(ss); 
 
-    ss->sec.lastTime = 0;
-    ss->sec.lastState = PR_TRUE;
-
     return status;
 }
 
@@ -823,8 +820,6 @@ ssl_ResetSecurityInfo(sslSecurityInfo *sec)
     }
     PORT_ZFree(sec->ci.sendBuf.buf, sec->ci.sendBuf.space);
     memset(&sec->ci, 0, sizeof sec->ci);
-    sec->lastTime = 0;
-    sec->lastState = PR_TRUE;
 }
 
 /*

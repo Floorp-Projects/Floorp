@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.46 2003/01/23 22:02:36 relyea%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.47 2003/02/15 01:21:23 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1323,48 +1323,31 @@ ssl3_ComputeRecordMAC(
     return rv;
 }
 
-PRBool
-ssl_ClientAuthTokenPresent(sslSocket *ss) {
-    sslSessionID *sid;
-    PRIntervalTime thisTime;
-    static PRIntervalTime timeout = 0;
+static PRBool
+ssl3_ClientAuthTokenPresent(sslSessionID *sid) {
     PK11SlotInfo *slot = NULL;
-
-
-    if (timeout == 0) {
-	timeout = PR_SecondsToInterval(10);
-    }
-    sid = ss->sec.ci.sid;
+    PRBool isPresent = PR_TRUE;
 
     /* we only care if we are doing client auth */
     if (!sid || !sid->u.ssl3.clAuthValid) {
 	return PR_TRUE;
     }
 
-    /* Limit how often we really check the token */
-    thisTime = PR_IntervalNow();
-    if (thisTime - ss->sec.lastTime < timeout) {
-	return ss->sec.lastState;
-    }
-
     /* get the slot */
     slot = SECMOD_LookupSlot(sid->u.ssl3.clAuthModuleID,
-	                             sid->u.ssl3.clAuthSlotID);
-    ss->sec.lastTime = thisTime;
+	                     sid->u.ssl3.clAuthSlotID);
     if (slot == NULL ||
-        !PK11_IsPresent(slot) ||
+	!PK11_IsPresent(slot) ||
 	sid->u.ssl3.clAuthSeries     != PK11_GetSlotSeries(slot) ||
 	sid->u.ssl3.clAuthSlotID     != PK11_GetSlotID(slot)     ||
 	sid->u.ssl3.clAuthModuleID   != PK11_GetModuleID(slot)   ||
                !PK11_IsLoggedIn(slot, NULL)) {
-	ss->sec.lastState = PR_FALSE;
-    } else {
-	ss->sec.lastState = PR_TRUE;
-    }
+	isPresent = PR_FALSE;
+    } 
     if (slot) {
 	PK11_FreeSlot(slot);
     }
-    return ss->sec.lastState;
+    return isPresent;
 }
 
 /* Process the plain text before sending it.
@@ -1412,7 +1395,7 @@ ssl3_SendRecord(   sslSocket *        ss,
     }
 
     /* check for Token Presence */
-    if (!ssl_ClientAuthTokenPresent(ss)) {
+    if (!ssl3_ClientAuthTokenPresent(ss->sec.ci.sid)) {
 	PORT_SetError(SSL_ERROR_TOKEN_INSERTION_REMOVAL);
 	return SECFailure;
     }
@@ -2741,21 +2724,8 @@ ssl3_SendClientHello(sslSocket *ss)
 	** holds the private key still exists, is logged in, hasn't been
 	** removed, etc.
 	*/
-	if (sidOK && sid->u.ssl3.clAuthValid) {
-	    slot = SECMOD_LookupSlot(sid->u.ssl3.clAuthModuleID,
-	                             sid->u.ssl3.clAuthSlotID);
-	    if (slot == NULL ||
-	        !PK11_IsPresent(slot) ||
-		sid->u.ssl3.clAuthSeries     != PK11_GetSlotSeries(slot) ||
-		sid->u.ssl3.clAuthSlotID     != PK11_GetSlotID(slot)     ||
-		sid->u.ssl3.clAuthModuleID   != PK11_GetModuleID(slot)   ||
-                !PK11_IsLoggedIn(slot, NULL)) {
-	        sidOK = PR_FALSE;
-	    }
-	    if (slot) {
-		PK11_FreeSlot(slot);
-		slot = NULL;
-	    }
+	if (sidOK && !ssl3_ClientAuthTokenPresent(sid)) {
+	    sidOK = PR_FALSE;
 	}
 
 	if (!sidOK) {
@@ -7463,7 +7433,7 @@ const ssl3BulkCipherDef *cipher_def;
     ssl3 = ss->ssl3;
 
     /* check for Token Presence */
-    if (!ssl_ClientAuthTokenPresent(ss)) {
+    if (!ssl3_ClientAuthTokenPresent(ss->sec.ci.sid)) {
 	PORT_SetError(SSL_ERROR_TOKEN_INSERTION_REMOVAL);
 	return SECFailure;
     }
