@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const nsISupports              = Components.interfaces.nsISupporst;
+const nsISupports              = Components.interfaces.nsISupports;
 
 const nsICommandLine           = Components.interfaces.nsICommandLine;
 const nsICommandLineHandler    = Components.interfaces.nsICommandLineHandler;
