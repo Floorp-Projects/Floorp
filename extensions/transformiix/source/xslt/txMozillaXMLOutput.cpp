@@ -318,11 +318,7 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
 
 void txMozillaXMLOutput::removeScriptElement(nsIDOMHTMLScriptElement *aElement)
 {
-    if (mScriptElements) {
-        PRInt32 index = mScriptElements->IndexOf(aElement);
-        if (index > -1)
-            mScriptElements->RemoveElementAt(index);
-    }
+    mScriptElements.RemoveObject(aElement);
 }
 
 void txMozillaXMLOutput::startDocument()
@@ -547,11 +543,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
         nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement =
             do_QueryInterface(mCurrentNode);
         NS_ASSERTION(scriptElement, "Need script element");
-        if (!mScriptElements)
-            NS_NewISupportsArray(getter_AddRefs(mScriptElements));
-        NS_ASSERTION(mScriptElements, "Can't create array");
-        if (mScriptElements)
-            mScriptElements->AppendElement(scriptElement);
+        mScriptElements.AppendObject(scriptElement);
     }
     // Set document title
     else if (mCreatingNewDocument &&
@@ -776,12 +768,8 @@ txMozillaXMLOutput::SignalTransformEnd()
         return;
     }
 
-    if (mScriptElements) {
-        PRUint32 scriptCount = 0;
-        mScriptElements->Count(&scriptCount);
-        if (scriptCount != 0) {
-            return;
-        }
+    if (mScriptElements.Count() > 0) {
+        return;
     }
 
     // Make sure that we don't get deleted while this function is executed and
