@@ -280,7 +280,9 @@ function add_node_to_current_list(registry, service)
   
   // Copy over the attributes
   item.setAttribute('id', service.Value);
-  item.setAttribute('customize', option_customize);
+  if (option_customize && option_customize != '') {
+    item.setAttribute('customize', option_customize);
+  }
   item.setAttribute('content', option_content);
   cell.setAttribute('class', 'treecell-indent treecell-panel');
   cell.setAttribute('value', option_title);
