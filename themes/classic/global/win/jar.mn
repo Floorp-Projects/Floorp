@@ -10,6 +10,7 @@ classic.jar:
     skin/classic/global/filepicker.css
     skin/classic/global/formatting.css
     skin/classic/global/global.css
+    skin/classic/global/groupbox.css
     skin/classic/global/menu.css
     skin/classic/global/menubutton.css
     skin/classic/global/menulist.css
@@ -22,7 +23,6 @@ classic.jar:
     skin/classic/global/splitter.css
     skin/classic/global/tabbox.css
     skin/classic/global/textbox.css
-    skin/classic/global/titledbox.css
     skin/classic/global/toolbar.css
     skin/classic/global/tree.css
     skin/classic/global/outliner.css

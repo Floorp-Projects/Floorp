@@ -1,20 +1,8 @@
-/* titledbox is deprecated but included for backwards compatibility;
-   it is to be removed later */
-titledbox,
 groupbox 
   {
     border                : 2px groove #CCCCCC;
     padding               : 7px;
     margin                : 5px;
-  }
-
-groupbox > label
-  {
-    margin-left           : 6px;
-    padding-left          : 3px;
-    padding-right         : 3px;
-    background-color      : #DEDEDE;
-
   }
 
 box.groupbox-title 

@@ -136,12 +136,12 @@ radio {
 /******** groupbox *********/
 
 groupbox {
-  -moz-binding: url("chrome://global/content/bindings/titledbox.xml#groupbox");
+  -moz-binding: url("chrome://global/content/bindings/groupbox.xml#groupbox");
   display: -moz-groupbox;
 }
 
 caption {
-  -moz-binding: url("chrome://global/content/bindings/titledbox.xml#caption");
+  -moz-binding: url("chrome://global/content/bindings/groupbox.xml#caption");
 }
 
 .groupbox-body {
