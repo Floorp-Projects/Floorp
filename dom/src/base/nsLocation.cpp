@@ -699,13 +699,23 @@ LocationImpl::SetSearch(const nsAReadableString& aSearch)
 NS_IMETHODIMP
 LocationImpl::Reload(PRBool aForceget)
 {
+  nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE),
-                    NS_ERROR_FAILURE);
+  if (webNav) {
+    PRUint32 reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
-  return NS_OK;
+    if (aForceget) {
+      reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 
+                    nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
+    }
+    rv = webNav->Reload(reloadFlags);
+  } else {
+    NS_ASSERTION(0, "nsIWebNavigation interface is not available!");
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
