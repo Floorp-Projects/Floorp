@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_data.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : main data structure definition                             * */
 /* *                                                                        * */
@@ -75,6 +75,25 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 09/07/2000 - G.Juyn                                * */
+/* *             - added support for new filter_types                       * */
+/* *             0.9.3 - 09/10/2000 - G.Juyn                                * */
+/* *             - fixed DEFI behavior                                      * */
+/* *             0.9.3 - 10/10/2000 - G.Juyn                                * */
+/* *             - added support for alpha-depth prediction                 * */
+/* *             0.9.3 - 10/11/2000 - G.Juyn                                * */
+/* *             - added support for nEED                                   * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added optional support for bKGD for PNG images           * */
+/* *             - added support for JDAA                                   * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added callback to process non-critical unknown chunks    * */
+/* *             - fixed support for bKGD                                   * */
+/* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
+/* *             - implemented delayed delta-processing                     * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -119,18 +138,6 @@ typedef struct mng_savedata_struct {
 #endif /* MNG_SUPPORT_READ || MNG_SUPPORT_WRITE */
 
 #ifdef MNG_SUPPORT_DISPLAY
-           mng_uint16        iDEFIobjectid;      /* DEFI fields */
-           mng_uint8         iDEFIdonotshow;
-           mng_uint8         iDEFIconcrete;
-           mng_bool          bDEFIhasloca;
-           mng_int32         iDEFIlocax;
-           mng_int32         iDEFIlocay;
-           mng_bool          bDEFIhasclip;
-           mng_int32         iDEFIclipl;
-           mng_int32         iDEFIclipr;
-           mng_int32         iDEFIclipt;
-           mng_int32         iDEFIclipb;
-
            mng_uint16        iBACKred;           /* BACK fields */
            mng_uint16        iBACKgreen;
            mng_uint16        iBACKblue;
@@ -202,6 +209,7 @@ typedef struct mng_data_struct {
            mng_uint32        iFramecount;
            mng_uint32        iPlaytime;
            mng_uint32        iSimplicity;
+           mng_uint8         iAlphadepth;        /* indicates expected alpha-depth */
 
            mng_uint32        iImagelevel;        /* level an image inside a stream */
 
@@ -217,6 +225,7 @@ typedef struct mng_data_struct {
            mng_uint16        iBGred;             /* default background color */
            mng_uint16        iBGgreen;           /* initially "black" */
            mng_uint16        iBGblue;
+           mng_bool          bUseBKGD;           /* preferred use of bKGD for PNG */
 
            mng_bool          bIssRGB;            /* indicates sRGB system */
 
@@ -257,6 +266,8 @@ typedef struct mng_data_struct {
            mng_processtext   fProcesstext;
            mng_processsave   fProcesssave;
            mng_processseek   fProcessseek;
+           mng_processneed   fProcessneed;
+           mng_processunknown fProcessunknown;
            mng_getcanvasline fGetcanvasline;
            mng_getbkgdline   fGetbkgdline;
            mng_getalphaline  fGetalphaline;
@@ -285,6 +296,7 @@ typedef struct mng_data_struct {
 #ifdef MNG_INCLUDE_JNG
            mng_bool          bHasJHDR;           /* inside a JHDR-IEND sequence */
            mng_bool          bHasJSEP;           /* passed the JSEP separator */
+           mng_bool          bHasJDAA;           /* at least 1 JDAA processed */
            mng_bool          bHasJDAT;           /* at least 1 JDAT processed */
 #endif
            mng_bool          bHasPLTE;           /* PLTE chunk processed */
@@ -380,6 +392,8 @@ typedef struct mng_data_struct {
            mng_uint32        iRequesttime;
            mng_bool          bSearching;
 
+           mng_bool          bRestorebkgd;       /* flags restore required before IDAT/JDAT */
+
            mng_uint32        iRuntime;           /* millisecs since start */
            mng_uint32        iSynctime;          /* tickcount at last framesync */
            mng_uint32        iStarttime;         /* tickcount at start */
@@ -422,6 +436,12 @@ typedef struct mng_data_struct {
            mng_int32         iSamplediv;
            mng_int32         iRowsize;           /* size of actual data in work row */
            mng_int32         iRowmax;            /* maximum size of data in work row */
+           mng_int32         iFilterofs;         /* offset to filter-byte in work row */
+           mng_int32         iPixelofs;          /* offset to pixel-bytes in work row */
+           mng_uint32        iLevel0;            /* leveling variables */
+           mng_uint32        iLevel1;
+           mng_uint32        iLevel2;
+           mng_uint32        iLevel3;
            mng_uint8p        pWorkrow;           /* working row of pixel-data */
            mng_uint8p        pPrevrow;           /* previous row of pixel-data */
            mng_uint8p        pRGBArow;           /* intermediate row of RGBA8 or RGBA16 data */
@@ -461,11 +481,20 @@ typedef struct mng_data_struct {
                                                     uncompressed/unfiltered row of data */
            mng_ptr           fProcessrow;        /* internal callback to process an
                                                     uncompressed row of data */
+           mng_ptr           fDifferrow;         /* internal callback to perform
+                                                    added filter leveling and
+                                                    differing on an unfiltered row */
+           mng_ptr           fScalerow;          /* internal callback to scale a
+                                                    delta-row to the bitdepth of its target */
+           mng_ptr           fDeltarow;          /* internal callback to execute a
+                                                    delta-row onto a target */
            mng_ptr           fInitrowproc;       /* internal callback to initialize
                                                     the row processing */
 
            mng_uint16        iDEFIobjectid;      /* DEFI fields */
+           mng_bool          bDEFIhasdonotshow;
            mng_uint8         iDEFIdonotshow;
+           mng_bool          bDEFIhasconcrete;
            mng_uint8         iDEFIconcrete;
            mng_bool          bDEFIhasloca;
            mng_int32         iDEFIlocax;
@@ -549,6 +578,8 @@ typedef struct mng_data_struct {
            mng_ptr           fDeltareplacerow;
            mng_ptr           fDeltaputrow;
 
+           mng_uint16        iMAGNfromid;
+           mng_uint16        iMAGNtoid;
 #endif /* MNG_SUPPORT_DISPLAY */
 
 #ifdef MNG_INCLUDE_ZLIB
@@ -573,33 +604,57 @@ typedef struct mng_data_struct {
            mng_bool          bJPEGcompressprogr;
            mng_bool          bJPEGcompressopt;
 
-           mng_uint32        iMaxJDAT;           /* maximum size of JDAT data */
+           mng_uint32        iMaxJDAT;           /* maximum size of JDAT/JDAA data */
 
            mngjpeg_compp     pJPEGcinfo;         /* compression structure */
            mngjpeg_errorp    pJPEGcerr;          /* error-manager compress */
-           mngjpeg_decompp   pJPEGdinfo;         /* decompression structure */
-           mngjpeg_errorp    pJPEGderr;          /* error-manager decompress */
-           mngjpeg_sourcep   pJPEGdsrc;          /* source-manager decompress */
 
-           mng_uint8p        pJPEGbuf;           /* buffer for JPEG (de)compression */
-           mng_uint32        iJPEGbufmax;        /* allocated space for buffer */
-           mng_uint8p        pJPEGcurrent;       /* current pointer into buffer */
-           mng_uint32        iJPEGbufremain;     /* remaining bytes in buffer */
-           mng_uint32        iJPEGtoskip;        /* bytes to skip on next input-block */
+           mngjpeg_decompp   pJPEGdinfo;         /* decompression structure (JDAT) */
+           mngjpeg_errorp    pJPEGderr;          /* error-manager decompress (JDAT) */
+           mngjpeg_sourcep   pJPEGdsrc;          /* source-manager decompress (JDAT) */
 
-           mng_uint8p        pJPEGrow;           /* buffer for a JPEG row of samples */
+           mngjpeg_decompp   pJPEGdinfo2;        /* decompression structure (JDAA) */
+           mngjpeg_errorp    pJPEGderr2;         /* error-manager decompress (JDAA) */
+           mngjpeg_sourcep   pJPEGdsrc2;         /* source-manager decompress (JDAA) */
+
+           mng_uint8p        pJPEGbuf;           /* buffer for JPEG (de)compression (JDAT) */
+           mng_uint32        iJPEGbufmax;        /* allocated space for buffer (JDAT) */
+           mng_uint8p        pJPEGcurrent;       /* current pointer into buffer (JDAT) */
+           mng_uint32        iJPEGbufremain;     /* remaining bytes in buffer (JDAT) */
+           mng_uint32        iJPEGtoskip;        /* bytes to skip on next input-block (JDAT) */
+
+           mng_uint8p        pJPEGbuf2;          /* buffer for JPEG (de)compression (JDAA) */
+           mng_uint32        iJPEGbufmax2;       /* allocated space for buffer (JDAA) */
+           mng_uint8p        pJPEGcurrent2;      /* current pointer into buffer (JDAA) */
+           mng_uint32        iJPEGbufremain2;    /* remaining bytes in buffer (JDAA) */
+           mng_uint32        iJPEGtoskip2;       /* bytes to skip on next input-block (JDAA) */
+
+           mng_uint8p        pJPEGrow;           /* buffer for a JPEG row of samples (JDAT) */
            mng_uint32        iJPEGrowlen;
+
+           mng_uint8p        pJPEGrow2;          /* buffer for a JPEG row of samples (JDAA) */
+           mng_uint32        iJPEGrowlen2;
 
            mng_bool          bJPEGcompress;      /* indicates "compress" initialized */
 
-           mng_bool          bJPEGdecompress;    /* indicates "decompress" ininitialized */
-           mng_bool          bJPEGhasheader;     /* indicates "readheader" succeeded */
-           mng_bool          bJPEGdecostarted;   /* indicates "decompress" started */
-           mng_bool          bJPEGscanstarted;   /* indicates "first scan" started */
-           mng_bool          bJPEGprogressive;   /* indicates a progressive image */
+           mng_bool          bJPEGdecompress;    /* indicates "decompress" ininitialized (JDAT) */
+           mng_bool          bJPEGhasheader;     /* indicates "readheader" succeeded (JDAT) */
+           mng_bool          bJPEGdecostarted;   /* indicates "decompress" started (JDAT) */
+           mng_bool          bJPEGscanstarted;   /* indicates "first scan" started (JDAT) */
+           mng_bool          bJPEGprogressive;   /* indicates a progressive image (JDAT) */
+
+           mng_bool          bJPEGdecompress2;   /* indicates "decompress" ininitialized (JDAA) */
+           mng_bool          bJPEGhasheader2;    /* indicates "readheader" succeeded (JDAA) */
+           mng_bool          bJPEGdecostarted2;  /* indicates "decompress" started (JDAA) */
+           mng_bool          bJPEGscanstarted2;  /* indicates "first scan" started (JDAA) */
+           mng_bool          bJPEGprogressive2;  /* indicates a progressive image (JDAA) */
 
            mng_ptr           fStorerow2;         /* internal callback to store an
-                                                    uncompressed/unfiltered row of JPEG-data */
+                                                    uncompressed/unfiltered row of JPEG-data (JDAT) */
+
+           mng_ptr           fStorerow3;         /* internal callback to store an
+                                                    uncompressed/unfiltered row of JPEG-data (JDAA) */
+
            mng_uint32        iJPEGrow;           /* row-number for current JPEG row */
            mng_uint32        iJPEGalpharow;      /* nr. of rows filled with alpha */
            mng_uint32        iJPEGrgbrow;        /* nr. of rows filled with 'color'-info */
@@ -608,7 +663,7 @@ typedef struct mng_data_struct {
 #if defined(MNG_USE_SETJMP) && defined (MNG_INCLUDE_IJG6B)
            jmp_buf           sErrorbuf;          /* setjmp/longjmp buffer (error-recovery) */
 #endif
-           
+
 #endif /* MNG_INCLUDE_JNG */
 
            mng_uint32        aCRCtable [256];    /* CRC prefab table */
@@ -624,13 +679,31 @@ typedef mng_data * mng_datap;
 /* *                                                                        * */
 /* ************************************************************************** */
 
-typedef mng_retcode(*mng_displayrow)  (mng_datap pData);
-typedef mng_retcode(*mng_restbkgdrow) (mng_datap pData);
-typedef mng_retcode(*mng_correctrow)  (mng_datap pData);
-typedef mng_retcode(*mng_retrieverow) (mng_datap pData);
-typedef mng_retcode(*mng_storerow)    (mng_datap pData);
-typedef mng_retcode(*mng_processrow)  (mng_datap pData);
-typedef mng_retcode(*mng_initrowproc) (mng_datap pData);
+typedef mng_retcode(*mng_displayrow)  (mng_datap  pData);
+typedef mng_retcode(*mng_restbkgdrow) (mng_datap  pData);
+typedef mng_retcode(*mng_correctrow)  (mng_datap  pData);
+typedef mng_retcode(*mng_retrieverow) (mng_datap  pData);
+typedef mng_retcode(*mng_storerow)    (mng_datap  pData);
+typedef mng_retcode(*mng_processrow)  (mng_datap  pData);
+typedef mng_retcode(*mng_initrowproc) (mng_datap  pData);
+typedef mng_retcode(*mng_differrow)   (mng_datap  pData);
+typedef mng_retcode(*mng_scalerow)    (mng_datap  pData);
+typedef mng_retcode(*mng_deltarow)    (mng_datap  pData);
+
+typedef mng_retcode(*mng_magnify_x)   (mng_datap  pData,
+                                       mng_uint16 iMX,
+                                       mng_uint16 iML,
+                                       mng_uint16 iMR,
+                                       mng_uint32 iWidth,
+                                       mng_uint8p iSrcline,
+                                       mng_uint8p iDstline);
+typedef mng_retcode(*mng_magnify_y)   (mng_datap  pData,
+                                       mng_int32  iM,
+                                       mng_int32  iS,
+                                       mng_uint32 iWidth,
+                                       mng_uint8p iSrcline1,
+                                       mng_uint8p iSrcline2,
+                                       mng_uint8p iDstline);
 
 /* ************************************************************************** */
 /* *                                                                        * */

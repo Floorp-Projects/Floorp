@@ -30,9 +30,6 @@
 #ifndef _libmng_write_h_
 #define _libmng_write_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
-
 /* ************************************************************************** */
 
 mng_retcode write_graphic (mng_datap pData);

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunk_io.h         copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk I/O routines (definition)                            * */
 /* *                                                                        * */
@@ -25,6 +25,11 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added support for JDAA                                   * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -33,10 +38,6 @@
 
 #ifndef _libmng_chunk_io_h_
 #define _libmng_chunk_io_h_
-
-#include "libmng.h"
-#include "libmng_data.h"
-#include "libmng_chunks.h"
 
 /* ************************************************************************** */
 
@@ -93,6 +94,7 @@ READ_CHUNK (read_expi) ;
 READ_CHUNK (read_fpri) ;
 READ_CHUNK (read_phyg) ;
 READ_CHUNK (read_jhdr) ;
+READ_CHUNK (read_jdaa) ;
 READ_CHUNK (read_jdat) ;
 READ_CHUNK (read_jsep) ;
 READ_CHUNK (read_dhdr) ;
@@ -103,6 +105,7 @@ READ_CHUNK (read_ijng) ;
 READ_CHUNK (read_drop) ;
 READ_CHUNK (read_dbyk) ;
 READ_CHUNK (read_ordr) ;
+READ_CHUNK (read_magn) ;
 READ_CHUNK (read_need) ;
 READ_CHUNK (read_unknown) ;
 
@@ -148,6 +151,7 @@ READ_CHUNK (read_unknown) ;
 #define read_fpri 0
 #define read_phyg 0
 #define read_jhdr 0
+#define read_jdaa 0
 #define read_jdat 0
 #define read_jsep 0
 #define read_dhdr 0
@@ -158,6 +162,7 @@ READ_CHUNK (read_unknown) ;
 #define read_drop 0
 #define read_dbyk 0
 #define read_ordr 0
+#define read_magn 0
 #define read_need 0
 #define read_unknown 0
 #endif /* MNG_INCLUDE_READ_PROCS */
@@ -208,6 +213,7 @@ WRITE_CHUNK (write_expi) ;
 WRITE_CHUNK (write_fpri) ;
 WRITE_CHUNK (write_phyg) ;
 WRITE_CHUNK (write_jhdr) ;
+WRITE_CHUNK (write_jdaa) ;
 WRITE_CHUNK (write_jdat) ;
 WRITE_CHUNK (write_jsep) ;
 WRITE_CHUNK (write_dhdr) ;
@@ -218,6 +224,7 @@ WRITE_CHUNK (write_ijng) ;
 WRITE_CHUNK (write_drop) ;
 WRITE_CHUNK (write_dbyk) ;
 WRITE_CHUNK (write_ordr) ;
+WRITE_CHUNK (write_magn) ;
 WRITE_CHUNK (write_need) ;
 WRITE_CHUNK (write_unknown) ;
 
@@ -263,6 +270,7 @@ WRITE_CHUNK (write_unknown) ;
 #define write_fpri 0
 #define write_phyg 0
 #define write_jhdr 0
+#define write_jdaa 0
 #define write_jdat 0
 #define write_jsep 0
 #define write_dhdr 0
@@ -273,6 +281,7 @@ WRITE_CHUNK (write_unknown) ;
 #define write_drop 0
 #define write_dbyk 0
 #define write_ordr 0
+#define write_magn 0
 #define write_need 0
 #define write_unknown 0
 #endif /* MNG_INCLUDE_WRITE_PROCS */

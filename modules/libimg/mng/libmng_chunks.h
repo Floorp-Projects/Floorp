@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunks.h           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk structures (definition)                              * */
 /* *                                                                        * */
@@ -32,6 +32,13 @@
 /* *                                                                        * */
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
+/* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 09/10/2000 - G.Juyn                                * */
+/* *             - fixed DEFI behavior                                      * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added JDAA chunk                                         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -351,7 +358,9 @@ typedef mng_endl * mng_endlp;
 typedef struct {                       /* DEFI */
            mng_chunk_header  sHeader;
            mng_uint16        iObjectid;
+           mng_bool          bHasdonotshow;
            mng_uint8         iDonotshow;
+           mng_bool          bHasconcrete;
            mng_uint8         iConcrete;
            mng_bool          bHasloca;
            mng_int32         iXlocation;
@@ -606,6 +615,11 @@ typedef mng_jhdr * mng_jhdrp;
 
 /* ************************************************************************** */
 
+typedef mng_idat mng_jdaa;             /* JDAA */
+typedef mng_jdaa * mng_jdaap;
+
+/* ************************************************************************** */
+
 typedef mng_idat mng_jdat;             /* JDAT */
 typedef mng_jdat * mng_jdatp;
 
@@ -709,6 +723,23 @@ typedef struct mng_ordr_struct {       /* ORDR */
            mng_ordr_entryp   pEntries;
         } mng_ordr;
 typedef mng_ordr * mng_ordrp;
+
+/* ************************************************************************** */
+
+typedef struct {                       /* MAGN */
+           mng_chunk_header  sHeader;
+           mng_uint16        iFirstid;
+           mng_uint16        iLastid;
+           mng_uint16        iMethodX;
+           mng_uint16        iMX;
+           mng_uint16        iMY;
+           mng_uint16        iML;
+           mng_uint16        iMR;
+           mng_uint16        iMT;
+           mng_uint16        iMB;
+           mng_uint16        iMethodY;
+        } mng_magn;
+typedef mng_magn * mng_magnp;
 
 /* ************************************************************************** */
 

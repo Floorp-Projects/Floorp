@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunk_prc.h        copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk initialization & cleanup (definition)                * */
 /* *                                                                        * */
@@ -21,6 +21,11 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 10/16/2000 - G.Juyn                                * */
+/* *             - added support for JDAA                                   * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -29,10 +34,6 @@
 
 #ifndef _libmng_chunk_prc_h_
 #define _libmng_chunk_prc_h_
-
-#include "libmng.h"
-#include "libmng_data.h"
-#include "libmng_chunks.h"
 
 /* ************************************************************************** */
 
@@ -85,6 +86,7 @@ INIT_CHUNK_HDR (init_fpri) ;
 INIT_CHUNK_HDR (init_need) ;
 INIT_CHUNK_HDR (init_phyg) ;
 INIT_CHUNK_HDR (init_jhdr) ;
+INIT_CHUNK_HDR (init_jdaa) ;
 INIT_CHUNK_HDR (init_jdat) ;
 INIT_CHUNK_HDR (init_jsep) ;
 INIT_CHUNK_HDR (init_dhdr) ;
@@ -95,6 +97,7 @@ INIT_CHUNK_HDR (init_ijng) ;
 INIT_CHUNK_HDR (init_drop) ;
 INIT_CHUNK_HDR (init_dbyk) ;
 INIT_CHUNK_HDR (init_ordr) ;
+INIT_CHUNK_HDR (init_magn) ;
 INIT_CHUNK_HDR (init_unknown) ;
 
 /* ************************************************************************** */
@@ -142,6 +145,7 @@ FREE_CHUNK_HDR (free_fpri) ;
 FREE_CHUNK_HDR (free_need) ;
 FREE_CHUNK_HDR (free_phyg) ;
 FREE_CHUNK_HDR (free_jhdr) ;
+FREE_CHUNK_HDR (free_jdaa) ;
 FREE_CHUNK_HDR (free_jdat) ;
 FREE_CHUNK_HDR (free_jsep) ;
 FREE_CHUNK_HDR (free_dhdr) ;
@@ -152,6 +156,7 @@ FREE_CHUNK_HDR (free_ijng) ;
 FREE_CHUNK_HDR (free_drop) ;
 FREE_CHUNK_HDR (free_dbyk) ;
 FREE_CHUNK_HDR (free_ordr) ;
+FREE_CHUNK_HDR (free_magn) ;
 FREE_CHUNK_HDR (free_unknown) ;
 
 /* ************************************************************************** */

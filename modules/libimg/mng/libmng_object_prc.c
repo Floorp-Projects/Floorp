@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_object_prc.c       copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 0.9.3                                                      * */
 /* *                                                                        * */
 /* * purpose   : Object processing routines (implementation)                * */
 /* *                                                                        * */
@@ -58,6 +58,17 @@
 /* *                                                                        * */
 /* *             0.9.3 - 08/07/2000 - G.Juyn                                * */
 /* *             - B111300 - fixup for improved portability                 * */
+/* *             0.9.3 - 08/26/2000 - G.Juyn                                * */
+/* *             - added MAGN chunk                                         * */
+/* *             0.9.3 - 09/10/2000 - G.Juyn                                * */
+/* *             - fixed DEFI behavior                                      * */
+/* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
+/* *             - added valid-flag to stored objects for read() / display()* */
+/* *             - added routine to discard "invalid" objects               * */
+/* *             0.9.3 - 10/18/2000 - G.Juyn                                * */
+/* *             - fixed delta-processing behavior                          * */
+/* *             0.9.3 - 10/19/2000 - G.Juyn                                * */
+/* *             - added storage for pixel-/alpha-sampledepth for delta's   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -71,6 +82,7 @@
 #include "libmng_memory.h"
 #include "libmng_objects.h"
 #include "libmng_display.h"
+#include "libmng_pixels.h"
 #include "libmng_object_prc.h"
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -80,6 +92,44 @@
 /* ************************************************************************** */
 
 #ifdef MNG_INCLUDE_DISPLAY_PROCS
+
+/* ************************************************************************** */
+/* *                                                                        * */
+/* * Generic object routines                                                * */
+/* *                                                                        * */
+/* ************************************************************************** */
+
+mng_retcode drop_invalid_objects (mng_datap pData)
+{
+  mng_objectp       pObject;
+  mng_objectp       pNext;
+  mng_cleanupobject fCleanup;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DROP_INVALID_OBJECTS, MNG_LC_START)
+#endif
+
+  pObject = pData->pFirstimgobj;       /* get first stored image-object (if any) */
+
+  while (pObject)                      /* more objects to check ? */
+  {
+    pNext = ((mng_object_headerp)pObject)->pNext;
+                                       /* invalid ? */
+    if (!((mng_imagep)pObject)->bValid)
+    {                                  /* call appropriate cleanup */
+      fCleanup = ((mng_object_headerp)pObject)->fCleanup;
+      fCleanup (pData, pObject);
+    }
+
+    pObject = pNext;                   /* neeeext */
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DROP_INVALID_OBJECTS, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -124,6 +174,10 @@ mng_retcode create_imagedataobject (mng_datap      pData,
   pImagedata->iFilter            = iFilter;
   pImagedata->iInterlace         = iInterlace;
   pImagedata->iAlphabitdepth     = 0;
+  pImagedata->iJHDRcompression   = 0;
+  pImagedata->iJHDRinterlace     = 0;
+  pImagedata->iPixelsampledepth  = iBitdepth;
+  pImagedata->iAlphasampledepth  = iBitdepth;
                                        /* determine samplesize from color_type/bit_depth */
   switch (iColortype)                  /* for < 8-bit samples we just reserve 8 bits */
   {
@@ -385,6 +439,9 @@ mng_retcode create_imageobject (mng_datap  pData,
   pImage->bFrozen          = MNG_FALSE;
   pImage->bVisible         = bVisible;
   pImage->bViewable        = bViewable;
+  pImage->bValid           = (mng_bool)((pData->bDisplaying) &&
+                                        (pData->bRunning   ) &&
+                                        (!pData->bFreezing )    ); 
   pImage->iPosx            = iPosx;
   pImage->iPosy            = iPosy;
   pImage->bClipped         = bClipped;
@@ -392,6 +449,14 @@ mng_retcode create_imageobject (mng_datap  pData,
   pImage->iClipr           = iClipr;
   pImage->iClipt           = iClipt;
   pImage->iClipb           = iClipb;
+  pImage->iMAGN_MethodX    = 0;
+  pImage->iMAGN_MethodY    = 0;
+  pImage->iMAGN_MX         = 0;
+  pImage->iMAGN_MY         = 0;
+  pImage->iMAGN_ML         = 0;
+  pImage->iMAGN_MR         = 0;
+  pImage->iMAGN_MT         = 0;
+  pImage->iMAGN_MB         = 0;
   pImage->pImgbuf          = pImgbuf;
 
   if (iId)                             /* only if not object 0 ! */
@@ -513,6 +578,15 @@ mng_retcode clone_imageobject (mng_datap  pData,
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_CLONE_IMGOBJECT, MNG_LC_START)
 #endif
+
+  if ((pSource->iId) &&                /* needs magnification ? */
+      ((pSource->iMAGN_MethodX) || (pSource->iMAGN_MethodY)))
+  {
+    iRetcode = magnify_imageobject (pData, pSource);
+
+    if (iRetcode)                      /* on error bail out */
+      return iRetcode;
+  }
                                        /* get a buffer */
   MNG_ALLOC (pData, pNew, sizeof (mng_image))
                                        /* fill or copy the appropriate fields */
@@ -547,6 +621,15 @@ mng_retcode clone_imageobject (mng_datap  pData,
   pNew->iClipr           = pSource->iClipr;
   pNew->iClipt           = pSource->iClipt;
   pNew->iClipb           = pSource->iClipb;
+                                       /* copy magnification info */
+  pNew->iMAGN_MethodX    = pSource->iMAGN_MethodX;
+  pNew->iMAGN_MethodY    = pSource->iMAGN_MethodY;
+  pNew->iMAGN_MX         = pSource->iMAGN_MX;
+  pNew->iMAGN_MY         = pSource->iMAGN_MY;
+  pNew->iMAGN_ML         = pSource->iMAGN_ML;
+  pNew->iMAGN_MR         = pSource->iMAGN_MR;
+  pNew->iMAGN_MT         = pSource->iMAGN_MT;
+  pNew->iMAGN_MB         = pSource->iMAGN_MB;
 
   if (iId)                             /* not for object 0 */
   {                                    /* find previous lower object-id */
@@ -791,6 +874,18 @@ mng_retcode reset_object_details (mng_datap  pData,
     pImage->iClipb   = iHeight;
   }
 
+  if (pImage->iId)                     /* reset magnification info ? */
+  {
+    pImage->iMAGN_MethodX = 0;
+    pImage->iMAGN_MethodY = 0;
+    pImage->iMAGN_MX      = 0;
+    pImage->iMAGN_MY      = 0;
+    pImage->iMAGN_ML      = 0;
+    pImage->iMAGN_MR      = 0;
+    pImage->iMAGN_MT      = 0;
+    pImage->iMAGN_MB      = 0;
+  }
+
   if (bResetall)                       /* reset the other characteristics ? */
   {
     pBuf->bHasPLTE = MNG_FALSE;
@@ -859,15 +954,436 @@ mng_retcode promote_imageobject (mng_datap  pData,
                                  mng_uint8  iColortype,
                                  mng_uint8  iFilltype)
 {
+  mng_uint8p     pNewbuf;
+  mng_uint32     iNewbufsize;
+  mng_uint32     iNewrowsize;
+  mng_uint32     iNewsamplesize;
+  mng_uint32     iX, iY;
+  mng_uint8p     pSrcline, pDstline;
+  mng_uint8      iB;
+  mng_imagedatap pBuf = pImage->pImgbuf;
+  mng_uint32     iW   = pBuf->iWidth;
+  mng_uint32     iH   = pBuf->iHeight;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROMOTE_IMGOBJECT, MNG_LC_START)
 #endif
 
+  if ((pBuf->iColortype == 3) && (iColortype == 2))
+  {                                    /* indexed -> rgb */
+    iNewsamplesize = 3;
+    iNewrowsize    = iW * iNewsamplesize;
+    iNewbufsize    = iH * iNewrowsize;
 
+    MNG_ALLOC (pData, pNewbuf, iNewbufsize)
+
+    pSrcline = pBuf->pImgdata;
+    pDstline = pNewbuf;
+
+    for (iY = 0; iY < iH; iY++)
+    {
+      for (iX = 0; iX < iW; iX++)
+      {
+        iB = *pSrcline;
+
+        if ((mng_uint32)iB < pBuf->iPLTEcount)
+        {
+          *pDstline     = pBuf->aPLTEentries [iB].iRed;
+          *(pDstline+1) = pBuf->aPLTEentries [iB].iGreen;
+          *(pDstline+2) = pBuf->aPLTEentries [iB].iBlue;
+        }  
+
+        pSrcline++;
+        pDstline += 3;
+      }
+    }
+
+    MNG_FREEX (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+
+    pBuf->iBitdepth    = iBitdepth;
+    pBuf->iColortype   = iColortype;
+    pBuf->iSamplesize  = iNewsamplesize;
+    pBuf->iRowsize     = iNewrowsize;
+    pBuf->iImgdatasize = iNewbufsize;
+    pBuf->pImgdata     = pNewbuf;
+    pBuf->bHasPLTE     = MNG_FALSE;
+    pBuf->bHasTRNS     = MNG_FALSE;
+  }
+  else
+  if ((pBuf->iColortype == 3) && (iColortype == 6))
+  {                                    /* indexed -> rgba */
+    iNewsamplesize = 4;
+    iNewrowsize    = iW * iNewsamplesize;
+    iNewbufsize    = iH * iNewrowsize;
+
+    MNG_ALLOC (pData, pNewbuf, iNewbufsize)
+
+    pSrcline = pBuf->pImgdata;
+    pDstline = pNewbuf;
+
+    for (iY = 0; iY < iH; iY++)
+    {
+      for (iX = 0; iX < iW; iX++)
+      {
+        iB = *pSrcline;
+
+        if ((mng_uint32)iB < pBuf->iPLTEcount)
+        {
+          *pDstline       = pBuf->aPLTEentries [iB].iRed;
+          *(pDstline+1)   = pBuf->aPLTEentries [iB].iGreen;
+          *(pDstline+2)   = pBuf->aPLTEentries [iB].iBlue;
+
+          if ((mng_uint32)iB < pBuf->iTRNScount)
+            *(pDstline+3) = pBuf->aTRNSentries [iB];
+          else
+            *(pDstline+3) = 255;
+        }
+
+        pSrcline++;
+        pDstline += 4;
+      }
+    }
+
+    MNG_FREEX (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+
+    pBuf->iBitdepth    = iBitdepth;
+    pBuf->iColortype   = iColortype;
+    pBuf->iSamplesize  = iNewsamplesize;
+    pBuf->iRowsize     = iNewrowsize;
+    pBuf->iImgdatasize = iNewbufsize;
+    pBuf->pImgdata     = pNewbuf;
+    pBuf->bHasPLTE     = MNG_FALSE;
+    pBuf->bHasTRNS     = MNG_FALSE;
+  }
+  else
+  {
+
+    /* TODO: other promotion */
+
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROMOTE_IMGOBJECT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode magnify_imageobject (mng_datap  pData,
+                                 mng_imagep pImage)
+{
+  mng_uint8p     pNewdata;
+  mng_uint8p     pSrcline1;
+  mng_uint8p     pSrcline2;
+  mng_uint8p     pTempline;
+  mng_uint8p     pDstline;
+  mng_uint32     iNewrowsize;
+  mng_uint32     iNewsize;
+  mng_uint32     iY;
+  mng_int32      iS, iM;
+  mng_retcode    iRetcode;
+
+  mng_imagedatap pBuf      = pImage->pImgbuf;
+  mng_uint32     iNewW     = pBuf->iWidth;
+  mng_uint32     iNewH     = pBuf->iHeight;
+  mng_magnify_x  fMagnifyX = MNG_NULL;
+  mng_magnify_y  fMagnifyY = MNG_NULL;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_MAGNIFY_IMGOBJECT, MNG_LC_START)
+#endif
+
+  if (pBuf->iColortype == 3)           /* indexed color ? */
+  {                                    /* concrete buffer ? */
+    if ((pBuf->bConcrete) && (pImage->iId))
+      MNG_ERROR (pData, MNG_INVALIDCOLORTYPE)
+
+    if (pBuf->iTRNScount)              /* with transparency ? */
+      iRetcode = promote_imageobject (pData, pImage, 8, 6, 0);
+    else
+      iRetcode = promote_imageobject (pData, pImage, 8, 2, 0);
+
+    if (iRetcode)                      /* on error bail out */
+      return iRetcode;
+  }
+
+  if (pImage->iMAGN_MethodX)           /* determine new width */
+  {
+    if (pImage->iMAGN_MethodX == 1)
+    {
+      iNewW   = pImage->iMAGN_ML;
+      if (pBuf->iWidth  > 1)
+        iNewW = iNewW + pImage->iMAGN_MR;
+      if (pBuf->iWidth  > 2)
+        iNewW = iNewW + (pBuf->iWidth  - 2) * (pImage->iMAGN_MX);
+    }
+    else
+    {
+      iNewW   = pBuf->iWidth  + pImage->iMAGN_ML - 1;
+      if (pBuf->iWidth  > 2)
+        iNewW = iNewW + pImage->iMAGN_MR - 1;
+      if (pBuf->iWidth  > 3)
+        iNewW = iNewW + (pBuf->iWidth  - 3) * (pImage->iMAGN_MX - 1);
+    }
+  }
+
+  if (pImage->iMAGN_MethodY)           /* determine new height */
+  {
+    if (pImage->iMAGN_MethodY == 1)
+    {
+      iNewH   = pImage->iMAGN_MT;
+      if (pBuf->iHeight > 1)
+        iNewH = iNewH + pImage->iMAGN_ML;
+      if (pBuf->iHeight > 2)
+        iNewH = iNewH + (pBuf->iHeight - 2) * (pImage->iMAGN_MY);
+    }
+    else
+    {
+      iNewH   = pBuf->iHeight + pImage->iMAGN_MT - 1;
+      if (pBuf->iHeight > 2)
+        iNewH = iNewH + pImage->iMAGN_MB - 1;
+      if (pBuf->iHeight > 3)
+        iNewH = iNewH + (pBuf->iHeight - 3) * (pImage->iMAGN_MY - 1);
+    }
+  }
+                                       /* get new buffer */
+  iNewrowsize  = iNewW * pBuf->iSamplesize;
+  iNewsize     = iNewH * iNewrowsize;
+  
+  MNG_ALLOC (pData, pNewdata, iNewsize);
+
+  switch (pBuf->iColortype)            /* determine magnification routines */
+  {
+    case  0 : ;
+    case  8 : {
+                if (pBuf->iBitdepth <= 8)
+                {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = magnify_g8_x1; break; }
+                    case 2  : { fMagnifyX = magnify_g8_x2; break; }
+                    case 3  : { fMagnifyX = magnify_g8_x1; break; }
+                    case 4  : { fMagnifyX = magnify_g8_x2; break; }
+                  }
+
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = magnify_g8_y1; break; }
+                    case 2  : { fMagnifyY = magnify_g8_y2; break; }
+                    case 3  : { fMagnifyY = magnify_g8_y1; break; }
+                    case 4  : { fMagnifyY = magnify_g8_y2; break; }
+                  }
+                }
+                else
+                {
+
+                  /* TODO: magnify 16-bit */
+
+                }
+
+                break;
+              }
+
+    case  2 : ;
+    case 10 : {
+                if (pBuf->iBitdepth <= 8)
+                {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = magnify_rgb8_x1; break; }
+                    case 2  : { fMagnifyX = magnify_rgb8_x2; break; }
+                    case 3  : { fMagnifyX = magnify_rgb8_x1; break; }
+                    case 4  : { fMagnifyX = magnify_rgb8_x2; break; }
+                  }
+
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = magnify_rgb8_y1; break; }
+                    case 2  : { fMagnifyY = magnify_rgb8_y2; break; }
+                    case 3  : { fMagnifyY = magnify_rgb8_y1; break; }
+                    case 4  : { fMagnifyY = magnify_rgb8_y2; break; }
+                  }
+                }
+                else
+                {
+
+                  /* TODO: magnify 16-bit */
+
+                }
+
+                break;
+              }
+
+    case  4 : ;
+    case 12 : {
+                if (pBuf->iBitdepth <= 8)
+                {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = magnify_ga8_x1; break; }
+                    case 2  : { fMagnifyX = magnify_ga8_x2; break; }
+                    case 3  : { fMagnifyX = magnify_ga8_x3; break; }
+                    case 4  : { fMagnifyX = magnify_ga8_x4; break; }
+                  }
+
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = magnify_ga8_y1; break; }
+                    case 2  : { fMagnifyY = magnify_ga8_y2; break; }
+                    case 3  : { fMagnifyY = magnify_ga8_y3; break; }
+                    case 4  : { fMagnifyY = magnify_ga8_y4; break; }
+                  }
+                }
+                else
+                {
+
+                  /* TODO: magnify 16-bit */
+
+                }
+
+                break;
+              }
+
+    case  6 : ;
+    case 14 : {
+                if (pBuf->iBitdepth <= 8)
+                {
+                  switch (pImage->iMAGN_MethodX)
+                  {
+                    case 1  : { fMagnifyX = magnify_rgba8_x1; break; }
+                    case 2  : { fMagnifyX = magnify_rgba8_x2; break; }
+                    case 3  : { fMagnifyX = magnify_rgba8_x2; break; }
+                    case 4  : { fMagnifyX = magnify_rgba8_x3; break; }
+                  }
+
+                  switch (pImage->iMAGN_MethodY)
+                  {
+                    case 1  : { fMagnifyY = magnify_rgba8_y1; break; }
+                    case 2  : { fMagnifyY = magnify_rgba8_y2; break; }
+                    case 3  : { fMagnifyY = magnify_rgba8_y3; break; }
+                    case 4  : { fMagnifyY = magnify_rgba8_y4; break; }
+                  }
+                }
+                else
+                {
+
+                  /* TODO: magnify 16-bit */
+
+                }
+
+                break;
+              }
+  }
+
+  pSrcline1 = pBuf->pImgdata;          /* initialize row-loop variables */
+  pDstline  = pNewdata;
+                                       /* allocate temporary row */
+  MNG_ALLOC (pData, pTempline, iNewrowsize)
+
+  for (iY = 0; iY < pBuf->iHeight; iY++)
+  {
+    pSrcline2 = pSrcline1 + pBuf->iRowsize;
+
+    if (fMagnifyX)                     /* magnifying in X-direction ? */
+    {
+      iRetcode = fMagnifyX (pData, pImage->iMAGN_MX,
+                            pImage->iMAGN_ML, pImage->iMAGN_MR,
+                            pBuf->iWidth, pSrcline1, pDstline);
+
+      if (iRetcode)                    /* on error bail out */
+      {
+        MNG_FREEX (pData, pTempline, iNewrowsize)
+        MNG_FREEX (pData, pNewdata,  iNewsize)
+        return iRetcode;
+      }
+    }
+    else
+    {
+      MNG_COPY (pDstline, pSrcline1, iNewrowsize)
+    }
+
+    pDstline += iNewrowsize;
+                                       /* magnifying in Y-direction ? */
+    if ((fMagnifyY) &&
+        ((iY < pBuf->iHeight - 1) || (pBuf->iHeight == 1) || (pImage->iMAGN_MethodY == 1)))
+    {
+      if (iY == 0)                     /* first interval ? */
+      {
+        if (pBuf->iHeight == 1)        /* single row ? */
+          pSrcline2 = MNG_NULL;
+
+        iM = (mng_int32)pImage->iMAGN_MT;
+      }
+      else                             /* last interval ? */
+      if (((pImage->iMAGN_MethodY == 1) && (iY == (pBuf->iHeight - 1))) ||
+          ((pImage->iMAGN_MethodY != 1) && (iY == (pBuf->iHeight - 2)))    )
+        iM = (mng_int32)pImage->iMAGN_MB;
+      else                             /* middle interval */
+        iM = (mng_int32)pImage->iMAGN_MY;
+
+      for (iS = 1; iS < iM; iS++)
+      {
+        iRetcode = fMagnifyY (pData, iS, iM, pBuf->iWidth,
+                              pSrcline1, pSrcline2, pTempline);
+
+        if (iRetcode)                  /* on error bail out */
+        {
+          MNG_FREEX (pData, pTempline, iNewrowsize)
+          MNG_FREEX (pData, pNewdata,  iNewsize)
+          return iRetcode;
+        }
+
+        if (fMagnifyX)                   /* magnifying in X-direction ? */
+        {
+          iRetcode = fMagnifyX (pData, pImage->iMAGN_MX,
+                                pImage->iMAGN_ML, pImage->iMAGN_MR,
+                                pBuf->iWidth, pTempline, pDstline);
+
+          if (iRetcode)                  /* on error bail out */
+          {
+            MNG_FREEX (pData, pTempline, iNewrowsize)
+            MNG_FREEX (pData, pNewdata,  iNewsize)
+            return iRetcode;
+          }
+        }
+        else
+        {
+          MNG_COPY (pDstline, pTempline, iNewrowsize)
+        }
+
+        pDstline  += iNewrowsize;
+      }
+    }
+
+    pSrcline1 += pBuf->iRowsize;
+  }
+                                       /* drop temporary row */
+  MNG_FREEX (pData, pTempline, iNewrowsize)
+                                       /* drop old pixel-data */
+  MNG_FREEX (pData, pBuf->pImgdata, pBuf->iImgdatasize)
+
+  pBuf->pImgdata     = pNewdata;       /* save new buffer dimensions */
+  pBuf->iRowsize     = iNewrowsize;
+  pBuf->iImgdatasize = iNewsize;
+  pBuf->iWidth       = iNewW;
+  pBuf->iHeight      = iNewH;
+
+  if (pImage->iId)                     /* real object ? */
+  {
+    pImage->iMAGN_MethodX = 0;         /* it's done; don't do it again !!! */
+    pImage->iMAGN_MethodY = 0;
+    pImage->iMAGN_MX      = 0;
+    pImage->iMAGN_MY      = 0;
+    pImage->iMAGN_ML      = 0;
+    pImage->iMAGN_MR      = 0;
+    pImage->iMAGN_MT      = 0;
+    pImage->iMAGN_MB      = 0;
+  }
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_MAGNIFY_IMGOBJECT, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -933,7 +1449,7 @@ mng_retcode create_ani_image (mng_datap pData)
     pCurrent = (mng_imagep)pData->pObjzero;
                                        /* now just clone the object !!! */
   iRetcode  = clone_imageobject (pData, 0, MNG_FALSE, pCurrent->bVisible,
-                                 MNG_TRUE, MNG_FALSE, 0, 0, 0, pCurrent, &pImage);
+                                 MNG_FALSE, MNG_FALSE, 0, 0, 0, pCurrent, &pImage);
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
@@ -994,7 +1510,7 @@ mng_retcode process_ani_image (mng_datap   pData,
     {                                  /* make sure to process pixels as well */
       pData->bDeltaimmediate = MNG_FALSE;
                                        /* execute the delta process */
-      iRetcode = execute_delta_image (pData, pDelta, (mng_imagep)pData->pObjzero);
+      iRetcode = execute_delta_image (pData, pDelta, (mng_imagep)pObject);
 
       if (iRetcode)                    /* on error bail out */
         return iRetcode;
@@ -1800,47 +2316,50 @@ mng_retcode process_ani_endl (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_ENDL, MNG_LC_START)
 #endif
 
-  pLOOP = pENDL->pLOOP;                /* determine matching LOOP */
-
-  if (!pLOOP)                          /* haven't got it yet ? */
-  {                                    /* go and look back in the list */
-    pLOOP = (mng_ani_loopp)pENDL->sHeader.pPrev;
-
-    while ((pLOOP) &&
-           ((pLOOP->sHeader.fCleanup != free_ani_loop) ||
-            (pLOOP->iLevel           != pENDL->iLevel)    ))
-      pLOOP = pLOOP->sHeader.pPrev;
-  }
-                                       /* got it now ? */
-  if ((pLOOP) && (pLOOP->iLevel == pENDL->iLevel))
+  if ((pData->bDisplaying) && (pData->bRunning))
   {
-    pENDL->pLOOP = pLOOP;              /* save for next time ! */
+    pLOOP = pENDL->pLOOP;              /* determine matching LOOP */
+
+    if (!pLOOP)                        /* haven't got it yet ? */
+    {                                  /* go and look back in the list */
+      pLOOP = (mng_ani_loopp)pENDL->sHeader.pPrev;
+
+      while ((pLOOP) &&
+             ((pLOOP->sHeader.fCleanup != free_ani_loop) ||
+              (pLOOP->iLevel           != pENDL->iLevel)    ))
+        pLOOP = pLOOP->sHeader.pPrev;
+    }
+                                       /* got it now ? */
+    if ((pLOOP) && (pLOOP->iLevel == pENDL->iLevel))
+    {
+      pENDL->pLOOP = pLOOP;            /* save for next time ! */
                                        /* decrease running counter ? */
-    if ((pLOOP->iRunningcount) && (pLOOP->iRunningcount < 0x7fffffffL))
-      pLOOP->iRunningcount--;
+      if ((pLOOP->iRunningcount) && (pLOOP->iRunningcount < 0x7fffffffL))
+        pLOOP->iRunningcount--;
 
-    /* TODO: we're cheating out on the termination_condition,
-       iteration_min, iteration_max and possible signals;
-       it's just not ready for that can of worms.... */  
+      /* TODO: we're cheating out on the termination_condition,
+         iteration_min, iteration_max and possible signals;
+         the code is just not ready for that can of worms.... */
 
-    if (!pLOOP->iRunningcount)         /* reached zero ? */
-    {                                  /* was this the outer LOOP ? */
-      if (pLOOP == pData->pFirstaniobj)
-        pData->bHasLOOP = MNG_FALSE;
+      if (!pLOOP->iRunningcount)       /* reached zero ? */
+      {                                /* was this the outer LOOP ? */
+        if (pLOOP == pData->pFirstaniobj)
+          pData->bHasLOOP = MNG_FALSE;
+      }
+      else
+      {
+        if (pData->pCurraniobj)        /* was we processing objects ? */
+          pData->pCurraniobj = pLOOP;  /* then restart with LOOP */
+        else                           /* else restart behind LOOP !!! */
+          pData->pCurraniobj = pLOOP->sHeader.pNext;
+      }
     }
     else
     {
-      if (pData->pCurraniobj)          /* was we processing objects ? */
-        pData->pCurraniobj = pLOOP;    /* then restart with LOOP */
-      else                             /* else restart behind LOOP !!! */
-        pData->pCurraniobj = pLOOP->sHeader.pNext;
-    }
-  }
-  else
-  {
-    MNG_ERROR (pData, 1234);
-    /* TODO: error abort ??? */
+      MNG_ERROR (pData, 1234);
+      /* TODO: error abort ??? */
 
+    }
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1869,7 +2388,9 @@ mng_retcode create_ani_defi (mng_datap pData)
   add_ani_object (pData, (mng_object_headerp)pDEFI);
 
   pDEFI->iId              = pData->iDEFIobjectid;
+  pDEFI->bHasdonotshow    = pData->bDEFIhasdonotshow;
   pDEFI->iDonotshow       = pData->iDEFIdonotshow;
+  pDEFI->bHasconcrete     = pData->bDEFIhasconcrete;
   pDEFI->iConcrete        = pData->iDEFIconcrete;
   pDEFI->bHasloca         = pData->bDEFIhasloca;
   pDEFI->iLocax           = pData->iDEFIlocax;
@@ -1917,17 +2438,19 @@ mng_retcode process_ani_defi (mng_datap   pData,
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_DEFI, MNG_LC_START)
 #endif
 
-  pData->iDEFIobjectid  = pDEFI->iId;
-  pData->iDEFIdonotshow = pDEFI->iDonotshow;
-  pData->iDEFIconcrete  = pDEFI->iConcrete;
-  pData->bDEFIhasloca   = pDEFI->bHasloca;
-  pData->iDEFIlocax     = pDEFI->iLocax;
-  pData->iDEFIlocay     = pDEFI->iLocay;
-  pData->bDEFIhasclip   = pDEFI->bHasclip;
-  pData->iDEFIclipl     = pDEFI->iClipl;
-  pData->iDEFIclipr     = pDEFI->iClipr;
-  pData->iDEFIclipt     = pDEFI->iClipt;
-  pData->iDEFIclipb     = pDEFI->iClipb;
+  pData->iDEFIobjectid     = pDEFI->iId;
+  pData->bDEFIhasdonotshow = pDEFI->bHasdonotshow;
+  pData->iDEFIdonotshow    = pDEFI->iDonotshow;
+  pData->bDEFIhasconcrete  = pDEFI->bHasconcrete;
+  pData->iDEFIconcrete     = pDEFI->iConcrete;
+  pData->bDEFIhasloca      = pDEFI->bHasloca;
+  pData->iDEFIlocax        = pDEFI->iLocax;
+  pData->iDEFIlocay        = pDEFI->iLocay;
+  pData->bDEFIhasclip      = pDEFI->bHasclip;
+  pData->iDEFIclipl        = pDEFI->iClipl;
+  pData->iDEFIclipr        = pDEFI->iClipr;
+  pData->iDEFIclipt        = pDEFI->iClipt;
+  pData->iDEFIclipb        = pDEFI->iClipb;
 
   iRetcode = process_display_defi (pData);
 
@@ -3100,6 +3623,97 @@ mng_retcode process_ani_pplt (mng_datap   pData,
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_ANI_PPLT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+/* ************************************************************************** */
+
+mng_retcode create_ani_magn (mng_datap  pData,
+                             mng_uint16 iFirstid,
+                             mng_uint16 iLastid,
+                             mng_uint16 iMethodX,
+                             mng_uint16 iMX,
+                             mng_uint16 iMY,
+                             mng_uint16 iML,
+                             mng_uint16 iMR,
+                             mng_uint16 iMT,
+                             mng_uint16 iMB,
+                             mng_uint16 iMethodY)
+{
+  mng_ani_magnp pMAGN;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_MAGN, MNG_LC_START)
+#endif
+
+  MNG_ALLOC (pData, pMAGN, sizeof (mng_ani_magn))
+
+  pMAGN->sHeader.fCleanup = free_ani_magn;
+  pMAGN->sHeader.fProcess = process_ani_magn;
+
+  pMAGN->iFirstid         = iFirstid;
+  pMAGN->iLastid          = iLastid;
+  pMAGN->iMethodX         = iMethodX;
+  pMAGN->iMX              = iMX;
+  pMAGN->iMY              = iMY;
+  pMAGN->iML              = iML;
+  pMAGN->iMR              = iMR;
+  pMAGN->iMT              = iMT;
+  pMAGN->iMB              = iMB;
+  pMAGN->iMethodY         = iMethodY;
+
+  add_ani_object (pData, (mng_object_headerp)pMAGN);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CREATE_ANI_MAGN, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode free_ani_magn (mng_datap   pData,
+                           mng_objectp pObject)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_MAGN, MNG_LC_START)
+#endif
+
+  MNG_FREEX (pData, pObject, sizeof (mng_ani_magn))
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_FREE_ANI_MAGN, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode process_ani_magn (mng_datap   pData,
+                              mng_objectp pObject)
+{
+  mng_ani_magnp pMAGN = (mng_ani_magnp)pObject;
+  mng_retcode iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_MAGN, MNG_LC_START)
+#endif
+
+  iRetcode = process_display_magn (pData, pMAGN->iFirstid, pMAGN->iLastid,
+                                   pMAGN->iMethodX, pMAGN->iMX, pMAGN->iMY,
+                                   pMAGN->iML, pMAGN->iMR, pMAGN->iMT, pMAGN->iMB,
+                                   pMAGN->iMethodY);
+
+  if (iRetcode)                        /* on error bail out */
+    return iRetcode;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_PROCESS_ANI_MAGN, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;

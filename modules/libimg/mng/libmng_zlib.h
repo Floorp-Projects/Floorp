@@ -30,9 +30,6 @@
 #ifndef _libmng_zlib_h_
 #define _libmng_zlib_h_
 
-#include "libmng.h"
-#include "libmng_data.h"
-
 /* ************************************************************************** */
 
 mng_retcode mngzlib_initialize  (mng_datap pData);

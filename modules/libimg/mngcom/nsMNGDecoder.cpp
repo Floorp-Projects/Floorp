@@ -27,23 +27,15 @@
 #include "libmng.h"
 #include "prinrval.h"
 
-// Define this if you just want an RGB (no alpha) target
-//#define NO_ALPHA
-
-#ifdef NO_ALPHA
-#define CHANNELS 3
-#else
-#define CHANNELS 4
-#endif
-
-
-typedef struct ipng_str {
+typedef struct imng_str {
 
   mng_handle handle;
   PRUint32 width;
   PRUint32 height;
-  PRUint8 *image;               /* RGBA full image buffer */
+
+  PRUint8 *image;               /* full image buffer */
   PRUint8 *rowbuf;              /* ImgDCBHaveRow is destructive.  Grrr... */
+  PRUint32 channels;            /* How many channels (3 or 4) */
 
   void *timer_id;
   
@@ -63,6 +55,7 @@ typedef struct ipng_str {
   il_container *ic = (il_container *)mng_get_userdata(handle); \
   imng_structp imng_p = (imng_structp)ic->ds
 
+#define DEBUG_tor
 #ifdef DEBUG_tor
 #define dprintf(x) fprintf x
 #else
@@ -112,23 +105,35 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
   ic->src_header->width = width;
   ic->src_header->height = height;
 
-#ifndef NO_ALPHA
-  if (mng_get_simplicity(handle) & MNG_SIMPLICITY_TRANSPARENCY) {
-    dprintf((stderr, "--- MNG ALPHA 8-BIT\n"));
-    ic->image->header.alpha_bits = 8;
-  } else {
+  switch (mng_get_alphadepth(handle)) {
+  case 0:
+    dprintf((stderr, "--- MNG ALPHA NONE\n"));
+    ic->image->header.alpha_bits = 0;
+    mng_set_canvasstyle(imng_p->handle, MNG_CANVAS_RGB8);
+    imng_p->channels = 3;
+    break;
+  case 1:
     dprintf((stderr, "--- MNG ALPHA THRESHHOLD\n"));
     ic->image->header.alpha_bits = 1;
+    mng_set_canvasstyle(imng_p->handle, MNG_CANVAS_RGBA8);
+    imng_p->channels = 4;
+    break;
+  default:
+    dprintf((stderr, "--- MNG ALPHA 8-BIT\n"));
+    ic->image->header.alpha_bits = 8;
+    mng_set_canvasstyle(imng_p->handle, MNG_CANVAS_RGBA8);
+    imng_p->channels = 4;
+    break;
   }
+
   ic->image->header.alpha_shift = 0;
   ic->image->header.is_interleaved_alpha = TRUE;
-#endif
 
   imng_p->image =
-    (unsigned char*)nsMemory::Alloc(CHANNELS*width*height);
-  memset(imng_p->image, 0, CHANNELS*width*height);
+    (unsigned char*)nsMemory::Alloc(imng_p->channels*width*height);
+  memset(imng_p->image, 0, imng_p->channels*width*height);
 
-  imng_p->rowbuf = (unsigned char*)nsMemory::Alloc(CHANNELS*width);
+  imng_p->rowbuf = (unsigned char*)nsMemory::Alloc(imng_p->channels*width);
 
   ic->imgdcb->ImgDCBImageSize();
   ic->imgdcb->ImgDCBSetupColorspaceConverter(); 
@@ -141,7 +146,7 @@ il_mng_getcanvasline(mng_handle handle, mng_uint32 iLinenr)
 {
   EXTRACT_STRUCTS;
 
-  return imng_p->image+CHANNELS*imng_p->width*iLinenr;
+  return imng_p->image+imng_p->channels*imng_p->width*iLinenr;
 }
 
 static mng_bool
@@ -156,8 +161,8 @@ il_mng_refresh(mng_handle handle,
 
   for (mng_uint32 y=top; y<top+height; y++) {
     memcpy(imng_p->rowbuf, 
-           imng_p->image+y*CHANNELS*imng_p->width,
-           CHANNELS*imng_p->width);
+           imng_p->image+y*imng_p->channels*imng_p->width,
+           imng_p->channels*imng_p->width);
     ic->imgdcb->ImgDCBHaveRow(0              /* color index data */,
                               imng_p->rowbuf /* rgb[a] */,
                               0              /* x-offset */,
@@ -165,7 +170,7 @@ il_mng_refresh(mng_handle handle,
                               y              /* start row */,
                               1              /* row duplication count */,
                               ilErase        /* draw mode */,
-                              0              /* pass */);
+                              mng_get_refreshpass(handle) /* pass */);
   }
 
   return MNG_TRUE;
@@ -346,10 +351,6 @@ MNGDecoder::ImgDInit()
     mng_set_displaygamma(imng_p->handle, display_exponent);
 ////////////
 
-#ifndef NO_ALPHA
-    mng_set_canvasstyle(imng_p->handle, MNG_CANVAS_RGBA8);
-#endif
-
     mng_setcb_openstream(imng_p->handle, il_mng_openstream);
     mng_setcb_closestream(imng_p->handle, il_mng_closestream);
     mng_setcb_readdata(imng_p->handle, il_mng_readdata);
@@ -403,8 +404,7 @@ MNGDecoder::ImgDWrite(const unsigned char *buf, int32 len)
     imng_p->bufferEnd += len;
 
     if (imng_p->resumeNeeded) {
-//      dprintf((stderr, "MNG::ImgDWrite display_resume (%d)\n",
-//               imng_p->bytesBuffered));
+//      dprintf((stderr, "MNG::ImgDWrite display_resume\n"));
       imng_p->resumeNeeded = PR_FALSE;
       int ret = mng_display_resume(imng_p->handle);
       if (ret == MNG_NEEDMOREDATA)
