@@ -225,7 +225,7 @@ nsEvaluateStringProxy::BringUpConsole()
                                        console_window_options);
         if (!argv) return NS_ERROR_OUT_OF_MEMORY;
 
-        rv = window->Open(cx, argv, 3, getter_AddRefs(console));
+        rv = window->OpenDialog(cx, argv, 3, getter_AddRefs(console));
 
         JS_PopArguments(cx, mark);
     }
