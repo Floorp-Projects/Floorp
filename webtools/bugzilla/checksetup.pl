@@ -1376,7 +1376,12 @@ if (GetIndexDef('profiles', 'login_name')->[1]) {
                        ["longdescs", "who"]) {
             my ($table, $field) = (@$i);
             print "   Updating $table.$field ...\n";
-            $dbh->do("UPDATE $table SET $field = $u1 WHERE $field = $u2");
+            my $extra = "";
+            if ($table eq "bugs") {
+                $extra = ", delta_ts = delta_ts";
+            }
+            $dbh->do("UPDATE $table SET $field = $u1 $extra " .
+                     "WHERE $field = $u2");
         }
         $dbh->do("DELETE FROM profiles WHERE userid = $u2");
     }
