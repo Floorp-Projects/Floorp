@@ -57,6 +57,8 @@ public:
     return MakeFrameName("SliderFrame", aResult);
   }
 
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,

@@ -32,6 +32,8 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsTreeTwistyListener.h"
+#include "nsIViewManager.h"
+#include "nsIView.h"
 
 //
 // NS_NewTreeFrame
@@ -57,7 +59,7 @@ NS_NewTreeRowFrame (nsIFrame** aNewFrame)
 
 // Constructor
 nsTreeRowFrame::nsTreeRowFrame()
-:nsTableRowFrame()
+:nsTableRowFrame(), mIsHeader(PR_FALSE)
 { }
 
 // Destructor
@@ -86,4 +88,89 @@ NS_METHOD nsTreeRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     }
   }
   return rv;
+}
+
+
+NS_IMETHODIMP
+nsTreeRowFrame::Init(nsIPresContext&  aPresContext,
+                      nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsIStyleContext* aContext,
+                      nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsTableRowFrame::Init(aPresContext, aContent, aParent, aContext,
+                                aPrevInFlow);
+  
+  // Determine if we're a column header or not.
+  // Get row group frame
+  if (aParent != nsnull)
+  {
+		// Get the display type of the row group frame and see if it's a header or body
+		nsCOMPtr<nsIStyleContext> parentContext;
+		aParent->GetStyleContext(getter_AddRefs(parentContext));
+		if (parentContext)
+		{
+			const nsStyleDisplay* display = (const nsStyleDisplay*)
+				parentContext->GetStyleData(eStyleStruct_Display);
+			if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP)
+			{
+				mIsHeader = PR_TRUE;
+
+        // headers get their own views, so that they can capture events
+        CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+        nsIView* view;
+        GetView(&view);
+        view->SetContentTransparency(PR_TRUE);
+			}
+			else mIsHeader = PR_FALSE;
+		}
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTreeRowFrame::HeaderDrag(PRBool aGrabMouseEvents)
+{
+    // get its view
+  nsIView* view = nsnull;
+  GetView(&view);
+  nsCOMPtr<nsIViewManager> viewMan;
+  PRBool result;
+
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewMan));
+
+    if (viewMan) {
+      if (aGrabMouseEvents) {
+        viewMan->GrabMouseEvents(view,result);
+      } else {
+        viewMan->GrabMouseEvents(nsnull,result);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+PRBool
+nsTreeRowFrame::DraggingHeader()
+{
+    // get its view
+  nsIView* view = nsnull;
+  GetView(&view);
+  nsCOMPtr<nsIViewManager> viewMan;
+  
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewMan));
+
+    if (viewMan) {
+      nsIView* grabbingView;
+      viewMan->GetMouseEventGrabber(grabbingView);
+      if (grabbingView == view)
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }

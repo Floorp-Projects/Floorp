@@ -35,9 +35,19 @@ public:
                                       nsReflowStatus&      aStatus,
                                       nsIFrame *           aNextFrame);
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow); // Overridden to set whether we're a column header 
+
+  NS_IMETHOD HeaderDrag(PRBool aGrabber);
+  PRBool DraggingHeader();
+
 protected:
   nsTreeRowFrame();
   virtual ~nsTreeRowFrame();
 
 protected: // Data Members
+  PRBool mIsHeader;
 }; // class nsTreeRowFrame

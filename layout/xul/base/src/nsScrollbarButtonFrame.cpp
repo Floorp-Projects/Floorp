@@ -234,3 +234,11 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start, nsIFr
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScrollbarButtonFrame::Destroy(nsIPresContext& aPresContext)
+{
+  // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
+  // from under you while you're in the process of scrolling.
+  nsRepeatService::GetInstance()->Stop();
+  return nsTitledButtonFrame::Destroy(aPresContext);
+}
