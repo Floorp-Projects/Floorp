@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.12 2002/09/20 04:41:47 jpierre%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.13 2002/10/25 22:46:48 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -879,6 +879,7 @@ NSS_SMIMESignerInfo_SaveSMIMEProfile(NSSCMSSignerInfo *signerinfo)
     CERTCertDBHandle *certdb;
     int save_error;
     SECStatus rv;
+    PRBool must_free_cert = PR_FALSE;
 
     certdb = CERT_GetDefaultCertDB();
 
@@ -900,6 +901,7 @@ NSS_SMIMESignerInfo_SaveSMIMEProfile(NSSCMSSignerInfo *signerinfo)
 	cert = NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(certdb, ekp);
 	if (cert == NULL)
 	    return SECFailure;
+	must_free_cert = PR_TRUE;
     }
 
     if (cert == NULL) {
@@ -915,6 +917,8 @@ NSS_SMIMESignerInfo_SaveSMIMEProfile(NSSCMSSignerInfo *signerinfo)
      * should have already been saved */
 #ifdef notdef
     if (CERT_VerifyCert(certdb, cert, PR_TRUE, certUsageEmailRecipient, PR_Now(), signerinfo->cmsg->pwfn_arg, NULL) != SECSuccess) {
+	if (must_free_cert)
+	    CERT_DestroyCertificate(cert);
 	return SECFailure;
     }
 #endif
@@ -939,6 +943,8 @@ NSS_SMIMESignerInfo_SaveSMIMEProfile(NSSCMSSignerInfo *signerinfo)
     }
 
     rv = CERT_SaveSMimeProfile (cert, profile, utc_stime);
+    if (must_free_cert)
+	CERT_DestroyCertificate(cert);
 
     /*
      * Restore the saved error in case the calls above set a new
