@@ -78,6 +78,26 @@ public:
     {0x81, 0x77, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
+/*
+* Public shortcuts to the shared allocator's methods
+*/
+
+class NSTaskMem
+{
+public:
+    static NS_EXPORT void* Alloc(PRUint32 size);
+    static NS_EXPORT void* Realloc(void* ptr, PRUint32 size);
+    static NS_EXPORT void  Free(void* ptr);
+    static NS_EXPORT void  HeapMinimize();
+    static NS_EXPORT void* Clone(const void* ptr,  PRUint32 size);
+private:
+    NSTaskMem();   // not implemented
+    static PRBool EnsureAllocator() {return mAllocator || FetchAllocator();}
+    static PRBool FetchAllocator();
+    static nsIAllocator* mAllocator;
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsIAllocator_h___ */

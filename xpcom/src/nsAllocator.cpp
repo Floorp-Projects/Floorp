@@ -21,6 +21,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "nsAllocator.h"
+#include "nsIServiceManager.h"
+#include <string.h>     /* for memcpy */
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
@@ -127,3 +129,55 @@ nsAllocatorFactory::LockFactory(PRBool aLock)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/*
+* Public shortcuts to the shared allocator's methods
+*   (all these methods are class statics)
+*/
+
+// public:
+void* NSTaskMem::Alloc(PRUint32 size) 
+{
+    if(!EnsureAllocator()) return NULL;
+    return mAllocator->Alloc(size);
+}
+
+void* NSTaskMem::Realloc(void* ptr, PRUint32 size)
+{
+    if(!EnsureAllocator()) return NULL;
+    return mAllocator->Realloc(ptr, size);
+}
+
+void  NSTaskMem::Free(void* ptr)
+{
+    if(!EnsureAllocator()) return;
+    mAllocator->Free(ptr);
+}
+
+void  NSTaskMem::HeapMinimize()
+{
+    if(!EnsureAllocator()) return;
+    mAllocator->HeapMinimize();
+}
+
+void* NSTaskMem::Clone(const void* ptr,  PRUint32 size)
+{
+    if(!ptr || !EnsureAllocator()) return NULL;
+    void* p = mAllocator->Alloc(size);
+    if(p) memcpy(p, ptr, size);
+    return p;
+}        
+
+// private:
+
+nsIAllocator* NSTaskMem::mAllocator = NULL;
+
+PRBool NSTaskMem::FetchAllocator()
+{
+    NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+    NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+    nsServiceManager::GetService(kAllocatorCID, kIAllocatorIID, 
+                                 (nsISupports **)&mAllocator);
+    NS_ASSERTION(mAllocator, "failed to get Allocator!");
+    return (PRBool) mAllocator;
+}    
