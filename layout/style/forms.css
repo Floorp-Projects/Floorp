@@ -44,7 +44,7 @@
 
 *|*::-moz-fieldset-content {
   display: block;
-  height: inherit;   /* Need this so percentage heights of kids work right */
+  height: 100%;   /* Need this so percentage heights of kids work right */
 }
 
 form {
