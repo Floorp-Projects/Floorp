@@ -60,7 +60,7 @@ Rights Reserved.
                  type="autocomplete" flex="1"
                  searchSessions="addrbook" timeout="300" maxrows="4" 
                  autoFill="true" autoFillAfterMatch="true" forceComplete="true"
-                 minResultsForPopup="3" 
+                 minResultsForPopup="3" ignoreBlurWhileSearching="true"
                  ontextcommand="awRecipientTextCommand(eventParam, this)"
                  onerrorcommand="awRecipientErrorCommand(eventParam, this)"
                  oninput="gContentChanged=true; setupAutocomplete();" disableonsend="true"
