@@ -24,6 +24,7 @@
 
 %{C++
 #include "nscore.h" // for NS_WIDGET
+#include "nsIComponentManager.h"
 %}
 native StandardFilterMask(nsIFileSpecWithUI::StandardFilterMask);
 
@@ -71,6 +72,24 @@ interface nsIFileSpecWithUI : nsIFileSpec
 };
 	
 %{C++
+// Define Progid and CID
+// {e3326a80-2816-11d3-a7e5-98cb48c74f3c}
+#define NS_FILESPECWITHUI_CID \
+{ 0xe3326a80, 0x2816, 0x11d3, { 0xa7, 0xe5, 0x98, 0xcb, 0x48, 0xc7, 0x4f, 0x3c } }
+
+#define NS_FILESPECWITHUI_PROGID "component://netscape/filespecwithui"
+#define NS_FILESPECWITHUI_CLASSNAME "nsIFileSpecWithUI"
+
 // Factory methods
-extern NS_WIDGET nsresult NS_NewFileSpecWithUI(nsIFileSpecWithUI** result);
+inline nsIFileSpecWithUI* NS_CreateFileSpecWithUI()
+{
+     nsIFileSpecWithUI* spec = nsnull;
+     nsresult rv = nsComponentManager::CreateInstance(
+     	(const char*)NS_FILESPECWITHUI_PROGID,
+     	(nsISupports*)nsnull,
+     	(const nsID&)nsIFileSpecWithUI::GetIID(),
+     	(void**)&spec);
+     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
+     return spec;
+}
 %}
