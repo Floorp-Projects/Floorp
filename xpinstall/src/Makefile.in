@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  plugin \
 		  unicharutil \
+		  appshell \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

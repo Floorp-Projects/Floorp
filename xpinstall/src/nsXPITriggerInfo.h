@@ -54,11 +54,12 @@ typedef struct XPITriggerEvent {
 class nsXPITriggerItem
 {
   public:
-    nsXPITriggerItem( const PRUnichar* name, const PRUnichar* URL, PRInt32 flags = 0);
+    nsXPITriggerItem( const PRUnichar* name, const PRUnichar* URL, const PRUnichar* iconURL, PRInt32 flags = 0);
     ~nsXPITriggerItem();
 
     nsString    mName;
     nsString    mURL;
+    nsString    mIconURL;
     nsString    mArguments;
     nsString    mCertName;
     PRInt32     mFlags;

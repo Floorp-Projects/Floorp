@@ -51,6 +51,8 @@ interface nsIDOMChromeWindow : nsISupports
 
   void                      getAttention();
 
+  void                      getAttentionWithCycleCount(in long aCycleCount);
+
   void                      setCursor(in DOMString cursor);
 
   void                      maximize();

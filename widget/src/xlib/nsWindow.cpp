@@ -169,7 +169,7 @@ nsWindow::UpdateIdle (void *data)
 // Just raises the window.
 // There should probably be checks on this.
 // FIXME KenF
-NS_IMETHODIMP nsWindow::GetAttention(void)
+NS_IMETHODIMP nsWindow::GetAttention(PRInt32 aCycleCount)
 {
   XRaiseWindow(mDisplay, mBaseWindow);
   return NS_OK;

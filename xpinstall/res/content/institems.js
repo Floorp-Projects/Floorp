@@ -58,7 +58,7 @@ function addTreeItem(num, aName, aUrl, aCertName)
 function onLoad()
 {
   var row = 0;
-  var moduleName, URL, certName, numberOfDialogTreeElements;
+  var moduleName, URL, IconURL, certName, numberOfDialogTreeElements;
 
   gBundle = document.getElementById("xpinstallBundle");
   gParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
@@ -71,6 +71,7 @@ function onLoad()
   {
     moduleName = gParam.GetString(i);
     URL = gParam.GetString(++i);
+    IconURL = gParam.GetString(++i); // Advance the enumeration, parameter is unused just now.
     certName = gParam.GetString(++i);
 
     addTreeItem(row++, moduleName, URL, certName);

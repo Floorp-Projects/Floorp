@@ -38,8 +38,9 @@ MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem)
 
 nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
                                     const PRUnichar* aURL,
+                                    const PRUnichar* aIconURL,
                                     PRInt32 aFlags)
-  : mName(aName), mURL(aURL), mFlags(aFlags)
+  : mName(aName), mURL(aURL), mIconURL(aIconURL), mFlags(aFlags)
 {
     MOZ_COUNT_CTOR(nsXPITriggerItem);
 

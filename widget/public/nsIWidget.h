@@ -958,8 +958,11 @@ class nsIWidget : public nsISupports {
      * the Mac.  The notification should be suppressed if the window is already
      * in the foreground and should be dismissed when the user brings this window
      * to the foreground.
+     * @param aCycleCount Maximum number of times to animate the window per system 
+     *                    conventions. If set to -1, cycles indefinitely until 
+     *                    window is brought into the foreground.
      */
-    NS_IMETHOD GetAttention() = 0;
+    NS_IMETHOD GetAttention(PRInt32 aCycleCount) = 0;
 
     /**
      * Get the last user input event time in milliseconds. If there are any pending
