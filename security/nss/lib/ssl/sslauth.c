@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.3 2001/02/09 00:32:03 nelsonb%netscape.com Exp $
+ * $Id: sslauth.c,v 1.4 2001/02/09 02:11:30 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -229,6 +229,9 @@ SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
     
     ss = ssl_FindSocket(fd);
     PORT_Assert(ss != NULL);
+    if (!ss) {
+	return SECFailure;
+    }
 
     handle = (CERTCertDBHandle *)arg;
 
