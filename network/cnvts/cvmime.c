@@ -435,7 +435,7 @@ net_RegisterDefaultDecoders (void)
   NET_RegisterContentTypeConverter (APPLICATION_APPLEFILE, FO_SAVE_AS,
 								    NULL, fe_MakeAppleSingleDecodeStream_1);
 #endif
-#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
   /* the new apple single/double and binhex decode.	20oct95 	*/
   NET_RegisterContentTypeConverter (APPLICATION_BINHEX, FO_PRESENT,
 								    NULL, fe_MakeBinHexDecodeStream);

@@ -768,7 +768,7 @@ PRIVATE void
 net_help_init_chrome(Chrome *window_chrome, int32 w, int32 h)
 {
     window_chrome->type           = MWContextHTMLHelp;
-  #if defined(XP_WIN) || defined(XP_UNIX)
+  #if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_BEOS)
     window_chrome->topmost        = FALSE;
   #else
     window_chrome->topmost        = TRUE;  

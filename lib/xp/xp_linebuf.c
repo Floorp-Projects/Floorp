@@ -48,7 +48,7 @@ extern int MK_OUT_OF_MEMORY;
 #  define LINEBREAK         "\015\012"
 #  define LINEBREAK_LEN     2
 # else
-#  ifdef XP_UNIX
+#  if defined(XP_UNIX) || defined(XP_BEOS)
 #   define LINEBREAK        "\012"
 #   define LINEBREAK_LEN    1
 #  endif /* XP_UNIX */

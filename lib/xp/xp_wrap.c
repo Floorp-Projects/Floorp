@@ -428,7 +428,7 @@ XP_WordWrapWithPrefix(int charset, unsigned char *str, int maxColumn,
 # define LINEBREAK "\015"
 #elif defined(XP_OS2)
 # define LINEBREAK "\015"
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 # define LINEBREAK "\012"
 #endif
 
