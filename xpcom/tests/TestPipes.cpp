@@ -513,6 +513,56 @@ RunTests(PRUint32 segSize, PRUint32 segCount)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void
+TestSearch(const char* delim, PRUint32 segSize)
+{
+    nsresult rv;
+    // need at least 2 segments to test boundary conditions:
+    PRUint32 bufDataSize = segSize * 2;
+    PRUint32 bufSize = segSize * 2;
+    nsIBufferInputStream* in;
+    nsIBufferOutputStream* out;
+    rv = NS_NewPipe(&in, &out, nsnull, segSize, bufSize);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
+    out->SetNonBlocking(PR_TRUE);
+
+    PRUint32 i, j, amt;
+    PRUint32 delimLen = nsCRT::strlen(delim);
+    for (i = 0; i < bufDataSize; i++) {
+        // first fill the buffer
+        for (j = 0; j < i; j++) {
+            rv = out->Write("-", 1, &amt);
+            NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
+        }
+        rv = out->Write(delim, delimLen, &amt);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Write failed");
+        if (i + amt < bufDataSize) {
+            for (j = i + amt; j < bufDataSize; j++) {
+                rv = out->Write("+", 1, &amt);
+                NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
+            }
+        }
+        
+        // now search for the delimiter
+        PRBool found;
+        PRUint32 offset;
+        rv = in->Search(delim, PR_FALSE, &found, &offset);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Search failed");
+
+        // print the results
+        char* bufferContents = new char[bufDataSize + 1];
+        rv = in->Read(bufferContents, bufDataSize, &amt);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && amt == bufDataSize, "Read failed");
+        bufferContents[bufDataSize] = '\0';
+        printf("Buffer: %s\nDelim: %s %s offset: %d\n", bufferContents,
+               delim, (found ? "found" : "not found"), offset);
+    }
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef DEBUG
 extern NS_COM void
 TestSegmentedBuffer();
@@ -549,6 +599,10 @@ main(int argc, char* argv[])
         return -1;
     }
 #endif
+    TestSearch("foo", 8);
+    TestSearch("bar", 6);
+    TestSearch("baz", 2);
+
     rv = TestPipeObserver();
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipeObserver failed");
     rv = TestChainedPipes();
