@@ -2063,6 +2063,8 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
   for (PRInt32 i = 0; i < colCount; i++)
   {
     cellData = cellMap->GetDataAt(aLineNumber, i);
+    if (!cellData)
+      continue; // we hit a cellmap hole
     if (!cellData->IsOrig())
       continue;
     tempFrame = (nsIFrame*)cellData->GetCellFrame();
