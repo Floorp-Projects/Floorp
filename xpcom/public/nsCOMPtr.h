@@ -256,6 +256,13 @@
   #endif
 #endif
 
+#if defined(SOLARIS) && !defined(__GNUG__)
+  #define NSCAP_NO_BOOL
+  #define NSCAP_NO_EXPLICIT
+  #define NSCAP_NO_NEW_CASTS
+  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
+#endif
+
 #if defined(_MSC_VER) && (_MSC_VER<1100)
   #define NSCAP_NO_EXPLICIT
   #define NSCAP_NO_BOOL
