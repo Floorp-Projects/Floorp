@@ -432,42 +432,19 @@ nsScriptNameSpaceManager::RegisterInterface(nsIInterfaceInfo* aIfInfo,
   // interface name than to get the count of constants. The former is 
   // always cached. The latter might require loading an xpt file!
 
-  PRUint16 constant_count = 0;
   *aFoundOld = PR_FALSE;
 
-  nsresult rv = aIfInfo->GetConstantCount(&constant_count);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("can't get constant count");
-    return rv;
+  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aIfName));
+  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
+    *aFoundOld = PR_TRUE;
+
+    return NS_OK;
   }
 
-  if (constant_count) {
-    PRUint16 parent_constant_count = 0;
+  s->mType = nsGlobalNameStruct::eTypeInterface;
 
-    nsCOMPtr<nsIInterfaceInfo> parent_info;
-
-    aIfInfo->GetParent(getter_AddRefs(parent_info));
-
-    if (parent_info) {
-      rv = parent_info->GetConstantCount(&parent_constant_count);
-      if (NS_FAILED(rv)) {
-        NS_ERROR("can't get constant count");
-        return rv;
-      }
-    }
-
-    if (constant_count != parent_constant_count) {
-      nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aIfName));
-      NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-      if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
-          *aFoundOld = PR_TRUE;
-          return NS_OK;
-      }
-
-      s->mType = nsGlobalNameStruct::eTypeInterface;
-    }
-  }
   return NS_OK;
 }
 
