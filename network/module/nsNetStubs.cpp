@@ -301,14 +301,14 @@ PUBLIC void INTL_CCCReportMetaCharsetTag(MWContext *context, char *charset_tag)
  * From ns/cmd/winfe/authdll.cpp
  *---------------------------------------------------------------------------
  */
-static char * WFE_BuildCompuserveAuthString(URL_Struct *URL_s)
+char * WFE_BuildCompuserveAuthString(URL_Struct *URL_s)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
 }
 
 
-static int
+int
 WFE_DoCompuserveAuthenticate(MWContext *context,
                              URL_Struct *URL_s, 
                              char *authenticate_header_value)
@@ -534,7 +534,7 @@ size_t XP_StrfTime(MWContext* context, char *result, size_t maxsize, int format,
  *---------------------------------------------------------------------------
  */
 
-static void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
+void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
 {
     MOZ_FUNCTION_STUB;
 }
