@@ -1782,23 +1782,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   nsresult result;
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
-  if (aSpread == eSpreadDown)
-  {
-    nsIFrame *frame = GetPrevInFlow();
-    while(frame){
-      frame->SetSelected(aRange,aSelected,eSpreadNone);
-      result = frame->GetPrevInFlow(&frame);
-      if (NS_FAILED(result))
-        break;
-    }
-    frame = GetNextInFlow();
-    while (frame){
-      frame->SetSelected(aRange,aSelected,eSpreadNone);
-      result = frame->GetNextInFlow(&frame);
-      if (NS_FAILED(result))
-        break;
-    }
-  }
+
   nsFrameState  frameState;
   GetFrameState(&frameState);
   PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
@@ -1808,6 +1792,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   }
 
   PRBool found = PR_FALSE;
+  PRBool wholeContentFound = PR_FALSE;//if the entire content we look at is selected.
   if (aRange) {
     //lets see if the range contains us, if so we must redraw!
     nsCOMPtr<nsIDOMNode> endNode;
@@ -1841,8 +1826,11 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
       else
         found = PR_FALSE;
     }
-    else
+    else//this WHOLE content is selected. 
+    {
       found = PR_TRUE;
+      wholeContentFound = PR_TRUE;
+    }
   }
   else {
     if ( aSelected != (PRBool)(frameState | NS_FRAME_SELECTED_CONTENT) ){
@@ -1861,6 +1849,34 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
     nsRect rect(0, 0, frameRect.width, frameRect.height);
     Invalidate(rect, PR_FALSE);
 //    ForceDrawFrame(this);
+  }
+  if (aSpread == eSpreadDown)
+  {
+    nsIFrame *frame = GetPrevInFlow();
+    while(frame){
+      frame->SetSelected(aRange,aSelected,eSpreadNone);
+      result = frame->GetPrevInFlow(&frame);
+      if (NS_FAILED(result))
+        break;
+    }
+    frame = GetNextInFlow();
+    while (frame){
+      frame->SetSelected(aRange,aSelected,eSpreadNone);
+      result = frame->GetNextInFlow(&frame);
+      if (NS_FAILED(result))
+        break;
+    }
+    if (wholeContentFound)//we need to talk to siblings as well as flow
+    {
+      nsIFrame *frame;
+      result = GetNextSibling(&frame);
+      while (NS_SUCCEEDED(result) && frame){
+        frame->SetSelected(aRange,aSelected,eSpreadDown);
+        result = frame->GetNextSibling(&frame);
+        if (NS_FAILED(result))
+          break;
+      }
+    }
   }
   return NS_OK;
 }
