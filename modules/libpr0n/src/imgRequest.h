@@ -83,6 +83,7 @@ private:
   nsVoidArray mObservers;
 
   PRBool mProcessing;
+
   PRUint32 mStatus;
   PRUint32 mState;
 };
