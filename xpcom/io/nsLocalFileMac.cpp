@@ -1219,7 +1219,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 NS_IMETHODIMP  
 nsLocalFile::Append(const char *node)
 {
-  if (!node || (strstr(node, ":") != nsnull))
+  if (!node || (strchr(node, ':') != nsnull))
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
   return AppendRelativePath(node);
