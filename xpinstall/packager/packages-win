@@ -93,6 +93,7 @@ bin\components\nkdata.dll
 bin\components\nkfile.dll
 bin\components\nkftp.dll
 bin\components\nkhttp.dll
+bin\components\nkjar.dll
 bin\components\nkres.dll
 bin\components\nkkyword.dll
 bin\components\nkdatetm.dll
