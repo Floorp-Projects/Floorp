@@ -94,6 +94,7 @@ void ProcessFileOps(DWORD dwTiming)
   ProcessMoveFile(dwTiming);
   ProcessCopyFile(dwTiming);
   ProcessCopyFileSequential(dwTiming);
+  ProcessSelfRegisterFile(dwTiming);
   ProcessDeleteFile(dwTiming);
   ProcessRemoveDirectory(dwTiming);
   ProcessRunApp(dwTiming);
@@ -572,6 +573,104 @@ HRESULT ProcessCopyFileSequential(DWORD dwTiming)
     lstrcpy(szSection, "Copy File Sequential");
     lstrcat(szSection, szIndex);
     GetPrivateProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniConfig);
+  }
+  return(FO_SUCCESS);
+}
+
+int RegisterDll32(char *File)
+{
+  FARPROC   DllReg;
+  HINSTANCE hLib;
+
+  if((hLib = LoadLibraryEx(File, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
+  {
+    if((DllReg = GetProcAddress(hLib, "DllRegisterServer")) != NULL)
+      DllReg();
+
+    FreeLibrary(hLib);
+    return(0);
+  }
+
+  return(1);
+}
+
+
+HRESULT FileSelfRegister(LPSTR szFilename, LPSTR szDestination)
+{
+  char            szFullFilenamePath[MAX_BUF];
+  DWORD           dwRv;
+  HANDLE          hFile;
+  WIN32_FIND_DATA fdFile;
+  BOOL            bFound;
+
+  lstrcpy(szFullFilenamePath, szDestination);
+  AppendBackSlash(szFullFilenamePath, sizeof(szFullFilenamePath));
+  lstrcat(szFullFilenamePath, szFilename);
+
+  /* From file path exists and To file path does not exist */
+  if(FileExists(szFullFilenamePath))
+  {
+    RegisterDll32(szFullFilenamePath);
+    return(FO_SUCCESS);
+  }
+
+  lstrcpy(szFullFilenamePath, szDestination);
+  AppendBackSlash(szFullFilenamePath, sizeof(szFullFilenamePath));
+  lstrcat(szFullFilenamePath, szFilename);
+
+  if((hFile = FindFirstFile(szFullFilenamePath, &fdFile)) == INVALID_HANDLE_VALUE)
+    bFound = FALSE;
+  else
+    bFound = TRUE;
+
+  while(bFound)
+  {
+    if((lstrcmpi(fdFile.cFileName, ".") != 0) && (lstrcmpi(fdFile.cFileName, "..") != 0))
+    {
+      /* create full path string including filename for destination */
+      lstrcpy(szFullFilenamePath, szDestination);
+      AppendBackSlash(szFullFilenamePath, sizeof(szFullFilenamePath));
+      lstrcat(szFullFilenamePath, fdFile.cFileName);
+
+      if((dwRv = FileExists(szFullFilenamePath)) && (dwRv != FILE_ATTRIBUTE_DIRECTORY))
+        RegisterDll32(szFullFilenamePath);
+    }
+
+    bFound = FindNextFile(hFile, &fdFile);
+  }
+
+  FindClose(hFile);
+  return(FO_SUCCESS);
+}
+
+HRESULT ProcessSelfRegisterFile(DWORD dwTiming)
+{
+  DWORD dwIndex;
+  char  szIndex[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  char  szSection[MAX_BUF];
+  char  szFilename[MAX_BUF];
+  char  szDestination[MAX_BUF];
+
+  dwIndex = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szSection, "Self Register File");
+  lstrcat(szSection, szIndex);
+  GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
+  while(*szBuf != '\0')
+  {
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
+    {
+      DecryptString(szDestination, szBuf);
+      GetPrivateProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniConfig);
+      FileSelfRegister(szFilename, szDestination);
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szSection, "Self Register File");
+    lstrcat(szSection, szIndex);
+    GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
   }
   return(FO_SUCCESS);
 }
