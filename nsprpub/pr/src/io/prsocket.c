@@ -1122,7 +1122,7 @@ static PRIOMethods udpMethods = {
 
 
 static PRIOMethods socketpollfdMethods = {
-    PR_DESC_SOCKET_POLL,
+    (PRDescType) 0,
     (PRCloseFN)_PR_InvalidStatus,
     (PRReadFN)_PR_InvalidInt,
     (PRWriteFN)_PR_InvalidInt,
