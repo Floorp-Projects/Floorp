@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  downloadmanager \
+      uriloader \
 		  pref \
 		  docshell \
 		  webshell \
