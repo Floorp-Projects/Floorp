@@ -313,7 +313,8 @@ int initCategories(STGlobals* g)
     fp = fopen(g->mOptions.mCategoryFile, "r");
     if (!fp)
     {
-        REPORT_ERROR(__LINE__, initCategories);
+        /* It isnt an error to not have a categories file */
+        REPORT_INFO("No categories file.");
         return -1;
     }
 
@@ -676,9 +677,12 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     */
     walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL);
 
-    for (i = 0; i < aRun->mAllocationCount; i++)
+    if (g->mNCategoryMap > 0)
     {
-        categorizeAllocation(aRun->mAllocations[i], g);
+        for (i = 0; i < aRun->mAllocationCount; i++)
+        {
+            categorizeAllocation(aRun->mAllocations[i], g);
+        }
     }
 
     /*
