@@ -347,6 +347,7 @@ public:
 
   // nsIDocShell
   NS_DECL_NSIDOCSHELL
+  void SetCurrentURI(nsIURI* aURI);
 
   // nsWebShell
   nsIEventQueue* GetEventQueue(void);
@@ -1163,9 +1164,23 @@ nsWebShell::GetURL(const PRUnichar** aURL)
 NS_IMETHODIMP
 nsWebShell::SetURL(const PRUnichar* aURL)
 {
-  mURL = aURL;
+  nsCOMPtr<nsIURI> uri;
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), aURL, nsnull), 
+                    NS_ERROR_FAILURE);
+  SetCurrentURI(uri);
   return NS_OK;
 }
+
+void 
+nsWebShell::SetCurrentURI(nsIURI* aURI)
+{
+   nsXPIDLCString spec;
+   if (NS_SUCCEEDED(aURI->GetSpec(getter_Copies(spec)))) {
+     mURL = spec;
+     nsDocShell::SetCurrentURI(aURI);
+   }
+}
+
 
 NS_IMETHODIMP
 nsWebShell::GetIsInSHist(PRBool& aResult)

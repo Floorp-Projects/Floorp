@@ -140,8 +140,8 @@ protected:
    NS_IMETHOD StopCurrentLoads();
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIURI* aURI);
-   void SetCurrentURI(nsIURI* aURI);
-   void SetReferrerURI(nsIURI* aURI);
+   virtual void SetCurrentURI(nsIURI* aURI);
+   virtual void SetReferrerURI(nsIURI* aURI);
 
    // Session History
    NS_IMETHOD ShouldAddToSessionHistory(nsIURI* aURI, PRBool* aShouldAdd);
