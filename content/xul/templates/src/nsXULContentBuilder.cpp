@@ -1203,6 +1203,12 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
                                              nsIContent** aContainer,
                                              PRInt32* aNewIndexInContainer)
 {
+    // Avoid re-entrant builds for the same resource.
+    if (IsActivated(aResource))
+        return NS_OK;
+
+    ActivationEntry entry(aResource, &mTop);
+
     // Create the contents of a container by iterating over all of the
     // "containment" arcs out of the element's resource.
     nsresult rv;
@@ -1662,12 +1668,6 @@ nsXULContentBuilder::Rebuild(nsIContent* aElement)
     // First, make sure that the element is in the right widget -- ours.
     if (! IsElementInWidget(aElement))
         return NS_OK;
-
-    // Forbid re-entrant rebuilds
-    if (mIsBuilding)
-        return NS_OK;
-
-    AutoLatch latch(&mIsBuilding);
 
     nsresult rv;
 

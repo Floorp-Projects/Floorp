@@ -160,8 +160,8 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mTimer(nsnull),
       mUpdateBatchNest(0),
       mRulesCompiled(PR_FALSE),
-      mIsBuilding(PR_FALSE),
-      mFlags(0)
+      mFlags(0),
+      mTop(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -565,11 +565,14 @@ nsXULTemplateBuilder::OnAssert(nsIRDFDataSource* aDataSource,
                                nsIRDFResource* aProperty,
                                nsIRDFNode* aTarget)
 {
-    // Ignore re-entrant updates while we're building content.
-    if (mIsBuilding || mUpdateBatchNest != 0)
+    // Ignore updates if we're batching
+    if (mUpdateBatchNest)
         return(NS_OK);
 
-    AutoLatch latch(&mIsBuilding);
+    // Ignore re-entrant builds for content that is currently in our
+    // activation stack.
+    if (IsActivated(aSource))
+        return NS_OK;
 
     nsresult rv;
 
@@ -635,11 +638,14 @@ nsXULTemplateBuilder::OnUnassert(nsIRDFDataSource* aDataSource,
                                  nsIRDFResource* aProperty,
                                  nsIRDFNode* aTarget)
 {
-    // Ignore re-entrant updates while we're building content.
-    if (mIsBuilding || mUpdateBatchNest != 0)
+    // Ignore updates if we're batching
+    if (mUpdateBatchNest)
         return NS_OK;
 
-    AutoLatch latch(&mIsBuilding);
+    // Ignore re-entrant builds for content that is currently in our
+    // activation stack.
+    if (IsActivated(aSource))
+        return NS_OK;
 
     nsresult rv;
 
@@ -665,11 +671,14 @@ nsXULTemplateBuilder::OnChange(nsIRDFDataSource* aDataSource,
                                nsIRDFNode* aOldTarget,
                                nsIRDFNode* aNewTarget)
 {
-    // Ignore re-entrant updates while we're building content.
-    if (mIsBuilding || mUpdateBatchNest != 0)
+    // Ignore updates if we're batching
+    if (mUpdateBatchNest)
         return NS_OK;
 
-    AutoLatch latch(&mIsBuilding);
+    // Ignore re-entrant builds for content that is currently in our
+    // activation stack.
+    if (IsActivated(aSource))
+        return NS_OK;
 
 	if (mCache) {
 		if (aOldTarget)
@@ -715,11 +724,9 @@ nsXULTemplateBuilder::OnMove(nsIRDFDataSource* aDataSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget)
 {
-    // Ignore re-entrant updates while we're building content.
-    if (mIsBuilding || mUpdateBatchNest != 0)
+    // Ignore updates if we're batching
+    if (mUpdateBatchNest)
         return NS_OK;
-
-    AutoLatch latch(&mIsBuilding);
 
 	if (mCache)
 		mCache->Move(aOldSource, aNewSource, aProperty, aTarget);
@@ -2439,3 +2446,14 @@ nsXULTemplateBuilder::IsSystemPrincipal(nsIPrincipal *principal, PRBool *result)
   return NS_OK;
 }
 
+PRBool
+nsXULTemplateBuilder::IsActivated(nsIRDFResource *aResource)
+{
+    for (ActivationEntry *entry = mTop;
+         entry != nsnull;
+         entry = entry->mPrevious) {
+        if (entry->mResource == aResource)
+            return PR_TRUE;
+    }
+    return PR_FALSE;
+}

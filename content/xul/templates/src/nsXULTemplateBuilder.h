@@ -60,6 +60,7 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsResourceSet.h"
 #include "nsRuleNetwork.h"
+#include "nsVoidArray.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -403,8 +404,6 @@ protected:
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
 
-    PRBool mIsBuilding;
-
     enum {
         eDontTestEmpty = (1 << 0)
     };
@@ -412,20 +411,35 @@ protected:
     PRInt32 mFlags;
 
     /**
-     * Stack-based helper class to maintain a latch variable without
-     * worrying about control flow headaches.
+     * Stack-based helper class to maintain a list of ``activated''
+     * resources; i.e., resources for which we are currently building
+     * content.
      */
-    class AutoLatch {
-    protected:
-        PRBool* mVariable;
-
+    class ActivationEntry {
     public:
-        AutoLatch(PRBool* aVariable) : mVariable(aVariable) {
-            NS_ASSERTION(! *mVariable, "latch already set");
-            *mVariable = PR_TRUE; }
+        nsIRDFResource   *mResource;
+        ActivationEntry  *mPrevious;
+        ActivationEntry **mLink;
 
-        ~AutoLatch() { *mVariable = PR_FALSE; }
+        ActivationEntry(nsIRDFResource *aResource, ActivationEntry **aLink)
+            : mResource(aResource),
+              mPrevious(*aLink),
+              mLink(aLink) { *mLink = this; }
+
+        ~ActivationEntry() { *mLink = mPrevious; }
     };
+
+    /**
+     * The top of the stack of resources that we're currently building
+     * content for.
+     */
+    ActivationEntry *mTop;
+
+    /**
+     * Determine if a resource is currently on the activation stack.
+     */
+    PRBool
+    IsActivated(nsIRDFResource *aResource);
 
     /**
      * Must be implemented by subclasses. Handle replacing aOldMatch
