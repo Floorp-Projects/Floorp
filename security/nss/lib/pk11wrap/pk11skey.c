@@ -116,8 +116,8 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
  *      Slot is the slot to create the key in.
  *      type is the mechanism type 
  */
-PK11SymKey *
-PK11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PRBool owner, 
+static PK11SymKey *
+pk11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PRBool owner, 
 								void *wincx)
 {
 
@@ -252,7 +252,7 @@ PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent, PK11Origin origin,
 	return NULL;
     }
 
-    symKey = PK11_CreateSymKey(slot,type,owner,wincx);
+    symKey = pk11_CreateSymKey(slot,type,owner,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -329,7 +329,7 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11SymKey *    symKey;
     SECStatus	    rv;
 
-    symKey = PK11_CreateSymKey(slot,type,!isToken,wincx);
+    symKey = pk11_CreateSymKey(slot,type,!isToken,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -827,11 +827,11 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 	    return NULL;
 	}
 
-        symKey = PK11_CreateSymKey(bestSlot, type, !isToken, wincx);
+        symKey = pk11_CreateSymKey(bestSlot, type, !isToken, wincx);
 
         PK11_FreeSlot(bestSlot);
     } else {
-	symKey = PK11_CreateSymKey(slot, type, !isToken, wincx);
+	symKey = pk11_CreateSymKey(slot, type, !isToken, wincx);
     }
     if (symKey == NULL) return NULL;
 
@@ -1261,7 +1261,7 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
 
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,!isPerm,baseKey->cx);
+    symKey = pk11_CreateSymKey(slot,target,!isPerm,baseKey->cx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -1328,7 +1328,7 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
     }
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,PR_TRUE,wincx);
+    symKey = pk11_CreateSymKey(slot,target,PR_TRUE,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -1497,7 +1497,7 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 #endif
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,PR_TRUE,wincx);
+    symKey = pk11_CreateSymKey(slot,target,PR_TRUE,wincx);
     if (symKey == NULL) {
 	return NULL;
     }
@@ -1786,7 +1786,7 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     }
 
     /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,target,!isPerm,wincx);
+    symKey = pk11_CreateSymKey(slot,target,!isPerm,wincx);
     if (symKey == NULL) {
 	if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
 	return NULL;
