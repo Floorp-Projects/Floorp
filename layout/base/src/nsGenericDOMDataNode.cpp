@@ -276,10 +276,6 @@ nsGenericDOMDataNode::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
-// XXX temporary; none of these methods try to return error codes as
-// per the spec
-#define NS_DOM_INDEX_SIZE_ERR NS_ERROR_FAILURE
-
 nsresult    
 nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
                                     PRUint32 aCount,
@@ -290,7 +286,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
   // XXX add <0 checks if types change
   PRUint32 textLength = PRUint32( mText.GetLength() );
   if (aStart >= textLength) {
-    return NS_DOM_INDEX_SIZE_ERR;
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   PRUint32 amount = aCount;
