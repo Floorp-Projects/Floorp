@@ -1582,7 +1582,7 @@ XXX ...couldn't get this to work...
     public:
         typedef enum { OnItsWay, InHand } PackageStatus;
         
-        Package(const String &name) : mName(name), mStatus(OnItsWay), JSObject(Package_Type) { }
+        Package(const String &name) : JSObject(Package_Type), mName(name), mStatus(OnItsWay) { }
 
         String mName;
         PackageStatus mStatus;
