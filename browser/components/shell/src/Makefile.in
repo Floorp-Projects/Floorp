@@ -27,7 +27,6 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = shellservice
-LIBRARY_NAME = shellservice_s
 
 REQUIRES	= \
 		  xpcom \
@@ -58,6 +57,10 @@ CPPSRCS = nsGNOMEShellService.cpp
 REQUIRES += mozgnome
 endif
 endif
+endif
+
+ifdef CPPSRCS
+LIBRARY_NAME = shellservice_s
 endif
 
 FORCE_STATIC_LIB = 1
