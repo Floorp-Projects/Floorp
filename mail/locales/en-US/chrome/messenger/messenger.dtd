@@ -210,14 +210,19 @@
 <!ENTITY reloadCmd.accesskey "R">
 <!ENTITY stopCmd.label "Stop">
 <!ENTITY stopCmd.accesskey "S">
-<!ENTITY textZoomEnlargeCmd.label "Increase Text Size">
+<!ENTITY textZoomEnlargeCmd.label "Increase">
 <!ENTITY textZoomEnlargeCmd.accesskey "I">
 <!ENTITY textZoomEnlargeCmd.commandkey "+">
 <!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
-<!ENTITY textZoomReduceCmd.label "Decrease Text Size">
+<!ENTITY textZoomReduceCmd.label "Decrease">
 <!ENTITY textZoomReduceCmd.accesskey "D">
 <!ENTITY textZoomReduceCmd.commandkey "-">
 <!ENTITY textZoomResetCmd.commandkey "0">
+<!ENTITY textZoomResetCmd.label     "Normal">
+<!ENTITY textZoomResetCmd.accesskey "N"> 
+<!ENTITY textSize.label             "Text Size">
+<!ENTITY textSize.accesskey             "x">
+
 <!ENTITY pageSourceCmd.label "Message Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.key "u">

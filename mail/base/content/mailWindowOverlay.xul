@@ -116,6 +116,7 @@
    <commandset id="viewZoomCommands">
      <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
      <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+     <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
    </commandset>
 </commandset>
 
@@ -360,7 +361,7 @@
     <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;" command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key key="&textZoomResetCmd.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+    <key id="key_textZoomReset"   key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
   </keyset>
 
   <!-- Tab/F6 Keys -->
@@ -1298,10 +1299,17 @@
             oncommand="ToggleInlineAttachment(event.target)" type="checkbox" checked="true"/>
           <menuseparator/>
 
+          <menu label="&textSize.label;" accesskey="&textSize.accesskey;">
+            <menupopup>
           <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
                     command="cmd_textZoomEnlarge"/>
           <menuitem key="key_textZoomReduce" label="&textZoomReduceCmd.label;" accesskey="&textZoomReduceCmd.accesskey;"
                     command="cmd_textZoomReduce"/>
+              <menuseparator/>
+              <menuitem key="key_textZoomReset" label="&textZoomResetCmd.label;" accesskey="&textZoomResetCmd.accesskey;" command="cmd_textZoomReset"/>
+            </menupopup>
+          </menu>
+
           <menu id="mailviewCharsetMenu" />
           <menuseparator/>
           <menuitem id="pageSourceMenuItem" label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
