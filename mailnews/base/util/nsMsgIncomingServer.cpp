@@ -851,6 +851,12 @@ nsMsgIncomingServer::StorePassword()
 {
     nsresult rv;
 
+    // we only need to store this if we're password protecting the local cache.
+    // Otherwise, the password manager handles storing the password if the user 
+    // checks the "remember password" box.
+    if (!PasswordProtectLocalCache())
+      return NS_OK;
+
     nsXPIDLCString pwd;
     rv = GetPassword(getter_Copies(pwd));
     if (NS_FAILED(rv)) return rv;
@@ -862,11 +868,10 @@ nsMsgIncomingServer::StorePassword()
     rv = GetServerURI(getter_Copies(serverSpec));
     if (NS_FAILED(rv)) return rv;
 
-    // if we're password protecting the local cache, we're going to munge the uri in the password mgr to 
+    // We're password protecting the local cache, we're going to munge the uri in the password mgr to 
     // start with 'x', so that we can remember the password in order to challenge the user, w/o having the
     // password mgr automatically use the password.
-    if (PasswordProtectLocalCache())
-      serverSpec.Insert('x', 0);
+    serverSpec.Insert('x', 0);
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), serverSpec);
 
