@@ -404,10 +404,15 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
                parsenodes - recyclednodes);
         before = sbrk(0);
 #endif
-        pn->pn_type = TOK_LC;
-        ok = js_FoldConstants(cx, pn, &cg->treeContext) &&
-             js_AllocTryNotes(cx, cg) &&
-             js_EmitTree(cx, cg, pn);
+
+        /*
+         * No need to emit code here -- Statements already has, for each
+         * statement in turn.  Search for TCF_COMPILING in Statements, below.
+         * That flag is set for every tc == &cg->treeContext, and it implies
+         * that the tc can be downcast to a cg and used to emit code during
+         * parsing, rather than at the end of the parse phase.
+         */
+        ok = JS_TRUE;
     }
 
 #ifdef METER_PARSENODES
