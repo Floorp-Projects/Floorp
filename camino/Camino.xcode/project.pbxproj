@@ -3424,17 +3424,10 @@
 			dstPath = res/builtin;
 			dstSubfolderSpec = 6;
 			files = (
-				3F44AD3C05BDFB9F00CB4B08,
 				3F44AD3D05BDFB9F00CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AD3C05BDFB9F00CB4B08 = {
-			fileRef = F6BD64D301B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		3F44AD3D05BDFB9F00CB4B08 = {
 			fileRef = F6BD64D501B3172601A962F7;
@@ -7168,17 +7161,10 @@
 			dstPath = res/builtin;
 			dstSubfolderSpec = 6;
 			files = (
-				3F44AF5705BDFBA000CB4B08,
 				3F44AF5805BDFBA000CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AF5705BDFBA000CB4B08 = {
-			fileRef = F6BD64D301B3172601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		3F44AF5805BDFBA000CB4B08 = {
 			fileRef = F6BD64D501B3172601A962F7;
@@ -13724,21 +13710,11 @@
 		};
 		F6BD64C801B3172601A962F7 = {
 			children = (
-				F6BD64D301B3172601A962F7,
 				F6BD64D501B3172601A962F7,
 			);
 			isa = PBXGroup;
 			name = builtin;
 			path = ../dist/Embed/res/builtin;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F6BD64D301B3172601A962F7 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = text.plist.xml;
-			name = htmlBindings.xml;
-			path = ../dist/Embed/res/builtin/htmlBindings.xml;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
