@@ -1224,10 +1224,12 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
           htmlColor.Append(tmpStr);
 
           htmlColor.Append(PRUnichar(')'));
-          aIsSet = htmlColor.EqualsIgnoreCase(valueString);
+          aIsSet = htmlColor.Equals(valueString,
+                                    nsCaseInsensitiveStringComparator());
         }
         else
-          aIsSet = htmlValueString.EqualsIgnoreCase(valueString);
+          aIsSet = htmlValueString.Equals(valueString,
+                                    nsCaseInsensitiveStringComparator());
       }
     }
 
