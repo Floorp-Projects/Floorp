@@ -170,13 +170,12 @@ NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
 
 CFGFILE=$(OBJDIR)\cmd.cfg
 
-!if "$(MOZ_BITS)" == "16"
-INCS=-I$(XPDIST)\public\win16 $(INCS) -I$(DEPTH)\include -I$(DIST)\include -I..\include
-!else
-INCS=$(INCS) -I$(DEPTH)\include -I$(DIST)\include \
-             -I$(XPDIST)\public\img -I$(XPDIST)\public\util \
-             -I$(XPDIST)\public\coreincl
-!endif # 16
+INCS=$(INCS) -I$(DEPTH)\include \
+             -I$(DIST)\include \
+             -I$(PUBLIC)\img \
+             -I$(PUBLIC)\util \
+             -I$(PUBLIC)\coreincl \
+             -I$(PUBLIC)\dbm
 
 !ifndef NO_LAYERS
 INCS=$(INCS) -I$(DEPTH)\lib\liblayer\include
