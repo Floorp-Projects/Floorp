@@ -3040,7 +3040,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             if (NS_SUCCEEDED(rv) && mailTrash)
               rv = mailTrash->GetURI(getter_Copies(actionTargetFolderUri));
 
-            msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);  // mark read in trash.
+            // msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);  // mark read in trash.
           }
           else  // (!deleteToTrash)
           {
@@ -4400,7 +4400,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               if (folderOpen)
                 UpdateFolder(msgWindow);
               else
-                UpdatePendingCounts(PR_TRUE, PR_FALSE);
+                UpdatePendingCounts();
           }
           if (m_copyState)
           {
@@ -4530,7 +4530,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             {
               if (NS_SUCCEEDED(aExitCode))
               {
-                UpdatePendingCounts(PR_TRUE, PR_FALSE);
+                UpdatePendingCounts();
 
                 m_copyState->m_curIndex++;
                 if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
@@ -4636,9 +4636,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   return rv;
 }
 
-void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead)
+void nsImapMailFolder::UpdatePendingCounts()
 {
-  nsresult rv;
   if (m_copyState)
   {
     if (!m_copyState->m_isCrossServerOp)
@@ -4646,48 +4645,13 @@ void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAre
     else
       ChangeNumPendingTotalMessages(1);
 
-    if (countUnread)
+    // count the moves that were unread
+    int numUnread = m_copyState->m_unreadCount;
+  
+    if (numUnread)
     {
-      // count the moves that were unread
-      int numUnread = 0;
-      nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_copyState->m_srcSupport);
-      if (!m_copyState->m_isCrossServerOp)
-        for (PRUint32 keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
-        {
-          nsCOMPtr<nsIMsgDBHdr> message =
-              do_QueryElementAt(m_copyState->m_messages, keyIndex, &rv);
-          // if the key is not there, then assume what the caller tells us to.
-          PRBool isRead = missingAreRead;
-          PRUint32 flags;
-          if (message )
-          {
-            message->GetFlags(&flags);
-            isRead = flags & MSG_FLAG_READ;
-          }
-
-          if (!isRead)
-            numUnread++;
-        }
-      else
-      {
-        nsCOMPtr<nsIMsgDBHdr> message =
-            do_QueryElementAt(m_copyState->m_messages,
-                              m_copyState->m_curIndex, &rv);
-          // if the key is not there, then assume what the caller tells us to.
-        PRBool isRead = missingAreRead;
-        PRUint32 flags;
-        if (message )
-        {
-          message->GetFlags(&flags);
-          isRead = flags & MSG_FLAG_READ;
-        }
-
-        if (!isRead)
-          numUnread++;
-      }
-    
-      if (numUnread)
-        ChangeNumPendingUnread(numUnread);
+      m_numStatusUnseenMessages += numUnread; // adjust last status count by this delta.
+      ChangeNumPendingUnread(numUnread);
     }
     SummaryChanged();
   }
@@ -5792,6 +5756,9 @@ nsImapMailFolder::CopyNextStreamMessage(PRBool copySucceeded, nsISupports *copyS
                                                      &rv);
         if (NS_SUCCEEDED(rv))
         {
+            PRBool isRead;
+            mailCopyState->m_message->GetIsRead(&isRead);
+            mailCopyState->m_unreadCount = (isRead) ? 0 : 1;
             rv = CopyStreamMessage(mailCopyState->m_message,
                                    this, mailCopyState->m_msgWindow, mailCopyState->m_isMove);
         }
@@ -5891,12 +5858,11 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
 
     nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = InitCopyState(aSupport, messages, isMove, PR_FALSE, listener, msgWindow, allowUndo);
+    rv = InitCopyState(aSupport, messages, isMove, PR_FALSE, isCrossServerOp, listener, msgWindow, allowUndo);
     if(NS_FAILED(rv)) 
       return rv;
 
     m_copyState->m_streamCopy = PR_TRUE;
-    m_copyState->m_isCrossServerOp = isCrossServerOp;
 
     // ** jt - needs to create server to server move/copy undo msg txn
     if (m_copyState->m_allowUndo)
@@ -6444,7 +6410,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 
   rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
 
-  rv = InitCopyState(srcSupport, messages, isMove, PR_TRUE, listener, msgWindow, allowUndo);
+  rv = InitCopyState(srcSupport, messages, isMove, PR_TRUE, PR_FALSE, listener, msgWindow, allowUndo);
   if (NS_FAILED(rv)) goto done;
 
   m_copyState->m_curIndex = m_copyState->m_totalCount;
@@ -6573,13 +6539,15 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     }
 
     rv = InitCopyState(srcSupport, messages, PR_FALSE, isDraftOrTemplate,
-                       listener, msgWindow, PR_FALSE);
+                       PR_FALSE, listener, msgWindow, PR_FALSE);
     if (NS_FAILED(rv)) 
       return OnCopyCompleted(srcSupport, rv);
 
     nsCOMPtr<nsISupports> copySupport;
     if( m_copyState ) 
         copySupport = do_QueryInterface(m_copyState);
+    if (!isDraftOrTemplate)
+      m_copyState->m_totalCount = 1;
     rv = imapService->AppendMessageFromFile(m_eventQueue, fileSpec, this,
                                             messageId.get(),
                                             PR_TRUE, isDraftOrTemplate,
@@ -6678,6 +6646,7 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
                                 nsISupportsArray* messages,
                                 PRBool isMove,
                                 PRBool selectedState,
+                                PRBool acrossServers,
                                 nsIMsgCopyServiceListener* listener,
                                 nsIMsgWindow *msgWindow,
                                 PRBool allowUndo)
@@ -6694,14 +6663,54 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
     if (!m_copyState) 
       return NS_ERROR_OUT_OF_MEMORY;
 
+    m_copyState->m_isCrossServerOp = acrossServers;
     if (srcSupport)
         m_copyState->m_srcSupport = do_QueryInterface(srcSupport, &rv);
 
     if (NS_SUCCEEDED(rv))
     {
-        m_copyState->m_messages = do_QueryInterface(messages, &rv);
+      m_copyState->m_messages = do_QueryInterface(messages, &rv);
+      rv = messages->Count(&m_copyState->m_totalCount);
+      if (!m_copyState->m_isCrossServerOp)
+      {
         if (NS_SUCCEEDED(rv))
-            rv = messages->Count(&m_copyState->m_totalCount);
+        {
+            PRUint32 numUnread = 0;
+            for (PRUint32 keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
+            {
+              nsCOMPtr<nsIMsgDBHdr> message =
+                  do_QueryElementAt(m_copyState->m_messages, keyIndex, &rv);
+              // if the key is not there, then assume what the caller tells us to.
+              PRBool isRead = PR_FALSE;
+              PRUint32 flags;
+              if (message )
+              {
+                message->GetFlags(&flags);
+                isRead = flags & MSG_FLAG_READ;
+              }
+
+              if (!isRead)
+                numUnread++;
+            }
+            m_copyState->m_unreadCount = numUnread;
+        }
+      }
+      else
+      {
+        nsCOMPtr<nsIMsgDBHdr> message =
+            do_QueryElementAt(m_copyState->m_messages,
+                              m_copyState->m_curIndex, &rv);
+          // if the key is not there, then assume what the caller tells us to.
+        PRBool isRead = PR_FALSE;
+        PRUint32 flags;
+        if (message )
+        {
+          message->GetFlags(&flags);
+          isRead = flags & MSG_FLAG_READ;
+        }
+
+        m_copyState->m_unreadCount = (isRead) ? 0 : 1;
+      }
     }
     m_copyState->m_isMove = isMove;
     m_copyState->m_allowUndo = allowUndo;
