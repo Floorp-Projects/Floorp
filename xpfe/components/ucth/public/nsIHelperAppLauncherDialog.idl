@@ -43,6 +43,8 @@ interface nsIHelperAppLauncherDialog : nsISupports {
 	// aSuggestedFileExtension --> sugested file extension
 	// aFileLocation --> return value for the file location
 	void promptForSaveToFile(in nsISupports aWindowContext, in wstring aDefaultFile, in wstring aSuggestedFileExtension, out nsILocalFile aFileLocation);
+
+	void showProgressDialog(in nsIHelperAppLauncher aLauncher, in nsISupports aContext);
 };
 
 

@@ -52,22 +52,24 @@ nsHelperAppLauncherDialog.prototype= {
         document.getElementById( "alwaysAskMe" ).setAttribute( "disabled", "true" );
 
         // Pre-select the choice the user made last time.
-        if ( this.appLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) {
+        this.chosenApp = this.appLauncher.MIMEInfo.preferredApplicationHandler;
+        if ( this.chosenApp && this.appLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) {
             // Run app.
-            document.getElementById( "runApp" ).checked = true;
-
-            this.chosenApp = this.appLauncher.MIMEInfo.preferredApplicationHandler;
-            var applicationDescription = this.appLauncher.MIMEInfo.applicationDescription;
-            if (applicationDescription != "")
-              document.getElementById( "appName" ).value = applicationDescription;
-            else
-                // If a user-chosen application, show its path.
-                document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
+            document.getElementById( "runApp" ).checked = true;            
         } else {
             // Save to disk.
             document.getElementById( "saveToDisk" ).checked = true;
             // Disable choose app button.
             document.getElementById( "chooseApp" ).setAttribute( "disabled", "true" );
+        }
+
+        var applicationDescription = this.appLauncher.MIMEInfo.applicationDescription;
+        if (applicationDescription != "")
+           document.getElementById( "appName" ).value = applicationDescription;
+        else if (this.chosenApp)
+        {
+          // If a user-chosen application, show its path.
+          document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
         }
 
         // Put content type into dialog text.
@@ -109,7 +111,10 @@ nsHelperAppLauncherDialog.prototype= {
             this.appLauncher.launchWithApplication( this.chosenApp, dontAskNextTime );
         } else {
             this.appLauncher.MIMEInfo.preferredAction = this.nsIHelperAppLauncher.saveToDisk;
-            this.appLauncher.saveToDisk( null, dontAskNextTime );
+            try {
+              this.appLauncher.saveToDisk( null, dontAskNextTime );
+            } catch (exception) { 
+            }
         }
     
         window.close();
