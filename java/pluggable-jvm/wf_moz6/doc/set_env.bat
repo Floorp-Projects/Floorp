@@ -15,7 +15,7 @@
 @REM Portions created by Sun Microsystems Inc are Copyright (C) 2001
 @REM All Rights Reserved.
 @REM
-@REM $Id: set_env.bat,v 1.1 2001/05/10 18:12:39 edburns%acm.org Exp $
+@REM $Id: set_env.bat,v 1.2 2001/07/12 21:57:51 edburns%acm.org Exp $
 @REM
 @REM 
 @REM Contributor(s): 
@@ -24,7 +24,7 @@
 
 @echo off
 rem Set those variables
-set WFDIR=f:\nike\wf
+set WFDIR=%MOZ_SRC%\java\pluggable-jvm\wf
 rem set WFJDKHOME=c:\jdk1.3
 rem end of customizable part
 

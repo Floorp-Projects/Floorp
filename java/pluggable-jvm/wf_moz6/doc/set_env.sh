@@ -16,7 +16,7 @@
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
 #
-# $Id: set_env.sh,v 1.2 2001/07/12 20:32:06 edburns%acm.org Exp $
+# $Id: set_env.sh,v 1.3 2001/07/12 21:57:52 edburns%acm.org Exp $
 #
 # 
 # Contributor(s): 
@@ -26,7 +26,7 @@
 # Set those variables
 # for me this var set in .bashrc so I don't need it here
 #WFJDKHOME=/usr/java/jdk1.3.0_02
-WFDIR=/work/wf.ed
+WFDIR=../wf
 # end of customizable part
 
 CURDIR=`pwd`
