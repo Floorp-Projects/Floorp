@@ -87,6 +87,10 @@ ifeq ($(OS_ARCH),OpenVMS)
 PREF_JS_EXPORTS	+= $(srcdir)/unix/openvms.js
 endif
 
+ifeq ($(OS_ARCH),AIX)
+PREF_JS_EXPORTS	+= $(srcdir)/unix/aix.js
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(MOZ_JS_LIBS) \
@@ -97,5 +101,5 @@ include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 			all.js mailnews.js editor.js \
-			beos.js unix.js winpref.js os2prefs.js openvms.js photon.js)
+			aix.js beos.js unix.js winpref.js os2prefs.js openvms.js photon.js)
 
