@@ -33,9 +33,6 @@ function Startup(){
   if (!InitEditorShell())
     return;
   dump("EditorShell found for image map dialog\n");
-
-  doSetOKCancel(onOK, null);
-
   initDialog();
 }
 
@@ -67,12 +64,19 @@ function initDialog(){
   //Place Image
   newImg = frameDoc.createElement("img");
   newImg.setAttribute("src", imageElement.getAttribute("src"));
+  newImg.setAttribute("width", imageElement.getAttribute("width"));
+  newImg.setAttribute("height", imageElement.getAttribute("height"));
   newImg.setAttribute("id", "mainImg");
   frameDoc.getElementById("bgDiv").appendChild(newImg);
 
   //Recreate Image Map if it exists
   if (imageElement.getAttribute("usemap") != "")
     recreateMap();
+}
+
+function exitImageMap(){
+  dump("exit called");
+  window.close();
 }
 
 function hideToolbar(){
@@ -127,10 +131,10 @@ function recreateMap(){
     else
       Poly(coords, href, null, null, true);
   }
-  imageElement.ownerDocument.body.removeChild(mapCollection[0]);
+  imageElement.ownerDocument.removeChild(mapCollection[0]);
 }
 
-function onOK(){
+function finishMap(){
   spots = frameDoc.getElementsByName("hotspot");
   var len = spots.length;
   createMap();
@@ -214,6 +218,8 @@ function createPoly(which){
 }
 
 function hotSpotProps(which){
+  currentRect = null;
+  currentCir = null;
   if (which == null)
     return;
   href = which.getAttribute("href");
