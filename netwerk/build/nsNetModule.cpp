@@ -112,6 +112,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsMIMEHeaderParamImpl.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEHeaderParamImpl)
+///////////////////////////////////////////////////////////////////////////////
+
 #include "nsRequestObserverProxy.h"
 #include "nsSimpleStreamListener.h"
 #include "nsDirIndexParser.h"
@@ -809,6 +814,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_MIMEINFO_CID,
       NS_MIMEINFO_CONTRACTID,
       nsMIMEInfoImplConstructor
+    },
+
+    { "mime header param", 
+      NS_MIMEHEADERPARAM_CID,
+      NS_MIMEHEADERPARAM_CONTRACTID,
+      nsMIMEHeaderParamImplConstructor
     },
 
 #ifdef NECKO_PROTOCOL_file

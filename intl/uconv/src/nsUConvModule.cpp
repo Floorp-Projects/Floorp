@@ -50,9 +50,11 @@
 #include "nsIServiceManager.h"
 
 
+#include "nsUConvCID.h"
 #include "nsCharsetConverterManager.h"
 #include "nsCharsetAlias.h"
 #include "nsTextToSubURI.h"
+#include "nsUTF8ConverterService.h"
 #include "nsConverterInputStream.h"
 #include "nsPlatformCharset.h"
 
@@ -677,6 +679,7 @@ nsConverterManagerDataRegister(nsIComponentManager* aCompMgr,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ConverterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
@@ -725,6 +728,11 @@ static const nsModuleComponentInfo components[] =
     "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
     NS_UNICODEENCODEHELPER_CONTRACTID, 
     nsUnicodeEncodeHelperConstructor 
+  },
+  { 
+    "Converter to/from UTF8 with charset", NS_UTF8CONVERTERSERVICE_CID,
+    NS_UTF8CONVERTERSERVICE_CONTRACTID, 
+    nsUTF8ConverterServiceConstructor
   },
   { 
     "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
