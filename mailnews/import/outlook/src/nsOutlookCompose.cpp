@@ -655,6 +655,8 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	if (!bodyType.IsEmpty())
 		pMimeType = ToNewCString(bodyType);
 	
+        if (!pMimeType)
+          pMimeType = strdup ("text/plain");
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();
 

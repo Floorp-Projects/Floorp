@@ -39,6 +39,7 @@
 #include <time.h>
 #include "nsString.h"
 #include "nsFileSpec.h"
+#include "nsSpecialSystemDirectory.h"
 
 #include "MapiDbgLog.h"
 #include "MapiApi.h"
@@ -455,38 +456,43 @@ void CMapiMessage::ProcessHeaders( void)
 
 BOOL CMapiMessage::FetchBody( void)
 {
-	m_bodyIsHtml = FALSE;
-	m_body.Truncate();
-	LPSPropValue	pVal = CMapiApi::GetMapiProperty( m_lpMsg, PR_BODY);
-	if (!pVal) {
-		// Is it html?
-		pVal = CMapiApi::GetMapiProperty( m_lpMsg, 0x1013001e);
-		if (pVal && CMapiApi::IsLargeProperty( pVal))
-			CMapiApi::GetLargeStringProperty( m_lpMsg, 0x1013001e, m_body);
-		else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_TSTRING) && (pVal->Value.LPSZ) && (*(pVal->Value.LPSZ))) {
-			m_body = pVal->Value.LPSZ;
-		}
-		if (!m_body.IsEmpty())
-			m_bodyIsHtml = TRUE;
-	}
-	else {
-		if (pVal && CMapiApi::IsLargeProperty( pVal)) {
-			CMapiApi::GetLargeStringProperty( m_lpMsg, PR_BODY, m_body);
-		}
-		else {
-			if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_TSTRING) && (pVal->Value.LPSZ) && (*(pVal->Value.LPSZ))) {
-				m_body = pVal->Value.LPSZ;
-			}
-		}
-	}
+  m_bodyIsHtml = FALSE;
+  m_body.Truncate();
+  // Is it html?
+  LPSPropValue pVal = CMapiApi::GetMapiProperty( m_lpMsg, 0x1013001e);
+  if (pVal && CMapiApi::IsLargeProperty( pVal))
+    CMapiApi::GetLargeStringProperty( m_lpMsg, 0x1013001e, m_body);
+  else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_TSTRING) && (pVal->Value.LPSZ) && (*(pVal->Value.LPSZ)))
+    m_body = pVal->Value.LPSZ;
 
-	if (pVal)
-		CMapiApi::MAPIFreeBuffer( pVal);
-
-	MAPI_DUMP_STRING( m_body);
-	MAPI_TRACE0( "\r\n");
-
-	return( TRUE);
+  // kind-hearted Outlook will give us html even for a plain text message. But it will include
+  // a comment saying it did the conversion. We'll use this as a hack to really use
+  // the plain text part.
+  if (!m_body.IsEmpty() && m_body.Find("<!-- Converted from text/plain format -->") == kNotFound)
+    m_bodyIsHtml = TRUE;
+  else
+  {
+    pVal = CMapiApi::GetMapiProperty( m_lpMsg, PR_BODY);
+    if (pVal) 
+    {
+      if (pVal && CMapiApi::IsLargeProperty( pVal)) {
+        CMapiApi::GetLargeStringProperty( m_lpMsg, PR_BODY, m_body);
+      }
+      else {
+        if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_TSTRING) && (pVal->Value.LPSZ) && (*(pVal->Value.LPSZ))) {
+          m_body = pVal->Value.LPSZ;
+        }
+      }
+    }
+  }
+  
+  if (pVal)
+    CMapiApi::MAPIFreeBuffer( pVal);
+  
+  MAPI_DUMP_STRING( m_body);
+  MAPI_TRACE0( "\r\n");
+  
+  return( TRUE);
 }
 
 enum {
@@ -595,30 +601,23 @@ void CMapiMessage::ClearTempAttachFile( void)
 BOOL CMapiMessage::CopyBinAttachToFile( LPATTACH lpAttach)
 {
 	LPSTREAM	lpStreamFile;
-	char		tPath[256];
 	DWORD		len;
-
-	
-	if (!(len = ::GetTempPath( 256, tPath)) || (len > 200)) {
-		len = 3;
-		strcpy( tPath, "c:\\");
-	}
-	
-	if (tPath[len - 1] != '\\')
-		strcat( tPath, "\\");
 
 	m_ownsAttachFile = FALSE;
 	m_attachPath.Truncate();
 
-	HRESULT hr = CMapiApi::OpenStreamOnFile( gpMapiAllocateBuffer, gpMapiFreeBuffer, STGM_READWRITE | STGM_CREATE | SOF_UNIQUEFILENAME,
-						tPath, NULL, &lpStreamFile);
+        const char *tFileName = "mapiattach.tmp";
+
+        nsFileSpec tmpSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
+        tmpSpec += tFileName;
+        tmpSpec.MakeUnique();
+
+	HRESULT hr = CMapiApi::OpenStreamOnFile( gpMapiAllocateBuffer, gpMapiFreeBuffer, STGM_READWRITE | STGM_CREATE,
+						(char *) tmpSpec.GetNativePathCString(), NULL, &lpStreamFile);
 	if (HR_FAILED(hr)) {
 		MAPI_TRACE1( "~~ERROR~~ OpenStreamOnFile failed - temp path: %s\r\n", tPath);
 		return( FALSE);
 	}
-	
-	m_attachPath = tPath;
-
 	MAPI_TRACE1( "\t\t** Attachment extracted to temp file: %s\r\n", (const char *)m_attachPath);
 
 	BOOL		bResult = TRUE;
@@ -646,6 +645,7 @@ BOOL CMapiMessage::CopyBinAttachToFile( LPATTACH lpAttach)
 		}
 	}
 
+	m_attachPath = tmpSpec.GetNativePathCString();
 	if (lpAttachStream)
 		lpAttachStream->Release();
 	lpStreamFile->Release();
@@ -713,7 +713,7 @@ BOOL CMapiMessage::GetAttachmentInfo( int idx)
 		bResult = FALSE;
 	
 	nsCString	fName, fExt;
-	pVal = CMapiApi::GetMapiProperty( lpAttach, PR_ATTACH_FILENAME);
+	pVal = CMapiApi::GetMapiProperty( lpAttach, PR_ATTACH_LONG_FILENAME);
 	if (pVal)
 		CMapiApi::GetStringFromProp( pVal, fName);
 	pVal = CMapiApi::GetMapiProperty( lpAttach, PR_ATTACH_EXTENSION);

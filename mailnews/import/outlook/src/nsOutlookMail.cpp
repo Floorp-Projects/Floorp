@@ -360,8 +360,10 @@ void nsOutlookMail::SetDefaultContentType(CMapiMessage &msg, nsCString &cType)
   // here. Same thing when conten type is not being set at all.
   if (msg.GetMimeContentLen())
   {
-    // If content type is not multipart/alternative, return.
-    if (nsCRT::strcasecmp(msg.GetMimeContent(), "multipart/alternative"))
+    // If content type is not multipart/alternative or mixed, return.
+    // for a multipart alternative with attachments, we get multipart mixed!
+    if (nsCRT::strcasecmp(msg.GetMimeContent(), "multipart/alternative")
+      && nsCRT::strcasecmp(msg.GetMimeContent(), "multipart/mixed"))
       return;
 
     // For multipart/alternative, if no body or boundary,
