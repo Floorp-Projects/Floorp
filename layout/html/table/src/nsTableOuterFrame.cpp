@@ -552,7 +552,7 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 void
 nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
                                     PRUint8         aCaptionSide,
-                                    nsSize&         aOuterSize,
+                                    const nsSize&   aOuterSize,
                                     PRBool          aInnerChanged,
                                     PRBool          aCaptionChanged,
                                     nsRect*         aOldOverflowArea)
@@ -1258,7 +1258,8 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
                                     nsMargin&                  aMarginNoAuto,
                                     nsMargin&                  aPadding,
                                     nsReflowReason             aReflowReason,
-                                    nsReflowStatus&            aStatus)
+                                    nsReflowStatus&            aStatus,
+                                    PRBool*                    aNeedToReflowCaption)
 { 
   if (!aPresContext) ABORT1(NS_ERROR_NULL_POINTER);
   aMargin = aPadding = nsMargin(0,0,0,0);
@@ -1316,6 +1317,16 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
     if ((mCaptionFrame == aChildFrame) && (NS_SIDE_LEFT  != captionSide) 
                                        && (NS_SIDE_RIGHT != captionSide)) {
       aAvailWidth = aOuterRS.availableWidth;
+    }
+  }
+  // see if we need to reflow the caption in addition
+  if (aNeedToReflowCaption && !*aNeedToReflowCaption &&
+      mInnerTableFrame == aChildFrame) {
+    nsHTMLReflowCommand* command = childRS.path->mReflowCommand;
+    if (command) {
+      nsReflowType type;
+      command->GetType(type);
+      *aNeedToReflowCaption = eReflowType_StyleChanged == type;
     }
   }
 
@@ -1676,9 +1687,14 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
                                                &capMin, innerMargin, innerPadding);
   nsresult rv = OuterReflowChild(aPresContext, mInnerTableFrame, aOuterRS, innerMet,
                                  availWidth, innerSize, innerMargin, innerMarginNoAuto, innerPadding,  
-                                 reflowReason, aStatus);
+                                 reflowReason, aStatus, &reflowCaption);
   if (NS_FAILED(rv)) return rv;
-
+  
+  if (eReflowReason_StyleChange != reflowReason && reflowCaption) {
+    // inner table frame was target for a style change reflow issue a style 
+    // change reflow for the caption too.
+    reflowReason = eReflowReason_StyleChange;
+  }
   nsPoint  innerOrigin(0,0);
   nsMargin captionMargin(0,0,0,0);
   nsMargin captionMarginNoAuto(0,0,0,0);
