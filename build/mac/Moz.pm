@@ -389,6 +389,7 @@ sub InstallResources($;$;$)
 		my ($manifest_file, $dest_dir, $copy_files) = @_;
 
 		$dest_dir ||= ":";
+		mkpath($dest_dir) if !-d $dest_dir;
 
 		$manifest_file =~ m/(.+):/;
 		my $source_dir =  $1;
