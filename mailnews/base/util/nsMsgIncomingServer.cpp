@@ -726,9 +726,15 @@ nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
 
     // compare the server keys
     if (PL_strcmp((const char *)key1,(const char *)key2)) {
+#ifdef DEBUG_seth
+        printf("%s and %s are different, servers are not the same\n",(const char *)key1,(const char *)key2);
+#endif /* DEBUG_seth */
         *_retval = PR_FALSE;
     }
     else {
+#ifdef DEBUG_seth
+        printf("%s and %s are equal, servers are the same\n",(const char *)key1,(const char *)key2);
+#endif /* DEBUG_seth */
         *_retval = PR_TRUE;
     }
     return rv;
