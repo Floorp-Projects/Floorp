@@ -278,6 +278,17 @@ nsFrameImageLoader::IsSameImageRequest(const nsString& aURL,
     return NS_OK;
   }
 
+  // XXX Temporary fix to deal with the case of animated
+  // images that are preloaded. If we've completed the image
+  // and there aren't any frames associated with it, then we
+  // interrupted the load of the image. The good things is that
+  // the image is still in the image cache. The bad thing is that
+  // we don't share the image loader.
+  if ((nsnull == mFrames) && (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
   // Background colors must match
   if (aBackgroundColor) {
     if (!mHaveBackgroundColor) {
@@ -420,6 +431,12 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     break;
 
   case nsImageNotification_kImageComplete:
+    // XXX Temporary fix to deal with the case of animated
+    // images that are preloaded. If there are no frames
+    // registered, then stop loading this image.
+    if (nsnull == mFrames) {
+      AbortImageLoad();
+    }
     if ((nsnull == mImage) && (nsnull != aImage)) {
       mImage = aImage;
       NS_ADDREF(aImage);
