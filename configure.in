@@ -26,6 +26,8 @@ dnl               Henry Sobotka <sobotka@axess.com>
 dnl                 OS/2 support
 dnl               Dan Mosedale <dmose@mozilla.org>
 dnl                 LDAP support
+dnl               Seth Spitzer <sspitzer@netscape.com>
+dnl                 xpctools support
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
@@ -3502,6 +3504,11 @@ MOZ_ARG_ENABLE_BOOL(jprof,
 [  --enable-jprof          Enable jprof profiling tool (pull tools/jprof)],
   MOZ_JPROF=1
   AC_DEFINE(MOZ_JPROF))
+
+dnl mozilla/js/src/xpconnect/tools is not part of default build.
+MOZ_ARG_ENABLE_BOOL(xpctools,
+[  --enable-xpctools       Build JS profiling tool],
+  MOZ_XPCTOOLS=1)
 
 AC_MSG_CHECKING(webshell leaks option)
 MOZ_ARG_ENABLE_BOOL(detect-webshell-leaks,

@@ -44,10 +44,9 @@ ifdef ENABLE_TESTS
 DIRS		+= tests
 endif
 
-ifdef MOZ_XPC_TOOLS_SUPPORT
+ifdef MOZ_XPCTOOLS
 DIRS         +=  tools 
 endif
-
 
 include $(topsrcdir)/config/rules.mk
 
