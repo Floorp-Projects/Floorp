@@ -121,7 +121,6 @@ public:
     NS_DECL_ISUPPORTS
 
     DiskCacheEntry()
-        :   mDirty(PR_FALSE)
     {
         NS_INIT_ISUPPORTS();
     }
@@ -143,20 +142,9 @@ public:
         return mMetaTransports[mode - 1];
     }
     
-    PRBool isDirty()
-    {
-        return mDirty;
-    }
-    
-    void setDirty(PRBool dirty)
-    {
-        mDirty = dirty;
-    }
-
 private:
     nsCOMPtr<nsITransport> mTransports[3];
     nsCOMPtr<nsITransport> mMetaTransports[3];
-    PRBool mDirty;
 };
 NS_IMPL_ISUPPORTS0(DiskCacheEntry);
 
@@ -340,8 +328,6 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     PRInt64 deltaSize64;
     LL_I2L(deltaSize64, deltaSize);
     LL_ADD(mTotalCachedDataSize, mTotalCachedDataSize, deltaSize64);
-    DiskCacheEntry* diskEntry = getDiskCacheEntry(entry);
-    if (diskEntry) diskEntry->setDirty(PR_TRUE);
     return NS_OK;
 }
 
@@ -436,7 +422,7 @@ struct MetaDataHeader {
     PRUint32        mHeaderSize;
     PRInt32         mFetchCount;
     PRTime          mLastFetched;
-    PRTime          mLastValidated;
+    PRTime          mLastValidated;     // NOT NEEDED
     PRTime          mExpirationTime;
     PRUint32        mDataSize;
     PRUint32        mKeySize;
@@ -557,8 +543,8 @@ nsresult MetaDataFile::Read(nsIInputStream* input)
 
 nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
 {
-    DiskCacheEntry* diskEntry = getDiskCacheEntry(entry);
-    if (diskEntry && diskEntry->isDirty()) {
+    DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
+    if (diskEntry && (entry->IsMetaDataDirty() || entry->IsEntryDirty())) {
         nsresult rv;
         nsCOMPtr<nsITransport>& transport = diskEntry->getMetaTransport(nsICache::ACCESS_WRITE);
         if (!transport) {
@@ -583,8 +569,22 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
         rv = output->Close();
         
         // mark the disk entry as being consistent with meta data file.
-        diskEntry->setDirty(PR_FALSE);
+        entry->MarkMetaDataClean();
+        entry->MarkEntryClean();
     }
+    return NS_OK;
+}
+
+static nsresult NS_NewCacheEntry(nsCacheEntry ** result, nsCString* key,
+                                 PRBool streamBased, nsCacheStoragePolicy storagePolicy)
+{
+    nsCString* newKey = new nsCString(key->get());
+    if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsCacheEntry* entry = new nsCacheEntry(newKey, streamBased, storagePolicy);
+    if (!entry) { delete newKey; return NS_ERROR_OUT_OF_MEMORY; }
+    
+    *result = entry;
     return NS_OK;
 }
 
@@ -598,12 +598,10 @@ nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** r
     rv = file->Exists(&exists);
     if (NS_FAILED(rv) || !exists) return NS_ERROR_NOT_AVAILABLE;
 
-    nsCString* newKey = new nsCString(key->get());
-    if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
+    nsCacheEntry* entry;
+    rv = NS_NewCacheEntry(&entry, key, PR_TRUE, nsICache::STORE_ON_DISK);
+    if (NS_FAILED(rv)) return rv;
     
-    nsCacheEntry* entry = new nsCacheEntry(newKey, PR_TRUE, nsICache::STORE_ON_DISK);
-    if (!entry) { delete newKey; return NS_ERROR_OUT_OF_MEMORY; }
-        
     do {
         DiskCacheEntry* diskEntry = ensureDiskCacheEntry(entry);
         if (!diskEntry) break;
@@ -623,6 +621,9 @@ nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** r
         rv = metaDataFile.Read(input);
         input->Close();
         if (NS_FAILED(rv)) break;
+        
+        // Ensure that the keys match.
+        if (nsCRT::strcmp(key->get(), metaDataFile.mKey) != 0) break;
         
         // initialize the entry.
         entry->SetFetchCount(metaDataFile.mFetchCount);
