@@ -74,6 +74,8 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     # have a big thread begin where the rest of the messages continue
     # being cc'd to newsbot.
     #
+    # 99-05-27: allow message/news in addition to message/rfc822 for the
+    # second part as this is what communicator 3.x uses. -endico
     if ($entity->parts < 2) {
         next;
         }
@@ -82,7 +84,9 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
          !($parts[0]->head->mime_type =~ /text\/plain/) ) {
         next;
         }
-    if ( !($parts[1]->head->mime_type =~ /message\/rfc822/)) {
+    if ( !( ($parts[1]->head->mime_type =~ /message\/rfc822/) ||
+            ($parts[1]->head->mime_type =~ /message\/news/)
+          ) {
         next;
         }
 
