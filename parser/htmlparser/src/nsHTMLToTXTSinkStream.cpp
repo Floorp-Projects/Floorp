@@ -423,6 +423,12 @@ void nsHTMLToTXTSinkStream::UnicodeToTXTString(const nsString& aSrc)
 }
 
 
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::GetStringBuffer(nsString & aStrBuffer) 
+{
+  aStrBuffer = mStrBuffer;
+  return NS_OK; 
+}
 
 
 
@@ -449,6 +455,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
 
     UnicodeToTXTString(text);
     aStream << mBuffer;
+    mStrBuffer.Append(mBuffer);
     mColPos += text.Length();
   } 
   else if (type == eHTMLTag_whitespace)
@@ -458,6 +465,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
       const nsString& text = aNode.GetText();
       UnicodeToTXTString(text);
       aStream << mBuffer;
+      mStrBuffer.Append(mBuffer);
       mColPos += text.Length();
     }
   }
@@ -466,6 +474,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
     if (PR_TRUE)
     {
       aStream << endl;
+      mStrBuffer.Append("\n");
       mColPos += 1;
     }
   }
@@ -543,7 +552,9 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode){
   {
     if (mColPos != 0)
     {  
-      *mOutput << endl;
+      if (mOutput)
+        *mOutput << endl;
+      mStrBuffer.Append("\n");
       mColPos = 0;
     }
   }

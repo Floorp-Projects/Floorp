@@ -68,6 +68,7 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
   virtual ~nsHTMLToTXTSinkStream();
 
   NS_IMETHOD_(void) SetOutputStream(ostream& aStream);
+  NS_IMETHOD        GetStringBuffer(nsString & aStrBuffer);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -123,6 +124,8 @@ protected:
     PRBool          mDoOutput;
     char*           mBuffer;
     PRInt32         mBufferSize;
+
+    nsString        mStrBuffer;
 
 };
 
