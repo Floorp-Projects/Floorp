@@ -1332,19 +1332,19 @@ nsDocShell::GetChromeEventHandler(nsIChromeEventHandler ** aChromeEventHandler)
 NS_IMETHODIMP
 nsDocShell::SetCurrentURI(nsIURI *aURI)
 {
-    SetCurrentURI(aURI, nsnull);
+    SetCurrentURI(aURI, nsnull, PR_TRUE);
     return NS_OK;
 }
 
 void
-nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest)
+nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
+                          PRBool aFireOnLocationChange)
 {
     // We don't want to send a location change when we're displaying an error
     // page, and we don't want to change our idea of "current URI" either
     if (mLoadType == LOAD_ERROR_PAGE) {
         return;
     }
-
 
     mCurrentURI = aURI;         //This assignment addrefs
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
@@ -1366,7 +1366,7 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest)
         historyEntry->GetIsSubFrame(&isSubFrame);
       }
     }
- 
+
     if (!isSubFrame && !isRoot) {
       /* 
        * We don't want to send OnLocationChange notifications when
@@ -1375,8 +1375,10 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest)
        */
       return; 
     }
-    
-    FireOnLocationChange(this, aRequest, aURI);
+
+    if (aFireOnLocationChange) {
+        FireOnLocationChange(this, aRequest, aURI);
+    }
 }
 
 NS_IMETHODIMP
@@ -2990,7 +2992,7 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     // Create an shistory entry for the old load, if we have a channel
     if (aFailedChannel) {
         mURIResultedInDocument = PR_TRUE;
-        OnLoadingSite(aFailedChannel);
+        OnLoadingSite(aFailedChannel, PR_TRUE);
         mOSHE = mLSHE;
     }
 
@@ -4459,7 +4461,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 // This is a document.write(). Get the made-up url
                 // from the channel and store it in session history.
                 rv = AddToSessionHistory(uri, wcwgChannel, getter_AddRefs(mLSHE));
-                SetCurrentURI(uri, aRequest);
+                SetCurrentURI(uri, aRequest, PR_TRUE);
                 // Save history state of the previous page
                 rv = PersistLayoutHistoryState();
                 if (mOSHE)
@@ -4699,7 +4701,7 @@ nsDocShell::CreateAboutBlankContentViewer()
         Embed(viewer, "", 0);
         viewer->SetDOMDocument(domdoc);
 
-        SetCurrentURI(blankDoc->GetDocumentURI(), nsnull);
+        SetCurrentURI(blankDoc->GetDocumentURI(), nsnull, PR_TRUE);
         rv = NS_OK;
       }
     }
@@ -4740,12 +4742,14 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // *new* document will fire.
     mFiredUnloadEvent = PR_FALSE;
 
-    // we've created a new document so go ahead and call OnLoadingSite
+    // we've created a new document so go ahead and call
+    // OnLoadingSite(), but don't fire OnLocationChange()
+    // notifications before we've called Embed(). See bug 284993.
     mURIResultedInDocument = PR_TRUE;
 
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
-    OnLoadingSite(aOpenedChannel);
+    OnLoadingSite(aOpenedChannel, PR_FALSE);
 
     // let's try resetting the load group if we need to...
     nsCOMPtr<nsILoadGroup> currentLoadGroup;
@@ -4815,6 +4819,8 @@ nsDocShell::CreateContentViewer(const char *aContentType,
       // native messages might be starved.
       PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
     }
+
+    FireOnLocationChange(this, request, mCurrentURI);
   
     return NS_OK;
 }
@@ -5514,7 +5520,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              * call OnNewURI() so that, this traversal will be 
              * recorded in session and global history.
              */
-            OnNewURI(aURI, nsnull, mLoadType);
+            OnNewURI(aURI, nsnull, mLoadType, PR_TRUE);
             nsCOMPtr<nsIInputStream> postData;
             PRUint32 pageIdent = PR_UINT32_MAX;
             
@@ -6215,9 +6221,9 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
 }
 
 
-NS_IMETHODIMP
+void
 nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
-                     PRUint32 aLoadType)
+                     PRUint32 aLoadType, PRBool aFireOnLocationChange)
 {
     NS_ASSERTION(aURI, "uri is null");
 #ifdef PR_LOGGING
@@ -6258,7 +6264,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     /* Create SH Entry (mLSHE) only if there is a  SessionHistory object (mSessionHistory) in
      * the current frame or in the root docshell
      */
-    nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
+    nsCOMPtr<nsISHistory> rootSH = mSessionHistory;
     if (!rootSH) {
         // Get the handle to SH from the root docshell          
         GetRootSessionHistory(getter_AddRefs(rootSH));
@@ -6348,16 +6354,14 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         if (shInternal)
             shInternal->UpdateIndex();
     }
-    SetCurrentURI(aURI, aChannel);
+    SetCurrentURI(aURI, aChannel, aFireOnLocationChange);
     // if there's a refresh header in the channel, this method
     // will set it up for us. 
     SetupRefreshURI(aChannel);
- 
-    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::OnLoadingSite(nsIChannel * aChannel)
+nsresult
+nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange)
 {
     nsCOMPtr<nsIURI> uri;
     // If this a redirect, use the final url (uri)
@@ -6374,7 +6378,7 @@ nsDocShell::OnLoadingSite(nsIChannel * aChannel)
         aChannel->GetOriginalURI(getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
-    OnNewURI(uri, aChannel, mLoadType);
+    OnNewURI(uri, aChannel, mLoadType, aFireOnLocationChange);
 
     return NS_OK;
 }

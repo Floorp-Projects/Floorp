@@ -46,6 +46,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsEmbedCID.h"
+#include "nsPIDOMWindow.h"
 
 nsresult
 NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
@@ -158,6 +159,15 @@ nsAutoDOMEventDispatcher::DispatchCustomEvent(const char *aEventName)
   if (!mWindow) {
     return PR_TRUE;
   }
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
+
+    NS_ASSERTION(window->GetExtantDocument() != nsnull,
+                 "nsPrompt used too early on window object!");
+  }
+#endif
 
   nsCOMPtr<nsIDOMDocument> domdoc;
   mWindow->GetDocument(getter_AddRefs(domdoc));
