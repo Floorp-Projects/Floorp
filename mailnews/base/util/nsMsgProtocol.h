@@ -69,7 +69,8 @@ public:
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
 	// already opened then we just call ProcessProtocolState to start the churning process.
-	virtual nsresult LoadUrl(nsIURL * aURL);
+	// aConsumer is the consumer for the url. It can be null if this argument is not appropriate
+	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
 
 	// Flag manipulators
 	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}

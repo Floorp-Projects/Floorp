@@ -155,7 +155,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const
 	return aMsgUrl->SetUrlState(PR_FALSE, aStatus);
 }
 
-nsresult nsMsgProtocol::LoadUrl(nsIURL * aURL)
+nsresult nsMsgProtocol::LoadUrl(nsIURL * aURL, nsISupports * /* aConsumer */)
 {
 	// okay now kick us off to the next state...
 	// our first state is a process state so drive the state machine...
