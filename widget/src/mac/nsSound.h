@@ -32,6 +32,7 @@ class nsSound : public nsISound {
 
   nsSound();
   virtual ~nsSound();
+  void PlaySound(Ptr waveDataPtr, long waveDataSize);
   char *mPlayBuf;
   char *mBuffer;
   PRInt32 mBufferSize;
