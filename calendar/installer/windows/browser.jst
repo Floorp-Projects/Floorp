@@ -483,7 +483,7 @@ if(verifyDiskSpace(fProgram, srDest))
       logComment("performInstall() returned: " + err);
       if (! ('buildID' in Install))
       {
-        logComment("Running Pre-Mozilla 0.2a");
+        logComment("Running Pre-Mozilla 0.2b");
         initInstall("Post-install Cleanup Utility", "Calendar/xpicleanup", "$Version$");
         cleanupUtility = getFolder(fProgram, "xpicleanup.exe");
         err = File.execute(cleanupUtility);
