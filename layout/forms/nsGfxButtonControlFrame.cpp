@@ -170,9 +170,9 @@ nsGfxButtonControlFrame::GetCID()
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsGfxButtonControlFrame::GetFrameName(nsString& aResult) const
+nsGfxButtonControlFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ButtonControl", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ButtonControl"), aResult);
 }
 #endif
 

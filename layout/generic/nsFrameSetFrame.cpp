@@ -112,7 +112,7 @@ class nsHTMLFramesetBorderFrame : public nsLeafFrame {
 
 public:
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
@@ -1928,9 +1928,9 @@ nsHTMLFramesetBorderFrame::GetCursor(nsIPresContext* aPresContext,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsString& aResult) const
+NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("FramesetBorder", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("FramesetBorder"), aResult);
 }
 #endif
 

@@ -125,7 +125,7 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
           sink->SetOutputStream(out);
           parser->RegisterDTD(dtd);
 	        parser->SetContentSink(sink);
-	        result = parser->Parse(stream, 0, NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);
+	        result = parser->Parse(stream, 0, NS_LITERAL_STRING("text/html"), PR_FALSE, PR_TRUE);
 
           PR_Close(out);
         }

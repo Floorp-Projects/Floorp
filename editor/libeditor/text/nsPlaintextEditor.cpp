@@ -291,20 +291,21 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
           metaElement = do_QueryInterface(metaNode); 
           if (!metaElement) continue; 
 
-          const NS_ConvertASCIItoUCS2 content("charset="); 
+          NS_NAMED_LITERAL_STRING(charset, "charset=");
+          NS_NAMED_LITERAL_STRING(content, "content");
           nsString currentValue; 
 
           if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("http-equiv"), currentValue))) continue; 
 
           if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
-            if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("content"), currentValue))) continue; 
+            if (NS_FAILED(metaElement->GetAttribute(content, currentValue))) continue; 
 
-            PRInt32 offset = currentValue.Find(content.get(), PR_TRUE); 
+            PRInt32 offset = currentValue.Find(charset.get(), PR_TRUE); 
             if (kNotFound != offset) {
               currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
-              newMetaString.Append(content); 
+              newMetaString.Append(charset); 
               newMetaString.Append(characterSet); 
-             result = nsEditor::SetAttribute(metaElement, NS_ConvertASCIItoUCS2("content"), newMetaString); 
+              result = nsEditor::SetAttribute(metaElement, content, newMetaString); 
               if (NS_SUCCEEDED(result)) 
                 newMetaCharset = PR_FALSE; 
               break; 
@@ -324,7 +325,7 @@ nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSe
           if (headNode) { 
             // Create a new meta charset tag 
               // can't use |NS_LITERAL_STRING| here until |CreateNode| is fixed to accept readables
-            result = CreateNode(NS_ConvertASCIItoUCS2("meta"), headNode, 0, getter_AddRefs(resultNode)); 
+            result = CreateNode(NS_LITERAL_STRING("meta"), headNode, 0, getter_AddRefs(resultNode)); 
             if (NS_FAILED(result)) 
               return NS_ERROR_FAILURE; 
 

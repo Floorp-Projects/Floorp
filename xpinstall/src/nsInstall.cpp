@@ -2264,7 +2264,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     else if ( mListener )
     {
         // error in preparation step -- log it
-        char* errRsrc = GetResourcedString(NS_ConvertASCIItoUCS2("ERROR"));
+        char* errRsrc = GetResourcedString(NS_LITERAL_STRING("ERROR"));
         if (errRsrc)
         {
             char* errprefix = PR_smprintf("%s (%d): ", errRsrc, error);
@@ -2572,7 +2572,7 @@ nsInstall::Alert(nsString& string)
     if (!proxiedDialog)
         return NS_ERROR_FAILURE;
 
-    PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Alert").get());
+    PRUnichar *title = GetTranslatedString(NS_LITERAL_STRING("Alert").get());
 
     return proxiedDialog->Alert(mParent, title, string.get());
 }
@@ -2591,7 +2591,7 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
     if (!proxiedDialog)
         return NS_ERROR_FAILURE;
 
-    PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Confirm").get());
+    PRUnichar *title = GetTranslatedString(NS_LITERAL_STRING("Confirm").get());
     
     return proxiedDialog->Confirm(mParent, title, string.get(), aReturn);
 }
@@ -2740,12 +2740,12 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
  * @return  rscdStr     - corresponding resourced value in the string bundle
  */
 char*
-nsInstall::GetResourcedString(const nsString& aResName)
+nsInstall::GetResourcedString(const nsAString& aResName)
 {
     if (mStringBundle)
     {   
         nsXPIDLString ucRscdStr;
-        nsresult rv = mStringBundle->GetStringFromName(aResName.get(),
+        nsresult rv = mStringBundle->GetStringFromName(PromiseFlatString(aResName).get(),
                                                      getter_Copies(ucRscdStr));
         if (NS_SUCCEEDED(rv))
             return ToNewCString(ucRscdStr);

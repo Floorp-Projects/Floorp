@@ -65,15 +65,15 @@ public:
 
 
 protected:
-  PRBool IsChecked(const nsString & aName);
+  PRBool IsChecked(const nsAString & aName);
   PRBool IsChecked(nsIDOMElement * aNode);
   void   SetChecked(nsIDOMElement * aNode, PRBool aValue);
-  void   SetChecked(const nsString & aName, PRBool aValue);
-  void   GetText(nsIDOMElement * aNode, nsString & aStr);
-  void   GetText(const nsString & aName, nsString & aStr);
+  void   SetChecked(const nsAString & aName, PRBool aValue);
+  void   GetText(nsIDOMElement * aNode, nsAString & aStr);
+  void   GetText(const nsAString & aName, nsAString & aStr);
   float  GetFloat(nsString & aStr);
-  void   SetText(nsIDOMElement * aNode, const nsString &aValue);
-  void   SetText(const nsString & aName, const nsString & aStr);
+  void   SetText(nsIDOMElement * aNode, const nsAString &aValue);
+  void   SetText(const nsAString & aName, const nsAString & aStr);
 
   nsBrowserWindow * mBrowserWindow;
   nsIXPBaseWindow * mWindow;

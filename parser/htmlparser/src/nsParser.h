@@ -205,7 +205,7 @@ class nsParser : public nsIParser,
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult Parse(nsIInputStream& aStream,const nsAReadableString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -219,7 +219,7 @@ class nsParser : public nsIParser,
                                     void* aKey,
                                     nsVoidArray& aTagStack,
                                     PRUint32 anInsertPos,
-                                    const nsString& aContentType,
+                                    const nsAReadableString& aContentType,
                                     nsDTDMode aMode=eDTDMode_autodetect);
 
 

@@ -2271,30 +2271,28 @@ nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsFrame::GetFrameName(nsString& aResult) const
+nsFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Frame", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Frame"), aResult);
 }
 
 nsresult
-nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
+nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 {
-  aResult.AssignWithConversion(aType);
+  aResult = aType;
   if (nsnull != mContent) {
     nsIAtom* tag;
     mContent->GetTag(tag);
     if ((tag != nsnull) && (tag != nsLayoutAtoms::textTagName)) {
-      aResult.AppendWithConversion("(");
       nsAutoString buf;
       tag->ToString(buf);
-      aResult.Append(buf);
+      aResult.Append(NS_LITERAL_STRING("(") + buf + NS_LITERAL_STRING(")"));
       NS_RELEASE(tag);
-      aResult.AppendWithConversion(")");
     }
   }
   char buf[40];
   PR_snprintf(buf, sizeof(buf), "(%d)", ContentIndexInContainer(this));
-  aResult.AppendWithConversion(buf);
+  aResult.Append(NS_ConvertASCIItoUCS2(buf));
   return NS_OK;
 }
 #endif

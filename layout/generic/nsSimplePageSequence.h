@@ -113,7 +113,7 @@ public:
                      nscoord         aHeight);
 #ifdef NS_DEBUG
   // Debugging
-  NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   NS_IMETHOD SetDebugFD(FILE* aFD);
   FILE * mDebugFD;
 #endif

@@ -62,8 +62,8 @@ public:
   virtual ~nsGfxCheckboxControlFrame();
   
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("CheckboxControl", aResult);
+  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+    return MakeFrameName(NS_LITERAL_STRING("CheckboxControl"), aResult);
   }
 #endif
    // this should be protected, but VC6 is lame.

@@ -57,8 +57,8 @@ public:
     nsScrollbarFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mScrollbarMediator(nsnull) {}
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("ScrollbarFrame", aResult);
+  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+    return MakeFrameName(NS_LITERAL_STRING("ScrollbarFrame"), aResult);
   }
 #endif
 

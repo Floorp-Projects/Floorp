@@ -150,7 +150,7 @@ extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor*
   return PR_TRUE;
 }
 
-extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsString& aColorName, nscolor* aResult)
+extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
   nsColorName id = nsColorNames::LookupName(aColorName);
   if (eColorName_UNKNOWN < id) {

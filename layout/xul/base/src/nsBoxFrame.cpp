@@ -1854,9 +1854,9 @@ nsBoxFrame::GetBoxName(nsAutoString& aName)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsBoxFrame::GetFrameName(nsString& aResult) const
+nsBoxFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Box", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Box"), aResult);
 }
 #endif
 

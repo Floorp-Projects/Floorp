@@ -216,8 +216,8 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
           nsCOMPtr<nsIDOMElement> domElement ( do_QueryInterface(content) );
           if ( domElement ) {
             nsAutoString value;
-            domElement->GetAttribute(NS_ConvertASCIItoUCS2("container"), value);  // can't use an atom here =(
-            isContainer = value.EqualsWithConversion("true");
+            domElement->GetAttribute(NS_LITERAL_STRING("container"), value);  // can't use an atom here =(
+            isContainer = value.Equals(NS_LITERAL_STRING("true"));
           }
           else
             NS_WARNING("Not a DOM element");        
@@ -361,11 +361,9 @@ nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
     // tell the toolbar to not do any more drop feedback. Note that the toolbar code doesn't
     // care at all about "tb-droplocation", only the coordinate so there is no need to send the
     // AttributeChanged() about that attribute.
-    char buffer[10];
-    sprintf(buffer, "%d", -1);
-    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
-    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(buffer), PR_FALSE );
-    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, NS_ConvertASCIItoUCS2("1"), PR_TRUE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_LITERAL_STRING("-1"), PR_TRUE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_LITERAL_STRING("-1"), PR_FALSE );
+    myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, NS_LITERAL_STRING("1"), PR_TRUE );
     
     // reset the current drop location
     mCurrentDropLoc = -1;

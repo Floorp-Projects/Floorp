@@ -4393,7 +4393,7 @@ PresShell::DoCopy()
   nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(globalObject);
   if (domWindow)
   {
-    domWindow->UpdateCommands(NS_ConvertASCIItoUCS2("clipboard"));
+    domWindow->UpdateCommands(NS_LITERAL_STRING("clipboard"));
   }
   
   return NS_OK;

@@ -93,7 +93,7 @@ nsColorNames::ReleaseTable(void)
 }
 
 nsColorName 
-nsColorNames::LookupName(const nsCString& aColor)
+nsColorNames::LookupName(const nsACString& aColor)
 {
   NS_ASSERTION(gColorTable, "no lookup table, needs addref");
   if (gColorTable) {
@@ -103,7 +103,7 @@ nsColorNames::LookupName(const nsCString& aColor)
 }
 
 nsColorName 
-nsColorNames::LookupName(const nsString& aColor)
+nsColorNames::LookupName(const nsAString& aColor)
 {
   NS_ASSERTION(gColorTable, "no lookup table, needs addref");
   if (gColorTable) {

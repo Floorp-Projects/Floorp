@@ -71,10 +71,10 @@ void nsFindDialog::Initialize(nsIXPBaseWindow * aWindow)
   nsIDOMHTMLDocument *doc = nsnull;
   mWindow->GetDocument(doc);
   if (nsnull != doc) {
-    doc->GetElementById(NS_ConvertASCIItoUCS2("find"),       &mFindBtn);
-    doc->GetElementById(NS_ConvertASCIItoUCS2("searchup"),   &mUpRB);
-    doc->GetElementById(NS_ConvertASCIItoUCS2("searchdown"), &mDwnRB);
-    doc->GetElementById(NS_ConvertASCIItoUCS2("matchcase"),  &mMatchCaseCB);
+    doc->GetElementById(NS_LITERAL_STRING("find"),       &mFindBtn);
+    doc->GetElementById(NS_LITERAL_STRING("searchup"),   &mUpRB);
+    doc->GetElementById(NS_LITERAL_STRING("searchdown"), &mDwnRB);
+    doc->GetElementById(NS_LITERAL_STRING("matchcase"),  &mMatchCaseCB);
 
     // XXX: Register event listening on each dom element. We should change this so
     // all DOM events are automatically passed through.
@@ -130,7 +130,7 @@ nsFindDialog::DoFind()
   nsIDOMHTMLDocument *doc = nsnull;
   mWindow->GetDocument(doc);
   if (nsnull != doc) {
-    if (NS_OK == doc->GetElementById(NS_ConvertASCIItoUCS2("query"), &textNode)) {
+    if (NS_OK == doc->GetElementById(NS_LITERAL_STRING("query"), &textNode)) {
       nsIDOMHTMLInputElement * element;
       if (NS_OK == textNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
         nsString str;

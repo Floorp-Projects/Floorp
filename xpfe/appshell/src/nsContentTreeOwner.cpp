@@ -224,7 +224,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+  docShellElement->GetAttribute(NS_LITERAL_STRING("persist"), persistString);
 
   PRBool saveString = PR_FALSE;
   PRInt32 index;
@@ -276,7 +276,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
   }
 
   if(saveString) 
-    docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+    docShellElement->SetAttribute(NS_LITERAL_STRING("persist"), persistString);
 
   return NS_OK;
 }
@@ -292,7 +292,7 @@ nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
     return NS_ERROR_FAILURE;
 
   nsAutoString persistString;
-  docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("persist"), persistString);
+  docShellElement->GetAttribute(NS_LITERAL_STRING("persist"), persistString);
 
   // data structure doesn't quite match the question, but it's close enough
   // for what we want (since this method is never actually called...)
@@ -645,13 +645,13 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 
       if(docShellElement)  
          {
-         docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("contenttitlesetting"), contentTitleSetting);
+         docShellElement->GetAttribute(NS_LITERAL_STRING("contenttitlesetting"), contentTitleSetting);
          if(contentTitleSetting.EqualsWithConversion("true"))
             {
             mContentTitleSetting = PR_TRUE;
-            docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("titlemodifier"), mWindowTitleModifier);
-            docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("titlemenuseparator"), mTitleSeparator);
-            docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("titlepreface"), mTitlePreface);
+            docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);
+            docShellElement->GetAttribute(NS_LITERAL_STRING("titlemenuseparator"), mTitleSeparator);
+            docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"), mTitlePreface);
             }
          }
       else

@@ -239,7 +239,7 @@ MyLoadImage(char *aFileName)
     nscolor white;
     MyObserver *observer = new MyObserver();
             
-    NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
+    NS_ColorNameToRGB(NS_LITERAL_STRING("white"), &white);
     gImageReq = gImageGroup->GetImage(fileURL,
                                       observer,
                                       &white, 0, 0, 0);

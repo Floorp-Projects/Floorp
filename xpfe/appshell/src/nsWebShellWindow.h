@@ -173,8 +173,8 @@ public:
 
 protected:
   
-  nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
-  nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
+  nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsAString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
+  nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsAString & aWebShellName);
   void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
 #if 0
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);

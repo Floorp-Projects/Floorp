@@ -96,9 +96,9 @@ nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsInlineFrame::GetFrameName(nsString& aResult) const
+nsInlineFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Inline", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Inline"), aResult);
 }
 #endif
 
@@ -911,9 +911,9 @@ nsFirstLineFrame::nsFirstLineFrame()
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsFirstLineFrame::GetFrameName(nsString& aResult) const
+nsFirstLineFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Line", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Line"), aResult);
 }
 #endif
 

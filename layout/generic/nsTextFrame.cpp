@@ -423,7 +423,7 @@ public:
 #ifdef DEBUG
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   NS_IMETHOD GetPosition(nsIPresContext* aCX,
@@ -5628,9 +5628,9 @@ nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetFrameName(nsString& aResult) const
+nsTextFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Text", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Text"), aResult);
 }
 
 NS_IMETHODIMP

@@ -581,7 +581,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
     // Open the node so that the contents are visible.
     nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(aMenuNode);
     if (menuElement)
-      menuElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
+      menuElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
 
     // Begin menuitem inner loop
     
@@ -641,8 +641,8 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   nsString menuitemName;
   nsString menuitemCmd;
 
-  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuitemName);
-  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("cmd"), menuitemCmd);
+  menuitemElement->GetAttribute(NS_LITERAL_STRING("label"), menuitemName);
+  menuitemElement->GetAttribute(NS_LITERAL_STRING("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
@@ -771,7 +771,7 @@ void nsWebShellWindow::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
+  menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
   //printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
 
   // Create nsMenu
@@ -785,7 +785,7 @@ void nsWebShellWindow::LoadSubMenu(
     NS_RELEASE(supports); // Balance QI
 
     // Open the node so that the contents are visible.
-    menuElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
+    menuElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
       
     // Set nsMenu Name
     pnsMenu->SetLabel(menuName); 
@@ -865,7 +865,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
 
   nsresult rv;
   int endCount = 0;
-  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_ConvertASCIItoUCS2("menubar"), window, endCount, 1));
+  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_LITERAL_STRING("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
     rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
@@ -948,7 +948,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
   nsresult rv;
   int endCount = 0;
-  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_ConvertASCIItoUCS2("menubar"), window, endCount, 1));
+  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_LITERAL_STRING("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
     rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
@@ -970,7 +970,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             nsString menuName;
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.EqualsWithConversion("menu")) {
-              menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
+              menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
 
 #ifdef DEBUG_rods
               printf("Creating Menu [%s] \n", NS_LossyConvertUCS2toASCII(menuName).get());
@@ -1235,7 +1235,7 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
   ///////////////////////////////
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
   ///////////////////////////////
-  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(NS_ConvertASCIItoUCS2("this"))); // XXX "this" is a small kludge for code reused
+  nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(NS_LITERAL_STRING("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
 #ifdef SOME_PLATFORM // Anyone using native non-dynamic menus should add themselves here.
@@ -1246,7 +1246,7 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
     nsCOMPtr<nsIDOMNode> window(do_QueryInterface(element));
 
     int endCount = 0;
-    contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
+    contextMenuTest = FindNamedDOMNode(NS_LITERAL_STRING("contextmenu"), window, endCount, 1);
     // End Context Menu test
 #else
     DynamicLoadMenus(menubarDOMDoc, mWindow);
@@ -1287,7 +1287,7 @@ nsWebShellWindow::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 //----------------------------------------
-nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
+nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsAString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
 {
   if(!aParent)
     return nsnull;
@@ -1319,18 +1319,18 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, n
 } // nsWebShellWindow::FindNamedDOMNode
 
 //----------------------------------------
-nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebShellName)
+nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsAString & aWebShellName)
 {
   nsCOMPtr<nsIDOMDocument> domDoc; // result == nsnull;
 
   // first get the toolbar child docShell
   nsCOMPtr<nsIDocShell> childDocShell;
-  if (aWebShellName.EqualsWithConversion("this")) { // XXX small kludge for code reused
+  if (aWebShellName.Equals(NS_LITERAL_STRING("this"))) { // XXX small kludge for code reused
     childDocShell = mDocShell;
   } else {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
     nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mDocShell));
-    docShellAsNode->FindChildWithName(aWebShellName.get(), 
+    docShellAsNode->FindChildWithName(PromiseFlatString(aWebShellName).get(), 
       PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(docShellAsItem));
     childDocShell = do_QueryInterface(docShellAsItem);
     if (!childDocShell)

@@ -179,9 +179,9 @@ public:
   void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-      return MakeFrameName("Menu", aResult);
+      return MakeFrameName(NS_LITERAL_STRING("Menu"), aResult);
   }
 #endif
 

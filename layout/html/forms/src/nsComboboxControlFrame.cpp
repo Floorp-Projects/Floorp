@@ -1782,9 +1782,9 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsComboboxControlFrame::GetFrameName(nsString& aResult) const
+nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ComboboxControl", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ComboboxControl"), aResult);
 }
 #endif
 

@@ -90,7 +90,7 @@ public:
   NS_IMETHOD EndPage(void);
 
   // Static Helper Methods
-  static char* GetACPString(const nsString& aStr);
+  static char* GetACPString(const nsAString& aStr);
 
 
 protected:

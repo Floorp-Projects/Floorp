@@ -157,7 +157,7 @@ public:
                               PRInt32         aHint);
   
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
   NS_IMETHOD GetContentForEvent(nsIPresContext* aPresContext,
@@ -722,9 +722,9 @@ CanvasFrame::GetContentForEvent(nsIPresContext* aPresContext,
 
 #ifdef DEBUG
 NS_IMETHODIMP
-CanvasFrame::GetFrameName(nsString& aResult) const
+CanvasFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Canvas", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Canvas"), aResult);
 }
 
 NS_IMETHODIMP

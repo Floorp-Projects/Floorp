@@ -315,7 +315,7 @@ char* nsInstallFileOpItem::toString()
 
       mSrc->GetPath(&srcPath);
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("CopyFile"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("CopyFile"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
@@ -325,7 +325,7 @@ char* nsInstallFileOpItem::toString()
         break;
 
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("DeleteFile"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("DeleteFile"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
@@ -339,13 +339,13 @@ char* nsInstallFileOpItem::toString()
       temp = ToNewCString(*mParams);
       if((temp != nsnull) && (*temp != '\0'))
       {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ExecuteWithArgs"));
+        rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("ExecuteWithArgs"));
         if(rsrcVal != nsnull)
           PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath, temp);
       }
       else
       {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
+        rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("Execute"));
         if(rsrcVal != nsnull)
           PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath);
       }
@@ -361,7 +361,7 @@ char* nsInstallFileOpItem::toString()
 
       mSrc->GetPath(&srcPath);
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("MoveFile"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("MoveFile"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
@@ -372,7 +372,7 @@ char* nsInstallFileOpItem::toString()
 
       mSrc->GetPath(&srcPath);
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("RenameFile"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("RenameFile"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
@@ -382,7 +382,7 @@ char* nsInstallFileOpItem::toString()
         break;
 
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("CreateFolder"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("CreateFolder"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
@@ -392,7 +392,7 @@ char* nsInstallFileOpItem::toString()
         break;
 
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("RemoveFolder"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("RemoveFolder"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
@@ -403,13 +403,13 @@ char* nsInstallFileOpItem::toString()
 
       mSrc->GetPath(&srcPath);
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("RenameFolder"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("RenameFolder"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
 
     case NS_FOP_WIN_SHORTCUT:
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("WindowsShortcut"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("WindowsShortcut"));
       if(rsrcVal != nsnull)
       {
         mShortcutPath->GetPath(&temp);
@@ -430,7 +430,7 @@ char* nsInstallFileOpItem::toString()
         break;
 
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("MacAlias"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("MacAlias"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
@@ -443,14 +443,14 @@ char* nsInstallFileOpItem::toString()
         break;
 
       mTarget->GetPath(&dstPath);
-      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("WindowsRegisterServer"));
+      rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("WindowsRegisterServer"));
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
 
     default:
       if(rsrcVal != nsnull)
-        resultCString = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("UnknownFileOpCommand"));
+        resultCString = mInstall->GetResourcedString(NS_LITERAL_STRING("UnknownFileOpCommand"));
       break;
   }
 

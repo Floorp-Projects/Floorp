@@ -101,9 +101,9 @@ public:
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
 
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-      return MakeFrameName("Deck", aResult);
+      return MakeFrameName(NS_LITERAL_STRING("Deck"), aResult);
   }
 #endif
 

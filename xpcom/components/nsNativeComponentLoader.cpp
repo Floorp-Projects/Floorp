@@ -690,7 +690,7 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
       {
         (void) observerService->NotifyObservers(mgr,
                                                 NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
-                                                NS_ConvertASCIItoUCS2("Unregistering native component").get());
+                                                NS_LITERAL_STRING("Unregistering native component").get());
       }
     }
 
@@ -845,9 +845,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
           rv = NS_GetServiceManager(getter_AddRefs(mgr));
           if (NS_SUCCEEDED(rv))
           {
-            // this string can't come from a string bundle, because we don't have string
-            // bundles yet.
-            NS_ConvertASCIItoUCS2 statusMsg("Registering native component ");            
+            // this string can't come from a string bundle, because we
+            // don't have string bundles yet.
             NS_ConvertASCIItoUCS2 fileName("(no name)");
             
             // get the file name
@@ -858,11 +857,14 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
               dllSpec->GetLeafName(getter_Copies(dllLeafName));
               fileName.AssignWithConversion(dllLeafName);
             }
-            statusMsg.Append(fileName);
             
-            (void) observerService->NotifyObservers(mgr,
-                                                    NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
-                                                    statusMsg.get());
+            // this string can't come from a string bundle, because we
+            // don't have string bundles yet.
+            (void) observerService->
+                NotifyObservers(mgr,
+                                NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                                PromiseFlatString(NS_LITERAL_STRING("Registering native component ") +
+                                                  fileName).get());
           }
         }
 

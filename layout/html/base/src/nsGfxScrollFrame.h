@@ -175,7 +175,7 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   virtual nsresult GetContentOf(nsIContent** aContent);

@@ -255,7 +255,7 @@ public:
   NS_IMETHOD  Scrolled(nsIView *aView);
 #ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
@@ -432,7 +432,7 @@ public:
    */
   virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   
-  nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
+  nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
 
   // Display Reflow Debugging 
   static void* DisplayReflowEnter(nsIFrame*                aFrame,

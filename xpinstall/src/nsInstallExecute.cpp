@@ -150,7 +150,7 @@ char* nsInstallExecute::toString()
     if (mExecutableFile == nsnull)
     {
         char *tempString = ToNewCString(mJarLocation);
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
+        rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("Execute"));
 
         if (rsrcVal)
         {
@@ -163,7 +163,7 @@ char* nsInstallExecute::toString()
     }
     else
     {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
+        rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("Execute"));
 
         if (rsrcVal)
         {

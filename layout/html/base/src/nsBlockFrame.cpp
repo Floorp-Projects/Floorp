@@ -465,9 +465,9 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
 }
 
 NS_IMETHODIMP
-nsBlockFrame::GetFrameName(nsString& aResult) const
+nsBlockFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Block", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Block"), aResult);
 }
 #endif
 

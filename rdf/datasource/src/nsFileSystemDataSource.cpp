@@ -460,7 +460,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		if (property == kNC_pulse)
 		{
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
 			*target = pulseLiteral;
 			return NS_OK;
 		}
@@ -548,7 +548,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		else if (property == kNC_pulse)
 		{
 			nsCOMPtr<nsIRDFLiteral> pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(), getter_AddRefs(pulseLiteral));
+			gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), getter_AddRefs(pulseLiteral));
 			rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			return(rv);
 		}
@@ -624,7 +624,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		else if (property == kNC_pulse)
 		{
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
 			NS_RELEASE(pulseLiteral);
 
@@ -695,7 +695,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		else if (property == kNC_pulse)
 		{
 			nsCOMPtr<nsIRDFLiteral>	pulseLiteral;
-			rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(),
+			rv = gRDFService->GetLiteral(NS_LITERAL_STRING("12").get(),
 				getter_AddRefs(pulseLiteral));
 			if (NS_FAILED(rv)) return rv;
 

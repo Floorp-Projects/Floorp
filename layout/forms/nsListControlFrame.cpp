@@ -2458,9 +2458,9 @@ nsListControlFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsListControlFrame::GetFrameName(nsString& aResult) const
+nsListControlFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ListControl", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ListControl"), aResult);
 }
 #endif
 

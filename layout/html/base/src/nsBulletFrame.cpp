@@ -153,9 +153,9 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsBulletFrame::GetFrameName(nsString& aResult) const
+nsBulletFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Bullet", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Bullet"), aResult);
 }
 #endif
 

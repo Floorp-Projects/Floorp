@@ -141,7 +141,7 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   nsCOMPtr<nsIDOMElement> treeItemNode ( do_QueryInterface(treeItemContent) );
   if ( treeItemNode ) {
     nsAutoString value;
-    treeItemNode->GetAttribute(NS_ConvertASCIItoUCS2("container"), value);  // can't use an atom here =(
+    treeItemNode->GetAttribute(NS_LITERAL_STRING("container"), value);  // can't use an atom here =(
     isContainer = value.EqualsWithConversion("true");
   }
   else
@@ -280,9 +280,11 @@ nsTreeItemDragCapturer::DragOver(nsIDOMEvent* aDragEvent)
       char buffer[10];
 
       sprintf(buffer, "%d", yLoc);
+      NS_NAMED_LITERAL_STRING(trueStr, "true");
+      NS_NAMED_LITERAL_STRING(falseStr, "false");
       content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
-      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2(beforeMe ? "true" : "false"), PR_FALSE );
-      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2(onMe ? "true" : "false"), PR_TRUE );
+      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, beforeMe ? trueStr : falseStr, PR_FALSE );
+      content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropOn, onMe ? trueStr : falseStr, PR_TRUE );
     }
     
     // cache the current drop location
@@ -314,9 +316,9 @@ nsTreeItemDragCapturer::DragExit(nsIDOMEvent* aDragEvent)
     char buffer[10];
     sprintf(buffer, "%d", kNoDropLoc);
     content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, NS_ConvertASCIItoUCS2(buffer), PR_TRUE );
-    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_ConvertASCIItoUCS2("false"), PR_TRUE );
-    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_ConvertASCIItoUCS2("false"), PR_TRUE );
-    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaintRestore, NS_ConvertASCIItoUCS2("1"), PR_TRUE );  
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, NS_LITERAL_STRING("false"), PR_TRUE );
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddDropOn, NS_LITERAL_STRING("false"), PR_TRUE );
+    content->SetAttr ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaintRestore, NS_LITERAL_STRING("1"), PR_TRUE );  
   }
   
   // cache the current drop location

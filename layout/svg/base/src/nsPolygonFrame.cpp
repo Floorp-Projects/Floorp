@@ -54,7 +54,7 @@
 #include "nsIDeviceContext.h"
 #include "nsGUIEvent.h"
 #include "nsReadableUtils.h"
-
+#include "nsUnicharUtils.h"
 #include "nsIReflowCommand.h"
 extern nsresult
 NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
@@ -123,7 +123,10 @@ nsPolygonFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString type;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
-  if (type.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("swatch")) || type.IsEmpty())
+  if ((Compare(type,
+               NS_LITERAL_STRING("swatch"),
+               nsCaseInsensitiveStringComparator()) == 0) ||
+      type.IsEmpty())
   {
     //mPolygon = new nsStdPolygon();
     //mPolygon->Init(mContent);

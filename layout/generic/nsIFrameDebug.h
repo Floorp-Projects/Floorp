@@ -65,7 +65,7 @@ public:
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetFrameType() instead...
    */
-  NS_IMETHOD  GetFrameName(nsString& aResult) const = 0;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
   /**
    * Called to dump out regression data that describes the layout
    * of the frame and it's children, and so on. The format of the

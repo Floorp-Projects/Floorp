@@ -370,7 +370,7 @@ char* nsInstallPatch::toString()
 
     if (mTargetFile != nsnull)
     {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Patch"));
+        rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("Patch"));
 
         if (rsrcVal)
         {

@@ -210,7 +210,7 @@ nsInstallProgressDialog::SetActionText(const PRUnichar * aActionText)
             PRInt32 offset = (len/2) - ((len - maxChars)/2);
             PRInt32 count  = (len - maxChars);
             theMessage.Cut(offset, count);  
-            theMessage.Insert(NS_ConvertASCIItoUCS2("..."), offset);
+            theMessage.Insert(NS_LITERAL_STRING("..."), offset);
         }
         rv = setDlgAttribute( "dialog.currentAction", "value", theMessage );
     }
@@ -229,9 +229,9 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
     {
         modeFlag = mode;
         if ( modeFlag == 'n' )
-            rv = setDlgAttribute( "dialog.progress", "mode", NS_ConvertASCIItoUCS2("normal"));
+            rv = setDlgAttribute( "dialog.progress", "mode", NS_LITERAL_STRING("normal"));
         else
-            rv = setDlgAttribute( "dialog.progress", "mode", NS_ConvertASCIItoUCS2("undetermined"));
+            rv = setDlgAttribute( "dialog.progress", "mode", NS_LITERAL_STRING("undetermined"));
     }
 
     if ( (NS_SUCCEEDED(rv)) && (modeFlag == 'n'))
@@ -252,7 +252,7 @@ nsInstallProgressDialog::StartInstallPhase()
     nsresult rv = NS_OK;
 
     // don't care if this fails
-    setDlgAttribute("cancel", "disabled", NS_ConvertASCIItoUCS2("true"));
+    setDlgAttribute("cancel", "disabled", NS_LITERAL_STRING("true"));
 
     return rv;
 }

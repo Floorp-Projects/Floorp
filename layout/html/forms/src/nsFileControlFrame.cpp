@@ -562,9 +562,9 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsFileControlFrame::GetFrameName(nsString& aResult) const
+nsFileControlFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("FileControl", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("FileControl"), aResult);
 }
 #endif
 

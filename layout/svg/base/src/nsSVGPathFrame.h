@@ -84,8 +84,8 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("SVGPathFrame", aResult);
+  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+    return MakeFrameName(NS_LITERAL_STRING("SVGPathFrame"), aResult);
   }
 #endif
 

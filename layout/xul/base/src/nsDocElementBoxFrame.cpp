@@ -88,7 +88,7 @@ public:
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 };
@@ -133,7 +133,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("popupgroup"), nsString(), NS_ConvertASCIItoUCS2("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+  nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("popupgroup"), NS_LITERAL_STRING(""), NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
     *getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIContent> content;
@@ -161,9 +161,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsDocElementBoxFrame::GetFrameName(nsString& aResult) const
+nsDocElementBoxFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("DocElementBox", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("DocElementBox"), aResult);
 }
 
 NS_IMETHODIMP

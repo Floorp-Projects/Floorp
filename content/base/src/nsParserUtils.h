@@ -45,7 +45,7 @@ class nsParserUtils {
 public:
   static nsresult
   GetQuotedAttributeValue(nsString& aSource,
-                          const nsString& aAttribute,
+                          const nsAFlatString& aAttribute,
                           nsString& aValue);
 
   static PRBool

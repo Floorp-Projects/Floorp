@@ -60,7 +60,7 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -105,9 +105,9 @@ nsFirstLetterFrame::nsFirstLetterFrame()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsFirstLetterFrame::GetFrameName(nsString& aResult) const
+nsFirstLetterFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Letter", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Letter"), aResult);
 }
 #endif
 

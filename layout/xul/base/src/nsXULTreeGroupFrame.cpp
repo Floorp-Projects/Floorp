@@ -127,8 +127,8 @@ nsXULTreeGroupFrame::~nsXULTreeGroupFrame()
 
   // NOTE: the last Remove will delete the drag capturer
   if ( receiver ) {
-    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragCapturer, PR_TRUE);
-    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragCapturer, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragover"), mDragCapturer, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragexit"), mDragCapturer, PR_TRUE);
   }
   
 }
@@ -156,8 +156,8 @@ nsXULTreeGroupFrame::Init ( nsIPresContext* aPresContext, nsIContent* aContent,
     // line can do the right thing.
     nsresult rv1, rv2;
     mDragCapturer = new nsTreeItemDragCapturer(this, aPresContext);
-    rv1 = receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragCapturer, PR_TRUE);
-    rv2 = receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragCapturer, PR_TRUE);
+    rv1 = receiver->AddEventListener(NS_LITERAL_STRING("dragover"), mDragCapturer, PR_TRUE);
+    rv2 = receiver->AddEventListener(NS_LITERAL_STRING("dragexit"), mDragCapturer, PR_TRUE);
     NS_ASSERTION ( NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2), "Couldn't hookup drag capturer on tree" );
   }
   
@@ -1025,9 +1025,10 @@ nsXULTreeGroupFrame :: IsOpenContainer ( ) const
   nsCOMPtr<nsIDOMElement> me ( do_QueryInterface(mContent) );
   if ( me ) {
     nsAutoString isContainer, isOpen;
-    me->GetAttribute(NS_ConvertASCIItoUCS2("container"), isContainer);
-    me->GetAttribute(NS_ConvertASCIItoUCS2("open"), isOpen);
-    isOpenContainer = (isContainer.EqualsWithConversion("true") && isOpen.EqualsWithConversion("true"));
+    me->GetAttribute(NS_LITERAL_STRING("container"), isContainer);
+    me->GetAttribute(NS_LITERAL_STRING("open"), isOpen);
+    isOpenContainer = (isContainer.Equals(NS_LITERAL_STRING("true")) &&
+                       isOpen.Equals(NS_LITERAL_STRING("true")));
   }
 
   return isOpenContainer;

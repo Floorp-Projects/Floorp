@@ -1044,14 +1044,14 @@ nsDeviceContextWin :: PrefChanged(const char* aPref, void* aClosure)
 }
 
 char* 
-nsDeviceContextWin :: GetACPString(const nsString& aStr)
+nsDeviceContextWin :: GetACPString(const nsAString& aStr)
 {
    int acplen = aStr.Length() * 2 + 1;
    char * acp = new char[acplen];
    if(acp)
    {
       int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
-                      aStr.get(), aStr.Length(),
+                      PromiseFlatString(aStr).get(), aStr.Length(),
                       acp, acplen, NULL, NULL);
       if ( outlen > 0)
          acp[outlen] = '\0';  // null terminate

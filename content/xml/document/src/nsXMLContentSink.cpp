@@ -1327,25 +1327,25 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
     // If it's a XSL stylesheet PI...
     nsAutoString type;
-    nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
+    nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("type"), type);
     if (mState == eXMLContentSinkState_InProlog && 
         target.EqualsWithConversion(kStyleSheetPI) && 
         !type.EqualsIgnoreCase("text/css")) {
       nsAutoString href, title, media, alternate;
 
-      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("href"), href);
       // If there was no href, we can't do anything with this PI
       if (href.IsEmpty()) {
         return NS_OK;
       }
 
-      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
+      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("title"), title);
       title.CompressWhitespace();
 
-      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
+      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("media"), media);
       media.ToLowerCase();
 
-      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
+      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("alternate"), alternate);
 
       result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
                                 title, type, media);

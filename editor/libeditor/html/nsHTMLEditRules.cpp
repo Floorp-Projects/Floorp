@@ -2839,7 +2839,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
 /* !!!!!!!!!!!!!!!  TURNED OFF PER BUG 33213 !!!!!!!!!!!!!!!!!!!!
         // set style to not have unwanted vertical margins
         nsCOMPtr<nsIDOMElement> quoteElem = do_QueryInterface(curQuote);
-        res = mHTMLEditor->SetAttribute(quoteElem, NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 40px;"));
+        res = mHTMLEditor->SetAttribute(quoteElem, NS_LITERAL_STRING("style"), NS_LITERAL_STRING("margin: 0 0 0 40px;"));
         if (NS_FAILED(res)) return res;
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 

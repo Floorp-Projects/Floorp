@@ -1614,7 +1614,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
+nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
@@ -1760,7 +1760,7 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
                                  void* aKey,
                                  nsVoidArray& aTagStack,
                                  PRUint32 anInsertPos,
-                                 const nsString& aMimeType,
+                                 const nsAReadableString& aMimeType,
                                  nsDTDMode aMode){
 
   nsresult result = NS_OK;

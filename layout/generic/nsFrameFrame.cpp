@@ -149,7 +149,7 @@ public:
   nsHTMLFrameOuterFrame();
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   // nsISupports   
@@ -215,7 +215,7 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
@@ -456,9 +456,9 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsString& aResult) const
+NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("FrameOuter", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("FrameOuter"), aResult);
 }
 #endif
 
@@ -908,9 +908,9 @@ nsHTMLFrameInnerFrame::OnSecurityChange(nsIWebProgress *aWebProgress,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsString& aResult) const
+NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("FrameInner", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("FrameInner"), aResult);
 }
 #endif
 
@@ -1235,7 +1235,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
     GetURL(parentContent, url);
     url.Trim(" \t\n\r");
     if (url.IsEmpty())  // Load about:blank into a frame if not URL is specified (bug 35986)
-      url = NS_ConvertASCIItoUCS2("about:blank");
+      url = NS_LITERAL_STRING("about:blank");
 
     // Make an absolute URL
     nsCOMPtr<nsIURI> baseURL;

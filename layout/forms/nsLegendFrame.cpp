@@ -153,8 +153,8 @@ PRInt32 nsLegendFrame::GetAlign()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsLegendFrame::GetFrameName(nsString& aResult) const
+nsLegendFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Legend", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Legend"), aResult);
 }
 #endif

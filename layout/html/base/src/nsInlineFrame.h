@@ -86,7 +86,7 @@ public:
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -162,7 +162,7 @@ public:
   friend nsresult NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD Reflow(nsIPresContext* aPresContext,

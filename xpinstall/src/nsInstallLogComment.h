@@ -37,8 +37,8 @@ class nsInstallLogComment : public nsInstallObject
     public:
 
         nsInstallLogComment(nsInstall* inInstall,
-                            const      nsString&,
-                            const      nsString&,
+                            const      nsAString&,
+                            const      nsAString&,
                             PRInt32    *error);
 
         virtual ~nsInstallLogComment();

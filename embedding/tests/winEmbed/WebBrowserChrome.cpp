@@ -374,14 +374,14 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
     if(!(nsCRT::strcmp(operation, "back")))
     {
         // Going back. XXX Get string from a resource file
-        uriAStr.Append(NS_ConvertASCIItoUCS2("Going back to url:"));
-        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+        uriAStr.Append(NS_LITERAL_STRING("Going back to url:"));
+        uriAStr.Append(NS_ConvertUTF8toUCS2(uriCStr));
     }
     else if (!(nsCRT::strcmp(operation, "forward")))
     {
         // Going forward. XXX Get string from a resource file
-        uriAStr.Append(NS_ConvertASCIItoUCS2("Going forward to url:"));
-        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+        uriAStr.Append(NS_LITERAL_STRING("Going forward to url:"));
+        uriAStr.Append(NS_ConvertUTF8toUCS2(uriCStr));
     }
     else if (!(nsCRT::strcmp(operation, "reload")))
     {
@@ -389,19 +389,19 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
             aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
         {
-            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url,(bypassing proxy and cache) :"));
+            uriAStr.Append(NS_LITERAL_STRING("Reloading url,(bypassing proxy and cache) :"));
         }
         else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
         {
-            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing proxy):"));
+            uriAStr.Append(NS_LITERAL_STRING("Reloading url, (bypassing proxy):"));
         }
         else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
         {
-            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing cache):"));
+            uriAStr.Append(NS_LITERAL_STRING("Reloading url, (bypassing cache):"));
         }
         else
         {
-            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (normal):"));
+            uriAStr.Append(NS_LITERAL_STRING("Reloading url, (normal):"));
         }
         uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
@@ -409,21 +409,21 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
     {
         // Adding new entry. XXX Get string from a resource file
         uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
-        uriAStr.Append(NS_ConvertASCIItoUCS2(" added to session History"));
+        uriAStr.Append(NS_LITERAL_STRING(" added to session History"));
     }
     else if (!(nsCRT::strcmp(operation, "goto")))
     {
         // Goto. XXX Get string from a resource file
-        uriAStr.Append(NS_ConvertASCIItoUCS2("Going to HistoryIndex:"));
+        uriAStr.Append(NS_LITERAL_STRING("Going to HistoryIndex:"));
         uriAStr.AppendInt(info1);
-        uriAStr.Append(NS_ConvertASCIItoUCS2(" Url:"));
+        uriAStr.Append(NS_LITERAL_STRING(" Url:"));
         uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
     else if (!(nsCRT::strcmp(operation, "purge")))
     {
         // Purging old entries
         uriAStr.AppendInt(info1);
-        uriAStr.Append(NS_ConvertASCIItoUCS2(" purged from Session History"));
+        uriAStr.Append(NS_LITERAL_STRING(" purged from Session History"));
     }
 
     WebBrowserChromeUI::UpdateStatusBarText(this, uriAStr.get());

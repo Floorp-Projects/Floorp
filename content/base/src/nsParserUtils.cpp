@@ -64,7 +64,7 @@ FindWhileSkippingWhitespace(nsString& aStr, PRUnichar aChar, PRInt32 aOffset)
 
 nsresult
 nsParserUtils::GetQuotedAttributeValue(nsString& aSource,
-                                       const nsString& aAttribute,
+                                       const nsAFlatString& aAttribute,
                                        nsString& aValue)
 {  
   PRInt32 startOfAttribute = 0;     // Index into aSource where the attribute name starts
@@ -75,7 +75,7 @@ nsParserUtils::GetQuotedAttributeValue(nsString& aSource,
   // While there are more characters to look at
   while (startOfAttribute != -1) {
     // Find the attribute starting at offset
-    startOfAttribute = aSource.Find(aAttribute, PR_FALSE, startOfAttribute);
+    startOfAttribute = aSource.Find(aAttribute.get(), PR_FALSE, startOfAttribute);
     // If attribute found
     if (startOfAttribute != -1) { 
       // Find the '=' character while skipping whitespace

@@ -211,7 +211,7 @@ void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath
         inFolderPath->GetPath(&szPath);
         nsStrFolder.AssignWithConversion(szPath);
         nsMemory::Free(szPath);
-        ilc = new nsInstallLogComment(inInstall, NS_ConvertASCIItoUCS2("CreateFolder"), nsStrFolder, error);
+        ilc = new nsInstallLogComment(inInstall, NS_LITERAL_STRING("CreateFolder"), nsStrFolder, error);
         if(ilc == nsnull)
             *error = nsInstall::OUT_OF_MEMORY;
 
@@ -326,22 +326,22 @@ char* nsInstallFile::toString()
     {
         if(mMode & nsInstall::WIN_SHARED_FILE)
         {
-            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceSharedFile"));
+            rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("ReplaceSharedFile"));
         }
         else
         {
-            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceFile"));
+            rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("ReplaceFile"));
         }
     }
     else
     {
         if(mMode & nsInstall::WIN_SHARED_FILE)
         {
-            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("InstallSharedFile"));
+            rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("InstallSharedFile"));
         }
         else
         {
-            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("InstallFile"));
+            rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("InstallFile"));
         }
     }
 

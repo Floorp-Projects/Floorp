@@ -421,8 +421,10 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("scrollbar"), nsString(), NS_ConvertASCIItoUCS2("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
-    *getter_AddRefs(nodeInfo));
+  nodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("scrollbar"),
+                               NS_LITERAL_STRING(""),
+                               NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+                               *getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
@@ -783,9 +785,9 @@ nsGfxScrollFrame::Release(void)
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsGfxScrollFrame::GetFrameName(nsString& aResult) const
+nsGfxScrollFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("GfxScroll", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("GfxScroll"), aResult);
 }
 #endif
 

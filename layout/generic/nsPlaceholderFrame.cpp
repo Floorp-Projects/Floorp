@@ -119,9 +119,9 @@ nsPlaceholderFrame::Paint(nsIPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::GetFrameName(nsString& aResult) const
+nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Placeholder", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Placeholder"), aResult);
 }
 
 NS_IMETHODIMP
