@@ -160,7 +160,7 @@ function Startup()
   showFolder.parentNode.insertBefore(downloadFolderList, showFolder);
   downloadFolderList.hidden = false;
 
-#ifdef MOZ_PHOENIX  
+#ifdef MOZ_PHOENIX
   toggleDMPrefUI(document.getElementById("showWhenStarting"));
 #endif
   
