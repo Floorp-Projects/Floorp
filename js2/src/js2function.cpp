@@ -59,7 +59,55 @@ namespace MetaData {
     {   
         js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta->functionClass->prototype, meta->functionClass));
         FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
+		JS2Object::RootIterator ri = JS2Object::addRoot(&fnInst);
+		fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true));
 
+		if (argc) {
+			const String *str = meta->toString(argv[0]);
+			const String &srcLoc = widenCString("Function constructor source");
+
+			Arena a;
+			Pragma::Flags flags = Pragma::js1;		// XXX get flags from meta/context ?
+			Parser parser(meta->world, a, flags, *str, srcLoc);
+			CompilationData *oldData = NULL;
+			try {
+				StmtNode *parsedStatements = parser.parseProgram();
+				ASSERT(parser.lexer.peek(true).hasKind(Token::end));
+				if (meta->showTrees)
+				{
+					PrettyPrinter f(stdOut, 80);
+					{
+						PrettyPrinter::Block b(f, 2);
+						f << "Program =";
+						f.linearBreak(1);
+						StmtNode::printStatements(f, parsedStatements);
+					}
+					f.end();
+					stdOut << '\n';
+				}
+				if (parsedStatements) {
+					oldData = meta->startCompilationUnit(fnInst->fWrap->bCon, *str, srcLoc);
+					meta->ValidateStmtList(parsedStatements);
+					StmtNode *p = parsedStatements;
+					size_t lastPos = p->pos;
+					while (p) {
+						meta->SetupStmt(meta->env, RunPhase, p);
+						lastPos = p->pos;
+						p = p->next;
+					}
+					fnInst->fWrap->bCon->emitOp(eReturnVoid, lastPos);
+				}
+			}
+			catch (Exception &x) {
+				if (oldData)
+					meta->restoreCompilationUnit(oldData);
+				JS2Object::removeRoot(ri);
+				throw x;
+			}
+			if (oldData)
+				meta->restoreCompilationUnit(oldData);
+		}
+        JS2Object::removeRoot(ri);
         return thatValue;
     }
     

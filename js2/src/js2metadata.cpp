@@ -4017,26 +4017,47 @@ deleteClassProperty:
                     fWrap = (checked_cast<SimpleInstance *>(fnObj))->fWrap;
                 }
                 else
-                    if ((fnObj->kind == PrototypeInstanceKind)
-                            && ((checked_cast<PrototypeInstance *>(fnObj))->type == functionClass)) {
-                        fWrap = (checked_cast<FunctionInstance *>(fnObj))->fWrap;
-                    }
+                if ((fnObj->kind == PrototypeInstanceKind)
+                        && ((checked_cast<PrototypeInstance *>(fnObj))->type == functionClass)) {
+                    fWrap = (checked_cast<FunctionInstance *>(fnObj))->fWrap;
+                }
+                else
+                if (fnObj->kind == MethodClosureKind) {
+                    // XXX here we ignore the bound this, can that be right?
+                    MethodClosure *mc = checked_cast<MethodClosure *>(fnObj);
+                    fWrap = mc->method->fInst->fWrap;
+				}
                 if (fWrap) {
                     if (fWrap->code) {
                         result = (fWrap->code)(this, thisValue, NULL, 0);
                         return true;
                     }
-                }
-                else 
-                if (fnObj->kind == MethodClosureKind) {
-                    // XXX here we accept the bound this, can that be right?
-                    MethodClosure *mc = checked_cast<MethodClosure *>(fnObj);
-                    SimpleInstance *fInst = mc->method->fInst;
-                    FunctionWrapper *fWrap = fInst->fWrap;
-                    if (fWrap->code) {
-                        result = (fWrap->code)(this, mc->thisObject, NULL, 0);
-                        return true;
-                    }
+					else {
+						uint8 *savePC = NULL;
+						BytecodeContainer *bCon = fWrap->bCon;
+
+						CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
+						ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+						runtimeFrame->instantiate(env);
+						runtimeFrame->thisObject = thisValue;
+						Frame *oldTopFrame = env->getTopFrame();
+						env->addFrame(runtimeFrame);
+						try {
+							savePC = engine->pc;
+							engine->pc = NULL;
+							result = engine->interpret(RunPhase, bCon);
+						}
+						catch (Exception &x) {
+							engine->pc = savePC;
+							restoreCompilationUnit(oldData);
+							env->setTopFrame(oldTopFrame);
+							throw x;
+						}
+						engine->pc = savePC;
+						restoreCompilationUnit(oldData);
+						env->setTopFrame(oldTopFrame);
+						return true;
+					}
                 }
             }
         }
