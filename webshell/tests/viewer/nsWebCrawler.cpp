@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
+#include "prprf.h"
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -153,7 +154,8 @@ AtomHashTable::Remove(nsIAtom* aKey)
 //----------------------------------------------------------------------
 
 nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
-  : mQueuedLoadURLs(0)
+  : mHaveURLList(PR_FALSE),
+    mQueuedLoadURLs(0)
 {
   NS_INIT_REFCNT();
 
@@ -174,6 +176,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mBaseHrefAttr = getter_AddRefs(NS_NewAtom("_base_href"));
   mVisited = new AtomHashTable();
   mVerbose = nsnull;
+  LL_I2L(mStartLoad, 0);
   mRegressing = PR_FALSE;
 }
 
@@ -211,22 +214,56 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsresult aStatus,
                                 nsIDocumentLoaderObserver* aObserver)
 {
-  nsresult rv;
+  PRTime endLoadTime = PR_Now();
 
   nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-  
+  nsresult rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   if (nsnull == aURL) {
     return NS_OK;
   }
 
-  if (mVerbose) {
-    char* spec;
-    aURL->GetSpec(&spec);
-    printf("Crawler: done loading %s\n", spec);
+  // Ignore this notification unless its for the current url. That way
+  // we skip over embedded webshell notifications (e.g. frame cells,
+  // iframes, etc.)
+  char* spec;
+  aURL->GetSpec(&spec);
+  if (!spec) {
     nsCRT::free(spec);
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+  nsCOMPtr<nsIURI> currentURL;
+  rv = NS_NewURI(getter_AddRefs(currentURL), mCurrentURL);
+  if (NS_FAILED(rv)) {
+    nsCRT::free(spec);
+    return rv;
+  }
+  char* spec2;
+  currentURL->GetSpec(&spec2);
+  if (!spec2) {
+    nsCRT::free(spec);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (PL_strcmp(spec, spec2)) {
+    nsCRT::free(spec);
+    nsCRT::free(spec2);
+    return NS_OK;
+  }
+  nsCRT::free(spec2);
+
+  char buf[400];
+  PRTime delta, cvt, rounder;
+  LL_I2L(cvt, 1000);
+  LL_I2L(rounder, 499);
+  LL_SUB(delta, endLoadTime, mStartLoad);
+  LL_ADD(delta, delta, rounder);
+  LL_DIV(delta, delta, cvt);
+  PR_snprintf(buf, sizeof(buf), "%s: done loading (%lld msec)",
+              spec, delta);
+  printf("%s\n", buf);
+  nsCRT::free(spec);
 
   // Make sure the document bits make it to the screen at least once
   nsIPresShell* shell = GetPresShell();
@@ -439,12 +476,14 @@ nsWebCrawler::SetRegressionDir(const nsString& aDir)
 void
 nsWebCrawler::Start()
 {
-printf("start: thread=%p\n", PR_CurrentThread());
   // Enable observing each URL load...
   nsIWebShell* shell = nsnull;
   mBrowser->GetWebShell(shell);
   shell->SetDocLoaderObserver(this);
   NS_RELEASE(shell);
+  if (mPendingURLs.Count() > 1) {
+    mHaveURLList = PR_TRUE;
+  }
   LoadNextURL(PR_FALSE);
 }
 
@@ -719,6 +758,7 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
           }
           else {
             mCurrentURL = *url;
+            mStartLoad = PR_Now();
             webShell->LoadURL(url->GetUnicode());
           }
           NS_RELEASE(webShell);
@@ -959,6 +999,7 @@ nsWebCrawler::GoToQueuedURL(const nsString& aURL)
   mBrowser->GetWebShell(webShell);
   if (webShell) {
     mCurrentURL = aURL;
+    mStartLoad = PR_Now();
     webShell->LoadURL(aURL.GetUnicode());
     NS_RELEASE(webShell);
   }
