@@ -48,6 +48,67 @@
 #define NS_ERROR_UCONV_NOCONV \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x01)
 
+
+#define NS_IMPL_NSUCONVERTERREGSELF                                     \
+static NS_IMETHODIMP                                                    \
+nsUConverterRegSelf( const char* aFromCharset,                          \
+                     const char* aToCharset,                            \
+                     nsCID aCID)                                        \
+{                                                                       \
+  nsresult res = NS_OK;                                                 \
+  nsRegistryKey key;                                                    \
+  char buff[1024];                                                      \
+  PRBool isOpen = PR_FALSE;                                             \
+  NS_WITH_SERVICE( nsIRegistry, registry, NS_REGISTRY_PROGID, &res);    \
+  if (NS_FAILED(res))                                                   \
+    goto done;                                                          \
+  res = registry->IsOpen(&isOpen);                                      \
+  if (NS_FAILED(res))                                                   \
+    goto done;                                                          \
+  if(! isOpen) {                                                        \
+    res = registry->OpenWellKnownRegistry(                              \
+        nsIRegistry::ApplicationComponentRegistry);                     \
+    if (NS_FAILED(res))                                                 \
+      goto done;                                                        \
+  }                                                                     \
+  char * cid_string;                                                    \
+  cid_string = aCID.ToString();                                         \
+  sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);   \
+  nsCRT::free(cid_string);                                              \
+  res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);        \
+  if (NS_FAILED(res))                                                   \
+    goto done;                                                          \
+  res = registry -> SetString(key, "source", aFromCharset);             \
+  if (NS_FAILED(res))                                                   \
+    goto done;                                                          \
+  res = registry -> SetString(key, "destination", aToCharset);          \
+  if (NS_FAILED(res))                                                   \
+    goto done;                                                          \
+  printf("RegSelf %s to %s converter complete\n",                       \
+         aFromCharset, aToCharset);                                     \
+done:                                                                   \
+  return res;                                                           \
+}
+
+#define NS_UCONV_REG_UNREG(_InstanceClass, _From, _To, _CID )         \
+static NS_IMETHODIMP                                                  \
+_InstanceClass##RegSelf (nsIComponentManager *aCompMgr,               \
+                         nsIFile *aPath,                              \
+                         const char* registryLocation,                \
+                         const char* componentType)                   \
+{                                                                     \
+   nsCID cid = _CID;                                                  \
+   return nsUConverterRegSelf( _From, _To, cid);                      \
+}                                                                     \
+static NS_IMETHODIMP                                                  \
+_InstanceClass##UnRegSelf (nsIComponentManager *aCompMgr,             \
+                           nsIFile *aPath,                            \
+                           const char* registryLocation)              \
+{                                                                     \
+  printf("UnRegSelf " _From " to " _To "converter not implement\n");  \
+  return NS_OK;                                                       \
+}
+
 /**
  * Interface for a Manager of Charset Converters.
  * 
