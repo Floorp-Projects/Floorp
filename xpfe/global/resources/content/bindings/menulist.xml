@@ -14,7 +14,7 @@
 
   <binding id="menulist" display="xul:menu" 
            extends="chrome://global/content/bindings/menulist.xml#menulist-base">
-    <content>
+    <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
         <xul:image class="menulist-icon" xbl:inherits="src"/>
         <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
@@ -45,8 +45,6 @@
       <method name="setInitialSelection">
         <body>
           <![CDATA[
-            this.setAttribute('sizetopopup', 'pref');
-            
             var popup = this.menupopup;
             if (popup) {
               var arr = popup.getElementsByAttribute('selected', 'true');
@@ -254,7 +252,7 @@
   </binding>
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
-    <content>
+    <content sizetopopup="pref">
       <xul:hbox class="menulist-editable-box textbox-input-box" flex="1">
         <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
                     xbl:inherits="value=label,disabled"/>
@@ -434,7 +432,7 @@
   
   <binding id="menulist-compact" display="xul:menu" 
            extends="chrome://global/content/bindings/menulist.xml#menulist">
-    <content>
+    <content sizetopopup="false">
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <xul:image class="menulist-icon" xbl:inherits="src"/>
       <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
