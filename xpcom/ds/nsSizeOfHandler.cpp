@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nscore.h"
 #include "nsISizeOfHandler.h"
 #include "nsIAtom.h"
 #include "plhash.h"
@@ -95,7 +96,7 @@ SizeOfDataStats::Update(PRUint32 aSize)
 
 //----------------------------------------------------------------------
 
-#define POINTER_HASH_KEY(_atom) ((PLHashNumber) _atom)
+#define POINTER_HASH_KEY(_atom) (PLHashNumber) NS_PTR_TO_INT32(_atom)
 
 static PLHashNumber
 PointerHashKey(nsIAtom* key)

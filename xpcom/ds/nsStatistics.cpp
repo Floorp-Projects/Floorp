@@ -19,6 +19,7 @@
  *   Chris Waterson <waterson@netscape.com>
  */
 
+#include "nscore.h"
 #include "nsStatistics.h"
 #include "nsISupportsUtils.h"
 #include "nsTraceRefcnt.h" // for NS_MeanAndStdDev
@@ -27,7 +28,7 @@
 inline PLHashNumber
 nsStatistics::HashPRInt32(const void* aKey)
 {
-    return PLHashNumber(aKey);
+    return PLHashNumber(NS_PTR_TO_INT32(aKey));
 }
 
 nsStatistics::nsStatistics(const char* aTopic)
@@ -72,7 +73,7 @@ nsStatistics::Record(PRInt32 aValue)
                                               NS_REINTERPRET_CAST(const void*, aValue));
 
     if (hep && *hep) {
-        PRInt32 count = NS_REINTERPRET_CAST(PRUint32, (*hep)->value);
+        PRInt32 count = NS_PTR_TO_INT32((*hep)->value);
         (*hep)->value = NS_REINTERPRET_CAST(void*, ++count);
     }
     else {
@@ -92,7 +93,7 @@ nsStatistics::Print(FILE* aFile)
             mTopic, mCount, mMinimum, mMaximum, mean, stddev);
 
     for (PRInt32 i = mMinimum; i <= mMaximum; ++i) {
-        PRUint32 count = NS_REINTERPRET_CAST(PRUint32, PL_HashTableLookup(mDistribution, NS_REINTERPRET_CAST(const void*, i)));
+        PRUint32 count = NS_PTR_TO_INT32(PL_HashTableLookup(mDistribution, NS_INT32_TO_PTR(i)));
         if (! count)
             continue;
 

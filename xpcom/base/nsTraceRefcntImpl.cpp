@@ -21,6 +21,7 @@
  *   L. David Baron <dbaron@fas.harvard.edu>
  */
 
+#include "nscore.h"
 #include "nsISupports.h"
 #include "nsVoidArray.h"
 #include "prprf.h"
@@ -571,7 +572,7 @@ static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
   // need to disguise this pointer, so the table won't keep the object alive.
   aPtr = (void*) ~PLHashNumber(aPtr);
 #endif
-  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
   if (hep && *hep) {
     return PRInt32((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->serialNumber);
   }
@@ -580,7 +581,7 @@ static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
     record->serialNumber = ++gNextSerialNumber;
     record->refCount = 0;
     record->COMPtrCount = 0;
-    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(aPtr), aPtr, NS_REINTERPRET_CAST(void*,record));
+    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr, NS_REINTERPRET_CAST(void*,record));
     return gNextSerialNumber;
   }
   else {
@@ -594,7 +595,7 @@ static PRInt32* GetRefCount(void* aPtr)
   // need to disguise this pointer, so the table won't keep the object alive.
   aPtr = (void*) ~PLHashNumber(aPtr);
 #endif
-  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
   if (hep && *hep) {
     return &((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->refCount);
   } else {
@@ -608,7 +609,7 @@ static PRInt32* GetCOMPtrCount(void* aPtr)
   // need to disguise this pointer, so the table won't keep the object alive.
   aPtr = (void*) ~PLHashNumber(aPtr);
 #endif
-  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
   if (hep && *hep) {
     return &((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->COMPtrCount);
   } else {
@@ -667,7 +668,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
 
 static PLHashNumber PR_CALLBACK HashNumber(const void* aKey)
 {
-  return PLHashNumber(aKey);
+  return PLHashNumber(NS_PTR_TO_INT32(aKey));
 }
 
 static void InitTraceLog(void)
@@ -1163,7 +1164,7 @@ write_address_file(void * pc, FILE* aStream)
     static mutex_t lock;
     struct bucket * ptr;
 
-    unsigned int val = (unsigned int)pc;
+    unsigned int val = NS_PTR_TO_INT32(pc);
 
     ptr = table + ((val >> 2)&2047);
 
@@ -1206,10 +1207,10 @@ write_address_file(void * pc, FILE* aStream)
 #endif /*__GNUC__*/
  
         fprintf(aStream, "%u %s:%s+0x%x\n",
-            ptr->next->index,
-			lib,
-            func,
-            (unsigned int)pc - (unsigned int)info.dli_saddr);
+                ptr->next->index,
+                lib,
+                func,
+                (char *)pc - (char*)info.dli_saddr);
  
         return (ptr->next->index);
     }
@@ -1617,8 +1618,8 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
 
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (aRefCnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X %d Create\n",
-              aClazz, PRInt32(aPtr), serialno);
+      fprintf(gAllocLog, "\n<%s> 0x%08p %d Create\n",
+              aClazz, aPtr, serialno);
       WalkTheStack(gAllocLog);
     }
 
@@ -1631,7 +1632,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
       else {        
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
-                  "\n<%s> 0x%08X %d AddRef %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);       
+                  "\n<%s> 0x%08p %d AddRef %d\n", aClazz, aPtr, serialno, aRefCnt);       
           WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
@@ -1684,7 +1685,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
       else {
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
-                  "\n<%s> 0x%08X %d Release %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
+                  "\n<%s> 0x%08p %d Release %d\n", aClazz, aPtr, serialno, aRefCnt);
           WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
@@ -1697,8 +1698,8 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     // using LogDeleteXPCOM instead to get file and line numbers.)
     if (aRefCnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog,
-              "\n<%s> 0x%08X %d Destroy\n",
-              aClazz, PRInt32(aPtr), serialno);
+              "\n<%s> 0x%08p %d Destroy\n",
+              aClazz, aPtr, serialno);
       WalkTheStack(gAllocLog);
     }
 
@@ -1844,8 +1845,8 @@ nsTraceRefcnt::LogCtor(void* aPtr,
     // using LogNewXPCOM instead to get file and line numbers.)
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X %d Ctor (%d)\n",
-             aType, PRInt32(aPtr), serialno, aInstanceSize);
+      fprintf(gAllocLog, "\n<%s> 0x%08p %d Ctor (%d)\n",
+             aType, aPtr, serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
     }
 #endif
@@ -1887,8 +1888,8 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
     if (gAllocLog && loggingThisType && loggingThisObject) {
-      fprintf(gAllocLog, "\n<%s> 0x%08X %d Dtor (%d)\n",
-             aType, PRInt32(aPtr), serialno, aInstanceSize);
+      fprintf(gAllocLog, "\n<%s> 0x%08p %d Dtor (%d)\n",
+             aType, aPtr, serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
     }
 #endif
@@ -1930,8 +1931,8 @@ nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
     if (gCOMPtrLog && loggingThisObject) {
-      fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrAddRef %d 0x%08X\n",
-              PRInt32(object), serialno, count?(*count):-1, PRInt32(aCOMPtr));
+      fprintf(gCOMPtrLog, "\n<?> 0x%08p %d nsCOMPtrAddRef %d 0x%08p\n",
+              object, serialno, count?(*count):-1, aCOMPtr);
       WalkTheStack(gCOMPtrLog);
     }
 #endif
@@ -1973,8 +1974,8 @@ nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
 
     if (gCOMPtrLog && loggingThisObject) {
-      fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrRelease %d 0x%08X\n",
-              PRInt32(object), serialno, count?(*count):-1, PRInt32(aCOMPtr));
+      fprintf(gCOMPtrLog, "\n<?> 0x%08p %d nsCOMPtrRelease %d 0x%08p\n",
+              object, serialno, count?(*count):-1, aCOMPtr);
       WalkTheStack(gCOMPtrLog);
     }
 #endif

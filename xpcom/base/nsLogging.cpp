@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsLogging.h"
 
 #ifdef NS_ENABLE_LOGGING
@@ -92,7 +93,7 @@ nsLoggingService::Release(void)
 static void* PR_CALLBACK
 levelClone(nsHashKey *aKey, void *aData, void* closure)
 {
-    PRUint32 level = (PRUint32)aData;
+    PRUint32 level = NS_PTR_TO_INT32(aData);
     return (void*)level;
 }
 
@@ -421,7 +422,7 @@ nsLog::Init(const char* name, PRUint32 controlFlags, nsILogEventSink* sink)
     mSink = sink;
 
     nsCStringKey key(name);
-    PRUint32 level = (PRUint32)gSettings->Get(&key);
+    PRUint32 level = NS_PTR_TO_INT32(gSettings->Get(&key));
     if (level != 0) {
         mControlFlags |= nsILog::DEFAULT_ENABLED;
     }
@@ -690,7 +691,7 @@ nsFileLogEventSink::Print(nsILog* log, const char* msg)
     if (NS_FAILED(rv)) return rv;
 
     if (flags & nsILog::PRINT_THREAD_ID) {
-        ::fprintf(mOutput, "%8x ", (PRInt32)PR_CurrentThread());
+        ::fprintf(mOutput, "%8p ", PR_CurrentThread());
         mBeginningOfLine = PR_FALSE;
     }
 

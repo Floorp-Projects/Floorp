@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include <stdio.h>
+#include "nscore.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -42,7 +43,7 @@ int main(int argc, char** argv)
 
   char* characterSetName = argv[2];
   nsString* cset = ConvertCharacterSetName(characterSetName);
-  if (PRInt32(cset) < 0) {
+  if (NS_PTR_TO_INT32(cset) < 0) {
     printf("illegal character set name: '%s'\n", characterSetName);
     return -1;
   }

@@ -122,7 +122,7 @@ OnMonitorRecycle(void* addr)
 PR_STATIC_CALLBACK(PLHashNumber)
 _hash_pointer(const void* key)
 {
-    return PLHashNumber(key) >> 2;
+    return PLHashNumber(NS_PTR_TO_INT32(key)) >> 2;
 }
 
 // Must be single-threaded here, early in primordial thread.
