@@ -40,3 +40,8 @@
   list-style-image: url("chrome://messenger/skin/icons/layout2.gif");
 }
 
+/* :::::: Emoticon smiley face ::::: */
+
+.smileface {
+  list-style-image: url("chrome://editor/skin/icons/smiley/smile.gif");
+}

@@ -10,11 +10,6 @@
   height                  : 80px;
 }  
 
-.smileface
-  {
-    list-style-image : url("chrome://messenger/skin/smile.gif");
-  }
-
 #previewImageContainer {
   overflow: hidden; 
   height: 92px; 
