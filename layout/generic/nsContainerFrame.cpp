@@ -417,25 +417,8 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   nextInFlow->BreakFromPrevFlow();
 
   // Take the next-in-flow out of the parent's child list
-  if (parent->mFrames.FirstChild() == nextInFlow) {
-    nsIFrame* nextFrame;
-    nextInFlow->GetNextSibling(&nextFrame);
-    parent->mFrames.SetFrames(nextFrame);
-  } else {
-    nsIFrame* nextSibling;
-
-    // Because the next-in-flow is not the first child of the parent
-    // we know that it shares a parent with aChild. Therefore, we need
-    // to capture the next-in-flow's next sibling (in case the
-    // next-in-flow is the last next-in-flow for aChild AND the
-    // next-in-flow is not the last child in parent)
-    NS_ASSERTION(((nsContainerFrame*)parent)->IsChild(aChild), "screwy flow");
-    aChild->GetNextSibling(&nextSibling);
-    NS_ASSERTION(nextSibling == nextInFlow, "unexpected sibling");
-
-    nextInFlow->GetNextSibling(&nextSibling);
-    aChild->SetNextSibling(nextSibling);
-  }
+  PRBool  result = parent->mFrames.RemoveFrame(nextInFlow);
+  NS_ASSERTION(result, "failed to remove frame");
 
   // Delete the next-in-flow frame
   nextInFlow->DeleteFrame(aPresContext);
