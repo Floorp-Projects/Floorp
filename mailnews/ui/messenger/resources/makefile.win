@@ -49,12 +49,6 @@ install::
 	$(MAKE_INSTALL) forward.gif			$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) trash.gif			$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) newsHost.gif		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) content1.xul		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) content2.xul		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) content3.xul		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) content4.xul		$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) cpw.xul				$(DIST)\bin\res\mailnews\messenger
-	$(MAKE_INSTALL) navigation.xul		$(DIST)\bin\res\mailnews\messenger
 
 clobber::
 	rm -f $(DIST)\res\mailnews\messenger\mailshell.xul
