@@ -4151,55 +4151,59 @@ struct MidasCommand {
   const char*  incomingCommandString;
   const char*  internalCommandString;
   const char*  internalParamString;
-  PRBool       useNewParam;
+  PRPackedBool useNewParam;
+  PRPackedBool convertToBoolean;
 };
 
 static struct MidasCommand gMidasCommandTable[] = {
-  { "bold",          "cmd_bold",            "", PR_TRUE },
-  { "italic",        "cmd_italic",          "", PR_TRUE },
-  { "underline",     "cmd_underline",       "", PR_TRUE },
-  { "strikethrough", "cmd_strikethrough",   "", PR_TRUE },
-  { "subscript",     "cmd_subscript",       "", PR_TRUE },
-  { "superscript",   "cmd_superscript",     "", PR_TRUE },
-  { "cut",           "cmd_cut",             "", PR_TRUE },
-  { "copy",          "cmd_copy",            "", PR_TRUE },
-  { "delete",        "cmd_delete",          "", PR_TRUE },
-  { "selectall",     "cmd_selectall",       "", PR_TRUE },
-  { "undo",          "cmd_undo",            "", PR_TRUE },
-  { "redo",          "cmd_redo",            "", PR_TRUE },
-  { "indent",        "cmd_indent",          "", PR_TRUE },
-  { "outdent",       "cmd_outdent",         "", PR_TRUE },
-  { "backcolor",     "cmd_backgroundColor", "", PR_FALSE },
-  { "forecolor",     "cmd_fontColor",       "", PR_FALSE },
-  { "fontname",      "cmd_fontFace",        "", PR_FALSE },
-  { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
-  { "increasefontsize", "cmd_increaseFont", "", PR_FALSE },
-  { "decreasefontsize", "cmd_decreaseFont", "", PR_FALSE },
-  { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
-  { "inserthorizontalrule", "cmd_insertHR", "", PR_TRUE },
-  { "createlink",    "cmd_insertLinkNoUI",  "", PR_FALSE },
-  { "insertimage",   "cmd_insertImageNoUI", "", PR_FALSE },
-  { "justifyleft",   "cmd_align",       "left", PR_TRUE },
-  { "justifyright",  "cmd_align",      "right", PR_TRUE },
-  { "justifycenter", "cmd_align",     "center", PR_TRUE },
-  { "justifyfull",   "cmd_align",    "justify", PR_TRUE },
-  { "removeformat",  "cmd_removeStyles",    "", PR_TRUE },
-  { "unlink",        "cmd_removeLinks",     "", PR_TRUE },
-  { "insertorderedlist",   "cmd_ol",        "", PR_TRUE },
-  { "insertunorderedlist", "cmd_ul",        "", PR_TRUE },
-  { "insertparagraph", "cmd_paragraphState", "p", PR_TRUE },
-  { "formatblock",   "cmd_paragraphState",  "", PR_FALSE },
-  { "heading",       "cmd_paragraphState",  "", PR_FALSE },
+  { "bold",          "cmd_bold",            "", PR_TRUE,  PR_FALSE },
+  { "italic",        "cmd_italic",          "", PR_TRUE,  PR_FALSE },
+  { "underline",     "cmd_underline",       "", PR_TRUE,  PR_FALSE },
+  { "strikethrough", "cmd_strikethrough",   "", PR_TRUE,  PR_FALSE },
+  { "subscript",     "cmd_subscript",       "", PR_TRUE,  PR_FALSE },
+  { "superscript",   "cmd_superscript",     "", PR_TRUE,  PR_FALSE },
+  { "cut",           "cmd_cut",             "", PR_TRUE,  PR_FALSE },
+  { "copy",          "cmd_copy",            "", PR_TRUE,  PR_FALSE },
+  { "delete",        "cmd_delete",          "", PR_TRUE,  PR_FALSE },
+  { "selectall",     "cmd_selectall",       "", PR_TRUE,  PR_FALSE },
+  { "undo",          "cmd_undo",            "", PR_TRUE,  PR_FALSE },
+  { "redo",          "cmd_redo",            "", PR_TRUE,  PR_FALSE },
+  { "indent",        "cmd_indent",          "", PR_TRUE,  PR_FALSE },
+  { "outdent",       "cmd_outdent",         "", PR_TRUE,  PR_FALSE },
+  { "backcolor",     "cmd_backgroundColor", "", PR_FALSE, PR_FALSE },
+  { "forecolor",     "cmd_fontColor",       "", PR_FALSE, PR_FALSE },
+  { "hilitecolor",   "cmd_highlight",       "", PR_FALSE, PR_FALSE },
+  { "fontname",      "cmd_fontFace",        "", PR_FALSE, PR_FALSE },
+  { "fontsize",      "cmd_fontSize",        "", PR_FALSE, PR_FALSE },
+  { "increasefontsize", "cmd_increaseFont", "", PR_FALSE, PR_FALSE },
+  { "decreasefontsize", "cmd_decreaseFont", "", PR_FALSE, PR_FALSE },
+  { "fontsize",      "cmd_fontSize",        "", PR_FALSE, PR_FALSE },
+  { "inserthorizontalrule", "cmd_insertHR", "", PR_TRUE,  PR_FALSE },
+  { "createlink",    "cmd_insertLinkNoUI",  "", PR_FALSE, PR_FALSE },
+  { "insertimage",   "cmd_insertImageNoUI", "", PR_FALSE, PR_FALSE },
+  { "justifyleft",   "cmd_align",       "left", PR_TRUE,  PR_FALSE },
+  { "justifyright",  "cmd_align",      "right", PR_TRUE,  PR_FALSE },
+  { "justifycenter", "cmd_align",     "center", PR_TRUE,  PR_FALSE },
+  { "justifyfull",   "cmd_align",    "justify", PR_TRUE,  PR_FALSE },
+  { "removeformat",  "cmd_removeStyles",    "", PR_TRUE,  PR_FALSE },
+  { "unlink",        "cmd_removeLinks",     "", PR_TRUE,  PR_FALSE },
+  { "insertorderedlist",   "cmd_ol",        "", PR_TRUE,  PR_FALSE },
+  { "insertunorderedlist", "cmd_ul",        "", PR_TRUE,  PR_FALSE },
+  { "insertparagraph", "cmd_paragraphState", "p", PR_TRUE, PR_FALSE },
+  { "formatblock",   "cmd_paragraphState",  "", PR_FALSE, PR_FALSE },
+  { "heading",       "cmd_paragraphState",  "", PR_FALSE, PR_FALSE },
+  { "useCSS",        "cmd_setDocumentUseCSS",   "", PR_FALSE, PR_TRUE },
+  { "readonly",      "cmd_setDocumentReadOnly", "", PR_FALSE, PR_TRUE },
 #if 0
 // no editor support to remove alignments right now
-  { "justifynone",   "cmd_align",           "", PR_TRUE },
+  { "justifynone",   "cmd_align",           "", PR_TRUE,  PR_FALSE },
 
 // the following will need special review before being turned on
-  { "saveas",        "cmd_saveAs",          "", PR_TRUE },
-  { "print",         "cmd_print",           "", PR_TRUE },
-  { "paste",         "cmd_paste",           "", PR_TRUE },
+  { "saveas",        "cmd_saveAs",          "", PR_TRUE,  PR_FALSE },
+  { "print",         "cmd_print",           "", PR_TRUE,  PR_FALSE },
+  { "paste",         "cmd_paste",           "", PR_TRUE,  PR_FALSE },
 #endif
-  { NULL, NULL, NULL, PR_FALSE }
+  { NULL, NULL, NULL, PR_FALSE, PR_FALSE }
 };
 
 #define MidasCommandCount ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
@@ -4228,28 +4232,52 @@ static struct MidasParam gMidasParamTable[] = {
 // this function will return false if the command is not recognized
 // inCommandID will be converted as necessary for internal operations
 // inParam will be converted as necessary for internal operations
-// outParam will be Empty if no parameter is needed
+// outParam will be Empty if no parameter is needed or if returning a boolean
+// outIsBoolean will determine whether to send param as a boolean or string
+// outBooleanParam will not be set unless outIsBoolean
 PRBool
 nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID, 
                                               const nsAString & inParam,
                                               nsACString& outCommandID,
-                                              nsACString& outParam)
+                                              nsACString& outParam,
+                                              PRBool& outIsBoolean,
+                                              PRBool& outBooleanValue)
 {
   NS_ConvertUCS2toUTF8 convertedCommandID(inCommandID);
-  PRUint32 i, j;
+  PRUint32 i;
+  PRBool found = PR_FALSE;
   for (i = 0; i < MidasCommandCount; ++i) {
     if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
                                   nsCaseInsensitiveCStringComparator())) {
-      // set outCommandID (what we use internally)
-      outCommandID.Assign(gMidasCommandTable[i].internalCommandString);
+      found = PR_TRUE;
+      break;
+    }
+  }
 
-      // set outParam based on the flag from the table
-      if (gMidasCommandTable[i].useNewParam) {
-        outParam.Assign(gMidasCommandTable[i].internalParamString);
+  if (found) {
+    // set outCommandID (what we use internally)
+    outCommandID.Assign(gMidasCommandTable[i].internalCommandString);
+
+    // set outParam & outIsBoolean based on flags from the table
+    outIsBoolean = gMidasCommandTable[i].convertToBoolean;
+
+    if (gMidasCommandTable[i].useNewParam) {
+      outParam.Assign(gMidasCommandTable[i].internalParamString);
+    }
+    else {
+      // handle checking of param passed in
+      NS_ConvertUCS2toUTF8 convertedParam(inParam);
+
+      if (outIsBoolean) {
+        // if this is a boolean value and it's not explicitly false
+        // (e.g. no value) we default to "true" 
+        outBooleanValue = convertedParam.Equals("false",
+                                   nsCaseInsensitiveCStringComparator());
+        outParam.SetLength(0);
       }
       else {
-        NS_ConvertUCS2toUTF8 convertedParam(inParam);
         // check to see if we need to convert the parameter
+        PRUint32 j;
         for (j = 0; j < MidasParamCount; ++j) {
           if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
                                     nsCaseInsensitiveCStringComparator())) {
@@ -4257,19 +4285,22 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
             break;
           }
         }
+
         // if we didn't convert the parameter, just
         // pass through the parameter that was passed to us
-	     if (j == MidasParamCount)
+        if (j == MidasParamCount)
           outParam.Assign(convertedParam);
       }
-      return PR_TRUE;
     }
+  } // end else for useNewParam (do convert existing param)
+  else {
+    // reset results if the command is not found in our table
+    outCommandID.SetLength(0);
+    outParam.SetLength(0);
+    outIsBoolean = PR_FALSE;
   }
 
-  // reset results if the command is not found in our table
-  outCommandID.SetLength(0);
-  outParam.SetLength(0);
-  return PR_FALSE;  
+  return found;  
 }
 
 /* TODO: don't let this call do anything if the page is not done loading */
@@ -4307,11 +4338,13 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramStr;
-  if (!ConvertToMidasInternalCommand(commandID, value, cmdToDispatch, paramStr))
+  PRBool isBool, boolVal;
+  if (!ConvertToMidasInternalCommand(commandID, value, 
+                                     cmdToDispatch, paramStr, isBool, boolVal))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
-  if (paramStr.IsEmpty()) {
+  if (!isBool && paramStr.IsEmpty()) {
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
   } else {
     // we have a command that requires a parameter, create params
@@ -4319,7 +4352,11 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
                                             NS_COMMAND_PARAMS_CONTRACTID, &rv);
     if (!cmdParams)
       return NS_ERROR_OUT_OF_MEMORY;
-    rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
+
+    if (isBool)
+      rv = cmdParams->SetBooleanValue("state_attribute", boolVal);
+    else
+      rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
     if (NS_FAILED(rv))
       return rv;
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), cmdParams, window);
@@ -4369,8 +4406,9 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramStr;
+  PRBool isBool, boolVal;
   if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramStr))
+                                     cmdToDispatch, paramStr, isBool, boolVal))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   return cmdMgr->IsCommandEnabled(cmdToDispatch.get(), window, _retval);
@@ -4413,8 +4451,9 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramToCheck;
+  PRBool dummy, dummy2;
   if (!ConvertToMidasInternalCommand(commandID, commandID, 
-                                     cmdToDispatch, paramToCheck))
+                                     cmdToDispatch, paramToCheck, dummy, dummy2))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv;
@@ -4501,8 +4540,9 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramStr;
+  PRBool isBool, boolVal;
   if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramStr))
+                                     cmdToDispatch, paramStr, isBool, boolVal))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   // create params
