@@ -703,7 +703,10 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       nsIView*  view;
       absoluteFrame->GetView(view);
       if (nsnull == view) {
-        view = CreateAbsoluteView(position, display);
+        nsIStyleContext* absSC;
+        absoluteFrame->GetStyleContext(&aPresContext, absSC);
+        view = CreateAbsoluteView(absSC);
+        NS_RELEASE(absSC);
         absoluteFrame->SetView(view);  
       }
 
@@ -781,9 +784,16 @@ nsBodyFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
   }
 }
 
-nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
-                                         const nsStyleDisplay*  aDisplay) const
+nsIView*
+nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
 {
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStylePosition* position = (const nsStylePosition*)
+    aStyleContext->GetStyleData(eStyleStruct_Position);
+  const nsStyleColor* color = (const nsStyleColor*)
+    aStyleContext->GetStyleData(eStyleStruct_Color);
+
   nsIView*  view;
 
   static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -811,21 +821,21 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
 
     // Is there a clip rect specified?
     nsViewClip    clip = {0, 0, 0, 0};
-    PRUint8       clipType = (aDisplay->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
+    PRUint8       clipType = (display->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
     nsViewClip*   pClip = nsnull;
 
     if (NS_STYLE_CLIP_RECT == clipType) {
-      if ((NS_STYLE_CLIP_LEFT_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mLeft = aDisplay->mClip.left;
+      if ((NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags) == 0) {
+        clip.mLeft = display->mClip.left;
       }
-      if ((NS_STYLE_CLIP_RIGHT_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mRight = aDisplay->mClip.right;
+      if ((NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags) == 0) {
+        clip.mRight = display->mClip.right;
       }
-      if ((NS_STYLE_CLIP_TOP_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mTop = aDisplay->mClip.top;
+      if ((NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags) == 0) {
+        clip.mTop = display->mClip.top;
       }
-      if ((NS_STYLE_CLIP_BOTTOM_AUTO & aDisplay->mClipFlags) == 0) {
-        clip.mBottom = aDisplay->mClip.bottom;
+      if ((NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags) == 0) {
+        clip.mBottom = display->mClip.bottom;
       }
       pClip = &clip;
     }
@@ -836,11 +846,11 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
 
     // Get the z-index to use
     PRInt32 zIndex = 0;
-    if (aPosition->mZIndex.GetUnit() == eStyleUnit_Integer) {
-      zIndex = aPosition->mZIndex.GetIntValue();
-    } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Auto) {
+    if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+      zIndex = position->mZIndex.GetIntValue();
+    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
       zIndex = 0;
-    } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Inherit) {
+    } else if (position->mZIndex.GetUnit() == eStyleUnit_Inherit) {
       // XXX need to handle z-index "inherit"
       NS_NOTYETIMPLEMENTED("zIndex: inherit");
     }
@@ -852,6 +862,7 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
     viewManager->InsertChild(containingView, view, 0);
     //XXX this needs to be conditional...
     viewManager->SetViewContentTransparency(view, PR_TRUE);
+    viewManager->SetViewOpacity(view, color->mOpacity);
     NS_RELEASE(viewManager);
   }
 
