@@ -80,6 +80,7 @@
 #include "secmime.h"
 #include "ocsp.h"
 #include "cms.h"
+#include "nssckbi.h"
 extern "C" {
 #include "pkcs12.h"
 #include "p12plcy.h"
@@ -337,21 +338,64 @@ nsNSSComponent::EnableOCSP()
 void
 nsNSSComponent::InstallLoadableRoots()
 {
-  PRBool hasRoot = PR_FALSE;
-  PK11SlotListElement *listElement;
-  PK11SlotList *slotList = PK11_GetAllTokens(CKM_INVALID_MECHANISM, 
-                                             PR_FALSE, PR_FALSE, nsnull); 
-  if (slotList) {
-    for (listElement=slotList->head; listElement != NULL; 
-         listElement = listElement->next) {
-      if (PK11_HasRootCerts(listElement->slot)) {
-        hasRoot = PR_TRUE;
-        break;
-      }    
+  SECMODModule *RootsModule = nsnull;
+
+  {
+    // Find module containing root certs
+
+    SECMODModuleList *list = SECMOD_GetDefaultModuleList();
+    SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
+    SECMOD_GetReadLock(lock);
+
+    while (!RootsModule && list) {
+      SECMODModule *module = list->module;
+
+      for (int i=0; i < module->slotCount; i++) {
+        PK11SlotInfo *slot = module->slots[i];
+        if (PK11_IsPresent(slot)) {
+          if (PK11_HasRootCerts(slot)) {
+            RootsModule = module;
+            break;
+          }
+        }
+      }
+
+      list = list->next;
     }
-    PK11_FreeSlotList(slotList);
+    SECMOD_ReleaseReadLock(lock);
   }
-  if (!hasRoot) {
+
+  if (RootsModule) {
+    // Check version, and unload module if it is too old
+
+    CK_INFO info;
+    if (SECSuccess != PK11_GetModInfo(RootsModule, &info)) {
+      // Do not use this module
+      RootsModule = nsnull;
+    }
+    else {
+      // NSS_BUILTINS_LIBRARY_VERSION_MAJOR and NSS_BUILTINS_LIBRARY_VERSION_MINOR
+      // define the version we expect to have.
+      // Later version are fine.
+      // Older versions are not ok, and we will replace with our own version.
+
+      if (
+            (info.libraryVersion.major < NSS_BUILTINS_LIBRARY_VERSION_MAJOR)
+          || 
+            (info.libraryVersion.major == NSS_BUILTINS_LIBRARY_VERSION_MAJOR
+             && info.libraryVersion.minor < NSS_BUILTINS_LIBRARY_VERSION_MINOR)
+         ) {
+        PRInt32 modType;
+        SECMOD_DeleteModule(RootsModule->commonName, &modType);
+
+        RootsModule = nsnull;
+      }
+    }
+  }
+
+  if (!RootsModule) {
+    // Load roots module from our installation path
+  
     nsresult rv;
     nsAutoString modName;
     rv = GetPIPNSSBundleString(NS_LITERAL_STRING("RootCertModuleName").get(),
