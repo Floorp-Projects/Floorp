@@ -193,7 +193,7 @@
   NSRect oldFrame = [self frame];
   [super setFrame:aRect];
 
-  if (oldFrame.size.width == aRect.size.width)
+  if (oldFrame.size.width == aRect.size.width || aRect.size.height == 0)
     return;
 
   int count = [mButtons count];
@@ -222,6 +222,22 @@
     // See if we got bigger or smaller.  We could gain or lose a row.
     [self reflowButtons];
   }
+}
+
+-(void)showBookmarksToolbar: (BOOL)aShow
+{
+  if (!aShow) {
+    float height = [self bounds].size.height;
+    [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + height,
+                               [self frame].size.width, 0)];
+    // We need to adjust the content area.
+    NSView* view = [[[self window] windowController] getTabBrowser];
+    [view setFrame: NSMakeRect([view frame].origin.x, [view frame].origin.y,
+                               [view frame].size.width, [view frame].size.height + height)];
+  }
+  //else
+    // Reflowing the buttons will do the right thing.
+  //  [self reflowButtons];
 }
 
 @end

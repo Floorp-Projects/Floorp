@@ -300,7 +300,6 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
-                                        HomeToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
                                         nil];
