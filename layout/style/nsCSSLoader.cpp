@@ -733,9 +733,18 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
       Cleanup(key, aLoadData);
     }
   }
-  else {  // load failed, cleanup
+  else {  // load failed, cleanup    
     URLKey  key(aLoadData->mURL);
     Cleanup(key, aLoadData);
+
+    // Dump error message to console.
+    const char *url;
+    if (nsnull != aLoadData->mURL) 
+      aLoadData->mURL->GetSpec(&url);
+    else
+      url = "";      
+    cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
+      << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
   }
 
 }
@@ -1192,6 +1201,16 @@ CSSLoaderImpl::LoadAgentSheet(nsIURL* aURL,
           NS_RELEASE(uin);
         }
         NS_RELEASE(in);
+      }
+      else {
+        // Dump an error message to the console
+        const char *url;
+        if (nsnull != aURL) 
+          aURL->GetSpec(&url);
+        else
+          url = "";      
+        cerr << "CSSLoaderImpl::LoadAgentSheet: Load of URL '" << url 
+          << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
       }
     }
   }
