@@ -90,9 +90,6 @@ nsFTPChannel::Init(const char* verb,
         return NS_ERROR_ALREADY_CONNECTED;
     }
 
-    // parameter validation
-    NS_ASSERTION(aPool, "FTP: channel needs a thread pool to play in");
-
     // setup channel state
     mHandler = aHandler;
     NS_ASSERTION(aPool, "FTP channel needs a thread pool to play in");
