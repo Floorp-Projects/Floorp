@@ -28,7 +28,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME=xpconnect
 MODULE=xpconnect
-# IS_COMPONENT =  1
+IS_COMPONENT =  1
 
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
@@ -47,6 +47,20 @@ CPPSRCS=		\
 	xpcwrappedjsclass.cpp	\
 	xpcwrappednative.cpp	\
 	xpcwrappednativeclass.cpp	\
+	$(NULL)
+
+
+EXTRA_DSO_LDOPTS = \
+	-L$(DIST)/bin \
+	-l$(MOZ_LIB_JS_PREFIX)js \
+	-lxpcom \
+	-lxpt \
+	-lxptinfo \
+	-lxptcall \
+	-lxptcmd \
+	-lraptorbase \
+	-lreg \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
