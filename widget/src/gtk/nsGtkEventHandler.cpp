@@ -678,18 +678,20 @@ gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
   // exact same timestamp as the current event.
 
   // get a copy of the next event
-  nextEvent = gdk_event_peek();
+  nextEvent = gdk_event_get();
   // see if it's a key press event and if the time matches.
   if (nextEvent)
   {
-    if ((nextEvent->type == GDK_KEY_PRESS) && (nextEvent->key.time == event->time))
+    if ((nextEvent->type == GDK_KEY_PRESS) &&
+        (nextEvent->key.time == event->time))
     {
       shouldDrop = PR_TRUE;
       // the next key press event shouldn't generate a key down event.
       // this is a global variable
       suppressNextKeyDown = PR_TRUE;
     }
-
+    // put makes a copy so we're safe doing this.
+    gdk_event_put(nextEvent);
     // free the event since we just got a copy.
     gdk_event_free(nextEvent);
   }
