@@ -23,6 +23,14 @@ function onInit() {
 
 }
 
+function onPreInit(account, accountValues)
+{
+    var type = parent.getAccountValue(account, accountValues, "server", "type");
+    
+    hideShowControls(type);
+}
+
+
 function initServerType() {
   var serverType = document.getElementById("server.type").value;
   
@@ -42,10 +50,10 @@ function initServerType() {
       index = 3;
   }
 
-  if (index != undefined) {
-      var deck = document.getElementById("serverdeck");
-      deck.setAttribute("index", index);
-  }
+  //  if (index != undefined) {
+  //      var deck = document.getElementById("serverdeck");
+  //      deck.setAttribute("index", index);
+  //  }
 
   var hostname = document.getElementById("server.hostName").value;
   var username = document.getElementById("server.username").value;
@@ -55,6 +63,41 @@ function initServerType() {
   setDivText("username.verbose", username);
 
 }
+
+function hideShowControls(serverType)
+{
+    var controls = document.controls;
+    var len = controls.length;
+    for (var i=0; i<len; i++) {
+        var control = controls[i];
+        var controlName = control.name;
+        if (!controlName) continue;
+        var controlNameSplit = controlName.split(".");
+        
+        if (controlNameSplit.length < 2) continue;
+        var controlType = controlNameSplit[0];
+
+        // skip generic server/identity things
+        if (controlType == "server" ||
+            controlType == "identity") continue;
+
+        // we only deal with controls in <html:div>s
+        var div = getEnclosingDiv(control);
+        
+        if (!div) continue;
+
+        // hide unsupported server type
+        if (controlType == serverType)
+            div.style.display = "block";
+        else
+            div.style.display = "none";
+    }
+
+    var serverPrefContainer = document.getElementById("serverPrefContainer");
+    if (serverPrefContainer)
+        serverPrefContainer.style.display = "block";
+}
+
 
 function setDivText(divname, value) {
     var div = document.getElementById(divname);
@@ -67,7 +110,9 @@ function setDivText(divname, value) {
 
 function openImapAdvanced()
 {
+    dump("openImapAdvanced()\n");
     var imapServer = getImapServer();
+    dump("Opening dialog..\n");
     window.openDialog("chrome://messenger/content/am-imap-advanced.xul",
                       "_blank",
                       "chrome,modal", imapServer);
@@ -94,7 +139,6 @@ function getImapServer() {
 
 function saveServerLocally(imapServer)
 {
-    dump("Saving server..\n");
     var controls = document.controls;
 
     // boolean prefs, JS does the conversion for us
@@ -107,5 +151,31 @@ function saveServerLocally(imapServer)
     controls["imap.serverDirectory"].value = imapServer.serverDirectory;
     controls["imap.otherUsersNamespace"].value = imapServer.otherUsersNamespace;
 
-    dump("Done.\n");
+}
+
+function getEnclosingDiv(startNode) {
+
+    var parent = startNode.parentNode;
+    var div;
+    
+    while (parent && parent != document) {
+
+        if (parent.tagName.toLowerCase() == "div") {
+            var isContainer =
+                (parent.getAttribute("iscontrolcontainer") == "true");
+            
+            // remember the FIRST div we encounter, or the first
+            // controlcontainer
+            if (!div || isContainer)
+                div=parent;
+            
+            // break out with a controlcontainer
+            if (isContainer)
+                break;
+        }
+        
+        parent = parent.parentNode;
+    }
+    
+    return div;
 }

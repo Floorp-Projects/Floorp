@@ -6,6 +6,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
+        onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');"
         align="vertical">
 
   <html:script src="chrome://messenger/content/am-serverwithnoidentities.js"/>

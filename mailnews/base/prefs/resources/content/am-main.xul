@@ -8,6 +8,7 @@
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
      flex="100%"
      class="dialog"
+     onload="parent.onPanelLoaded('am-main.xul');"
      align="vertical">
 
     <box class="header" align="horizontal">  

@@ -17,7 +17,7 @@
 	<keyset id="keyset"/>
 
 	<box align="horizontal" flex="100%" style="padding: 5px">
-		<box align="vertical">
+		<box align="vertical" >
          <tree rdf:datasources="rdf:msgaccountmanager" flex="100%"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
@@ -45,38 +45,7 @@
          </box>
 		</box>
         <spring style="width: 5px"/>
-        <box flex="100%">
-           <tabcontrol align="vertical">
-             <deck id="mydeck" flex="100%">
-                <box id="am-main.xul">
-<!-- need to specific these src= URLs as absolute URLs
-     so that DOM security knows these have the same principal as this file -->
-                     <html:iframe src="chrome://messenger/content/am-main.xul" name="am-main.xul"
-                          style="width: 30em; height: 30em; border: none"/>
-                </box>
-                <box id="am-server.xul" >
-                     <html:iframe src="chrome://messenger/content/am-server.xul" name="am-server.xul"
-                          style="width: 30em; height: 30em; border: none" />
-                </box>
-                <box id="am-copies.xul" >
-                     <html:iframe src="chrome://messenger/content/am-copies.xul" name="am-copies.xul"
-                          style="width: 30em; height: 30em; border: none" />
-                </box>
-                <box id="am-advanced.xul" >
-                     <html:iframe src="chrome://messenger/content/am-advanced.xul" name="am-advanced.xul"
-                          style="width: 30em; height: 30em; border: none"/>
-                </box>
-                <box id="am-smtp.xul" >
-                     <html:iframe src="chrome://messenger/content/am-smtp.xul" name="am-smtp.xul"
-                          style="width: 30em; height: 30em; border: none" />
-                </box>
-                <box id="am-serverwithnoidentities.xul" >
-                     <html:iframe src="chrome://messenger/content/am-serverwithnoidentities.xul" name="am-serverwithnoidentities.xul"
-                          style="width: 30em; height: 30em; border: none" />
-                </box>
-              </deck>
-           </tabcontrol>
-        </box>
+        <html:iframe name="contentFrame" flex="100%" style="width: 40em; height: 30em"/>
 	</box>
     <html:div class="separator" align="horizontal"/>
     <box id="okCancelButtons"/>

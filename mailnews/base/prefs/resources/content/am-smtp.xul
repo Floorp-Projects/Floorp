@@ -7,6 +7,7 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	flex="100%"
 	class="dialog"
+    onload="parent.onPanelLoaded('am-smtp.xul');"
 	align="vertical">
 
 <html:div>&smtpServer.label;</html:div>

@@ -43,8 +43,12 @@
 
 var accountArray;
 var accounttree;
-var lastServerId;
-var lastPageId;
+
+var currentServerId;
+var currentPageId;
+
+var pendingServerId;
+var pendingPageId;
 var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 // services used
@@ -61,7 +65,6 @@ var setDefaultButton;
 // called when the whole document loads
 // perform initialization here
 function onLoad() {
-  dump("accountmanager on load\n");
   accountArray = new Array;
   RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 
@@ -83,7 +86,6 @@ function onLoad() {
 
 function selectFirstAccount()
 { 
-  //dump("selectFirstAccount\n");
   var tree = document.getElementById("accounttree");
   var firstItem = findFirstTreeItem(tree);
 
@@ -126,8 +128,13 @@ function onOk() {
 
 function onSave() {
 
+  if (pendingPageId) {
+    dump("ERROR: " + pendingPageId + " hasn't loaded yet! Not saving.\n");
+    return;
+  }
+  
   // make sure the current visible page is saved
-  savePage(lastServerId, lastPageId);
+  savePage(currentServerId);
 
   for (var accountid in accountArray) {
     var account = getAccountFromServerId(accountid);
@@ -228,7 +235,6 @@ function saveAccount(accountValues, account)
 
     for (var slot in typeArray) {
       var dest;
-
       try {
       if (type == "identity")
         dest = identity;
@@ -254,7 +260,6 @@ function saveAccount(accountValues, account)
       if (dest == undefined) continue;
 
       if (dest[slot] != typeArray[slot]) {
-        //dump("Array->Account: " + slot + " to " + dest + "\n");
         try {
           dest[slot] = typeArray[slot];
         } catch (ex) {
@@ -263,12 +268,6 @@ function saveAccount(accountValues, account)
       }
     }
   }
-}
-
-// called when a prefs page is done loading
-function onPageLoad(event, name) {
-  // page needs to be filled with values.
-  // how do we determine which account we should be using?
 }
 
 
@@ -327,11 +326,9 @@ function updateButtons(tree,serverId) {
 // figure out context by what they clicked on
 //
 function onAccountClick(tree) {
-  //dump("onAccountClick\n");
   var result = getServerIdAndPageIdFromTree(tree);
   
   if (result) {
-	  // dump("before showPage(" + result.serverId + "," + result.pageId + ");\n");
 	  showPage(result.serverId, result.pageId);
 	  updateButtons(tree,result.serverId);
   }
@@ -339,53 +336,68 @@ function onAccountClick(tree) {
 
 // show the page for the given server:
 // - save the old values
-// - initialize the widgets with the new values
+// - start loading the new page
 function showPage(serverId, pageId) {
 
-  if (pageId == lastPageId &&
-      serverId == lastServerId) return;
+  if (pageId == currentPageId &&
+      serverId == currentServerId)
+    return;
 
-  savePage(lastServerId, lastPageId);
 
-  restorePage(serverId, pageId);
-  showDeckPage(pageId);
-
-  lastServerId = serverId;
-  lastPageId = pageId;
+  // save the previous page
+  savePage(currentServerId);
+  
+  // loading a complete different page
+  if (pageId != currentPageId) {
+    
+    // prevent overwriting with bad stuff
+    currentServerId = currentPageId = null;
+    
+    pendingServerId=serverId;
+    pendingPageId=pageId;
+    loadPage(pageId);
+  }
+  
+  // same page, different server
+  else if (serverId != currentServerId) {
+    restorePage(pageId, serverId);
+  }
+  
 }
 
-//
-// show the page with the given id
-//
-function showDeckPage(deckBoxId) {
-
-  /* bring the deck to the front */
-  var deckBox = top.document.getElementById(deckBoxId);
-  if (deckBox) {
-      var deck = deckBox.parentNode;
-      var children = deck.childNodes;
-
-      // search through deck children, and find the index to load
-      for (var i=0; i<children.length; i++) {
-        if (children[i] == deckBox) break;
-      }
-
-      deck.setAttribute("index", i);
+// page has loaded
+function onPanelLoaded(pageId) {
+  if (pageId != pendingPageId) {
+    dump("ERROR: page " + pageId + " was loaded, but " + pendingPageId + " was expected!\n");
+    return;
   }
+  
+  restorePage(pendingPageId, pendingServerId);
+
+  // probably unnecessary, but useful for debugging
+  pendingServerId = null;
+  pendingPageId = null;
+}
+
+
+function loadPage(pageId)
+{
+  frames["contentFrame"].location = "chrome://messenger/content/" + pageId;
 }
 
 //
 // save the values of the widgets to the given server
 //
-function savePage(serverId, pageId) {
-  if (!serverId || !pageId) return;
+function savePage(serverId) {
+  
+  if (!serverId) return;
 
   // tell the page that it's about to save
-  if (top.frames[pageId].onSave)
-      top.frames[pageId].onSave();
+  if (top.frames["contentFrame"].onSave)
+      top.frames["contentFrame"].onSave();
   
   var accountValues = getValueArrayFor(serverId);
-  var pageElements = getPageFormElements(pageId);
+  var pageElements = getPageFormElements();
 
   if (pageElements == null) return;
 
@@ -460,14 +472,19 @@ function getAccountValue(account, accountValues, type, slot) {
 //
 // restore the values of the widgets from the given server
 //
-function restorePage(serverId, pageId) {
-  if (!serverId || !pageId) return;
-  
+function restorePage(pageId, serverId) {
+  if (!serverId) return;
+
   var accountValues = getValueArrayFor(serverId);
-  var pageElements = getPageFormElements(pageId);
+  var pageElements = getPageFormElements();
 
   if (pageElements == null) return;
 
+  var account = getAccountFromServerId(serverId);
+
+  if (top.frames["contentFrame"].onPreInit)
+    top.frames["contentFrame"].onPreInit(account, accountValues);
+  
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].name) {
@@ -475,15 +492,19 @@ function restorePage(serverId, pageId) {
         var type = vals[0];
         var slot = vals[1];
 
-        var account = getAccountFromServerId(serverId);
         var value = getAccountValue(account, accountValues, type, slot);
         setFormElementValue(pageElements[i], value);
       }
   }
 
   // tell the page that new values have been loaded
-  if (top.frames[pageId].onInit)
-      top.frames[pageId].onInit();
+  if (top.frames["contentFrame"].onInit)
+      top.frames["contentFrame"].onInit();
+
+  // everything has succeeded, vervied by setting currentPageId
+  currentPageId = pageId;
+  currentServerId = serverId;
+
 }
 
 //
@@ -583,11 +604,9 @@ function getAccountFromServerId(serverId) {
 //
 // get the array of form elements for the given page
 //
-function getPageFormElements(pageId) {
+function getPageFormElements() {
  try {
-	var pageFrame = top.frames[pageId];
-	var pageDoc = top.frames[pageId].document;
-	var pageElements = pageDoc.controls;
+	var pageElements = top.frames["contentFrame"].document.controls;
 	return pageElements;
  }
  catch (ex) {

@@ -8,6 +8,7 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       class="dialog"
+      onload="parent.onPanelLoaded('am-copies.xul');"
       align="vertical">
 
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
