@@ -187,6 +187,7 @@ secmod_parseParameters(char *param, pk11_parameters *parsed, PRBool isFIPS)
 	tokens[index].minPW = minPW ? atoi(minPW) : 0;
 	tokens[index].readOnly = parsed->readOnly;
 	tokens[index].noCertDB = parsed->noCertDB;
+	tokens[index].noKeyDB = parsed->noCertDB;
 	tokens[index].forceOpen = parsed->forceOpen;
 	tokens[index].pwRequired = parsed->pwRequired;
 	certPrefix = NULL;
