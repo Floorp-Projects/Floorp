@@ -176,7 +176,6 @@ CertReader::OnDataAvailable(nsIRequest *request,
       continue;
 
     const char* caret = mLeftoverBuffer.get();
-    const char* end = caret + mLeftoverBuffer.Length();
 
     ZipLocal_* ziplocal = (ZipLocal_*) caret;
 
