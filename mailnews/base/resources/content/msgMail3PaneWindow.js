@@ -91,10 +91,9 @@ var folderListener = {
     OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
 	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
-    OnFolderEvent: function(item, event) {},
-
-	OnFolderLoaded: function (folder)
-	{
+    OnItemEvent: function(folder, event) {
+        if (event.GetUnicode() == "FolderLoaded") {
+            
 		if(folder)
 		{
 			var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -138,9 +137,8 @@ var folderListener = {
 			}
 
 		}
-	},
-	OnDeleteOrMoveMessagesCompleted :function(folder)
-	{
+        } else if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
+            
 		if(IsCurrentLoadedFolder(folder))
 		{
 			msgNavigationService.EnsureDocumentIsLoaded(document);
@@ -155,6 +153,7 @@ var folderListener = {
 			}
 		}
 	}
+    }
 }
 
 function IsCurrentLoadedFolder(folder)
