@@ -55,14 +55,12 @@
 #include "nsDTDUtils.h"
 #include "nsHTMLTokenizer.h"
 #include "nsTime.h"
-#include "nsViewSourceHTML.h" 
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
 #include "nsLinebreakConverter.h"
 #include "nsUnicharUtils.h"
 
 #include "prmem.h" 
-
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -299,7 +297,7 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
         }
       }
     } 
-  } 
+  }
   return result; 
 }
 

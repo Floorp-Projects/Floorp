@@ -36,7 +36,6 @@ ac_add_options --disable-xpfe-components
 ac_add_options --disable-necko-disk-cache
 ac_add_options --enable-necko-protocols=http,file,res,jar
 ac_add_options --enable-image-decoders=png,gif,jpeg
-ac_add_options --disable-view-source
 
 ac_add_options --enable-reorder
 ac_add_options --enable-elf-dynstr-gc

@@ -95,7 +95,9 @@ static const char* const gHTMLTypes[] = {
   "text/css",
   "text/javascript",
   "application/x-javascript",
+#ifdef MOZ_VIEW_SOURCE
   "application/x-view-source", //XXX I wish I could just use nsMimeTypes.h here
+#endif
   "application/xhtml+xml",
   0
 };
@@ -162,7 +164,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   EnsureUAStyleSheet();
 
   // Are we viewing source?
-
+#ifdef MOZ_VIEW_SOURCE
   nsCOMPtr<nsIViewSourceChannel> viewSourceChannel = do_QueryInterface(aChannel);
   if (viewSourceChannel)
   {
@@ -212,7 +214,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     aChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
     aContentType = "text/plain";
   }
-
+#endif
   // Try html
   int typeIndex=0;
   while(gHTMLTypes[typeIndex]) {
