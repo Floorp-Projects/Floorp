@@ -78,6 +78,7 @@ public:
   NS_IMETHOD              GetClientData(void*& aClientData);
   NS_IMETHOD              SetClientData(void* aClientData);
   NS_IMETHOD              Destroy();
+  NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
   virtual nsIEnumerator*  GetChildren();
   virtual void            AddChild(nsIWidget* aChild);

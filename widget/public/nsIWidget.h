@@ -320,6 +320,17 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD Destroy(void) = 0;
 
+
+    /**
+     * Reparent a widget
+     *
+     * Change the widgets parent
+     *
+     * @param     aNewParent   new parent 
+     */
+    NS_IMETHOD SetParent(nsIWidget* aNewParent) = 0;
+
+
     /**
      * Return the parent Widget of this Widget or nsnull if this is a 
      * top level window
