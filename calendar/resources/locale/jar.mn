@@ -76,6 +76,19 @@ calendar-hu-HU.jar:
     locale/hu-HU/calendar/prefs.dtd  (hu-HU/prefs.dtd) 
     locale/hu-HU/calendar/selectAddresses.dtd (hu-HU/selectAddresses.dtd)
 
+calendar-it-IT.jar:
+    locale/it-IT/calendar/calendar.dtd (it-IT/calendar.dtd)
+    locale/it-IT/calendar/calendar.properties (it-IT/calendar.properties)
+    locale/it-IT/calendar/categories.properties  (it-IT/categories.properties) 
+    locale/it-IT/calendar/contents.rdf (it-IT/contents.rdf)
+    locale/it-IT/calendar/dateFormat.properties (it-IT/dateFormat.properties)
+    locale/it-IT/calendar/email.properties (it-IT/email.properties)
+    locale/it-IT/calendar/global.dtd (it-IT/global.dtd)
+    locale/it-IT/calendar/menuOverlay.dtd (it-IT/menuOverlay.dtd)
+    locale/it-IT/calendar/overlay.dtd  (it-IT/overlay.dtd) 
+    locale/it-IT/calendar/prefs.dtd  (it-IT/prefs.dtd) 
+    locale/it-IT/calendar/selectAddresses.dtd (it-IT/selectAddresses.dtd)
+
 calendar-ja-JP.jar:
     locale/ja-JP/calendar/calendar.dtd (ja-JP/calendar.dtd)
     locale/ja-JP/calendar/calendar.properties (ja-JP/calendar.properties)

@@ -1,0 +1,480 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com>
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- General -->
+<!ENTITY calendar.file.default.name  "Mio Calendario" >
+
+<!-- Alarm -->
+<!ENTITY alarm.units.minutes  "Minuti" >
+<!ENTITY alarm.units.hours    "Ore" >
+<!ENTITY alarm.units.days     "Giorni" >
+
+<!ENTITY alarm.units.minutes.singular  "Minuti" >
+<!ENTITY alarm.units.hours.singular    "Ore" >
+<!ENTITY alarm.units.days.singular     "Giorni" >
+
+
+<!ENTITY repeat.units.days     "Giorni" >
+<!ENTITY repeat.units.weeks    "Settimane" >
+<!ENTITY repeat.units.months   "Mesi" >
+<!ENTITY repeat.units.years    "Anni" >
+
+<!ENTITY repeat.units.days.singular    "Giorno" >
+<!ENTITY repeat.units.weeks.singular    "Settimana" >
+<!ENTITY repeat.units.months.singular   "Mese" >
+<!ENTITY repeat.units.years.singular    "Anno" >
+
+<!ENTITY priority.level.none              "Nessuno">
+<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.low               "Basso">
+<!ENTITY priority.level.low.accesskey     "B">
+<!ENTITY priority.level.medium            "Medio">
+<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.high              "Alto">
+<!ENTITY priority.level.high.accesskey    "A">
+
+<!ENTITY newevent.title.label        "Titolo" >
+<!ENTITY newevent.location.label     "Luogo" >
+<!ENTITY newevent.start.label        "Inizio" >
+<!ENTITY newevent.date.label         "Data" >
+<!ENTITY newevent.startdate.label    "Inizio" >
+<!ENTITY newevent.enddate.label      "Fine" >
+<!ENTITY newevent.end.label          "Fine" >
+<!ENTITY newevent.alldayevent.label  "Questo evento ricorre tutti i giorni." >
+<!ENTITY newevent.description.label  "Nota" >
+<!ENTITY newevent.uri.label          "URL" >
+<!ENTITY newevent.uri.visit.label    "Visita URL" >
+<!ENTITY newevent.private.label      "Privato" >
+<!ENTITY newevent.private.note       "Questo evento e' privato." >
+<!ENTITY newevent.alarm.label        "Allarme" >
+<!ENTITY newevent.server.label       "File di calendario" >
+<!ENTITY newevent.invite.label       "Invita" >
+<!ENTITY newevent.email.label        "Invia allarme via E-mail a:" >
+<!ENTITY newevent.beforealarm.label  "prima che l'evento inizi" >
+<!ENTITY newevent.beforealarmends.label  "prima che l'evento finisca" >
+<!ENTITY newevent.repeat.label       "Ripeti ogni" >
+<!ENTITY newevent.until.label        "Fino a" >
+<!ENTITY newevent.forever.label      "Sempre" >
+<!ENTITY newevent.numberoftimes.label "Numero di volte" >
+<!ENTITY newevent.category.label      "Categoria" >
+<!ENTITY newevent.exceptions.caption "Eccezioni">
+<!ENTITY newevent.addexceptions.label "Aggiungi eccezzione">
+<!ENTITY newevent.deleteexceptions.label "Elimina eccezzione">
+<!ENTITY newevent.endtime.warning    "L'ora di inizio e' successiva all'ora di fine.">
+<!ENTITY newevent.enddate.warning    "La data di inizio e' successiva alla data di fine.">
+<!ENTITY newevent.repeatdate.tooltip    "Scegli una data di termine" >
+<!ENTITY newevent.recurend.warning    "L'ora ricorrente impostata per l'inizio termina dopo l'ora di fine.">
+<!ENTITY newevent.endtime.tooltip    "Scegli un'ora di termine per questo evento" >
+<!ENTITY newevent.starttimeerror.alertmessage "L'evento non puo' terminare prima che sia iniziato. Aggiusta l'ora di inizio o di fine." >
+<!ENTITY newevent.recurendtimeerror.alertmessage "L'ora di ripetizione dell'evento non puo' essere successiva all'ora di termine. Aggiustala oppure disabilita la ricorrenza dell'evento." >
+<!ENTITY newevent.newevent.tab.label "Evento" >
+<!ENTITY newevent.recurrence.tab.label "Ricorrenza" >
+<!ENTITY newevent.contacts.tab.label "Contatti" >
+<!ENTITY newevent.files.tab.label "File" >
+<!ENTITY newevent.status.label "Stato" >
+<!ENTITY newevent.status.longlabel "Stato dell'evento">
+<!ENTITY newevent.status.needsaction.label "Necessita Azione" >
+<!ENTITY newevent.status.inprogress.label  "In Svolgimento" >
+<!ENTITY newevent.status.completed.label   "Completato" >
+<!ENTITY newevent.status.cancelled.label   "Cancellato" >
+<!ENTITY newevent.status.tentative.label   "Programmato" >
+<!ENTITY newevent.status.confirmed.label   "Confermato" >
+
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "Al giorno X del mese">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4rto Martedi del mese">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Ultimo Martedi del mese">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " del mese">
+
+<!ENTITY newevent.advanced.repeat.onthe.label "Il ">
+<!ENTITY newevent.advanced.repeat.last.label "Ultimo ">
+<!ENTITY newevent.advanced.repeat.first.label "Primo">
+<!ENTITY newevent.advanced.repeat.second.label "Secondo">
+<!ENTITY newevent.advanced.repeat.third.label "Terzo">
+<!ENTITY newevent.advanced.repeat.fourth.label "Quarto">
+<!ENTITY newevent.advanced.repeat.first.extension "mo">
+<!ENTITY newevent.advanced.repeat.second.extension "ndo">
+<!ENTITY newevent.advanced.repeat.third.extension "rzo">
+<!ENTITY newevent.advanced.repeat.nth.extension "esimo">
+
+<!ENTITY newevent.choosefile.label "Scegli File">
+<!ENTITY newevent.removeselectedfile.label "Rimuovi file selzionato">
+
+<!ENTITY newtodo.completed.label "Completato">
+<!ENTITY newtodo.duedate.label "Data richiesta">
+<!ENTITY newtodo.startdate.label "Data Inizio">
+<!ENTITY newtodo.priority.label "Priorit' ">
+<!ENTITY newtodo.percentcomplete.label "&#037; completato">
+<!ENTITY newtodo.categories.label "Categorie">
+<!ENTITY newtodo.starttime.warning "La data di inizio e' posteriore alla data richiesta.">
+<!ENTITY newtodo.cancelled.label "Cancellato">
+<!ENTITY newtodo.status.label "Stato">
+<!ENTITY newtodo.beforealarm.label  "prima che l'operazione inizi" >
+<!ENTITY newtodo.beforealarmends.label  "prima che l'operazione finisca" >
+<!ENTITY newtodo.newtodo.tab.label "Operazione" >
+<!ENTITY newtodo.status.longlabel "Stato operazione">
+<!ENTITY newtodo.duetime.warning    "L'ora di inizio e' successiva all'ora di fine.">
+<!ENTITY newtodo.duedate.warning    "La data di inizio e' successiva alla data di fine.">
+<!ENTITY newtodo.repeatstart.warning "Data di inizio necessaria per ricorrenza">
+
+<!ENTITY calendar.confirm.deleteevent "Sei sicuro di voler eliminare questo evento: " >
+<!ENTITY calendar.confirm.deleteuntitledevent "Sei sicuro di voler eliminare questo evento - senza titolo -?" >
+
+<!ENTITY event.alarm.checkbox.label "Ricordamelo ancora tra " >
+
+<!ENTITY event.title.alarm         "Allarme" >
+<!ENTITY event.title.new         "Nuovo Evento" >
+<!ENTITY event.title.edit        "Modifica Evento" >
+<!ENTITY event.title.heading        "Alarme Calendario" >
+
+<!ENTITY onthe-text            "Il ">
+<!ENTITY last-text             "Ultimo ">
+<!ENTITY ofthemonth-text       " del mese.">
+
+
+<!ENTITY todo.title.new         "Nuovo Impegno">
+<!ENTITY todo.title.edit        "Modifica Impegno">
+
+<!ENTITY event.tip.new         "Crea un nuovo evento." >
+<!ENTITY event.tip.edit        "Modifica un evento esistente." >
+<!ENTITY todo.tip.new         "Crea un nuovo impegno." >
+<!ENTITY todo.tip.edit        "Modifica un impegno esistente." >
+<!ENTITY event.tip.alert       "Allarme!" >
+
+
+<!ENTITY calendar.flat.topbar.new              "Nuovo Evento" >
+<!ENTITY calendar.flat.topbar.gototoday        "Vai a Oggi" >
+<!ENTITY calendar.flat.topbar.choosedate       "Vai alla Data" >
+<!ENTITY calendar.flat.topbar.dayview          "Vista Giorno" >
+<!ENTITY calendar.dayview.accesskey            "g" >
+<!ENTITY calendar.flat.topbar.weekview         "Vista Settimana" >
+<!ENTITY calendar.weekview.accesskey           "s" >
+<!ENTITY calendar.flat.topbar.monthview        "Vista Mese" >
+<!ENTITY calendar.monthview.accesskey          "m" >
+<!ENTITY calendar.flat.topbar.multiweekview   "Settimane multiple" >
+<!ENTITY calendar.multiweekview.accesskey     "e" >
+
+<!ENTITY calendar.tools.delete.tooltip         "Elimina Evento" >
+<!ENTITY calendar.tools.modify.tooltip         "Modifica Evento" >
+
+<!ENTITY calendar.newtask.button.tooltip          "Crea un Nuovo Impegno" >
+<!ENTITY calendar.newevent.button.tooltip         "Crea evento di Calendario" >
+<!ENTITY calendar.delete.button.tooltip           "Elimina evento selezionato" >
+<!ENTITY calendar.edit.button.tooltip             "Modifica evento selezionato" >
+
+<!ENTITY calendar.unifinder.withalarms.label      "Con Allarmi" >
+<!ENTITY calendar.unifinder.todayandfuture.label  "Nascondi eventi passati" >
+<!ENTITY calendar.unifinder.todoitems.label       "Impegni" >
+<!ENTITY calendar.unifinder.hidecompletedtodos.label "Nascondi impegni completati">
+
+<!ENTITY calendar.calendartab.label "Calendario">
+<!ENTITY calendar.listofcalendarstab.label "Calendari">
+<!ENTITY calendar.gototoday.button.label        "Vai a Oggi" >
+
+<!ENTITY calendar.calendarlistbox.label "Calendari">
+
+<!ENTITY calendar.events.filter.all.label "Tutti gli Eventi">
+<!ENTITY calendar.events.filter.today.label "Eventi di Oggi">
+<!ENTITY calendar.events.filter.week.label "Eventi della Settimana">
+<!ENTITY calendar.events.filter.2weeks.label "Eventi prossime 2 Settimane">
+<!ENTITY calendar.events.filter.month.label "Eventi del mese prossimo">
+<!ENTITY calendar.events.filter.future.label "Tutti gli eventi futuri">
+<!ENTITY calendar.events.filter.current.label "Giorno selezionato">
+
+<!ENTITY calendar.unifinder.tree.done.label          "Fatto">
+<!ENTITY calendar.unifinder.tree.priority.label      "Priorita' ">
+<!ENTITY calendar.unifinder.tree.title.label         "Titolo">
+<!ENTITY calendar.unifinder.tree.percentcomplete.label "&#037; Completato">
+<!ENTITY calendar.unifinder.tree.startdate.label     "Inizio">
+<!ENTITY calendar.unifinder.tree.enddate.label       "Fine">
+<!ENTITY calendar.unifinder.tree.duedate.label       "Richiesto">
+<!ENTITY calendar.unifinder.tree.completeddate.label "Completato">
+<!ENTITY calendar.unifinder.tree.categories.label    "Categorie">
+<!ENTITY calendar.unifinder.tree.location.label    "Luogo">
+<!ENTITY calendar.unifinder.tree.status.label    "Stato">
+<!ENTITY calendar.unifinder.tree.filename.label    "Nome Calendario">
+
+<!ENTITY calendar.gototoday.button.tooltip        "Vai a oggi" >
+<!ENTITY calendar.choosedate.button.tooltip       "Vai a una data" >
+
+<!ENTITY calendar.dayview.button.tooltip          "Passa a vista giorno" >
+<!ENTITY calendar.weekview.button.tooltip         "Passa a vista settimana" >
+<!ENTITY calendar.monthview.button.tooltip        "Passa a vista mese" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Passa a vista multisettimana" >
+
+<!ENTITY calendar.nextday.button.tooltip        "Giorno successivo" >
+<!ENTITY calendar.prevday.button.tooltip        "Giorno precedente" >
+<!ENTITY calendar.nextweek.button.tooltip       "Settimana seguente" >
+<!ENTITY calendar.prevweek.button.tooltip       "Settimana precedente" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Mese prossimo" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Mese precedente" >
+
+<!ENTITY calendar.newtask.button.label          "Nuovo Impegno" >
+<!ENTITY calendar.newevent.button.label         "Nuovo Evento" >
+<!ENTITY calendar.delete.button.label           "Elimina" >
+<!ENTITY calendar.edit.button.label             "Modifica" >
+
+<!ENTITY calendar.choosedate.button.label       "Scegli Data" >
+
+<!ENTITY calendar.cut.button.tooltip            "Taglia" >
+<!ENTITY calendar.copy.button.tooltip           "Copia" >
+<!ENTITY calendar.paste.button.tooltip          "Incolla" >
+<!ENTITY calendar.print.button.tooltip          "Stampa Calendario" >
+
+<!ENTITY calendar.cut.button.label              "Taglia" >
+<!ENTITY calendar.copy.button.label             "Copia" >
+<!ENTITY calendar.paste.button.label            "Incolla" >
+<!ENTITY calendar.print.button.label            "Stampa" >
+
+<!ENTITY calendar.import.button.tooltip            "Importa: Importa eventi da un file locale." >
+<!ENTITY calendar.export.button.tooltip            "Esporta: Esporta eventi in un file locale." >
+<!ENTITY calendar.subscribe.button.tooltip         "Sottoscrivi: Sottoscrivi un file calendario da una postazione remota." >
+<!ENTITY calendar.publish.button.tooltip            "Pubblica: Plubblica eventi in una postazione remota." >
+
+<!ENTITY calendar.import.button.label              "Importa" >
+<!ENTITY calendar.export.button.label              "Esporta" >
+<!ENTITY calendar.subscribe.button.label           "Sottoscrivi" >
+<!ENTITY calendar.publish.button.label             "Pubblica" >
+
+<!ENTITY calendar.dayview.button.label          "Giorno" >
+<!ENTITY calendar.weekview.button.label         "Settimana" >
+<!ENTITY calendar.monthview.button.label        "Mese" >
+<!ENTITY calendar.multiweekview.button.label        "Settimane multiple" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Solo Lunedi-Venerdi " >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "L" >
+<!ENTITY calendar.displaytodos.checkbox.label   "Mostra Impegni " >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "I" >
+
+<!ENTITY calendar.menu.options.modify           "Modifica" >
+<!ENTITY calendar.menu.options.remove           "Elimina" >
+<!ENTITY calendar.menu.options.close            "Chiudi Finestra" >
+<!ENTITY calendar.menu.options.close.accesskey  "C" >
+
+<!ENTITY calendar.main.tab.label        "Eventi" >
+<!ENTITY calendar.search.tab.label      "Ricerca">
+
+<!ENTITY calendar.search.options.searchfor " contiene">
+
+<!ENTITY calendar.menu.numberofweeks.label     "Numero di Settimane" >
+<!ENTITY calendar.menu.numberofweeks.1      "1 Settimana" >
+<!ENTITY calendar.menu.numberofweeks.2      "2 Settimane" >
+<!ENTITY calendar.menu.numberofweeks.3      "3 Settimane" >
+<!ENTITY calendar.menu.numberofweeks.4      "4 Settimane" >
+<!ENTITY calendar.menu.numberofweeks.5      "5 Settimane" >
+<!ENTITY calendar.menu.numberofweeks.6      "6 Settimane" >
+
+<!-- Month View Entities -->
+<!ENTITY calendar.monthview.column.1.name "DOM">
+<!ENTITY calendar.monthview.column.2.name "LUN">
+<!ENTITY calendar.monthview.column.3.name "MAR">
+<!ENTITY calendar.monthview.column.4.name "MER">
+<!ENTITY calendar.monthview.column.5.name "GIO">
+<!ENTITY calendar.monthview.column.6.name "VEN">
+<!ENTITY calendar.monthview.column.7.name "SAB">
+<!ENTITY week.short "W">
+
+<!-- Statusbar -->
+<!ENTITY statusText.label            "Documento: Fatto">
+
+<!-- Window Title -->
+<!ENTITY window.title            "Mozilla Calendario">
+
+<!-- customizable toolbars -->
+<!ENTITY calendar.context.customize.label             "Personalizza">
+<!ENTITY calendar.context.customize.accesskey         "P">
+<!ENTITY calendar.menu.customize.label                "Personalizza barre">
+<!ENTITY calendar.menu.customize.accesskey            "C">
+<!ENTITY calendar.maintoolbar.name                    "Barra Principale">
+<!ENTITY calendar.maintoolbar.accesskey               "B">
+
+<!-- Context Menu -->
+<!ENTITY calendar.context.newevent.label              "Nuovo Evento ">
+<!ENTITY calendar.context.newevent.accesskey          "E">
+<!ENTITY calendar.context.newtodo.label               "Nuovo Impegno ">
+<!ENTITY calendar.context.newtodo.accesskey           "I">
+<!ENTITY calendar.context.modifyevent.label           "Modifica evento selezionato ">
+<!ENTITY calendar.context.modifyevent.accesskey       "E">
+<!ENTITY calendar.context.modifytask.label            "Modifica impegno ">
+<!ENTITY calendar.context.modifytask.accesskey        "E">
+<!ENTITY calendar.context.deleteevent.label           "Elimina evento selezionato ">
+<!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.deletetask.label            "Elimina Impegno ">
+<!ENTITY calendar.context.deletetask.accesskey        "l">
+<!ENTITY calendar.context.cutevent.label              "Taglia ">
+<!ENTITY calendar.context.cutevent.accesskey          "t">
+<!ENTITY calendar.context.copyevent.label             "Copia ">
+<!ENTITY calendar.context.copyevent.accesskey         "C">
+<!ENTITY calendar.context.pasteevent.label            "Incolla ">
+<!ENTITY calendar.context.pasteevent.accesskey        "I">
+<!ENTITY calendar.context.selectall.label             "Seleziona Tutto ">
+<!ENTITY calendar.context.selectall.accesskey         "T">
+<!ENTITY calendar.context.gototoday.label             "Vai a Oggi ">
+<!ENTITY calendar.context.gototoday.accesskey         "O">
+<!ENTITY calendar.context.dayview.label               "Passa a Vista Giorno ">
+<!ENTITY calendar.context.dayview.accesskey           "G">
+<!ENTITY calendar.context.weekview.label              "Passa a Vista Settimana ">
+<!ENTITY calendar.context.weekview.accesskey          "S">
+<!ENTITY calendar.context.monthview.label             "Passa a Vista Mese ">
+<!ENTITY calendar.context.monthview.accesskey         "M">
+<!ENTITY calendar.context.multiweekview.label        "Passa a Vista Multisettimana ">
+<!ENTITY calendar.context.multiweekview.accesskey    "u">
+<!ENTITY calendar.context.reload.label                "Ricarica ">
+<!ENTITY calendar.context.reload.accesskey            "R">
+<!ENTITY calendar.context.emailevent.label            "Invia e-mail per evento(i) selezionato(i) ">
+<!ENTITY calendar.context.emailevent.accesskey        "m">
+<!ENTITY calendar.context.emailtask.label             "Invia e-mail per impegno ">
+<!ENTITY calendar.context.emailtask.accesskey         "m">
+
+<!-- Task Context Menu -->
+<!ENTITY calendar.context.progress.label              "Progresso ">
+<!ENTITY calendar.context.progress.accesskey          "P">
+<!ENTITY calendar.context.priority.label              "Priorita' ">
+<!ENTITY calendar.context.priority.accesskey          "r">
+
+<!ENTITY percnt "&#037;" ><!--=percent sign-->
+
+<!ENTITY progress.level.0             "0&percnt;">
+<!ENTITY progress.level.0.accesskey   "0">
+<!ENTITY progress.level.25            "25&percnt;">
+<!ENTITY progress.level.25.accesskey  "2">
+<!ENTITY progress.level.50            "50&percnt;">
+<!ENTITY progress.level.50.accesskey  "5">
+<!ENTITY progress.level.75            "75&percnt;">
+<!ENTITY progress.level.75.accesskey  "7">
+<!ENTITY progress.level.100            "100&percnt;">
+<!ENTITY progress.level.100.accesskey  "1">
+                                                                 
+<!-- Server Context Menu -->
+<!ENTITY calendar.context.newserver.label              "Nuovo Calendario">
+<!ENTITY calendar.context.newserver.accesskey          "N">
+<!ENTITY calendar.context.editserver.label             "Modifica Calendario">
+<!ENTITY calendar.context.editserver.accesskey         "M">
+<!ENTITY calendar.context.deleteserver.label           "Elimina Calendario">
+<!ENTITY calendar.context.deleteserver.accesskey       "E">
+<!ENTITY calendar.context.refreshserver.label          "Aggiorna Calendari Remoti">
+<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.publish.label                "Pubblica intero Calendario">
+<!ENTITY calendar.context.publish.accesskey            "P">
+
+<!-- About Dialog -->
+<!ENTITY calendar.about.title "Informazioni su Mozilla Calendar">
+<!ENTITY calendar.about.tab   "Informazioni su...">
+
+<!ENTITY throbber.tooltip "Vai alla home page di Mozilla">
+<!ENTITY menuBar.tooltip "Barra dei Menu">
+<!ENTITY navigationToolbar.tooltip "Barra di Navigazione">
+
+
+<!-- Calendar Alarm Dialog -->
+<!ENTITY calendar.alarm.acknowledge.label           "OK (spegni allarme)" >
+<!ENTITY calendar.alarm.editevent.label             "Modifica Evento" >
+<!ENTITY calendar.alarm.acknowledgeall.label        "Accetta tutti gli allarmi" >
+<!ENTITY calendar.alarm.snooze.label                "Rimanda" >
+
+
+<!-- Calendar Server Dialog -->
+<!ENTITY calendar.server.dialog.title.new           "Aggiungi un nuovo Calendario">
+<!ENTITY calendar.server.dialog.title.edit          "Modifica Calendario">
+<!ENTITY calendar.server.dialog.name.label          "Nome">
+<!ENTITY calendar.server.dialog.publish.label       "Pubblica cambiamenti automaticamente? Per Calendari Remoti, questo richiedera' lo scaricamento di una nuova versione prima che tu possa aggiungere, modificare o eliminare un evento. Quindi verra' eseguita la tua azione e caricato il nuovo file sul server.">
+<!ENTITY calendar.server.dialog.location.label      "Luogo">
+<!ENTITY calendar.server.dialog.local.location.label "Ubicazione del file locale">
+<!ENTITY calendar.server.dialog.browse.label        "Sfoglia per il file locale...">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Puoi eventualmente specificare un percorso di file locale in cui creare il calendario.">
+<!ENTITY calendar.server.dialog.help.label          "Puoi indicare un percorso di file locale o un percorso remoto come http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+
+<!-- Calendar Coloring -->
+<!ENTITY calendar.server.dialog.color.label "Colore">
+
+<!ENTITY calendar.local.calendar.dialog.optional.label "I campi seguenti sono opzionali, e sono usati per pubblicare il calendario su una computer remoto.">
+
+<!-- Calendar Publish Dialog -->
+<!ENTITY calendar.publish.dialog.title              "Pubblica Calendario">
+<!ENTITY calendar.publish.url.label                 "Pubblicazione URL">
+<!ENTITY calendar.publish.publish.button      "Pubblica">
+<!ENTITY calendar.publish.close.button      "Chiudi">
+
+<!ENTITY calendar.publish.example.url.description   "Qualcosa come: http://www.myserver.com/webdav/test.ics">
+
+<!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
+<!ENTITY allDayEvents.label "Tutti gli Eventi del Giorno">
+
+<!-- Calendar Wizard Dialog -->
+<!ENTITY calendar.wizard.import.label              "Importa: Importa gli eventi da un file locale in un calendario esistente.">
+<!ENTITY calendar.wizard.export.label              "Esporta: Esporta gli eventi da un calendario esistente su un file locale.">
+<!ENTITY calendar.wizard.subscribe.label           "Sottoscrivi: Sottoscrivi un file di calendario su un computer remoto (ad es. su Internet)">
+<!ENTITY calendar.wizard.publish.label             "Pubblica: Pubblica gli eventi su un computer remoto (ad es. su Internet) per poterlo far sottoscrivere ad altri.">
+
+<!-- Calendar Import Outlook CSV Dialog -->
+<!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
+                  copied from outlook csv file headers -->
+<!ENTITY calendar.importoutlook.dialog.title "Importazione Outlook CSV" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Per favore rimappa i seguenti concetti con i equivalenti di Outlook CSV" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Soggetto" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Data inizio" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Ora inizio" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "Data fine" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "Ora fine" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Luogo" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Descrizione" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Evento Tutto il giorno" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Privato" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Alarme attivato/disattivato" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Data alarme" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarme ora" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Categorie" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Scegliere il significato della seguente parola:" >
+<!ENTITY calendar.importoutlook.true.label "Vero" >
+<!ENTITY calendar.importoutlook.false.label "Falso" >
+
+<!-- Calendar Printing -->
+<!ENTITY calendar.print.window.title "Stampa un Calendario">
+<!ENTITY calendar.print.selectoptions.label "Seleziona le tue opzioni seguenti e premi OK per stampare">
+<!ENTITY calendar.print.selectviews.label "Seleziona Vista per stampare">
+<!ENTITY calendar.print.listselected.label "Mosta lista degli eventi selezionati">
+<!ENTITY calendar.print.onlyitemsstatus.label "Stampa solo voci con questo stato:">
+<!ENTITY calendar.print.onlyitemscategory.label "Stampa solo voci di questa categoria:">
+
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+

@@ -4,7 +4,7 @@ Desc: Installation script
 const displayName      = "Mozilla Calendar";
 const name             = "MozillaCalendar";
 const version          = "0.8";
-const addLocales       = new Array("cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "ja-JP", "lt-LT", "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "wen-DE");
+const addLocales       = new Array("cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "it-IT", "ja-JP", "lt-LT", "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "wen-DE");
 const default_lang     =  "en-US";
 
 var err = initInstall(displayName, name, version);
