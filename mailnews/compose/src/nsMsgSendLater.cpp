@@ -76,7 +76,6 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
 
@@ -503,7 +502,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
-  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID, &rv);
+  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Since we have already parsed all of the headers, we are simply going to

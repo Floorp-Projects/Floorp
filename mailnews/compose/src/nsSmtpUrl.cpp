@@ -49,7 +49,6 @@
 #include "nsISupportsObsolete.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 /////////////////////////////////////////////////////////////////////////////////////
 // mailto url definition
@@ -194,7 +193,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 		} // while we still have part of the url to parse...
 	} // if rest && *rest
 
-  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
   nsXPIDLCString decodedString;
 
   // Now unescape any fields that need escaped...

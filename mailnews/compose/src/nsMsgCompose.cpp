@@ -114,7 +114,6 @@
 
 // Defines....
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 static PRInt32 GetReplyOnTop()
@@ -1441,7 +1440,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   if (!uriList)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
+  nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
 
   nsXPIDLCString charset;
   // use a charset of the original message
@@ -1788,7 +1787,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       if (NS_SUCCEEDED(rv))
       {
         nsXPIDLCString decodedString;
-        mMimeConverter = do_GetService(kCMimeConverterCID);
+        mMimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
         // Decode header, the result string is null if the input is non MIME encoded ASCII.
         if (mMimeConverter)
           mMimeConverter->DecodeMimeHeader(author.get(), getter_Copies(decodedString), charset, charetOverride);
@@ -1918,7 +1917,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         PRBool needToRemoveDup = PR_FALSE;
         if (!mMimeConverter)
         {
-          mMimeConverter = do_GetService(kCMimeConverterCID, &rv);
+          mMimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv, rv);
         }
         nsXPIDLCString charset;

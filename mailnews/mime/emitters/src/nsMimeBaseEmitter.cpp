@@ -71,7 +71,6 @@ static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 #define   MIME_URL      "chrome://messenger/locale/mimeheader.properties"
 static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static    NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMimeBaseEmitter)
 NS_IMPL_THREADSAFE_RELEASE(nsMimeBaseEmitter)
@@ -125,7 +124,7 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 //  mBody = "";
 
   // This is needed for conversion of I18N Strings...
-  nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+  nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
                                      NS_GET_IID(nsIMimeConverter), 
                                      getter_AddRefs(mUnicodeConverter));
 

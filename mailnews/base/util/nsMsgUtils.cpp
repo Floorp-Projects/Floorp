@@ -65,7 +65,6 @@
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 #define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
 static PRBool gInitPasswordManager = PR_FALSE;
@@ -366,7 +365,7 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP, char **modifiedSub
   // we cannot strip "Re:" for MIME encoded subject without modifying the original
   if (modifiedSubject && strstr(*stringP, "=?"))
   {
-    mimeConverter = do_GetService(kCMimeConverterCID, &rv);
+    mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       rv = mimeConverter->DecodeMimeHeader(*stringP, getter_Copies(decodedString));
   }

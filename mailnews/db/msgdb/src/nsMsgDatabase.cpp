@@ -89,7 +89,6 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #endif
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 #define MSG_HASH_SIZE 512
@@ -2839,7 +2838,7 @@ nsIMimeConverter *nsMsgDatabase::GetMimeConverter()
   if (!m_mimeConverter)
   {
     // apply mime decode
-    nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+    nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
       NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
   }
   return m_mimeConverter;

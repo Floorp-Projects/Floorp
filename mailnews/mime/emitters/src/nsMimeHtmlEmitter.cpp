@@ -60,7 +60,6 @@
 #include "nsMsgMimeCID.h"
 #include "nsDateTimeFormatCID.h"
 
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 #define VIEW_ALL_HEADERS 2
 

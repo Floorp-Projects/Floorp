@@ -57,8 +57,6 @@ static char *mime_mailto_stream_read_buffer = 0;
 
 PRInt32 nsMsgSendPart::M_counter = 0;
 
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
-
 nsMsgSendPart::nsMsgSendPart(nsIMsgSend* state, const char *part_charset)
 {
   m_state = nsnull;

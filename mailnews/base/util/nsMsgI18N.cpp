@@ -63,7 +63,6 @@
 #include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
@@ -395,7 +394,7 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, PRBool structured, const
 
   char *encodedString = nsnull;
   nsresult res;
-  nsCOMPtr<nsIMimeConverter> converter = do_GetService(kCMimeConverterCID, &res);
+  nsCOMPtr<nsIMimeConverter> converter = do_GetService(NS_MIME_CONVERTER_CONTRACTID, &res);
   if (NS_SUCCEEDED(res) && nsnull != converter)
     res = converter->EncodeMimePartIIStr_UTF8(header, structured, charset, fieldnamelen, kMIME_ENCODED_WORD_SIZE, &encodedString);
 
