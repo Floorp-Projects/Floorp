@@ -274,8 +274,8 @@ namespace ICG {
 
         typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method } LValueKind;
 
-        LValueKind ICodeGenerator::getVariableByName(const StringAtom &name, TypedRegister &v);
-        LValueKind ICodeGenerator::scanForVariable(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base);
+        LValueKind getVariableByName(const StringAtom &name, TypedRegister &v);
+        LValueKind scanForVariable(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base);
         LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base, bool lvalue);
         TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
