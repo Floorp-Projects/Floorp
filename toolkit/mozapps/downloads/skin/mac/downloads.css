@@ -1,100 +1,122 @@
-#downloadManager {
-  background-color: ThreeDFace;
-}
-
 /* Download View */
 #downloadView {
   -moz-binding: url("chrome://mozapps/skin/downloads/downloads.xml#download-view");
-  margin: 10px 10px 5px 10px;
-  -moz-appearance: listbox;
+  margin: 0px;
   -moz-user-focus: normal;
+  border-bottom: 1px solid #8E8E8E;
+
 }
 
 .downloadViewInner2 {
-  background-image: url("chrome://mozapps/skin/downloads/viewFader.png");
+  background: url("chrome://mozapps/skin/downloads/background-stripe.png") #FFFFFF repeat;
   padding: 0px;
-}  
-
-.downloadViewInner1 {
-  background-color: Window;
-  background-image: url("chrome://mozapps/skin/downloads/downloadsBG.png");
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-position: bottom right;
 }
 
 /* Download Manager Command Bar */
 #commandBar {
-  padding: 0px 10px 5px 10px;
 }
 
-#cleanUpButton {
-  margin: 0px;
+
+#cleanUpButton, #optionsButton {
+ -moz-appearance: none;
+ min-width: 32px;
+ height: 26px;
+ margin: 2px;
   -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanup.png");
+} 
+
+#cleanUpButton {
+  background: url("chrome://mozapps/skin/downloads/cleanup-button.png") no-repeat;
+}
+
+#cleanUpButton[disabled=true] {
+  background: url("chrome://mozapps/skin/downloads/cleanup-button-disabled.png") no-repeat !important;
+}
+
+#cleanUpButton:hover:active {
+  background: url("chrome://mozapps/skin/downloads/cleanup-button-pressed.png") no-repeat;
 }
 
 #optionsButton {
-  margin: 0px;
-  -moz-user-focus: ignore;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadOptions.png");
+  background: url("chrome://mozapps/skin/downloads/options-button.png") no-repeat;
 }
 
-#cleanUpButton .button-icon, #optionsButton .button-icon {
-  margin: 0px 5px 0px 0px !important;
+#optionsButton:hover:active {
+  background: url("chrome://mozapps/skin/downloads/options-button-pressed.png") no-repeat;
 }
 
-#cleanUpButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanupDisabled.png");
+#optionsButton .button-text, #cleanUpButton .button-text  {
+  display: none;
 }
 
 #commandBarSeparator {
-  margin-left: 5px;
+  display:none;
 }
 
 /* Download View Items */
 download {
-  padding: 13px 10px 13px 13px;
-  min-height: 25px;
-  border-bottom: 1px dotted #C0C0C0;
+ padding: 4px 8px 4px 4px;
+ height: 32px !important;
+ min-height: 40px !important;
+ border-bottom: 1px dashed #C0C0C0;
 }
 
 download[selected="true"] {
-  background-image: url("chrome://mozapps/skin/downloads/downloadSelected.png") !important;
-  border-bottom: 1px dotted #7F9DB9;
+    background-color: Highlight !important;
+    background-image: none !important;
 }
 
 download[state="0"], download[state="-1"], download[state="4"] {
-  background-color: transparent;
-  background-image: url("chrome://mozapps/skin/downloads/downloadFader.png");
+  font: icon !important;
+  padding-bottom: 7px;
+  padding-top: 7px;
+  min-height: 80px !important;
+  background: url("chrome://mozapps/skin/downloads/background-gradient.png") repeat;
+}
+
+label:last-child {
+  color: #666666;
+  font-size: 95%;
 }
 
 /* Download View Items, implementation */
-.downloadContentBox {
-  -moz-opacity: 0.0;
-}
 
-.downloadContentBox[animated="true"] {
-  -moz-opacity: 1.0;
-}
-
-.downloadTypeIcon {
-  margin-right: 10px;
-}
 
 .link {
   text-decoration: underline;
-  color: blue;
-  cursor: pointer;
+  color: blue !important;
   -moz-user-focus: normal;
-  border: 1px solid transparent;
+  font-size: 100% !important;
+  margin-left: 6px;
+  padding: 0px;
+  
 }
 
 .link:hover:active {
-  color: red;
 }
 
-.link:focus {
-  border: 1px dotted black;
+progressmeter {
+  margin: 6px 6px 4px 6px;
+  min-height:19px;
+  -moz-appearance: none;
 }
 
+.progress-bar {
+  background: url("chrome://mozapps/skin/downloads/progress-bar.gif") repeat-x !important;
+  border-left: 1px solid #D9D9D9 !important;
+}
+
+download[state="4"] .progress-bar {
+  background: url("chrome://mozapps/skin/downloads/progress-bar-paused.gif") repeat-x !important;
+}
+
+.progress-remainder {
+  background: url("chrome://mozapps/skin/downloads/progress-remainder.gif") repeat-x !important;
+  border-right: 1px solid #DEDEDE !important;
+}
+
+dialog label {
+	color: #000000 !important;
+	font-size: 100% !important;
+        font: icon;
+}
