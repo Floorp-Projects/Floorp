@@ -23,9 +23,10 @@
 #include "nsGUIEvent.h"
 
 class nsIDataModel;
+class nsIDMItem;
 
 // {E6ED4EC4-5985-11d2-96ED-00104B7B7DEB}
-#define NS_IDATAMODEL_IID      \
+#define NS_IDMWIDGET_IID      \
 { 0xe6ed4ec4, 0x5985, 0x11d2, \
 	{ 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } }
 
