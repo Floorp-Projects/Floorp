@@ -35,7 +35,7 @@
 *
 *
 * Date:    29 April 2003
-* SUMMARY: Testing  merge of if-clause and boolean expressions
+* SUMMARY: Testing merged if-clauses
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=203841
 *
@@ -43,7 +43,7 @@
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 203841;
-var summary = 'Testing the comma operator inside an if statement';
+var summary = 'Testing merged if-clauses';
 var status = '';
 var statusitems = [];
 var actual = '';
