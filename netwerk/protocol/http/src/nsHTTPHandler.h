@@ -131,7 +131,15 @@ public:
                                       nsHTTPChannel* i_Channel, 
                                       nsIEventSinkGetter* i_ESG,
                                       nsIChannel** o_pTrans);
-                                      
+    
+    /**
+    *    Called to create a transport from RequestTransport to accually
+    *    make a new channel.
+    **/
+
+    virtual nsresult CreateTransport(const char* host, PRInt32 port, 
+                                     nsIEventSinkGetter* i_ESG, nsIChannel** o_pTrans);
+    
     /*
         Remove this transport from the list.
     */

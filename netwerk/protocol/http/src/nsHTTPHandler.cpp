@@ -395,9 +395,6 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     // Create a new one...
     nsIChannel* trans;
 
-    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     if (!mProxy)
     {
         PRInt32 port;
@@ -414,12 +411,12 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             GetDefaultPort(&port);
         }
 
-        rv = sts->CreateTransport(host, port, i_ESG, &trans);
+        rv = CreateTransport(host, port, i_ESG, &trans);
         i_Channel->SetUsingProxy(PR_FALSE);
     }
     else
     {
-        rv = sts->CreateTransport(mProxy, mProxyPort, i_ESG, &trans);
+        rv = CreateTransport(mProxy, mProxyPort, i_ESG, &trans);
         i_Channel->SetUsingProxy(PR_TRUE);
     }
     if (NS_FAILED(rv)) return rv;
@@ -439,6 +436,15 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     return rv;
 }
 
+nsresult nsHTTPHandler::CreateTransport(const char* host, PRInt32 port, nsIEventSinkGetter* i_ESG, nsIChannel** o_pTrans)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return sts->CreateTransport(host, port, i_ESG, o_pTrans);  
+}
 
 nsHTTPHandler * nsHTTPHandler::GetInstance(void)
 {
