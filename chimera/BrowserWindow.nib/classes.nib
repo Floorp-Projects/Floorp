@@ -11,10 +11,12 @@
                 doRenameBookmarkSheet = id; 
                 openBookmarkInNewTab = id; 
                 openBookmarkInNewWindow = id; 
+                showBookmarkInfo = id; 
             }; 
             CLASS = BookmarksDataSource; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                mBookmarkInfoPanel = id; 
                 mBrowserWindowController = id; 
                 mOutlineView = id; 
                 mRenameSheet = id; 

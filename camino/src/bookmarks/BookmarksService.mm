@@ -37,6 +37,7 @@
 
 #import "CHBrowserView.h"
 #import "BookmarksService.h"
+#import "BookmarkInfoController.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -70,6 +71,7 @@
 
 -(void) dealloc
 {
+  [mBookmarkInfoController release];
   [super dealloc];
 }
 
@@ -329,7 +331,7 @@
   nsIContent* content = [item contentNode];
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
   nsAutoString group;
-  elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+  content->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
   if (!group.IsEmpty())
     mBookmarks->OpenBookmarkGroup([mBrowserWindowController getTabBrowser], elt);
   else if ([mOutlineView isExpandable: item]) {
@@ -460,7 +462,7 @@
           nsIContent* content = [item contentNode];
           nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
           nsAutoString group;
-          elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+          content->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
           if (!group.IsEmpty())
             [attachmentAttrStringCell setImage:[NSImage imageNamed:@"groupbookmark"]];
           else
@@ -692,18 +694,45 @@
     NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
 
     nsAutoString group;
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
-    elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+    [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
     if (group.IsEmpty()) 
       [mBrowserWindowController openNewWindowWithURL: urlToLoad loadInBackground: NO];
-    else
+    else {
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
       [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: NO];
+    }
   }
 }
 
 -(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder
 {
   mBookmarks->OpenBookmarkGroup(aTabView, aFolder);
+}
+
+-(IBAction)showBookmarkInfo:(id)aSender
+{
+  if (!mBookmarkInfoController) 
+    mBookmarkInfoController = [[BookmarkInfoController alloc] initWithOutlineView: mOutlineView]; 
+
+  [mBookmarkInfoController showWindow:mBookmarkInfoController];
+
+  int index = [mOutlineView selectedRow];
+  BookmarkItem* item = [mOutlineView itemAtRow: index];
+  [mBookmarkInfoController setBookmark:item];
+}
+
+-(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
+{
+  int index = [mOutlineView selectedRow];
+  if (index == -1) {
+    if (mBookmarkInfoController)
+      [mBookmarkInfoController setBookmark:NULL];
+  }
+  else {  
+    BookmarkItem* item = [mOutlineView itemAtRow:index];
+    if (mBookmarkInfoController)
+      [mBookmarkInfoController setBookmark:item];
+  }
 }
 
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
@@ -716,8 +745,7 @@
   BOOL isBookmark = [mOutlineView isExpandable:item] == NO;
   
   nsAutoString group;
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
-  elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+  [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
   BOOL isGroup = !group.IsEmpty();
 
   if (([aMenuItem action] == @selector(openBookmarkInNewWindow:))) {
@@ -796,9 +824,12 @@ NSMutableDictionary* BookmarksService::gDictionary = nil;
 MainController* BookmarksService::gMainController = nil;
 NSMenu* BookmarksService::gBookmarksMenu = nil;
 nsIDOMElement* BookmarksService::gToolbarRoot = nsnull;
-nsIAtom* BookmarksService::gFolderAtom = nsnull;
 nsIAtom* BookmarksService::gBookmarkAtom = nsnull;
+nsIAtom* BookmarksService::gDescriptionAtom = nsnull;
+nsIAtom* BookmarksService::gFolderAtom = nsnull;
+nsIAtom* BookmarksService::gGroupAtom = nsnull;
 nsIAtom* BookmarksService::gHrefAtom = nsnull;
+nsIAtom* BookmarksService::gKeywordAtom = nsnull;
 nsIAtom* BookmarksService::gNameAtom = nsnull;
 nsIAtom* BookmarksService::gOpenAtom = nsnull;
 nsVoidArray* BookmarksService::gInstances = nsnull;
@@ -994,6 +1025,9 @@ BookmarksService::AddObserver()
         gNameAtom = NS_NewAtom("name");
         gHrefAtom = NS_NewAtom("href");
         gOpenAtom = NS_NewAtom("open");
+        gKeywordAtom = NS_NewAtom("id");
+        gDescriptionAtom = NS_NewAtom("description");
+        gGroupAtom = NS_NewAtom("group");
         gInstances = new nsVoidArray();
                 
         nsCOMPtr<nsIFile> profileDir;
@@ -1281,8 +1315,7 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
   aChild->GetTag(*getter_AddRefs(tagName));
 
   nsAutoString group;
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aChild));
-  elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+  aChild->GetAttr(kNameSpaceID_None, gGroupAtom, group);
 
   if (group.IsEmpty() && tagName == gFolderAtom) {
     NSMenu* menu = [[[NSMenu alloc] initWithTitle: title] autorelease];
@@ -1314,11 +1347,12 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
 
   // Get the content node.
   nsIContent* content = [item contentNode];
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
   nsAutoString group;
-  elt->GetAttribute(NS_LITERAL_STRING("group"), group);
-  if (!group.IsEmpty())
+  content->GetAttr(kNameSpaceID_None, gGroupAtom, group);
+  if (!group.IsEmpty()) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
     return OpenBookmarkGroup([aController getTabBrowser], elt);
+  }
   
   // Get the href attribute.  This is the URL we want to load.
   nsAutoString href;
@@ -1562,7 +1596,7 @@ BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
     return [NSImage imageNamed:@"folder"];
     
   nsAutoString group;
-  aElement->GetAttribute(NS_LITERAL_STRING("group"), group);
+  content->GetAttr(kNameSpaceID_None, gGroupAtom, group);
   if (!group.IsEmpty())
     return [NSImage imageNamed:@"smallgroup"];
   

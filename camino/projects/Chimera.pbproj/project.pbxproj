@@ -28,6 +28,7 @@
 				F52F87CD027D75C301A80165,
 				F52F87CE027D75C301A80165,
 				2E748B73029A448D4B000102,
+				F5383FCD02AC8F8E01A80164,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -414,6 +415,7 @@
 				2E293A01027F33604B000102,
 				2EEC3E63028138724B000102,
 				2E748B74029A448D4B000102,
+				F5383FCE02AC8F8E01A80164,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -477,6 +479,7 @@
 				F540BD1B029ED15301026D5D,
 				F540BD1D029ED17901026D5D,
 				F5007D3B02A3DA4801010220,
+				F5388AC202ACBC9001A80164,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -517,6 +520,7 @@
 				2E293A02027F33604B000102,
 				2EEC3E64028138724B000102,
 				2E748B75029A448D4B000102,
+				F5383FCF02AC8F8E01A80164,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -1048,6 +1052,7 @@
 				F52F87CB027D75C301A80165,
 				F52F87CC027D75C301A80165,
 				2E748B72029A448D4B000102,
+				F5383FCC02AC8F8E01A80164,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -1850,6 +1855,39 @@
 		};
 		F52F87D2027D75C301A80165 = {
 			fileRef = F52F87CE027D75C301A80165;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5383FCC02AC8F8E01A80164 = {
+			isa = PBXFileReference;
+			path = BookmarkInfoController.h;
+			refType = 4;
+		};
+		F5383FCD02AC8F8E01A80164 = {
+			isa = PBXFileReference;
+			path = BookmarkInfoController.mm;
+			refType = 4;
+		};
+		F5383FCE02AC8F8E01A80164 = {
+			fileRef = F5383FCC02AC8F8E01A80164;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5383FCF02AC8F8E01A80164 = {
+			fileRef = F5383FCD02AC8F8E01A80164;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5388AC102ACBC8F01A80164 = {
+			isa = PBXFileReference;
+			path = BookmarkInfoPanel.nib;
+			refType = 4;
+		};
+		F5388AC202ACBC9001A80164 = {
+			fileRef = F5388AC102ACBC8F01A80164;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3141,6 +3179,7 @@
 		F58A94F2023F10CA010001CA = {
 			children = (
 				29B97319FDCFA39411CA2CEA,
+				F5388AC102ACBC8F01A80164,
 				F51842FC0206176901A966FE,
 				F5247C2D02289FD9013DD99A,
 				F5173958020CE1E50189DA0C,

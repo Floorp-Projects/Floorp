@@ -48,6 +48,8 @@
 class BookmarksService;
 class nsIAtom;
 
+@class BookmarkInfoController;
+
 @interface BookmarksDataSource : NSObject
 {
   BookmarksService* mBookmarks;
@@ -58,7 +60,11 @@ class nsIAtom;
   IBOutlet id mRenameSheet;
   IBOutlet NSTextField* mRenameTextField;
   
+  IBOutlet id mBookmarkInfoPanel;
+  
   NSString* mCachedHref;
+  
+  BookmarkInfoController* mBookmarkInfoController;
 }
 
 -(id) init;
@@ -85,6 +91,7 @@ class nsIAtom;
 -(IBAction)openBookmarkInNewWindow:(id)aSender;
 
 -(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder;
+-(IBAction)showBookmarkInfo:(id)aSender;
 
 // Datasource methods.
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
@@ -170,8 +177,11 @@ public:
   static nsIAtom* gFolderAtom;
   static nsIAtom* gNameAtom;
   static nsIAtom* gHrefAtom;
+  static nsIAtom* gKeywordAtom;
+  static nsIAtom* gDescriptionAtom;
   static nsIAtom* gBookmarkAtom;
   static nsIAtom* gOpenAtom;
+  static nsIAtom* gGroupAtom;
   static nsIDocument* gBookmarks;
   static nsVoidArray* gInstances;
   static int CHInsertNone;
