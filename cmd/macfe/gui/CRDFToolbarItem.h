@@ -50,7 +50,15 @@ public:
 	virtual void PutInside ( LView *inView, Boolean inOrient = true) = 0;
 	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) = 0;
 	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) = 0;
+	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const = 0;
 
+		// Post-creation init routines
+		// These are called AFTER the item has been placed inside its parent
+		// toolbar. This is important because some items need to be part of
+		// a window or need to walk up the view hierarchy to register themselves.
+	virtual void HookUpToListeners ( ) { } ;
+	virtual void FinishCreate ( ) { } ;
+	
 protected:
 
 	HT_Resource HTNode ( ) { return mNode; }
@@ -84,9 +92,6 @@ public:
 	CRDFPushButton ( HT_Resource inNode ) ;
 	virtual ~CRDFPushButton ( ) ;
 
-	void SetTrackInside(bool inInside) { mTrackInside = inInside; }
-	bool IsTrackInside() const { return mTrackInside; }
-
 		// returns how the buttons wants to display: icon only, icon & text, text only
 		// based on the properties in HT.
 	UInt32 CalcDisplayMode ( ) const;
@@ -100,6 +105,9 @@ public:
 	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) {
 		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
 	}
+	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
+
+	virtual void HookUpToListeners ( ) ;
 
 protected:
 
@@ -117,7 +125,9 @@ protected:
 	virtual void DrawSelfDisabled ( ) ;
 	virtual void DrawButtonOutline ( ) ;
 	virtual void DrawButtonHilited ( ) ;
-
+	virtual void EnableSelf ( ) ;
+	virtual void DisableSelf ( ) ;
+	
 		// handle drawing icon as an image
 	virtual void ImageIsReady ( ) ;
 	virtual void DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const ;
@@ -133,16 +143,21 @@ protected:
 	virtual void HotSpotResult ( Int16 inHotSpot );
 	
 	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
+	void SetTrackInside(bool inInside) { mTrackInside = inInside; }
+	bool IsTrackInside() const { return mTrackInside; }
 
 		// calculate tooltip to display title
 	virtual void FindTooltipForMouseLocation ( const EventRecord& inMacEvent,
 												StringPtr outTip );
+	
+	virtual void AssignCommand ( ) ;
 	
 private:
 
 	UInt32 CalcAlignment ( UInt32 inTopAlignment, Uint32 inSideAlignment ) const;
 	void AttachTooltip ( ) ;
 	void AttachContextMenu ( ) ;
+	void AttachPaneEnabler ( ) ;
 	
 	StRegion mButtonMask;
 	Rect mCachedButtonFrame;
@@ -189,7 +204,8 @@ public:
 	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) {
 		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
 	}
-
+	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
+	
 	virtual void DrawSelf ( ) ;
 	
 private:
@@ -222,8 +238,9 @@ public:
 	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) {
 		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
 	}
+	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
 
-	virtual void DrawSelf ( ) ;	
+	virtual void FinishCreate ( ) ;
 
 private:
 	// items cannot be passed by value because they exist in 1-to-1 correspondance

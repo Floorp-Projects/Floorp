@@ -38,7 +38,9 @@
 #include "UGAAppearance.h"
 #include "URDFUtilities.h"
 #include "CBrowserWindow.h"
+#include "CTargetedUpdateMenuRegistry.h"
 #include "uapp.h"
+#include "CPaneEnabler.h"
 
 
 extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
@@ -55,7 +57,6 @@ CRDFToolbarItem :: ~CRDFToolbarItem ( )
 {
 
 }
-
 
 
 #pragma mark -
@@ -75,6 +76,9 @@ CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 	
 	AttachTooltip();
 	AttachContextMenu();
+	AttachPaneEnabler();
+	
+	AssignCommand();
 }
 
 
@@ -82,6 +86,59 @@ CRDFPushButton :: ~CRDFPushButton ( )
 {
 
 }
+
+
+//
+// HookUpToListeners
+//
+// Find the top level browser window and register it as a listener for commands, but only
+// if this button is a special command. Other kinds of buttons don't need to be registered as
+// they just dispatch immediately and don't broadcast commands.
+//
+void
+CRDFPushButton :: HookUpToListeners ( )
+{
+	const char* url = HT_GetNodeURL(HTNode());
+	if ( url && strncmp(url, "command:", 8) == 0 ) {
+		LView* top=GetSuperView();
+		while ( top && top->GetSuperView() )
+			top = top->GetSuperView();
+		LListener* topListener = dynamic_cast<LListener*>(top);
+		if ( topListener )
+			AddListener(topListener);	
+	}
+		
+} // HookUpToListeners
+
+
+//
+// AssignCommand
+//
+// Set LControl's value message for clicking and command enabling. The default is |cmd_ToolbarButton|
+// which is a container or url (a la personal toolbar button). Explicit commands (anything with
+// "command:" in their URL) have their own command ID's in the FE.
+//
+void
+CRDFPushButton :: AssignCommand ( )
+{
+	SetValueMessage ( cmd_ToolbarButton );
+
+	// check for one of our known commands. If it is one of those, change the command id.
+	const char* url = HT_GetNodeURL(HTNode());
+	if ( url && strncmp(url, "command:", 8) == 0 ) {
+		if ( strcmp(url, "command:back") == 0 )
+			SetValueMessage ( cmd_GoBack );
+		else if ( strcmp(url, "command:forward") == 0 )
+			SetValueMessage ( cmd_GoForward );
+		else if ( strcmp(url, "command:stop") == 0 )
+			SetValueMessage ( cmd_Stop );
+		else if ( strcmp(url, "command:reload") == 0 )
+			SetValueMessage ( cmd_Reload );		
+		else if ( strcmp(url, "command:search") == 0 )
+			SetValueMessage ( cmd_NetSearch );
+	}
+	
+} // AssignCommand
 
 
 //
@@ -239,6 +296,23 @@ CRDFPushButton :: AttachContextMenu ( )
 
 
 //
+// AttachPaneEnabler
+//
+// Creates a enabler policy attachment. We can use the default enabling policy (which is based off
+// FindCommandStatus) because we are an LControl.
+//
+void
+CRDFPushButton :: AttachPaneEnabler ( )
+{
+	CPaneEnabler* enabler = new CPaneEnabler;
+	Assert_(enabler != NULL);
+	if ( enabler )
+		AddAttachment(enabler);
+
+} // AttachPaneEnabler
+
+
+//
 // FindTooltipForMouseLocation
 //
 // Dredge the tooltip text out of HT for this button
@@ -255,6 +329,48 @@ CRDFPushButton :: FindTooltipForMouseLocation ( const EventRecord& inMacEvent, S
 		*outTip = 0;
 
 } // FindTooltipForMouseLocation
+
+
+//
+// NaturalSize
+//
+SDimension16
+CRDFPushButton::NaturalSize( SDimension16 inAvailable ) const
+	/*
+	  ...returns the natural size of this item.	 The toolbar asks this of
+	  each item during layout.	If possible, the toolbar will resize the
+	  item to its natural size, as returned by this routine.
+
+	  If you return exactly the value from |inAvailable| for width,	 the
+	  toolbar may assume that you wish to consume all available width, e.g.,
+	  for a URL entry field, or a status message.  This does not apply to
+	  height (mainly because of the problem described below).  Returning a
+	  height greater than |inAvailable| may encourage the toolbar to grow
+	  vertically.
+
+	  For a particular dimension:
+		* an item with a fixed size can ignore |inAvailable| and return its
+		  size;
+		* an item with a percentage size can calculate it based on
+		  |inAvailable|;
+		* an item with a space-filling size can simply return |inAvailable|.
+
+	  Problems:
+		this routine is essentially a hack.	 In particular, if |inAvailable|
+	  happens to coincide with the natural size in either dimension,
+	  hilarity ensues.	Hopefully, |inAvailable| will always reflect a
+	  toolbar wider than a normal button :->
+
+	  Assumptions:
+		any toolbar item can be resized arbitrarilly small (to an
+	  unspecified limit).
+	*/
+{
+	SDimension16 desiredSpace;
+	desiredSpace.width = 50; desiredSpace.height = 50;		//еее for now
+	
+	return desiredSpace;
+}
 
 
 //
@@ -500,10 +616,10 @@ CRDFPushButton :: ImageIsReady ( )
 //
 // Called when the image we want to draw has not finished loading. We get
 // called to draw something in its place. Any good ideas?
+//
 void
 CRDFPushButton :: DrawStandby ( const Point & inTopLeft, IconTransformType inTransform ) const
 {
-//	::FrameRect ( &mCachedGraphicFrame );		//еее this is wrong!
 
 } // DrawStandby
 
@@ -513,7 +629,7 @@ CRDFPushButton :: MouseEnter ( Point /*inPortPt*/, const EventRecord & /*inMacEv
 {
 	mMouseInFrame = true;
 	if (IsActive() && IsEnabled())
-		Draw(NULL);
+		Refresh();
 }
 
 
@@ -531,20 +647,10 @@ CRDFPushButton :: MouseLeave( )
 		return;
 	
 	mMouseInFrame = false;
-	if (IsActive() && IsEnabled()) {
-		// since we can't simply draw the border w/ xor, we need to get the toolbar
-		// to redraw its bg and then redraw the normal button over it. To do this
-		// we create a rgn (in port coords), make it the clip rgn, and then draw
-		// the parent toolbar and this button again.
-		Rect portRect;
-		CalcPortFrameRect(portRect);
-		StRegion buttonRgnPort(portRect);
-//		StClipRgnState savedClip(buttonRgnPort);	///еее grrr, this doesn't work
-		
-		GetSuperView()->Draw(NULL);
-		Draw(NULL);
-	}
-}
+	if (IsActive() && IsEnabled())
+		Refresh();
+
+} // MouseLeave
 
 
 //
@@ -557,7 +663,7 @@ CRDFPushButton :: HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boo
 {
 	if (inCurrInside != inPrevInside) {
 		SetTrackInside(inCurrInside);
-		Draw(NULL);
+		Draw(NULL);						// draw immed. because mouse is down, can't wait for update event
 	}
 
 } // HotSpotAction
@@ -567,13 +673,11 @@ void
 CRDFPushButton :: HotSpotResult(Int16 inHotSpot)
 {
 	const char* url = HT_GetNodeURL(HTNode());
-	if ( strncmp(url, "command:", 8) == 0 )
+	if ( url && strncmp(url, "command:", 8) == 0 )
 	{
 		// We're a command, baby.  Look up our FE command and execute it.
-		//UINT nCommand = theApp.m_pBrowserCommandMap->GetFEResource(url);
-		//WFE_GetOwnerFrame(this)->PostMessage(WM_COMMAND, MAKEWPARAM(nCommand, nCommand), 0);
+		HotSpotAction ( 0, false, true );
 		BroadcastValueMessage();
-		DebugStr("\pExecuting command; g");
 	}
 	else if ( !HT_IsContainer(HTNode()) && !HT_IsSeparator(HTNode()) )
 	{
@@ -591,7 +695,7 @@ CRDFPushButton :: HotSpotResult(Int16 inHotSpot)
 		// find the Browser window and tell it to show a popdown with
 		// the give HT_Resource for this cell
 		LView* top=GetSuperView();
-		while ( top->GetSuperView() )
+		while ( top && top->GetSuperView() )
 			top = top->GetSuperView();
 
 		// popdown the tree			
@@ -633,15 +737,37 @@ CRDFPushButton :: DoneTracking ( SInt16 inHotSpot, Boolean inGoodTrack )
 {		
 	SetTrackInside(false);
 
-	if ( inGoodTrack ) {	
-		// draw parent, then redraw us.
-		GetSuperView()->Draw(NULL);
-		Draw(NULL);
-	}
+	if ( inGoodTrack )
+		Refresh();
 	else
 		MouseLeave();		// mouse has left the building. Redraw the correct state now, not later
 }
 
+
+//
+// EnableSelf
+// DisableSelf
+//
+// Override to redraw immediately when enabled or disabled.
+//
+
+void 
+CRDFPushButton :: EnableSelf ( )
+{
+	if (FocusExposed()) {
+		FocusDraw();
+		Draw(NULL);
+	}
+}
+
+void 
+CRDFPushButton :: DisableSelf ( )
+{
+	if (FocusExposed()) {
+		FocusDraw();
+		Draw(NULL);
+	}
+}
 
 
 #pragma mark -
@@ -673,13 +799,30 @@ CRDFSeparator :: DrawSelf ( )
 	::FrameRect ( &localRect );
 }
 
+
+//
+// NaturalSize
+// (See comment on CRDFPushButton::NaturalSize() for tons of info.)
+//
+// Return the appropriate size for a separator.
+//
+SDimension16
+CRDFSeparator :: NaturalSize( SDimension16 inAvailable ) const
+{
+	SDimension16 desiredSpace;
+	desiredSpace.width = 15; desiredSpace.height = 50;		//еее for now
+	
+	return desiredSpace;
+	 
+} // NaturalSize
+
+
 #pragma mark -
 
 
 CRDFURLBar :: CRDFURLBar ( HT_Resource inNode )
 	: CRDFToolbarItem(inNode)
 {
-
 
 }
 
@@ -691,13 +834,34 @@ CRDFURLBar :: ~CRDFURLBar ( )
 
 }
 
-// a strawman drawing routine for testing purposes only
+
+//
+// FinishCreate
+//
+// Called after this item has been placed into the widget hierarchy. Reanimate the
+// url bar from a PPob. This needs to be done here (and not in the constructor)
+// because some of its components (proxy icon, etc) throw/assert if they are not
+// part of a window at creation time.
+//
 void
-CRDFURLBar :: DrawSelf ( )
+CRDFURLBar :: FinishCreate ( )
 {
-	Rect localRect;
-	CalcLocalFrameRect ( localRect );
+	LWindow* window = LWindow::FetchWindowObject(GetMacPort());
+	LView* view = UReanimator::CreateView(1104, this, window);	// create the url bar
 
-	::FrameRect ( &localRect );
-}
 
+} // FinishCreate
+
+
+//
+// NaturalSize
+// (See comment on CRDFPushButton::NaturalSize() for tons of info.)
+//
+// Since we want to take as much room as possible, return what is available.
+//
+SDimension16
+CRDFURLBar::NaturalSize( SDimension16 inAvailable ) const
+{
+	return inAvailable;
+	 
+} // NaturalSize
