@@ -17,5 +17,5 @@
  */
 
 
-
+#include "MacEditorConfig.h"
 #include "MacPrefix_debug.h"
