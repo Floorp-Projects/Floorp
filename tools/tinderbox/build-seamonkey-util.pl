@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.60 $ ';
+$::UtilsVersion = '$Revision: 1.61 $ ';
 
 package TinderUtils;
 
@@ -740,6 +740,14 @@ sub run_all_tests {
         $test_result = AliveTest("MozillaAliveTest", $build_dir,
 								 $binary, 0, 45);
     }
+
+	# Mozilla java test
+    if ($Settings::JavaTest and $test_result eq 'success') {
+	  print_log "binary = $binary\n";
+        $test_result = AliveTest("MozillaJavaTest", $build_dir,
+								 $binary, "http://java.sun.com", 45);
+    }
+	
 
     # Viewer alive test
     if ($Settings::ViewerTest and $test_result eq 'success') {

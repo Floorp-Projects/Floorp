@@ -16,12 +16,15 @@ $TestOnly          = 0;      # Only run tests, don't pull/build
 $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 
 # Tests
-$AliveTest         = 1;
-$ViewerTest        = 0;
-$BloatTest         = 0;
-$DomToTextConversionTest = 0;
-$MailNewsTest      = 0;
-$EmbedTest         = 0;      # Assumes you wanted $BuildEmbed=1
+$AliveTest                = 1;
+$JavaTest                 = 0;
+$ViewerTest               = 0;
+$BloatTest                = 0;
+$DomToTextConversionTest  = 0;
+$MailNewsTest             = 0;  # Bit-rotted, currently not working.
+$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
+$LayoutPerformanceTest    = 0;
+$StartupPerformanceTest   = 0;
 
 $BloatTestTimeout  = 120;    # seconds
 $DomTestTimeout	   = 45;     # seconds
