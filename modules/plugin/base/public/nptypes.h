@@ -46,4 +46,7 @@ typedef int int32_t;
 typedef unsigned int uint32_t;
 #else
 #include <stdint.h>
+#ifndef bool
+#define bool int
+#endif
 #endif
