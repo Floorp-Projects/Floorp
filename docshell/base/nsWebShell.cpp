@@ -836,7 +836,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
        this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
 
-  if (mContentViewer && (eCharsetReloadInit!=mCharsetReloadState))
+  if (mContentViewer) // && (eCharsetReloadInit!=mCharsetReloadState))
   { // get any interesting state from the old content viewer
     // XXX: it would be far better to just reuse the document viewer ,
     //      since we know we're just displaying the same document as before
