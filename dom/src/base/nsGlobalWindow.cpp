@@ -2947,7 +2947,7 @@ GlobalWindowImpl::CanSetProperty(const char *aPrefName)
  * Examine the current document state to see if we're in a way that is
  * typically abused by web designers. The window.open code uses this
  * routine to determine whether to allow the new window.
- * Returns a value from the CheckAbusePoint enum.
+ * Returns a value from the CheckForAbusePoint enum.
  */
 PRUint32
 GlobalWindowImpl::CheckForAbusePoint()
@@ -3133,7 +3133,7 @@ GlobalWindowImpl::CheckForAbusePoint()
 /* Allow or deny a window open based on whether popups are suppressed.
    A popup generally will be allowed if it's from a white-listed domain,
    or if its target is an extant window.
-   Returns PR_TRUE if the window should be opened. */
+   Returns a value from the CheckOpenAllow enum. */
 PRUint32
 GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
                                  const nsAString &aName)
