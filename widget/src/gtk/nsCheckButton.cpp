@@ -33,7 +33,6 @@ nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
   mLabel = nsnull;
   mCheckButton = nsnull;
   mState = PR_FALSE;
-  mFirstTime = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -103,6 +102,10 @@ void nsCheckButton::InitCallbacks(char * aName)
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
+
+  InstallSignal(mCheckButton,
+                "toggled",
+                GTK_SIGNAL_FUNC(nsCheckButton::ToggledSignal));
 }
 
 /**
@@ -136,10 +139,13 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
   mState = aState;
 
-  if (mWidget && mCheckButton)
+  if (mWidget && mCheckButton) 
   {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckButton),
-                                 (gboolean) mState);
+    GtkToggleButton * item = GTK_TOGGLE_BUTTON(mCheckButton);
+
+    item->active = (gboolean) mState;
+
+    gtk_widget_queue_draw(GTK_WIDGET(item));
   }
 
   return NS_OK;
@@ -153,17 +159,6 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
   aState = mState;
-
-  // Pathetically lame hack to work around artificial intelligence 
-  // in the GtkToggleButton widget.  Because the gtk toggle widget
-  // changes its state on button press, we are out of whack by one
-  //
-  if (mFirstTime)
-  {
-    mFirstTime = PR_FALSE;
-
-    aState = !mState;
-  }
     
   return NS_OK;
 }
@@ -212,3 +207,34 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
   }
   return NS_OK;
 }
+
+/* virtual */ void
+nsCheckButton::OnToggledSignal(const gboolean aState)
+{
+  // Untoggle the sonofabitch
+  if (mWidget && mCheckButton) 
+  {
+    GtkToggleButton * item = GTK_TOGGLE_BUTTON(mCheckButton);
+
+    item->active = !item->active;
+
+    gtk_widget_queue_draw(GTK_WIDGET(item));
+  }
+}
+//////////////////////////////////////////////////////////////////////
+
+/* static */ gint 
+nsCheckButton::ToggledSignal(GtkWidget *      aWidget, 
+                             gpointer         aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  nsCheckButton * button = (nsCheckButton *) aData;
+
+  NS_ASSERTION( nsnull != button, "instance pointer is null");
+
+  button->OnToggledSignal(GTK_TOGGLE_BUTTON(aWidget)->active);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////

@@ -50,6 +50,7 @@ public:
   virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
   virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
+  virtual void OnToggledSignal(const gboolean aState);
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);
@@ -63,8 +64,10 @@ protected:
   // gecko check controlling frame.
   PRBool     mState;
 
-  // See GetState()
-  PRBool     mFirstTime;
+private:
+
+  static gint ToggledSignal(GtkWidget *      aWidget, 
+                            gpointer         aData);
 };
 
 #endif // nsCheckButton_h__

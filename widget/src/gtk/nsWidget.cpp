@@ -1153,12 +1153,11 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 
 #undef TRACE_MOUSE_EVENTS
 
-#ifdef TRACE_MOUSE_EVENTS
-static void
-DebugPrintMouseEvent(nsMouseEvent & aEvent,
-                     char *         sMessage,
-                     nsWidget *     aInstance,
-                     GtkWidget *    aGtkWidget)
+#ifdef DEBUG
+void
+nsWidget::DebugPrintMouseEvent(nsMouseEvent & aEvent,
+                               char *         sMessage,
+                               GtkWidget *    aGtkWidget)
 {
   char * eventName = nsnull;
 
@@ -1233,13 +1232,13 @@ DebugPrintMouseEvent(nsMouseEvent & aEvent,
   printf("%4d %s(this=%p,name=%s,event=%s,x=%d,y=%d)\n",
          sPrintCount++,
          sMessage,
-         aInstance,
+         this,
          gtk_widget_get_name(aGtkWidget),
          eventName,
          aEvent.point.x,
          aEvent.point.y);
 }
-#endif // TRACE_MOUSE_EVENTS
+#endif // DEBUG
 //////////////////////////////////////////////////////////////////
 /* virtual */ void 
 nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
@@ -1301,7 +1300,7 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   }
   
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Motion",this,mWidget);
+  DebugPrintMouseEvent(event,"Motion",mWidget);
 #endif
   
   AddRef();
@@ -1340,7 +1339,7 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   }
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Enter",this,mWidget);
+  DebugPrintMouseEvent(event,"Enter",mWidget);
 #endif
 
   AddRef();
@@ -1379,7 +1378,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   }
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Leave",this,mWidget);
+  DebugPrintMouseEvent(event,"Leave",mWidget);
 #endif
 
   AddRef();
@@ -1458,7 +1457,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"ButtonPress",this,mWidget);
+  DebugPrintMouseEvent(event,"ButtonPress",mWidget);
 #endif
 
   // Set the button motion target and remeber the widget and root coords
@@ -1506,7 +1505,7 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"ButtonRelease",this,mWidget);
+  DebugPrintMouseEvent(event,"ButtonRelease",mWidget);
 #endif
 
   if (nsnull != sButtonMotionTarget)
@@ -1527,7 +1526,7 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 /* virtual */ void
 nsWidget::OnRealize()
 {
-  printf("nsWidget::OnRealize(%p)\n",this);
+  //  printf("nsWidget::OnRealize(%p)\n",this);
 }
 //////////////////////////////////////////////////////////////////////
 
