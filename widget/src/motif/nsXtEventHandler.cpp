@@ -45,7 +45,8 @@ struct nsKeyConverter nsKeycodes[] = {
   NS_VK_TAB,        XK_Tab,
   NS_VK_CLEAR,      XK_Clear,
   NS_VK_RETURN,     XK_Return,
-  NS_VK_SHIFT,      XK_Shift_Lock,      
+  NS_VK_SHIFT,      XK_Shift_L,      
+  NS_VK_SHIFT,      XK_Shift_R,      
   NS_VK_CONTROL,    XK_Control_L,
   NS_VK_CONTROL,    XK_Control_R,
   NS_VK_ALT,        XK_Alt_L,
@@ -123,9 +124,8 @@ int nsConvertKey(XID keysym)
 {
  int i;
  int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
- XID maskKey = keysym & 0x0000FFFF;
  for (i = 0; i < length; i++) {
-   if (nsKeycodes[i].keysym == maskKey)
+   if (nsKeycodes[i].keysym == keysym)
      return(nsKeycodes[i].vkCode);
  }
 
@@ -163,11 +163,13 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
 
   if (anXEv != NULL) { // Do Mouse Event specific intialization
     anEvent.time       = anXEv->xbutton.time;
-    anEvent.isShift    = anXEv->xbutton.state & ShiftMask;
-    anEvent.isControl  = anXEv->xbutton.state & ControlMask;
+    anEvent.isShift    = (anXEv->xbutton.state & ShiftMask) ? 1 : 0;
+    anEvent.isControl  = (anXEv->xbutton.state & ControlMask) ? 1 : 0;
     anEvent.isAlt      = PR_FALSE; // Fix later
     anEvent.clickCount = 1; // Fix for double-clicks
     anEvent.eventStructType = NS_MOUSE_EVENT;
+
+    printf("Mouse event isShift %d isControl %d\n", anEvent.isShift, anEvent.isControl);
   }
 
   //anEvent.isAlt      = GetKeyState(VK_LMENU) < 0    || GetKeyState(VK_RMENU) < 0;
@@ -624,12 +626,14 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
 // xKeyEvent->state, &modout, &res);
 // instead of XkeycodeToKeysym, but it doesn't work.
 
+   // Get the modout to test for shift + control
+  XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res); 
   res = XKeycodeToKeysym(xKeyEvent->display, xKeyEvent->keycode, 0);
 
   aKeyEvent.keyCode   = nsConvertKey(res);
   aKeyEvent.time      = xKeyEvent->time; 
-  aKeyEvent.isShift   = modout & ShiftMask; 
-  aKeyEvent.isControl = modout & ControlMask;
+  aKeyEvent.isShift   = (xKeyEvent->state & ShiftMask) ? 1 : 0; 
+  aKeyEvent.isControl = (xKeyEvent->state & ControlMask) ? 1 : 0;
   aKeyEvent.isAlt     = PR_FALSE; // Fix later
  printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
 }
