@@ -158,7 +158,6 @@ protected:
 	nsIMsgThread *	GetThreadForSubject(nsCString &subject);
 	nsIMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
 	nsMsgHdr	*	GetMsgHdrForReference(nsCString &reference);
-	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsCString &msgID);
 	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsCString &msgID);
 	// threading interfaces
 	virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);

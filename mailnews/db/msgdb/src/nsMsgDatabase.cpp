@@ -3313,7 +3313,8 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, 
 
 nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr)
 {
-  nsIMsgDBHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
+  nsIMsgDBHdr	*msgHdr = nsnull;
+  GetMsgHdrForMessageID(msgID.get(), &msgHdr);  
   nsIMsgThread *thread = NULL;
   
   if (msgHdr != NULL)
@@ -3488,37 +3489,38 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsCString &reference)
 	NS_ASSERTION(PR_FALSE, "not implemented yet.");
 	return nsnull;
 }
-
-nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsCString &msgID)
+NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForMessageID(const char *msgID, nsIMsgDBHdr **aHdr)
 {
-	nsIMsgDBHdr	*msgHdr = nsnull;
-    nsresult rv = NS_OK;
-	mdbYarn	messageIdYarn;
+  NS_ENSURE_ARG_POINTER(aHdr);
+  nsIMsgDBHdr	*msgHdr = nsnull;
+  nsresult rv = NS_OK;
+  mdbYarn	messageIdYarn;
 
-	messageIdYarn.mYarn_Buf = (void*)msgID.get();
-	messageIdYarn.mYarn_Fill = PL_strlen(msgID.get());
-	messageIdYarn.mYarn_Form = 0;
-	messageIdYarn.mYarn_Size = messageIdYarn.mYarn_Fill;
+  messageIdYarn.mYarn_Buf = (void *) msgID;
+  messageIdYarn.mYarn_Fill = PL_strlen(msgID);
+  messageIdYarn.mYarn_Form = 0;
+  messageIdYarn.mYarn_Size = messageIdYarn.mYarn_Fill;
 
-	nsIMdbRow	*hdrRow;
-	mdbOid		outRowId;
-	mdb_err result = GetStore()->FindRow(GetEnv(), m_hdrRowScopeToken,
-		m_messageIdColumnToken, &messageIdYarn,  &outRowId, 
-		&hdrRow);
-	if (NS_SUCCEEDED(result) && hdrRow)
-	{
-		//Get key from row
-		mdbOid outOid;
-		nsMsgKey key=0;
-		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
-			key = outOid.mOid_Id;
-		rv = GetHdrFromUseCache(key, &msgHdr);
-		if (NS_SUCCEEDED(rv) && msgHdr)
-			hdrRow->Release();
-		else
-			rv = CreateMsgHdr(hdrRow, key, &msgHdr);
-	}
-	return msgHdr;
+  nsIMdbRow	*hdrRow;
+  mdbOid		outRowId;
+  mdb_err result = GetStore()->FindRow(GetEnv(), m_hdrRowScopeToken,
+	  m_messageIdColumnToken, &messageIdYarn,  &outRowId, 
+	  &hdrRow);
+  if (NS_SUCCEEDED(result) && hdrRow)
+  {
+	  //Get key from row
+	  mdbOid outOid;
+	  nsMsgKey key=0;
+	  if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
+		  key = outOid.mOid_Id;
+	  rv = GetHdrFromUseCache(key, &msgHdr);
+	  if (NS_SUCCEEDED(rv) && msgHdr)
+		  hdrRow->Release();
+	  else
+		  rv = CreateMsgHdr(hdrRow, key, &msgHdr);
+  }
+  NS_IF_ADDREF(*aHdr = msgHdr);
+  return NS_OK; // it's not an error not to find a msg hdr.
 }
 
 nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsCString &subject)

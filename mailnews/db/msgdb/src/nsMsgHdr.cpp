@@ -207,11 +207,17 @@ NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 		*result = m_mdb->GetStatusFlags(this, m_flags);
 	else
 		*result = m_flags;
+#ifdef DEBUG_bienvenu
+        NS_ASSERTION(! (m_flags & MSG_FLAG_ELIDED), "shouldn't be set in db");
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetFlags(PRUint32 flags)
 {
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(! (m_flags & MSG_FLAG_ELIDED), "shouldn't set this flag on db");
+#endif
 	m_flags = flags;
   // don't write out MSG_FLAG_NEW to MDB.
 	SetUInt32Column(m_flags & ~MSG_FLAG_NEW, m_mdb->m_flagsColumnToken);
@@ -286,6 +292,16 @@ NS_IMETHODIMP nsMsgHdr::SetProperty(const char *propertyName, nsString &property
   return m_mdb->SetPropertyFromNSString(m_mdbRow, propertyName, &propertyStr);
 }
 
+NS_IMETHODIMP nsMsgHdr::SetStringProperty(const char *propertyName, const char *propertyValue)
+{
+  return m_mdb->SetProperty(m_mdbRow, propertyName, propertyValue);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetStringProperty(const char *propertyName, char **aPropertyValue)
+{
+  return m_mdb->GetProperty(m_mdbRow, propertyName, aPropertyValue);
+}
+
 NS_IMETHODIMP nsMsgHdr::GetUint32Property(const char *propertyName, PRUint32 *pResult)
 {
   return m_mdb->GetUint32Property(GetMDBRow(), propertyName, pResult);
@@ -316,41 +332,50 @@ nsresult nsMsgHdr::ParseReferences(const char *references)
 		startNextRef = GetNextReference(startNextRef, resultReference);
 		m_references.AppendCString(resultReference);
 	}
+        m_numReferences = m_references.Count();
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultReference)
 {
-	nsresult err = NS_OK;
-
-	if(!(m_initedValues & REFERENCES_INITED))
-	{
-		const char *references;
-		err = m_mdb->RowCellColumnToConstCharPtr(GetMDBRow(), m_mdb->m_referencesColumnToken, &references);
-		
-		if(NS_SUCCEEDED(err))
-		{
-			ParseReferences(references);
-			m_initedValues |= REFERENCES_INITED;
-		}
-	}
-
-	m_references.CStringAt(refNum, resultReference);
-	return err;
+  nsresult err = NS_OK;
+  
+  if(!(m_initedValues & REFERENCES_INITED))
+  {
+    const char *references;
+    err = m_mdb->RowCellColumnToConstCharPtr(GetMDBRow(), m_mdb->m_referencesColumnToken, &references);
+    
+    if(NS_SUCCEEDED(err))
+    {
+      ParseReferences(references);
+      m_initedValues |= REFERENCES_INITED;
+    }
+  }
+  
+  if (refNum < m_numReferences)
+    m_references.CStringAt(refNum, resultReference);
+  return err;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetDate(PRTime *result) 
 {
-	if (!(m_initedValues & CACHED_VALUES_INITED))
-		InitCachedValues();
-
-	*result = m_date;
-    return NS_OK;
+  if (!(m_initedValues & CACHED_VALUES_INITED))
+    InitCachedValues();
+  
+  *result = m_date;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetMessageId(const char *messageId)
 {
-	return SetStringColumn(messageId, m_mdb->m_messageIdColumnToken);
+  if (messageId && *messageId == '<')
+  {
+    nsCAutoString tempMessageID(messageId + 1);
+    if (tempMessageID.Last() == '>')
+      tempMessageID.SetLength(tempMessageID.Length() - 1);
+    return SetStringColumn(tempMessageID.get(), m_mdb->m_messageIdColumnToken);
+  }
+  return SetStringColumn(messageId, m_mdb->m_messageIdColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetSubject(const char *subject)

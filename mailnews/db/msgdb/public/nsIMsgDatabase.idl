@@ -124,6 +124,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // get a message header for the given key. Caller must release()!
 
   nsIMsgDBHdr GetMsgHdrForKey(in nsMsgKey key);
+  nsIMsgDBHdr getMsgHdrForMessageID(in string messageID);
   //Returns whether or not this database contains the given key
   boolean ContainsKey(in nsMsgKey key);
 
