@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.119 $ ';
+$::UtilsVersion = '$Revision: 1.120 $ ';
 
 package TinderUtils;
 
@@ -993,12 +993,15 @@ sub run_all_tests {
 	#
 	if ($Settings::XULWindowOpenTest and $test_result eq 'success') {
 		my $open_time;
+        my $test_name = "XULWindowOpenTest";
+        my $binary_log = "$build_dir/$test_name.log";
+
 		# Settle OS.
 		run_system_cmd("sync; sleep 10", 35);
 
 		my $url  = "-chrome \"file:$build_dir/mozilla/xpfe/test/winopen.xul\"";
 		if($test_result eq 'success') {
-			$open_time = AliveTestReturnToken("XULWindowOpenTest",
+			$open_time = AliveTestReturnToken($test_name,
 							  $build_dir,
 							  $binary,
 							  " -P $Settings::MozProfileName " . $url,
@@ -1014,8 +1017,12 @@ sub run_all_tests {
 			  "<a title=\"Best nav open time of 9 runs\" href=\"http://$Settings::results_server/graph/query.cgi?testname=xulwinopen&tbox=" .
 				::hostname() . "&autoscale=1&days=7\">Txul:$open_time" . "ms</a>\n";
 
+            # Pull out samples data from log.
+            my $raw_data = extract_token_from_file($binary_log, "openingTimes", "=");
+            chomp($raw_data);
+
 			if($Settings::TestsPhoneHome) {
-			  send_results_to_server($open_time, "--",
+			  send_results_to_server($open_time, $raw_data,
 									 "xulwinopen", ::hostname());
 			}
 		} else {
