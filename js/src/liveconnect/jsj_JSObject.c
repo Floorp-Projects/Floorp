@@ -640,7 +640,7 @@ done:
 
 
 JSJavaThreadState *
-jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
+jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
              JSContext **cxp, JSObject **js_objp, JSErrorReporter *old_error_reporterp,
              void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext)
 {
@@ -682,6 +682,10 @@ jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
     if (!jsj_env)
         goto error;
 
+    /* If a JSContext was passed by caller, use it. */
+    if (jsj_env->cx == NULL)
+        jsj_env->cx = *cxp;
+
     /* Get the JSContext that we're supposed to use for this Java thread */
     cx = jsj_env->cx;
     if (!cx) {
@@ -689,7 +693,7 @@ jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
            Java and back into JS.  Invoke a callback to obtain/create a
            JSContext for us to use. */
         if (JSJ_callbacks->map_jsj_thread_to_js_context) {
-            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env, jEnv, &err_msg);
+            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env, applet_obj, jEnv, &err_msg);
             if (!cx)
                 goto error;
         } else {
@@ -819,7 +823,7 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
     jboolean is_copy;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
 
@@ -874,7 +878,7 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv *jEnv,
     jobject member;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -912,7 +916,7 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv *jEnv,
     jboolean is_copy;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return;
     
@@ -959,7 +963,7 @@ Java_netscape_javascript_JSObject_setSlot(JNIEnv *jEnv,
     JSErrorReporter saved_reporter;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return;
     
@@ -990,7 +994,7 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv *jEnv,
     jboolean is_copy;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return;
     
@@ -1039,7 +1043,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
     jobject result;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -1128,7 +1132,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
     jobject result;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -1190,7 +1194,7 @@ Java_netscape_javascript_JSObject_toString(JNIEnv *jEnv,
     JSErrorReporter saved_reporter;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, NULL, java_wrapper_obj, &cx, &js_obj, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -1227,7 +1231,7 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
     jobject java_obj;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_reporter, NULL, 0, NULL);
+    jsj_env = jsj_enter_js(jEnv, java_applet_obj, NULL, &cx, NULL, &saved_reporter, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
