@@ -236,7 +236,7 @@ PRInt32 nsRegisterItem::Prepare()
 
 PRInt32 nsRegisterItem::Complete()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     PRInt32 result = nsInstall::SUCCESS;
     PRBool  isProfile = mChromeType & CHROME_PROFILE;
     nsIXULChromeRegistry* reg = mInstall->GetChromeRegistry();
