@@ -361,6 +361,9 @@ protected:
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIURI> mSourceUrl;
   nsString mTempFileExtension;
+  /**
+   * The MIME Info for this load. Will never be null.
+   */
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; /**< output stream to the temp file */
   nsCOMPtr<nsIInterfaceRequestor> mWindowContext; 
@@ -399,6 +402,10 @@ protected:
 
   char mDataBuffer[DATA_BUFFER_SIZE];
 
+  /**
+   * Creates the temporary file for the download and an output stream for it.
+   * Upon successful return, both mTempFile and mOutStream will be valid.
+   */
   nsresult SetUpTempFile(nsIChannel * aChannel);
   /**
    * When we download a helper app, we are going to retarget all load

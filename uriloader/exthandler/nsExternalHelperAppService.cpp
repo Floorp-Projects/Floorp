@@ -1512,17 +1512,19 @@ void nsExternalAppHandler::EnsureSuggestedFileName()
 
 nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
 #if defined(XP_MAC) || defined (XP_MACOSX)
  // create a temp file for the data...and open it for writing.
  // use NS_MAC_DEFAULT_DOWNLOAD_DIR which gets download folder from InternetConfig
  // if it can't get download folder pref, then it uses desktop folder
-  NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(mTempFile));
+  rv = NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR,
+                              getter_AddRefs(mTempFile));
 #else
   // create a temp file for the data...and open it for writing.
-  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
 #endif
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We need to generate a name for the temp file that we are going to be streaming data to. 
   // We don't want this name to be predictable for security reasons so we are going to generate a 
@@ -1582,7 +1584,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
         contentType.LowerCaseEqualsLiteral(MULTIPART_APPLEDOUBLE))
     {
       nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv) && appleFileDecoder)
+      if (NS_SUCCEEDED(rv))
       {
         rv = appleFileDecoder->Initialize(mOutStream, mTempFile);
         if (NS_SUCCEEDED(rv))
@@ -2200,7 +2202,7 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
      nsCAutoString fileName;
      fileToUse->GetNativeLeafName(fileName);
      nsCOMPtr<nsIFile> directoryLocation;
-     fileToUse->GetParent(getter_AddRefs(directoryLocation));
+     rv = fileToUse->GetParent(getter_AddRefs(directoryLocation));
      if (directoryLocation)
      {
        rv = mTempFile->MoveToNative(directoryLocation, fileName);
