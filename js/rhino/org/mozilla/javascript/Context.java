@@ -1412,6 +1412,9 @@ public final class Context {
      * <code>false</code> argument, the caches will be emptied.
      * So one strategy could be to clear the caches at times
      * appropriate to the application.
+     * <p>
+     * Caching is enabled by default.
+     * 
      * @param cachingEnabled if true, caching is enabled
      * @since 1.5 Release 1 
      */
