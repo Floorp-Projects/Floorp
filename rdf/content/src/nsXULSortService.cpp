@@ -793,6 +793,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource,
 				if (NS_SUCCEEDED(rv = GetSortColumnInfo(child, sortResource, sortDirection,
 					sortResource2, inbetweenSeparatorSort)))
 				{
+				    found = PR_TRUE;
 					break;
 				}
 			}
@@ -946,22 +947,27 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 		// not a collation key, and both aren't strings, so try other data types (ints)
 		nsCOMPtr<nsIRDFInt>		intLiteral1 = do_QueryInterface(cellNode1);
 		nsCOMPtr<nsIRDFInt>		intLiteral2 = do_QueryInterface(cellNode2);
-		if (intLiteral1 && intLiteral2)
+		if (intLiteral1 || intLiteral2)
 		{
-			PRInt32			intVal1, intVal2;
-			intLiteral1->GetValue(&intVal1);
-			intLiteral2->GetValue(&intVal2);
-			bothValid = PR_TRUE;
-			sortOrder = 0;
-			if (intVal1 < intVal2)		sortOrder = -1;
-			else if (intVal1 > intVal2)	sortOrder = 1;
+    		if (intLiteral1 && intLiteral2)
+    		{
+    			PRInt32			intVal1, intVal2;
+    			intLiteral1->GetValue(&intVal1);
+    			intLiteral2->GetValue(&intVal2);
+    			bothValid = PR_TRUE;
+    			sortOrder = 0;
+    			if (intVal1 < intVal2)		sortOrder = -1;
+    			else if (intVal1 > intVal2)	sortOrder = 1;
+    		}
+    		else if (intLiteral1)	sortOrder = -1;
+    		else					sortOrder = 1;
 		}
 		else
 		{
-			// not a collation key, and both aren't strings, so try other data types (dates)
+			sortOrder = 0;
+			// not a collation key, and both aren't strings/ints, so try dates
 			nsCOMPtr<nsIRDFDate>		dateLiteral1 = do_QueryInterface(cellNode1);
 			nsCOMPtr<nsIRDFDate>		dateLiteral2 = do_QueryInterface(cellNode2);
-			sortOrder = 0;
 			if (dateLiteral1 && dateLiteral2)
 			{
 				PRInt64			dateVal1, dateVal2;
