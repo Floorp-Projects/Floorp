@@ -40,8 +40,8 @@
 #define nsHTMLContentSerializer_h__
 
 #include "nsXMLContentSerializer.h"
-#include "nsIParserService.h"
 #include "nsIEntityConverter.h"
+#include "nsString.h"
 
 class nsIContent;
 class nsIAtom;
@@ -81,7 +81,6 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                       PRBool aHasDirtyAttr,
                       nsAString& aStr);
   nsresult GetEntityConverter(nsIEntityConverter** aConverter);
-  nsresult GetParserService(nsIParserService** aParserService);
   void SerializeAttributes(nsIContent* aContent,
                            nsIAtom* aTagName,
                            nsAString& aStr);
@@ -105,7 +104,6 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsresult EscapeURI(const nsAString& aURI, nsAString& aEscapedURI);
   PRBool IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aAttrValueString);
 
-  nsCOMPtr<nsIParserService> mParserService;
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
 
   PRInt32   mIndent;
