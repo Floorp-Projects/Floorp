@@ -92,9 +92,9 @@ function SetFolderPicker(uri,pickerID)
 			serverName = "???";
 		}
 
-		selectedValue = gMessengerBundle.getString("verboseFolderFormat")
-		                            .replace(/%folderName%/, msgfolder.name)
-		                            .replace(/%serverName%/, serverName);
+		selectedValue = gMessengerBundle.getFormattedString("verboseFolderFormat",
+															[msgfolder.name,
+															serverName]);
 	}
 
 	picker.setAttribute("label",selectedValue);

@@ -54,10 +54,10 @@ function OnInit()
         var msgFolder = GetSelectedMsgFolder();
         acctName = msgFolder.prettyName;
 
-        title = messengerBundle.getString("acctCentralTitleFormat")
-                         .replace(/%brandName%/, brandName)
-                         .replace(/%accountType%/, acctType)
-                         .replace(/%accountName%/, acctName);
+        title = messengerBundle.getFormattedString("acctCentralTitleFormat",
+                                                   [brandName,
+                                                    acctType,
+                                                    acctName]);
 
         titleElement.setAttribute("value", title);
 

@@ -66,10 +66,9 @@ function onInit() {
         {
             var prettyName = currentAccountData.incomingServer.prettyName; 
             // Get the polished account name 
-            accountName = gPrefsBundle.getString("accountName")
-                                .replace(/%prettyName%/, prettyName)
-                                .replace(/%username%/, userName);  
-
+            accountName = gPrefsBundle.getFormattedString("accountName",
+                                                          [prettyName,
+                                                           userName]);
             // Set that to be the name in the pagedata 
             pageData.accname.prettyName.value = accountName;
         }

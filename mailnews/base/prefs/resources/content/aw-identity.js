@@ -121,11 +121,11 @@ function setEmailDescriptionText()
             emailIDTitle)
         {
             // Get email description data
-            displayText = gPrefsBundle.getString("customizedEmailText")
-                                .replace(/%emailProvider%/g, emailProvider)
-                                .replace(/%mailIDDesc%/g, emailIDDesc)
-                                .replace(/%sampleEmail%/, sampleEmail)
-                                .replace(/%sampleUserName%/, sampleUserName);
+            displayText = gPrefsBundle.getFormattedString("customizedEmailText",
+                                                          [emailProvider,
+                                                           emailIDDesc,
+                                                           sampleEmail,
+                                                           sampleUserName]);
 
             // Set emailfield label
             emailFieldLabelData =  emailIDTitle;
@@ -139,12 +139,11 @@ function setEmailDescriptionText()
     if (setDefaultEmailDescStrings)
     {
         // Check for obtained values and set with default values if needed
-        var username        = gPrefsBundle.getString("exampleEmailUserName"); 
-        var domain          = gPrefsBundle.getString("exampleEmailDomain"); 
+        var username = gPrefsBundle.getString("exampleEmailUserName"); 
+        var domain = gPrefsBundle.getString("exampleEmailDomain"); 
 
-        displayText = gPrefsBundle.getString("defaultEmailText")
-                            .replace(/%username%/, username)
-                            .replace(/%domain%/, domain);
+        displayText = gPrefsBundle.getFormattedString("defaultEmailText",
+                                                      [username, domain]);
     }
 
     // Create a text nodes with text to be displayed

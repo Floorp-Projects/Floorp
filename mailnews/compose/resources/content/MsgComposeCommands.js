@@ -850,8 +850,8 @@ function ComposeLoad()
   catch (ex) {
     dump("###ERROR WHILE LOADING MESSAGE COMPOSE: " + ex + "\n");
     var errorTitle = gComposeMsgsBundle.getString("initErrorDlogTitle");
-    var errorMsg = gComposeMsgsBundle.getString("initErrorDlogMessage");
-    errorMsg = errorMsg.replace(/%1\$s/, ex);
+    var errorMsg = gComposeMsgsBundle.getFormattedString("initErrorDlogMessage",
+                                                         [ex]);
     if (promptService)
       promptService.alert(window, errorTitle, errorMsg);
     else
@@ -1895,16 +1895,16 @@ function DisplaySaveFolderDlg(folderURI)
       return;
 		var checkbox = {value:0};
     var SaveDlgTitle = gComposeMsgsBundle.getString("SaveDialogTitle");
-    var DlgMsg = gComposeMsgsBundle.getString("SaveDialogMsg");
+    var dlgMsg = gComposeMsgsBundle.getFormattedString("SaveDialogMsg",
+                                                       [msgfolder.name,
+                                                        msgfolder.hostname]);
+
     var CheckMsg = gComposeMsgsBundle.getString("CheckMsg");
 
-    var newMessage = DlgMsg.replace(/@FolderName@/, msgfolder.name);
-    var SaveDlgMsg = newMessage.replace(/@HostName@/, msgfolder.hostname);
-
     if (promptService)
-      promptService.alertCheck(window, SaveDlgTitle, SaveDlgMsg, CheckMsg, checkbox);
+      promptService.alertCheck(window, SaveDlgTitle, dlgMsg, CheckMsg, checkbox);
     else
-      window.alert(SaveDlgMsg);
+      window.alert(dlgMsg);
     try {
           currentIdentity.showSaveMsgDlg = !checkbox.value;
     }//try
