@@ -2375,7 +2375,7 @@ GlobalWindowImpl::Blur()
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   GetTreeOwner(getter_AddRefs(treeOwner));
-  nsCOMPtr<nsIEmbeddingSiteWindow2> siteWindow(do_QueryInterface(treeOwner));
+  nsCOMPtr<nsIEmbeddingSiteWindow2> siteWindow(do_GetInterface(treeOwner));
   if (siteWindow)
     rv = siteWindow->Blur();
 
