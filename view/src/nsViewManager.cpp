@@ -109,6 +109,14 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define SUPPORT_TRANSLUCENT_VIEWS
 
+// The following number is used in OptimizeDisplayList to decide when the
+// opaque region is getting too complicated.  When we get to an opaque region
+// with MAX_OPAQUE_REGION_COMPLEXITY rets in it, we stop adding views' rects to
+// the opaque region.  On "normal" pages (those without hundreds to thousands
+// of positioned elements) there are usually not that many opaque views around;
+// 10 is plenty for such pages.
+#define MAX_OPAQUE_REGION_COMPLEXITY 10
+
 /*
   This class represents an offscreen buffer which may have an alpha channel.
   Currently, if an alpha channel is required, we implement it by rendering into
@@ -3664,8 +3672,10 @@ void nsViewManager::OptimizeDisplayList(const nsVoidArray* aDisplayList, const n
       } else {
         element->mBounds = tmpRgn.GetBounds();
 
-        // a view is opaque if it is neither transparent nor transluscent
-        if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))
+        // See whether we should add this view's bounds to aOpaqueRegion
+        if (aOpaqueRegion.GetNumRects() <= MAX_OPAQUE_REGION_COMPLEXITY &&
+            // a view is opaque if it is neither transparent nor transluscent
+            (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))
             // also, treat it as opaque if it's drawn onto a uniform background
             // and we're doing scrolling analysis; if the background is uniform,
             // we don't care what's under it. But the background might be translucent
@@ -3676,7 +3686,7 @@ void nsViewManager::OptimizeDisplayList(const nsVoidArray* aDisplayList, const n
             // if the background is translucent, then this view is also marked
             // translucent.
             || (element->mView->HasUniformBackground() && aTreatUniformAsOpaque
-                && !(element->mFlags & VIEW_TRANSLUCENT))) {
+                && !(element->mFlags & VIEW_TRANSLUCENT)))) {
           aOpaqueRegion.Or(aOpaqueRegion, element->mBounds);
         }
       }
