@@ -443,7 +443,7 @@ form {
 
 input {
   vertical-align: bottom;
-  text-align: -moz-default;
+  text-align: start;
   border: 2px inset rgb(204, 204, 204);
   color: black;
 	background-color: white;
@@ -1050,7 +1050,7 @@ td textarea {
 /* End - Margin setting for form controls inside tables for Nav Quirks */
 
 textarea {
-  text-align: -moz-default;
+  text-align: start;
   box-sizing: border-box;
   font-family:-moz-fixed;
   vertical-align: bottom;
