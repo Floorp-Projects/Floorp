@@ -5,26 +5,26 @@
 
 <body bgcolor="#FFFFFF">
 <h1>Example 3: Basic Tables</h1>
-<h2>Simple</h2>
+<h2>Simple table, 75% width, border=1</h2>
 <table border="1" width="75%">
   <tr>
-    <td bgcolor="#3399FF">One</td>
+    <td bgcolor=blue>cell bg</td>
     <td>Two</td>
     <td>Three</td>
   </tr>
   <tr>
-    <td>Four</td>
-    <td>Five</td>
-    <td>Six</td>
+    <td align=left>left</td>
+    <td align=center>center</td>
+    <td align=right>right</td>
   </tr>
-  <tr>
-    <td>Seven</td>
-    <td>Eight</td>
-    <td bgcolor="#990033">Nine</td>
+  <tr bgcolor=yellow>
+    <td height=50>row bg</td>
+    <td valign=top>top</td>
+    <td valign=bottom>bottom</td>
   </tr>
 </table>
-<h2>Row Span</h2>
-<table border>
+<h2>Row Span, auto width table, border=5</h2>
+<table border=5>
   <tr> 
     <td rowspan=2 >c0r[0-1] Data 1 span=2 rows</td>
     <td >c0r0</td>
@@ -69,7 +69,7 @@
     <td >c1r9</td>
   </tr>
 </table>
-<h2>Col Span</h2>
+<h2>Col Span auto width table</h2>
 <table border >
   <tr> 
     <td colspan=8>r0c[0-7], span=8</td>
