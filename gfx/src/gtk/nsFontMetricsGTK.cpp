@@ -26,6 +26,9 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharRepresentable.h"
+#include "nsILocale.h"
+#include "nsILocaleService.h"
+#include "nsLocaleCID.h"
 #include "nsCOMPtr.h"
 #include "nspr.h"
 #include "plhash.h"
@@ -141,15 +144,58 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  gchar* factorStr = g_getenv("GECKO_FONT_SIZE_FACTOR");
-  double factor;
-  if (factorStr) {
-    factor = atof(factorStr);
-  }
-  else {
-    factor = 1.0;
+  static double factor = 1.0;
+  static PRUint16 minimum = 1;
+  static int init = 0;
+  if (!init) {
+    init = 1;
+    gchar* factorStr = g_getenv("GECKO_FONT_SIZE_FACTOR");
+    if (factorStr) {
+      factor = atof(factorStr);
+    }
+    else {
+      factor = 1.0;
+    }
+
+    /*
+     * XXX This is a temporary solution for the large CJK font problem.
+     * On Unix, East Asian fonts are large, and ugly when scaled. So we try
+     * to avoid scaling them, but then any adjacent English text looks too
+     * small. The proper solution is to get the layout engine to ask for
+     * the font heights for a string, rather than the height of the ASCII
+     * font only. (nsIFontMetrics::GetHeight only measures the ASCII font
+     * currently, and we don't want to load all of the fonts just to get a
+     * height.) Until we get the proper solution in the layout engine, we
+     * apply this temporary solution, based on the East Asian locale.
+     */
+    static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+    nsresult res = NS_ERROR_FAILURE;
+    NS_WITH_SERVICE(nsILocaleService, service, kLocaleServiceCID, &res);
+    if (NS_SUCCEEDED(res) && service) {
+      nsCOMPtr<nsILocale> locale = nsnull;
+      res = service->GetApplicationLocale(getter_AddRefs(locale));
+      if (NS_SUCCEEDED(res) && locale) {
+        PRUnichar* str = nsnull;
+        res = locale->GetCategory(nsAutoString(NSILOCALE_CTYPE).GetUnicode(),
+                                  &str);
+        if (NS_SUCCEEDED(res) && str) {
+          nsAutoString loc(str);
+          loc.Truncate(2);
+          loc.ToLowerCase();
+          if ((loc == "ja") || (loc == "ko") || (loc == "zh")) {
+            // In CJK environments, we want the minimum request to be 16px,
+            // since the smallest font for some of those langs is 16.
+            minimum = 16;
+          }
+          Recycle(str);
+        }
+      }
+    }
   }
   mPixelSize = NSToIntRound(app2dev * factor * mFont->size);
+  if (mPixelSize < minimum) {
+    mPixelSize = minimum;
+  }
   mStretchIndex = 4; // normal
   mStyleIndex = mFont->style;
 
@@ -414,10 +460,10 @@ void nsFontMetricsGTK::RealizeFont()
 
   mAscent = nscoord(fontInfo->ascent * f);
   mDescent = nscoord(fontInfo->descent * f);
-  mMaxAscent = nscoord(fontInfo->ascent * f) ;
-  mMaxDescent = nscoord(fontInfo->descent * f);
+  mMaxAscent = nscoord(fontInfo->max_bounds.ascent * f) ;
+  mMaxDescent = nscoord(fontInfo->max_bounds.descent * f);
 
-  mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f);
+  mHeight = nscoord((fontInfo->max_bounds.ascent + fontInfo->max_bounds.descent) * f);
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
 
   // 56% of ascent, best guess for non-true type
@@ -1258,6 +1304,7 @@ struct nsFontSearch
   nsFontGTK*        mFont;
 };
 
+#if 0
 static void
 GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
   unsigned long* aThickness)
@@ -1285,6 +1332,7 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
     *aThickness = (overall.ascent + overall.descent);
   }
 }
+#endif /* 0 */
 
 static PRUint32*
 GetMapFor10646Font(XFontStruct* aFont)
@@ -1334,7 +1382,8 @@ nsFontGTK::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics)
       }
     }
     mFont = gdkFont;
-    mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
+    mActualSize = xFont->ascent + xFont->descent;
+#if 0
     if (aCharSet->mInfo->mSpecialUnderline && aMetrics->mFontHandle) {
       XFontStruct* asciiXFont =
         (XFontStruct*) GDK_FONT_XFONT(aMetrics->mFontHandle);
@@ -1344,6 +1393,7 @@ nsFontGTK::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics)
       mActualSize += (positionX2 + thickness);
       mBaselineAdjust = (-xFont->max_bounds.descent);
     }
+#endif /* 0 */
   }
 }
 
