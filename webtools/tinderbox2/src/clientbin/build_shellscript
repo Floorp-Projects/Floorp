@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.5 $
-# $Date: 2001/03/26 13:37:24 $
+# $Revision: 1.6 $
+# $Date: 2001/03/30 22:44:10 $
 # $Author: kestes%tradinglinx.com $
 # $Name:  $
 
@@ -441,9 +441,9 @@ sub mail_tinderbox_cmdlog {
   #	    " TreeName and BuildName.\n");
 
 
+  # remove duplicate printing of unmonitored build list.
+
   my ($message) = <<"EOF";
-
-
 From: $MAIL_FROM
 To: $MAIL_TO
 Subject: Tinderbox Build Update 
