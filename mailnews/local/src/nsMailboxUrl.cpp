@@ -51,7 +51,8 @@
 #include "nsMsgDBCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgHdr.h"
-
+#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
 #include "rdf.h"
@@ -113,7 +114,7 @@ static char *nsMailboxGetURI(const char *nativepath)
         nsFilePath serverPath(spec);
         
         // check if filepath begins with serverPath
-        PRInt32 len = PL_strlen(serverPath);
+        PRInt32 len = strlen(serverPath);
         if (PL_strncasecmp(serverPath, filePath, len) == 0) {
             nsXPIDLCString serverURI;
             rv = server->GetServerURI(getter_Copies(serverURI));
@@ -137,10 +138,6 @@ static char *nsMailboxGetURI(const char *nativepath)
     }
     return uri;
 }
-
-
-// helper function for parsing the search field of a url
-char * extractAttributeValue(const char * searchString, const char * attributeName);
 
 nsMailboxUrl::nsMailboxUrl()
 {
@@ -373,31 +370,35 @@ NS_IMETHODIMP nsMailboxUrl::IsUrlType(PRUint32 type, PRBool *isType)
 
 nsresult nsMailboxUrl::ParseSearchPart()
 {
-	nsXPIDLCString searchPart;
-	nsresult rv = GetQuery(getter_Copies(searchPart));
-	// add code to this function to decompose everything past the '?'.....
-	if (NS_SUCCEEDED(rv) && searchPart)
-	{
-    // the action for this mailbox must be a display message...
-    char * msgPart = extractAttributeValue(searchPart, "part=");
-    if (msgPart)  // if we have a part in the url then we must be fetching just the part.
-      m_mailboxAction = nsIMailboxUrl::ActionFetchPart;
+    nsXPIDLCString searchPart;
+    nsresult rv = GetQuery(getter_Copies(searchPart));
+    // add code to this function to decompose everything past the '?'.....
+    if (NS_SUCCEEDED(rv) && searchPart)
+    {
+        char * msgPart = nsnull;
+        nsCOMPtr<nsIIOService> ioService (do_GetIOService(&rv));
+        if (NS_FAILED(rv))
+            return rv;
+        // the action for this mailbox must be a display message...
+        rv = ioService->GetQueryAttributeValue(searchPart, "part", &msgPart);
+        // if we have a part in the url then we must be fetching just the part.
+        m_mailboxAction = NS_SUCCEEDED(rv) 
+          ? nsIMailboxUrl::ActionFetchPart
+          : nsIMailboxUrl::ActionFetchMessage;
+        PR_FREEIF(msgPart);
+
+        char * messageKey = nsnull;
+        rv = ioService->GetQueryAttributeValue(searchPart, "number", &messageKey);
+        ioService->GetQueryAttributeValue(searchPart, "messageid", &m_messageID);
+        if (NS_SUCCEEDED(rv)) {
+            m_messageKey = atol(messageKey); // convert to a long...
+            PR_FREEIF(messageKey);
+        }
+    }
     else
-		  m_mailboxAction = nsIMailboxUrl::ActionFetchMessage;
+        m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
 
-		char * messageKey = extractAttributeValue(searchPart, "number=");
-		m_messageID = extractAttributeValue(searchPart,"messageid=");
-		if (messageKey)
-			m_messageKey = atol(messageKey); // convert to a long...
-		if (messageKey || m_messageID)
-		
-    PR_FREEIF(msgPart);
-		PR_FREEIF(messageKey);
-	}
-	else
-		m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
-
-	return rv;
+    return rv;
 }
 
 // warning: don't assume when parsing the url that the protocol part is "news"...
@@ -410,7 +411,7 @@ nsresult nsMailboxUrl::ParseUrl()
   // ### fix me.
   // this hack is to avoid asserting on every local message loaded because the security manager
   // is creating an empty "mailbox://" uri for every message.
-  if (nsCRT::strlen(m_file) < 2)
+  if (strlen(m_file) < 2)
     m_filePath = nsnull;
   else
 	  m_filePath = new nsFileSpec(nsFilePath(nsUnescape((char *) (const char *)m_file)));
@@ -431,43 +432,6 @@ NS_IMETHODIMP nsMailboxUrl::SetQuery(const char *aQuery)
   if (NS_SUCCEEDED(rv))
     rv = ParseUrl();
   return rv;
-}
-
-// takes a string like ?messageID=fooo&number=MsgKey and returns a new string 
-// containing just the attribute value. i.e you could pass in this string with
-// an attribute name of messageID and I'll return fooo. Use PR_Free to delete
-// this string...
-
-// Assumption: attribute pairs in the string are separated by '&'.
-char * extractAttributeValue(const char * searchString, const char * attributeName)
-{
-	char * attributeValue = nsnull;
-
-	if (searchString && attributeName)
-	{
-		// search the string for attributeName
-		PRUint32 attributeNameSize = PL_strlen(attributeName);
-		char * startOfAttribute = PL_strcasestr(searchString, attributeName);
-		if (startOfAttribute)
-		{
-			startOfAttribute += attributeNameSize; // skip over the attributeName
-			if (startOfAttribute) // is there something after the attribute name
-			{
-				char * endofAttribute = startOfAttribute ? PL_strchr(startOfAttribute, '&') : nsnull;
-				if (startOfAttribute && endofAttribute) // is there text after attribute value
-					attributeValue = PL_strndup(startOfAttribute, endofAttribute - startOfAttribute);
-				else // there is nothing left so eat up rest of line.
-					attributeValue = PL_strdup(startOfAttribute);
-
-				// now unescape the string...
-				if (attributeValue)
-					attributeValue = nsUnescape(attributeValue); // unescape the string...
-			} // if we have a attribute value
-
-		} // if we have a attribute name
-	} // if we got non-null search string and attribute name values
-
-	return attributeValue;
 }
 
 // nsIMsgI18NUrl support
