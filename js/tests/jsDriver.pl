@@ -810,7 +810,7 @@ sub expand_user_test_list {
           die("Error opening test list file '$list_file': $!\n");
     
         while (<TESTLIST>) {
-            s/\n$//;
+            s/\r*\n*$//;
             if (!(/\s*\#/)) {
                 # It's not a comment, so process it
                 push (@retval, &expand_test_list_entry($_));
