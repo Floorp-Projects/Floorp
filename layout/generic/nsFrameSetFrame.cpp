@@ -857,14 +857,9 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
   if (nsnull != content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
-      if (value.GetUnit() == eHTMLUnit_Color) {
+      if ((eHTMLUnit_Color == value.GetUnit()) ||
+          (eHTMLUnit_ColorName == value.GetUnit())) {
         result = value.GetColorValue();
-      } else if (value.GetUnit() == eHTMLUnit_String) {
-        nsAutoString buffer;
-        value.GetStringValue(buffer);
-        char cbuf[40];
-        buffer.ToCString(cbuf, sizeof(cbuf));
-        NS_ColorNameToRGB(cbuf, &result);
       }
     }
     NS_RELEASE(content);
@@ -883,14 +878,9 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
   if (nsnull != content) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
-      if (value.GetUnit() == eHTMLUnit_Color) {
+      if ((eHTMLUnit_Color == value.GetUnit()) ||
+          (eHTMLUnit_ColorName == value.GetUnit())) {
         result = value.GetColorValue();
-      } else if (value.GetUnit() == eHTMLUnit_String) {
-        nsAutoString buffer;
-        value.GetStringValue(buffer);
-        char cbuf[40];
-        buffer.ToCString(cbuf, sizeof(cbuf));
-        NS_ColorNameToRGB(cbuf, &result);
       }
     }
     NS_RELEASE(content);
