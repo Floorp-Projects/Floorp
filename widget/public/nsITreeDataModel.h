@@ -30,7 +30,7 @@ class nsITreeItem;
 #define NS_ITREEDATAMODEL_IID \
 { 0x728d90c2, 0x5b2a, 0x11d2, { 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } }
 
-class nsITreeDataModel : public nsIDataModel
+class nsITreeDataModel : public nsISupports
 {
 
 public:
