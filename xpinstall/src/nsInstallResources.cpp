@@ -21,47 +21,32 @@
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
+#include <string.h>
+#include "nscore.h"
 #include "nsInstallResources.h"
 
-char* nsInstallResources::GetInstallFileString(void)
-{ 
-    return "Installing: %s"; 
-}
+char* 
+nsInstallResources::GetDefaultVal(const char* aResName)
+{
+    char    *currResName = XPIResTable[0].resName;
+    char    *currResVal = nsnull;
+    PRInt32 idx, len = 0;
 
-char* nsInstallResources::GetReplaceFileString(void)
-{ 
-    return "Replacing %s"; 
-}     
+    for (idx = 0; 0 != strcmp(currResName, NS_XPI_EOT); idx++)
+    {
+        currResName = XPIResTable[idx].resName;
+        len = strlen(currResName);
 
-char* nsInstallResources::GetDeleteFileString(void)
-{ 
-    return "Deleting file: %s"; 
-} 
+        if (0 == strncmp(currResName, aResName, len))
+        {
+            currResVal = XPIResTable[idx].defaultString;
+            break;
+        }
+    }
 
-char* nsInstallResources::GetDeleteComponentString(void) 
-{ 
-    return "Deleting component: %s"; 
-}
-
-char* nsInstallResources::GetExecuteString(void)         
-{ 
-    return "Executing: %s"; 
-}
-
-char* nsInstallResources::GetExecuteWithArgsString(void) 
-{ 
-    return "Executing: %s with argument: %s"; 
-}
-
-char* nsInstallResources::GetPatchFileString(void)       
-{ 
-    return "Patching: %s"; 
-}
-
-char* nsInstallResources::GetUninstallString(void)       
-{ 
-    return "Uninstalling: %s"; 
+    return currResVal;
 }
 
