@@ -1997,7 +1997,7 @@ SSM_CertListCount(CERTCertList *certList)
 
 /* ### mwelch - PKCS11 private function? Need prototype for Mac */
 #ifdef XP_MAC
-extern "C" CERTCertList *
+CERTCertList *
 PK11_FindCertsFromNickname(char *nickname, void *wincx);
 #endif
 

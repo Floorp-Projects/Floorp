@@ -45,6 +45,7 @@
 #include "nss.h"
 #include "p12plcy.h"
 #include "nlslayer.h"
+#include "softoken.h"
 
 void SSM_InitLogging(void);
 
@@ -359,12 +360,10 @@ psm_catch_signals(void)
 }
 #endif
 
-
 #if defined(XP_PC) && !defined(DEBUG)
 int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
                    LPSTR lpszLine, int nShow)
-#else
-#ifdef macintosh
+#elif defined(XP_MAC)
 /*
 	We run RunMacPSM in a separate thread off the main thread. 
 	This is because we can't do any blocking I/O routines on the main
@@ -375,12 +374,11 @@ void RunMacPSM(void *arg)
 #else
 int main(int argc, char ** argv)
 #endif
-#endif
 {
-#ifdef macintosh
+#ifdef XP_MAC
 #pragma unused(arg)
 #endif
-#if (defined(XP_PC) && !defined(DEBUG)) || (defined(macintosh))
+#if (defined(XP_PC) && !defined(DEBUG)) || (defined(XP_MAC))
     /* substitute argc and argv for NSPR */
     int argc = 0;
     char *argv[] = {"", NULL};
