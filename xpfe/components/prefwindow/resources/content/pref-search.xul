@@ -24,26 +24,26 @@
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-search.dtd" >
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="if( parent.handle ) parent.handle.onpageload( 'pref-search' ); else parent.queuedTag = 'pref-search'; InitSingleEngineList(); "  title="&title.label;"
-	      align="vertical">
+	      orient="vertical">
 
 	<html:script language="javascript" src="chrome://pref/content/pref-search.js"/>
 
- 	<box class="header" align="horizontal">  
+ 	<box class="header" orient="horizontal">  
 		<titledbutton class="left-header-text" value="&lHeader;"/>
 		<spring class="header-spring" flex="1"/>
 		<titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
 
 
-	<box align="vertical">
-		<html:fieldset flex="1">
-			<html:legend align="left">&legendHeader;</html:legend>
+	<box orient="vertical">
+		<titledbox orient="vertical" flex="1">
+			<title><text value="&legendHeader;"/></title>
 
-			<html:div class="hspace-both">
+            <html:div>
 				<html:input name="powermode" type="radio" id="browserSearchPowermode0"
               pref="true" preftype="int" prefindex="0" prefstring="browser.search.powermode"/>
 				<html:label for="browserSearchPowermode0" accesskey="t" tabindex="0">
@@ -67,27 +67,27 @@
 
 				</html:select>
 
-			</html:div>	
+			</html:div>
 
-<!--			<html:div class="hspace-both">
+<!--			<html:div>
 				<html:input name="powermode" type="radio" id="browserSearchPowermode1"
               pref="true" preftype="int" prefindex="1" prefstring="browser.search.powermode"/>
 				<html:label for="browserSearchPowermode1" accesskey="t" tabindex="1">
 					&enablePowerSearch.label;
 				</html:label>
-			</html:div>	-->
-		</html:fieldset>
+			</html:div -->	
+		</titledbox>
 
-    <html:fieldset>
-      <html:legend>&searchResults.label;</html:legend>
-  		<html:div class="hspace-both" style="padding-right: 0px;">
+    <titledbox orient="vertical">
+      <title><text value="&searchResults.label;"/></title>
+  		<html:div>
   			<html:input name="opensearchpanel" type="checkbox" id="browserSearchOpenSidebarSearchPanel"
               pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"/>
 		  	<html:label for="browserSearchOpenSidebarSearchPanel" accesskey="t" tabindex="2">
 			  	&openSidebarSearchPanel.label;
   			</html:label>
 	  	</html:div>	
-    </html:fieldset>
+    </titledbox>
 
 	</box>
 </window>

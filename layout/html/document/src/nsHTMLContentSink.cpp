@@ -3011,7 +3011,7 @@ HTMLContentSink::StartLayout()
   if (mWebShell) {
     // initially show the scrollbars. We need to do this because another
     // document like a XUL document, could have have hidden the scrollbars. -EDV
-    mWebShell->SetScrolling(-1, PR_FALSE);
+    //mWebShell->SetScrolling(-1, PR_FALSE);
     if (mFrameset) {
       mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN, PR_FALSE);
     } 

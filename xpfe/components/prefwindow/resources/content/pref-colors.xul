@@ -24,7 +24,7 @@
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-colors.dtd" >
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         title="&window.title;" align="vertical"
@@ -41,11 +41,11 @@
 
   <box align="horizontal">
     <!-- back and foreground colors -->
-		<html:fieldset flex="10%" style="width: 100%">
-					<html:legend align="left"> &color;</html:legend>
-    		<box style="width: 85%" class="hspace-both">
+		<titledbox  orient="vertical" flex="1">
+			<title><html:div> &color;</html:div></title>
+    		<box>
           <html:label>&text;</html:label>
-          <spring flex="100%"/>
+          <spring flex="1"/>
     			<menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserForegroundColorDiv" style="width:30px; background-color:white"/>
     				<titledbutton class="popup" align="right"/>
@@ -56,12 +56,12 @@
     			<html:input type="hidden" id="foregroundText"
                       pref="true" preftype="color" prefstring="browser.foreground_color"/>
     		</box>
-    		<box style="width: 85%" class="hspace-both">
+    		<box>
           <html:label>&background;</html:label>
-          <spring flex="100%"/>
+          <spring flex="1"/>
     			<menu id="backgroundmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserBackgroundColorDiv" style="width:30px; background-color:white"/>
-            <spring flex="100%"/>
+            <spring flex="1"/>
     				<titledbutton class="popup" align="right"/>
     				<menupopup id="backgroundMenuPopup">
     					<colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
@@ -77,18 +77,18 @@
 		    		&useWinColorsCheck.label;
     			</html:label>
 		  	</html:div> 
-	    </html:fieldset>
+	    </titledbox>
       
       <!-- links -->
-			<html:fieldset flex="100%" style="width: 100%">
-				<html:legend align="left">&links;</html:legend>
-    		<box style="width: 85%" class="hspace-both">
+			<titledbox flex="1"  orient="vertical">
+				<title><text value="&links;"/></title>
+    		<box class="hspace-both">
           <html:label>&unvisit;</html:label>
-          <spring flex="100%"/>
+          <spring flex="1"/>
     			<menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserUnvisitedLinksColorDiv" style="width:30px; background-color:white"/>
-            <spring flex="100%"/>
-    				<titledbutton class="popup" align="right" flex="100%"/>
+            <spring flex="1"/>
+    				<titledbutton class="popup" align="right" flex="1"/>
     				<menupopup id="unvisitedLinksMenuPopup">
     					<colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
     				</menupopup>
@@ -96,12 +96,12 @@
     			<html:input type="hidden" id="unvisitedLinks"
                       pref="true" preftype="string" prefstring="browser.anchor_color"/>
     		</box>
-    		<box style="width: 85%" class="hspace-both">
+    		<box class="hspace-both">
           <html:label>&visit;</html:label>
-          <spring flex="100%"/>
+          <spring flex="1"/>
     			<menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
     				<html:div id="browserVisitedLinksColorDiv" style="width:30px; background-color:white"/>
-            <spring flex="100%"/>
+            <spring flex="1"/>
     				<titledbutton class="popup" align="right"/>
     				<menupopup id="visitedLinksMenuPopup">
     					<colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
@@ -117,24 +117,25 @@
 				    &underLinksCheck.label;
   				</html:label>
   			</html:div>		
-	  	</html:fieldset>
+	  	</titledbox>
     </box>
 
-		<html:fieldset>
-			<html:legend>&someProvColors;</html:legend>
- 			<html:div class="hspace-both">
+		<titledbox orient="vertical">
+			<title><text value="&someProvColors;"/></title>
+ 			<html:div>
         <html:input type="radio" id="browserUseDocumentColors0" name="browserUseDocumentColors"
                     pref="true" preftype="bool" prefindex="true" prefstring="browser.use_document_colors"/>
 				<html:label for="browserUseDocumentColors0" accesskey="&alwaysUseDocColors.accesskey;" tabindex="0">
 	  			&alwaysUseDocColors.label;
   			</html:label>
       </html:div>
-			<html:div class="hspace-both">
+			<html:div>
         <html:input type="radio" id="browserUseDocumentColors1" name="browserUseDocumentColors"
                     pref="true" preftype="bool" prefindex="false" prefstring="browser.use_document_colors"/>
 				<html:label for="browserUseDocumentColors1" accesskey="&ignoreDocColors.label;" tabindex="0">
 	  			&ignoreDocColors.label;
   			</html:label>
       </html:div>
-		</html:fieldset>
+    </titledbox>
+
 </window>

@@ -92,6 +92,18 @@ progressmeter {
 	display: inline;
 }
 
+/****** TitledBox ******/
+
+titledbox
+{
+  display: block;
+}
+
+title
+{
+   display: block;
+}
+
 /********* XP Menus ***********/
 
 menubar[collapsed="true"] {

@@ -130,7 +130,7 @@ public:
 
 protected:
   // return true if the alignment is horizontal false if vertical
-  virtual PRBool GetInitialAlignment(); 
+  virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
 
   // given x,y in client coordinates, compensate for nested documents like framesets.
   void AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupDoc, nsIPresShell* inPopupShell, 

@@ -43,7 +43,7 @@ window.dialog {
 /******** Box *********/
 
 
-/* Conditional debug */
+/* Conditional debug 
 
 *[debug="true"]:-moz-horizontal-box-debug {
   border: 2px solid blue;
@@ -77,24 +77,30 @@ window.dialog {
   margin: 2px;
 }
 
+*/
+
 /* comment this in to make all boxes show their
    debug info automatically. Otherwise use debug="true"
-   to show it and use the rules above.
+   to show it and use the rules above.  */
 
-*:-moz-horizontal-box-debug {
+:-moz-horizontal-box-debug {
   border: 2px solid blue;
   border-top-width: 10px;
   padding: 2px;
+  margin: 2px;
   color: white;
 }
 
-*:-moz-vertical-box-debug {
+:-moz-vertical-box-debug {
   border: 2px solid red;
   border-left-width: 10px;
   padding: 2px;
+  margin: 2px;
   color: white;
 }
-*/
+
+
+
 
 /******* Scrollbar *******/
 
@@ -605,6 +611,39 @@ progressmeter[mode="undetermined"]
 {
    //background-color: yellow;
    background-image: url(chrome://global/skin/progressmeter-busy.gif);
+}
+
+/********* TitledBox **********/
+
+titledbox
+{
+  display: block;
+  border: 2px groove white;
+  padding: 5px;
+  margin: 2px;
+}
+
+title
+{
+   display: block;
+   font-weight: bold;
+}
+
+title > *
+{
+   margin-left: 5px;
+   margin-right: 5px;
+}
+
+title > html|*
+{
+   margin-left: 5px;
+   margin-right: 5px;
+}
+
+:titledbox-content {
+  display: block;
+  padding: inherit;
 }
 
 /********* XP Menus ***********/

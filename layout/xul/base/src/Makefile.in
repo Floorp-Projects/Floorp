@@ -30,6 +30,8 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
+		nsTitledBoxFrame.cpp \
+		nsTitleFrame.cpp \
 		nsFrameNavigator.cpp \
 		nsSplitterFrame.cpp \
 		nsGrippyFrame.cpp \

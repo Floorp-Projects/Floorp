@@ -25,11 +25,11 @@
 <?xul-overlay href="chrome://pref/content/fontScalingOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
-<window id="fontPanel"
+<window debug="false" id="fontPanel"
         xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        title="&window.title;" align="vertical"
+        title="&window.title;" orient="vertical"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-fonts' ); else parent.queuedTag = 'pref-fonts';startUp()">
 
 
@@ -40,10 +40,11 @@
     <spring class="header-spring" flex="1"/>
 		<titledbutton class="right-header-text" value="&rHeader;"/>
   </box>
-		<html:fieldset>
-      <html:legend>&displayFonts;</html:legend>
-	  <html:table width="100%">
-	      <html:tr>
+		<titledbox orient="vertical">
+      <title><html:div>&displayFonts;</html:div></title>
+	  <html:div  style="width: 50px; height: 50px">
+	  <html:table>
+	      <html:tr valign="baseline">
 			    <html:td>&fontsFor.select;</html:td>
 				  <html:td>
 		  			<html:select class="Font" id="selectLangs" onchange = "selectLang();" width = "10">
@@ -136,10 +137,19 @@
 				  </html:td>
 			  </html:tr> 
 			</html:table>  
-    </html:fieldset>	  
+			</html:div>
+    </titledbox>	
+    
     <!-- fonts with webpages -->
-    <html:fieldset>
-      <html:legend>&header2;</html:legend>
+    <titledbox  orient="vertical">
+      <title><text value="&header2;"/></title>
+    	<html:div>
+      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
+                    pref="true" preftype="int" prefindex="2"  prefstring="browser.use_document_fonts"/>
+    		<html:label for="browserUseDocumentFonts2" accesskey="t" tabindex="0">
+		    	&useDocFontDynamic;
+    		</html:label>
+    	</html:div>	
     	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
                     pref="true" preftype="int" prefindex="1"  prefstring="browser.use_document_fonts"/>
@@ -154,7 +164,7 @@
 		    	&useDefaultFont;
     		</html:label> 
     	</html:div>	
-		</html:fieldset>
+		</titledbox>
 
 
 </window>
