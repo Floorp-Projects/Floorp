@@ -1434,15 +1434,10 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
 
-#if 0
+#ifdef FIX_FOR_BUG_40596
   aSize = mMinSize;
-  printf("nsGfxTextControlFrame2::GetMinSize %d,%d\n", aSize.width, aSize.height);
   return NS_OK;
 #else
-  nsBox::GetMinSize(aState, aSize);
-#ifdef DEBUG_rods
-  printf("nsGfxTextControlFrame2::GetMinSize %d,%d\n", aSize.width, aSize.height);
-#endif
   return nsBox::GetMinSize(aState, aSize);
 #endif
 }
@@ -1450,10 +1445,6 @@ nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
-  nsBox::GetMaxSize(aState, aSize);
-#ifdef DEBUG_rods
-  printf("nsGfxTextControlFrame2::GetMaxSize %d,%d\n", aSize.width, aSize.height);
-#endif
   return nsBox::GetMaxSize(aState, aSize);
 }
 
