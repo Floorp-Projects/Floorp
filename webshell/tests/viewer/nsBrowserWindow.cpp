@@ -216,10 +216,12 @@ HandleLocationEvent(nsGUIEvent *aEvent)
 nsEventStatus
 nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
+#ifdef NS_DEBUG
   nsEventStatus result = DispatchDebugMenu(aID);
   if (nsEventStatus_eIgnore != result) {
     return result;
   }
+#endif
   switch (aID) {
   case VIEWER_EXIT:
     mApp->Exit();
