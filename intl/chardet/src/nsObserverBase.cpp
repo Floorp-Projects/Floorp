@@ -28,6 +28,8 @@
 #include "nsIContentViewerContainer.h"
 #include "nsCURILoader.h"
 #include "nsObserverBase.h"
+#include "nsIParser.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -37,61 +39,43 @@ static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsObserverBase::NotifyWebShell(
-  nsISupports* aDocumentID, const char* charset, nsCharsetSource source)
+  nsISupports* aParserBundle, const char* charset, nsCharsetSource source)
 {
-   nsresult res = NS_OK;
-   nsresult rv = NS_OK;
-   // should docLoader a member to increase performance ???
-   nsIDocumentLoader * docLoader = nsnull;
-   nsIContentViewerContainer * cvc  = nsnull;
-   nsIWebShellServices* wss = nsnull;
-
-   if(NS_FAILED(rv =nsServiceManager::GetService(kDocLoaderServiceCID,
-                                                 kIDocumentLoaderIID,
-                                                 (nsISupports**)&docLoader)))
-     goto done;
    
-   if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
-     goto done;
+   nsresult rv  = NS_OK;
 
-   /* sspitzer:  this was necessary to get printing of mail to work (sort of)
-    */
-   NS_ASSERTION(cvc,"GetContentViewerContainer didn't fail, but cvc is null");
-   if (!cvc) {
-	goto done;
-   }
+   nsCOMPtr<nsIWebShellServices> wss=nsnull;
+   nsAutoString theKey;
+   
+   theKey.AssignWithConversion("webshell"); // Key to find webshell service from the bundle. 
+    
+   nsISupportsParserBundle* bundle=(nsISupportsParserBundle*)aParserBundle;
 
-   if(NS_FAILED( rv = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
-     goto done;
-
-   if (!wss) {
- 	goto done;
-   }
+   if (bundle) {
+     nsresult res = NS_OK;
+ 	     
+     res=bundle->GetDataFromBundle(theKey,getter_AddRefs(wss));
+     if(NS_SUCCEEDED(res)) {
 
 #ifndef DONT_INFORM_WEBSHELL
-   // ask the webshellservice to load the URL
-   if(NS_FAILED( rv = wss->SetRendering(PR_FALSE) ))
-     goto done;
+       // ask the webshellservice to load the URL
+       if(NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
+         rv=res;
 
-   // XXX nisheeth, uncomment the following two line to see the reent problem
+       // XXX nisheeth, uncomment the following two line to see the reent problem
 
-   if(NS_FAILED(rv = wss->StopDocumentLoad())){
-	  rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-      goto done;
-   }
+       else if(NS_FAILED(res = wss->StopDocumentLoad())){
+	       rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+       }
 
-   if(NS_FAILED(rv = wss->ReloadDocument(charset, source))) {
-	  rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-      goto done;
-   }
-   res = NS_ERROR_HTMLPARSER_STOPPARSING;
+       else if(NS_FAILED(res = wss->ReloadDocument(charset, source))) {
+	       rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+       }
+       else
+         rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
 #endif
 
-done:
-   if(docLoader) {
-      nsServiceManager::ReleaseService(kDocLoaderServiceCID,docLoader);
+     }
    }
-   NS_IF_RELEASE(cvc);
-   NS_IF_RELEASE(wss);
-   return res;
+   return rv;
 }
