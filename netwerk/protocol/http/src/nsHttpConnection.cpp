@@ -59,6 +59,7 @@ nsHttpConnection::nsHttpConnection()
     , mKeepAliveMask(PR_TRUE)
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
     , mIsReused(PR_FALSE)
+    , mCompletedSSLConnect(PR_FALSE)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -126,11 +127,13 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
     // if we don't have a socket transport then create a new one
     if (!mSocketTransport) {
         rv = CreateTransport();
-        if (NS_SUCCEEDED(rv)) {
-            // need to handle SSL proxy CONNECT if this is the first time.
-            if (mConnInfo->UsingSSL() && mConnInfo->UsingHttpProxy())
-                rv = SetupSSLProxyConnect();
-        }
+        if (NS_FAILED(rv))
+            goto loser;
+    }
+
+    // need to handle SSL proxy CONNECT if this is the first time.
+    if (mConnInfo->UsingSSL() && mConnInfo->UsingHttpProxy() && !mCompletedSSLConnect) {
+        rv = SetupSSLProxyConnect();
         if (NS_FAILED(rv))
             goto loser;
     }
@@ -329,15 +332,13 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             LOG(("SSL proxy CONNECT succeeded!\n"));
             *reset = PR_TRUE;
             ProxyStartSSL();
+            mCompletedSSLConnect = PR_TRUE;
             nsresult rv = mSocketOut->AsyncWait(this, 0, nsnull);
             // XXX what if this fails -- need to handle this error
             NS_ASSERTION(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
-        else {
+        else
             LOG(("SSL proxy CONNECT failed!\n"));
-            // close out the write request
-            mSocketOut->Close();
-        }
     }
 
     return NS_OK;
@@ -656,6 +657,9 @@ nsHttpConnection::SetupSSLProxyConnect()
     request.SetVersion(gHttpHandler->HttpVersion());
     request.SetRequestURI(buf.get());
     request.SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+
+    // send this header for backwards compatibility.
+    request.SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
 
     // NOTE: this cast is valid since this connection cannot be processing a
     // transaction pipeline until after the first HTTP/1.1 response.

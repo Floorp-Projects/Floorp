@@ -146,6 +146,7 @@ private:
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mSupportsPipelining;
     PRPackedBool                    mIsReused;
+    PRPackedBool                    mCompletedSSLConnect;
 };
 
 #endif // nsHttpConnection_h__
