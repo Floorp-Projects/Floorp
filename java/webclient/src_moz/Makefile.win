@@ -1,0 +1,154 @@
+#!nmake
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..
+IGNORE_MANIFEST=1
+
+MAKE_OBJ_TYPE	= DLL
+DLLNAME = webclient
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+MODULE=webclient 
+
+OBJS =                              \
+    .\$(OBJDIR)\jni_util.obj  \
+    .\$(OBJDIR)\rdf_util.obj  \
+    .\$(OBJDIR)\nsActions.obj  \
+    .\$(OBJDIR)\BookmarksImpl.obj  \
+    .\$(OBJDIR)\CurrentPageImpl.obj  \
+    .\$(OBJDIR)\DocumentLoaderObserverImpl.obj  \
+    .\$(OBJDIR)\EventRegistration.obj  \
+    .\$(OBJDIR)\HistoryImpl.obj  \
+    .\$(OBJDIR)\WrapperFactoryImpl.obj  \
+    .\$(OBJDIR)\WindowControlImpl.obj  \
+    .\$(OBJDIR)\NavigationImpl.obj  \
+    .\$(OBJDIR)\NativeEventThread.obj  \
+    .\$(OBJDIR)\RDFEnumeration.obj  \
+    .\$(OBJDIR)\RDFTreeNode.obj  \
+    .\$(OBJDIR)\ISupportsPeer.obj  \
+    .\$(OBJDIR)\nsSetupRegistry.obj  \
+    $(NULL)
+
+LINCS = \
+	-I$(JDKHOME)\include \
+	-I$(JDKHOME)\include\win32 \
+	$(NULL)
+
+
+LCFLAGS = \
+	-DDEBUG_RAPTOR_CANVAS \
+        $(NULL)
+
+LLIBS = \
+	$(DIST)\lib\gkweb.lib \
+	$(DIST)\lib\raptorbasewidget_s.lib \
+	$(DIST)\lib\gkwidget.lib \
+	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\nsreg.lib \
+	$(DIST)\lib\nspr3.lib \
+	$(DIST)\lib\plds3.lib \
+#	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
+	$(NULL)  
+
+WIN_LIBS = \
+  version.lib
+
+include <$(DEPTH)\config\rules.mak>
+
+include <$(DEPTH)\java\config\localdefs.mak>
+
+!CMDSWITCHES -S
+
+# generate the jni header
+export:: BookmarksImpl.h CurrentPageImpl.h HistoryImpl.h WrapperFactoryImpl.h WindowControlImpl.h NavigationImpl.h NativeEventThread.h RDFEnumeration.h RDFTreeNode.h ISupportsPeer.h nsSetupRegistry.cpp 
+
+BookmarksImpl.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.BookmarksImpl is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.BookmarksImpl
+
+CurrentPageImpl.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.CurrentPageImpl is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.CurrentPageImpl
+
+HistoryImpl.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.HistoryImpl is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.HistoryImpl
+
+WrapperFactoryImpl.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.WrapperFactoryImpl is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.WrapperFactoryImpl
+
+NavigationImpl.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.NavigationImpl is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.NavigationImpl
+
+RDFEnumeration.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.RDFEnumeration is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.RDFEnumeration
+
+RDFTreeNode.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.RDFTreeNode is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.RDFTreeNode
+
+ISupportsPeer.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.ISupportsPeer is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.ISupportsPeer
+
+WindowControlImpl.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.WindowControlImpl is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.WindowControlImpl
+
+NativeEventThread.h:
+	@echo Assuming class org.mozilla.webclient.wrapper_native.NativeEventThread is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.NativeEventThread
+
+nsSetupRegistry.cpp:
+	copy $(MOZ_SRC)\mozilla\xpfe\bootstrap\nsSetupRegistry.cpp
+
+buildRunems:
+	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\runem.bat.  Use this to run the test browser.
+	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\runem.bat
+	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.EmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\runem.bat
+	@echo +++ Creating $(MOZ_SRC)\mozilla\java\webclient\src\$(OBJDIR)\swingem.bat.  Use this to run the swing based test browser.
+	@echo set PATH=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin;$(PATH) > .\$(OBJDIR)\swingem.bat
+	@echo $(JAVA) -Djava.library.path=$(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin -classpath $(JAVAC_CLASSPATH) org.mozilla.webclient.test.swing.SwingEmbeddedMozilla $(MOZ_SRC)\mozilla\dist\$(OBJDIR)\bin %1% >> .\$(OBJDIR)\swingem.bat
+
+install:: $(DLL) buildRunems
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+
+clobber_all:: clobber
+
+clobber::
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f BookmarksImpl.h
+	rm -f CurrentPageImpl.h
+	rm -f HistoryImpl.h
+	rm -f WrapperFactoryImpl.h
+	rm -f NavigationImpl.h
+	rm -f WindowControlImpl.h
+	rm -f NativeEventThread.h
+	rm -f RDFEnumeration.h
+	rm -f RDFTreeNode.h
+	rm -f ISupportsPeer.h
+	rm -f nsSetupRegistry.cpp
+	rm -f .\$(OBJDIR)\runem.bat
+	rm -f .\$(OBJDIR)\swingem.bat
