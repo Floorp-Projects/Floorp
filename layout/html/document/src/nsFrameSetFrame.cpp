@@ -1512,7 +1512,11 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     // Update the view immediately (make drag appear snappier)
     nsIViewManager* vm = aPresContext->GetViewManager();
     if (vm) {
-      vm->UpdateView(vm->RootView(), NS_VMREFRESH_IMMEDIATE);
+      nsIView* root;
+      vm->GetRootView(root);
+      if (root) {
+        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE);
+      }
     }
   }
 }  

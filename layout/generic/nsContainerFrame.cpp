@@ -601,7 +601,8 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   aView->SetHasUniformBackground(drawnOnUniformField);
 
   if (isCanvas) {
-    nsIView* rootView = vm->RootView();
+    nsIView* rootView;
+    vm->GetRootView(rootView);
     nsIView* rootParent = rootView->GetParent();
     if (!rootParent) {
       // We're the root of a view manager hierarchy. We will have to

@@ -1603,7 +1603,11 @@ nsDocShell::SetZoom(float zoom)
     if (scrollableView)
         scrollableView->ComputeScrollOffsets();
 
-    vm->UpdateView(vm->RootView(), 0);
+    // get the root view
+    nsIView *rootView = nsnull; // views are not ref counted
+    vm->GetRootView(rootView);
+    if (rootView)
+        vm->UpdateView(rootView, 0);
 
     return NS_OK;
 }
@@ -3280,8 +3284,13 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
+    // get the root view
+    nsIView *view = nsnull; // views are not ref counted
+    NS_ENSURE_SUCCESS(vm->GetRootView(view), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+
     // if our root view is hidden, we are not visible
-    if (vm->RootView()->GetVisibility() == nsViewVisibility_kHide) {
+    if (view->GetVisibility() == nsViewVisibility_kHide) {
         *aVisibility = PR_FALSE;
         return NS_OK;
     }

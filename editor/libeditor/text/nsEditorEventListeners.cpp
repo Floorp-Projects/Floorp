@@ -1047,7 +1047,11 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   // begin hack repaint
           nsIViewManager* viewmgr = ps->GetViewManager();
           if (viewmgr) {
-            viewmgr->UpdateView(viewmgr->RootView(),NS_VMREFRESH_IMMEDIATE);
+            nsIView* view;
+            viewmgr->GetRootView(view);         // views are not refCounted
+            if (view) {
+              viewmgr->UpdateView(view,NS_VMREFRESH_IMMEDIATE);
+            }
           }
   // end hack repaint
 #else
@@ -1106,7 +1110,11 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         nsIViewManager* viewmgr = ps->GetViewManager();
         if (viewmgr) 
         {
-          viewmgr->UpdateView(viewmgr->RootView(),NS_VMREFRESH_IMMEDIATE);
+          nsIView* view;
+          viewmgr->GetRootView(view);         // views are not refCounted
+          if (view) {
+            viewmgr->UpdateView(view,NS_VMREFRESH_IMMEDIATE);
+          }
         }
 // end hack repaint
 #else

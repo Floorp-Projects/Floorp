@@ -2754,7 +2754,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   nsIViewManager* vm = aPresContext->GetViewManager();
 
   if (canvasColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
-    nsIView* rootView = vm->RootView();
+    nsIView* rootView;
+    vm->GetRootView(rootView);
     if (!rootView->GetParent()) {
       PRBool widgetIsTranslucent = PR_FALSE;
 

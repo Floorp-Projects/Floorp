@@ -190,7 +190,8 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   viewManager->RemoveChild(ourView);
 
   // Reinsert ourselves as the root view with a maximum z-index.
-  nsIView* rootView = viewManager->RootView();
+  nsIView* rootView;
+  viewManager->GetRootView(rootView);
   viewManager->SetViewZIndex(ourView, PR_FALSE, kMaxZ);
   viewManager->InsertChild(rootView, ourView, nsnull, PR_TRUE);
 
@@ -414,7 +415,8 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
   aPoint.y = 0;
  
   // Keep track of the root view so that we know to stop there
-  nsIView* rootView = aView->GetViewManager()->RootView();
+  nsIView* rootView;
+  aView->GetViewManager()->GetRootView(rootView);
 
   nsIView *parent;
 
@@ -488,7 +490,7 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext,
   if (view) {
     nsIView* rootView = nsnull;
     if (aStopAtViewManagerRoot) {
-      rootView = view->GetViewManager()->RootView();
+      view->GetViewManager()->GetRootView(rootView);
     }
     
     while (view) {
@@ -559,7 +561,9 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   nsIWidget* popupDocumentWidget = nsnull;
   nsIViewManager* viewManager = inPopupShell->GetViewManager();
   if ( viewManager ) {  
-    nsIView* rootView = viewManager->RootView();
+    nsIView* rootView;
+    viewManager->GetRootView(rootView);
+    if ( rootView )
       popupDocumentWidget = rootView->GetNearestWidget(nsnull);
   }
   NS_WARN_IF_FALSE(popupDocumentWidget, "ACK, BAD WIDGET");
@@ -601,8 +605,11 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
           // widget.
           nsIViewManager* viewManagerTarget = shell->GetViewManager();
           if ( viewManagerTarget ) {
-            nsIView* rootViewTarget = viewManagerTarget->RootView();
+            nsIView* rootViewTarget;
+            viewManagerTarget->GetRootView(rootViewTarget);
+            if ( rootViewTarget ) {
               targetDocumentWidget = rootViewTarget->GetNearestWidget(nsnull);
+            }
           }
         }
       }

@@ -421,7 +421,11 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
       }
     }
     else {
-      viewBounds = vm->RootView()->GetBounds();
+      nsIView *view;
+      vm->GetRootView(view);
+      if (view) {
+        viewBounds = view->GetBounds();
+      }
     }
 
     if (parentDoc) {  // After first time thru loop
