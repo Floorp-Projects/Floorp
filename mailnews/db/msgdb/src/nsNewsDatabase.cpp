@@ -69,11 +69,6 @@ NS_IMETHODIMP nsNewsDatabase::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	return nsMsgDatabase::QueryInterface(aIID, aInstancePtr);
 }
 
-nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
   nsNewsDatabase	        *newsDB;
@@ -222,27 +217,6 @@ nsresult nsNewsDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
     return rv;
 }
 
-PRBool nsNewsDatabase::IsArticleOffline(nsMsgKey key)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsNewsDatabase::AddHdrFromXOver(const char * line,  nsMsgKey *msgId)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP		nsNewsDatabase::AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP		nsNewsDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr **pResult)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // return highest article number we've seen.
 NS_IMETHODIMP nsNewsDatabase::GetHighWaterArticleNum(nsMsgKey *key)
 {
@@ -293,36 +267,6 @@ nsNewsDatabase	*nsNewsDatabase::GetNewsDB()
 	return this;
 }
 
-PRBool	nsNewsDatabase::PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo) { return PR_FALSE; };
-
-PRBool	nsNewsDatabase::IsCategory() {
-  return PR_FALSE;
-}
-nsresult nsNewsDatabase::SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-nsresult nsNewsDatabase::SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-nsresult nsNewsDatabase::SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-nsresult nsNewsDatabase::GetOfflineRetrievalInfo(MSG_RetrieveArtInfo *info)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-nsresult nsNewsDatabase::GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-nsresult nsNewsDatabase::GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // used to handle filters editing on open news groups.
 //	static void				NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
 void nsNewsDatabase::ClearFilterList()
@@ -336,11 +280,6 @@ void nsNewsDatabase::OpenFilterList()
 }
 //void OnFolderFilterListChanged(MSG_FolderInfo *folder);
 //caller needs to free
-/* static */ 
-char *nsNewsDatabase::GetGroupNameFromURL(const char *url) 
-{
-  return nsnull;
-}
 
 // should we thread messages with common subjects that don't start with Re: together?
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.
@@ -395,8 +334,11 @@ PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
     PRBool isRead;
     rv = IsHeaderRead(msgHdr, &isRead);
     
-    if (isRead == bRead) {
-        return PR_FALSE;
+    if (isRead == bRead) 
+    {
+      // give the base class a chance to update m_flags.
+      nsMsgDatabase::SetHdrReadFlag(msgHdr, bRead);
+      return PR_FALSE;
     }
     else {
       nsMsgKey messageKey;

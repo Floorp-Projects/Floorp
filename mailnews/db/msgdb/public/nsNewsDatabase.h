@@ -40,8 +40,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED 
   NS_DECL_NSINEWSDATABASE
 
-  virtual  nsresult         MessageDBOpenUsingURL(const char * groupURL);
-  char *GetGroupURL()       { return m_groupURL; }
   NS_IMETHOD				Open(nsIFileSpec *newsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
   NS_IMETHOD				Close(PRBool forceCommit);
   NS_IMETHOD				ForceClosed();
@@ -52,11 +50,6 @@ public:
   NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
   virtual nsresult  IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead);
 
-  virtual PRBool			IsArticleOffline(nsMsgKey key);
-  virtual nsresult          AddHdrFromXOver(const char * line,  nsMsgKey *msgId);
-  NS_IMETHOD				AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
-  
-  NS_IMETHOD				ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
   NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD         MarkAllRead(nsMsgKeyArray *thoseMarked);
@@ -70,22 +63,11 @@ public:
 
   virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
   
-  virtual PRBool		PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
-  PRBool				IsCategory();
-  nsresult				SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *);
-  nsresult				SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
-  nsresult				SetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
-  nsresult				GetOfflineRetrievalInfo(MSG_RetrieveArtInfo *info);
-  nsresult				GetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
-  nsresult				GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
-  
   // used to handle filters editing on open news groups.
   //static void			NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
   void					ClearFilterList();	// filter was changed by user.
   void					OpenFilterList();
   // void               OnFolderFilterListChanged(MSG_FolderInfo *folder);
-  // caller needs to free
-  static char			*GetGroupNameFromURL(const char *url);
 
   NS_IMETHOD GetDefaultViewFlags(nsMsgViewFlagsTypeValue *aDefaultViewFlags);
   NS_IMETHOD GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType);
@@ -93,10 +75,8 @@ public:
 protected:
   virtual PRBool	    ThreadBySubjectWithoutRe() ;
 
-  char                  *m_groupURL;
   //	MSG_FilterList*		m_filterList;
   
-  PRUint32				m_headerIndex;		// index of unthreaded headers
   // at a specified entry.
 
   nsMsgKeySet           *m_readSet;

@@ -1600,38 +1600,38 @@ nsresult nsMsgDatabase::HasAttachments(nsMsgKey key, PRBool *pHasThem)
 
 PRBool nsMsgDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
 {
-	return SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
+  return SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
 }
 
 nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                              nsIDBChangeListener *instigator)
 {
-    nsresult rv;
-    nsMsgKey key;
-	PRUint32 oldFlags;
-    (void)msgHdr->GetMessageKey(&key);
-	msgHdr->GetFlags(&oldFlags);
-
-	if (m_newSet)
-		m_newSet->Remove(key);
-
-	if (m_dbFolderInfo != NULL)
-	{
-		if (bRead)
-			m_dbFolderInfo->ChangeNumNewMessages(-1);
-		else
-			m_dbFolderInfo->ChangeNumNewMessages(1);
-	}
-
-    SetHdrReadFlag(msgHdr, bRead); // this will cause a commit, at least for local mail, so do it after we change
-                                   // the folder counts above, so they will get committed too.
-    PRUint32 flags;
-    rv = msgHdr->GetFlags(&flags);
-    flags &= ~MSG_FLAG_NEW;
-    msgHdr->SetFlags(flags);
-    if (NS_FAILED(rv)) return rv;
-    
-	return NotifyKeyChangeAll(key, oldFlags, flags, instigator);
+  nsresult rv;
+  nsMsgKey key;
+  PRUint32 oldFlags;
+  (void)msgHdr->GetMessageKey(&key);
+  msgHdr->GetFlags(&oldFlags);
+  
+  if (m_newSet)
+    m_newSet->Remove(key);
+  
+  if (m_dbFolderInfo != NULL)
+  {
+    if (bRead)
+      m_dbFolderInfo->ChangeNumNewMessages(-1);
+    else
+      m_dbFolderInfo->ChangeNumNewMessages(1);
+  }
+  
+  SetHdrReadFlag(msgHdr, bRead); // this will cause a commit, at least for local mail, so do it after we change
+  // the folder counts above, so they will get committed too.
+  PRUint32 flags;
+  rv = msgHdr->GetFlags(&flags);
+  flags &= ~MSG_FLAG_NEW;
+  msgHdr->SetFlags(flags);
+  if (NS_FAILED(rv)) return rv;
+  
+  return NotifyKeyChangeAll(key, oldFlags, flags, instigator);
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkRead(nsMsgKey key, PRBool bRead, 
@@ -1913,24 +1913,30 @@ PRBool nsMsgDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag
 NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead, 
                                          nsIDBChangeListener *instigator)
 {
-    nsresult rv = NS_OK;
-	PRBool	isRead = PR_TRUE;
-	IsHeaderRead(msgHdr, &isRead);
-	// if the flag is already correct in the db, don't change it
-	if (!!isRead != !!bRead)
-	{
-		nsCOMPtr <nsIMsgThread> threadHdr;
-		nsMsgKey msgKey;
-		msgHdr->GetMessageKey(&msgKey);
+  nsresult rv = NS_OK;
+  PRBool	isRead = PR_TRUE;
+  PRUint32      msgFlags;
 
-		rv = GetThreadForMsgKey(msgKey, getter_AddRefs(threadHdr));
-		if (threadHdr)
-		{
-			threadHdr->MarkChildRead(bRead);
-		}
-		rv = MarkHdrReadInDB(msgHdr, bRead, instigator);
-	}
-	return rv;
+  (void) msgHdr->GetFlags(&msgFlags);
+  IsHeaderRead(msgHdr, &isRead);
+  // if the flag is already correct in the db, don't change it.
+  // Check msg flags as well as IsHeaderRead in case it's a newsgroup
+  // and the msghdr flags are out of sync with the newsrc settings.
+  // (we could override this method for news db's, but it's a trivial fix here.
+  if (!!isRead != !!bRead || (msgFlags & MSG_FLAG_READ != 0) != !!isRead)
+  {
+    nsCOMPtr <nsIMsgThread> threadHdr;
+    nsMsgKey msgKey;
+    msgHdr->GetMessageKey(&msgKey);
+    
+    rv = GetThreadForMsgKey(msgKey, getter_AddRefs(threadHdr));
+    if (threadHdr)
+    {
+      threadHdr->MarkChildRead(bRead);
+    }
+    rv = MarkHdrReadInDB(msgHdr, bRead, instigator);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkHdrReplied(nsIMsgDBHdr *msgHdr, PRBool bReplied,
