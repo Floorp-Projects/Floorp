@@ -1424,13 +1424,6 @@ sub Param ($) {
         return $::param{$value};
     }
 
-    # See if it is a dynamically-determined param (can't be changed by user).
-    if ($value eq "commandmenu") {
-        return GetCommandMenu();
-    }
-    if ($value eq "settingsmenu") {
-        return GetSettingsMenu();
-    }
     # Um, maybe we haven't sourced in the params at all yet.
     if (stat("data/params")) {
         # Write down and restore the version # here.  That way, we get around
