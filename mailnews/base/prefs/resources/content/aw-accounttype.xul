@@ -32,9 +32,7 @@ Rights Reserved.
     onunload="onUnload();">
 
   <script src="aw-accounttype.js"/>
-  <text value="before"/>
   <box class="box-header" value="&accountTypeTitle.label;"/>
-  <text value="after"/>
 
   <html class="desc">&accountTypeDesc.label;</html>
   <spring class="spacer"/>
