@@ -427,9 +427,12 @@ char *nsIMAPGenericParser::CreateString()
 
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
 // the end of the closing quote.  Call GetNextToken() to get the token after it.
-// Note that if the current line ends without the
-// closed quote then we have to fetch another line from the server, until
-// we find the close quote.
+// QUOTED_CHAR     ::= <any TEXT_CHAR except quoted_specials> /
+//                     "\" quoted_specials
+// TEXT_CHAR       ::= <any CHAR except CR and LF>
+// quoted_specials ::= <"> / "\"
+// Note that according to RFC 1064 and RFC 2060, CRs and LFs are not allowed 
+// inside a quoted string.  It is sufficient to read from the current line only.
 char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 {
   char *currentChar = fCurrentLine + 
@@ -441,19 +444,14 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
   PRBool closeQuoteFound = PR_FALSE;
   nsCString returnString(currentChar);
   
-  while (!closeQuoteFound && ContinueParse())
+  while (returnString.CharAt(charIndex))
   {
-    if (!returnString.CharAt(charIndex))
-    {
-      AdvanceToNextLine();
-      returnString += fCurrentLine;
-      charIndex++;
-    }
-    else if (returnString.CharAt(charIndex) == '"')
+    if (returnString.CharAt(charIndex) == '"')
     {
       // don't check to see if it was escaped, 
       // that was handled in the next clause
       closeQuoteFound = PR_TRUE;
+      break;
     }
     else if (returnString.CharAt(charIndex) == '\\')
     {
@@ -499,7 +497,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
     }
   }
   else
-    NS_ASSERTION(PR_FALSE, "didn't find close quote");
+    SetSyntaxError(PR_TRUE);
   
   return ToNewCString(returnString);
 }
