@@ -70,7 +70,7 @@ else
 EXTRA_LIBS += $(DIST)/lib/libcrmf.a
 endif
 
-include $(CORE_DEPTH)/security/cmd/platlibs.mk
+include ../platlibs.mk
 
 
 #######################################################################
@@ -93,4 +93,4 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 lame:
 	echo $(CPU_ARCH)
 
-include $(CORE_DEPTH)/security/cmd/platrules.mk
+include ../platrules.mk
