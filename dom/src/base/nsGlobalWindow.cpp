@@ -3196,7 +3196,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   PRInt64 now, delta;
 
   if (argc < 1) {
-    ::JS_ReportError(cx, "Function %s requires at least 1 parameters",
+    ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
     return NS_ERROR_FAILURE;
   }
