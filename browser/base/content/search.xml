@@ -41,7 +41,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="searchbar" extends="chrome://global/content/widgets/autocomplete.xml#autocomplete">
+  <binding id="searchbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation>
       <constructor><![CDATA[
         setTimeout(function(a) { a.initialize(); }, 0, this);

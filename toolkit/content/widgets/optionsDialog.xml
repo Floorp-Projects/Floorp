@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
           
   <binding id="optionsDialog" 
-           extends="chrome://global/content/widgets/dialog.xml#dialog">
+           extends="chrome://global/content/bindings/dialog.xml#dialog">
      <content>
 #ifndef XP_MACOSX
        <xul:hbox flex="1">

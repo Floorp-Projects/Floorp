@@ -26,7 +26,7 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="spinbuttons"
-     extends="chrome://global/content/widgets/spinbuttons.xml#spinbuttons-baseline">
+     extends="chrome://global/content/bindings/spinbuttons.xml#spinbuttons-baseline">
     <resources>
       <stylesheet src="chrome://global/skin/spinbuttons.css"/>
     </resources>

@@ -32,7 +32,7 @@
 
 scrollbar {
   -moz-appearance: scrollbar;
-  -moz-binding: url(chrome://global/content/widgets/nativescrollbar.xml#scrollbar);
+  -moz-binding: url(chrome://global/content/bindings/nativescrollbar.xml#scrollbar);
   min-width: 16px;
   cursor: default;
   background-color: white;

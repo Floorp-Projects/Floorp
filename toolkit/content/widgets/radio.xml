@@ -327,7 +327,7 @@
     </handlers>
   </binding>
 
-  <binding id="radio" extends="chrome://global/content/widgets/general.xml#control-item">
+  <binding id="radio" extends="chrome://global/content/bindings/general.xml#control-item">
     <resources>
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>

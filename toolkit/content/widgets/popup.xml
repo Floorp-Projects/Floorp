@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="popup" extends="chrome://global/content/widgets/popup.xml#popup-base">
+  <binding id="popup" extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
         <children/>
@@ -160,7 +160,7 @@
     </handlers>
   </binding>
 
-  <binding id="tooltip" extends="chrome://global/content/widgets/popup.xml#popup">
+  <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <children>
         <xul:label class="tooltip-label" xbl:inherits="value=label,crop" crop="right" flex="1"/>
@@ -323,7 +323,7 @@
   </binding>
   
   <!-- East-West resizer -->
-  <binding id="ew-resizer" extends="xul:box"> <!-- extends="chrome://global/content/widgets/popup.xml#resizerbase"> -->
+  <binding id="ew-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:hbox class="ew-resizer-box" flex="1"/>
     </content>
@@ -356,7 +356,7 @@
   </binding>
   
   <!-- North-South resizer -->
-  <binding id="ns-resizer" extends="xul:box"> <!-- extends="chrome://global/content/widgets/popup.xml#resizerbase"> -->
+  <binding id="ns-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:hbox class="ns-resizer-box" flex="1"/>
     </content>
@@ -390,7 +390,7 @@
   </binding>
   
   <!-- Diagonal resizer -->
-  <binding id="diag-resizer" extends="xul:box"> <!-- extends="chrome://global/content/widgets/popup.xml#resizerbase"> -->
+  <binding id="diag-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:hbox class="diag-resizer-box" align="center" flex="1">
         <xul:image class="diag-resizer-image"/>
@@ -430,7 +430,7 @@
     -->
   </binding>
   
-  <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/widgets/popup.xml#resizerbase"> -->
+  <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
       <xul:hbox class="titlebar-box" flex="1">
         <xul:hbox class="titlebar-title-box" flex="1" tooltiptext="Click and drag to float">
@@ -474,7 +474,7 @@
     -->
   </binding>          
 
-  <binding id="floater-base" display="xul:popup" extends="chrome://global/content/widgets/popup.xml#popup">
+  <binding id="floater-base" display="xul:popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       
       <!-- Popup Manipulation Constants -->
@@ -615,7 +615,7 @@
     </handlers>
   </binding>
 
-  <binding id="popup-scrollbars" extends="chrome://global/content/widgets/popup.xml#popup">
+  <binding id="popup-scrollbars" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <xul:hbox class="popup-internal-box" flex="1" orient="vertical" style="overflow: auto;">
         <children/>
@@ -623,7 +623,7 @@
     </content>
   </binding>
 
-  <binding id="floater-normal" extends="chrome://global/content/widgets/popup.xml#floater-base">
+  <binding id="floater-normal" extends="chrome://global/content/bindings/popup.xml#floater-base">
     <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
       <vbox class="floater-box" flex="1">
         <box class="floater-box-top">
@@ -642,7 +642,7 @@
     </content>
   </binding>
 
-  <binding id="floater-dock-left" extends="chrome://global/content/widgets/popup.xml#floater-base">
+  <binding id="floater-dock-left" extends="chrome://global/content/bindings/popup.xml#floater-base">
     <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
       <vbox class="floater-box" flex="1">
         <box class="floater-box-top">
@@ -658,7 +658,7 @@
     </content>
   </binding>  
   
-  <binding id="close-button" extends="chrome://global/content/widgets/button.xml#button-base">
+  <binding id="close-button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <xul:hbox align="center" flex="1">
         <xul:image class="close-button-x"/>
