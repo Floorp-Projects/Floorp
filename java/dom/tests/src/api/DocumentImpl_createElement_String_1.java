@@ -67,6 +67,7 @@ public class DocumentImpl_createElement_String_1 extends BWBaseTest implements E
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              Element e = d.createElement("HR");
 	     if (e == null) {
                 TestLoader.logErrPrint("Document 'createElement(HR) is  NULL..");
@@ -74,6 +75,10 @@ public class DocumentImpl_createElement_String_1 extends BWBaseTest implements E
              } else {
                 TestLoader.logErrPrint("Document 'createElement(HR)' is  not NULL..");
              }
+        } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

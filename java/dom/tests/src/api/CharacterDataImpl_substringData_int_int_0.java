@@ -66,6 +66,7 @@ public class CharacterDataImpl_substringData_int_int_0 extends BWBaseTest implem
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              String str = "Creating a new Text Node";
              Text tn = d.createTextNode(str);
 	     if (tn == null) {
@@ -88,6 +89,10 @@ System.out.println("x is " + x);
 System.out.println("getstr is " + getstr);
 
              }
+        } catch (DOMException e) {
+             TestLoader.logErrPrint("Caught DOMException " );
+             return BWBaseTest.PASSED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

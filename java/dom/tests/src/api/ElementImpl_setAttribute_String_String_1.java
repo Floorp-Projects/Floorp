@@ -67,6 +67,7 @@ public class ElementImpl_setAttribute_String_String_1 extends BWBaseTest impleme
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
 	     Attr a = d.createAttribute("dummyattr_6");
 	     if (a == null) {
                 TestLoader.logErrPrint("Document createAttribute FAILED... ");
@@ -84,6 +85,10 @@ public class ElementImpl_setAttribute_String_String_1 extends BWBaseTest impleme
                   return BWBaseTest.FAILED;
                 } 
              }
+         } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.PASSED;
+         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

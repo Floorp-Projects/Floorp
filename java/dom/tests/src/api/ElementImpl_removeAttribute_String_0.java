@@ -68,6 +68,7 @@ public class ElementImpl_removeAttribute_String_0 extends BWBaseTest implements 
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
 	     Attr a = d.createAttribute("dummyattr_3");
 	     if (a == null) {
                 TestLoader.logErrPrint("Document createAttribute FAILED... ");
@@ -82,6 +83,10 @@ public class ElementImpl_removeAttribute_String_0 extends BWBaseTest implements 
                 e.setAttributeNode(a);
                 e.removeAttribute(null);
              }
+         } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.PASSED;
+         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

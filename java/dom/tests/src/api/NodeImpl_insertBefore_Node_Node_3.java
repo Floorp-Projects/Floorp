@@ -66,6 +66,7 @@ public class NodeImpl_insertBefore_Node_Node_3 extends BWBaseTest implements Exe
       Document d = (Document)tobj;
       if (d != null)
       {
+       try {
          String elname = "SCRIPT";
          Element e = d.createElement(elname);
          if (e == null)
@@ -109,6 +110,10 @@ public class NodeImpl_insertBefore_Node_Node_3 extends BWBaseTest implements Exe
             TestLoader.logErrPrint("Could not find Node " + nodename);
             return BWBaseTest.FAILED;
          }
+       } catch (DOMException e) {
+            TestLoader.logErrPrint("Caught DOMException");
+            return BWBaseTest.FAILED;
+       }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -108,7 +108,7 @@ public class TestLoader
 	    }
         }
      } catch (Exception e) {
-        System.out.println("could not read Line from file fname...");
+        System.out.println("could not read Line from file " + fname);
         line=null;
      }
      
@@ -118,6 +118,13 @@ public class TestLoader
         System.out.println ("Could not close file " + fname);
         return null;
      } 
+
+     // check if test have to be run in single Thread mode(S) or 
+     // multi Thread mode (M)
+     //
+     String threadMode = propTable.getProperty("BW_THREADMODE");
+     if (threadMode == null)
+             threadMode = "S";
 
      for (int i=0; i<fileVect.size(); i++)
      {
@@ -140,17 +147,33 @@ public class TestLoader
            continue;
          }
 
-         if (((BWBaseTest)classObj).execute(targetObj)) {
-              txtPrint(s, "PASSED");
-         } else {
-              txtPrint(s, "FAILED");
-         }
+         // If single thread execution
+         if (threadMode.compareTo("S") == 0)
+         {
+              if (((BWBaseTest)classObj).execute(targetObj)) {
+                 txtPrint(s, "PASSED");
+              } else {
+                 txtPrint(s, "FAILED");
+              }
 
-         if (returnType == 1)
-	 {
-           return (((BWBaseTest)classObj).returnObject());
-	 }
+              // if any return type expected, then it is returned.
+              // This is just a provision kept for latter use
+              //
+              //if (returnType == 1)
+	      //{
+              //  return (((BWBaseTest)classObj).returnObject());
+	      //}
+         } else {
+              BWTestThread t = new BWTestThread(s);
+              if (t != null)
+              {
+                t.setTestObject(classObj, targetObj);
+                t.start();
+              }
+        }
+
      }
+              txtPrint("Parent Thread Done", "PASSED");
      return null;
   }
 

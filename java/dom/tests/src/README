@@ -1,4 +1,7 @@
+This document describes steps required to run the Test Suite for JavaDOM API.
 
+For Solaris
+===========
   1)  open mozilla.csh
 
   2)  make changes to variables
@@ -11,21 +14,23 @@
       this will set up the environment
 
   4)  Edit BWProperties file and change the locations for variables
-          BW_TESTDIR
-          BW_LOGDIR
+          BW_TESTDIR    (Absolute Directory Path where file BWTestClass.lst is 
+                         located)
+          BW_LOGDIR     (Absolute Directory Path where  log files need to be 
+                         created)
+          BW_THREADMODE (Execute tests in single thread [S] or 
+                         multi-thread [M] mode. Takes values S/M.)
 
-  5)  Run the Makefile
-
-  6)  Copy test.html and test.xml files to your Web-Servers DOCUMENT_ROOT
+  5)  Copy test.html and test.xml files to your Web-Servers DOCUMENT_ROOT
       (By default it is assumed that they can be accessed as
         http://<server name>/text.html).
         or
         http://<server name>/~<username>/text.html).
 
-  7)  Invoke autorun.sh from command prompt.
+  6)  Invoke autorun.sh from command prompt.
        sh autorun.sh
 
-  8)  The results are recorded in HTML file BWTest.html
+  7)  The results are recorded in HTML file BWTest.html
       and in log file BWTest.log
       Individual test Log files are also found in 'log' directory.
 
@@ -35,10 +40,7 @@
 To Invoke a specific test case 
    sh autorun.sh -t org.mozilla.dom.test.AttrImpl_getName
 
-NOTE: All Test Cases are recorded in file BWTestClass.lst.ORIG
-
----------------------------------------------------------------------------
-
+NOTE: All Test Cases are reocorded in file BWTestClass.lst.ORIG
 
 Assumption:
 
@@ -51,3 +53,52 @@ Assumption:
 
 
 
+=============================================================================
+
+For WIN32
+===========
+Assumes you have installed PERL
+
+  1)  open mozilla.bat
+
+  2)  make changes to variables
+          BLACKWOOD_HOME - the path to the parent directory of this one
+          MOZILLA_FIVE_HOME 
+          JAVA_HOME 
+          TEST_PATH
+          TEST_URL- as explained below
+
+  3)  execute mozilla.bat from command prompt
+      this will set up the environment for this command prompt
+
+  4)  Edit BWProperties file and change the locations for variables
+          BW_TESTDIR    (Absolute Directory Path where file BWTestClass.lst is 
+                         located)
+          BW_LOGDIR     (Absolute Directory Path where  log files need to be 
+                         created)
+          BW_THREADMODE (Execute tests in single thread [S] or 
+                         multi-thread [M] mode. Takes values S/M.)
+
+  5)  Copy files test.html and test.xml into 
+      some document directory of HTTP server. TEST_URL environment 
+      variable should contain the URL of this directory.
+      For example, if you placed the files in the root directory of
+      HTTP server "myserver", then value of TEST_URL should be 
+      "http://myserver".
+
+  6)  Invoke autorun.pl from command prompt.
+       perl autorun.pl
+
+  7)  The results are recorded in HTML file BWTest.html
+      and in log file BWTest.log
+      Individual test Log files are also found in 'log' directory.
+
+  
+---------------------------------------------------------------------------
+
+To Invoke a specific test case 
+   perl autorun.pl -t org.mozilla.dom.test.AttrImpl_getName
+
+NOTE: All Test Cases are recorded in file BWTestClass.lst.ORIG
+
+---------------------------------------------------------------------------

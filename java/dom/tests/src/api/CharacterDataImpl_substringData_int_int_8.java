@@ -66,6 +66,7 @@ public class CharacterDataImpl_substringData_int_int_8 extends BWBaseTest implem
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              String str = "Creating a new Text Node";
              Text tn = d.createTextNode(str);
 	     if (tn == null) {
@@ -87,6 +88,10 @@ public class CharacterDataImpl_substringData_int_int_8 extends BWBaseTest implem
                   return BWBaseTest.FAILED;
                 }
              }
+        } catch (DOMException e) {
+             TestLoader.logErrPrint("Caught DOMException " );
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

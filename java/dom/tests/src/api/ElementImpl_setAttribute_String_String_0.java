@@ -67,6 +67,7 @@ public class ElementImpl_setAttribute_String_String_0 extends BWBaseTest impleme
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              Element e = d.getDocumentElement();
 	     if (e == null) {
                 TestLoader.logErrPrint("Document Element is  NULL..");
@@ -74,6 +75,10 @@ public class ElementImpl_setAttribute_String_String_0 extends BWBaseTest impleme
              } else {
                 e.setAttribute(null, null);
              }
+         } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.PASSED;
+         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

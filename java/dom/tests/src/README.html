@@ -1,0 +1,201 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; SunOS 5.7 sun4u) [Netscape]">
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+
+<center>
+<h3>
+<b>README for DOM API Test Execution</b></h3></center>
+
+<center>
+<hr NOSHADE WIDTH="100%"></center>
+<i><u><font color="#990000"><font size=+3>Solaris</font></font></u></i>
+<ul>
+<li>
+<b><font size=+1>open <font color="#FF6666">mozilla.csh</font></font></b></li>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>make changes to variables</font></b></li>
+
+<ul>
+<li>
+<b><font color="#FF6666"><font size=+1>BLACKWOOD_HOME</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>MOZILLA_FIVE_HOME</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>JAVA_HOME</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>TEST_PATH</font></font></b></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>source mozilla.csh this will set up the environment</font></b></li>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>Edit BWProperties file and change the locations for variables</font></b></li>
+</ul>
+
+<center><table BORDER COLS=2 WIDTH="80%" BGCOLOR="#99FFCC" NOSAVE >
+<tr NOSAVE>
+<td WIDTH="30%" NOSAVE><b><font color="#FF6666"><font size=+1>BW_TESTDIR</font></font></b></td>
+
+<td><b>Absolute Directory Path where file BWTestClass.lst is located.</b></td>
+</tr>
+
+<tr NOSAVE>
+<td NOSAVE><b><font color="#FF6666"><font size=+1>BW_LOGDIR</font></font></b></td>
+
+<td><b>Absolute D.irectory&nbsp; Path where log files need to be created.</b></td>
+</tr>
+
+<tr>
+<td><b><font color="#FF6666"><font size=+1>BW_THREADMODE</font></font></b></td>
+
+<td><b>Indicates whether to execute tests in single-thread mode[S]&nbsp;&nbsp;&nbsp;&nbsp;
+or multi-thread mode[M].&nbsp; Takes values S/M .</b></td>
+</tr>
+</table></center>
+
+<ul>&nbsp;</ul>
+
+<ul>
+<li>
+<b><font size=+1>Copy <font color="#FF6666">test.html</font> and <font color="#FF6666">test.xml</font>
+files to your web-servers DOCUMENT_ROOT ( By default it is assumed that
+they can be&nbsp; accessed as <font color="#3366FF">http://[server name]/text.html</font>&nbsp;
+or <font color="#3366FF">http://[servername]/~[username]/text.html</font>).</font></b></li>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>Invoke autorun.sh from command prompt.</font></b></li>
+
+<ul>
+<li>
+<b><font size=+1>sh autorun.sh</font></b></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>The results are recorded in HTML file <font color="#FF6666">BWTest.html</font>
+and in log file <font color="#FF6666">BWTest.log</font> Individual test
+Log files are also found in 'log' directory.</font></b></li>
+</ul>
+
+<hr NOSHADE WIDTH="100%">&nbsp;<b><font size=+1>To Invoke a specific test
+case</font></b>
+<blockquote><b><font size=+1>sh autorun.sh -t org.mozilla.dom.test.AttrImpl_getName</font></b></blockquote>
+<b><font size=+1><u><font color="#3366FF">NOTE:</font></u>All Test Cases
+are recorded in file BWTestClass.lst.ORIG</font></b>
+<p><font size=+1><u><font color="#3366FF">ASSUMPTION</font></u><b>: I assume
+that u have copied the files test.xml and test.html to your DOCUMENT_ROOT
+of your WebServer.</b></font>
+<br><b><font size=+1>The URL it tries to load is http://[servername]/test.html.</font></b>
+<br><b><font size=+1>If it is set in users public_html then open file autorun.sh
+and change DOCROOT accordingly.</font></b>
+<p>
+<hr SIZE=4 NOSHADE WIDTH="100%">
+<br><i><u><font color="#990000"><font size=+3>Windows NT</font></font></u></i>
+<ul>
+<li>
+<b><font size=+1>open <font color="#FF6666">mozilla.bat</font></font></b></li>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>make changes to variables</font></b></li>
+
+<ul>
+<li>
+<b><font color="#FF6666"><font size=+1>BLACKWOOD_HOME</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>MOZILLA_FIVE_HOME</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>JAVA_HOME</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>TEST_PATH</font></font></b></li>
+
+<li>
+<b><font color="#FF6666"><font size=+1>TEST_URL</font></font></b></li>
+</ul>
+</ul>
+
+<ul>
+<li>
+<b><font size=+1>execute&nbsp; mozilla.bat from command prompt.</font></b></li>
+
+<br><b><font size=+1>&nbsp;this will set up the environment for this command
+prompt.</font></b></ul>
+
+<ul>
+<li>
+<b><font size=+1>Edit BWProperties file and change the locations for variables</font></b></li>
+</ul>
+
+<center><table BORDER COLS=2 WIDTH="80%" BGCOLOR="#99FFCC" NOSAVE >
+<tr NOSAVE>
+<td WIDTH="30%" NOSAVE><b><font color="#FF6666"><font size=+1>BW_TESTDIR</font></font></b></td>
+
+<td><b>Absolute Directory Path where file BWTestClass.lst is located.</b></td>
+</tr>
+
+<tr NOSAVE>
+<td NOSAVE><b><font color="#FF6666"><font size=+1>BW_LOGDIR</font></font></b></td>
+
+<td><b>Absolute D.irectory&nbsp; Path where log files need to be created.</b></td>
+</tr>
+
+<tr>
+<td><b><font color="#FF6666"><font size=+1>BW_THREADMODE</font></font></b></td>
+
+<td><b>Indicates whether to execute tests in single-thread mode[S]&nbsp;&nbsp;&nbsp;&nbsp;
+or multi-thread mode[M].&nbsp; Takes values S/M .</b></td>
+</tr>
+</table></center>
+
+<ul>&nbsp;</ul>
+
+<ul>
+<li>
+<b><font size=+1>Copy files <font color="#CC6600">test.html</font>and <font color="#CC6600">test.xml</font>
+into some document directory of HTTP server. TEST_URL environment variable
+should contain the URL of this directory.</font></b></li>
+
+<br><b><font size=+1>&nbsp;For example, if you placed the files in the
+root directory of&nbsp;&nbsp; HTTP server "<font color="#3333FF">myserver</font>",
+then value of TEST_URL should be&nbsp; "<font color="#3333FF">http://myserver</font>".</font></b></ul>
+
+<ul>
+<li>
+<b><font size=+1>Invoke autorun.pl from command prompt.</font></b></li>
+
+<ul>
+<li>
+<b><font size=+1>perl autorun.pl</font></b></li>
+</ul>
+</ul>
+
+<ul><b><font size=+1>The results are recorded in HTML file <font color="#FF6666">BWTest.html</font>
+and in log file <font color="#FF6666">BWTest.log</font> Individual test
+Log files are also found in 'log' directory.</font></b></ul>
+
+<hr SIZE=4 NOSHADE WIDTH="100%">
+<br><b><font size=+1>&nbsp;</font></b>
+</body>
+</html>

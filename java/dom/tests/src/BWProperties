@@ -1,4 +1,5 @@
-BW_TESTDIR=/workspace/mozilla/java/dom/tests/src
+BW_TESTDIR=/home/user/Blackwood/src/JavaDOM/CoreLevel1/src
 BW_TESTFILE=BWTestClass.lst
-BW_LOGDIR=/workspace/mozilla/java/dom/tests/src/log
+BW_LOGDIR=/home/user/Blackwood/src/JavaDOM/CoreLevel1/src/log
 BW_LOGFILE=BWTest.log
+BW_THREADMODE=S

@@ -66,12 +66,17 @@ public class DocumentImpl_createEntityReference_String_1 extends BWBaseTest impl
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              String str = "newEntity";
              EntityReference er = d.createEntityReference(str);
 	     if (er == null) {
                 TestLoader.logErrPrint("Could not Create EntityReference with name " + str);
                 return BWBaseTest.FAILED;
              } 
+        } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.PASSED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -66,6 +66,7 @@ public class CharacterDataImpl_appendData_String_1 extends BWBaseTest implements
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              String str = "Creating a new Text Node";
              Text tn = d.createTextNode(str);
 	     if (tn == null) {
@@ -85,6 +86,10 @@ public class CharacterDataImpl_appendData_String_1 extends BWBaseTest implements
                   return BWBaseTest.FAILED;
                 }
              }
+        } catch (DOMException e) {
+             TestLoader.logErrPrint("Caught DOMException " );
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -66,13 +66,14 @@ public class CharacterDataImpl_setData_String_1 extends BWBaseTest implements Ex
       Document d = (Document)tobj;
       if (d != null)
       {
+         try {
              String str = "Creating a new Text Node";
              Text tn = d.createTextNode(str);
 	     if (tn == null) {
                 TestLoader.logErrPrint("Could not Create TextNode " + str);
                 return BWBaseTest.FAILED;
              } else {
-                String newstr="Original Text is replaced wiht this text";
+                String newstr="Original Text is replaced with this text";
                 tn.setData(newstr);
                 String getstr = tn.getData();
 		if (getstr == null) {
@@ -85,6 +86,10 @@ public class CharacterDataImpl_setData_String_1 extends BWBaseTest implements Ex
                   return BWBaseTest.FAILED;
                 }
              }
+        } catch (DOMException e) {
+             TestLoader.logErrPrint("Caught DOMException " );
+             return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

@@ -67,6 +67,7 @@ public class NodeImpl_setNodeValue_String_0 extends BWBaseTest implements Execut
       Document d = (Document)tobj;
       if (d != null)
       {
+       try {
          String name = "nom";
          Attr a = d.createAttribute(name);
          if (a == null) 
@@ -82,6 +83,10 @@ public class NodeImpl_setNodeValue_String_0 extends BWBaseTest implements Execut
              TestLoader.logErrPrint("Node Value cannot be set to null...");
              return BWBaseTest.FAILED;
          }
+       } catch (DOMException e) {
+            TestLoader.logErrPrint("Caught DOMException");
+            return BWBaseTest.PASSED;
+       }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

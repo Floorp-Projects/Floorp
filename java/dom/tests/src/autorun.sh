@@ -19,6 +19,7 @@ USER=`logname`
 DOCROOT="http://$SERVER/~$USER"
 
 
+
 ##################################################################
 # Usage
 ##################################################################
@@ -52,6 +53,34 @@ title()
    echo
    echo
 }
+
+##################################################################
+#
+# check whether to run tests in single threaded or multi threaded
+# mode
+#
+##################################################################
+checkExecutionMode()
+{
+	executionMode=""
+        propnom="$curdir/BWProperties" 
+        executionMode=`grep THREADMODE $propnom | cut -d"=" -f2`
+
+        if [ "$executionMode" != "S" ] &&
+	   [ "$executionMode" != "s" ] &&
+	   [ "$executionMode" != "M" ] &&
+	   [ "$executionMode" != "m" ] 
+        then
+          echo "Entry for BW_THREADMODE in BWProperties file is incorrect."
+          echo "It should be set to 'S' or 'M'"
+          echo
+          echo " Make changes to BWProperties file and re-run this script"
+          echo
+          exit 1
+        fi
+
+}
+
 
 ##################################################################
 #
@@ -376,6 +405,24 @@ then
 fi
 /bin/cp "$curdir/BWProperties" "$MOZILLA_FIVE_HOME/BWProperties"
 
+# Read the LOGDIR setting from BWProperties and
+# accordingly set BWTest.txt location
+#
+logdir=`grep BW_LOGDIR $curdir/BWProperties | cut -d"=" -f2`
+if [ ! -d "$logdir" ]
+then
+  echo
+  echo "Log Directory $logdir does not exist...";
+  echo "Create Directory and re-run this script...";
+  echo
+  exit 1
+fi
+LOGTXT="$logdir/BWTest.txt"
+
+
+# check BW_THREADMODE setting from BWPropeties file
+#
+checkExecutionMode
 
 # check if output text file of previous run exists.
 # if so, then save it as .bak
@@ -434,6 +481,8 @@ CLASSPATH="$curdir/../classes:${CLASSPATH}"
 currcnt=0
 while true
 do
+
+
  for i in `cat $filename`
  do
    if [ ! -z "$testparam" ]
@@ -449,7 +498,20 @@ do
       continue
    fi
 
-   echo $testcase > $curdir/BWTestClass.lst
+   # if single threaded execution 
+   if [ "$executionMode" = "S" ]
+   then
+      echo $testcase > $curdir/BWTestClass.lst
+   else
+      # if multi-threaded but user has specified particular testcase
+      if [ ! -z "$testparam" ]
+      then
+        echo $testcase > $curdir/BWTestClass.lst
+      else
+        /bin/cp  $filename $curdir/BWTestClass.lst
+      fi
+   fi
+
    cd $MOZILLA_FIVE_HOME
    
    echo "========================================"
@@ -461,6 +523,9 @@ do
    nom=`basename $format`
    testlog="$curdir/log/$nom.$id.log"
    ./apprunner $DOCFILE 2>$testlog 1>&2 &
+
+   # dummy sleep to allow apprunner to show up on process table
+   sleep 3
    curpid=`ps -aef | grep apprunner | grep -v grep | awk '{ print $2 }'`
 
    flag=0
@@ -517,10 +582,11 @@ do
       break
    fi
   
-   #if [ $flag -eq 0 ]
-   #then
-   #   /bin/rm $testlog
-   #fi
+   # if single threaded execution 
+   if [ "$executionMode" = "S" ]
+   then
+        break
+   fi
  done
 
  currcnt=`expr $currcnt + 1`

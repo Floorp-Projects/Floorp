@@ -66,6 +66,7 @@ public class ProcessingInstructionImpl_setData_String_1 extends BWBaseTest imple
       Document d = (Document)tobj;
       if (d != null)
       {
+          try {
              String target="xml";
              String data="version=\"1.0\"";
              ProcessingInstruction pi = d.createProcessingInstruction(target, data);
@@ -81,6 +82,10 @@ public class ProcessingInstructionImpl_setData_String_1 extends BWBaseTest imple
                   return BWBaseTest.FAILED;
                 }
              }
+          } catch (DOMException e) {
+                 TestLoader.logErrPrint("Caught DOMException");
+                 return BWBaseTest.FAILED;
+          }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

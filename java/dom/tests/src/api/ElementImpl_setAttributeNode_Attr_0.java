@@ -67,6 +67,7 @@ public class ElementImpl_setAttributeNode_Attr_0 extends BWBaseTest implements E
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              Element e = d.getDocumentElement();
 	     if (e == null) {
                 TestLoader.logErrPrint("Document Element is  NULL..");
@@ -79,6 +80,10 @@ public class ElementImpl_setAttributeNode_Attr_0 extends BWBaseTest implements E
                   return BWBaseTest.FAILED;
                 }
            }
+         } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.PASSED;
+         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
