@@ -16,6 +16,39 @@
  * Reserved.
  */
 
+//
+// gtk/nsSelectionMgr: the class which handles X selection for DoCopy.
+//
+// Xheads: One thing we might want to change later:
+// Currently it's necessary to do edit->copy (or keyboard equivalent)
+// to get selection info to this class.
+// The PresShell does a DoCopy, which calls the parser and creates a
+// content stream with the contents of the then-current selection.
+// X users may be more comfortable with having this happen every time
+// the selection is changed.  This could be done in two ways:
+//
+// 1. Have the mozilla selection class (nsRangeList) call nsSelectionMgr
+//    explicitly every time the selection changes.  We have to make sure
+//    that this isn't expensive, since selection changes happen frequently,
+//    and that it doesn't happen by default on the other platforms, since
+//    nsRangeList is XP code and the other two platforms wouldn't like
+//    this behavior.
+//
+// 2. Have nsSelectionMgr::SelectionRequestor query for the current
+//    selection each time it's called, and throw away the stream passed in
+//    (or, better, change the interface not to pass a stream in in the
+//    first place).
+//    This requires that nsSelectionMgr have access to the current selection,
+//    which probably means that when the PresShell is creating nsSelectionMgr,
+//    it pass a pointer to itself along, and the SelectionMgr just queries
+//    the PresShell whenever it wants the selection.
+//    This seems like a much cleaner solution, but unfortunately does
+//    require an interface change on all three platforms.
+//
+// #2 will probably happen soon.  Talk to me (akkana@netscape.com) if
+// you're reading this and have an opinion about this.
+//
+
 #include "nsSelectionMgr.h"
 
 #include <strstream.h>
@@ -50,7 +83,7 @@ nsresult nsSelectionMgr::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  return !NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsSelectionMgr::nsSelectionMgr()
@@ -58,10 +91,27 @@ nsSelectionMgr::nsSelectionMgr()
   NS_INIT_REFCNT();
 
   mCopyStream = 0;
+  sWidget = 0;
 }
 
 nsSelectionMgr::~nsSelectionMgr()
 {
+  // Remove all our event handlers:
+  if (sWidget &&
+      gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
+    gtk_selection_remove_all(sWidget);
+  if (mCopyStream)
+    delete mCopyStream;
+}
+
+void nsSelectionMgr::SetTopLevelWidget(GtkWidget* w)
+{
+  // Don't set up any more event handlers if we're being called twice
+  // for the same toplevel widget
+  if (sWidget == w)
+    return;
+
+  sWidget = w;
 }
 
 nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
@@ -73,22 +123,31 @@ nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
   return NS_OK;
 }
 
-#if 0
-// May or may not need this routine:
-static void ClearSelection()
+// Called when another app requests the selection:
+void nsSelectionMgr::SelectionClearCB( GtkWidget *widget,
+                                       GdkEventSelection *event,
+                                       gpointer data)
 {
-  // Before clearing the selection by setting the owner to NULL,
-  // we check if we are the actual owner
-  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
-    gtk_selection_owner_set (NULL, GDK_SELECTION_PRIMARY,
-                             GDK_CURRENT_TIME);
+  if (data)
+    ((nsSelectionMgr*)data)->SelectionClear(widget, event);
 }
-#endif
+
+void nsSelectionMgr::SelectionClear( GtkWidget *w,
+                                     GdkEventSelection *event )
+{
+  // Delete the copy stream, since we don't need it any more:
+  if (mCopyStream)
+    delete mCopyStream;
+  mCopyStream = 0;
+}
 
 //
-// Here folows a bunch of code which came from GTK's gtktestselection.c:
+// Here follows a bunch of code which came from GTK's gtktestselection.c:
 //
 
+// XXX Scary -- this list doesn't seem to be in an include file anywhere!
+// Apparently every app which uses gtk selection is expected to copy
+// this list verbatim, and hope that it doesn't get out of sync!  Oy.
 typedef enum {
   SEL_TYPE_NONE,
   APPLE_PICT,
@@ -109,103 +168,20 @@ typedef enum {
   LAST_SEL_TYPE
 } SelType;
 
-GdkAtom seltypes[LAST_SEL_TYPE];
-
-typedef struct _Target {
-  gchar *target_name;
-  SelType type;
-  GdkAtom target;
-  gint format;
-} Target;
-
-/* The following is a list of all the selection targets defined
-   in the ICCCM */
-
-static Target targets[] = {
-  { "ADOBE_PORTABLE_DOCUMENT_FORMAT",	    STRING, 	   0, 8 },
-  { "APPLE_PICT", 			    APPLE_PICT,    0, 8 },
-  { "BACKGROUND",			    PIXEL,         0, 32 },
-  { "BITMAP", 				    BITMAP,        0, 32 },
-  { "CHARACTER_POSITION",                   SPAN, 	   0, 32 },
-  { "CLASS", 				    TEXT, 	   0, 8 },
-  { "CLIENT_WINDOW", 			    WINDOW, 	   0, 32 },
-  { "COLORMAP", 			    COLORMAP,      0, 32 },
-  { "COLUMN_NUMBER", 			    SPAN, 	   0, 32 },
-  { "COMPOUND_TEXT", 			    COMPOUND_TEXT, 0, 8 },
-  /*  { "DELETE", "NULL", 0, ? }, */
-  { "DRAWABLE", 			    DRAWABLE,      0, 32 },
-  { "ENCAPSULATED_POSTSCRIPT", 		    STRING, 	   0, 8 },
-  { "ENCAPSULATED_POSTSCRIPT_INTERCHANGE",  STRING, 	   0, 8 },
-  { "FILE_NAME", 			    TEXT, 	   0, 8 },
-  { "FOREGROUND", 			    PIXEL, 	   0, 32 },
-  { "HOST_NAME", 			    TEXT, 	   0, 8 },
-  /*  { "INSERT_PROPERTY", "NULL", 0, ? NULL }, */
-  /*  { "INSERT_SELECTION", "NULL", 0, ? NULL }, */
-  { "LENGTH", 				    INTEGER, 	   0, 32 },
-  { "LINE_NUMBER", 			    SPAN, 	   0, 32 },
-  { "LIST_LENGTH", 			    INTEGER,       0, 32 },
-  { "MODULE", 				    TEXT, 	   0, 8 },
-  /*  { "MULTIPLE", "ATOM_PAIR", 0, 32 }, */
-  { "NAME", 				    TEXT, 	   0, 8 },
-  { "ODIF", 				    TEXT,          0, 8 },
-  { "OWNER_OS", 			    TEXT, 	   0, 8 },
-  { "PIXMAP", 				    PIXMAP,        0, 32 },
-  { "POSTSCRIPT", 			    STRING,        0, 8 },
-  { "PROCEDURE", 			    TEXT,          0, 8 },
-  { "PROCESS",				    INTEGER,       0, 32 },
-  { "STRING", 				    STRING,        0, 8 },
-  { "TARGETS", 				    ATOM, 	   0, 32 },
-  { "TASK", 				    INTEGER,       0, 32 },
-  { "TEXT", 				    TEXT,          0, 8  },
-  { "TIMESTAMP", 			    INTEGER,       0, 32 },
-  { "USER", 				    TEXT, 	   0, 8 },
-};
-
-static int num_targets = sizeof(targets)/sizeof(Target);
-
+//
+// The types we support
+//
 static GtkTargetEntry targetlist[] = {
   { "STRING",        0, STRING },
   { "TEXT",          0, TEXT },
   { "COMPOUND_TEXT", 0, COMPOUND_TEXT }
+  // Probably need to add entries for XIF and HTML
 };
 static gint ntargets = sizeof(targetlist) / sizeof(targetlist[0]);
 
-GtkWidget *selection_text;
-GtkWidget *selection_button;
-GString *selection_string = NULL;
-
-static void
-init_atoms (void)
-{
-  int i;
-
-  seltypes[SEL_TYPE_NONE] = GDK_NONE;
-  seltypes[APPLE_PICT] = gdk_atom_intern ("APPLE_PICT",FALSE);
-  seltypes[ATOM]       = gdk_atom_intern ("ATOM",FALSE);
-  seltypes[ATOM_PAIR]  = gdk_atom_intern ("ATOM_PAIR",FALSE);
-  seltypes[BITMAP]     = gdk_atom_intern ("BITMAP",FALSE);
-  seltypes[C_STRING]   = gdk_atom_intern ("C_STRING",FALSE);
-  seltypes[COLORMAP]   = gdk_atom_intern ("COLORMAP",FALSE);
-  seltypes[COMPOUND_TEXT] = gdk_atom_intern ("COMPOUND_TEXT",FALSE);
-  seltypes[DRAWABLE]   = gdk_atom_intern ("DRAWABLE",FALSE);
-  seltypes[INTEGER]    = gdk_atom_intern ("INTEGER",FALSE);
-  seltypes[PIXEL]      = gdk_atom_intern ("PIXEL",FALSE);
-  seltypes[PIXMAP]     = gdk_atom_intern ("PIXMAP",FALSE);
-  seltypes[SPAN]       = gdk_atom_intern ("SPAN",FALSE);
-  seltypes[STRING]     = gdk_atom_intern ("STRING",FALSE);
-  seltypes[TEXT]       = gdk_atom_intern ("TEXT",FALSE);
-  seltypes[WINDOW]     = gdk_atom_intern ("WINDOW",FALSE);
-
-  for (i=0; i<num_targets; i++)
-    targets[i].target = gdk_atom_intern (targets[i].target_name, FALSE);
-}
-
-void nsSelectionMgr::SetTopLevelWidget(GtkWidget* w)
-{
-  sWidget = w;
-}
-
-// The event handler to handle paste requests:
+//
+// The event handler to handle selection requests:
+//
 void nsSelectionMgr::SelectionRequestCB( GtkWidget        *widget, 
                                          GtkSelectionData *selection_data,
                                          guint      /*info*/,
@@ -216,6 +192,11 @@ void nsSelectionMgr::SelectionRequestCB( GtkWidget        *widget,
     ((nsSelectionMgr*)data)->SelectionRequestor(widget, selection_data);
 }
 
+//
+// SelectionRequestor:
+// This is the routine which gets called when another app
+// requests the selection
+//
 void nsSelectionMgr::SelectionRequestor( GtkWidget        *widget, 
                                          GtkSelectionData *selection_data )
 {
@@ -229,17 +210,22 @@ void nsSelectionMgr::SelectionRequestor( GtkWidget        *widget,
   // the format arg, "8", indicates string data with no endianness
 }
 
+//
+// CopyToClipboard:
+// This is the routine which gets called when the user selects edit->copy.
+//
 nsresult nsSelectionMgr::CopyToClipboard()
 {
   // we'd better already have a stream and a widget ...
   if (!mCopyStream || !sWidget)
       return NS_ERROR_NOT_INITIALIZED;
 
-  char* str = (char*)mCopyStream->str();
-  //printf("owning selection:\n--'%s'--\n", str);
+  // If we're already the selection owner, don't need to do anything,
+  // we're already handling the events:
+  if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
+    return NS_OK;
 
-  // XXX How do we get a widget to pass to gtk_selection_owner_set?
-  // That's the sticky part of the whole mess
+  // register as the selection owner:
   gint have_selection = gtk_selection_owner_set(sWidget,
                                                 GDK_SELECTION_PRIMARY,
                                                 GDK_CURRENT_TIME);
@@ -251,24 +237,23 @@ nsresult nsSelectionMgr::CopyToClipboard()
     return NS_ERROR_FAILURE;
   }
 
-  // Now set up the event handler to handle paste requests:
-  // This doesn't seem to be working right, or at least,
-  // when we paste in an xterm we never get notified
-  // of selection_request_events or the others listed below.
-  static beenhere = 0;
-  if (!beenhere)
-  {
-    init_atoms();
-    gtk_selection_add_targets (sWidget, GDK_SELECTION_PRIMARY,
-                               targetlist, ntargets);
-    gtk_signal_connect(GTK_OBJECT(sWidget),
-                       //"selection_request_event",
-                       //"selection_notify_event",
-                       "selection_get",
-                       //"selection_received",
-                       GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionRequestCB),
-                       this);
-  }
+  // Set up all the event handlers
+  gtk_selection_add_targets (sWidget, GDK_SELECTION_PRIMARY,
+                             targetlist, ntargets);
+  // Respond to requests for the selection:
+  gtk_signal_connect(GTK_OBJECT(sWidget),
+                     "selection_get",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionRequestCB),
+                     this);
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_clear_event",
+                     GTK_SIGNAL_FUNC (nsSelectionMgr::SelectionClearCB),
+                     this);
+
+  // Other signals we should handle in some fashion:
+  //"selection_received"  (when we've requested a paste and it's come in --
+  //   this may need to be handled by a different class, e.g. nsIEditor.
+  //"selection_request_event" (dunno what this one is, maybe we don't need it)
+  //"selection_notify_event" (don't know what this is either)
 
   return NS_OK;
 }
