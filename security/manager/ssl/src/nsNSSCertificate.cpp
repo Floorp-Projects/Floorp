@@ -32,13 +32,19 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.3 2001/02/26 21:50:52 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.4 2001/03/07 19:24:11 mcgreer%netscape.com Exp $
  */
 
+#include "prmem.h"
+
+#include "nsCOMPtr.h"
 #include "nsNSSCertificate.h"
+#include "nsIX509Cert.h"
 #include "nsString.h"
 
+#include "pk11func.h"
 #include "certdb.h"
+#include "cert.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -58,8 +64,15 @@ public:
   virtual ~nsNSSCertTrust();
 
   /* query */
-  void IsTrustedCA(PRBool *ssl, PRBool *email, PRBool *objSign);
-  void IsTrustedPeer(PRBool *ssl, PRBool *email, PRBool *objSign);
+  PRBool HasCA(PRBool checkSSL = PR_TRUE, 
+               PRBool checkEmail = PR_TRUE,  
+               PRBool checkObjSign = PR_TRUE);
+  PRBool HasPeer(PRBool checkSSL = PR_TRUE, 
+                 PRBool checkEmail = PR_TRUE,  
+                 PRBool checkObjSign = PR_TRUE);
+  PRBool HasUser(PRBool checkSSL = PR_TRUE, 
+                 PRBool checkEmail = PR_TRUE,  
+                 PRBool checkObjSign = PR_TRUE);
 
   /* common defaults */
   /* equivalent to "c,c,c" */
@@ -100,6 +113,7 @@ public:
 private:
   void addTrust(unsigned int *t, unsigned int v);
   void removeTrust(unsigned int *t, unsigned int v);
+  PRBool hasTrust(unsigned int t, unsigned int v);
   CERTCertTrust mTrust;
 };
 
@@ -143,6 +157,11 @@ nsNSSCertTrust::nsNSSCertTrust(unsigned int ssl,
   addTrust(&mTrust.sslFlags, ssl);
   addTrust(&mTrust.emailFlags, email);
   addTrust(&mTrust.objectSigningFlags, objsign);
+}
+
+nsNSSCertTrust::nsNSSCertTrust(CERTCertTrust *t)
+{
+  memcpy(&mTrust, t, sizeof(CERTCertTrust));
 }
 
 nsNSSCertTrust::~nsNSSCertTrust()
@@ -299,10 +318,57 @@ nsNSSCertTrust::SetUser()
                   PR_TRUE, PR_FALSE);
 }
 
+PRBool
+nsNSSCertTrust::HasCA(PRBool checkSSL, 
+                      PRBool checkEmail,  
+                      PRBool checkObjSign)
+{
+  if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_VALID_CA))
+    return PR_FALSE;
+  if (checkEmail && !hasTrust(mTrust.emailFlags, CERTDB_VALID_CA))
+    return PR_FALSE;
+  if (checkObjSign && !hasTrust(mTrust.objectSigningFlags, CERTDB_VALID_CA))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
+PRBool
+nsNSSCertTrust::HasPeer(PRBool checkSSL, 
+                        PRBool checkEmail,  
+                        PRBool checkObjSign)
+{
+  if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_VALID_PEER))
+    return PR_FALSE;
+  if (checkEmail && !hasTrust(mTrust.emailFlags, CERTDB_VALID_PEER))
+    return PR_FALSE;
+  if (checkObjSign && !hasTrust(mTrust.objectSigningFlags, CERTDB_VALID_PEER))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+PRBool
+nsNSSCertTrust::HasUser(PRBool checkSSL, 
+                        PRBool checkEmail,  
+                        PRBool checkObjSign)
+{
+  if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_USER))
+    return PR_FALSE;
+  if (checkEmail && !hasTrust(mTrust.emailFlags, CERTDB_USER))
+    return PR_FALSE;
+  if (checkObjSign && !hasTrust(mTrust.objectSigningFlags, CERTDB_USER))
+    return PR_FALSE;
+  return PR_TRUE;
+}
+
 void
 nsNSSCertTrust::addTrust(unsigned int *t, unsigned int v)
 {
   *t |= v;
+}
+
+PRBool
+nsNSSCertTrust::hasTrust(unsigned int t, unsigned int v)
+{
+  return (t & v);
 }
 
 /* Header file */
@@ -458,11 +524,70 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
 {
 }
 
+/*  [noscript] nsIX509Cert getCertByName(in nsIPK11Token aToken,
+ *                                       in string aNickname);
+ */
+NS_IMETHODIMP
+nsNSSCertificateDB::GetCertByName(nsIPK11Token *aToken,
+                                  const char *nickname,
+                                  nsIX509Cert **_rvCert)
+{
+  CERTCertificate *cert = NULL;
+  nsCOMPtr<nsIX509Cert> pCert = nsnull;
+  char *foo = strdup(nickname);
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", foo));
+  cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), foo);
+  if (cert) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got it\n"));
+    pCert = new nsNSSCertificate(cert);
+  }
+  *_rvCert = pCert;
+  NS_ADDREF(*_rvCert);
+  return NS_OK;
+}
+
+/* [noscript] void getCertificateNames(in nsIPK11Token aToken,
+ *                                     in unsigned long aType,
+ *                                     in nsAutoStringRef rCertNameList);
+ */
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetCertificateNames(nsIPK11Token *aToken, 
+                                        PRUint32 aType,
+                                        nsAutoString& rCertNameList)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  /*
+   * obtain the cert list from NSS
+   */
+  CERTCertList *certList = NULL;
+  PK11CertListType pk11type;
+  if (aType == nsIX509Cert::USER_CERT)
+    pk11type = PK11CertListUser;
+  else 
+    pk11type = PK11CertListUnique;
+  certList = PK11_ListCerts(pk11type, NULL);
+  if (!certList)
+    goto cleanup;
+  /*
+   * get list of cert names from list of certs
+   * XXX also cull the list (NSS only distinguishes based on user/non-user
+   */
+  getCertNames(certList, aType, rCertNameList);
+  rv = NS_OK;
+  /*
+   * finish up
+   */
+cleanup:
+  if (certList)
+    CERT_DestroyCertList(certList);
+  return rv;
+}
+
 /*
- * nsresult importCertificate (in nsIX509Cert cert, 
- *                             in unsigned long type,
- *                             in unsigned long trust, 
- *                             in wchar tokenName); 
+ * [noscript] void importCertificate (in nsIX509Cert cert, 
+ *                                    in unsigned long type,
+ *                                    in unsigned long trust, 
+ *                                    in wchar tokenName); 
  */
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportCertificate(nsIX509Cert *cert, 
@@ -511,5 +636,60 @@ done:
   if (tmpCert) 
     CERT_DestroyCertificate(tmpCert);
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
+}
+
+/*
+ * NSS Helper Routines (private to nsNSSCertificateDB)
+ */
+
+#define DELIM '\001'
+
+/*
+ * GetSortedNameList
+ *
+ * Converts a CERTCertList to a list of certificate names
+ */
+void
+nsNSSCertificateDB::getCertNames(CERTCertList *certList,
+                                 PRUint32      type, 
+                                 nsString&     nameList)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  CERTCertListNode *node;
+  int i, num = 0;
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("List of certs:\n"));
+  for (node = CERT_LIST_HEAD(certList);
+       !CERT_LIST_END(node, certList);
+       node = CERT_LIST_NEXT(node)) {
+    if (getCertType(node->cert) == type) {
+      nameList.AppendWithConversion(DELIM);
+      if (type == nsIX509Cert::EMAIL_CERT) {
+        nameList.AppendWithConversion(node->cert->emailAddr);
+      } else {
+        nameList.AppendWithConversion(node->cert->nickname);
+      }
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("%s\n", node->cert->nickname));
+    }
+  }
+}
+
+/* somewhat follows logic of cert_list_include_cert from PSM 1.x */
+PRUint32 
+nsNSSCertificateDB::getCertType(CERTCertificate *cert)
+{
+  char *nick = cert->nickname;
+  char *email = cert->emailAddr;
+  nsNSSCertTrust trust(cert->trust);
+  if (nick) {
+    if (trust.HasUser())
+      return nsIX509Cert::USER_CERT;
+    if (trust.HasCA())
+      return nsIX509Cert::CA_CERT;
+    if (trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE))
+      return nsIX509Cert::SERVER_CERT;
+  }
+  if (email && trust.HasPeer(PR_FALSE, PR_FALSE, PR_TRUE))
+    return nsIX509Cert::EMAIL_CERT;
+  return nsIX509Cert::UNKNOWN_CERT;
 }
 

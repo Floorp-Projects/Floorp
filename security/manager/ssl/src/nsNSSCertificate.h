@@ -44,10 +44,6 @@
 #include "cert.h"
 #include "secitem.h"
 
-#define NS_X509CERTDB_CID { 0x78e5b720, 0x0442, 0x11d5, \
-    { 0xac, 0x56, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } }
-#define NS_X509CERTDB_CONTRACTID "@mozilla.org/x509certdb;1"
-
 /* Certificate */
 class nsNSSCertificate : public nsIX509Cert 
 {
@@ -75,6 +71,12 @@ public:
   virtual ~nsNSSCertificateDB();
 
 private:
+
+  void getCertNames(CERTCertList *certList,
+                    PRUint32      type, 
+                    nsString&     nameList);
+
+  PRUint32 getCertType(CERTCertificate *cert);
 
 };
 

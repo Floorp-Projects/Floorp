@@ -62,6 +62,7 @@ EXPORTS = \
 OBJS = \
     .\$(OBJDIR)\nsNSSDialogs.obj \
     .\$(OBJDIR)\nsPKIModule.obj \
+    .\$(OBJDIR)\nsCertificateManager.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

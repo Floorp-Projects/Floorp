@@ -48,5 +48,6 @@ function onLoad()
 
 function openCertManager()
 {
-  alert('this will eventually open the cert manager'); 
+  window.open('chrome://pippki/content/certManager.xul',  "",
+              'chrome,width=500,height=400,resizable=1');
 }

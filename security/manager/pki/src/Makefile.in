@@ -51,6 +51,7 @@ EXPORTS =  \
 CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \
+        nsCertificateManager.cpp \
 	$(NULL)
 
 REQUIRES = nspr security js

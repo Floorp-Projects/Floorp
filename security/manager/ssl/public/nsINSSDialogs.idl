@@ -110,6 +110,7 @@ interface nsICertificateDialogs : nsISupports
                       in nsIX509Cert cert,
                       out unsigned long trust,
                       out boolean canceled);
+
 };
 
 /**

@@ -648,7 +648,6 @@ CertDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 CertDownloader::OnDataAvailable(nsIRequest* request,
                                 nsISupports* context,
@@ -676,7 +675,6 @@ CertDownloader::OnDataAvailable(nsIRequest* request,
   
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 CertDownloader::OnStopRequest(nsIRequest* request,
