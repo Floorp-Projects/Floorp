@@ -1,0 +1,635 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+         
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+         
+  <meta name="Author" content="mike judge">
+         
+  <meta name="GENERATOR"
+ content="Mozilla/4.7 [en-gb]C-NSCP  (WinNT; U) [Netscape]">
+  <title>embeddocs</title>
+</head>
+  <body>
+<h1><b> A Guide to Embedding The Gecko Editor</b></h1>
+11/5/02<br>
+<br>
+ 
+<h2>In the Beginning there is MakeEditable</h2>
+ 
+<p>Given an nsIWebBrowser instance, get a nsIDOMWindow from the GetContentDOMWindow
+call.&nbsp; Then simply call nsIWebBrowser-&gt;do_GetInterface on the nsIWebBrowser
+to retrieve the nsIEditingSession from it.&nbsp; From there you call editingSession-&gt;MakeWindowEditable(domWindow,
+PR_TRUE);&nbsp;&nbsp;&nbsp; The first parameter is the nsIDOMWindow you just
+retrieved and the second is whether you want the window editable or not.&nbsp;
+In calling this method the editor is created underneath and the event listeners
+etc. are all prepared.<br>
+</p>
+<p><i>&nbsp;&nbsp;&nbsp; nsCOMPtr&lt;nsIDOMWindow&gt; domWindow;<br>
+&nbsp;&nbsp;&nbsp; nsIWebBrowser-&gt;GetContentDOMWindow(getter_AddRefs(domWindow));</i></p>
+<p><i>&nbsp;&nbsp;&nbsp; nsCOMPtr&lt;nsIEditingSession&gt; editingSession;<br>
+&nbsp;&nbsp;&nbsp; nsIWebBrowser-&gt;do_GetInterface(getter_AddRefs(editingSession));</i></p>
+<p><i>&nbsp;&nbsp;&nbsp; editingSession-&gt;MakeWindowEditable(domWindow,
+PR_TRUE);<br>
+</i> </p>
+ 
+<h2>Editor Commands</h2>
+ 
+<p>To do anything meaningful you of course need to call commands and<br>
+ recieve updates. First get the nsICommandManager from the nsIWebBrowser<br>
+ using do_GetInterface.</p>
+ 
+<p><i>&nbsp;&nbsp;&nbsp; nsCOMPtr&lt;nsICommandManager&gt; commandManager;<br>
+&nbsp;&nbsp;&nbsp; nsIWebBrowser-&gt;do_GetInterface(getter_AddRefs(commandMgr));</i><br>
+</p>
+<p>To call a command use DoCommand:</p>
+ 
+<p><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><i>commandManager</i><i>-&gt;DoCommand(aCommand,
+aCommandParams);</i> </p>
+ 
+<p>&nbsp;&nbsp;&nbsp; <i>aCommand</i> is a const char * to a supported command
+name (see list below).<br>
+ &nbsp;&nbsp;&nbsp; <i>aCommandParams</i> could possibly be a null pointer
+or a pointer to a valid structure filled with relative parameters to aCommand.
+(see list below for legal params)</p>
+ 
+<p>To see if a command is enabled use IsCommandEnabled</p>
+ 
+<p><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><i>commandManager</i><i>-&gt;IsCommandEnabled(aCommand,
+retval)</i> </p>
+ 
+<p>To get the current command state of a given command use GetCommandState: 
+</p>
+ 
+<p><i>&nbsp;&nbsp;&nbsp;&nbsp;</i><i>commandManager</i><i>-&gt;GetCommandState(aCommand,aCommandParams)</i>
+<br>
+&nbsp;</p>
+ 
+<h3>Index of Commands and Parameters</h3>
+  
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_bold, cmd_italics, cmd_underline<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">acts upon the current selection to apply 
+style<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_all"(boolean), "state_begin"(boolean),<br>
+ "state_end"(boolean), "state_mixed"(boolean)      </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameters<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_indent, cmd_outdent<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">indents the line(s) of the current selection<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_enabled"(boolean)&nbsp;      </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameters<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_increaseFont, cmd_decreaseFont<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">acts upon the current selection to adjust 
+font size.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_enabled"      </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameters<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_undo, cmd_redo<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">undoes/redoes last executed command.
+&nbsp;(only availabe if txmgr.dll is present)<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_enabled"      </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameters<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_fontColor<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">acts upon the current selection to set 
+the font color<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring) **<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_backgroundColor<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">sets the background color of &nbsp;the 
+document<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)      </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring) **      </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_fontFace<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">sets the font face for the current selection<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring) ***&nbsp;"Helvetica, 
+Arial, sans-serif", "Times New Roman, Times, serif", "Courier New, Courier, 
+monospace"      </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">cmd_align<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">sets the alignment for the lines contained 
+in the current selection<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)&nbsp;"left","right","center" 
+      </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">"cmd_charSet"      </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">sets the charset for the document. there 
+must be a clear undo stack or this will not work<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">"state_attribute" (cstring)&nbsp;&nbsp; 
+      </td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">"cmd_copy",&nbsp;"cmd_delete",&nbsp;"cmd_cut", 
+"cmd_paste",&nbsp;"cmd_cutOrDelete"</td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">operates on the current selection to
+copy, delete, cut and paste&nbsp; respectively<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">*"state_enabled" (boolean)      </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameter&nbsp;</td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p></p>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">"cmd_deleteCharBackward",&nbsp;"cmd_deleteCharForward", 
+"cmd_deleteWordForward",<br>
+ "cmd_deleteWordBackward", "cmd_deleteToBeginningOfLine",&nbsp;"cmd_deleteToEndOfLine",<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">deletes relative to the current selection 
+end point.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">*"state_enabled" (boolean)       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameter&nbsp;</td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">"cmd_scrollTop",&nbsp;"cmd_scrollBottom",&nbsp;"cmd_scrollPageUp",&nbsp;"cmd_scrollPageDown",<br>
+ "cmd_selectTop", "cmd_selectBottom",&nbsp;"cmd_selectLineNext",&nbsp;"cmd_selectLinePrevious",<br>
+ "cmd_selectCharPrevious", "cmd_selectCharNext",&nbsp;"cmd_selectBeginLine",&nbsp;"cmd_selectEndLine",<br>
+ "cmd_selectWordPrevious", "cmd_selectWordNext",&nbsp;</td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">scrolls relative to the current selection 
+end point.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">*"state_enabled" (boolean)       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameter&nbsp;</td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+ 
+<p><br>
+ </p>
+ 
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+   <tbody>
+     <tr>
+       <td valign="top">Command<br>
+       </td>
+       <td valign="top" width="75%">"cmd_movePageUp",&nbsp;"cmd_movePageDown",&nbsp;"cmd_moveTop",&nbsp;"cmd_moveBottom",<br>
+ "cmd_lineNext", "cmd_linePrevious",&nbsp;"cmd_charPrevious",&nbsp;"cmd_charNext",&nbsp;"cmd_beginLine",<br>
+ "cmd_endLine", "cmd_wordPrevious",&nbsp;"cmd_wordNext"</td>
+     </tr>
+     <tr>
+       <td valign="top">Description<br>
+       </td>
+       <td valign="top" width="75%">scrolls relative to the current selection 
+end point.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top">GetCommandState<br>
+       </td>
+       <td valign="top" width="75%">*"state_enabled" (boolean)       </td>
+     </tr>
+     <tr>
+       <td valign="top">DoCommand<br>
+       </td>
+       <td valign="top" width="75%">no parameter&nbsp;</td>
+     </tr>
+     <tr>
+       <td valign="top"><br>
+       </td>
+       <td valign="top" width="75%"><br>
+       </td>
+     </tr>
+     
+  </tbody> 
+</table>
+  
+<p>*Note: GetCommandState in these cases will return whether or not it is 
+<br>
+ possible to call DoCommand.&nbsp; This will not really give you any concrete 
+<br>
+ information on the state of the current indent and outdent .<br>
+ **Note: for color values, use the cstring representation of RRGGBB. i.e.<br>
+ RED="#FF0000" and BLACK="#000000"<br>
+ ***Font Face is a cstring of the following values : "Helvetica, Arial,<br>
+ sans-serif", "Times New Roman, Times, serif", "Courier New, Courier,<br>
+ monospace"&nbsp;</p>
+ 
+<h2>nsICommandParams&nbsp; </h2>
+<h3>Creating:</h3>
+<i>- how do you create an nsICommandParams? -saari</i><br>
+<br>
+<h3>Writing:</h3>
+ Once you have created an nsICommandParams you call the "Set" methods. 
+<p>SetBooleanValue<br>
+ SetLongValue<br>
+ SetDoubleValue<br>
+ SetStringValue<br>
+ SetCStringValue<br>
+ SetISupportsValue<br>
+ RemoveValue</p>
+ 
+<p>Each will take a name value pair.&nbsp; In the case of SetBooleanValue 
+for<br>
+ example you use a boolean as the second parameter.</p>
+ 
+<p>&nbsp;&nbsp;&nbsp;<i> commandParam-&gt;SetCStringValue("state_attribute","left");</i><br>
+ </p>
+ 
+<h3>Reading:</h3>
+ For reading you may go after individual name/value pairs you know are<br>
+ there or you may iterate through all the name/value pairs and<br>
+ programatically pull off data. 
+<p>First<br>
+ GetNext (returns the next name in the name/value pair list)<br>
+ HasMoreElements<br>
+ GetValueType (numeric enum type see nsICommandParams for values)</p>
+ 
+<p>If the name/value pair is known or it was obtained using the methods<br>
+ described above, it is possible to call the following methods.</p>
+ 
+<p>GetBooleanValue<br>
+ GetLongValue<br>
+ GetDoubleValue<br>
+ GetStringValue<br>
+ GetCStringValue<br>
+ GetISupportsValue</p>
+ 
+<p>All of these take pointers to values except for GetStringValue which<br>
+ demands a reference to an nsAString.</p>
+ 
+<p>commandParam-&gt;GetBooleanValue("state_enabled",&amp;boolval);<br>
+</p>
+ <br>
+</body>
+</html>

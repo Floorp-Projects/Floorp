@@ -1,0 +1,439 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+   
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+  <title>Midas Specification</title>
+      
+  <meta name="author" content="Kathleen Brade">
+</head>
+  <body>
+ Last revised: &nbsp;November 15, 2002<br>
+ <br>
+ Midas is rich text editing controls for a document.<br>
+ <br>
+ 
+<h1> Enabling Midas:</h1>
+ 
+<div style="margin-left: 40px;">Given a document, you can add the attribute
+"designMode" and set it to "on" to get an editable document. &nbsp;For example,
+in JavaScript, if you have an iframe with an id of 'edit', you can get its
+contentDocument and set designMode to "on" like this:<br>
+ 
+<div style="margin-left: 40px;"><code>document.getElementById("edit").contentDocument.designMode="on";</code>
+</div>
+ <br>
+ Right now, you can't completely turn off editing by setting designMode to
+"off." &nbsp;Setting designMode to "off" will prevent certain operations
+from being handled but typing and other actions are still possible.<br>
+ </div>
+ <br>
+ 
+<h1>Invoking Commands:</h1>
+<h2>execCommand<br>
+</h2>
+ 
+<div style="margin-left: 40px;">Given a document that has Midas enabled,
+you can invoke specific commands on the document by calling execCommand with
+3 parameters. &nbsp;For example, in JavaScript, if you have an editable document,
+you can invoke the bold command by calling this:<br>
+ 
+<div style="margin-left: 40px;"><code>editableDocument.execCommand("Bold", 
+false, null); </code></div>
+ Notes: &nbsp;If you haven't set designMode to "On", you will get an error.
+&nbsp;This could also happen if you call execCommand with the wrong document.<br>
+ <br>
+ There are 3 required parameters for execCommand:<br>
+ 
+<ol>
+   <li>command string</li>
+   <li>boolean flag for showing UI</li>
+   <li>value string</li>
+ 
+</ol>
+ The first parameter is a string which contains the command. &nbsp;The second
+parameter is a boolean flag. &nbsp;If it is set to true, you will get an
+error (NS_ERROR_NOT_IMPLEMENTED). &nbsp;The third parameter is a string which
+is the value. &nbsp;Some commands will require details such as the particular
+size you want to set when setting a font size.<br>
+ <br>
+ The section on Supported Commands will document each command and any corresponding 
+values needed.<br>
+</div>
+ 
+<div style="margin-left: 40px;"> </div>
+ <br>
+<h2>queryCommandEnabled</h2>
+<blockquote>This command operates on the editable document. &nbsp;There is
+one required parameter (the command string). &nbsp;The result is a boolean
+which is true if the command is can be done given the current selection and/or
+caret position. &nbsp;The result is false if the command should not be invoked
+(execCommand) given the current selection and/or caret position. <br>
+</blockquote>
+<br>
+<h2>queryCommandState</h2>
+<blockquote>xxx<br>
+</blockquote>
+<br>
+<h2>queryCommandValue</h2>
+<blockquote> xxx<br>
+</blockquote>
+<br>
+<h1>Supported Commands:</h1>
+ 
+<div style="margin-left: 40px;">The following list of commands is presented
+in alphabetical order. &nbsp;The commands may be mixed case or whatever makes
+your code more readable.<br>
+ <br>
+ 
+<table cellpadding="2" cellspacing="2" border="1"
+ style="text-align: left; width: 100%;">
+   <tbody>
+     <tr>
+       <td style="vertical-align: top;">command<br>
+       </td>
+       <td style="vertical-align: top;">value<br>
+       </td>
+       <td style="vertical-align: top;">explanation / behavior<br>
+       </td>
+     </tr>
+     <tr>
+       <td style="vertical-align: top;">backcolor<br>
+       </td>
+       <td style="vertical-align: top;">????<br>
+       </td>
+       <td style="vertical-align: top;">This command is untested right now.<br>
+ This command will set the background color of the document.</td>
+     </tr>
+     <tr>
+       <td style="vertical-align: top;">bold<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">If there is no selection, the insertion
+point will set bold for subsequently typed characters. &nbsp;<br>
+      <br>
+If there is a selection and all of the characters are already bold, the bold
+will be removed. &nbsp;Otherwise, all selected characters will become bold.<br>
+       </td>
+     </tr>
+     <tr>
+       <td style="vertical-align: top;">copy<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">If there is a selection, this command
+will copy the selection to the clipboard. &nbsp;If there isn't a selection,
+nothing will happen.<br>
+       <br>
+ note: &nbsp;the shortcut key will automatically trigger this command (typically
+accel-C)<br>
+       </td>
+     </tr>
+     <tr>
+      <td valign="top">createlink<br>
+      </td>
+      <td valign="top">url (href)<br>
+      </td>
+      <td valign="top">This command will not do anything if no selection
+is made. &nbsp;If there is a selection, a link will be inserted around the
+selection with the url parameter as the href of the link.<br>
+      </td>
+    </tr>
+    <tr>
+       <td style="vertical-align: top;">cut<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">If there is a selection, this command
+will copy the selection to the clipboard and remove the selection from the
+edit control. &nbsp;If there isn't a selection, nothing will happen.<br>
+       <br>
+ note: &nbsp;the shortcut key will automatically trigger this command (typically
+accel-X)<br>
+       </td>
+     </tr>
+     <tr>
+      <td valign="top">delete<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top">This command will delete all text and objects that
+are selected.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">fontname<br>
+      </td>
+      <td valign="top">????<br>
+      </td>
+      <td valign="top">This command will set the fontface for a selection
+or at the insertion point if there is no selection.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">fontsize<br>
+      </td>
+      <td valign="top">????<br>
+      </td>
+      <td valign="top">This command will set the fontsize for a selection
+or at the insertion point if there is no selection.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">forecolor<br>
+      </td>
+      <td valign="top">????<br>
+      </td>
+      <td valign="top">This command is untested right now.<br>
+ This command will set the text color of the selection or at the insertion
+point.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">formatblock<br>
+      </td>
+      <td valign="top">????<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">heading<br>
+      </td>
+      <td valign="top">????<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+       <td style="vertical-align: top;">indent<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">Indent the block where the caret is
+located.<br>
+       </td>
+     </tr>
+     <tr>
+      <td valign="top">inserthorizontalrule<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top">This command will insert a horizontal rule (line)
+at the insertion point.<br>
+      <br>
+Does it delete the selection?<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">insertimage<br>
+      </td>
+      <td valign="top">url (src)<br>
+      </td>
+      <td valign="top">This command will insert an image (referenced by url)
+at the insertion point.<br>
+ <br>
+ Does it delete the selection?<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">insertorderedlist<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">insertunorderedlist<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+       <td style="vertical-align: top;">italic<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">If there is no selection, the insertion
+point will set italic for subsequently typed characters. &nbsp;<br>
+      <br>
+If there is a selection and all of the characters are already italic, the
+italic will be removed. &nbsp;Otherwise, all selected characters will become
+italic.</td>
+     </tr>
+     <tr>
+      <td valign="top">justifycenter<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">justifyfull<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">justifyleft<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">justifyright<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+       <td style="vertical-align: top;">outdent<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">Outdent the block where the caret
+is located. &nbsp;If the block is not indented prior to calling outdent,
+nothing will happen.<br>
+      <br>
+note: &nbsp;is an error thrown if no outdenting is done?<br>
+      </td>
+     </tr>
+     <tr>
+       <td style="vertical-align: top;">paste<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">This command is disabled for the
+time being to prevent security exploits.<br>
+      <br>
+This command will paste the contents of the clipboard at the location of
+the caret. &nbsp;If there is a selection, it will be deleted prior to the
+insertion of the clipboard's contents.<br>
+       <br>
+ note: &nbsp;the shortcut key will automatically trigger this command (typically
+accel-V)</td>
+     </tr>
+     <tr>
+       <td style="vertical-align: top;">redo<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">This command will redo the previous
+undo action. &nbsp;If undo was not the most recent action, this command will
+have no effect.<br>
+       <br>
+ note: &nbsp;the shortcut key will automatically trigger this command (typically
+accel-shift-Z)</td>
+     </tr>
+     <tr>
+      <td valign="top">removeformat<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+    <tr>
+       <td style="vertical-align: top;">selectall<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">This command will select all of the
+contents within the editable area.<br>
+       <br>
+ note: &nbsp;the shortcut key will automatically trigger this command (typically
+accel-A)<br>
+       </td>
+     </tr>
+     <tr>
+      <td valign="top">strikethrough<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top">If there is no selection, the insertion point will
+set strikethrough for subsequently typed characters. &nbsp;<br>
+      <br>
+If there is a selection and all of the characters are already striked, the
+strikethrough will be removed. Otherwise, all selected characters will have
+a line drawn through them.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">subscript<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top">If there is no selection, the insertion point will
+set subscript for subsequently typed characters. &nbsp;<br>
+ <br>
+ If there is a selection and all of the characters are already subscripted,
+the subscript will be removed. Otherwise, all selected characters will be
+drawn slightly lower than normal text.<br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">superscript<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top">If there is no selection, the insertion point will
+set superscript for subsequently typed characters. &nbsp;<br>
+  <br>
+  If there is a selection and all of the characters are already superscripted,
+the superscript will be removed. Otherwise, all selected characters will
+be drawn slightly higher than normal text<br>
+      </td>
+    </tr>
+    <tr>
+       <td style="vertical-align: top;">underline<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">If there is no selection, the insertion
+point will set underline for subsequently typed characters. &nbsp;<br>
+      <br>
+If there is a selection and all of the characters are already underlined,
+the underline will be removed. Otherwise, all selected characters will become
+underlined.</td>
+     </tr>
+     <tr>
+       <td style="vertical-align: top;">undo<br>
+       </td>
+       <td style="vertical-align: top;">none<br>
+       </td>
+       <td style="vertical-align: top;">This command will undo the previous
+action. &nbsp;If no action has occurred in the document, then this command
+will have no effect.<br>
+       <br>
+ note: &nbsp;the shortcut key will automatically trigger this command (typically
+accel-Z)<br>
+       </td>
+     </tr>
+    <tr>
+      <td valign="top">unlink<br>
+      </td>
+      <td valign="top">none<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+   
+  </tbody> 
+</table>
+ <br>
+ </div>
+ <br>
+</body>
+</html>
