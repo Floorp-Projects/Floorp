@@ -140,7 +140,11 @@ pull_editor:
 
 ############################################################
 
-clobber_all:: clobber_nglayout
+clobber_all:: clobber_nglayout clobber_apprunner
+
+clobber_apprunner:
+	@cd $(MOZ_SRC)\mozilla\xpfe
+	nmake -f makefile.win clobber
 
 clobber_nglayout:
 	@cd $(MOZ_SRC)\mozilla\.
