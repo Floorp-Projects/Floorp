@@ -3277,7 +3277,7 @@ NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
    return NS_OK;
 }
 
-PRInt32 GlobalWindowImpl::WinHasOption(char *options, char *name, PRBool* aPresenceFlag)
+PRInt32 GlobalWindowImpl::WinHasOption(char *options, const char *name, PRBool* aPresenceFlag)
 {
    if(!options)
       return 0;
