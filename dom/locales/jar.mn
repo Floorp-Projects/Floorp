@@ -1,0 +1,4 @@
+#filter substitution
+
+@AB_CD@.jar:
+  locale/@AB_CD@/communicator/dom/dom.properties (%chrome/dom/dom.properties)
