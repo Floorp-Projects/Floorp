@@ -162,7 +162,7 @@ public:
 	NS_IMETHOD GetBody(char **_retval);
 	const char* GetBody();
 
-	int AppendBody(const char*);
+	PRInt16 AppendBody(const char*);
 
 	// When forwarding a bunch of messages, we can have a bunch of
 	// "forward url's" instead of an attachment.

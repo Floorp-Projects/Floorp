@@ -33,7 +33,7 @@
 JFD*/
 
 extern "C" {
-  extern int MK_OUT_OF_MEMORY;
+	extern int MK_OUT_OF_MEMORY;
 	extern int MK_MSG_INVALID_NEWS_HEADER;
 	extern int MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS;
 }
@@ -55,7 +55,6 @@ nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 	else
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
-
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgCompFields, nsIMsgCompFields::IID());
@@ -133,15 +132,12 @@ nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value, PRInt32 *
 	/* Since colon is not a legal character in a newsgroup name under son-of-1036
 	   we're assuming that such a header contains a URL, and we should parse it out
 	   to infer the news server. */
-	if (value && MSG_NEWSGROUPS_HEADER_MASK == header && PL_strchr(value, ':'))
-	{
+	if (value && MSG_NEWSGROUPS_HEADER_MASK == header && PL_strchr(value, ':')) {
 		status = ParseNewsgroupsForUrls (value);
 		if (status == 0)
 			return status; /* it was a news URL, and we snarfed it up */
-		else 
-		{
-			if (status == MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS)
-			{
+		else {
+			if (status == MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS) {
 				MSG_Pane *owner = GetOwner();
 				if (owner)
 					FE_Alert (owner->GetContext(), XP_GetString(status));
@@ -153,21 +149,17 @@ nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value, PRInt32 *
 	}
 
 	int i = DecodeHeader(header);
-	if (i >= 0) 
-	{
+	if (i >= 0) {
 		char* old = m_headers[i]; /* Done with careful paranoia, in case the
 								     value given is the old value (or worse,
 								     a substring of the old value, as does
 								     happen here and there.) */
-		if (value != old) 
-		{
-			if (value) 
-			{
+		if (value != old) {
+			if (value) {
 				m_headers[i] = nsCRT::strdup(value);
 				if (!m_headers[i]) 
 				   status = MK_OUT_OF_MEMORY;
-			} 
-			else 
+			} else 
 				m_headers[i] = NULL;
 			PR_FREEIF(old);
 		}
@@ -198,16 +190,15 @@ const char* nsMsgCompFields::GetHeader(PRInt32 header)
 nsresult nsMsgCompFields::SetBoolHeader(PRInt32 header, PRBool bValue, PRInt32 *_retval)
 {
 	int status = 0;
-/*JFD
 	NS_ASSERTION ((int) header >= (int) MSG_RETURN_RECEIPT_BOOL_HEADER_MASK &&
 			   (int) header < (int) MSG_LAST_BOOL_HEADER_MASK, "invalid header index");
 
 	if ( (int) header < (int) MSG_RETURN_RECEIPT_BOOL_HEADER_MASK ||
 		 (int) header >= (int) MSG_LAST_BOOL_HEADER_MASK )
-		 return -1;
+		 return NS_ERROR_FAILURE;
 
 	m_boolHeaders[header] = bValue;
-*/
+
 	if (_retval)
 		*_retval = status;
 
@@ -217,6 +208,7 @@ nsresult nsMsgCompFields::SetBoolHeader(PRInt32 header, PRBool bValue, PRInt32 *
 nsresult nsMsgCompFields::GetBoolHeader(PRInt32 header, PRBool *_retval)
 {
 	NS_PRECONDITION(nsnull != _retval, "nsnull ptr");
+
 	*_retval = GetBoolHeader(header);
 	return NS_OK;
 }
@@ -488,23 +480,19 @@ HJ36954
 	/* Here's where we allow URLs in the newsgroups: header */
 
 	int status = -1; 
-	if (hostPort && group) /* must have a group */
-	{
+	if (hostPort && group) { /* must have a group */
 		char *newsPostUrl = HJ57077
-		if (newsPostUrl)
-		{
+		if (newsPostUrl) {
 			const char *existingHeader;
 			GetHeader (MSG_NEWSPOSTURL_HEADER_MASK, (char **)&existingHeader);
-			if (existingHeader && *existingHeader && nsCRT::strcasecmp(newsPostUrl,existingHeader))
+			if (existingHeader && *existingHeader && nsCRT::strcasecmp(newsPostUrl, existingHeader))
 				status = MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS; /* can only send to one news host at a time */
-			else
-			{
+			else {
 				SetHeader (MSG_NEWSPOSTURL_HEADER_MASK, newsPostUrl, NULL);
 				status = 0; /* we succeeded, no need to keep looking at this header */
 			}
 			PR_Free(newsPostUrl);
-		}
-		else
+		} else
 			status = MK_OUT_OF_MEMORY;
 	}
 
@@ -522,18 +510,14 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 	msg_StringArray values (PR_TRUE /*owns memory for strings*/);
 	values.ImportTokenList (value);
 
-	for (int i = 0; i < values.GetSize() && status == 0; i++)
-	{
+	for (int i = 0; i < values.GetSize() && status == 0; i++) {
 		const char *singleValue = values.GetAt(i);
-		if (NEWS_TYPE_URL == NET_URL_Type (singleValue))
-		{
+		if (NEWS_TYPE_URL == NET_URL_Type (singleValue)) {
 			char *hostPort, *group, *id, *data;
 			HJ81279
-			if (status == 0)
-			{
+			if (status == 0) {
 				HJ78808
-				if (status == 0)
-				{
+				if (status == 0) {
 					values.RemoveAt(i);         /* Remove the URL spec for this group */
 					values.InsertAt (i, group); /* Add in the plain old group name */
 				}
@@ -542,16 +526,13 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 				PR_FREEIF (id);
 				PR_FREEIF (data);
 			}
-		}
-		else
+		} else
 			status = MK_MSG_INVALID_NEWS_HEADER;
 	}
 
-	if (status == 0)
-	{
+	if (status == 0) {
 		char *newValue = values.ExportTokenList ();
-		if (newValue)
-		{
+		if (newValue) {
 			status = SetHeader (MSG_NEWSGROUPS_HEADER_MASK, newValue);
 			PR_Free(newValue);
 		}
@@ -559,15 +540,6 @@ PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
 #endif //JFD
 	return status;
 }
-
-/*JFD
-extern "C" const char* MSG_GetCompFieldsHeader(MSG_CompositionFields *fields,
-										   MSG_HEADER_SET header)
-{
-	return (fields) ? fields->GetHeader(header) : 0;
-}
-*/
-
 
 nsresult nsMsgCompFields::SetBody(const char *value, PRInt32 *_retval)
 {
@@ -588,22 +560,23 @@ nsresult nsMsgCompFields::SetBody(const char *value, PRInt32 *_retval)
 nsresult nsMsgCompFields::GetBody(char **_retval)
 {
 	NS_PRECONDITION(nsnull != _retval, "nsnull ptr");
+
 	*_retval = NS_CONST_CAST(char*, GetBody());
 	return NS_OK;
 }
 
-const char* 
-nsMsgCompFields::GetBody()
+const char* nsMsgCompFields::GetBody()
 {
     return m_body ? m_body : "";
 }
 
 
-int
-nsMsgCompFields::AppendBody(const char* value)
+PRInt16 nsMsgCompFields::AppendBody(const char* value)
 {
-    if (!value || !*value) return 0;
-    if (!m_body) {
+    if (!value || !*value)
+		return 0;
+ 
+	if (!m_body) {
 		return SetBody(value, NULL);
     } else {
 		char* tmp = (char*) PR_MALLOC(nsCRT::strlen(m_body) + nsCRT::strlen(value) + 1);
@@ -622,81 +595,37 @@ nsMsgCompFields::AppendBody(const char* value)
 PRInt16 nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
 {
     int result;
-    switch(header) {
-    case MSG_FROM_HEADER_MASK:
-		result = 0;
-		break;
-    case MSG_REPLY_TO_HEADER_MASK:
-		result = 1;
-		break;
-    case MSG_TO_HEADER_MASK:
-		result = 2;
-		break;
-    case MSG_CC_HEADER_MASK:
-		result = 3;
-		break;
-    case MSG_BCC_HEADER_MASK:
-		result = 4;
-		break;
-    case MSG_FCC_HEADER_MASK:
-		result = 5;
-		break;
-    case MSG_NEWSGROUPS_HEADER_MASK:
-		result = 6;
-		break;
-    case MSG_FOLLOWUP_TO_HEADER_MASK:
-		result = 7;
-		break;
-    case MSG_SUBJECT_HEADER_MASK:
-		result = 8;
-		break;
-    case MSG_ATTACHMENTS_HEADER_MASK:
-		result = 9;
-		break;
-    case MSG_ORGANIZATION_HEADER_MASK:
-		result = 10;
-		break;
-    case MSG_REFERENCES_HEADER_MASK:
-		result = 11;
-		break;
-    case MSG_OTHERRANDOMHEADERS_HEADER_MASK:
-		result = 12;
-		break;
-    case MSG_NEWSPOSTURL_HEADER_MASK:
-		result = 13;
-		break;
-    case nsMsgPriority_HEADER_MASK:
-		result = 14;
-		break;
-	case MSG_NEWS_FCC_HEADER_MASK:
-		result = 15;
-		break;
-	case MSG_MESSAGE_ENCODING_HEADER_MASK:
-		result = 16;
-		break;
-	case MSG_CHARACTER_SET_HEADER_MASK:
-		result = 17;
-		break;
-	case MSG_MESSAGE_ID_HEADER_MASK:
-		result = 18;
-		break;
-	case MSG_NEWS_BCC_HEADER_MASK:
-		result = 19;
-		break;
-	case MSG_HTML_PART_HEADER_MASK:
-		result = 20;
-		break;
-    case MSG_DEFAULTBODY_HEADER_MASK:
-		result = 21;
-		break;
-	case MSG_X_TEMPLATE_HEADER_MASK:
-		result = 22;
-		break;
+ 
+	switch(header) {
+    case MSG_FROM_HEADER_MASK				: result = 0;		break;
+    case MSG_REPLY_TO_HEADER_MASK			: result = 1;		break;
+    case MSG_TO_HEADER_MASK					: result = 2;		break;
+    case MSG_CC_HEADER_MASK					: result = 3;		break;
+    case MSG_BCC_HEADER_MASK				: result = 4;		break;
+    case MSG_FCC_HEADER_MASK				: result = 5;		break;
+    case MSG_NEWSGROUPS_HEADER_MASK			: result = 6;		break;
+    case MSG_FOLLOWUP_TO_HEADER_MASK		: result = 7;		break;
+    case MSG_SUBJECT_HEADER_MASK			: result = 8;		break;
+    case MSG_ATTACHMENTS_HEADER_MASK		: result = 9;		break;
+    case MSG_ORGANIZATION_HEADER_MASK		: result = 10;		break;
+    case MSG_REFERENCES_HEADER_MASK			: result = 11;		break;
+    case MSG_OTHERRANDOMHEADERS_HEADER_MASK	: result = 12;		break;
+    case MSG_NEWSPOSTURL_HEADER_MASK		: result = 13;		break;
+    case nsMsgPriority_HEADER_MASK			: result = 14;		break;
+	case MSG_NEWS_FCC_HEADER_MASK			: result = 15;		break;
+	case MSG_MESSAGE_ENCODING_HEADER_MASK	: result = 16;		break;
+	case MSG_CHARACTER_SET_HEADER_MASK		: result = 17;		break;
+	case MSG_MESSAGE_ID_HEADER_MASK			: result = 18;		break;
+	case MSG_NEWS_BCC_HEADER_MASK			: result = 19;		break;
+	case MSG_HTML_PART_HEADER_MASK			: result = 20;		break;
+    case MSG_DEFAULTBODY_HEADER_MASK		: result = 21;		break;
+	case MSG_X_TEMPLATE_HEADER_MASK			: result = 22;		break;
     default:
 		NS_ASSERTION(0, "invalid header index");
 		result = -1;
 		break;
     }
+
     NS_ASSERTION(result < sizeof(m_headers) / sizeof(char*), "wrong result, review the code!");
     return result;
 }
