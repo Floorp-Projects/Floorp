@@ -228,6 +228,8 @@ function onAccept() {
 //
 function checkUserServerChanges(showAlert) {
   var accountValues = getValueArrayFor(currentServerId);
+  if (!accountValues) 
+    return true;
   var pageElements = getPageFormElements();
 
   if (pageElements == null) return true;
@@ -710,6 +712,9 @@ function savePage(serverId) {
       top.frames["contentFrame"].onSave();
 
   var accountValues = getValueArrayFor(serverId);
+  if (!accountValues) 
+    return true;
+
   var pageElements = getPageFormElements();
 
   if (pageElements == null) return;
@@ -821,6 +826,9 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
 function restorePage(pageId, serverId) {
   if (!serverId) return;
   var accountValues = getValueArrayFor(serverId);
+  if (!accountValues) 
+    return true;
+
   var pageElements = getPageFormElements();
 
   if (pageElements == null) return;

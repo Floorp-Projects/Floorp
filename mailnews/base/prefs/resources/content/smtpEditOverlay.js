@@ -48,6 +48,7 @@ var gSmtpUseUsername;
 var gSmtpAuthMethod;
 var gSmtpTrySSL;
 var gSmtpPrefBranch;
+var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 var gSavedUsername="";
 
