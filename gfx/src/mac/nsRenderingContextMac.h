@@ -174,13 +174,11 @@ public:
                                 nsBoundingMetrics& aBoundingMetrics,
                                 PRInt32*           aFontID);
 #endif /* MOZ_MATHML */
-#ifdef IBMBIDI
   /**
    * Let the device context know whether we want text reordered with
    * right-to-left base direction
    */
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
-#endif // IBMBIDI
   //locals
   nsresult   SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
@@ -212,9 +210,7 @@ protected:
     nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
     nsAutoVoidArray         mGSStack;           // GraphicStates stack, used for PushState/PopState
     PRUint32                mChanges;           // bit mask of attributes that have changed since last Push().
-#ifdef IBMBIDI
     PRBool                  mRightToLeftText;
-#endif
 };
 
 #endif /* nsRenderingContextMac_h___ */
