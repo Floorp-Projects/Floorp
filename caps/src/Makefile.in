@@ -49,7 +49,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		-lz	\
+		$(ZLIB_LIBS)	\
 		-lxp	\
 		$(NSPR_LIBS) \
 		$(NULL)
