@@ -130,7 +130,7 @@ function sidebarOpenURL(event, treeitem, root)
 	if (treeitem.getAttribute("type") == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
 		return(false);
 
-	var id = treeitem.id;
+	var id = treeitem.getAttribute("id");
 	if (!id)
 		return(false);
 
@@ -138,22 +138,15 @@ function sidebarOpenURL(event, treeitem, root)
 	// a "#URL" property, use it, otherwise default to using the id
 	try
 	{
-		var theRootNode = document.getElementById(root);
-		var ds = null;
-		if (rootNode)
-		{
-			ds = theRootNode.database;
-		}
-    
-    var rdf = nsJSComponentManager.getService(RDFSERVICE_CONTRACTID, "nsIRDFService");
-		if (rdf)
-		{
-			if (ds)
+
+	    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+		if (rdf) rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf && root)
 			{
 				var src = rdf.GetResource(id, true);
 				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-				var target = ds.GetTarget(src, prop, true);
-				if (target)	target = target.QueryInterface(nsIRDFLiteral);
+				var target = root.GetTarget(src, prop, true);
+			    if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
 				if (target)	target = target.Value;
 				if (target)	id = target;
 			}
