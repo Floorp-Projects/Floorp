@@ -1000,42 +1000,42 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>find.c</PATH>
+                    <PATH>bfind.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>instance.c</PATH>
+                    <PATH>binst.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>object.c</PATH>
+                    <PATH>bobject.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>session.c</PATH>
+                    <PATH>bsession.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>slot.c</PATH>
+                    <PATH>bslot.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>token.c</PATH>
+                    <PATH>btoken.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1164,32 +1164,32 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>find.c</PATH>
+                    <PATH>bfind.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>instance.c</PATH>
+                    <PATH>binst.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>object.c</PATH>
+                    <PATH>bobject.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>session.c</PATH>
+                    <PATH>bsession.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>slot.c</PATH>
+                    <PATH>bslot.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>token.c</PATH>
+                    <PATH>btoken.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2206,42 +2206,42 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>find.c</PATH>
+                    <PATH>bfind.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>instance.c</PATH>
+                    <PATH>binst.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>object.c</PATH>
+                    <PATH>bobject.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>session.c</PATH>
+                    <PATH>bsession.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>slot.c</PATH>
+                    <PATH>bslot.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>token.c</PATH>
+                    <PATH>btoken.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -2370,32 +2370,32 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>find.c</PATH>
+                    <PATH>bfind.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>instance.c</PATH>
+                    <PATH>binst.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>object.c</PATH>
+                    <PATH>bobject.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>session.c</PATH>
+                    <PATH>bsession.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>slot.c</PATH>
+                    <PATH>bslot.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>token.c</PATH>
+                    <PATH>btoken.c</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2614,37 +2614,37 @@
         <FILEREF>
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>find.c</PATH>
+            <PATH>bfind.c</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>instance.c</PATH>
+            <PATH>binst.c</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>object.c</PATH>
+            <PATH>bobject.c</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>session.c</PATH>
+            <PATH>bsession.c</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>slot.c</PATH>
+            <PATH>bslot.c</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>NSSckbi.shlb</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>token.c</PATH>
+            <PATH>btoken.c</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
