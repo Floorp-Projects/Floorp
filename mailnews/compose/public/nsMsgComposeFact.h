@@ -27,7 +27,7 @@
 
 #include "nsIMsgCompose.h"
 
-extern nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult);
+extern nsresult NS_NewMsgCompose(const nsIID &aIID, void ** aInstancePtrResult);
 
 
 #endif

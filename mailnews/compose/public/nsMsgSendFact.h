@@ -27,7 +27,7 @@
 
 #include "nsIMsgSend.h"
 
-extern nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult);
+extern nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult);
 
 
 #endif
