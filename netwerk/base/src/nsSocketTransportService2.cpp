@@ -327,8 +327,14 @@ nsSocketTransportService::Init()
     if (mInitialized)
         return NS_OK;
 
-    if (!mThreadEvent)
+    if (!mThreadEvent) {
         mThreadEvent = PR_NewPollableEvent();
+        // NOTE: per bug 190000, this failure could be caused by Zone-Alarm
+        // or similar software.  Though this could also be a low-memory
+        // error, we'll treat it like being offline in the hopes of giving
+        // the user a better error message.
+        NS_ENSURE_TRUE(mThreadEvent, NS_ERROR_OFFLINE);
+    }
 
     nsresult rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) return rv;
