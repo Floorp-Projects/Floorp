@@ -1476,7 +1476,8 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
 
     nsresult rv;
 
-    if ((aNameSpaceID == kNameSpaceID_HTML) && (aTag == kScriptAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_HTML || 
+         aNameSpaceID == kNameSpaceID_XUL) && (aTag == kScriptAtom)) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: script tag not allowed as root content element"));
 
@@ -1519,7 +1520,8 @@ nsresult
 XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTag)
 {
     nsresult rv;
-    if ((aNameSpaceID == kNameSpaceID_HTML) && (aTag == kScriptAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_HTML  || 
+         aNameSpaceID == kNameSpaceID_XUL) && (aTag == kScriptAtom)) {
         // Oops, it's a script!
         return OpenScript(aNode);
     }
