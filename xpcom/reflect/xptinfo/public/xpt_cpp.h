@@ -108,6 +108,8 @@ public:
         NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE_IS,"not an interface_is");
         return type.type.argnum;
     }
+    // NOTE: gettting the interface or interface iid is done via methods on
+    // nsIInterfaceInfo
 
 private:
     nsXPTParamInfo();   // no implementation

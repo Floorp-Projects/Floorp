@@ -179,7 +179,8 @@ nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 }
 
 NS_IMETHODIMP
-nsInterfaceInfo::GetInfoForParam(nsXPTParamInfo *param, nsIInterfaceInfo** info)
+nsInterfaceInfo::GetInfoForParam(const nsXPTParamInfo *param, 
+                                 nsIInterfaceInfo** info)
 {
 
     NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
@@ -210,7 +211,7 @@ nsInterfaceInfo::GetInfoForParam(nsXPTParamInfo *param, nsIInterfaceInfo** info)
 }
 
 NS_IMETHODIMP
-nsInterfaceInfo::GetIIDForParam(nsXPTParamInfo* param, nsIID** iid)
+nsInterfaceInfo::GetIIDForParam(const nsXPTParamInfo* param, nsIID** iid)
 {
     NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
