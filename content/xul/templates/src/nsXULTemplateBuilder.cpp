@@ -623,14 +623,19 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
                 ReplaceMatch(VALUE_TO_IRDFRESOURCE(memberval), match.operator->(), nsnull);
             }
         }
-
+#if 0
         // Now fire any newly revealed rules
         {
             nsTemplateMatchSet::ConstIterator last = firings.Last();
             for (nsTemplateMatchSet::ConstIterator match = firings.First(); match != last; ++match) {
                 // XXXwaterson yo. write me.
+                // The intent here is to handle any rules that might be
+                // "revealed" by the removal of an assertion from the datasource.
+                // Waterson doesn't think we support negated conditions in a rule.
+                // Nor is he sure that this is currently useful.
             }
         }
+#endif
     }
 
     return NS_OK;
