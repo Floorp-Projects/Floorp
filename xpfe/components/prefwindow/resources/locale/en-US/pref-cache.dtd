@@ -16,7 +16,7 @@
 <!ENTITY  clearMemCache.accesskey       "c">
 <!ENTITY  clearDiskCache.label          "Clear Disk Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
-<!ENTITY  docCache                      "Compare the page in the cache to the page on the network">
+<!ENTITY  docCache                      "Compare the page in the cache to the page on the network:">
 <!ENTITY  chooseFolder.label            "Choose Folder...">
 <!ENTITY  chooseFolder.accesskey        "f">
 <!ENTITY  oncePsessionRadio.label       "Once per session">
