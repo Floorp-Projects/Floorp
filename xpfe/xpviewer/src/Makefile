@@ -20,13 +20,13 @@ DEPTH = ../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
+	nsBrowserMain.cpp \
+	nsBrowserWindow.cpp \
 	nsSetupRegistry.cpp \
 	nsViewerApp.cpp \
 	$(NULL)
 
-# These all have windows.h: what's the deal? -mcafee
-# nsBrowserMain.cpp 
-# nsBrowserWindow.cpp
+# This file is still a Windows-only file:  -mcafee
 # JSConsole.cpp
 
 PROGRAM = xpviewer
@@ -42,10 +42,56 @@ INCLUDES = \
 	-I$(PUBLIC)/xpcom \
 	$(NULL)
 
+LDFLAGS += \
+	-L$(DIST)/bin \
+	-lraptorbase \
+	-lxpcom \
+	-ljs \
+	-lpref \
+	-limg \
+	-lpng \
+	-ljpeg \
+	-lraptorgfx \
+	-lraptorhtmlpars \
+	-lhttpurl \
+	-labouturl \
+	-lmimetype \
+	-lnetlib \
+	-lnetwork \
+	-lnetcache \
+	-lnetcnvts \
+	-lfileurl \
+	-lgophurl \
+	-lftpurl \
+	-lremoturl \
+	-lnetutil \
+	-lsecfree \
+	-lzlib \
+	-lxp \
+	-lutil \
+	-lplc21 \
+	-lnspr21 \
+	-lplds21 \
+	$(NULL)
+
+# Motif, use config/mkdetect here!  Hacking Linux for now. -mcafee
+LDFLAGS += \
+	-lwidgetmotif \
+	-lgmbasemotif \
+	-L/usr/X11R6/lib -lXm -lXp -lXt -lXext -lX11 \
+	$(NULL)
+
+# Static :(
+#	-lraptorwidgetmotif_s \
+
+
+
 include $(DEPTH)/config/rules.mk
 
-$(PROGS): $(OBJS) $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lXext -lX11
 
-
+# This wasn't being used, due to the $(PROGRAM) + rules.mk stuff.
+# Commenting-out for now. -mcafee
+#
+#$(PROGS): $(OBJS)
+#	@$(MAKE_OBJDIR)
+#	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lXext -lX11
