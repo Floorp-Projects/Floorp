@@ -3333,7 +3333,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
     }
   }
 
-  // border-colors: color, string
+  // border-colors: color, string, enum
   if (marginData.mBorderColors) {
     nscolor borderColor;
     nscolor unused = NS_RGB(0,0,0);
@@ -3343,10 +3343,14 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
         // Some composite border color information has been specified for this
         // border side.
         border->EnsureBorderColors();
+        border->ClearBorderColors(i);
         nsCSSValueList* list = marginData.mBorderColors[i];
         while (list) {
           if (SetColor(list->mValue, unused, mPresContext, borderColor, inherited))
-            border->AppendBorderColor(i, borderColor);
+            border->AppendBorderColor(i, borderColor, PR_FALSE);
+          else if (eCSSUnit_Enumerated == list->mValue.GetUnit() &&
+                   NS_STYLE_COLOR_TRANSPARENT == list->mValue.GetIntValue())
+            border->AppendBorderColor(i, nsnull, PR_TRUE);
           list = list->mNext;
         }
       }
