@@ -38,6 +38,9 @@ NO_CAFE=1
 
 include <$(DEPTH)\config\config.mak>
 
+# for compatibility
+include <$(DEPTH)\java\config\localdefs.mak>
+
 JAR_MJUTIL_CLASSES = org\mozilla\util 
 
 !ifdef JAVA_OR_NSJVM

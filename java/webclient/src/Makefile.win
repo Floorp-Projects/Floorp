@@ -57,7 +57,7 @@ WIN_LIBS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-include <..\config\localdefs.mak>
+include <$(DEPTH)\java\config\localdefs.mak>
 
 !CMDSWITCHES -S
 

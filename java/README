@@ -15,8 +15,8 @@ How To Build:
 * make it so the directory in which this file resides is a child of your
   top level mozilla directory
 
-* Copy the files .\webclient\config\buildpkg.bat and
-  .\webclient\config\outofdate.pl to mozilla\config.  These file were
+* Copy the files .\config\buildpkg.bat and
+  .\config\outofdate.pl to mozilla\config.  These file were
   modified after M8 and the modifications are required to build java.
 
 * make sure the environment var JDKHOME is set to your jdk installation

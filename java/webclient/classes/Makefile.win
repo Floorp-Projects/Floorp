@@ -36,6 +36,9 @@ NO_CAFE=1
 
 include <$(DEPTH)\config\config.mak>
 
+# for compatibility
+include <$(DEPTH)\java\config\localdefs.mak>
+
 JAR_WEBCLIENT_CLASSES = org\mozilla\webclient \
 	org\mozilla\webclient\test 
 
