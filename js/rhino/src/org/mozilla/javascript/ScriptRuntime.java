@@ -1582,11 +1582,8 @@ public class ScriptRuntime {
                 if (typeX == ScriptableClass) {
                     if (x == y)
                         return true;
-                    if (x instanceof Wrapper &&
-                        y instanceof Wrapper)
-                    {
-                        return ((Wrapper) x).unwrap() ==
-                               ((Wrapper) y).unwrap();
+                    if (x instanceof Wrapper && y instanceof Wrapper) {
+                        return ((Wrapper) x).unwrap().equals(((Wrapper) y).unwrap());
                     }
                     return false;
                 }
