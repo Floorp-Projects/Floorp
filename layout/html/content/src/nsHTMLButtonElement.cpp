@@ -387,12 +387,13 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
     switch (aEvent->message) {
 
     case NS_KEY_PRESS:
+    case NS_KEY_UP:
       {
         // For backwards compat, trigger buttons with space or enter
         // (bug 25300)
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-        if (keyEvent->keyCode == NS_VK_RETURN ||
-            keyEvent->charCode == NS_VK_SPACE) {
+        if ((keyEvent->keyCode == NS_VK_RETURN && NS_KEY_PRESS == aEvent->message) ||
+            keyEvent->keyCode == NS_VK_SPACE  && NS_KEY_UP == aEvent->message) {
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_MOUSE_EVENT;
