@@ -1020,16 +1020,36 @@ NS_IMETHODIMP nsView :: GetVisibility(nsViewVisibility &aVisibility) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetZIndex(PRInt32 zindex)
+NS_IMETHODIMP nsView::SetZIndex(PRInt32 aZIndex)
 {
-  mZindex = zindex;
-  return NS_OK;
+	mZindex = aZIndex;
+
+	if (nsnull != mWindow) {
+		mWindow->SetZIndex(aZIndex);
+	}
+
+	return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetZIndex(PRInt32 &aZIndex) const
+NS_IMETHODIMP nsView::GetZIndex(PRInt32 &aZIndex) const
 {
   aZIndex = mZindex;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsView::SetAutoZIndex(PRBool aAutoZIndex)
+{
+	if (aAutoZIndex)
+		mVFlags |= NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX;
+	else
+		mVFlags &= ~NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsView::GetAutoZIndex(PRBool &aAutoZIndex) const
+{
+	aAutoZIndex = ((mVFlags & NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX) != 0);
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: SetParent(nsIView *aParent)
@@ -1236,6 +1256,9 @@ NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
       if (aEnableDragDrop) {
         mWindow->EnableDragDrop(PR_TRUE);
       }
+      
+      // propagate the z-index to the widget.
+      mWindow->SetZIndex(mZindex);
     }
   }
 

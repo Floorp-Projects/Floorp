@@ -37,25 +37,23 @@ struct nsRect;
 //this is used by the view clipping APIs since the description of
 //a clip rect is different than a rect
 
-typedef struct
-{
+struct nsViewClip {
   nscoord mLeft;
   nscoord mRight;
   nscoord mTop;
   nscoord mBottom;
-} nsViewClip;
+};
 
 // Enumerated type to indicate the visibility of a layer.
 // hide - the layer is not shown.
 // show - the layer is shown irrespective of the visibility of 
 //        the layer's parent.
 // inherit - the layer inherits its visibility from its parent.
-typedef enum
-{
+enum nsViewVisibility {
   nsViewVisibility_kHide = 0,
   nsViewVisibility_kShow = 1,
   nsViewVisibility_kInherit = 2
-} nsViewVisibility;
+};
 
 // IID for the nsIView interface
 #define NS_IVIEW_IID    \
@@ -245,6 +243,21 @@ public:
    * @result current z depth
    */
   NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const = 0;
+
+  /**
+   * Indicate that the z-index of a view is "auto". An "auto" z-index
+   * means that the view does not define a new stacking context,
+   * which means that the z-indicies of the view's children are
+   * relative to the view's siblings.
+   * @param aAutoZIndex if true then z-index will be auto
+   */
+  NS_IMETHOD  SetAutoZIndex(PRBool aAutoZIndex) = 0;
+
+  /**
+   * Returns true if an auto z-index is set for this view.
+   * @result current state of auto z-indexing
+   */
+  NS_IMETHOD  GetAutoZIndex(PRBool &aAutoZIndex) const = 0;
 
   /**
    * Called to set the parent of the view.
@@ -516,5 +529,7 @@ private:
 //indicates that the view should not be bitblt'd when moved
 //or scrolled and instead must be repainted
 #define NS_VIEW_PUBLIC_FLAG_DONT_BITBLT          0x0010
+// indicates that the view is using auto z-indexing
+#define NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX          0x0020
 
 #endif
