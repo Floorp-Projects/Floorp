@@ -25,9 +25,6 @@
 #ifndef _NS_XICONTEXT_H_
 #define _NS_XICONTEXT_H_
 
-#include <gtk/gtk.h>
-#include <pthread.h>
-
 #include "nsLicenseDlg.h"
 #include "nsWelcomeDlg.h"
 #include "nsSetupTypeDlg.h"
@@ -79,15 +76,6 @@ public:
                                        emitted twice; this notes the state */
     int                 bDone;      /* engine thread sets boolean when done
                                        so that ui/main thread can exit */
-
-    pthread_mutex_t     prog_mutex; /* mutex for sync between ui and eng th */
-    pthread_cond_t      prog_cv;    /* cond var for ui/eng th communication */
-    int                 threadTurn; /* toggle between engine and ui threads */
-    enum
-    {
-        UI_THREAD       = 0x0A,
-        ENGINE_THREAD   = 0x0F
-    };
 
 /*-------------------------------------------------------------------*
  *   Utilities

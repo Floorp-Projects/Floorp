@@ -53,8 +53,6 @@ nsXIContext::nsXIContext()
     nextID = 0;
     bMoving = FALSE;
     bDone = FALSE;
-
-    threadTurn = nsXIContext::UI_THREAD;
 }
 
 nsXIContext::~nsXIContext()
