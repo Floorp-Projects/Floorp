@@ -1,23 +1,23 @@
-<!ENTITY  window.title                "SmartFill">
-<!ENTITY  lHeader                     "SmartFill">
+<!ENTITY  window.title                "Forms and Passwords">
+<!ENTITY  lHeader                     "Forms and Passwords">
 <!ENTITY  rHeader                     "Manage personal information and passwords">
 
-<!ENTITY  walletHeader.label          "&brandShortName; SmartFill">
-<!ENTITY  walletDescription.label     "&brandShortName; SmartFill can remember information about you so that filling out forms on webpages is faster.">
-<!ENTITY  walletServer.label          "Server for SmartFill tables:">
+<!ENTITY  walletHeader.label          "Forms Manager">
+<!ENTITY  walletDescription.label     "Forms Manager can remember information about you so that filling out forms on webpages is faster.">
+<!ENTITY  walletServer.label          "Server for Forms Manager tables:">
 <!ENTITY  walletServer.accesskey      "s">
 <!ENTITY  walletEnabled.label         "Save form data from webpages when completing forms.">
 <!ENTITY  walletEnabled.accesskey     "f">
 <!ENTITY  viewWallet.label            "View Saved Data...">
 <!ENTITY  viewWallet.accesskey        "v">
 
-<!ENTITY  signonHeader.label          "&brandShortName; Single Signon">
-<!ENTITY  signonDescription.label     "&brandShortName; Single Signon stores your usernames and passwords for sites that require you to log in, and enters them automatically when you visit those sites.">
+<!ENTITY  signonHeader.label          "Password Manager">
+<!ENTITY  signonDescription.label     "Password Manager stores your usernames and passwords for sites that require you to log in, and enters them automatically when you visit those sites.">
 <!ENTITY  signonEnabled.label         "Remember passwords for sites that require me to log in.">
 <!ENTITY  signonEnabled.accesskey     "r">
-<!ENTITY  viewSignons.label           "View Saved Signons...">
+<!ENTITY  viewSignons.label           "View Saved Passwords...">
 <!ENTITY  viewSignons.accesskey       "e">
 
-<!ENTITY  changePasswords.label       "Change SmartFill Password...">
+<!ENTITY  changePasswords.label       "Change Forms Manager Password...">
 <!ENTITY  changePasswords.accesskey   "c">
 

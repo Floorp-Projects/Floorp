@@ -22,7 +22,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-colors.dtd" >
@@ -42,7 +41,7 @@
   
   <script language="JavaScript" src="chrome://communicator/content/pref/pref-colors.js"></script>
 
-  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;"/>
 
   <box>
 		<titledbox orient="vertical" flex="1">
@@ -57,8 +56,7 @@
             <colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
           </menupopup>
         </menu>
-        <textfield collapsed="true" id="foregroundText" pref="true" preftype="color"
-                   prefstring="browser.foreground_color" prefattribute="value"/>
+        <data id="foregroundText" pref="true" preftype="color" prefstring="browser.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <box>
         <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.label;" for="backgroundmenu"/>
@@ -70,8 +68,7 @@
             <colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
           </menupopup>
         </menu>
-        <textfield collapsed="true" id="background" pref="true" preftype="color"
-                   prefstring="browser.background_color" prefattribute="value"/>
+        <data id="background" pref="true" preftype="color" prefstring="browser.background_color" prefattribute="value" wsm_attributes="value"/>
       </box>
       <checkbox id="browserUseWindowsColors" value="&useWindowsColors.label;" accesskey="&useWindowsColors.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.wfe.use_windows_colors" prefattribute="checked"/>
@@ -89,8 +86,7 @@
             <colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
           </menupopup>
         </menu>
-        <textfield collapsed="true" id="unvisitedLinks" pref="true" preftype="string"
-                   prefstring="browser.anchor_color" prefattribute="value"/>
+        <data id="unvisitedLinks" pref="true" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
       </box>
     	<box>
         <text class="label" value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" for="visitedlinkmenu"/>
@@ -102,8 +98,7 @@
             <colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
           </menupopup>
         </menu>
-        <textfield collapsed="true" id="visitedLinks" pref="true" preftype="string"
-                   prefstring="browser.visited_color" prefattribute="value"/>
+        <data id="visitedLinks" pref="true" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
       </box>
   		<checkbox id="browserUnderlineAnchors" value="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>

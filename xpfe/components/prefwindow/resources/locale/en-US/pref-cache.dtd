@@ -3,8 +3,8 @@
 <!--LOCALIZATION NOTE : FILE Cache prefs dialog -->
 <!ENTITY  title.label                   "Cache">
 <!ENTITY  lHeader                       "Cache">
-<!ENTITY  rHeader                       "Designate the size of the cache">
-<!ENTITY  cachePara                     "The cache is used to keep local copies of frequently accessed documents and thus reduce time connected to the network. The Reload button will always compare the cache document to the network and show the most recent one.">
+<!ENTITY  cacheTitle.label              "Set Cache size">
+<!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. This reduces the amount of time you are connected to the Internet. (Clicking Reload always shows you the latest version of a page.)">
 <!ENTITY  memCache.label                "Memory Cache:">
 <!ENTITY  memCache.accesskey            "m">
 <!ENTITY  diskCache.label               "Disk Cache:">
@@ -16,12 +16,12 @@
 <!ENTITY  clearMemCache.accesskey       "c">
 <!ENTITY  clearDiskCache.label          "Clear Disk Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
-<!ENTITY  docCache                      "Document in cache is compared to document on network:">
+<!ENTITY  docCache                      "Compare the page in the cache to the page on the network">
 <!ENTITY  chooseFolder.label            "Choose Folder...">
 <!ENTITY  chooseFolder.accesskey        "f">
 <!ENTITY  oncePsessionRadio.label       "Once per session">
 <!ENTITY  oncePsessionRadio.accesskey   "o">
-<!ENTITY  everyTimeRadio.label          "Every time">
+<!ENTITY  everyTimeRadio.label          "Every time I view the page">
 <!ENTITY  everyTimeRadio.accesskey      "e">
 <!ENTITY  neverRadio.label              "Never">
 <!ENTITY  neverRadio.accesskey          "n">

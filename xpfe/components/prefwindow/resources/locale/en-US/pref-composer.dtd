@@ -5,7 +5,7 @@
 <!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
 <!ENTITY  title.label               "Composer">
 <!ENTITY  lHeader                   "Composer">
-<!ENTITY  rHeader                   "Settings for authoring of new web pages">
+<!ENTITY  rHeader                   "Settings for authoring of new Web pages">
 
 <!ENTITY  tableEditing.label                    "Table Editing">
 
@@ -17,6 +17,3 @@
 <!ENTITY  deleteCell.accesskey                  "s">
 <!ENTITY  deleteContent.label                   "delete only cell content">
 <!ENTITY  deleteContent.accesskey               "c">
-
-<!ENTITY  AutoSaveCheck             "Automatically save every">
-<!ENTITY  minText                   "minutes">

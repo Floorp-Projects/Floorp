@@ -1,6 +1,5 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
@@ -28,7 +27,7 @@
     <!-- tree sidebar -->
     <tree class="inset" id="prefsTree"/>      
 
-    <html:iframe id="panelFrame" name="panelFrame" style="width:0px" flex="1"/>
+    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="1"/>
     <script language="JavaScript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {

@@ -309,7 +309,7 @@ nsPrefWindow.prototype =
           for( var i = 0; i < panelChildren.childNodes.length; i++ )
             {
               var currentItem = panelChildren.childNodes[i];
-              if( currentItem.id != aComponentName )
+              if( currentItem.id != aComponentName && currentItem.id != "appearance" )
                 currentItem.removeAttribute( "open" );
             }
           var openItem = document.getElementById( aComponentName );
