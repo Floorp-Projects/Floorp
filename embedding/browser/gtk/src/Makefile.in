@@ -164,6 +164,6 @@ EmbedComponents.cpp: EmbedComponents.cpp.in Makefile Makefile.in $(EMBED_LINK_CO
 	sed -e "s|%MODULE_LIST%|$(foreach m, $(shell cat $(EMBED_LINK_COMP_NAMES)),MODULE($(m)),)|" \
 	> $@
 
-GARBAGE += embed-link-comp-names embed-link-comps components
+GARBAGE += EmbedComponents.cpp embed-link-comp-names embed-link-comps components
 endif
 
