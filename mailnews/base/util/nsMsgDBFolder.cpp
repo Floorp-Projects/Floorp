@@ -30,6 +30,18 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMsgAccountManager.h"
+#include "nsXPIDLString.h"
+
+#if defined(XP_WIN16) || defined(XP_OS2)
+#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
+#elif defined(XP_MAC)
+#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 26
+#elif defined(XP_WIN32)
+#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 256
+#else
+#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 32000
+#endif
+
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
@@ -320,6 +332,111 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 		return rv;
 }
 
+// path coming in is the root path without the leaf name,
+// on the way out, it's the whole path.
+nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &path, char **resultName)
+{
+	const int charLimit = MAX_FILE_LENGTH_WITHOUT_EXTENSION;	// set on platform specific basis
+#if XP_MAC
+	nsCAutoString illegalChars = ":";
+#elif defined(XP_WIN16) || defined(XP_OS2) 
+	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$. ";
+#elif defined(XP_WIN32)
+	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$";
+#else		// UNIX
+	nsCAutoString illegalChars = "";
+#endif
+
+	if (!resultName || !userLeafName)
+		return NS_ERROR_NULL_POINTER;
+	*resultName = nsnull;
+
+	// mangledLeaf is the new leaf name.
+	// If userLeafName	(a) contains all legal characters
+	//					(b) is within the valid length for the given platform
+	//					(c) does not already exist on the disk
+	// then we simply return nsCRT::strdup(userLeafName)
+	// Otherwise we mangle it
+
+	// leafLength is the length of mangledLeaf which we will return
+	// if userLeafName is greater than the maximum allowed for this
+	// platform, then we truncate and mangle it.  Otherwise leave it alone.
+	PRInt32 leafLength;
+
+	// mangledPath is the entire path to the newly mangled leaf name
+	nsCAutoString mangledLeaf = userLeafName;
+	
+	PRInt32 illegalCharacterIndex = mangledLeaf.FindCharInSet(illegalChars);
+
+	PRBool exists;
+
+	if (illegalCharacterIndex == kNotFound)
+	{
+		path += (const char *) mangledLeaf;
+		if (!path.Exists())
+		{
+		// if there are no illegal characters
+		// and the file doesn't already exist, then don't do anything to the string
+		// Note that this might be truncated to charLength, but if so, the file still
+		// does not exist, so we are OK.
+			*resultName = mangledLeaf.ToNewCString();
+			return (*resultName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+		}
+	}
+	else
+	{
+
+		// First, replace all illegal characters with '_'
+		mangledLeaf.ReplaceChar(illegalChars, '_');
+
+		path += (const char *) mangledLeaf;
+	}
+	// if we are here, then any of the following may apply:
+	//		(a) there were illegal characters
+	//		(b) the file already existed
+
+	// Now, we have to loop until we find a filename that doesn't already
+	// exist on the disk
+	PRBool nameSpaceExhausted = FALSE;
+	nsXPIDLCString leafName;
+	
+	path.SetLeafName(mangledLeaf.GetBuffer());
+	exists = path.Exists();
+	leafLength = mangledLeaf.Length();
+
+	if (exists)
+	{
+		if (leafLength >= 2) 
+			mangledLeaf.SetCharAt(leafLength - 2, 'A');
+		mangledLeaf.SetCharAt(leafLength - 1, 'A');	// leafLength must be at least 1
+	}
+
+	while (!nameSpaceExhausted && path.Exists())
+	{
+		if (leafLength >= 2)
+		{
+			PRUnichar lastChar = mangledLeaf.CharAt(leafLength - 1);
+			mangledLeaf.SetCharAt(leafLength - 1, ++lastChar);
+			if (lastChar > 'Z')
+			{
+				mangledLeaf.SetCharAt(leafLength - 1,'A');
+				PRUnichar nextToLastChar = mangledLeaf.CharAt(leafLength - 2);
+				mangledLeaf.SetCharAt(leafLength - 2, nextToLastChar + 1);
+				nameSpaceExhausted = (nextToLastChar == 'Z');
+			}
+		}
+		else
+		{
+			PRUnichar lastChar = mangledLeaf.CharAt(leafLength - 1);
+			mangledLeaf.SetCharAt(leafLength - 1, ++lastChar);
+			nameSpaceExhausted = (lastChar == 'Z');
+		}
+	}
+	*resultName = mangledLeaf.ToNewCString();
+	
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgDBFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
 {
@@ -607,3 +724,4 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 	}
     return NS_OK;
 }
+

@@ -289,7 +289,7 @@ static PRUint32 StringHash(const char *ubuf)
 
 nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 {
-#if defined(XP_WIN16) || defined(XP_OS2)
+#if defined(XP_OS2)
   const PRUint32 MAX_LEN = 8;
 #elif defined(XP_MAC)
   const PRUint32 MAX_LEN = 25;

@@ -1733,8 +1733,13 @@ nsMsgFolder::GetPath(nsIFileSpec * *aPath)
 
   nsCOMPtr<nsIFileSpec> path;
   rv = server->GetLocalPath(getter_AddRefs(path));
-  if (NS_FAILED(rv)) return rv;
+  return rv;
 
+}
+
+NS_IMETHODIMP
+nsMsgFolder::SetPath(nsIFileSpec  * /* aPath */)
+{
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 

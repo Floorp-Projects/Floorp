@@ -275,7 +275,7 @@ interface nsIMsgFolder : nsIFolder {
   /**
    * local path of this folder
    */
-	readonly attribute nsIFileSpec path;
+	attribute nsIFileSpec path;
 
 	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
 	void markAllMessagesRead();

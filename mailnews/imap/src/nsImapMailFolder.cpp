@@ -176,6 +176,19 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
 
 	return NS_OK;
 }
+NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)
+{
+	if (!aPathName)
+		return NS_ERROR_NULL_POINTER;
+    if (! m_pathName) 
+    {
+    	m_pathName = new nsFileSpec("");
+    	if (! m_pathName)
+    		return NS_ERROR_OUT_OF_MEMORY;
+	}
+	return aPathName->GetFileSpec(m_pathName);
+}
+
 
 NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
 {
@@ -314,6 +327,14 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 		}
 
 		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
+		// make the imap folder remember the file spec it was created with.
+		if (child)
+		{
+			nsCOMPtr <nsIFileSpec> msfFileSpec;
+			nsresult rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
+			if (NS_SUCCEEDED(rv) && msfFileSpec)
+				child->SetPath(msfFileSpec);
+		}
 		PL_strfree(folderName);
     }
 	return rv;
@@ -544,9 +565,10 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 	    return parentFolder->CreateClientSubfolderInfo(nsCAutoString(leafName));
     }
     
+	// if we get here, it's really a leaf, and "this" is the parent.
     folderNameStr = leafName;
     
-    path += folderNameStr;
+//    path += folderNameStr;
 
 	// Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
@@ -557,6 +579,12 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 	{
         nsCOMPtr<nsIMsgDatabase> unusedDB;
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
+
+		nsXPIDLCString uniqueLeafName;
+
+		rv = CreatePlatformLeafNameForDisk(folderName, path, getter_Copies(uniqueLeafName));
+		path.SetLeafName(uniqueLeafName);
+
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
 		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
@@ -573,6 +601,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 
 			//Now let's create the actual new folder
 			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
+			if (NS_SUCCEEDED(rv) && child)
+				child->SetPath(dbFileSpec);
 
 			nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
 			if (imapFolder)

@@ -76,6 +76,7 @@ protected:
 	nsresult ReadFromFolderCache(nsIMsgFolderCacheElement *element);
 	nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
+	nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  

@@ -164,6 +164,7 @@ public:
     NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
     NS_IMETHOD GetPath(nsIFileSpec** aPathName);
+	NS_IMETHOD SetPath(nsIFileSpec * aPath);
 
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
@@ -314,7 +315,7 @@ protected:
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsCString& msgIds, nsMsgKeyArray& keyArray);
 
-    nsNativeFileSpec *m_pathName;
+    nsFileSpec *m_pathName;
     PRBool m_initialized;
     PRBool m_haveDiscoveredAllFolders;
     PRBool m_haveReadNameFromDB;
