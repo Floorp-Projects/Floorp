@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.5 2001/02/06 01:05:21 relyea%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.6 2001/08/24 18:20:07 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -160,8 +160,15 @@ main (int argc, char **argv)
      */
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    rv = NSS_Init(SECU_ConfigDirectory(NULL));
-    if (rv != SECSuccess) goto prdone;
+    if (output_file) {
+	rv = NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    } else {
+	rv = NSS_Init(SECU_ConfigDirectory(NULL));
+    }
+    if (rv != SECSuccess) {
+	retval = -1;
+	goto prdone;
+    }
 
     /* Convert value into an item */
     data.data = (unsigned char *)value;
@@ -215,6 +222,19 @@ file_loser:
     else
     {
       SECItem keyid = { 0, 0, 0 };
+      PK11SlotInfo *slot = NULL;
+
+      /* sigh, initialize the key database */
+      slot = PK11_GetInternalKeySlot();
+      if (slot && PK11_NeedUserInit(slot)) {
+        rv = SECU_ChangePW(slot, "", 0);
+        if (rv != SECSuccess) {
+            SECU_PrintError(program_name, "Failed to initialize slot \"%s\"",
+                                    PK11_GetSlotName(slot));
+            return SECFailure;
+        }
+	PK11_FreeSlot(slot);
+      }
 
       rv = PK11SDR_Encrypt(&keyid, &data, &result, 0);
       if (rv != SECSuccess) {
