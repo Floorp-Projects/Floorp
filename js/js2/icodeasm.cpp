@@ -70,7 +70,8 @@ namespace ICodeASM {
         uint statementNo = 0;
         iter begin = source.begin();
         iter end = source.end();
-
+        mMaxRegister = 0;
+        
         while (begin < end)
         {
             try
@@ -664,8 +665,8 @@ namespace ICodeASM {
                 throw new ICodeParseException ("Expected numeric value after Offset keyword");
             int32 ofs;
             begin = ParseInt32 (tl.begin, end, &ofs);
-            VM::Label *new_label = new VM::Label(0);
-            new_label->mOffset = mStatementNodes.size() + ofs;
+            VM::Label *new_label = new VM::Label(mInstructions);
+            new_label->mOffset = mInstructionCount + ofs;
             mUnnamedLabels.push_back (new_label);
             *rval = new_label;
         } else {
@@ -678,7 +679,7 @@ namespace ICodeASM {
             } else {
                 /* havn't seen the label definition yet, put a placeholder
                  * in the namedlabels map */
-                VM::Label *new_label = new VM::Label(0);
+                VM::Label *new_label = new VM::Label(mInstructions);
                 new_label->mOffset = VM::NotALabel;
                 *rval = new_label;
                 mNamedLabels[str->c_str()] = new_label;
@@ -725,25 +726,20 @@ namespace ICodeASM {
     iter ICodeParser::ParseInstruction (uint icodeID, iter begin, iter end)
     {
         iter curpos = begin;
-        StatementNode *node = new StatementNode();
-        node->begin = begin;
-        node->icodeID = icodeID;
+        StatementNode node;
+        node.icodeID = icodeID;
 
         fprintf (stderr, "parsing instruction %s\n", icodemap[icodeID].name);
         
-        /* add the node now, so the parse*operand functions can see it
-         * (used for label calculations) */
-        mStatementNodes.push_back (node);
-
 #       define CASE_TYPE(T, C, CTYPE)                                      \
            case ot##T:                                                     \
            {                                                               \
               C rval;                                                      \
               fprintf (stderr, "parsing operand type %u\n",                \
                        static_cast<uint32>(ot##T));                        \
-              node->operand[i].type = ot##T;                               \
+              node.operand[i].type = ot##T;                                \
               curpos = Parse##T##Operand (curpos, end, &rval);             \
-              node->operand[i].data = CTYPE<int64>(rval);                  \
+              node.operand[i].data = CTYPE<int64>(rval);                   \
               break;                                                       \
            }
  
@@ -766,6 +762,7 @@ namespace ICodeASM {
                 CASE_TYPE(Register, JSTypes::Register, static_cast);
                 CASE_TYPE(StringAtom, StringAtom *, reinterpret_cast);
                 default:
+                    node.operand[i].type = otNone;
                     break;                    
             }
             if (i != 3 && icodemap[icodeID].otype[i + 1] != otNone) {
@@ -781,6 +778,9 @@ namespace ICodeASM {
 
 #       undef CASE_TYPE
 
+        mInstructions.push_back (InstructionFromNode(&node));
+        ++mInstructionCount;
+        
         TokenLocation tl = SeekTokenStart (curpos, end);
         if (tl.estimate != teNewline && tl.estimate != teEOF)
             throw new ICodeParseException ("Expected newline");
@@ -831,15 +831,15 @@ namespace ICodeASM {
             LabelMap::const_iterator l = mNamedLabels.find(label_str.c_str());
             if (l == mNamedLabels.end()) {
                 /* if it wasn't already referenced, add it */
-                VM::Label *new_label = new VM::Label (0);
-                new_label->mOffset = mStatementNodes.size();
+                VM::Label *new_label = new VM::Label (mInstructions);
+                new_label->mOffset = mInstructionCount;
                 mNamedLabels[label_str.c_str()] = new_label;
             } else {
                 /* if it was already referenced, check to see if the offset
                  * was already set */
                 if ((*l).second->mOffset == VM::NotALabel) {
                     /* offset not set yet, set it and move along */
-                    (*l).second->mOffset = mStatementNodes.size();
+                    (*l).second->mOffset = mInstructionCount;
                 } else {
                     /* offset was already set, this must be a dupe! */
                     throw new ICodeParseException ("Duplicate label");

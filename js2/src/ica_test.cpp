@@ -36,7 +36,7 @@
 
 #include "icodeasm.h"
 
-void testAlpha (JavaScript::ICodeASM::ICodeParser icp, const string &str,
+void testAlpha (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
                 const string &expect)
 {
     string *result;
@@ -61,7 +61,7 @@ void testBool (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
     fprintf (stderr, "string '%s' bool parsed as %i\n", str.c_str(), b);
 }
 
-void testDouble (JavaScript::ICodeASM::ICodeParser icp, const string &str,
+void testDouble (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
                  double expect)
 {
     double result;
@@ -74,7 +74,7 @@ void testDouble (JavaScript::ICodeASM::ICodeParser icp, const string &str,
              result);
 }
 
-void testString (JavaScript::ICodeASM::ICodeParser icp, const string &str,
+void testString (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
                  const string &expect)
 {
     string *result;
@@ -87,7 +87,7 @@ void testString (JavaScript::ICodeASM::ICodeParser icp, const string &str,
              result->c_str());
 }
 
-void testUInt32 (JavaScript::ICodeASM::ICodeParser icp, const string &str,
+void testUInt32 (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
                  uint32 expect)
 {
     uint32 result;
@@ -100,7 +100,7 @@ void testUInt32 (JavaScript::ICodeASM::ICodeParser icp, const string &str,
              result);
 }
 
-void testParse (JavaScript::ICodeASM::ICodeParser icp, const string &str)
+void testParse (JavaScript::ICodeASM::ICodeParser &icp, const string &str)
 {
     icp.ParseSourceFromString (str);    
 }

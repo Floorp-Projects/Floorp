@@ -86,7 +86,7 @@ sub get_classname {
 my $binary_op =
   {
    super  => "Instruction_3",
-   super_has_print => 1,
+#   super_has_print => 1,
    rem    => "dest, source1, source2",
    params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };

@@ -662,7 +662,6 @@ ICodeOp ICodeGenerator::mapExprNodeToICodeOp(ExprNode::Kind kind)
     case ExprNode::notIdentical:
         return STRICT_EQ;
 
-
     default:
         NOT_REACHED("Unimplemented kind");
         return NOP;

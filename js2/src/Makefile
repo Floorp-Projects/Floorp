@@ -29,6 +29,7 @@ test_objs = hash.o \
 	utilities.o \
 	world.o \
 	vmtypes.o \
+    xmlparser.o \
 	debugger.o
 
 gc_path = ../../gc/boehm/
