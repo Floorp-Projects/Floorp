@@ -1046,7 +1046,7 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
     switch (key_type) {
     case CKK_RSA:
 	crv = pk11_ConstrainAttribute(object, CKA_MODULUS,
-						 RSA_MIN_MODULUS_BITS, 0, 2);
+						 RSA_MIN_MODULUS_BITS, 0, 0);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
