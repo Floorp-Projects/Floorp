@@ -122,3 +122,8 @@ XUL_ATOM(container, "container")
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")
+
+XUL_ATOM(iframe, "iframe")
+XUL_ATOM(browser, "browser")
+XUL_ATOM(editor, "editor")
+
