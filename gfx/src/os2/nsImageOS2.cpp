@@ -266,10 +266,7 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
 
       #define ROP_NOTSRCAND 0x22 // NOT(SRC) AND DST
 
-      PRBool aBool;
-      surf->RequiresInvertedMask( &aBool);
-
-      long lRop = aBool ? ROP_NOTSRCAND : ROP_SRCAND;
+      long lRop = (mDeviceDepth >= 8) ? ROP_NOTSRCAND : ROP_SRCAND;
 
       // Apply mask to target, clear pels we will fill in from the image
       DrawBitmap( surf->mPS, 4, aptl, lRop, PR_TRUE);
