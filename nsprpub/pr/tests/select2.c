@@ -64,7 +64,7 @@ PRInt32 count;
 ***********************************************************************/
 
 
-static Test_Result (int result)
+static void Test_Result (int result)
 {
 	switch (result)
 	{
@@ -104,7 +104,6 @@ static void PRSelectTest(void)
 {
     PRFileDesc *listenSocket;
     PRNetAddr serverAddr;
-    PRThread *WorkerThread;
 
     if ( (listenSocket = PR_NewTCPSocket()) == NULL) {
         if (debug_mode) printf("\tServer error creating listen socket\n");
@@ -185,7 +184,6 @@ static void NativeSelectTest(void)
 {
     PRFileDesc *listenSocket;
     PRNetAddr serverAddr;
-    PRThread *WorkerThread;
 
     if ( (listenSocket = PR_NewTCPSocket()) == NULL) {
         if (debug_mode) printf("\tServer error creating listen socket\n");
