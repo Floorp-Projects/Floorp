@@ -5,8 +5,8 @@
 # Util.tst - simple regression tests for the Util.pm module
 
 
-# $Revision: 1.5 $ 
-# $Date: 2002/04/25 00:11:51 $ 
+# $Revision: 1.6 $ 
+# $Date: 2003/04/20 20:16:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/util.tst,v $ 
 # $Name:  $ 
@@ -42,7 +42,20 @@ use lib '#tinder_libdir#';
 use Utils;
 
 
+sub extract_printable_chars_tst {
 
+  $a = "a";
+  ($a eq extract_printable_chars($a)) || die();
+  
+  $a = "\0";
+  ($a eq extract_printable_chars($a)) && die();
+
+  $a = "a\0b";
+  $b = "ab";
+  ($b eq extract_printable_chars($a)) || die();
+  
+return 1;
+}
 
 sub extract_digits_tst {
 
@@ -99,7 +112,16 @@ sub extract_user_tst {
   # mail address with 'decoration'
   $a = ' "leaf (Daniel Nunes)" <leaf@mozilla.org> ';
     ('leaf@mozilla.org' eq extract_user($a)) || die();
-  
+
+  # names from the Mozilla CVS repository which look like they could
+  # give us trouble
+
+  $a = 'roc+%cs.cmu.edu';
+
+  $a = 'henry.jia%sun.com';
+
+
+
   # bad addresses
   $a = "\n";
   (length(extract_user($a))) && die();
@@ -129,7 +151,7 @@ sub extract_html_chars_tst {
   $a = "<ScRiPT></ScRiPT>";
   (length(extract_html_chars($a))) && die();
   
-  $a = "<SCRIPT></SCRIPT>";
+  $a = "<script></script>";
   (length(extract_html_chars($a))) && die();
 
   $a = "<SCRIPT></SCRIPT>";
@@ -143,6 +165,13 @@ sub extract_html_chars_tst {
 
   $a = "<EMBED></EMBED>";
   (length(extract_html_chars($a))) && die();
+
+  $a = "<EMBED> press here. </EMBED>";
+  ( " press here. " ne extract_html_chars($a)) && die();
+
+  $a = "<SCRIPT> <H2> title <H2><pre> typical \n \t HTML </pre> </SCRIPT>";
+  ( " <H2> title <H2><pre> typical \n \t HTML </pre> " ne
+    extract_html_chars($a) ) && die();
 
   $a = "\0";
   (length(extract_html_chars($a))) && die();
@@ -249,12 +278,58 @@ sub median_tst {
  return 1;
 }
 
+sub round_tst {
+
+    (3.12 == round(3.1234) ) || die();
+    (4.00 == round(3.9999) ) || die();
+    (3.56 == round(3.5555) ) || die();
+
+    return 1;
+}
+
+
+# this tests that the times returned by the function round_time have
+# the right property.
+
+sub chk_rounded_time {
+    my ($time) = @_;
+
+    my @time = localtime(round_time($time));
+    
+    # the minutes should be divisible by five.
+    ( ($time[1] % 5) == 0 ) || die();
+
+    # the seconds should be zero
+    ($time[0] == 0) || die();
+
+    return 1;
+}
+
+sub round_time_tst {
+
+    # Test a whole lot of times and see if they round correctly.
+
+    my $time = 1050845700;
+    my $rounded_time;
+    foreach $i (1 .. $SECONDS_PER_DAY) { 
+        $time++;
+        $rounded_time = round_time($time);
+        chk_rounded_time($rounded_time);
+    }
+
+    return 1;
+}
+
+sub clean_times {
+    return 1;
+}
 
 # --------------------main-------------------------
 
 {
   set_static_vars();	
 
+  extract_printable_chars_tst();
   extract_digits_tst();
   extract_user_tst();
   extract_html_chars_tst();
@@ -264,6 +339,8 @@ sub median_tst {
   max_tst();
   min_tst();
   median_tst();
+  round_tst();
+  round_time_tst();
 
   exit 0;
 }
