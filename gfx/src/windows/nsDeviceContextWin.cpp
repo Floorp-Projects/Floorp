@@ -131,7 +131,7 @@ NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *
 
     if (nsnull != surf)
     {
-      rv = surf->Init(mDC);
+      rv = surf->Init(mDC, PR_FALSE);
 
       if (NS_OK == rv)
         rv = pContext->Init(this, surf);
