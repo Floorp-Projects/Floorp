@@ -393,6 +393,7 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
                                               actualOffset,
                                               *aRangeOffset,
                                               endOffset))) {
+      *aRangeOffset += actualOffset;
       NS_IF_RELEASE(parent);
       return NS_OK;
     }
