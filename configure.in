@@ -462,6 +462,32 @@ MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 MOZ_COMPONENT_LIBS='$(MOZ_COMPONENT_NSPR_LIBS) $(MOZ_COMPONENT_XPCOM_LIBS)'
 
+
+dnl ========================================================
+dnl Check which style vtables we're using on Solaris
+dnl Options current are:
+dnl   * gcc style - used by gcc (duh) and SUNWspro4.2 (and
+dnl     later versions of workshop with the -compat=4 flag)
+dnl   * SUNWspro5.0 style, also used by 6.0b
+dnl ========================================================
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_RUN([
+int main(int argc, char **argv) {
+#ifdef __SUNPRO_CC_COMPAT
+	return (__SUNPRO_CC_COMPAT==4);
+#else
+	return 1;
+#endif
+}],
+SUNWSPRO5_VTABLE=1,
+SUNWSPRO5_VTABLE=,
+SUNWSPRO5_VTABLE=)
+AC_LANG_RESTORE
+AC_SUBST(SUNWSPRO5_VTABLE)
+
+
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -771,11 +797,6 @@ dnl the qsort routine under solaris is faulty
            ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0 -K PIC'
            ;;
        esac
-       dnl The C++ compiler in Workshop 5.0 uses standard iostreams by
-       dnl default. -library=iostream will force use of classic iostreams.
-       if test ! -z "`${CC} -V 2>&1 | head -1 | grep '5.0'`"; then
-	  CXX="$CXX -library=iostream"
-       fi
     else
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKCSHLIB='$(CC) $(DSO_LDOPTS)'
@@ -1532,7 +1553,25 @@ esac
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
-    AC_CHECK_LIB(C, demangle)
+
+    dnl The C++ compiler in Workshop 5.0 uses standard iostreams by
+    dnl default. -library=iostream will force use of classic iostreams.
+    dnl The test is here because we need -liostream to be inserted before
+    dnl the standard C++ library (which isn't -lC on Workshop5+, but is
+    dnl a set of libraries).  Aurgh.
+    case $target in
+    *-solaris*)
+	if test ! -z "`${CC} -V 2>&1 | head -1 | grep '5.0'`" && test "$SUNWSPRO5_VTABLE"; then
+	    CXX="$CXX -library=iostream"
+	    LIBS="-liostream -lCstd -lCrun $LIBS"
+	else
+	    AC_CHECK_LIB(C, demangle)
+	fi
+	;;
+     *)
+	AC_CHECK_LIB(C, demangle)
+	;;
+     esac
 fi
 AC_CHECK_LIB(resolv, res_gethostbyaddr)
 AC_CHECK_LIB(socket, getnetbyaddr)
