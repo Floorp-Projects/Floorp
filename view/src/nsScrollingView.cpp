@@ -207,18 +207,21 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   if (mVis == nsViewVisibility_kShow)
   {
     nscoord xoff, yoff;
+    nsRect  brect;
 
     rc.PushState();
 
     GetScrollOffset(&xoff, &yoff);
     rc.Translate(xoff, yoff);
 
-    clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+    GetBounds(brect);
+
+    clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
 
     if (clipres == PR_FALSE)
     {
       rc.SetColor(NS_RGB(192, 192, 192));
-      rc.FillRect(mBounds);
+      rc.FillRect(brect);
 
       if (PR_TRUE == mShowQuality)
       {
@@ -226,14 +229,14 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         //display quality indicator
 
-        rc.Translate(mBounds.x, mBounds.y);
+        rc.Translate(brect.x, brect.y);
 
         rc.SetColor(NS_RGB(0, 0, 0));
 
-        rc.FillEllipse(nscoord(mBounds.width * 0.15f),
-                       nscoord(mBounds.height * 0.15f),
-                       NS_TO_INT_ROUND(mBounds.width * 0.7f),
-                       NS_TO_INT_ROUND(mBounds.height * 0.7f));
+        rc.FillEllipse(nscoord(brect.width * 0.15f),
+                       nscoord(brect.height * 0.15f),
+                       NS_TO_INT_ROUND(brect.width * 0.7f),
+                       NS_TO_INT_ROUND(brect.height * 0.7f));
 
         if (mQuality == nsContentQuality_kGood)
           rc.SetColor(NS_RGB(0, 255, 0));
@@ -246,10 +249,10 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         //something funny happens on windows when the *right* numbers are
         //used. MMP
 
-        rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.23f),
-                       NS_TO_INT_ROUND(mBounds.height * 0.23f),
-                       nscoord(mBounds.width * 0.46f),
-                       nscoord(mBounds.height * 0.46f));
+        rc.FillEllipse(NS_TO_INT_ROUND(brect.width * 0.23f),
+                       NS_TO_INT_ROUND(brect.height * 0.23f),
+                       nscoord(brect.width * 0.46f),
+                       nscoord(brect.height * 0.46f));
 
         bcolor = tcolor = rc.GetColor();
 
@@ -261,10 +264,10 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         rc.SetColor(tcolor);
 
-        rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.34f),
-                       NS_TO_INT_ROUND(mBounds.height * 0.34f),
-                       nscoord(mBounds.width * 0.28f),
-                       nscoord(mBounds.height * 0.28f));
+        rc.FillEllipse(NS_TO_INT_ROUND(brect.width * 0.34f),
+                       NS_TO_INT_ROUND(brect.height * 0.34f),
+                       nscoord(brect.width * 0.28f),
+                       nscoord(brect.height * 0.28f));
 
         tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 120, 255), 
                         (int)min(NS_GET_G(bcolor) + 120, 255),
@@ -272,10 +275,10 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         rc.SetColor(tcolor);
 
-        rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.32f),
-                       NS_TO_INT_ROUND(mBounds.height * 0.32f),
-                       nscoord(mBounds.width * 0.17f),
-                       nscoord(mBounds.height * 0.17f));
+        rc.FillEllipse(NS_TO_INT_ROUND(brect.width * 0.32f),
+                       NS_TO_INT_ROUND(brect.height * 0.32f),
+                       nscoord(brect.width * 0.17f),
+                       nscoord(brect.height * 0.17f));
       }
     }
 
@@ -283,7 +286,7 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
     if (clipres == PR_FALSE)
     {
-      nsRect  xrect = mBounds;
+      nsRect  xrect = brect;
 
       xrect.x += xoff;
       xrect.y += yoff;
@@ -532,11 +535,14 @@ PRBool nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                                 PRUint32 aPaintFlags, nsIView *aBackstop)
 {
   PRBool  clipres = PR_FALSE;
+  nsRect  brect;
 
   rc.PushState();
 
+  GetBounds(brect);
+
   if (mVis == nsViewVisibility_kShow)
-    clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+    clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
 
   if (clipres == PR_FALSE)
   {
@@ -547,7 +553,7 @@ PRBool nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   clipres = rc.PopState();
 
   if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
-    clipres = rc.SetClipRect(mBounds, nsClipCombine_kSubtract);
+    clipres = rc.SetClipRect(brect, nsClipCombine_kSubtract);
 
   return clipres;
 }

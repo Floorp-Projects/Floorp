@@ -198,7 +198,7 @@ public:
    * Called to get the dimensions and position of the view.
    * @param aBounds out parameter for bounds
    */
-  virtual void GetBounds(nsRect &aBounds) = 0;
+  virtual void GetBounds(nsRect &aBounds) const = 0;
 
   /**
    * Called to indicate that the clip of the view has been changed.

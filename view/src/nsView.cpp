@@ -289,8 +289,6 @@ nsresult nsView :: Init(nsIViewManager* aManager,
 
   NS_ADDREF(aManager);
 
-  mBounds = aBounds;
-
   if (aClip != nsnull)
     mClip = *aClip;
   else
@@ -306,6 +304,8 @@ nsresult nsView :: Init(nsIViewManager* aManager,
 
   // assign the parent view
   SetParent(aParent);
+
+  SetBounds(aBounds);
 
   // check if a real window has to be created
   if (aWindowCIID)
@@ -371,19 +371,23 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   }
   else if (mVis == nsViewVisibility_kShow)
   {
+    nsRect brect;
+
+    GetBounds(brect);
+
     if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
     {
       nsRect  crect;
 
-      crect.x = mClip.mLeft + mBounds.x;
-      crect.y = mClip.mTop + mBounds.y;
+      crect.x = mClip.mLeft + brect.x;
+      crect.y = mClip.mTop + brect.y;
       crect.width = mClip.mRight - mClip.mLeft;
       crect.height = mClip.mBottom - mClip.mTop;
 
       clipres = rc.SetClipRect(crect, nsClipCombine_kIntersect);
     }
     else if (this != pRoot)
-      clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+      clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
   }
 
   if (nsnull != mXForm)
@@ -394,7 +398,11 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
   if (clipres == PR_FALSE)
   {
-    rc.Translate(mBounds.x, mBounds.y);
+    nscoord posx, posy;
+
+    GetPosition(&posx, &posy);
+
+    rc.Translate(posx, posy);
 
     PRInt32 numkids = GetChildCount();
 
@@ -506,8 +514,8 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           else
           {
             x = y = 0;
-            w = mBounds.width;
-            h = mBounds.height;
+
+            GetDimensions(&w, &h);
 
             if (nsnull != mWindow)
               rc.SetColor(NS_RGB(0, 255, 0));
@@ -537,19 +545,23 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 //  if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow))
   if (!clipwasset && (clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
   {
+    nsRect  brect;
+
+    GetBounds(brect);
+
     if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
     {
       nsRect  crect;
 
-      crect.x = mClip.mLeft + mBounds.x;
-      crect.y = mClip.mTop + mBounds.y;
+      crect.x = mClip.mLeft + brect.x;
+      crect.y = mClip.mTop + brect.y;
       crect.width = mClip.mRight - mClip.mLeft;
       crect.height = mClip.mBottom - mClip.mTop;
 
       clipres = rc.SetClipRect(crect, nsClipCombine_kSubtract);
     }
     else if (this != pRoot)
-      clipres = rc.SetClipRect(mBounds, nsClipCombine_kSubtract);
+      clipres = rc.SetClipRect(brect, nsClipCombine_kSubtract);
   }
 
   NS_RELEASE(pRoot);
@@ -570,7 +582,6 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
 {
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
-  nsIScrollbar  *scroll;
   nsEventStatus retval = nsEventStatus_eIgnore;
 
   //see if any of this view's children can process the event
@@ -699,8 +710,17 @@ void nsView :: SetPosition(nscoord x, nscoord y)
 
 void nsView :: GetPosition(nscoord *x, nscoord *y)
 {
-  *x = mBounds.x;
-  *y = mBounds.y;
+  nsIView *rootView = mViewManager->GetRootView();
+
+  if (this == rootView)
+    *x = *y = 0;
+  else
+  {
+    *x = mBounds.x;
+    *y = mBounds.y;
+  }
+
+  NS_IF_RELEASE(rootView);
 }
 
 void nsView :: SetDimensions(nscoord width, nscoord height)
@@ -750,9 +770,16 @@ void nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight
   SetDimensions(aWidth, aHeight);
 }
 
-void nsView :: GetBounds(nsRect &aBounds)
+void nsView :: GetBounds(nsRect &aBounds) const
 {
+  nsIView *rootView = mViewManager->GetRootView();
+
   aBounds = mBounds;
+
+  if ((nsIView *)this == rootView)
+    aBounds.x = aBounds.y = 0;
+
+  NS_IF_RELEASE(rootView);
 }
 
 void nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
@@ -987,7 +1014,9 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
             windowBounds.x, windowBounds.y,
             windowBounds.width, windowBounds.height);
   }
-  out << mBounds;
+  nsRect brect;
+  GetBounds(brect);
+  out << brect;
   fprintf(out, " z=%d vis=%d opc=%1.3f <\n", mZindex, mVis, mOpacity);
   nsIView* kid = mFirstChild;
   while (nsnull != kid) {
