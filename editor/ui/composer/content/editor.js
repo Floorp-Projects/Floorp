@@ -120,11 +120,11 @@ nsButtonPrefListener.prototype =
         var mixedObj = {};
         var state = editor.getHighlightColorState(mixedObj);
         cmd.setAttribute("state", state);
-        cmd.removeAttribute("collapsed");
+        cmd.collapsed = false;
       }      
       else {
         cmd.setAttribute("state", "transparent");
-        cmd.setAttribute("collapsed", "true");
+        cmd.collapsed = true;
       }
 
       if (editor)
@@ -353,7 +353,7 @@ var gEditorDocumentObserver =
               {
                 var item = children.item(i);
                 if (item.id != "insertChars")
-                  item.setAttribute("hidden", "true");
+                  item.hidden = true;
               }
             }
 
@@ -435,7 +435,7 @@ function EditorStartup()
     var prefs = GetPrefs();
     var useCSS = prefs.getBoolPref("editor.use_css");
     if (!useCSS && is_HTMLEditor) {
-      cmd.setAttribute("collapsed", "true");
+      cmd.collapsed = true;
     }
   }
 
@@ -1552,7 +1552,7 @@ function SetEditMode(mode)
       {
         if (dt)
         {
-          doctypeNode.removeAttribute("collapsed");
+          doctypeNode.collapsed = false;
           var doctypeText = "<!DOCTYPE " + domdoc.doctype.name;
           if (dt.publicId)
             doctypeText += " PUBLIC \"" + domdoc.doctype.publicId;
@@ -1562,7 +1562,7 @@ function SetEditMode(mode)
           doctypeNode.setAttribute("value", doctypeText);
         }
         else
-          doctypeNode.setAttribute("collapsed", "true");
+          doctypeNode.collapsed = true;
       }
     }
     // Get the entire document's source string
@@ -1693,16 +1693,6 @@ function FinishHTMLSource()
 
   // Switch edit modes -- converts source back into DOM document
   SetEditMode(gPreviousNonSourceDisplayMode);
-}
-
-function CollapseItem(id, collapse)
-{
-  var item = document.getElementById(id);
-  if (item)
-  {
-    if(collapse != (item.getAttribute("collapsed") == "true"))
-      item.setAttribute("collapsed", collapse ? "true" : "");
-  }
 }
 
 function SetDisplayMode(mode)
@@ -2588,7 +2578,7 @@ function HideItem(id)
 {
   var item = document.getElementById(id);
   if (item)
-    item.setAttribute("hidden", "true");
+    item.hidden = true;
 }
 
 function RemoveItem(id)

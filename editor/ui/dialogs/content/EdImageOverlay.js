@@ -303,8 +303,8 @@ function PreviewImageLoaded()
       gDialog.PreviewWidth.setAttribute("value", gActualWidth);
       gDialog.PreviewHeight.setAttribute("value", gActualHeight);
 
-      gDialog.PreviewSize.setAttribute("collapsed", "false");
-      gDialog.ImageHolder.setAttribute("collapsed", "false");
+      gDialog.PreviewSize.collapsed = false;
+      gDialog.ImageHolder.collapsed = false;
 
       SetSizeWidgets(gDialog.widthInput.value, gDialog.heightInput.value);
     }
@@ -316,7 +316,7 @@ function PreviewImageLoaded()
 
 function LoadPreviewImage()
 {
-  gDialog.PreviewSize.setAttribute("collapsed", "true");
+  gDialog.PreviewSize.collapsed = true;
 
   var imageSrc = TrimString(gDialog.srcInput.value);
   if (!imageSrc)

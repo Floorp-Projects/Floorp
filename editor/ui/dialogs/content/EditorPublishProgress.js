@@ -110,15 +110,15 @@ function Startup()
     if (gPublishData.docDir)
       document.getElementById("docDir").value = gPublishData.docDir;
     else
-      document.getElementById("DocSubdir").setAttribute("hidden", "true");
+      document.getElementById("DocSubdir").hidden = true;
       
     if (gPublishData.publishOtherFiles && gPublishData.otherDir)
       document.getElementById("otherDir").value = gPublishData.otherDir;
     else
-      document.getElementById("OtherSubdir").setAttribute("hidden", "true");
+      document.getElementById("OtherSubdir").hidden = true;
   }
   else
-    document.getElementById("Subdirectories").setAttribute("hidden", "true");
+    document.getElementById("Subdirectories").hidden = true;
 
   // Add the document to the "publish to" list as quick as possible!
   SetProgressStatus(gPublishData.filename, "busy");
