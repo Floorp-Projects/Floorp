@@ -917,7 +917,14 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
     PRInt32 x = NSTwipsToIntPixels((pt.x - inner.x), t2p);
     PRInt32 y = NSTwipsToIntPixels((pt.y - inner.y), t2p);
     if (NS_OK == map->IsInside(x, y)) {
-      aCursor = NS_STYLE_CURSOR_POINTER;
+      // Use style defined cursor if one is provided, otherwise when
+      // the cursor style is "auto" we use the pointer cursor.
+      const nsStyleColor* styleColor;
+      GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+      aCursor = styleColor->mCursor;
+      if (NS_STYLE_CURSOR_AUTO == aCursor) {
+        aCursor = NS_STYLE_CURSOR_POINTER;
+      }
     }
     NS_RELEASE(map);
     return NS_OK;
