@@ -119,6 +119,8 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 #endif
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
+#define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
+
 
 
 /* ----- TEST METHODS DECLARATIONS ----- */
@@ -876,9 +878,9 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsString& aTag,
-                                             nsIDOMNode     *aParent,
-                                             PRInt32         aPosition,
-                                             CreateElementTxn ** aTxn)
+                                                  nsIDOMNode     *aParent,
+                                                  PRInt32         aPosition,
+                                                  CreateElementTxn ** aTxn)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aParent)
@@ -904,9 +906,9 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
-                                             nsIDOMNode * aParent,
-                                             PRInt32      aPosition,
-                                             InsertElementTxn ** aTxn)
+                                                  nsIDOMNode * aParent,
+                                                  PRInt32      aPosition,
+                                                  InsertElementTxn ** aTxn)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aNode && aParent && aTxn)
@@ -997,6 +999,38 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
     result = DoInitialInsert(aStringToInsert);
   }
+  else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
+  {
+    BeginTransaction();
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
+    {
+      nsCOMPtr<nsIDOMNode> selectedNode;
+      PRInt32 offset;
+      result = selection->GetAnchorNodeAndOffset(getter_AddRefs(selectedNode), &offset);
+      if ((NS_SUCCEEDED(result)) && selectedNode)
+      {
+        nsCOMPtr<nsIDOMNode> newNode;
+        result = CreateNode(GetTextNodeTag(), selectedNode, offset+1, 
+                            getter_AddRefs(newNode));
+        if (NS_SUCCEEDED(result) && newNode)
+        {
+          nsCOMPtr<nsIDOMCharacterData>newTextNode;
+          newTextNode = do_QueryInterface(newNode);
+          if (newTextNode)
+          {
+            nsAutoString placeholderText(" ");
+            newTextNode->SetData(placeholderText);
+            selection->Collapse(newNode, 0);
+            selection->Extend(newNode, 1);
+            result = InsertText(aStringToInsert);
+          }
+        }
+      }
+    }            
+    EndTransaction();
+  }
   return result;
 }
 
@@ -1039,6 +1073,9 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
               result = NS_ERROR_UNEXPECTED; 
               nodeAsText = do_QueryInterface(node,&result);
               range->GetStartOffset(&offset);
+              if (!nodeAsText) {
+                result = NS_ERROR_EDITOR_NO_TEXTNODE;
+              }
             }
           }
         }
@@ -1292,7 +1329,7 @@ nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir, 
-                                               EditAggregateTxn  ** aTxn)
+                                                    EditAggregateTxn  ** aTxn)
 {
   if (!aTxn)
     return NS_ERROR_NULL_POINTER;
@@ -1374,7 +1411,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
 
   // determine if the insertion point is at the beginning, middle, or end of the node
   nsCOMPtr<nsIDOMCharacterData> nodeAsText;
-  nodeAsText = do_QueryInterface(node, &result);
+  nsCOMPtr<nsIDOMNode> selectedNode;
+  nodeAsText = do_QueryInterface(node);
 
   if (nodeAsText)
   {
@@ -1384,18 +1422,18 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     isLast  = PRBool(count==(PRUint32)offset);
   }
   else
-  {
-    nsCOMPtr<nsIDOMNode> sibling;
-    result = node->GetPreviousSibling(getter_AddRefs(sibling));
-    if ((NS_SUCCEEDED(result)) && sibling)
-      isFirst = PR_FALSE;
-    else
-      isFirst = PR_TRUE;
-    result = node->GetNextSibling(getter_AddRefs(sibling));
-    if ((NS_SUCCEEDED(result)) && sibling)
-      isLast = PR_FALSE;
-    else
-      isLast = PR_TRUE;
+  { 
+    // get the child list and count
+    nsCOMPtr<nsIDOMNodeList>childList;
+    PRUint32 count=0;
+    result = node->GetChildNodes(getter_AddRefs(childList));
+    if ((NS_SUCCEEDED(result)) && childList)
+    {
+      childList->GetLength(&count);
+      childList->Item(offset, getter_AddRefs(selectedNode));
+    }
+    isFirst = PRBool(0==offset);
+    isLast  = PRBool((count-1)==(PRUint32)offset);
   }
 // XXX: if isFirst && isLast, then we'll need to delete the node 
   //    as well as the 1 child
@@ -1491,6 +1529,11 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     }
     else
     { // we're deleting a node
+      DeleteElementTxn *txn;
+      result = CreateTxnForDeleteElement(selectedNode, &txn);
+      if (NS_SUCCEEDED(result)) {
+        aTxn->AppendChild(txn);
+      }
     }
   }
   return result;
@@ -1634,13 +1677,12 @@ NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
 }
 
 NS_IMETHODIMP
-nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
-                    nsIDOMNode * aNodeToJoin,
-                    nsIDOMNode * aParent,
-                    PRBool       aNodeToKeepIsFirst)
+nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
+                    nsIDOMNode * aRightNode,
+                    nsIDOMNode * aParent)
 {
   JoinElementTxn *txn;
-  nsresult result = CreateTxnForJoinNode(aNodeToKeep, aNodeToJoin, &txn);
+  nsresult result = CreateTxnForJoinNode(aLeftNode, aRightNode, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
@@ -1648,8 +1690,8 @@ nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
-                                        nsIDOMNode  *aRightNode,
-                                        JoinElementTxn **aTxn)
+                                             nsIDOMNode  *aRightNode,
+                                             JoinElementTxn **aTxn)
 {
   nsresult result=NS_ERROR_NULL_POINTER;
   if ((nsnull != aLeftNode) && (nsnull != aRightNode))

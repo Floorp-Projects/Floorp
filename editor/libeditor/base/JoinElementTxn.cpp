@@ -29,8 +29,8 @@ JoinElementTxn::JoinElementTxn()
 }
 
 NS_IMETHODIMP JoinElementTxn::Init(nsIEditor  *aEditor,
-                              nsIDOMNode *aLeftNode,
-                              nsIDOMNode *aRightNode)
+                                   nsIDOMNode *aLeftNode,
+                                   nsIDOMNode *aRightNode)
 {
   mEditor = do_QueryInterface(aEditor);
   mLeftNode = do_QueryInterface(aLeftNode);
@@ -59,21 +59,18 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
       {
         if (leftParent==rightParent)
         {
-          mParent=leftParent; // set this instance mParent. 
-                              // Other methods see a non-null mParent and know all is well
+          mParent= do_QueryInterface(leftParent); // set this instance mParent. 
+                                                  // Other methods will see a non-null mParent and know all is well
           nsCOMPtr<nsIDOMNodeList> childNodes;
           result = mLeftNode->GetChildNodes(getter_AddRefs(childNodes));
-          if ((NS_SUCCEEDED(result)) && (childNodes))
-          {
+          if ((NS_SUCCEEDED(result)) && (childNodes)) {
             childNodes->GetLength(&mOffset);
           }
-          //XXX: WRONG! needs commented code below
-/*
-  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) {
-    result = editor->JoinNodesImpl(mLeftNode, mRightNode, mParent, PR_FALSE);
-*/
-          result = mEditor->JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
+          nsCOMPtr<nsIEditorSupport> editor;
+          result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+          if (NS_SUCCEEDED(result) && editor) {
+            result = editor->JoinNodesImpl(mLeftNode, mRightNode, mParent, PR_TRUE);
+          }
         }
       }
     }
@@ -98,7 +95,15 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
 
 NS_IMETHODIMP JoinElementTxn::Redo(void)
 {
-  nsresult result = mEditor->JoinNodes(mLeftNode, mRightNode, mParent, PR_FALSE);
+  nsresult result;
+  nsCOMPtr<nsIEditorSupport> editor;
+  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
+  if (NS_SUCCEEDED(result) && editor) {
+    result = editor->JoinNodesImpl(mLeftNode, mRightNode, mParent, PR_TRUE);
+  }
+  else {
+    result = NS_ERROR_NOT_IMPLEMENTED;
+  }
   return result;
 }
 

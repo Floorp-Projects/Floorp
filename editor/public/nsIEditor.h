@@ -209,17 +209,16 @@ public:
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
-   * @param aNodeToKeep   The node that will remain after the join.
-   * @param aNodeToJoin   The node that will be joined with aNodeToKeep.
+   * @param aNodeToKeep   The left node.  It will remain after the join.
+   * @param aNodeToJoin   The right node.
    *                      There is no requirement that the two nodes be of the same type.
    * @param aParent       The parent of aExistingRightNode
    * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
    *                            contents|children of aNodeToJoin, otherwise their positions are switched.
    */
-  NS_IMETHOD JoinNodes(nsIDOMNode *aNodeToKeep,
-                       nsIDOMNode  *aNodeToJoin,
-                       nsIDOMNode  *aParent,
-                       PRBool       aNodeToKeepIsFirst)=0;
+  NS_IMETHOD JoinNodes(nsIDOMNode  *aLeftNode,
+                       nsIDOMNode  *aRightNode,
+                       nsIDOMNode  *aParent)=0;
   
   /**
    * Insert a break into the content model.<br>
