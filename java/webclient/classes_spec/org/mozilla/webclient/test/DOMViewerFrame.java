@@ -55,7 +55,7 @@ import java.util.Stack;
  * A dom viewer Frame
 
  *
- * @version $Id: DOMViewerFrame.java,v 1.2 2000/06/08 18:40:20 edburns%acm.org Exp $
+ * @version $Id: DOMViewerFrame.java,v 1.3 2000/06/30 17:53:58 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -75,6 +75,7 @@ public class DOMViewerFrame extends JFrame implements EventListener {
 private EmbeddedMozilla creator;
 
 private Node rootNode;
+private Node mouseOverNode = null;
 private DOMAccessPanel elementPanel;
 
 private JScrollPane treePane;
@@ -122,16 +123,15 @@ public void setDocument(Document newDocument)
 
     if (null != doc) {
         if (doc instanceof EventTarget) {
-            System.out.println("debug: edburns: Document is EventTarget");
             eventTarget = (EventTarget) doc;
             eventTarget.removeEventListener("mousedown", this, false);
         }
     }
     doc = newDocument;
     if (doc instanceof EventTarget) {
-        System.out.println("debug: edburns: Document is EventTarget");
         eventTarget = (EventTarget) doc;
         eventTarget.addEventListener("click", this, false);
+        eventTarget.addEventListener("mouseover", this, false);
     }
 
     try {
@@ -152,7 +152,7 @@ public void setDocument(Document newDocument)
 	tree.addTreeSelectionListener(elementPanel);
 
 	tree.setCellRenderer(new DOMCellRenderer(tree.getCellRenderer()));
-	tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+	tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
 	treePane.setViewportView(tree);
     } catch (Exception e) {
 	e.printStackTrace();
@@ -170,24 +170,23 @@ public void handleEvent(Event e)
         return;
     }
     MouseEvent mouseEvent = (MouseEvent) e;
-
-    if (mouseEvent.getShiftKey()) {
-        // As of M13, getCurrentNode is un-implemented in mozilla.
-        //        selectNodeInTree(mouseEvent.getCurrentNode());
+    Node relatedNode = (Node) mouseEvent.getRelatedTarget();
+    if (null != relatedNode) {
+        mouseOverNode = relatedNode;
     }
-    
+    if (mouseEvent.getShiftKey() && 1 == mouseEvent.getButton()) {
+        if (null != mouseOverNode) {
+            selectNodeInTree(mouseOverNode);
+        }
+    }
 }
 
 protected void selectNodeInTree(Node node)
 {
-    TreeSelectionModel selection = tree.getSelectionModel();
-    if (null == selection) {
+    if (null == node) {
         return;
     }
 
-    if (null == node) {
-        selection.clearSelection();
-    }
     if (null != pathStack) {
         pathStack.clear();
     }
@@ -195,15 +194,27 @@ protected void selectNodeInTree(Node node)
     if (null == pathStack || pathStack.isEmpty()) {
         return;
     }
-    TreePath nodePath = new TreePath(pathStack.toArray());
+
+    // don't include the root
+    int i, j = 0, size = pathStack.size() - 1;
     
-    System.out.println("treePath: " + nodePath.toString());
+    // reverse the stack
+    Object pathArray[] = new Object [size];
+    for (i=size; i > 0; i--) {
+        pathArray[j++] = pathStack.elementAt(i - 1);
+    }
     
-    selection.setSelectionPath(nodePath);
+    TreePath nodePath = new TreePath(pathArray);
+    
+    tree.clearSelection();
+    tree.setSelectionPath(nodePath);
 }
 
 protected void populatePathStackFromNode(Node node)
 {
+    if (null == node) {
+        return;
+    }
     if (null == pathStack) {
         // PENDING(edburns): perhaps provide default size
         pathStack = new Stack();
@@ -214,7 +225,7 @@ protected void populatePathStackFromNode(Node node)
     pathStack.push(node);
     Node parent = node.getParentNode();
     if (null != parent) {
-        populatePathStackFromNode(node);
+        populatePathStackFromNode(parent);
     }
 }
 
