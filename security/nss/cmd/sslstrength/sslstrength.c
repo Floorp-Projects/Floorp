@@ -292,7 +292,7 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
   }
   
   if (portnumarg) {
-    if (PL_strlen(portnumarg) == 0) {
+    if (*portnumarg == 0) {
       PR_fprintf(PR_STDOUT,"malformed port number supplied\n");
       return(1);
     }
