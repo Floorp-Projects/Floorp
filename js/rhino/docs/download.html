@@ -10,16 +10,26 @@
 <center><b><font size="+3">Rhino Downloads</font></b></center>
 <p>Rhino is available for download both in source and compiled form. </p>
 <h3> Binaries</h3>
-You can download binaries (JAR files) from <a
+<p>
+You can download binary distributions of Rhino from <a
  href="ftp://ftp.mozilla.org/pub/mozilla.org/js/"> ftp://ftp.mozilla.org/pub/mozilla.org/js/</a>
-. Rhino 1.5 Release 5 is the last qualified release. It is also possible
-to download the latest rhino build that reflects newer features and bug
-fixes, but has not been fully qualified. These zip files also include
-the source.
-<p>If you are looking for <tt>js.jar</tt> for XSLT or for IBM's Bean
-Scripting  Framework (BSF), download one of the zip files below and
-unzip it. </p>
+. These zip files includes precompiled <tt>js.jar</tt> with all Rhino classes, documentation, examples and sources.
+</p>
+
+<p>
+Rhino 1.5R5 is the last qualified release. It is also possible
+to download the release candidate 1 for Rhino 1.6R1 or the latest build but they has not been fully qualified. 
+</p>
+<p>
+Release candidate 1 for Rhino 1.6R1 includes support for <a href="http://www.ecma-international.org/publications/standards/Ecma-357.htm">ECMAScript for XML</a> (E4X). Please try this out and report any issues as described at the <a href="help.html">help</a> pages. Note that you need to add <tt>xmlbeans.jar</tt> from <a href="http://xml.apache.org/xmlbeans/">XMLBeans</a> project to your class path if you use E4X in Rhino.
+</p>
+
 <ul>
+  <li> <a href="ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino1_6R1pre.zip">Rhino 1.6R1 Release Candidate 1</a>
+  <ul>
+    <li> <font size="-1"><a href="changes.html">Description of changes from 1.5R5.</a></font></li>
+  </ul>
+  </li>
  
   <li> <a href="ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino1_5R5.zip">Rhino 1.5R5</a>
   <ul>
@@ -71,12 +81,13 @@ changes from 1.4R3.</a> </font></li>
   <li><a href="ftp://ftp.mozilla.org/pub/mozilla.org/js/rhinoLatest.zip">Latest
 Rhino build</a>
   <ul>
-    <li><font size="-1"><a href="changes.html">Description of
-changes since Rhino 1.5R5.</a> </font></li>
+    <li><font size="-1"><a href="changes.html">Change log for Rhino</a> </font></li>
   </ul>
   </li>
   
 </ul>
+<p>If you are looking for <tt>js.jar</tt> for XSLT or for IBM's Bean
+Scripting  Framework (BSF), please read the following <a href="bsf.html#bsf-issue">note</a> and then download one of the zip files above and unzip it. </p>
 <h3> Source</h3>
 The source code for Rhino is available under <a
  href="http://www.mozilla.org/NPL/"> NPL 1.1</a> . In addition to getting

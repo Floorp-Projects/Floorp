@@ -1,43 +1,44 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="Author" content="Norris Boyd">
-   <meta name="GENERATOR" content="Mozilla/4.75 [en] (WinNT; U) [Netscape]">
-   <meta name="KeyWords" content="Rhino, JavaScript, Java, BSF, Apache">
-   <title>Rhino and BSF</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="KeyWords" content="Rhino, JavaScript, Java, BSF, Apache">
+<title>Rhino and BSF</title>
+<style>
+BODY { background-color: white }
+H1 { text-align: center }
+P { text-align: justify }
+
+</style>
 </head>
-<body bgcolor="#FFFFFF">
-<script src="owner.js"></script>
+<body>
 
-<center>
-<h1>
-Using Rhino with BSF and Apache</h1></center>
-<script>document.write(owner());</script>
+<h1>Rhino and BSF</h1>
 
-<br><script>
-	var d = new Date(document.lastModified);
-	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
-	document.write('<br>');
-</script>
-
-<hr WIDTH="100%">
-<br>The <a href="http://oss.software.ibm.com/developerworks/projects/bsf">Bean
+<h2>What is BSF?</h2>
+<p>
+The <a href="http://jakarta.apache.org/bsf/">Bean
 Scripting Framework</a> (or BSF) was originally developed by IBM and now
-published as open source. It provides a framework for using a number of
+published as open source as a project at the Apache Software Foundation. It provides a framework for using a number of
 scripting languages with Java. Rhino is one of the supported languages.
+</p>
+
 <p>This framework has been embedded in a number of open source projects,
-including the XSL processor <a href="http://xml.apache.org/xalan-j/index.html">Xalan</a>
+including the XSL processor <a href="http://xml.apache.org/xalan-j/">Xalan</a>
 and the XML/Java build tool <a href="http://ant.apache.org/">Ant</a>.
-<p>You can download a version of <tt>bsf.jar</tt> from <a href="http://oss.software.ibm.com/developerworks/projects/bsf">http://oss.software.ibm.com/developerworks/projects/bsf</a>
-that includes the <tt>com.ibm.bsf.engines.javascript.JavaScriptEngine</tt>
-class. The current version is 2.2 release candidate at the time of this
-writing. This version thus supports JavaScript through Rhino when used
-with the <tt>js.jar</tt> file from either <tt>rhino15R1.zip</tt> or <tt>rhinoTip.zip</tt>.
-<p>See <a href="http://xml.apache.org/xalan/extensions.html#ex-basic">Xalan-Java
-Extensions</a> for more information on adding JavaScript to XSL and the
-<a href="http://jakarta.apache.org/ant/jakarta-ant/docs/#script">Script
-task</a> for using scripting in Ant build files.
+See <a href="http://xml.apache.org/xalan-j/extensions.html">Xalan-Java
+Extensions</a> for more information on adding JavaScript to XSL and the description of the optional Script task in the 
+<a href="http://ant.apache.org/manual/">Apache Ant Manual</a> for using scripting in Ant build files.
+</p>
+
+<h2 id="bsf-issue">Using BSF with Rhino</h2>
+
+<p>If you use BSF 2.3.0 Release candidate 1 (released 2002-11-12) or earlier versions, you have to use Rhino 1.5R2 or Rhino 1.5R3 (see Rhino <a href="download.html">download</a> page). 
+</p>
+<p>
+If you want to use later releases of Rhino, then as of time of writing, 2004-08-04, you have to either build BSF from <a href="http://jakarta.apache.org/site/cvsindex.html">Apache's CVS</a> or use pre-built binaries since BSF project has not yet released an official version incorporating all the necessary changes to work with Rhino 1.5R4 or later.
+</p>
+
 <p><a href="index.html">back to top</a>
 </body>
 </html>
