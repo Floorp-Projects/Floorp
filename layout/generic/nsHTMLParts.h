@@ -40,6 +40,7 @@ class nsIURI;
 class nsString;
 class nsIWebShell;
 class nsIPresShell;
+class nsIChannel;
 
 /**
  * Additional frame-state bits used by nsBlockFrame
@@ -381,7 +382,8 @@ extern nsresult NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aResul
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
                                       nsIURI* aURL,
-                                      nsIWebShell* aWebShell);
+                                      nsIWebShell* aWebShell,
+                                      nsIChannel* aChannel);
 extern nsresult NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInstancePtrResult);
 
 /** Create a new HTML reflow command */
