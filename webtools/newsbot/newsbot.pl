@@ -113,7 +113,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     if (!$newsgroups) {
         next;
     }
-    $newsgroups =~ s/(netscape.public.mozilla.([\w-])+)/\n<A HREF="news:\/\/news.mozilla.org\/$1\">\n $1<\/A>/g;
+    $newsgroups =~ s/(netscape.public.mozilla.([\w-.])+)/\n<A HREF="news:\/\/news.mozilla.org\/$1\">\n $1<\/A>/g;
     $news  =~ /^Message-ID: <([^>]+)/m;
     my $MID  = $1;
     $news  =~ /^From: ([^\n]+)/m;
