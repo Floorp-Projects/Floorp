@@ -203,6 +203,8 @@ protected:
   nsIEventListener * mEventListener;
   nscolor     mBackground;
   nscolor     mForeground;
+  unsigned long  mBackgroundPixel;
+  unsigned long  mForegroundPixel;
   nsCursor    mCursor;
   nsBorderStyle mBorderStyle;
   nsRect      mBounds;
