@@ -373,7 +373,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           
           PRBool focusChangeFailed = PR_TRUE;
           if (focusable) {
-            if (current != mCurrentFocus) {
+            if (current.get() != mCurrentFocus) {
               nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
               if (ChangeFocus(content, PR_TRUE))
                 focusChangeFailed = PR_FALSE;
