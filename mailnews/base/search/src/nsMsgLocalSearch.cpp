@@ -153,23 +153,23 @@ PRBool nsMsgSearchBoolExpression::OfflineEvaluate()
     // otherwise we must recursively determine the value of our sub expressions
     PRBool result1 = PR_TRUE;    // always default to false positives
     PRBool result2 = PR_TRUE;
-    
+
     if (m_leftChild)
+    {
         result1 = m_leftChild->OfflineEvaluate();
+        if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR && result1 ||
+           (m_boolOp == nsMsgSearchBooleanOp::BooleanAND && !result1))
+            return result1;
+    }
+
     if (m_rightChild)
         result2 = m_rightChild->OfflineEvaluate();
 
     if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR)
-    {
-        if (result1 || result2)
-            return PR_TRUE;
-    }
-    
-    if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
-    {
-        if (result1 && result2)
-            return PR_TRUE;
-    }
+        return (result1 || result2) ? PR_TRUE : PR_FALSE;
+
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND && result1 && result2) 
+        return PR_TRUE;
 
     return PR_FALSE;
 }
