@@ -38,4 +38,5 @@ nsTransferable.js
 nsJSComponentManager.js
 nsUserSettings.js
 toolbarBindings.xml
+stringbundleBindings.xml
 

@@ -63,7 +63,7 @@ CHROME_CONTENT= \
 	.\htmlBindings.xml \
 	.\menulistBindings.xml \
 	.\radioBindings.xml \
-  .\scrollbarBindings.xml \
+	.\scrollbarBindings.xml \
 	.\tabBindings.xml \
 	.\treeBindings.xml \
 	.\toolbarBindings.xml \
@@ -74,6 +74,7 @@ CHROME_CONTENT= \
 	.\nsJSComponentManager.js \
 	.\nsUserSettings.js \
 	.\xul.css \
+	.\stringbundleBindings.xml \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

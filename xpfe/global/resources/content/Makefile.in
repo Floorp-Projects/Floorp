@@ -71,7 +71,7 @@ CHROME_CONTENT= \
 		htmlBindings.xml \
 		menulistBindings.xml \
 		radioBindings.xml \
-    scrollbarBindings.xml \
+		scrollbarBindings.xml \
 		tabBindings.xml \
 		treeBindings.xml \
 		xulBindings.xml \
@@ -83,6 +83,7 @@ CHROME_CONTENT= \
 		nsUserSettings.js \
 		xul.css \
 		toolbarBindings.xml \
+		stringbundleBindings.xml \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<bindings id="stringBundleBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="stringbundle" extends="xul:spring">
+    <implementation name="XStringBundle">
+      
+      <method name="getString">
+        <argument name="aStringKey"/>
+        <body>
+        <![CDATA[
+          try {
+            return this._bundle.GetStringFromName(aStringKey);
+          }
+          catch (e) {
+            dump("<StringBundle> Error: Failed to get string from bundle. Are you using the right key?\n");
+            dump("The key you provided was: " + aStringKey + "\n");
+            dump("The exception thrown was:\n" + e + "\n");
+          }
+        ]]>
+        </body>
+      </method>
+    
+      <property name="stringBundle">
+        <getter>
+        <![CDATA[
+          return this._bundle;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          try {
+            strBundleService = Components.classes["component://netscape/intl/stringbundle"].getService(); 
+            strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+          } 
+          catch (ex) {
+            return null;
+          }
+          this._bundle = strBundleService.CreateBundle(val, this.appLocale); 
+        ]]>
+        </setter>
+      </property>
+
+      <property name="appLocale">
+        <getter>
+        <![CDATA[
+          var applicationLocale = null;
+          try {
+            localeService = Components.classes["component://netscape/intl/nslocaleservice"].getService();
+            localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
+          } 
+          catch (ex) {
+            return null;
+          }
+          applicationLocale = localeService.GetApplicationLocale();
+          return applicationLocale;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="_bundle"/>
+    </implementation>
+    <handlers>
+      <handler event="bindingattached">
+      <![CDATA[
+        this.stringBundle = this.getAttribute("src");
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+</bindings>          

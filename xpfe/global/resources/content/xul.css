@@ -351,11 +351,13 @@ checkbox {
 radio 
   {
     behavior              : url(chrome://global/content/radioBindings.xml#radio);
+    user-focus            : none;
   }
 
 radiogroup 
   {
     behavior              : url(chrome://global/content/radioBindings.xml#radiogroup);
+    user-focus            : normal;
   }
 
 button, button.left {
@@ -625,3 +627,12 @@ address {
   behavior                : url("chrome://global/content/addressingBindings.xml#address");
 }
 */
+
+stringbundle 
+  {
+    behavior              : url("chrome://global/content/stringbundleBindings.xml#stringbundle");
+    visibility            : collapse;
+  }
+
+  
+
