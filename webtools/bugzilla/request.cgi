@@ -64,7 +64,7 @@ sub queue {
     
     my $attach_join_clause = "flags.attach_id = attachments.attach_id";
     if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
-        $attach_join_clause .= " AND attachment.isprivate < 1";
+        $attach_join_clause .= " AND attachments.isprivate < 1";
     }
 
     my $query = 
