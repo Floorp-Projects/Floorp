@@ -26,6 +26,8 @@
 #include "nsMarkupDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIHTTPEventSink.h"
 
 class nsIParser;
 class nsIDOMNode;
@@ -34,7 +36,9 @@ class nsICSSLoader;
 
 class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
-                      public nsIHTMLContentContainer
+                      public nsIHTMLContentContainer,
+                      public nsIInterfaceRequestor,
+                      public nsIHTTPEventSink
 {
 public:
   nsXMLDocument();
@@ -86,6 +90,14 @@ public:
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
+
+  // nsIInterfaceRequestor
+  NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink);
+
+  // nsIHTTPEventSink
+  NS_IMETHOD OnHeadersAvailable(nsISupports *aContext);
+  NS_IMETHOD OnRedirect(nsISupports *aContext, nsIURI *aNewLocation);
+
 
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 protected:
