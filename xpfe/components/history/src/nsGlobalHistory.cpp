@@ -1716,7 +1716,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 
     // Preconditions
     NS_ENSURE_ARG_POINTER(return_cobj);
-    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+    NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
 
     // Create an initialize the layout module instance
     nsGlobalHistoryModule *m = new nsGlobalHistoryModule();

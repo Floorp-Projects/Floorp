@@ -163,7 +163,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager * compMgr,
   nsresult rv = NS_OK;
 
   NS_ENSURE_ARG_POINTER(return_cobj);
-  NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(gModule, NS_ERROR_FAILURE);
 
   // Create an initialize the module instance
   nsConverterModule * m = new nsConverterModule();
