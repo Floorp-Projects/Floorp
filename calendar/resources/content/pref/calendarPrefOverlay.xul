@@ -62,10 +62,18 @@
    </groupbox>
    
    <treechildren id="panelChildren">
-    <treeitem id="calendarPanel" container="false">
+    <treeitem id="calendarPanel" container="true">
       <treerow>
         <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="&calendar.label;" id="calendar"/>
       </treerow>
+      <treechildren id="panelChildren">
+       <treeitem id="calendarPublishPanel" container="false">
+         <treerow>
+           <treecell class="treecell-indent" url="chrome://calendar/content/pref/publishPrefs.xul" label="Publish Prefs" id="calendarPublish"/>
+         </treerow>
+       </treeitem>
+     </treechildren>
+
     </treeitem>
   </treechildren>
   

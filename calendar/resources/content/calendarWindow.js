@@ -177,14 +177,21 @@ function CalendarWindow( calendarDataSource )
             
             if ( nextEvent ) 
             {
-                calendarWindow.setSelectedEvent( nextEvent );
+               calendarWindow.setSelectedEvent( nextEvent );
             }
             else
             {
-                if( calendarWindow.currentView == calendarWindow.monthView )
-                {
-                   calendarWindow.currentView.hiliteSelectedDate( );
-                }
+               //get the tree, see if there are items to highlight.
+
+               var today = new Date( );
+
+               //calendarWindow.setSelectedDate( getNextOrPreviousRecurrence( calendarEvent ) );
+               calendarWindow.setSelectedDate( today );
+
+               //if( calendarWindow.currentView == calendarWindow.monthView )
+               //{
+               //   calendarWindow.currentView.hiliteSelectedDate( );
+               //}
             }
          }
       },

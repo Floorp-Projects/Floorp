@@ -1067,6 +1067,7 @@ treechildren:-moz-tree-cell-text(completed)
 
 /* TO DO LIST IMAGES */
 
+/* this is the header image */
 #unifinder-todo-tree-col-completed {
    list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
 }
@@ -1103,6 +1104,7 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed, curre
    list-style-image      : url("chrome://global/skin/checkbox/cbox-act-check.gif");
 }
 
+/* This is the header image */
 #unifinder-todo-tree-col-priority {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
 }

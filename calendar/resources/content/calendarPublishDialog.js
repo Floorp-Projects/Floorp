@@ -97,6 +97,12 @@ function loadCalendarPublishDialog()
    
    gOnOkFunction = args.onOk;
    
+   //get default values from the prefs
+   document.getElementById( "publish-url-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
+   document.getElementById( "publish-remotefilename-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.filename", "" );
+   document.getElementById( "publish-username-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.username", "" );
+   document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
+
    var firstFocus = document.getElementById( "publish-url-textbox" );
    firstFocus.focus();
 }
@@ -122,4 +128,5 @@ function onOKCommand()
    // tell standard dialog stuff to close the dialog
    return true;
 }
+
 

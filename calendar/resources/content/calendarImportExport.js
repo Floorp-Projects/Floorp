@@ -94,64 +94,109 @@ function convertToUnicode(aCharset, aSrc )
 
 function loadEventsFromFile()
 {
-   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-   
-   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-     
-   fp.init(window, "Open", nsIFilePicker.modeOpen);
-	
-   fp.defaultExtension = "ics"
-   
-   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
-   fp.appendFilter( filterXcs, "*" + extensionXcs );
-   fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
-   fp.show();
 
-   if (fp.file && fp.file.path.length > 0) 
-   {
+  var dupResult = { cancelled: false, discard: true, prompt: false };
+
+  openDialog("chrome://calendar/content/importDuplicatesDialog.xul", "caDuplicates", "chrome,modal,centerscreen", dupResult );
+  if (dupResult.cancelled == true)
+    return;
+
+//   dump("*******************\n");
+//   dump("cancelled: " + dupResult.cancelled + "\n");
+//   dump("discard:   " + dupResult.discard + "\n");
+//   dump("prompt:    " + dupResult.prompt + "\n");
+//   dump("*******************\n");
+
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+     
+  fp.init(window, "Open", nsIFilePicker.modeOpen);
+  fp.defaultExtension = "ics";
+   
+  fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+  fp.appendFilter( filterXcs, "*" + extensionXcs );
+  fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
+  fp.show();
+
+  if (fp.file && fp.file.path.length > 0) 
+    {
       var aDataStream = readDataFromFile( fp.file.path, "UTF-8" );
-      var calendarEventArray;
+      var calendarEventArray = new Array();
+      var duplicateEventArray = new Array();
 
       switch (fp.filterIndex) {
       case 0 : // ics
-         calendarEventArray = parseIcalData( aDataStream );
-         break;
+        calendarEventArray = parseIcalData( aDataStream );
+        break;
       case 1 : // xcs
-         calendarEventArray = parseXCSData( aDataStream );
-         break;
+        calendarEventArray = parseXCSData( aDataStream );
+        break;
       case 2: // csv
-         calendarEventArray = parseOutlookCSVData( aDataStream );
-         break;
+        var ret = parseOutlookCSVData( aDataStream, dupResult.discard, dupResult.prompt );
+        calendarEventArray = ret.calendarEventArray;
+        duplicateEventArray = ret.calendarDuplicateArray;
+        break;
       }
    
+
+      // If there are no events to import, let the user know
+      //
+      if (calendarEventArray.length == 0 && (duplicateEventArray.length == 0 || dupResult.discard == true) ) {
+        alert("No events to import...");
+        return false;
+      }
+      
       // Show a dialog with option to import events with or without dialogs
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
       promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
       var result = {value:0}; 
-      
-      var buttonPressed =      
-      promptService.confirmEx(window, 
-           "Import", "About to import " + calendarEventArray.length + " event(s).\nDo you want to open all events to import before importing?", 
-           (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
-           (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
-           (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
-            null,null,null,null, result); 
-      if(buttonPressed == 0) // YES
-      { 
-         addEventsToCalendar( calendarEventArray );
-         return true;
+
+      if (calendarEventArray.length > 0) {
+
+        var buttonPressed =      
+          promptService.confirmEx(window, 
+                                  "Import", "About to import " + calendarEventArray.length + " event(s).\nDo you want to open all new events to import before importing?", 
+                                  (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
+                                  (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
+                                  (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
+                                  null,null,null,null, result); 
+
+        if(buttonPressed == 0) // YES
+          { 
+            addEventsToCalendar( calendarEventArray );
+            return true;
+          }
+        else if(buttonPressed == 1) // NO
+          { 
+            addEventsToCalendar( calendarEventArray, true );
+            return true;
+          } 
+        else if(buttonPressed == 2) // CANCEL
+          { 
+            return false; 
+          } 
       }
-      else if(buttonPressed == 1) // NO
-      { 
-         addEventsToCalendar( calendarEventArray, true );
-         return true;
-      } 
-      else if(buttonPressed == 2) // CANCEL
-      { 
-         return false; 
-      } 
-   }
-   return false;
+
+
+      // Depending on how the user chose to deal with duplicates,
+      // either add them blindly, or prompt then for each.
+      //
+      if (duplicateEventArray.length > 0) {
+
+        if (dupResult.discard == false) {
+
+          if (dupResult.prompt)
+            alert("Some duplicate entries were imported. Each one will display in the New Event dialog,\n where you can skip it using Cancel, or edit and accept it using OK.");
+
+          addEventsToCalendar( duplicateEventArray, !dupResult.prompt );
+        }
+
+      }
+    }
+  
+  
+  return false;
 }
 
 
@@ -323,62 +368,63 @@ function entryExists( date, subject) {
   return ret;
 }
 
+function promptToKeepEntry(title, startTime, endTime) 
+{
+  return confirm(
+                 "Add duplicate entry:\n\n" + 
+                 "Title:      " + title + "\n" +
+                 "Start Time: " + startTime.toString() + "\n" +
+                 "End Time:   " + endTime.toString() + "\n" 
+                 );
+
+}
+
+
 /**** parseOutlookCSVData
  *
  * Takes a text block of iCalendar events and tries to split that into individual events.
  * Parses those events and returns an array of calendarEvents.
  */
- 
-function parseOutlookCSVData( icalStr )
+function parseOutlookCSVData( icalStr, discardDuplicates, promptEach )
 {
   var lines = icalStr.split("\n");
   var calendarEvent;
-  var calendarEventArray = new Array();
+  var eventArray = new Array();
+  var dupArray = new Array();
   var lineIndex = 1;
   var totalLines = lines.length-1;
-
-  var skipped = 0, added = 0;
+  var exists = false;
 
   while (lineIndex < totalLines) {
 
     var fields = lines[lineIndex].split('","');
-
-    fields[0] = fields[0].substring(1);
-
-    dump(fields[0] + "\n");
-    dump(fields[1] + "\n");
-    dump(fields[2] + "\n");
-    dump(fields[3] + "\n");
-    dump(fields[4] + "\n");
-    dump("\n");
+    fields[0] = fields[0].substring(1); // strip off the leading quote...
 
     var title = fields[0];
     var stime = new Date(fields[1] + " " + fields[2]);
     var etime = new Date(fields[3] + " " + fields[4]);
 
-
-    if (!entryExists(stime, title)) {
+    exists = entryExists(stime, title);
       
-      calendarEvent = createEvent();
-      calendarEvent.id = createUniqueID( );
-      calendarEvent.title = title;
-      calendarEvent.start.setTime(stime);
-      calendarEvent.end.setTime(etime);
-      
-      calendarEventArray[ calendarEventArray.length ] = calendarEvent;
-      dump("added: " + title);
+    calendarEvent = createEvent();
+    calendarEvent.id = createUniqueID( );
+    calendarEvent.title = title;
+    calendarEvent.start.setTime(stime);
+    calendarEvent.end.setTime(etime);
 
-      ++added;
-    }
+    if ( !exists )
+      eventArray[ eventArray.length ] = calendarEvent;
     else
-      ++skipped;
+      dupArray[ dupArray.length ] = calendarEvent;
+
 
     ++lineIndex;
   }
 
-  alert("Skipped: " + skipped + ", added: " + added);
+//   dump("*** calendar entries : " + eventArray.length + "\n");
+//   dump("*** duplicate entries: " + dupArray.length + "\n");
 
-  return calendarEventArray;
+  return { calendarEventArray: eventArray, calendarDuplicateArray: dupArray };
 }
 
 /**** parseIcalData

@@ -89,17 +89,7 @@
 
    <groupbox align="start" orient="vertical">
       <caption label="&pref.mainbox.label;"/>
-      <description>&pref.alarmgoesoff.label;</description>
-      <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
-          label="&pref.playasound;" />
-          
-      <checkbox id="alarmshow" prefstring="calendar.alarms.show"
-          label="&pref.showalarmbox;" />
-          
-      <description>Default address to send alarms to:</description>
-      <textbox id="alarmemailaddress" prefstring="calendar.alarms.emailaddress" flex="1"/>      
-
-      <vbox>
+      <hbox>
          <description>&pref.dateformat.label;</description>
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
              <menupopup id="dateformat">
@@ -107,9 +97,9 @@
                <menuitem id="dateformat-short-menuitem" label="&pref.dateformat.short;" value="1"/>
              </menupopup>
            </menulist>
-      </vbox>
+      </hbox>
       
-      <vbox>
+      <hbox>
          <description>&pref.weekstarts.label;</description>
          <menulist id="weekstarts" prefstring="calendar.week.start">
           <menupopup id="weekstarts">
@@ -122,7 +112,7 @@
             <menuitem label="&pref.weekstarts.saturday;"  value="6"/>
           </menupopup>
         </menulist>   
-      </vbox>
+      </hbox>
       
       <hbox align="center">
          <description>&pref.defaultlength.label;</description>
@@ -137,13 +127,25 @@
       </hbox>
       
       <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />
-          
-      
-      
    </groupbox>
    <groupbox>
-      <vbox>
-         <caption label="&pref.categories.label;"/>
+      <caption label="Alarms"/>
+      <description>&pref.alarmgoesoff.label;</description>
+      <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
+          label="&pref.playasound;" />
+          
+      <checkbox id="alarmshow" prefstring="calendar.alarms.show" label="&pref.showalarmbox;" />
+          
+      <hbox>
+         <description>Default address to send alarms to:</description>
+         <textbox id="alarmemailaddress" prefstring="calendar.alarms.emailaddress" flex="1"/>      
+      </hbox>
+
+   </groupbox>
+   
+   <groupbox>
+      <caption label="&pref.categories.label;"/>
+         <vbox>
          <textbox id="categories" prefstring="calendar.categories.names"/>
          <description flex="1">&pref.categories.help.description;</description>
       </vbox>
