@@ -589,9 +589,12 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	
   if (!m_socketIsOpen)
   {
-    nsCOMPtr<nsIDocShell> docShell;
-    aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
-    nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(docShell));
+    nsCOMPtr<nsIInterfaceRequestor> ir;
+    if (aMsgWindow) {
+      nsCOMPtr<nsIDocShell> docShell;
+      aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+      ir = do_QueryInterface(docShell);
+    }
 
     // call base class to set up the transport
     if (isSecure) {
