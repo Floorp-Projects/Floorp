@@ -263,7 +263,7 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
   //nsIFocusTracker interface
-  virtual nsresult SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame){mFocusEventFrame = aFrame; mAnchorEventFrame = aAnchorFrame; return NS_OK;}
+  virtual nsresult SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame){mFocusEventFrame = aFrame; mAnchorEventFrame = aAnchorFrame;  printf("anchor = %x \n",aAnchorFrame); return NS_OK;}
 
   virtual nsresult GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){if (!aFrame || !aAnchorFrame) return NS_ERROR_NULL_POINTER;*aFrame = mFocusEventFrame;
       *aAnchorFrame = mAnchorEventFrame; return NS_OK;}
