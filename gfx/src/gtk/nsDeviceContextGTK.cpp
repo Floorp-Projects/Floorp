@@ -118,8 +118,6 @@ class nsSystemFontsGTK {
 nscoord nsDeviceContextGTK::mDpi = 96;
 static nsSystemFontsGTK *gSystemFonts = nsnull;
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextGTK, nsIDeviceContext)
-
 nsDeviceContextGTK::nsDeviceContextGTK()
 {
   NS_INIT_REFCNT();
