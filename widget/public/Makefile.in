@@ -77,6 +77,7 @@ EXPORTS = \
 	nsIFontNameIterator.h \
 	nsIFontSizeIterator.h \
 	nsIFontRetrieverService.h \
+	nsIContextMenu.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
