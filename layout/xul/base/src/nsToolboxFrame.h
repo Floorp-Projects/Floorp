@@ -39,6 +39,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
+#include "nsXULAtoms.h"
 #include "nsCOMPtr.h"
 
 
@@ -103,6 +104,7 @@ protected:
   void CollapseToolbar ( TabInfo & inTab ) ; 
   void ExpandToolbar ( TabInfo & inTab ) ; 
 
+  void ConvertToLocalPoint ( nsPoint & ioPoint ) ;
   void OnMouseMove ( nsPoint & aMouseLoc ) ;
   void OnMouseExit ( ) ;
   void OnMouseLeftClick ( nsPoint & aMouseLoc ) ;
@@ -116,6 +118,9 @@ protected:
   unsigned short mNumToolbars;
   short mGrippyHilighted;          // used to indicate which grippy the mouse is inside
 
+  const nsCOMPtr<nsIAtom> kCollapsedAtom ;
+  const nsCOMPtr<nsIAtom> kHiddenAtom ;
+  
     // pass-by-value not allowed for a toolbox because it corresponds 1-to-1
     // with an element in the UI.
   nsToolboxFrame ( const nsToolboxFrame& aFrame ) ;	            // DO NOT IMPLEMENT
