@@ -176,6 +176,10 @@ var gComposeRecyclingListener = {
     SetContentAndBodyAsUnmodified();
     disableEditableFields()
     ReleaseGlobalVariables();
+
+    //Release the nsIMsgComposeParams object
+    if (window.arguments && window.arguments[0])
+      window.arguments[0] = null;
 	},
 
 	onReopen: function(params) {
