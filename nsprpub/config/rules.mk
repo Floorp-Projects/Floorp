@@ -370,7 +370,7 @@ ifeq ($(OS_TARGET), OpenVMS)
 	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
 else	# OpenVMS
 ifdef USE_AUTOCONF
-	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
+	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS)
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
 endif   # USE_AUTOCONF
