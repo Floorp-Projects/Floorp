@@ -113,8 +113,8 @@ else
 	OS_CFLAGS += $(NOMD_OS_CFLAGS) $(ARCHFLAG)
 	ifndef BUILD_OPT
 		OS_CFLAGS  += -xs
-#	else
-#		OPTIMIZER += -fast
+	else
+		OPTIMIZER = -xO3
 	endif
 
 endif
