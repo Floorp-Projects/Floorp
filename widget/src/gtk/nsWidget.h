@@ -108,7 +108,6 @@ public:
   nsIWidget* GetParent(void);
   virtual void OnDestroy();
 
-  NS_IMETHOD SetModal(PRBool aModal);
   NS_IMETHOD Show(PRBool state);
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD IsVisible(PRBool &aState);
@@ -311,12 +310,6 @@ protected:
   static gint  DestroySignal(GtkWidget *      aGtkWidget,
                              nsWidget*        aWidget);
 
-  static void  SuppressModality(PRBool aSuppress);
-
-  // Deal with rollup for popups
-  PRBool HandlePopup(PRInt32 inMouseX, PRInt32 inMouseY, PRBool isWheel);
-  PRBool IsMouseInWindow ( GdkWindow* inWindow, PRInt32 inMouseX, PRInt32 inMouseY ) ;
-
 public:
   virtual void IMECommitEvent(GdkEventKey *aEvent);
 
@@ -371,9 +364,6 @@ protected:
                      gchar *       aSignalName,
                      GtkSignalFunc aSignalFunction);
   
-  PRBool DropEvent(GtkWidget * aWidget, 
-                   GdkWindow * aEventWindow);
-  
   void InitMouseEvent(GdkEventButton * aGdkButtonEvent,
                       nsMouseEvent &   anEvent,
                       PRUint32         aEventType);
@@ -423,6 +413,7 @@ private:
   //
   // Keep track of the last widget being "dragged"
   //
+public:
   static nsWidget *sButtonMotionTarget;
   static gint sButtonMotionRootX;
   static gint sButtonMotionRootY;

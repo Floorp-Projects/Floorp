@@ -69,25 +69,6 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-// keeping track of a list of simultaneously modal widgets
-class ModalWidgetList {
-public:
-  ModalWidgetList(nsWidget *aWidget);
-  ~ModalWidgetList();
-
-  static PRBool Find(nsWidget *aWidget);
-  static void   Append(nsWidget *aWidget);
-  static void   Remove(nsWidget *aWidget);
-  static void   RemoveLast(void);
-  static void   Suppress(PRBool aSuppress);
-
-private:
-  nsWidget        *mWidget;
-  ModalWidgetList *mNext,
-                  *mPrev,
-                  *mLast; // valid only for head of list
-};
-
 PRUint32 nsWidget::sWidgetCount = 0;
 
 // this is the nsWindow with the focus
@@ -301,7 +282,6 @@ nsWidget::~nsWidget()
   // to be called once
   Destroy();
 
-  NS_ASSERTION(!ModalWidgetList::Find(this), "destroying widget without first clearing modality.");
 }
 
 
@@ -436,13 +416,6 @@ nsWidget::DestroySignal(GtkWidget* aGtkWidget, nsWidget* aWidget)
 }
 
 void
-nsWidget::SuppressModality(PRBool aSuppress)
-{
-  ModalWidgetList::Suppress(aSuppress); 
-}
-
-
-void
 nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
 {
   OnDestroy();
@@ -491,30 +464,6 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
   return NS_OK;
-}
-
-NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
-{
-  GtkWindow *topWindow;
-
-  topWindow = GetTopLevelWindow();
-
-  if (!topWindow) {
-    if (!aModal) {
-      ModalWidgetList::RemoveLast();
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  if (aModal) {
-    ModalWidgetList::Append(this);
-    gtk_window_set_modal(topWindow, TRUE);
-  } else {
-    ModalWidgetList::Remove(this);
-    gtk_window_set_modal(topWindow, FALSE);
-  }
-
-	return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
@@ -1820,90 +1769,6 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 }
 
 
-//
-// IsMouseInWindow
-//
-// Check if the mouse x/y is within the given window
-//
-PRBool
-nsWidget :: IsMouseInWindow ( GdkWindow* inWindow, PRInt32 inMouseX, PRInt32 inMouseY )
-{
-  gint x, y;
-  gint w, h;
-
-  // XXX this causes a round trip to the ever lovely X server.  fix me.
-  gdk_window_get_origin(inWindow, &x, &y);
-
-  // this doesn't... it just pokes GdkWindowPrivate :-)
-  gdk_window_get_size(inWindow, &w, &h);
-
-  if ( inMouseX > x && inMouseX < x + w &&
-       inMouseY > y && inMouseY < y + h )
-    return PR_TRUE;
-
-  return PR_FALSE;
-
-} // IsMouseInWindow
-
-
-//
-// HandlePopup
-//
-// Deal with rollup of popups (xpmenus, etc)
-// 
-PRBool
-nsWidget::HandlePopup(PRInt32 inMouseX, PRInt32 inMouseY, PRBool isWheel)
-{
-  PRBool retVal = PR_FALSE;
-  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWidget);
-  if (rollupWidget && gRollupListener)
-  {
-    GdkWindow *currentPopup = (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-    if ( !IsMouseInWindow(currentPopup, inMouseX, inMouseY) ) {
-      PRBool rollup = PR_TRUE;
-      if (isWheel) {
-        gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
-        retVal = PR_TRUE;
-      }
-      // if we're dealing with menus, we probably have submenus and we don't
-      // want to rollup if the clickis in a parent menu of the current submenu
-      nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
-      if ( menuRollup ) {
-        nsCOMPtr<nsISupportsArray> widgetChain;
-        menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
-        if ( widgetChain ) {
-          PRUint32 count = 0;
-          widgetChain->Count ( &count );
-          for ( PRUint32 i = 0; i < count; ++i ) {
-            nsCOMPtr<nsISupports> genericWidget;
-            widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
-            nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
-            if ( widget ) {
-              GdkWindow* currWindow = (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
-              if ( IsMouseInWindow(currWindow, inMouseX, inMouseY) ) {
-                rollup = PR_FALSE;
-                break;
-              }
-            }
-          } // foreach parent menu widget
-        }
-      } // if rollup listener knows about menus
-
-      // if we've determined that we should still rollup, do it.
-      if ( rollup ) {
-        gRollupListener->Rollup();
-        retVal = PR_TRUE;
-      }
-    }
-  } else {
-    gRollupWidget = nsnull;
-    gRollupListener = nsnull;
-  }
-
-  return retVal;
-} // HandlePopup
-
-
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
@@ -1912,11 +1777,6 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-  PRBool isWheel = (aGdkButtonEvent->button == 4 ||
-                    aGdkButtonEvent->button == 5);
-  if (HandlePopup(aGdkButtonEvent->x_root, aGdkButtonEvent->y_root, isWheel))
-    return;
-   
   // Switch on single, double, triple click.
   switch (aGdkButtonEvent->type) 
   {
@@ -2197,61 +2057,6 @@ nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
 
   }
 }
-//////////////////////////////////////////////////////////////////
-PRBool
-nsWidget::DropEvent(GtkWidget * aWidget, 
-                    GdkWindow * aEventWindow) 
-{
-  NS_ASSERTION( nsnull != aWidget, "widget is null");
-  NS_ASSERTION( nsnull != aEventWindow, "event window is null");
-
-#if 0
-  static int count = 0;
-
-  if (GTK_IS_LAYOUT(aWidget))
-  {
-    GtkLayout * layout = GTK_LAYOUT(aWidget);
-
-    printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p,bin_win=%p)\n",
-           count++,
-           this,
-           aWidget,
-           aEventWindow,
-           aWidget->window,
-           layout->bin_window);
-  }
-  else
-  {
-    printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p)\n",
-           count++,
-           this,
-           aWidget,
-           aEventWindow,
-           aWidget->window);
-  }
-#endif
-
-
-  // For gtklayout widgets, we dont want to handle events
-  // that occur in the sub windows.  Check the window member
-  // of the GdkEvent, if it is not the gtklayout's bin_window,
-  // drop the event.
-  if (GTK_IS_LAYOUT(aWidget))
-  {
-    GtkLayout * layout = GTK_LAYOUT(aWidget);
-
-    if (aEventWindow != layout->bin_window)
-    {
-#ifdef DEBUG_pavlov
-      printf("dropping event!!!!!!!\n");
-#endif
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-//////////////////////////////////////////////////////////////////////
-
 
 //////////////////////////////////////////////////////////////////
 //
@@ -2269,11 +2074,6 @@ nsWidget::MotionNotifySignal(GtkWidget *      aWidget,
   nsWidget * widget = (nsWidget *) aData;
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
-
-  if (widget->DropEvent(aWidget, aGdkMotionEvent->window))
-  {
-    return PR_TRUE;
-  }
 
   widget->OnMotionNotifySignal(aGdkMotionEvent);
 
@@ -2293,11 +2093,6 @@ nsWidget::EnterNotifySignal(GtkWidget *        aWidget,
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-  if (widget->DropEvent(aWidget, aGdkCrossingEvent->window))
-  {
-	return PR_TRUE;
-  }
-
   widget->OnEnterNotifySignal(aGdkCrossingEvent);
 
   return PR_TRUE;
@@ -2314,11 +2109,6 @@ nsWidget::LeaveNotifySignal(GtkWidget *        aWidget,
   nsWidget * widget = (nsWidget *) aData;
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
-
-  if (widget->DropEvent(aWidget, aGdkCrossingEvent->window))
-  {
-    return PR_TRUE;
-  }
 
   widget->OnLeaveNotifySignal(aGdkCrossingEvent);
 
@@ -2339,11 +2129,6 @@ nsWidget::ButtonPressSignal(GtkWidget *      aWidget,
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-  if (widget->DropEvent(aWidget, aGdkButtonEvent->window))
-  {
-    return PR_TRUE;
-  }
-
   widget->OnButtonPressSignal(aGdkButtonEvent);
 
   return PR_TRUE;
@@ -2362,11 +2147,6 @@ nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget,
   nsWidget * widget = (nsWidget *) aData;
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
-
-  if (widget->DropEvent(aWidget, aGdkButtonEvent->window))
-  {
-    return PR_TRUE;
-  }
 
   widget->OnButtonReleaseSignal(aGdkButtonEvent);
 
@@ -2402,11 +2182,6 @@ nsWidget::FocusInSignal(GtkWidget *      aWidget,
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-//   if (widget->DropEvent(aWidget, aGdkFocusEvent->window))
-//   {
-// 	return PR_TRUE;
-//   }
-
   widget->OnFocusInSignal(aGdkFocusEvent);
 
   if (GTK_IS_WINDOW(aWidget))
@@ -2428,11 +2203,6 @@ nsWidget::FocusOutSignal(GtkWidget *      aWidget,
   nsWidget * widget = (nsWidget *) aData;
 
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
-
-//   if (widget->DropEvent(aWidget, aGdkFocusEvent->window))
-//   {
-// 	return PR_TRUE;
-//   }
 
   widget->OnFocusOutSignal(aGdkFocusEvent);
 
@@ -2533,95 +2303,6 @@ void nsWidget::SetBackgroundColorNative(GdkColor *aColorNor,
 NS_IMETHODIMP nsWidget::ResetInputState()
 {
   return NS_OK;
-}
-
-/********************** class ModalWidgetList ***********************/
-/* This silly little thing is a linked list of widgets that have been
-   declared modal, in the order of their declaration. We do this only
-   so clients can stack modal dialogs on top of each other, as they
-   are wont to do. Yes, glib keeps its own list, but we need our own copy
-   so we can temporarily disable them all when a popup control window
-   makes an appearance within a modal dialog.
-*/
-static ModalWidgetList *gModalWidgets = nsnull;
-
-ModalWidgetList::ModalWidgetList(nsWidget *aWidget) {
-  mWidget = aWidget;
-  mNext = 0;
-  mPrev = 0;
-  mLast = 0;
-}
-
-ModalWidgetList::~ModalWidgetList() {
-}
-
-PRBool ModalWidgetList::Find(nsWidget *aWidget) {
-  ModalWidgetList *next;
-
-  for (next = gModalWidgets; next && next->mWidget != aWidget; next = next->mNext)
-    ;
-  return next ? PR_TRUE : PR_FALSE;
-}
-
-void ModalWidgetList::Append(nsWidget *aWidget) {
-
-  ModalWidgetList *newElement = new ModalWidgetList(aWidget);
-
-  NS_ASSERTION(newElement, "out of memory in modal widget list creation");
-  if (!newElement)
-    return;
-
-  if (gModalWidgets) {
-    newElement->mPrev = gModalWidgets->mLast;
-    gModalWidgets->mLast->mNext = newElement;
-    gModalWidgets->mLast = newElement;
-  } else {
-    newElement->mLast = newElement;
-    gModalWidgets = newElement;
-  }
-}
-
-void ModalWidgetList::Remove(nsWidget *aWidget) {
-  NS_ASSERTION(gModalWidgets && gModalWidgets->mLast->mWidget == aWidget,
-    "removing modal widgets out of order");
-  if (gModalWidgets && gModalWidgets->mLast->mWidget == aWidget)
-    ModalWidgetList::RemoveLast();
-}
-
-void ModalWidgetList::RemoveLast() {
-  NS_ASSERTION(gModalWidgets, "removing modal widgets from empty list");
-  if (!gModalWidgets)
-    return;
-
-  ModalWidgetList *deadElement = gModalWidgets->mLast;
-  if (deadElement->mPrev) {
-    deadElement->mPrev->mNext = 0;
-    gModalWidgets->mLast = deadElement->mPrev;
-  } else
-    gModalWidgets = 0;
-  delete deadElement;
-}
-
-void ModalWidgetList::Suppress(PRBool aSuppress) {
-
-  if (!gModalWidgets)
-    return;
-
-  GtkWindow       *window;
-  ModalWidgetList *widget;
-
-  if (aSuppress)
-    for (widget = gModalWidgets->mLast; widget; widget = widget->mPrev) {
-      window = widget->mWidget->GetTopLevelWindow();
-       NS_ASSERTION(window, "non-window in modality suppression list");
-      gtk_window_set_modal(window, FALSE);
-    }
-  else
-    for (widget = gModalWidgets; widget; widget = widget->mNext) {
-      window = widget->mWidget->GetTopLevelWindow();
-      NS_ASSERTION(window, "non-window in modality suppression list");
-      gtk_window_set_modal(window, TRUE);
-    }
 }
 
 /* virtual */
