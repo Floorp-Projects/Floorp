@@ -24,7 +24,8 @@ typedef enum nsWinRegEnum {
   NS_WIN_REG_DELETE          = 2,
   NS_WIN_REG_DELETE_VAL      = 3,
   NS_WIN_REG_SET_VAL_STRING  = 4,
-  NS_WIN_REG_SET_VAL         = 5
+  NS_WIN_REG_SET_VAL_NUMBER  = 5,
+  NS_WIN_REG_SET_VAL         = 6
 
 } nsWinRegEnum;
 

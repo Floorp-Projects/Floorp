@@ -40,6 +40,7 @@
 #include "nsInstallVersion.h"
 #include "nsInstall.h"
 
+#define _MAXKEYVALUE_ 8196
 class nsWinReg
 {
   public:
@@ -59,45 +60,45 @@ class nsWinReg
                       nsWinReg(nsInstall* suObj);
 
     PRInt32           setRootKey(PRInt32 key);
-    PRInt32           createKey(nsString subkey, nsString classname, PRInt32* aReturn);
-    PRInt32           deleteKey(nsString subkey, PRInt32* aReturn);
-    PRInt32           deleteValue(nsString subkey, nsString valname, PRInt32* aReturn);
-    PRInt32           setValueString(nsString subkey, nsString valname, nsString value, PRInt32* aReturn);
-    PRInt32           getValueString(nsString subkey, nsString valname, nsString** aReturn);
-    PRInt32           setValue(nsString subkey, nsString valname, nsWinRegValue* value, PRInt32* aReturn);
-    PRInt32           getValue(nsString subkey, nsString valname, nsWinRegValue** aReturn);
+    PRInt32           createKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn);
+    PRInt32           deleteKey(const nsString& subkey, PRInt32* aReturn);
+    PRInt32           deleteValue(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
+    PRInt32           setValueString(const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn);
+    PRInt32           getValueString(const nsString& subkey, const nsString& valname, nsString* aReturn);
+    PRInt32           setValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn);
+    PRInt32           getValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
+    PRInt32           setValue(const nsString& subkey, const nsString& valname, nsWinRegValue* value, PRInt32* aReturn);
+    PRInt32           getValue(const nsString& subkey, const nsString& valname, nsWinRegValue** aReturn);
 
     nsInstall*        installObject(void);
 
-    PRInt32           finalCreateKey(PRInt32 root, nsString subkey, nsString classname, PRInt32* aReturn);
-    PRInt32           finalDeleteKey(PRInt32 root, nsString subkey, PRInt32* aReturn);
-    PRInt32           finalDeleteValue(PRInt32 root, nsString subkey, nsString valname, PRInt32* aReturn);
-    PRInt32           finalSetValueString(PRInt32 root, nsString subkey, nsString valname, nsString value, PRInt32* aReturn);
-    PRInt32           finalSetValue(PRInt32 root, nsString subkey, nsString valname, nsWinRegValue* value, PRInt32* aReturn);
+    PRInt32           finalCreateKey(PRInt32 root, const nsString& subkey, const nsString& classname, PRInt32* aReturn);
+    PRInt32           finalDeleteKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn);
+    PRInt32           finalDeleteValue(PRInt32 root, const nsString& subkey, const nsString& valname, PRInt32* aReturn);
+    PRInt32           finalSetValueString(PRInt32 root, const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn);
+    PRInt32           finalSetValueNumber(PRInt32 root, const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn);
+    PRInt32           finalSetValue(PRInt32 root, const nsString& subkey, const nsString& valname, nsWinRegValue* value, PRInt32* aReturn);
 
     
   private:
     
     /* Private Fields */
-    PRInt32 rootkey;
-//    nsPrincipal* principal;
-//    nsPrivilegeManager* privMgr;
-//    nsTarget* impersonation;
+    PRInt32    rootkey;
     nsInstall* su;
 
-//    nsUserTarget* target;
-    
     /* Private Methods */
-    PRInt32 nativeCreateKey(nsString subkey, nsString classname);
-    PRInt32 nativeDeleteKey(nsString subkey);
-    PRInt32 nativeDeleteValue(nsString subkey, nsString valname);
+    PRInt32           nativeCreateKey(const nsString& subkey, const nsString& classname);
+    PRInt32           nativeDeleteKey(const nsString& subkey);
+    PRInt32           nativeDeleteValue(const nsString& subkey, const nsString& valname);
 
-    PRInt32 nativeSetValueString(nsString subkey, nsString valname, nsString value);
-    nsString* nativeGetValueString(nsString subkey, nsString valname);
+    PRInt32           nativeSetValueString(const nsString& subkey, const nsString& valname, const nsString& value);
+    void              nativeGetValueString(const nsString& subkey, const nsString& valname, nsString* aReturn);
+    PRInt32           nativeSetValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value);
+    void              nativeGetValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
 
-    PRInt32 nativeSetValue(nsString subkey, nsString valname, nsWinRegValue* value);
-    nsWinRegValue* nativeGetValue(nsString subkey, nsString valname);
-//    PRBool resolvePrivileges();
+    PRInt32           nativeSetValue(const nsString& subkey, const nsString& valname, nsWinRegValue* value);
+    nsWinRegValue*    nativeGetValue(const nsString& subkey, const nsString& valname);
 };
 
 #endif /* __NS_WINREG_H__ */
+

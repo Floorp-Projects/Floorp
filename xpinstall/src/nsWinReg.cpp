@@ -36,7 +36,7 @@ nsWinReg::setRootKey(PRInt32 key)
 }
   
 PRInt32
-nsWinReg::createKey(nsString subkey, nsString classname, PRInt32* aReturn)
+nsWinReg::createKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn)
 {
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_CREATE, subkey, classname, "null");
 
@@ -49,7 +49,7 @@ nsWinReg::createKey(nsString subkey, nsString classname, PRInt32* aReturn)
 }
   
 PRInt32
-nsWinReg::deleteKey(nsString subkey, PRInt32* aReturn)
+nsWinReg::deleteKey(const nsString& subkey, PRInt32* aReturn)
 {
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_DELETE, subkey, "null", "null");
 
@@ -62,7 +62,7 @@ nsWinReg::deleteKey(nsString subkey, PRInt32* aReturn)
 }
 
 PRInt32
-nsWinReg::deleteValue(nsString subkey, nsString valname, PRInt32* aReturn)
+nsWinReg::deleteValue(const nsString& subkey, const nsString& valname, PRInt32* aReturn)
 {
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_DELETE_VAL, subkey, valname, "null");
 
@@ -75,7 +75,7 @@ nsWinReg::deleteValue(nsString subkey, nsString valname, PRInt32* aReturn)
 }
 
 PRInt32
-nsWinReg::setValueString(nsString subkey, nsString valname, nsString value, PRInt32* aReturn)
+nsWinReg::setValueString(const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn)
 {
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_SET_VAL_STRING, subkey, valname, value);
 
@@ -88,14 +88,36 @@ nsWinReg::setValueString(nsString subkey, nsString valname, nsString value, PRIn
 }
 
 PRInt32
-nsWinReg::getValueString(nsString subkey, nsString valname, nsString** aReturn)
+nsWinReg::getValueString(const nsString& subkey, const nsString& valname, nsString* aReturn)
 {
-  // fix:
+  nativeGetValueString(subkey, valname, aReturn);
+
   return NS_OK;
 }
-  
+ 
 PRInt32
-nsWinReg::setValue(nsString subkey, nsString valname, nsWinRegValue* value, PRInt32* aReturn)
+nsWinReg::setValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn)
+{
+	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_SET_VAL_NUMBER, subkey, valname, value);
+
+	if(wi == nsnull)
+  {
+    return NS_OK;
+  }
+	su->ScheduleForInstall(wi);
+	return 0;
+}
+
+PRInt32
+nsWinReg::getValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn)
+{
+  nativeGetValueNumber(subkey, valname, aReturn);
+
+  return NS_OK;
+}
+ 
+PRInt32
+nsWinReg::setValue(const nsString& subkey, const nsString& valname, nsWinRegValue* value, PRInt32* aReturn)
 {
   // fix: need to figure out what to do with nsWinRegValue class.
   //
@@ -110,7 +132,7 @@ nsWinReg::setValue(nsString subkey, nsString valname, nsWinRegValue* value, PRIn
 }
   
 PRInt32
-nsWinReg::getValue(nsString subkey, nsString valname, nsWinRegValue** aReturn)
+nsWinReg::getValue(const nsString& subkey, const nsString& valname, nsWinRegValue** aReturn)
 {
   // fix:
   return NS_OK;
@@ -122,7 +144,7 @@ nsInstall* nsWinReg::installObject()
 }
   
 PRInt32
-nsWinReg::finalCreateKey(PRInt32 root, nsString subkey, nsString classname, PRInt32* aReturn)
+nsWinReg::finalCreateKey(PRInt32 root, const nsString& subkey, const nsString& classname, PRInt32* aReturn)
 {
 	setRootKey(root);
 	*aReturn = nativeCreateKey(subkey, classname);
@@ -130,7 +152,7 @@ nsWinReg::finalCreateKey(PRInt32 root, nsString subkey, nsString classname, PRIn
 }
   
 PRInt32
-nsWinReg::finalDeleteKey(PRInt32 root, nsString subkey, PRInt32* aReturn)
+nsWinReg::finalDeleteKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn)
 {
 	setRootKey(root);
 	*aReturn = nativeDeleteKey(subkey);
@@ -138,15 +160,15 @@ nsWinReg::finalDeleteKey(PRInt32 root, nsString subkey, PRInt32* aReturn)
 }
   
 PRInt32
-nsWinReg::finalDeleteValue(PRInt32 root, nsString subkey, nsString valname, PRInt32* aReturn)
+nsWinReg::finalDeleteValue(PRInt32 root, const nsString& subkey, const nsString& valname, PRInt32* aReturn)
 {
 	setRootKey(root);
 	*aReturn = nativeDeleteValue(subkey, valname);
   return NS_OK;
 }
-  
-PRInt32 
-nsWinReg::finalSetValueString(PRInt32 root, nsString subkey, nsString valname, nsString value, PRInt32* aReturn)
+
+PRInt32
+nsWinReg::finalSetValueString(PRInt32 root, const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn)
 {
 	setRootKey(root);
 	*aReturn = nativeSetValueString(subkey, valname, value);
@@ -154,7 +176,15 @@ nsWinReg::finalSetValueString(PRInt32 root, nsString subkey, nsString valname, n
 }
  
 PRInt32
-nsWinReg::finalSetValue(PRInt32 root, nsString subkey, nsString valname, nsWinRegValue* value, PRInt32* aReturn)
+nsWinReg::finalSetValueNumber(PRInt32 root, const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn)
+{
+	setRootKey(root);
+	*aReturn = nativeSetValueNumber(subkey, valname, value);
+  return NS_OK;
+}
+ 
+PRInt32
+nsWinReg::finalSetValue(PRInt32 root, const nsString& subkey, const nsString& valname, nsWinRegValue* value, PRInt32* aReturn)
 {
 	setRootKey(root);
 	*aReturn = nativeSetValue(subkey, valname, value);
@@ -165,7 +195,7 @@ nsWinReg::finalSetValue(PRInt32 root, nsString subkey, nsString valname, nsWinRe
 /* Private Methods */
 
 PRInt32
-nsWinReg::nativeCreateKey(nsString subkey, nsString classname)
+nsWinReg::nativeCreateKey(const nsString& subkey, const nsString& classname)
 {
     HKEY    root, newkey;
     LONG    result;
@@ -190,7 +220,7 @@ nsWinReg::nativeCreateKey(nsString subkey, nsString classname)
 }
 
 PRInt32
-nsWinReg::nativeDeleteKey(nsString subkey)
+nsWinReg::nativeDeleteKey(const nsString& subkey)
 {
     HKEY  root;
     LONG  result;
@@ -207,7 +237,7 @@ nsWinReg::nativeDeleteKey(nsString subkey)
 }
   
 PRInt32
-nsWinReg::nativeDeleteValue(nsString subkey, nsString valname)
+nsWinReg::nativeDeleteValue(const nsString& subkey, const nsString& valname)
 {
 #if defined (WIN32) || defined (XP_OS2)
     HKEY    root, newkey;
@@ -234,7 +264,7 @@ nsWinReg::nativeDeleteValue(nsString subkey, nsString valname)
 }
 
 PRInt32
-nsWinReg::nativeSetValueString(nsString subkey, nsString valname, nsString value)
+nsWinReg::nativeSetValueString(const nsString& subkey, const nsString& valname, const nsString& value)
 {
     HKEY    root;
     HKEY    newkey;
@@ -247,7 +277,6 @@ nsWinReg::nativeSetValueString(nsString subkey, nsString valname, nsString value
     
     length = subkey.Length();
 
-#ifdef WIN32
     root   = (HKEY) rootkey;
     result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey);
 
@@ -256,7 +285,6 @@ nsWinReg::nativeSetValueString(nsString subkey, nsString valname, nsString value
         result = RegSetValueEx( newkey, valnameCString, 0, REG_SZ, (unsigned char*)valueCString, length );
         RegCloseKey( newkey );
     }
-#endif
 
     delete [] subkeyCString;
     delete [] valnameCString;
@@ -267,23 +295,20 @@ nsWinReg::nativeSetValueString(nsString subkey, nsString valname, nsString value
  
 #define STRBUFLEN 255
  
-nsString*
-nsWinReg::nativeGetValueString(nsString subkey, nsString valname)
+void
+nsWinReg::nativeGetValueString(const nsString& subkey, const nsString& valname, nsString* aReturn)
 {
-    unsigned char    valbuf[STRBUFLEN];
-    HKEY    root;
-    HKEY    newkey;
-    LONG    result;
-    DWORD   type = REG_SZ;
-    DWORD   length = STRBUFLEN;
-	  nsString* value;
-    char*   subkeyCString   = subkey.ToNewCString();
-    char*   valnameCString  = valname.ToNewCString();
+    unsigned char     valbuf[_MAXKEYVALUE_];
+    HKEY              root;
+    HKEY              newkey;
+    LONG              result;
+    DWORD             type            = REG_SZ;
+    DWORD             length          = _MAXKEYVALUE_;
+    char*             subkeyCString   = subkey.ToNewCString();
+    char*             valnameCString  = valname.ToNewCString();
 
-
-#ifdef WIN32
     root   = (HKEY) rootkey;
-    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey );
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );
 
     if ( ERROR_SUCCESS == result ) {
         result = RegQueryValueEx( newkey, valnameCString, nsnull, &type, valbuf, &length );
@@ -293,19 +318,72 @@ nsWinReg::nativeGetValueString(nsString subkey, nsString valname)
 
     if(ERROR_SUCCESS == result && type == REG_SZ)
     {
-        value = new nsString((char*)valbuf);
+        *aReturn = (char*)valbuf;
     }
-#endif
+
+    delete [] subkeyCString;
+    delete [] valnameCString;
+}
+
+PRInt32
+nsWinReg::nativeSetValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value)
+{
+    HKEY    root;
+    HKEY    newkey;
+    LONG    result;
+
+    char*   subkeyCString   = subkey.ToNewCString();
+    char*   valnameCString  = valname.ToNewCString();
+    
+    root   = (HKEY) rootkey;
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey);
+
+    if(ERROR_SUCCESS == result)
+    {
+        result = RegSetValueEx( newkey, valnameCString, 0, REG_DWORD, (LPBYTE)&value, sizeof(PRInt32));
+        RegCloseKey( newkey );
+    }
 
     delete [] subkeyCString;
     delete [] valnameCString;
 
-    return value;
+    return result;
+}
+ 
+void
+nsWinReg::nativeGetValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn)
+{
+    PRInt32 valbuf;
+    PRInt32 valbuflen;
+    HKEY    root;
+    HKEY    newkey;
+    LONG    result;
+    DWORD   type            = REG_DWORD;
+    DWORD   length          = _MAXKEYVALUE_;
+    char*   subkeyCString   = subkey.ToNewCString();
+    char*   valnameCString  = valname.ToNewCString();
+
+    valbuflen = sizeof(PRInt32);
+    root      = (HKEY) rootkey;
+    result    = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );
+
+    if ( ERROR_SUCCESS == result ) {
+        result = RegQueryValueEx( newkey, valnameCString, nsnull, &type, (LPBYTE)&valbuf, (LPDWORD)&valbuflen);
+
+        RegCloseKey( newkey );
+    }
+
+    if(ERROR_SUCCESS == result && type == REG_DWORD)
+    {
+        *aReturn = valbuf;
+    }
+
+    delete [] subkeyCString;
+    delete [] valnameCString;
 }
 
-  
 PRInt32
-nsWinReg::nativeSetValue(nsString subkey, nsString valname, nsWinRegValue* value)
+nsWinReg::nativeSetValue(const nsString& subkey, const nsString& valname, nsWinRegValue* value)
 {
 #if defined (WIN32) || defined (XP_OS2)
     HKEY    root;
@@ -341,7 +419,7 @@ nsWinReg::nativeSetValue(nsString subkey, nsString valname, nsWinRegValue* value
 }
   
 nsWinRegValue*
-nsWinReg::nativeGetValue(nsString subkey, nsString valname)
+nsWinReg::nativeGetValue(const nsString& subkey, const nsString& valname)
 {
 #if defined (WIN32) || defined (XP_OS2)
     unsigned char    valbuf[STRBUFLEN];

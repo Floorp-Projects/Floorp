@@ -279,8 +279,8 @@ WinRegSetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 WinRegGetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
-  nsString* nativeRet;
+  nsWinReg*    nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  nsString     nativeRet;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -305,11 +305,111 @@ WinRegGetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
       return JS_FALSE;
     }
 
-    *rval = INT_TO_JSVAL(nativeRet);
+    ConvertStrToJSVal(nativeRet, cx, rval);
   }
   else
   {
     JS_ReportError(cx, "WinReg.GetValueString() parameters error");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+//
+// Native method SetValueNumber
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegSetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  PRInt32 nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+//  nsAutoString b2;
+  PRInt32      ib2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 3)
+  {
+    //  public int setValueNumber ( String subKey,
+    //                              String valueName,
+    //                              Number value);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+
+    if(JSVAL_IS_INT(argv[2])) 
+    {
+      ib2 = JSVAL_TO_INT(argv[2]);
+//      ConvertJSValToStr(b2, cx, argv[2]);
+    }
+    else
+    {
+      JS_ReportError(cx, "Parameter 3 must be a number");
+      return JS_FALSE;
+    }
+
+    if(NS_OK != nativeThis->setValueNumber(b0, b1, ib2, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "WinReg.SetValueNumber() parameters error");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+//
+// Native method GetValueNumber
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegGetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg*    nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  PRInt32      nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 2)                             
+  {
+    //  public int getValueNumber ( String subKey,
+    //                              Number valueName);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+
+    if(NS_OK != nativeThis->getValueNumber(b0, b1, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "WinReg.GetValueNumber() parameters error");
     return JS_FALSE;
   }
 
@@ -482,6 +582,8 @@ static JSFunctionSpec WinRegMethods[] =
   {"deleteValue",               WinRegDeleteValue,              2},
   {"setValueString",            WinRegSetValueString,           3},
   {"getValueString",            WinRegGetValueString,           2},
+  {"setValueNumber",            WinRegSetValueNumber,           3},
+  {"getValueNumber",            WinRegGetValueNumber,           2},
   {"setValue",                  WinRegSetValue,                 3},
   {"getValue",                  WinRegGetValue,                 2},
   {"installObject",             WinRegInstallObject,            0},

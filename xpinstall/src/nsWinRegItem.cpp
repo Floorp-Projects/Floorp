@@ -25,7 +25,7 @@
 
 /* Public Methods */
 
-nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, nsString sub, nsString valname, nsString val)
+nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, const nsString& val)
 : nsInstallObject(regObj->installObject())
 {
 	reg     = regObj;
@@ -36,6 +36,19 @@ nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, nsStr
 	subkey  = new nsString(sub);
 	name    = new nsString(valname);
 	value   = new nsString(val);
+}
+
+nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsString& sub, const nsString& valname, PRInt32 val)
+: nsInstallObject(regObj->installObject())
+{
+	reg     = regObj;
+	command = action;
+	rootkey = root;
+
+	/* I'm assuming we need to copy these */
+	subkey  = new nsString(sub);
+	name    = new nsString(valname);
+	value   = new PRInt32(val);
 }
 
 nsWinRegItem::~nsWinRegItem()
@@ -63,6 +76,9 @@ PRInt32 nsWinRegItem::Complete()
       break;
     case NS_WIN_REG_SET_VAL_STRING:
       reg->finalSetValueString(rootkey, *subkey, *name, *(nsString*)value, &aReturn);
+      break;
+    case NS_WIN_REG_SET_VAL_NUMBER:
+      reg->finalSetValueNumber(rootkey, *subkey, *name, *(PRInt32*)value, &aReturn);
       break;
     case NS_WIN_REG_SET_VAL:
       reg->finalSetValue(rootkey, *subkey, *name, (nsWinRegValue*)value, &aReturn);

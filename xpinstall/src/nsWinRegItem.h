@@ -34,12 +34,19 @@ public:
   /* Public Fields */
 
   /* Public Methods */
-  nsWinRegItem(nsWinReg* regObj,
-               PRInt32   root,
-               PRInt32   action,
-               nsString  sub,
-               nsString  valname,
-               nsString  val);
+  nsWinRegItem(nsWinReg*        regObj,
+               PRInt32          root,
+               PRInt32          action,
+               const nsString&  sub,
+               const nsString&  valname,
+               const nsString&  val);
+  
+  nsWinRegItem(nsWinReg*        regObj,
+               PRInt32          root,
+               PRInt32          action,
+               const nsString&  sub,
+               const nsString&  valname,
+               PRInt32          val);
   
   ~nsWinRegItem();
 
