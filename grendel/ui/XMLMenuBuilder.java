@@ -112,10 +112,12 @@ public class XMLMenuBuilder {
       tree = new TreeWalker(current);
 
       // get the link tag for this file
-      node = tree.getNextElement("head");
+      // node = tree.getNextElement("head");
       // get into head and get the first element
-      node = node.getFirstChild();
-      node = node.getNextSibling();
+      node = 
+        tree.getNextElement("head").getElementsByTagName("link").item(0);
+      // node = node.getFirstChild();
+      // node = node.getNextSibling();
 
       // set the configuration contained in this node
       setConfiguration((Element)node);
