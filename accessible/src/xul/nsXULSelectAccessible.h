@@ -121,7 +121,28 @@ public:
   virtual ~nsXULListboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccValue(nsAWritableString& _retval);
+
+};
+
+/**
+  * Listitems -- used in listboxes 
+  */
+class nsXULListitemAccessible : public nsXULMenuitemAccessible
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  
+  nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULListitemAccessible() {}
+
+  /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
 
 };
 

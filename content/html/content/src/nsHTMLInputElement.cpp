@@ -1183,7 +1183,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           // Fire an event to notify accessibility
 #ifdef ACCESSIBILITY
           if ( selectedRadiobtn != this ) {
-            FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("RadiobuttonStateChange"));;
+            FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("RadioStateChange"));
           }
 #endif
         }
