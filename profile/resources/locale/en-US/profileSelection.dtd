@@ -51,6 +51,7 @@
 <!ENTITY            exit.label            "Exit">
 <!ENTITY            manage.label          "Manage Profiles...">
 <!ENTITY            manage.accesskey      "M">
+<!ENTITY            select.label          "Use Profile">
 
 <!ENTITY            availprofiles.label   "Available Profiles">
 

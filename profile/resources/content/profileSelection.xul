@@ -43,24 +43,30 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % profileDTD SYSTEM "chrome://communicator/locale/profile/profileSelection.dtd">
 %profileDTD;
 ]>
 
-<window
+<dialog
   id="profileWindow"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-  class="color-dialog non-resizable"
   title="&windowtitle.label;"
   windowtype="mozilla:profileSelection"
   orient="vertical"
   style="width: 42em;"
-  onclose="onExit();"
+  spacerflex="1"
+  buttons="accept,cancel,extra2"
+  buttonlabelstart="&start.label;"
+  buttonlabelexit="&exit.label;"
+  buttonlabelaccept="&select.label;"
+  buttonlabelextra2="&manage.label;"
+  buttonaccesskeyextra2="&manage.accesskey;"
+  ondialogaccept="onStart();"
+  ondialogcancel="onExit();"
+  ondialogextra2="SwitchProfileManagerMode();"
   onload="StartUp();"> 
       
   <stringbundle id="bundle_profileManager"
@@ -71,8 +77,6 @@
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
-  
-  <keyset id="dialogKeys"/>
 
   <dialogheader class="header-large" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
   
@@ -80,7 +84,7 @@
 
     <!-- instructions -->
     <deck id="prattle">
-      <description id="intro" style="width: 17em;border:1px solid transparent;" flex="1">""</description>
+      <description id="intro" style="width: 17em;"/>
       <vbox id="manager">
         <description style="width: 17em;" class="label">&pmTextA.label;</description>
         <separator/>
@@ -114,16 +118,4 @@
     </vbox>
   </hbox>
   
-  <hbox class="selection">
-    <separator class="thin" orient="vertical"/>
-    <button id="manage" label="&manage.label;" accesskey="&manage.accesskey;" oncommand="SwitchProfileManagerMode();"/>
-    <spacer flex="1"/>
-    <hbox id="okCancelButtons"/>
-    <separator class="thin" orient="vertical"/>
-  </hbox>
-  
-  <separator class="thin" />
-  
-  <hbox id="profileManager-status" class="box-status" value="&profilemanager.label;" progress=""/>
-  
-</window>
+</dialog>

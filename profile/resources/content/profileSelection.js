@@ -59,26 +59,24 @@ function StartUp()
   gProfileManagerBundle = document.getElementById("bundle_profileManager");
   gBrandBundle = document.getElementById("bundle_brand");
 
-  SetUpOKCancelButtons();
-  centerWindowOnScreen();
+  if (gStartupMode) {
+    document.documentElement.setAttribute("buttonlabelcancel",
+      document.documentElement.getAttribute("buttonlabelexit"));
+    document.documentElement.setAttribute("buttonlabelaccept",
+      document.documentElement.getAttribute("buttonlabelstart"));
+  }
+
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
-    
-  // Set up the intro text, depending on our context
-  var introTextItem = document.getElementById("intro");
-  var introText, insertText;
-  if (gStartupMode) {
-    insertText = gProfileManagerBundle.getFormattedString("startButton",
-                                    [gBrandBundle.getString("brandShortName")]);
-    introText = gProfileManagerBundle.getFormattedString("intro_start",
-                    [insertText]);
+  else {  
+    // Set up the intro text, depending on our context
+    var introTextItem = document.getElementById("intro");
+    var insertText = document.documentElement.getAttribute("buttonlabelaccept");
+    var introText = gProfileManagerBundle.getFormattedString(
+                      gStartupMode ? "intro_start" : "intro_switch",
+                      [insertText]);
+    introTextItem.textContent = introText;
   }
-  else {
-    insertText = gProfileManagerBundle.getString("selectButton");
-    introText = gProfileManagerBundle.getFormattedString("intro_switch",
-                    [insertText]);
-  }
-  introTextItem.childNodes[0].nodeValue = introText;
 
   var dirServ = Components.classes['@mozilla.org/file/directory_service;1']
                           .getService(Components.interfaces.nsIProperties);
@@ -286,33 +284,4 @@ function onExit()
 {
   gDialogParams.SetInt(0, 0); // 0 == cancel
   return true;
-}
-
-function SetUpOKCancelButtons()
-{
-  doSetOKCancel( onStart, onExit, null, null );
-  var okButton = document.getElementById("ok");
-  var cancelButton = document.getElementById("cancel");
-
-  var okButtonString;
-  var cancelButtonString;
-  
-  try {    
-    if (gStartupMode) {
-      okButtonString = gProfileManagerBundle.getFormattedString("startButton",
-                                    [gBrandBundle.getString("brandShortName")]);
-      cancelButtonString = gProfileManagerBundle.getString("exitButton");
-    }
-    else {
-      okButtonString = gProfileManagerBundle.getString("selectButton");
-      cancelButtonString = gProfileManagerBundle.getString("cancel");
-    }
-  } catch (e) {
-    okButtonString = "Start Yah";
-    cancelButtonString = "Exit Yah";
-  }
-
-  okButton.setAttribute( "label", okButtonString );
-  okButton.setAttribute( "class", ( okButton.getAttribute("class") + " padded" ) );
-  cancelButton.setAttribute( "label", cancelButtonString );
 }
