@@ -27,16 +27,24 @@ REQUIRES=util img xpcom raptor netlib
 
 DEFINES = -D_IMPL_NS_WIDGET 
 
-EXTRA_DSO_LDOPTS+= \
-	$(DIST)/bin/libxpcom.so \
-	$(LIBNSPR) -lXm -lXt -lX11
+#EXTRA_DSO_LDOPTS+= -lnspr21 -lplds21 -lplc21 -lreg -lraptorbase -lgfxunix -L$(DIST)/lib $(DIST)/lib/libnspr21.a $(DIST)/lib/libreg.a $(DIST)/lib/libraptorbase.a -L/usr/X11R6/lib $(DIST)/lib/libgfxunix.a -lXm -lXt -lX11
+EXTRA_DSO_LDOPTS+= -lnspr21 -lplds21 -lplc21 -lreg -lraptorbase -lgfxunix -L$(DIST)/lib $(DIST)/lib/libnspr21.a $(DIST)/lib/libxpcom.a $(DIST)/lib/libreg.a $(DIST)/lib/libraptorbase.a -L/usr/X11R6/lib $(DIST)/lib/libgfxunix.a -lXm -lXt -lX11
 
-CPPSRCS=nsWidgetFactory.cpp \
+#LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libgfxunix.a
+
+CPPSRCS= \
+	nsScrollbar.cpp \
+	nsButton.cpp \
+	nsAppShell.cpp \
+	nsWidgetFactory.cpp \
 	nsWindow.cpp \
 	nsXtEventHandler.cpp \
 	nsToolkit.cpp
 
 CPP_OBJS=				\
+ ./$(OBJDIR)/nsButton.o		\
+ ./$(OBJDIR)/nsScrollbar.o		\
+ ./$(OBJDIR)/nsAppShell.o		\
  ./$(OBJDIR)/nsWidgetFactory.o		\
  ./$(OBJDIR)/nsWindow.o		\
  ./$(OBJDIR)/nsToolkit.o		\
