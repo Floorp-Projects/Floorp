@@ -183,7 +183,17 @@ void CnsIObserServ::RemoveObserversTest()
 
 void CnsIObserServ::NotifyObserversTest()
 {
+	PRInt32 i;
+	nsCOMPtr<nsIObserverService>observerService(do_GetService("@mozilla.org/observer-service;1",&rv));
+
 	QAOutput("\n nsIObserverService::NotifyObserversTest().");
+
+	for (i=0; i<10; i++)
+	{
+		FormatAndPrintOutput("The notified observer = ", ObserverTable[i].theTopic, 1);
+		rv = observerService->NotifyObservers(nsnull, ObserverTable[i].theTopic, 0);
+		RvTestResult(rv, "NotifyObservers() test", 2);
+	}
 }
 
 
