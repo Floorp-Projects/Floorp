@@ -241,6 +241,7 @@ function BrowserPrintPreview()
     // that we can initialize the toolbar with total num pages
     showPrintPreviewToolbar();
 
+    _content.focus();
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.
