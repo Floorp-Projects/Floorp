@@ -58,6 +58,7 @@
 #include "nsIDOMSelection.h"
 
 #include "nsIFileWidget.h"
+#include "nsFileSpec.h"
 #include "nsIDOMToolkitCore.h"
 #include "nsIFindComponent.h"
 
