@@ -614,9 +614,8 @@ nsHTMLInputElement::Blur()
   if (NS_SUCCEEDED(rv)) {
      // Ask the frame to Deselect focus (i.e Blur).
     formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
-    return NS_OK;
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -642,7 +641,7 @@ nsHTMLInputElement::Focus()
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
