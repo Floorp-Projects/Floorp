@@ -95,7 +95,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     PR_APPEND_LINK(&trap->links, &rt->trapList);
     trap->script = script;
     trap->pc = pc;
-    trap->op = *pc;
+    trap->op = (JSOp)*pc;
     trap->handler = handler;
     trap->closure = closure;
     *pc = JSOP_TRAP;

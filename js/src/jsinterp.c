@@ -952,7 +952,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
     while (pc < endpc) {
 	fp->pc = pc;
-	op = *pc;
+	op = (JSOp)*pc;
       do_op:
 	cs = &js_CodeSpec[op];
 	len = cs->length;
