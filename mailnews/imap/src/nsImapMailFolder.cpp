@@ -699,12 +699,12 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetPrettyName(nsString& prettyName)
+NS_IMETHODIMP nsImapMailFolder::GetPrettyName(char ** prettyName)
 {
     if (mDepth == 1) {
         char *hostName = nsnull;
         GetHostName(&hostName);
-        prettyName = PL_strdup(hostName);
+        *prettyName = PL_strdup(hostName);
         PR_FREEIF(hostName);
     }
     else {
@@ -765,7 +765,7 @@ NS_IMETHODIMP nsImapMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 }
 
     
-NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 size)
+NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 * size)
 {
     nsresult rv = NS_ERROR_FAILURE;
     return rv;
@@ -866,7 +866,7 @@ NS_IMETHODIMP nsImapMailFolder::UserNeedsToAuthenticateForFolder(PRBool
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::RememberPassword(char *password)
+NS_IMETHODIMP nsImapMailFolder::RememberPassword(const char *password)
 {
     nsresult rv = NS_ERROR_FAILURE;
     return rv;
@@ -1120,11 +1120,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     	{
 			PRUint32 total;
             
-    		PRBool highWaterDeleted = FALSE;
 			// It would be nice to notify RDF or whoever of a mass delete here.
     		m_mailDatabase->DeleteMessages(&keysToDelete,NULL);
 			total = keysToDelete.GetSize();
-			nsMsgKey highWaterMark = nsMsgKey_None;
 		}
 	   	if (keysToFetch.GetSize())
     	{			
@@ -1506,7 +1504,7 @@ void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, c
     {
 		PRUint32 total = keysToFetch.GetSize();
 
-        for (int keyIndex=0; keyIndex < total; keyIndex++)
+        for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
         	theKeys[keyIndex] = keysToFetch[keyIndex];
         
 //        m_DownLoadState = kDownLoadingAllMessageHeaders;
@@ -1586,7 +1584,7 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
 					MSG_FLAG_NEW => do nothing, leave kMDNNeeded on
 			 */
 			PRUint16 userFlags;
-			nsresult res = aProtocol->GetSupportedUserFlags(&userFlags);
+			res = aProtocol->GetSupportedUserFlags(&userFlags);
 			if (NS_SUCCEEDED(res) && (userFlags & (kImapMsgSupportUserFlag |
 													  kImapMsgSupportMDNSentFlag)))
 			{
