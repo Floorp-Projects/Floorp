@@ -183,16 +183,16 @@ public:
 	// local methods
 
 	void
-	SetContentType(nsMIMEType result);
+	SetContentType(const nsMIMEType result);
 
 	void
-	SetSeekable(PRBool result);
+	SetSeekable(const PRBool result);
 
 	void
-	SetLength(PRUint32 result);
+	SetLength(const PRUint32 result);
 
 	void
-	SetLastModified(PRUint32 result);
+	SetLastModified(const PRUint32 result);
 
 private:
 
