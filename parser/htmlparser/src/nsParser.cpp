@@ -352,7 +352,7 @@ PRInt32 nsParser::WillBuildModel(const char* aFilename, const char* aContentType
   }
 
 #ifdef DEBUG_SAVE_SOURCE_DOC
-#if defined(XP_UNIX) && defined(IRIX)
+#if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
   /* XXX: IRIX does not support ios::binary */
   gTempStream =new fstream("c:/temp/out.html",ios::out);
 #else
