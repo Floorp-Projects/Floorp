@@ -1016,6 +1016,9 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 #ifdef NTO
     /* Neutrino needs RTLD_GROUP to load Netscape plugins. (bug 71179) */
     int dl_flags = RTLD_GROUP;
+#elif defined(AIX)
+    /* AIX needs RTLD_MEMBER to load an archive member.  (bug 228899) */
+    int dl_flags = RTLD_MEMBER;
 #else
     int dl_flags = 0;
 #endif
