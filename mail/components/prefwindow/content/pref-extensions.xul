@@ -53,6 +53,8 @@
       onload="parent.initPanel('chrome://communicator/content/pref/pref-extensions.xul'); Startup()"
       headertitle="&lHeader;">
 
+  <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
+
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-extensions.js"/>
 
   <description>&extensionIntro.label;</description>

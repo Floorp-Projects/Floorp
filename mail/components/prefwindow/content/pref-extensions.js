@@ -132,10 +132,14 @@ function updateDisableExtButton(item)
   if (disableButton.disabled)
     disableButton.disabled = false;
 
+  var prefBundle = document.getElementById("bundle_prefutilities");
+  var enableExtension = prefBundle.getString("enableExtension");
+  var disableExtension = prefBundle.getString("disableExtension");
+
   if (item.getAttribute("disabledState") == "true")
-    disableButton.setAttribute("label", "Enable Extension"); // XXXdwh localize
+    disableButton.setAttribute("label", enableExtension);
   else
-    disableButton.setAttribute("label", "Disable Extension"); // XXXdwh localize
+    disableButton.setAttribute("label", disableExtension);
 }
 
 function showSettings()

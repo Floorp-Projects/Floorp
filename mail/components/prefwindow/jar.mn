@@ -21,6 +21,7 @@ comm.jar:
 *   content/communicator/pref/pref-calibrate-screen.xul                (content/pref-calibrate-screen.xul)
 
 en-US.jar:
++   locale/en-US/communicator/pref/prefutilities.properties            (locale/prefutilities.properties)
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
 +   locale/en-US/communicator/pref/pref-themes.dtd                     (locale/pref-themes.dtd)
 +   locale/en-US/messenger/messengercompose/pref-formatting.dtd        (locale/pref-formatting.dtd)
