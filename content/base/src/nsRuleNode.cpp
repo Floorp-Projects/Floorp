@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
+#include "nsIServiceManager.h"
 #include "nsRuleNode.h"
 #include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
@@ -51,10 +52,6 @@
 #include "nsThemeConstants.h"
 #include "nsITheme.h"
 #include "pldhash.h"
-
-// Temporary - Test of full time Standard mode for forms
-#include "nsIPref.h"
-#include "nsIServiceManager.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a linked list.
@@ -1864,22 +1861,6 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       case NS_STYLE_FONT_THEME:         sysID = eSystemFont_Theme;        break;
     }
 
-    nsCompatibility mode = eCompatibility_Standard;
-
-    if (sysID == eSystemFont_Field ||
-        sysID == eSystemFont_List ||
-        sysID == eSystemFont_Button) {
-      nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
-      if (prefService) {
-        PRBool useEitherMode;
-        if (NS_SUCCEEDED(prefService->GetBoolPref("layout.forms.use_standard_or_quirks", &useEitherMode))) {
-          if (useEitherMode) {
-            aPresContext->GetCompatibilityMode(&mode);
-          }
-        }
-      }
-    }
-
     nsCOMPtr<nsIDeviceContext> dc;
     aPresContext->GetDeviceContext(getter_AddRefs(dc));
     if (dc) {
@@ -1891,35 +1872,15 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       aFont->mSize = aFont->mFont.size; // this becomes our cascading size
     }
 
-    // NavQuirks uses sans-serif instead of whatever the native font is
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    if (eCompatibility_NavQuirks == mode) {
-      switch (sysID) {
-        case eSystemFont_Field:
-        case eSystemFont_List:
-          aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          aFont->mSize = defaultFixedFont->size;
-          break;
-        case eSystemFont_Button:
-          aFont->mFont.name.Assign(NS_LITERAL_STRING("serif"));
-          aFont->mSize = defaultVariableFont->size;
-          break;
-      }
-    }
-#endif
-
+    // XXXldb All of this platform-specific stuff should be in the
+    // nsIDeviceContext implementations, not here.
 #if defined(XP_OS2)
-      switch (sysID) {
-        case eSystemFont_List:
-        case eSystemFont_Button:
-          aFont->mFont.name = defaultVariableFont->name;
-          break;
-        case eSystemFont_Field:
-          if (eCompatibility_NavQuirks == mode)
-             aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          else
-             aFont->mFont.name = defaultVariableFont->name;
-          break;
+    switch (sysID) {
+      case eSystemFont_List:
+      case eSystemFont_Button:
+      case eSystemFont_Field:
+        aFont->mFont.name = defaultVariableFont->name;
+        break;
     }
 #endif
 
@@ -1932,63 +1893,17 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     //
     switch (sysID) {
       // Fields (text fields)
-      //
-      // For NavQuirks:
-      //   We always use the monospace font and whatever
-      //   the "fixed" font size this that is set by the browser
-      //
-      // For Standard/Strict Mode:
+      // Button and Selects (listboxes/comboboxes)
       //    We use whatever font is defined by the system. Which it appears
       //    (and the assumption is) it is always a proportional font. Then we
       //    always use 2 points smaller than what the browser has defined as
       //    the default proportional font.
       case eSystemFont_Field:
-        if (eCompatibility_NavQuirks == mode) {
-          aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          aFont->mSize = defaultFixedFont->size;
-        } else {
-          // Assumption: system defined font is proportional
-          aFont->mSize = PR_MAX(defaultVariableFont->size - NSIntPointsToTwips(2), 0);
-        }
-        break;
-      //
-      // Button and Selects (listboxes/comboboxes)
-      //
-      // For NavQuirks:
-      //   We always use the sans-serif font and 2 point point sizes smaller
-      //   that whatever the "proportional" font size this that is set by the browser
-      //
-      // For Standard/Strict Mode:
-      //    We use whatever font is defined by the system. Which it appears
-      //    (and the assumption is) it is always a proportional font. Then we
-      //    always use 2 points smaller than what the browser has defined as
-      //    the default proportional font.
       case eSystemFont_Button:
       case eSystemFont_List:
-        if (eCompatibility_NavQuirks == mode) {
-          aFont->mFont.name.Assign(NS_LITERAL_STRING("sans-serif"));
-        }
         // Assumption: system defined font is proportional
         aFont->mSize = PR_MAX(defaultVariableFont->size - NSIntPointsToTwips(2), 0);
         break;
-    }
-#endif
-
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    if (eCompatibility_NavQuirks == mode) {
-      switch (sysID) {
-        case eSystemFont_Field:
-          aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
-          aFont->mSize = defaultFixedFont->size;
-          break;
-        case eSystemFont_Button:
-        case eSystemFont_List:
-          aFont->mFont.name.Assign(NS_LITERAL_STRING("serif"));
-          aFont->mSize = defaultVariableFont->size;
-          break;
-        default:
-          NS_ERROR("unexpected SID");
-      }
     }
 #endif
   }

@@ -578,37 +578,33 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   } else { // Normal reflow.
 
-    nsCompatibility mode = eCompatibility_NavQuirks;
-    //nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
-
-    if (mode == eCompatibility_NavQuirks) {
-      // nsHTMLButtonControlFrame::Reflow registers it for Standard Mode
-      // and sets up mPresContext
-      if (eReflowReason_Initial == aReflowState.reason) {
-        nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-      }
-      // Do NavQuirks Sizing and layout
-      rv = DoNavQuirksReflow(aPresContext, aDesiredSize, aReflowState, aStatus); 
-      
-      // Make sure we obey min/max-width and min/max-height
-      if (aDesiredSize.width > aReflowState.mComputedMaxWidth) {
-        aDesiredSize.width = aReflowState.mComputedMaxWidth;
-      }
-      if (aDesiredSize.width < aReflowState.mComputedMinWidth) {
-        aDesiredSize.width = aReflowState.mComputedMinWidth;
-      } 
-
-      if (aDesiredSize.height > aReflowState.mComputedMaxHeight) {
-        aDesiredSize.height = aReflowState.mComputedMaxHeight;
-      }
-      if (aDesiredSize.height < aReflowState.mComputedMinHeight) {
-        aDesiredSize.height = aReflowState.mComputedMinHeight;
-      } 
-
-    } else {
-      // Do Standard mode sizing and layout
-      rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+#if 1
+    // nsHTMLButtonControlFrame::Reflow registers it for Standard Mode
+    // and sets up mPresContext
+    if (eReflowReason_Initial == aReflowState.reason) {
+      nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     }
+    // Do NavQuirks Sizing and layout
+    rv = DoNavQuirksReflow(aPresContext, aDesiredSize, aReflowState, aStatus); 
+    
+    // Make sure we obey min/max-width and min/max-height
+    if (aDesiredSize.width > aReflowState.mComputedMaxWidth) {
+      aDesiredSize.width = aReflowState.mComputedMaxWidth;
+    }
+    if (aDesiredSize.width < aReflowState.mComputedMinWidth) {
+      aDesiredSize.width = aReflowState.mComputedMinWidth;
+    } 
+
+    if (aDesiredSize.height > aReflowState.mComputedMaxHeight) {
+      aDesiredSize.height = aReflowState.mComputedMaxHeight;
+    }
+    if (aDesiredSize.height < aReflowState.mComputedMinHeight) {
+      aDesiredSize.height = aReflowState.mComputedMinHeight;
+    } 
+#else
+    // Do Standard mode sizing and layout
+    rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+#endif
   }
 
 #ifdef DEBUG_rodsXXXX

@@ -133,6 +133,7 @@ public:
                              PRInt32 aNumChars, nsSize& aSize,
                              nsIRenderingContext *aRendContext);
 
+  // XXX This could be removed now that we no longer have form quirks.
   static nsresult GetFont(nsIFormControlFrame *  aFormFrame,
                           nsIPresContext*        aPresContext, 
                           nsIStyleContext *      aStyleContext, 
@@ -184,7 +185,10 @@ public:
 
   static void  GetBoolString(const PRBool aValue, nsAString& aResult);
 
-  static nsCompatibility GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2);
+  static void GetRepChars(char& char1, char& char2) {
+    char1 = 'W';
+    char2 = 'w';
+  }
 
   // wrap can be one of these three values.  
   typedef enum {
@@ -357,15 +361,10 @@ public:
                             nsIStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
 
-  static void GetFormCompatibilityMode(nsIPresContext* aPresContext, nsCompatibility& mCompatMode);
-
 protected:
   nsFormControlHelper();
   virtual ~nsFormControlHelper();
 
-  // Temporary - Test of full time Standard mode for forms (Bug 91602)
-  static PRPackedBool mCompatFirstTime;
-  static PRPackedBool mUseEitherMode;
 };
 
 #endif

@@ -1736,121 +1736,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
 
 
 
-
-PRInt32
-nsGfxTextControlFrame2::CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
-                                              nsIRenderingContext*  aRendContext,
-                                              nsIFormControlFrame*  aFrame,
-                                              nsInputDimensionSpec& aSpec, 
-                                              nsSize&               aDesiredSize, 
-                                              nsSize&               aMinSize, 
-                                              nscoord&              aRowHeight,
-                                              nsMargin&             aBorder,
-                                              nsMargin&             aPadding,
-                                              PRBool                aIsUsingDefSize)
-{
-  nscoord charWidth   = 0; 
-  aDesiredSize.width  = CSS_NOTSET;
-  aDesiredSize.height = CSS_NOTSET;
-
-  // Quirks does not use rowAttr
-  nsHTMLValue colAttr;
-  nsresult    colStatus;
-  nsHTMLValue rowAttr;
-  nsresult    rowStatus;
-  if (NS_ERROR_FAILURE == GetColRowSizeAttr(aFrame, 
-                                            aSpec.mColSizeAttr, colAttr, colStatus,
-                                            aSpec.mRowSizeAttr, rowAttr, rowStatus)) {
-    return 0;
-  }
-
-  // Get the Font Metrics for the Control
-  // without it we can't calculate  the size
-  nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-  if (NS_SUCCEEDED(res) && fontMet) {
-    aRendContext->SetFont(fontMet);
-
-    // Calculate the min size of the text control as one char
-    // save the current default col size
-    nscoord tmpCol        = aSpec.mColDefaultSize;
-    aSpec.mColDefaultSize = 1;
-    charWidth = nsFormControlHelper::CalcNavQuirkSizing(aPresContext, 
-                                                        aRendContext, fontMet, 
-                                                        aFrame, aSpec, aDesiredSize);
-    // set the default col size back
-    aMinSize.width        = aDesiredSize.width;
-    aMinSize.height       = aDesiredSize.height;
-    aSpec.mColDefaultSize = tmpCol;
-
-    // Figure out the number of columns
-    // and set that as the default col size
-    if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
-      PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-      col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-      aSpec.mColDefaultSize = col;
-    }
-    charWidth = nsFormControlHelper::CalcNavQuirkSizing(aPresContext, 
-                                                        aRendContext, fontMet, 
-                                                        aFrame, aSpec, aDesiredSize);
-    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
-  } else {
-    NS_ASSERTION(fontMet, "Couldn't get Font Metrics"); 
-    aDesiredSize.width = 300;  // arbitrary values
-    aDesiredSize.width = 1500;
-  }
-
-  aRowHeight      = aDesiredSize.height;
-  aMinSize.height = aDesiredSize.height;
-
-  // if we are not using the default size 
-  // then make the minimum size the size we want to be
-  if (!aIsUsingDefSize) {
-    aMinSize.width  = aDesiredSize.width;
-    aMinSize.height = aDesiredSize.height;
-  }
-
-  PRInt32 numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
-
-  return numRows;
-}
-
 //------------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxTextControlFrame2::ReflowNavQuirks(nsIPresContext*          aPresContext,
-                                        nsSize&                  aDesiredSize,
-                                        const nsHTMLReflowState& aReflowState,
-                                        nsReflowStatus&          aStatus,
-                                        nsMargin&                aBorder,
-                                        nsMargin&                aPadding)
-{
-  PRBool usingDefaultSize = PR_FALSE;
-  PRInt32 ignore;
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    PRInt32 width = 0;
-    if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
-      width = GetDefaultColumnWidth();
-      usingDefaultSize = PR_TRUE;
-    }
-    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
-                                  nsnull, width, 
-                                  PR_FALSE, nsnull, 1);
-    CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this,  
-                           textSpec, aDesiredSize, mMinSize, ignore, aBorder, aPadding, usingDefaultSize);
-  } else {
-    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
-                                  nsnull, GetDefaultColumnWidth(), 
-                                  PR_FALSE, nsHTMLAtoms::rows, 1);
-    CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this,  
-                           areaSpec, aDesiredSize, mMinSize, ignore, aBorder, aPadding, usingDefaultSize);
-  }
-
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
                                        nsIContent *      aContent,
@@ -2399,10 +2285,6 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (mState & NS_FRAME_FIRST_REFLOW)
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
 
-  nsCompatibility mode;
-  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
-  PRBool navQuirksMode = eCompatibility_NavQuirks == mode && nameSpaceID == kNameSpaceID_HTML;
-
   nsReflowStatus aStatus;
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
@@ -2418,11 +2300,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   paddingStyle->CalcPaddingFor(this, padding);
 
   nsresult rv;
-  if (navQuirksMode) {
-    rv = ReflowNavQuirks(aPresContext, aSize, *aReflowState, aStatus, border, padding);
-  } else {
-    rv = ReflowStandard(aPresContext, aSize, *aReflowState, aStatus, border, padding);
-  }
+  rv = ReflowStandard(aPresContext, aSize, *aReflowState, aStatus, border, padding);
   AddInset(aSize);
 
   mPrefSize = aSize;
