@@ -775,7 +775,7 @@ function EditorApplyStyleSheet(styleSheetURL)
            accesskey="&editpastequotation.accesskey;"
            oncommand="EditorPasteAsQuotation()"/>
     <menuitem value="&editRewrapCmd.label;"
-           oncommand="editorShell.Rewrap()"/>
+           oncommand="editorShell.Rewrap(false)"/>
     <menuitem value="&editStripQuotesCmd.label;"
            oncommand="editorShell.StripCites()"/>
     <menuitem value="&insertTextCmd.label;"

@@ -23,7 +23,7 @@
 
 #include "nsAOLCiter.h"
 
-#include "nsString.h"
+#include "nsWrapUtils.h"
 
 /** Mail citations using the AOL style >> This is a citation <<
   */
@@ -85,14 +85,32 @@ nsAOLCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 NS_IMETHODIMP
 nsAOLCiter::StripCites(const nsString& aInString, nsString& aOutString)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Remove the beginning cites, if any:
+  if (aInString.EqualsWithConversion(">>", PR_FALSE, 2))
+  {
+    PRInt32 i = 3;
+    while (nsCRT::IsAsciiSpace(aInString[i]))
+      ++i;
+    aOutString.Append(aInString, i);
+  }
+  else
+    aOutString = aInString;
+
+  // Remove the end cites, if any:
+  aOutString.Trim("<", PR_FALSE, PR_TRUE, PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAOLCiter::Rewrap(const nsString& aInString,
-                        PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
-                        nsString& aOutString)
+                   PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                   PRBool aRespectNewlines,
+                   nsString& aOutString)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsString citeString ("");
+  return nsWrapUtils::Rewrap(aInString, aWrapCol, aFirstLineOffset,
+                             aRespectNewlines, citeString,
+                             aOutString);
 }
 

@@ -25,8 +25,19 @@
 
 #include "nsString.h"
 
+#include "nsWrapUtils.h"
+
+#include "nsCOMPtr.h"
+
+// Line breaker stuff
+#include "nsIServiceManager.h"
+#include "nsILineBreakerFactory.h"
+#include "nsLWBrkCIID.h"
+
 /** Mail citations using the Internet style >> This is a citation <<
   */
+
+static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 nsInternetCiter::nsInternetCiter()
 {
@@ -86,9 +97,15 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsInternetCiter::StripCites(const nsString& aInString, nsString& aOutString)
+nsresult
+nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
+                                         nsString& aOutString,
+                                         PRBool aLinebreaksToo,
+                                         PRInt32* aCiteLevel)
 {
+  if (aCiteLevel)
+    *aCiteLevel = 0;
+
   aOutString.SetLength(0);
 
   PRInt32 length = aInString.Length();
@@ -96,27 +113,66 @@ nsInternetCiter::StripCites(const nsString& aInString, nsString& aOutString)
   PRUnichar gt ('>');
   while (i < length)  // loop over lines
   {
+    // Clear out cites first, at the beginning of the line:
+    PRInt32 thisLineCiteLevel = 0;
     while (aInString[i] == gt || nsCRT::IsAsciiSpace(aInString[i]))
+    {
+      if (aInString[i] == gt) ++thisLineCiteLevel;
       ++i;
+    }
+
+    // Now copy characters until line end:
     PRInt32 nextNewline = aInString.FindCharInSet("\r\n", i);
     if (nextNewline > i)
     {
       while (i < nextNewline)
-        aOutString += aInString[i++];
-      aOutString += NS_LINEBREAK;
+        aOutString.Append(aInString[i++]);
+      if (aLinebreaksToo)
+        aOutString.Append(' ');
+      else
+        aOutString.Append('\n');    // DOM linebreaks, not NS_LINEBREAK
+      // Skip over any more consecutive linebreak-like characters:
       while (aOutString[i] == '\r' || aOutString[i] == '\n')
         ++i;
     }
+    else    // no more newlines
+    {
+      while (i < length)
+        aOutString.Append(aInString[i++]);
+    }
+
+    // Done with this line -- update cite level
+    if (aCiteLevel && (thisLineCiteLevel > *aCiteLevel))
+      *aCiteLevel = thisLineCiteLevel;
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
+nsInternetCiter::StripCites(const nsString& aInString, nsString& aOutString)
+{
+  return StripCitesAndLinebreaks(aInString, aOutString, PR_FALSE, 0);
+}
+
+NS_IMETHODIMP
 nsInternetCiter::Rewrap(const nsString& aInString,
                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                        PRBool aRespectNewlines,
                         nsString& aOutString)
 {
-  printf("nsInternetCiter::Rewrap not yet implemented\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 i;
+
+  // First, clean up all the existing newlines/cite marks and save the cite level.
+  nsAutoString inString;
+  PRInt32 citeLevel;
+  StripCitesAndLinebreaks(aInString, inString, !aRespectNewlines, &citeLevel);
+
+  nsAutoString citeString;
+  for (i=0; i<citeLevel; ++i)
+    citeString += "> ";
+
+  return nsWrapUtils::Rewrap(inString, aWrapCol, aFirstLineOffset,
+                             aRespectNewlines, citeString,
+                             aOutString);
 }
 

@@ -2183,7 +2183,7 @@ static nsICiter* MakeACiter()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::Rewrap()
+nsEditorShell::Rewrap(PRBool aRespectNewlines)
 {
   PRInt32 wrapCol;
   nsresult rv = GetWrapColumn(&wrapCol);
@@ -2221,7 +2221,7 @@ nsEditorShell::Rewrap()
     if (NS_FAILED(rv)) return rv;
     if (!citer) return NS_ERROR_UNEXPECTED;
 
-    rv = citer->Rewrap(current, wrapCol, 0, wrapped);
+    rv = citer->Rewrap(current, wrapCol, 0, aRespectNewlines, wrapped);
     if (NS_FAILED(rv)) return rv;
 
     rv = SelectAll();
@@ -2241,7 +2241,8 @@ nsEditorShell::Rewrap()
     if (!citer) return NS_ERROR_UNEXPECTED;
 
     PRUint32 firstLineOffset = 0;   // XXX need to get this
-    rv = citer->Rewrap(current, wrapCol, firstLineOffset, wrapped);
+    rv = citer->Rewrap(current, wrapCol, firstLineOffset, aRespectNewlines,
+                       wrapped);
     if (NS_FAILED(rv)) return rv;
 
     return mEditor->InsertText(wrapped);

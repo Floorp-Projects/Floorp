@@ -147,7 +147,7 @@ interface nsIEditorShell : nsISupports
                               in boolean insertHTML, in wstring charset,
                               out nsIDOMNode nodeInserted);
 
-  void Rewrap();
+  void Rewrap(in boolean respectNewlines);
   void StripCites();
   
   void SelectAll();

@@ -44,6 +44,7 @@ public:
 
   NS_IMETHOD Rewrap(const nsString& aInString,
                     PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
+                    PRBool aRespectNewlines,
                     nsString& aOutString);
 };
 
