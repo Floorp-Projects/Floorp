@@ -234,9 +234,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
             str = getImpl(cx).input;
             if (str == null) {
                 Object[] errArgs = { re.toString() };
-                throw Context.reportRuntimeError(ScriptRuntime.getMessage
-                                                 ("msg.no.re.input.for",
-                                                  errArgs));
+                throw NativeGlobal.constructError(
+                            cx, "SyntaxError",
+                            ScriptRuntime.getMessage
+                                ("msg.no.re.input.for", errArgs),
+                            thisObj);
             }
         } else {
             str = ScriptRuntime.toString(args[0]);
@@ -785,14 +787,15 @@ public class NativeRegExp extends ScriptableObject implements Function {
               case '{':
                 if (++index == source.length || !isDigit(c = source[index])) {
                     reportError("msg.bad.quant",
-                                String.valueOf(source[state.index]));
+                                String.valueOf(source[state.index]), state);
                     return null;
                 }
                 min = unDigit(c);
                 while (++index < source.length && isDigit(c = source[index])) {
                     min = 10 * min + unDigit(c);
                     if ((min >> 16) != 0) {
-                        reportError("msg.overlarge.max", tail(source, index));
+                        reportError("msg.overlarge.max", tail(source, index),
+                                state);
                         return null;
                     }
                 }
@@ -804,17 +807,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             max = 10 * max + unDigit(c);
                             if ((max >> 16) != 0) {
                                 reportError("msg.overlarge.max",
-                                            String.valueOf(source[up]));
+                                            String.valueOf(source[up]), state);
                                 return null;
                             }
                         }
                         if (max == 0) {
                             reportError("msg.zero.quant",
-                                        tail(source, state.index));
+                                        tail(source, state.index), state);
                             return null;
                         }
                         if (min > max) {
-                            reportError("msg.max.lt.min", tail(source, up));
+                            reportError("msg.max.lt.min", tail(source, up), state);
                             return null;
                         }
                     } else {
@@ -825,14 +828,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     /* Exactly n times. */
                     if (min == 0) {
                         reportError("msg.zero.quant",
-                                    tail(source, state.index));
+                                    tail(source, state.index), state);
                         return null;
                     }
                     max = min;
                 }
                 if (source[index] != '}') {
                     reportError("msg.unterm.quant",
-                                String.valueOf(source[state.index]));
+                                String.valueOf(source[state.index]), state);
                     return null;
                 }
                 index++;
@@ -960,7 +963,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 return null;
             index = state.index;
             if (index >= source.length || source[index] != ')') {
-                reportError("msg.unterm.paren", tail(source, ocp));
+                reportError("msg.unterm.paren", tail(source, ocp), state);
                 return null;
             }
             index++;
@@ -995,7 +998,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
           case '[':
             /* A char class must have at least one char in it. */
             if (++index == source.length) {
-                reportError("msg.unterm.class", tail(source, ocp));
+                reportError("msg.unterm.class", tail(source, ocp), state);
                 return null;
             }
             c = source[index];
@@ -1003,13 +1006,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
             /* A negated class must have at least one char in it after the ^. */
             if (c == '^' && ++index == source.length) {
-                reportError("msg.unterm.class", tail(source, ocp));
+                reportError("msg.unterm.class", tail(source, ocp), state);
                 return null;
             }
 
             for (;;) {
                 if (++index == source.length) {
-                    reportError("msg.unterm.paren", tail(source, ocp));
+                    reportError("msg.unterm.paren", tail(source, ocp), state);
                     return null;
                 }
                 c = source[index];
@@ -1870,10 +1873,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
         return flags;
     }
 
-    private void reportError(String msg, String arg) {
+    private void reportError(String msg, String arg, CompilerState state) {
         Object[] args = { arg };
-        String message = ScriptRuntime.getMessage(msg, args);
-        Context.reportRuntimeError(message);
+        throw NativeGlobal.constructError(
+                    state.cx, "SyntaxError",
+                    ScriptRuntime.getMessage(msg, args),
+                    state.scope);
     }
 
     private String source;      /* locked source string, sans // */
