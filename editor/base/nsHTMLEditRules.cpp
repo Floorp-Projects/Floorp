@@ -121,11 +121,12 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   if (NS_FAILED(res)) return res;
 
   char *returnInEmptyLIKillsList = 0;
-  res = prefs->CopyCharPref("editor.liReturnBehavior", &returnInEmptyLIKillsList);
+  res = prefs->CopyCharPref("editor.html.typing.returnInEmptyListItemClosesList",
+                               &returnInEmptyLIKillsList);
                           
   if (NS_SUCCEEDED(res) && returnInEmptyLIKillsList)
   {
-    if (!strncmp(returnInEmptyLIKillsList, "no", 2))
+    if (!strncmp(returnInEmptyLIKillsList, "false", 5))
       mReturnInEmptyLIKillsList = PR_FALSE; 
     else
       mReturnInEmptyLIKillsList = PR_TRUE; 
