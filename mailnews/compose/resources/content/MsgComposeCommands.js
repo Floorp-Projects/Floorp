@@ -1279,7 +1279,7 @@ function ComposeStartup(recycled, aParams)
 
         var attachments = msgCompFields.attachmentsArray;
         if (attachments)
-          for (var i = 0; i < attachments.Count(); i ++)
+          for (i = 0; i < attachments.Count(); i ++)
             AddAttachment(attachments.QueryElementAt(i, Components.interfaces.nsIMsgAttachment));
         }
 
@@ -1853,7 +1853,6 @@ function SuppressComposeCommandUpdating(suppress)
     CommandUpdate_MsgCompose();
 }
 
->>>>>>> 1.227
 function AdjustFocus()
 {
   //dump("XXX adjusting focus\n");
