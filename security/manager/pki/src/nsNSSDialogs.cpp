@@ -71,10 +71,12 @@ class nsNSSDialogHelper
 {
 public:
   const static char *kDefaultOpenWindowParam;
+  //The params is going to be either a nsIPKIParamBlock or
+  //nsIDialogParamBlock
   static nsresult openDialog(
                   nsIDOMWindowInternal *window,
                   const char *url,
-                  nsIPKIParamBlock *params);
+                  nsISupports *params);
 
   static nsresult openDialogVA(nsIDOMWindowInternal *window,
                                const char *format, ...);
@@ -122,7 +124,7 @@ nsresult
 nsNSSDialogHelper::openDialog(
     nsIDOMWindowInternal *window,
     const char *url,
-    nsIPKIParamBlock *params)
+    nsISupports *params)
 {
   nsresult rv;
   nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
@@ -145,7 +147,7 @@ nsNSSDialogHelper::openDialog(
                                   url,
                                   "_blank",
                                   nsNSSDialogHelper::kDefaultOpenWindowParam,
-                                  &NS_GET_IID(nsIPKIParamBlock),
+                                  &NS_GET_IID(nsISupports),
                                   (nsISupports*)params
                                 );
   if ( !argv ) return NS_ERROR_FAILURE;
@@ -192,7 +194,8 @@ nsNSSDialogHelper::openDialogVA(nsIDOMWindowInternal *window,
 }
 
 /* ==== */
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_PKIPARAMBLOCK_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kPKIParamBlockCID, NS_PKIPARAMBLOCK_CID);
 
 nsNSSDialogs::nsNSSDialogs()
 {
@@ -240,7 +243,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
   if (!block) return NS_ERROR_FAILURE;
 
   // void ChangePassword(in wstring tokenName, out int status);
@@ -275,7 +278,7 @@ nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   
   *_retval = PR_FALSE;
 
-  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
 
   if (!block)
     return NS_ERROR_FAILURE;
@@ -293,8 +296,8 @@ nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
     return rv;
 
   PRInt32 status;
-
-  rv = block->GetInt(1, &status);
+  nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
+  rv = dialogBlock->GetInt(1, &status);
   if (NS_FAILED(rv))
     return rv; 
 
@@ -303,7 +306,7 @@ nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   } else {
     // The user wants to continue, let's figure out
     // what to do with this cert. 
-    rv = block->GetInt(2, &addType);
+    rv = dialogBlock->GetInt(2, &addType);
     switch (addType) {
       case 0:
         *outAddType = ADD_TRUSTED_PERMANENTLY;
@@ -336,12 +339,13 @@ nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
 
   *_retval = PR_FALSE;
 
-  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
 
   if (!block)
     return NS_ERROR_FAILURE;
 
-  rv = block->SetString(1, targetURL);
+  nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
+  rv = dialogBlock->SetString(1, targetURL);
   if (NS_FAILED(rv))
     return rv;
 
@@ -357,7 +361,7 @@ nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
 
   PRInt32 status;
 
-  rv = block->GetInt(1, &status);
+  rv = dialogBlock->GetInt(1, &status);
   if (NS_FAILED(rv))
     return rv;
 
@@ -380,7 +384,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 
   *_retval = PR_FALSE;
 
-  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
 
   if (!block)
     return NS_ERROR_FAILURE; 
@@ -427,7 +431,8 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
   Recycle(commonName);
   Recycle(formattedDatePR);
 
-  rv = block->SetString(1,message1); 
+  nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
+  rv = dialogBlock->SetString(1,message1); 
 
   if (NS_FAILED(rv))
     return rv;
@@ -441,7 +446,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
                              block);
 
   PRInt32 status;
-  rv = block->GetInt(1, &status);
+  rv = dialogBlock->GetInt(1, &status);
   if (NS_FAILED(rv))
     return rv; 
 
@@ -607,13 +612,14 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
   if (!block) return NS_ERROR_FAILURE;
 
   nsXPIDLString commonName;
   rv = cert->GetCommonName(getter_Copies(commonName));
   if (NS_FAILED(rv))
     return rv;
+
   rv = block->SetString(1, commonName);
   if (NS_FAILED(rv)) return rv;
 

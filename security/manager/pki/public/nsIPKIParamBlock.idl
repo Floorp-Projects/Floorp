@@ -34,10 +34,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIDialogParamBlock.idl"
 
 [scriptable, uuid(b6fe3d78-1dd1-11b2-9058-ced9016984c8)]
-interface nsIPKIParamBlock : nsIDialogParamBlock {
+interface nsIPKIParamBlock : nsISupports {
 
   void setNumberISupports(in PRInt32 numISupports);
   void setISupportAtIndex(in PRInt32 index, in nsISupports object);

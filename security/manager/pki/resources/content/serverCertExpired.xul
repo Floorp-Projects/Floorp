@@ -41,13 +41,11 @@
   <separator/>
   <text value="&serverCertExpired.continue;" />
   <separator/>
-  <!--
   <box>
-  <button id="examineCert-button" class="dialog" value="Examine Certificate"
+  <button id="examineCert-button" class="dialog" value="&examineCert.label;"
      onclick=""/> 
   </box>
   <separator/>
-  -->
   <box>
   <button id="ok-button" class="dialog" value="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
