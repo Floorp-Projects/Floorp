@@ -74,11 +74,11 @@ NS_NewFileControlFrame(nsIFrame** aNewFrame)
 nsFileControlFrame::nsFileControlFrame():
   mTextFrame(nsnull), 
   mFormFrame(nsnull),
-  mTextContent(nsnull)
+  mTextContent(nsnull),
+  mCachedState(nsnull)
 {
     //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
-  mCachedState = nsnull;
 }
 
 nsFileControlFrame::~nsFileControlFrame()
@@ -237,23 +237,23 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   if (fileWidget) {
-	  nsString titles[] = {"all files"};
-	  nsString filters[] = {"*.*"};
-	  fileWidget->SetFilterList(1, titles, filters);
+    nsString titles[] = {"all files"};
+    nsString filters[] = {"*.*"};
+    fileWidget->SetFilterList(1, titles, filters);
 
-	  fileWidget->Create(parentWidget, title, eMode_load, nsnull, nsnull);
-	  result = fileWidget->Show();
+    fileWidget->Create(parentWidget, title, eMode_load, nsnull, nsnull);
+    result = fileWidget->Show();
 
-	  if (result) {
-	    nsFileSpec fileSpec;
-	    fileWidget->GetFile(fileSpec);
-	    char* leafName = fileSpec.GetLeafName();
-	    if (leafName) {
-	      mTextFrame->SetProperty(nsHTMLAtoms::value,leafName);
-	      nsCRT::free(leafName);
+    if (result) {
+      nsFileSpec fileSpec;
+      fileWidget->GetFile(fileSpec);
+      char* leafName = fileSpec.GetLeafName();
+      if (leafName) {
+        mTextFrame->SetProperty(nsHTMLAtoms::value,leafName);
+        nsCRT::free(leafName);
       }
-	  }
-	  NS_RELEASE(fileWidget);
+    }
+    NS_RELEASE(fileWidget);
   }
   NS_RELEASE(parentWidget);
 
@@ -473,10 +473,17 @@ nsresult nsFileControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 
 NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
+  nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
-    mTextFrame->SetTextControlFrameState(aValue);                                         
+    if (mTextFrame) {
+      mTextFrame->SetTextControlFrameState(aValue);                                         
+    } else {
+      if (mCachedState) delete mCachedState;
+      mCachedState = new nsString(aValue);
+      if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
+    }
   }
-  return NS_OK;
+  return rv;
 }      
 
 NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
@@ -542,9 +549,8 @@ nsFileControlFrame::RestoreState(nsISupports* aState)
   char* chars = nsnull;
   nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
   if (NS_SUCCEEDED(res) && chars) {
-    // Don't poke mTextFrame, it's not there yet.
-    mCachedState = new nsString(chars);
-    if (!mCachedState) res = NS_ERROR_OUT_OF_MEMORY;
+    nsAutoString value(chars);
+    SetProperty(nsHTMLAtoms::value, value);
     nsCRT::free(chars);
   }
   return res;
