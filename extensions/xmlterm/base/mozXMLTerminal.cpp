@@ -102,12 +102,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(mozXMLTerminal,
 mozXMLTerminal::mozXMLTerminal() :
   mInitialized(PR_FALSE),
 
-  mCookie(EmptyString()),
+  mCookie(nsAutoString()),
 
-  mCommand(EmptyString()),
-  mPromptExpr(EmptyString()),
+  mCommand(nsAutoString()),
+  mPromptExpr(nsAutoString()),
 
-  mInitInput(EmptyString()),
+  mInitInput(nsAutoString()),
 
   mXMLTermShell(nsnull),
   mDocShell(nsnull),

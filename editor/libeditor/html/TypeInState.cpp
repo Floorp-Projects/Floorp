@@ -158,12 +158,12 @@ void TypeInState::Reset()
 
 nsresult TypeInState::SetProp(nsIAtom *aProp)
 {
-  return SetProp(aProp,EmptyString(),EmptyString());
+  return SetProp(aProp,nsAutoString(),nsAutoString());
 }
 
 nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr)
 {
-  return SetProp(aProp,aAttr,EmptyString());
+  return SetProp(aProp,aAttr,nsAutoString());
 }
 
 nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue)
@@ -209,12 +209,12 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
 nsresult TypeInState::ClearAllProps()
 {
   // null prop means "all" props
-  return ClearProp(nsnull,EmptyString());
+  return ClearProp(nsnull,nsAutoString());
 }
 
 nsresult TypeInState::ClearProp(nsIAtom *aProp)
 {
-  return ClearProp(aProp,EmptyString());
+  return ClearProp(aProp,nsAutoString());
 }
 
 nsresult TypeInState::ClearProp(nsIAtom *aProp, const nsString &aAttr)
@@ -285,7 +285,7 @@ nsresult TypeInState::TakeRelativeFontSize(PRInt32 *outRelSize)
 
 nsresult TypeInState::GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp)
 {
-  return GetTypingState(isSet, theSetting, aProp, EmptyString(), nsnull);
+  return GetTypingState(isSet, theSetting, aProp, nsAutoString(), nsnull);
 }
 
 nsresult TypeInState::GetTypingState(PRBool &isSet, 

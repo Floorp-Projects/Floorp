@@ -634,7 +634,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
     if NS_FAILED((rv = IsDirectory(&dirCheck)))
         return rv;
     if (!dirCheck)
-        return CopyToNative(newParent, EmptyCString());
+        return CopyToNative(newParent, nsCString());
     
     if (NS_FAILED(rv = Equals(newParent, &dirCheck)))
         return rv;
@@ -684,7 +684,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
             rv = newParent->Clone(getter_AddRefs(destClone));
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsILocalFile> newDir(do_QueryInterface(destClone));
-                if (NS_FAILED(rv = entry->CopyToNative(newDir, EmptyCString()))) {
+                if (NS_FAILED(rv = entry->CopyToNative(newDir, nsCString()))) {
 #ifdef DEBUG
                     nsresult rv2;
                     nsCAutoString pathName;
@@ -698,7 +698,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
                 }
             }
         } else {
-            if (NS_FAILED(rv = entry->CopyToNative(newParent, EmptyCString()))) {
+            if (NS_FAILED(rv = entry->CopyToNative(newParent, nsCString()))) {
 #ifdef DEBUG
                 nsresult rv2;
                 nsCAutoString pathName;

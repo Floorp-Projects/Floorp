@@ -526,8 +526,8 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
      than going away. See bug 61840.  */
 
   if (mDocShell && aDocument) {
-    SetStatus(EmptyString());
-    SetDefaultStatus(EmptyString());
+    SetStatus(nsString());
+    SetDefaultStatus(nsString());
   }
 
   if (mDocument) {

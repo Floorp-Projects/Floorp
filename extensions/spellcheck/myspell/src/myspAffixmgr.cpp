@@ -520,7 +520,7 @@ nsresult
 myspAffixMgr::DecodeString(const nsAFlatCString &aSource, nsAString &aDest)
 {
   if (!mDecoder) {
-    aDest.Truncate();
+    aDest.Assign(NS_LITERAL_STRING(""));
     return NS_OK;
   }
   PRInt32 inLength = aSource.Length();

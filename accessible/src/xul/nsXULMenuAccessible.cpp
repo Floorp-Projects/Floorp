@@ -274,7 +274,7 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetName(nsAString& _retval)
 {
-  _retval.Truncate();
+  _retval.Assign(NS_LITERAL_STRING(""));
   return NS_OK;
 }
 

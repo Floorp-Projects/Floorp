@@ -217,7 +217,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
 		            }
 		        }
 		        else
-		            rv = dirEntry->CopyToNative(destDir, EmptyCString());
+		            rv = dirEntry->CopyToNative(destDir, nsCString());
 		    }
 		
 		}

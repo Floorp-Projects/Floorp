@@ -615,8 +615,8 @@ nsJVMConfigManagerUnix::AddDirectory(nsAString& aHomeDirName)
     nsJVMConfig* config = NS_STATIC_CAST(nsJVMConfig *,
                                          mJVMConfigList.Get(&key));
     if (!config) {
-        config = new nsJVMConfig(version, type, EmptyString(), arch, path,
-                                 mozPluginPath, EmptyString());
+        config = new nsJVMConfig(version, type, nsString(), arch, path,
+                                 mozPluginPath, nsString());
         NS_ENSURE_TRUE(config, NS_ERROR_OUT_OF_MEMORY);
         mJVMConfigList.Put(&key, NS_STATIC_CAST(void *, config));
         NS_ADDREF(config);

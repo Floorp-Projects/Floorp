@@ -1210,7 +1210,7 @@ nsAppShellService::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width,
 
   }
   else {
-    rv = OpenWindow(chromeUrlForTask, EmptyString(), width, height);
+    rv = OpenWindow(chromeUrlForTask, nsString(), width, height);
   }
   
   // If we get here without an error, then a window was opened OK.

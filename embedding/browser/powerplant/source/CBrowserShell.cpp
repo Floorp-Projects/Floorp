@@ -1105,13 +1105,13 @@ NS_METHOD CBrowserShell::SaveDocument(ESaveFormat inSaveFormat)
     if (NS_FAILED(rv))
       return rv;
 
-    return SaveInternal(documentURI, domDocument, EmptyString(), false, inSaveFormat);     // don't bypass cache
+    return SaveInternal(documentURI, domDocument, nsString(), false, inSaveFormat);     // don't bypass cache
 }
 
 // Save link target
 NS_METHOD CBrowserShell::SaveLink(nsIURI* inURI)
 {
-    return SaveInternal(inURI, nsnull, EmptyString(), true, eSaveFormatHTML);     // bypass cache
+    return SaveInternal(inURI, nsnull, nsString(), true, eSaveFormatHTML);     // bypass cache
 }
 
 const char* const kPersistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";

@@ -510,7 +510,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
       if (!attrPrefix) {
         // Default NS attribute does not have prefix (and the name is "xmlns")
-        PushNameSpaceDecl(EmptyString(), uriStr, aElement);
+        PushNameSpaceDecl(nsString(), uriStr, aElement);
       } else {
         attrName->ToString(nameStr);
         PushNameSpaceDecl(nameStr, uriStr, aElement);

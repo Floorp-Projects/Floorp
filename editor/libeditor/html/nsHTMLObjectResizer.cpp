@@ -1044,12 +1044,12 @@ nsHTMLEditor::SetFinalSize(PRInt32 aX, PRInt32 aY)
     if (setWidth)
       mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
                                        nsEditProperty::cssWidth,
-                                       EmptyString(),
+                                       NS_LITERAL_STRING(""),
                                        PR_FALSE);
     if (setHeight)
       mHTMLCSSUtils->RemoveCSSProperty(mResizedObject,
                                       nsEditProperty::cssHeight,
-                                      EmptyString(),
+                                      NS_LITERAL_STRING(""),
                                       PR_FALSE);
   }
   // finally notify the listeners if any
