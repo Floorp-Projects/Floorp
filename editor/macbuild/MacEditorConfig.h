@@ -17,7 +17,7 @@
  */
 
 
-//#define ENABLE_JS_EDITOR_LOG
+#define ENABLE_EDITOR_API_LOG
 
 
 
