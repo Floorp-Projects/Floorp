@@ -485,32 +485,6 @@ LocalVar('index_html', <<'END');
 $index_html = 0;
 END
 
-if (!LocalVarExists('mysqlpath')) {
-    my $mysql_binaries;
-    if ($^O !~ /MSWin32/i) {
-        $mysql_binaries = `which mysql`;
-        if ($mysql_binaries =~ /no mysql/ || $mysql_binaries eq '') {
-            # If which didn't find it, just provide a reasonable default
-            $mysql_binaries = "/usr/bin";
-        } else {
-            $mysql_binaries =~ s:/mysql\n$::;
-        }
-    } else {
-        # provide a reasonable default for Windows
-        $mysql_binaries = 'c:\mysql\bin';
-    }    
-    
-    LocalVar('mysqlpath', <<"END");
-#
-# In order to do certain functions in Bugzilla (such as sync the shadow
-# database), we require the MySQL Binaries (mysql, mysqldump, and mysqladmin).
-# Because it's possible that these files aren't in your path, you can specify
-# their location here.
-# Please specify only the directory name, with no trailing slash.
-\$mysqlpath = '$mysql_binaries';
-END
-}
-
 
 if (!LocalVarExists('cvsbin')) {
     my $cvs_executable;
@@ -761,6 +735,11 @@ LocalVar('platforms', '
         "Other"
 );
 ');
+
+if (LocalVarExists('mysqlpath')) {
+    print "\nThe \$mysqlpath setting in your localconfig file ",
+          "is no longer required.\nWe recommend you remove it.\n";
+}
 
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",
