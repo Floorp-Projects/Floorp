@@ -696,11 +696,13 @@ endif
 ###############################################################################
 # Update Makefiles
 ###############################################################################
+# Note: Passing depth to make-makefile is optional.
+#       It saves the script some work, though.
 Makefile: Makefile.in
-	$(topsrcdir)/build/autoconf/make-makefile
+	$(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH)
 
 $(SUBMAKEFILES): % : %.in
-	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile $@
+	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH) $@
 
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
