@@ -355,16 +355,15 @@ void nsSpecialSystemDirectory::operator = (OSType folderType)
 	        break;
 		} // switch
     } // for
-    mSpec.name[0] = '\0';
-    dipb->ioNamePtr = (StringPtr)&mSpec.name;
+    StrFileName filename;
+    filename[0] = '\0';
+    dipb->ioNamePtr = (StringPtr)&filename;
     dipb->ioFDirIndex = -1;
     
-    mError = PBGetCatInfoSync(&cinfo);
-        
+    mError = NS_FILE_RESULT(PBGetCatInfoSync(&cinfo));
     if (NS_SUCCEEDED(mError))
     {
-        mSpec.vRefNum = dipb->ioVRefNum;
-        mSpec.parID = dipb->ioDrParID;
+	    mError = NS_FILE_RESULT(FSMakeFSSpec(dipb->ioVRefNum, dipb->ioDrParID, filename, &mSpec));
     }
 }
 #endif // XP_MAC

@@ -248,7 +248,12 @@ void nsFileSpec::operator += (const char* inRelativePath)
 		nsFileSpecHelpers::ReallocCat(mPath, "x");
 	else
 		nsFileSpecHelpers::ReallocCat(mPath, "\\x");
-	SetLeafName(inRelativePath);
+	
+	// If it's a (unix) relative path, make it native
+	char* dosPath = nsFileSpecHelpers::StringDup(inRelativePath);
+	nsFileSpecHelpers::UnixToNative(dosPath);
+	SetLeafName(dosPath);
+	delete [] dosPath;
 } // nsFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
@@ -379,6 +384,49 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 
     return NS_FILE_FAILURE;
 } // nsFileSpec::Execute
+
+//----------------------------------------------------------------------------------------
+PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
+//----------------------------------------------------------------------------------------
+{
+	char aDrive[_MAX_DRIVE + 2];
+	_splitpath( mPath, aDrive, NULL, NULL, NULL);
+
+	if (aDrive[0] == '\0')
+	{
+        // The back end is always trying to pass us paths that look
+        //   like /c|/netscape/mail.  See if we've got one of them
+        if (strlen(mPath) > 2 && mPath[0] == '/' && mPath[2] == '|')
+        {
+            aDrive[0] = mPath[1];
+            aDrive[1] = ':';
+            aDrive[2] = '\0';
+        }
+        else
+        {
+            // Return bogus large number and hope for the best
+            return ULONG_MAX; 
+        }
+    }
+
+	strcat(aDrive, "\\");
+
+	PRUint32 dwSectorsPerCluster = 0;
+	PRUint32 dwBytesPerSector = 0;
+	PRUint32 dwFreeClusters = 0;
+	PRUint32 dwTotalClusters = 0;
+	if (!GetDiskFreeSpace(aDrive, 
+						&dwSectorsPerCluster, 
+						&dwBytesPerSector, 
+						&dwFreeClusters, 
+						&dwTotalClusters))
+	{
+		return ULONG_MAX; // Return bogus large number and hope for the best
+	}
+
+	//	We can now figure free disk space.
+	return dwFreeClusters * dwSectorsPerCluster * dwBytesPerSector;
+} // nsFileSpec::GetDiskSpaceAvailable()
 
 //========================================================================================
 //								nsDirectoryIterator

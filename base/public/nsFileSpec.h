@@ -236,12 +236,16 @@ class NS_BASE nsFileSpec
         PRBool                  operator ==(const nsFileSpec& inOther) const;
         PRBool                  operator !=(const nsFileSpec& inOther) const;
 
-#ifndef XP_MAC
-                                operator const char* () const { return mPath; }
-                                    // This is the only automatic conversion to const char*
+                                operator const char* () const { return GetCString(); }
+                                    // Same as GetCString (please read the comments).
+       const char*              GetCString() const;
+                                    // This is the only conversion to const char*
                                     // that is provided, and it allows the
-                                    // path to be "passed" to NSPR file routines.
-#endif
+                                    // path to be "passed" to legacy code.  This practice
+                                    // is VERY EVIL and should only be used to support legacy
+                                    // code.  Using it guarantees bugs on Macintosh.
+                                    // The path is cached and freed by the nsFileSpec destructor
+                                    // so do not delete (or free) it.
 
 #ifdef XP_MAC
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
@@ -259,6 +263,11 @@ class NS_BASE nsFileSpec
                                 operator const FSSpec* const () { return &mSpec; }
                                 operator  FSSpec& () { return mSpec; }
                                 operator const FSSpec& () const { return mSpec; }
+                                
+        const FSSpec&           GetFSSpec() const { return mSpec; }
+        FSSpec&                 GetFSSpec() { return mSpec; }
+        ConstFSSpecPtr          GetFSSpecPtr() const { return &mSpec; }
+        FSSpecPtr               GetFSSpecPtr() { return &mSpec; }
         void                    MakeAliasSafe();
                                     // Called for the spec of an alias.  Copies the alias to
                                     // a secret temp directory and modifies the spec to point
@@ -329,6 +338,7 @@ class NS_BASE nsFileSpec
                                 }
         
         PRUint32                GetFileSize() const;
+        PRUint32                GetDiskSpaceAvailable() const;
         
         nsFileSpec              operator + (const char* inRelativePath) const;
         nsFileSpec              operator + (const nsString& inRelativePath) const
@@ -398,12 +408,12 @@ class NS_BASE nsFileSpec
 
     protected:
                                 friend class nsFilePath;
+                                friend class nsFileURL;
                                 friend class nsDirectoryIterator;
 #ifdef XP_MAC
         FSSpec                  mSpec;
-#else
-        char*                   mPath;
 #endif
+        char*                   mPath;
         nsresult                mError;
 }; // class nsFileSpec
 
@@ -440,7 +450,7 @@ class NS_BASE nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
 
-                                operator const char* const () { return mURL; } // deprecated.
+                                operator const char* () const { return mURL; } // deprecated.
         const char*             GetAsString() const { return mURL; }
 
         friend                  NS_BASE nsOutputStream& operator << (
@@ -465,8 +475,9 @@ class NS_BASE nsFileURL
 
 //========================================================================================
 class NS_BASE nsFilePath
-//    This is a string that looks like "/foo/bar/mumble%20fish".  Same as nsFileURL, but
-//    without the "file:// prefix".
+//    This is a string that looks like "/foo/bar/mumble fish".  Same as nsFileURL, but
+//    without the "file:// prefix", and NOT %20 ENCODED! Strings passed in must be
+//    valid unix-style paths in this format.
 //========================================================================================
 {
     public:
