@@ -34,12 +34,15 @@
         alttitle="&windowalttitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em!important;"
+        buttons="accept,cancel,help"
         onload="Startup()"
-        ondialogaccept="return onAccept();">
+        ondialogaccept="return onAccept();"
+        ondialoghelp="return doHelpButton();">
 
   <script src="chrome://communicator/content/wallet/SignonViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
+  <script src="chrome://help/content/contextHelp.js"/>
 
   <stringbundle id="signonBundle"
                 src="chrome://communicator/locale/wallet/SignonViewer.properties"/>

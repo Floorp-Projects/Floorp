@@ -452,8 +452,11 @@ function getSelectedTab()
   return key;
 }
 
-
 function doHelpButton() {
-   var uri = getSelectedTab();
-   openHelp(uri);
+  if (isImages) {
+    openHelp("image_mgr");
+  } else {
+    var uri = getSelectedTab();
+    openHelp(uri);
+  }
 }

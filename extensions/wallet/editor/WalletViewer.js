@@ -442,3 +442,7 @@ nsWalletViewer.prototype =
     return true;
   }
 
+  // called by the help button overlaid from platformDialogOverlay
+  function doHelpButton() {
+    openHelp("forms_data");
+  }

@@ -535,3 +535,10 @@ function TrimString(string)
   return string.replace(/(^\s+)|(\s+$)/g, '')
 }
 
+function doHelpButton() {
+  if (isPasswordManager) {
+     openHelp("password_mgr");
+  } else {
+     openHelp("forms_sites");
+  }
+}

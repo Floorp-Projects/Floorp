@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -162,5 +163,10 @@ function Cancel() {
   var list = prefillList[prefillList.length-2];
   var result = "|list|"+list+"|fillins||url||skip|false|";
   walletpreview.SetValue(result, window);
+  return true;
+}
+
+function doHelpButton() {
+  openHelp("forms_prefill");
   return true;
 }

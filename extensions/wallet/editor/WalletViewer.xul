@@ -36,14 +36,12 @@
       // centerWindowOnScreen();
       
     }
-  
   ]]>
-  
   </script>        
         
   <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletViewer.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
-
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <keyset id="dialogKeys"/>
 
   <hbox flex="1">
@@ -57,7 +55,7 @@
 
   <separator/>
 
-  <hbox id="okCancelButtonsRight" />
+  <hbox id="okCancelHelpButtonsRight" />
 
   <script type="application/x-javascript">
     <![CDATA[
