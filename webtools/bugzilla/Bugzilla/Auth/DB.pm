@@ -71,7 +71,7 @@ sub authenticate {
     # Now we know that the user has logged in successfully,
     # so delete any password tokens for them
     require Token;
-    Token::DeletePasswordTokens("user logged in");
+    Token::DeletePasswordTokens($userid, "user_logged_in");
 
     # The user may have had their account disabled
     return (AUTH_DISABLED, $userid, $disabledtext)

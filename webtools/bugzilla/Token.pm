@@ -246,7 +246,7 @@ sub DeletePasswordTokens {
                             "WHERE userid=? AND tokentype='password'");
     $sth->execute($userid);
     while (my $token = $sth->fetchrow_array) {
-        Token::Cancel($token, "user_logged_in");
+        Token::Cancel($token, $reason);
     }
 }
 
