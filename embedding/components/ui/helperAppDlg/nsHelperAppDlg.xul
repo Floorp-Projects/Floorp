@@ -53,7 +53,9 @@
           <separator orient="horizontal" class="thin"/>
           <description id="prompt">&prompt.label;</description>
         </vbox>
-        <image id="contentTypeImage"/>
+        <vbox>
+          <image id="contentTypeImage"/>
+        </vbox>
       </hbox>
 
       <separator orient="horizontal" class="thin"/>
