@@ -225,6 +225,7 @@ protected:
     NS_IMETHODIMP ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
     NS_IMETHODIMP ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     NS_IMETHODIMP ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeEscapedContent(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     NS_IMETHODIMP ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     NS_IMETHODIMP ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);

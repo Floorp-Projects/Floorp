@@ -236,7 +236,7 @@ void CTokenRecycler::RecycleToken(CToken* aToken) {
 
 /**
  * 
- * @update	gess8/4/98
+ * @update	vidur 11/12/98
  * @param 
  * @return
  */
@@ -262,6 +262,7 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
       case eToken_style:      result=new CStyleToken(); break;
       case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
       case eToken_instruction:result=new CInstructionToken(); break;
+      case eToken_cdatasection:result=new CCDATASectionToken(); break;
         default:
           break;
     }

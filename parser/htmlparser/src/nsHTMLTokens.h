@@ -54,6 +54,7 @@ enum eHTMLTokenTypes {
   eToken_start=1,     eToken_end,     eToken_comment,         eToken_entity,
   eToken_whitespace,  eToken_newline, eToken_text,            eToken_attribute,
   eToken_script,      eToken_style,   eToken_skippedcontent,  eToken_instruction,
+  eToken_cdatasection,
   eToken_last //make sure this stays the last token...
 };
 
@@ -78,7 +79,6 @@ public:
 
 protected:
 };
-
 
 /**
  *  This declares start tokens, which always take the form <xxxx>. 
@@ -204,6 +204,23 @@ class CTextToken: public CHTMLToken {
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
+};
+
+
+/**
+ *  CDATASection tokens contain raw unescaped text content delimited by
+ *  a ![CDATA[ and ]]. 
+ *  XXX Not really a HTML construct - maybe we need a separation
+ *  
+ *  @update  vidur 11/12/98
+ */
+class CCDATASectionToken : public CHTMLToken {
+public:
+                        CCDATASectionToken();
+                        CCDATASectionToken(const nsString& aString);
+    virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
+    virtual const char* GetClassName(void);
+    virtual PRInt32     GetTokenType(void);  
 };
 
 

@@ -459,6 +459,110 @@ nsresult CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 /*
  *  default constructor
  *  
+ *  @update  vidur 11/12/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CCDATASectionToken::CCDATASectionToken() : CHTMLToken(eHTMLTag_unknown) {
+}
+
+
+/*
+ *  string based constructor
+ *  
+ *  @update  vidur 11/12/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CCDATASectionToken::CCDATASectionToken(const nsString& aName) : CHTMLToken(aName) {
+  mTypeID=eHTMLTag_unknown;
+}
+
+/*
+ *  
+ *  
+ *  @update  vidur 11/12/98
+ *  @param   
+ *  @return  
+ */
+const char*  CCDATASectionToken::GetClassName(void) {
+  return "cdatasection";
+}
+
+/*
+ *  
+ *  
+ *  @update  vidur 11/12/98
+ *  @param   
+ *  @return  
+ */
+PRInt32 CCDATASectionToken::GetTokenType(void) {
+  return eToken_cdatasection;
+}
+
+/*
+ *  Consume as much marked test from scanner as possible.
+ *
+ *  @update  vidur 11/12/98
+ *  @param   aChar -- last char consumed from stream
+ *  @param   aScanner -- controller of underlying input source
+ *  @return  error result
+ */
+nsresult CCDATASectionToken::Consume(PRUnichar aChar, CScanner& aScanner) {
+  static    nsAutoString terminals("]\r");
+  nsresult  result=NS_OK;
+  PRBool    done=PR_FALSE;
+
+  while((NS_OK==result) && (!done)) {
+    result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE,PR_FALSE);
+    if(NS_OK==result) {
+      result=aScanner.Peek(aChar);
+      if(kCR==aChar) {
+        result=aScanner.GetChar(aChar); //strip off the \r
+        result=aScanner.Peek(aChar);    //then see what's next.
+        switch(aChar) {
+          case kCR:
+            result=aScanner.GetChar(aChar); //strip off the \r
+            mTextValue.Append("\n\n");
+            break;
+          case kNewLine:
+             //which means we saw \r\n, which becomes \n
+            result=aScanner.GetChar(aChar); //strip off the \n
+                //now fall through on purpose...
+          default:
+            mTextValue.Append("\n");
+            break;
+        }
+      }
+      else if (kRightSquareBracket==aChar) {
+        result=aScanner.GetChar(aChar); //strip off the ]
+        result=aScanner.Peek(aChar);    //then see what's next.
+        if (kRightSquareBracket==aChar) {
+          result=aScanner.GetChar(aChar);    //strip off the second ]
+          result=aScanner.Peek(aChar);    //then see what's next.
+          if (kGreaterThan==aChar) {
+            result=aScanner.GetChar(aChar); //strip off the >
+            done=PR_TRUE;
+          }
+          else {
+            // This isn't the end of the CDATA section so go on
+            mTextValue.Append("]");
+          }
+        }
+        else {
+          // This isn't the end of the CDATA section so go on
+          mTextValue.Append("]");
+        }
+      }
+      else done=PR_TRUE;
+    }
+  }
+  return result;
+}
+
+/*
+ *  default constructor
+ *  
  *  @update  gess 3/25/98
  *  @param   aName -- string to init token name with
  *  @return  

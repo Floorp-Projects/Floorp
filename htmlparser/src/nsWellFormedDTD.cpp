@@ -473,6 +473,74 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,
   return result;
 }
 
+/*
+ * Consume characters as long as they match the string passed in.
+ * If they don't match, put them all back. 
+ * XXX The scanner should be able to do this.
+ *
+ *  @update vidur 11/12/98
+ */
+static nsresult
+ConsumeConditional(CScanner& aScanner, 
+                   const nsString& aMatchString,
+                   PRBool& aMatch)
+{
+  nsresult result=NS_OK;
+  PRUnichar matchChar;
+
+  PRInt32 i, count = aMatchString.Length();
+  for (i=0; i < count; i++) {
+    result = aScanner.GetChar(matchChar);
+    if ((NS_OK != result) || (aMatchString.CharAt(i) != matchChar)) {
+      break;
+    }
+  }
+
+  if (NS_OK == result) {
+    if (i != count) {
+      for (; i >= 0; i--) {
+        aScanner.PutBack(aMatchString.CharAt(i));
+      }
+      aMatch = PR_FALSE;
+    }
+    else {
+      aMatch = PR_TRUE;
+    }
+  }
+
+  return result;
+}
+
+/**
+ *  This method is called when we see a "<!" sequence. The result
+ *  could be a comment or a CDATASection.
+ *  XXX "Escaped Content" is not the right term, but I couldn't think
+ *  of a good one.
+ *  
+ *  @update vidur 11/12/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  aToken is the newly created token (comment or cdatasection)
+ *  @return error code
+ */
+NS_IMETHODIMP CWellFormedDTD::ConsumeEscapedContent(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+  nsresult result=NS_OK;
+  nsAutoString CDATAString("[CDATA[");
+  PRBool isCDATA = PR_FALSE;
+
+  result = ConsumeConditional(aScanner, CDATAString, isCDATA);
+  if (NS_OK == result) {
+    if (isCDATA) {
+      aToken=gTokenRecycler.CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,gEmpty);
+    }
+    else {
+      aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
+    }
+  }
+
+  return result;
+}
+
 /**
  *  This method is called just after a newline has been consumed. 
  *  
@@ -496,7 +564,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,
  *  and we know we're at the start of some kind of tagged 
  *  element. We don't know yet if it's a tag or a comment.
  *  
- *  @update  gess 5/12/98
+ *  @update  vidur 11/12/98
  *  @param   aChar is the last char read
  *  @param   aScanner is represents our input source
  *  @param   aToken is the out arg holding our new token
@@ -520,7 +588,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CTok
         break;
 
       case kExclamation:
-        aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
+        result = ConsumeEscapedContent(aChar, aScanner, aToken);
         break;
 
       case kQuestionMark: //it must be an XML processing instruction...
@@ -599,7 +667,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken){
           case kCR: case kLF:
             result=ConsumeNewline(theChar,*theScanner,aToken);
             break;
-          
+            
           case kNotFound:
             break;
           
@@ -699,7 +767,7 @@ PRBool CWellFormedDTD::IsContainer(PRInt32 aTag) const{
 
 /**
  *  
- *  @update  gess 3/25/98
+ *  @update  vidur 11/12/98
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
@@ -716,6 +784,7 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
     case eToken_entity:
     case eToken_whitespace:
     case eToken_text:
+    case eToken_cdatasection:
       result=mSink->AddLeaf(theNode); 
       break;
 

@@ -73,7 +73,8 @@ const PRUint32  kRightParen       = ')';
 const PRUint32  kLeftBrace        = '{';
 const PRUint32  kRightBrace       = '}';
 const PRUint32  kQuestionMark     = '?';
-
+const PRUint32  kLeftSquareBracket  = '[';
+const PRUint32  kRightSquareBracket = ']';
 
 #endif
 
