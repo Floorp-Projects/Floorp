@@ -1047,6 +1047,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
               GetCurrentProcessDirectory(*this);
             else
               *this = tPath;
+            PrfWriteProfileString(HINI_USERPROFILE, "Mozilla", "Home", *this);
             break;
         }
 
