@@ -11059,9 +11059,9 @@ MOZ_JSDEBUGGER=1
 # Check whether --enable-jsd or --disable-jsd was given.
 if test "${enable_jsd+set}" = set; then
   enableval="$enable_jsd"
-  if test "$enableval" = "yes"; then
+  if test "$enableval" = "no"; then
     MOZ_JSDEBUGGER=
-  elif test "$enableval" = "no"; then
+  elif test "$enableval" = "yes"; then
     :
   else
     { echo "configure: error: Option, jsd, does not take an argument ($enableval)." 1>&2; exit 1; }
