@@ -1607,8 +1607,8 @@ var BookmarksUtils = {
     var button = aEvent.type == "command" || aEvent.type == "keypress"? 0:aEvent.button;
     if (button == 2)
       return "";
-    if (aEvent.metaKey || aEvent.ctrlKey || button == 1)
-      if (aEvent.shiftKey)
+    if (aEvent.metaKey || aEvent.shiftKey || button == 1)
+      if (aEvent.ctrlKey)
         return "window";
       else
         return "tab";
