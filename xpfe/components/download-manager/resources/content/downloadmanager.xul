@@ -139,7 +139,7 @@
         datasources="rdf:null"
         seltype="multiple" flags="dont-test-empty"
         ondblclick="return goDoCommand('cmd_properties');"
-        onselect="window.updateCommands('tree-select');"
+        onselect="onSelect(event);"
         style="height: 0px; width: 0px;" flex="1">
 
     <treehead>
@@ -256,7 +256,7 @@
     </treecolgroup>
   </tree>
 
-  <statusbar id="status-bar">
+  <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusbar-text" flex="1"/>
   </statusbar>
 

@@ -44,69 +44,98 @@
 interface nsIDOMWindow;
 interface nsIURI;
 interface nsILocalFile;
-interface nsIDownloadItem;
+interface nsIDownload;
 interface nsIWebBrowserPersist;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
 interface nsIDownloadManager : nsISupports {
 
   /**
-  * addDownload
-  * Creates (and returns) an nsIDownloadItem with the given properties and adds
-  * it to the list of downloads being managed by the download manager.
+  * Creates an nsIDownload and adds it to be managed by the download manager.
+  *
+  * @param aSource The source (nsIURI) of the download.
+  *
+  * @param aTarget The local file to which the download is being saved.
+  *
+  * @param aPersist The "persist" used to transfer the download.  If set,
+  *                 the manager will set its listener to the download item
+  *                 and use it for cancellation.  If not set, the client
+  *                 is expected to set the download item as the listener on
+  *                 whatever transfer component is being used, and to
+  *                 set an observer on the download item that listens for
+  *                 the "oncancel" topic and cancels the download.
+  *
+  * @return The newly created download item with the passed-in properties.
   */
   
-  nsIDownloadItem addDownload(in nsIURI aURI,
-                              in nsILocalFile aTarget,
-                              in wstring aDisplayName,
-                              in nsIWebBrowserPersist aPersist);
+  nsIDownload addDownload(in nsIURI aSource,
+                          in nsILocalFile aTarget,
+                          in wstring aDisplayName,
+                          in nsIWebBrowserPersist aPersist);
 
   /**
-  * getDownload
-  * Used to retrieve a download managed by the download manager.
+  *  Retrieves an in-progress download managed by the download manager.
+  *
+  *  @param aPersistentDescriptor The unique identifier used to describe a
+  *                               a download, and an attribute of nsILocalFile.
+  *                               On Windows and Linux, this is just the path
+  *                               of the target, but on Mac this is guaranteed
+  *                               to be unique.
+  *
+  *  @return The download with the specified persistent descriptor.
   */
 
-  nsIDownloadItem getDownload(in string persistentDescriptor);
+  nsIDownload getDownload(in string aPersistentDescriptor);
 
   /**
-  * cancelDownload
-  * If a persist is set on the download item, download manager will call
-  * nsIWebBrowserPersist::CancelSave.  Else, if an observer is set on the item
-  * (it should be), it will be notified with the "oncancel" topic.  Callers
-  * that don't provide a persist object promise to listen for this topic and cancel
-  * the download.
+  * Cancels the download with the specified persistent descriptor if it's
+  * currently in progress.  If a "persist" was specified for the download,
+  * nsIWebBrowserPersist::CancelSave will be called.  If an observer was set
+  * on the nsIDownload, it will be notified with the "oncancel" topic.  Clients
+  * that don't provide a "persist" must listen for this topic and cancel the
+  * download.
+  *
+  * @param aPersistentDescriptor The persistent descriptor of the download to
+  *                              be cancelled.
   */
 
-  void cancelDownload(in string persistentDescriptor);
+  void cancelDownload(in string aPersistentDescriptor);
 
   /**
-  * removeDownload
-  * Remove a download that is not currently in progress.  Whereas cancelDownload simply
-  * cancels the transfer but retains information about it, removeDownload removes all
-  * knowledge of it.
+  * Removes the download with the specified persistent descriptor if it's not
+  * currently in progress.  Whereas cancelDownload simply cancels the transfer
+  * but retains information about it, removeDownload removes all knowledge of it.
+  *
+  * @param aPersistentDescriptor The persistent descriptor of the download to
+  *                              be removed.
   */
 
-  void removeDownload(in string key);
+  void removeDownload(in string aPersistentDescriptor);
 
   /**
-  * open
   * Opens the Download Manager front end.
+  *
+  * @param aParent The parent, or opener, of the front end (optional).
   */
 
   void open(in nsIDOMWindow aParent);
 
   /**
-  * openProgressDialogFor
   * Opens an individual progress dialog displaying progress for the download.
+  *
+  * @param aPersistentDescriptor The persistent descriptor of the download to
+  *                              display progress for.
+  *
+  * @param aParent The parent, or opener, of the front end (optional).
   */
 
-  void openProgressDialogFor(in string persistentDescriptor, in nsIDOMWindow aParent);
+  void openProgressDialogFor(in string aPersistentDescriptor, in nsIDOMWindow aParent);
 
   /**
-  * onClose
   * Called when the download manager front end is closed.  Useful for
   * third party managers to let us know when they've closed.
   */
+
   void onClose();
 
 };
