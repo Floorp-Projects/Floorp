@@ -305,6 +305,7 @@ public:
   PRInt32         mContextTopIndex;
   PRBool          mHadBody;
   PRBool          mHadFrameset;
+  PRBool          mHasOpenHead;
   PRBool          mTransitional;
   PRBool          mHadDocTypeDecl;
 
