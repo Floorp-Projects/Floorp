@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -43,6 +44,8 @@
 #include "nsIViewManager.h" 
 #include "nsIDeviceContext.h"
 #include "nsIWidget.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
 
 static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
@@ -134,12 +137,37 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
+{
+  NS_PRECONDITION(aElement, "Dude, where's my arg?!");
+
+  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
+  if (!window) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
+  NS_ASSERTION(presShell, "Dude, where's my pres shell?!");
+  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
+  if (!frame) {
+    return NS_OK;
+  }
+
+  presShell->ScrollFrameIntoView(frame,
+                                 NS_PRESSHELL_SCROLL_ANYWHERE /* VPercent */,
+                                 NS_PRESSHELL_SCROLL_ANYWHERE /* HPercent */);
+
+  return NS_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // inFlasher
 
-NS_IMETHODIMP 
-inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, nscolor aColor, 
-                              PRUint32 aThickness, float aP2T, nsIRenderingContext* aRenderContext)
+nsresult
+inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                       nscolor aColor, PRUint32 aThickness, float aP2T,
+                       nsIRenderingContext* aRenderContext)
 {
   aRenderContext->SetColor(aColor);
   DrawLine(aX, aY, aWidth, aThickness, DIR_HORIZONTAL, BOUND_OUTER, aP2T, aRenderContext);
@@ -150,9 +178,10 @@ inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, 
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength, PRUint32 aThickness, 
-                           PRBool aDir, PRBool aBounds, float aP2T, nsIRenderingContext* aRenderContext)
+nsresult
+inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength,
+                    PRUint32 aThickness, PRBool aDir, PRBool aBounds,
+                    float aP2T, nsIRenderingContext* aRenderContext)
 {
   nscoord thickTwips = NSIntPixelsToTwips(aThickness, aP2T);
   if (aDir) { // horizontal

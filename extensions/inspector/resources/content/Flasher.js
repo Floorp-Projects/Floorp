@@ -55,7 +55,7 @@ var gFlasherRegistry = [];
 
 function Flasher(aColor, aThickness, aDuration, aSpeed, aInvert)
 {
-  this.mShell = XPCU.createInstance("@mozilla.org/inspector/flasher;1", "inIFlasher");;
+  this.mShell = XPCU.createInstance("@mozilla.org/inspector/flasher;1", "inIFlasher");
   this.color = aColor;
   this.mThickness = aThickness;
   this.duration = aDuration;
@@ -91,9 +91,7 @@ Flasher.prototype =
   { 
     if (val && val.nodeType == Node.ELEMENT_NODE) {
       this.mElement = val; 
-      if ("scrollIntoView" in val) {
-        val.scrollIntoView(false);
-      }
+      this.mShell.scrollElementIntoView(val);
     } else 
       throw "Invalid node type.";
   },
