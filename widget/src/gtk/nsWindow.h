@@ -68,9 +68,11 @@ public:
 
     NS_IMETHOD            BeginResizingChildren(void);
     NS_IMETHOD            EndResizingChildren(void);
+    NS_IMETHOD            Destroy(void);
 
 
     virtual PRBool IsChild() { return(PR_FALSE); };
+    virtual void SetIsDestroying( PRBool val) { mIsDestroying = val; };
 
      // Utility methods
     virtual  PRBool OnPaint(nsPaintEvent &event);
@@ -83,12 +85,15 @@ public:
     char gInstanceClassName[256];
   
 protected:
+    virtual void            OnDestroy();
+
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
 
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
+  PRBool      mIsDestroying;
 
   GtkWindowType mBorderStyle;
 
