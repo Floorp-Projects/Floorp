@@ -50,7 +50,7 @@
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
 nsresult PR_CALLBACK
-app_GetModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
@@ -67,7 +67,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
             setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
 
 #ifdef _BUILD_STATIC_BIN
-            NSGetStaticModuleInfo = app_GetModuleInfo;
+            NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
             if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull)))
