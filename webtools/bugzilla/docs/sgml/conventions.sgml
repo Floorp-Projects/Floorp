@@ -135,6 +135,14 @@
         </row>
 
         <row>
+          <entry>Term found in the glossary</entry>
+
+          <entry>
+            <glossterm linkend="gloss-bugzilla">Bugzilla</glossterm>
+          </entry>
+        </row>
+
+        <row>
           <entry>Code Example</entry>
 
           <entry>

@@ -118,7 +118,7 @@
       </glossdef>
     </glossentry>
 
-    <glossentry>
+    <glossentry id="gloss-bugzilla">
       <glossterm>Bugzilla</glossterm>
 
       <glossdef>

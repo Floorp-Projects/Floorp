@@ -1597,7 +1597,7 @@ AddHandler cgi-script .cgi
         (either the Bugzilla directory or one of its parents).
         </para>
         <programlisting>
-Options +ExecCGI 
+Options +ExecCGI
 AllowOverride Limit
         </programlisting>
 

@@ -30,8 +30,9 @@
     Bugzilla e-mail gateway with the subject of 
     <quote>[Bug XXXX]</quote>, 
     and you can have CVS check-in comments append to your Bugzilla bug. If
-    you have your check-in script include an @resolution field, you can even
-    change the Bugzilla bug state.</para>
+    you  want to have the bug be closed automatically, you'll have to modify
+    the <filename>contrib/bugzilla_email_append.pl</filename> script.
+    </para>
 
     <para>There is also a CVSZilla project, based upon somewhat dated 
     Bugzilla code, to integrate CVS and Bugzilla through CVS' ability to 
