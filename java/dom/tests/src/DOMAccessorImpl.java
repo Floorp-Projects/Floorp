@@ -41,12 +41,11 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
 	try {
 		//at this moment library is not loaded yet - tet's do it
 		System.loadLibrary("javadomjni");
-		DocumentImpl.initialize();
 	} catch (Exception e) {
 		System.out.println("Can't load javadomjni.dll: "+e);
 		System.exit(-1);
 	}
-	getInstance().addDocumentLoadListener(new TestListener());
+	DOMAccessorImpl.getInstance().addDocumentLoadListener(new TestListener());
     }
 
     public static synchronized DOMAccessor getInstance() {
@@ -193,6 +192,7 @@ class TestListener implements DocumentLoadListener {
    }
 
     Object obj = (Object) doc;
+System.out.println("Loading new TestLoader...\n");
 
     TestLoader tl = new TestLoader(obj, 0);
     if (tl != null) {

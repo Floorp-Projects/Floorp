@@ -111,7 +111,7 @@ public class NamedNodeMapImpl_setNamedItem_Node_1 extends BWBaseTest implements 
          {
              Node newnode = ha;
              Node n  = map.setNamedItem(newnode);
-             if (n == null)
+             if (n != null)
              {
                 TestLoader.logErrPrint(" Could not set namedItem for Node " + attrName);
                 return BWBaseTest.FAILED;

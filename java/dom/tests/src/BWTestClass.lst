@@ -1,4 +1,1 @@
-org.mozilla.dom.test.ElementImpl_setAttributeNode_Attr_1
-#org.mozilla.dom.test.AttrImpl_getName
-#org.mozilla.dom.test.AttrImpl_setValue_String_0
-#org.mozilla.dom.test.AttrImpl_setValue_String_1
+org.mozilla.dom.test.TextImpl_splitText_int_2

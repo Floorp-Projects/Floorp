@@ -93,7 +93,7 @@ public class ElementImpl_removeAttribute_String_1 extends BWBaseTest implements 
              } else {
                 e.setAttributeNode(a);
                 e.removeAttribute("dummyattr_4");
-		if (e.getAttribute("dummyattr_4") != null) {
+		if (e.getAttribute("dummyattr_4").compareTo("") != 0) {
                   TestLoader.logErrPrint("Element 'removeAttribute(dummyattr_4) FAILED... ");
                   return BWBaseTest.FAILED;
                 } 

@@ -148,6 +148,7 @@ public class TestLoader extends Applet implements DocumentLoadListener
      String testDir = ".";
      String testFile = TESTFILE;
 
+System.out.println("Inside LoadTest");
      // Set Test directory
      testDir = propTable.getProperty("BW_TESTDIR");
      if (testDir == null) testDir=".";
@@ -239,7 +240,10 @@ public class TestLoader extends Applet implements DocumentLoadListener
            try {
 		System.out.println("################ Starting test ...");
               if (((BWBaseTest)classObj).execute(targetObj)) {
-                 txtPrint(s, "PASSED");
+                 if (((BWBaseTest)classObj).isUnsupported())
+                    txtPrint(s, "UNSUPPORTED METHOD");
+                 else 
+                    txtPrint(s, "PASSED");
 		 System.out.println("################ passed");
               } else {
                  txtPrint(s, "FAILED");

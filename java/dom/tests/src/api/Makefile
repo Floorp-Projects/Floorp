@@ -29,6 +29,7 @@ all:
 	$(JAVAC) -d $(CLASSDIR) $(JAVAFILES)
 
 JAVAFILES= AttrImpl_getName.java \
+	AttrImpl_getOwnerElement.java \
 	AttrImpl_getSpecified.java \
 	AttrImpl_getValue.java \
 	AttrImpl_setValue_String_0.java \
@@ -81,11 +82,18 @@ JAVAFILES= AttrImpl_getName.java \
 	CharacterDataImpl_substringData_int_int_6.java \
 	CharacterDataImpl_substringData_int_int_7.java \
 	CharacterDataImpl_substringData_int_int_8.java \
+	DOMImplementationImpl_createDocumentType_String_String_String_0.java \
+	DOMImplementationImpl_createDocumentType_String_String_String_String_0.java \
+	DOMImplementationImpl_createDocument_String_String_DocumentType_0.java \
 	DOMImplementationImpl_hasFeature_String_String_0.java \
 	DOMImplementationImpl_hasFeature_String_String_1.java \
 	DOMImplementationImpl_hasFeature_String_String_2.java \
 	DOMImplementationImpl_hasFeature_String_String_3.java \
 	DOMImplementationImpl_hasFeature_String_String_4.java \
+	DocumentImpl_createAttributeNS_String_String_0.java \
+	DocumentImpl_createAttributeNS_String_String_1.java \
+	DocumentImpl_createAttributeNS_String_String_2.java \
+	DocumentImpl_createAttributeNS_String_String_3.java \
 	DocumentImpl_createAttribute_String_0.java \
 	DocumentImpl_createAttribute_String_1.java \
 	DocumentImpl_createCDATASection_String_0.java \
@@ -93,10 +101,16 @@ JAVAFILES= AttrImpl_getName.java \
 	DocumentImpl_createComment_String_0.java \
 	DocumentImpl_createComment_String_1.java \
 	DocumentImpl_createDocumentFragment.java \
+	DocumentImpl_createElementNS_String_String_0.java \
+	DocumentImpl_createElementNS_String_String_1.java \
+	DocumentImpl_createElementNS_String_String_2.java \
+	DocumentImpl_createElementNS_String_String_3.java \
 	DocumentImpl_createElement_String_0.java \
 	DocumentImpl_createElement_String_1.java \
 	DocumentImpl_createEntityReference_String_0.java \
 	DocumentImpl_createEntityReference_String_1.java \
+	DocumentImpl_createEvent_String_0.java \
+	DocumentImpl_createEvent_String_1.java \
 	DocumentImpl_createProcessingInstruction_String_String_0.java \
 	DocumentImpl_createProcessingInstruction_String_String_1.java \
 	DocumentImpl_createProcessingInstruction_String_String_2.java \
@@ -105,40 +119,93 @@ JAVAFILES= AttrImpl_getName.java \
 	DocumentImpl_createTextNode_String_1.java \
 	DocumentImpl_getDoctype.java \
 	DocumentImpl_getDocumentElement.java \
+	DocumentImpl_getElementById_String_0.java \
+	DocumentImpl_getElementById_String_1.java \
+	DocumentImpl_getElementsByTagNameNS_String_String_0.java \
+	DocumentImpl_getElementsByTagNameNS_String_String_1.java \
+	DocumentImpl_getElementsByTagNameNS_String_String_2.java \
+	DocumentImpl_getElementsByTagNameNS_String_String_3.java \
 	DocumentImpl_getElementsByTagName_String_0.java \
 	DocumentImpl_getElementsByTagName_String_1.java \
 	DocumentImpl_getImplementation.java \
+	DocumentImpl_importNode_Node_boolean_0.java \
+	DocumentImpl_importNode_Node_boolean_1.java \
+	DocumentImpl_importNode_Node_boolean_2.java \
+	DocumentImpl_importNode_Node_boolean_3.java \
 	DocumentTypeImpl_getEntities.java \
+	DocumentTypeImpl_getInternalSubset.java \
 	DocumentTypeImpl_getName.java \
 	DocumentTypeImpl_getNotations.java \
+	DocumentTypeImpl_getPublicId.java \
+	DocumentTypeImpl_getSystemId.java \
+	ElementImpl_getAttributeNS_String_String_0.java \
+	ElementImpl_getAttributeNS_String_String_1.java \
+	ElementImpl_getAttributeNS_String_String_2.java \
+	ElementImpl_getAttributeNS_String_String_3.java \
+	ElementImpl_getAttributeNodeNS_String_String_0.java \
+	ElementImpl_getAttributeNodeNS_String_String_1.java \
+	ElementImpl_getAttributeNodeNS_String_String_2.java \
+	ElementImpl_getAttributeNodeNS_String_String_3.java \
 	ElementImpl_getAttributeNode_String_0.java \
 	ElementImpl_getAttributeNode_String_1.java \
 	ElementImpl_getAttribute_String_0.java \
 	ElementImpl_getAttribute_String_1.java \
+	ElementImpl_getElementsByTagNameNS_String_String_0.java \
+	ElementImpl_getElementsByTagNameNS_String_String_1.java \
+	ElementImpl_getElementsByTagNameNS_String_String_2.java \
+	ElementImpl_getElementsByTagNameNS_String_String_3.java \
 	ElementImpl_getElementsByTagName_String_0.java \
 	ElementImpl_getElementsByTagName_String_1.java \
 	ElementImpl_getTagName.java \
 	ElementImpl_normalize.java \
+	ElementImpl_removeAttributeNS_String_String_0.java \
+	ElementImpl_removeAttributeNS_String_String_1.java \
+	ElementImpl_removeAttributeNS_String_String_2.java \
+	ElementImpl_removeAttributeNS_String_String_3.java \
 	ElementImpl_removeAttributeNode_Attr_0.java \
 	ElementImpl_removeAttributeNode_Attr_1.java \
 	ElementImpl_removeAttribute_String_0.java \
 	ElementImpl_removeAttribute_String_1.java \
+	ElementImpl_setAttributeNS_String_String_String_0.java \
+	ElementImpl_setAttributeNS_String_String_String_1.java \
+	ElementImpl_setAttributeNS_String_String_String_2.java \
+	ElementImpl_setAttributeNS_String_String_String_3.java \
+	ElementImpl_setAttributeNS_String_String_String_4.java \
+	ElementImpl_setAttributeNS_String_String_String_5.java \
+	ElementImpl_setAttributeNS_String_String_String_6.java \
+	ElementImpl_setAttributeNS_String_String_String_7.java \
+	ElementImpl_setAttributeNS_String_String_String_8.java \
+	ElementImpl_setAttributeNS_String_String_String_9.java \
+	ElementImpl_setAttributeNodeNS_Attr_0.java \
+	ElementImpl_setAttributeNodeNS_Attr_1.java \
 	ElementImpl_setAttributeNode_Attr_0.java \
 	ElementImpl_setAttributeNode_Attr_1.java \
+	ElementImpl_setAttributeNode_Attr_2.java \
 	ElementImpl_setAttribute_String_String_0.java \
 	ElementImpl_setAttribute_String_String_1.java \
 	ElementImpl_setAttribute_String_String_2.java \
 	ElementImpl_setAttribute_String_String_3.java \
 	NamedNodeMapImpl_getLength.java \
+	NamedNodeMapImpl_getNamedItemNS_String_String_0.java \
+	NamedNodeMapImpl_getNamedItemNS_String_String_1.java \
+	NamedNodeMapImpl_getNamedItemNS_String_String_2.java \
+	NamedNodeMapImpl_getNamedItemNS_String_String_3.java \
 	NamedNodeMapImpl_getNamedItem_String_0.java \
 	NamedNodeMapImpl_getNamedItem_String_1.java \
 	NamedNodeMapImpl_item_int_0.java \
 	NamedNodeMapImpl_item_int_1.java \
 	NamedNodeMapImpl_item_int_2.java \
+	NamedNodeMapImpl_removeNamedItemNS_String_String_0.java \
+	NamedNodeMapImpl_removeNamedItemNS_String_String_1.java \
+	NamedNodeMapImpl_removeNamedItemNS_String_String_2.java \
+	NamedNodeMapImpl_removeNamedItemNS_String_String_3.java \
 	NamedNodeMapImpl_removeNamedItem_String_0.java \
 	NamedNodeMapImpl_removeNamedItem_String_1.java \
+	NamedNodeMapImpl_setNamedItemNS_Node_0.java \
+	NamedNodeMapImpl_setNamedItemNS_Node_1.java \
 	NamedNodeMapImpl_setNamedItem_Node_0.java \
 	NamedNodeMapImpl_setNamedItem_Node_1.java \
+	NamedNodeMapImpl_setNamedItem_Node_2.java \
 	NodeImpl_appendChild_Node_0.java \
 	NodeImpl_appendChild_Node_1.java \
 	NodeImpl_cloneNode_boolean_0.java \
@@ -151,12 +218,15 @@ JAVAFILES= AttrImpl_getName.java \
 	NodeImpl_getChildNodes.java \
 	NodeImpl_getFirstChild.java \
 	NodeImpl_getLastChild.java \
+	NodeImpl_getLocalName.java \
+	NodeImpl_getNamespaceURI.java \
 	NodeImpl_getNextSibling.java \
 	NodeImpl_getNodeName.java \
 	NodeImpl_getNodeType.java \
 	NodeImpl_getNodeValue.java \
 	NodeImpl_getOwnerDocument.java \
 	NodeImpl_getParentNode.java \
+	NodeImpl_getPrefix.java \
 	NodeImpl_getPreviousSibling.java \
 	NodeImpl_hasChildNodes.java \
 	NodeImpl_hashCode.java \
@@ -164,6 +234,7 @@ JAVAFILES= AttrImpl_getName.java \
 	NodeImpl_insertBefore_Node_Node_1.java \
 	NodeImpl_insertBefore_Node_Node_2.java \
 	NodeImpl_insertBefore_Node_Node_3.java \
+	NodeImpl_normalize.java \
 	NodeImpl_removeChild_Node_0.java \
 	NodeImpl_removeChild_Node_1.java \
 	NodeImpl_replaceChild_Node_Node_0.java \
@@ -172,6 +243,12 @@ JAVAFILES= AttrImpl_getName.java \
 	NodeImpl_replaceChild_Node_Node_3.java \
 	NodeImpl_setNodeValue_String_0.java \
 	NodeImpl_setNodeValue_String_1.java \
+	NodeImpl_setPrefix_String_0.java \
+	NodeImpl_setPrefix_String_1.java \
+	NodeImpl_supports_String_String_0.java \
+	NodeImpl_supports_String_String_1.java \
+	NodeImpl_supports_String_String_2.java \
+	NodeImpl_supports_String_String_3.java \
 	NodeImpl_toString.java \
 	NodeListImpl_getLength.java \
 	NodeListImpl_item_int_0.java \

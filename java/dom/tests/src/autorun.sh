@@ -559,7 +559,7 @@ do
    format=`echo $testcase | sed 's/\./\//g'`
    nom=`basename $format`
    testlog="$curdir/log/$nom.$id.log"
-   ./mozilla-bin $DOCFILE 2>$testlog 1>&2 &
+   ./mozilla-bin -P mozProfile $DOCFILE 2>$testlog 1>&2 &
 
    # dummy sleep to allow mozilla-bin to show up on process table
    sleep 3

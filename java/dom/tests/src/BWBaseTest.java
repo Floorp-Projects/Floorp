@@ -51,6 +51,31 @@ public class BWBaseTest implements Execution
      return null;
    }
 
+  /**
+   *  This method indicates whether a particular method is UNSUPPORTED or 
+   *  not.
+   *
+   */
+   public void setUnsupported()
+   {
+     UNSUPPORTED = true;
+   }
+
+  /**
+   *  This method indicates whether a particular method is UNSUPPORTED or 
+   *  not.
+   *
+   * 
+   *  @return         Value of boolean varibale UNSUPPORTED.
+   *
+   */
+   public boolean isUnsupported()
+   {
+     return UNSUPPORTED;
+   }
+
+
    public static boolean FAILED=false;
    public static boolean PASSED=true;
+   public boolean UNSUPPORTED=false;
 }

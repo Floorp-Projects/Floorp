@@ -93,7 +93,7 @@ public class ElementImpl_setAttributeNode_Attr_1 extends BWBaseTest implements E
                 return BWBaseTest.FAILED;
              } else {
                 Attr anode = e.setAttributeNode(a);
-                if (anode == null)
+                if (anode != null)
                 {
                   TestLoader.logErrPrint("Element 'setAttribute(dummyattr_5) FAILED... ");
                   return BWBaseTest.FAILED;

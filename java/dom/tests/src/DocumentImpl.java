@@ -42,6 +42,10 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
 
     // instantiated from JNI only
     private DocumentImpl() {}
+    public DocumentImpl(long p) {
+        super(p);
+    }
+
 
     public native Attr createAttribute(String name);
     public native CDATASection createCDATASection(String data);
@@ -60,16 +64,8 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
     public native DOMImplementation getImplementation();
 
 
-/* The only change in this file - private -> public*/
-    public static native void initialize();
-
     public Event createEvent(String type) throws DOMException {
         throw new UnsupportedOperationException();
-    }
-
-    static {
-	System.loadLibrary("javadomjni");
-	initialize();
     }
 
     public Node importNode(Node importedNode, boolean deep) throws DOMException {
