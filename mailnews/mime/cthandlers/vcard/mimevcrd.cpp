@@ -27,7 +27,6 @@
 #include "mimexpcom.h"
 #include "mimevcrd.h"
 #include "nsEscape.h"
-#include "nsVCardTransition.h"
 #include "comi18n.h"
 #include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
