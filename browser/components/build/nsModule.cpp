@@ -53,7 +53,6 @@
 #include "nsFontPackageHandler.h"
 #if defined(XP_WIN)
 #include "nsAlertsService.h" 
-#include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
 #if defined(MOZ_LDAP_XPCOM)
@@ -77,7 +76,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
 #if defined(MOZ_LDAP_XPCOM)
@@ -185,8 +183,6 @@ static const nsModuleComponentInfo components[] = {
       "@mozilla.org/locale/default-font-package-handler;1",
       nsFontPackageHandlerConstructor },
 #if defined(XP_WIN)
-    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
-      nsUrlWidgetConstructor },
     { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },

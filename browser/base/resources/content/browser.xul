@@ -25,11 +25,10 @@ Contributor(s): ______________________________________. -->
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
-<?xul-overlay href="chrome://navigator/content/linkToolbarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/bookmarks/bookmarksOverlay.xul"?>
 
 
 <!DOCTYPE window [
@@ -70,7 +69,7 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
 
   <!-- Shared Bookmarks Utility Library -->
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/personalToolbar.js"/>
   
   <!-- Navigator -->

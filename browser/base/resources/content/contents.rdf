@@ -4,14 +4,14 @@
 
   <!-- list all the packages being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:package:root">
-    <RDF:li resource="urn:mozilla:package:navigator"/>
+    <RDF:li resource="urn:mozilla:package:browser"/>
   </RDF:Seq>
 
   <!-- package information -->
-  <RDF:Description about="urn:mozilla:package:navigator"
-        chrome:displayName="Navigator"
+  <RDF:Description about="urn:mozilla:package:browser"
+        chrome:displayName="Browser"
         chrome:author="mozilla.org"
-        chrome:name="navigator"
+        chrome:name="browser"
         chrome:localeVersion="0.9.9"
         chrome:skinVersion="1.0">
   </RDF:Description>

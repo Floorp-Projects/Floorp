@@ -17,31 +17,28 @@
 #
 # Contributor(s): 
 
-comm.jar:
-	content/communicator/bookmarks/addBookmark.xul
-	content/communicator/bookmarks/addBookmark.js
-	content/communicator/bookmarks/bm-props.js
-	content/communicator/bookmarks/bm-props.xul
-	content/communicator/bookmarks/bookmarksDD.js
-	content/communicator/bookmarks/bookmarks.xul
-	content/communicator/bookmarks/bookmarks.js
-	content/communicator/bookmarks/bookmarks.css
-	content/communicator/bookmarks/bookmarks.xml
-	content/communicator/bookmarks/bookmarksTree.js
-	content/communicator/bookmarks/bookmarksOverlay.xul
-	content/communicator/bookmarks/bookmarksOverlay.js
-	content/communicator/bookmarks/bm-panel.xul
-	content/communicator/bookmarks/bookmarksPanel.js
-	content/communicator/bookmarks/findBookmark.js
-	content/communicator/bookmarks/findBookmark.xul
-	content/communicator/bookmarks/pref-bookmarks.xul
-	content/communicator/bookmarks/oTest.xul
+browser.jar:
+	content/browser/bookmarks/addBookmark.xul              (content/addBookmark.xul)
+	content/browser/bookmarks/addBookmark.js               (content/addBookmark.js)
+	content/browser/bookmarks/bm-props.js                  (content/bm-props.js)
+	content/browser/bookmarks/bm-props.xul                 (content/bm-props.xul)
+	content/browser/bookmarks/bookmarksDD.js               (content/bookmarksDD.js)
+	content/browser/bookmarks/bookmarks.xul                (content/bookmarks.xul)
+	content/browser/bookmarks/bookmarks.js                 (content/bookmarks.js)
+	content/browser/bookmarks/bookmarks.css                (content/bookmarks.css)
+	content/browser/bookmarks/bookmarks.xml                (content/bookmarks.xml)
+	content/browser/bookmarks/bookmarksTree.js             (content/bookmarksTree.js)
+	content/browser/bookmarks/bookmarksOverlay.xul         (content/bookmarksOverlay.xul)
+	content/browser/bookmarks/bookmarksOverlay.js          (content/bookmarksOverlay.js)
+	content/browser/bookmarks/bm-panel.xul                 (content/bm-panel.xul)
+	content/browser/bookmarks/bookmarksPanel.js            (content/bookmarksPanel.js)
+	content/browser/bookmarks/findBookmark.js              (content/findBookmark.js)
+	content/browser/bookmarks/findBookmark.xul             (content/findBookmark.xul)
 
 en-US.jar:
-	locale/en-US/communicator/bookmarks/addBookmark.dtd         (locale/en-US/addBookmark.dtd)
-	locale/en-US/communicator/bookmarks/bm-props.dtd            (locale/en-US/bm-props.dtd)
-	locale/en-US/communicator/bookmarks/bookmarks.dtd           (locale/en-US/bookmarks.dtd)
-	locale/en-US/communicator/bookmarks/bookmark.properties     (locale/en-US/bookmark.properties)
-	locale/en-US/communicator/bookmarks/bookmarksOverlay.dtd    (locale/en-US/bookmarksOverlay.dtd)
-	locale/en-US/communicator/bookmarks/findBookmark.dtd	    (locale/en-US/findBookmark.dtd)
-	locale/en-US/communicator/bookmarks/pref-bookmarks.dtd	    (locale/en-US/pref-bookmarks.dtd)
+	locale/en-US/browser/bookmarks/addBookmark.dtd         (locale/addBookmark.dtd)
+	locale/en-US/browser/bookmarks/bm-props.dtd            (locale/bm-props.dtd)
+	locale/en-US/browser/bookmarks/bookmarks.dtd           (locale/bookmarks.dtd)
+	locale/en-US/browser/bookmarks/bookmark.properties     (locale/bookmark.properties)
+	locale/en-US/browser/bookmarks/bookmarksOverlay.dtd    (locale/bookmarksOverlay.dtd)
+	locale/en-US/browser/bookmarks/findBookmark.dtd	      (locale/findBookmark.dtd)
