@@ -51,6 +51,12 @@ var formIndex = 0;
 var imageIndex = 0;
 var frameCount = 0;
 
+const COPYCOL_NONE = -1;
+const COPYCOL_META_CONTENT = 1;
+const COPYCOL_FORM_ACTION = 3;
+const COPYCOL_LINK_ADDRESS = 2;
+const COPYCOL_IMAGE_ADDRESS = 1;
+
 // a number of services I'll need later
 // the cache services
 const nsICacheService = Components.interfaces.nsICacheService;
@@ -61,6 +67,16 @@ var ftpCacheSession = cacheService.createSession("FTP", 0, true);
 // scriptable date formater, for pretty printing dates
 const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
 var dateService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].getService(nsIScriptableDateFormat);
+
+// clipboard helper
+try
+{
+  const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+}
+catch(e)
+{
+  // do nothing, later code will handle the error
+}
 
 // namespaces, don't need all of these yet...
 const XLinkNS = "http://www.w3.org/1999/xlink";
@@ -99,6 +115,7 @@ function onLoadPageInfo()
     else
       theWindow = window.opener.frames[0];
     theDocument = theWindow.document;
+
     docTitle = theBundle.getString("pageInfo.title");
   }
 
@@ -153,7 +170,7 @@ function makeGeneralTab()
   // get the meta tags
   var metaNodes = theDocument.getElementsByTagName("meta");
   var metaTree = document.getElementById("metatree");
-  var metaView = new pageInfoTreeView(["meta-name","meta-content"]);
+  var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_CONTENT);
 
   metaTree.treeBoxObject.view = metaView;
 
@@ -249,11 +266,10 @@ function makeFormTab()
   var formTree = document.getElementById("formtree");
   var formPreview = document.getElementById("formpreview");
   
-  var formView = new pageInfoTreeView(["form-number","form-name","form-action","form-method"]);
-  var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"]);
+  var formView = new pageInfoTreeView(["form-number","form-name","form-method","form-action"], COPYCOL_FORM_ACTION);
+  var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"], COPYCOL_NONE);
   formTree.treeBoxObject.view = formView;
   formPreview.treeBoxObject.view = fieldView;
-
   formList = grabAllForms(theWindow, theDocument);
   formIndex = 0;
 
@@ -261,7 +277,7 @@ function makeFormTab()
   for (var i = 0; i < length; i++)
   {
     var elem = formList[i];
-    formView.addRow([++formIndex, elem.name, elem.method, elem.action]);
+    formView.addRow([++formIndex, elem.name, elem.method, elem.getAttribute("action")]);  // use getAttribute() because of bug 122128
   }
   formView.rowCountChanged(0, length);
 
@@ -298,7 +314,7 @@ function onFormSelect()
   if (formView.selection.count == 1)
   {
     var formPreview = document.getElementById("formpreview");
-    var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"]);
+    var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"], COPYCOL_NONE);
     formPreview.treeBoxObject.view = fieldView;
 
     var clickedRow = formView.selection.currentIndex;
@@ -388,7 +404,7 @@ function makeLinkTab()
   var theBundle = document.getElementById("pageinfobundle");
   var linkTree = document.getElementById("linktree");
 
-  var linkView = new pageInfoTreeView(["link-number","link-name","link-address","link-type"]);
+  var linkView = new pageInfoTreeView(["link-number","link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
   linkTree.treeBoxObject.view = linkView;
 
   linkList = grabAllLinks(theWindow, theDocument);
@@ -400,6 +416,7 @@ function makeLinkTab()
   var linkRel = theBundle.getString("linkRel");
   var linkStylesheet = theBundle.getString("linkStylesheet");
   var linkRev = theBundle.getString("linkRev");
+  var linkX = theBundle.getString("linkX");
 
   var linktext = null;
   linkIndex = 0;
@@ -418,7 +435,7 @@ function makeLinkTab()
         linkView.addRow([++linkIndex, elem.alt, elem.href, linkArea]);
         break;
       case "input":
-        linkView.addRow([++linkIndex, elem.value || linkSubmit, elem.form.action, linkSubmission]);
+        linkView.addRow([++linkIndex, elem.value || linkSubmit, elem.form.getAttribute("action"), linkSubmission]); // use getAttribute() due to bug 122128
         break;
       case "link":
         if (elem.rel)
@@ -434,7 +451,13 @@ function makeLinkTab()
         linkView.addRow([++linkIndex, elem.rel || elem.rev, elem.href, linktext]);
         break;
       default:
-        dump("Page Info - makeLinkTab(): Hey, that's an odd one! ("+elem+")");
+        if (elem.hasAttributeNS(XLinkNS, "href"))
+        {
+          linktext = getValueText(elem);
+          linkView.AddRow([++linkIndex, linktext, elem.href, linkX]);
+        }
+        else
+          dump("Page Info - makeLinkTab(): Hey, that's an odd one! ("+elem+")");
         break;
     }
   }
@@ -466,11 +489,35 @@ function grabAllLinks(aWindow,aDocument)
     if (inputList[i].type.toLowerCase() == "submit")
       theList = theList.concat(inputList[i]);
 
+  theList = theList.concat(grabAllXLinks(aDocument));
+
   if ("links" in aDocument)
     return theList.concat(aDocument.links);
   else
     return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "a"));
 }
+
+function grabAllXLinks(aDocument)
+{
+  function XLinkFilter() 
+  {
+    this.acceptNode = function(aDocument)
+    {
+      return (aDocument.hasAttributeNS(XLinkNS, "href")) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    }     
+  }
+
+  var nodeFilter = new XLinkFilter;
+  var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, nodeFilter, true);
+
+  var theList = new Array();
+
+  while(iterator.nextNode())
+    theList = theList.concat(iterator.currentNode);
+
+  return theList;
+}
+
 
 function openURL(target)
 {
@@ -484,7 +531,7 @@ function makeMediaTab()
   var theBundle = document.getElementById("pageinfobundle");
   var imageTree = document.getElementById("imagetree");
 
-  var imageView = new pageInfoTreeView(["image-number","image-address","image-type"]);
+  var imageView = new pageInfoTreeView(["image-number","image-address","image-type"], COPYCOL_IMAGE_ADDRESS);
   imageTree.treeBoxObject.view = imageView;
 
   imageList = grabAllMedia(theWindow, theDocument);
@@ -697,18 +744,10 @@ function makePreview(item)
   document.getElementById("imageexpirestext").value = expirationText;
   document.getElementById("imagesizetext").value = sizeText;
 
-  // perhaps these can be done in the future
-  //document.getElementById("imageplugintext").value = "--";
-  //document.getElementById("imagecharsettext").value = "--";
-
   var width = ("width" in item && item.width) || "";
   var height = ("height" in item && item.height) || "";
-
   document.getElementById("imagewidth").value = theBundle.getFormattedString("mediaWidth", [width]);
   document.getElementById("imageheight").value = theBundle.getFormattedString("mediaHeight", [height]);
-
-  // also can't be done at the moment
-  //document.getElementById("imageencryptiontext").value = "--";
 
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
@@ -849,16 +888,33 @@ function getAbsoluteURL(url, node)
   return URL.spec;
 }
 
+function doCopy(event)
+{
+  if (!gClipboardHelper) 
+    return;
+
+  var elem = event.originalTarget;
+  if (elem && "treeBoxObject" in elem)
+    elem.treeBoxObject.view.performActionOnRow("copy", elem.currentIndex);
+
+  var text = elem.getAttribute("copybuffer");
+  if (text) 
+    gClipboardHelper.copyString(text);
+}
+
 //******** define a js object to implement nsITreeView
-function pageInfoTreeView(columnids)
+function pageInfoTreeView(columnids, copycol)
 {
   // columnids is an array of strings indicating the names of the columns, in order
   this.columnids = columnids;
   this.colcount = columnids.length
+  this.copycol = copycol;
   this.rows = 0;
   this.tree = null;
   this.data = new Array;
   this.selection = null;
+  this.sortcol = null;
+  this.sortdir = 0;
 }
 
 pageInfoTreeView.prototype = {
@@ -918,13 +974,25 @@ pageInfoTreeView.prototype = {
     this.data = null;
   },
 
+  handleCopy: function(row)
+  {
+    return (row < 0) ? "" : (this.data[row][this.copycol] || "");
+  },
+
+  performActionOnRow: function(action, row)
+  {
+    if (action == "copy")
+      var data = this.handleCopy(row)
+    this.tree.treeBody.parentNode.setAttribute("copybuffer", data);
+  },
+
   getRowProperties: function(row, column, prop) { },
   getCellProperties: function(row, prop) { },
   getColumnProperties: function(column, elem, prop) { },
   isContainer: function(index) { return false; },
   isContainerOpen: function(index) { return false; },
   isSeparator: function(index) { return false; },
-  isSorted: function() { return false; },
+  isSorted: function() { },
   canDropOn: function(index) { return false; },
   canDropBeforeAfter: function(index, before) { return false; },
   drop: function(row, orientation) { return false; },
@@ -940,6 +1008,5 @@ pageInfoTreeView.prototype = {
   cycleCell: function(row, column) { },
   isEditable: function(row, column) { return false; },
   performAction: function(action) { },
-  performActionOnRow: function(action, row) { },
   performActionOnCell: function(action, row, column) { }
 };
