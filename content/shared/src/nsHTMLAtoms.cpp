@@ -20,6 +20,7 @@
 nsIAtom* nsHTMLAtoms::a;
 nsIAtom* nsHTMLAtoms::above;
 nsIAtom* nsHTMLAtoms::action;
+nsIAtom* nsHTMLAtoms::active;
 nsIAtom* nsHTMLAtoms::align;
 nsIAtom* nsHTMLAtoms::alink;
 nsIAtom* nsHTMLAtoms::alt;
@@ -66,6 +67,7 @@ nsIAtom* nsHTMLAtoms::h5;
 nsIAtom* nsHTMLAtoms::h6;
 nsIAtom* nsHTMLAtoms::height;
 nsIAtom* nsHTMLAtoms::hidden;
+nsIAtom* nsHTMLAtoms::hover;
 nsIAtom* nsHTMLAtoms::href;
 nsIAtom* nsHTMLAtoms::hspace;
 nsIAtom* nsHTMLAtoms::httpEquiv;
@@ -94,6 +96,7 @@ nsIAtom* nsHTMLAtoms::onblur;
 nsIAtom* nsHTMLAtoms::onfocus;
 nsIAtom* nsHTMLAtoms::onload;
 nsIAtom* nsHTMLAtoms::onunload;
+nsIAtom* nsHTMLAtoms::outOfDate;
 nsIAtom* nsHTMLAtoms::overflow;
 nsIAtom* nsHTMLAtoms::p;
 nsIAtom* nsHTMLAtoms::pagex;
@@ -128,6 +131,7 @@ nsIAtom* nsHTMLAtoms::valign;
 nsIAtom* nsHTMLAtoms::value;
 nsIAtom* nsHTMLAtoms::variable;
 nsIAtom* nsHTMLAtoms::visibility;
+nsIAtom* nsHTMLAtoms::visited;
 nsIAtom* nsHTMLAtoms::vlink;
 nsIAtom* nsHTMLAtoms::vspace;
 nsIAtom* nsHTMLAtoms::width;
@@ -143,6 +147,7 @@ void nsHTMLAtoms::AddrefAtoms()
     a = NS_NewAtom("A");
     above = NS_NewAtom("ABOVE");
     action = NS_NewAtom("ACTION");
+    active = NS_NewAtom("ACTIVE");
     align = NS_NewAtom("ALIGN");
     alink = NS_NewAtom("ALINK");
     alt = NS_NewAtom("ALT");
@@ -189,6 +194,7 @@ void nsHTMLAtoms::AddrefAtoms()
     h6 = NS_NewAtom("H6");
     height = NS_NewAtom("HEIGHT");
     hidden = NS_NewAtom("HIDDEN");
+    hover = NS_NewAtom("HOVER");
     href = NS_NewAtom("HREF");
     hspace = NS_NewAtom("HSPACE");
     httpEquiv = NS_NewAtom("HTTP-EQUIV");
@@ -217,6 +223,7 @@ void nsHTMLAtoms::AddrefAtoms()
     onfocus = NS_NewAtom("ONFOCUS");
     onload = NS_NewAtom("ONLOAD");
     onunload = NS_NewAtom("ONUNLOAD");
+    outOfDate = NS_NewAtom("OUT-OF-DATE");
     overflow = NS_NewAtom("OVERFLOW");
     p = NS_NewAtom("P");
     pagex = NS_NewAtom("PAGEX");
@@ -251,6 +258,7 @@ void nsHTMLAtoms::AddrefAtoms()
     value = NS_NewAtom("VALUE");
     variable = NS_NewAtom("VARIABLE");
     visibility = NS_NewAtom("VISIBILITY");
+    visited = NS_NewAtom("VISITED");
     vlink = NS_NewAtom("VLINK");
     vspace = NS_NewAtom("VSPACE");
     width = NS_NewAtom("WIDTH");
@@ -267,6 +275,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(a);
     NS_RELEASE(above);
     NS_RELEASE(action);
+    NS_RELEASE(active);
     NS_RELEASE(align);
     NS_RELEASE(alink);
     NS_RELEASE(alt);
@@ -313,6 +322,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(h6);
     NS_RELEASE(height);
     NS_RELEASE(hidden);
+    NS_RELEASE(hover);
     NS_RELEASE(href);
     NS_RELEASE(hspace);
     NS_RELEASE(httpEquiv);
@@ -341,6 +351,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(onfocus);
     NS_RELEASE(onload);
     NS_RELEASE(onunload);
+    NS_RELEASE(outOfDate);
     NS_RELEASE(overflow);
     NS_RELEASE(p);
     NS_RELEASE(pagex);
@@ -375,6 +386,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(value);
     NS_RELEASE(variable);
     NS_RELEASE(visibility);
+    NS_RELEASE(visited);
     NS_RELEASE(vlink);
     NS_RELEASE(vspace);
     NS_RELEASE(width);
