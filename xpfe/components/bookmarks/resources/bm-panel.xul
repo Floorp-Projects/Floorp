@@ -34,8 +34,9 @@
 </popup>
 
 <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
-      datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
-      ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+   flex="100%" style="height: 100%"
+   datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
+   ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
 
   <!-- Commented out until new tree content model and template builder can play nice -->
   <template>
@@ -65,13 +66,7 @@
       </treechildren>
     </rule>
   </template>
-
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-
-  <!-- remove the TREEHEAD when bug 9923 is fixed. -->
-  <treehead>
-    <treerow><treecell/></treerow>
-  </treehead>
 </tree>
 
 </window>
