@@ -19,8 +19,6 @@
 #ifndef nsSocketTransport_h___
 #define nsSocketTransport_h___
 
-#define NSPIPE2
-
 #include "prclist.h"
 #include "prio.h"
 #include "prnetdb.h"
@@ -33,14 +31,10 @@
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
 #include "nsIDNSListener.h"
-#ifndef NSPIPE2
-#include "nsIBuffer.h"
-#else
 #include "nsIPipe.h"
-#endif
 
-#define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (4*1024)
-#define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (64*1024)
+#define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)
+#define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
 
 //
 // This is the size of the global buffer used by all nsSocketTransport 
@@ -116,26 +110,15 @@ class nsSocketTransportService;
 
 class nsSocketTransport : public nsIChannel, 
                           public nsIDNSListener,
-#ifndef NSPIPE2
-                          public nsIBufferObserver
-#else
                           public nsIPipeObserver
-#endif
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
 
-#ifndef NSPIPE2
-  // nsIBufferObserver methods:
-  NS_IMETHOD OnFull (nsIBuffer* aBuffer);
-  NS_IMETHOD OnWrite(nsIBuffer* aBuffer, PRUint32 aCount);
-  NS_IMETHOD OnEmpty(nsIBuffer* aBuffer);
-#else
   // nsIPipeObserver methods:
   NS_DECL_NSIPIPEOBSERVER
-#endif
 
   // nsIDNSListener methods:
   NS_DECL_NSIDNSLISTENER
@@ -215,25 +198,15 @@ protected:
 
   nsCOMPtr<nsISupports>       mReadContext;
   nsCOMPtr<nsIStreamListener> mReadListener;
-#ifndef NSPIPE2
-  nsCOMPtr<nsIInputStream>    mReadStream;
-  nsCOMPtr<nsIBuffer>         mReadBuffer;
-#else
   nsCOMPtr<nsIBufferInputStream>  mReadPipeIn;
   nsCOMPtr<nsIBufferOutputStream> mReadPipeOut;
-#endif
 
   PRInt32                     mWriteCount;
   nsCOMPtr<nsISupports>       mWriteContext;
   nsCOMPtr<nsIStreamObserver> mWriteObserver;
-#ifndef NSPIPE2
-  nsCOMPtr<nsIInputStream>    mWriteStream;
-  nsCOMPtr<nsIBuffer>         mWriteBuffer;
-#else
   nsCOMPtr<nsIInputStream>        mWriteFromStream;
   nsCOMPtr<nsIBufferInputStream>  mWritePipeIn;
   nsCOMPtr<nsIBufferOutputStream> mWritePipeOut;
-#endif
   PRUint32 mSourceOffset;
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;

@@ -89,7 +89,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
         nsIHTTPEventSink *sink = nsnull;
 
         (void) i_EventSinkGetter->GetEventSink(i_Verb, NS_GET_IID(nsIHTTPEventSink),
-                                             (nsISupports**)&sink);
+                                               (nsISupports**)&sink);
         mEventSink = sink;
         NS_IF_RELEASE(sink);
     }
