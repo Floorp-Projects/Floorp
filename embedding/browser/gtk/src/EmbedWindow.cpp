@@ -191,7 +191,9 @@ EmbedWindow::CreateBrowserWindow(PRUint32 aChromeFlags,
 NS_IMETHODIMP
 EmbedWindow::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[SIZE_TO], aCX, aCY);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -233,7 +235,9 @@ EmbedWindow::GetPersistence(PRBool *aPersistX, PRBool *aPersistY,
 NS_IMETHODIMP
 EmbedWindow::Destroy(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[DESTROY_BROWSER]);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

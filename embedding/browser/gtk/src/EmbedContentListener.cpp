@@ -19,6 +19,8 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
+#include <nsXPIDLString.h>
+
 #include "EmbedContentListener.h"
 #include "EmbedPrivate.h"
 
@@ -47,8 +49,21 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
 				     const char *aWindowTarget,
 				     PRBool     *aAbortOpen)
 {
-  printf("XXX OnStartURIOpen\n");
-  *aAbortOpen = PR_FALSE;
+  nsresult rv;
+
+  nsXPIDLCString specString;
+  rv = aURI->GetSpec(getter_Copies(specString));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  gint return_val = FALSE;
+  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+		  moz_embed_signals[OPEN_URI],
+		  (const char *)specString, &return_val);
+
+  *aAbortOpen = return_val;
+
   return NS_OK;
 }
 
