@@ -61,46 +61,130 @@ class nsIEventListenerManager;
 { 0x78030220, 0x9447, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-// A node of content in a documents content model. This interface
-// is supported by all content objects.
+/**
+ * A node of content in a document's content model. This interface
+ * is supported by all content objects.
+ */
 class nsIContent : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
+  /**
+   * Get the document for this content.
+   * @param aResult the document [OUT]
+   */
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const = 0;
 
+  /**
+   * Set the document for this content.
+   *
+   * @param aDocument the new document to set (could be null)
+   * @param aDeep whether to set the document on children
+   * @param aCompileEventHandlers whether to initialize the event handlers in
+   *        the document (used by nsXULElement)
+   */
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers) = 0;
 
+  /**
+   * Get the parent content for this content.
+   * @param aResult the parent, or null if no parent [OUT]
+   */
   NS_IMETHOD GetParent(nsIContent*& aResult) const = 0;
 
+  /**
+   * Set the parent content for this content.  (This does not add the child to
+   * its parent's child list.)
+   * @param aParent the new parent content to set (could be null)
+   */
   NS_IMETHOD SetParent(nsIContent* aParent) = 0;
 
   /**
-   * Get the namespace that this tag is defined in
+   * Get the namespace that this element's tag is defined in
+   * @param aResult the namespace [OUT]
    */
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const = 0;
 
+  /**
+   * Get the tag for this element
+   * @param aResult the tag [OUT]
+   */
   NS_IMETHOD GetTag(nsIAtom*& aResult) const = 0;
 
+  /**
+   * Get the NodeInfo for this element
+   * @param aResult the tag [OUT]
+   */
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const = 0;
 
+  /**
+   * Tell whether this element can contain children
+   * @param aResult whether this element can contain children [OUT]
+   */
   NS_IMETHOD CanContainChildren(PRBool& aResult) const = 0;
 
+  /**
+   * Get the number of children
+   * @param aResult the number of children [OUT]
+   */
   NS_IMETHOD ChildCount(PRInt32& aResult) const = 0;
 
+  /**
+   * Get a child by index
+   * @param aIndex the index of the child to get, or null if index out of bounds
+   * @param aResult the child [OUT]
+   */
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const = 0;
 
+  /**
+   * Get the index of a child within this content
+   * @param aPossibleChild the child to get the index
+   * @param aIndex the index of the child, or -1 if not a child [OUT]
+   */
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const = 0;
 
+  /**
+   * Insert a content node at a particular index.
+   *
+   * @param aKid the content to insert
+   * @param aIndex the index it is being inserted at (the index it will have
+   *        after it is inserted)
+   * @param aNotify whether to notify the document that the insert has
+   *        occurred
+   * @param aDeepSetDocument whether to set document on all children of aKid
+   */
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
                            PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
+  /**
+   * Remove a child and replace it with another.
+   *
+   * @param aKid the content to replace with
+   * @param aIndex the index of the content to replace
+   * @param aNotify whether to notify the document that the replace has
+   *        occurred
+   * @param aDeepSetDocument whether to set document on all children of aKid
+   */
   NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
                             PRBool aNotify, PRBool aDeepSetDocument) = 0;
 
+  /**
+   * Append a content node to the end of the child list.
+   *
+   * @param aKid the content to append
+   * @param aNotify whether to notify the document that the replace has
+   *        occurred
+   * @param aDeepSetDocument whether to set document on all children of aKid
+   */
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
                            PRBool aDeepSetDocument) = 0;
 
+  /**
+   * Remove a child from this content node.
+   *
+   * @param aIndex the index of the child to remove
+   * @param aNotify whether to notify the document that the replace has
+   *        occurred
+   */
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) = 0;
 
   /**
@@ -111,7 +195,7 @@ public:
    *
    * @param aStr the unparsed attribute string
    * @param aName out parameter representing the complete name of the
-   * attribute
+   *        attribute
    */
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
                                  nsINodeInfo*& aNodeInfo) = 0;
@@ -123,12 +207,11 @@ public:
    * of the canonical form into the underlying content specific
    * form.
    *
+   * @param aNameSpaceID the namespace of the attribute
    * @param aName the name of the attribute
-
-   * @param aValue may legitimately be the empty string.
-   *
-   * @param aUpdateMask specifies how whether or not the document should be
-   * notified of the attribute change.
+   * @param aValue the value to set
+   * @param aNotify specifies how whether or not the document should be
+   *        notified of the attribute change.
    */
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue,
@@ -142,11 +225,10 @@ public:
    * form.
    *
    * @param aNodeInfo the node info (name, prefix, namespace id) of the
-   * attribute
-   * @param aValue may legitimately be the empty string.
-   *
+   *        attribute
+   * @param aValue the value to set
    * @param aNotify specifies whether or not the document should be
-   * notified of the attribute change.
+   *        notified of the attribute change.
    */
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
                      const nsAString& aValue,
@@ -156,18 +238,14 @@ public:
    * Get the current value of the attribute. This returns a form that is
    * suitable for passing back into SetAttr.
    *
-   * <UL>
-   *
-   * <LI>If the attribute is not set and has no default value, return
-   * NS_CONTENT_ATTR_NOT_THERE.
-   *
-   * <LI>If the attribute exists, but has no value, return
-   * NS_CONTENT_ATTR_NO_VALUE.
-   *
-   * <LI>If the attribute has a non-empty value, set ret to
-   * be the value, and return NS_CONTENT_ATTR_HAS_VALUE (== NS_OK).
-   *
-   * </UL>
+   * @param aNameSpaceID the namespace of the attr
+   * @param aName the name of the attr
+   * @param aResult the value (may legitimately be the empty string) [OUT]
+   * @throws NS_CONTENT_ATTR_NOT_THERE if the attribute is not set and has no
+   *         default value
+   * @throws NS_CONTENT_ATTR_NO_VALUE if the attribute exists but has no value
+   * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
+   *         non-empty value (==NS_OK)
    */
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                      nsAString& aResult) const = 0;
@@ -176,30 +254,26 @@ public:
    * Get the current value and prefix of the attribute. This returns a form
    * that is suitable for passing back into SetAttr.
    *
-   * <UL>
-   *
-   * <LI>If the attribute is not set and has no default value, return
-   * NS_CONTENT_ATTR_NOT_THERE.
-   *
-   * <LI>If the attribute exists, but has no value, return
-   * NS_CONTENT_ATTR_NO_VALUE.
-   *
-   * <LI>If the attribute has a non-empty value, set ret to
-   * be the value, and return NS_CONTENT_ATTR_HAS_VALUE (== NS_OK).
-   *
-   * </UL>
-   *
-   * NOTE! aPrefix is an OUT parameter.
+   * @param aNameSpaceID the name space of the attr to get
+   * @param aName the name of the attr
+   * @param aPrefix the prefix of the attr [OUT]
+   * @param aName the name of the attr [OUT]
+   * @throws NS_CONTENT_ATTR_NOT_THERE if the attribute is not set and has no
+   *         default value
+   * @throws NS_CONTENT_ATTR_NO_VALUE if the attribute exists but has no value
+   * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
+   *         non-empty value (==NS_OK)
    */
 
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      nsIAtom*& aPrefix, nsAString& aResult) const = 0;
 
   /**
-   * Determine if an attribute has been set.
+   * Determine if an attribute has been set (empty string or otherwise).
    *
    * @param aNameSpaceId the namespace id of the attribute
    * @param aAttr the attribute name
+   * @return whether an attribute exists
    */
 
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const = 0;
@@ -207,22 +281,22 @@ public:
   /**
    * Remove an attribute so that it is no longer explicitly specified.
    *
+   * @param aNameSpaceID the namespace id of the attribute
    * @param aAttr the name of the attribute to unset
-   * 
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change
-   *
    */
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
                        PRBool aNotify) = 0;
 
 
   /**
-   * Get the namespace & name of a given attribute.
+   * Get the namespace / name / prefix of a given attribute.
    * 
    * @param aIndex the index of the attribute name
-   * @param aNameSpace an out param of the name space ID of the attribute name
-   * @param aName an out param if the attribute name
+   * @param aNameSpace the name space ID of the attribute name [OUT]
+   * @param aName the attribute name [OUT]
+   * @param aPrefix the attribute prefix [OUt]
    *
    */
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
@@ -233,9 +307,7 @@ public:
   /**
    * Get the number of all specified attributes.
    *
-   * @param aCountResult an out parameter to be filled in with
-   *        the number of attributes
-   *
+   * @param aCountResult the number of attributes [OUT]
    */
   NS_IMETHOD GetAttrCount(PRInt32& aCountResult) const = 0;
 
@@ -243,18 +315,57 @@ public:
    * Inform content of range ownership changes.  This allows content
    * to do the right thing to ranges in the face of changes to the content
    * model.
-
-   * RangeAdd -- informs content that it owns one or both range endpoints
    * RangeRemove -- informs content that it no longer owns a range endpoint
    * GetRangeList -- returns the list of ranges that have one or both endpoints
    *                 within this content item
    */
+  /**
+   * Inform content that it owns one or both range endpoints
+   * @param aRange the range the content owns
+   */
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange) = 0;
+  /**
+   * Inform content that it no longer owns either range endpoint
+   * @param aRange the range the content no longer owns
+   */
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange) = 0;
+  /**
+   * Get the list of ranges that have either endpoint in this content item
+   * @param aResult the list of ranges owned partially by this content [OUT]
+   */
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const = 0;
   
   /**
-   * Handle a DOM event for this piece of content.
+   * Handle a DOM event for this piece of content.  This method is responsible
+   * for handling and controlling all three stages of events, capture, local
+   * and bubble.  It also does strange things to anonymous content which whiz
+   * right by this author's head.
+   *
+   * Here are some beginning explanations:
+   * - if in INIT or CAPTURE mode, it must pass the event to its parent in
+   *   CAPTURE mode (this happens before the event is fired, therefore the
+   *   firing of events will occur from the root up to the target).
+   * - The event is fired to listeners.
+   * - If in INIT or BUBBLE mode, it passes the event to its parent in BUBBLE
+   *   mode.  This means that the events will be fired up the chain starting
+   *   from the target to the ancestor.
+   *
+   * NOTE: if you are extending nsGenericElement and have to do a default
+   * action, call super::HandleDOMEvent() first and check for
+   * aEventStatus != nsEventStatus_eIgnore and make sure you are not in CAPTURE
+   * mode before proceeding.
+   *
+   * XXX Go comment that method, Will Robinson.
+   * @param aPresContext the current presentation context
+   * @param aEvent the event that is being propagated
+   * @param aDOMEvent a special event that may contain a modified target.  Pass
+   *        in null here or aDOMEvent if you are in HandleDOMEvent already;
+   *        don't worry your pretty little head about it.
+   * @param aFlags flags that describe what mode we are in.  Generally
+   *        NS_EVENT_FLAG_CAPTURE, NS_EVENT_FLAG_BUBBLE and NS_EVENT_FLAG_INIT
+   *        are the ones that matter.
+   * @param aEventStatus the status returned from the function.  Generally
+   *        nsEventStatus_eIgnore
    */
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
@@ -263,50 +374,97 @@ public:
                             nsEventStatus* aEventStatus) = 0;
 
   /**
-   * Get and set a unique ID for this piece of content.
+   * Get a unique ID for this piece of content.
    * This ID is used as a key to store state information 
    * about this content object and its associated frame object.
    * The state information is stored in a dictionary that is
    * manipulated by the frame manager (nsIFrameManager) inside layout.
    * An opaque pointer to this dictionary is passed to the session
    * history as a handle associated with the current document's state
+   *
+   * @param aID the unique ID for this content [OUT]
    */
   NS_IMETHOD GetContentID(PRUint32* aID) = 0;
+  /**
+   * Set the unique content ID for this content.
+   * @param aID the ID to set
+   */
   NS_IMETHOD SetContentID(PRUint32 aID) = 0;
 
   /**
+   * Set the focus on this content.  This is generally something for the event
+   * state manager to do, not ordinary people.  Ordinary people should do
+   * something like nsGenericHTMLElement::SetElementFocus().  This method is
+   * the end result, the point where the content finds out it has been focused.
+   * 
    * All content elements are potentially focusable (according to CSS3).
-   * These methods are used to set and remove the focus on the content
-   * element.
+   *
+   * @param aPresContext the pres context
+   * @see nsGenericHTMLElement::SetElementFocus()
    */
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) = 0;
+  /**
+   * Remove the focus on this content.  This is generally something for the
+   * event state manager to do, not ordinary people.  Ordinary people should do
+   * something like nsGenericHTMLElement::SetElementFocus().  This method is
+   * the end result, the point where the content finds out it has been focused.
+   * 
+   * All content elements are potentially focusable (according to CSS3).
+   *
+   * @param aPresContext the pres context
+   * @see nsGenericHTMLElement::SetElementFocus()
+   */
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) = 0;
 
   /**
-   * APIs for setting and obtaining the content node
-   * with the binding responsible for our construction (and existence)
-   * Used by anonymous content (XBL-generated). null for all explicit content.
+   * Sets content node with the binding responsible for our construction (and
+   * existence).  Used by anonymous content (XBL-generated). null for all
+   * explicit content.
+   *
+   * @param aContent the new binding parent
    */
   NS_IMETHOD SetBindingParent(nsIContent* aContent) = 0;
+  /**
+   * Gets content node with the binding responsible for our construction (and
+   * existence).  Used by anonymous content (XBL-generated). null for all
+   * explicit content.
+   *
+   * @param aContent the binding parent [OUT]
+   */
   NS_IMETHOD GetBindingParent(nsIContent** aContent) = 0;
 
   /**
    * Bit-flags to pass (or'ed together) to IsContentOfType()
    */
   enum {
+    /** text elements */
     eTEXT                = 0x00000001,
+    /** dom elements */
     eELEMENT             = 0x00000002,
+    /** html elements */
     eHTML                = 0x00000004,
+    /** form controls */
     eHTML_FORM_CONTROL   = 0x00000008,
+    /** XUL elements */
     eXUL                 = 0x00000010
   };
 
   /**
    * API for doing a quick check if a content object is of a given
-   * type, such as HTML, XUL, Text, ...
+   * type, such as HTML, XUL, Text, ...  Use this when you can instead of
+   * checking the tag.
+   *
+   * @param aFlags what types you want to test for (see above, eTEXT, eELEMENT,
+   *        eHTML, eHTML_FORM_CONTROL, eXUL)
+   * @return whether the content matches ALL flags passed in
    */
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) = 0;
 
+  /**
+   * Get the event listener manager, the guy you talk to to register for events
+   * on this element.
+   * @param aResult the event listener manager [OUT]
+   */
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
 
   /**
@@ -372,11 +530,14 @@ public:
 };
 
 // nsresult codes for GetAttr
+/** Returned if the attr exists and has a value */
 #define NS_CONTENT_ATTR_HAS_VALUE NS_OK
 
+/** Returned if the attr exists but has no value */
 #define NS_CONTENT_ATTR_NO_VALUE \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,0)
 
+/** Returned if the attr does not exist */
 #define NS_CONTENT_ATTR_NOT_THERE \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,1)
 
