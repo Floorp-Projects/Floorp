@@ -45,11 +45,15 @@ public:
   static nsIAtom* tty;
   static nsIAtom* tv;
 
+  // Alphabetical list of standard name space prefixes
+  static nsIAtom* htmlNameSpace;
+  static nsIAtom* xmlNameSpace;
+
   // Alphabetical list of frame additional child list names
   static nsIAtom* absoluteList;
+  static nsIAtom* bulletList;
   static nsIAtom* colGroupList;
   static nsIAtom* floaterList;
-  static nsIAtom* bulletList;
 };
 
 #endif /* nsLayoutAtoms_h___ */
