@@ -46,52 +46,12 @@
 
 #ifdef DEBUG_verbose
 extern PRUint32 gScriptCount;
+extern PRUint32 gValueCount;
 #endif
 
 /*******************************************************************************
  * reflected jsd data structures
  *******************************************************************************/
-
-class jsdContext : public jsdIContext
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_JSDICONTEXT
-
-    /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdContext (JSDContext *aCx) : mCx(aCx)
-    {
-        NS_INIT_ISUPPORTS();
-        printf ("++++++ jsdContext\n");
-    }
-
-    static jsdIContext *FromPtr (JSDContext *aCx)
-    {
-        if (!aCx)
-            return 0;
-        
-        void *data = JSD_GetContextPrivate (aCx);
-        jsdIContext *rv;
-        
-        if (data) {
-            rv = NS_STATIC_CAST(jsdIContext *, data);
-        } else {
-            rv = new jsdContext (aCx);
-            NS_IF_ADDREF(rv);  // addref for the SetContextPrivate
-            JSD_SetContextPrivate (aCx, NS_STATIC_CAST(void *, rv));
-        }
-        
-        NS_IF_ADDREF(rv); // addref for the return value
-        return rv;
-    }
-
-    virtual ~jsdContext() { printf ("------ ~jsdContext\n"); }
-  private:            
-    jsdContext(); /* no implementation */
-    jsdContext(const jsdContext&); /* no implementation */
-    
-    JSDContext *mCx;
-};
 
 class jsdPC : public jsdIPC
 {
@@ -279,9 +239,134 @@ class jsdStackFrame : public jsdIStackFrame
     jsdStackFrame(); /* no implementation */
     jsdStackFrame(const jsdStackFrame&); /* no implementation */
 
-    JSDContext     *mCx;
-    JSDThreadState *mThreadState;
+    JSDContext        *mCx;
+    JSDThreadState    *mThreadState;
     JSDStackFrameInfo *mStackFrameInfo;
+};
+
+class jsdValue : public jsdIValue
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIVALUE
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdValue (JSDContext *aCx, JSDValue *aValue) : mCx(aCx), mValue(aValue)
+    {
+#ifdef DEBUG_verbose
+        printf ("++++++ jsdValue %i\n", ++gValueCount);
+#endif
+        NS_INIT_ISUPPORTS();
+    }
+
+    static jsdIValue *FromPtr (JSDContext *aCx, JSDValue *aValue)
+    {
+        if (!aValue)
+            return 0;
+
+        jsdIValue *rv;
+        rv = new jsdValue (aCx, aValue);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+    virtual ~jsdValue() 
+    {
+#ifdef DEBUG_verbose
+        printf ("----- jsdValue %i\n", --gValueCount);
+#endif
+        JSD_DropValue (mCx, mValue);
+    }
+    
+  private:
+    jsdValue(); /* no implementation */
+    jsdValue (const jsdScript&); /* no implementation */
+    
+    JSDContext *mCx;
+    JSDValue  *mValue;
+};
+
+/******************************************************************************
+ * debugger service
+ ******************************************************************************/
+
+#define JSDSERVICE_CID                               \
+{ /* f1299dc2-1dd1-11b2-a347-ee6b7660e048 */         \
+     0xf1299dc2,                                     \
+     0x1dd1,                                         \
+     0x11b2,                                         \
+    {0xa3, 0x47, 0xee, 0x6b, 0x76, 0x60, 0xe0, 0x48} \
+}
+
+class jsdService : public jsdIDebuggerService
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIDEBUGGERSERVICE
+
+    jsdService();
+    virtual ~jsdService() { }
+    
+    static jsdService *GetService ();
+    
+  private:
+    PRBool      mOn;
+    PRUint32    mNestedLoopLevel;
+    JSDContext *mCx;
+    nsCOMPtr<jsdIExecutionHook> mBreakpointHook;
+    nsCOMPtr<jsdIExecutionHook> mErrorHook;
+    nsCOMPtr<jsdIExecutionHook> mDebuggerHook;
+    nsCOMPtr<jsdIExecutionHook> mInterruptHook;
+    nsCOMPtr<jsdIScriptHook>    mScriptHook;
+    nsCOMPtr<jsdIExecutionHook> mThrowHook;
+};
+
+#endif /* JSDSERVICE_H___ */
+
+
+/* graveyard */
+
+#if 0
+
+class jsdContext : public jsdIContext
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDICONTEXT
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdContext (JSDContext *aCx) : mCx(aCx)
+    {
+        NS_INIT_ISUPPORTS();
+        printf ("++++++ jsdContext\n");
+    }
+
+    static jsdIContext *FromPtr (JSDContext *aCx)
+    {
+        if (!aCx)
+            return 0;
+        
+        void *data = JSD_GetContextPrivate (aCx);
+        jsdIContext *rv;
+        
+        if (data) {
+            rv = NS_STATIC_CAST(jsdIContext *, data);
+        } else {
+            rv = new jsdContext (aCx);
+            NS_IF_ADDREF(rv);  // addref for the SetContextPrivate
+            JSD_SetContextPrivate (aCx, NS_STATIC_CAST(void *, rv));
+        }
+        
+        NS_IF_ADDREF(rv); // addref for the return value
+        return rv;
+    }
+
+    virtual ~jsdContext() { printf ("------ ~jsdContext\n"); }
+  private:            
+    jsdContext(); /* no implementation */
+    jsdContext(const jsdContext&); /* no implementation */
+    
+    JSDContext *mCx;
 };
 
 class jsdThreadState : public jsdIThreadState
@@ -323,72 +408,4 @@ class jsdThreadState : public jsdIThreadState
     JSDThreadState *mThreadState;
 };
 
-class jsdValue : public jsdIValue
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_JSDIVALUE
-
-    /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdValue (JSDContext *aCx, JSDValue *aValue) : mCx(aCx), mValue(aValue)
-    {
-        NS_INIT_ISUPPORTS();
-    }
-
-    static jsdIValue *FromPtr (JSDContext *aCx, JSDValue *aValue)
-    {
-        if (!aValue)
-            return 0;
-
-        jsdIValue *rv;
-        rv = new jsdValue (aCx, aValue);
-        NS_IF_ADDREF(rv);
-        return rv;
-    }
-
-    virtual ~jsdValue() { JSD_DropValue (mCx, mValue); }
-    
-  private:
-    jsdValue(); /* no implementation */
-    jsdValue (const jsdScript&); /* no implementation */
-    
-    JSDContext *mCx;
-    JSDValue  *mValue;
-};
-
-/******************************************************************************
- * debugger service
- ******************************************************************************/
-
-#define JSDSERVICE_CID                               \
-{ /* f1299dc2-1dd1-11b2-a347-ee6b7660e048 */         \
-     0xf1299dc2,                                     \
-     0x1dd1,                                         \
-     0x11b2,                                         \
-    {0xa3, 0x47, 0xee, 0x6b, 0x76, 0x60, 0xe0, 0x48} \
-}
-
-class jsdService : public jsdIDebuggerService
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_JSDIDEBUGGERSERVICE
-
-    jsdService();
-    virtual ~jsdService() { }
-    
-    static jsdService *GetService ();
-    
-  private:
-    PRBool      mOn;
-    PRUint32    mNestedLoopLevel;
-    JSDContext *mCx;
-    nsCOMPtr<jsdIExecutionHook> mBreakpointHook;
-    nsCOMPtr<jsdIExecutionHook> mDebugBreakHook;
-    nsCOMPtr<jsdIExecutionHook> mDebuggerHook;
-    nsCOMPtr<jsdIExecutionHook> mInterruptHook;
-    nsCOMPtr<jsdIScriptHook>    mScriptHook;
-};
-
-#endif /* JSDSERVICE_H___ */
-
+#endif
