@@ -1218,19 +1218,6 @@ nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
   return NS_OK;
 }
 
-nsChangeHint
-nsCSSDeclaration::GetStyleImpact() const
-{
-  nsChangeHint hint = NS_STYLE_HINT_NONE;
-  for (PRInt32 index = mOrder.Count() - 1; index >= 0; --index) {
-    nsCSSProperty property = OrderValueAt(index);
-    if (eCSSProperty_UNKNOWN < property) {
-      NS_UpdateHint(hint, nsCSSProps::kHintTable[property]);
-    }
-  }
-  return hint;
-}
-
 nsCSSDeclaration*
 nsCSSDeclaration::Clone() const
 {

@@ -73,7 +73,6 @@ public:
   static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[]);
   static const nsAFlatCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
 
-  static const nsChangeHint    kHintTable[eCSSProperty_COUNT];
   static const nsCSSType       kTypeTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
 

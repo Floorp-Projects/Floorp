@@ -90,9 +90,6 @@ public:
   PRUint32 Count() const;
   nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
 
-  // XXX This should go away, along with the rest of the property-based hints.
-  nsChangeHint GetStyleImpact() const;
-
   nsresult ToString(nsAString& aString) const;
 
   nsCSSDeclaration* Clone() const;

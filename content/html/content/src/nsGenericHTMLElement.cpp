@@ -1931,26 +1931,6 @@ PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
           aName == nsLayoutAtoms::onDOMNodeRemoved);
 }
 
-static nsChangeHint GetStyleImpactFrom(const nsHTMLValue& aValue)
-{
-  nsChangeHint hint = NS_STYLE_HINT_NONE;
-
-  if (eHTMLUnit_ISupports == aValue.GetUnit()) {
-    nsCOMPtr<nsISupports> supports(dont_AddRef(aValue.GetISupportsValue()));
-    nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(supports));
-
-    if (cssRule) {
-      nsCSSDeclaration* declaration = cssRule->GetDeclaration();
-
-      if (declaration) {
-        hint = declaration->GetStyleImpact();
-      }
-    }
-  }
-
-  return hint;
-}
-
 nsresult
 nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
@@ -2097,24 +2077,11 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
   }
 
-  nsChangeHint impact = NS_STYLE_HINT_UNKNOWN;
   if (mDocument) {
     if (aNotify) {
       mDocument->BeginUpdate();
 
       mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
-
-      if (aNameSpaceID == kNameSpaceID_None &&
-          aAttribute == nsHTMLAtoms::style) {
-        nsHTMLValue oldValue;
-        if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute,
-                                                          oldValue)) {
-          impact = GetStyleImpactFrom(oldValue);
-        }
-        else {
-          impact = NS_STYLE_HINT_NONE;
-        }
-      }
     }
 
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
@@ -2165,7 +2132,9 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
       binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE, aNotify);
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, nsIDOMMutationEvent::REMOVAL, impact);
+      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
+                                  nsIDOMMutationEvent::REMOVAL,
+                                  NS_STYLE_HINT_UNKNOWN);
       mDocument->EndUpdate();
     }
   }
