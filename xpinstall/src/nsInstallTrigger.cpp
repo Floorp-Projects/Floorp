@@ -89,16 +89,11 @@ nsInstallTrigger::GetScriptObject(nsIScriptContext *aContext, void** aScriptObje
 
     if (nsnull == mScriptObject)
     {
-        nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-
-        res = NS_NewScriptInstallTriggerGlobal(  aContext,
-                                                (nsISupports *)(nsIDOMInstallTriggerGlobal*)this,
-                                                (nsISupports *)global,
-                                                &mScriptObject);
-        NS_IF_RELEASE(global);
-
+        res = NS_NewScriptInstallTriggerGlobal(aContext,
+                                               (nsIDOMInstallTriggerGlobal*)this,
+                                               aContext->GetGlobalObject(),
+                                               &mScriptObject);
     }
-
 
     *aScriptObject = mScriptObject;
     return res;
