@@ -38,6 +38,8 @@
  */
 class ilIImageRenderer : public nsISupports {
 public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(IL_IIMAGERENDERER_IID);
   /**
    *  This is the function invoked for allocating pixmap storage and
    *  platform-specific pixmap resources.
