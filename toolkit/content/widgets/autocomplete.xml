@@ -372,6 +372,10 @@
               this.mEnterEvent = aEvent;
               cancel = this.mController.handleEnter();
               break;
+            case KeyEvent.DOM_VK_DELETE:
+              if (aEvent.shiftKey)
+                cancel = this.mController.handleDelete();
+              break;
           }
 
           if (cancel) {
