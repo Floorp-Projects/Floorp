@@ -122,6 +122,25 @@ nsContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return result;
 }
 
+static void
+CleanupGeneratedContentIn(nsIContent* aRealContent, nsIFrame* aRoot) {
+  nsIAtom* frameList = nsnull;
+  PRInt32 listIndex = 0;
+  do {
+    nsIFrame* child = aRoot->GetFirstChild(frameList);
+    while (child) {
+      nsIContent* content = child->GetContent();
+      if (content && content != aRealContent) {
+        content->SetParent(nsnull);
+        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      }
+      ::CleanupGeneratedContentIn(aRealContent, child);
+      child = child->GetNextSibling();
+    }
+    frameList = aRoot->GetAdditionalChildListName(listIndex++);
+  } while (frameList);
+}
+
 NS_IMETHODIMP
 nsContainerFrame::Destroy(nsIPresContext* aPresContext)
 {
@@ -130,6 +149,16 @@ nsContainerFrame::Destroy(nsIPresContext* aPresContext)
     GetView()->SetClientData(nsnull);
   }
 
+  if (mState & NS_FRAME_GENERATED_CONTENT) {
+    // Make sure all the content nodes for the generated content inside
+    // this frame know it's going away.
+    // XXXbz would this be better done via a global structure in
+    // nsCSSFrameConstructor that could key off of
+    // GeneratedContentFrameRemoved or something?  The problem is that
+    // our kids are gone by the time that's called.
+    ::CleanupGeneratedContentIn(mContent, this);
+  }
+  
   // Delete the primary child list
   mFrames.DestroyFrames(aPresContext);
   
