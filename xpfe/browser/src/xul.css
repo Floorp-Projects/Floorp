@@ -1,14 +1,16 @@
 toolbar {
+    display:block;
     background-color: #CCCCCC;
     border-bottom: solid darkGray 1px;
     border-top: solid white 1px;
     border-left: solid white 1px;
     border-right: solid darkGray 1px;
     font: 10pt sans-serif;
-    min-height: 16px;
+    min-height: 20px;
 }
 
 toolbar#taskbar {
+    display:block;
     background-color: #666699;
     border-bottom: solid #333366 1px;
     border-top: solid #9999AA 1px;
