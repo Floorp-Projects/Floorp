@@ -654,6 +654,11 @@ static char * str_escape(const char * original) {
 				q[1] = '\"';
 				q++;
                 break;
+            case '\n':
+				q[0] = '\\';
+				q[1] = '\n';
+				q++;
+                break;
             default:
 				*q = *p;
                 break;
