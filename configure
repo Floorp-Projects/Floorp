@@ -7853,8 +7853,8 @@ EOF
 
 fi
 
-echo $ac_n "checking if C++ requires implementation of unused methods""... $ac_c" 1>&6
-echo "configure:7858: checking if C++ requires implementation of unused methods" >&5
+echo $ac_n "checking whether C++ requires implementation of unused methods""... $ac_c" 1>&6
+echo "configure:7858: checking whether C++ requires implementation of unused methods" >&5
 if eval "test \"`echo '$''{'ac_cv_cpp_unused_required'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
