@@ -159,8 +159,6 @@ struct ClassPolicy : public PLDHashEntryHdr
 {
     char*  key;
     PLDHashTable* mPolicy;
-    ClassPolicy*  mDefault;
-    ClassPolicy*  mWildcard;
 };
 
 PR_STATIC_CALLBACK(PRBool)
@@ -213,7 +211,9 @@ InitClassPolicyEntry(PLDHashTable *table,
 class DomainPolicy : public PLDHashTable
 {
 public:
-    DomainPolicy() : mRefCount(0)
+    DomainPolicy() : mWildcardPolicy(nsnull),
+                     mRefCount(0)
+                     
     {
         static PLDHashTableOps domainPolicyOps =
         {
@@ -247,6 +247,8 @@ public:
         if (--mRefCount == 0)
             delete this;
     }
+
+    ClassPolicy* mWildcardPolicy;
 
 private:
     PRUint32 mRefCount;
@@ -330,20 +332,13 @@ private:
                            nsIPrincipal* aObject,
                            PRUint32 aAction,
                            PRBool aIsCheckConnect);
-    
-    PRInt32 
-    GetSecurityLevel(nsIPrincipal *principal,
-                     PRBool aIsDOM,
-                     const char* aClassName, const char* aProperty,
-                     PRUint32 aAction, nsCString &capability, void** aPolicy);
 
     nsresult
-    GetClassPolicy(nsIPrincipal* principal, const char* aClassName,
-                   ClassPolicy** result);
-
-    SecurityLevel
-    GetPropertyPolicy(jsval aProperty, ClassPolicy* aClassPolicy,
-                      PRUint32 aAction);
+    LookupPolicy(nsIPrincipal* principal,
+                 char* aClassName, jsval aProperty,
+                 PRUint32 aAction,
+                 ClassPolicy** aCachedClassPolicy,
+                 SecurityLevel* result);
 
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);

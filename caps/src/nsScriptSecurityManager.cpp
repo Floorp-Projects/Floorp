@@ -115,9 +115,17 @@ GetScriptContext(JSContext *cx)
 class ClassInfoData
 {
 public:
-    ClassInfoData(nsIClassInfo *aClassInfo)
-        : mClassInfo(aClassInfo), mDidGetFlags(PR_FALSE)
+    ClassInfoData(nsIClassInfo *aClassInfo, const char* aName)
+        : mClassInfo(aClassInfo), mDidGetFlags(PR_FALSE),
+          mName((char*) aName), mMustFreeName(PR_FALSE)
     {
+    }
+
+
+    ~ClassInfoData()
+    {
+        if (mMustFreeName)
+            nsMemory::Free(mName);
     }
 
     PRUint32 GetFlags()
@@ -146,10 +154,26 @@ public:
         return GetFlags() & nsIClassInfo::CONTENT_NODE;
     }
 
+    char* GetName()
+    {
+        if (!mName)
+        {
+            if (mClassInfo)
+                mClassInfo->GetClassDescription(&mName);
+            if (mName)
+                mMustFreeName = PR_TRUE;
+            else
+                mName = NS_REINTERPRET_CAST(char*,"UnnamedClass");
+        }
+        return mName;
+    }
+
 private:
     nsIClassInfo *mClassInfo; // WEAK
     PRBool mDidGetFlags;
     PRUint32 mFlags;
+    char* mName;
+    PRBool mMustFreeName;
 };
  
 JSContext *
@@ -183,42 +207,6 @@ nsScriptSecurityManager::GetSafeJSContext()
         return nsnull;
     return cx;
 }
-
-
-class ClassNameHolder
-{
-public:
-    ClassNameHolder(const char* aClassName, nsIClassInfo* aClassInfo) : 
-      mClassName((char*)aClassName), mClassInfo(aClassInfo), mMustFree(PR_FALSE)
-    {
-    }
-
-    ~ClassNameHolder()
-    {
-        if (mMustFree)
-            nsMemory::Free(mClassName);
-    }
-
-    char* get()
-    {
-        if (mClassName)
-            return mClassName;
-
-        if (mClassInfo)
-            mClassInfo->GetClassDescription(&mClassName);
-        if (mClassName)
-            mMustFree = PR_TRUE;
-        else
-            mClassName = "UnnamedClass";
-
-        return mClassName;
-    }
-
-private:
-    char* mClassName;
-    nsCOMPtr<nsIClassInfo> mClassInfo;
-    PRBool mMustFree;
-};
 
 /* Static function for comparing two URIs - for security purposes,
  * two URIs are equivalent if their scheme, host, and port are equal.
@@ -625,58 +613,22 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         return NS_OK;
 
     nsresult rv;
-    ClassNameHolder className(aClassName, aClassInfo);
+    // Hold the class info data here so we don't have to go back to virtual
+    // methods all the time
+    ClassInfoData classInfoData(aClassInfo, aClassName);
 #ifdef DEBUG_mstoltz
     nsCAutoString propertyName;
     propertyName.AssignWithConversion((PRUnichar*)JSValIDToString(cx, aProperty));
-    printf("### CanAccess(%s.%s, %i) ", className.get(), 
+    printf("### CanAccess(%s.%s, %i) ", classInfoData.GetName(), 
            propertyName.get(), aAction);
 #endif
 
-    //-- Initialize policies if necessary
-    if (mPolicyPrefsChanged)
-    {
-        rv = InitPolicies();
-        if (NS_FAILED(rv))
-            return rv;
-    }
-
-    //-- Look up the policy for this class
-    ClassPolicy* cpolicy = aCachedClassPolicy ? 
-                           NS_REINTERPRET_CAST(ClassPolicy*, *aCachedClassPolicy) : nsnull;
-    if (!cpolicy)
-    {
-        //-- No cached policy for this class, need to look it up
-#ifdef DEBUG_mstoltz
-        printf("Miss! ");
-#endif
-    	rv = GetClassPolicy(subjectPrincipal, className.get(), &cpolicy);
-        if (NS_FAILED(rv))
-            return rv;
-        if (aCachedClassPolicy)
-            *aCachedClassPolicy = cpolicy;
-    }
-
-    SecurityLevel securityLevel = GetPropertyPolicy(aProperty, cpolicy, aAction);
-
-    // If the class policy we have is a wildcard policy, then we may
-    // still need to try the default for this class
-    if (cpolicy != NO_POLICY_FOR_CLASS &&
-        cpolicy->key[0] == '*' && cpolicy->key[1] == '\0' &&
-        securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
-    {
-        cpolicy = 
-          NS_REINTERPRET_CAST(ClassPolicy*,
-                              PL_DHashTableOperate(mDefaultPolicy,
-                                                   className.get(),
-                                                   PL_DHASH_LOOKUP));
-        if (PL_DHASH_ENTRY_IS_LIVE(cpolicy))
-            securityLevel = GetPropertyPolicy(aProperty, cpolicy, aAction);
-    }
-
-    // Hold the class info data here so we don't have to go back to virtual
-    // methods all the time
-    ClassInfoData classInfoData(aClassInfo);
+    //-- Look up the security policy for this class and subject domain
+    SecurityLevel securityLevel;
+    rv = LookupPolicy(subjectPrincipal, classInfoData.GetName(), aProperty, aAction, 
+                      (ClassPolicy**)aCachedClassPolicy, &securityLevel);
+    if (NS_FAILED(rv))
+        return rv;
 
     if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
     {   
@@ -839,7 +791,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
             errorMsg += "call method ";
         }
-        errorMsg += className.get();
+        errorMsg += classInfoData.GetName();
         errorMsg += '.';
         errorMsg.AppendWithConversion((PRUnichar*)JSValIDToString(cx, aProperty));
 
@@ -954,16 +906,37 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
 }
 
 nsresult
-nsScriptSecurityManager::GetClassPolicy(nsIPrincipal* principal,
-                                        const char* aClassName,
-                                        ClassPolicy** result)
+nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
+                                     char* aClassName, jsval aProperty,
+                                     PRUint32 aAction,
+                                     ClassPolicy** aCachedClassPolicy,
+                                     SecurityLevel* result)
 {
     nsresult rv;
-    *result = nsnull;
+    result->level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
+
+    //-- Initialize policies if necessary
+    if (mPolicyPrefsChanged)
+    {
+        rv = InitPolicies();
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
     DomainPolicy* dpolicy = nsnull;
-    if (mOriginToPolicyMap)
-    {   //-- Look up the relevant domain policy, if any
-        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(aPrincipal));
+    NS_ASSERTION(agg, "Subject principal not an aggregate - this shouldn't happen");
+    if (agg)
+        agg->GetCachedSecurityPolicy((void**)&dpolicy);
+
+    if (!dpolicy && mOriginToPolicyMap)
+    {
+        //-- Look up the relevant domain policy, if any
+#ifdef DEBUG_mstoltz
+        printf("DomainLookup ");
+#endif
+
+        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(aPrincipal));
         if (!codebase)
             return NS_ERROR_FAILURE;
 
@@ -1006,94 +979,89 @@ nsScriptSecurityManager::GetClassPolicy(nsIPrincipal* principal,
             }
             de = de->mNext;
         }
+
+        if (!dpolicy)
+            dpolicy = mDefaultPolicy;
+
+        agg->SetCachedSecurityPolicy((void*)dpolicy);
     }
 
-    ClassPolicy* wildcardPolicy = nsnull;
-    if (dpolicy)
-    {
-        //-- Now get the class policy
-        *result = 
-          NS_REINTERPRET_CAST(ClassPolicy*,
-            PL_DHashTableOperate(dpolicy,
-                                 aClassName,
-                                 PL_DHASH_LOOKUP));
+    ClassPolicy* cpolicy = nsnull;
 
-        //-- and the wildcard policy (class "*" for this domain)
-        wildcardPolicy = 
-          NS_REINTERPRET_CAST(ClassPolicy*,
-            PL_DHashTableOperate(dpolicy,
-                                 "*",
-                                 PL_DHASH_LOOKUP));
+    if ((dpolicy == mDefaultPolicy) && aCachedClassPolicy)
+    {
+        // No per-domain policy for this principal (the more common case)
+        // so look for a cached class policy from the object wrapper
+        cpolicy = *aCachedClassPolicy;
     }
 
-    //-- and the default policy for this class
-    ClassPolicy* defaultClassPolicy = 
-          NS_REINTERPRET_CAST(ClassPolicy*,
-            PL_DHashTableOperate(mDefaultPolicy,
-                                 aClassName,
-                                 PL_DHASH_LOOKUP));
+    if (!cpolicy)
+    { //-- No cached policy for this class, need to look it up
+#ifdef DEBUG_mstoltz
+        printf("ClassLookup ");
+#endif
 
-    if (*result && PL_DHASH_ENTRY_IS_LIVE(*result))
+        cpolicy = NS_REINTERPRET_CAST(ClassPolicy*,
+                                      PL_DHashTableOperate(dpolicy,
+                                                           aClassName,
+                                                           PL_DHASH_LOOKUP));
+
+        if (!PL_DHASH_ENTRY_IS_LIVE(cpolicy))
+            cpolicy = NO_POLICY_FOR_CLASS;
+
+        if ((dpolicy == mDefaultPolicy) && aCachedClassPolicy)
+            *aCachedClassPolicy = cpolicy;
+    }
+    PropertyPolicy* ppolicy = nsnull;
+    if (cpolicy != NO_POLICY_FOR_CLASS)
     {
-        if (PL_DHASH_ENTRY_IS_LIVE(wildcardPolicy))
-            (*result)->mWildcard = wildcardPolicy;
-        if (PL_DHASH_ENTRY_IS_LIVE(defaultClassPolicy))
-            (*result)->mDefault  = defaultClassPolicy;
+        ppolicy = 
+                (PropertyPolicy*) PL_DHashTableOperate(cpolicy->mPolicy,
+                                                       (void*)aProperty,
+                                                       PL_DHASH_LOOKUP);
     }
     else
     {
-        if (wildcardPolicy && PL_DHASH_ENTRY_IS_LIVE(wildcardPolicy))
-            *result = wildcardPolicy;
-        else if (PL_DHASH_ENTRY_IS_LIVE(defaultClassPolicy))
-            *result = defaultClassPolicy;
-        else
-            *result = NO_POLICY_FOR_CLASS;
+        // If there's no per-domain policy and no default policy, we're done
+        if (dpolicy == mDefaultPolicy)
+            return NS_OK;
+
+        // This class is not present in the domain policy, check its wildcard policy
+        if (dpolicy->mWildcardPolicy)
+        {
+            ppolicy = 
+                (PropertyPolicy*) PL_DHashTableOperate(dpolicy->mWildcardPolicy->mPolicy,
+                                                       (void*)aProperty, PL_DHASH_LOOKUP);
+        }
+
+        // If there's no wildcard policy, check the default policy for this class
+        if (!ppolicy || !PL_DHASH_ENTRY_IS_LIVE(ppolicy))
+        {
+            cpolicy = NS_REINTERPRET_CAST(ClassPolicy*,
+                                          PL_DHashTableOperate(mDefaultPolicy,
+                                                               aClassName,
+                                                               PL_DHASH_LOOKUP));
+
+            if (PL_DHASH_ENTRY_IS_LIVE(cpolicy))
+            {
+                ppolicy = 
+                    (PropertyPolicy*) PL_DHashTableOperate(cpolicy->mPolicy,
+                                                           (void*)aProperty,
+                                                           PL_DHASH_LOOKUP);
+            }
+        }
     }
+
+    if (!ppolicy || !PL_DHASH_ENTRY_IS_LIVE(ppolicy))
+        return NS_OK;
+
+    // Get the correct security level from the property policy
+    if (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY)
+        *result = ppolicy->mSet;
+    else
+        *result = ppolicy->mGet;
 
     return NS_OK;
-}
-
-SecurityLevel
-nsScriptSecurityManager::GetPropertyPolicy(jsval aProperty, ClassPolicy* aClassPolicy,
-                                           PRUint32 aAction)
-{
-    //-- Look up the policy for this property/method
-    PropertyPolicy* ppolicy = nsnull;
-    if (aClassPolicy && aClassPolicy != NO_POLICY_FOR_CLASS)
-    {
-        ppolicy = 
-          (PropertyPolicy*) PL_DHashTableOperate(aClassPolicy->mPolicy,
-                                                 NS_REINTERPRET_CAST(void*, aProperty),
-                                                 PL_DHASH_LOOKUP);
-        if (!PL_DHASH_ENTRY_IS_LIVE(ppolicy))
-        {   // No domain policy for this property, look for a wildcard policy
-            if (aClassPolicy->mWildcard)
-            {
-                ppolicy = NS_REINTERPRET_CAST(PropertyPolicy*,
-                  PL_DHashTableOperate(aClassPolicy->mWildcard->mPolicy,
-                                       NS_REINTERPRET_CAST(void*, aProperty),
-                                       PL_DHASH_LOOKUP));
-            }
-            if (!PL_DHASH_ENTRY_IS_LIVE(ppolicy) && aClassPolicy->mDefault)
-            {   // Now look for a default policy
-                ppolicy = NS_REINTERPRET_CAST(PropertyPolicy*,
-                  PL_DHashTableOperate(aClassPolicy->mDefault->mPolicy,
-                                       NS_REINTERPRET_CAST(void*, aProperty),
-                                       PL_DHASH_LOOKUP));
-            }
-        }
-        if (PL_DHASH_ENTRY_IS_LIVE(ppolicy))
-        {
-            // Get the correct security level from the property policy
-            if (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY)
-                return ppolicy->mSet;
-            return ppolicy->mGet;
-        }
-    }
-
-    SecurityLevel nopolicy;
-    nopolicy.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
-    return nopolicy;
 }
 
 
@@ -1625,23 +1593,10 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     //-- Check for a per-site policy
     static const char jsPrefGroupName[] = "javascript";
 
-    //-- Initialize policies if necessary
-    if (mPolicyPrefsChanged)
-    {
-        rv = InitPolicies();
-        if (NS_FAILED(rv))
-            return rv;
-    }
-
-    ClassPolicy* cpolicy;
     SecurityLevel secLevel;
-    rv = GetClassPolicy(aPrincipal, jsPrefGroupName, &cpolicy);
-
-    if (NS_SUCCEEDED(rv))
-    {
-        secLevel = GetPropertyPolicy(sEnabledID, cpolicy,
-                                     nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-    }
+    rv = LookupPolicy(aPrincipal, (char*)jsPrefGroupName, sEnabledID,
+                      nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
+                      nsnull, &secLevel);
     if (NS_FAILED(rv) || secLevel.level == SCRIPT_SECURITY_NO_ACCESS)
     {
         *result = PR_FALSE;
@@ -2413,7 +2368,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     PR_FREEIF(iidStr);
 #endif
 // XXX Special case for nsIXPCException ?
-    if (ClassInfoData(aClassInfo).IsDOMClass())
+    if (ClassInfoData(aClassInfo, nsnull).IsDOMClass())
     {
 #if 0
         printf("DOM class - GRANTED.\n");
@@ -2472,23 +2427,16 @@ nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
     printf("### CheckComponentPermissions(ClassID.%s) ",cid.get());
 #endif
 
-    //-- Initialize policies if necessary
-    if (mPolicyPrefsChanged)
-    {
-        rv = InitPolicies();
-        if (NS_FAILED(rv))
-            return rv;
-    }
+    // Look up the policy for this class.
+    // while this isn't a property we'll treat it as such, using ACCESS_CALL_METHOD
+    jsval cidVal = STRING_TO_JSVAL(::JS_InternString(cx, cid.get()));
 
-    //-- Look up the policy for this class
-    ClassPolicy* cpolicy = nsnull;
-    rv = GetClassPolicy(subjectPrincipal, "ClassID", &cpolicy);
+    SecurityLevel securityLevel;
+    rv = LookupPolicy(subjectPrincipal, "ClassID", cidVal,
+                      nsIXPCSecurityManager::ACCESS_CALL_METHOD, 
+                      nsnull, &securityLevel);
     if (NS_FAILED(rv))
         return rv;
-    jsval cidVal = STRING_TO_JSVAL(::JS_InternString(cx, cid.get()));
-    // While this isn't a property we'll treat it as such, ussing ACCESS_CALL_METHOD
-    SecurityLevel securityLevel = GetPropertyPolicy(cidVal, cpolicy,
-        nsIXPCSecurityManager::ACCESS_CALL_METHOD);
 
     // If there's no policy stored, use the "security.classID.allowByDefault" pref 
     if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
@@ -3015,6 +2963,11 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
 
         if (!cpolicy)
             break;
+
+        // If this is the wildcard class (class '*'), save it in mWildcardPolicy
+        // (we leave it stored in the hashtable too to take care of the cleanup)
+        if ((*start == '*') && (end == start + 1))
+            aDomainPolicy->mWildcardPolicy = cpolicy;
 
         // Get the property name
         start = end + 1;
