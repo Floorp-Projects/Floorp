@@ -609,6 +609,11 @@ xpfe/components/ucth/resources/Makefile
 xpfe/components/remote/Makefile
 xpfe/components/remote/public/Makefile
 xpfe/components/remote/src/Makefile
+xpfe/components/autocomplete/Makefile
+xpfe/components/autocomplete/public/Makefile
+xpfe/components/autocomplete/resources/Makefile
+xpfe/components/autocomplete/resources/skin/Makefile
+xpfe/components/autocomplete/src/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
