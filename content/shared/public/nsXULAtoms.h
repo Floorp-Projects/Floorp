@@ -52,6 +52,7 @@ public:
 
   static nsIAtom* text;
   static nsIAtom* toolbar;
+  static nsIAtom* toolbaritem;
   static nsIAtom* toolbox;
   
   // The tree atoms
