@@ -1239,19 +1239,31 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     return lineno;
 }
 
+/* The line number limit is the same as the jssrcnote offset limit. */
+#define SN_LINE_LIMIT   (SN_3BYTE_OFFSET_FLAG << 16)
+
 jsbytecode *
 js_LineNumberToPC(JSScript *script, uintN target)
 {
-    ptrdiff_t offset;
-    uintN lineno;
+    ptrdiff_t offset, best;
+    uintN lineno, bestdiff, diff;
     jssrcnote *sn;
     JSSrcNoteType type;
 
     offset = 0;
+    best = -1;
     lineno = script->lineno;
+    bestdiff = SN_LINE_LIMIT;
     for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        if (lineno >= target)
-            break;
+        if (lineno == target)
+            goto out;
+        if (lineno > target) {
+            diff = lineno - target;
+            if (diff < bestdiff) {
+                bestdiff = diff;
+                best = offset;
+            }
+        }
         offset += SN_DELTA(sn);
         type = (JSSrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
@@ -1260,6 +1272,9 @@ js_LineNumberToPC(JSScript *script, uintN target)
             lineno++;
         }
     }
+    if (best >= 0)
+        offset = best;
+out:
     return script->code + offset;
 }
 
