@@ -53,9 +53,7 @@
 */
 #include "nsNetUtil.h"
 #include "nsGlobalHistory.h"
-#include "nsIFileSpec.h"
 #include "nsCRT.h"
-#include "nsFileStream.h"
 #include "nsIEnumerator.h"
 #include "nsIServiceManager.h"
 #include "nsEnumeratorUtils.h"
