@@ -189,7 +189,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
       NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-      file->InitWithPath(mFile);
+      file->InitWithPath(mFile.get());
 
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
