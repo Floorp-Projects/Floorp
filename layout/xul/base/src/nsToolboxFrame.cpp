@@ -25,8 +25,10 @@
 //
 
 #include "nsToolboxFrame.h"
+#include "nsIStyleContext.h"
+#include "nsCSSRendering.h"
 
-
+#if 0
 //
 // NS_NewToolboxFrame
 //
@@ -44,7 +46,7 @@ NS_NewToolboxFrame ( nsIFrame*& aNewFrame, PRUint32 aFlags )
   return NS_OK;
   
 } // NS_NewToolboxFrame
-
+#endif
 
 //
 // nsToolboxFrame dstr
@@ -106,13 +108,26 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
 // Handle moving children around. This may have to account for toolbars that 
 // grew to multiple lines or collapsed toolbars and the expando-dock at the bottom
 //
-NS_IMETHOD
+NS_IMETHODIMP
 nsToolboxFrame :: Reflow ( nsIPresContext&          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {
-  nsHTMLContainerFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
+  return nsHTMLContainerFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
 
 } // Reflow 
+
+
+//
+// GetSkipSides
+//
+// ***What does this do???
+//
+PRIntn
+nsToolboxFrame :: GetSkipSides() const
+{
+  return 0;
+
+} // GetSkipSides
 

@@ -25,6 +25,8 @@
 //
 
 #include "nsToolbarFrame.h"
+#include "nsIStyleContext.h"
+#include "nsCSSRendering.h"
 
 
 //
@@ -104,13 +106,13 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
 //
 // Handle moving children around.
 //
-NS_IMETHOD
+NS_IMETHODIMP
 nsToolbarFrame :: Reflow ( nsIPresContext&          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {
-  nsBlockFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
+  return nsBlockFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
 
 } // Reflow 
 
