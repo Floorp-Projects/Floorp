@@ -625,7 +625,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
       }
 
       if (extString) {
-        var desc = mimeInfo.Description;
+        var desc = mimeInfo.description;
         if (!desc) { 
           var key = plural ? "unknownDescriptionFilesPluralFilter" : 
                              "unknownDescriptionFilesFilter";
@@ -842,7 +842,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   
   var mimeInfo = getMIMEInfoForType(aContentType, ext);
 
-  if (ext && mimeInfo && mimeInfo.ExtensionExists(ext)) {
+  if (ext && mimeInfo && mimeInfo.extensionExists(ext)) {
     return ext;
   }
   
@@ -854,7 +854,7 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   } catch (e) {
   }
 
-  if (urlext && mimeInfo && mimeInfo.ExtensionExists(urlext)) {
+  if (urlext && mimeInfo && mimeInfo.extensionExists(urlext)) {
     return urlext;
   }
   else {
