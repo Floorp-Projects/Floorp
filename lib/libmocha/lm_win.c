@@ -2015,72 +2015,6 @@ win_delay(JSContext *cx, JSObject *obj,
 }
 
 PR_STATIC_CALLBACK(PRBool)
-win_escape(JSContext *cx, JSObject *obj,
-           uint argc, jsval *argv, jsval *rval)
-{
-    jsdouble v;
-    JSString *str;
-    char *bytes;
-    int32 length;
-    int mask;
-
-    if (argc > 1) {
-        if (!JS_ValueToNumber(cx, argv[1], &v))
-            return JS_FALSE;
-        mask = (int)v;
-        if (mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH)) {
-            JS_ReportError(cx, "invalid string escape mask %x", mask);
-            return JS_FALSE;
-        }
-    } else {
-        mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
-    }
-    if (!(str = JS_ValueToString(cx, argv[0])))
-        return JS_FALSE;
-    /* XXXunicode ? */
-    bytes = NET_EscapeBytes(JS_GetStringBytes(str),
-                            (int32)JS_GetStringLength(str),
-                            mask,
-                            &length);
-    if (!bytes) {
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
-    }
-
-    /* XXXunicode ? */
-    str = JS_NewString(cx, bytes, (size_t)length);
-    if (!str)
-        return JS_FALSE;
-    *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-win_unescape(JSContext *cx, JSObject *obj,
-             uint argc, jsval *argv, jsval *rval)
-{
-    JSString *str;
-    size_t length;
-    char *bytes;
-
-    if (!(str = JS_ValueToString(cx, argv[0])))
-        return JS_FALSE;
-    length = JS_GetStringLength(str);
-    if (!(bytes = JS_malloc(cx, length + 1)))
-        return JS_FALSE;
-    /* XXXunicode ? */
-    XP_MEMCPY(bytes, JS_GetStringBytes(str), length);
-    bytes[length] = '\0';
-    length = (size_t)NET_UnEscapeBytes(bytes, length);
-    /* XXXunicode ? */
-    str = JS_NewString(cx, bytes, length);
-    if (!str)
-        return JS_FALSE;
-    *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(PRBool)
 win_focus(JSContext *cx, JSObject *obj,
           uint argc, jsval *argv, jsval *rval)
 {
@@ -2788,8 +2722,9 @@ static JSFunctionSpec lm_window_methods[] = {
     {setTimeout_str,    win_set_timeout,        2},
     {setInterval_str,   win_set_interval,       2},
     {"delay",           win_delay,              0},
-    {"escape",          win_escape,             2},
-    {"unescape",        win_unescape,           1},
+    /* escape and unescape are now spec'ed by ECMA, and have been moved
+     * into the core engine.
+     */
     {lm_blur_str,       win_blur,               0},
     {lm_focus_str,      win_focus,              0},
     {lm_scroll_str,     win_scroll_to,          2},
