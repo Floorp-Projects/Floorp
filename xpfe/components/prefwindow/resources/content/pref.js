@@ -216,7 +216,7 @@ function PREF_ParsePref( elementID, elementObject )
       case "color":
         dump("*** " + elementObject.prefstring + "\n");
         try {
-          var charPref = whp.CopyCharPref( elementObject.prefstring );
+          var charPref = whp.CopyUnicharPref( elementObject.prefstring );
         }
         catch(e) {
           var charPref = "";
@@ -229,7 +229,7 @@ function PREF_ParsePref( elementID, elementObject )
         }
         if( charPref != elementObject.value )   // do we care about whitespace? 
           try {
-            whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
+            whp.SetUnicharPref( elementObject.prefstring, elementObject.value );  // string pref
           }
           catch (ex) {
             dump("*** failure when calling SetCharPref: " + ex + "\n");
@@ -339,7 +339,7 @@ function PREF_onpageload( tag )
         case "string":
         case "color":
           try {
-            var prefvalue = this.pref.CopyCharPref( prefstring );
+            var prefvalue = this.pref.CopyUnicharPref( prefstring );
           } 
           catch(e) {
             continue;
