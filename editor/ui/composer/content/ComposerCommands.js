@@ -1762,7 +1762,7 @@ const kSupportedTextMimeTypes =
   "application/vnd.mozilla.xul+xml"
 ];
 
-function IsSupporteTextMimeType(aMimeType)
+function IsSupportedTextMimeType(aMimeType)
 {
   for (var i = 0; i < kSupportedTextMimeTypes.count; i++)
   {
