@@ -19,6 +19,7 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsGUIEvent.h"
+#include <Quickdraw.h>
 #include <Fonts.h>
 #include <TextEdit.h>
 #include <Dialogs.h>
@@ -40,10 +41,11 @@ nsToolkit::nsToolkit()
 	NS_INIT_REFCNT();
 	
 	// once only, macintosh specific initialization
-	if( mInit == PR_TRUE)
+	if( mInit == PR_FALSE)
 		{
 		mInit = PR_TRUE;
-		InitGraf;
+		InitGraf(&qd.thePort);
+		InitFonts();
 		InitWindows();
 		InitMenus();
 		TEInit();
