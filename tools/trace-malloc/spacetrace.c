@@ -246,6 +246,26 @@ int showHelp(void)
 }
 
 /*
+** ticks2msec
+**
+** Convert platform specific ticks to msec time
+** Returns 0 on success.
+*/
+PRUint32 ticks2msec(tmreader* aReader, PRUint32 aTicks)
+{
+    PRUint32 retval = 0;
+    PRUint64 bigone = LL_INIT(0, 1000);
+    PRUint64 tmp64;
+
+    LL_UI2L(tmp64, aTicks);
+    LL_MUL(bigone, bigone, tmp64);
+    LL_UI2L(tmp64, aReader->ticksPerSec);
+    LL_DIV(bigone, bigone, tmp64);
+    LL_L2UI(retval, bigone);
+    return retval;
+}
+
+/*
 ** initOptions
 **
 ** Determine global settings for the application.
@@ -2222,7 +2242,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                         {
                             eventType = TM_EVENT_FREE;
                         }
-                        trackEvent(aEvent->u.alloc.interval, eventType, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
+                        trackEvent(ticks2msec(aReader, aEvent->u.alloc.interval), eventType, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
                     }
                 }
                 else

@@ -65,12 +65,13 @@ struct tmevent {
             uint32  offset;
         } site;
         struct {
-            uint32  interval;
+            uint32  interval; /* in ticks */
             uint32  ptr;
             uint32  size;
             uint32  oldserial;
             uint32  oldptr;
             uint32  oldsize;
+            uint32  cost;     /* in ticks */
         } alloc;
         struct {
             nsTMStats tmstats;
@@ -155,6 +156,7 @@ struct tmreader {
     PLHashTable     *methods;
     PLHashTable     *callsites;
     tmcallsite      calltree_root;
+    uint32          ticksPerSec;
 };
 
 typedef void (*tmeventhandler)(tmreader *tmr, tmevent *event);
