@@ -980,7 +980,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   }
 	if (NS_OK == mForward->QueryInterface(kIWidgetIID,(void**)&widget))
 	{
-    widget->Create(mWindow, r, HandleBackEvent, NULL);
+    widget->Create(mWindow, r, HandleForwardEvent, NULL);
     widget->SetFont(font);
     widget->Show(PR_TRUE);
     mForward->SetLabel("Forward");
