@@ -71,7 +71,8 @@ public:
                        nsIContentViewerContainer* aContainer,
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull,
-                       nsIStreamObserver* anObserver = nsnull) = 0;
+                       nsIStreamObserver* anObserver = nsnull,
+                       PRInt32 type = 0) = 0;
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener) = 0;

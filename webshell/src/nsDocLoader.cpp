@@ -93,8 +93,10 @@ public:
     NS_DECL_ISUPPORTS
 
     nsresult Bind(const nsString& aURLSpec, 
-                  nsIPostData* aPostData, 
-                  nsIStreamListener* aListener);
+                  nsIPostData* aPostData,
+                  nsIStreamListener* aListener,
+                  PRInt32 type = 0);
+
     nsresult Stop(void);
 
     /* nsIStreamListener interface methods... */
@@ -379,7 +381,8 @@ public:
                        nsIContentViewerContainer* aContainer,
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull,
-                       nsIStreamObserver* anObserver = nsnull);
+                       nsIStreamObserver* anObserver = nsnull,
+                       PRInt32 type = 0);
 
     NS_IMETHOD LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener);
@@ -503,14 +506,14 @@ nsDocLoaderImpl::SetDocumentFactory(nsIDocumentLoaderFactory* aFactory)
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadURL(const nsString& aURLSpec, 
                          const char* aCommand,
                          nsIContentViewerContainer* aContainer,
                          nsIPostData* aPostData,
                          nsISupports* aExtraInfo,
-                         nsIStreamObserver* anObserver)
+                         nsIStreamObserver* anObserver,
+                         PRInt32 type)
 {
     nsresult rv;
     nsDocumentBindInfo* loader = nsnull;
@@ -533,12 +536,11 @@ nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
     /* The DocumentBindInfo reference is only held by the Array... */
     m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
 
-    rv = loader->Bind(aURLSpec, aPostData, nsnull);
+    rv = loader->Bind(aURLSpec, aPostData, nsnull, type);
 
 done:
     return rv;
 }
-
 
 NS_IMETHODIMP
 nsDocLoaderImpl::LoadURL(const nsString& aURLSpec,
@@ -776,7 +778,8 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
 
 nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec, 
                                   nsIPostData* aPostData,
-                                  nsIStreamListener* aListener)
+                                  nsIStreamListener* aListener,
+                                  PRInt32 type)
 {
     nsresult rv;
 
@@ -802,6 +805,11 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
         if (NS_OK != rv) {
             return rv;
         }
+    }
+
+    rv = m_Url->SetReloadType(type);
+    if (rv != NS_OK) {
+        return rv;
     }
 
     /* Store any POST data into the URL */
