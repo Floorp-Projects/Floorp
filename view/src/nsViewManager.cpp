@@ -49,7 +49,12 @@ nsViewManager :: nsViewManager()
 
 nsViewManager :: ~nsViewManager()
 {
-  NS_IF_RELEASE(mTimer);
+  if (nsnull != mTimer)
+  {
+    mTimer->Cancel();     //XXX this should not be necessary. MMP
+    NS_RELEASE(mTimer);
+  }
+
   NS_IF_RELEASE(mRootWindow);
   NS_IF_RELEASE(mRootView);
 
