@@ -51,7 +51,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEHYPERLINK
 
-  nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame);
 };
 
 class nsHTMLImageMapAccessible : public nsHTMLImageAccessible,

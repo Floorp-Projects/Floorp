@@ -49,8 +49,8 @@
 // --------------------------------------------------------
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessibleWrap, nsHTMLLinkAccessible, nsIAccessibleHyperLink)
 
-nsHTMLLinkAccessibleWrap::nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHTMLLinkAccessible(aDomNode, aShell)
+nsHTMLLinkAccessibleWrap::nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):
+nsHTMLLinkAccessible(aDomNode, aShell, aFrame)
 { 
 }
 
