@@ -171,13 +171,14 @@ var calendarViewDNDObserver = {
          {
             var calendarEvent = gICalLib.fetchEvent( dropEvent.id );
 	       
-	    if( calendarEvent != null )
-	    {
+	         if( calendarEvent != null )
+	         {
                calendarEvent.start.setTime(gDropzoneStartTime.getTime() );
                calendarEvent.end.setTime ( calendarEvent.start.getTime() + eventDuration );
 
                gICalLib.modifyEvent( calendarEvent );
-            } else
+            } 
+            else
                alert(" Event with id: " + dropEvent.id + " not found");
          }
          else
