@@ -3174,7 +3174,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
       do {
         child = element->GetChildAt(++index);
-        // stop at first non-comment and non-whitespace node
+        // stop at first non-comment (and non-whitespace for
+        // :-moz-only-whitespace) node        
       } while (child && !IsSignificantChild(child, PR_TRUE, isWhitespaceSignificant));
       result = localTrue == (child == nsnull);
     }
