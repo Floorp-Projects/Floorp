@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #include "ifuncns.h"
@@ -28,16 +27,17 @@
 
 BOOL SearchForUninstallKeys(char *szStringToMatch)
 {
+#ifdef OLDCODE
   char      szBuf[MAX_BUF];
   char      szStringToMatchLowerCase[MAX_BUF];
   char      szBufKey[MAX_BUF];
   char      szSubKey[MAX_BUF];
-  HINI      hkHandle;
+  HKEY      hkHandle;
   BOOL      bFound;
-  ULONG     dwIndex;
-  ULONG     dwSubKeySize;
-  ULONG     dwTotalSubKeys;
-  ULONG     dwTotalValues;
+  DWORD     dwIndex;
+  DWORD     dwSubKeySize;
+  DWORD     dwTotalSubKeys;
+  DWORD     dwTotalValues;
   FILETIME  ftLastWriteFileTime;
   char      szWRMSUninstallKeyPath[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
   char      szWRMSUninstallName[] =  "UninstallString";
@@ -72,27 +72,28 @@ BOOL SearchForUninstallKeys(char *szStringToMatch)
 
   RegCloseKey(hkHandle);
   return(bFound);
+#endif
 }
 
-APIRET FileMove(PSZ szFrom, PSZ szTo)
+HRESULT FileMove(PSZ szFrom, PSZ szTo)
 {
-  LHANDLE          hFile;
-  FILEFINDBUF3 fdFile;
+  HDIR            hFile;
+  FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szFromDir[MAX_BUF];
   char            szFromTemp[MAX_BUF];
   char            szToTemp[MAX_BUF];
   char            szBuf[MAX_BUF];
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
-
 
   /* From file path exists and To file path does not exist */
   if((FileExists(szFrom)) && (!FileExists(szTo)))
   {
-    MoveFile(szFrom, szTo);
+    
+    /* @MAK - need to handle OS/2 case where they are not the same drive*/
+    DosMove(szFrom, szTo);
+
     return(FO_SUCCESS);
   }
   /* From file path exists and To file path exists */
@@ -105,14 +106,17 @@ APIRET FileMove(PSZ szFrom, PSZ szTo)
     AppendBackSlash(szToTemp, sizeof(szToTemp));
     ParsePath(szFrom, szBuf, MAX_BUF, PP_FILENAME_ONLY);
     strcat(szToTemp, szBuf);
-    MoveFile(szFrom, szToTemp);
+    DosMove(szFrom, szToTemp);
     return(FO_SUCCESS);
   }
 
   ParsePath(szFrom, szFromDir, MAX_BUF, PP_PATH_ONLY);
 
-  rc = DosFindFirst(szFrom, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
+  strcat(szFrom, "*.*");
+  ulFindCount = 1;
+  hFile = HDIR_CREATE;
+  ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+  if((DosFindFirst(szFrom, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -131,32 +135,32 @@ APIRET FileMove(PSZ szFrom, PSZ szTo)
       AppendBackSlash(szToTemp, sizeof(szToTemp));
       strcat(szToTemp, fdFile.achName);
 
-      MoveFile(szFromTemp, szToTemp);
+      DosMove(szFromTemp, szToTemp);
     }
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+
+    ulFindCount = 1;
+    if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+      bFound = TRUE;
+    } else {
+      bFound = FALSE;
+    }
   }
 
-  DosFindClose(hdirFindHandle);
+  DosFindClose(hFile);
   return(FO_SUCCESS);
 }
 
-APIRET FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists)
+HRESULT FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists)
 {
-  LHANDLE          hFile;
-  FILEFINDBUF3 fdFile;
+  HDIR            hFile;
+  FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szFromDir[MAX_BUF];
   char            szFromTemp[MAX_BUF];
   char            szToTemp[MAX_BUF];
   char            szBuf[MAX_BUF];
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
 
   if(FileExists(szFrom))
   {
@@ -165,7 +169,12 @@ APIRET FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists)
     strcpy(szToTemp, szTo);
     AppendBackSlash(szToTemp, sizeof(szToTemp));
     strcat(szToTemp, szBuf);
-    CopyFile(szFrom, szToTemp, bFailIfExists);
+    if (bFailIfExists) {
+      DosCopy(szFrom, szToTemp, 0);
+    } else {
+      DosCopy(szFrom, szToTemp, DCPY_EXISTING);
+    }
+
     return(FO_SUCCESS);
   }
 
@@ -173,8 +182,10 @@ APIRET FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists)
   /* proceed acordingly.                                                             */
   ParsePath(szFrom, szFromDir, MAX_BUF, PP_PATH_ONLY);
 
-  rc = DosFindFirst(szFrom, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
+  ulFindCount = 1;
+  hFile = HDIR_CREATE;
+  ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+  if((DosFindFirst(szFrom, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -193,25 +204,31 @@ APIRET FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists)
       AppendBackSlash(szToTemp, sizeof(szToTemp));
       strcat(szToTemp, fdFile.achName);
 
-      CopyFile(szFromTemp, szToTemp, bFailIfExists);
+      if (bFailIfExists) {
+        DosCopy(szFromTemp, szToTemp, 0);
+      } else {
+        DosCopy(szFromTemp, szToTemp, DCPY_EXISTING);
+      }
     }
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+
+    ulFindCount = 1;
+    if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+      bFound = TRUE;
+    } else {
+      bFound = FALSE;
+    }
   }
 
-  DosFindClose(hdirFindHandle);
+  DosFindClose(hFile);
   return(FO_SUCCESS);
 }
 
-APIRET CreateDirectoriesAll(char* szPath)
+HRESULT CreateDirectoriesAll(char* szPath)
 {
   int     i;
   int     iLen = strlen(szPath);
   char    szCreatePath[MAX_BUF];
-  APIRET hrResult;
+  HRESULT hrResult = 0;
 
   memset(szCreatePath, 0, MAX_BUF);
   memcpy(szCreatePath, szPath, iLen);
@@ -222,24 +239,28 @@ APIRET CreateDirectoriesAll(char* szPath)
       (!((szPath[0] == '\\') && (i == 1)) && !((szPath[1] == ':') && (i == 2))))
     {
       szCreatePath[i] = '\0';
-      hrResult        = CreateDirectory(szCreatePath, NULL);
+      if(FileExists(szCreatePath) == FALSE)
+      {
+        APIRET rc = DosCreateDir(szCreatePath, NULL);  
+        if (rc == NO_ERROR) {
+          hrResult = 1;
+        }
+      }
       szCreatePath[i] = szPath[i];
     }
   }
   return(hrResult);
 }
 
-APIRET FileDelete(PSZ szDestination)
+HRESULT FileDelete(PSZ szDestination)
 {
-  LHANDLE          hFile;
+  HDIR            hFile;
   FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szBuf[MAX_BUF];
   char            szPathOnly[MAX_BUF];
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
 
   if(FileExists(szDestination))
   {
@@ -252,8 +273,10 @@ APIRET FileDelete(PSZ szDestination)
   /* proceed acordingly.                                                             */
   ParsePath(szDestination, szPathOnly, MAX_BUF, PP_PATH_ONLY);
 
-  rc = DosFindFirst(szDestination, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
+  ulFindCount = 1;
+  hFile = HDIR_CREATE;
+  ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+  if((DosFindFirst(szDestination, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -269,27 +292,26 @@ APIRET FileDelete(PSZ szDestination)
       DosDelete(szBuf);
     }
 
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+    ulFindCount = 1;
+    if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+      bFound = TRUE;
+    } else {
+      bFound = FALSE;
+    }
   }
 
-  DosFindClose(hdirFindHandle);
+  DosFindClose(hFile);
   return(FO_SUCCESS);
 }
 
-APIRET DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
+HRESULT DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
 {
-  LHANDLE          hFile;
+  HDIR            hFile;
   FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szDestTemp[MAX_BUF];
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
 
   if(!FileExists(szDestination))
     return(FO_SUCCESS);
@@ -300,9 +322,14 @@ APIRET DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
     AppendBackSlash(szDestTemp, sizeof(szDestTemp));
     strcat(szDestTemp, "*");
 
-    bFound = TRUE;
-    rc = DosFindFirst(szDestTemp, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-    while((rc != ERROR_INVALID_HANDLE) && (bFound == TRUE))
+    ulFindCount = 1;
+    hFile = HDIR_CREATE;
+    ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+    if((DosFindFirst(szDestTemp, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+      bFound = FALSE;
+    else
+      bFound = TRUE;
+    while(bFound == TRUE)
     {
       if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
       {
@@ -320,94 +347,19 @@ APIRET DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
           DosDelete(szDestTemp);
         }
       }
-      rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
+
+      ulFindCount = 1;
+      if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
         bFound = TRUE;
-    else
+      } else {
         bFound = FALSE;
+      }
     }
 
-    DosFindClose(hdirFindHandle);
+    DosFindClose(hFile);
   }
   
-  RemoveDirectory(szDestination);
+  DosDeleteDir(szDestination);
   return(FO_SUCCESS);
-}
-
-HINI ParseRootKey(PSZ szRootKey)
-{
-  HINI hkRootKey;
-
-  if(strcmpi(szRootKey, "HKEY_CURRENT_CONFIG") == 0)
-    hkRootKey = HKEY_CURRENT_CONFIG;
-  else if(strcmpi(szRootKey, "HKEY_CURRENT_USER") == 0)
-    hkRootKey = HKEY_CURRENT_USER;
-  else if(strcmpi(szRootKey, "HKEY_LOCAL_MACHINE") == 0)
-    hkRootKey = HKEY_LOCAL_MACHINE;
-  else if(strcmpi(szRootKey, "HKEY_USERS") == 0)
-    hkRootKey = HKEY_USERS;
-  else if(strcmpi(szRootKey, "HKEY_PERFORMANCE_DATA") == 0)
-    hkRootKey = HKEY_PERFORMANCE_DATA;
-  else if(strcmpi(szRootKey, "HKEY_DYN_DATA") == 0)
-    hkRootKey = HKEY_DYN_DATA;
-  else /* HKEY_CLASSES_ROOT */
-    hkRootKey = HKEY_CLASSES_ROOT;
-
-  return(hkRootKey);
-}
-
-PSZ GetStringRootKey(HINI hkRootKey, PSZ szString, ULONG dwStringSize)
-{
-  if(hkRootKey == HKEY_CURRENT_CONFIG)
-  {
-    if(sizeof("HKEY_CURRENT_CONFIG") <= dwStringSize)
-      strcpy(szString, "HKEY_CURRENT_CONFIG");
-    else
-      return(NULL);
-  }
-  else if(hkRootKey == HKEY_CURRENT_USER)
-  {
-    if(sizeof("HKEY_CURRENT_USER") <= dwStringSize)
-      strcpy(szString, "HKEY_CURRENT_USER");
-    else
-      return(NULL);
-  }
-  else if(hkRootKey == HKEY_LOCAL_MACHINE)
-  {
-    if(sizeof("HKEY_LOCAL_MACHINE") <= dwStringSize)
-      strcpy(szString, "HKEY_LOCAL_MACHINE");
-    else
-      return(NULL);
-  }
-  else if(hkRootKey == HKEY_USERS)
-  {
-    if(sizeof("HKEY_USERS") <= dwStringSize)
-      strcpy(szString, "HKEY_USERS");
-    else
-      return(NULL);
-  }
-  else if(hkRootKey == HKEY_PERFORMANCE_DATA)
-  {
-    if(sizeof("HKEY_PERFORMANCE_DATA") <= dwStringSize)
-      strcpy(szString, "HKEY_PERFORMANCE_DATA");
-    else
-      return(NULL);
-  }
-  else if(hkRootKey == HKEY_DYN_DATA)
-  {
-    if(sizeof("HKEY_DYN_DATA") <= dwStringSize)
-      strcpy(szString, "HKEY_DYN_DATA");
-    else
-      return(NULL);
-  }
-  else
-  {
-    if(sizeof("HKEY_CLASSES_ROOT") <= dwStringSize)
-      strcpy(szString, "HKEY_CLASSES_ROOT");
-    else
-      return(NULL);
-  }
-
-  return(szString);
 }
 

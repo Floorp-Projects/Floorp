@@ -20,11 +20,8 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
-#define INCL_WINSYS
 
-#include <os2.h>
 #include "extern.h"
 #include "extra.h"
 #include "dialogs.h"
@@ -32,36 +29,35 @@
 #include "parser.h"
 #include "rdi.h"
 
-
 void ParseAllUninstallLogs()
 {
   char  szFileInstallLog[MAX_BUF];
   char  szKey[MAX_BUF];
   sil   *silFile;
-  ULONG dwFileFound;
-  ULONG dwRv = 0;
+  ULONG ulFileFound;
+  ULONG ulRv = 0;
 
-  dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
-  while(dwFileFound)
+  UndoDesktopIntegration();
+  ulFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
+  while(ulFileFound)
   {
     if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
     {
-      UndoDesktopIntegration();
       FileDelete(szFileInstallLog);
-      dwRv = Uninstall(silFile);
+      ulRv = Uninstall(silFile);
       DeInitSilNodes(&silFile);
-      if(dwRv == WTD_CANCEL)
+      if(ulRv == WTD_CANCEL)
         break;
     }
 
-    dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
+    ulFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
   }
 
-  if(dwRv != WTD_CANCEL)
+  if(ulRv != WTD_CANCEL)
   {
-    lstrcpy(szFileInstallLog, ugUninstall.szLogPath);
+    strcpy(szFileInstallLog, ugUninstall.szLogPath);
     AppendBackSlash(szFileInstallLog, MAX_BUF);
-    lstrcat(szFileInstallLog, ugUninstall.szLogFilename);
+    strcat(szFileInstallLog, ugUninstall.szLogFilename);
     if(FileExists(szFileInstallLog))
     {
       if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
@@ -73,59 +69,59 @@ void ParseAllUninstallLogs()
     }
 
     /* clean up the uninstall windows registry key */
-    lstrcpy(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\");
-    lstrcat(szKey, ugUninstall.szUninstallKeyDescription);
+    strcpy(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\");
+    strcat(szKey, ugUninstall.szUninstallKeyDescription);
+#ifdef OLDCODE
     RegDeleteKey(HKEY_LOCAL_MACHINE, szKey);
+#endif
 
     /* update Wininit.ini to remove itself at reboot */
     RemoveUninstaller(ugUninstall.szUninstallFilename);
   }
 }
 
-MRESULT EXPENTRY DlgProcUninstall(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam)
+MRESULT APIENTRY DlgProcUninstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-   PSZ pszFontNameSize;
-   ULONG ulFontNameSizeLength;
-   char  szBuf[MAX_BUF];
-   RECTL  rDlg;
-   
-   pszFontNameSize = myGetSysFont();
-   ulFontNameSizeLength = sizeof(pszFontNameSize) +1;
+  char  szBuf[MAX_BUF];
+  SWP   swpDlg;
 
   switch(msg)
   {
     case WM_INITDLG:
-      SetWindowText(hDlg, diUninstall.szTitle);
-      wsprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
-      GetPrivateProfileString("Dialog Uninstall", "Uninstall", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, IDWIZNEXT, szBuf);
-      GetPrivateProfileString("Dialog Uninstall", "Cancel", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, MBID_CANCEL, szBuf);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_MESSAGE0), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDWIZNEXT), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, MBID_CANCEL), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
- 
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(ugUninstall.szDefinedFont)+1, ugUninstall.szDefinedFont);
+      WinSetWindowText(hDlg, diUninstall.szTitle);
+      sprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
+      WinSetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "Yes", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      WinSetDlgItemText(hDlg, IDWIZNEXT, szBuf);
+      GetPrivateProfileString("Dialog Uninstall", "No", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      WinSetDlgItemText(hDlg, DID_CANCEL, szBuf);
 
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.xRight/2), (dwScreenY/2)-(rDlg.yBottom/2), 0, 0, SWP_NOSIZE);
-
+      WinQueryWindowPos(hDlg, &swpDlg);
+      WinSetWindowPos(hDlg,
+                      HWND_TOP,
+                      (ulScreenX/2)-(swpDlg.cx/2),
+                      (ulScreenY/2)-(swpDlg.cy/2),
+                      0,
+                      0,
+                      SWP_MOVE);
       break;
 
     case WM_COMMAND:
-      switch(LOWORD(wParam))
+      switch ( SHORT1FROMMP( mp1 ) )
       {
         case IDWIZNEXT:
-          EnableWindow(GetDlgItem(hDlg, IDWIZNEXT), FALSE);
-          EnableWindow(GetDlgItem(hDlg, MBID_CANCEL), FALSE);
+          WinEnableWindow(WinWindowFromID(hDlg, IDWIZNEXT), FALSE);
+          WinEnableWindow(WinWindowFromID(hDlg, DID_CANCEL), FALSE);
           ParseAllUninstallLogs();
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
+          WinDestroyWindow(hDlg);
+          WinPostQueueMsg(0, WM_QUIT, 0, 0);
           break;
 
-        case MBID_CANCEL:
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
+        case DID_CANCEL:
+          WinDestroyWindow(hDlg);
+          WinPostQueueMsg(0, WM_QUIT, 0, 0);
           break;
 
         default:
@@ -133,74 +129,68 @@ MRESULT EXPENTRY DlgProcUninstall(HWND hDlg, UINT msg, MPARAM wParam, LONG lPara
       }
       break;
   }
-  return(0);
+  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
-MRESULT EXPENTRY DlgProcWhatToDo(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam)
+MRESULT APIENTRY DlgProcWhatToDo(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-   PSZ pszFontNameSize;
-   ULONG ulFontNameSizeLength;
-   char  szBuf[MAX_BUF];
-   RECTL  rDlg;
-   
-   pszFontNameSize = myGetSysFont();
-   ulFontNameSizeLength = sizeof(pszFontNameSize) +1;
+  char  szBuf[MAX_BUF];
+  SWP   swpDlg;
 
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(ugUninstall.szDefinedFont)+1, ugUninstall.szDefinedFont);
       GetPrivateProfileString("Messages", "DLG_REMOVE_FILE_TITLE", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetWindowText(hDlg, szBuf);
+      WinSetWindowText(hDlg, szBuf);
 
-      if((PSZ)lParam != NULL)
-        SetDlgItemText(hDlg, IDC_STATIC_SHARED_FILENAME, (PSZ)lParam);
+      if((PSZ)mp2 != NULL)
+        WinSetDlgItemText(hDlg, IDC_STATIC_SHARED_FILENAME, (PSZ)mp2);
 
       GetPrivateProfileString("Dialog Uninstall", "Message1", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+      WinSetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "Message2", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, szBuf);
+      WinSetDlgItemText(hDlg, IDC_MESSAGE1, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "FileName", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, IDC_STATIC, szBuf);
+      WinSetDlgItemText(hDlg, IDC_STATIC, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "No", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, MBID_NO, szBuf);
+      WinSetDlgItemText(hDlg, ID_NO, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "NoToAll", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, ID_NO_TO_ALL, szBuf);
+      WinSetDlgItemText(hDlg, ID_NO_TO_ALL, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "Yes", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, MBID_YES, szBuf);
+      WinSetDlgItemText(hDlg, ID_YES, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "YesToAll", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-      SetDlgItemText(hDlg, ID_YES_TO_ALL, szBuf);
-       
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_MESSAGE0), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_MESSAGE1), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC_SHARED_FILENAME), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, MBID_NO), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, ID_NO_TO_ALL), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, MBID_YES), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, ID_YES_TO_ALL), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-     
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.xRight/2), (dwScreenY/2)-(rDlg.yBottom/2), 0, 0, SWP_NOSIZE);
+      WinSetDlgItemText(hDlg, ID_YES_TO_ALL, szBuf);
 
+      /* Center dialog */
+      WinQueryWindowPos(hDlg, &swpDlg);
+      WinSetWindowPos(hDlg,
+                      HWND_TOP,
+                      (ulScreenX/2)-(swpDlg.cx/2),
+                      (ulScreenY/2)-(swpDlg.cy/2),
+                      0,
+                      0,
+                      SWP_MOVE);
       break;
 
     case WM_COMMAND:
-      switch(LOWORD(wParam))
+      switch ( SHORT1FROMMP( mp1 ) )
       {
-        case MBID_NO:
-          EndDialog(hDlg, WTD_NO);
+        case ID_NO:
+          WinDismissDlg(hDlg, WTD_NO);
           break;
 
         case ID_NO_TO_ALL:
-          EndDialog(hDlg, WTD_NO_TO_ALL);
+          WinDismissDlg(hDlg, WTD_NO_TO_ALL);
           break;
 
-        case MBID_YES:
-          EndDialog(hDlg, WTD_YES);
+        case ID_YES:
+          WinDismissDlg(hDlg, WTD_YES);
           break;
 
         case ID_YES_TO_ALL:
-          EndDialog(hDlg, WTD_YES_TO_ALL);
+          WinDismissDlg(hDlg, WTD_YES_TO_ALL);
           break;
 
         default:
@@ -208,87 +198,77 @@ MRESULT EXPENTRY DlgProcWhatToDo(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam
       }
       break;
   }
-  return(0);
+  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
-MRESULT EXPENTRY DlgProcMessage(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam)
+MRESULT APIENTRY DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-  RECTL      rDlg;
-  HWND      hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); 
-  HDC       hdcSTMessage;
-  SIZEL      sizeString;
-  LOGFONT   logFont;
-  HFONT     hfontTmp;
-  HFONT     hfontOld;
+  SWP       swpDlg;
+  HWND      hSTMessage = WinWindowFromID(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
+  HPS       hpsSTMessage;
+  RECTL     rectlString;
   int       i;
-  PSZ pszFontNameSize;
-  ULONG ulFontNameSizeLength;
-    
-   pszFontNameSize = myGetSysFont();
-   ulFontNameSizeLength = sizeof(pszFontNameSize) +1;
 
   switch(msg)
   {
     case WM_INITDLG:
-        WinSetPresParam(WinWindowFromID(hDlg, IDC_MESSAGE), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);          
-        break;
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(ugUninstall.szDefinedFont)+1, ugUninstall.szDefinedFont);
+      break;
 
     case WM_COMMAND:
-      switch(LOWORD(wParam))
+      switch ( SHORT1FROMMP( mp1 ) )
       {
         case IDC_MESSAGE:
-          hdcSTMessage = GetWindowDC(hSTMessage);
+          hpsSTMessage = WinGetPS(hSTMessage);
 
-          SystemParametersInfo(SPI_GETICONTITLELOGFONT,
-                               sizeof(logFont),
-                               (PVOID)&logFont,
-                               0);
-          hfontTmp = CreateFontIndirect(&logFont);
+          rectlString.xLeft = 0;
+          rectlString.xRight = 10000;
+          rectlString.yTop = 10000;
+          rectlString.yBottom = 0;
+          WinDrawText(hpsSTMessage, strlen((char*)mp2), (char*)mp2,
+                            &rectlString, 0, 0,
+                            DT_BOTTOM | DT_QUERYEXTENT | DT_TEXTATTRS | DT_WORDBREAK);
+          WinReleasePS(hpsSTMessage);
 
-          if(hfontTmp)
-            hfontOld = SelectObject(hdcSTMessage, hfontTmp);
+          WinSetWindowPos(hDlg, HWND_TOP,
+                      (ulScreenX/2)-((rectlString.xRight + 55)/2),
+                      (ulScreenY/2)-((rectlString.yTop + 50)/2),
+                      rectlString.xRight + 55,
+                      rectlString.yTop + 50,
+                      SWP_SIZE | SWP_MOVE);
 
-          GetTextExtentPoint32(hdcSTMessage, (PSZ)lParam, lstrlen((PSZ)lParam), &sizeString);
-          SelectObject(hdcSTMessage, hfontOld);
-          DeleteObject(hfontTmp);
-          ReleaseDC(hSTMessage, hdcSTMessage);
+          WinQueryWindowPos(hDlg, &swpDlg);
 
-          SetWindowPos(hDlg, HWND_TOP,
-                      (dwScreenX/2)-((sizeString.cx + 40)/2), (dwScreenY/2)-((sizeString.cy + 40)/2),
-                      sizeString.cx + 40, sizeString.cy + 40,
-                      SWP_SHOW);
-
-          if(GetClientRect(hDlg, &rDlg))
-            SetWindowPos(hSTMessage,
+          WinSetWindowPos(hSTMessage,
                          HWND_TOP,
-                         rDlg.xLeft,
-                         rDlg.yTop,
-                         rDlg.xRight,
-                         rDlg.yBottom,
-                         SWP_SHOW);
+                         ulDlgFrameX,
+                         ulDlgFrameY,
+                         swpDlg.cx-2*ulDlgFrameX,
+                         swpDlg.cy-2*ulDlgFrameY-ulTitleBarY,
+                         SWP_SIZE | SWP_MOVE);
 
-          for(i = 0; i < lstrlen((PSZ)lParam); i++)
+          for(i = 0; i < strlen((PSZ)mp2); i++)
           {
-            if((((PSZ)lParam)[i] == '\r') || (((PSZ)lParam)[i] == '\n')) 
-              ((PSZ)lParam)[i] = ' ';
+            if((((PSZ)mp2)[i] == '\r') || (((PSZ)mp2)[i] == '\n')) 
+              ((PSZ)mp2)[i] = ' ';
           }
 
-          SetDlgItemText(hDlg, IDC_MESSAGE, (PSZ)lParam);
-          break;
+          WinSetDlgItemText(hDlg, IDC_MESSAGE, (PSZ)mp2);
+          return (MRESULT)TRUE;
       }
       break;
   }
-  return(0);
+  return(WinDefDlgProc(hDlg, msg, mp1, mp2));
 }
 
 void ProcessWindowsMessages()
 {
-  QMSG msg;
+  QMSG qmsg;
 
-  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+  while(WinPeekMsg((HAB)0, &qmsg, 0, 0, 0, PM_REMOVE))
   {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+    WinDispatchMsg((HAB)0, &qmsg );
   }
 }
 
@@ -296,47 +276,42 @@ void ShowMessage(PSZ szMessage, BOOL bShow)
 {
   char szBuf[MAX_BUF];
 
-  if(ugUninstall.dwMode != SILENT)
+  if(ugUninstall.ulMode != SILENT)
   {
     if((bShow) && (hDlgMessage == NULL))
     {
-      ZeroMemory(szBuf, sizeof(szBuf));
+      memset(szBuf, 0, sizeof(szBuf));
       GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-       hDlgMessage =InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
-      SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (MPARAM)szMessage);
+      hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
+      WinSendMsg(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (MPARAM)szMessage);
     }
     else if(!bShow && hDlgMessage)
     {
-      DestroyWindow(hDlgMessage);
+      WinDestroyWindow(hDlgMessage);
       hDlgMessage = NULL;
     }
   }
 }
 
-HWND InstantiateDialog(HWND hParent, ULONG dwDlgID, PSZ szTitle, PFNWP wpDlgProc)
+HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgProc)
 {
   char szBuf[MAX_BUF];
   HWND hDlg = NULL;
 
-  if((hDlg = CreateDialog(hInst, MAKEINTRESOURCE(dwDlgID), hParent, wpDlgProc)) == NULL)
+  hDlg = WinLoadDlg(HWND_DESKTOP, hParent, pfnwpDlgProc, 0, ulDlgID, NULL);
+
+  if (hDlg == NULL)
   {
     char szEDialogCreate[MAX_BUF];
 
     if(GetPrivateProfileString("Messages", "ERROR_DIALOG_CREATE", "", szEDialogCreate, sizeof(szEDialogCreate), szFileIniUninstall))
     {
-      wsprintf(szBuf, szEDialogCreate, szTitle);
+      sprintf(szBuf, szEDialogCreate, szTitle);
       PrintError(szBuf, ERROR_CODE_SHOW);
     }
 
-    PostQuitMessage(1);
+    WinPostQueueMsg(NULL, WM_QUIT, 1, 0);
   }
 
   return(hDlg);
-}
-
-PSZ myGetSysFont()
-{
-  PSZ szFontNameSize[MAXNAMEL];
-  PrfQueryProfileString(HINI_USER,"PM_SYSTEMFONTS", "IconText", "9.WarpSans", szFontNameSize, MAXNAMEL);
-  return szFontNameSize;
 }

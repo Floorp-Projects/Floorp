@@ -27,14 +27,14 @@
 
 #include "uninstall.h"
 
-APIRET     FileUncompress(PSZ szFrom, PSZ szTo);
-APIRET     FileMove(PSZ szFrom, PSZ szTo);
-APIRET     FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists);
-APIRET     FileDelete(PSZ szDestination);
-APIRET     DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs);
-APIRET     CreateDirectoriesAll(char* szPath);
-HINI        ParseRootKey(PSZ szRootKey);
-PSZ       GetStringRootKey(HINI hkRootKey, PSZ szString, ULONG dwStringSize);
+HRESULT     FileUncompress(PSZ szFrom, PSZ szTo);
+HRESULT     FileMove(PSZ szFrom, PSZ szTo);
+HRESULT     FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists);
+HRESULT     FileDelete(PSZ szDestination);
+HRESULT     DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs);
+HRESULT     CreateDirectoriesAll(char* szPath);
+//HKEY        ParseRootKey(PSZ szRootKey);
+//PSZ         GetStringRootKey(HKEY hkRootKey, PSZ szString, DWORD dwStringSize);
 BOOL        SearchForUninstallKeys(char *szStringToMatch);
 
 #endif

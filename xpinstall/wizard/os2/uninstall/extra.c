@@ -20,104 +20,95 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
-
-#define INCl_DOSSESMGR
-#define INCL_DOSMEMMGR 
-#define INCL_DOSERRORS
-#define INCL_WIN
-#define INCL_WINWINDOWMGR
-#define HIULONG(l)   ((ULONG) (((ULONG) (l) >> 32) & 0xFFFF))
-#define LOULONG(l)   ((ULONG) (l))
-#define INDEX_STR_LEN       10
-#define PN_PROCESS          TEXT("Process")
-#define PN_THREAD           TEXT("Thread")
-#define INCL_WINSHELLDATA
 
 #include "extern.h"
 #include "extra.h"
 #include "parser.h"
 #include "dialogs.h"
 #include "ifuncns.h"
-#include <os2.h>
 
-ULONG  (EXPENTRY *NS_GetDiskFreeSpace)(PCSZ, PULONG, PULONG, PULONG, PULONG);
-ULONG  (EXPENTRY *NS_GetDiskFreeSpaceEx)(PCSZ, PULONG, PULONG, PULONG);
+#define INDEX_STR_LEN       10
+#define PN_PROCESS          TEXT("Process")
+#define PN_THREAD           TEXT("Thread")
 
-BOOL InitApplication(LHANDLE hInstance)
+BOOL InitApplication(HMODULE hInstance)
 {
+  CLASSINFO classinfo;
 
-HAB hab;
-PFNWP pGenericWndProc;
-  
-WinRegisterClass(hab, szClassName,  pGenericWndProc,  0L, 0);            
- 
-  dwScreenX = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN);
-  dwScreenY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN);
+  ulScreenX = WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN);
+  ulScreenY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN);
+  ulDlgFrameX = WinQuerySysValue(HWND_DESKTOP, SV_CXDLGFRAME);
+  ulDlgFrameY = WinQuerySysValue(HWND_DESKTOP, SV_CYDLGFRAME);
+  ulTitleBarY = WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
 
-  return(WinRegisterClass);
+  WinQueryClassInfo((HAB)0, WC_FRAME, &classinfo);
+  return (WinRegisterClass((HAB)0, szClassName, WinDefDlgProc,
+                           CS_SAVEBITS, classinfo.cbWindowData));
 }
 
-void PrintError(PSZ szMsg, ULONG dwErrorCodeSH)
+void PrintError(PSZ szMsg, ULONG ulErrorCodeSH)
 {
-  ULONG dwErr;
+  ERRORID erridErrorCode;
   char  szErrorString[MAX_BUF];
 
-  if(dwErrorCodeSH == ERROR_CODE_SHOW)
+  if(ulErrorCodeSH == ERROR_CODE_SHOW)
   {
-    dwErr = GetLastError();
-    sprintf(szErrorString, "%d : %s", dwErr, szMsg);
+    erridErrorCode = WinGetLastError((HAB)0);
+    sprintf(szErrorString, "%d : %s", erridErrorCode, szMsg);
   }
   else
     sprintf(szErrorString, "%s", szMsg);
 
-  if((ugUninstall.dwMode != SILENT) && (ugUninstall.dwMode != AUTO))
+  if((ugUninstall.ulMode != SILENT) && (ugUninstall.ulMode != AUTO))
   {
-    WinMessageBox(HWND_DESKTOP, hWndMain, szErrorString, NULL, NULL, MB_ICONEXCLAMATION);
+    WinMessageBox(HWND_DESKTOP, hWndMain, szErrorString, NULL, 0, MB_ICONEXCLAMATION);
   }
-  else if(ugUninstall.dwMode == AUTO)
+  else if(ugUninstall.ulMode == AUTO)
   {
     ShowMessage(szErrorString, TRUE);
-    Delay(5);
+    DosSleep(5000);
     ShowMessage(szErrorString, FALSE);
   }
 }
 
-void *NS_GlobalAlloc(ULONG dwMaxBuf)
+void *NS_GlobalAlloc(ULONG ulMaxBuf)
 {
-   PVOID  MyObject    = NULL;
-   APIRET rc; 
+  PSZ szBuf = NULL;
 
-if((rc = DosAllocMem(&MyObject,  dwMaxBuf,  PAG_WRITE )) != 0)
-  {
-    return(FALSE);
+  if((szBuf = calloc(1, ulMaxBuf)) == NULL)
+  {     
+    if((szEGlobalAlloc == NULL) || (*szEGlobalAlloc == '\0'))
+      PrintError("Memory allocation error.", ERROR_CODE_HIDE);
+    else
+      PrintError(szEGlobalAlloc, ERROR_CODE_SHOW);
+
+    return(NULL);
   }
   else
-  {
-    return(rc);
-  }
+    return(szBuf);
 }
-  
+
 void FreeMemory(void **vPointer)
 {
   if(*vPointer != NULL)
-    *vPointer = GlobalFree(*vPointer);
+    free(*vPointer);
+  *vPointer = NULL;
 }
 
-APIRET NS_LoadStringAlloc(LHANDLE hInstance, ULONG dwID, PSZ *szStringBuf, ULONG dwStringBuf)
+HRESULT NS_LoadStringAlloc(HMODULE hInstance, ULONG ulID, PSZ *szStringBuf, ULONG ulStringBuf)
 {
   char szBuf[MAX_BUF];
 
   if((*szStringBuf = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   
-  if(!LoadString(hInstance, dwID, *szStringBuf, dwStringBuf))
+  if(!WinLoadString((HAB)0, hInstance, ulID, ulStringBuf, *szStringBuf))
   {
     if((szEStringLoad == NULL) ||(*szEStringLoad == '\0'))
-      sprintf(szBuf, "Could not load string resource ID %d", dwID);
+      sprintf(szBuf, "Could not load string resource ID %d", ulID);
     else
-      sprintf(szBuf, szEStringLoad, dwID);
+      sprintf(szBuf, szEStringLoad, ulID);
 
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
@@ -125,16 +116,16 @@ APIRET NS_LoadStringAlloc(LHANDLE hInstance, ULONG dwID, PSZ *szStringBuf, ULONG
   return(0);
 }
 
-APIRET NS_LoadString(LHANDLE hInstance, ULONG dwID, PSZ szStringBuf, ULONG dwStringBuf)
+HRESULT NS_LoadString(HMODULE hInstance, ULONG ulID, PSZ szStringBuf, ULONG ulStringBuf)
 {
   char szBuf[MAX_BUF];
 
-  if(!LoadString(hInstance, dwID, szStringBuf, dwStringBuf))
+  if(!WinLoadString((HAB)0, hInstance, ulID, ulStringBuf, szStringBuf))
   {
     if((szEStringLoad == NULL) ||(*szEStringLoad == '\0'))
-      sprintf(szBuf, "Could not load string resource ID %d", dwID);
+      sprintf(szBuf, "Could not load string resource ID %d", ulID);
     else
-      sprintf(szBuf, szEStringLoad, dwID);
+      sprintf(szBuf, szEStringLoad, ulID);
 
     PrintError(szBuf, ERROR_CODE_SHOW);
     return(1);
@@ -142,29 +133,22 @@ APIRET NS_LoadString(LHANDLE hInstance, ULONG dwID, PSZ szStringBuf, ULONG dwStr
   return(WIZ_OK);
 }
 
-void Delay(ULONG dwSeconds)
-{
-  SleepEx(dwSeconds * 1000, FALSE);
-}
-
-APIRET Initialize(LHANDLE hInstance)
+HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
 {
   char szBuf[MAX_BUF];
   HWND hwndFW;
-  SWP swpCurrent;
 
   hDlgMessage = NULL;
-  DetermineOSVersion();
-  gdwWhatToDo = WTD_ASK;
+  gulWhatToDo = WTD_ASK;
 
   /* load strings from setup.exe */
-  if(NS_LoadStringAlloc(hInst, IDS_ERROR_GLOBALALLOC, &szEGlobalAlloc, MAX_BUF))
+  if(NS_LoadStringAlloc(0, IDS_ERROR_GLOBALALLOC, &szEGlobalAlloc, MAX_BUF))
     return(1);
-  if(NS_LoadStringAlloc(hInst, IDS_ERROR_STRING_LOAD, &szEStringLoad,  MAX_BUF))
+  if(NS_LoadStringAlloc(0, IDS_ERROR_STRING_LOAD, &szEStringLoad,  MAX_BUF))
     return(1);
-  if(NS_LoadStringAlloc(hInst, IDS_ERROR_DLL_LOAD,    &szEDllLoad,     MAX_BUF))
+  if(NS_LoadStringAlloc(0, IDS_ERROR_DLL_LOAD,    &szEDllLoad,     MAX_BUF))
     return(1);
-  if(NS_LoadStringAlloc(hInst, IDS_ERROR_STRING_NULL, &szEStringNull,  MAX_BUF))
+  if(NS_LoadStringAlloc(0, IDS_ERROR_STRING_NULL, &szEStringNull,  MAX_BUF))
     return(1);
 
   memset(szBuf, 0, sizeof(MAX_BUF));
@@ -173,25 +157,22 @@ APIRET Initialize(LHANDLE hInstance)
 
   strcpy(szClassName, CLASS_NAME);
 
+#ifdef OLDCODE
   /* Allow only one instance of setup to run.
    * Detect a previous instance of setup, bring it to the 
    * foreground, and quit current instance */
-  if((hwndFW = WinQueryObject(szClassName)) != NULL)
+  if((hwndFW = FindWindow(szClassName, szClassName)) != NULL)
   {
-    WinQueryWindowPos(hwndFW, &swpCurrent);
-    WinSetWindowPos(hwndFW, HWND_TOP , swpCurrent.x, swpCurrent.y, swpCurrent.cx, swpCurrent.cy, SWP_RESTORE|SWP_MOVE|SWP_SIZE);
-    WinShowWindow(hwndFW, TRUE);
-    //SetForegroundWindow(hwndFW);
+    ShowWindow(hwndFW, SW_RESTORE);
+    SetForegroundWindow(hwndFW);
     return(1);
   }
-
-  hAccelTable = LoadAccelerators(hInst, szClassName);
+#endif
 
   if((szUninstallDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
-  GetModuleFileName(NULL, szBuf, sizeof(szBuf));
-  ParsePath(szBuf, szUninstallDir, MAX_BUF, PP_PATH_ONLY);
+  ParsePath(szAppName, szUninstallDir, MAX_BUF, PP_PATH_ONLY);
 
   if((szTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -206,6 +187,15 @@ APIRET Initialize(LHANDLE hInstance)
   AppendBackSlash(szFileIniUninstall, MAX_BUF);
   strcat(szFileIniUninstall, FILE_INI_UNINSTALL);
 
+  if((szFileIniDefaultsInfo = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  strcpy(szFileIniDefaultsInfo, szUninstallDir);
+  AppendBackSlash(szFileIniDefaultsInfo, MAX_BUF);
+  GetPrivateProfileString("General", "Defaults Info Filename", "", szBuf, MAX_BUF, szFileIniUninstall);
+  strcat(szFileIniDefaultsInfo, szBuf);
+
+#ifdef OLDCODE
   // determine the system's TEMP path
   if(GetTempPath(MAX_BUF, szTempDir) == 0)
   {
@@ -224,6 +214,7 @@ APIRET Initialize(LHANDLE hInstance)
     AppendBackSlash(szTempDir, MAX_BUF);
     strcat(szTempDir, "TEMP");
   }
+#endif
   strcpy(szOSTempDir, szTempDir);
   AppendBackSlash(szTempDir, MAX_BUF);
   strcat(szTempDir, WIZ_TEMP_DIR);
@@ -248,198 +239,69 @@ APIRET Initialize(LHANDLE hInstance)
     RemoveBackSlash(szTempDir);
   }
 
+  ugUninstall.bVerbose = FALSE;
+  ugUninstall.bUninstallFiles = TRUE;
+
   return(0);
 }
 
 /* Function to remove quotes from a string */
-void RemoveQuotes(PSZ lpszSrc, PSZ lpszDest, int iDestSize)
+void RemoveQuotes(PSZ szSrc, PSZ szDest, int iDestSize)
 {
-  char *lpszBegin;
+  char *szBegin;
 
-  if(strlen(lpszSrc) > iDestSize)
+  if(strlen(szSrc) > iDestSize)
     return;
 
-  if(*lpszSrc == '\"')
-    lpszBegin = &lpszSrc[1];
+  if(*szSrc == '\"')
+    szBegin = &szSrc[1];
   else
-    lpszBegin = lpszSrc;
+    szBegin = szSrc;
 
-  strcpy(lpszDest, lpszBegin);
+  strcpy(szDest, szBegin);
 
-  if(lpszDest[strlen(lpszDest) - 1] == '\"')
-    lpszDest[strlen(lpszDest) - 1] = '\0';
+  if(szDest[strlen(szDest) - 1] == '\"')
+    szDest[strlen(szDest) - 1] = '\0';
 }
 
 /* Function to locate the first non space character in a string,
  * and return a pointer to it. */
-PSZ GetFirstNonSpace(PSZ lpszString)
+PSZ GetFirstNonSpace(PSZ szString)
 {
   int   i;
   int   iStrLength;
 
-  iStrLength = strlen(lpszString);
+  iStrLength = strlen(szString);
 
   for(i = 0; i < iStrLength; i++)
   {
-    if(!isspace(lpszString[i]))
-      return(&lpszString[i]);
+    if(!isspace(szString[i]))
+      return(&szString[i]);
   }
 
   return(NULL);
 }
 
-/* Function to return the argument count given a command line input
- * format string */
-int GetArgC(PSZ lpszCommandLine)
-{
-  int   i;
-  int   iArgCount;
-  int   iStrLength;
-  PSZ lpszBeginStr;
-  BOOL  bFoundQuote;
-  BOOL  bFoundSpace;
-
-  iArgCount    = 0;
-  lpszBeginStr = GetFirstNonSpace(lpszCommandLine);
-
-  if(lpszBeginStr == NULL)
-    return(iArgCount);
-
-  iStrLength   = strlen(lpszBeginStr);
-  bFoundQuote  = FALSE;
-  bFoundSpace  = TRUE;
-
-  for(i = 0; i < iStrLength; i++)
-  {
-    if(lpszCommandLine[i] == '\"')
-    {
-      if(bFoundQuote == FALSE)
-      {
-        ++iArgCount;
-        bFoundQuote = TRUE;
-      }
-      else
-      {
-        bFoundQuote = FALSE;
-      }
-    }
-    else if(bFoundQuote == FALSE)
-    {
-      if(!isspace(lpszCommandLine[i]) && (bFoundSpace == TRUE))
-      {
-        ++iArgCount;
-        bFoundSpace = FALSE;
-      }
-      else if(isspace(lpszCommandLine[i]))
-      {
-        bFoundSpace = TRUE;
-      }
-    }
-  }
-
-  return(iArgCount);
-}
-
-/* Function to return a specific argument parameter from a given command line input
- * format string. */
-PSZ GetArgV(PSZ lpszCommandLine, int iIndex, PSZ lpszDest, int iDestSize)
-{
-  int   i;
-  int   j;
-  int   iArgCount;
-  int   iStrLength;
-  PSZ lpszBeginStr;
-  PSZ lpszDestTemp;
-  BOOL  bFoundQuote;
-  BOOL  bFoundSpace;
-
-  iArgCount    = 0;
-  lpszBeginStr = GetFirstNonSpace(lpszCommandLine);
-
-  if(lpszBeginStr == NULL)
-    return(NULL);
-
-  lpszDestTemp = (char *)calloc(iDestSize, sizeof(char));
-  if(lpszDestTemp == NULL)
-  {
-    PrintError("Out of memory", ERROR_CODE_HIDE);
-    exit(1);
-  }
-
-  memset(lpszDest, 0, iDestSize);
-  iStrLength    = strlen(lpszBeginStr);
-  bFoundQuote   = FALSE;
-  bFoundSpace   = TRUE;
-  j             = 0;
-
-  for(i = 0; i < iStrLength; i++)
-  {
-    if(lpszCommandLine[i] == '\"')
-    {
-      if(bFoundQuote == FALSE)
-      {
-        ++iArgCount;
-        bFoundQuote = TRUE;
-      }
-      else
-      {
-        bFoundQuote = FALSE;
-      }
-    }
-    else if(bFoundQuote == FALSE)
-    {
-      if(!isspace(lpszCommandLine[i]) && (bFoundSpace == TRUE))
-      {
-        ++iArgCount;
-        bFoundSpace = FALSE;
-      }
-      else if(isspace(lpszCommandLine[i]))
-      {
-        bFoundSpace = TRUE;
-      }
-    }
-
-    if((iIndex == (iArgCount - 1)) &&
-      ((bFoundQuote == TRUE) || (bFoundSpace == FALSE) ||
-      ((bFoundQuote == FALSE) && (lpszCommandLine[i] == '\"'))))
-    {
-      if(j < iDestSize)
-      {
-        lpszDestTemp[j] = lpszCommandLine[i];
-        ++j;
-      }
-      else
-      {
-        lpszDestTemp[j] = '\0';
-      }
-    }
-  }
-
-  RemoveQuotes(lpszDestTemp, lpszDest, iDestSize);
-  free(lpszDestTemp);
-  return(lpszDest);
-}
-
 void SetUninstallRunMode(PSZ szMode)
 {
   if(strcmpi(szMode, "NORMAL") == 0)
-    ugUninstall.dwMode = NORMAL;
+    ugUninstall.ulMode = NORMAL;
   if(strcmpi(szMode, "AUTO") == 0)
-    ugUninstall.dwMode = AUTO;
+    ugUninstall.ulMode = AUTO;
   if(strcmpi(szMode, "SILENT") == 0)
-    ugUninstall.dwMode = SILENT;
+    ugUninstall.ulMode = SILENT;
 }
 
 void RemoveBackSlash(PSZ szInput)
 {
   int   iCounter;
-  ULONG dwInputLen;
+  ULONG ulInputLen;
 
   if(szInput != NULL)
   {
-    dwInputLen = strlen(szInput);
+    ulInputLen = strlen(szInput);
 
-    for(iCounter = dwInputLen -1; iCounter >= 0 ; iCounter--)
+    for(iCounter = ulInputLen -1; iCounter >= 0 ; iCounter--)
     {
       if(szInput[iCounter] == '\\')
         szInput[iCounter] = '\0';
@@ -449,20 +311,20 @@ void RemoveBackSlash(PSZ szInput)
   }
 }
 
-void AppendBackSlash(PSZ szInput, ULONG dwInputSize)
+void AppendBackSlash(PSZ szInput, ULONG ulInputSize)
 {
   if(szInput != NULL)
   {
     if(*szInput == '\0')
     {
-      if(((ULONG)strlen(szInput) + 1) < dwInputSize)
+      if(((ULONG)strlen(szInput) + 1) < ulInputSize)
       {
         strcat(szInput, "\\");
       }
     }
     else if(szInput[strlen(szInput) - 1] != '\\')
     {
-      if(((ULONG)strlen(szInput) + 1) < dwInputSize)
+      if(((ULONG)strlen(szInput) + 1) < ulInputSize)
       {
         strcat(szInput, "\\");
       }
@@ -473,13 +335,13 @@ void AppendBackSlash(PSZ szInput, ULONG dwInputSize)
 void RemoveSlash(PSZ szInput)
 {
   int   iCounter;
-  ULONG dwInputLen;
+  ULONG ulInputLen;
 
   if(szInput != NULL)
   {
-    dwInputLen = strlen(szInput);
+    ulInputLen = strlen(szInput);
 
-    for(iCounter = dwInputLen -1; iCounter >= 0 ; iCounter--)
+    for(iCounter = ulInputLen -1; iCounter >= 0 ; iCounter--)
     {
       if(szInput[iCounter] == '/')
         szInput[iCounter] = '\0';
@@ -489,20 +351,20 @@ void RemoveSlash(PSZ szInput)
   }
 }
 
-void AppendSlash(PSZ szInput, ULONG dwInputSize)
+void AppendSlash(PSZ szInput, ULONG ulInputSize)
 {
   if(szInput != NULL)
   {
     if(*szInput == '\0')
     {
-      if(((ULONG)strlen(szInput) + 1) < dwInputSize)
+      if(((ULONG)strlen(szInput) + 1) < ulInputSize)
       {
         strcat(szInput, "/");
       }
     }
     else if(szInput[strlen(szInput) - 1] != '/')
     {
-      if(((ULONG)strlen(szInput) + 1) < dwInputSize)
+      if(((ULONG)strlen(szInput) + 1) < ulInputSize)
       {
         strcat(szInput, "/");
       }
@@ -510,25 +372,25 @@ void AppendSlash(PSZ szInput, ULONG dwInputSize)
   }
 }
 
-void ParsePath(PSZ szInput, PSZ szOutput, ULONG dwOutputSize, ULONG dwType)
+void ParsePath(PSZ szInput, PSZ szOutput, ULONG ulOutputSize, ULONG ulType)
 {
   int   iCounter;
-  ULONG dwCounter;
-  ULONG dwInputLen;
+  ULONG ulCounter;
+  ULONG ulInputLen;
   BOOL  bFound;
 
   if((szInput != NULL) && (szOutput != NULL))
   {
     bFound        = TRUE;
-    dwInputLen    = strlen(szInput);
-    memset(szOutput, 0, dwOutputSize);
+    ulInputLen    = strlen(szInput);
+    memset(szOutput, 0, ulOutputSize);
 
-    if(dwInputLen < dwOutputSize)
+    if(ulInputLen < ulOutputSize)
     {
-      switch(dwType)
+      switch(ulType)
       {
         case PP_FILENAME_ONLY:
-          for(iCounter = dwInputLen - 1; iCounter >= 0; iCounter--)
+          for(iCounter = ulInputLen - 1; iCounter >= 0; iCounter--)
           {
             if(szInput[iCounter] == '\\')
             {
@@ -543,7 +405,7 @@ void ParsePath(PSZ szInput, PSZ szOutput, ULONG dwOutputSize, ULONG dwType)
           break;
 
         case PP_PATH_ONLY:
-          for(iCounter = dwInputLen - 1; iCounter >= 0; iCounter--)
+          for(iCounter = ulInputLen - 1; iCounter >= 0; iCounter--)
           {
             if(szInput[iCounter] == '\\')
             {
@@ -563,16 +425,16 @@ void ParsePath(PSZ szInput, PSZ szOutput, ULONG dwOutputSize, ULONG dwType)
           {
             szOutput[0] = szInput[0];
             szOutput[1] = szInput[1];
-            AppendBackSlash(szOutput, dwOutputSize);
+            AppendBackSlash(szOutput, ulOutputSize);
           }
           else if(szInput[1] == '\\')
           {
             int iFoundBackSlash = 0;
-            for(dwCounter = 0; dwCounter < dwInputLen; dwCounter++)
+            for(ulCounter = 0; ulCounter < ulInputLen; ulCounter++)
             {
-              if(szInput[dwCounter] == '\\')
+              if(szInput[ulCounter] == '\\')
               {
-                szOutput[dwCounter] = szInput[dwCounter];
+                szOutput[ulCounter] = szInput[ulCounter];
                 ++iFoundBackSlash;
               }
 
@@ -581,7 +443,7 @@ void ParsePath(PSZ szInput, PSZ szOutput, ULONG dwOutputSize, ULONG dwType)
             }
 
             if(iFoundBackSlash != 0)
-              AppendBackSlash(szOutput, dwOutputSize);
+              AppendBackSlash(szOutput, ulOutputSize);
           }
           break;
       }
@@ -589,92 +451,42 @@ void ParsePath(PSZ szInput, PSZ szOutput, ULONG dwOutputSize, ULONG dwType)
   }
 }
 
-void DetermineOSVersion()
+HRESULT WinSpawn(PSZ szClientName, PSZ szParameters, PSZ szCurrentDir, BOOL bWait)
 {
-  ULONG         dwVersion;
-  ULONG         dwWindowsMajorVersion;
-  ULONG         dwWindowsMinorVersion;
-  ULONG         dwWindowsVersion;
-  BOOL          bIsWin95Debute;
-  char          szESetupRequirement[MAX_BUF];
-
-  ulOSType        = 0;
-  dwVersion       = GetVersion();
-  bIsWin95Debute  = IsWin95Debute();
-
-  // Get major and minor version numbers of Windows
-  dwWindowsMajorVersion =  (ULONG)(LOBYTE(LOWORD(dwVersion)));
-  dwWindowsMinorVersion =  (ULONG)(HIBYTE(LOWORD(dwVersion)));
-  dwWindowsVersion      =  (ULONG)(HIWORD(dwVersion));
-
-  // Get build numbers for Windows NT or Win95/Win98
-  if(dwVersion < 0x80000000) // Windows NT
-  {
-    ulOSType |= OS_NT;
-    if(dwWindowsMajorVersion == 3)
-      ulOSType |= OS_NT3;
-    else if(dwWindowsMajorVersion == 4)
-      ulOSType |= OS_NT4;
-    else
-      ulOSType |= OS_NT5;
-  }
-  else if(dwWindowsMajorVersion == 4)
-  {
-    ulOSType |= OS_WIN9x;
-    if(dwWindowsMinorVersion == 0)
-    {
-      ulOSType |= OS_WIN95;
-
-      if(bIsWin95Debute)
-        ulOSType |= OS_WIN95_DEBUTE;
+  STARTDATA startdata;
+  PID       pid, endpid;
+  ULONG     ulSessID;
+  APIRET rc;
+  RESULTCODES resultcodes;
+  ULONG     ulFlags;
+  
+  rc = DosQueryAppType(szClientName, &ulFlags);
+  if (rc == NO_ERROR) {
+    memset(&startdata, 0, sizeof(STARTDATA));
+    startdata.Length  = sizeof(STARTDATA);
+    startdata.PgmName = szClientName;
+    startdata.PgmInputs = szParameters;
+    rc = DosStartSession(&startdata, &ulSessID, &pid);
+    if (rc == NO_ERROR) {
+      if (bWait) {
+        DosWaitChild(DCWA_PROCESS, DCWW_NOWAIT, &resultcodes, &endpid, pid);
+      }
+      return (TRUE);
     }
-    else
-      ulOSType |= OS_WIN98;
+  } else {
+    CHAR szBuf[CCHMAXPATH];
+    HOBJECT hobject;
+    strcpy(szBuf, szCurrentDir);
+    strcat(szBuf, szClientName);
+    hobject = WinQueryObject(szBuf);
+    WinSetFocus(HWND_DESKTOP, HWND_DESKTOP);
+    WinOpenObject(hobject, 0, TRUE); // 0 = OPEN_DEFAULT
   }
-  else
-  {
-    if(GetPrivateProfileString("Messages", "ERROR_SETUP_REQUIREMENT", "",
-                               szESetupRequirement, sizeof(szESetupRequirement), 
-                               szFileIniUninstall))
-      PrintError(szESetupRequirement, ERROR_CODE_HIDE);
 
-    exit(1);
-  }
+  return(FALSE);
 }
 
-APIRET WinSpawn(PSZ szClientName, PSZ szParameters, PSZ szCurrentDir, int iShowCmd, BOOL bWait)
-{
-
-HWND hwndNotify;
-PPROGDETAILS pDetails;
-HAPP happ;
-
-   pDetails = (PPROGDETAILS) malloc( sizeof(PROGDETAILS) );   /* Allocate structure */
-
-   pDetails->Length                      = sizeof(PROGDETAILS);
-   pDetails->progt.progc                 = PROG_WINDOWABLEVIO;
-   pDetails->progt.fbVisible             = SHE_VISIBLE;
-   pDetails->pszTitle                    = "TEXT";
-   pDetails->pszExecutable               = "TEXT.EXE";
-   pDetails->pszParameters               = szParameters;
-   pDetails->pszStartupDir               = szCurrentDir;
-   pDetails->pszEnvironment              = "WORKPLACE\0\0";
-   pDetails->swpInitial.fl               = SWP_ACTIVATE;        /* Window positioning   */
-   pDetails->swpInitial.cy               = 0;                   /* Width of window      */
-   pDetails->swpInitial.cx               = 0;                   /* Height of window     */
-   pDetails->swpInitial.y                = 0;                   /* Lower edge of window */
-   pDetails->swpInitial.x                = 0;                   /* Left edge of window  */
-   pDetails->swpInitial.hwndInsertBehind = HWND_TOP;
-   pDetails->swpInitial.hwnd             = hwndNotify;
-   pDetails->swpInitial.ulReserved1      = 0;
-   pDetails->swpInitial.ulReserved2      = 0;
-
-   happ = WinStartApp(hwndNotify, pDetails, NULL, NULL, SAF_STARTCHILDAPP);
-
-   WinTerminateApp(happ);
-}
-
-APIRET InitDlgUninstall(diU *diDialog)
+HRESULT InitDlgUninstall(diU *diDialog)
 {
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -691,10 +503,12 @@ void DeInitDlgUninstall(diU *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
-APIRET InitUninstallGeneral()
+HRESULT InitUninstallGeneral()
 {
-  ugUninstall.dwMode = NORMAL;
+  ugUninstall.ulMode = NORMAL;
 
+  if((ugUninstall.szAppPath                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((ugUninstall.szLogPath                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szLogFilename             = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -703,11 +517,13 @@ APIRET InitUninstallGeneral()
     return(1);
   if((ugUninstall.szProductName             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szWrKey                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szOIKey                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szUserAgent               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szWrMainKey               = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szDefaultComponent        = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((ugUninstall.szOIMainApp               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((ugUninstall.szDescription             = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -715,22 +531,27 @@ APIRET InitUninstallGeneral()
     return(1);
   if((ugUninstall.szUninstallFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((ugUninstall.szAppID                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
 
 void DeInitUninstallGeneral()
 {
+  FreeMemory(&(ugUninstall.szAppPath));
   FreeMemory(&(ugUninstall.szLogPath));
   FreeMemory(&(ugUninstall.szLogFilename));
   FreeMemory(&(ugUninstall.szDescription));
   FreeMemory(&(ugUninstall.szUninstallKeyDescription));
   FreeMemory(&(ugUninstall.szUninstallFilename));
   FreeMemory(&(ugUninstall.szUserAgent));
-  FreeMemory(&(ugUninstall.szWrKey));
+  FreeMemory(&(ugUninstall.szDefaultComponent));
+  FreeMemory(&(ugUninstall.szOIKey));
   FreeMemory(&(ugUninstall.szCompanyName));
   FreeMemory(&(ugUninstall.szProductName));
-  FreeMemory(&(ugUninstall.szWrMainKey));
+  FreeMemory(&(ugUninstall.szOIMainApp));
+  FreeMemory(&(ugUninstall.szAppID));
 }
 
 sil *CreateSilNode()
@@ -781,65 +602,108 @@ void SilNodeDelete(sil *silTemp)
   }
 }
 
-BOOL IsWin95Debute()
+ULONG ParseCommandLine(int argc, char *argv[])
 {
-  BOOL      bIsWin95Debute;
-  HMODULE ModuleHandle = NULLHANDLE;
-  UCHAR    LoadError[256] = "";
-  PSZ        ModuleName = "kernel3.dll";
-  APIRET   rc = NO_ERROR;
-
-  PFN        NS_GetDiskFreeSpace;
-  PFN        NS_GetDiskFreeSpaceEx;
-
-
-  bIsWin95Debute = FALSE;
-  
-  if(DosLoadModule(LoadError, sizeof(LoadError), ModuleName, &ModuleHandle) == NO_ERROR)
-  {
-    if(DosQueryProcAddr(ModuleHandle, 0, "GetDiskFreeSpaceExA", NS_GetDiskFreeSpaceEx) == NO_ERROR)
-    {       
-        bIsWin95Debute = TRUE;        
-        DosQueryProcAddr(ModuleHandle, 0, "GetDiskFreeSpaceA", NS_GetDiskFreeSpace);
-    }
-
-    DosFreeModule(ModuleHandle);
-  }
-  return(bIsWin95Debute);
-}
-
-void ParseCommandLine(PSZ lpszCmdLine)
-{
-  char  szArgVBuf[MAX_BUF];
   int   i;
-  int   iArgC;
 
   i     = 0;
-  iArgC = GetArgC(lpszCmdLine);
-  while(i < iArgC)
+  while(i < argc)
   {
-    GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
-
-    if((strcmpi(szArgVBuf, "-ma") == 0) || (strcmpi(szArgVBuf, "/ma") == 0))
+    if((strcmpi(argv[i], "-ma") == 0) || (strcmpi(argv[i], "/ma") == 0))
     {
       SetUninstallRunMode("AUTO");
     }
-    else if((strcmpi(szArgVBuf, "-ms") == 0) || (strcmpi(szArgVBuf, "/ms") == 0))
+    else if((strcmpi(argv[i], "-ms") == 0) || (strcmpi(argv[i], "/ms") == 0))
     {
       SetUninstallRunMode("SILENT");
     }
-    else if((strcmpi(szArgVBuf, "-ua") == 0) || (strcmpi(szArgVBuf, "/ua") == 0))
+    else if((strcmpi(argv[i], "-ua") == 0) || (strcmpi(argv[i], "/ua") == 0))
     {
-      if((i + 1) < iArgC)
-        GetArgV(lpszCmdLine, ++i, ugUninstall.szUserAgent, MAX_BUF);
+      if((i + 1) < argc) {
+        i++;
+        strcpy(ugUninstall.szUserAgent, argv[i]);
+      }
+    }
+    else if((strcmpi(argv[i], "-app") == 0) || (strcmpi(argv[i], "/app") == 0))
+    // Set the App ID
+    {
+      if((i + 1) < argc) {
+        i++;
+        strcpy(ugUninstall.szAppID, argv[i]);
+      }
+    }
+    else if((strcmpi(argv[i], "-reg_path") == 0) || (strcmpi(argv[i], "/reg_path") == 0))
+    // Set the alternative Windows registry path
+    {
+      if((i + 1) < argc) {
+        i++;
+        strcpy(ugUninstall.szOIMainApp, argv[i]);
+      }
+    }
+    else if((strcmpi(argv[i], "-v") == 0) || (strcmpi(argv[i], "/v") == 0))
+    // Set Verbose
+    {
+      ugUninstall.bVerbose = TRUE;
     }
 
     ++i;
   }
 }
 
-APIRET CheckInstances()
+int PreCheckInstance(char *szSection, char *szIniFile, char *szFQProcessName)
 {
+  char  szParameter[MAX_BUF];
+  char  szPath[MAX_BUF];
+  ULONG ulCounter = 0;
+  BOOL  bContinue = TRUE;
+  char  szExtraCmd[] = "Extra Cmd";
+  char  szExtraCmdParameter[MAX_BUF];
+
+  do
+  {
+    /* Read the win reg key path */
+    sprintf(szExtraCmdParameter, "%s%d Parameter", szExtraCmd, ulCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdParameter,
+                            "",
+                            szParameter,
+                            sizeof(szParameter),
+                            szIniFile);
+    if(*szParameter == '\0')
+    {
+      bContinue = FALSE;
+      continue;
+    }
+
+    ParsePath(szFQProcessName, szPath, sizeof(szPath), PP_PATH_ONLY);
+
+    // we've found a file, so let's execute it and stop.  No need to look
+    // for other keys to parse.  We only want to do that if the file is
+    // _not_ found.  This is for when we change the name of the browser
+    // app file and still need to deal with locating it and calling
+    // -kill on it. ie.
+    //   previous name: netscp6.exe
+    //   new name: netscp.exe
+    // We only need to call one of them, not both.
+    bContinue = FALSE;
+
+    /* Run the file */
+    WinSpawn(szFQProcessName, szParameter, szPath, TRUE);
+
+    /* Even though WinSpawn is suppose to wait for the app to finish, this
+     * does not really work that way for trying to quit the browser when
+     * it's in turbo mode, so we wait 2 secs for it to complete. */
+    DosSleep(2000);
+    
+    ++ulCounter;
+  } while(bContinue);
+
+  return(WIZ_OK);
+}
+
+HRESULT CheckInstances()
+{
+  char  szFQProcessName[CCHMAXPATH];
   char  szSection[MAX_BUF];
   char  szClassName[MAX_BUF];
   char  szWindowName[MAX_BUF];
@@ -848,18 +712,18 @@ APIRET CheckInstances()
   int   iIndex;
   BOOL  bContinue;
   HWND  hwndFW;
-  PSZ szWN;
-  PSZ szCN;
-  ULONG dwRv0;
-  ULONG dwRv1;
+  PSZ   szWN;
+  PSZ   szCN;
+  ULONG ulRv0;
+  ULONG ulRv1;
 
   bContinue = TRUE;
   iIndex    = -1;
   while(bContinue)
   {
-    memset(szClassName, 0, sizeof(szClassName));
+    memset(szClassName,  0, sizeof(szClassName));
     memset(szWindowName, 0, sizeof(szWindowName));
-    memset(szMessage, 0, sizeof(szMessage));
+    memset(szMessage,    0, sizeof(szMessage));
 
     ++iIndex;
     itoa(iIndex, szIndex, 10);
@@ -869,10 +733,10 @@ APIRET CheckInstances()
     GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniUninstall);
 
     /* Process Name= key did not exist, so look for other keys */
-    dwRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniUninstall);
-    dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniUninstall);
-    if((dwRv0 == 0L) &&
-       (dwRv1 == 0L))
+    ulRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniUninstall);
+    ulRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniUninstall);
+    if((ulRv0 == 0L) &&
+       (ulRv1 == 0L))
     {
       bContinue = FALSE;
     }
@@ -888,23 +752,54 @@ APIRET CheckInstances()
       else
         szWN = szWindowName;
 
-      if((hwndFW = FindWindow(szClassName, szWN)) != NULL)
+      /* If an instance is found, call PreCheckInstance first. */
+      if((hwndFW = FindWindow(szCN)) != NULL) {
+        PID pid;
+        TID tid;
+        WinQueryWindowProcess(hwndFW, &pid, &tid);
+#ifdef OLDCODE
+        CheckForProcess(pid, NULL, 0, szFQProcessName, sizeof(szFQProcessName));
+#endif
+        PreCheckInstance(szSection, szFileIniUninstall, szFQProcessName);
+      }
+
+      if((hwndFW = FindWindow(szCN)) != NULL)
       {
         if(*szMessage != '\0')
         {
-          if((ugUninstall.dwMode != SILENT) && (ugUninstall.dwMode != AUTO))
+          switch(ugUninstall.ulMode)
           {
-            MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION);
-          }
-          else if(ugUninstall.dwMode == AUTO)
-          {
-            ShowMessage(szMessage, TRUE);
-            Delay(5);
-            ShowMessage(szMessage, FALSE);
-          }
-         }
+            case NORMAL:
+              switch(WinMessageBox(HWND_DESKTOP, hWndMain, szMessage, NULL, 0, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
+              {
+                case MBID_CANCEL:
+                  /* User selected to cancel Setup */
+                  return(TRUE);
 
-        return(TRUE);
+                case MBID_RETRY:
+                  /* User selected to retry.  Reset counter */
+                  iIndex = -1;
+                  break;
+              }
+              break;
+
+            case AUTO:
+              ShowMessage(szMessage, TRUE);
+              DosSleep(5000);
+              ShowMessage(szMessage, FALSE);
+
+              /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
+              return(TRUE);
+
+            case SILENT:
+              return(TRUE);
+          }
+        }
+        else
+        {
+          /* No message to display.  Assume cancel because we can't allow user to continue */
+          return(TRUE);
+        }
       }
     }
   }
@@ -912,208 +807,54 @@ APIRET CheckInstances()
   return(FALSE);
 }
 
-BOOL GetFileVersion(PSZ szFile, verBlock *vbVersion)
+HRESULT GetAppPath()
 {
-  UINT              uLen;
-  UINT              dwLen;
-  BOOL              bRv;
-  ULONG             dwHandle;
-  PPVOID            lpData;
-  PPVOID            lpBuffer;
-
-  vbVersion->ullMajor   = 0;
-  vbVersion->ullMinor   = 0;
-  vbVersion->ullRelease = 0;
-  vbVersion->ullBuild   = 0;
-  if(FileExists(szFile))
-  {
-     bRv    = TRUE;
-     dwLen  = GetFileVersionInfoSize(szFile, &dwHandle);
-     lpData = (PPVOID)malloc(sizeof(long)*dwLen);
-     uLen   = 0;
-
-    if(GetFileVersionInfo(szFile, dwHandle, dwLen, lpData) != 0)
-    {
-      if(VerQueryValue(lpData, "\\", &lpBuffer, &uLen) != 0)
-      {
-      }
-    }
-    free(lpData);
-  }
-  else
-    /* File does not exist */
-    bRv = FALSE;
-
-  return(bRv);
-}
-
-void TranslateVersionStr(PSZ szVersion, verBlock *vbVersion)
-{
-  PSZ szNum1 = NULL;
-  PSZ szNum2 = NULL;
-  PSZ szNum3 = NULL;
-  PSZ szNum4 = NULL;
-
-  szNum1 = strtok(szVersion, ".");
-  szNum2 = strtok(NULL,      ".");
-  szNum3 = strtok(NULL,      ".");
-  szNum4 = strtok(NULL,      ".");
-
-  vbVersion->ullMajor   = _atoi64(szNum1);
-  vbVersion->ullMinor   = _atoi64(szNum2);
-  vbVersion->ullRelease = _atoi64(szNum3);
-  vbVersion->ullBuild   = _atoi64(szNum4);
-}
-
-int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
-{
-  if(vbVersionOld.ullMajor > vbVersionNew.ullMajor)
-    return(4);
-  else if(vbVersionOld.ullMajor < vbVersionNew.ullMajor)
-    return(-4);
-
-  if(vbVersionOld.ullMinor > vbVersionNew.ullMinor)
-    return(3);
-  else if(vbVersionOld.ullMinor < vbVersionNew.ullMinor)
-    return(-3);
-
-  if(vbVersionOld.ullRelease > vbVersionNew.ullRelease)
-    return(2);
-  else if(vbVersionOld.ullRelease < vbVersionNew.ullRelease)
-    return(-2);
-
-  if(vbVersionOld.ullBuild > vbVersionNew.ullBuild)
-    return(1);
-  else if(vbVersionOld.ullBuild < vbVersionNew.ullBuild)
-    return(-1);
-
-  /* the versions are all the same */
-  return(0);
-}
-
-BOOL VerifyRestrictedAccess(void)
-{
-  return FALSE;
-}
-
-BOOL CheckLegacy(HWND hDlg)
-{
-  char      szSection[MAX_BUF];
-  char      szFilename[MAX_BUF];
-  char      szMessage[MAX_BUF];
-  char      szIndex[MAX_BUF];
-  char      szVersionNew[MAX_BUF];
-  char      szDecryptedFilePath[MAX_BUF];
-  int       iIndex;
-  BOOL      bContinue;
-  ULONG     dwRv0;
-  ULONG     dwRv1;
-  verBlock  vbVersionNew;
-  verBlock  vbVersionOld;
-
-  bContinue = TRUE;
-  iIndex    = -1;
-  while(bContinue)
-  {
-    memset(szFilename, 0, sizeof(szFilename));
-    memset(szVersionNew, 0, sizeof(szVersionNew));
-    memset(szMessage, 0, sizeof(szMessage));
-
-    ++iIndex;
-    itoa(iIndex, szIndex, 10);
-    strcpy(szSection, "Legacy Check");
-    strcat(szSection, szIndex);
-
-    dwRv0 = PrfQueryProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniUninstall);
-    dwRv1 = PrfQueryProfileString(szSection, "Version", "", szVersionNew, MAX_BUF, szFileIniUninstall);
-    if(dwRv0 == 0L)
-    {
-      bContinue = FALSE;
-    }
-    else if(*szFilename != '\0')
-    {
-      GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniUninstall);
-      if(*szMessage == '\0')
-        /* no message string input. so just continue with the next check */
-        continue;
-
-      DecryptString(szDecryptedFilePath, szFilename);
-      if((dwRv1 == 0L) || (*szVersionNew == '\0'))
-      {
-        if(FileExists(szDecryptedFilePath))
-        {
-          char szMBWarningStr[MAX_BUF];
-
-          if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
-                                      szMBWarningStr, sizeof(szMBWarningStr), 
-                                      szFileIniUninstall))
-            strcpy(szMBWarningStr, "Warning");
-
-          if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_WARNING | MB_YESNO) == MBID_YES)
-            return(TRUE);
-        }
-        /* file does not exist, so it's okay.  Continue with the next check */
-        continue;
-      }
-
-      if(GetFileVersion(szDecryptedFilePath, &vbVersionOld))
-      {
-        TranslateVersionStr(szVersionNew, &vbVersionNew);
-        if(CompareVersion(vbVersionOld, vbVersionNew) < 0)
-        {
-          char szMBWarningStr[MAX_BUF];
-
-          if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
-                                      szMBWarningStr, sizeof(szMBWarningStr), 
-                                      szFileIniUninstall))
-            strcpy(szMBWarningStr, "Warning");
-
-          if(MessageBox(hDlg, szMessage, szMBWarningStr, MB_WARNING | MB_YESNO) == MBID_YES)
-            return(TRUE);
-        }
-      }
-    }
-  }
-  /* returning TRUE means the user wants to go back and choose a different destination path
-   * returning FALSE means the user is ignoring the warning
-   */
-  return(FALSE);
-}
-
-APIRET GetUninstallLogPath()
-{
-  char szBuf[MAX_BUF];
-  char szLogFolder[MAX_BUF];
-  char szKey[MAX_BUF];
-  char szWindowsUninstallKey[MAX_BUF];
-  char szErrorMsg[MAX_BUF];
-  char szEUninstallLogFolder[MAX_BUF];
-  char szRootKey[MAX_BUF];
+  char szTmpAppPath[MAX_BUF];
+  char szApp[MAX_BUF];
 
   if(*ugUninstall.szUserAgent != '\0')
   {
-    lstrcpy(szKey, ugUninstall.szWrMainKey);
-    AppendBackSlash(szKey, sizeof(szKey));
-    lstrcat(szKey, ugUninstall.szUserAgent);
-    AppendBackSlash(szKey, sizeof(szKey));
-    lstrcat(szKey, "Uninstall");
+    sprintf(szApp, "%s %s", ugUninstall.szOIMainApp, ugUninstall.szUserAgent);
   }
   else
   {
-    strcpy(szKey, ugUninstall.szWrKey);
+    strcpy(szApp, ugUninstall.szOIKey); /* OLDCODE */
   }
 
-  GetProfReg( szKey,  "Uninstall Log Folder", szLogFolder, sizeof(szLogFolder));
-  GetProfReg( szKey, "Description", ugUninstall.szUninstallKeyDescription, MAX_BUF);
+  PrfQueryProfileString(HINI_USERPROFILE, szApp, "PathToExe", "", szTmpAppPath, sizeof(szTmpAppPath));
 
-    lstrcpy(szWindowsUninstallKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\");
-    lstrcat(szWindowsUninstallKey, ugUninstall.szUninstallKeyDescription);
-    GetProfReg( szWindowsUninstallKey, "DisplayName", ugUninstall.szDescription, MAX_BUF);
+  if(FileExists(szTmpAppPath))
+  {
+    strcpy(ugUninstall.szAppPath, szTmpAppPath);
+  }
 
-  /* if the DisplayName was not found in the windows registry,
-   * use the description from read in from config.ini file */
-  if(*ugUninstall.szDescription == '\0')
-    lstrcpy(ugUninstall.szDescription, ugUninstall.szUninstallKeyDescription);
+  return(0);
+}
+
+HRESULT GetUninstallLogPath()
+{
+  char szBuf[MAX_BUF];
+  char szLogFolder[MAX_BUF];
+  char szApp[MAX_BUF];
+  char szWindowsUninstallKey[MAX_BUF];
+  char szErrorMsg[MAX_BUF];
+  char szEUninstallLogFolder[MAX_BUF];
+  BOOL bRestrictedAccess;
+
+  if(*ugUninstall.szUserAgent != '\0')
+  {
+    sprintf(szApp, "%s %s", ugUninstall.szOIMainApp, ugUninstall.szUserAgent);
+  }
+  else
+  {
+#ifdef OLDCODE
+    strcpy(szApp, ugUninstall.szOIKey);
+#endif
+  }
+
+  PrfQueryProfileString(HINI_USERPROFILE, szApp, "Uninstall Log Folder", "", szLogFolder, sizeof(szLogFolder));
+
+  strcpy(ugUninstall.szDescription, "Hello"); /* OLDCODE */
 
   if(FileExists(szLogFolder) == FALSE)
   {
@@ -1121,82 +862,74 @@ APIRET GetUninstallLogPath()
                                szEUninstallLogFolder, sizeof(szEUninstallLogFolder), 
                                szFileIniUninstall))
     {
-      lstrcpy(szBuf, "\n\n    ");
+      strcpy(szBuf, "\n\n    ");
 
-      if(*szLogFolder == '\0')
-      {
-//        GetStringRootKey(hkRoot, szRootKey, sizeof(szRootKey));
-        lstrcat(szBuf, szRootKey);
-        lstrcat(szBuf, "\\");
-        lstrcat(szBuf, szKey);
-        lstrcat(szBuf, "\\Uninstall Log Folder");
-      }
-      else
-        lstrcat(szBuf, szLogFolder);
+      strcat(szBuf, szLogFolder);
 
-      lstrcat(szBuf, "\n");
-      wsprintf(szErrorMsg, szEUninstallLogFolder, szBuf);
+      strcat(szBuf, "\n");
+      sprintf(szErrorMsg, szEUninstallLogFolder, szBuf);
       PrintError(szErrorMsg, ERROR_CODE_SHOW);
     }
 
     return(1);
   }
-  lstrcpy(ugUninstall.szLogPath, szLogFolder);
+  strcpy(ugUninstall.szLogPath, szLogFolder);
 
   return(0);
 }
 
-
-APIRET ParseUninstallIni(PSZ lpszCmdLine)
+HRESULT ParseUninstallIni(int argc, char *argv[])
 {
   char szBuf[MAX_BUF];
+  char szAppCrypted[MAX_BUF];
   char szKeyCrypted[MAX_BUF];
   char szShowDialog[MAX_BUF];
+  char fontName[MAX_BUF];
+  char fontSize[MAX_BUF];
+  char charSet[MAX_BUF];
 
-  if(CheckInstances())
-    return(1);
   if(InitUninstallGeneral())
     return(1);
-  if(InitDlgUninstall(&diUninstall))
-    return(1);
- 
+
   strcpy(ugUninstall.szLogFilename, FILE_LOG_INSTALL);
 
   /* get install Mode information */
   GetPrivateProfileString("General", "Run Mode", "", szBuf, MAX_BUF, szFileIniUninstall);
   SetUninstallRunMode(szBuf);
-  ParseCommandLine(lpszCmdLine);
+  ParseCommandLine(argc, argv);
 
+  if(CheckInstances())
+    return(1);
+  if(InitDlgUninstall(&diUninstall))
+    return(1);
+ 
   /* get product name description */
   GetPrivateProfileString("General", "Company Name", "", ugUninstall.szCompanyName, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Product Name", "", ugUninstall.szProductName, MAX_BUF, szFileIniUninstall);
-  GetPrivateProfileString("General", "Root Key",     "", szBuf, MAX_BUF, szFileIniUninstall);
-  ugUninstall.hWrRoot = ParseRootKey(szBuf);
 
   GetPrivateProfileString("General", "Key",          "", szKeyCrypted, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Decrypt Key",  "", szBuf, MAX_BUF, szFileIniUninstall);
   if(strcmpi(szBuf, "TRUE") == 0)
   {
-    DecryptString(ugUninstall.szWrKey, szKeyCrypted);
+    DecryptString(ugUninstall.szOIKey, szKeyCrypted);
   }
   else
-    strcpy(ugUninstall.szWrKey, szKeyCrypted);
+    strcpy(ugUninstall.szOIKey, szKeyCrypted);
 
-  RemoveBackSlash(ugUninstall.szWrKey);
+  GetPrivateProfileString("General", "Main App",         "", szAppCrypted, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("General", "Decrypt Main App", "", szBuf, MAX_BUF, szFileIniUninstall);
 
-  GetPrivateProfileString("General", "Main Root Key",    "", szBuf, MAX_BUF, szFileIniUninstall);
-  ugUninstall.hWrMainRoot = ParseRootKey(szBuf);
-
-  GetPrivateProfileString("General", "Main Key",         "", szKeyCrypted, MAX_BUF, szFileIniUninstall);
-  GetPrivateProfileString("General", "Decrypt Main Key", "", szBuf, MAX_BUF, szFileIniUninstall);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  // If szOIMainApp is not null then it was set on the command-line and that is
+  //    what we want to use.
+  if(*ugUninstall.szOIMainApp == '\0') 
   {
-    DecryptString(ugUninstall.szWrMainKey, szKeyCrypted);
+    if(strcmpi(szBuf, "TRUE") == 0)
+    {
+      DecryptString(ugUninstall.szOIMainApp, szAppCrypted);
+    }
+    else
+      strcpy(ugUninstall.szOIMainApp, szAppCrypted);
   }
-  else
-    strcpy(ugUninstall.szWrMainKey, szKeyCrypted);
-
-  RemoveBackSlash(ugUninstall.szWrMainKey);
 
   GetPrivateProfileString("General", "Uninstall Filename", "", ugUninstall.szUninstallFilename, MAX_BUF, szFileIniUninstall);
 
@@ -1208,46 +941,31 @@ APIRET ParseUninstallIni(PSZ lpszCmdLine)
   if(strcmpi(szShowDialog, "TRUE") == 0)
     diUninstall.bShowDialog = TRUE;
 
-  switch(ugUninstall.dwMode)
+  switch(ugUninstall.ulMode)
   {
     case AUTO:
     case SILENT:
-      gdwWhatToDo             = WTD_NO_TO_ALL;
+      gulWhatToDo             = WTD_NO_TO_ALL;
       diUninstall.bShowDialog = FALSE;
       break;
   }
 
+  /* get defined font */
+  GetPrivateProfileString("Dialog Uninstall", "FONTNAME", "", fontName, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("Dialog Uninstall", "FONTSIZE", "", fontSize, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("Dialog Uninstall", "CHARSET", "", charSet, MAX_BUF, szFileIniUninstall);
+  strcpy(ugUninstall.szDefinedFont, fontSize);
+  strcat(ugUninstall.szDefinedFont, ".");
+  strcat(ugUninstall.szDefinedFont, fontName);
+
+  GetAppPath();
+
+  ugUninstall.bUninstallFiles = TRUE;
+
   return(GetUninstallLogPath());
 }
 
-void GetProfReg(PSZ szKey, PSZ szName, PSZ szReturnValue, ULONG dwReturnValueSize )
-{
-  BOOL rc  = TRUE;
-
-  rc = PrfQueryProfileSize( HINI_PROFILE, szKey,  szName, &dwReturnValueSize );
-
-  if( rc == TRUE )
-  {
-        rc = PrfQueryProfileString( HINI_PROFILE, szKey, szName,
-                               (PSZ)"Error Retrieving Data",
-                               (PVOID) szReturnValue,
-                               dwReturnValueSize );
-        if(rc == TRUE)
-//                ExpandEnvironmentStrings(szBuf, szReturnValue, dwReturnValueSize);
-                ;
-        else
-                *szReturnValue = '\0';
-  }
-  else
-        *szReturnValue = '\0';
-}
-
-void SetProfReg( PSZ szKey, PSZ szName, PSZ szData )
-{
-  PrfWriteProfileString( HINI_PROFILE, szKey, szName, szData ); 
-}
-
-APIRET DecryptVariable(PSZ szVariable, ULONG dwVariableSize)
+HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
 {
   char szBuf[MAX_BUF];
   char szKey[MAX_BUF];
@@ -1255,169 +973,32 @@ APIRET DecryptVariable(PSZ szVariable, ULONG dwVariableSize)
   char szValue[MAX_BUF];
 
   /* zero out the memory allocations */
-  ZeroMemory(szBuf,       sizeof(szBuf));
-  ZeroMemory(szKey,       sizeof(szKey));
-  ZeroMemory(szName,      sizeof(szName));
-  ZeroMemory(szValue,     sizeof(szValue));
+  memset(szBuf,           0, sizeof(szBuf));
+  memset(szKey,           0, sizeof(szKey));
+  memset(szName,          0, sizeof(szName));
+  memset(szValue,         0, sizeof(szValue));
 
   if(strcmpi(szVariable, "PROGRAMFILESDIR") == 0)
   {
-    /* parse for the "c:\Program Files" directory */
-    GetProfReg( "Software\\Microsoft\\Windows\\CurrentVersion", "ProgramFilesDir", szVariable, dwVariableSize);
+    /* @MAK Needed for install */
   }
-  else if(strcmpi(szVariable, "COMMONFILESDIR") == 0)
+  else if(strcmpi(szVariable, "STARTUP") == 0)
   {
-    /* parse for the "c:\Program Files\Common Files" directory */
-    GetProfReg( "Software\\Microsoft\\Windows\\CurrentVersion", "CommonFilesDir", szVariable, dwVariableSize);
+    HOBJECT hobj;
+    hobj = WinQueryObject("<WP_STARTUP>");
+    WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "MEDIAPATH") == 0)
+  else if(strcmpi(szVariable, "DESKTOP") == 0)
   {
-    /* parse for the "c:\Winnt40\Media" directory */
-    GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion", "MediaPath", szVariable, dwVariableSize);
+    HOBJECT hobj;
+    hobj = WinQueryObject("<WP_DESKTOP>");
+    WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "CONFIGPATH") == 0)
+  else if(strcmpi(szVariable, "WARPCENTER") == 0)
   {
-    /* parse for the "c:\Windows\Config" directory */
-    if(ulOSType & OS_WIN9x)
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion", "ConfigPath", szVariable, dwVariableSize);
-    }
-  }
-  else if(strcmpi(szVariable, "DEVICEPATH") == 0)
-  {
-    /* parse for the "c:\Winnt40\INF" directory */
-     GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion", "DevicePath", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "COMMON_STARTUP") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs\\Startup" directory */
-    if(ulOSType & OS_WIN9x)
-    {
-     GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Startup", szVariable, dwVariableSize);
-    }
-    else
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Startup", szVariable, dwVariableSize);
-    }
-  }
-  else if(strcmpi(szVariable, "COMMON_PROGRAMS") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs" directory */
-    if(ulOSType & OS_WIN9x)
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Programs", szVariable, dwVariableSize);
-    }
-    else
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Programs", szVariable, dwVariableSize);
-    }
-  }
-  else if(strcmpi(szVariable, "COMMON_STARTMENU") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu" directory */
-    if(ulOSType & OS_WIN9x)
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Start Menu", szVariable, dwVariableSize);
-    }
-    else
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Start Menu", szVariable, dwVariableSize);
-    }
-  }
-  else if(strcmpi(szVariable, "COMMON_DESKTOP") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\All Users\Desktop" directory */
-    if(ulOSType & OS_WIN9x)
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Desktop", szVariable, dwVariableSize);
-    }
-    else
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Desktop", szVariable, dwVariableSize);
-    }
-  }
-  else if(strcmpi(szVariable, "PERSONAL_STARTUP") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Start Menu\Programs\Startup" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Startup", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_PROGRAMS") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Start Menu\Programs" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Programs", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_STARTMENU") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Start Menu" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Start Menu", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_DESKTOP") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Desktop" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Desktop", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_APPDATA") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Application Data" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "AppData", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_CACHE") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Temporary Internet Files" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Cache", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_COOKIES") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Cookies" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Cookies", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_FAVORITES") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Favorites" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Favorites", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_FONTS") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Fonts" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Fonts", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_HISTORY") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\History" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "History", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_NETHOOD") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\NetHood" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "NetHood", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_PERSONAL") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Personal" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Personal", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_PRINTHOOD") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\PrintHood" directory */
-    if(ulOSType & OS_NT)
-    {
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "PrintHood", szVariable, dwVariableSize);
-    }
-  }
-  else if(strcmpi(szVariable, "PERSONAL_RECENT") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\Recent" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Recent", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_SENDTO") == 0)
-  {
-    /* parse for the "C:\WINNT40\Profiles\%USERNAME%\SendTo" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "SendTo", szVariable, dwVariableSize);
-  }
-  else if(strcmpi(szVariable, "PERSONAL_TEMPLATES") == 0)
-  {
-    /* parse for the "C:\WINNT40\ShellNew" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Templates", szVariable, dwVariableSize);
+    HOBJECT hobj;
+    hobj = WinQueryObject("<WP_WARPCENTER????>");
+    WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
   else if(strcmpi(szVariable, "WIZTEMP") == 0)
   {
@@ -1433,77 +1014,32 @@ APIRET DecryptVariable(PSZ szVariable, ULONG dwVariableSize)
     if(szVariable[strlen(szVariable) - 1] == '\\')
       szVariable[strlen(szVariable) - 1] = '\0';
   }
-  else if(strcmpi(szVariable, "WINDISK") == 0)
+  else if(strcmpi(szVariable, "OS2DISK") == 0)
   {
-    /* Locate the drive that Windows is installed on, and only use the drive letter and the ':' character (C:). */
-    if(GetWindowsDirectory(szBuf, MAX_BUF) == 0)
-    {
-      char szEGetWinDirFailed[MAX_BUF];
-
-      if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "",
-                                 szEGetWinDirFailed, sizeof(szEGetWinDirFailed), 
-                                 szFileIniUninstall))
-        PrintError(szEGetWinDirFailed, ERROR_CODE_SHOW);
-
-      exit(1);
-    }
-    else
-    {
-      /* Copy the first 2 characters from the path..        */
-      /* This is the drive letter and the ':' character for */
-      /* where Windows is installed at.                     */
-      memset(szVariable, '\0', MAX_BUF);
-      szVariable[0] = szBuf[0];
-      szVariable[1] = szBuf[1];
-    }
+    /* Locate the drive that OS/2 is installed on, and only use the drive letter and the ':' character (C:). */
+    ULONG ulBootDrive = 0;
+    memset(szVariable, '\0', MAX_BUF);
+    DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                    &ulBootDrive, sizeof(ulBootDrive));
+    szVariable[0] = 'A' - 1 + ulBootDrive;
+    szVariable[1] = ':';
   }
-  else if(strcmpi(szVariable, "WINDIR") == 0)
+  else if(strcmpi(szVariable, "OS2DIR") == 0)
   {
-    /* Locate the "c:\Windows" directory */
-    if(GetWindowsDirectory(szVariable, dwVariableSize) == 0)
-    {
-      char szEGetWinDirFailed[MAX_BUF];
-
-      if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "",
-                                 szEGetWinDirFailed, sizeof(szEGetWinDirFailed), 
-                                 szFileIniUninstall))
-        PrintError(szEGetWinDirFailed, ERROR_CODE_SHOW);
-      exit(1);
-    }
-  }
-  else if(strcmpi(szVariable, "WINSYSDIR") == 0)
-  {
-    /* Locate the "c:\Windows\System" (for Win95/Win98) or "c:\Windows\System32" (for NT) directory */
-    if(GetSystemDirectory(szVariable, dwVariableSize) == 0)
-    {
-      char szEGetSysDirFailed[MAX_BUF];
-
-      if(GetPrivateProfileString("Messages", "ERROR_GET_SYSTEM_DIRECTORY_FAILED", "",
-                                 szEGetSysDirFailed, sizeof(szEGetSysDirFailed), 
-                                 szFileIniUninstall))
-        PrintError(szEGetSysDirFailed, ERROR_CODE_SHOW);
-
-      exit(1);
-    }
+    /* Locate the "OS2" directory */
+    ULONG ulBootDrive = 0;
+    APIRET rc;
+    char  buffer[] = " :\\OS2\\";
+    DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                    &ulBootDrive, sizeof(ulBootDrive));
+    buffer[0] = 'A' - 1 + ulBootDrive;
+    strcpy(szVariable, buffer);
   }
   else if(strcmpi(szVariable, "JRE BIN PATH") == 0)
   {
-    /* Locate the "c:\Program Files\JavaSoft\JRE\1.3\Bin" directory */
-      GetProfReg("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\javaw.Exe", NULL, szVariable, dwVariableSize);
-    if(*szVariable == '\0')
-      return(FALSE);
-    else
-    {
-      ParsePath(szVariable, szBuf, MAX_BUF, PP_PATH_ONLY);
-      strcpy(szVariable, szBuf);
-    }
   }
   else if(strcmpi(szVariable, "JRE PATH") == 0)
   {
-    /* Locate the "c:\Program Files\JavaSoft\JRE\1.3" directory */
-      GetProfReg("Software\\JavaSoft\\Java Plug-in\\1.3", "JavaHome", szVariable, dwVariableSize);
-    if(*szVariable == '\0')
-      return(FALSE);
   }
   else if(strcmpi(szVariable, "UNINSTALL STARTUP PATH") == 0)
   {
@@ -1511,31 +1047,22 @@ APIRET DecryptVariable(PSZ szVariable, ULONG dwVariableSize)
   }
   else if(strcmpi(szVariable, "Product CurrentVersion") == 0)
   {
-    char szKey[MAX_BUF];
+    char szApp[MAX_BUF];
 
-    strcpy(szKey, "Software\\");
-    strcat(szKey, ugUninstall.szCompanyName);
-    strcat(szKey, "\\");
-    strcat(szKey, ugUninstall.szProductName);
+    sprintf(szApp, "%s", ugUninstall.szProductName);
 
-    /* parse for the current Netscape WinReg key */
-     GetProfReg(szKey, "CurrentVersion", szBuf, sizeof(szBuf));
+    /* parse for the current Netscape INI entry */
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, "CurrentVersion", "",
+                          szBuf, sizeof(szBuf));
 
     if(*szBuf == '\0')
       return(FALSE);
 
-    sprintf(szVariable, "Software\\%s\\%s\\%s", ugUninstall.szCompanyName, ugUninstall.szProductName, szBuf);
+    strcpy(szVariable, szBuf);
   }
-  else if(strcmpi(szVariable, "Product WinRegKey") == 0)
+  else if(strcmpi(szVariable, "Product OS2INIApp") == 0)
   {
-    char szKey[MAX_BUF];
-
-    strcpy(szKey, "Software\\");
-    strcat(szKey, ugUninstall.szCompanyName);
-    strcat(szKey, "\\");
-    strcat(szKey, ugUninstall.szProductName);
-
-    sprintf(szVariable, "Software\\%s\\%s", ugUninstall.szCompanyName, ugUninstall.szProductName);
+    sprintf(szVariable, "%s", ugUninstall.szProductName);
   }
   else
     return(FALSE);
@@ -1543,12 +1070,12 @@ APIRET DecryptVariable(PSZ szVariable, ULONG dwVariableSize)
   return(TRUE);
 }
 
-APIRET DecryptString(PSZ szOutputStr, PSZ szInputStr)
+HRESULT DecryptString(PSZ szOutputStr, PSZ szInputStr)
 {
-  ULONG dwLenInputStr;
-  ULONG dwCounter;
-  ULONG dwVar;
-  ULONG dwPrepend;
+  ULONG ulLenInputStr;
+  ULONG ulCounter;
+  ULONG ulVar;
+  ULONG ulPrepend;
   char  szBuf[MAX_BUF];
   char  szVariable[MAX_BUF];
   char  szPrepend[MAX_BUF];
@@ -1566,45 +1093,45 @@ APIRET DecryptString(PSZ szOutputStr, PSZ szInputStr)
   memset(szResultStr, '\0', MAX_BUF);
 
   strcpy(szPrepend, szInputStr);
-  dwLenInputStr = strlen(szInputStr);
+  ulLenInputStr = strlen(szInputStr);
   bBeginParse   = FALSE;
   bFoundVar     = FALSE;
 
-  for(dwCounter = 0; dwCounter < dwLenInputStr; dwCounter++)
+  for(ulCounter = 0; ulCounter < ulLenInputStr; ulCounter++)
   {
-    if((szInputStr[dwCounter] == ']') && bBeginParse)
+    if((szInputStr[ulCounter] == ']') && bBeginParse)
       break;
 
     if(bBeginParse)
-      szVariable[dwVar++] = szInputStr[dwCounter];
+      szVariable[ulVar++] = szInputStr[ulCounter];
 
-    if((szInputStr[dwCounter] == '[') && !bBeginParse)
+    if((szInputStr[ulCounter] == '[') && !bBeginParse)
     {
-      dwVar        = 0;
-      dwPrepend    = dwCounter;
+      ulVar        = 0;
+      ulPrepend    = ulCounter;
       bBeginParse  = TRUE;
     }
   }
 
-  if(dwCounter == dwLenInputStr)
+  if(ulCounter == ulLenInputStr)
     /* did not find anything to expand. */
-    dwCounter = 0;
+    ulCounter = 0;
   else
   {
     bFoundVar = TRUE;
-    ++dwCounter;
+    ++ulCounter;
   }
 
   if(bFoundVar)
   {
-    strcpy(szAppend, &szInputStr[dwCounter]);
+    strcpy(szAppend, &szInputStr[ulCounter]);
 
-    szPrepend[dwPrepend] = '\0';
+    szPrepend[ulPrepend] = '\0';
 
     bDecrypted = DecryptVariable(szVariable, MAX_BUF);
     if(!bDecrypted)
     {
-      /* Variable was not able to be dcripted. */
+      /* Variable was not able to be decrypted. */
       /* Leave the variable as it was read in by adding the '[' and ']' */
       /* characters back to the variable. */
       strcpy(szBuf, "[");
@@ -1629,21 +1156,30 @@ APIRET DecryptString(PSZ szOutputStr, PSZ szInputStr)
   return(TRUE);
 }
 
-APIRET FileExists(PSZ szFile)
+#define S_IFMT (S_IFDIR | S_IFREG)
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+
+HRESULT FileExists(PSZ szFile)
 {
-  APIRET				rc = NO_ERROR;
-  FILEFINDBUF3	fdFile;
-  ULONG				ulResultBufLen = sizeof(FILEFINDBUF3);
+  struct stat st;
+  int statrv;
 
-
-  if((rc = DosQueryPathInfo(szFile, FIL_STANDARD, &fdFile, ulResultBufLen) != NO_ERROR))
+  statrv = stat(szFile, &st);
+  if (statrv == 0)
+     if (S_ISDIR(st.st_mode))
+        return FILE_DIRECTORY;
+     else
+        return(TRUE);
+  else if ((strlen(szFile) == 2) && (szFile[1] == ':'))
   {
-    return(FALSE);
+     char temp[4] = {0};
+     strcpy(temp, szFile);
+     strcat(temp, "\\");
+     statrv = stat(temp, &st);
+     if (statrv == 0)
+        return FILE_DIRECTORY;
   }
-  else
-  {
-    return(rc);
-  }
+  return (FALSE);
 }
 
 void DeInitialize()
@@ -1658,5 +1194,54 @@ void DeInitialize()
   FreeMemory(&szEDllLoad);
   FreeMemory(&szEStringLoad);
   FreeMemory(&szEStringNull);
+  FreeMemory(&szFileIniUninstall);
+  FreeMemory(&szFileIniDefaultsInfo);
+}
+
+HWND FindWindow(PCSZ pszAtomString)
+{
+  ATOM atom;
+  HENUM henum;
+  HWND hwndClient, hwnd = NULLHANDLE;
+
+
+  atom = WinFindAtom(WinQuerySystemAtomTable(), pszAtomString);
+  if (atom) {
+    henum = WinBeginEnumWindows(HWND_DESKTOP);
+    while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+    {
+      ULONG ulWindowWord;
+      ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
+      if (ulWindowWord == atom) {
+        break;
+      } else {
+        /* Try the class name method to support older browsers */
+        HWND hwndClient;
+        CHAR szClassName[MAX_BUF];
+        hwndClient = WinWindowFromID(hwnd, FID_CLIENT);
+        WinQueryClassName(hwndClient ? hwndClient : hwnd, MAX_BUF, szClassName);
+        if (strcmp(szClassName, pszAtomString) == 0) {
+           break;
+        }
+      }
+    }
+    WinEndEnumWindows(henum);
+  }
+  if (!hwnd) {
+     /* Try the object windows just in case, but only for the classname */
+    henum = WinBeginEnumWindows(HWND_OBJECT);
+    while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+    {
+      /* Try the class name method to support older browsers */
+      HWND hwndClient;
+      CHAR szClassName[MAX_BUF];
+      hwndClient = WinWindowFromID(hwnd, FID_CLIENT);
+      WinQueryClassName(hwndClient ? hwndClient : hwnd, MAX_BUF, szClassName);
+      if (strcmp(szClassName, pszAtomString) == 0) {
+         break;
+      }
+    }
+  }
+  return  hwnd;
 }
 

@@ -19,7 +19,6 @@
  * 
  * Contributor(s): 
  *   Sean Su <ssu@netscape.com>
- *   IBM Corp. 
  */
 
 #include "extern.h"
@@ -27,97 +26,127 @@
 #include "extra.h"
 #include "ifuncns.h"
 
-char gszRDISection[] = "Restore Desktop Integration";
+char szUnreadMailKey[] = "Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+char szMozillaDesktopKey[] = "Software\\Mozilla\\Desktop";
+char szRDISection[] = "Restore Desktop Integration";
 
-void RestoreDesktopIntegrationAssociations(HKEY hkRoot, PSZ szWinRegDesktopKey)
+/* This function enumerates HKEY_LOCAL_MACHINE\Sofware\Mozilla\Desktop for
+ * variable information on what desktop integration was done by the
+ * browser/mail client.
+ *
+ * These variables found cannot be deleted or modified until the enumeration
+ * is complete, or else this function will fail! */
+void RestoreDesktopIntegration()
 {
-  char      *szBufPtr = NULL;
-  char      szSection[MAX_BUF];
-  char      szAllKeys[MAX_BUF];
+#ifdef OLDCODE
+  char      szVarName[MAX_BUF];
   char      szValue[MAX_BUF];
-  char      szRDIName[] = "HKEY_LOCAL_MACHINE\\Software\\Classes";
-  char      szName[MAX_BUF];
+  char      szSubKey[MAX_BUF];
+  HKEY      hkHandle;
+  DWORD     dwIndex;
+  DWORD     dwSubKeySize;
+  DWORD     dwTotalValues;
+  char      szKHKEY[]               = "HKEY";
+  char      szKisHandling[]         = "isHandling";
 
-  sprintf(szSection, "%s Associations", gszRDISection);
-  GetPrivateProfileString(szSection, NULL, "", szAllKeys, sizeof(szAllKeys), szFileIniUninstall);
-  if(*szAllKeys != '\0')
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, 0, KEY_READ|KEY_WRITE, &hkHandle) != ERROR_SUCCESS)
+    return;
+
+  dwTotalValues  = 0;
+  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, NULL, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
+  for(dwIndex = 0; dwIndex < dwTotalValues; dwIndex++)
   {
-    szBufPtr = szAllKeys;
-    while(*szBufPtr != '\0')
+    /* Enumerate thru all the vars found within the Mozilla Desktop key */
+    dwSubKeySize = sizeof(szVarName);
+    if(RegEnumValue(hkHandle, dwIndex, szVarName, &dwSubKeySize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-      GetPrivateProfileString(szSection, szBufPtr, "", szValue, sizeof(szValue), szFileIniUninstall);
-      if(lstrcmpi(szValue, "TRUE") == 0)
+      if(strnicmp(szVarName, szKHKEY, strlen(szKHKEY)) == 0)
       {
-        sprintf(szName, "%s\\%s", szRDIName, szBufPtr);
-        GetWinReg(hkRoot, szWinRegDesktopKey, szName, szValue, sizeof(szValue));
-        if(*szValue != '\0')
+        HKEY hkRootKey;
+
+        hkRootKey = GetRootKeyAndSubKeyPath(szVarName, szSubKey, sizeof(szSubKey));
+        if(*szSubKey != '\0')
         {
-          SetWinReg(HKEY_CLASSES_ROOT, szBufPtr, NULL, REG_SZ, szValue, lstrlen(szValue));
+          GetWinReg(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, szVarName, szValue, sizeof(szValue));
+          if(*szValue != '\0')
+          {
+            /* Due to a bug in the browser code that saves the previous HKEY
+             * value it's trying to replace as garbage chars, we need to try
+             * to detect it.  If found, do not restore it. This bug only
+             * happens for the saved ddeexec keys. */
+            if(DdeexecCheck(szSubKey, szValue))
+            {
+              /* Restore the previous saved setting here */
+              SetWinReg(hkRootKey,
+                        szSubKey,
+                        NULL,
+                        REG_SZ,
+                        szValue,
+                        strlen(szValue));
+            }
+          }
+          else
+            /* if the saved value is an empty string, then
+             * delete the default var for this key */
+            DeleteWinRegValue(hkRootKey,
+                              szSubKey,
+                              szValue);
         }
       }
-
-      /* move the pointer to the next key */
-      szBufPtr += lstrlen(szBufPtr) + 1;
     }
   }
-}
-
-void ResetWinRegDIProcotol(HKEY hkRoot, PSZ szWinRegDesktopKey, PSZ szRDIName, PSZ szProtocol, PSZ szLatterKeyPath)
-{
-  char szKey[MAX_BUF];
-  char szName[MAX_BUF];
-  char szValue[MAX_BUF];
-
-  sprintf(szName, "%s\\%s\\%s", szRDIName, szProtocol, szLatterKeyPath);
-  GetWinReg(hkRoot, szWinRegDesktopKey, szName, szValue, sizeof(szValue));
-  if(*szValue != '\0')
-  {
-    sprintf(szKey, "%s\\%s", szProtocol, szLatterKeyPath);
-    SetWinReg(HKEY_CLASSES_ROOT, szKey, NULL, REG_SZ, szValue, lstrlen(szValue));
-  }
-}
-
-void RestoreDesktopIntegrationProtocols(HKEY hkRoot, PSZ szWinRegDesktopKey)
-{
-  char      *szBufPtr = NULL;
-  char      szSection[MAX_BUF];
-  char      szAllKeys[MAX_BUF];
-  char      szValue[MAX_BUF];
-  char      szRDIName[] = "HKEY_LOCAL_MACHINE\\Software\\Classes";
-
-  sprintf(szSection, "%s Protocols", gszRDISection);
-  GetPrivateProfileString(szSection, NULL, "", szAllKeys, sizeof(szAllKeys), szFileIniUninstall);
-  if(*szAllKeys != '\0')
-  {
-    szBufPtr = szAllKeys;
-    while(*szBufPtr != '\0')
-    {
-      GetPrivateProfileString(szSection, szBufPtr, "", szValue, sizeof(szValue), szFileIniUninstall);
-      if(lstrcmpi(szValue, "TRUE") == 0)
-      {
-        ResetWinRegDIProcotol(hkRoot, szWinRegDesktopKey, szRDIName, szBufPtr, "shell\\open\\command");
-        ResetWinRegDIProcotol(hkRoot, szWinRegDesktopKey, szRDIName, szBufPtr, "shell\\open\\ddeexec");
-        ResetWinRegDIProcotol(hkRoot, szWinRegDesktopKey, szRDIName, szBufPtr, "shell\\open\\ddeexec\\Application");
-      }
-
-      /* move the pointer to the next key */
-      szBufPtr += lstrlen(szBufPtr) + 1;
-    }
-  }
+  RegCloseKey(hkHandle);
+  return;
+#endif
 }
 
 BOOL UndoDesktopIntegration(void)
 {
-  char szMozillaDesktopKey[MAX_BUF];
+#ifdef OLDCODE
   char szMozillaKey[] = "Software\\Mozilla";
+  char szBuf[MAX_BUF];
 
-  sprintf(szMozillaDesktopKey, "%s\\%s", szMozillaKey, "Desktop");
-  RestoreDesktopIntegrationAssociations(HKEY_LOCAL_MACHINE, szMozillaDesktopKey);
-  RestoreDesktopIntegrationProtocols(HKEY_LOCAL_MACHINE, szMozillaDesktopKey);
+  /* Check to see if uninstall.ini has indicated to restore
+   * the destktop integration performed by the browser/mail */
+  GetPrivateProfileString(szRDISection, "Enabled", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+  if(strcmpi(szBuf, "TRUE") == 0)
+  {
+    RestoreDesktopIntegration();
 
-  DeleteWinRegKey(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, TRUE);
-  DeleteWinRegKey(HKEY_LOCAL_MACHINE, szMozillaKey, FALSE);
-
+    DeleteWinRegKey(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, TRUE);
+    DeleteWinRegKey(HKEY_LOCAL_MACHINE, szMozillaKey, FALSE);
+  }
+#endif
   return(0);
+}
+
+
+/* Function that retrieves the app name (including path) that is going to be
+ * uninstalled.  The return string is in upper case. */
+int GetUninstallAppPathName(char *szAppPathName, ULONG ulAppPathNameSize)
+{
+#ifdef OLDCODE
+  char szKey[MAX_BUF];
+  HKEY hkRoot;
+
+  if(*ugUninstall.szUserAgent != '\0')
+  {
+    hkRoot = ugUninstall.hWrMainRoot;
+    strcpy(szKey, ugUninstall.szWrMainKey);
+    AppendBackSlash(szKey, sizeof(szKey));
+    strcat(szKey, ugUninstall.szUserAgent);
+    AppendBackSlash(szKey, sizeof(szKey));
+    strcat(szKey, "Main");
+  }
+  else
+  {
+    return(CMI_APP_PATHNAME_NOT_FOUND);
+  }
+
+  GetWinReg(hkRoot, szKey, "PathToExe", szAppPathName, dwAppPathNameSize);
+  strupr(szAppPathName);
+  return(CMI_OK);
+
+#endif
 }
 
