@@ -81,3 +81,19 @@ var HistoryController = {
         }
     },
 };
+
+var historyDNDObserver = {
+  onDragStart: function (aEvent)
+  {
+    var title = aEvent.target.getAttribute("value");
+    var uri = aEvent.target.parentNode.parentNode.id;
+    dump("*** title = " + title + "; uri = " + uri + "\n");
+    var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
+    var flavourList = { };
+    flavourList["text/unicode"] = { width: 2, data: uri };
+    flavourList["text/html"] = { width: 2, data: htmlString };
+    flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + "[ TEMP TITLE ]" };
+    return flavourList;
+  },
+
+};
