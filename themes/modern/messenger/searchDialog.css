@@ -45,10 +45,16 @@
 
 /* ::::: Search Dialog adjustments ::::: */
 
-#fileMessageButton {
-   margin: 0px 0px 0px 0px;
- }
 
 #searchTermTree {
   min-height: 50px;
+}
+
+#searchTermListBox {
+  height: 100px;
+}
+
+#searchResultListBox {
+  margin: 5px;
+  height: 100px;
 }
