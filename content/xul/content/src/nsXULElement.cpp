@@ -4460,14 +4460,14 @@ nsXULElement::SetFlex(const nsAReadableString& aAttr)
 }
 
 nsresult
-nsXULElement::GetFlexgroup(nsAWritableString& aAttr)
+nsXULElement::GetFlexGroup(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetFlexgroup(const nsAReadableString& aAttr)
+nsXULElement::SetFlexGroup(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("flexgroup"), aAttr);
   return NS_OK;
@@ -4558,7 +4558,7 @@ nsXULElement::SetCollapsed(PRBool aAttr)
 }
 
 nsresult
-nsXULElement::GetAllowevents(PRBool* aResult)
+nsXULElement::GetAllowEvents(PRBool* aResult)
 {
   *aResult = PR_FALSE;
   nsAutoString val;
@@ -4569,7 +4569,7 @@ nsXULElement::GetAllowevents(PRBool* aResult)
 }
 
 nsresult
-nsXULElement::SetAllowevents(PRBool aAttr)
+nsXULElement::SetAllowEvents(PRBool aAttr)
 {
  if (aAttr)
     SetAttribute(NS_LITERAL_STRING("allowevents"), NS_LITERAL_STRING("true"));
@@ -4607,14 +4607,14 @@ nsXULElement::SetMenu(const nsAReadableString& aAttr)
 }
 
 nsresult
-nsXULElement::GetContextmenu(nsAWritableString& aAttr)
+nsXULElement::GetContextMenu(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetContextmenu(const nsAReadableString& aAttr)
+nsXULElement::SetContextMenu(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("contextmenu"), aAttr);
   return NS_OK;
@@ -4663,95 +4663,88 @@ nsXULElement::SetHeight(const nsAReadableString& aAttr)
 }
 
 nsresult
-nsXULElement::GetMinwidth(nsAWritableString& aAttr)
+nsXULElement::GetMinWidth(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMinwidth(const nsAReadableString& aAttr)
+nsXULElement::SetMinWidth(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("minwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMinheight(nsAWritableString& aAttr)
+nsXULElement::GetMinHeight(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMinheight(const nsAReadableString& aAttr)
+nsXULElement::SetMinHeight(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("minheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMaxwidth(nsAWritableString& aAttr)
+nsXULElement::GetMaxWidth(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMaxwidth(const nsAReadableString& aAttr)
+nsXULElement::SetMaxWidth(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("maxwidth"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetMaxheight(nsAWritableString& aAttr)
+nsXULElement::GetMaxHeight(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetMaxheight(const nsAReadableString& aAttr)
+nsXULElement::SetMaxHeight(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetTooltiptext(nsAWritableString& aAttr)
+nsXULElement::GetTooltipText(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetTooltiptext(const nsAReadableString& aAttr)
+nsXULElement::SetTooltipText(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("tooltiptext"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::GetStatustext(nsAWritableString& aAttr)
+nsXULElement::GetStatusText(nsAWritableString& aAttr)
 {
   GetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
   return NS_OK;
 }
 
 nsresult
-nsXULElement::SetStatustext(const nsAReadableString& aAttr)
+nsXULElement::SetStatusText(const nsAReadableString& aAttr)
 {
   SetAttribute(NS_LITERAL_STRING("statustext"), aAttr);
   return NS_OK;
 }
-
-
-
-
-
-
-
 
 nsresult
 nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)

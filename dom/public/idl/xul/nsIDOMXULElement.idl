@@ -41,7 +41,7 @@ interface nsIDOMXULElement : nsIDOMElement
   attribute DOMString align;
   attribute DOMString dir;
   attribute DOMString flex;
-  attribute DOMString flexgroup;
+  attribute DOMString flexGroup;
   attribute DOMString ordinal;
   attribute DOMString orient;
   attribute DOMString pack;
@@ -55,22 +55,22 @@ interface nsIDOMXULElement : nsIDOMElement
   
   // Properties for hooking up to popups
   attribute DOMString menu;
-  attribute DOMString contextmenu;
+  attribute DOMString contextMenu;
   attribute DOMString tooltip;
   
   // Width/height properties
   attribute DOMString width;
   attribute DOMString height;
-  attribute DOMString minwidth;
-  attribute DOMString minheight;
-  attribute DOMString maxwidth;
-  attribute DOMString maxheight;
+  attribute DOMString minWidth;
+  attribute DOMString minHeight;
+  attribute DOMString maxWidth;
+  attribute DOMString maxHeight;
   
   // Tooltip and status info
-  attribute DOMString tooltiptext;
-  attribute DOMString statustext;
+  attribute DOMString tooltipText;
+  attribute DOMString statusText;
   
-  attribute boolean allowevents;
+  attribute boolean allowEvents;
 
   // XXX: This doesn't belong here, nsIDOMLinkStyle has this...
   readonly attribute nsIDOMCSSStyleDeclaration style;
