@@ -119,7 +119,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 private:
   // logon redirection related variables and methods

@@ -162,13 +162,13 @@ public:
 	virtual ~nsNNTPProtocol();
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg);
 
 	char * m_ProxyServer;		/* proxy server hostname */
 
 	NS_IMETHOD Cancel(nsresult status);  // handle stop button
 	NS_IMETHOD GetContentType(char * *aContentType);
-  NS_IMETHOD AsyncRead(nsIStreamListener *listener, nsISupports *ctxt, PRUint32 transferOffset, PRUint32 transferCount, nsIRequest **_retval);
+  NS_IMETHOD AsyncRead(nsIStreamListener *listener, nsISupports *ctxt);
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:

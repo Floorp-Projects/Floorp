@@ -63,7 +63,7 @@ public:
    * @param length    The amount of data that was just pushed into the stream.
    * @return The return value is currently ignored.
    */
-  NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputStream *aIStream, 
+  NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInputStream *aIStream, 
                               PRUint32 sourceOffset, PRUint32 aLength);
 
 
@@ -75,7 +75,7 @@ public:
   * @return The return value is currently ignored.  In the future it may be
   * used to cancel the URL load..
   */
-  NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports * aCtxt);
+  NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt);
   
   /**
   * Notify the observer that the URL has finished loading.  This method is 
@@ -88,7 +88,7 @@ public:
   * @param msg   A text string describing the error.
   * @return The return value is currently ignored.
   */
-  NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg);
 
 
 

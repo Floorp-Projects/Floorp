@@ -101,7 +101,7 @@ nsURLFetcher::StillRunning(PRBool *running)
 * @return The return value is currently ignored.
 */
 nsresult
-nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputStream *aIStream, 
+nsURLFetcher::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInputStream *aIStream, 
                               PRUint32 sourceOffset, PRUint32 aLength)
 {
   nsresult        rc = NS_OK;
@@ -135,7 +135,7 @@ nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputS
 * used to cancel the URL load..
 */
 nsresult
-nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports * ctxt)
+nsURLFetcher::OnStartRequest(nsIChannel * aChannel, nsISupports * ctxt)
 {
   return NS_OK;
 }
@@ -152,7 +152,7 @@ nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports * ctxt)
 * @return The return value is currently ignored.
 */
 nsresult
-nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
+nsURLFetcher::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
 {
 #ifdef NS_DEBUG_rhp
   printf("nsURLFetcher::OnStopRequest()\n");
@@ -197,8 +197,8 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   nsCOMPtr<nsIChannel> channel;
   rv = service->NewChannelFromURI(aURL, getter_AddRefs(channel));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIRequest> request;
-  rv = channel->AsyncRead(this, nsnull, 0, -1, getter_AddRefs(request));
+
+  rv = channel->AsyncRead(this, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   mURL = dont_QueryInterface(aURL);

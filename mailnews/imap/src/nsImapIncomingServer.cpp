@@ -476,10 +476,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
       if (NS_SUCCEEDED(aImapUrl->GetMockChannel(getter_AddRefs(mockChannel))) && mockChannel)
       {
-          nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
-        if (!request)
-            return NS_ERROR_FAILURE;
-        request->GetStatus(&rv);
+        mockChannel->GetStatus(&rv);
         if (!NS_SUCCEEDED(rv))
         {
           nsresult res;

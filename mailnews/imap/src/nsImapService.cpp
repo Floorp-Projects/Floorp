@@ -671,9 +671,8 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
-          //  now try to open the channel passing in our display consumer as the listener
-          nsCOMPtr<nsIRequest> request; 
-          rv = aChannel->AsyncRead(aStreamListener, aCtxt, 0, -1, getter_AddRefs(request));
+          //  now try to open the channel passing in our display consumer as the listener 
+          rv = aChannel->AsyncRead(aStreamListener, aCtxt);
         }
         else // do what we used to do before
         {
@@ -1036,8 +1035,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 
       nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
       //  now try to open the channel passing in our display consumer as the listener 
-      nsCOMPtr<nsIRequest> request; 
-      rv = aChannel->AsyncRead(aStreamListener, aCtxt, 0, -1, getter_AddRefs(request));
+      rv = aChannel->AsyncRead(aStreamListener, aCtxt);
     }
     else // do what we used to do before
     {

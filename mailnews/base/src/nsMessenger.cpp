@@ -1573,7 +1573,7 @@ nsSaveAsListener::OnStopCopy(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
+nsSaveAsListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aSupport)
 {
     nsresult rv = NS_OK;
     if (m_fileSpec)
@@ -1590,7 +1590,7 @@ nsSaveAsListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
+nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
                                 nsresult status, const PRUnichar* aMsg)
 {
   nsresult    rv = NS_OK;
@@ -1688,7 +1688,7 @@ nsSaveAsListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnDataAvailable(nsIRequest* request, 
+nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel, 
                                   nsISupports* aSupport,
                                   nsIInputStream* inStream, 
                                   PRUint32 srcOffset,

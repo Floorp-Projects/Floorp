@@ -141,7 +141,7 @@ nsMsgSendLater::~nsMsgSendLater()
 
 // Stream is done...drive on!
 nsresult
-nsMsgSendLater::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsMsgSendLater::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 {
   nsresult    rv;
 
@@ -179,10 +179,6 @@ nsMsgSendLater::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult s
   }
   else
   {
-    nsCOMPtr<nsIChannel> channel;
-    request->GetParent(getter_AddRefs(channel));
-    if(!channel) return NS_ERROR_FAILURE;
-
     // extract the prompt object to use for the alert from the url....
     nsCOMPtr<nsIURI> uri; 
     nsCOMPtr<nsIPrompt> promptObject;
@@ -264,7 +260,7 @@ nsMsgSendLater::BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *tota
 
 // Got data?
 nsresult
-nsMsgSendLater::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+nsMsgSendLater::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   // This is a little bit tricky since we have to chop random 
   // buffers into lines and deliver the lines...plus keeping the
@@ -320,7 +316,7 @@ nsMsgSendLater::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInput
 }
 
 nsresult
-nsMsgSendLater::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+nsMsgSendLater::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 {
   return NS_OK;
 }

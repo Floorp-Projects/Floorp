@@ -244,15 +244,14 @@ NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 // But we need to have a channel to return for nsSmtpService::NewChannel
 // that can simulate a real channel such that the uri loader can then get the
 // content type for the channel.
-class nsMailtoChannel : public nsIChannel, public nsIRequest, public nsIStreamContentInfo
+class nsMailtoChannel : public nsIChannel
 {
 public:
 
 	  NS_DECL_ISUPPORTS
     NS_DECL_NSICHANNEL
     NS_DECL_NSIREQUEST
-	NS_DECL_NSISTREAMCONTENTINFO
-
+	
     nsMailtoChannel(nsIURI * aURI);
 	  virtual ~nsMailtoChannel();
 
@@ -325,26 +324,24 @@ NS_IMETHODIMP nsMailtoChannel::SetURI(nsIURI* aURI)
   return NS_OK; 
 }
  
-NS_IMETHODIMP nsMailtoChannel::OpenInputStream(PRUint32 transferOffset, PRUint32 transferCount, nsIInputStream **_retval)
+NS_IMETHODIMP nsMailtoChannel::OpenInputStream(nsIInputStream **_retval)
 {
   NS_NOTREACHED("OpenInputStream");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(PRUint32 transferOffset, PRUint32 transferCount, nsIOutputStream **_retval)
+NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
   NS_NOTREACHED("OpenOutputStream");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMailtoChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt,
-                                         PRUint32 transferOffset, PRUint32 transferCount, nsIRequest **_retval)
+NS_IMETHODIMP nsMailtoChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
   return listener->OnStartRequest(this, ctxt);
 }
 
-NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt,
-                                          PRUint32 transferOffset, PRUint32 transferCount, nsIRequest **_retval)
+NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
 {
     NS_NOTREACHED("AsyncWrite");
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -382,6 +379,83 @@ NS_IMETHODIMP
 nsMailtoChannel::SetContentLength(PRInt32 aContentLength)
 {
     NS_NOTREACHED("SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    NS_NOTREACHED("GetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    NS_NOTREACHED("SetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    NS_NOTREACHED("GetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    NS_NOTREACHED("SetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetLocalFile(nsIFile* *file)
+{
+    NS_NOTREACHED("GetLocalFile");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsMailtoChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -434,17 +508,6 @@ NS_IMETHODIMP nsMailtoChannel::Suspend()
 NS_IMETHODIMP nsMailtoChannel::Resume()
 {
     NS_NOTREACHED("Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsISupports parent; */
-NS_IMETHODIMP nsMailtoChannel::GetParent(nsISupports * *aParent)
-{
-    NS_ADDREF(*aParent=(nsISupports*)(nsIChannel*)this);
-    return NS_OK;
-}
-NS_IMETHODIMP nsMailtoChannel::SetParent(nsISupports * aParent)
-{
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

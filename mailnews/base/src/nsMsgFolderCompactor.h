@@ -72,7 +72,7 @@ public:
   virtual ~nsOfflineStoreCompactState(void);
   virtual nsresult InitDB(nsIMsgDatabase *db);
 
-  NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+  NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
                                     nsresult status, const PRUnichar *errorMsg);
 
   NS_IMETHODIMP FinishCompact();

@@ -42,19 +42,15 @@ nsMsgComposeContentHandler::~nsMsgComposeContentHandler()
 }
 
 NS_IMETHODIMP nsMsgComposeContentHandler::HandleContent(const char * aContentType, const char * aCommand,
-                                                const char * aWindowTarget, nsISupports * aWindowContext, nsIRequest *request)
+                                                const char * aWindowTarget, nsISupports * aWindowContext, nsIChannel * aChannel)
 {
   nsresult rv = NS_OK;
-  if (!request)
+  if (!aChannel)
     return NS_ERROR_NULL_POINTER;
 
   // First of all, get the content type and make sure it is a content type we know how to handle!
   if (nsCRT::strcasecmp(aContentType, "x-application-mailto") == 0) {
     nsCOMPtr<nsIURI> aUri;
-    nsCOMPtr<nsIChannel> aChannel;
-    request->GetParent(getter_AddRefs(aChannel));
-    if(!aChannel) return NS_ERROR_FAILURE;
-
     rv = aChannel->GetURI(getter_AddRefs(aUri));
     if (aUri)
     {

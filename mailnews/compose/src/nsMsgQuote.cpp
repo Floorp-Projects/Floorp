@@ -220,8 +220,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   if (NS_FAILED(rv)) return rv;
 
   //  now try to open the channel passing in our display consumer as the listener 
-  nsCOMPtr<nsIRequest> request;
-  rv = mQuoteChannel->AsyncRead(convertedListener, ctxt, 0, -1, getter_AddRefs(request));
+  rv = mQuoteChannel->AsyncRead(convertedListener, ctxt);
 
   ReleaseMessageServiceFromURI(aMsgUri, msgService);
   return rv;

@@ -95,7 +95,7 @@ nsMsgPrintEngine::OnStartDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, 
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIRequest *request, PRUint32 aStatus)
+nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChannel, PRUint32 aStatus)
 {
   // Now, fire off the print operation!
   nsresult rv = NS_ERROR_FAILURE;
@@ -106,13 +106,10 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIRequest *reque
   PR_FREEIF(msg);
 
   NS_ASSERTION(mDocShell,"can't print, there is no docshell");
-  if ( (!mDocShell) || (!request) ) 
+  if ( (!mDocShell) || (!aChannel) ) 
   {
     return StartNextPrintOperation();
   }
-  nsCOMPtr<nsIChannel> aChannel;
-  request->GetParent(getter_AddRefs(aChannel));
-  if (!aChannel) return NS_ERROR_FAILURE;
 
   // Make sure this isn't just "about:blank" finishing....
   nsCOMPtr<nsIURI> originalURI = nsnull;
@@ -160,25 +157,25 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIRequest *reque
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnStartURLLoad(nsIDocumentLoader *aLoader, nsIRequest *request)
+nsMsgPrintEngine::OnStartURLLoad(nsIDocumentLoader *aLoader, nsIChannel *channel)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnProgressURLLoad(nsIDocumentLoader *aLoader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
+nsMsgPrintEngine::OnProgressURLLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnStatusURLLoad(nsIDocumentLoader *loader, nsIRequest *request, nsString & aMsg)
+nsMsgPrintEngine::OnStatusURLLoad(nsIDocumentLoader *loader, nsIChannel *channel, nsString & aMsg)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnEndURLLoad(nsIDocumentLoader *aLoader, nsIRequest *request, PRUint32 aStatus)
+nsMsgPrintEngine::OnEndURLLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel, PRUint32 aStatus)
 {
   return NS_OK;
 }

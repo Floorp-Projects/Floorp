@@ -1173,12 +1173,12 @@ QuotingOutputStreamListener::ConvertToPlainText(PRBool formatflowed /* = PR_FALS
   return rv;
 }
 
-NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIRequest *request, nsISupports * /* ctxt */)
+NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */)
 {
 	return NS_OK;
 }
 
-NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
+NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
 {
   nsresult rv = NS_OK;
   nsAutoString aCharset;
@@ -1373,7 +1373,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
   return rv;
 }
 
-NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
+NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChannel */, 
 							                nsISupports *ctxt, nsIInputStream *inStr, 
                               PRUint32 sourceOffset, PRUint32 count)
 {
