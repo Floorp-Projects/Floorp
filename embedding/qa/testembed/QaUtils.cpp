@@ -309,12 +309,16 @@ nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *webBrowser)
 	return (theDOMWindow);
 }
 
-nsCAutoString GetTheUri(nsIURI *theUri, int displayMethod)
+nsCAutoString GetTheUri(nsIURI *theURI, int displayMethod)
 {
 	nsresult rv;
 	nsCAutoString uriString;
 
-	rv = theUri->GetSpec(uriString);
+	if (!theURI) {
+        QAOutput("nsIURI object is null. return failure.");
+		return nsnull;
+	}
+	rv = theURI->GetSpec(uriString);
     RvTestResult(rv, "nsIURI::GetSpec() test", displayMethod);
     FormatAndPrintOutput("the uri = ", uriString, displayMethod);
 

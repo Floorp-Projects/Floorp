@@ -229,7 +229,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	if (!theURI)
 	{
 	   QAOutput("We didn't get the URI. Test failed.", 1);
-	   return NULL;
+	   return nsnull;
 	}
 	else {
 	   retURI = GetTheUri(theURI, 1);
@@ -246,7 +246,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	if (!theChannel)
 	{
 	   QAOutput("We didn't get the Channel. Test failed.", 1);
-	   return NULL;
+	   return nsnull;
 	}
 	else {
 	   RvTestResult(rv, "NS_NewChannel", 1);
@@ -257,6 +257,10 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
 	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 
+	if (!listener) {
+	   QAOutput("We didn't get the listener for AsyncOpen(). Test failed.", 1);
+	   return nsnull;
+	}
 	// this calls nsIStreamListener::OnDataAvailable()
 	rv = theChannel->AsyncOpen(listener, nsnull);
 	RvTestResult(rv, "AsyncOpen()", 1);
