@@ -25,6 +25,7 @@
 #include "domstubs.idl"
 #include "nsIPref.idl"
 #include "nsIURIContentListener.idl"
+#include "nsIURI.idl"
 
 %{ C++
 #include "nsIPresContext.h"
@@ -62,7 +63,7 @@ interface nsIDocShell : nsISupports
 	@param presContext - Presentation Context to use for the new URL.  This
 		may be null.
 	*/
-	[noscript]void LoadURI(in wstring uri, in nsIPresContext presContext);
+	[noscript]void loadURI(in nsIURI uri, in nsIPresContext presContext);
 
 	/*
 	Loads a given URI through the specified adapter.  This will give priority
@@ -75,7 +76,7 @@ interface nsIDocShell : nsISupports
 		may be null.
 	@param adapterBinding - The local IP address of the adapter to bind to.
 	*/
-	[noscript]void LoadURIVia(in wstring uri, in nsIPresContext presContext, 
+	[noscript]void loadURIVia(in nsIURI uri, in nsIPresContext presContext, 
 		in unsigned long adapterBinding);
 
 	/*
@@ -91,6 +92,11 @@ interface nsIDocShell : nsISupports
 	The current document that is loaded in the DocShell.
 	*/
 	readonly attribute nsIDOMDocument document;
+
+	/*
+	The current URI that is loaded.
+	*/
+	readonly attribute nsIURI currentURI;
 
 	/*
 	name of the DocShell
