@@ -204,6 +204,14 @@ DEFINES += -DSPLASH_XPM=\"$(SPLASH_XPM)\"
 LIBS += $(MOZ_GTK_LDFLAGS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+SPLASH_XPM = $(srcdir)/splash.xpm
+CPPSRCS += nsNativeAppSupportGtk.cpp \
+	   nsNativeAppSupportBase.cpp
+DEFINES += -DSPLASH_XPM=\"$(SPLASH_XPM)\"
+LIBS += $(MOZ_GTK2_LIBS)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 RCINCLUDE = splash.rc
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
