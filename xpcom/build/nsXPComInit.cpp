@@ -105,6 +105,7 @@
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
+#include "nsRecyclingAllocator.h"
 
 // Registry Factory creation function defined in nsRegistry.cpp
 // We hook into this function locally to create and register the registry
@@ -283,7 +284,9 @@ static const nsModuleComponentInfo components[] = {
 
     COMPONENT(FASTLOADSERVICE, nsFastLoadService::Create),
     COMPONENT(VARIANT, nsVariantConstructor),
-    COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton)
+    COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton),
+
+    COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImpl::nsRecyclingAllocatorImplConstructor),
 };
 
 #undef COMPONENT

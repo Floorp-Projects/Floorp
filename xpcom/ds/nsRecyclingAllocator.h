@@ -50,11 +50,13 @@
  * Uses a timer to release all memory allocated if not used for more than
  * 10 secs automatically.
  *
+ * Also there is a 4 byte maintenance overhead on every allocation.
+ *
  * This allocator is thread safe.
  *
  * CAVEATS: As the number of buckets increases, this allocators performance
  *          will drop. As a general guideline, dont use this for more
- *          than NS_MAX_BUCKETS (10)
+ *          than NS_MAX_BLOCKS
  */
 
 #ifndef nsRecyclingAllocator_h__
@@ -62,54 +64,86 @@
 
 #include "nscore.h"
 #include "pratom.h"
+#include "prlock.h"
+#include "nsIRecyclingAllocator.h"
+#include "nsIGenericFactory.h"
 
 #define NS_DEFAULT_RECYCLE_TIMEOUT 10  // secs
-#define NS_MAX_BUCKETS             10
+#define NS_MAX_BLOCKS              24
+#define NS_ALLOCATOR_OVERHEAD_BYTES (sizeof(Block)) // bytes
 
 class nsITimer;
+class nsIMemory;
 
 class NS_COM nsRecyclingAllocator {
  protected:
-    struct nsMemBucket {
-        void *ptr;
-        PRUint32 size;
-
-        // Is this bucket available ?
-        // 1 : free
-        // 0 or negative : in use
-        // This is an int because we use atomic inc/dec to operate on it
-        PRInt32 available;
+    struct Block {
+      PRUint32 bytes;
     };
 
-    PRUint32 mNBucket;
-    nsMemBucket *mMemBucket;
+    struct BlockStoreNode {
+      BlockStoreNode() : bytes(0), block(nsnull), next(nsnull) {};
+      PRUint32 bytes;
+      Block *block;
+      BlockStoreNode *next;
+    };
 
+#define DATA(block) ((void *)(((char *)block) + NS_ALLOCATOR_OVERHEAD_BYTES))
+#define DATA_TO_BLOCK(data) ((Block *)((char *)(data) - NS_ALLOCATOR_OVERHEAD_BYTES))
+
+    // mMaxBlocks: Maximum number of blocks that can be allocated
+    PRUint32 mMaxBlocks;
+
+    // mBlocks:
+    //  All blocks used or not.
+    BlockStoreNode *mBlocks;
+
+    // mFreeList
+    //  A linked list of free blocks sorted by increasing order of size
+    BlockStoreNode* mFreeList;
+
+    // mNotUsedList
+    //  A linked list of BlockStoreNodes that are not used to store
+    //  any block information. When we add blocks into mFreeList, we
+    //  take BlockStoreNode from here.
+    BlockStoreNode* mNotUsedList;
+
+    // mLock: Thread safety of mFreeList and mNotUsedList
+    PRLock *mLock;
+
+    // Timer for freeing unused memory
     nsITimer *mRecycleTimer;
+
+    // mRecycleAfter:
+    //  Allocator should be untouched for this many seconds for freeing
+    //  unused Blocks.
     PRUint32 mRecycleAfter;
 
-    // mTouched  : says if the allocator touched any bucket
-    //             If allocator didn't touch any bucket over a time
-    //             time interval, timer will call FreeUnusedBuckets()
+    // mTouched:
+    //  says if the allocator touched any bucket. If allocator didn't touch
+    //  any bucket over a time time interval, timer will call FreeUnusedBuckets()
     PRInt32 mTouched;
 
-    // mNAllocations: says how many buckets still have memory.
-    //             If all buckets were freed the last time
-    //             around and allocator didn't touch any bucket, then
-    //             there is nothing to be freed.
-    PRInt32 mNAllocations;
-
-    // mId: a string for identifying the user of nsRecyclingAllocator
-    //      User mainly for debug prints
+    // mId:
+    //  a string for identifying the user of nsRecyclingAllocator
+    //  User mainly for debug prints
     const char *mId;
+
+#ifdef DEBUG
+    // mNAllocated: Number of blocks allocated
+    PRInt32 mNAllocated;
+#endif
 
  public:
 
     // nbucket : number of buckets to hold. Capped at NS_MAX_BUCKET
     // recycleAfter : Try recycling allocated buckets after this many seconds
     // id : a string used to identify debug prints. Will not be released.
-    nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAfter = NS_DEFAULT_RECYCLE_TIMEOUT,
+    nsRecyclingAllocator(PRUint32 nbucket = 0, PRUint32 recycleAfter = NS_DEFAULT_RECYCLE_TIMEOUT,
                          const char *id = NULL);
     ~nsRecyclingAllocator();
+
+    NS_IMETHOD Init(PRUint32 nbucket, PRUint32 recycleAfter, const char *id);
 
     // Allocation and free routines
     void* Malloc(PRUint32 size, PRBool zeroit = PR_FALSE);
@@ -120,27 +154,20 @@ class NS_COM nsRecyclingAllocator {
         return Malloc(items * size, PR_TRUE);
     }
 
-
     // FreeUnusedBuckets - Frees any bucket memory that isn't in use
     void FreeUnusedBuckets();
 
  protected:
-    // Timer callback to trigger unused memory
 
+    // Timer callback to trigger unused memory
     static void nsRecycleTimerCallback(nsITimer *aTimer, void *aClosure);
 
-    // Bucket handling
-    PRBool Claim(PRUint32 i)
-    {
-        PRBool claimed = (PR_AtomicDecrement(&mMemBucket[i].available) == 0);
-        // Undo the claim, if claim failed
-        if (!claimed)
-            Unclaim(i);
-
-        return claimed;
-    }
-
-    void Unclaim(PRUint32 i) { PR_AtomicIncrement(&mMemBucket[i].available); }
+    // Freelist management
+    // FindFreeBlock: return a free block that can hold bytes (best fit)
+    Block* FindFreeBlock(PRUint32 bytes);
+    // AddToFreeList: adds block into our freelist for future retrieval.
+    //  Returns PR_TRUE is addition was successful. PR_FALSE otherewise.
+    PRBool AddToFreeList(Block* block);
 
     // Touch will mark that someone used this allocator
     // Timer based release will free unused memory only if allocator
@@ -156,4 +183,24 @@ class NS_COM nsRecyclingAllocator {
     friend void nsRecycleTimerCallback(nsITimer *aTimer, void *aClosure);
 };
 
+// ----------------------------------------------------------------------
+// Wrapping the recyling allocator with nsIMemory
+// ----------------------------------------------------------------------
+
+// Wrapping the nsRecyclingAllocator with nsIMemory
+class NS_COM nsRecyclingAllocatorImpl : public nsRecyclingAllocator, public nsIRecyclingAllocator {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMEMORY
+    NS_DECL_NSIRECYCLINGALLOCATOR
+
+    nsRecyclingAllocatorImpl()
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    virtual ~nsRecyclingAllocatorImpl() {}
+
+    NS_GENERIC_FACTORY_CONSTRUCTOR(nsRecyclingAllocatorImpl);
+};
 #endif // nsRecyclingAllocator_h__

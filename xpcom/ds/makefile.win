@@ -75,6 +75,7 @@ XPIDLSRCS =                            \
 	.\nsITimelineService.idl       \
 	.\nsIProperties.idl            \
 	.\nsIPropertyBag.idl           \
+	.\nsIRecyclingAllocator.idl    \
 	.\nsISerializable.idl          \
         .\nsISimpleEnumerator.idl      \
 	.\nsISupportsArray.idl         \
