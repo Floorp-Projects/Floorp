@@ -647,6 +647,12 @@ function saveEventsToFile( calendarEventArray )
          extension   = extensionRdf;
          charset = "UTF-8";
          break;
+      case 6 : // vcs
+         aDataStream = eventArrayToICalString( calendarEventArray, true );
+         extension   = extensionvCalendar;
+         charset = "UTF-8";
+         break;
+
       }
       var filePath = fp.file.path;
       if(filePath.indexOf(".") == -1 )
