@@ -75,14 +75,21 @@ var gPermissionManager = {
                                 .getService(Components.interfaces.nsIIOService);
       var uri = ioService.newURI("http://"+host, null, null);
       host = uri.host;
+
+      // check for garbage
+      if (host == "" || host.replace(/\W/, "") == "")
+        throw("Error: Invalid hostname entered.");
     } catch(ex) {
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                     .getService(Components.interfaces.nsIPromptService);
       var message = this._bundle.getString("invalidURI");
       var title = this._bundle.getString("invalidURITitle");
       promptService.alert(window, title, message);
+
+      // clear out the textbox and disable the buttons
       textbox.value = "";
       textbox.focus();
+      this.onHostInput(textbox);
       return;
     }
 
@@ -137,9 +144,12 @@ var gPermissionManager = {
   
   onHostInput: function (aSiteField)
   {
-    document.getElementById("btnSession").disabled = !aSiteField.value;
-    document.getElementById("btnBlock").disabled = !aSiteField.value;
-    document.getElementById("btnAllow").disabled = !aSiteField.value;
+    // trim any leading space
+    var site = aSiteField.value.replace(/^\s*([-\w]*:\/+)?/, "");
+ 
+    document.getElementById("btnSession").disabled = !site;
+    document.getElementById("btnBlock").disabled = !site;
+    document.getElementById("btnAllow").disabled = !site;
   },
   
   onLoad: function ()
