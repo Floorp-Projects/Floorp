@@ -353,6 +353,7 @@ public:
   void ShowHistory();
 
   nsIWebShell* GetTarget(const PRUnichar* aName);
+  NS_IMETHOD CreateTargetLocation(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
   nsIBrowserWindow* GetBrowserWindow(void);
 
   static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
@@ -2782,7 +2783,15 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
 nsIWebShell*
 nsWebShell::GetTarget(const PRUnichar* aName)
 {
-  nsAutoString name(aName);
+   nsCOMPtr<nsIDocShellTreeItem> shellItem;
+   NS_ENSURE_SUCCESS(nsDocShell::GetTarget(aName, getter_AddRefs(shellItem)), nsnull);
+   
+   nsIWebShell* target = nsnull;
+   if(shellItem)
+      CallQueryInterface(shellItem, &target);
+   return target;   
+    
+/*  nsAutoString name(aName);
   nsIWebShell* target = nsnull;
 
   if (0 == name.Length()) {
@@ -2840,7 +2849,23 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     }
   }
 
-  return target;
+  return target; */
+}
+
+NS_IMETHODIMP nsWebShell::CreateTargetLocation(const PRUnichar* aName, 
+   nsIDocShellTreeItem** aShell)
+{
+   nsCOMPtr<nsIWebShell> webShell;
+   mContainer->NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, *getter_AddRefs(webShell));
+
+   NS_ENSURE_SUCCESS(CallQueryInterface(webShell, aShell), NS_ERROR_FAILURE);
+
+   if(*aShell && aName)
+      (*aShell)->SetName(aName);
+
+   NS_IF_ADDREF(*aShell);
+
+   return NS_OK;
 }
 
 nsIEventQueue* nsWebShell::GetEventQueue(void)
@@ -4094,32 +4119,15 @@ NS_IMETHODIMP nsWebShell::GetTitle(PRUnichar** aTitle)
 
 NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
 {
-  // Record local title
-  mTitle = aTitle;
+   nsDocShell::SetTitle(aTitle);
 
-  // Title's set on the top level web-shell are passed ont to the container
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  GetSameTypeParent(getter_AddRefs(parent));
-  if (!parent) {
-    nsIBrowserWindow *browserWindow = GetBrowserWindow();
-    if (nsnull != browserWindow) {
-      browserWindow->SetTitle(aTitle);
-      NS_RELEASE(browserWindow);
+   // Oh this hack sucks. But there isn't any other way that I can
+   // reliably get the title text. Sorry.
+   nsCOMPtr<nsIGlobalHistory> globalHistory(do_GetService("component://netscape/browser/global-history"));
+   NS_ENSURE_TRUE(globalHistory, NS_ERROR_FAILURE);
+   globalHistory->SetPageTitle(nsCAutoString(mURL), aTitle);
 
-      // Oh this hack sucks. But there isn't any other way that I can
-      // reliably get the title text. Sorry.
-      do {
-        nsresult rv;
-        NS_WITH_SERVICE(nsIGlobalHistory, history, "component://netscape/browser/global-history", &rv);
-        if (NS_FAILED(rv)) break;
-
-        rv = history->SetPageTitle(nsCAutoString(mURL), aTitle);
-        if (NS_FAILED(rv)) break;
-      } while (0);
-    }
-  }
-
-  return NS_OK;
+   return NS_OK;
 }
 
 //*****************************************************************************
