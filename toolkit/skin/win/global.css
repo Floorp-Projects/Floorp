@@ -144,7 +144,6 @@ sidebarheader {
   height: 25px;
   background-color: -moz-Dialog;
   -moz-appearance: toolbox;
-  border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDHighlight;
 }

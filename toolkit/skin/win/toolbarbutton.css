@@ -34,7 +34,7 @@ toolbarbutton {
   -moz-box-align: center;
   -moz-box-pack: center;
   margin: 0;
-  border: 1px outset transparent;
+  border: 1px solid transparent;
   padding: 3px;
   background-color: transparent;
   color: -moz-DialogText;
@@ -51,12 +51,12 @@ toolbarbutton {
 
 toolbarbutton:hover,
 toolbarbutton[buttonover="true"] {
-  border-color: ThreeDFace;
+  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
 }
 
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
-  border-style: inset;
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
   padding: 4px 2px 2px 4px;
 }
 
@@ -72,8 +72,7 @@ toolbarbutton[disabled="true"][open="true"] {
 /* ..... checked state ..... */
 
 toolbarbutton[checked="true"] {
-  border-style: inset !important;
-  border-color: ThreeDFace !important;
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
   padding: 4px 2px 2px 4px !important;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
   color: ButtonText !important;
@@ -113,11 +112,6 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-orient: vertical;
 }
 
-.toolbarbutton-menubutton-button,
-.toolbarbutton-menubutton-dropmarker {
-  border: 1px outset transparent;
-}
-
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
@@ -127,7 +121,6 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  border: 1px solid transparent !important;
   padding: 0 0 1px 0 !important;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif") !important;
 }
