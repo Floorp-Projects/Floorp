@@ -174,43 +174,37 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////////
 nsresult nsMailboxUrl::SetMailboxParser(nsIStreamListener * aMailboxParser)
 {
-	NS_LOCK_INSTANCE();
 	if (aMailboxParser)
 		m_mailboxParser = dont_QueryInterface(aMailboxParser);
-	NS_UNLOCK_INSTANCE();
 	return NS_OK;
 }
 
 nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 {
-	NS_LOCK_INSTANCE();
-	if (aConsumer)
-	{
-		*aConsumer = m_mailboxParser;
-		NS_IF_ADDREF(*aConsumer);
-	}
-	NS_UNLOCK_INSTANCE();
+  NS_ENSURE_ARG_POINTER(aConsumer);
+  
+  *aConsumer = m_mailboxParser;
+	NS_IF_ADDREF(*aConsumer);
 	return  NS_OK;
 }
 
 nsresult nsMailboxUrl::SetMailboxCopyHandler(nsIStreamListener * aMailboxCopyHandler)
 {
-	NS_LOCK_INSTANCE();
 	if (aMailboxCopyHandler)
 		m_mailboxCopyHandler = dont_QueryInterface(aMailboxCopyHandler);
-	NS_UNLOCK_INSTANCE();
 	return NS_OK;
 }
 
 nsresult nsMailboxUrl::GetMailboxCopyHandler(nsIStreamListener ** aMailboxCopyHandler)
 {
-	NS_LOCK_INSTANCE();
+  NS_ENSURE_ARG_POINTER(aMailboxCopyHandler);
+
 	if (aMailboxCopyHandler)
 	{
 		*aMailboxCopyHandler = m_mailboxCopyHandler;
 		NS_IF_ADDREF(*aMailboxCopyHandler);
 	}
-	NS_UNLOCK_INSTANCE();
+
 	return  NS_OK;
 }
 
