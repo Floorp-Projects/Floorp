@@ -2559,7 +2559,7 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
  
   for (nsIView* parent = aView;
        parent && parent->GetViewManager() == aManager;
-       parent = parent->GetParent(parent)) {
+       parent = parent->GetParent()) {
     aPoint += parent->GetPosition();
   }
 }
