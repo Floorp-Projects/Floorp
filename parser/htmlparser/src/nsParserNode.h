@@ -179,7 +179,6 @@ class nsCParserNode :  public nsIParserNode {
     nsDeque*      mAttributes;
     nsAutoString  mSkippedContent;
     PRInt32       mUseCount;
-    PRBool        mIsResidual;
 
     nsITokenRecycler* mRecycler;
 };

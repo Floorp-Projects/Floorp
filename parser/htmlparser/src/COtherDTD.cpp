@@ -534,8 +534,8 @@ nsresult COtherDTD::CloseFrameset(const nsIParserNode *aNode){
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-nsresult COtherDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aUpdateStyleStack,PRInt32 aResidualStyleLevel){
-  return CNavDTD::OpenContainer(aNode,aTarget,aUpdateStyleStack,aResidualStyleLevel);
+nsresult COtherDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aUpdateStyleStack,nsEntryStack* aStyleStack){
+  return CNavDTD::OpenContainer(aNode,aTarget,aUpdateStyleStack,aStyleStack);
 }
 
 /**

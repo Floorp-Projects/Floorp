@@ -73,7 +73,6 @@ struct nsHTMLElement {
   TagList*        GetEndRootTags(void) const {return mEndRootNodes;}
   TagList*        GetAutoCloseStartTags(void) const {return mAutocloseStart;}
   TagList*        GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
-  TagList*        GetNonAutoCloseEndTags(void) const {return mDontAutocloseEnd;}
   eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const;
 
   TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
@@ -114,7 +113,7 @@ struct nsHTMLElement {
   TagList*        mAutocloseStart;    //these are the start tags that you can automatically close with this START tag
   TagList*        mAutocloseEnd;      //these are the start tags that you can automatically close with this END tag
   TagList*        mSynonymousTags;    //These are morally equivalent; an end tag for one can close a start tag for another (like <Hn>)
-  TagList*        mDontAutocloseEnd;  //these are the end tags that you cannot automatically close with this END tag
+  TagList*        mDontAutocloseEnd;  //...
   int             mParentBits;        //defines groups that can contain this element
   int             mInclusionBits;     //defines parental and containment rules
   int             mExclusionBits;     //defines things you CANNOT contain

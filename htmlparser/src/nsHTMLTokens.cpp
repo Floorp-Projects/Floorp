@@ -770,8 +770,10 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
     }//if
   }//while
   if(NS_OK==result) {
-     //if you're here, we're consuming a "short-form" comment
-    result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+     //Read up to the closing '>', unless you already did!  (such as <!>).
+    if(kGreaterThan!=aChar) {
+      result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+    }
   }
   return result;
 }
@@ -864,8 +866,10 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
     }//if
   }//if
   if(NS_OK==result) {
-     //Read up to the closing '>'
-    result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+     //Read up to the closing '>', unless you already did!  (such as <!>).
+    if(kGreaterThan!=aChar) {
+      result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+    }
   }
   return result;
 }

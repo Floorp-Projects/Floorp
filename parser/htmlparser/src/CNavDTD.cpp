@@ -49,7 +49,7 @@
 #endif
 #include "prmem.h"
 
-//#define ENABLE_RESIDUALSTYLE  
+#define ENABLE_RESIDUALSTYLE  
 //#define RICKG_DEBUG 
 //#define ENABLE_CRC
 #ifdef  RICKG_DEBUG
@@ -458,7 +458,8 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
   mParseMode=aParseMode;
-
+  mStyleHandlingEnabled=(eParseMode_quirks==mParseMode);
+    
   if((aNotifySink) && (aSink)) {
 
     STOP_TIMER();
@@ -577,6 +578,24 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             } 
           }
         } 
+        else {
+          //If you're here, then an error occured, but we still have nodes on the stack.
+          //At a minimum, we should grab the nodes and recycle them.
+          //Just to be correct, we'll also recycle the nodes.
+
+          while(mBodyContext->GetCount() > 0) { 
+
+            nsEntryStack *theChildStyles=0;
+            nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);
+            theNode->mUseCount=0;
+            RecycleNode(theNode);
+            if(theChildStyles) {
+              delete theChildStyles;
+            }
+          } 
+
+        }
+
         STOP_TIMER();
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
 
@@ -1006,7 +1025,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
                 // The safest thing to do is to discard this tag.     
                 return result;
               }
-              CloseContainersTo(theIndex,theParentTag,PR_TRUE);
+              CloseContainersTo(theIndex,aChildTag,PR_TRUE);
             }//if
             else break;
           }//if
@@ -1609,9 +1628,10 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
       
         // The body context should contain contents only upto the marked position.  
         PRInt32 i=0;
-        nsEntryStack *theStack=0;
+        nsEntryStack* theChildStyleStack=0;
+
         for(i=0; i<(theTagCount - theTopIndex); i++) {
-          mTempContext->Push((nsCParserNode*)mBodyContext->Pop(theStack));
+          mTempContext->Push((nsCParserNode*)mBodyContext->Pop(theChildStyleStack));
         }
      
         // Now flush out all the bad contents.
@@ -1644,7 +1664,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
         // Bad-contents were successfully processed. Now, itz time to get
         // back to the original body context state.
         for(PRInt32 k=0; k<(theTagCount - theTopIndex); k++) {
-          mBodyContext->Push((nsCParserNode*)mTempContext->Pop(theStack));
+          mBodyContext->Push((nsCParserNode*)mTempContext->Pop(theChildStyleStack));
         }
 
         STOP_TIMER()
@@ -2312,35 +2332,41 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
 
   //later, change this so that transients only open in containers that get leaked in to.
 
+  if(mStyleHandlingEnabled) {
+
 #ifdef  ENABLE_RESIDUALSTYLE
 
-  eHTMLTags theParentTag=mBodyContext->Last();
-  if(!gHTMLElements[theParentTag].HasSpecialProperty(kNoStyleLeaksIn)) {
-      //the following code builds the set of style tags to be opened...
-    PRUint32 theCount=mBodyContext->GetCount()-1;
-    PRUint32 theLevel=0;
-    for(theLevel=0;theLevel<theCount;theLevel++){
-      nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
-      if(theStack){
+    eHTMLTags theParentTag=mBodyContext->Last();
 
-        PRUint32 scount=theStack->mCount;
-        PRUint32 sindex=0;
+    if(CanContain(eHTMLTag_font,aChildTag)) {
+      if(!gHTMLElements[theParentTag].HasSpecialProperty(kNoStyleLeaksIn)) {
+          //the following code builds the set of style tags to be opened...
+        PRUint32 theCount=mBodyContext->GetCount();
+        PRUint32 theLevel=0;
+        for(theLevel=0;theLevel<theCount;theLevel++){
+          nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
+          if(theStack){
 
-        nsTagEntry *theEntry=theStack->mEntries;
-        for(sindex=0;sindex<scount;sindex++){            
-          if(kNotFound==theEntry->mLevel) {
-            theEntry->mLevel=theLevel;
-            nsIParserNode* theNode=theEntry->mNode;
-            if(theNode) {
-              result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theLevel);
-            }
-          }
-          theEntry++;
+            PRUint32 scount=theStack->mCount;
+            PRUint32 sindex=0;
+
+            nsTagEntry *theEntry=theStack->mEntries;
+            for(sindex=0;sindex<scount;sindex++){            
+              if(!theEntry->mParent) {
+                theEntry->mParent=theStack;  //we do this too, because this entry differs from the new one we're pushing...
+                nsIParserNode* theNode=theEntry->mNode;
+                if(theNode) {
+                  result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theStack);
+                }
+              }
+              theEntry++;
+            } //for
+          } //if
         } //for
       } //if
-    } //for
-  }
+    }
 #endif
+  }//if
   return result;
 }
 
@@ -2359,21 +2385,24 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
 nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
+  if(mStyleHandlingEnabled) {
+
 #ifdef  ENABLE_RESIDUALSTYLE
 #if 0
-  int theTagPos=0;
-    //now iterate style set, and close the containers...
+    int theTagPos=0;
+      //now iterate style set, and close the containers...
 
-  nsEntryStack* theStack=mBodyContext->GetStylesAt();
-  for(theTagPos=mBodyContext->mOpenStyles;theTagPos>0;theTagPos--){
-    eHTMLTags theTag=GetTopNode();
-    CStartToken   token(theTag);
-    nsCParserNode theNode(&token,mLineNumber);
-    token.SetTypeID(theTag); 
-    result=CloseContainer(theNode,theTag,PR_FALSE);
-  }
+    nsEntryStack* theStack=mBodyContext->GetStylesAt();
+    for(theTagPos=mBodyContext->mOpenStyles;theTagPos>0;theTagPos--){
+      eHTMLTags theTag=GetTopNode();
+      CStartToken   token(theTag);
+      nsCParserNode theNode(&token,mLineNumber);
+      token.SetTypeID(theTag); 
+      result=CloseContainer(theNode,theTag,PR_FALSE);
+    }
 #endif
 #endif
+  } //if
   return result;
 }
 
@@ -2388,14 +2417,16 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
 nsresult CNavDTD::PopStyle(eHTMLTags aTag){
   nsresult result=0;
 
+  if(mStyleHandlingEnabled) {
 #ifdef  ENABLE_RESIDUALSTYLE
-  if(nsHTMLElement::IsStyleTag(aTag)) {
-    nsCParserNode *theNode=(nsCParserNode*)mBodyContext->PopStyle(aTag);
-    if(theNode) {
-      RecycleNode(theNode);
+    if(nsHTMLElement::IsStyleTag(aTag)) {
+      nsCParserNode* theNode=(nsCParserNode*)mBodyContext->PopStyle(aTag);
+      if(theNode) {
+        RecycleNode(theNode);
+      }
     }
-  }
 #endif
+  } //if
   return result;
 }
 
@@ -2725,7 +2756,7 @@ nsresult CNavDTD::CloseFrameset(const nsIParserNode *aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult
-CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,PRInt32 aResidualStyleLevel){
+CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,nsEntryStack* aStyleStack){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
   
   nsresult   result=NS_OK; 
@@ -2804,7 +2835,7 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
       START_TIMER();
 
-      mBodyContext->Push(aNode,aResidualStyleLevel);
+      mBodyContext->Push(aNode,aStyleStack);
   }
 
   return result;
@@ -2897,8 +2928,9 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
 
       theTag=mBodyContext->Last();
 
-      nsEntryStack *theStyles=0;
-      nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theStyles);
+      nsEntryStack *theChildStyleStack=0;
+
+      nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyleStack);
       result=CloseContainer(theNode,aTarget,aClosedByStartTag);
 
       if(theNode) {
@@ -2907,11 +2939,18 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
         PRBool theTagIsStyle=nsHTMLElement::IsStyleTag(theTag);
 
         if(mStyleHandlingEnabled) {
-          if(aClosedByStartTag) {
+          if(aClosedByStartTag && (0==theNode->mUseCount)) {
+
+
+            /***************************************************************************
+              The cases we're handing here:
+                1. <body><b><DIV>       //<b> gets pushed onto <body>.mStyles.
+             ***************************************************************************/
+
             if(theTagIsStyle) {
-              if(theStyles) {
-                theStyles->PushFront(theNode);
-                mBodyContext->PushStyles(theStyles);
+              if(theChildStyleStack) {
+                theChildStyleStack->PushFront(theNode);
+                mBodyContext->PushStyles(theChildStyleStack);
               }
               else mBodyContext->PushStyle(theNode);
             } 
@@ -2920,53 +2959,78 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
             //if you're here, then we're dealing with the closure of tags
             //caused by a close tag (as opposed to an open tag).
             //At a minimum, we should consider pushing residual styles up 
-            //up the stack...
+            //up the stack or popping and recycling displaced nodes.
 
-            if(aTarget!=theTag) {
-              if(theTagIsStyle) {
-                if(theStyles) {
-                  theStyles->PushFront(theNode);
-                  mBodyContext->PushStyles(theStyles);
-                }
-                else mBodyContext->PushStyle(theNode);
-              } 
-              else if(theStyles) {
-                mBodyContext->PushStyles(theStyles);
+            /***************************************************************************
+              There are 2 cases: 
+                1. <body><b><div>text</DIV> 
+                      Here the <b> will leak into <div> (see case given above), and 
+                      when <div> closes the <b> is dropped since it's already residual.
+                2. <body><div><b>text</div>
+                      Here the <b> will leak out of the <div> and get pushed onto
+                      the RS stack for the <body>, since it originated in the <div>.
+             ***************************************************************************/
+
+            if(theTagIsStyle) {
+              if(theChildStyleStack) {
+                theChildStyleStack->PushFront(theNode);
+                mBodyContext->PushStyles(theChildStyleStack);
               }
+              else if (0==theNode->mUseCount) {
+                if(theTag!=aTarget) {
+                  mBodyContext->PushStyle(theNode);
+                } //otherwise just let the node recycle, because it was explicty closed
+                  //and does not live on a style stack.
+              } 
+              else {
+                //Ah, at last, the final case. If you're here, then we just popped a 
+                //style tag that got onto that tag stack from a stylestack somewhere.
+                //The the target==theTag, then pop it from the stylestack.
+                if(theTag==aTarget) {
+                  nsIParserNode* theNextNode=mBodyContext->PopStyle(theTag);
+                }
+              }
+            } 
+            else if(theChildStyleStack) {
+              mBodyContext->PushStyles(theChildStyleStack);
             }
           }
-        }
+        } //if
         else {
           //since stylehandling is disabled, let's recycle the associated nodes here...
         }
 #endif
-        RecycleNode(theNode);
-      }
+      }//if
+      RecycleNode(theNode);
     }
+
+
+    if(eParseMode_quirks==mParseMode) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
 
-    //This code takes any nodes in style stack for at this level and reopens
-    //then where they were originally.
+      //This code takes any nodes in style stack for at this level and reopens
+      //then where they were originally.
 
-    if(!aClosedByStartTag) {
-      nsEntryStack* theStack=mBodyContext->GetStylesAt(anIndex-1);
-      if(theStack){
+      if(!aClosedByStartTag) {
+        nsEntryStack* theStack=mBodyContext->GetStylesAt(anIndex-1);
+        if(theStack){
 
-        PRUint32 scount=theStack->mCount;
-        PRUint32 sindex=0;
+          PRUint32 scount=theStack->mCount;
+          PRUint32 sindex=0;
 
-        for(sindex=0;sindex<scount;sindex++){
-          nsIParserNode* theNode=theStack->NodeAt(sindex);
-          if(theNode) {
-            ((nsCParserNode*)theNode)->mUseCount--;
-            result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE);
-          }
-        } 
-        theStack->mCount=0; 
+          for(sindex=0;sindex<scount;sindex++){
+            nsIParserNode* theNode=theStack->NodeAt(sindex);
+            if(theNode) {
+              ((nsCParserNode*)theNode)->mUseCount--;
+              result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE);
+            }
+          } 
+          theStack->mCount=0; 
+        } //if
       } //if
-    } //if
 #endif
+    }//if
 
   } //if
   return result;
