@@ -445,8 +445,10 @@ sub deactivate {
 ################################################################################
 
 sub validateID {
+    # $::FORM{'id'} is destroyed if detaint_natural fails.
+    my $flagtype_id = $::FORM{'id'};
     detaint_natural($::FORM{'id'})
-      || ThrowCodeError("flag_type_id_invalid", { id => $::FORM{'id'} });
+      || ThrowCodeError("flag_type_id_invalid", { id => $flagtype_id });
 
     SendSQL("SELECT 1 FROM flagtypes WHERE id = $::FORM{'id'}");
     FetchOneColumn()
@@ -499,10 +501,12 @@ sub validateComponent {
 }
 
 sub validateSortKey {
+    # $::FORM{'sortkey'} is destroyed if detaint_natural fails.
+    my $sortkey = $::FORM{'sortkey'};
     detaint_natural($::FORM{'sortkey'})
       && $::FORM{'sortkey'} < 32768
       || ThrowUserError("flag_type_sortkey_invalid", 
-                        { sortkey => $::FORM{'sortkey'} });
+                        { sortkey => $sortkey });
 }
 
 sub validateTargetType {
