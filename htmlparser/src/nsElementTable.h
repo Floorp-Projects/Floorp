@@ -171,6 +171,7 @@ struct nsHTMLElement {
   PRBool          CanAutoCloseTag(nsDTDContext& aContext,eHTMLTags aTag) const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
   PRBool          IsSpecialParent(eHTMLTags aTag) const;
+  PRBool          IsExcludableParent(eHTMLTags aParent) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
  
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);

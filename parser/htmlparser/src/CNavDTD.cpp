@@ -209,7 +209,7 @@ nsCParserNode* CNavDTD::CreateNode(void) {
 void CNavDTD::RecycleNode(nsCParserNode* aNode) {
   if(aNode && (!aNode->mUseCount)) {
 
-    if(aNode->mToken) {
+    if(aNode->mToken) { 
       if(!aNode->mToken->mUseCount) { 
         mTokenRecycler->RecycleToken(aNode->mToken); 
       }
@@ -694,8 +694,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         case eHTMLTag_comment:
         case eHTMLTag_script:
         case eHTMLTag_markupDecl:
-        case eHTMLTag_userdefined:
-          break;  //simply pass these through to token handler without further ado...
+          break;  // simply pass these through to token handler without further ado...
+                  // Userdefined tags shouldn't just pass through. -- Fix for 31694,31940
         case eHTMLTag_newline:
         case eHTMLTag_whitespace:
           if(mMisplacedContent.GetSize()<=0) // fix for bugs 17017,18308,23765, and 24275
@@ -842,7 +842,8 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
           eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
           if(eToken_newline==theType){
             mLineNumber++;
-            mTokenizer->PopToken();  //skip 1st newline inside PRE and LISTING
+            theNextToken=mTokenizer->PopToken();  //skip 1st newline inside PRE and LISTING
+            if(theNextToken) mTokenRecycler->RecycleToken(theNextToken); // fix for Bug 29379
           }//if
         }//if
       }
@@ -1017,31 +1018,33 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           }
 
           if(theChildAgrees && theChildIsContainer) {
-            if ((theParentTag!=aChildTag) && (!nsHTMLElement::IsResidualStyleTag(aChildTag))) { 
+            if (!nsHTMLElement::IsResidualStyleTag(aChildTag)) { 
+              if(theParentTag!=aChildTag) {
               
-              //trying is blockcloser to widen the set of elements that this effects, re: bug 27865...
+                //trying is blockcloser to widen the set of elements that this effects, re: bug 27865...
 
-              if(nsHTMLElement::IsBlockCloser(theParentTag)) {
-                PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+                if(nsHTMLElement::IsBlockCloser(theParentTag)) {
+                  PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
               
-                if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
+                  if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
 
-                /*-------------------------------------------------------------------------------------
-                  1.  Here's a tricky case from bug 22596:  <h5><li><h5>
+                  /*-------------------------------------------------------------------------------------
+                    1.  Here's a tricky case from bug 22596:  <h5><li><h5>
 
-                      How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
-                      (Afterall, the <h5> is a legal child of the <LI>).
+                        How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
+                        (Afterall, the <h5> is a legal child of the <LI>).
               
-                      The way you know is that there is no root between the two, so the <h5> binds more
-                      tightly to the 1st <h5> than to the <LI>.
+                        The way you know is that there is no root between the two, so the <h5> binds more
+                        tightly to the 1st <h5> than to the <LI>.
 
-                  2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
-                      From this case we learned not to execute this logic if the parent is a block.
-                 -------------------------------------------------------------------------------------*/
+                    2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
+                        From this case we learned not to execute this logic if the parent is a block.
+                   -------------------------------------------------------------------------------------*/
 
-                  theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
-                } //if
-              }//if
+                    theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
+                  } //if
+                }//if
+              }
             } //if
           } //if
         } //if parentcontains
@@ -2028,23 +2031,22 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
 
     eHTMLTokenTypes theTokenType=(eHTMLTokenTypes)theNextToken->GetTokenType();
 
-    mScratch.Truncate();
     // Dont worry about attributes here because it's already stored in 
     // the start token as mTrailing content and will get appended in 
     // start token's GetSource();
     if(eToken_attribute!=theTokenType) {
       if (eToken_entity==theTokenType) {
         if((eHTMLTag_textarea==theNodeTag) || (eHTMLTag_title==theNodeTag)) {
+          mScratch.Truncate();
           ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
           // since this is an entity, we know that it's only one character.
           // check to see if it's a CR, in which case we'll need to do line
           // termination conversion at the end.
           aMustConvertLinebreaks |= (mScratch[0] == kCR);
+          aNode.mSkippedContent->Append(mScratch);
         }
       }
-      else theNextToken->GetSource(mScratch);
-
-      aNode.mSkippedContent->Append(mScratch);
+      else theNextToken->GetSource(*aNode.mSkippedContent);
     }
     mTokenRecycler->RecycleToken(theNextToken);
   }
@@ -2684,8 +2686,9 @@ nsresult CNavDTD::CloseBody(const nsIParserNode *aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
-  static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_col,
-                                       eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup};
+  // Include TD and TH to fix bug 29735.
+  static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th,
+                                     eHTMLTag_col,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup};
   if(mHasOpenForm)
     CloseForm(aNode);
     
@@ -3116,7 +3119,9 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                   }
                 }
                 else if(1==theNode->mUseCount) {
-                    //this fixes bug 30885 and 29626
+                  // This fixes bug 30885 and 29626
+                  // Make sure that the node, which is about to
+                  // get released does not stay on the style stack...
                   mBodyContext->PopStyle(theTag);
                 }
                 mBodyContext->PushStyles(theChildStyleStack);
@@ -3348,7 +3353,10 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
 
   eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
   
-  if(eHTMLTag_meta==theTag) {
+  // XXX - SCRIPT inside NOTAGS should not get executed unless the pref.
+  // says so.  Since we don't have this support yet..lets ignore the
+  // SCRIPT inside NOTAGS.  Ref Bug 25880.
+  if(eHTMLTag_meta==theTag || eHTMLTag_script==theTag) {
     if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
       return result;
     }
@@ -3374,10 +3382,13 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
 
       }
       else result=AddLeaf(aNode);
-        // XXX If the return value tells us to block, go
-        // ahead and close the tag out anyway, since its
-        // contents will be consumed.
-      if (NS_SUCCEEDED(result)) {
+      // XXX If the return value tells us to block, go
+      // ahead and close the tag out anyway, since its
+      // contents will be consumed.
+
+      // Fix for Bug 31392
+      // Do not leave a head context open no matter what the result is.
+      if(mHasOpenHead) {
         nsresult rv=CloseHead(aNode);
         // XXX Only send along a failure. If the close 
         // succeeded we still may need to indicate that the

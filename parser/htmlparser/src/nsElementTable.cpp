@@ -136,7 +136,8 @@ TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
 
 
-TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913,23680
+TagList  gExcludableParents={1,{eHTMLTag_pre}}; // Ref Bug 22913
+TagList  gCaptionExcludableParents={1,{eHTMLTag_td}}; //Ref Bug 26488
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
@@ -1389,10 +1390,12 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
     if(!result) {
       // NOBR is a block closure - Ref. Bug# 24462
       // DIR is a block closure -- Ref. Bug# 25845
+      // TD is a block closure   - Ref. Bug# 27490
+      // TR is a block closure   - Ref. Bug# 26488
 
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
-                                    eHTMLTag_td,eHTMLTag_th,
-                                    /* eHTMLTag_tfoot, eHTMLTag_thead,eHTMLTag_tr, */
+                                    eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr,
+                                    /* eHTMLTag_tfoot, eHTMLTag_thead,*/
                                     eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul,eHTMLTag_dir};
 
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
@@ -1544,6 +1547,45 @@ PRBool nsHTMLElement::CanExclude(eHTMLTags aChild) const{
   if(eHTMLTag_unknown!=mExclusionBits){
     if(gHTMLElements[aChild].IsMemberOf(mExclusionBits)) {
       result=PR_TRUE;
+    }
+  }
+  return result;
+}
+
+/**
+ * 
+ * @update	harishd 03/01/00
+ * @param 
+ * @return
+ */
+PRBool nsHTMLElement::IsExcludableParent(eHTMLTags aParent) const{
+  PRBool result=PR_FALSE;
+
+  if(!IsTextTag(mTagID)) {
+    if(mExcludableParents) {
+      TagList* theParents=mExcludableParents;
+      if(FindTagInSet(aParent,theParents->mTags,theParents->mCount))
+        result=PR_TRUE;
+    }
+    if(!result) {
+      // If you're a block parent make sure that you're not the
+      // parent of a TABLE element. ex. <table><tr><td><div><td></tr></table>
+      // IE & Nav. render this as table with two cells ( which I think is correct ).
+      // NOTE: If need arise we could use the root node to solve this problem
+      if(nsHTMLElement::IsBlockParent(aParent)){
+        switch(mTagID) {
+          case eHTMLTag_caption:
+          case eHTMLTag_thead:
+          case eHTMLTag_tbody:
+          case eHTMLTag_tfoot:
+          case eHTMLTag_td:
+          case eHTMLTag_th:
+          case eHTMLTag_tr:
+            result=PR_TRUE;
+          default:
+            break;
+        }
+      }
     }
   }
   return result;
@@ -1907,12 +1949,9 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
       if(FindTagInSet(mTagID,theCloseTags->mTags,theCloseTags->mCount))
         return PR_FALSE;
     }
-
-    if(gHTMLElements[aChild].mExcludableParents) {
-      TagList* theParents=gHTMLElements[aChild].mExcludableParents;
-      if(FindTagInSet(mTagID,theParents->mTags,theParents->mCount))
-        return PR_FALSE;
-    }
+    
+    if(gHTMLElements[aChild].IsExcludableParent(mTagID))
+      return PR_FALSE;
 
     if(gHTMLElements[aChild].IsBlockCloser(aChild)){
       if(nsHTMLElement::IsBlockParent(mTagID)){

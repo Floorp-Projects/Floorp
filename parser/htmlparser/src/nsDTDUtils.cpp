@@ -73,22 +73,13 @@ nsEntryStack::~nsEntryStack() {
   MOZ_COUNT_DTOR(nsEntryStack);
 
   if(mEntries) {
-    if(0<mCount) {
-      PRInt32 anIndex=0;
-      for(anIndex=0;anIndex<mCount;anIndex++){
-        if(mEntries[anIndex].mStyles)
-          delete mEntries[anIndex].mStyles;
-
-        //add code here to recycle the node if you have one...
-      
-      }
-    }
+    //add code here to recycle the node if you have one...  
     delete [] mEntries;
     mEntries=0;
   }
+
   mCount=mCapacity=0;
 }
-
 
 /**
  * Resets state of stack to be empty.
@@ -117,7 +108,7 @@ void nsEntryStack::EnsureCapacityFor(PRInt32 aNewMax,PRInt32 aShiftOffset) {
       for(index=0;index<mCount;index++) {
         temp[aShiftOffset+index]=mEntries[index];
       }
-      delete [] mEntries;
+      if(mEntries) delete [] mEntries;
       mEntries=temp;
     }
     else{
@@ -562,8 +553,15 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
 
       }
       else theStyles->Append(aStyles);
-    } //if
-  }//if
+    } //if(theEntry )
+    else if(mStack.mCount==0) {
+      // If you're here it means that we have hit the rock bottom
+      // ,of the stack, and there's no need to handle anymore styles.
+      // Fix for bug 29048
+      delete aStyles;
+      aStyles=0;
+    }
+  }//if(aStyles)
 }
 
 
@@ -592,20 +590,21 @@ nsIParserNode* nsDTDContext::PopStyle(void){
 nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
 
   PRInt32 theLevel=0;
+  nsIParserNode* result=0;
 
   for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
     if(theStack) {
       if(aTag==theStack->Last()) {
+        result=theStack->Pop();
         mResidualStyleCount--;
-        return theStack->Pop();
       } else {
         // NS_ERROR("bad residual style entry");
       }
     } 
   }
 
-  return 0;
+  return result;
 }
 
 /** 
@@ -619,20 +618,21 @@ nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
 nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
 
   PRInt32 theLevel=0;
+  nsIParserNode* result=0;
 
   for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
     if(theStack) {
       if(aTag==theStack->Last()) {
+        result=theStack->Pop();
         mResidualStyleCount--;
-        return theStack->Pop();
       } else {
         // NS_ERROR("bad residual style entry");
       }
     } 
   }
 
-  return 0;
+  return result;
 }
 
 /**************************************************************
