@@ -1,0 +1,22 @@
+<!-- INSERT OPEN OEONE LICENSE -->
+
+<!-- Select addresses for mail message dialog -->
+<!ENTITY ab-selectAddressesDialog.title "Izbor naslovov">
+<!ENTITY ab-selectAddressesDialogHeader.label "Izberite naslov">
+<!ENTITY ab-selectAddressesDialogLookIn.label "Išči v:">
+<!ENTITY ab-selectAddressesDialogNameColumn.label "Ime">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "E-poštni naslov">
+<!ENTITY ab-selectAddressesDialogFor.label "za:">
+<!ENTITY ab-selectAddressesDialogClearButton.label "Izprazni">
+<!ENTITY ab-selectAddressesDialogToButton.label "Za">
+<!ENTITY ab-selectAddressesDialogCcButton.label "Cc">
+<!ENTITY ab-selectAddressesDialogBccButton.label "Bcc">
+<!ENTITY ab-selectAddressesDialogRemoveButton.label "Odstrani">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "Obvestilo naslovi na:">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "Za:">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "Cc:">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc:">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Ni e-poštnega naslova">
+<!ENTITY ab-selectAddressesDialogInvite.label "Povabi">
+<!ENTITY ab-selectAddressesDialogUninvite.label "Odstrani">
+<!ENTITY ab-selectAddressesDialogInviteList.label "Seznam povabljenih:">
