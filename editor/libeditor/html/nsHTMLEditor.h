@@ -138,6 +138,7 @@ public:
   NS_IMETHOD GetFontFaceState(PRBool &aMixed, nsString &outFace);
   NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL);
   NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD);
+  NS_IMETHOD GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign);
   NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent);
 
   NS_IMETHOD MakeOrChangeList(const nsString& aListType);

@@ -531,6 +531,8 @@ interface nsIEditorShell : nsISupports
   wstring GetListState(out boolean mixed);
   /* Returns "li", "dt", or "dd" */
   wstring GetListItemState(out boolean mixed);
+  /* Returns "left", "center", or "right" */
+  wstring GetAlignment(out boolean mixed);
 
   void ApplyStyleSheet(in wstring url);
 

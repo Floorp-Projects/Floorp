@@ -3082,6 +3082,18 @@ nsHTMLEditor::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool 
   return htmlRules->GetListItemState(aMixed, aLI, aDT, aDD);
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
+{
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  if (!htmlRules) return NS_ERROR_FAILURE;
+  
+  return htmlRules->GetAlignment(aMixed, aAlign);
+}
+
+
 NS_IMETHODIMP 
 nsHTMLEditor::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
 {
