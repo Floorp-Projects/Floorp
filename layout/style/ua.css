@@ -111,7 +111,6 @@ A:active IMG { border: 2px solid lime; text-decoration: underline }
 A:out-of-date IMG { border: 2px solid red; text-decoration: underline }
 
 IMG { border-style: solid; border-color: blue; }
-//INPUT { border-style: solid; border-color: blue; }
 
 //----------------------------------------------------------------------
 // The real stuff
@@ -126,6 +125,16 @@ HR {
 BR {
   display: inline;
   color: cyan;
+}
+
+INPUT {
+  vertical-align: bottom;
+}
+SELECT {
+  vertical-align: bottom;
+}
+TEXTAREA {
+  vertical-align: bottom;
 }
 
 // Block tags
