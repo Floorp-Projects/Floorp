@@ -21,29 +21,6 @@
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 
-// XXX move to nsID.h or nsHashtable.h? (copied from nsRepository.cpp)
-class IDKey: public nsHashKey {
-private:
-    nsID id;
-  
-public:
-    IDKey(const nsID &aID) {
-        id = aID;
-    }
-  
-    PRUint32 HashValue(void) const {
-        return id.m0;
-    }
-
-    PRBool Equals(const nsHashKey *aKey) const {
-        return (id.Equals(((const IDKey *) aKey)->id));
-    }
-
-    nsHashKey *Clone(void) const {
-        return new IDKey(id);
-    }
-};
-
 class nsServiceEntry {
 public:
 
@@ -57,11 +34,12 @@ public:
     const nsCID& mClassID;
     nsISupports* mService;
     nsVector* mListeners;        // nsVector<nsIShutdownListener>
+    PRBool mShuttingDown;
 
 };
 
 nsServiceEntry::nsServiceEntry(const nsCID& cid, nsISupports* service)
-    : mClassID(cid), mService(service), mListeners(NULL)
+    : mClassID(cid), mService(service), mListeners(NULL), mShuttingDown(PR_FALSE)
 {
 }
 
@@ -216,7 +194,7 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
     (void)PR_GetCurrentThread();
     PR_CEnterMonitor(this);
 
-    IDKey key(aClass);
+    nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
     if (entry) {
@@ -226,6 +204,14 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
             err = entry->AddListener(shutdownListener);
             if (err == NS_OK) {
                 *result = service;
+
+                // If someone else requested the service to be shut down, 
+                // and we just asked to get it again before it could be 
+                // released, then cancel their shutdown request:
+                if (entry->mShuttingDown) {
+                    entry->mShuttingDown = PR_FALSE;
+                    service->AddRef();      // Released in ShutdownService
+                }
             }
         }
     }
@@ -242,10 +228,8 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                 err = entry->AddListener(shutdownListener);
                 if (err == NS_OK) {
                     mServices->Put(&key, entry);
-                    service->AddRef(); // Add a extra ref so that the service is not freed for now.
-                                       // Should fix it later depending on Mem pressure API or some
-                                       // daemon killer thread.
                     *result = service;
+                    service->AddRef();      // Released in ShutdownService
                 }
                 else {
                     service->Release();
@@ -261,12 +245,12 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
 
 nsresult
 nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
-                                 nsIShutdownListener* shutdownListener)
+                                     nsIShutdownListener* shutdownListener)
 {
     nsresult err = NS_OK;
     PR_CEnterMonitor(this);
 
-    IDKey key(aClass);
+    nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
     NS_ASSERTION(entry, "service not found");
@@ -274,18 +258,12 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 
     if (entry) {
         err = entry->RemoveListener(shutdownListener);
-        // XXX Is this too aggressive? Maybe we should have a memory
-        // pressure API that releases services if they're not in use so
-        // that we don't thrash.(warren)
         nsrefcnt cnt = service->Release();
-#if 0
-       // Turns out to be too aggressive. Stanley reported that he always gets a new copy
-       // of service.So do not remove it. Also one cannot depend return value of Release as per COM! (sudu)
         if (err == NS_OK && cnt == 0) {
             mServices->Remove(&key);
             delete entry;
+            err = nsRepository::FreeLibraries();
         }
-#endif 
     }
 
     PR_CExitMonitor(this);
@@ -298,18 +276,19 @@ nsServiceManagerImpl::ShutdownService(const nsCID& aClass)
     nsresult err = NS_OK;
     PR_CEnterMonitor(this);
 
-    IDKey key(aClass);
+    nsIDKey key(aClass);
     nsServiceEntry* entry = (nsServiceEntry*)mServices->Get(&key);
 
     if (entry == NULL) {
         err = NS_ERROR_SERVICE_NOT_FOUND;
     }
     else {
-        entry->mService->AddRef();
-        err = entry->NotifyListeners();
-        nsrefcnt cnt = entry->mService->Release();
+        err = entry->NotifyListeners();         // break the cycles
+        entry->mShuttingDown = PR_TRUE;
+        nsrefcnt cnt = entry->mService->Release();       // AddRef in GetService
         if (err == NS_OK && cnt == 0) {
             mServices->Remove(&key);
+            delete entry;
             err = nsRepository::FreeLibraries();
         }
         else

@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 DEPTH=..\..
 
 EXPORTS = \
-	nsCOMPtr.h			\
+	nsCOMPtr.h		\
 	nsAgg.h			\
 	nsCom.h			\
 	nsDebug.h		\
@@ -41,6 +41,7 @@ EXPORTS = \
         nsXPComFactory.h        \
         nsXPComCIID.h           \
         nsIEventQueueService.h  \
+        nsIAllocator.h          \
 	$(NULL)			
 
 MODULE = xpcom 
