@@ -267,6 +267,12 @@
     </implementation>
   </binding>
 
+  // for now, empty binding to deal with -moz-binding rules from communicator.css
+  // (see bug 227993) we may need that binding one day to propagate
+  // the text/icons/both state to other windows. If we don't, this binding
+  // should be removed after we stop shipping the seamonkey communicator.css skin files.
+  <binding id="toolbar-primary" extends="chrome://global/content/bindings/toolbar.xml#toolbar"/>
+
   <binding id="menubar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
