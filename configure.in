@@ -312,15 +312,11 @@ alpha*-*-osf*)
 *-netbsd*)
     DLL_SUFFIX="so.1.0"
     DSO_CFLAGS='-fPIC'
-    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKSHLIB_FORCE_ALL='--whole-archive'
-    MKSHLIB_UNFORCE_ALL='--no-whole-archive'
     CFLAGS="$CFLAGS -Dunix"
     CXXFLAGS="$CXXFLAGS -Dunix"
 dnl Test for a.out platform and handle C++ libraries correctly
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-shared /usr/lib/c++rt0.o"
+	DSO_LDOPTS="-shared"
     fi
     if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
