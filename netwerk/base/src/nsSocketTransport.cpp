@@ -2080,7 +2080,7 @@ nsSocketBOS::Flush()
 NS_IMETHODIMP
 nsSocketBOS::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aBytesWritten)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     PRInt32 total = 0;
     PRInt32 written;
 
