@@ -29,7 +29,8 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
-//NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
+static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
+static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
 nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -90,30 +91,34 @@ nsMenu::~nsMenu()
 //-------------------------------------------------------------------------
 //
 // Create the proper widget
-// add menu to menubar
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
+NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
 {
-  mMenuBarParent = aParent;
-  NS_ADDREF(mMenuBarParent);
+  if(aParent)
+  {
+    nsIMenuBar * menubar = nsnull;
+    aParent->QueryInterface(kIMenuBarIID, (void**) &menubar);
+    if(menubar)
+    {
+      mMenuBarParent = menubar;
+      NS_ADDREF(mMenuBarParent);
+      NS_RELEASE(menubar);
+    }
+    else
+    {
+      nsIMenu * menu = nsnull;
+      aParent->QueryInterface(kIMenuIID, (void**) &menu);
+      if(menu)
+      {
+        mMenuParent = menu;
+        NS_ADDREF(mMenuParent);
+        NS_RELEASE(menu);
+      }
+    }
+  }
 
   mLabel = aLabel;
   mMenu = gtk_menu_new();
-//aParent->AddMenu(this);
-
-  return NS_OK;
-}
-
-//add submenu
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
-{
-  mMenuParent = aParent;
-  NS_ADDREF(mMenuParent);
-
-  mLabel = aLabel;
-  mMenu = gtk_menu_new();
-//  aParent->AddMenu(this);
 
   return NS_OK;
 }
@@ -139,7 +144,7 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetLabel(nsString &aText)
+NS_METHOD nsMenu::SetLabel(const nsString &aText)
 {
   /* we Do GetLabel() when we are adding the menu...
    *  but we might want to redo this.
@@ -149,16 +154,28 @@ NS_METHOD nsMenu::SetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::AddItem(const nsString &aText)
+NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 {
-  char * labelStr = mLabel.ToNewCString();
-  GtkWidget *widget;
-
-  widget = gtk_menu_item_new_with_label (labelStr);
-  gtk_widget_show(widget);
-  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
-
-  delete[] labelStr;
+  if(aItem)
+  {
+    nsIMenuItem * menuitem = nsnull;
+    aItem->QueryInterface(kIMenuItemIID, (void**) &menuitem);
+    if(menuitem)
+    {
+      AddMenuItem(menuitem);
+      NS_RELEASE(menuitem);
+    }
+    else
+    {
+      nsIMenu * menu = nsnull;
+      aItem->QueryInterface(kIMenuIID, (void**) &menu);
+      if(menu)
+      {
+        AddMenu(menu);
+        NS_RELEASE(menu);
+      }
+    }
+  }
 
   return NS_OK;
 }
@@ -198,7 +215,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 
   voidData = NULL;
 
-  aMenu->GetNativeData(voidData);
+  aMenu->GetNativeData(&voidData);
   newmenu = GTK_WIDGET(voidData);
 
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), newmenu);
@@ -254,9 +271,9 @@ NS_METHOD nsMenu::RemoveAll()
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetNativeData(void *& aData)
+NS_METHOD nsMenu::GetNativeData(void ** aData)
 {
-  aData = (void *)mMenu;
+  *aData = (void *)mMenu;
   return NS_OK;
 }
 
@@ -264,7 +281,7 @@ GtkWidget *nsMenu::GetNativeParent()
 {
   void * voidData; 
   if (nsnull != mMenuParent) {
-    mMenuParent->GetNativeData(voidData);
+    mMenuParent->GetNativeData(&voidData);
   } else if (nsnull != mMenuBarParent) {
     mMenuBarParent->GetNativeData(voidData);
   } else {
