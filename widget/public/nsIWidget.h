@@ -404,7 +404,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas) = 0;
+    virtual void SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]) = 0;
 
     /**
      * Update the collection of tooltip rectangles. The number of tooltips must
@@ -415,7 +415,7 @@ class nsIWidget : public nsISupports {
      *
      */
 
-    virtual void UpdateTooltips(const nsRect* aNewTips) = 0;
+    virtual void UpdateTooltips(nsRect* aNewTips[]) = 0;
 
     /**
      * Remove the collection of tooltip rectangles.
