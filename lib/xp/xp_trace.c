@@ -56,13 +56,15 @@ void XP_Trace1 (const char* message, ...)
 #endif /* DEBUG */
 }
 
-#if defined(XP_UNIX) && defined(DEBUG)
+#if defined(XP_UNIX)
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 FILE *real_stderr = 0;
 #else
 FILE *real_stderr = stderr;
 #endif
+#endif /* XP_UNIX */
 
+#if defined(XP_UNIX) && defined(DEBUG)
 void FE_Trace (const char* buffer)
 {
 #if defined(DEBUG_warren)
