@@ -8,10 +8,12 @@ icodegenerator.o: icodegenerator.cpp numerics.h utilities.h \
  gc_allocator.h jsclasses.h icode.h icodegenerator.h interpreter.h
 interpreter.o: interpreter.cpp interpreter.h utilities.h systemtypes.h \
  jstypes.h gc_allocator.h vmtypes.h numerics.h jsclasses.h world.h \
- hash.h parser.h icode.h icodegenerator.h
+ hash.h parser.h icode.h icodegenerator.h jsmath.h
 js2.o: js2.cpp world.h utilities.h systemtypes.h hash.h parser.h \
  interpreter.h jstypes.h gc_allocator.h vmtypes.h numerics.h \
  jsclasses.h icode.h icodegenerator.h debugger.h
+jsmath.o: jsmath.cpp jsmath.h jstypes.h utilities.h systemtypes.h \
+ gc_allocator.h
 jstypes.o: jstypes.cpp jstypes.h utilities.h systemtypes.h \
  gc_allocator.h jsclasses.h numerics.h icodegenerator.h parser.h \
  vmtypes.h world.h hash.h icode.h
