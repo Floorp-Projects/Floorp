@@ -708,6 +708,7 @@ LocalVar('opsys', '
         "Mac OS X 10.0",
         "Mac OS X 10.1",
         "Mac OS X 10.2",
+        "Mac OS X 10.3",
         "Linux",
         "BSD/OS",
         "FreeBSD",
