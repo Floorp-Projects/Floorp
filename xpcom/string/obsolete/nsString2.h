@@ -634,6 +634,8 @@ class NS_COM NS_ConvertASCIItoUCS2
       NS_ConvertASCIItoUCS2( const char*, PRUint32 );
       explicit NS_ConvertASCIItoUCS2( char );
 
+      const PRUnichar* get() const { return GetUnicode(); }
+
       operator const PRUnichar*() const
         {
           return GetUnicode();
