@@ -7,6 +7,9 @@ Parse__4nsIDFPc		# nsID::Parse(char*)
 #Equals__5IDKeyCFPC9nsHashKey		# IDKey::Equals(const nsHashKey*) const
 #Clone__5IDKeyCFv		# IDKey::Clone() const
 FreeLibraries__12nsRepositoryFv		# nsRepository::FreeLibraries()
+ProgIDToCLSID__12nsRepositoryFPCcP4nsID		# nsRepository::ProgIDToCLSID(const char*,nsID*)
+RegisterComponent__12nsRepositoryFRC4nsIDPCcPCcPCcii		# nsRepository::RegisterComponent(const nsID&,const char*,const char*,const char*,int,int)
+UnregisterComponent__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterComponent(const nsID&,const char*)
 UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
 UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
 RegisterFactory__12nsRepositoryFRC4nsIDPCcii		# nsRepository::RegisterFactory(const nsID&,const char*,int,int)
