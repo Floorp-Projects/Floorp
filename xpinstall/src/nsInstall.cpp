@@ -732,9 +732,9 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
         LL_L2D(d, *aReturn);
         return NS_OK;
     }
-    
+    nsAutoCString temp(aFolder);
     nsCOMPtr<nsILocalFile> folder;
-    NS_NewLocalFile(aFolder.ToNewCString(), getter_AddRefs(folder));
+    NS_NewLocalFile(temp, getter_AddRefs(folder));
 
     result = folder->GetDiskSpaceAvailable(aReturn);
     return NS_OK;
@@ -962,13 +962,14 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
     char*       componentCString;
     char        dir[MAXREGPATHLEN];
     nsFileSpec  nsfsDir;
-
+    nsresult    res = NS_OK;
 
     if(!aNewFolder)
       return INVALID_ARGUMENTS;
-    
-    *aNewFolder = nsnull;
 
+    *aNewFolder = nsnull;
+    
+    
     nsString tempString;
 
     if ( GetQualifiedPackageName(aComponentName, tempString) != SUCCESS )
@@ -1007,13 +1008,23 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 
     if(*dir != '\0') 
     {
-      *aNewFolder = new nsInstallFolder(NS_ConvertASCIItoUCS2(dir), aSubdirectory);
+      nsInstallFolder * folder = new nsInstallFolder();
+      if (!folder) return NS_ERROR_OUT_OF_MEMORY;
+      res = folder->Init(NS_ConvertASCIItoUCS2(dir), aSubdirectory);
+      if (NS_FAILED(res))
+      {
+        delete folder;
+      }
+      else
+      {
+        *aNewFolder = folder;
+      }
     }
 
     if (componentCString)
         Recycle(componentCString);
     
-    return NS_OK;
+    return res;
 }
 
 PRInt32    
@@ -1029,12 +1040,21 @@ nsInstall::GetFolder(const nsString& targetFolder, const nsString& aSubdirectory
     if (!aNewFolder)
         return INVALID_ARGUMENTS;
 
-    *aNewFolder = new nsInstallFolder(targetFolder, aSubdirectory);   
-    if (*aNewFolder == nsnull)
+    * aNewFolder = nsnull;
+    
+    nsInstallFolder* folder = new nsInstallFolder();   
+    if (folder == nsnull)
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
+    nsresult res = folder->Init(targetFolder, aSubdirectory);
 
+    if (NS_FAILED(res))
+    {
+        delete folder;
+        return res;
+    }
+    *aNewFolder = folder;
     return NS_OK;
 }
 
@@ -1048,16 +1068,25 @@ nsInstall::GetFolder(const nsString& targetFolder, nsInstallFolder** aNewFolder)
 PRInt32
 nsInstall::GetFolder( nsInstallFolder& aTargetFolderObj, const nsString& aSubdirectory, nsInstallFolder** aNewFolder )
 {
-    /* This version of GetFolder takes a nsInstallFolder object as the first param */
+    /* This version of GetFolder takes an nsString object as the first param */
     if (!aNewFolder)
         return INVALID_ARGUMENTS;
-  
-    *aNewFolder = new nsInstallFolder(aTargetFolderObj, aSubdirectory);
-    if (*aNewFolder == nsnull)
+
+    * aNewFolder = nsnull;
+
+    nsInstallFolder* folder = new nsInstallFolder();   
+    if (folder == nsnull)
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
+    nsresult res = folder->Init(aTargetFolderObj, aSubdirectory);
 
+    if (NS_FAILED(res))
+    {
+        delete folder;
+        return res;
+    }
+    *aNewFolder = folder;
     return NS_OK;
 }
 
@@ -1354,9 +1383,20 @@ nsInstall::SetPackageFolder(nsInstallFolder& aFolder)
 {
     if (mPackageFolder)
         delete mPackageFolder;
-    
-    mPackageFolder = new nsInstallFolder(aFolder, nsAutoString());
 
+    nsInstallFolder* folder = new nsInstallFolder();   
+    if (folder == nsnull)
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsresult res = folder->Init(aFolder, nsAutoString());
+
+    if (NS_FAILED(res))
+    {
+        delete folder;
+        return res;
+    }
+    mPackageFolder = folder;
     return NS_OK;
 }
 
@@ -1398,7 +1438,21 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
     if(REGERR_OK == VR_GetDefaultDirectory(szRegPackageName, MAXREGPATHLEN, szRegPackagePath))
     {
-      mPackageFolder = new nsInstallFolder(NS_ConvertASCIItoUCS2(szRegPackagePath), nsAutoString());
+        nsInstallFolder* folder = new nsInstallFolder();   
+        if (folder == nsnull)
+        {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        nsresult res = folder->Init(NS_ConvertASCIItoUCS2(szRegPackagePath), nsAutoString());
+
+        if (NS_FAILED(res))
+        {
+            delete folder;
+        }
+        else
+        {
+            mPackageFolder = folder;
+        }
     }
     else
     {
@@ -1924,8 +1978,10 @@ nsInstall::FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt
   nsCOMPtr<nsILocalFile> nsfsSource;
   nsCOMPtr<nsILocalFile> nsfsAlias;
   
-  NS_NewLocalFile(aSourcePath.ToNewCString(), getter_AddRefs(nsfsSource));
-  NS_NewLocalFile(aAliasPath.ToNewCString(), getter_AddRefs(nsfsAlias));
+  nsAutoCString tempSource(aSourcePath);
+  nsAutoCString tempAlias(aAliasPath);
+  NS_NewLocalFile(tempSource, getter_AddRefs(nsfsSource));
+  NS_NewLocalFile(tempAlias, getter_AddRefs(nsfsAlias));
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, nsfsSource, nsfsAlias, aReturn);
 
   PRInt32 result = SanityCheck();
@@ -2342,8 +2398,8 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             aJarfile.Right(extension, (aJarfile.Length() - extpos) );
             tempFileName += extension;
         }
-
-        tempFile->Append(tempFileName.ToNewCString());
+        nsAutoCString temp(tempFileName);
+        tempFile->Append(temp);
 
         // Create a temporary file to extract to
         MakeUnique(tempFile);
@@ -2453,10 +2509,8 @@ nsInstall::GetResourcedString(const nsString& aResName)
     */
     if (!bStrBdlSuccess)
     {
-        char *cResName = aResName.ToNewCString();
-        rscdStr.AssignWithConversion(nsInstallResources::GetDefaultVal(cResName));
-        if (cResName)
-            Recycle(cResName);
+        nsAutoCString temp(aResName);
+        rscdStr.AssignWithConversion(nsInstallResources::GetDefaultVal(temp));
     }
     
     return rscdStr.ToNewCString();

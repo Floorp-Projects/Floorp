@@ -1040,15 +1040,15 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
 
 
     ConvertJSValToStr(b0, cx, argv[0]);
-    NS_NewLocalFile(b0.ToNewCString(), getter_AddRefs(nsfsB0));
+    NS_NewLocalFile(nsAutoCString(b0), getter_AddRefs(nsfsB0));
     ConvertJSValToStr(b1, cx, argv[1]);
-    NS_NewLocalFile(b1.ToNewCString(), getter_AddRefs(nsfsB1));
+    NS_NewLocalFile(nsAutoCString(b1), getter_AddRefs(nsfsB1));
     ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b3, cx, argv[3]);
-    NS_NewLocalFile(b3.ToNewCString(), getter_AddRefs(nsfsB3));
+    NS_NewLocalFile(nsAutoCString(b3), getter_AddRefs(nsfsB3));
     ConvertJSValToStr(b4, cx, argv[4]);
     ConvertJSValToStr(b5, cx, argv[5]);
-    NS_NewLocalFile(b5.ToNewCString(), getter_AddRefs(nsfsB5));
+    NS_NewLocalFile(nsAutoCString(b5), getter_AddRefs(nsfsB5));
 
     if(JSVAL_IS_NULL(argv[6]))
     {

@@ -186,19 +186,22 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         location = inPartialPath.FindChar('/',PR_FALSE, offset);
         if ((location < 0) && (pass == 0)) //no separators were found
         {
-            mFinalFile->Append(inPartialPath.ToNewCString());
+            nsAutoCString tempPartialPath(inPartialPath);
+            mFinalFile->Append(tempPartialPath);
             finished = PR_TRUE;
         }
         else if ((location < 0) && (pass > 0) && (offset < inPartialPath.mLength)) //last occurance
         {
             nsresult rv = inPartialPath.Mid(subString, offset, inPartialPath.mLength-offset);
-            mFinalFile->Append(subString.ToNewCString());
+            nsAutoCString tempSubString(subString);
+            mFinalFile->Append(tempSubString);
             finished = PR_TRUE;
         }
         else
         {
             nsresult rv = inPartialPath.Mid(subString, offset, location-offset);
-            mFinalFile->Append(subString.ToNewCString());
+            nsAutoCString tempSubString(subString);
+            mFinalFile->Append(tempSubString);
             offset = location + 1;
             pass++;
         }

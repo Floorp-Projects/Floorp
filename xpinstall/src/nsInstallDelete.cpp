@@ -69,8 +69,9 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
         *error = nsInstall::OUT_OF_MEMORY;
         return;
     }
-    
-    mFinalFile->Append(inPartialPath.ToNewCString());
+    nsAutoCString tempPartialPath(inPartialPath);
+
+    mFinalFile->Append(tempPartialPath);
 
     *error = ProcessInstallDelete();
 }

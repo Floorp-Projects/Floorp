@@ -380,19 +380,32 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
         }
         else if ( mItem->IsFileURL() )
         {
-            // don't need to download, just point at local file
-            //rv = NS_NewFileSpecWithSpec( nsFileSpec(nsFileURL(mItem->mURL)),
-            //        getter_AddRefs(mItem->mFile) );
-            rv = NS_NewLocalFile(mItem->mURL.ToNewCString(), getter_AddRefs(mItem->mFile));
-            if (NS_FAILED(rv))
+            
+            nsCOMPtr<nsIURI> pURL;
+            rv = NS_NewURI(getter_AddRefs(pURL), mItem->mURL);
+            
+            if (NS_SUCCEEDED(rv)) 
             {
-                // serious problem with trigger! try to carry on
-                mTriggers->SendStatus( mItem->mURL.GetUnicode(), 
-                                       nsInstall::DOWNLOAD_ERROR );
-                mItem->mFile = 0;
-            }
+                nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
+                if (!fileURL)
+                    return NS_ERROR_NULL_POINTER;
+                
+                nsCOMPtr<nsIFile> localFile;
+                rv = fileURL->GetFile(getter_AddRefs(localFile));
 
-            rv = DownloadNext();
+                if (NS_FAILED(rv))
+                {
+                    // serious problem with trigger! try to carry on
+                    mTriggers->SendStatus( mItem->mURL.GetUnicode(), 
+                                           nsInstall::DOWNLOAD_ERROR );
+                    mItem->mFile = 0;
+                }
+                else
+                {
+                    mItem->mFile = do_QueryInterface(localFile);
+                    rv = DownloadNext();
+                }
+            }
         }
         else
         {
@@ -408,7 +421,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
             {
                 nsString jarleaf;
                 mItem->mURL.Right( jarleaf, mItem->mURL.Length() - (pos + 1));
-                temp->Append(jarleaf.ToNewCString());
+                temp->Append(nsAutoCString(jarleaf));
             }
             else
                 temp->Append("xpinstall.xpi");
