@@ -217,8 +217,8 @@ nsWidgetStateManager.prototype =
               for( var i = 0; i < attributes.length; i++ )
                 {
                   dataObject[attributes[i]] = aElement.getAttribute( attributes[i] );
-                  dataObject.localname = aElement.localName;
                 }
+                dataObject.localname = aElement.localName;
               return dataObject;
             }
             return null;
