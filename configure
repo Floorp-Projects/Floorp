@@ -5457,13 +5457,13 @@ echo "configure:5429: checking for NSPR - version >= $min_nspr_version (skipping
 
 if test -z "$MOZ_NATIVE_NSPR"; then
     echo "configure: warning: nspr-config not found. building local copy of NSPR" 1>&2
-    NSPR_CFLAGS='`$(DIST)/bin/nspr-config --prefix=$(DIST) --cflags`'
+    NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
     case "$target" in
     *-*-os2_vacpp)
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
         ;;
     *)
-        NSPR_LIBS='`$(DIST)/bin/nspr-config --prefix=$(DIST) --libs`'
+        NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
         ;;
     esac
 fi
