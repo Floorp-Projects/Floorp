@@ -2056,9 +2056,10 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
 					PRInt32 num=0, err;
 					num = srcStr.ToInteger(&err);
 					NS_ASSERTION(err == 0, "failed to get uid for current draft msg");
+					// 0 is not a valid IMAP Uid
 					if (num)
 					{
-					  messageID.Add(num);
+                                                messageID.Add(num);
 						rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), messageID.GetSize());
 					}
 				  }
