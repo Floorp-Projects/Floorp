@@ -651,6 +651,11 @@
     "navigator.language", \
     "navigator.mimetypes", \
     "navigator.platform", \
+    "navigator.oscpu", \
+    "navigator.vendor", \
+    "navigator.vendorSub", \
+    "navigator.product", \
+    "navigator.productSub", \
     "navigator.plugins", \
     "navigator.preference", \
     "navigator.securitypolicy", \

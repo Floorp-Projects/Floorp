@@ -3724,6 +3724,82 @@ NS_IMETHODIMP NavigatorImpl::GetPlatform(nsString& aPlatform)
    return res;
 }
 
+NS_IMETHODIMP NavigatorImpl::GetOscpu(nsString& aOSCPU)
+{
+    nsresult res;
+    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
+    if (NS_SUCCEEDED(res) && (nsnull != service))
+        {
+        PRUnichar *oscpu = nsnull;
+        res = service->GetOscpu(&oscpu);
+        aOSCPU = oscpu;
+        Recycle(oscpu);
+        }
+
+    return res;
+}
+
+NS_IMETHODIMP NavigatorImpl::GetVendor(nsString& aVendor)
+{
+    nsresult res;
+    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
+    if (NS_SUCCEEDED(res) && (nsnull != service))
+        {
+        PRUnichar *vendor = nsnull;
+        res = service->GetVendor(&vendor);
+        aVendor = vendor;
+        Recycle(vendor);
+        }
+
+    return res;
+}
+
+
+NS_IMETHODIMP NavigatorImpl::GetVendorSub(nsString& aVendorSub)
+{
+    nsresult res;
+    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
+    if (NS_SUCCEEDED(res) && (nsnull != service))
+        {
+        PRUnichar *vendor = nsnull;
+        res = service->GetVendorSub(&vendor);
+        aVendorSub = vendor;
+        Recycle(vendor);
+        }
+
+    return res;
+}
+
+NS_IMETHODIMP NavigatorImpl::GetProduct(nsString& aProduct)
+{
+    nsresult res;
+    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
+    if (NS_SUCCEEDED(res) && (nsnull != service))
+        {
+        PRUnichar *product = nsnull;
+        res = service->GetProduct(&product);
+        aProduct = product;
+        Recycle(product);
+        }
+
+    return res;
+}
+
+NS_IMETHODIMP NavigatorImpl::GetProductSub(nsString& aProductSub)
+{
+    nsresult res;
+    nsCOMPtr<nsIHTTPProtocolHandler> service(do_GetService(kHTTPHandlerCID, &res));
+    if (NS_SUCCEEDED(res) && (nsnull != service))
+        {
+        PRUnichar *productSub = nsnull;
+        res = service->GetProductSub(&productSub);
+        aProductSub = productSub;
+        Recycle(productSub);
+        }
+
+    return res;
+}
+
 NS_IMETHODIMP NavigatorImpl::GetSecurityPolicy(nsString& aSecurityPolicy)
 {
    return NS_OK;
