@@ -240,6 +240,22 @@ struct JSStackHeader {
 
 #define JS_STACK_SEGMENT(sh)    ((jsval *)(sh) + 2)
 
+/*
+ * Key and entry types for the JSContext.resolving hash table, typedef'd here
+ * because all consumers need to see these declarations (not just the typedef
+ * names, as would be the case for a pointer-to-typedef'd-type declaration),
+ * along with cx->resolving.
+ */
+typedef struct JSResolvingKey {
+    JSObject            *obj;
+    jsid                id;
+} JSResolvingKey;
+
+typedef struct JSResolvingEntry {
+    JSDHashEntryHdr     hdr;
+    JSResolvingKey      key;
+} JSResolvingEntry;
+
 struct JSContext {
     JSCList             links;
 
