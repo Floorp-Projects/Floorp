@@ -203,7 +203,7 @@ following commands:
 	touch nomail
 	touch mail
 	
-   Make sure the commands, nomail, and mail files are writable by the
+   Make sure the comments, nomail, and mail files are writable by the
 webserver too.
 
    Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
