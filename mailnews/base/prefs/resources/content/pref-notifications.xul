@@ -46,7 +46,8 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-notifications.xul');"
-      headertitle="&pane.title;">
+      headertitle="&pane.title;"
+      id="mailNotificationsPage">
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-notifications.js"/>
 
@@ -58,8 +59,8 @@
   ]]>
   </script>
   
-  <groupbox>
-    <caption label="&newMessagesArrive.label;"/>
+  <groupbox id="newMessagesArrivePrefs">
+    <caption id="newMessagesArriveCaption" label="&newMessagesArrive.label;"/>
 
     <vbox align="start">
       <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
@@ -70,7 +71,7 @@
                 oncommand="PlaySoundCheck()"/>
     </vbox>
     
-    <hbox align="center" class="indent">
+    <hbox align="center" class="indent" id="newMailNotificationSoundSelectBox">
       <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
         <radio id="system" class="iconic" value="0" oncommand="PlaySoundCheck()" 
                label="&systemsound.label;" accesskey="&systemsound.accesskey;"/>
