@@ -32,7 +32,7 @@
 #include "nsFileSpec.h"
 
 
-REGERR DeleteFileNowOrSchedule(nsFileSpec& filename);
+REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename);
 REGERR ReplaceFileNowOrSchedule(nsFileSpec& tmpfile, nsFileSpec& target );
 
 
