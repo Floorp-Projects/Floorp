@@ -161,7 +161,6 @@
   <key id="key_cut"/>
   <key id="key_copy"/>
   <key id="key_paste"/>
-  <key id="pastequotationkb"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
   <key id="key_find"  key="&findCmd.key;"  command="cmd_find" modifiers="accel"/>
