@@ -42,6 +42,12 @@
  *   C A L E N D A R
  *-------------------------------------------------------------------*/
 
+/*#calendar-top-box
+{
+   background-color        : #F267B9;
+}*/
+
+
 /*--------------------------------------------------------------------
  *   Top bar, with name, image and buttons
  *-------------------------------------------------------------------*/
@@ -292,10 +298,6 @@
    list-style-image         : url( "chrome://calendar/skin/event_repeating.png" );
 }
 
-.unifinder-treecell-box-class
-{
-   -moz-box-align           : start;
-}
 /*<<-------------------------------------------------/\/\/\ Month*/
 
 #month-controls-box{
@@ -456,7 +458,7 @@
    margin-top           : 3px; 	
    margin-left          : 4px; 	
    margin-bottom        : -1px; 	
-    font-size: 1.1em;
+   font-size            : 1.1em;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
 }
@@ -479,7 +481,7 @@
    margin-right         : 2px;
    background-color     : #F9F4FF;
    text-align           : center; 	
-    font-size: 0.9em;
+   font-size            : 0.9em;
    font-family          : Arial, Helvetica;
    cursor               : pointer;
 }
