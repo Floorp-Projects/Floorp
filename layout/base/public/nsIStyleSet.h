@@ -68,19 +68,22 @@ public:
   // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
-                                           nsIFrame* aParentFrame) = 0;
+                                           nsIFrame* aParentFrame,
+                                           PRBool aForceUnique = PR_FALSE) = 0;
 
   // get a style context for a pseudo-frame (ie: tag = NS_NewAtom(":FIRST-LINE");
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIAtom* aPseudoTag,
-                                                 nsIFrame* aParentFrame) = 0;
+                                                 nsIFrame* aParentFrame,
+                                                 PRBool aForceUnique = PR_FALSE) = 0;
 
   // This funtions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that
   // pseudo element
   virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                nsIAtom* aPseudoTag,
-                                               nsIFrame* aParentFrame) = 0;
+                                               nsIFrame* aParentFrame,
+                                               PRBool aForceUnique = PR_FALSE) = 0;
 
   // xxx style rules enumeration
 
