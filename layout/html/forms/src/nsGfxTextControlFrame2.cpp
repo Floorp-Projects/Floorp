@@ -1484,6 +1484,20 @@ PRBool nsGfxTextControlFrame2::IsSingleLineTextControl() const
   return PR_FALSE; 
 }
 
+PRBool nsGfxTextControlFrame2::IsTextArea() const
+{
+  if (!mContent)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(*getter_AddRefs(tag));
+
+  if (nsHTMLAtoms::textarea == tag)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
 // XXX: wouldn't it be nice to get this from the style context!
 PRBool nsGfxTextControlFrame2::IsPlainTextControl() const
 {
@@ -2631,7 +2645,7 @@ nsGfxTextControlFrame2::SelectAllContents()
 nsresult
 nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
 {
-  NS_ASSERTION(IsSingleLineTextControl(), "Should only call this on a single line input");
+  NS_ASSERTION(IsSingleLineTextControl() || IsTextArea(), "Should only call this on a single line input");
   NS_ASSERTION(mEditor, "Should have an editor here");
   NS_ASSERTION(mTextSelImpl,"selection not found!");
 
@@ -2745,7 +2759,7 @@ nsGfxTextControlFrame2::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
 NS_IMETHODIMP
 nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
 {
-  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IsSingleLineTextControl() && !IsTextArea()) return NS_ERROR_NOT_IMPLEMENTED;
 
   // make sure we have an editor
   if (!mEditor) 
@@ -2757,7 +2771,7 @@ nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
 NS_IMETHODIMP
 nsGfxTextControlFrame2::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IsSingleLineTextControl() && !IsTextArea()) return NS_ERROR_NOT_IMPLEMENTED;
 
   // make sure we have an editor
   if (!mEditor) 
@@ -2798,7 +2812,7 @@ nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSe
       if (!firstRange) 
         return NS_ERROR_FAILURE;
 
-      if (IsSingleLineTextControl())
+      if (IsSingleLineTextControl() || IsTextArea())
       {
         firstRange->GetStartOffset(aSelectionStart);
         firstRange->GetEndOffset(aSelectionEnd);

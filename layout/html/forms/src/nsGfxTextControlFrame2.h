@@ -188,6 +188,11 @@ public: //for methods who access nsGfxTextControlFrame2 directly
    */
   virtual PRBool IsSingleLineTextControl() const;
   /**
+   * Find out whether this control is a textarea.
+   * @return whether this is a textarea text control
+   */
+  virtual PRBool IsTextArea() const;
+  /**
    * Find out whether this control edits plain text.  (Currently always true.)
    * @return whether this is a plain text control
    */

@@ -46,5 +46,9 @@ interface nsIControllers;
 [scriptable, uuid(ca066b44-9ddf-11d3-bccc-0060b0fc76bd)]
 interface nsIDOMNSHTMLTextAreaElement : nsISupports
 {
-	readonly attribute nsIControllers   controllers;
+  readonly attribute nsIControllers   controllers;
+
+  readonly attribute long    textLength;
+  attribute long             selectionStart;
+  attribute long             selectionEnd;
 };
