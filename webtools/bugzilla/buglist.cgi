@@ -577,7 +577,9 @@ while (@row = FetchSQLData()) {
                 next;
             }
             my $value = shift @row;
-
+            if (!defined $value) {
+                next;
+            }
             if ($::needquote{$c}) {
                 $value = html_quote($value);
             } else {
