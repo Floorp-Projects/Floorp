@@ -61,7 +61,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
     // nsIFileWidget interface
 		NS_IMETHOD					   Create(nsIWidget *aParent,
 							                      nsString& aTitle,
-							                      nsMode aMode,
+							                      nsFileDlgMode aMode,
 							                      nsIDeviceContext *aContext = nsnull,
 							                      nsIAppShell *aAppShell = nsnull,
 							                      nsIToolkit *aToolkit = nsnull,
@@ -107,7 +107,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      PRBool                 mIOwnEventLoop;
      PRBool                 mWasCancelled;
      nsString               mTitle;
-     nsMode                 mMode;
+     nsFileDlgMode          mMode;
      nsString               mFile;
      PRUint32               mNumberOfFilters;  
      const nsString*        mTitles;
