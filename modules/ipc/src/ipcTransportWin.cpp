@@ -64,8 +64,9 @@ static PRThread      *ipcThread = NULL;
 static PRMonitor     *ipcMonitor = NULL;
 static nsIEventQueue *ipcEventQ = NULL;
 static HWND           ipcDaemonHwnd = NULL;
-static HWND           ipcLocalHwnd = NULL;  // not accessed on message thread!!
-static ipcTransport  *ipcTrans = NULL;      // not accessed on message thread!!
+static HWND           ipcLocalHwnd = NULL;
+static PRBool         ipcShutdown = PR_FALSE; // not accessed on message thread!!
+static ipcTransport  *ipcTrans = NULL;        // not accessed on message thread!!
 
 //-----------------------------------------------------------------------------
 // event proxy to main thread
@@ -205,10 +206,12 @@ ipcThreadFunc(void *arg)
         MSG msg;
         while (GetMessage(&msg, ipcLocalHwnd, 0, 0))
             DispatchMessage(&msg);
-    }
 
-    DestroyWindow(ipcLocalHwnd);
-    ipcLocalHwnd = NULL;
+        ipcShutdown = PR_TRUE; // assuming atomic memory write
+
+        DestroyWindow(ipcLocalHwnd);
+        ipcLocalHwnd = NULL;
+    }
 
     LOG(("exiting message thread\n"));
     return;
@@ -224,6 +227,7 @@ ipcThreadInit(ipcTransport *transport)
         return PR_FAILURE;
 
     NS_ADDREF(ipcTrans = transport);
+    ipcShutdown = PR_FALSE;
 
     ipcMonitor = PR_NewMonitor();
     if (!ipcMonitor)
@@ -256,8 +260,12 @@ ipcThreadInit(ipcTransport *transport)
 static PRStatus
 ipcThreadShutdown()
 {
-    PostMessage(ipcLocalHwnd, IPC_WM_SHUTDOWN, 0, 0);
+    if (PR_AtomicSet(&ipcShutdown, PR_TRUE) == PR_FALSE) {
+        LOG(("posting IPC_WM_SHUTDOWN message\n"));
+        PostMessage(ipcLocalHwnd, IPC_WM_SHUTDOWN, 0, 0);
+    }
 
+    LOG(("joining w/ message thread...\n"));
     PR_JoinThread(ipcThread);
     ipcThread = NULL;
 
@@ -342,13 +350,17 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
 {
     LOG(("ipcTransport::SendMsg_Internal\n"));
 
-    NS_ENSURE_TRUE(ipcLocalHwnd, NS_ERROR_NOT_INITIALIZED);
-
+    if (ipcShutdown) {
+        NS_WARNING("unable to send message b/c message thread is shutdown\n");
+        goto loser;
+    }
     if (!PostMessage(ipcLocalHwnd, IPC_WM_SENDMSG, 0, (LPARAM) msg)) {
         LOG(("  PostMessage failed w/ error = %u\n", GetLastError()));
-        delete msg;
-        return NS_ERROR_FAILURE;
+        goto loser;
     }
     return NS_OK;
+loser:
+    delete msg;
+    return NS_ERROR_FAILURE;
 }
 
