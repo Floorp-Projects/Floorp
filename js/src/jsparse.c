@@ -1651,7 +1651,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		currentGetter = clasp->getProperty;
 		currentSetter = clasp->setProperty;
 	    }
-	    if (currentGetter == js_GetLocalVariable && !InWithStatement(tc)) {
+	    if (currentGetter == js_GetLocalVariable &&
+		cx->fp->scopeChain == obj &&
+		!InWithStatement(tc)) {
 		ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
 					 currentGetter, currentSetter,
                                          (pn->pn_op == JSOP_DEFCONST)
@@ -1690,8 +1692,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	}
 
 	if (ok &&
-            fun &&
-            (clasp == &js_FunctionClass || clasp == &js_CallClass) &&
+	    fun &&
+	    cx->fp->scopeChain == obj &&
 	    !InWithStatement(tc))
 	{
 	    /* Depending on the value of the getter, change the
@@ -1762,7 +1764,7 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
     *opp = JSOP_NAME;
     if (clasp != &js_FunctionClass && clasp != &js_CallClass)
 	return JS_TRUE;
-    if (InWithStatement(tc))
+    if (cx->fp->scopeChain != obj || InWithStatement(tc))
 	return JS_TRUE;
     if (!js_LookupProperty(cx, obj, (jsid)atom, &pobj, (JSProperty **)&sprop))
 	return JS_FALSE;

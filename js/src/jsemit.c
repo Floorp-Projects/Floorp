@@ -803,7 +803,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		    if (!script)
 			return JS_FALSE;
 		    ok = js_Execute(cx, cx->fp->scopeChain, script, NULL,
-				    cx->fp, JS_FALSE, &pn3->pn_val);
+				    cx->fp, 0, &pn3->pn_val);
 		    js_DestroyScript(cx, script);
 		    if (!ok)
 			return JS_FALSE;

@@ -706,13 +706,14 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
 #if JS_HAS_EVAL_THIS_SCOPE
     JSObject *callerScopeChain;
-    JSBool implicitWith;
+    JSBool implicitWith = JS_FALSE; /* unnecessary init to kill gcc warning */
 #endif
 
     caller = cx->fp->down;
-    implicitWith = JS_FALSE; /* Unnecessary init to kill gcc warning */
 
-    if (JSVERSION_IS_ECMA(cx->version) && *caller->pc != JSOP_EVAL) {
+    if (JSVERSION_IS_ECMA(cx->version) &&
+	caller->pc &&
+	*caller->pc != JSOP_EVAL) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     JSMSG_BAD_INDIRECT_CALL, js_eval_str);
         return JS_FALSE;
@@ -740,9 +741,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #if JS_HAS_EVAL_THIS_SCOPE
 	/* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
 	callerScopeChain = caller->scopeChain;
-	implicitWith = (callerScopeChain != obj &&
-			(OBJ_GET_CLASS(cx, callerScopeChain) != &js_WithClass ||
-			 OBJ_GET_PROTO(cx, callerScopeChain) != obj));
+	implicitWith = (caller->pc && *caller->pc != JSOP_EVAL);
 	if (implicitWith) {
 	    scopeobj = js_NewObject(cx, &js_WithClass, obj, callerScopeChain);
 	    if (!scopeobj)
@@ -788,7 +787,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	scopeobj = caller->scopeChain;
     }
 #endif
-    ok = js_Execute(cx, scopeobj, script, caller->fun, caller, JS_FALSE, rval);
+    ok = js_Execute(cx, scopeobj, script, caller->fun, caller, JSFRAME_EVAL,
+                    rval);
     JS_DestroyScript(cx, script);
 
 out:

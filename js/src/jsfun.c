@@ -635,7 +635,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
 
     /* Find fun's top-most activation record. */
-    for (fp = cx->fp; fp && (fp->fun != fun || fp->debugging); fp = fp->down)
+    for (fp = cx->fp; fp && (fp->fun != fun || fp->flags); fp = fp->down)
 	continue;
 
     slot = (jsint)JSVAL_TO_INT(id);
@@ -750,7 +750,7 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	if (!fp)
 	    goto read_only;
 	if (fp->fun == fun) {
-	    if (!fp->debugging)
+	    if (!fp->flags)
 		break;
 	} else {
 	    if (fp->script)
