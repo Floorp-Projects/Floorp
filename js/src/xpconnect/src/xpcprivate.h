@@ -54,6 +54,7 @@
 #include "nsIXPCScriptable.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSRuntimeService.h"
+#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsAutoLock.h"
@@ -73,10 +74,12 @@
 #include "prlong.h"
 #include "prmem.h"
 #include "prenv.h"
+#include "nsReadableUtils.h"
 
 #include "nsIJSContextStack.h"
 #include "prthread.h"
 #include "nsDeque.h"
+#include "nsVoidArray.h"
 
 #ifdef XPCONNECT_STANDALONE
 #include <math.h>
@@ -252,6 +255,8 @@ public:
         return mStrings[index];
     }
 
+    static JSBool GCCallback(JSContext *cx, JSGCStatus status);
+
     void DebugDump(PRInt16 depth);
 
     ~XPCJSRuntime();
@@ -291,6 +296,7 @@ private:
     IID2WrappedJSClassMap* mWrappedJSClassMap;
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
     PRLock* mMapLock;
+    nsVoidArray mWrappedJSToReleaseArray;
 };
 
 /***************************************************************************/
@@ -689,7 +695,7 @@ public:
     static nsXPCWrappedJSClass* GetNewOrUsedClass(XPCJSRuntime* rt,
                                                   REFNSIID aIID);
     REFNSIID GetIID() const {return mIID;}
-    XPCJSRuntime* GetJSRuntime() const {return mRuntime;}
+    XPCJSRuntime* GetRuntime() const {return mRuntime;}
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     const char* GetInterfaceName();
 
@@ -758,7 +764,9 @@ private:
 
 /*************************/
 
-class nsXPCWrappedJS : public nsXPTCStubBase, public nsIXPConnectWrappedJS
+class nsXPCWrappedJS : public nsXPTCStubBase, 
+                       public nsIXPConnectWrappedJS,
+                       public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
@@ -787,12 +795,21 @@ public:
     nsXPCWrappedJSClass*  GetClass() const {return mClass;}
     REFNSIID GetIID() const {return GetClass()->GetIID();}
     nsXPCWrappedJS* GetRootWrapper() const {return mRoot;}
+    nsXPCWrappedJS* GetNextWrapper() const {return mNext;}
 
     nsXPCWrappedJS* Find(REFNSIID aIID);
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
 
     JSBool IsValid() const {return mJSObj != nsnull;}
     void SystemIsBeingShutDown(JSRuntime* rt);
+    
+    // This is used by XPCJSRuntime::GCCallback to find wrappers that no 
+    // longer root their JSObject and are only still alive because they
+    // were being used via nsSupportsWeakReference at the time when their
+    // last (outside) reference was released. Wrappers that fit into that
+    // category are only deleted when we see that their cooresponding JSObject
+    // is to be finalized.
+    JSBool IsSubjectToFinalization() const {return IsValid() && mRefCnt == 1;}
 
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
@@ -1350,7 +1367,7 @@ private:
     void FillCache(JSContext *cx, JSObject *obj,
                    nsIXPConnectWrappedNative *wrapper,
                    nsIXPCScriptable *arbitrary);
-
+    
     JSBool NeedToFillCache(JSObject* obj) const {return obj != mObj;}
 
 private:
