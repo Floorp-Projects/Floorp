@@ -63,7 +63,6 @@ class nsIDocument;
 class nsIURI;
 class nsIContent;
 class nsAutoVoidArray;
-class nsIXMLDocument;
 class nsIUnicharInputStream;
 class nsIParser;
 class nsINameSpace;

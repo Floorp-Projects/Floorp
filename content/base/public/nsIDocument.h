@@ -91,6 +91,11 @@ class nsIScriptEventManager;
 // object it creates
 #define NS_CONTENT_ID_COUNTER_BASE 10000
 
+
+// Flag for AddStyleSheet().
+#define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
+
+
 //----------------------------------------------------------------------
 
 // Document interface

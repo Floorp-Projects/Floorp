@@ -213,7 +213,6 @@ nsXMLDocument::~nsXMLDocument()
 
 // QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
@@ -1060,23 +1059,26 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   return CallQueryInterface(content, aReturn);
 }
 
-// nsIXMLDocument
-NS_IMETHODIMP 
+nsresult
 nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 {
-  nsresult result = NS_OK;
-  if (aUrl) {
-    result = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aUrl, this);
-    if (NS_SUCCEEDED(result)) {
-      result = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mInlineStyleSheet), aUrl, this);
-      AddStyleSheet(mAttrStyleSheet, 0); // tell the world about our new style sheet
-      if (NS_SUCCEEDED(result)) {
-        AddStyleSheet(mInlineStyleSheet, 0); // tell the world about our new style sheet
-      }
-    }
+  if (!aUrl) {
+    return NS_OK;
   }
 
-  return result;
+  nsresult rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aUrl,
+                                     this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_NewHTMLCSSStyleSheet(getter_AddRefs(mInlineStyleSheet), aUrl,
+                               this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // tell the world about our new style sheets
+  AddStyleSheet(mAttrStyleSheet, 0);
+  AddStyleSheet(mInlineStyleSheet, 0);
+
+  return rv;
 }
 
 NS_IMETHODIMP 
