@@ -59,6 +59,7 @@ sol_curthread:
 	movl	%ecx, %eax
 	ret
 
+#ifdef _PR_HAVE_ATOMIC_CAS
 /
 / PR_StackPush(listp, elementp)
 /
@@ -137,3 +138,4 @@ empty:
 / Return previous listp value (already in eax)
 	ret
 
+#endif / _PR_HAVE_ATOMIC_CAS
