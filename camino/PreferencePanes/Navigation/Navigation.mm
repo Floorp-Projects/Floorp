@@ -244,34 +244,31 @@ const int kDefaultExpireDays = 9;
   if (error != noErr)
     return;
   
-  // make a ICFileSpec out of our path and shove it into IC
-  NSMutableString* carbonPath = [NSMutableString stringWithString:inNewFolder];
-  [carbonPath replaceOccurrencesOfString:@"/" withString:@":" options:0 range:NSMakeRange(0, [carbonPath length])];
-NSLog(@"carbon path is %@", carbonPath);
-//  const char* utf8str = [inNewFolder UTF8String];
-  const char* utf8str = "Vespa:Users:pink:Desktop:";
-  unsigned len = strlen(utf8str);
-  if (len > 255) 
-    len = 255;
-  
-  char buff[256];
-  strncpy(&buff[1], utf8str, len);
-  buff[0] = len;
-  FSSpec downloadSpec;
-  FSMakeFSSpec(0, 0, (unsigned char*)buff, &downloadSpec);
-  
-  long prefSize = sizeof(ICFileSpec);
+  // make a ICFileSpec out of our path and shove it into IC. This requires
+  // creating an FSSpec and an alias.
+  FSRef fsRef;
+  Boolean isDir;
   AliasHandle alias = nil;
-  error = ::NewAlias(nil, &downloadSpec, &alias);
-  NSLog(@"alias is %ld error is %d", alias, error);
+  FSSpec fsSpec;
+  error = ::FSPathMakeRef((UInt8 *)[inNewFolder fileSystemRepresentation], &fsRef, &isDir);
+  if (error != noErr)
+    return;
+  error = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nil, nil, &fsSpec, nil);
+  if (error != noErr)
+    return;
+  error = ::FSNewAlias(nil, &fsRef, &alias);
+  if (error != noErr)
+    return;
   
+  // copy the data out of our variables into the ICFileSpec and hand it to IC.
+  long headerSize = offsetof(ICFileSpec, alias);
   long aliasSize = ::GetHandleSize((Handle)alias);
-  ICFileSpec* realbuffer = (ICFileSpec*) new char[sizeof(ICFileSpec) + aliasSize];
-  realbuffer->fss = downloadSpec;
+  ICFileSpec* realbuffer = (ICFileSpec*) calloc(headerSize + aliasSize, 1);
+  realbuffer->fss = fsSpec;
   memcpy(&realbuffer->alias, *alias, aliasSize);
-  
-  error = ::ICSetPref(icInstance, kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, prefSize);
+  error = ::ICSetPref(icInstance, kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, headerSize + aliasSize);
   NSLog(@"error is %d", error);
+  free(realbuffer);
   
   ::ICStop(icInstance);
 }
