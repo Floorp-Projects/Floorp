@@ -302,9 +302,11 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
   		aSize = 1;
   	mThumbSize = aSize;
 
+	if (mContext != NULL) {			// beard - can't draw w/o a context.
 		StartDraw();
   		DrawWidget();				// ??? is this necessary - DWC
 		EndDraw();
+	}
   	return(NS_OK);
 }
 
