@@ -159,7 +159,7 @@ endif
 build_number: FORCE
 	$(PERL) -I$(srcdir) $(srcdir)/bdate.pl $@ $(_BN_OFFICIAL)
 
-nsBuildID.h: nsBuildID.h.in build_number 
+nsBuildID.h: nsBuildID.h.in build_number $(srcdir)/milestone.txt Makefile
 	$(RM) $@
 	$(PERL) -I$(srcdir) $(srcdir)/aboutime.pl -m $(srcdir)/milestone.txt $@ build_number $(srcdir)/nsBuildID.h.in
 
