@@ -140,9 +140,6 @@ public: /* internal -- HPUX compiler can't handle this being private */
     };
     friend class nsSegmentEncoder;
 
-protected:
-    virtual nsStandardURL* StartClone();
-
 private:
     PRInt32  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 

@@ -49,7 +49,6 @@
 #include "nsICSSLoader.h"
 #include "nsIURI.h"
 #include "nsLayoutCID.h"
-#include "nsIChromeURL.h"
 #include "nsCSSRuleProcessor.h"
 
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
@@ -96,6 +95,14 @@ nsXBLPrototypeResources::AddResourceListener(nsIContent* aBoundElement)
     mLoader->AddResourceListener(aBoundElement);
 }
 
+static PRBool IsChromeURI(nsIURI* aURI)
+{
+  PRBool isChrome=PR_FALSE;
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
 nsresult
 nsXBLPrototypeResources::FlushSkinSheets()
 {
@@ -124,12 +131,8 @@ nsXBLPrototypeResources::FlushSkinSheets()
     oldSheet->GetSheetURI(getter_AddRefs(uri));
 
     nsCOMPtr<nsICSSStyleSheet> newSheet;
-    nsCOMPtr<nsIChromeURL> chromeURL = do_QueryInterface(uri);
-    if (chromeURL) {
-      nsCOMPtr<nsIChromeURL> newURL;
-      rv = chromeURL->ReConvert(getter_AddRefs(newURL));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (NS_FAILED(loader->LoadAgentSheet(newURL, getter_AddRefs(newSheet))))
+    if (IsChromeURI(uri)) {
+      if (NS_FAILED(loader->LoadAgentSheet(uri, getter_AddRefs(newSheet))))
         continue;
     }
     else {
