@@ -114,7 +114,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomi
 	char * hostName = nsnull;
 	
 	nsresult rv = GetHostName(&hostName);
-	rv = GetUserName(&userName);
+	rv = GetUsername(&userName);
 
 	NS_WITH_SERVICE(nsIImapHostSessionList, hostSession, kCImapHostSessionList, &rv);
     if (NS_FAILED(rv)) return rv;
