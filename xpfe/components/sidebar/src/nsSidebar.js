@@ -331,6 +331,12 @@ nsSidebar.prototype.flags = nsIClassInfo.DOM_OBJECT;
 // property of nsIClassInfo
 nsSidebar.prototype.classDescription = "Sidebar";
 
+// method of nsIClassInfo
+nsSidebar.prototype.getInterfaces = function(c) {c.value = 0; return null;}
+
+// method of nsIClassInfo
+nsSidebar.prototype.getHelperForLanguage = function() {return null;}
+
 nsSidebar.prototype.QueryInterface =
 function (iid) {
     if (!iid.equals(nsISidebar) && 
