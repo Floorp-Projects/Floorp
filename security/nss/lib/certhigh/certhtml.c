@@ -34,7 +34,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.2 2001/09/20 21:41:34 relyea%netscape.com Exp $
+ * $Id: certhtml.c,v 1.3 2001/10/26 21:30:58 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -307,7 +307,7 @@ static char *sec_FortezzaClearance(SECItem *clearance) {
     return "None";
 }
 
-static char *sec_FortezzaMessagePriviledge(SECItem *priv) {
+static char *sec_FortezzaMessagePrivilege(SECItem *priv) {
     unsigned char clr = 0;
 
     if (priv->len > 0) { clr = (priv->data[0]) & 0x78; }
@@ -332,7 +332,7 @@ static char *sec_FortezzaMessagePriviledge(SECItem *priv) {
 
 }
 					
-static char *sec_FortezzaCertPriviledge(SECItem *priv) {
+static char *sec_FortezzaCertPrivilege(SECItem *priv) {
     unsigned char clr = 0;
 
     if (priv->len > 0) { clr = priv->data[0]; }
@@ -379,9 +379,9 @@ static char *htmlcertstrings[] = {
     0, /* notAfter does here */
     "</b><br><b>Clearance:</b>",
     0,
-    "<br><b>DSS Priviledges:</b>",
+    "<br><b>DSS Privileges:</b>",
     0,
-    "<br><b>KEA Priviledges:</b>",
+    "<br><b>KEA Privileges:</b>",
     0,
     "<br><b>KMID:</b>",
     0,
@@ -500,12 +500,12 @@ CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages, PRBool showIssuer)
 	htmlcertstrings[18] = "</b><br><b>Clearance:</b>";
 	htmlcertstrings[19] = sec_FortezzaClearance(
 					&pubk->u.fortezza.clearance);
-	htmlcertstrings[20] = "<br><b>DSS Priviledges:</b>";
-	DSSPriv = sec_FortezzaCertPriviledge(
+	htmlcertstrings[20] = "<br><b>DSS Privileges:</b>";
+	DSSPriv = sec_FortezzaCertPrivilege(
 					&pubk->u.fortezza.DSSpriviledge);
 	htmlcertstrings[21] = DSSPriv;
-	htmlcertstrings[22] = "<br><b>KEA Priviledges:</b>";
-	htmlcertstrings[23] = sec_FortezzaMessagePriviledge(
+	htmlcertstrings[22] = "<br><b>KEA Privileges:</b>";
+	htmlcertstrings[23] = sec_FortezzaMessagePrivilege(
 					&pubk->u.fortezza.KEApriviledge);
 	htmlcertstrings[24] = "<br><b>KMID:</b>";
 	dummyitem.data = &pubk->u.fortezza.KMID[0];
