@@ -340,7 +340,7 @@ if (@::legal_keywords) {
     while (MoreSQLData()) {
         push(@list, FetchOneColumn());
     }
-    my $value = value_quote(join(',', @list));
+    my $value = value_quote(join(', ', @list));
     print qq{
 <TR>
 <TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords</A>:</B>
