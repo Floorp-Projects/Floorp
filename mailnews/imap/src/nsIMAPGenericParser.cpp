@@ -198,7 +198,7 @@ PRBool nsIMAPGenericParser::ContinueParse()
 
 PRBool nsIMAPGenericParser::at_end_of_line()
 {
-	return nsCRT::strcmp(fNextToken, CRLF) == 0;
+	return (fAtEndOfLine || (nsCRT::strcmp(fNextToken, CRLF) == 0));
 }
 
 void nsIMAPGenericParser::skip_to_CRLF()
@@ -315,13 +315,17 @@ void nsIMAPGenericParser::AdvanceToNextLine()
 
 void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 {
+	PRInt32 startingDiff = fLineOfTokens - fStartOfLineOfTokens;
+	if (fNextToken == fStartOfLineOfTokens)
+		fNextToken = "";
 	PR_FREEIF(fStartOfLineOfTokens);
 	if (fCurrentLine)
 	{
 		fStartOfLineOfTokens = PL_strdup(fCurrentLine);
 		if (fStartOfLineOfTokens && ((int32) PL_strlen(fStartOfLineOfTokens) >= bytesToAdvance))
 		{
-			fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance;
+			fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance  + startingDiff;
+			fCurrentTokenPlaceHolder = fLineOfTokens;
 			fTokenizerAdvanced = PR_TRUE;
 		}
 		else
@@ -473,12 +477,9 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 		else
 		{
 			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 2 - PL_strlen(fNextToken);
-			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-				fAtEndOfLine = PR_TRUE;
-			/*
-			tokenIndex += charIndex;
-			fNextToken = currentChar + tokenIndex + 1;
-			if (!nsCRT::strcmp(fNextToken, CRLF))
+			if (!*fCurrentTokenPlaceHolder)
+				*fCurrentTokenPlaceHolder = ' ';	// put the token delimiter back
+			/*	if (!nsCRT::strcmp(fNextToken, CRLF))
 				fAtEndOfLine = PR_TRUE;
 			*/
 		}
@@ -503,17 +504,36 @@ char *nsIMAPGenericParser::CreateLiteral()
 	{
 		*(returnString + numberOfCharsInMessage) = 0; // Null terminate it first
 
+		PRBool terminatedLine = PR_FALSE;
 		while (ContinueParse() && (charsReadSoFar < numberOfCharsInMessage))
 		{
-			AdvanceToNextLine();
-			currentLineLength = PL_strlen(fCurrentLine);
+			if (!terminatedLine)
+			{
+				if (fCurrentTokenPlaceHolder &&
+					*fCurrentTokenPlaceHolder == LF &&
+					*(fCurrentTokenPlaceHolder+1))
+				{
+					// This is a static buffer, with a CRLF between the literal size ({91}) and
+					// the string itself
+					fCurrentTokenPlaceHolder++;
+				}
+				else
+				{
+					// We have to read the next line from AdvanceToNextLine().
+					terminatedLine = PR_TRUE;
+					AdvanceToNextLine();
+				}
+			}
+			else
+				AdvanceToNextLine();
+			currentLineLength = PL_strlen(terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder);
 			bytesToCopy = (currentLineLength > numberOfCharsInMessage - charsReadSoFar ?
 						   numberOfCharsInMessage - charsReadSoFar : currentLineLength);
 			NS_ASSERTION (bytesToCopy, "0 length literal?");
 
 			if (ContinueParse())
 			{
-				nsCRT::memcpy(returnString + charsReadSoFar, fCurrentLine, bytesToCopy); 
+				nsCRT::memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
 				charsReadSoFar += bytesToCopy;
 			}
 		}
@@ -524,50 +544,30 @@ char *nsIMAPGenericParser::CreateLiteral()
 			{
 				skip_to_CRLF();
 				fAtEndOfLine = PR_TRUE;
-				//fNextToken = GetNextToken();
 			}
 			else if (currentLineLength == bytesToCopy)
 			{
 				fAtEndOfLine = PR_TRUE;
-				//AdvanceToNextLine();
 			}
 			else
 			{
 				// Move fCurrentTokenPlaceHolder
-
-				//fCurrentTokenPlaceHolder = fStartOfLineOfTokens + bytesToCopy;
-				AdvanceTokenizerStartingPoint (bytesToCopy);
+				if (terminatedLine)
+					AdvanceTokenizerStartingPoint (bytesToCopy);
+				else
+					AdvanceTokenizerStartingPoint (	bytesToCopy + 
+													PL_strlen(fNextToken) + 
+													2 /* CRLF */ +
+													(fNextToken - fLineOfTokens)
+													);
 				if (!*fCurrentTokenPlaceHolder)	// landed on a token boundary
 					fCurrentTokenPlaceHolder++;
 				if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
 					fAtEndOfLine = PR_TRUE;
-
-				// The first token on the line might not
-				// be at the beginning of the line.  There might be ONLY
-				// whitespace before it, in which case, fNextToken
-				// will be pointing to the right thing.  Otherwise,
-				// we want to advance to the next token.
-				/*
-				int32 numCharsChecked = 0;
-				PRBool allWhitespace = PR_TRUE;
-				while ((numCharsChecked < bytesToCopy)&& allWhitespace)
-				{
-					allWhitespace = (XP_STRCHR(WHITESPACE, fCurrentLine[numCharsChecked]) != NULL);
-					numCharsChecked++;
-				}
-
-				if (!allWhitespace)
-				{
-					//fNextToken = fCurrentLine + bytesToCopy;
-					fNextToken = GetNextToken();
-					if (!nsCRT::strcmp(fNextToken, CRLF))
-						fAtEndOfLine = PR_TRUE;
-				}
-				*/
 			}	
 		}
 	}
-	
+
 	return returnString;
 }
 
