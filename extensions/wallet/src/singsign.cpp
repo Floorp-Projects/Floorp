@@ -48,6 +48,8 @@
 #include "prprf.h"  
 #include "nsVoidArray.h"
 
+typedef PRInt32 nsKeyType;
+
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -294,7 +296,7 @@ si_CheckGetUsernamePassword
  * Key Management *
  ******************/
 
-extern PRUnichar Wallet_GetKey(PRInt64 saveCount, PRInt64 writeCount);
+extern PRUnichar Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount);
 extern PRBool Wallet_KeySet();
 extern void Wallet_KeyResetTime();
 extern PRBool Wallet_KeyTimedOut();
@@ -306,7 +308,7 @@ char* signonFileNameP = nsnull;
 char* signonFileNameU = nsnull;
 
 PRIVATE PRUnichar
-si_GetKey(PRInt64 saveCount, PRInt64 writeCount) {
+si_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   return Wallet_GetKey(saveCount, writeCount);
 }
 
@@ -1652,7 +1654,7 @@ Wallet_UTF8Get(nsInputFileStream strm);
 PRIVATE PRInt32
 si_ReadLine
   (nsInputFileStream strmu, nsInputFileStream strmp, nsAutoString& lineBuffer,PRBool obscure,
-    PRInt64 saveCount = 0, PRInt64 * readCount = 0, PRBool inHeader = PR_FALSE) {
+    nsKeyType saveCount = 0, nsKeyType * readCount = 0, PRBool inHeader = PR_FALSE) {
 
   lineBuffer = nsAutoString("");
 
@@ -1713,8 +1715,8 @@ SI_LoadSignonData(PRBool fullLoad) {
   nsAutoString buffer;
   PRBool badInput = PR_FALSE;
 
-  PRInt64 readCount = 0;
-  PRInt64 saveCount = 0;
+  nsKeyType readCount = 0;
+  nsKeyType saveCount = 0;
 
   if (si_FullyLoaded && fullLoad) {
     return 0;
@@ -1768,7 +1770,7 @@ SI_LoadSignonData(PRBool fullLoad) {
 
   /* read the header information */
   nsAutoString format;
-  PRInt64 temp;
+  nsKeyType temp;
   PRInt32 error;
 
   if (!si_oldFormat) {
@@ -1788,7 +1790,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
-    temp = (PRInt64)(buffer.ToInteger(&error));
+    temp = (nsKeyType)(buffer.ToInteger(&error));
     if (error) {
       return -1;
     }
@@ -1797,7 +1799,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
-    temp = (PRInt64)(buffer.ToInteger(&error));
+    temp = (nsKeyType)(buffer.ToInteger(&error));
     if (error) {
       return -1;
     }
@@ -1808,7 +1810,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
-    temp = (PRInt64)(buffer.ToInteger(&error));
+    temp = (nsKeyType)(buffer.ToInteger(&error));
     if (error) {
       return -1;
     }
@@ -1817,7 +1819,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (NS_FAILED(si_ReadLine(strmu, strmp, buffer, fullLoad, 0, 0, PR_TRUE))) {
       return -1;
     }
-    temp = (PRInt64)(buffer.ToInteger(&error));
+    temp = (nsKeyType)(buffer.ToInteger(&error));
     if (error) {
       return -1;
     }
@@ -1946,7 +1948,7 @@ si_WriteChar(nsOutputFileStream strm, PRUnichar c) {
 PRIVATE void
 si_WriteLine(nsOutputFileStream strmu, nsOutputFileStream strmp, 
     nsAutoString lineBuffer, PRBool obscure, PRBool fullSave, 
-    PRInt64 saveCount = 0, PRInt64 *writeCount = 0, PRBool inHeader = PR_FALSE) {
+    nsKeyType saveCount = 0, nsKeyType *writeCount = 0, PRBool inHeader = PR_FALSE) {
 
   for (int i=0; i<lineBuffer.Length(); i++) {
     if (inHeader) {
@@ -1977,8 +1979,8 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
   si_Reject * reject;
-  PRInt64 saveCount = 0;
-  PRInt64 writeCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType writeCount = 0;
   PRBool fullSave2 = fullSave || si_oldFormat;
 
   /* do nothing if signon list has not changed */

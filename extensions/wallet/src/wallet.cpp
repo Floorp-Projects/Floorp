@@ -61,6 +61,8 @@
 #define morseAssert(x,y) 0
 #endif 
 
+typedef PRInt32 nsKeyType;
+
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -1301,7 +1303,7 @@ char* keyFileName = nsnull;
 char* schemaValueFileName = nsnull;
 
 PUBLIC PRUnichar
-Wallet_GetKey(PRInt64 saveCount, PRInt64 writeCount) {
+Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   return key.CharAt((PRInt32)(writeCount % key.Length()));
 }
 
@@ -1440,15 +1442,15 @@ Wallet_KeySize() {
 }
 
 void
-wallet_GetHeader(nsInputFileStream strm, PRInt64& saveCount, PRInt64& readCount);
+wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCount);
 
 void
-wallet_PutHeader(nsOutputFileStream strm, PRInt64 saveCount, PRInt64 writeCount);
+wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCount);
 
 PRBool
 wallet_ReadKeyFile(PRBool useDefaultKey) {
-  PRInt64 saveCount = 0;
-  PRInt64 writeCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType writeCount = 0;
 
   if (useDefaultKey && (Wallet_KeySize() == 0) ) {
     keySet = PR_TRUE;
@@ -1505,8 +1507,8 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
 
 PRBool
 wallet_WriteKeyFile(PRBool useDefaultKey) {
-  PRInt64 saveCount = 0;
-  PRInt64 writeCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType writeCount = 0;
 
   nsFileSpec dirSpec;
   nsresult rval = Wallet_ProfileDirectory(dirSpec);
@@ -1554,8 +1556,8 @@ Wallet_SetKey(PRBool isNewkey) {
   if (Wallet_KeySet() && !isNewkey) {
     return PR_TRUE;
   }
-  PRInt64 saveCount = 0;
-  PRInt64 writeCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType writeCount = 0;
 
   nsAutoString newkey;
   PRBool useDefaultKey = PR_FALSE;
@@ -1676,7 +1678,7 @@ Wallet_SetKey(PRBool isNewkey) {
  */
 PRInt32
 wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure,
-    PRInt64 saveCount = 0, PRInt64 *readCount = 0, PRBool inHeader = PR_FALSE) {
+    nsKeyType saveCount = 0, nsKeyType *readCount = 0, PRBool inHeader = PR_FALSE) {
 
   /* read the line */
   line = "";
@@ -1706,10 +1708,10 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure,
 }
 
 void
-wallet_GetHeader(nsInputFileStream strm, PRInt64& saveCount, PRInt64& readCount){
+wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCount){
   nsAutoString format;
   nsAutoString buffer;
-  PRInt64 temp;
+  nsKeyType temp;
   PRInt32 error;
 
   /* format revision number */
@@ -1725,7 +1727,7 @@ wallet_GetHeader(nsInputFileStream strm, PRInt64& saveCount, PRInt64& readCount)
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  temp = (PRInt64)(buffer.ToInteger(&error));
+  temp = (nsKeyType)(buffer.ToInteger(&error));
   if (error) {
     return;
   }
@@ -1734,17 +1736,17 @@ wallet_GetHeader(nsInputFileStream strm, PRInt64& saveCount, PRInt64& readCount)
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  temp = (PRInt64)(buffer.ToInteger(&error));
+  temp = (nsKeyType)(buffer.ToInteger(&error));
   if (error) {
     return;
   }
-  saveCount += (PRInt64)(buffer.ToInteger(&error));
+  saveCount += (nsKeyType)(buffer.ToInteger(&error));
 
   /* readCount */
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  temp = (PRInt64)(buffer.ToInteger(&error));
+  temp = (nsKeyType)(buffer.ToInteger(&error));
   if (error) {
     return;
   }
@@ -1753,11 +1755,11 @@ wallet_GetHeader(nsInputFileStream strm, PRInt64& saveCount, PRInt64& readCount)
   if (NS_FAILED(wallet_GetLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  temp = (PRInt64)(buffer.ToInteger(&error));
+  temp = (nsKeyType)(buffer.ToInteger(&error));
   if (error) {
     return;
   }
-  readCount += (PRInt64)(buffer.ToInteger(&error));
+  readCount += (nsKeyType)(buffer.ToInteger(&error));
 }
 
 /*
@@ -1765,7 +1767,7 @@ wallet_GetHeader(nsInputFileStream strm, PRInt64& saveCount, PRInt64& readCount)
  */
 void
 wallet_PutLine(nsOutputFileStream strm, const nsAutoString& line, PRBool obscure,
-   PRInt64 saveCount = 0, PRInt64 *writeCount = 0, PRBool inHeader = PR_FALSE)
+   nsKeyType saveCount = 0, nsKeyType *writeCount = 0, PRBool inHeader = PR_FALSE)
 {
   for (int i=0; i<line.Length(); i++) {
     if (inHeader) {
@@ -1778,7 +1780,7 @@ wallet_PutLine(nsOutputFileStream strm, const nsAutoString& line, PRBool obscure
 }
 
 void
-wallet_PutHeader(nsOutputFileStream strm, PRInt64 saveCount, PRInt64 writeCount){
+wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCount){
 
   /* format revision number */
   wallet_PutLine(strm, nsAutoString(HEADER_VERSION_1), PR_FALSE, 0, 0, PR_TRUE);
@@ -1836,8 +1838,8 @@ wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
   if(!list) {
     return;
   }
-  PRInt64 saveCount = 0;
-  PRInt64 writeCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType writeCount = 0;
 
   /* put out the header */
   if (filename == schemaValueFileName) {
@@ -1890,8 +1892,8 @@ wallet_ReadFromFile
     /* file doesn't exist -- that's not an error */
     return;
   }
-  PRInt64 saveCount = 0;
-  PRInt64 readCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType readCount = 0;
 
   /* read in the header */
   if (filename == schemaValueFileName && !wallet_oldFormat) {
@@ -3102,8 +3104,8 @@ WLLT_PostEdit(nsAutoString walletList) {
     NS_ERROR("unable to open file");
     return;
   }
-  PRInt64 saveCount = 0;
-  PRInt64 writeCount = 0;
+  nsKeyType saveCount = 0;
+  nsKeyType writeCount = 0;
 
   /* write the values in the walletList to the file */
   wallet_PutHeader(strm, saveCount, writeCount);
