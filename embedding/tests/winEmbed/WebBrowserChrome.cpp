@@ -193,8 +193,9 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
 
     nsIWebBrowserChrome *parent = aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT ? this : 0;
 
-    nsIWebBrowserChrome *newChrome = nsnull;
-    rv = AppCallbacks::CreateBrowserWindow(aChromeFlags, parent, &newChrome);
+    nsCOMPtr<nsIWebBrowserChrome> newChrome;
+    rv = AppCallbacks::CreateBrowserWindow(aChromeFlags, parent,
+                         getter_AddRefs(newChrome));
     if (NS_SUCCEEDED(rv))
     {
         newChrome->GetWebBrowser(_retval);
