@@ -15,33 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#######################################################################
-# (1) Include manifest file                                           #
-#######################################################################
-
-include manifest.mn
-
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
+DEPTH = .
 
 include $(DEPTH)/config/config.mk
 
-#######################################################################
-# (3) Include "local" platform-dependent assignments (OPTIONAL).      #
-#######################################################################
+EF_DIRS = Compiler Debugger Runtime Utilities Exports 
 
-
-
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
+# Do not mess with the order of directories
+DIRS = $(EF_DIRS) VM Tools Packages Driver
 
 include $(DEPTH)/config/rules.mk
 
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
+clean clobber::
+	rm -r -f $(LOCAL_EXPORT_DIR)
+	cd $(MKDEPEND_DIR); $(MAKE) clobber
 
-include rules.mk
-
+export:: $(MKDEPEND)
