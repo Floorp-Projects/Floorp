@@ -1539,7 +1539,11 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     //
     // XXX Changing the object's identity is a big deal: we actually need to
     // toss the kids and recreate them. We don't do that here.
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kIdAtom) { // XXX regardless of namespace
+    // XXX This code doesn't work unless ID is set, since GetResource 
+    // actually tries to fetch the ID!  We need to move this whole
+    // block down so that we can figure out whether or not we're making
+    // a NEW ID or overwriting an EXISTING ID - Dave.
+    /*if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kIdAtom) { // XXX regardless of namespace
       nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
       NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
       if (rdfDoc) {
@@ -1551,7 +1555,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
           }
         }
       }
-    }
+    }*/
 
     // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
     // class list.
