@@ -46,9 +46,8 @@
         persist='open-panel-src'>
         <template>
           <rule>
-            <titledbutton uri="rdf:*" align="left" 
+            <box uri="rdf:*" class="texttab" align="left" 
               value="rdf:http://home.netscape.com/NC-rdf#title"
-              class="panel-bar borderless" 
               onclick="SidebarSelectPanel(this)"
               hidden="true"
               exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
@@ -62,9 +61,8 @@
         datasources="chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf">
         <template>
           <rule>
-            <titledbutton uri="rdf:*" align="left" 
+            <box uri="rdf:*" class="texttab" align="left" 
               value="rdf:http://home.netscape.com/NC-rdf#title"
-              class="panel-bar borderless" 
               onclick="SidebarSelectPanel(this)"
               hidden="true"
               exclude="rdf:http://home.netscape.com/NC-rdf#content" 
