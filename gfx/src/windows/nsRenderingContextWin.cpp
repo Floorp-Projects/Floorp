@@ -1813,7 +1813,10 @@ nsRenderingContextWin::GetWidth(const char *aString,
       // Estimate how many characters will fit. Do that by diving the available
       // space by the average character width. Make sure the estimated number
       // of characters is at least 1
-      PRInt32 estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+      PRInt32 estimatedNumChars = 0;
+      if (aveCharWidth > 0) {
+        estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+      }
       if (estimatedNumChars < 1) {
         estimatedNumChars = 1;
       }
