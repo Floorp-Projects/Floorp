@@ -96,6 +96,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     // Initialize XPCOM and AutoRegister() its components
     //--------------------------------------------------------------------
 #ifdef XP_MAC
+
     nsLocalFile* localFile = new nsLocalFile;
 	if (localFile)
 	{
@@ -106,7 +107,9 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     {
     	rv = NS_ERROR_FAILURE;
     }
+
 #elif defined(XP_PC)
+
     char componentPath[MAX_PATH];
     getcwd(componentPath, MAX_PATH);
 
@@ -116,19 +119,39 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     rv = NS_InitXPCOM(&gServiceMgr, file); 
 
 #elif defined(XP_UNIX)
+
     nsCOMPtr<nsILocalFile> file;
     NS_NewLocalFile(aProgramDir, getter_AddRefs(file));
     
     rv = NS_InitXPCOM(&gServiceMgr, file); 
 
+    char cwd[1024];
+    char compDirPath[1024];
+
+    memset(cwd, 0, 1024);
+    memset(compDirPath, 0, 1024);
+    getcwd(cwd, 1024);
+    sprintf(compDirPath, "%s/components", cwd);
+
+    nsCOMPtr<nsILocalFile> compDir;
+    NS_NewLocalFile(compDirPath, getter_AddRefs(compDir));
+
 #else
+
     rv = NS_InitXPCOM(&gServiceMgr, NULL);
+
 #endif
 
     if (!NS_SUCCEEDED(rv))
         return rv;
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+#ifdef XP_UNIX
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
+                                          compDir);
+#else
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
+                                          nsnull);
+#endif
     if (!NS_SUCCEEDED(rv))
         return rv;
 
