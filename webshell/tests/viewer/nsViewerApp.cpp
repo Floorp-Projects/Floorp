@@ -844,6 +844,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
 //--------------------------------------------
 //
 //--------------------------------------------
+static
 PRBool CreateRobotDialog(nsIWidget * aParent)
 {
 
@@ -1217,6 +1218,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
 //-----------------------------------------
 //--
 //-----------------------------------------
+static
 PRBool CreateSiteDialog(nsIWidget * aParent)
 {
 
