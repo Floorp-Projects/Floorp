@@ -2105,7 +2105,9 @@ js_Interpret(JSContext *cx, jsval *result)
             /* Get immediate argc and find the constructor function. */
             argc = GET_ARGC(pc);
 
+#if JS_HAS_INITIALIZERS
           do_new:
+#endif
             vp = sp - (2 + argc);
             JS_ASSERT(vp >= newsp);
 
@@ -3158,6 +3160,12 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_ENDINIT:
             if (--fp->sharpDepth == 0)
                 fp->sharpArray = NULL;
+
+            /* Re-set the newborn root to the top of this object tree. */
+            JS_ASSERT(sp - newsp >= 1);
+            lval = sp[-1];
+            JS_ASSERT(JSVAL_IS_OBJECT(lval));
+            cx->newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
             break;
 
           case JSOP_INITPROP:
