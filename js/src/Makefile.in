@@ -52,6 +52,7 @@ CSRCS		= \
 		jscntxt.c \
 		jsdate.c \
 		jsdbgapi.c \
+		jsdhash.c \
 		jsdtoa.c \
 		jsemit.c \
 		jsexn.c \
@@ -92,6 +93,7 @@ EXPORTS		= \
 		jsconfig.h \
 		jsdate.h \
 		jsdbgapi.h \
+		jsdhash.h \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
@@ -153,7 +155,7 @@ ASFILES		= $(notdir $(wildcard $(srcdir)/*_$(OS_ARCH).s))
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-DEF_OBJS = jsapi.o jsarena.o jsdbgapi.o jsdtoa.o jsgc.o jshash.o \
+DEF_OBJS = jsapi.o jsarena.o jsdbgapi.o jsdhash.o jsdtoa.o jsgc.o jshash.o \
 	jsinterp.o jslog2.o jslong.o jsprf.o jsutil.o jsxdrapi.o prmjtime.o
 #ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >>$(DEF_FILE)
 endif
