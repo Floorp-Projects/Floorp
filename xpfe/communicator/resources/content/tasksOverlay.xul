@@ -61,6 +61,7 @@
               <menuitem label="&importUtilCmd.label;" accesskey="&importUtilCmd.accesskey;" oncommand="toImport()"/>
               <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
               <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+              <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
             </menupopup>
           </menu>
           <menuseparator id="sep-window-list"/>
