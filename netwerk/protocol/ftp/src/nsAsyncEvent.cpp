@@ -99,3 +99,4 @@ nsFTPAsyncWriteEvent::HandleEvent()
 {
     return mChannel->AsyncWrite(mInStream, 0, mWriteCount, mContext, mObserver);
 }
+
