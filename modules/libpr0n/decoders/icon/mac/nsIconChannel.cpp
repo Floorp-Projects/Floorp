@@ -315,6 +315,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     // sigh; REALLY low-mem, bail
     if (iconH)      ::DisposeHandle(iconH);
     if (iconMaskH)  ::DisposeHandle(iconMaskH);
+    if (fileExists) ::ReleaseIconRef(icnRef);
     return(NS_ERROR_OUT_OF_MEMORY);
   }
 
