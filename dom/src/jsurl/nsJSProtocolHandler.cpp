@@ -367,15 +367,22 @@ protected:
 
     nsresult StopAll();
 
+    nsresult InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
+                          nsISupports *aContext, nsIInputStream **aResult);
+
 protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
 
+    nsLoadFlags             mLoadFlags;
+
     nsRefPtr<nsJSThunk>     mIOThunk;
-    PRBool                  mIsActive;
+    PRPackedBool            mIsActive;
+    PRPackedBool            mWasCanceled;
 };
 
 nsJSChannel::nsJSChannel() :
-    mIsActive(PR_FALSE)
+    mIsActive(PR_FALSE),
+    mWasCanceled(PR_FALSE)
 {
 }
 
@@ -455,43 +462,42 @@ nsJSChannel::GetName(nsACString &aResult)
 NS_IMETHODIMP
 nsJSChannel::IsPending(PRBool *aResult)
 {
-    if (mIsActive) {
-        *aResult = mIsActive;
-        return NS_OK;
-    }
-    return mStreamChannel->IsPending(aResult);
+    *aResult = mIsActive;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSChannel::GetStatus(nsresult *aResult)
 {
-    return mStreamChannel->GetStatus(aResult);
+    // We're always ok. Our status is independent of our underlying
+    // stream's status.
+    *aResult = NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSChannel::Cancel(nsresult aStatus)
 {
-    if (mIsActive && aStatus == NS_BINDING_ABORTED) {
-        // We're aborted while active, this means we're canceled from
-        // the call to StopAll() in Open() or AsyncOpen(), ignore the
-        // cancel call, since we're not done with mStreamChannel yet.
+    // If we're canceled just record the fact that we were canceled,
+    // the underlying stream will be canceled later, if needed. And we
+    // don't care about the reason for the canceling, i.e. ignore
+    // aStatus.
 
-        return NS_OK;
-    }
+    mWasCanceled = PR_TRUE;
 
-    return mStreamChannel->Cancel(aStatus);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSChannel::Suspend(void)
+nsJSChannel::Suspend()
 {
-    return mStreamChannel->Suspend();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJSChannel::Resume(void)
+nsJSChannel::Resume()
 {
-    return mStreamChannel->Resume();
+    return NS_OK;
 }
 
 //
@@ -519,53 +525,50 @@ nsJSChannel::GetURI(nsIURI * *aURI)
 NS_IMETHODIMP
 nsJSChannel::Open(nsIInputStream **aResult)
 {
-    nsresult rv;
-
-    // Synchronously execute the script...
-    // mIsActive is used to indicate the the request is 'busy' during the
-    // the script evaluation phase.  This means that IsPending() will 
-    // indicate the the request is busy while the script is executing...
-    mIsActive = PR_TRUE;
-    rv = mIOThunk->EvaluateScript(mStreamChannel);
-
-    if (NS_SUCCEEDED(rv)) {
-        // EvaluateScript() succeeded, that means there's data to
-        // parse as a result of evaluating the script. Stop all
-        // pending network loads.
-
-        rv = StopAll();
-
-        if (NS_SUCCEEDED(rv)) {
-            // This will add mStreamChannel to the load group.
-            rv = mStreamChannel->Open(aResult);
-        }
-    } else {
-        // Propagate the failure down to the underlying channel...
-        (void) mStreamChannel->Cancel(rv);
-    }
-    mIsActive = PR_FALSE;
-    return rv;
-
+    return InternalOpen(PR_FALSE, nsnull, nsnull, aResult);
 }
 
 NS_IMETHODIMP
 nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
-    nsresult rv;
+    return InternalOpen(PR_TRUE, aListener, aContext, nsnull);
+}
 
+nsresult
+nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
+                          nsISupports *aContext, nsIInputStream **aResult)
+{
     nsCOMPtr<nsILoadGroup> loadGroup;
+
+    // Add the javascript channel to its loadgroup so that we know if
+    // network loads were canceled or not...
+    mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup) {
+        loadGroup->AddRequest(this, aContext);
+    }
 
     // Synchronously execute the script...
     // mIsActive is used to indicate the the request is 'busy' during the
     // the script evaluation phase.  This means that IsPending() will 
     // indicate the the request is busy while the script is executing...
     mIsActive = PR_TRUE;
-    rv = mIOThunk->EvaluateScript(mStreamChannel);
+    nsresult rv = mIOThunk->EvaluateScript(mStreamChannel);
 
-    if (NS_SUCCEEDED(rv)) {
-        // EvaluateScript() succeeded, that means there's data to
-        // parse as a result of evaluating the script.
+    // Remove the javascript channel from its loadgroup...
+    if (loadGroup) {
+        loadGroup->RemoveRequest(this, aContext, rv);
+    }
 
+    // We're no longer active, it's now up to the stream channel to do
+    // the loading, if needed.
+    mIsActive = PR_FALSE;
+
+    if (NS_SUCCEEDED(rv) && !mWasCanceled) {
+        // EvaluateScript() succeeded, and we were not canceled, that
+        // means there's data to parse as a result of evaluating the
+        // script.
+
+        // Get the stream channels load flags (!= mLoadFlags).
         nsLoadFlags loadFlags;
         mStreamChannel->GetLoadFlags(&loadFlags);
 
@@ -578,26 +581,44 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 
         if (NS_SUCCEEDED(rv)) {
             // This will add mStreamChannel to the load group.
-            rv = mStreamChannel->AsyncOpen(aListener, aContext);
+
+            if (aIsAsync) {
+                rv = mStreamChannel->AsyncOpen(aListener, aContext);
+            } else {
+                rv = mStreamChannel->Open(aResult);
+            }
         }
     } else {
         // Propagate the failure down to the underlying channel...
-        (void) mStreamChannel->Cancel(rv);
+        mStreamChannel->Cancel(rv);
     }
 
-    mIsActive = PR_FALSE;
     return rv;
 }
 
 NS_IMETHODIMP
 nsJSChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    return mStreamChannel->GetLoadFlags(aLoadFlags);
+    *aLoadFlags = mLoadFlags;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
+    // Since the javascript channel is never the actual channel that
+    // any data is loaded through, don't ever set the
+    // LOAD_DOCUMENT_URI flag on it, since that could lead to two
+    // 'document channels' in the loadgroup if a javascript: URL is
+    // loaded while a document is being loaded in the same window.
+
+    mLoadFlags = aLoadFlags & ~LOAD_DOCUMENT_URI;
+
+    // ... but the underlying stream channel should get this bit, if
+    // set, since that'll be the real document channel if the
+    // javascript: URL generated data.
+
     return mStreamChannel->SetLoadFlags(aLoadFlags);
 }
 
