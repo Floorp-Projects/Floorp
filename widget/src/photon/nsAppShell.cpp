@@ -56,13 +56,14 @@ our_photon_input_add (int               fd,
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::our_photon_input_add fd=<%d>\n", fd));
 
-	int err = PtAppAddFd(NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL), 
-	                     event_processor_callback,data);
-    if (err != 0)
-	{
-		NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");
-		abort();
-	}
+  int err = PtAppAddFd(NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL), 
+                       event_processor_callback,data);
+  if (err != 0)
+  {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::our_photon_input_add Error calling PtAppAddFD errno=<%d>\n", errno));
+    NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");
+    abort();
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -99,6 +100,7 @@ nsAppShell::~nsAppShell()
 	  printf("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd mFD=<%d> errno=<%d>\n", mFD, errno);
 	  //abort();
     }  
+    mFD = -1;
   }
 }
 
@@ -247,6 +249,8 @@ void MyMainLoop( void )
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Run()
 {
+  int temp_fd;
+  
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Run this=<%p>\n", this));
 
   if (!mEventQueue)
@@ -255,9 +259,16 @@ NS_IMETHODIMP nsAppShell::Run()
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
 
-  mFD = mEventQueue->GetEventQueueSelectFD();
-  our_photon_input_add(mFD, event_processor_callback, mEventQueue);
+  temp_fd = mEventQueue->GetEventQueueSelectFD();
 
+  /* Don't re-add the fd if its already been added */
+  /* this occurs when the user creates a new profile. */
+  if (mFD != temp_fd)
+  {
+    mFD = temp_fd;
+    our_photon_input_add(mFD, event_processor_callback, mEventQueue);
+  }
+  
   MyMainLoop();
 
   Spindown();
