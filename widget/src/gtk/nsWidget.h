@@ -202,7 +202,8 @@ public:
 protected:
 
   virtual void UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
-  virtual void UpdateDragStatus(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
+  virtual void StartDragMotion(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
+  virtual void EndDragMotion(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
 
   virtual void InitCallbacks(char * aName = nsnull);
 

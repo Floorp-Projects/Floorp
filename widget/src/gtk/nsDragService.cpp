@@ -341,12 +341,25 @@ NS_IMETHODIMP nsDragService::SetLastContext  (GtkWidget          *aWidget,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::UpdateDragStatus(GtkWidget          *aWidget,
-                                              GdkDragContext     *aContext,
-                                              guint               aTime)
+NS_IMETHODIMP nsDragService::StartDragMotion(GtkWidget      *aWidget,
+                                             GdkDragContext *aContext,
+                                             guint           aTime)
 {
 #ifdef DEBUG_DD
-  g_print("UpdateDragStatus: %d\n", mCanDrop);
+  g_print("StartDragMotion\n");
+#endif
+  // set our drop target to false since we probably won't get
+  // notification if there's no JS DND listener.
+  mCanDrop = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDragService::EndDragMotion(GtkWidget      *aWidget,
+                                           GdkDragContext *aContext,
+                                           guint           aTime)
+{
+#ifdef DEBUG_DD
+  g_print("EndDragMotion: %d\n", mCanDrop);
 #endif
   if (mCanDrop) 
     gdk_drag_status(aContext, GDK_ACTION_COPY, aTime);

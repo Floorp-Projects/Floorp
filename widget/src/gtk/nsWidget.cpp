@@ -2973,7 +2973,7 @@ void nsWidget::UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragCon
 }
 
 /* virtual */
-void nsWidget::UpdateDragStatus(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime)
+void nsWidget::StartDragMotion(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime)
 {
   // make sure that we tell the drag manager what the hell is going on.
   nsCOMPtr<nsIDragService> dragService;
@@ -2989,7 +2989,27 @@ void nsWidget::UpdateDragStatus(GtkWidget *aWidget, GdkDragContext *aGdkDragCont
   if (!dragServiceGTK) {
     return;
   }
-  dragServiceGTK->UpdateDragStatus(aWidget, aGdkDragContext, aTime);
+  dragServiceGTK->StartDragMotion(aWidget, aGdkDragContext, aTime);
+}
+
+/* virtual */
+void nsWidget::EndDragMotion(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime)
+{
+  // make sure that we tell the drag manager what the hell is going on.
+  nsCOMPtr<nsIDragService> dragService;
+  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                             nsIDragService::GetIID(),
+                                             (nsISupports **)&dragService);
+  if (NS_FAILED(rv)) {
+    g_print("*** warning: failed to get the drag service. this is a _bad_ thing.\n");
+    return;
+  }
+  nsCOMPtr<nsIDragSessionGTK> dragServiceGTK;
+  dragServiceGTK = do_QueryInterface(dragService);
+  if (!dragServiceGTK) {
+    return;
+  }
+  dragServiceGTK->EndDragMotion(aWidget, aGdkDragContext, aTime);
 }
 
 #ifdef NS_DEBUG

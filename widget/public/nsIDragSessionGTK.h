@@ -39,7 +39,10 @@ class nsIDragSessionGTK : public nsISupports {
   NS_IMETHOD SetLastContext  (GtkWidget      *aWidget,
                               GdkDragContext *aContext,
                               guint           aTime) = 0;
-  NS_IMETHOD UpdateDragStatus(GtkWidget      *aWidget,
+  NS_IMETHOD StartDragMotion (GtkWidget      *aWidget,
+                              GdkDragContext *aContext,
+                              guint           aTime) = 0;
+  NS_IMETHOD EndDragMotion   (GtkWidget      *aWidget,
                               GdkDragContext *aContext,
                               guint           aTime) = 0;
   NS_IMETHOD SetDataReceived (GtkWidget         *aWidget,
