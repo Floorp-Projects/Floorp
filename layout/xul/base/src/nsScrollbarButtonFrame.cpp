@@ -69,11 +69,18 @@ nsScrollbarButtonFrame::HandleEvent(nsIPresContext& aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {  
-   switch (aEvent->message) {
+   /*
+  XXX Eric, this seems to be redundant, since titledbutton's handle event
+  also calls MouseClicked. I'm commenting this out to avoid receiving two
+  mouse clicked messages - Dave H.
+  */
+  /*
+  switch (aEvent->message) {
     case NS_MOUSE_LEFT_CLICK:
        MouseClicked(aPresContext);
     break;
    }
+  */
 
   return nsTitledButtonFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
