@@ -606,13 +606,13 @@ NS_IMPL_ISUPPORTS2(CBrowserApp, nsIObserver, nsISupportsWeakReference);
 //  CBrowserApp : nsIObserver
 // ---------------------------------------------------------------------------
 
-NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     #define CLOSE_WINDOWS_ON_SWITCH 1
 
     nsresult rv = NS_OK;
     
-    if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()))
+    if (!nsCRT::strcmp(aTopic, "profile-approve-change"))
     {
         // Ask the user if they want to
         DialogItemIndex item = UModalAlerts::StopAlert(alrt_ConfirmProfileSwitch);
