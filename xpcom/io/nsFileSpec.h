@@ -502,8 +502,8 @@ class NS_COM nsFileSpec
                                 // point to the original.  Sets mError.
         nsresult                ResolveSymlink(PRBool& wasSymlink);
 
-        void                    CreateDirectory(int mode = 0700 /* for unix */);
-        void                    CreateDir(int mode = 0700) { CreateDirectory(mode); }
+        void                    CreateDirectory(int mode = 0775 /* for unix */);
+        void                    CreateDir(int mode = 0775) { CreateDirectory(mode); }
                                    // workaround for yet another VC++ bug with long identifiers.
         void                    Delete(PRBool inRecursive) const;
         nsresult                Truncate(PRInt32 aNewLength) const;
