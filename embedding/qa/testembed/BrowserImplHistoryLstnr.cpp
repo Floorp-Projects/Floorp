@@ -87,11 +87,26 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theUri, PRBool *notify)
 
 NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags, PRBool *notify)
 {
+	char flagString[100];
+
 	CQaUtils::QAOutput("nsIHistoryListener::OnHistoryReload()", 2);
 
 	CQaUtils::GetTheUri(theUri, 1);
 	*notify = PR_TRUE;
 	CQaUtils::FormatAndPrintOutput("OnHistoryReload() notification = ", *notify, 1);
+
+	if (reloadFlags == 0x0000)
+		strcpy(flagString, "LOAD_FLAGS_NONE");
+	else if (reloadFlags == 0x0100)
+		strcpy(flagString, "LOAD_FLAGS_BYPASS_CACHE");
+	else if (reloadFlags == 0x0200)
+		strcpy(flagString, "LOAD_FLAGS_BYPASS_PROXY");
+	else if (reloadFlags == 0x0400)
+		strcpy(flagString, "LOAD_FLAGS_CHARSET_CHANGE");
+	else if (reloadFlags == (0x0200 | 0x0400))
+		strcpy(flagString, "LOAD_RELOAD_BYPASS_PROXY_AND_CACHE");
+
+	CQaUtils::FormatAndPrintOutput("OnHistoryReload() flag = ", flagString, 2);
 
 	return NS_OK;
 }
@@ -104,6 +119,8 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGotoIndex(PRInt32 theIndex, nsIURI *theUri,
 	*notify = PR_TRUE;
 	CQaUtils::FormatAndPrintOutput("OnHistoryGotoIndex() notification = ", *notify, 1);
 
+	CQaUtils::FormatAndPrintOutput("OnHistoryGotoIndex() index = ", theIndex, 2);
+
 	return NS_OK;
 }
 
@@ -113,6 +130,8 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryPurge(PRInt32 theNumEntries, PRBool *notify
 
 	*notify = PR_TRUE;
 	CQaUtils::FormatAndPrintOutput("OnHistoryPurge() notification = ", *notify, 1);
+
+	CQaUtils::FormatAndPrintOutput("OnHistoryGotoIndex() theNumEntries = ", theNumEntries, 2);
 
 	return NS_OK;
 }
