@@ -52,7 +52,6 @@ DIRS=                   \
 !ifdef EDITOR
 	edtplug         \
 !endif
-	applet          \
 	softupdt        \
 	zlib            \
 !endif

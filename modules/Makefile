@@ -34,7 +34,7 @@ DIRS		= \
 	$(NULL)
 
 ifdef MOZ_JAVA
-DIRS		+= applet libreg softupdt zlib li progress
+DIRS		+= libreg softupdt zlib li progress
 
 ifdef EDITOR
 DIRS		+= edtplug spellchk
