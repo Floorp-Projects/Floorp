@@ -66,10 +66,12 @@ if(!(-e "$inDistPath"))
 
 # Make .js files
 MakeJsFile("core");
+MakeJsFile("browser");
 MakeJsFile("mail");
 
 # Make .xpi files
 MakeXpiFile("core");
+MakeXpiFile("browser");
 MakeXpiFile("mail");
 
 MakeConfigFile();

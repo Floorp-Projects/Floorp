@@ -105,6 +105,7 @@ Description Long=Program will be installed with the minimal options.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
 C0=Component0
+C1=Component1
 
 [Setup Type1]
 Description Short=C&omplete
@@ -115,6 +116,7 @@ Description Long=Program will be installed with the most common options.
 ; this Setup Type is selected.
 C0=Component0
 C1=Component1
+C2=Component2
 
 [Setup Type2]
 Description Short=C&ustom
@@ -127,6 +129,7 @@ Description Long=You may choose the options you want to install.  Recommended fo
 ; this Setup Type is selected.
 C0=Component0
 C1=Component1
+C2=Component2
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -215,12 +218,30 @@ Message=Setup has detected that an instance of Seamonkey is currently running.  
 ; Components dialog) for installation.
 ; There is no limit to the number of components to install.
 [Component0]
-Description Short=Mozilla Seamonkey
-Description Long=Browser software for the internet
+Description Short=Mozilla Xpinstall Engine
+Description Long=Install Engine
 Archive=core.xpi
 $InstallSize$:core
 $InstallSizeSystem$
 $InstallSizeArchive$:core.xpi
+; Attributes can be the following values:
+;   SELECTED  - the component is selected to be installed by default.
+;   INVISIBLE - the component is not shown in the Select Components dialog.
+Attributes=SELECTED|INVISIBLE
+; url keys can be as many as needed.  url0 is attempted first.  if it fails,
+; the next url key is tried in sequential order.
+; The url should not contain the filename.  Setup will assemble the complete url
+; using the url keys and the Archive key.
+url0=$URLPath$
+
+[Component1]
+Description Short=Mozilla Seamonkey
+Description Long=Browser software for the internet
+Archive=browser.xpi
+$InstallSize$:browser
+$InstallSizeSystem$
+$InstallSizeArchive$:browser.xpi
+Dependency0=Mozilla Xpinstall Engine
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
@@ -231,14 +252,14 @@ Attributes=SELECTED
 ; using the url keys and the Archive key.
 url0=$URLPath$
 
-[Component1]
+[Component2]
 Description Short=Mail&News
 Description Long=Seamonkey Mail&News
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
 $InstallSizeArchive$:mail.xpi
-;Dependency0=Mozilla Seamonkey
+Dependency0=Mozilla Xpinstall Engine
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
