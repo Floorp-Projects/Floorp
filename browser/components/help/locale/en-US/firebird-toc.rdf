@@ -120,8 +120,10 @@
   <rdf:Description about="#themes">
       <nc:subheadings>
         <rdf:Seq>
-          <rdf:li> <rdf:Description ID="themes-getting-and-installing" nc:name="Acquiring and Installing" nc:link="customization.xhtml#getting_installing_themes"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="themes-getting-and-installing" nc:name="Getting and Installing" nc:link="customization.xhtml#getting_installing_themes"/> </rdf:li>
+          <rdf:li><rdf:Description ID="themes-uninstalling" nc:name="Uninstalling" nc:link="customization.xhtml#uninstalling_themes"/> </rdf:li>
           <rdf:li> <rdf:Description ID="themes-changing" nc:name="Switching Themes" nc:link="customization.xhtml#changing_themes"/> </rdf:li>
+          <rdf:li><rdf:Description ID="themes-updating" nc:name="Updating Themes" nc:link="customization.xhtml#updating_themes"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
@@ -129,6 +131,7 @@
   <rdf:Description about="#extensions">
       <nc:subheadings>
         <rdf:Seq>
+          <rdf:li><rdf:Description ID="extensions-installing" nc:name="Getting and Installing" nc:link="customization.xhtml#getting_installing_extensions"/> </rdf:li>
           <rdf:li><rdf:Description ID="extensions-uninstalling" nc:name="Uninstalling" nc:link="customization.xhtml#uninstalling_extensions"/> </rdf:li>
           <rdf:li><rdf:Description ID="extensions-updating" nc:name="Updating Extensions" nc:link="customization.xhtml#updating_extensions"/> </rdf:li>
         </rdf:Seq>
