@@ -108,7 +108,7 @@ nsJavaDOMImpl::nsJavaDOMImpl()
   vm_args.version = 0x00010001;
   vm_args.verifyMode = JNI_TRUE;
 #ifdef DEBUG
-  vm_args.verbose = JNI_TRUE;
+  //  vm_args.verbose = JNI_TRUE;
   vm_args.enableVerboseGC = JNI_TRUE;
 #endif // DEBUG
   char* cp = PR_GetEnv("CLASSPATH");
@@ -126,7 +126,11 @@ nsJavaDOMImpl::nsJavaDOMImpl()
 #ifdef DEBUG
   printf("classpath is \"%s\"\n", vm_args.classpath);
 #endif // DEBUG
+#ifdef XP_PC
+  JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+#else
   JNI_CreateJavaVM(&jvm, &env, &vm_args);
+#endif
   delete[] p;
 
   gcClass = env->FindClass("org/mozilla/dom/DOMGarbageCollector");

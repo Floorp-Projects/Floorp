@@ -53,7 +53,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\org_mozilla_dom_NamedNodeMapImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_NodeImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_NodeListImpl.obj \
-	.\$(OBJDIR)\org_mozilla_dom_NotationImpl.cpp \
+	.\$(OBJDIR)\org_mozilla_dom_NotationImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_ProcessingInstructionImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_TextImpl.obj \
  $(NULL)
