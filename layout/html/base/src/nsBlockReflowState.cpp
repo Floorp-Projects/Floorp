@@ -831,10 +831,6 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   // content.
   nscoord saveY = mY;
 
-  // Grab the compatibility mode
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
-
   nsIFrame* floater = aFloaterCache->mPlaceholder->GetOutOfFlowFrame();
 
   // Grab the floater's display information
@@ -890,18 +886,11 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 	       (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
 	       "invalid float type");
 
-  // In backwards compatibility mode, we don't bother to see if a
-  // floated table can ``really'' fit: in old browsers, floating
-  // tables are horizontally stacked regardless of available space.
-  // (See bug 43086 about tables vs. non-tables.)
-  if ((eCompatibility_NavQuirks != mode) ||
-      (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay)) {
-    // Can the floater fit here?
-    while (! CanPlaceFloater(region, floaterDisplay->mFloats)) {
-      // Nope. Advance to the next band.
-      mY += mAvailSpaceRect.height;
-      GetAvailableSpace();
-    }
+  // Can the floater fit here?
+  while (! CanPlaceFloater(region, floaterDisplay->mFloats)) {
+    // Nope. Advance to the next band.
+    mY += mAvailSpaceRect.height;
+    GetAvailableSpace();
   }
 
   // Assign an x and y coordinate to the floater. Note that the x,y
