@@ -196,6 +196,15 @@ function EditorShowClipboard()
   window.editorShell.ShowClipboard(); 
 }
 
+// --------------------------- View menu ---------------------------
+
+function EditorSetDocumentCharacterSet(aCharset)
+{
+  dump(aCharset);
+  dump(" NOT IMPLEMENTED YET\n");
+}
+
+
 // --------------------------- Text style ---------------------------
 
 function EditorSetTextProperty(property, attribute, value)
