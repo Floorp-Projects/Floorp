@@ -77,6 +77,6 @@ function whitelistSite()
   popupmanager.add(uri, false);
   gSiteBox.removeChild(selectedItem);
 
-  alert(selectedItem.label + gUPMsg.value);
+  alert(uri.host + gUPMsg.value);
 }
 
