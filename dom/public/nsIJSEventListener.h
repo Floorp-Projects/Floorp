@@ -20,35 +20,29 @@
  * Contributor(s): 
  */
 
-#ifndef nsIScriptEventListener_h__
-#define nsIScriptEventListener_h__
+#ifndef nsIJSEventListener_h__
+#define nsIJSEventListener_h__
 
 #include "nsISupports.h"
+#include "jsapi.h"
 
+class nsIScriptContext;
+class nsIScriptObjectOwner;
 class nsIDOMEventListener;
 
-/*
- * Event listener interface.
- */
+#define NS_IJSEVENTLISTENER_IID     \
+{ 0xa6cf9114, 0x15b3, 0x11d2,       \
+{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-#define NS_ISCRIPTEVENTLISTENER_IID \
-{ /* e34ed820-1b62-11d2-bd89-00805f8ae3f4 */ \
-0xe34ed820, 0x1b62, 0x11d2, \
-{0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
-
-class nsIScriptEventListener : public nsISupports {
-
+// Implemented by JS event listeners. Used to retrieve the
+// JSObject corresponding to the event target.
+class nsIJSEventListener : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTEVENTLISTENER_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
- /**
-  * Checks equality of internal script function pointer with the one passed in.
-  */
-
-  virtual nsresult CheckIfEqual(nsIScriptEventListener *aListener) = 0;
-
+  NS_IMETHOD GetEventTarget(nsIScriptContext** aContext, nsIScriptObjectOwner** aOwner) = 0;
 };
 
-extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void* aObj, void *aFun);
+extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, nsIScriptObjectOwner* aOwner);
 
-#endif // nsIScriptEventListener_h__
+#endif nsIJSEventListener_h__
