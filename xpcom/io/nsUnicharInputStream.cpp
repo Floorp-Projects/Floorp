@@ -186,8 +186,10 @@ ConverterInputStream::ConverterInputStream(nsIInputStream* aStream,
                                            PRUint32 aBufferSize)
 {
   NS_INIT_REFCNT();
-  mInput = aStream; aStream->AddRef();
-  mConverter = aConverter; aConverter->AddRef();
+  mInput = aStream;
+  NS_ADDREF(aStream);
+  mConverter = aConverter;
+  NS_ADDREF(aConverter);
   if (aBufferSize == 0) {
     aBufferSize = 8192;
   }
@@ -211,19 +213,19 @@ ConverterInputStream::~ConverterInputStream()
 nsresult ConverterInputStream::Close()
 {
   if (nsnull != mInput) {
-    mInput->Release();
+    NS_RELEASE(mInput);
     mInput = nsnull;
   }
   if (nsnull != mConverter) {
-    mConverter->Release();
+    NS_RELEASE(mConverter);
     mConverter = nsnull;
   }
   if (nsnull != mByteData) {
-    mByteData->Release();
+    NS_RELEASE(mByteData);
     mByteData = nsnull;
   }
   if (nsnull != mUnicharData) {
-    mUnicharData->Release();
+    NS_RELEASE(mUnicharData);
     mUnicharData = nsnull;
   }
 
