@@ -702,7 +702,6 @@ Contributor(s):
   
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
              fullscreentoolbar="true">
-      <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                        label="&backCmd.label;"
                        oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
@@ -735,9 +734,8 @@ Contributor(s):
                        ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
                        ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
                        oncommand="BrowserHome();"/>
-      </hbox>
- 
-      <hbox id="nav-bar-inner" flex="1">
+      
+      <toolbaritem id="urlbar-container" align="center" flex="1">
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
@@ -770,7 +768,9 @@ Contributor(s):
                      onpopupshowing="createUBHistoryMenu(event.target);" 
                      oncommand="executeUrlBarHistoryCommand(event.target);"/>
         </textbox>
+      </toolbaritem>
 
+      <toolbaritem id="go-container" align="center">
         <button id="go-button" class="button-toolbar chromeclass-location"
                 label="&goButton.label;" persist="hidden"
                 oncommand="addToUrlbarHistory(); BrowserLoadURL();"
@@ -778,17 +778,17 @@ Contributor(s):
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
                 tooltiptext="&goButton.tooltip;"/> 
-      </hbox>
+      </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1"
                      label="&printButton.label;" persist="hidden"
                      oncommand="BrowserPrint();"
                      tooltiptext="&printButton.tooltip;"/>
 
-      <hbox id="throbber-box" align="center">
+      <toolbaritem id="throbber-box" align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
-      </hbox>
+      </toolbaritem>
       
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
