@@ -153,6 +153,8 @@ SECItem *pk11_GetLowLevelKeyFromHandle(PK11SlotInfo *slot,
 SECStatus PK11_TraverseSlot(PK11SlotInfo *slot, void *arg);
 CK_OBJECT_HANDLE pk11_FindPrivateKeyFromCertID(PK11SlotInfo *slot, 
 							SECItem *keyID);
+SECKEYPrivateKey *PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType, 
+			PRBool isTemp, CK_OBJECT_HANDLE privID, void *wincx);
 SEC_END_PROTOS
 
 #endif
