@@ -1530,6 +1530,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 #ifdef XP_UNIX
 	char *mail_directory_value_unix_style = mail_directory_value;
 #else
+	char *mail_directory_value_unix_style = nsnull;
 	nsCOMPtr <nsIFileSpec> spec;
 	rv = NS_NewFileSpec(getter_AddRefs(spec));
 	if (NS_FAILED(rv)) return rv;
