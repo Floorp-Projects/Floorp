@@ -584,6 +584,11 @@ nsFrameItems::AddChild(nsIFrame* aChild)
     lastChild->SetNextSibling(aChild);
     lastChild = aChild;
   }
+  // if aChild has siblings, lastChild needs to be the last one
+  nsIFrame* sib;
+  for (lastChild->GetNextSibling(&sib); sib; sib->GetNextSibling(&sib)) {
+    lastChild = sib;
+  }
 }
 
 // -----------------------------------------------------------
@@ -2813,16 +2818,15 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
   if (cgContent) { 
     cgContent->GetSpan(&span);
     nsIFrame* lastCol = aNewFrame;
+    nsCOMPtr<nsIStyleContext> styleContext;
     for (PRInt32 spanX = 1; spanX < span; spanX++) {
-      nsCOMPtr<nsIStyleContext> styleContext;
-      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableColPseudo, aStyleContext, 
-                                                 getter_AddRefs(styleContext));
+      // The same content node should always resolve to the same style context.
+      if (1 == spanX)
+        aNewFrame->GetStyleContext(getter_AddRefs(styleContext));
       nsIFrame* newCol;
       rv = aTableCreator.CreateTableColFrame(&newCol); if (NS_FAILED(rv)) return rv;
-      InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, styleContext, nsnull, newCol);
-      if (aIsPseudoParent) {
-        aPresContext->ReParentStyleContext(newCol, aStyleContext);
-      }
+      InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame,
+                          styleContext, nsnull, newCol);
       ((nsTableColFrame*)newCol)->SetType(eColAnonymousCol);
       lastCol->SetNextSibling(newCol);
       lastCol = newCol;
@@ -2833,13 +2837,14 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
     nsFrameItems childItems;
     nsIFrame* captionFrame;
     rv = TableProcessChildren(aPresShell, aPresContext, aState, aContent, aNewFrame,
-                              aTableCreator, childItems, captionFrame); if (NS_FAILED(rv)) return rv;
+                              aTableCreator, childItems, captionFrame);
+    if (NS_FAILED(rv)) return rv;
     aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (aIsPseudoParent) {
       aState.mPseudoFrames.mColGroup.mChildList.AddChild(aNewFrame);
     }
   }
-
+  
   return rv;
 }
 
@@ -3217,7 +3222,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
 
   // for every table related frame except captions and ones with pseudo parents, 
   // link into the child list
-  if (childFrame && !childIsCaption && !isPseudoParent) { 
+  if (childFrame && !childIsCaption && !isPseudoParent) {
     aChildItems.AddChild(childFrame);
   }
   return rv;

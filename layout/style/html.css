@@ -231,13 +231,10 @@ tr {
   display: table-row;
 }
 
+/* The :-moz-table-column pseudo-element is for extra columns at the end 
+   of a table. */
 col, *|*:-moz-table-column {
   display: table-column;
-  border: inherit;
-  width: inherit;
-  height: inherit;
-  background: inherit;
-  border: inherit;
 }
 
 colgroup, *|*:-moz-table-column-group {
