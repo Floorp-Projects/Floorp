@@ -48,7 +48,7 @@ NS_IMPL_ISUPPORTS1(nsPresState, nsIPresState)
 nsPresState::nsPresState(void)
 :mPropertyTable(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsPresState::~nsPresState(void)
@@ -62,20 +62,24 @@ NS_IMETHODIMP
 nsPresState::GetStateProperty(const nsAReadableString& aName,
 			      nsAWritableString& aResult)
 {
-  // Retrieve from hashtable.
-  nsCOMPtr<nsISupportsString> str;
-  nsAutoString keyStr(aName);
-  nsStringKey key(keyStr);
-  if (mPropertyTable)
-    str = dont_AddRef(NS_STATIC_CAST(nsISupportsString*, mPropertyTable->Get(&key)));
-   
   aResult.SetLength(0);
-  if (str) {
-    nsXPIDLCString data;
-    str->GetData(getter_Copies(data));
 
-    aResult.Append(NS_ConvertUTF8toUCS2(data));
+  // Retrieve from hashtable.
+  if (mPropertyTable) {
+    nsStringKey key(aName);
+
+    nsCOMPtr<nsISupportsString> supportsStr =
+            dont_AddRef(NS_STATIC_CAST(nsISupportsString*,
+                                       mPropertyTable->Get(&key)));
+
+    if (supportsStr) {
+      nsXPIDLCString data;
+      supportsStr->GetData(getter_Copies(data));
+
+      aResult.Append(NS_ConvertUTF8toUCS2(data));
+    }
   }
+
   return NS_OK;
 }
 
@@ -88,14 +92,12 @@ nsPresState::SetStateProperty(const nsAReadableString& aName, const nsAReadableS
   }
 
   // Add to hashtable
-  nsAutoString keyStr(aName);
-  nsStringKey key(keyStr);
+  nsStringKey key(aName);
 
   nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ConvertUCS2toUTF8 string(aValue);
-  supportsStr->SetData(string.get());
+  supportsStr->SetData(NS_ConvertUCS2toUTF8(aValue).get());
 
   mPropertyTable->Put(&key, supportsStr);
   return NS_OK;
@@ -107,8 +109,7 @@ nsPresState::RemoveStateProperty(const nsAReadableString& aName)
   if (!mPropertyTable)
     return NS_OK;
 
-  nsAutoString keyStr(aName);
-  nsStringKey key(keyStr);
+  nsStringKey key(aName);
 
   mPropertyTable->Remove(&key);
   return NS_OK;
@@ -119,10 +120,11 @@ nsPresState::GetStatePropertyAsSupports(const nsAReadableString& aName, nsISuppo
 {
   // Retrieve from hashtable.
   nsCOMPtr<nsISupports> supp;
-  nsAutoString keyStr(aName);
-  nsStringKey key(keyStr);
-  if (mPropertyTable)
+
+  if (mPropertyTable) {
+    nsStringKey key(aName);
     supp = dont_AddRef(NS_STATIC_CAST(nsISupports*, mPropertyTable->Get(&key)));
+  }
 
   *aResult = supp;
   NS_IF_ADDREF(*aResult);
@@ -138,8 +140,7 @@ nsPresState::SetStatePropertyAsSupports(const nsAReadableString& aName, nsISuppo
   }
 
   // Add to hashtable
-  nsAutoString keyStr(aName);
-  nsStringKey key(keyStr);
+  nsStringKey key(aName);
   mPropertyTable->Put(&key, aValue);
   return NS_OK;
 }
