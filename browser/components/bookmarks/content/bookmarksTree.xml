@@ -607,13 +607,13 @@
             this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
             break;
           default:
+            this.mOuter.saveSelection();
             // Notify the datasource that we're about to begin a batch operation
             //var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
             //observer.beginUpdateBatch(this.db);
             BookmarksController.doCommand(aCommand, selection, target);
             //observer.endUpdateBatch(this.db);
 
-            this.mOuter.saveSelection();
 
             //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
             //this.mOuter.treeBoxObject.selection.currentIndex=-1;
