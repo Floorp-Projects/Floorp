@@ -626,7 +626,7 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
     }
     SECMOD_ReleaseReadLock(moduleLock);
 
-    if (0 == slotcount) {
+    if ( (0 == slotcount) || (SECFailure == rv) ) {
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         PK11_FreeSlotList(slotList);
         slotList = NULL;
