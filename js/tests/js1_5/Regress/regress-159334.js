@@ -41,13 +41,12 @@
 * Testing that script engine can handle scripts with at least 64K of different
 * string literals. The following will evaluate, via eval(), a script like this:
 *
-*     test_var = Array(N);
-*     test_var[0] = '0';
-*     test_var[1] = '1';
+*     f('0')
+*     f('1')
 *     ...
-*     test_var[N - 1] = String(N - 1);
+*     f('N - 1')
 *
-* where N is about 0xFFFD
+* where N is 0xFFFE
 *
 */
 //-----------------------------------------------------------------------------
@@ -62,22 +61,19 @@ var expect= '';
 var expectedvalues = [];
 
 
-// Create the big array |test_var| via eval()
-var test_var = null;
-var long_eval = fuse(mk_array_assign("test_var", 0xFFFD));
+var N = 0xFFFE;
+
+// Create big string for eval recursively to avoid N*N behavior
+// on string concatenation
+var long_eval = buildEval_r(0, N);
+
+// Run it
+var test_sum = 0;
+function f(str) { test_sum += Number(str); }
 eval(long_eval);
 
-// Now test it out -
-var sum = 0;
-var test_sum = 0;
-for (var i=0; i!=test_var.length; ++i)
-{
-  test_sum += Number(test_var[i]);
-  sum += i;
-}
-
 status = inSection(1);
-actual = (test_sum == sum);
+actual = (test_sum == N * (N - 1) / 2);
 expect = true;
 addThis();
 
@@ -89,37 +85,18 @@ test();
 
 
 
-function fuse(array)
+function buildEval_r(beginLine, endLine)
 {
-  return fuse_r(array, 0, array.length);
-}
+  var count = endLine - beginLine;
 
-
-function fuse_r(array, begin, end)
-{
-  if (begin == end)
+  if (count == 0)
     return "";
 
-  if (begin + 1 == end)
-    return String(array[begin]);
+  if (count == 1)
+    return "f('" + beginLine + "')\n";
 
-  if (begin + 2 == end)
-    return String(array[begin]) + array[begin + 1];
-
-  var middle = ((begin + end) >>> 1) + 1;
-  return fuse_r(array, begin, middle) + fuse_r(array, middle, end);
-}
-
-
-function mk_array_assign(var_name, N)
-{
-  var array = Array(N + 1);
-  array[0] = var_name + " = Array(" + N + ");\n";
-
-  for (var i = 0; i != N; ++i)
-    array[1 + i] = var_name + "[" + i + "] = '" + i+ "';\n";
-
-  return array;
+  var middle = beginLine + (count >>> 1);
+  return buildEval_r(beginLine, middle) + buildEval_r(middle, endLine);
 }
 
 
