@@ -267,11 +267,22 @@ public class Context {
      * @see org.mozilla.javascript.Context#exit
      */
     public static Context getCurrentContext() {
+        if (threadLocalCx != null) {
+            try {
+                return (Context)threadLocalGet.invoke(threadLocalCx, null);
+            } catch (Exception ex) { }
+        }
         Thread t = Thread.currentThread();
         return (Context) threadContexts.get(t);
     }
 
     private static void setThreadContext(Context cx) {
+        if (threadLocalCx != null) {
+            try {
+                threadLocalSet.invoke(threadLocalCx, new Object[] { cx });
+                return;
+            } catch (Exception ex) { }
+        }
         Thread t = Thread.currentThread();
         if (cx != null) {
             threadContexts.put(t, cx);
@@ -2192,6 +2203,19 @@ public class Context {
     static boolean isCachingEnabled = true;
 
     private static Hashtable threadContexts = new Hashtable(11);
+    private static Object threadLocalCx;
+    private static Method threadLocalGet;
+    private static Method threadLocalSet;
+
+    static {
+        try {
+            Class cl = Class.forName("java.lang.ThreadLocal");
+            threadLocalGet = cl.getMethod("get", null);
+            threadLocalSet = cl.getMethod("set",
+                new Class[] { ScriptRuntime.ObjectClass });
+            threadLocalCx = cl.newInstance();
+        } catch (Exception ex) { }
+    }
 
     private static final Object contextListenersLock = new Object();
     private static Object[] contextListeners;
