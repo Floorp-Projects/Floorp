@@ -196,63 +196,54 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 */
 
 static JSObject* PR_CALLBACK
-map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char **errp)
+map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *errp)
 {
-    JSObject        *window = NULL;
-    MochaDecoder    *decoder; 
-    PRBool           mayscript = PR_FALSE;
-    PRBool           jvmMochaPrefsEnabled = PR_FALSE;
-    nsresult         err = NS_OK;
+	JSObject        *window = NULL;
+	MochaDecoder    *decoder; 
+	PRBool           mayscript = PR_FALSE;
+	PRBool           jvmMochaPrefsEnabled = PR_TRUE;
+	nsresult         err = NS_OK;
 
-    *errp = NULL;
-    if (!pNSIPluginInstanceIn) {
-        env->ThrowNew(env->FindClass("java/lang/NullPointerException"),0);
-        return 0;
-    }
-    //TODO: Check if Mocha is enabled. To get to any mocha api, we should use service 
-    //      manager and get to the appropriate service.
-    // jvmMochaPrefsEnabled = LM_GetMochaEnabled();
-    if(jvmMochaPrefsEnabled == PR_FALSE)
-    {
-       *errp = strdup("JSObject.getWindow() failed: java preference is disabled");
-#if 0
-       // XXX Causes a compiler error on Windows...
-       goto failed;
-#else
-       return 0;
-#endif
-    }
-     
-    /*
-    ** Check for the mayscript tag.
-    */
-    nsIPluginInstance* pluginInstance = (nsIPluginInstance*)pNSIPluginInstanceIn;
-    if ( (err == NS_OK) && (pluginInstance != NULL) ) {
-        nsIPluginInstancePeer* pluginPeer;
-        err = pluginInstance->GetPeer((nsIPluginInstancePeer**)&pluginPeer); 
-        if ( (err == NS_OK) &&(pluginPeer != NULL) ) {
-            nsIJVMPluginTagInfo* pJVMTagInfo;
-            if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID,
-                                      (void**)&pJVMTagInfo) == NS_OK) {
-                err = pJVMTagInfo->GetMayScript(&mayscript);
-                PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
-                pJVMTagInfo->Release();
-            }
-            pluginPeer->Release();
-        }
-    }
+	*errp = NULL;
 
-    if (mayscript            == PR_FALSE)
-    {
-        *errp = strdup("JSObject.getWindow() requires mayscript attribute on this Applet");
-        goto failed;
-    }
+	if (pluginInstancePtr == NULL) {
+		env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "plugin instance is NULL");
+		return NULL;
+	}
 
-    //TODO: Get to the window object using DOM.
-    // window = getDOMWindow().getScriptOwner().getJSObject().
-    return window;
-  failed:
-    return 0;
+	//TODO: Check if Mocha is enabled. To get to any mocha api, we should use service 
+	//      manager and get to the appropriate service.
+	// jvmMochaPrefsEnabled = LM_GetMochaEnabled();
+	if (!jvmMochaPrefsEnabled) {
+		*errp = strdup("JSObject.getWindow() failed: java preference is disabled");
+		return NULL;
+	}
+
+	/*
+	 * Check for the mayscript tag.
+	 */
+	nsIPluginInstance* pluginInstance = (nsIPluginInstance*)pluginInstancePtr;
+	if ( (err == NS_OK) && (pluginInstance != NULL) ) {
+		nsIPluginInstancePeer* pluginPeer;
+		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
+			nsIJVMPluginTagInfo* tagInfo;
+			if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID, &tagInfo) == NS_OK) {
+				err = tagInfo->GetMayScript(&mayscript);
+				PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
+				NS_RELEASE(tagInfo);
+			}
+			NS_RELEASE(pluginPeer);
+		}
+	}
+
+	if ( !mayscript ) {
+		*errp = strdup("JSObject.getWindow() requires mayscript attribute on this Applet");
+		return NULL;
+	}
+
+	//TODO: Get to the window object using DOM.
+	// window = getDOMWindow().getScriptOwner().getJSObject().
+	return window;
 }
 
 
