@@ -1042,6 +1042,11 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       if (autocomplete.EqualsIgnoreCase("off"))
         return NS_OK;
 
+      nsCOMPtr<nsIDOMElement> passFieldElement = do_QueryInterface(passFields.ObjectAt(0));
+      passFieldElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+      if (autocomplete.EqualsIgnoreCase("off"))
+        return NS_OK;
+
 
       // Check whether this signon is already stored.
       // Note that we don't prompt the user if only the password doesn't match;
