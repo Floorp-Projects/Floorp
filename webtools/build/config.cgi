@@ -23,9 +23,6 @@ $query = new CGI;
 $field_separator = "<<fs>>";
 $configure_in = "configure.in";
 $chrome_color = "#F0A000";
-open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
-  or die "Error parsing configure.in\n";
-
 
 if ($query->param()) {
   print "Content-type: text/html\n\n\n";
@@ -58,6 +55,10 @@ if ($query->param()) {
 	   <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
 	   <table cellspacing=0 cellpadding=1>
 );
+
+  #open(OPTIONS, "m4 webify-configure.m4 $configure_in|")
+  open(OPTIONS, "<parsed-configure.txt")
+    or die "Error parsing configure.in\n";
 
   foreach (<OPTIONS>) {
     chomp;
