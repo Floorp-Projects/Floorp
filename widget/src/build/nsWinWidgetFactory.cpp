@@ -153,7 +153,7 @@ static nsModuleComponentInfo components[] =
     nsFileWidgetConstructor },
   { "File Picker",
     NS_FILEPICKER_CID,
-    "@mozilla.org/widgets/filepicker/win;1",
+    "@mozilla.org/filepicker;1",
     nsFilePickerConstructor },
   { "Horiz Scrollbar",
     NS_HORZSCROLLBAR_CID,
