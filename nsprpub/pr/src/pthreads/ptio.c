@@ -3116,7 +3116,7 @@ static PRInt32 _pr_poll_with_poll(
     if (0 == npds) PR_Sleep(timeout);
     else
     {
-#define STACK_POLL_DESC_COUNT 4
+#define STACK_POLL_DESC_COUNT 64
         struct pollfd stack_syspoll[STACK_POLL_DESC_COUNT];
         struct pollfd *syspoll;
         PRIntn index, msecs;
@@ -3127,12 +3127,21 @@ static PRInt32 _pr_poll_with_poll(
         }
         else
         {
-            syspoll = (struct pollfd*)PR_MALLOC(npds * sizeof(struct pollfd));
-            if (NULL == syspoll)
+            PRThread *me = PR_GetCurrentThread();
+            if (npds > me->syspoll_count)
             {
-                PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-                return -1;
+                PR_Free(me->syspoll_list);
+                me->syspoll_list =
+                    (struct pollfd*)PR_MALLOC(npds * sizeof(struct pollfd));
+                if (NULL == me->syspoll_list)
+                {
+                    me->syspoll_count = 0;
+                    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+                    return -1;
+                }
+                me->syspoll_count = npds;
             }
+            syspoll = me->syspoll_list;
         }
 
         for (index = 0; index < npds; ++index)
@@ -3331,9 +3340,6 @@ retry:
                 }
             }
         }
-
-        if (syspoll != stack_syspoll)
-            PR_DELETE(syspoll);
     }
     return ready;
 
@@ -3362,25 +3368,33 @@ static PRInt32 _pr_poll_with_select(
     if (0 == npds) PR_Sleep(timeout);
     else
     {
-#define STACK_POLL_DESC_COUNT 4
-        int stack_syspollfd[STACK_POLL_DESC_COUNT];
-        int *syspollfd;
+#define STACK_POLL_DESC_COUNT 64
+        int stack_selectfd[STACK_POLL_DESC_COUNT];
+        int *selectfd;
 		fd_set rd, wr, ex, *rdp = NULL, *wrp = NULL, *exp = NULL;
 		struct timeval tv, *tvp;
         PRIntn index, msecs, maxfd = 0;
 
         if (npds <= STACK_POLL_DESC_COUNT)
         {
-            syspollfd = stack_syspollfd;
+            selectfd = stack_selectfd;
         }
         else
         {
-            syspollfd = (int *)PR_MALLOC(npds * sizeof(int));
-            if (NULL == syspollfd)
+            PRThread *me = PR_GetCurrentThread();
+            if (npds > me->selectfd_count)
             {
-                PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-                return -1;
+                PR_Free(me->selectfd_list);
+                me->selectfd_list = (int *)PR_MALLOC(npds * sizeof(int));
+                if (NULL == me->selectfd_list)
+                {
+                    me->selectfd_count = 0;
+                    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+                    return -1;
+                }
+                me->selectfd_count = npds;
             }
+            selectfd = me->selectfd_list;
         }
 		FD_ZERO(&rd);
 		FD_ZERO(&wr);
@@ -3440,7 +3454,7 @@ static PRInt32 _pr_poll_with_select(
                     {
                         if (0 == ready)
                         {
-                            syspollfd[index] = bottom->secret->md.osfd;
+                            selectfd[index] = bottom->secret->md.osfd;
                             if (in_flags_read & PR_POLL_READ)
                             {
                                 pds[index].out_flags |=
@@ -3473,10 +3487,10 @@ static PRInt32 _pr_poll_with_select(
 								FD_SET(bottom->secret->md.osfd, &ex);
 								exp = &ex;
 							}
-							if ((syspollfd[index] > maxfd) &&
+							if ((selectfd[index] > maxfd) &&
 									(pds[index].out_flags ||
 									(pds[index].in_flags & PR_POLL_EXCEPT)))
-								maxfd = syspollfd[index];
+								maxfd = selectfd[index];
                         }
                     }
                     else
@@ -3497,13 +3511,12 @@ static PRInt32 _pr_poll_with_select(
         }
         if (0 == ready)
         {
-			if ((maxfd + 1) > FD_SETSIZE) {
+			if ((maxfd + 1) > FD_SETSIZE)
+			{
 				/*
 				 * maxfd too large to be used with select, fall back to
 				 * calling poll
 				 */
-				if (syspollfd != stack_syspollfd)
-					PR_DELETE(syspollfd);
 				return(_pr_poll_with_poll(pds, npds, timeout));
 			}
             switch (timeout)
@@ -3562,7 +3575,7 @@ retry:
             			if ((NULL != pds[index].fd) &&
 											(0 != pds[index].in_flags))
 						{
-							if (fcntl(syspollfd[index], F_GETFL, 0) == -1)
+							if (fcntl(selectfd[index], F_GETFL, 0) == -1)
 							{
                     			pds[index].out_flags = PR_POLL_NVAL;
 								ready++;
@@ -3579,7 +3592,7 @@ retry:
                     PRInt16 out_flags = 0;
                     if ((NULL != pds[index].fd) && (0 != pds[index].in_flags))
                     {
-						if (FD_ISSET(syspollfd[index], &rd))
+						if (FD_ISSET(selectfd[index], &rd))
 						{
 							if (pds[index].out_flags
 							& _PR_POLL_READ_SYS_READ)
@@ -3592,7 +3605,7 @@ retry:
 								out_flags |= PR_POLL_WRITE;
 							}
 						}
-						if (FD_ISSET(syspollfd[index], &wr))
+						if (FD_ISSET(selectfd[index], &wr))
 						{
 							if (pds[index].out_flags
 							& _PR_POLL_READ_SYS_WRITE)
@@ -3605,16 +3618,13 @@ retry:
 								out_flags |= PR_POLL_WRITE;
 							}
 						}
-						if (FD_ISSET(syspollfd[index], &ex))
+						if (FD_ISSET(selectfd[index], &ex))
 							out_flags |= PR_POLL_EXCEPT;
                     }
                     pds[index].out_flags = out_flags;
                 }
             }
         }
-
-        if (syspollfd != stack_syspollfd)
-            PR_DELETE(syspollfd);
     }
     return ready;
 
