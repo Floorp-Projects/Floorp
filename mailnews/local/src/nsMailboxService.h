@@ -63,6 +63,7 @@ protected:
                         nsIMsgWindow * aMsgWindow,
 										    nsIUrlListener * aUrlListener,
                         nsMailboxAction mailboxAction,
+                        const PRUnichar * aCharsetOverride,
                         nsIURI ** aURL);
 };
 

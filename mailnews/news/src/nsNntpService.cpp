@@ -188,6 +188,8 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(nntpUrl));
     msgUrl->SetMsgWindow(aMsgWindow);
     nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
+    nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
+    i18nurl->SetCharsetOverRide(aCharsetOverride);
 
     // now is where our behavior differs....if the consumer is the docshell then we want to 
     // run the url in the webshell in order to display it. If it isn't a docshell then just

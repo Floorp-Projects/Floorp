@@ -104,7 +104,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
     nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
     if (!moveMessage)
         mailboxAction = nsIMailboxUrl::ActionCopyMessage;
-  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, mailboxAction, aURL);
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, mailboxAction, nsnull, aURL);
 }
 
 nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
@@ -123,6 +123,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
                                         nsIMsgWindow * aMsgWindow,
 										                    nsIUrlListener * aUrlListener,
                                         nsMailboxAction mailboxAction,
+                                        const PRUnichar * aCharsetOverride,
                                         nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
@@ -135,6 +136,8 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 		nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
     msgUrl->SetMsgWindow(aMsgWindow);
+    nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
+    i18nurl->SetCharsetOverRide(aCharsetOverride);
 
 		// instead of running the mailbox url like we used to, let's try to run the url in the docshell...
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
@@ -161,7 +164,7 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 {
   return FetchMessage(aMessageURI, aDisplayConsumer,
                       aMsgWindow,aUrlListener,
-                      nsIMailboxUrl::ActionDisplayMessage, aURL);
+                      nsIMailboxUrl::ActionDisplayMessage, aCharsetOveride, aURL);
 }
 
 /* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
@@ -390,7 +393,7 @@ nsresult nsMailboxService::DisplayMessageForPrinting(const char* aMessageURI,
 {
   mPrintingOperation = PR_TRUE;
   nsresult rv = FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, 
-                      nsIMailboxUrl::ActionDisplayMessage, aURL);
+                      nsIMailboxUrl::ActionDisplayMessage, nsnull, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;
 }

@@ -366,6 +366,8 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       }
 
       nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+      nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(imapUrl));
+      i18nurl->SetCharsetOverRide(aCharsetOverride);
 
       PRUint32 messageSize;
 
