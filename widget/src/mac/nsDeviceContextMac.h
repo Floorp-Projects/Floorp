@@ -67,6 +67,7 @@ protected:
   nsDrawingSurface 			mSurface ;
   PRUint32 							mDepth;
   nsIDeviceContextSpec  *mSpec;
+  GrafPtr								mOldPort;
 
 
 public:
