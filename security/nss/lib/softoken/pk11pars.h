@@ -751,8 +751,8 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
     } else {
     	slotString = PR_smprintf("0x%08x=[%s %s]",slotID,flagPair,rootFlagsPair);
     }
-    pk11_freePair(flags);
-    pk11_freePair(rootFlags);
+    pk11_freePair(flagPair);
+    pk11_freePair(rootFlagsPair);
     return slotString;
 }
 
