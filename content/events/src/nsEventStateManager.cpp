@@ -683,6 +683,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             nsEvent event;
             event.eventStructType = NS_EVENT;
             event.message = NS_BLUR_CONTENT;
+            event.flags = 0;
             nsCOMPtr<nsIEventStateManager> esm;
             oldPresContext->GetEventStateManager(getter_AddRefs(esm));
             esm->SetFocusedContent(gLastFocusedContent);
