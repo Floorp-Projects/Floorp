@@ -737,6 +737,9 @@ case $os in
 	      | -mingw32* | -linux-gnu* | -uxpv*)
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
+	-beos*)
+		os=-beos
+		;;
 	-linux*)
 		os=`echo $os | sed -e 's|linux|linux-gnu|'`
 		;;
