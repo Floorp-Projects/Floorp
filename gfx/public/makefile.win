@@ -43,6 +43,7 @@ EXPORTS =				\
   nsDeviceContext.h \
   nsIDeviceContextSpec.h \
   nsIDeviceContextSpecFactory.h \
+  nsColorNameIDs.h \
 	$(NULL)
 
 MODULE=raptor 
