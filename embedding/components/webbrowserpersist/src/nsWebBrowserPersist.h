@@ -129,6 +129,8 @@ private:
     nsresult FixRedirectedChannelEntry(nsIChannel *aNewChannel);
 
     void EndDownload(nsresult aResult = NS_OK);
+    nsresult SaveGatheredURIs(nsIURI *aFileAsURI);
+    PRBool SerializeNextFile();
     void CalcTotalProgress();
 
     // nsDOMWalkerCallback method
@@ -174,6 +176,7 @@ private:
     PRPackedBool              mCompleted;
     PRPackedBool              mStartSaving;
     PRPackedBool              mReplaceExisting;
+    PRPackedBool              mSerializingOutput;
     PRUint32                  mPersistFlags;
     PRUint32                  mPersistResult;
     PRInt32                   mTotalCurrentProgress;
