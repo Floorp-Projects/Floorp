@@ -637,7 +637,7 @@ sub filterEmailGroup ($$$) {
         # If this user is the one who made the change in the first place,
         # and they prefer not to receive mail about their own changes,
         # filter them from the list.
-        if (lc($user) eq $nametoexclude && $prefs{'ExcludeSelf'} eq 'on') {
+        if (lc($user) eq lc($nametoexclude) && $prefs{'ExcludeSelf'} eq 'on') {
             push(@excludedAddresses, $user);
             next;
         }
