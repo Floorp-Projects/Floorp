@@ -70,11 +70,11 @@ print "The raw version id is:  $inDefaultProductVersion\n";
 
 # $inDefaultGreVersion is the version that will be used to build GRE.  It is
 # passed to win_gre/makeall.pl.
-$inDefaultGreVersion  = $ARGV[1];
-$inStagePath          = "$topsrcdir/stage";
-$inDistPath           = "$topsrcdir/dist";
-$inXpiURL             = "ftp://not.supplied.com";
-$inRedirIniURL        = $inXpiURL;
+$inDefaultGreVersion      = $ARGV[1];
+$inStagePath              = "$topsrcdir/stage";
+$inDistPath               = "$topsrcdir/dist";
+$inXpiURL                 = "ftp://not.supplied.com";
+$inRedirIniURL            = $inXpiURL;
 $seiFileNameGeneric       = "nsinstall.exe";
 $seiFileNameSpecific      = "mozilla-win32-installer.exe";
 $seiStubRootName          = "mozilla-win32-stub-installer";
@@ -430,8 +430,7 @@ sub ParseArgv
   my(@myArgv) = @_;
   my($counter);
 
-  # The first 3 arguments are required, so start on the 4th.
-  for($counter = 3; $counter <= $#myArgv; $counter++)
+  for($counter = 0; $counter <= $#myArgv; $counter++)
   {
     if($myArgv[$counter] =~ /^[-,\/]h$/i)
     {
