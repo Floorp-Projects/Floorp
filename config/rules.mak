@@ -417,16 +417,16 @@ INSTALL_FILES: $(INSTALL_FILE_LIST)
 # It's to be linked into a meta-component. Add the component name to
 # the meta component's list
 export::
-        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_COMPS:\=/) $(LIBRARY_NAME)
-        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_COMP_NAMES:\=/) $(MODULE_NAME)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_COMPS:\=/) $(LIBRARY_NAME)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_COMP_NAMES:\=/) $(MODULE_NAME)
 
 !else # defined(META_COMPONENT)
 # Otherwise, it's to be linked into the main executable. Add the component
 # name to the list of components, and the library name to the list of
 # static libs.
 export::
-        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_COMPS:\=/) $(LIBRARY_NAME)
-        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_COMP_NAMES:\=/) $(MODULE_NAME)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_COMPS:\=/) $(LIBRARY_NAME)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_COMP_NAMES:\=/) $(MODULE_NAME)
 
 !endif # defined(META_COMPONENT)
 
@@ -467,14 +467,14 @@ clobber::
 # meta component's list
 
 export::
-        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_LIBS:\=/) $(LIBRARY_NAME)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(META_LINK_LIBS:\=/) $(LIBRARY_NAME)
 
 !else # defined(META_COMPONENT)
 # Otherwise, it's to be linked into the main executable. Add the
 # library to the list of static libs.
 
 export::
-        $(PERL) $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_LIBS:\=/) $(LIBRARY_NAME)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(_NO_FLOCK) $(FINAL_LINK_LIBS:\=/) $(LIBRARY_NAME)
 
 !endif # defined(META_COMPONENT)
 

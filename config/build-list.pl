@@ -31,12 +31,14 @@
 
 use Fcntl qw(:DEFAULT :flock);
 use Getopt::Std;
+use mozLock;
 
 sub usage() {
     print "$0 [-l] <filename> <entry>\n";
     exit(1);
 }
 
+$lockfile = 
 $nofilelocks = 0;
 
 getopts("l");
@@ -46,6 +48,8 @@ $nofilelocks = 1 if defined($::opt_l);
 $file = shift;
 $entry = shift;
 
+$lockfile = $file . ".lck";
+
 # touch the file if it doesn't exist
 if ( ! -e "$file") {
     $now = time;
@@ -54,7 +58,7 @@ if ( ! -e "$file") {
 
 # This needs to be atomic
 open(OUT, ">>$file") || die ("$file: $!\n");
-flock(OUT, LOCK_EX) unless $nofilelocks;
+mozLock($lockfile) unless $nofilelocks;
 open(RES, "grep -c '^$entry\$' $file |") or $err = $!;
 if ($err) {
 	flock(OUT,LOCK_UN) unless $nofilelocks;
@@ -65,7 +69,7 @@ close(RES);
 if (!$val) {
     print OUT "$entry\n";
 }
-flock(OUT, LOCK_UN) unless $nofilelocks;
+mozUnlock($lockfile) unless $nofilelocks;
 close(OUT);
 
 exit(0);
