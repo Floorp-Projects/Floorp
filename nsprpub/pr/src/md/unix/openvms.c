@@ -187,3 +187,30 @@ int thread_resume(PRThread *thr_id) {
 
     return 0;
 }
+
+
+#ifdef AS_IS
+/*
+** These are here because of the problems we have when
+** compiling AS_IS. After much trying to fix this problem
+** with macro definitions in _pth.h, I finally gave up
+** and put these jackets here. So now these two calls both
+** map onto their lowercase version, and the lowercase
+** version here just calls the uppercase version.
+*/
+
+#undef PTHREAD_MUTEX_INIT
+#undef PTHREAD_COND_INIT
+
+int pthread_mutex_init (
+	pthread_mutex_t *mutex,
+	const pthread_mutexattr_t *attr) {
+    return PTHREAD_MUTEX_INIT(mutex,attr);
+}
+
+int pthread_cond_init (
+        pthread_cond_t                  *cond,
+        const pthread_condattr_t        *attr){
+    return PTHREAD_COND_INIT (cond,attr);
+}
+#endif
