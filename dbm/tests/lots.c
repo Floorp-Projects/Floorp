@@ -251,7 +251,6 @@ VerifyData(DBT *data, int32 num, key_type_enum key_type)
 int
 VerifyRange(int32 low, int32 high, int32 should_exist, key_type_enum key_type)
 {
-	char key_buf[128];
 	DBT *key, data;
 	int32 num;
 	int status;
@@ -348,9 +347,10 @@ GenData(int32 num)
 int
 AddOrDelRange(int32 low, int32 high, int action, key_type_enum key_type)
 {
-	char key_buf[128];
 	DBT *key, *data;
+#if 0 /* only do this if your really analy checking the puts */
 	DBT tmp_data;
+#endif 
 	int32 num;
 	int status;
 
