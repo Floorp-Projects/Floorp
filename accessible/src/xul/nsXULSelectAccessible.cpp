@@ -379,11 +379,13 @@ NS_IMETHODIMP nsXULListboxAccessible::GetAccState(PRUint32 *_retval)
   */
 NS_IMETHODIMP nsXULListboxAccessible::GetAccValue(nsAString& _retval)
 {
+  _retval.Truncate();
   nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mDOMNode));
   if (select) {
     nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
     select->GetSelectedItem(getter_AddRefs(selectedItem));
-    return selectedItem->GetValue(_retval);
+    if (selectedItem)
+      return selectedItem->GetValue(_retval);
   }
   return NS_ERROR_FAILURE;
 }
