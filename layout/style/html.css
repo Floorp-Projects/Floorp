@@ -881,7 +881,7 @@ button:focus:-moz-focus-inner {
    border : 1px dotted black;
 }
 
-input[type=text] {
+input[type="text"] {
   box-sizing: border-box;
   font-family:-moz-fixed;
   border: 2px inset rgb(204, 204, 204); /* for Nav Quirks */
@@ -890,7 +890,7 @@ input[type=text] {
   color: black;
   padding: 0px;
   margin-top:    1px;
-  margin-bottom: 1px;
+  margin-bottom: 0px;
   margin-left:   0px;
   margin-right:  0px;
 } 
