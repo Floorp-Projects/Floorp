@@ -281,7 +281,6 @@ AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_AWK
-AC_PATH_PROGS(PERL, perl5 perl, :)
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
 AC_PATH_PROGS(PERL, perl5 perl, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
@@ -1751,11 +1750,6 @@ else
    MOZ_NATIVE_NSPR=1
 fi
 
-USE_NSPR_AUTOCONF=
-MOZ_ARG_ENABLE_BOOL(nspr-autoconf,
-    [  --enable-nspr-autoconf  Use autoconf when building nspr],
-    USE_NSPR_AUTOCONF=1)
-
 dnl See if mmap sees writes
 dnl ========================================================
 dnl For cross compiling, just define it as no, which is a safe default
@@ -2711,6 +2705,11 @@ dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
 MOZ_ARG_ENABLE_BOOL(idltool,
 [  --enable-idlc           Build idl tool (default=no) ],
   BUILD_IDLC=1)
+
+USE_NSPR_AUTOCONF=
+MOZ_ARG_ENABLE_BOOL(nspr-autoconf,
+    [  --enable-nspr-autoconf  Use autoconf when building nspr],
+    USE_NSPR_AUTOCONF=1)
 
 MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
