@@ -138,8 +138,6 @@ protected:
     HT_Resource getMenuFolder         ();
 	XP_Bool		getOnlyHeaders		  ();
 
-    void getStyleAndLayout(HT_Resource , int32 *, unsigned char * );
-
     // Item callbacks
     static void      item_armed_cb      (Widget,XtPointer,XtPointer);
     static void      item_disarmed_cb   (Widget,XtPointer,XtPointer);

@@ -33,14 +33,17 @@
 #include "xp_str.h"
 #include "xpassert.h"
 
-#include "felocale.h"		// fe_ConvertToXmString()
+#include "felocale.h"		// For fe_ConvertToXmString()
 #include "intl_csi.h"		// For INTL_ functions
+#include "prefapi.h"		// For PREF_GetIntPref
 
 #include "xfe.h"			// For fe_FormatDocTitle()
 
 #include <Xfe/Xfe.h>		// For XfeIsAlive()
 #include <Xfe/Label.h>		// For XfeIsLabel()
 #include <Xm/Label.h>		// For XmIsLabel()
+
+#include <Xfe/Button.h>		// For XmBUTTON_ defines
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -527,5 +530,130 @@ XFE_RDFUtils::getPixmapsForEntry(Widget			item,
     {
         *armedMaskOut = armedMask;
     }
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Style and layout
+//
+//////////////////////////////////////////////////////////////////////////
+/* static */ int32
+XFE_RDFUtils::getStyleForEntry(HT_Resource entry)
+{
+	XP_ASSERT( entry != NULL );
+
+	int32			style = BROWSER_TOOLBAR_TEXT_ONLY;
+    void *			data = NULL;
+
+    // Get the Toolbar displaymode from HT
+    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), 
+					   gNavCenter->toolbarDisplayMode, 
+					   HT_COLUMN_STRING, 
+					   &data);
+
+	// No value provided initially. So get it from prefs and set in HT
+    if (!data)
+    {
+		/* int result = */ PREF_GetIntPref("browser.chrome.toolbar_style", 
+									 &style);
+		
+       if (style == BROWSER_TOOLBAR_TEXT_ONLY)
+	   {
+		   HT_SetNodeData(HT_TopNode(HT_GetView(entry)), 
+						  gNavCenter->toolbarDisplayMode, 
+						  HT_COLUMN_STRING, 
+						  "text");
+	   }
+       else if (style == BROWSER_TOOLBAR_ICONS_ONLY)
+	   {
+		   HT_SetNodeData(HT_TopNode(HT_GetView(entry)), 
+						  gNavCenter->toolbarDisplayMode, 
+						  HT_COLUMN_STRING, 
+						  "pictures");
+	   }
+       else
+	   {
+		   HT_SetNodeData(HT_TopNode(HT_GetView(entry)), 
+						  gNavCenter->toolbarDisplayMode, 
+						  HT_COLUMN_STRING, 
+						  "PicturesAndText");
+	   }
+    }
+	// Value is found in HT
+    else 
+	{
+		char * answer = (char *) data;
+      
+		if ((!XP_STRCASECMP(answer, "text")))
+		{ 
+			style = BROWSER_TOOLBAR_TEXT_ONLY;
+		}
+		else if ((!XP_STRCASECMP(answer, "icons")))
+		{
+			style = BROWSER_TOOLBAR_ICONS_ONLY;
+		}
+		else
+		{
+			style = BROWSER_TOOLBAR_ICONS_AND_TEXT;
+		}
+    }
+
+	return style;
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ unsigned char
+XFE_RDFUtils::getButtonLayoutForEntry(HT_Resource entry,int32 style)
+{
+	XP_ASSERT( entry != NULL ) ;
+
+	unsigned char		layout = XmBUTTON_LABEL_ONLY;
+    void *				data = NULL;
+
+    if (style == BROWSER_TOOLBAR_ICONS_AND_TEXT) 
+	{
+		// Get the Toolbar bitmap position from HT */
+		HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), 
+						   gNavCenter->toolbarBitmapPosition, 
+						   HT_COLUMN_STRING, 
+						   &data);
+
+		if (data)
+		{
+			char * answer = (char *) data;
+
+			if ((!XP_STRCASECMP(answer, "top")))
+			{ 
+				layout = XmBUTTON_LABEL_ON_BOTTOM;
+			}
+			else if ((!XP_STRCASECMP(answer, "side")))
+			{
+				layout = XmBUTTON_LABEL_ON_RIGHT;
+			}
+		}
+		// Value not provided. It is top for command buttons and side 
+		// for personal
+		else 
+		{
+			if (XFE_RDFUtils::ht_IsFECommand(entry))
+			{
+				layout = XmBUTTON_LABEL_ON_BOTTOM;
+			}
+			else
+			{
+				layout = XmBUTTON_LABEL_ON_RIGHT;
+			}
+		}
+	}
+    else if (style == BROWSER_TOOLBAR_ICONS_ONLY)
+    {
+		layout = XmBUTTON_PIXMAP_ONLY;
+    } 
+    else if (style == BROWSER_TOOLBAR_TEXT_ONLY)
+    {
+		layout = XmBUTTON_LABEL_ONLY;
+    }
+
+	return layout;
 }
 //////////////////////////////////////////////////////////////////////////

@@ -378,13 +378,11 @@ XFE_RDFToolbar::updateRoot()
 /* virtual */ void
 XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 {
-    int32 toolbar_style;
-   unsigned char layout;
+    int32			style = XFE_RDFUtils::getStyleForEntry(entry);
+	unsigned char	layout = XFE_RDFUtils::getButtonLayoutForEntry(entry,
+																   style);
 
-    getStyleAndLayout(entry, &toolbar_style, &layout);
-
-
-    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    if (style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
 		XtVaSetValues(item,
 					  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
@@ -424,13 +422,12 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 /* virtual */ void
 XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 {
-    int32 toolbar_style;
-    unsigned char layout;
-
-    getStyleAndLayout(entry, &toolbar_style, &layout);
+    int32			style = XFE_RDFUtils::getStyleForEntry(entry);
+	unsigned char	layout = XFE_RDFUtils::getButtonLayoutForEntry(entry,
+																   style);
     D(printf("XFE_RDFToolbar::configureXfeCascade: toolbar_style = %d layout = %d\n", toolbar_style, layout););
 
-    if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    if (style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
 		XtVaSetValues(item,
 					  XmNpixmap,			XmUNSPECIFIED_PIXMAP,

@@ -120,6 +120,16 @@ public:
 											 Pixmap *		maskOut,
 											 Pixmap *		armedPixmapOut,
 											 Pixmap *		armedMaskOut);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Style and layout interface                                       //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static int32			getStyleForEntry		(HT_Resource	entry);
+
+	static unsigned char	getButtonLayoutForEntry	(HT_Resource	entry,
+													 int32			style);
 };
 
 #endif // _xfe_rdf_utils_h_

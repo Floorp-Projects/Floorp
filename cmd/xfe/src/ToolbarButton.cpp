@@ -127,17 +127,19 @@ XFE_ToolbarButton::configure()
 									 getHtResource());
 
 	// Set the item's style and layout
-    int32			button_style = getButtonStyle();
-	unsigned char	button_layout = styleToLayout(button_style);
+	HT_Resource		entry = getHtResource();
+    int32			style = XFE_RDFUtils::getStyleForEntry(entry);
+	unsigned char	layout = XFE_RDFUtils::getButtonLayoutForEntry(entry,
+																   style);
 
-    if (button_style == BROWSER_TOOLBAR_TEXT_ONLY)
+    if (style == BROWSER_TOOLBAR_TEXT_ONLY)
 	{
 		XtVaSetValues(m_widget,
 					  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
 					  XmNpixmapMask,		XmUNSPECIFIED_PIXMAP,
 					  NULL);
 
-		XtVaSetValues(m_widget, XmNbuttonLayout, button_layout, NULL);
+		XtVaSetValues(m_widget, XmNbuttonLayout, layout, NULL);
 	}
 	else
 	{
@@ -154,7 +156,7 @@ XFE_ToolbarButton::configure()
         XtVaSetValues(m_widget,
                       XmNpixmap,		pixmap,
                       XmNpixmapMask,	pixmapMask,
-                      XmNbuttonLayout,	button_layout,
+                      XmNbuttonLayout,	layout,
                       NULL);
 	}
 
@@ -184,134 +186,6 @@ XFE_ToolbarButton::addCallbacks()
 				  (XtPointer) this);
 }
 //////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//
-// Style and layout interface
-//
-//////////////////////////////////////////////////////////////////////////
-int32
-XFE_ToolbarButton::getButtonStyle()
-{
-	int32			button_style = BROWSER_TOOLBAR_TEXT_ONLY;
-    void *			data = NULL;
-	HT_Resource		entry = getHtResource();
-
-	XP_ASSERT( entry != NULL ) ;
-
-    // Get the Toolbar displaymode from HT
-    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), 
-					   gNavCenter->toolbarDisplayMode, 
-					   HT_COLUMN_STRING, 
-					   &data);
-
-	// No value provided initially. So get it from prefs and set in HT
-    if (!data)
-    {
-		/* int result = */ PREF_GetIntPref("browser.chrome.toolbar_style", 
-									 &button_style);
-		
-       if (button_style == BROWSER_TOOLBAR_TEXT_ONLY)
-	   {
-		   HT_SetNodeData(HT_TopNode(HT_GetView(entry)), 
-						  gNavCenter->toolbarDisplayMode, 
-						  HT_COLUMN_STRING, 
-						  "text");
-	   }
-       else if (button_style == BROWSER_TOOLBAR_ICONS_ONLY)
-	   {
-		   HT_SetNodeData(HT_TopNode(HT_GetView(entry)), 
-						  gNavCenter->toolbarDisplayMode, 
-						  HT_COLUMN_STRING, 
-						  "pictures");
-	   }
-       else
-	   {
-		   HT_SetNodeData(HT_TopNode(HT_GetView(entry)), 
-						  gNavCenter->toolbarDisplayMode, 
-						  HT_COLUMN_STRING, 
-						  "PicturesAndText");
-	   }
-    }
-	// Value is found in HT
-    else 
-	{
-		char * answer = (char *) data;
-      
-		if ((!XP_STRCASECMP(answer, "text")))
-		{ 
-			button_style = BROWSER_TOOLBAR_TEXT_ONLY;
-		}
-		else if ((!XP_STRCASECMP(answer, "icons")))
-		{
-			button_style = BROWSER_TOOLBAR_ICONS_ONLY;
-		}
-		else
-		{
-			button_style = BROWSER_TOOLBAR_ICONS_AND_TEXT;
-		}
-    }
-
-	return button_style;
-}
-//////////////////////////////////////////////////////////////////////////
-unsigned char
-XFE_ToolbarButton::styleToLayout(int32 button_style)
-{
-	unsigned char		button_layout = XmBUTTON_LABEL_ONLY;
-    void *				data = NULL;
-	HT_Resource			entry = getHtResource();
-
-	XP_ASSERT( entry != NULL ) ;
-
-    if (button_style == BROWSER_TOOLBAR_ICONS_AND_TEXT) 
-	{
-		// Get the Toolbar bitmap position from HT */
-		HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), 
-						   gNavCenter->toolbarBitmapPosition, 
-						   HT_COLUMN_STRING, 
-						   &data);
-
-		if (data)
-		{
-			char * answer = (char *) data;
-
-			if ((!XP_STRCASECMP(answer, "top")))
-			{ 
-				button_layout = XmBUTTON_LABEL_ON_BOTTOM;
-			}
-			else if ((!XP_STRCASECMP(answer, "side")))
-			{
-				button_layout = XmBUTTON_LABEL_ON_RIGHT;
-			}
-		}
-		// Value not provided. It is top for command buttons and side 
-		// for personal
-		else 
-		{
-			if (XFE_RDFUtils::ht_IsFECommand(entry))
-			{
-				button_layout = XmBUTTON_LABEL_ON_BOTTOM;
-			}
-			else
-			{
-				button_layout = XmBUTTON_LABEL_ON_RIGHT;
-			}
-		}
-	}
-    else if (button_style == BROWSER_TOOLBAR_ICONS_ONLY)
-    {
-		button_layout = XmBUTTON_PIXMAP_ONLY;
-    } 
-    else if (button_style == BROWSER_TOOLBAR_TEXT_ONLY)
-    {
-		button_layout = XmBUTTON_LABEL_ONLY;
-    }
-
-	return button_layout;
-}
-//////////////////////////////////////////////////////////////////////////
-
 
 //////////////////////////////////////////////////////////////////////////
 //
