@@ -634,7 +634,6 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
 {
   nsresult rv = NS_OK;
   nsCAutoString	folderURI;
-  nsMsgKey key;
 
   nsCOMPtr<nsIImapUrl> imapUrl;
   nsCAutoString urlSpec;
@@ -645,7 +644,7 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
   nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
 
   msgurl->SetMsgWindow(aMsgWindow);
-
+  msgurl->SetSearchSession(aSearchSession);
   imapUrl->AddChannelToLoadGroup();
   rv = SetImapUrlSink(aMsgFolder, imapUrl);
 
