@@ -80,6 +80,35 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
     if (count == 0)
         return NS_OK;
 
+    /*
+     * 3rd party query integration with Mozilla is achieved 
+     * by calling nsAbLDAPDirectoryQuery::DoQuery(). Thus
+     * we can arrive here with a query asking for all the
+     * ldap attributes using the card:nsIAbCard interface.
+     *
+     * So we need to check that we are not creating a condition 
+     * filter against this expression otherwise we will end up with an invalid 
+     * filter equal to "(|)".
+    */
+    
+    if (count == 1 )
+    {
+        nsCOMPtr<nsISupports> item;
+        rv = childExpressions->GetElementAt (0, getter_AddRefs (item));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIAbBooleanConditionString> childCondition(do_QueryInterface(item, &rv));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLCString name;
+            rv = childCondition->GetName (getter_Copies (name));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if(name.Equals("card:nsIAbCard"))
+                return NS_OK;
+        }
+    }
+
     filter += NS_LITERAL_CSTRING("(");
     switch (operation)
     {
