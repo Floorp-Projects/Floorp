@@ -930,7 +930,7 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
         nsCOMPtr<nsIFileSpec> spec;
         rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
         if (NS_SUCCEEDED(rv)) {
-                rv = spec->GetPersistentDescriptorString(string);
+        		rv = spec->GetNativePath(string);
                 if (NS_SUCCEEDED(rv)) {
                         return NS_OK;
                 }
