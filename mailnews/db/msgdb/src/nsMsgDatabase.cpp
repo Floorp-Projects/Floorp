@@ -506,10 +506,10 @@ nsMsgDatabase::CleanupCache()
       nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
       if (pMessageDB)
       {
-        // break cycle with folder -> parse msg state -> db
-        pMessageDB->m_folder = nsnull;
         // hold onto the db until we're finished closing it.
         nsCOMPtr <nsIMsgDatabase> kungFuGrip = pMessageDB;
+        // break cycle with folder -> parse msg state -> db
+        pMessageDB->m_folder = nsnull;
         pMessageDB->ForceClosed();
         kungFuGrip = nsnull;
         // look for db in cache before deleting, 
