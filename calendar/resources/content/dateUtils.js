@@ -165,21 +165,61 @@ function DateFormater( )
   this.monthIndex = -1;
   this.dayIndex = -1;
   this.twoDigitYear = false;
+  this.alphaMonths = null;
+  this.probeSucceeded = false;
   
   var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)\s*$/; //digits & nonDigits
   var probeDate = new Date(2002,3-1,4); // month is 0-based
   var probeString = this.getShortFormatedDate(probeDate);
 
   var probeArray = parseShortDateRegex.exec(probeString);
-  for (var i = 1; i <= 3; i++) { 
-    switch (Number(probeArray[i])) {
-      case 02:    this.twoDigitYear = true; // fall thru
-      case 2002:  this.yearIndex = i;       break;
-      case 3:     this.monthIndex = i;      break;
-      case 4:     this.dayIndex = i;        break;
+
+  if (probeArray != null) { 
+    // Numeric month format
+    for (var i = 1; i <= 3; i++) { 
+      switch (Number(probeArray[i])) {
+        case 02:    this.twoDigitYear = true; // fall thru
+        case 2002:  this.yearIndex = i;       break;
+        case 3:     this.monthIndex = i;      break;
+        case 4:     this.dayIndex = i;        break;
+      }
     }
+    //All three indexes are set (not -1) at this point.
+    this.probeSucceeded = true;
+  } else {
+    // Alphabetic month format, such as "dd MMM yy" or "MMMM dd, yyyy"
+    // (\d+|[^\d\W]) is digits or letters, not both together.
+    // Allows 31dec1999 (no delimiters between parts) if OS does (windows does not).
+    // Allows Dec 31, 1999 (comma and space between parts)
+    parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\s*$/;
+    probeArray = parseShortDateRegex.exec(probeString);
+    if (probeArray != null) {
+      for (var i = 1; i <= 3; i++) { 
+        switch (Number(probeArray[i])) {
+          case 02:    this.twoDigitYear = true; // fall thru
+          case 2002:  this.yearIndex = i;       break;
+          case 4:     this.dayIndex = i;        break;
+          default:    this.monthIndex = i;      break;
+        }
+      }
+      if (this.yearIndex != -1 && this.dayIndex != -1 && this.monthIndex != -1) {
+        this.probeSucceeded = true;
+        // Fill this.alphaMonths with month names.
+        this.alphaMonths = new Array(12);
+        for (var m = 0; m < 12; m++) {
+          probeDate.setMonth(m);
+          probeString = this.getShortFormatedDate(probeDate);
+          probeArray = parseShortDateRegex.exec(probeString);
+          if (probeArray != null) 
+            this.alphaMonths[m] = probeArray[this.monthIndex].toUpperCase();
+          else
+            this.probeSucceeded = false;
+        }
+      }
+    }
+    if (! this.probeSucceeded)
+      dump("\nOperating system short date format is not recognized: "+probeString+"\n");
   }
-  //All three indexes are set (not -1) at this point.
 }
 
 
@@ -306,12 +346,39 @@ DateFormater.prototype.getShortDayName = function( dayIndex )
  */
 DateFormater.prototype.parseShortDate = function ( dateString )
 { 
-  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/;//digits & nonDigits
-  
-  // parse dateString
-  var dateNumbersArray = parseShortDateRegex.exec(dateString);
-  if (dateNumbersArray != null) {
-    var year = Number(dateNumbersArray[this.yearIndex]);
+  if (!this.probeSucceeded)
+    return null; // avoid errors accessing uninitialized data.
+
+  var year = Number.MIN_VALUE; var month = -1; var day = -1; var timeString = null;
+  if (this.alphaMonths == null) {
+    // NUMERIC DATE
+    var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/;//digits & nonDigits
+    var dateNumbersArray = parseShortDateRegex.exec(dateString);
+    if (dateNumbersArray != null) {
+      year = Number(dateNumbersArray[this.yearIndex]);
+      month = Number(dateNumbersArray[this.monthIndex]) - 1; // 0-based
+      day = Number(dateNumbersArray[this.dayIndex]);
+      timeString = dateNumbersArray[4];
+    }
+  } else {
+    // DATE WITH ALPHABETIC MONTH
+    var parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;//digits & nonDigits
+    var datePartsArray = parseShortDateRegex.exec(dateString);
+    if (datePartsArray != null) {
+      year = Number(datePartsArray[this.yearIndex]);
+      var monthString = datePartsArray[this.monthIndex].toUpperCase();
+      for (var m = 0; m < this.alphaMonths.length; m++) {
+        if (monthString == this.alphaMonths[m]) {
+          month = m;
+          break;
+        }
+      }
+      day = Number(datePartsArray[this.dayIndex]);
+      timeString = datePartsArray[4];
+    }
+  }
+  if (year != Number.MIN_VALUE && month != -1 && day != -1) {
+    // year, month, day successfully parsed
     if (this.twoDigitYear && 0 <= year && year < 100) {
       // If 2-digit year format and 0 <= year < 100,
       //   parse year as up to 30 years in future or 69 years in past.
@@ -327,7 +394,7 @@ DateFormater.prototype.parseShortDate = function ( dateString )
     }
     // if time is also present, parse it
     var hours = 0; var minutes = 0; var seconds = 0;
-    if (dateNumbersArray.length > 4 && dateNumbersArray[4] != null) {
+    if (timeString != null) {
       var time = this.parseTimeOfDay(dateNumbersArray[4]);
       if (time != null) {
         hours = time.getHours();
@@ -335,11 +402,10 @@ DateFormater.prototype.parseShortDate = function ( dateString )
         seconds = time.getSeconds();
       }
     }
-    return new Date(year, // four-digit year
-                 Number(dateNumbersArray[this.monthIndex]) - 1, // 0-based
-                    Number(dateNumbersArray[this.dayIndex]),
-                    hours, minutes, seconds, 0);
-  } else return null; // did not match regex, not a valid date
+    return new Date(year, month, day, hours, minutes, seconds, 0);
+  } else { 
+    return null; // did not match regex, not a valid date
+  }
 }
 
 // Parse a variety of time formats so that cut and paste is likely to work.
