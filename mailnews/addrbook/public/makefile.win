@@ -28,6 +28,8 @@ XPIDLSRCS =						 \
 			.\nsIAddrDatabase.idl		\
 			.\nsIAddressBook.idl		\
 			.\nsIAddrBookSession.idl		\
+			.\nsIAutoCompleteSession.idl		\
+			.\nsIAutoCompleteListener.idl		\
 			$(NULL)
 
 

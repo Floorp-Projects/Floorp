@@ -36,6 +36,7 @@
 #include "nsAddrDatabase.h"
 #include "nsAddressBook.h"
 #include "nsAddrBookSession.h"
+#include "nsAbAutoCompleteSession.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -47,6 +48,7 @@ static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID);
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kAbAutoCompleteSessionCID ,NS_ABAUTOCOMPLETESESSION_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -232,6 +234,10 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 			delete abSession;
 		return rv;
 	}  
+	else if (mClassID.Equals(kAbAutoCompleteSessionCID))
+	{
+		return NS_NewAbAutoCompleteSession(aIID, aResult);
+	}
 	return NS_NOINTERFACE;  
 }  
 
@@ -332,6 +338,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 								  path, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->RegisterComponent(kAbAutoCompleteSessionCID,
+								  "Address Book Auto Completion Session",
+								  "component://netscape/messenger/autocomplete&type=addrbook",
+								  path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) finalResult = rv;
 	return finalResult;
 }
 
@@ -371,5 +384,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->UnregisterComponent(kAddrBookSessionCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+	rv = compMgr->UnregisterComponent(kAbAutoCompleteSessionCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+	
 	return finalResult;
 }

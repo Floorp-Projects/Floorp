@@ -32,6 +32,8 @@ XPIDLSRCS =				  \
 		nsIAddrDatabase.idl	\
 		nsIAddressBook.idl	\
 		nsIAddrBookSession.idl	\
+		nsIAutoCompleteListener.idl \
+		nsIAutoCompleteSession.idl  \
 		$(NULL)
 
 EXPORTS =				\

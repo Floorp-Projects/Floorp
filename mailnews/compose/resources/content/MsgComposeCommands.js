@@ -366,3 +366,4 @@ function CompFields2Recipients(msgCompFields)
 		}
 	}
 }
+

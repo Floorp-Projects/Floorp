@@ -34,6 +34,7 @@ EXPORTS=								\
 			nsAbCardProperty.h				\
 			nsAbRDFResource.h			\
 			nsAddrBookSession.h			\
+			nsAbAutoCompleteSession.h		\
 			$(NULL)
 
 ################################################################################
@@ -52,6 +53,7 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbCardProperty.obj				\
     .\$(OBJDIR)\nsAbRDFResource.obj				\
     .\$(OBJDIR)\nsAddrBookSession.obj				\
+    .\$(OBJDIR)\nsAbAutoCompleteSession.obj		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

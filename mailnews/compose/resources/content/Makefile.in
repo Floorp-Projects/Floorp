@@ -33,6 +33,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/MsgComposeCommands.js \
 	$(srcdir)/defaultTextBody.html \
 	$(srcdir)/defaultHtmlBody.html \
+	$(srcdir)/addressAutoComplete.js \
 	$(srcdir)/composebe_en.properties \
 	$(NULL)
 

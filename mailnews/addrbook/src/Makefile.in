@@ -36,6 +36,7 @@ EXPORTS = \
 	nsAbCardProperty.h\
 	nsAbRDFResource.h\
 	nsAddrBookSession.h\
+	nsAbAutoCompleteSession.h\
 	$(NULL)
 
 CPPSRCS = \
@@ -49,6 +50,7 @@ CPPSRCS = \
 	nsAbCardProperty.cpp\
 	nsAbRDFResource.cpp\
 	nsAddrBookSession.cpp\
+	nsAbAutoCompleteSession.cpp\
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

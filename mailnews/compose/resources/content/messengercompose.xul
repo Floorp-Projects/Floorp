@@ -97,6 +97,7 @@
 
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
 <html:script language="JavaScript" src="MsgComposeCommands.js"/>
+<html:script language="JavaScript" src="addressAutoComplete.js"/>
 
 <broadcaster id="args" value="editorType=default"/>
 
@@ -245,13 +246,13 @@
 					</box>
 					<box align="vertical" flex="80%">
 						<box align="vertical" flex="100%">
- 							<html:input type="text" id="msgRecipient#1" flex="100%"/>
+							<html:input type="text" id="msgRecipient#1" flex="100%" onkeyup="if (event.which == 13) { AutoCompleteAddress('msgRecipientType#1','msgRecipient#1'); }"/>
 						</box>					
 						<box align="vertical" flex="100%">
- 							<html:input type="text" id="msgRecipient#2" flex="100%"/>
+							<html:input type="text" id="msgRecipient#2" flex="100%" onkeyup="if (event.which == 13) { AutoCompleteAddress('msgRecipientType#2','msgRecipient#2'); }"/>
 						</box>					
 						<box align="vertical" flex="100%">
- 							<html:input type="text" id="msgRecipient#3" flex="100%"/>
+							<html:input type="text" id="msgRecipient#3" flex="100%" onkeyup="if (event.which == 13) { AutoCompleteAddress('msgRecipientType#3','msgRecipient#3'); }"/>
 						</box>					
 					</box>					
 				</box>
