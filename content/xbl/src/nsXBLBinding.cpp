@@ -1000,7 +1000,7 @@ nsXBLBinding::InstallEventHandlers()
           child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
           if (value.IsEmpty())
             GetTextData(child, value);
-          AddScriptEventListener(mBoundElement, eventAtom, value, iid);
+          AddScriptEventListener(mBoundElement, eventAtom, value);
         }
 
         // We chain all our event handlers together for easy
@@ -1655,7 +1655,7 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
 }
     
 NS_IMETHODIMP
-nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
+nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue)
 {
   nsAutoString val;
   aName->ToString(val);
@@ -1694,7 +1694,7 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const
   if (!scriptOwner)
     return NS_OK;
 
-  rv = manager->AddScriptEventListener(context, scriptOwner, eventName, aValue, aIID, PR_FALSE);
+  rv = manager->AddScriptEventListener(context, scriptOwner, eventName, aValue, PR_FALSE);
 
   return rv;
 }

@@ -431,7 +431,8 @@ nsXULDocument::nsXULDocument(void)
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
       mState(eState_Master),
       mCurrentScriptProto(nsnull),
-      mBoxObjectTable(nsnull)
+      mBoxObjectTable(nsnull),
+      mNumCapturers(0)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
@@ -2030,6 +2031,13 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   return ret;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsXULDocument::EventCaptureRegistration(PRInt32 aCapturerIncrement)
+{
+  mNumCapturers += aCapturerIncrement;
+  NS_WARN_IF_FALSE(mNumCapturers >= 0, "Number of capturers has become negative");
+  return (mNumCapturers > 0 ? PR_TRUE : PR_FALSE);
+}
 
 //----------------------------------------------------------------------
 //

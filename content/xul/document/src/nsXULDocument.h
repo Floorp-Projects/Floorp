@@ -281,6 +281,7 @@ public:
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
+    NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement);
 
     // nsIXMLDocument interface
     NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
@@ -540,6 +541,7 @@ protected:
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;
     PRInt32 mNextContentID;
+    PRInt32 mNumCapturers; //Number of capturing event handlers in doc.  Used to optimize event delivery.
 
     // The following are pointers into the content model which provide access to
     // the objects triggering either a popup or a tooltip. These are marked as

@@ -77,6 +77,7 @@
 #include "nsIJSContextStack.h"
 
 #include "nsIServiceManager.h"
+#include "nsIDOMEventListener.h"
 
 #include "jsapi.h"
 
@@ -1391,24 +1392,34 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     privateEvent->SetTarget(target);
   }
 
+  PRBool intermediateCapture = PR_FALSE;
   //Capturing stage evaluation
-  //Always pass capturing up the tree before local evaulation
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
-  // XXX: Bring on the more optimized version of capturing at some point
-    //if (nsnull != mDOMSlots && nsnull != mDOMSlots->mCapturer) {
-      //mDOMSlots->mCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-    //} else {
-      // Node capturing stage
-      if (mParent) {
+    //Initiate capturing phase.  Special case first call to document
+    if (NS_EVENT_FLAG_INIT & aFlags) {
+      //Set flag to PR_TRUE here so capture will still work even with no document.  If 
+      //the document is there and correctly has no capturers it will reset back to false.
+      intermediateCapture = PR_TRUE;
+      if (mDocument) {
+        mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+
+        //Now check for the presence of intermediate capturers registered at document;
+        intermediateCapture = mDocument->EventCaptureRegistration(0);
+      }
+
+      //If intermediate capturers exist, pass capturing up the tree before local evaulation
+      if (intermediateCapture && mParent) {
         // Pass off to our parent.
         mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      } else {
-        //Initiate capturing phase.  Special case first call to document
-        if (nsnull != mDocument) {
-          mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-        }
       }
-    //}
+    }
+    else {
+      //If we've been called during the event capture phase when the event didn't initiate on this element 
+      //then intermediate capturers must exist. Pass capturing up the tree before local evaulation.
+      if (mParent) {
+        mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      }
+    }
   }
 
   if (retarget) {
@@ -1957,96 +1968,7 @@ PRBool
 nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
                               jsval *aVp)
 {
-  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION &&
-      JSVAL_IS_STRING(aID)) {
-    nsAutoString propName, prefix;
-    propName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
-    if (propName.Length() > 2)
-      prefix.Assign(propName.GetUnicode(), 2);
-    if (prefix.Equals(NS_LITERAL_STRING("on"))) {
-      nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(propName));
-      nsIEventListenerManager *manager = nsnull;
-
-      if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || atom.get() ==  nsLayoutAtoms::onclick ||
-         atom.get() == nsLayoutAtoms::onmouseover || atom.get() == nsLayoutAtoms::onmouseout) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (atom.get() == nsLayoutAtoms::onkeydown || atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (atom.get() == nsLayoutAtoms::onmousemove) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (atom.get() == nsLayoutAtoms::onfocus || atom.get() == nsLayoutAtoms::onblur) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (atom.get() == nsLayoutAtoms::onsubmit || atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
-               atom.get() == nsLayoutAtoms::onselect) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (atom.get() == nsLayoutAtoms::onload || atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
-               atom.get() == nsLayoutAtoms::onerror) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (atom.get() == nsLayoutAtoms::onpaint || atom.get() == nsLayoutAtoms::onresize ||
-               atom.get() == nsLayoutAtoms::onscroll) {
-        if (NS_OK == GetListenerManager(&manager)) {
-          nsCOMPtr<nsIScriptContext> mScriptCX;
-          if (NS_FAILED(nsContentUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
-              NS_OK != manager->RegisterScriptEventListener(mScriptCX, this,
-                                                            atom, kIDOMPaintListenerIID)) {
-            NS_RELEASE(manager);
-            return PR_FALSE;
-          }
-        }
-      }
-      NS_IF_RELEASE(manager);
-    }
-  }
-
-  return PR_TRUE;
+  return InternalRegisterCompileEventHandler(aContext, aID, aVp, PR_FALSE);
 }
 
 PRBool
@@ -2061,7 +1983,7 @@ nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
 {
   *aDidDefineProperty = PR_FALSE;
 
-  return PR_TRUE;
+  return InternalRegisterCompileEventHandler(aContext, aID, nsnull, PR_TRUE);
 }
 
 PRBool
@@ -2073,6 +1995,54 @@ nsGenericElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
 void
 nsGenericElement::Finalize(JSContext *aContext, JSObject *aObj)
 {
+}
+
+PRBool
+nsGenericElement::InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName, 
+                                                      jsval *aVp, PRBool aCompile)
+{
+  //If called from resolve there is no aVp arg to check against.  Else check for function value.
+  //In both cases check for string type starting with 'on' before continuing with handler checking.
+  if ((!aVp || JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION) && JSVAL_IS_STRING(aPropName)) {
+    const PRUnichar* str = NS_REINTERPRET_CAST(const PRUnichar *, JS_GetStringChars(JS_ValueToString(aContext, aPropName)));
+
+    if (str && str[0] == 'o' && str[1] == 'n' && str[2]) {
+      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(str)));
+
+      if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || 
+          atom.get() ==  nsLayoutAtoms::onclick || atom.get() == nsLayoutAtoms::onmouseover || 
+          atom.get() == nsLayoutAtoms::onmouseout ||atom.get() == nsLayoutAtoms::onkeydown || 
+          atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress ||
+          atom.get() == nsLayoutAtoms::onmousemove || atom.get() == nsLayoutAtoms::onfocus || 
+          atom.get() == nsLayoutAtoms::onblur || atom.get() == nsLayoutAtoms::onsubmit || 
+          atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
+          atom.get() == nsLayoutAtoms::onselect || atom.get() == nsLayoutAtoms::onload || 
+          atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
+          atom.get() == nsLayoutAtoms::onerror || atom.get() == nsLayoutAtoms::onpaint || 
+          atom.get() == nsLayoutAtoms::onresize || atom.get() == nsLayoutAtoms::onscroll) {
+
+        nsCOMPtr<nsIEventListenerManager> manager;
+        GetListenerManager(getter_AddRefs(manager));
+
+        if (manager) {
+          nsCOMPtr<nsIScriptContext> scriptContext;
+          nsresult rv = nsContentUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, GetDOMSlots()->mScriptObject),
+                                                              getter_AddRefs(scriptContext));
+          if (NS_SUCCEEDED(rv) && scriptContext) {
+            if (aCompile) {
+              rv = manager->CompileScriptEventListener(scriptContext, this, atom);
+            }
+            else {
+              rv = manager->RegisterScriptEventListener(scriptContext, this, atom);
+            }
+          }
+          if (NS_FAILED(rv))
+            return PR_FALSE;
+        }
+      }
+    }
+  }
+  return PR_TRUE;
 }
 
 // Generic DOMNode implementations
@@ -2639,8 +2609,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
 
 nsresult
 nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
-                                         const nsAReadableString& aValue,
-                                         REFNSIID aIID)
+                                         const nsAReadableString& aValue)
 {
   nsresult ret = NS_OK;
   nsCOMPtr<nsIScriptContext> context = nsnull;
@@ -2688,7 +2657,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
       nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(global));
       if (objOwner) {
         ret = manager->AddScriptEventListener(context, objOwner, aAttribute,
-                                              aValue, aIID, PR_FALSE);
+                                              aValue, PR_FALSE);
       }
     }
   }
@@ -2698,7 +2667,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
     if (manager) {
       ret = manager->AddScriptEventListener(context, this, aAttribute, aValue,
-                                            aIID, PR_TRUE);
+                                            PR_TRUE);
     }
   }
 

@@ -295,6 +295,8 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus) = 0;
 
+  NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement) = 0;
+  
   NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows=PR_TRUE) = 0;
 
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID) = 0;

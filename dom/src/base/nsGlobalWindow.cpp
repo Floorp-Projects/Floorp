@@ -64,14 +64,6 @@
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
-#include "nsIDOMDragListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMLoadListener.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMPaintListener.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventStateManager.h"
@@ -2994,6 +2986,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
       CallQueryInterface(domReturn, aReturn);
   }
   return rv;
+
 }
 
 void GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
@@ -3605,8 +3598,7 @@ void GlobalWindowImpl::FlushPendingNotifications()
 }
 
 nsresult
-GlobalWindowImpl::RegisterEventListener(const char* aEventName,
-                                        REFNSIID aIID)
+GlobalWindowImpl::RegisterCompileEventListener(const char* aEventName, PRBool aCompile)
 {
   nsCOMPtr<nsIAtom> eventName = dont_AddRef(NS_NewAtom(aEventName));
 
@@ -3623,11 +3615,14 @@ GlobalWindowImpl::RegisterEventListener(const char* aEventName,
   if (NS_OK == GetListenerManager(getter_AddRefs(manager))) {
     nsCOMPtr<nsIScriptContext> scriptCX;
     nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
-    if (!scriptCX ||
-        NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this,
-                                                       eventName,
-                                                       aIID))) {
+    if (!scriptCX) {
       return NS_ERROR_FAILURE;
+    }
+    if (aCompile) {
+      return manager->CompileScriptEventListener(scriptCX, this, eventName);
+    }
+    else {
+      return manager->RegisterScriptEventListener(scriptCX, this, eventName);
     }
   }
 
@@ -3637,266 +3632,266 @@ GlobalWindowImpl::RegisterEventListener(const char* aEventName,
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnmousedown(jsval* aOnmousedown)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onmousedown", PR_TRUE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnmousedown(jsval aOnmousedown)
 {
-  return RegisterEventListener("onmousedown", NS_GET_IID(nsIDOMMouseListener));
+  return RegisterCompileEventListener("onmousedown", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnmouseup(jsval* aOnmouseup)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onmouseup", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnmouseup(jsval aOnmouseup)
 {
-  return RegisterEventListener("onmouseup", NS_GET_IID(nsIDOMMouseListener));
+  return RegisterCompileEventListener("onmouseup", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnclick(jsval* aOnclick)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onclick", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnclick(jsval aOnclick)
 {
-  return RegisterEventListener("onclick", NS_GET_IID(nsIDOMMouseListener));
+  return RegisterCompileEventListener("onclick", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnmouseover(jsval* aOnmouseover)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onmouseover", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnmouseover(jsval aOnmouseover)
 {
-  return RegisterEventListener("onmouseover", NS_GET_IID(nsIDOMMouseListener));
+  return RegisterCompileEventListener("onmouseover", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnmouseout(jsval* aOnmouseout)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onmouseout", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnmouseout(jsval aOnmouseout)
 {
-  return RegisterEventListener("onmouseout", NS_GET_IID(nsIDOMMouseListener));
+  return RegisterCompileEventListener("onmouseout", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnkeydown(jsval* aOnkeydown)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onkeydown", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnkeydown(jsval aOnkeydown)
 {
-  return RegisterEventListener("onkeydown", NS_GET_IID(nsIDOMKeyListener));
+  return RegisterCompileEventListener("onkeydown", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnkeyup(jsval* aOnkeyup)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onkeyup", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnkeyup(jsval aOnkeyup)
 {
-  return RegisterEventListener("onkeyup", NS_GET_IID(nsIDOMKeyListener));
+  return RegisterCompileEventListener("onkeyup", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnkeypress(jsval* aOnkeypress)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onkeypress", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnkeypress(jsval aOnkeypress)
 {
-  return RegisterEventListener("onkeypress", NS_GET_IID(nsIDOMKeyListener));
+  return RegisterCompileEventListener("onkeypress", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnmousemove(jsval* aOnmousemove)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onmousemove", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnmousemove(jsval aOnmousemove)
 {
-  return RegisterEventListener("onmousemove", NS_GET_IID(nsIDOMMouseMotionListener));
+  return RegisterCompileEventListener("onmousemove", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnfocus(jsval* aOnfocus)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onfocus", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnfocus(jsval aOnfocus)
 {
-  return RegisterEventListener("onfocus", NS_GET_IID(nsIDOMFocusListener));
+  return RegisterCompileEventListener("onfocus", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnblur(jsval* aOnblur)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onblur", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnblur(jsval aOnblur)
 {
-  return RegisterEventListener("onblur", NS_GET_IID(nsIDOMFocusListener));
+  return RegisterCompileEventListener("onblur", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnsubmit(jsval* aOnsubmit)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onsubmit", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnsubmit(jsval aOnsubmit)
 {
-  return RegisterEventListener("onsubmit", NS_GET_IID(nsIDOMFormListener));
+  return RegisterCompileEventListener("onsubmit", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnreset(jsval* aOnreset)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onreset", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnreset(jsval aOnreset)
 {
-  return RegisterEventListener("onreset", NS_GET_IID(nsIDOMFormListener));
+  return RegisterCompileEventListener("onreset", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnchange(jsval* aOnchange)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onchange", PR_TRUE);
 }
 NS_IMETHODIMP
 GlobalWindowImpl::SetOnchange(jsval aOnchange)
 {
-  return RegisterEventListener("onchange", NS_GET_IID(nsIDOMFormListener));
+  return RegisterCompileEventListener("onchange", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnselect(jsval* aOnselect)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onselect", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnselect(jsval aOnselect)
 {
-  return RegisterEventListener("onselect", NS_GET_IID(nsIDOMFormListener));
+  return RegisterCompileEventListener("onselect", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnload(jsval* aOnload)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onload", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnload(jsval aOnload)
 {
-  return RegisterEventListener("onload", NS_GET_IID(nsIDOMLoadListener));
+  return RegisterCompileEventListener("onload", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnunload(jsval* aOnunload)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onunload", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnunload(jsval aOnunload)
 {
-  return RegisterEventListener("onunload", NS_GET_IID(nsIDOMLoadListener));
+  return RegisterCompileEventListener("onunload", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnclose(jsval* aOnclose)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onclose", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnclose(jsval aOnclose)
 {
-  return RegisterEventListener("onclose", NS_GET_IID(nsIDOMLoadListener));
+  return RegisterCompileEventListener("onclose", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnabort(jsval* aOnabort)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onabort", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnabort(jsval aOnabort)
 {
-  return RegisterEventListener("onabort", NS_GET_IID(nsIDOMLoadListener));
+  return RegisterCompileEventListener("onabort", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnerror(jsval* aOnerror)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onerror", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnerror(jsval aOnerror)
 {
-  return RegisterEventListener("onerror", NS_GET_IID(nsIDOMLoadListener));
+  return RegisterCompileEventListener("onerror", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnpaint(jsval* aOnpaint)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onpaint", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnpaint(jsval aOnpaint)
 {
-  return RegisterEventListener("onpaint", NS_GET_IID(nsIDOMPaintListener));
+  return RegisterCompileEventListener("onpaint", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOndragdrop(jsval* aOndragdrop)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("ondragdrop", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOndragdrop(jsval aOndragdrop)
 {
-  return RegisterEventListener("ondragdrop", NS_GET_IID(nsIDOMDragListener));
+  return RegisterCompileEventListener("ondragdrop", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnresize(jsval* aOnresize)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onresize", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnresize(jsval aOnresize)
 {
-  return RegisterEventListener("onresize", NS_GET_IID(nsIDOMPaintListener));
+  return RegisterCompileEventListener("onresize", PR_FALSE);
 }
 
 NS_IMETHODIMP    
 GlobalWindowImpl::GetOnscroll(jsval* aOnscroll)
 {
-  return NS_OK;
+  return RegisterCompileEventListener("onscroll", PR_TRUE);
 }
 NS_IMETHODIMP    
 GlobalWindowImpl::SetOnscroll(jsval aOnscroll)
 {
-  return RegisterEventListener("onscroll", NS_GET_IID(nsIDOMPaintListener));
+  return RegisterCompileEventListener("onscroll", PR_FALSE);
 }
 
 //*****************************************************************************

@@ -405,7 +405,7 @@ public:
     NS_IMETHOD SetLazyState(PRInt32 aFlags);
     NS_IMETHOD ClearLazyState(PRInt32 aFlags);
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
-    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue, REFNSIID aIID);
+    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue);
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
     NS_IMETHOD InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
                                 nsIXULTemplateBuilder* aBuilder);

@@ -96,7 +96,7 @@ public:
     /**
      * Add a script event listener to the element.
      */
-    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue, REFNSIID aIID) = 0;
+    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue) = 0;
 
     /**
      * Evil rotten hack to make mailnews work. They assume that we

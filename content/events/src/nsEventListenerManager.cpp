@@ -307,6 +307,19 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       (*listeners)->InsertElementAt((void*)ls, (*listeners)->Count());
       NS_ADDREF(aListener);
     }
+
+    if (aFlags & NS_EVENT_FLAG_CAPTURE) {
+      //If a capturer is set up on a content object it must register that with its doc
+      nsCOMPtr<nsIDocument> document;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
+      if (content) {
+        content->GetDocument(*getter_AddRefs(document));
+        if (document) {
+          //Increment capturers by 1
+          document->EventCaptureRegistration(1);
+        }
+      }
+    }
   }
 
   return NS_OK;
@@ -326,6 +339,7 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
   nsListenerStruct* ls;
   nsresult rv;
   nsCOMPtr<nsIScriptEventListener> sel = do_QueryInterface(aListener, &rv);
+  PRBool listenerRemoved = PR_FALSE;
 
   for (int i=0; i<(*listeners)->Count(); i++) {
     ls = (nsListenerStruct*)(*listeners)->ElementAt(i);
@@ -335,6 +349,7 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
         NS_RELEASE(ls->mListener);
         (*listeners)->RemoveElement((void*)ls);
         PR_DELETE(ls);
+        listenerRemoved = PR_TRUE;
       }
       break;
     }
@@ -349,8 +364,22 @@ nsresult nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListe
             NS_RELEASE(ls->mListener);
             (*listeners)->RemoveElement((void*)ls);
             PR_DELETE(ls);
+            listenerRemoved = PR_TRUE;
           }
         }
+      }
+    }
+  }
+
+  if (listenerRemoved && aFlags & NS_EVENT_FLAG_CAPTURE) {
+    //If a capturer is set up on a content object it must register that with its doc
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
+    if (content) {
+      content->GetDocument(*getter_AddRefs(document));
+      if (document) {
+        //Deccrement capturers by 1
+        document->EventCaptureRegistration(-1);
       }
     }
   }
@@ -626,41 +655,39 @@ nsEventListenerManager::FindJSEventListener(REFNSIID aIID)
 nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, 
                                                     nsIScriptObjectOwner *aOwner, 
                                                     nsIAtom* aName,
-                                                    REFNSIID aIID,
                                                     PRBool aIsString)
 {
   nsresult result = NS_OK;
   nsListenerStruct *ls;
+  PRInt32 flags;
+  nsIID iid;
 
-  ls = FindJSEventListener(aIID);
+  NS_ENSURE_SUCCESS(GetIdentifiersForType(aName, iid, &flags), NS_ERROR_FAILURE);
+  
+  ls = FindJSEventListener(iid);
 
   if (nsnull == ls) {
     //If we didn't find a script listener or no listeners existed create and add a new one.
     nsIDOMEventListener* scriptListener;
     result = NS_NewJSEventListener(&scriptListener, aContext, aOwner);
     if (NS_SUCCEEDED(result)) {
-      AddEventListenerByIID(scriptListener, aIID, NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
+      AddEventListenerByIID(scriptListener, iid, NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
       NS_RELEASE(scriptListener);
-      ls = FindJSEventListener(aIID);
+      ls = FindJSEventListener(iid);
     }
   }
 
   if (NS_SUCCEEDED(result) && ls) {
-    PRInt32 flags;
-    nsIID iid;
-    result = GetIdentifiersForType(aName, iid, &flags);
-    if (NS_SUCCEEDED(result)) {
-      //Set flag to indicate possible need for compilation later
-      if (aIsString) {
-        ls->mHandlerIsString |= flags;
-      }
-      else {
-        ls->mHandlerIsString &= ~flags;
-      }
-
-      //Set subtype flags based on event
-      ls->mSubType |= flags;
+    //Set flag to indicate possible need for compilation later
+    if (aIsString) {
+      ls->mHandlerIsString |= flags;
     }
+    else {
+      ls->mHandlerIsString &= ~flags;
+    }
+
+    //Set subtype flags based on event
+    ls->mSubType |= flags;
   }
 
   return result;
@@ -671,7 +698,6 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
                                                nsIScriptObjectOwner *aScriptObjectOwner,
                                                nsIAtom *aName,
                                                const nsAReadableString& aBody,
-                                               REFNSIID aIID,
                                                PRBool aDeferCompilation)
 {
   JSObject *scriptObject;
@@ -710,13 +736,13 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
       if (NS_FAILED(rv)) return rv;
     }
   }
-  return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, aDeferCompilation);
+  return SetJSEventListener(aContext, aScriptObjectOwner, aName, aDeferCompilation);
 }
 
-nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, 
+nsresult
+nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, 
                                                              nsIScriptObjectOwner *aScriptObjectOwner, 
-                                                             nsIAtom *aName,
-                                                             REFNSIID aIID)
+                                                             nsIAtom *aName)
 {
   // Check that we have access to set an event listener. Prevents snooping attacks across 
   // domains by setting onkeypress handlers, for instance.
@@ -742,7 +768,90 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
   {
     return rv;
   }
-  return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, PR_FALSE);
+  return SetJSEventListener(aContext, aScriptObjectOwner, aName, PR_FALSE);
+}
+
+nsresult
+nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext, 
+                                                            nsIScriptObjectOwner *aScriptObjectOwner, 
+                                                            nsIAtom *aName)
+{
+  nsresult result = NS_OK;
+  nsListenerStruct *ls;
+  PRInt32 subType;
+  nsIID iid;
+
+  result = GetIdentifiersForType(aName, iid, &subType);
+  if (NS_SUCCEEDED(result)) {
+    ls = FindJSEventListener(iid);
+    if (!ls) {
+      //nothing to compile
+      return NS_OK;
+    }
+
+    if (ls->mHandlerIsString & subType) {
+      result = CompileEventHandlerInternal(aContext, aScriptObjectOwner, aName, ls, subType);
+    }
+  }
+
+  return result;
+}
+
+nsresult
+nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
+                                                    nsIScriptObjectOwner *aScriptObjectOwner,
+                                                    nsIAtom *aName,
+                                                    nsListenerStruct *aListenerStruct,
+                                                    PRUint32 aSubType)
+{
+  nsresult result = NS_OK;
+
+  JSObject* jsobj;
+  result = aScriptObjectOwner->GetScriptObject(aContext, (void**)&jsobj);
+  if (NS_FAILED(result)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(aScriptObjectOwner);
+  void* handler = nsnull;
+
+  if (handlerOwner) {
+    result = handlerOwner->GetCompiledEventHandler(aName, &handler);
+    if (NS_SUCCEEDED(result) && handler) {
+      result = aContext->BindCompiledEventHandler(jsobj, aName, handler);
+      aListenerStruct->mHandlerIsString &= ~aSubType;
+    }
+  }
+
+  if (aListenerStruct->mHandlerIsString & aSubType) {
+    // This should never happen for anything but content
+    // XXX I don't like that we have to reference content
+    // from here. The alternative is to store the event handler
+    // string on the JS object itself.
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aScriptObjectOwner);
+    NS_ASSERTION(content, "only content should have event handler attributes");
+    if (content) {
+      nsAutoString handlerBody;
+      result = content->GetAttribute(kNameSpaceID_None, aName, handlerBody);
+      if (NS_SUCCEEDED(result)) {
+        if (handlerOwner) {
+          // Always let the handler owner compile the event
+          // handler, as it may want to use a special
+          // context or scope object.
+          result = handlerOwner->CompileEventHandler(aContext, jsobj, aName, handlerBody, &handler);
+        }
+        else {
+          result = aContext->CompileEventHandler(jsobj, aName, handlerBody,
+                                                 (handlerOwner != nsnull),
+                                                 &handler);
+        }
+        if (NS_SUCCEEDED(result))
+          aListenerStruct->mHandlerIsString &= ~aSubType;
+      }
+    }
+  }
+
+  return result;
 }
 
 nsresult
@@ -770,8 +879,8 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
         return result;
       }
     }
-
     if (aListenerStruct->mHandlerIsString & aSubType) {
+
       nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListenerStruct->mListener);
       if (jslistener) {
         nsCOMPtr<nsIScriptObjectOwner> owner;
@@ -779,53 +888,12 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
         result = jslistener->GetEventTarget(getter_AddRefs(scriptCX), getter_AddRefs(owner));
 
         if (NS_SUCCEEDED(result)) {
-          JSObject* jsobj;
-          result = owner->GetScriptObject(scriptCX, (void**)&jsobj);
-          if (NS_SUCCEEDED(result)) {
-            nsAutoString eventString;
-            if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-              eventString.InsertWithConversion("on", 0, 2);
-              nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
+          nsAutoString eventString;
+          if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+            eventString.InsertWithConversion("on", 0, 2);
+            nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
 
-              nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(owner);
-              void* handler = nsnull;
-
-              if (handlerOwner) {
-                result = handlerOwner->GetCompiledEventHandler(atom, &handler);
-                if (NS_SUCCEEDED(result) && handler) {
-                  result = scriptCX->BindCompiledEventHandler(jsobj, atom, handler);
-                  aListenerStruct->mHandlerIsString &= ~aSubType;
-                }
-              }
-
-              if (aListenerStruct->mHandlerIsString & aSubType) {
-                // This should never happen for anything but content
-                // XXX I don't like that we have to reference content
-                // from here. The alternative is to store the event handler
-                // string on the JS object itself.
-                nsCOMPtr<nsIContent> content = do_QueryInterface(owner);
-                NS_ASSERTION(content, "only content should have event handler attributes");
-                if (content) {
-                  nsAutoString handlerBody;
-                  result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
-                  if (NS_SUCCEEDED(result)) {
-                    if (handlerOwner) {
-                      // Always let the handler owner compile the event
-                      // handler, as it may want to use a special
-                      // context or scope object.
-                      result = handlerOwner->CompileEventHandler(scriptCX, jsobj, atom, handlerBody, &handler);
-                    }
-                    else {
-                      result = scriptCX->CompileEventHandler(jsobj, atom, handlerBody,
-                                                             (handlerOwner != nsnull),
-                                                             &handler);
-                    }
-                    if (NS_SUCCEEDED(result))
-                      aListenerStruct->mHandlerIsString &= ~aSubType;
-                  }
-                }
-              }
-            }
+            result = CompileEventHandlerInternal(scriptCX, owner, atom, aListenerStruct, aSubType);
           }
         }
       }

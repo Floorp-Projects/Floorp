@@ -412,6 +412,8 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
 
+  NS_IMETHOD_(PRBool) EventCaptureRegistration(PRInt32 aCapturerIncrement);
+
 
   // nsIJSScriptObject interface
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
@@ -440,6 +442,9 @@ protected:
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hooks for sheet ordering
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
+
+  virtual PRBool InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName, 
+                                                     jsval *aVp, PRBool aCompile);
 
   nsDocument();
   virtual ~nsDocument(); 
@@ -483,6 +488,7 @@ protected:
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager; // OWNER
   nsSupportsHashtable* mBoxObjectTable;
+  PRInt32 mNumCapturers; //Number of capturing event handlers in doc.  Used to optimize event delivery.
 
 private:
   // These are not implemented and not supported.
