@@ -22,7 +22,6 @@
 #include "nsWidgetsCID.h"
 #include <LPeriodical.h>
 
-
 #define DRAW_ON_RESIZE
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
@@ -31,6 +30,7 @@ nsWindow* nsMacMessagePump::gCurrentWindow = nsnull;
 nsWindow* nsMacMessagePump::gGrabWindow = nsnull;			// need this for grabmouse
 
 static NS_DEFINE_IID(kITEXTWIDGETIID, NS_TEXTFIELD_CID);
+nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
 
 
 //=================================================================
@@ -86,6 +86,8 @@ unsigned char	evtype;
 	while(mRunning)
 		{			
 		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,0l);
+
+	  	LPeriodical::DevoteTimeToRepeaters(theevent);
 
 		if(haveevent)
 			{
@@ -164,8 +166,6 @@ unsigned char	evtype;
 					break;
 				}		
 			}
-			
-	  	LPeriodical::DevoteTimeToRepeaters(theevent);
 		}
 
     //if (mDispatchListener)
@@ -283,17 +283,16 @@ nsMouseEvent	mouseevent;
 		{
 		SelectWindow(whichwindow);
 		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
-			
-		if(thewindow != nsnull)
-			{
-			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
-			}
 
 		switch(partcode)
 			{
 			case inSysWindow:
 				break;
 			case inContent:
+				if(thewindow != nsnull)
+					{
+					thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+					}
 				if(thewindow)
 					{
 					SetPort(whichwindow);					
@@ -694,7 +693,7 @@ nsTextWidget	*widget;
  *  @return  NONE
  */
 void 
-nsMacMessagePump::DoMenu(EventRecord *aTheEvent, long menuItem)
+nsMacMessagePump::DoMenu(EventRecord *aTheEvent, long menuResult)
 {
 	WindowPtr whichwindow;
 	nsMenuEvent theEvent;
@@ -709,15 +708,41 @@ nsMacMessagePump::DoMenu(EventRecord *aTheEvent, long menuItem)
 	raptorWindow = mToolkit->GetFocus();
 #endif
     
+
+	// Convert MacOS menu item to PowerPlant menu item
+	// because we use Constructor for resource editing
+	long menuID = HiWord(menuResult);
+	long menuItem = LoWord(menuResult);
+	Int16**	theMcmdH = (Int16**) ::GetResource('Mcmd', menuID);
+	if (theMcmdH != nil)
+	{
+		if (::GetHandleSize((Handle)theMcmdH) > 0)
+		{
+			Int16 numCommands = (*theMcmdH)[0];
+			if (numCommands >= menuItem)
+			{
+				CommandT* theCommandNums = (CommandT*)(&(*theMcmdH)[1]);
+				menuItem = theCommandNums[menuItem-1];
+			}
+		}
+		::ReleaseResource((Handle) theMcmdH);
+	}
+	menuResult = (menuID << 16) + menuItem;
+
+	// Handle the menu command
 	if (raptorWindow)
 	{
 		theEvent.eventStructType = NS_MENU_EVENT;
 		theEvent.message  = NS_MENU_SELECTED;
-		theEvent.menuItem = menuItem;
+		theEvent.menuItem = menuResult;
 		theEvent.widget   = raptorWindow;
 		theEvent.nativeMsg = aTheEvent;
 		raptorWindow->DispatchEvent(&theEvent);
 	}
-
+	else
+	{
+		if (gWindowlessMenuEventHandler != nsnull)
+			gWindowlessMenuEventHandler(menuResult);
+	}
 	HiliteMenu(0);
 }
