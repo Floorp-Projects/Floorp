@@ -43,6 +43,7 @@ function nsContextMenu( xulMenu ) {
     this.hasBGImage = false;
     this.inDirList  = false;
     this.shouldDisplay = true;
+    this.disableCapture = false;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -139,6 +140,7 @@ nsContextMenu.prototype = {
 
         // Capture depends on whether a form is being displayed.
         this.showItem( "context-capture", this.okToCapture() );
+        this.setItemAttr( "context-capture", "disabled", this.disableCapture);
 
         // Prefill depends on whether a form is being displayed.
         this.showItem( "context-prefill", this.okToPrefill() );
@@ -425,10 +427,12 @@ nsContextMenu.prototype = {
 
     // Determine if "Save Form Data" is to appear in the menu.
     okToCapture: function () {
-      var capture = document.getElementById("menu_capture");
+      this.disableCapture = false;
+      var rv = false;
       if (!window._content.document) {
         return false;
       }
+      // test for a form with at least one text element that has a value
       var formsArray = window._content.document.forms;
       var form;
       for (form=0; form<formsArray.length; form++) {
@@ -436,18 +440,28 @@ nsContextMenu.prototype = {
         var element;
         for (element=0; element<elementsArray.length; element++) {
           var type = elementsArray[element].type;
-          var value = elementsArray[element].value;
-          if ((type=="" || type=="text") && value!="") {
-            return true;
+          if (type=="" || type=="text") {
+            // we have a form with at least one text element
+            var value = elementsArray[element].value;
+            rv = true;
+            if (value != "") {
+              // at least one text element has a value, thus capture is to appear in menu
+              return rv;
+            }
           } 
         }
       }
-      return false;
+      // if we got here, then there was no text element with a value
+      if (rv) {
+        // if we got here, then we had a form with at least one text element
+        // in that case capture is to appear in menu but will be disabled
+        this.disableCapture = true;
+      }
+      return rv;
     },
 
     // Determine if "Prefill Form" is to appear in the menu.
     okToPrefill: function () {
-      var prefill = document.getElementById("menu_prefill");
       if (!window._content.document) {
         return false;
       }
