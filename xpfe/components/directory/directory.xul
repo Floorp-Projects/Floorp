@@ -32,7 +32,7 @@
 
   <html:script src="directory.js" />
 
-  <html:div flex="1">
+  <html:div style="width:100px;height:100px;" flex="1">
     <tree id="tree" datasources="rdf:null" style="height:100%;">
       <template>
         <treechildren>
