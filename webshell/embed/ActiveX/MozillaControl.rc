@@ -70,17 +70,21 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
+            VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "Mozilla ActiveX control and plugin module\0"
-            VALUE "FileExtents", "*|*\0"
-            VALUE "FileOpenName", "ActiveX (*.*)|ActiveX (*.*)\0"
+            VALUE "FileExtents", "*|*|*.axs\0"
+            VALUE "FileOpenName", "ActiveX (*.*)|ActiveX (*.*)|ActiveScript(*.axs)\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "NPMOZCTL\0"
             VALUE "LegalCopyright", "Copyright 1999\0"
-            VALUE "MIMEType", "application/x-oleobject|application/oleobject\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "MIMEType", "application/x-oleobject|application/oleobject|text/x-activescript\0"
             VALUE "OriginalFilename", "NPMOZCTL.DLL\0"
+            VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "Mozilla ActiveX control and plugin support\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "SpecialBuild", "\0"
         END
     END
     BLOCK "VarFileInfo"
