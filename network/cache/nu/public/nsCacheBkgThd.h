@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+/* This class is the actual implementation of the original class nsBkgThread, 
+ * but I am too lazy to move the comments from nsBkgThread's 
+ * header file to here. :-)
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsCacheBkgThd_h__
 #define nsCacheBkgThd_h__
 

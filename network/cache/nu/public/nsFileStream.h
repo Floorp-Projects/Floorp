@@ -17,6 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* nsFileStream. The file/disk based implementation of the nsStream class.
+ * It basically maps the read write functions to the file equivalents.
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsFileStream_h__
 #define nsFileStream_h__
 

@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+/* nsCacheObject is the class that holds the basic definition of the 
+ * cache object.  A lot of changes are likely to occur before this 
+ * goes on stage. 
+ *
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsCacheObject_h__
 #define nsCacheObject_h__
 
@@ -87,6 +93,9 @@ public:
 
     PRUint32        InfoSize(void) const;
 
+    PRBool          IsCompleted(void) const;
+    void            IsCompleted(PRBool bComplete);
+
     PRBool          IsExpired(void) const;
 
     PRBool          IsPartial(void) const;
@@ -112,6 +121,8 @@ public:
     PRUint32        Size(void) const;
     void            Size(PRUint32 i_Size);
 
+    nsStream*       Stream(void) const;
+
     const char*     Trace() const;
 
     PRUint32        Write(const char* i_Buffer, const PRUint32 len);
@@ -130,6 +141,7 @@ protected:
     char*           m_Filename;
     PRUint16        m_Hits;
     PRUint32        m_info_size;
+    PRBool          m_bIsCompleted; /* Marked when the stream complete is called */
     PRIntervalTime  m_LastAccessed, m_LastModified;
     void*           m_pInfo;
     char*           m_PageServicesURL;
@@ -139,7 +151,6 @@ protected:
     PRUint32        m_Size;
     nsStream*       m_pStream;
     char*           m_URL;
-    
 
 private:
     nsCacheObject& operator=(const nsCacheObject& x);
@@ -148,7 +159,7 @@ private:
 inline 
 const char* nsCacheObject::Address(void) const
 {
-	return m_URL;
+    return m_URL;
 };
 
 inline
@@ -166,37 +177,37 @@ const char* nsCacheObject::ContentEncoding(void) const
 inline 
 PRUint32 nsCacheObject::ContentLength(void) const
 {
-	return m_ContentLength;
+    return m_ContentLength;
 };
 
 inline 
 void nsCacheObject::ContentLength(PRUint32 i_Size)
 {
-	m_ContentLength = i_Size;
+    m_ContentLength = i_Size;
 };
 
 inline 
 const char* nsCacheObject::ContentType(void) const
 {
-	return m_ContentType;
+    return m_ContentType;
 };
 
 inline 
 const char* nsCacheObject::Etag(void) const 
 {
-	return m_Etag;
+    return m_Etag;
 };
 
 inline 
 PRIntervalTime nsCacheObject::Expires(void) const
 {
-	return m_Expires;
+    return m_Expires;
 };
 
 inline 
 void nsCacheObject::Expires(PRIntervalTime i_Expires)
 {
-	m_Expires = i_Expires;
+    m_Expires = i_Expires;
 };
 
 inline
@@ -208,38 +219,50 @@ const char* nsCacheObject::Filename(void) const
 inline 
 PRUint16 nsCacheObject::Hits(void) const
 {
-	return m_Hits;
+    return m_Hits;
 };
+
+inline
+PRBool nsCacheObject::IsCompleted(void) const
+{
+    return m_bIsCompleted;
+}
+
+inline
+void nsCacheObject::IsCompleted(PRBool bComplete) 
+{
+    m_bIsCompleted = bComplete;
+}
 
 inline 
 PRBool nsCacheObject::IsExpired(void) const
 {
-	PRIntervalTime now = PR_IntervalNow();
-	return (m_Expires <= now);
+    PRIntervalTime now = PR_IntervalNow();
+    return (m_Expires <= now);
 };
 
 inline 
 PRBool nsCacheObject::IsPartial(void) const
 {
-	return (m_Flags & nsCacheObject::PARTIAL);
+    return (m_Flags & nsCacheObject::PARTIAL);
 };
 
 inline 
 PRIntervalTime nsCacheObject::LastAccessed(void) const
 {
-	return m_LastAccessed;
+    return m_LastAccessed;
 };
 
 inline 
 PRIntervalTime nsCacheObject::LastModified(void) const
 {
-	return m_LastModified;
+    return m_LastModified;
 };
 
 inline 
 void nsCacheObject::LastModified(const PRIntervalTime i_LastModified)
 {
-	m_LastModified = i_LastModified;
+    m_LastModified = i_LastModified;
 };
 
 inline 
@@ -275,14 +298,19 @@ PRUint32 nsCacheObject::PostDataLen(void) const
 inline 
 PRUint32 nsCacheObject::Size(void) const
 {
-	return m_Size;
+    return m_Size;
 };
 
 inline 
 void nsCacheObject::Size(PRUint32 i_Size)
 {
-	m_Size = i_Size;
+    m_Size = i_Size;
 };
 
+inline
+nsStream* nsCacheObject::Stream(void) const
+{
+    return m_pStream;
+}
 #endif // nsCacheObject_h__
 

@@ -16,6 +16,14 @@
  * Reserved.
  */
 
+/* nsCachePref. A class to separate the preference related code to 
+ * one place. This is an incomplete implementation, I need to access
+ * the libprefs directly, but that would add another dependency. And 
+ * libpref comes with a JS dependency... so holding this off for the 
+ * moment. 
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsCachePref_h__
 #define nsCachePref_h__
 

@@ -17,6 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* nsMonitorable. This is a cool class too. Its an easy of adding monitors
+ * actually PRMonitor behaviour to existing classes. The nsMonitorLocker is 
+ * an excursion class that locks the scope in which is declared (on stack). 
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsMonitorable_h__
 #define nsMonitorable_h__
 

@@ -15,15 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef _nsMemModule_H_
-#define _nsMemModule_H_
+
 /* 
-* nsMemModule
+* nsMemModule. The memory based cache module.  
 *
 * Gagan Saksena
 * 02/03/98
 * 
 */
+
+#ifndef _nsMemModule_H_
+#define _nsMemModule_H_
 
 #include "nsCacheModule.h"
 #include "nsMemCacheObject.h"

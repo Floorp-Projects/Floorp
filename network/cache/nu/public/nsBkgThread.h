@@ -16,6 +16,16 @@
  * Reserved.
  */
 
+/* This is a super cool class that does the background thread magic using
+ * NSPR Threads. This class is used to maintain odd tasks in the background
+ * like like updating, expiration, validation and garbage collection. 
+ * 
+ * Note that this is a noop active when the cache manager is offline. 
+ * 
+ * In PRThread terms, this is a PR_USER_THREAD with local scope.
+ *
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsBkgThread_h__
 #define nsBkgThread_h__
 
@@ -23,17 +33,6 @@
 #include "prthread.h"
 #include "prinrval.h"
 
-/*
-    Creates a background thread that maintains odd 
-    tasks like updating, expiration, validation and 
-    garbage collection. 
-    
-    Note that this is a noop active when the cache 
-    manager is offline. 
-
-    In PRThread terms, this is a PR_USER_THREAD with 
-    local scope.
-*/
 class nsBkgThread//: public nsISupports
 {
 
