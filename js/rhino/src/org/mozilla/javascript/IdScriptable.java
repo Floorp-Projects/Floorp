@@ -81,20 +81,21 @@ public abstract class IdScriptable extends ScriptableObject
 
     public boolean has(String name, Scriptable start) {
         if (prototypeFunctionPool != null) {
+            IdFunction f;
             int id = mapNameToMethodId(name);
             if (id != 0) { 
-                IdFunction f = prototypeFunctionPool[id];
-                if (f != IdFunction.WAS_OVERWRITTEN) { return true; }
+                f = prototypeFunctionPool[id];
             }
             else {
-                if (null != checkConstructor(name)) { return true; }
+                f = checkConstructor(name);
             }
+            if (f != IdFunction.WAS_OVERWRITTEN) { return true; }
         }
         return super.has(name, start);
     }
 
     public Object get(String name, Scriptable start) {
-        L: if (prototypeFunctionPool != null) {
+        if (prototypeFunctionPool != null) {
             IdFunction f = lastFunction;
             if (f.methodName == name) { 
                 if (prototypeFunctionPool[f.methodId] == f) {
@@ -106,16 +107,16 @@ public abstract class IdScriptable extends ScriptableObject
             if (id != 0) {
                 f = prototypeFunctionPool[id];
                 if (f == null) { f = wrapMethod(name, id); }
-                if (f == IdFunction.WAS_OVERWRITTEN) { break L; }
             }
             else {
                 f = checkConstructor(name);
-                if (f == null) { break L; }
             }
-            // Update cache
-            f.methodName = name;
-            lastFunction = f;
-            return f; 
+            if (f != IdFunction.WAS_OVERWRITTEN) {
+                // Update cache
+                f.methodName = name;
+                lastFunction = f;
+                return f; 
+            }
         }
         return super.get(name, start);
     }
@@ -127,7 +128,8 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     public void delete(String name) {
-        if (doOverwrite(name, this)) {
+        // Let the super class to throw exceptions for sealed objects
+        if (isSealed() || doOverwrite(name, this)) {
             super.delete(name);
         }
     }
@@ -137,7 +139,7 @@ public abstract class IdScriptable extends ScriptableObject
 
         prototypeFunctionPool = new IdFunction[getMaxPrototypeMethodId() + 1];
 
-        seal_functions = sealed;
+        sealFunctions = sealed;
         
         setPrototype(getObjectPrototype(scope));
         
@@ -157,6 +159,9 @@ public abstract class IdScriptable extends ScriptableObject
             // A "With" object would delegate these calls to the prototype:
             // not the right thing to do here!
             prototypeFunctionPool[CONSTRUCTOR_ID] = ctor;
+        }
+        else {
+            prototypeFunctionPool[CONSTRUCTOR_ID] = IdFunction.WAS_OVERWRITTEN;
         }
         
         if (sealed) {
@@ -194,7 +199,12 @@ public abstract class IdScriptable extends ScriptableObject
     } 
      
     Note that although such function can be implemented universally via
-    java.lang.Class.isInstance(), it would be much more slower
+    java.lang.Class.isInstance(), it would be much more slower.
+
+    @param searchPrototype specify is it OK to look up prototype chain 
+           for thisObj.
+    @return Scriptable object suitable for a check by the instanceof operator.
+    @throws RuntimeException if no more instanceof target can be found
 */
     protected Scriptable nextInstanceCheck(Scriptable thisObj, 
                                            IdFunction f, 
@@ -204,7 +214,7 @@ public abstract class IdScriptable extends ScriptableObject
             thisObj = thisObj.getPrototype();
             if (thisObj != null) { return thisObj; }
         }
-           throw NativeGlobal.typeError1("msg.incompat.call", f.methodName, f);
+        throw NativeGlobal.typeError1("msg.incompat.call", f.methodName, f);
     }
     
     protected IdFunction newIdFunction(String name, int id) {
@@ -233,17 +243,14 @@ public abstract class IdScriptable extends ScriptableObject
     
     // Return true to invoke put/delete in super class
     private boolean doOverwrite(String name, Scriptable start) {
-        // Let the super class to throw exceptions for sealed objects
-        if (!isSealed() && prototypeFunctionPool != null) { 
-            if (null != checkConstructor(name)) {
-                // If constructor is present, it is read-only
-                return false;
-            }
+        if (prototypeFunctionPool != null) { 
             if (this == start) {
                 int id = mapNameToMethodId(name);
                 if (id != 0) {
                     overwriteMethod(id);
-                    return true;
+                }
+                else if (name.equals("constructor")) {
+                    overwriteMethod(CONSTRUCTOR_ID);
                 }
             }
         }
@@ -255,7 +262,7 @@ public abstract class IdScriptable extends ScriptableObject
             IdFunction f = prototypeFunctionPool[id];
             if (f == null) {
                 f = newIdFunction(name, id);
-                if (seal_functions) { f.sealObject(); }
+                if (sealFunctions) { f.sealObject(); }
                 prototypeFunctionPool[id] = f;
             }
             return f;
@@ -275,7 +282,7 @@ public abstract class IdScriptable extends ScriptableObject
     private IdFunction checkConstructor(String name) {
         return name.equals("constructor") 
             ? prototypeFunctionPool[CONSTRUCTOR_ID]
-            : null;
+            : IdFunction.WAS_OVERWRITTEN;
     }
 
     private IdFunction[] prototypeFunctionPool;
@@ -283,7 +290,7 @@ public abstract class IdScriptable extends ScriptableObject
 // Not null to simplify logic 
     private IdFunction lastFunction = IdFunction.WAS_OVERWRITTEN;
     
-    private boolean seal_functions;
+    private boolean sealFunctions;
 
     private boolean useDynamicScope;
 }
