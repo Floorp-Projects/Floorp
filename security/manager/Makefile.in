@@ -67,7 +67,7 @@ SUBMAKEFILES = ssl/Makefile pki/Makefile
 
 include $(topsrcdir)/config/rules.mk
 
-depend dependclean export::
+dependclean export::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
@@ -87,7 +87,7 @@ endif
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
-clean clobber clobber_all realclean distclean::
+clean clobber clobber_all realclean distclean depend::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
