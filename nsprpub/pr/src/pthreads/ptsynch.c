@@ -71,6 +71,13 @@ void _PR_InitLocks(void)
     rv = _PT_PTHREAD_MUTEXATTR_INIT(&_pt_mattr); 
     PR_ASSERT(0 == rv);
 
+#ifdef LINUX
+#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
+    rv = pthread_mutexattr_setkind_np(&_pt_mattr, PTHREAD_MUTEX_ADAPTIVE_NP);
+    PR_ASSERT(0 == rv);
+#endif
+#endif
+
     rv = _PT_PTHREAD_CONDATTR_INIT(&_pt_cvar_attr);
     PR_ASSERT(0 == rv);
 }
