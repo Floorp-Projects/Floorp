@@ -22,7 +22,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/console.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/content/console/console.css" type="text/css"?> 
 
