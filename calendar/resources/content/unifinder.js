@@ -54,41 +54,57 @@ function calendarUnifinderInit( )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         // XXX This selection observer needs to be re written.
-
-         // Problems: When selecting everything, 
-         
-         if( gCalendarEventTreeClicked === false )
-         {
-            var SearchTree = document.getElementById( UnifinderTreeName );
+         //dump( "\nCALENDAR unifinder.js->on selection changed" );
+         var SearchTree = document.getElementById( UnifinderTreeName );
             
-            if( EventSelectionArray.length > 1 )
-            {
-               //get all the rows for the events
-               for( i = 0; i < EventSelectionArray.length; i++ )
-               {
-                  var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[i] );
-               }
-               //select all the rows in the tree.
+         /* The following is a brutal hack, caused by 
+         http://lxr.mozilla.org/mozilla1.0/source/layout/xul/base/src/tree/src/nsTreeSelection.cpp#555
+         and described in bug 168211
+         http://bugzilla.mozilla.org/show_bug.cgi?id=168211
+         Do NOT remove anything in the next 3 lines, or the selection in the tree will not work.
+         */
+
+         SearchTree.treeBoxObject.selection.selectEventsSuppressed = true;
+         SearchTree.onselect = null;
+         SearchTree.removeEventListener( "select", unifinderOnSelect, true );
+         
+         if( EventSelectionArray.length > 1 )
+         {
+            //SearchTree.treeBoxObject.selection.selectAll( );
+         }
+         else if( EventSelectionArray.length == 1 )
+         {
+            var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[0] );
                
-            }
-            else if( EventSelectionArray.length == 1 )
+            if( RowToScrollTo != "null" )
             {
                SearchTree.treeBoxObject.selection.clearSelection( );
-            
-               var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[0] );
-                  
+         
                SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
 
                SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
             }
          }
          
-         gCalendarEventTreeClicked = false;
+         /* This needs to be in a setTimeout */
+         setTimeout( "resetSelection()", 1 );
       }
    }
       
    gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
+}
+
+function resetSelection()
+{
+   /* 
+   Do not change anything in the following lines, they are needed as described in the 
+   selection observer above 
+   */
+   var SearchTree = document.getElementById( UnifinderTreeName );
+   
+   SearchTree.treeBoxObject.selection.selectEventsSuppressed = false;
+   
+   SearchTree.addEventListener( "select", unifinderOnSelect, true );
 }
 
 /**
@@ -243,6 +259,8 @@ function getCalendarEventFromEvent( event )
 
 function unifinderOnSelect( event )
 {
+   dump( "\n\nin unifinder onselect" );
+
    var ArrayOfEvents = new Array( );
    
    gCalendarEventTreeClicked = true;
@@ -660,7 +678,7 @@ calendarEventView.prototype.getRowOfCalendarEvent = function( Event )
       if( this.eventArray[i].id == Event.id )
          return( i );
    }
-   return( false );
+   return( "null" );
 }
 
 
