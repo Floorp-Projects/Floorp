@@ -18,6 +18,7 @@
 
 #define NS_IMPL_IDS
 #include "nsIPref.h"
+#include "prlog.h"
 
 #include "msgCore.h"    // precompiled header...
 
@@ -699,9 +700,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
   // change the leaf name (stored separately)
   nsresult status = MSG_FolderInfo::Rename (newUserLeafName);
   if (status == 0) {
-    char *baseDir = XP_STRDUP(m_pathName);
+    char *baseDir = nsCRT::strdup(m_pathName);
     if (baseDir) {
-      char *base_slash = XP_STRRCHR (baseDir, '/'); 
+      char *base_slash = nsCRT::strrchr (baseDir, '/'); 
       if (base_slash)
         *base_slash = '\0';
     }
@@ -712,11 +713,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
 
     if (0 == status) {
       // calculate the new path name
-      char *newPath = (char*) XP_ALLOC(XP_STRLEN(m_pathName) + XP_STRLEN(leafNameForDisk) + 1);
-      XP_STRCPY (newPath, m_pathName);
-      char *slash = XP_STRRCHR (newPath, '/'); 
+      char *newPath = (char*) PR_Malloc(nsCRT::strlen(m_pathName) + nsCRT::strlen(leafNameForDisk) + 1);
+      nsCRT::strcpy (newPath, m_pathName);
+      char *slash = nsCRT::strrchr (newPath, '/'); 
       if (slash)
-        XP_STRCPY (slash + 1, leafNameForDisk);
+        nsCRT::strcpy (slash + 1, leafNameForDisk);
 
       // rename the mail summary file, if there is one
       nsMsgDatabase *db = NULL;
@@ -733,7 +734,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
         }
         else {
           MailDB *mailDb = NULL;
-          MailDB::Open(newPath, TRUE, &mailDb, TRUE);
+          MailDB::Open(newPath, PR_TRUE, &mailDb, PR_TRUE);
           if (mailDb) {
             //need to set mailbox name
             mailDb->Close();
@@ -752,7 +753,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
 
         // tell all our children about the new pathname
         if (status == 0) {
-          int startingAt = XP_STRLEN (newPath) - XP_STRLEN (leafNameForDisk) + 1; // add one for trailing '/'
+          int startingAt = nsCRT::strlen (newPath) - nsCRT::strlen (leafNameForDisk) + 1; // add one for trailing '/'
           status = PropagateRename (leafNameForDisk, startingAt);
         }
       }
@@ -961,7 +962,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
     PRBool purgePrompt = m_master->GetPrefs()->GetPurgeThreshholdEnabled();;
     return (purgePrompt && m_expungedBytes / 1000L > purgeThreshhold);
   }
-  return FALSE;
+  return PR_FALSE;
 #endif
   return NS_OK;
 }
@@ -1008,12 +1009,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetHostname(char** hostName)
 NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
 {
 #ifdef HAVE_PORT
-    PRBool ret = FALSE;
+    PRBool ret = PR_FALSE;
   if (m_master->IsCachePasswordProtected() && !m_master->IsUserAuthenticated() && !m_master->AreLocalFoldersAuthenticated())
   {
     char *savedPassword = GetRememberedPassword();
-    if (savedPassword && XP_STRLEN(savedPassword))
-      ret = TRUE;
+    if (savedPassword && nsCRT::strlen(savedPassword))
+      ret = PR_TRUE;
     FREEIF(savedPassword);
   }
   return ret;
@@ -1026,7 +1027,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RememberPassword(const char *password)
 {
 #ifdef HAVE_DB
     MailDB *mailDb = NULL;
-  MailDB::Open(m_pathName, TRUE, &mailDb);
+  MailDB::Open(m_pathName, PR_TRUE, &mailDb);
   if (mailDb)
   {
     mailDb->SetCachedPassword(password);
@@ -1062,11 +1063,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
     {
       char *retPassword = NULL;
       MailDB *mailDb = NULL;
-      MailDB::Open(m_pathName, FALSE, &mailDb, FALSE);
+      MailDB::Open(m_pathName, PR_FALSE, &mailDb, PR_FALSE);
       if (mailDb)
       {
         mailDb->GetCachedPassword(cachedPassword);
-        retPassword = XP_STRDUP(cachedPassword);
+        retPassword = nsCRT::strdup(cachedPassword);
         mailDb->Close();
 
       }

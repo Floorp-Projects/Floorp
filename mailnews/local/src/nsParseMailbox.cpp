@@ -164,7 +164,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsI
 #endif
 			}
 		}
-		m_mailDB->Close(TRUE);
+		m_mailDB->Close(PR_TRUE);
 	}
 #endif
 
@@ -349,7 +349,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 			m_newMsgHdr = null_nsCOMPtr();
 		}
 		else
-			NS_ASSERTION(FALSE, "no database while parsing local folder");	// should have a DB, no?
+			NS_ASSERTION(PR_FALSE, "no database while parsing local folder");	// should have a DB, no?
 	}
 	else if (m_mailDB)
 	{
@@ -386,7 +386,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 //			PR_snprintf (buf, sizeof(buf),
 //						 XP_GetString(MK_MSG_NON_MAIL_FILE_READ_QUESTION),
 //						 folder_name);
-			m_isRealMailFolder = FALSE;
+			m_isRealMailFolder = PR_FALSE;
 			if (m_ignoreNonMailFolder)
 				return 0;
 //			else if (!FE_Confirm (m_context, buf))
@@ -441,7 +441,7 @@ nsParseMailMessageState::nsParseMailMessageState()
 {
 	NS_INIT_REFCNT();
 	m_position = 0;
-	m_IgnoreXMozillaStatus = FALSE;
+	m_IgnoreXMozillaStatus = PR_FALSE;
 	m_state = nsIMsgParseMailMsgState::ParseBodyState;
 	Clear();
 
@@ -972,7 +972,7 @@ msg_condense_mime2_string(char *sourceStr)
 		if (q) *q = '?';
 
 		// Decode any MIME-2 encoded strings, to save the overhead.
-		char *cvt = (CS_UTF8 != win_csid) ? INTL_DecodeMimePartIIStr(returnVal, win_csid, FALSE) : nsnull;
+		char *cvt = (CS_UTF8 != win_csid) ? INTL_DecodeMimePartIIStr(returnVal, win_csid, PR_FALSE) : nsnull;
 		if (cvt)
 		{
 			if (cvt != returnVal)
@@ -981,7 +981,7 @@ msg_condense_mime2_string(char *sourceStr)
 				returnVal = cvt;
 			}
 			// MIME-2 decoding occurred, so re-encode into large encoded words
-			cvt = INTL_EncodeMimePartIIStr_VarLen(returnVal, win_csid, TRUE,
+			cvt = INTL_EncodeMimePartIIStr_VarLen(returnVal, win_csid, PR_TRUE,
 												MSG_MAXSUBJECTLENGTH - 2);
 			if (cvt && (cvt != returnVal))
 			{
@@ -1202,7 +1202,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 					*ch = 0;
 					recipient->length = nsCRT::strlen(recipient->value);
 				}
-				m_newMsgHdr->SetRecipients(recipient->value, FALSE);
+				m_newMsgHdr->SetRecipients(recipient->value, PR_FALSE);
 			}
 			else if (recipient)
 			{
@@ -1220,7 +1220,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 					PR_FREEIF(names);
 				}
 				else	// hmm, should we just use the original string?
-					m_newMsgHdr->SetRecipients(recipient->value, TRUE);
+					m_newMsgHdr->SetRecipients(recipient->value, PR_TRUE);
 			}
 			if (ccList)
 			{
@@ -1311,7 +1311,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 		} 
 		else
 		{
-			NS_ASSERTION(FALSE, "error creating message header");
+			NS_ASSERTION(PR_FALSE, "error creating message header");
 			status = NS_ERROR_OUT_OF_MEMORY;	
 		}
 	}
@@ -1331,7 +1331,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 /* Given a string and a length, removes any "Re:" strings from the front.
    It also deals with that dumbass "Re[2]:" thing that some losing mailers do.
 
-   Returns TRUE if it made a change, FALSE otherwise.
+   Returns PR_TRUE if it made a change, PR_FALSE otherwise.
 
    The string is not altered: the pointer to its head is merely advanced,
    and the length correspondingly decreased.
@@ -1472,7 +1472,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 									MSG_FOLDER_FLAG_SENTMAIL, &status); 
 			if (defaultFolderName)
 			{
-				folderInfo = master->FindMailFolder(defaultFolderName, FALSE);
+				folderInfo = master->FindMailFolder(defaultFolderName, PR_FALSE);
 				if (folderInfo && folderInfo->GetMailFolderInfo())
 					folderName = folderInfo->GetMailFolderInfo()->GetPathname();
 				XP_FREE(defaultFolderName);
@@ -1486,20 +1486,20 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 				MSG_Rule *rule = nsnull;
 				MSG_SearchValue value;
 				newFilter->SetDescription("incorporate mdn report");
-				newFilter->SetEnabled(TRUE);
+				newFilter->SetEnabled(PR_TRUE);
 				newFilter->GetRule(&rule);
 				newFilter->SetFilterList(m_filterList);
 				value.attribute = attribOtherHeader;
 				value.u.string = "multipart/report";
 				rule->AddTerm(attribOtherHeader, opContains,
-							  &value, TRUE, "Content-Type");
+							  &value, PR_TRUE, "Content-Type");
 				value.u.string = "disposition-notification";
 				rule->AddTerm(attribOtherHeader, opContains,
-							  &value, TRUE, "Content-Type");
+							  &value, PR_TRUE, "Content-Type");
 #if 0
 				value.u.string = "delivery-status";
 				rule->AddTerm(attribOtherHeader, opContains,
-							  &value, FALSE, "Content-Type");
+							  &value, PR_FALSE, "Content-Type");
 #endif
 				rule->SetAction(nsMsgFilterActionMoveToFolder, (void*)folderName);
 				m_filterList->InsertFilterAt(0, newFilter);
@@ -1507,9 +1507,9 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 		}
 	}
 #endif // DOING_MDN
-	m_usingTempDB = FALSE;
+	m_usingTempDB = PR_FALSE;
 	m_tmpdbName = nsnull;
-	m_disableFilters = FALSE;
+	m_disableFilters = PR_FALSE;
 
     return NS_OK; 
 }
@@ -1538,7 +1538,7 @@ nsParseNewMailState::~nsParseNewMailState()
 // IncorporateWrite (once or more), and IncorporateComplete for every message.
 void nsParseNewMailState::DoneParsingFolder()
 {
-	PRBool moved = FALSE;
+	PRBool moved = PR_FALSE;
 /* End of file.  Flush out any partial line remaining in the buffer. */
 	if (m_ibuffer_fp > 0) 
 	{
@@ -1564,7 +1564,7 @@ void nsParseNewMailState::DoneParsingFolder()
 
 PRInt32 nsParseNewMailState::PublishMsgHeader()
 {
-	PRBool		moved = FALSE;
+	PRBool		moved = PR_FALSE;
 
 	FinishHeader();
 	
@@ -1732,7 +1732,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 							 &to, &cc, &state->m_subject, 
 							 &state->m_date, &state->m_mdn_original_recipient,
 							 &state->m_message_id, state->m_headers, 
-							 (PRInt32) state->m_headers_fp, TRUE);
+							 (PRInt32) state->m_headers_fp, PR_TRUE);
 					}
 					else
 					{
@@ -1743,7 +1743,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 							 &to, &cc, &state->m_subject, 
 							 &state->m_date, &state->m_mdn_original_recipient,
 							 &state->m_message_id, state->m_headers, 
-							 (PRInt32) state->m_headers_fp, TRUE);
+							 (PRInt32) state->m_headers_fp, PR_TRUE);
 					}
 #endif
 					char *tmp = (char*) to.value;
@@ -1788,7 +1788,7 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 {
 	PRUint32 newFlags;
 	if (m_mailDB)
-		m_mailDB->MarkHdrRead(msgHdr, TRUE, nsnull);
+		m_mailDB->MarkHdrRead(msgHdr, PR_TRUE, nsnull);
 	else
 		msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);
 	return 0;
@@ -1981,10 +1981,10 @@ ParseIMAPMailboxState::ParseIMAPMailboxState(MSG_IMAPHost *host, nsIMsgFolderMai
  	nsIMsgFolder *filteredFolder = imapContainer->FindMailPathname(folder->GetPathname());
  	fParsingInbox = 0 != (filteredFolder->GetFlags() & MSG_FOLDER_FLAG_INBOX);
  	fFlagState = flagStateAdopted;
- 	fB2HaveWarnedUserOfOfflineFiltertarget = FALSE;
+ 	fB2HaveWarnedUserOfOfflineFiltertarget = PR_FALSE;
  	
  	// we ignore X-mozilla status for imap messages
- 	GetMsgState()->m_IgnoreXMozillaStatus = TRUE;
+ 	GetMsgState()->m_IgnoreXMozillaStatus = PR_TRUE;
 	fNextSequenceNum = -1;
 	m_host = host;
 	m_imapContainer = imapContainer;
@@ -2040,7 +2040,7 @@ int ParseIMAPMailboxState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 	keysToFlag.Add(msgHdr->GetMessageKey());
 	MSG_IMAPFolderInfoMail *imapFolder = m_folder->GetIMAPFolderInfoMail();
 	if (imapFolder)
-		imapFolder->StoreImapFlags(m_pane, kImapMsgSeenFlag, TRUE, keysToFlag, GetFilterUrlQueue());
+		imapFolder->StoreImapFlags(m_pane, kImapMsgSeenFlag, PR_TRUE, keysToFlag, GetFilterUrlQueue());
 
 	return 0;
 }
@@ -2060,7 +2060,7 @@ nsresult ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 		nsIMsgFolder *sourceFolder = imapContainer->FindMailPathname(m_mailboxName);
 	 	nsIMsgFolder *destinationFolder = imapContainer->FindMailPathname(destFolder);
 	 	if (!destinationFolder)
-	 		destinationFolder = m_mailMaster->FindMailFolder(destFolder, FALSE);
+	 		destinationFolder = m_mailMaster->FindMailFolder(destFolder, PR_FALSE);
 
 	 	if (destinationFolder)
 	 	{
@@ -2125,7 +2125,7 @@ void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
  	if (fParsingInbox && !(GetCurrentMsg()->GetFlags() & MSG_FLAG_READ) )
  		nsParseNewMailState::ApplyFilters(pMoved);
  	else
- 		*pMoved = FALSE;
+ 		*pMoved = PR_FALSE;
  	
  	if (!*pMoved && m_parseMsgState->m_newMsgHdr)
  		fFetchBodyKeys.Add(m_parseMsgState->m_newMsgHdr->GetMessageKey());
@@ -2134,7 +2134,7 @@ void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
 
 PRInt32	ParseIMAPMailboxState::PublishMsgHeader()
 {
-	PRBool		moved = FALSE;
+	PRBool		moved = PR_FALSE;
 
 	m_parseMsgState->FinishHeader();
 	
@@ -2152,7 +2152,7 @@ PRInt32	ParseIMAPMailboxState::PublishMsgHeader()
 				if (thisMessageUnRead)
 					m_parseMsgState->m_newMsgHdr->OrFlags(kNew);
 				m_mailDB->AddHdrToDB (m_parseMsgState->m_newMsgHdr, nsnull,
-					(fNextSequenceNum == -1) ? m_updateAsWeGo : FALSE);
+					(fNextSequenceNum == -1) ? m_updateAsWeGo : PR_FALSE);
 				// following is for cacheless imap - match sequence number
 				// to location to insert in view.
 			}
@@ -2180,13 +2180,13 @@ ParseOutgoingMessage::ParseOutgoingMessage()
 {
 	m_bytes_written = 0;
 	m_out_file = 0;
-	m_wroteXMozillaStatus = FALSE;
-	m_writeToOutFile = TRUE;
-	m_lastBodyLineEmpty = FALSE;
+	m_wroteXMozillaStatus = PR_FALSE;
+	m_writeToOutFile = PR_TRUE;
+	m_lastBodyLineEmpty = PR_FALSE;
 	m_outputBuffer = 0;
 	m_ouputBufferSize = 0;
 	m_outputBufferIndex = 0;
-	m_writeMozillaStatus = TRUE;
+	m_writeMozillaStatus = PR_TRUE;
 }
 
 ParseOutgoingMessage::~ParseOutgoingMessage()
@@ -2197,7 +2197,7 @@ ParseOutgoingMessage::~ParseOutgoingMessage()
 void ParseOutgoingMessage::Clear()
 {
 	nsParseMailMessageState::Clear();
-	m_wroteXMozillaStatus = FALSE;
+	m_wroteXMozillaStatus = PR_FALSE;
 	m_bytes_written = 0;
 }
 
@@ -2240,7 +2240,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 	if (m_out_file && m_writeToOutFile)
 	{
 		if (!nsCRT::strncmp(line, X_MOZILLA_STATUS, X_MOZILLA_STATUS_LEN)) 
-			m_wroteXMozillaStatus = TRUE;
+			m_wroteXMozillaStatus = PR_TRUE;
 
 		m_lastBodyLineEmpty = (m_state == nsIMsgParseMailMsgState::ParseBodyState && (EMPTY_MESSAGE_LINE(line)));
 
@@ -2266,7 +2266,7 @@ PRInt32	ParseOutgoingMessage::ParseFolderLine(const char *line, PRUint32 lineLen
 				return res;
 			m_bytes_written += len;
 			m_position += len;
-			m_wroteXMozillaStatus = TRUE;
+			m_wroteXMozillaStatus = PR_TRUE;
 
 			MessageDB::ConvertDBFlagsToPublicFlags(&dbFlags);
 			dbFlags &= (MSG_FLAG_MDN_REPORT_NEEDED | MSG_FLAG_MDN_REPORT_SENT | MSG_FLAG_TEMPLATE);
@@ -2300,13 +2300,13 @@ PRInt32 ParseOutgoingMessage::ParseBlock(const char *block, PRUint32 length)
 	while (m_outputBuffer == 0)
 	{
 		
-		m_outputBuffer = (char *) XP_ALLOC(m_ouputBufferSize);
+		m_outputBuffer = (char *) PR_Malloc(m_ouputBufferSize);
 		if (m_outputBuffer == nsnull)
 			m_ouputBufferSize /= 2;
 	}
 	XP_ASSERT(m_outputBuffer != nsnull);
 
-	return msg_LineBuffer (block, length, &m_outputBuffer, &m_ouputBufferSize,  &m_outputBufferIndex, FALSE,
+	return msg_LineBuffer (block, length, &m_outputBuffer, &m_ouputBufferSize,  &m_outputBufferIndex, PR_FALSE,
 #ifdef XP_OS2
 					(PRInt32 (_Optlink*) (char*,PRUint32,void*))
 #endif

@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "prlog.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsPop3Protocol.h"
 #include "nsFileSpec.h"
@@ -353,7 +354,7 @@ void KillPopData(char* data)
 
 // nsPop3Protocol class implementation
 
-nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, FALSE)
+nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, PR_FALSE)
 {
 	Initialize(aURL);
 }

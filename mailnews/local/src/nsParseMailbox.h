@@ -224,7 +224,7 @@ public:
 	virtual void	DoneParsingFolder();
 	virtual void	SetUsingTempDB(PRBool usingTempDB, char *tmpDBName);
 
-	void DisableFilters() {m_disableFilters = TRUE;}
+	void DisableFilters() {m_disableFilters = PR_TRUE;}
 
 #ifdef DOING_JSFILTERS
 	// from jsmsg.cpp
