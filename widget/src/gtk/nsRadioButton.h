@@ -71,14 +71,15 @@ public:
   void Armed();
   void DisArmed();
 
-private:
-
+protected:
+  GtkWidget *mWidget;
   GtkWidget *mLabel;
-//  Widget  mRadioBtn;
-  Boolean mInitialState;
-  Boolean mNewValue;
-  Boolean mValueWasSet;
-  Boolean mIsArmed;
+
+private:
+  PRBool mInitialState;
+  PRBool mNewValue;
+  PRBool mValueWasSet;
+  PRBool mIsArmed;
 
 };
 

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include <gtk/gtk.h>
+
 #include "nsRadioButton.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
@@ -23,7 +25,6 @@
 #include "nsStringUtil.h"
 
 #include "nsGtkEventHandler.h"
-#include <gtk/gtk.h>
 
 NS_IMPL_ADDREF(nsRadioButton)
 NS_IMPL_RELEASE(nsRadioButton)
@@ -222,7 +223,7 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 
 //-------------------------------------------------------------------------
 //
-// Set this button label
+// Set this button state
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
@@ -249,7 +250,7 @@ NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   if (mLabel) {
-    gtk_label_set(mLabel, label);
+    gtk_label_set(GTK_LABEL(mLabel), label);
   } else {
     mLabel = gtk_label_new(label);
     gtk_container_add(GTK_CONTAINER(mWidget), mLabel);
@@ -269,7 +270,7 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
 {
   char * text;
   if (mLabel) {
-    gtk_label_get(mLabel, &text);
+    gtk_label_get(GTK_LABEL(mLabel), &text);
     aBuffer.SetLength(0);
     aBuffer.Append(text);
   }
