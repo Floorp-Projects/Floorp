@@ -280,7 +280,7 @@ PRBool nsOEScanBoxes::FindMailBoxes( nsIFileSpec* descFile)
 		#endif
 		
 		pEntry->fileName.Right( ext, 4);
-		if (ext.Compare( mbxExt))
+		if (Compare(ext, mbxExt))
 			pEntry->fileName.Append( ".mbx");		
 		
 		m_entryArray.AppendElement( pEntry);

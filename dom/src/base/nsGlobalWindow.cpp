@@ -1017,7 +1017,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
    GetWebBrowserChrome(getter_AddRefs(browserChrome));
    if(browserChrome)
-      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, nsPromiseFlatString(aStatus).get());
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, PromiseFlatString(aStatus).get());
 
   return NS_OK;
 }
@@ -1035,7 +1035,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefau
    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
    GetWebBrowserChrome(getter_AddRefs(browserChrome));
    if(browserChrome)
-      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT, nsPromiseFlatString(aDefaultStatus).get());
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT, PromiseFlatString(aDefaultStatus).get());
 
   return NS_OK;
 }
@@ -1056,7 +1056,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
   nsresult result = NS_OK;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   if (docShellAsItem)
-    result = docShellAsItem->SetName(nsPromiseFlatString(aName).get());
+    result = docShellAsItem->SetName(PromiseFlatString(aName).get());
   return result;
 }
 
@@ -1136,7 +1136,7 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
     if(type == nsIDocShellTreeItem::typeChrome) {
       nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
       if(docShellAsWin) {
-        docShellAsWin->SetTitle(nsPromiseFlatString(mTitle).get());
+        docShellAsWin->SetTitle(PromiseFlatString(mTitle).get());
       }
     }
   }
@@ -2190,7 +2190,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsAReadableString& aStr, nsAWritabl
   PRInt32 maxByteLen, srcLen;
   srcLen = aStr.Length();
 
-  nsPromiseFlatString flatSrc(aStr);
+  const nsPromiseFlatString& flatSrc = PromiseFlatString(aStr);
   const PRUnichar* src = flatSrc.get();
 
   // Get the expected length of result string

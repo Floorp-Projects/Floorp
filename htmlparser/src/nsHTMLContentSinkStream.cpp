@@ -289,7 +289,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsAReadableString& aString)
     {
       nsresult res;
       PRUnichar *encodedBuffer = nsnull;
-      res = mEntityConverter->ConvertToEntities(nsPromiseFlatString(aString).get(),
+      res = mEntityConverter->ConvertToEntities(PromiseFlatString(aString).get(),
                                                 nsIEntityConverter::html40Latin1,
                                                 &encodedBuffer);
       if (NS_SUCCEEDED(res) && encodedBuffer)
@@ -328,7 +328,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsAReadableString& aString)
   {
     // Call the converter to convert to the target charset.
     // Convert() takes a char* output param even though it's writing unicode.
-    res = mCharsetEncoder->Convert(nsPromiseFlatString(aString).get(), &encodedBuffer);
+    res = mCharsetEncoder->Convert(PromiseFlatString(aString).get(), &encodedBuffer);
     if (NS_SUCCEEDED(res) && encodedBuffer)
     {
       charsWritten = nsCRT::strlen(encodedBuffer);
@@ -340,7 +340,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsAReadableString& aString)
     else
     {
       charsWritten = aString.Length();
-      out.write(nsPromiseFlatString(aString).get(), charsWritten);
+      out.write(PromiseFlatString(aString).get(), charsWritten);
     }
   }
 
@@ -348,7 +348,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsAReadableString& aString)
   else
   {
     charsWritten = aString.Length();
-    out.write(nsPromiseFlatString(aString).get(), charsWritten);
+    out.write(PromiseFlatString(aString).get(), charsWritten);
   }
 
   return charsWritten;

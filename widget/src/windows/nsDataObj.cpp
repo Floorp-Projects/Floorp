@@ -364,7 +364,7 @@ nsDataObj :: GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aST
   
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
-  mTransferable->GetTransferData(nsPromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
+  mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
   nsCOMPtr<nsIImage> image ( do_QueryInterface(genericDataWrapper) );
   if ( image ) {
     // use a the helper class to build up a bitmap. We now own the bits,
@@ -574,7 +574,7 @@ HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STG
   
   // if someone asks for text/plain, look up text/unicode instead in the transferable.
   const char* flavorStr;
-  nsPromiseFlatCString flat(aDataFlavor);
+  const nsPromiseFlatCString& flat = PromiseFlatCString(aDataFlavor);
   if ( aDataFlavor.Equals("text/plain") )
     flavorStr = kUnicodeMime;
   else

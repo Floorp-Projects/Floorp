@@ -289,7 +289,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
                                     nextNewline-posInString));
       printf("Unquoted: appending '%s'\n", debug.ToNewCString());
 #endif
-      aOutString.Append(nsPromiseSubstring<PRUnichar>(aInString, posInString,
+      aOutString.Append(nsPromiseSubstring(aInString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
       if (nextNewline != (PRInt32)length)
@@ -324,7 +324,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
         nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline - posInString));
         printf("Short line: '%s'\n", debug.ToNewCString());
 #endif
-        aOutString += nsPromiseSubstring<PRUnichar>(aInString,
+        aOutString += nsPromiseSubstring(aInString,
                                 posInString, nextNewline - posInString);
         outStringCol += nextNewline - posInString;
         posInString = nextNewline + 1;
@@ -365,7 +365,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       printf("breakPt = %d\n", breakPt);
 #endif
 
-      aOutString += nsPromiseSubstring<PRUnichar>(aInString, posInString, breakPt);
+      aOutString += nsPromiseSubstring(aInString, posInString, breakPt);
       posInString += breakPt;
       outStringCol += breakPt;
 

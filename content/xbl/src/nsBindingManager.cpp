@@ -122,7 +122,7 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
   if (!mBindingTable)
     return NS_OK;
 
-  nsPromiseFlatCString flat(aRef);
+  const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
   *aResult = NS_STATIC_CAST(nsIXBLPrototypeBinding*, mBindingTable->Get(&key)); // Addref happens here.
 
@@ -135,7 +135,7 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
   if (!mBindingTable)
     mBindingTable = new nsSupportsHashtable();
 
-  nsPromiseFlatCString flat(aRef);
+  const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
   mBindingTable->Put(&key, aBinding);
 
@@ -870,7 +870,7 @@ NS_IMETHODIMP
 nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL,
                                       nsIDocument** aResult)
 {
-  nsCAutoString url; url.AssignWithConversion(nsPromiseFlatString(aURL).get());
+  nsCAutoString url; url.AssignWithConversion(PromiseFlatString(aURL).get());
   
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",

@@ -25,8 +25,13 @@
 #ifndef nsSlidingString_h___
 #define nsSlidingString_h___
 
-#include "nsAReadableString.h"
+#ifndef nsAString_h___
+#include "nsAString.h"
+#endif
+
+#ifndef nsSharedBufferList_h___
 #include "nsSharedBufferList.h"
+#endif
 
 
   /**
@@ -69,7 +74,7 @@ class nsSlidingString;
    * a substring over a buffer list, this 
    */
 class NS_COM nsSlidingSubstring
-     : virtual public nsPromiseReadable<PRUnichar>
+     : virtual public nsAPromiseString
   {
     friend class nsSlidingString;
 
@@ -90,14 +95,14 @@ class NS_COM nsSlidingSubstring
       nsSlidingSubstring( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
       nsSlidingSubstring( const nsSlidingString& );
       nsSlidingSubstring( const nsSlidingString& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
-      explicit nsSlidingSubstring( const nsAReadableString& );
+      explicit nsSlidingSubstring( const nsAString& );
         // copy the supplied string into a new buffer ... there will be no modifying instance over this buffer list
 
       void Rebind( const nsSlidingSubstring& );
       void Rebind( const nsSlidingSubstring&, const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
       void Rebind( const nsSlidingString& );
       void Rebind( const nsSlidingString&, const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
-      void Rebind( const nsAReadableString& );
+      void Rebind( const nsAString& );
 
      ~nsSlidingSubstring();
 
@@ -106,6 +111,7 @@ class NS_COM nsSlidingSubstring
     protected:
       nsSlidingSubstring( nsSlidingSharedBufferList* aBufferList );
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
+      virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     private:
         // can't assign into me, I'm a read-only reference
@@ -154,7 +160,7 @@ class NS_COM nsSlidingSubstring
    *  
    */
 class NS_COM nsSlidingString
-    : virtual public nsPromiseReadable<PRUnichar>,
+    : virtual public nsAPromiseString,
       private nsSlidingSubstring
   {
     friend class nsSlidingSubstring;
@@ -176,8 +182,9 @@ class NS_COM nsSlidingString
 
     protected:
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
+      virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) { return 0; }
 
-      void InsertReadable( const nsAReadableString&, const nsReadingIterator<PRUnichar>& ); // ...to implement |nsScannerString::UngetReadable| 
+      void InsertReadable( const nsAString&, const nsReadingIterator<PRUnichar>& ); // ...to implement |nsScannerString::UngetReadable| 
 
     private:
 

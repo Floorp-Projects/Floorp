@@ -17,10 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Rick Gessner <rickg@netscape.com>
- *
  * Contributor(s): 
+ *   Rick Gessner <rickg@netscape.com> (original author)
  *   Scott Collins <scc@mozilla.org>
  */
   

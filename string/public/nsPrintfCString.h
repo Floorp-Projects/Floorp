@@ -38,7 +38,9 @@
 #ifndef nsPrintfCString_h___
 #define nsPrintfCString_h___
  
-#include "nsAWritableString.h"
+#ifndef nsAString_h___
+#include "nsAString.h"
+#endif
 
 
   /**
@@ -66,7 +68,7 @@
    */
 
 class nsPrintfCString
-    : public nsAReadableCString
+    : public nsACString
   {
     enum { kLocalBufferSize=15 };
       // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)
@@ -81,7 +83,8 @@ class nsPrintfCString
       virtual PRUint32 Length() const;
 
     protected:
-      virtual const char* GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const;
+      virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 ) { return 0; }
 //    virtual PRBool GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest ) const;
 
     private:

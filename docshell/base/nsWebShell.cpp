@@ -1206,7 +1206,7 @@ nsWebShell :: IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* ou
   nsCOMPtr<nsIController> controller;
   rv = GetControllerForCommand ( inCommand, getter_AddRefs(controller) );
   if ( controller )
-    rv = controller->IsCommandEnabled(nsPromiseFlatString(inCommand).get(), outEnabled);
+    rv = controller->IsCommandEnabled(PromiseFlatString(inCommand).get(), outEnabled);
   
   return rv;
 }
@@ -1220,7 +1220,7 @@ nsWebShell :: DoCommand ( const nsAReadableString & inCommand )
   nsCOMPtr<nsIController> controller;
   rv = GetControllerForCommand ( inCommand, getter_AddRefs(controller) );
   if ( controller )
-    rv = controller->DoCommand(nsPromiseFlatString(inCommand).get());
+    rv = controller->DoCommand(PromiseFlatString(inCommand).get());
   
   return rv;
 }

@@ -2965,7 +2965,7 @@ void nsEditorShell::GetBundleString(const nsAReadableString &stringName, nsAWrit
   outString.Truncate();
   
   nsXPIDLString   tempString;
-  if (NS_SUCCEEDED(GetString(nsPromiseFlatString(stringName).get(), getter_Copies(tempString))) && tempString)
+  if (NS_SUCCEEDED(GetString(PromiseFlatString(stringName).get(), getter_Copies(tempString))) && tempString)
     outString = tempString.get();
 }
 
