@@ -26,7 +26,6 @@
 use strict;
 
 use vars qw(
-  %FORM
   $userid
   $template
   $vars
