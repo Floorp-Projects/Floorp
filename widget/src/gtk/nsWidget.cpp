@@ -2800,13 +2800,13 @@ nsWidget::GetXIC()
 
   // IC-per-shell, we share a single IC among all widgets of
   // a single toplevel widget
-  nsIWidget *widget = this;
-  nsIWidget *root = this;
+  nsCOMPtr<nsIWidget> widget = this;
+  nsCOMPtr<nsIWidget> root = this;
   while (widget) {
     root = widget;
-    widget = widget->GetParent();
+    widget = getter_AddRefs(widget->GetParent());
   }
-  nsWidget *root_win = (nsWidget*)root; // this is a toplevel window
+  nsWidget *root_win = (nsWidget*)root.get(); // this is a toplevel window
   if (!root_win->mIC) {
     // create an XIC as this is a new toplevel window
 
