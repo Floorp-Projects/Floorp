@@ -2135,9 +2135,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   PRBool haveDesiredHeight = PR_FALSE;
   PRBool balanced = PR_FALSE;
 
-  // Reflow the entire table. This phase is necessary during a constrained initial reflow 
-  // and other reflows which require either a strategy init or balance. This isn't done 
-  // during an unconstrained reflow because another reflow will be processed later.
+  // Reflow the entire table (pass 2 and possibly pass 3). This phase is necessary during a 
+  // constrained initial reflow and other reflows which require either a strategy init or balance. 
+  // This isn't done during an unconstrained reflow, because it will occur later when the parent 
+  // reflows with a constrained width.
   if (NeedsReflow(aReflowState) && (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
     if (isPaginated && !mPrevInFlow && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
@@ -2239,19 +2240,33 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     AdjustForCollapsingCols(aPresContext, aDesiredSize.width);
   }
 
-  // See if we are supposed to return our max element size
+  // See if we need to calc max elem and/or preferred widths. This isn't done on 
+  // continuations or if we have balanced (since it was done then) 
+  if ((aDesiredSize.maxElementSize || (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)) &&
+      !mPrevInFlow && !balanced) {
+    // Since the calculation has some cost, avoid doing it for an unconstrained initial 
+    // reflow (it was done when the strategy was initialized in pass 1 above) and most
+    // unconstrained resize reflows. XXX The latter optimization could be a problem if the
+    // parent of a nested table starts doing unconstrained resize reflows to get max elem/preferred 
+    if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) ||
+        (eReflowReason_Incremental == aReflowState.reason)    || 
+        (eReflowReason_StyleChange == aReflowState.reason)    ||
+        ((eReflowReason_Resize == aReflowState.reason) &&
+         HasPctCol() && IsAutoWidth())) {
+      nscoord minWidth, prefWidth;
+      CalcMinAndPreferredWidths(aPresContext, aReflowState, PR_TRUE, minWidth, prefWidth);
+      SetMinWidth(minWidth);
+      SetPreferredWidth(prefWidth);
+    }
+  }
+  // See if we need to return our max element size
   if (aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width  = GetMinWidth();
     aDesiredSize.maxElementSize->height = 0;
   }
-  // See if we are supposed to compute our maximum width
+  // See if we need to return our maximum width
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aDesiredSize.mMaximumWidth = GetPreferredWidth();
-    if (!mPrevInFlow && HasPctCol() && IsAutoWidth() && !balanced) {
-      nscoord minWidth;
-      CalcMinAndPreferredWidths(aPresContext, aReflowState, PR_TRUE, minWidth, aDesiredSize.mMaximumWidth);
-      SetPreferredWidth(aDesiredSize.mMaximumWidth);
-    }
   }
 
   if (aReflowState.mFlags.mSpecialHeightReflow) {
