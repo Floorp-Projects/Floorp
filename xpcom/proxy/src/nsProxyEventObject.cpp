@@ -118,8 +118,8 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                       REFNSIID aIID)
 {
     
-    nsCOMPtr<nsProxyEventObject> proxy = 0;
-    nsCOMPtr<nsProxyEventObject> root  = 0;
+    nsCOMPtr<nsProxyEventObject> proxy;
+    nsCOMPtr<nsProxyEventObject> root;
     nsProxyEventObject* peo;
 
     // Get a class for this IID.
@@ -137,11 +137,12 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         if (aObj == nsnull) return nsnull;
     }
 
-    // always find the native root if the |real| object.  
+    // always find the native root if the |real| object.
+	// this must not be a nsCOMPtr since we need to make sure that we do a QI.
     nsCOMPtr<nsISupports> rootObject;
-    if(NS_FAILED(aObj->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(rootObject))))
-        return nsnull;
-    
+	if(NS_FAILED(aObj->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(rootObject))))
+    return nsnull;
+
     /* get our hash table */    
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     if (manager == nsnull) return nsnull;
@@ -150,17 +151,20 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     if (realToProxyMap == nsnull) return nsnull;
 
     // we need to do make sure that we addref the passed in object as well as ensure
-    // that it is of the requested IID;
+    // that it is of the requested IID;  
+	// this must not be a nsCOMPtr since we need to make sure that we do a QI.
+
     nsCOMPtr<nsISupports> requestedInterface;
-    if(NS_FAILED(aObj->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
-        return nsnull;
+	if(NS_FAILED(aObj->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
+    return nsnull;
     
 
     // this will be our key in the hash table.  
-    
+    // this must not be a nsCOMPtr since we need to make sure that we do a QI.
     nsCOMPtr<nsISupports> destQRoot;
-    if(NS_FAILED(destQueue->QueryInterface(NS_GET_IID(nsISupports), (void**)&destQueue)))
-        return nsnull;
+	if(NS_FAILED(destQueue->QueryInterface(NS_GET_IID(nsISupports), (void**)&destQueue)))
+    return nsnull;
+
 
     char* rootKeyString = PR_sprintf_append(nsnull, "%p.%p.%d", (PRUint32)rootObject.get(), (PRUint32)destQRoot.get(), proxyType);
     nsStringKey rootkey(rootKeyString);
@@ -351,12 +355,17 @@ nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsProxyEventObject*
 nsProxyEventObject::Find(REFNSIID aIID)
 {
-    nsProxyEventObject* cur = (mRoot ? mRoot : this);
+    if(aIID.Equals(GetClass()->GetProxiedIID()))
+    {
+		return this;
+	}
 
     if(aIID.Equals(NS_GET_IID(nsISupports)))
     {
-        return cur;
+        return this;
     }
+
+	nsProxyEventObject* cur = (mRoot ? mRoot : this);
 
     do
     {
