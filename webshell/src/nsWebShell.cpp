@@ -69,6 +69,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMDOcument.h"
 #include "nsTimer.h"
 
 #include "nsILocaleService.h"
@@ -229,6 +230,7 @@ public:
 
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
+  NS_IMETHOD SetDocument(nsIDOMDocument *aDoc, nsIDOMElement *aRootNode);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
@@ -1903,6 +1905,112 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
 }
 
 NS_IMETHODIMP
+nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
+{
+
+  // The tricky part is bypassing the normal load process and just putting a document into
+  // the webshell.  This is particularly nasty, since webshells don't normally even know
+  // about their documents
+
+  // (1) Create a document viewer 
+  nsCOMPtr<nsIContentViewer> documentViewer;
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+  static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
+                                                       nsIDocumentLoaderFactory::GetIID(),
+                                                       (void**)getter_AddRefs(docFactory)),
+                    NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
+  if (!doc) { return NS_ERROR_NULL_POINTER; }
+
+  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
+                                                          doc,
+                                                          "view",
+                                                          getter_AddRefs(documentViewer)),
+                    NS_ERROR_FAILURE); 
+
+  // (2) Feed the webshell to the content viewer
+  NS_ENSURE_SUCCESS(documentViewer->SetContainer(this), NS_ERROR_FAILURE);
+
+  // (3) Tell the content viewer container to embed the content viewer.
+  //     (This step causes everything to be set up for an initial flow.)
+  NS_ENSURE_SUCCESS(Embed(documentViewer, "view", nsnull), NS_ERROR_FAILURE);
+
+  // XXX: It would be great to get rid of this dummy channel!
+  const nsAutoString uriString = "about:blank";
+  nsCOMPtr<nsIURI> uri;
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
+  if (!uri) { return NS_ERROR_OUT_OF_MEMORY; }
+
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
+
+  // (4) fire start document load notification
+  nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, this, &outStreamListener), 
+                    NS_ERROR_FAILURE);
+  NS_IF_RELEASE(outStreamListener);
+  NS_ENSURE_SUCCESS(OnStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
+
+  // (5) hook up the document and its content
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
+  if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
+  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
+  doc->SetRootContent(rootContent);
+
+  // (6) reflow the document
+  SetScrolling(-1, PR_FALSE);
+  PRInt32 i;
+  PRInt32 ns = doc->GetNumberOfShells();
+  for (i = 0; i < ns; i++) 
+  {
+    nsCOMPtr<nsIPresShell> shell(dont_AddRef(doc->GetShellAt(i)));
+    if (shell) 
+    {
+      // Make shell an observer for next time
+      NS_ENSURE_SUCCESS(shell->BeginObservingDocument(), NS_ERROR_FAILURE);
+
+      // Resize-reflow this time
+      nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(documentViewer);
+      if (!docViewer) { return NS_ERROR_OUT_OF_MEMORY; }
+      nsCOMPtr<nsIPresContext> presContext;
+      NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
+      if (!presContext) { return NS_ERROR_OUT_OF_MEMORY; }
+      float p2t;
+      presContext->GetScaledPixelsToTwips(&p2t);
+
+      nsRect r;
+      GetBounds(r.x, r.y, r.width, r.height);
+      NS_ENSURE_SUCCESS(shell->InitialReflow(NSToCoordRound(r.width * p2t), NSToCoordRound(r.height * p2t)), NS_ERROR_FAILURE);
+
+      // Now trigger a refresh
+      nsCOMPtr<nsIViewManager> vm;
+      NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+      if (vm) 
+      {
+        PRBool enabled;
+        documentViewer->GetEnableRendering(&enabled);
+        if (enabled) {
+          vm->EnableRefresh();
+        }
+        NS_ENSURE_SUCCESS(vm->SetWindowDimensions(NSToCoordRound(r.width * p2t), 
+                                                  NSToCoordRound(r.height * p2t)), 
+                          NS_ERROR_FAILURE);
+      }
+    }
+  }
+
+  // (7) fire end document load notification
+	mProcessedEndDocumentLoad = PR_FALSE;
+  nsresult rv = NS_OK;
+  NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIInputStream* aPostDataStream,
                     PRBool aModifyHistory,
@@ -2335,7 +2443,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
         ret = shist->Add(spec, this);
   }
 
-  
   nsCOMPtr<nsIWebShell> parent;
   nsresult res = GetParent(*getter_AddRefs(parent));
   nsAutoString urlstr;
