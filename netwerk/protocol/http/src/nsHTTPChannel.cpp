@@ -83,7 +83,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mResponseDataListener(nsnull),
     mState(HS_IDLE),
     mURI(dont_QueryInterface(i_URL)),
-    mUsingProxy(PR_FALSE)
+    mUsingProxy(PR_FALSE),
+    mRawResponseListener(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -221,7 +222,19 @@ nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 NS_IMETHODIMP
 nsHTTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    // parameter validation
+    if (!observer) return NS_ERROR_NULL_POINTER;
+
+    if (mResponseDataListener) {
+        rv = NS_ERROR_IN_PROGRESS;
+    } 
+
+    mOpenObserver = observer;
+    mOpenContext = ctxt;
+
+    return Open();
 }
 
 NS_IMETHODIMP
@@ -233,19 +246,21 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     // Initial parameter checks...
     if (mResponseDataListener) {
-        rv = NS_ERROR_IN_PROGRESS;
+        return NS_ERROR_IN_PROGRESS;
     } 
     else if (!listener) {
-        rv = NS_ERROR_NULL_POINTER;
+        return NS_ERROR_NULL_POINTER;
     }
 
-    // Initiate the loading of the URL...
-    if (NS_SUCCEEDED(rv)) {
-        mResponseDataListener = listener;
-        NS_ADDREF(mResponseDataListener);
+    mResponseDataListener = listener;
+    NS_ADDREF(mResponseDataListener);
+    mResponseContext = do_QueryInterface(aContext);
 
-        mResponseContext = do_QueryInterface(aContext);
-
+    if (mOpenObserver) {
+        // we were AsyncOpen()'d
+        NS_ASSERTION(mRawResponseListener, "our pointer to the response was never set");
+        return mRawResponseListener->FireSingleOnData(listener, aContext);
+    } else {
         rv = Open();
     }
 
