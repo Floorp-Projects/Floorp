@@ -36,6 +36,7 @@
 #include "nsIPref.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsNSSHelper.h"
 
@@ -112,6 +113,7 @@ private:
   static int PR_CALLBACK PrefChangedCallback(const char* aPrefName, void* data);
   void PrefChanged(const char* aPrefName);
 
+  nsCOMPtr<nsIScriptSecurityManager> mScriptSecurityManager;
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPref> mPref;

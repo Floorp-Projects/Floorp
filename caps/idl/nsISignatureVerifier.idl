@@ -24,7 +24,14 @@
 /* An interface for calculating secure hashes and verifying signatures*/
 #include "nsIPrincipal.idl"
 
+//interface nsIX509Cert;
+
+%{C++
+struct HASHContextStr;
+%}
+
 [ptr] native UnsignedCharPtr(unsigned char);
+[ptr] native HASHContextPtr(HASHContextStr);
 
 [uuid(7bdbdb36-1dd2-11b2-a44f-e303037f214d)]
 interface nsISignatureVerifier : nsISupports
@@ -43,19 +50,16 @@ interface nsISignatureVerifier : nsISupports
   const unsigned long MAX_HASH_LENGTH = SHA1_LENGTH;
 
   /* Secure Hashing functions */
-  void hashBegin(in unsigned long alg, out unsigned long id);
-  void hashUpdate(in unsigned long id, in string buf, in unsigned long buflen);
-  [noscript] void hashEnd(in unsigned long id, out UnsignedCharPtr hash, 
+  HASHContextPtr hashBegin(in unsigned long alg);
+  void hashUpdate(in HASHContextPtr id, in string buf, in unsigned long buflen);
+  [noscript] void hashEnd(in HASHContextPtr id, out UnsignedCharPtr hash, 
                           out unsigned long hashlen, in unsigned long maxLen);
   
-  /* Signature Verification functions */
-  nsIPrincipal createPrincipalFromSignature(in string aSignature,
-                                            in unsigned long aSignatureLen);
   nsIPrincipal verifySignature(in string aSignature,
-                       in unsigned long aSignatureLen,
-                       in string plaintext,
-                       in unsigned long plaintextLen,
-                       out long errorCode);
+                               in unsigned long aSignatureLen,
+                               in string plaintext,
+                               in unsigned long plaintextLen,
+                               out long errorCode);
 };
 
 
