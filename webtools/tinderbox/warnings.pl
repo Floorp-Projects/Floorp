@@ -343,7 +343,7 @@ sub print_warning {
     print   "$file:$linenum";
     print "</a> (multiple file matches)";
   } elsif ($file =~ /\[no_match\]/) {
-    $file =~ s/.\[multiple\]//;
+    $file =~ s/.\[no_match\]//;
     print   "$file:$linenum (no file match)";
   } else {
     print "<a target='_other' href='"
