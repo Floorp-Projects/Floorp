@@ -115,77 +115,85 @@ typedef PRUint32 nsSplittableType;
  */
 typedef PRUint32 nsFrameState;
 
-#define NS_FRAME_IN_REFLOW 0x00000001
+#define NS_FRAME_IN_REFLOW                            0x00000001
 
 // This bit is set when a frame is created. After it has been reflowed
 // once (during the DidReflow with a finished state) the bit is
 // cleared.
-#define NS_FRAME_FIRST_REFLOW 0x00000002
+#define NS_FRAME_FIRST_REFLOW                         0x00000002
 
 // If this bit is is set, then the view position and size should be
 // kept in sync with the frame position and size. If the bit is not
 // set then it's the responsibility of the frame itself (or whoever
 // created the view) to position and size its associated view
-#define NS_FRAME_SYNC_FRAME_AND_VIEW 0x00000004
+#define NS_FRAME_SYNC_FRAME_AND_VIEW                  0x00000004
 
 // If this bit is set, then there is a child frame in the frame that
 // extends outside this frame's bounding box. The implication is that
 // the frames rect does not completely cover its children and
 // therefore operations like rendering and hit testing (for example)
 // must operate differently.
-#define NS_FRAME_OUTSIDE_CHILDREN 0x00000008
+#define NS_FRAME_OUTSIDE_CHILDREN                     0x00000008
 
 // If this bit is set, then a reference to the frame is being held
 // elsewhere.  The frame may want to send a notification when it is
 // destroyed to allow these references to be cleared.
-#define NS_FRAME_EXTERNAL_REFERENCE 0x00000010
+#define NS_FRAME_EXTERNAL_REFERENCE                   0x00000010
 
 // If this bit is set, then the frame is a replaced element. For example,
 // a frame displaying an image
-#define NS_FRAME_REPLACED_ELEMENT 0x00000020
+#define NS_FRAME_REPLACED_ELEMENT                     0x00000020
 
 // If this bit is set, then the frame corresponds to generated content
-#define NS_FRAME_GENERATED_CONTENT 0x00000040
+#define NS_FRAME_GENERATED_CONTENT                    0x00000040
 
 // If this bit is set, then the frame has requested one or more image
 // loads via the nsIPresContext.StartLoadImage API at some time during
 // its lifetime.
-#define NS_FRAME_HAS_LOADED_IMAGES 0x00000080
+#define NS_FRAME_HAS_LOADED_IMAGES                    0x00000080
 
 // If this bit is set, then the frame is has been moved out of the flow,
 // e.g., it is absolutely positioned or floated
-#define NS_FRAME_OUT_OF_FLOW 0x00000100
+#define NS_FRAME_OUT_OF_FLOW                          0x00000100
 
 // If this bit is set, then the frame reflects content that may be selected
-#define NS_FRAME_SELECTED_CONTENT 0x00000200
+#define NS_FRAME_SELECTED_CONTENT                     0x00000200
 
 // If this bit is set, then the frame is dirty and needs to be reflowed.
 // This bit is set when the frame is first created
-#define NS_FRAME_IS_DIRTY 0x00000400
+#define NS_FRAME_IS_DIRTY                             0x00000400
 
 // If this bit is set then the frame is unflowable.
-#define NS_FRAME_IS_UNFLOWABLE 0x00000800
+#define NS_FRAME_IS_UNFLOWABLE                        0x00000800
 
 // If this bit is set, the frame has dirty children.
-#define NS_FRAME_HAS_DIRTY_CHILDREN 0x00001000
+#define NS_FRAME_HAS_DIRTY_CHILDREN                   0x00001000
 
 // If this bit is set, the frame has an associated view
-#define NS_FRAME_HAS_VIEW 0x00002000
+#define NS_FRAME_HAS_VIEW                             0x00002000
 
 // If this bit is set, the frame was created from anonymous content.
-#define NS_FRAME_INDEPENDENT_SELECTION 0x00004000
+#define NS_FRAME_INDEPENDENT_SELECTION                0x00004000
 
 // If this bit is set, the frame is "special" (lame term, I know),
 // which means that it is part of the mangled frame hierarchy that
 // results when an inline has been split because of a nested block.
-#define NS_FRAME_IS_SPECIAL 0x00008000
+#define NS_FRAME_IS_SPECIAL                           0x00008000
 
-// The low 16 bits of the frame state word are reserved by this API.
-#define NS_FRAME_RESERVED 0x0000FFFF
+// If this bit is set, the frame doesn't allow ignorable whitespace as
+// children. For example, the whitespace between <table>\n<tr>\n<td>
+// will be excluded during the construction of children. 
+// The bit is set when the frame is first created and remain
+// unchanged during the life-time of the frame.
+#define NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE         0x00010000
 
-// The upper 16 bits of the frame state word are reserved for frame
+
+// The lower 20 bits of the frame state word are reserved by this API.
+#define NS_FRAME_RESERVED                             0x000FFFFF
+
+// The upper 12 bits of the frame state word are reserved for frame
 // implementations.
-#define NS_FRAME_IMPL_RESERVED 0xFFFF0000
+#define NS_FRAME_IMPL_RESERVED                        0xFFF00000
 
 //----------------------------------------------------------------------
 
