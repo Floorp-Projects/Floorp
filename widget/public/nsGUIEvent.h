@@ -336,8 +336,8 @@ enum nsDragDropEventStatus {
 // Indicates a script error has occurred
 #define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
 
-// Indicates a script error has occurred
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
+#define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)

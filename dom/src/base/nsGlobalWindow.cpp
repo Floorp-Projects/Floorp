@@ -3805,6 +3805,21 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
          }
       }
 
+   else if(aPropName.EqualsWithConversion("onscroll"))
+      {
+      if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
+         {
+         nsCOMPtr<nsIScriptContext> scriptCX;
+         nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+         if(!scriptCX ||
+            NS_OK != manager->RegisterScriptEventListener(scriptCX, this, atom,
+            NS_GET_IID(nsIDOMPaintListener)))
+            {
+            return PR_FALSE;
+            }
+         }
+      }
+
    return PR_TRUE;
 }
 

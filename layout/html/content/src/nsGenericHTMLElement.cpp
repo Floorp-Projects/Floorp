@@ -1246,7 +1246,9 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
              (nsLayoutAtoms::onchange == aAttribute) ||
              (nsLayoutAtoms::onselect == aAttribute))
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
-    else if (nsLayoutAtoms::onpaint == aAttribute)
+    else if (nsLayoutAtoms::onpaint == aAttribute ||
+             nsLayoutAtoms::onresize == aAttribute ||
+             nsLayoutAtoms::onscroll == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
     else if (nsLayoutAtoms::oninput == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID);

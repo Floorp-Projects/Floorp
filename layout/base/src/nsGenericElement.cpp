@@ -1667,7 +1667,8 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
           }
         }
       }
-      else if (atom.get() == nsLayoutAtoms::onpaint) {
+      else if (atom.get() == nsLayoutAtoms::onpaint || atom.get() == nsLayoutAtoms::onresize ||
+               atom.get() == nsLayoutAtoms::onscroll) {
         if (NS_OK == GetListenerManager(&manager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if (NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)GetDOMSlots()->mScriptObject, getter_AddRefs(mScriptCX))) ||
