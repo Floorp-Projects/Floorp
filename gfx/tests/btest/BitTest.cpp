@@ -647,8 +647,8 @@ nscolor white,black;
   aSurface->SetFont(*font);
 
     // clear surface
-  NS_ColorNameToRGB("white", &white);
-  NS_ColorNameToRGB("red", &black);
+  NS_ColorNameToRGB(nsAutoString("white"), &white);
+  NS_ColorNameToRGB(nsAutoString("red"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
@@ -687,8 +687,8 @@ nscolor white,black;
             
 
   // clear surface
-  NS_ColorNameToRGB("white", &white);
-  NS_ColorNameToRGB("black", &black);
+  NS_ColorNameToRGB(nsAutoString("white"), &white);
+  NS_ColorNameToRGB(nsAutoString("black"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
@@ -741,8 +741,8 @@ nscolor white,black;
   aSurface->SetFont(*font);
 
     // clear surface
-  NS_ColorNameToRGB("white", &white);
-  NS_ColorNameToRGB("black", &black);
+  NS_ColorNameToRGB(nsAutoString("white"), &white);
+  NS_ColorNameToRGB(nsAutoString("black"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
@@ -875,13 +875,13 @@ char *str;
     if(aGenLoad == PR_TRUE)
       {
       MyBlendObserver *observer = new MyBlendObserver(aTheImage);
-      NS_ColorNameToRGB("white", &white);
+      NS_ColorNameToRGB(nsAutoString("white"), &white);
       gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
     else
       {
       MyObserver *observer = new MyObserver();
-      NS_ColorNameToRGB("white", &white);
+      NS_ColorNameToRGB(nsAutoString("white"), &white);
       gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
             
