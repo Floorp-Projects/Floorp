@@ -744,7 +744,7 @@ void nsFileSpec::operator = (const char* inString)
 {
     mPath = nsFileSpecHelpers::StringAssign(mPath, inString);
     // Make canonical and absolute.
-    nsFileSpecHelpers::Canonify(mPath, PR_TRUE /* XXX? */);
+    nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
     mError = NS_OK;
 }
 #endif //XP_UNIX
