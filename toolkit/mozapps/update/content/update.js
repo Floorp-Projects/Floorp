@@ -368,15 +368,70 @@ var gInstallingPage = {
 
     // Get XPInstallManager and kick off download/install 
     // process, registering us as an observer. 
-    
-    //XXXben
-    window.advance = function()
-    {
-      document.getElementById("installing").setAttribute("next", "finished");
-      document.documentElement.advance();
+    var items = [];
+
+    var foundList = document.getElementById("foundList");
+    for (var i = 0; i < foundList.childNodes.length; ++i) {
+      var item = foundList.childNodes[i];
+      if (item.type != nsIUpdateItem.TYPE_APP) {
+        items.push(item.url);
+        this._objs.push({ name: item.name });
+      }
     }
-    setTimeout("advance()", 2000);
+    
+    var xpimgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
+                           .createInstance(Components.interfaces.nsIXPInstallManager);
+    xpimgr.initManagerFromChrome(items, items.length, this);
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIXPIProgressDialog
+  onStateChange: function (aIndex, aState, aValue)
+  {
+    var strings = document.getElementById("updateStrings");
+
+    const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
+    switch (aState) {
+    case nsIXPIProgressDialog.DOWNLOAD_START:
+      var label = strings.getFormattedString("downloadingPrefix", [this._objs[aIndex].name]);
+      var actionItem = document.getElementById("actionItem");
+      actionItem.value = label;
+      break;
+    case nsIXPIProgressDialog.DOWNLOAD_DONE:
+    case nsIXPIProgressDialog.INSTALL_START:
+      var label = strings.getFormattedString("installingPrefix", [this._objs[aIndex].name]);
+      var actionItem = document.getElementById("actionItem");
+      actionItem.value = label;
+      break;
+    case nsIXPIProgressDialog.INSTALL_DONE:
+      if (aValue) {
+        this._objs[aIndex].error = aValue;
+        this._errors = true;
+      }
+      break;
+    case nsIXPIProgressDialog.DIALOG_CLOSE:
+      document.getElementById("installing").setAttribute("next", this._errors ? "errors" : "finished");
+      document.documentElement.advance();
+      break;
+    }
+  },
+  
+  _objs: [],
+  _errors: false,
+  
+  onProgress: function (aIndex, aValue, aMaxValue)
+  {
+    var downloadProgress = document.getElementById("downloadProgress");
+    downloadProgress.value = Math.ceil((aValue/aMaxValue) * 100);
   }
+};
+
+var gErrorsPage = {
+  onShowErrors: function ()
+  {
+    openDialog("chrome://mozapps/content/update/errors.xul", "", 
+               "modal", gInstallingPage._objs);
+  }  
 };
 
 var gFinishedPage = {
