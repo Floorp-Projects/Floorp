@@ -1351,7 +1351,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
     nsAutoString type, href, title, media, alternate;
 
     // If it's a stylesheet PI...
-    if (target.EqualsIgnoreCase(kStyleSheetPI)) {
+    if (target.Equals(kStyleSheetPI)) {
       result = GetQuotedAttributeValue(text, "href", href);
       // If there was an error or there's no href, we can't do
       // anything with this PI
