@@ -56,29 +56,34 @@ static PK11Slot pk11_slot[3];
  * to hold value.
  */
 static PK11Attribute *
-pk11_NewAttribute(PLArenaPool *arena,
+pk11_NewAttribute(PK11Object *object,
 	CK_ATTRIBUTE_TYPE type, CK_VOID_PTR value, CK_ULONG len)
 {
     PK11Attribute *attribute;
 
-#ifdef REF_COUNT_ATTRIBUTE
-    attribute = (PK11Attribute*)PORT_Alloc(sizeof(PK11Attribute));
-#else
-    attribute = (PK11Attribute*)PORT_ArenaAlloc(arena,sizeof(PK11Attribute));
-#endif
-    if (attribute == NULL) return NULL;
+#ifdef NO_ARENA
+    int index;
+    /* 
+     * NO_ARENA attempts to keep down contention on Malloc and Arena locks
+     * by limiting the number of these calls on high traversed paths. this
+     * is done for attributes by 'allocating' them from a pool already allocated
+     * by the parent object.
+     */
+    PK11_USE_THREADS(PR_Lock(object->attributeLock);)
+    index = object->nextAttr++;
+    PK11_USE_THREADS(PR_Unlock(object->attributeLock);)
+    PORT_Assert(index < MAX_OBJS_ATTRS);
+    if (index >= MAX_OBJS_ATTRS) return NULL;
 
+    attribute = &object->attrList[index];
     attribute->attrib.type = type;
     if (value) {
-#ifdef REF_COUNT_ATTRIBUTE
-	attribute->attrib.pValue = PORT_Alloc(len);
-#else
-	attribute->attrib.pValue = PORT_ArenaAlloc(arena,len);
-#endif
+        if (len <= ATTR_SPACE) {
+	    attribute->attrib.pValue = attribute->space;
+	} else {
+	    attribute->attrib.pValue = PORT_Alloc(len);
+	}
 	if (attribute->attrib.pValue == NULL) {
-#ifdef REF_COUNT_ATTRIBUTE
-	    PORT_Free(attribute);
-#endif
 	    return NULL;
 	}
 	PORT_Memcpy(attribute->attrib.pValue,value,len);
@@ -87,6 +92,34 @@ pk11_NewAttribute(PLArenaPool *arena,
 	attribute->attrib.pValue = NULL;
 	attribute->attrib.ulValueLen = 0;
     }
+#else
+#ifdef REF_COUNT_ATTRIBUTE
+    attribute = (PK11Attribute*)PORT_Alloc(sizeof(PK11Attribute));
+#else
+    attribute = (PK11Attribute*)PORT_ArenaAlloc(object->arena,sizeof(PK11Attribute));
+#endif /* REF_COUNT_ATTRIBUTE */
+    if (attribute == NULL) return NULL;
+
+    if (value) {
+#ifdef REF_COUNT_ATTRIBUTE
+	attribute->attrib.pValue = PORT_Alloc(len);
+#else
+	attribute->attrib.pValue = PORT_ArenaAlloc(object->arena,len);
+#endif /* REF_COUNT_ATTRIBUTE */
+	if (attribute->attrib.pValue == NULL) {
+#ifdef REF_COUNT_ATTRIBUTE
+	    PORT_Free(attribute);
+#endif /* REF_COUNT_ATTRIBUTE */
+	    return NULL;
+	}
+	PORT_Memcpy(attribute->attrib.pValue,value,len);
+	attribute->attrib.ulValueLen = len;
+    } else {
+	attribute->attrib.pValue = NULL;
+	attribute->attrib.ulValueLen = 0;
+    }
+#endif /* NO_ARENA */
+    attribute->attrib.type = type;
     attribute->handle = type;
     attribute->next = attribute->prev = NULL;
 #ifdef REF_COUNT_ATTRIBUTE
@@ -101,7 +134,7 @@ pk11_NewAttribute(PLArenaPool *arena,
 #else
     attribute->refLock = NULL;
 #endif
-#endif
+#endif /* REF_COUNT_ATTRIBUTE */
     return attribute;
 }
 
@@ -288,11 +321,76 @@ pk11_nullAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
 	PORT_Memset(attribute->attrib.pValue,0,attribute->attrib.ulValueLen);
 #ifdef REF_COUNT_ATTRIBUTE
 	PORT_Free(attribute->attrib.pValue);
-#endif
+#endif /* REF_COUNT_ATTRIBUTE */
+#ifdef NO_ARENA
+	if (attribute->attrib.pValue != attribute->space) {
+	    PORT_Free(attribute->attrib.pValue);
+	}
+#endif /* NO_ARENA */
 	attribute->attrib.pValue = NULL;
 	attribute->attrib.ulValueLen = 0;
     }
     pk11_FreeAttribute(attribute);
+}
+
+/*
+ * force an attribute to a spaecif value.
+ */
+CK_RV
+pk11_forceAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type, void *value,
+						unsigned int len)
+{
+    PK11Attribute *attribute;
+    void *att_val = NULL;
+
+    attribute=pk11_FindAttribute(object,type);
+    if (attribute == NULL) return pk11_AddAttributeType(object,type,value,len);
+
+
+    if (value) {
+#ifdef NO_ARENA
+        if (len <= ATTR_SPACE) {
+	    att_val = attribute->space;
+	} else {
+	    att_val = PORT_Alloc(len);
+	}
+#else
+#ifdef REF_COUNT_ATTRIBUTE
+	att_val = PORT_Alloc(len);
+#else
+	att_val = PORT_ArenaAlloc(object->arena,len);
+#endif /* REF_COUNT_ATTRIBUTE */
+#endif /* NO_ARENA */
+	if (att_val == NULL) {
+	    return CKR_HOST_MEMORY;
+	}
+	if (attribute->attrib.pValue == att_val) {
+	    PORT_Memset(attribute->attrib.pValue,0,
+					attribute->attrib.ulValueLen);
+	}
+	PORT_Memcpy(att_val,value,len);
+    }
+    if (attribute->attrib.pValue != NULL) {
+	if (attribute->attrib.pValue != att_val) {
+	    PORT_Memset(attribute->attrib.pValue,0,
+					attribute->attrib.ulValueLen);
+	}
+#ifdef REF_COUNT_ATTRIBUTE
+	PORT_Free(attribute->attrib.pValue);
+#endif /* REF_COUNT_ATTRIBUTE */
+#ifdef NO_ARENA
+	if (attribute->attrib.pValue != attribute->space) {
+	    PORT_Free(attribute->attrib.pValue);
+	}
+#endif /* NO_ARENA */
+	attribute->attrib.pValue = NULL;
+	attribute->attrib.ulValueLen = 0;
+    }
+    if (att_val) {
+	attribute->attrib.pValue = att_val;
+	attribute->attrib.ulValueLen = len;
+    }
+    return CKR_OK;
 }
 
 /*
@@ -482,7 +580,7 @@ pk11_AddAttributeType(PK11Object *object,CK_ATTRIBUTE_TYPE type,void *valPtr,
 							CK_ULONG length)
 {
     PK11Attribute *attribute;
-    attribute = pk11_NewAttribute(object->arena,type,valPtr,length);
+    attribute = pk11_NewAttribute(object,type,valPtr,length);
     if (attribute == NULL) { return CKR_HOST_MEMORY; }
     pk11_AddAttribute(object,attribute);
     return CKR_OK;
@@ -492,6 +590,23 @@ pk11_AddAttributeType(PK11Object *object,CK_ATTRIBUTE_TYPE type,void *valPtr,
  * ******************** Object Utilities *******************************
  */
 
+/* allocation hooks that allow us to recycle old object structures */
+static PK11Object *
+pk11_GetObjectFromList(PRBool *hasLocks) {
+    PK11Object *object = (PK11Object*)PORT_ZAlloc(sizeof(PK11Object));
+    *hasLocks = PR_FALSE;
+    return object;
+}
+
+static void
+pk11_PutObjectToList(PK11Object *object) {
+    PK11_USE_THREADS(PR_DestroyLock(object->attributeLock);)
+    PK11_USE_THREADS(PR_DestroyLock(object->refLock);)
+    object->attributeLock = object->refLock = NULL;
+    PORT_Free(object);
+}
+
+
 /*
  * Create a new object
  */
@@ -500,8 +615,17 @@ pk11_NewObject(PK11Slot *slot)
 {
     PK11Object *object;
     PLArenaPool *arena;
+    PRBool hasLocks = PR_FALSE;
     int i;
 
+
+#ifdef NO_ARENA
+    object = pk11_GetObjectFromList(&hasLocks);
+    if (object == NULL) {
+	return NULL;
+    }
+    object->nextAttr = 0;
+#else
     arena = PORT_NewArena(2048);
     if (arena == NULL) return NULL;
 
@@ -510,9 +634,14 @@ pk11_NewObject(PK11Slot *slot)
 	PORT_FreeArena(arena,PR_FALSE);
 	return NULL;
     }
+    object->arena = arena;
+
+    for (i=0; i < MAX_OBJS_ATTRS; i++) {
+	object->attrList[i].attrib.pValue = NULL;
+    }
+#endif
 
     object->handle = 0;
-    object->arena = arena;
     object->next = object->prev = NULL;
     object->sessionList.next = NULL;
     object->sessionList.prev = NULL;
@@ -525,15 +654,23 @@ pk11_NewObject(PK11Slot *slot)
     object->objclass = 0xffff;
     object->wasDerived = PR_FALSE;
 #ifdef PKCS11_USE_THREADS
-    object->refLock = PR_NewLock();
+    if (!hasLocks) object->refLock = PR_NewLock();
     if (object->refLock == NULL) {
+#ifdef NO_ARENA
+	PORT_Free(object);
+#else
 	PORT_FreeArena(arena,PR_FALSE);
+#endif
 	return NULL;
     }
-    object->attributeLock = PR_NewLock();
+    if (!hasLocks) object->attributeLock = PR_NewLock();
     if (object->attributeLock == NULL) {
 	PK11_USE_THREADS(PR_DestroyLock(object->refLock);)
+#ifdef NO_ARENA
+	PORT_Free(object);
+#else
 	PORT_FreeArena(arena,PR_FALSE);
+#endif
 	return NULL;
     }
 #else
@@ -555,7 +692,7 @@ pk11_NewObject(PK11Slot *slot)
 static CK_RV
 pk11_DestroyObject(PK11Object *object)
 {
-#ifdef REF_COUNT_ATTRIBUTE
+#if defined(REF_COUNT_ATTRIBUTE) || defined(NO_ARENA)
     int i;
 #endif
     SECItem pubKey;
@@ -587,6 +724,22 @@ pk11_DestroyObject(PK11Object *object)
     } 
     if (object->label) PORT_Free(object->label);
 
+    object->inDB = PR_FALSE;
+    object->label = NULL;
+
+#ifdef NO_ARENA
+    for (i=0; i < MAX_OBJS_ATTRS; i++) {
+	unsigned char *value = object->attrList[i].attrib.pValue;
+	if (value) {
+	    PORT_Memset(value,0,object->attrList[i].attrib.ulValueLen);
+	    if (value != object->attrList[i].space) {
+		PORT_Free(value);
+	    }
+	    object->attrList[i].attrib.pValue = NULL;
+	}
+    }
+#endif
+
 #ifdef REF_COUNT_ATTRIBUTE
     /* clean out the attributes */
     /* since no one is referencing us, it's safe to walk the chain
@@ -602,13 +755,17 @@ pk11_DestroyObject(PK11Object *object)
 	object->head[i] = NULL;
     }
 #endif
-    PK11_USE_THREADS(PR_DestroyLock(object->attributeLock);)
-    PK11_USE_THREADS(PR_DestroyLock(object->refLock);)
     if (object->objectInfo) {
 	(*object->infoFree)(object->objectInfo);
     }
+#ifdef NO_ARENA
+    pk11_PutObjectToList(object);
+#else
+    PK11_USE_THREADS(PR_DestroyLock(object->attributeLock);)
+    PK11_USE_THREADS(PR_DestroyLock(object->refLock);)
     arena = object->arena;
     PORT_FreeArena(arena,PR_FALSE);
+#endif
     return crv;
 }
 
@@ -744,8 +901,7 @@ pk11_CopyObject(PK11Object *destObject,PK11Object *srcObject)
 		    /* we need to copy the attribute since each attribute
 		     * only has one set of link list pointers */
 		    PK11Attribute *newAttribute = pk11_NewAttribute(
-				destObject->arena,
-					pk11_attr_expand(&attribute->attrib));
+			  destObject,pk11_attr_expand(&attribute->attrib));
 		    if (newAttribute == NULL) {
 			PK11_USE_THREADS(PR_Unlock(srcObject->attributeLock);)
 			return CKR_HOST_MEMORY;

@@ -475,17 +475,6 @@ pk11_defaultAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type,void *value,
 }
 
 /*
- * overwrite a potential existing attribute with a new value
- */
-CK_RV
-pk11_forceAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type,void *value,
-							unsigned int len)
-{
-    pk11_DeleteAttributeType(object,type);
-    return pk11_AddAttributeType(object,type,value,len);
-}
-
-/*
  * check the consistancy and initialize a Data Object 
  */
 static CK_RV

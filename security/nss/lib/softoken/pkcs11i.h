@@ -44,6 +44,11 @@
 
 #define PKCS11_USE_THREADS
 
+#define NO_ARENA
+#define MAX_OBJS_ATTRS 45
+#define ATTR_SPACE 50  /* hold up to a SSL premaster secret */
+
+
 #ifdef PKCS11_USE_THREADS
 #define PK11_USE_THREADS(x) x
 #else
@@ -119,6 +124,9 @@ struct PK11AttributeStr {
     /*must be called handle to make pk11queue_find work */
     CK_ATTRIBUTE_TYPE	handle;
     CK_ATTRIBUTE 	attrib;
+#ifdef NO_ARENA
+    unsigned char space[ATTR_SPACE];
+#endif
 };
 
 
@@ -139,7 +147,11 @@ struct PK11ObjectStr {
     PK11Object *prev;
     PK11ObjectList sessionList;
     CK_OBJECT_HANDLE handle;
+#ifdef NO_ARENA
+    int nextAttr;
+#else
     PLArenaPool	*arena;
+#endif
     int refCount;
     PRLock 		*refLock;
     PRLock		*attributeLock;
@@ -152,6 +164,9 @@ struct PK11ObjectStr {
     PRBool		inDB;
     PRBool		wasDerived;
     PK11Attribute 	*head[ATTRIBUTE_HASH_SIZE];
+#ifdef NO_ARENA
+    PK11Attribute	attrList[MAX_OBJS_ATTRS];
+#endif
 };
 
 /*
