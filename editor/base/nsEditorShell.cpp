@@ -1476,8 +1476,7 @@ nsEditorShell::FinishHTMLSource(void)
   if (mHTMLSourceMode)
   {
     // Call the JS command to convert and switch to previous edit mode
-    nsAutoString command(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
-    return DoControllerCommand(command);
+    return DoControllerCommand(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
   }
   return NS_OK;
 }
@@ -2180,8 +2179,7 @@ nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
   // For now, don't update the menu at all if aSaveToPrefs is false
   if (aSaveToPrefs)
   {
-    nsAutoString commandName(NS_LITERAL_STRING("cmd_buildRecentPagesMenu"));
-    res = DoControllerCommand(commandName);
+    res = DoControllerCommand(NS_LITERAL_STRING("cmd_buildRecentPagesMenu"));
   }
    
   return res;
@@ -3003,7 +3001,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
   { 
     // Stuff in Parameters 
     block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
-    nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif"  ); 
+    nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif" ); 
     block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
 
     nsAutoString yesStr, noStr;
@@ -5389,15 +5387,12 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
   // For double-click, edit element properties
   if (aClickCount == 2)
   {
-    nsAutoString commandName;
-
     // In "All Tags" mode, use AdvancedProperties,
     //  in others use appriate object property dialog
-    if (mDisplayMode != eDisplayModeAllTags) 
-      commandName = NS_LITERAL_STRING("cmd_objectProperties");
-    else
-      commandName = NS_LITERAL_STRING("cmd_advancedProperties");
-    
+    nsAReadableString &commandName = (mDisplayMode != eDisplayModeAllTags) ? 
+                            NS_LITERAL_STRING("cmd_objectProperties") :
+                            NS_LITERAL_STRING("cmd_advancedProperties");
+                            
     rv = DoControllerCommand(commandName);
 
     if (NS_SUCCEEDED(rv))
@@ -5408,7 +5403,7 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
 }
 
 nsresult
-nsEditorShell::DoControllerCommand(nsString& aCommand)
+nsEditorShell::DoControllerCommand(const nsAReadableString& aCommand)
 {
   // Get the list of controllers...
   nsCOMPtr<nsIControllers> controllers;      
@@ -5424,7 +5419,7 @@ nsEditorShell::DoControllerCommand(nsString& aCommand)
   //... then find the specific controller supporting desired command
   nsCOMPtr<nsIController> controller; 
 
-  rv = controllers->GetControllerForCommand(aCommand.GetUnicode(), getter_AddRefs(controller));
+  rv = controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
   
   if (NS_SUCCEEDED(rv))
   {
@@ -5432,7 +5427,7 @@ nsEditorShell::DoControllerCommand(nsString& aCommand)
 
     nsCOMPtr<nsIEditorController> composerController = do_QueryInterface(controller);
     // Execute the command
-    rv = composerController->DoCommand(aCommand.GetUnicode());
+    rv = composerController->DoCommand(aCommand);
   }
   return rv;
 }

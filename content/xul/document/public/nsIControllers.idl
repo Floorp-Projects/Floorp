@@ -30,7 +30,7 @@ interface nsIControllers : nsISecurityCheckedComponent
 {
 	attribute nsIDOMXULCommandDispatcher commandDispatcher;
 
-	nsIController getControllerForCommand(in wstring command);
+	nsIController getControllerForCommand(in DOMString command);
 
 	void insertControllerAt(in unsigned long index, in nsIController controller);
 	nsIController removeControllerAt(in unsigned long index);

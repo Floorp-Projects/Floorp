@@ -129,9 +129,9 @@ protected:
   void InitFrameData();
   
     // helpers for executing commands
-  virtual nsresult GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController ) ;
-  virtual nsresult IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled ) ;
-  virtual nsresult DoCommand ( const nsAReadableString & inCommand ) ;
+  virtual nsresult GetControllerForCommand ( const nsAReadableString & inCommand, nsIController** outController );
+  virtual nsresult IsCommandEnabled ( const nsAReadableString & inCommand, PRBool* outEnabled );
+  virtual nsresult DoCommand ( const nsAReadableString & inCommand );
 
   //
   // Helper method that is called when a new document (including any

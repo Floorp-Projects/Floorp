@@ -249,6 +249,8 @@ nsFocusController::Blur(nsIDOMEvent* aEvent)
 nsresult
 nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOMWindowInternal** aWindow)
 {
+	NS_ENSURE_ARG_POINTER(aWindow);
+
   nsCOMPtr<nsIDocument> objectOwner = do_QueryInterface(aDocument);
   if(!objectOwner) return NS_OK;
 
@@ -265,15 +267,14 @@ nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOM
 NS_IMETHODIMP
 nsFocusController::GetControllerForCommand(const nsAReadableString& aCommand, nsIController** _retval)
 {
-  const nsPromiseFlatString& flatCommand = PromiseFlatString(aCommand);
-  const PRUnichar *command = flatCommand.get();
+  NS_ENSURE_ARG_POINTER(_retval);	
   *_retval = nsnull;
 
   nsCOMPtr<nsIControllers> controllers;
   GetControllers(getter_AddRefs(controllers));
   if(controllers) {
     nsCOMPtr<nsIController> controller;
-    controllers->GetControllerForCommand(command, getter_AddRefs(controller));
+    controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
     if(controller) {
       *_retval = controller;
       NS_ADDREF(*_retval);
@@ -303,7 +304,7 @@ nsFocusController::GetControllerForCommand(const nsAReadableString& aCommand, ns
       domWindow->GetControllers(getter_AddRefs(controllers2));
       if(controllers2) {
         nsCOMPtr<nsIController> controller;
-        controllers2->GetControllerForCommand(command, getter_AddRefs(controller));
+        controllers2->GetControllerForCommand(aCommand, getter_AddRefs(controller));
         if(controller) {
           *_retval = controller;
           NS_ADDREF(*_retval);

@@ -40,8 +40,8 @@ public:
     
   NS_DECL_ISUPPORTS
     
-  NS_IMETHOD  IsCommandEnabled(const PRUnichar *aCommand, nsISupports* refCon, PRBool *_retval) = 0;
-  NS_IMETHOD  DoCommand(const PRUnichar *aCommand, nsISupports* refCon) = 0;
+  NS_IMETHOD  IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval) = 0;
+  NS_IMETHOD  DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon) = 0;
   
 };
 
@@ -50,7 +50,8 @@ public:
 class _cmd : public nsBaseEditorCommand                 \
 {                                                       \
 public:                                                 \
-  NS_DECL_NSICONTROLLERCOMMAND                          \
+  NS_IMETHOD IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval); \
+  NS_IMETHOD DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon); \
 };
 
 
@@ -74,14 +75,14 @@ NS_DECL_EDITOR_COMMAND(nsSelectionMoveCommands)
 #if 0
 // template for new command
 NS_IMETHODIMP
-nsFooCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+nsFooCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsFooCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+nsFooCommand::DoCommand(const nsAReadableString & aCommandName, const nsAReadableString & aCommandParams, nsISupports *aCommandRefCon)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

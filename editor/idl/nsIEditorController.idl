@@ -43,7 +43,7 @@ interface nsIEditorController : nsISupports
   /** Execute the command identified by the ID string
    *  param: commandName  ID string of the command
    */
-  void DoCommand( in wstring commandName );
+  void DoCommand( in DOMString commandName );
 
   /* Should we expose nsEditorController::IsCommandEnabled() as well? */
 };
