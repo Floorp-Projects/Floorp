@@ -275,8 +275,38 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   }
 
   // Init the rules system
+  // XXX: ERROR CHECKING should InitRules return an error, and then we could check it here?
   InitRules();
 
+	EnableUndo(PR_TRUE);
+ 
+  // Set up a DTD    XXX XXX 
+  // HACK: This should have happened in a document specific way
+  //       in nsEditor::Init(), but we dont' have a way to do that yet
+  result = nsComponentManager::CreateInstance(kCNavDTDCID, nsnull,
+                                          nsIDTD::GetIID(), getter_AddRefs(mDTD));
+  if (!mDTD) result = NS_ERROR_FAILURE;
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::PostCreate()
+{
+  nsresult result = InstallEventListeners();
+  if (NS_FAILED(result)) return result;
+
+  result = nsEditor::PostCreate();
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::InstallEventListeners()
+{
+  NS_ASSERTION(mDoc, "no document set on this editor");
+  if (!mDoc) return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult result;
   // get a key listener
   result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
   if (NS_FAILED(result)) {
@@ -327,7 +357,7 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 
   // get the DOM event receiver
   nsCOMPtr<nsIDOMEventReceiver> erP;
-  result = aDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
+  result = mDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
   if (NS_FAILED(result)) {
     HandleEventListenerError();
     return result;
@@ -363,19 +393,7 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 	}
   if (NS_FAILED(result)) {
     HandleEventListenerError();
-    return result;
   }
-
-  result = NS_OK;
-	EnableUndo(PR_TRUE);
- 
-  // Set up a DTD    XXX XXX 
-  // HACK: This should have happened in a document specific way
-  //       in nsEditor::Init(), but we dont' have a way to do that yet
-  result = nsComponentManager::CreateInstance(kCNavDTDCID, nsnull,
-                                          nsIDTD::GetIID(), getter_AddRefs(mDTD));
-  if (!mDTD) result = NS_ERROR_FAILURE;
-
   return result;
 }
 
