@@ -154,7 +154,7 @@ Rights Reserved.
           <grippy/>
         </splitter>
 
-        <hbox id="mail3PaneVertLayoutBox" persist="collapsed width" flex="2">
+        <hbox id="messengerBox" persist="collapsed width" flex="2">
           <vbox id="searchAndthreadpaneBox" persist="width" flex ="1">
            <vbox id="messagesBox" flex="1">
             <hbox id="searchBox"/>

@@ -566,6 +566,15 @@ function OnLoadMessenger()
 
   gNotifyDefaultInboxLoadedOnStartup = true;
 
+  // fix for #168937.  now that we don't have a sidebar
+  // users who haven't moved the splitter will
+  // see it jump around
+  var messengerBox = document.getElementById("messengerBox");
+  if (!messengerBox.getAttribute("width")) {
+    messengerBox.setAttribute("width","500px");
+  }
+
+
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
 }
