@@ -456,7 +456,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   // (1) get an hIcon for the file
   PSZ pszFileName = (PSZ)filePath.get();
   HPOINTER hIcon = WinLoadFileIcon(pszFileName, FALSE);
-  if (hIcon == NULLHANDLE) && (pszFileName[0] == '.')) {
+  if ((hIcon == NULLHANDLE) && (pszFileName[0] == '.')) {
     /* Just trying to get an icon for an extension */
     /* Create a temporary file to try to get an icon */
     char* tmpdir = getenv("TMP");
