@@ -5935,10 +5935,14 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
           pseudoElement = nsCSSPseudoElements::mozListNumber;
           break;
       }
-      nsRefPtr<nsStyleContext> kidSC = aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoElement, mStyleContext);
+
+      nsIPresShell *shell = aPresContext->PresShell();
+
+      nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
+        ResolvePseudoStyleFor(mContent, pseudoElement, mStyleContext);
 
       // Create bullet frame
-      mBullet = new (aPresContext->PresShell()) nsBulletFrame;
+      mBullet = new (shell) nsBulletFrame;
 
       if (nsnull == mBullet) {
         return NS_ERROR_OUT_OF_MEMORY;

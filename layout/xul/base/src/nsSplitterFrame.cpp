@@ -75,6 +75,7 @@
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsContentCID.h"
+#include "nsStyleSet.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 // was used in nsSplitterFrame::Init but now commented out
@@ -353,7 +354,8 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
         aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
         nsStyleContext* parent = aContext->GetParent();
-        newContext = aPresContext->ResolveStyleContextFor(aContent, parent);
+        newContext = aPresContext->StyleSet()->
+          ResolveStyleFor(aContent, parent);
         aContext = newContext;
       }
     }

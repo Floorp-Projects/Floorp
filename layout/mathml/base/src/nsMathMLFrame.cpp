@@ -38,6 +38,7 @@
 #include "nsIURI.h"
 #include "nsContentCID.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 
 
@@ -117,8 +118,9 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
     nsCSSAnonBoxes::mozMathStretchy :
     nsCSSAnonBoxes::mozMathAnonymous; // savings
   nsRefPtr<nsStyleContext> newStyleContext;
-  newStyleContext = aPresContext->ResolvePseudoStyleContextFor(aContent, pseudoStyle,
-							       aParentStyleContext);
+  newStyleContext = aPresContext->StyleSet()->
+    ResolvePseudoStyleFor(aContent, pseudoStyle, aParentStyleContext);
+
   if (newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);
 }
@@ -505,7 +507,7 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
   *aSheet = nsnull;
 
   // first, look if the attribute stylesheet is already there
-  nsStyleSet *styleSet = aPresContext->PresShell()->StyleSet();
+  nsStyleSet *styleSet = aPresContext->StyleSet();
   NS_ASSERTION(styleSet, "no style set");
 
   nsAutoString title;

@@ -45,6 +45,7 @@
 #include "nsIPresShell.h"
 #include "nsAutoPtr.h"
 #include "nsIFrame.h"
+#include "nsStyleSet.h"
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {
@@ -159,10 +160,12 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
     if (!presContext)
         return nsnull;
 
-    if (aContent->IsContentOfType(nsIContent::eELEMENT))
-        return presContext->ResolveStyleContextFor(aContent, parentContext);
+    nsStyleSet *styleSet = aPresShell->StyleSet();
 
-    return presContext->ResolveStyleContextForNonElement(parentContext);
+    if (aContent->IsContentOfType(nsIContent::eELEMENT))
+        return styleSet->ResolveStyleFor(aContent, parentContext);
+
+    return styleSet->ResolveStyleForNonElement(parentContext);
 }
 
 NS_IMETHODIMP

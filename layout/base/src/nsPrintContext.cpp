@@ -59,7 +59,6 @@ public:
   PrintContext();
   ~PrintContext();
 
-  NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
   NS_IMETHOD SetPaginatedScrolling(PRBool aResult)  { return NS_ERROR_FAILURE; }
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
@@ -82,6 +81,7 @@ PrintContext::PrintContext() :
   // Printed images are never animated
   mImageAnimationMode = imgIContainer::kDontAnimMode;
   mNeverAnimate = PR_TRUE;
+  mMedium = nsLayoutAtoms::print;
 }
 
 PrintContext::~PrintContext()
@@ -105,15 +105,6 @@ PrintContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return nsPresContext::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP
-PrintContext::GetMedium(nsIAtom** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nsLayoutAtoms::print;
-  NS_ADDREF(*aResult);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

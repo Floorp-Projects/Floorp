@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  xpconnect \
 		  js \
+		  webshell \
 		  $(NULL)
 
 CPPSRCS	= \

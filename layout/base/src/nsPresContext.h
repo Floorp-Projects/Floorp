@@ -71,33 +71,9 @@ public:
   NS_IMETHOD SetShell(nsIPresShell* aShell);
   virtual void SetCompatibilityMode(nsCompatibility aMode);
   virtual void SetImageAnimationMode(PRUint16 aMode);
-  NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
-  NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
-  NS_IMETHOD ClearStyleDataAndReflow(void);
+  virtual void ClearStyleDataAndReflow();
 
-  virtual already_AddRefed<nsStyleContext>
-  ResolveStyleContextFor(nsIContent* aContent, nsStyleContext* aParentContext);
-
-  virtual already_AddRefed<nsStyleContext>
-  ResolveStyleContextForNonElement(nsStyleContext* aParentContext);
-
-  virtual already_AddRefed<nsStyleContext>
-  ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                               nsIAtom* aPseudoTag,
-                               nsStyleContext* aParentContext);
-
-  virtual already_AddRefed<nsStyleContext>
-  ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
-                                   nsIAtom* aPseudoTag,
-                                   nsStyleContext* aParentContext,
-                                   nsICSSPseudoComparator* aComparator);
-
-  virtual already_AddRefed<nsStyleContext>
-  ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                             nsIAtom* aPseudoTag,
-                             nsStyleContext* aParentContext);
-
-  NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult);
+  virtual nsresult GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult);
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
@@ -244,8 +220,6 @@ protected:
   PRPackedBool          mDrawColorBackground;
 
   nsSupportsHashtable   mImageLoaders;
-
-  nsCOMPtr<nsIURI>      mBaseURL;
 
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
   PRPackedBool          mNeverAnimate;            // never animate images

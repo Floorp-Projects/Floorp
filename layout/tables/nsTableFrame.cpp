@@ -76,6 +76,7 @@
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsStyleSet.h"
 
 
 /********************************************************************************
@@ -814,15 +815,15 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
                                            nsTableColGroupType aColGroupType)
 {
   nsIContent* colGroupContent = GetContent();
+  nsIPresShell *shell = aPresContext.PresShell();
 
   nsRefPtr<nsStyleContext> colGroupStyle;
-  colGroupStyle = aPresContext.ResolvePseudoStyleContextFor(colGroupContent,
-                                                            nsCSSAnonBoxes::tableColGroup,
-                                                            mStyleContext);
+  colGroupStyle = shell->StyleSet()->ResolvePseudoStyleFor(colGroupContent,
+                                                           nsCSSAnonBoxes::tableColGroup,
+                                                           mStyleContext);
   // Create a col group frame
   nsIFrame* newFrame;
-  nsresult result = NS_NewTableColGroupFrame(aPresContext.PresShell(),
-                                             &newFrame);
+  nsresult result = NS_NewTableColGroupFrame(shell, &newFrame);
   if (NS_SUCCEEDED(result) && newFrame) {
     ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
     newFrame->Init(&aPresContext, colGroupContent, this, colGroupStyle, nsnull);
@@ -898,6 +899,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
 {
   *aFirstNewFrame = nsnull;
   nsIFrame* lastColFrame = nsnull;
+  nsIPresShell *shell = aPresContext.PresShell();
 
   // Get the last col frame
   nsIFrame* childFrame = aColGroupFrame.GetFirstChild(nsnull);
@@ -926,16 +928,16 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
       // all other anonymous cols use a pseudo style context of the col group
       iContent = aColGroupFrame.GetContent();
       parentStyleContext = aColGroupFrame.GetStyleContext();
-      styleContext = aPresContext.ResolvePseudoStyleContextFor(iContent,
-                                                               nsCSSAnonBoxes::tableCol,
-                                                               parentStyleContext);
+      styleContext = shell->StyleSet()->ResolvePseudoStyleFor(iContent,
+                                                              nsCSSAnonBoxes::tableCol,
+                                                              parentStyleContext);
     }
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
     // create the new col frame
     nsIFrame* colFrame;
-    NS_NewTableColFrame(aPresContext.PresShell(), &colFrame);
+    NS_NewTableColFrame(shell, &colFrame);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(&aPresContext, iContent, &aColGroupFrame,
                    styleContext, nsnull);

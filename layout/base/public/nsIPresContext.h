@@ -141,6 +141,9 @@ public:
 
   nsIDocument* GetDocument() { return GetPresShell()->GetDocument(); } 
   nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
+#ifdef _IMPL_NS_LAYOUT
+  nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
+#endif
   nsIFrameManager* GetFrameManager()
     { return GetPresShell()->GetFrameManager(); } 
 
@@ -166,84 +169,21 @@ public:
   nsILookAndFeel* LookAndFeel() { return mLookAndFeel; }
 
   /** 
-   * Get base url for presentation
-   */
-  NS_IMETHOD GetBaseURL(nsIURI** aURLResult) = 0;
-
-  /** 
    * Get medium of presentation
    */
-  NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
+  nsIAtom* Medium() { return mMedium; }
 
   /**
    * Clear style data from the root frame downwards, and reflow.
    */
-  NS_IMETHOD ClearStyleDataAndReflow(void) = 0;
+  virtual void ClearStyleDataAndReflow() = 0;
 
-  /**
-   * Resolve style for the given piece of content that will be a child
-   * of the aParentContext. Don't use this for pseudo frames.
-   */
-  virtual already_AddRefed<nsStyleContext>
-  ResolveStyleContextFor(nsIContent* aContent,
-                         nsStyleContext* aParentContext) = 0;
-
-  /**
-   * Resolve style for a non-element content node (i.e., one that is
-   * guaranteed not to match any rules).  Eventually such nodes
-   * shouldn't have style contexts at all, but this at least prevents
-   * the rule matching.
-   *
-   * XXX This is temporary.  It should go away when we stop creating
-   * style contexts for text nodes and placeholder frames.  (We also use
-   * it once to create a style context for the nsFirstLetterFrame that
-   * represents everything except the first letter.)
-   *
-   */
-  virtual already_AddRefed<nsStyleContext>
-  ResolveStyleContextForNonElement(nsStyleContext* aParentContext) = 0;
-
-  /**
-   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
-   * The tag should be lowercase and inclue the colon.
-   * ie: NS_NewAtom(":first-line");
-   */
-
-  virtual already_AddRefed<nsStyleContext>
-  ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                               nsIAtom* aPseudoTag,
-                               nsStyleContext* aParentContext) = 0;
-
-  /**
-   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
-   * The tag should be lowercase and inclue the colon.
-   * ie: NS_NewAtom(":first-line");
-   *
-   * Instead of matching solely on aPseudoTag, a comparator function can be
-   * passed in to test.
-   */
-  virtual already_AddRefed<nsStyleContext>
-  ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
-                                   nsIAtom* aPseudoTag,
-                                   nsStyleContext* aParentContext,
-                                   nsICSSPseudoComparator* aComparator) = 0;
-
-  /**
-   * Probe style for a pseudo frame within the given aParentContent & aParentContext.
-   * This will return nsnull id there are no explicit rules for the pseudo element.
-   * The tag should be lowercase and inclue the colon.
-   * ie: NS_NewAtom(":first-line");
-   */
-  virtual already_AddRefed<nsStyleContext>
-  ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                             nsIAtom* aPseudoTag,
-                             nsStyleContext* aParentContext) = 0;
- 
    /**
     * Resolve a new style context for a content node and return the URL
     * for its XBL binding, or null if it has no binding specified in CSS.
     */
-   NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult) = 0;
+  virtual nsresult GetXBLBindingURL(nsIContent* aContent,
+                                    nsIURI** aResult) = 0;
 
   /** 
    * For a given frame tree, get a new style context that is the equivalent
@@ -568,6 +508,8 @@ protected:
                                         // from gfx back to layout.
   nsIEventStateManager* mEventManager;  // [STRONG]
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
+  nsIAtom*              mMedium;        // initialized by subclass ctors;
+                                        // weak pointer to static atom
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;

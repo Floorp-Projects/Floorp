@@ -50,6 +50,7 @@
 #include "nsInlineFrame.h"
 #include "nsIAtom.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -291,7 +292,8 @@ TestReflowUnmapped(nsIPresContext* presContext)
   // Create an inline frame for the HTML container and set its
   // style context
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
-  nsRefPtr<nsStyleContext> styleContext = presContext->ResolveStyleContextFor(b, nsnull);
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = presContext->StyleSet()->ResolveStyleFor(b, nsnull);
 
   f->SetStyleContext(presContext,styleContext);
 
@@ -384,7 +386,8 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   // Create an inline frame for the HTML container and set its
   // style context
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
-  nsRefPtr<nsStyleContext> styleContext = presContext->ResolveStyleContextFor(b, nsnull);
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = presContext->StyleSet()->ResolveStyleFor(b, nsnull);
 
   f->SetStyleContext(presContext,styleContext);
 
@@ -556,7 +559,8 @@ TestOverflow(nsIPresContext* presContext)
   // Create an inline frame for the HTML container and set its
   // style context
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
-  nsRefPtr<nsStyleContext> styleContext = presContext->ResolveStyleContextFor(b, nsnull);
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = presContext->StyleSet()->ResolveStyleFor(b, nsnull);
 
   f->SetStyleContext(presContext,styleContext);
 
@@ -668,7 +672,8 @@ TestPushingPulling(nsIPresContext* presContext)
   // Create an inline frame for the HTML container and set its
   // style context
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
-  nsRefPtr<nsStyleContext> styleContext = presContext->ResolveStyleContextFor(b, nsnull);
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = presContext->StyleSet()->ResolveStyleFor(b, nsnull);
 
   f->SetStyleContext(presContext,styleContext);
 
@@ -1089,7 +1094,8 @@ TestSplittableChildren(nsIPresContext* presContext)
   // Create an inline frame for the HTML container and set its
   // style context
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
-  nsRefPtr<nsStyleContext> styleContext = presContext->ResolveStyleContextFor(b, nsnull);
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = presContext->StyleSet()->ResolveStyleFor(b, nsnull);
 
   f->SetStyleContext(presContext,styleContext);
 
@@ -1448,7 +1454,8 @@ TestMaxElementSize(nsIPresContext* presContext)
   // Create an inline frame for the HTML container and set its
   // style context
   InlineFrame*      f = new InlineFrame(b, 0, nsnull);
-  nsRefPtr<nsStyleContext> styleContext = presContext->ResolveStyleContextFor(b, nsnull);
+  nsRefPtr<nsStyleContext> styleContext;
+  styleContext = presContext->StyleSet()->ResolveStyleFor(b, nsnull);
 
   f->SetStyleContext(presContext,styleContext);
 

@@ -44,6 +44,7 @@
 #include "nsLineBox.h"
 #include "nsReflowPath.h"
 #include "nsCSSPseudoElements.h"
+#include "nsStyleSet.h"
 
 class nsBlockReflowState;
 class nsBulletFrame;
@@ -205,9 +206,9 @@ protected:
 
   already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsIPresContext* aPresContext)
   {
-    return aPresContext->ProbePseudoStyleContextFor(mContent,
-                                                    nsCSSPseudoElements::firstLetter,
-                                                    mStyleContext);
+    return aPresContext->StyleSet()->
+      ProbePseudoStyleFor(mContent,
+                          nsCSSPseudoElements::firstLetter, mStyleContext);
   }
 
   /*

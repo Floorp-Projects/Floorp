@@ -58,6 +58,7 @@
 #include "nsIPrefService.h"
 #include "nsAutoPtr.h"
 #include "nsMediaDocument.h"
+#include "nsStyleSet.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
@@ -533,7 +534,7 @@ nsImageDocument::CheckOverflowing()
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
   nsRefPtr<nsStyleContext> styleContext =
-    context->ResolveStyleContextFor(content, nsnull);
+    context->StyleSet()->ResolveStyleFor(content, nsnull);
 
   const nsStyleMargin* marginData = styleContext->GetStyleMargin();
   nsMargin margin;

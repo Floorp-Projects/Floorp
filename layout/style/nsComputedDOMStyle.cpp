@@ -59,6 +59,7 @@
 #include "nsIDocument.h"
 
 #include "nsCSSPseudoElements.h"
+#include "nsStyleSet.h"
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -2912,10 +2913,12 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
     presShell->GetPresContext(getter_AddRefs(pctx));
     if (pctx) {
       nsStyleContext* sctx;
+      nsStyleSet *styleSet = presShell->StyleSet();
       if (!mPseudo) {
-        sctx = pctx->ResolveStyleContextFor(mContent, nsnull).get();
+        sctx = styleSet->ResolveStyleFor(mContent, nsnull).get();
       } else {
-        sctx = pctx->ResolvePseudoStyleContextFor(mContent, mPseudo, nsnull).get();
+        sctx = styleSet->ResolvePseudoStyleFor(mContent, mPseudo,
+                                               nsnull).get();
       }
       if (sctx) {
         aStyleStruct = sctx->GetStyleData(aID);

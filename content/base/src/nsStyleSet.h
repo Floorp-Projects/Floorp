@@ -75,9 +75,7 @@ class nsStyleSet
 
   // get a style context for a non-pseudo frame.
   already_AddRefed<nsStyleContext>
-    ResolveStyleFor(nsIPresContext* aPresContext,
-                    nsIContent* aContent,
-                    nsStyleContext* aParentContext);
+  ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
   // Get a style context for a non-element (which no rules will match).
   // Eventually, this should go away and we shouldn't even create style
@@ -90,26 +88,23 @@ class nsStyleSet
   // represents everything except the first letter.)
   //
   already_AddRefed<nsStyleContext>
-    ResolveStyleForNonElement(nsIPresContext* aPresContext,
-                              nsStyleContext* aParentContext);
+  ResolveStyleForNonElement(nsStyleContext* aParentContext);
 
   // get a style context for a pseudo-element (i.e.,
   // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|;
   already_AddRefed<nsStyleContext>
-    ResolvePseudoStyleFor(nsIPresContext* aPresContext,
-                          nsIContent* aParentContent,
-                          nsIAtom* aPseudoTag,
-                          nsStyleContext* aParentContext,
-                          nsICSSPseudoComparator* aComparator = nsnull);
+  ResolvePseudoStyleFor(nsIContent* aParentContent,
+                        nsIAtom* aPseudoTag,
+                        nsStyleContext* aParentContext,
+                        nsICSSPseudoComparator* aComparator = nsnull);
 
   // This funtions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that
   // pseudo element.
   already_AddRefed<nsStyleContext>
-    ProbePseudoStyleFor(nsIPresContext* aPresContext,
-                        nsIContent* aParentContent,
-                        nsIAtom* aPseudoTag,
-                        nsStyleContext* aParentContext);
+  ProbePseudoStyleFor(nsIContent* aParentContent,
+                      nsIAtom* aPseudoTag,
+                      nsStyleContext* aParentContext);
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.
@@ -212,6 +207,8 @@ class nsStyleSet
   already_AddRefed<nsStyleContext> GetContext(nsIPresContext* aPresContext,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag);
+
+  nsIPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 
   static nsIURI  *gQuirkURI;
 

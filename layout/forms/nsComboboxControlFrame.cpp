@@ -84,6 +84,7 @@
 #include "nsIDOMNode.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -2031,15 +2032,17 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   }
 
   nsIPresShell *shell = aPresContext->PresShell();
+  nsStyleSet *styleSet = shell->StyleSet();
+
   nsresult rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
   if (NS_FAILED(rv)) { return rv; }
   if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
 
   // create the style context for the anonymous frame
   nsRefPtr<nsStyleContext> styleContext;
-  styleContext = aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                                  nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
-                                                  mStyleContext);
+  styleContext = styleSet->ResolvePseudoStyleFor(mContent, 
+                                                 nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
+                                                 mStyleContext);
   if (!styleContext) { return NS_ERROR_NULL_POINTER; }
 
   // create a text frame and put it inside the block frame
@@ -2047,7 +2050,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   if (NS_FAILED(rv)) { return rv; }
   if (!mTextFrame) { return NS_ERROR_NULL_POINTER; }
   nsRefPtr<nsStyleContext> textStyleContext;
-  textStyleContext = aPresContext->ResolveStyleContextForNonElement(styleContext);
+  textStyleContext = styleSet->ResolveStyleForNonElement(styleContext);
   if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
   mTextFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
@@ -2159,6 +2162,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
   if (aContent == content.get()) {
     // Get PresShell
     nsIPresShell *shell = aPresContext->PresShell();
+    nsStyleSet *styleSet = shell->StyleSet();
 
     // Start by by creating a containing frame
     nsresult rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
@@ -2167,9 +2171,9 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
 
     // create the style context for the anonymous block frame
     nsRefPtr<nsStyleContext> styleContext;
-    styleContext = aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                                    nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
-                                                    mStyleContext);
+    styleContext = styleSet->ResolvePseudoStyleFor(mContent, 
+                                                   nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
+                                                   mStyleContext);
     if (!styleContext) { return NS_ERROR_NULL_POINTER; }
 
     // Create a text frame and put it inside the block frame
@@ -2177,7 +2181,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
     if (NS_FAILED(rv)) { return rv; }
     if (!mTextFrame)   { return NS_ERROR_NULL_POINTER; }
     nsRefPtr<nsStyleContext> textStyleContext;
-    textStyleContext = aPresContext->ResolveStyleContextForNonElement(styleContext);
+    textStyleContext = styleSet->ResolveStyleForNonElement(styleContext);
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
 
     // initialize the text frame

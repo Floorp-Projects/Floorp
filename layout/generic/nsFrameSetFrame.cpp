@@ -56,6 +56,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -403,7 +404,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
       nsRefPtr<nsStyleContext> kidSC;
       nsresult result;
 
-      kidSC = aPresContext->ResolveStyleContextFor(child, mStyleContext);
+      kidSC = shell->StyleSet()->ResolveStyleFor(child, mStyleContext);
       if (tag == nsHTMLAtoms::frameset) {
         result = NS_NewHTMLFramesetFrame(shell, &frame);
 
@@ -445,9 +446,9 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
     // should just have null content, if we support that
     nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame;
     nsRefPtr<nsStyleContext> pseudoStyleContext;
-    pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                                    nsCSSAnonBoxes::framesetBlank,
-                                                                    mStyleContext);
+    pseudoStyleContext = shell->StyleSet()->ResolvePseudoStyleFor(nsnull,
+                                                                  nsCSSAnonBoxes::framesetBlank,
+                                                                  mStyleContext);
     if(blankFrame)
       blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
    
@@ -979,6 +980,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFramesetFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   nsIPresShell *shell = aPresContext->PresShell();
+  nsStyleSet *styleSet = shell->StyleSet();
 
   //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
@@ -1073,9 +1075,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
                                                             PR_FALSE,
                                                             PR_FALSE);
         nsRefPtr<nsStyleContext> pseudoStyleContext;
-        pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                                                        nsCSSPseudoElements::horizontalFramesetBorder,
-                                                                        mStyleContext);
+        pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
+                                                             nsCSSPseudoElements::horizontalFramesetBorder,
+                                                             mStyleContext);
         borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
 
         mChildCount++;
@@ -1102,9 +1104,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
                                                                 PR_TRUE,
                                                                 PR_FALSE);
             nsRefPtr<nsStyleContext> pseudoStyleContext;
-            pseudoStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                                                            nsCSSPseudoElements::verticalFramesetBorder,
-                                                                            mStyleContext);
+            pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
+                                                                 nsCSSPseudoElements::verticalFramesetBorder,
+                                                                 mStyleContext);
             borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
 
             mChildCount++;

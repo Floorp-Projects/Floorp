@@ -43,6 +43,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsCSSPseudoElements.h"
 #include "nsINameSpaceManager.h"
+#include "nsStyleSet.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
@@ -309,16 +310,17 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext* aPresContext)
 {
   // get all the styles
   nsStyleContext* context = mFrame->GetStyleContext();
+  nsStyleSet *styleSet = aPresContext->StyleSet();
 
   // style for the inner such as a dotted line (Windows)
-  mInnerFocusStyle = aPresContext->ProbePseudoStyleContextFor(mFrame->GetContent(),
-                                                              nsCSSPseudoElements::mozFocusInner,
-                                                              context);
+  mInnerFocusStyle = styleSet->ProbePseudoStyleFor(mFrame->GetContent(),
+                                                   nsCSSPseudoElements::mozFocusInner,
+                                                   context);
 
   // style for outer focus like a ridged border (MAC).
-  mOuterFocusStyle = aPresContext->ProbePseudoStyleContextFor(mFrame->GetContent(),
-                                                              nsCSSPseudoElements::mozFocusOuter,
-                                                              context);
+  mOuterFocusStyle = styleSet->ProbePseudoStyleFor(mFrame->GetContent(),
+                                                   nsCSSPseudoElements::mozFocusOuter,
+                                                   context);
 }
 
 nsStyleContext*

@@ -45,6 +45,7 @@
 #include "nsMathMLChar.h"
 #include "nsMathMLContainerFrame.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 NS_DEFINE_CID(kInlineFrameCID, NS_INLINE_FRAME_CID);
 
@@ -712,9 +713,10 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
 						    &wrapper);
       if (NS_FAILED(rv)) return rv;
       nsRefPtr<nsStyleContext> newStyleContext;
-      newStyleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
-								   nsCSSAnonBoxes::mozAnonymousBlock,
-								   mStyleContext);
+      newStyleContext = aPresContext->StyleSet()->
+	ResolvePseudoStyleFor(mContent,
+			      nsCSSAnonBoxes::mozAnonymousBlock,
+			      mStyleContext);
       rv = wrapper->Init(aPresContext, mContent, this, newStyleContext, nsnull);
       if (NS_FAILED(rv)) {
         wrapper->Destroy(aPresContext);
