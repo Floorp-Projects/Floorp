@@ -35,10 +35,10 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+#ifdef MOZ_PHOENIX
 var _elementIDs = ["askOnSave", "downloadFolderList", "downloadFolder", "showWhenStarting", "closeWhenDone"];
-
-#if 0
-  , "showWhenStarting", "closeWhenDone"
+#else
+var _elementIDs = ["askOnSave", "downloadFolderList", "downloadFolder"];
 #endif
 
 var gLastSelectedIndex = 0;
