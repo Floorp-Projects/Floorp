@@ -213,7 +213,7 @@ nsSecureBrowserUIImpl::DisplayPageInfoUI()
     if (mCurrentURI)
         mCurrentURI->GetHost(getter_Copies(host));
     
-    return psm->DisplaySecurityAdvisor(mLastPSMStatus, host);
+    return psm->DisplaySecurityAdvisor(mLastPSMStatus, host, mWindow);
 }
 
 
@@ -325,6 +325,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         PR_FREEIF(mLastPSMStatus); mLastPSMStatus = nsnull;
 
         mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
+        mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
 
         res = CheckProtocolContextSwitch( loadingURI, mCurrentURI);    
         return res;
@@ -491,7 +492,48 @@ nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
 	return NS_OK;
 }
 
+nsresult
+nsSecureBrowserUIImpl::IsURLfromPSM(nsIURI* aURL, PRBool* value)
+{
+	*value = PR_FALSE;
 
+	if (!aURL)
+		return NS_OK;
+
+	PCMT_CONTROL control;
+    char* host;
+	aURL->GetHost(&host);
+
+	if (host == nsnull)
+		return NS_ERROR_NULL_POINTER;
+
+    if ( PL_strncasecmp(host, "127.0.0.1",  9) == 0 ) {
+	    nsresult res;
+	    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+	    if (NS_FAILED(res)) 
+		    return res;
+
+        res = psm->GetControlConnection(&control);
+		if (NS_FAILED(res)) {
+			return res;
+		}
+
+		// Get the password 
+		char* password;
+		aURL->GetPassword(&password);
+
+		if (password == nsnull) {
+			return NS_ERROR_NULL_POINTER;
+		}
+
+		if (PL_strncasecmp(password, (const char*)control->nonce.data, control->nonce.len) == 0) {
+			nsMemory::Free(password);
+			*value = PR_TRUE;
+		}
+	}
+	nsMemory::Free(host);
+	return NS_OK;
+}
 
 void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outString)
 {
@@ -659,7 +701,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
 nsresult
 nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 {
-    PRBool secure;
+    PRBool secure, isSecurityAdvisor;
 
     nsresult rv = IsURLHTTPS(actionURL, &secure);
     if (NS_FAILED(rv))
@@ -670,6 +712,17 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         *okayToPost = PR_TRUE;
         return NS_OK;
     }
+
+	// If this is a Personal Security Manager (PSM) url, all is okay
+	rv = IsURLfromPSM(actionURL, &isSecurityAdvisor);
+	if (NS_FAILED(rv)) {
+		return rv;
+	}
+
+	if (isSecurityAdvisor) {
+		*okayToPost = PR_TRUE;
+		return NS_OK;
+	}
 
     PRBool boolpref = PR_TRUE;    
 

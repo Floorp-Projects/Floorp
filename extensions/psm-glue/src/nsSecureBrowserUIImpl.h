@@ -96,6 +96,7 @@ protected:
     nsresult CheckMixedContext(nsIURI* nextURI);
     nsresult CheckPost(nsIURI *actionURL, PRBool *okayToPost);
     nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
+    nsresult IsURLfromPSM(nsIURI* aURL, PRBool *value);
 };
 
 
