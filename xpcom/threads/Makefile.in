@@ -66,6 +66,7 @@ XPIDLSRCS	= \
 		nsIEventQueue.idl \
 		nsIEventQueueService.idl \
 		nsIProcess.idl \
+		nsITimerScriptable.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -42,6 +42,7 @@
 
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsITimerScriptable.h"
 
 #include "nsIThread.h"
 
@@ -68,10 +69,11 @@ static PRLogModuleInfo *gTimerLog = PR_NewLogModule("nsTimerImpl");
 enum {
   CALLBACK_TYPE_UNKNOWN   = 0,
   CALLBACK_TYPE_INTERFACE = 1,
-  CALLBACK_TYPE_FUNC      = 2
+  CALLBACK_TYPE_FUNC      = 2,
+  CALLBACK_TYPE_OBSERVER  = 3
 };
 
-class nsTimerImpl : public nsITimer 
+class nsTimerImpl : public nsITimer, public nsITimerScriptable
 {
 public:
 
@@ -98,8 +100,7 @@ public:
                   PRUint32 aType);
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD_(void) Cancel();
+  NS_DECL_NSITIMERSCRIPTABLE
 
   NS_IMETHOD_(PRUint32) GetDelay() { return mDelay; }
   NS_IMETHOD_(void) SetDelay(PRUint32 aDelay);
@@ -120,6 +121,7 @@ private:
   union {
     nsTimerCallbackFunc c;
     nsITimerCallback *  i;
+    nsIObserver *       o;
   } mCallback;
 
   PRUint8              mCallbackType;

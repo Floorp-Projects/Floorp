@@ -648,3 +648,8 @@ pref("layout.frames.force_resizability", false);
 
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
+
+// update notifications prefs
+pref("update_notifications.enabled", true);
+pref("update_notifications.provider.0.frequency", 7); // number of days
+pref("update_notifications.provider.0.datasource", "chrome://communicator-region/locale/region.properties");

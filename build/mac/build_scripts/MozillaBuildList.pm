@@ -292,6 +292,9 @@ sub InstallComponentFiles()
     # sidebar
     InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",                      "$components_dir");
 
+    # update notifications
+    InstallResources(":mozilla:xpfe:components:updates:src:MANIFEST",                      "$components_dir");
+
     # embedding UI
     InstallResources(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST",             "$components_dir");
 

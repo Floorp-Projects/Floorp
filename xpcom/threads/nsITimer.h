@@ -56,6 +56,8 @@ class nsITimerCallback;
  * from the main event loop, NOT from an interrupt.
  */
 
+// See nsITimerScriptable.idl for access to timer functionality from scripts.
+
 // Signature of timer callback function
 typedef void
 (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
@@ -146,7 +148,7 @@ public:
                   PRUint32 aType = NS_TYPE_ONE_SHOT) = 0;
 
   /// Cancels the timeout
-  NS_IMETHOD_(void) Cancel() = 0;
+  NS_IMETHOD Cancel() = 0;
 
   /// @return the millisecond delay of the timeout
   NS_IMETHOD_(PRUint32) GetDelay() = 0;

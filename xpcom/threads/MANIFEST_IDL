@@ -3,3 +3,4 @@ nsIThread.idl
 nsIThreadPool.idl
 nsIEventQueue.idl
 nsIEventQueueService.idl
+nsITimerScriptable.idl

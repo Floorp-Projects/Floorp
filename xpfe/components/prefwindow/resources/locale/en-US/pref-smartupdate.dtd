@@ -12,3 +12,11 @@
 <!ENTITY uninstallButton.label                "Uninstall">
 <!ENTITY uninstallButton.accesskey            "u">
 
+<!ENTITY updateNotifications.label            "Update Notifications">
+<!ENTITY updateNotifications.desc             "Check for new versions of this software.  No information about you or your computer will be revealed during this operation.">
+<!ENTITY enableUN.label                       "Check for updates:">
+<!ENTITY enableUN.accesskey                   "c">
+<!ENTITY weekly.label                         "weekly">
+<!ENTITY weekly.accesskey                     "w">
+<!ENTITY monthly.label                        "monthly">
+<!ENTITY monthly.accesskey                    "m">
