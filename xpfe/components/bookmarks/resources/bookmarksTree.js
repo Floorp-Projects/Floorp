@@ -457,7 +457,6 @@ BookmarksTree.prototype = {
     var kids = ContentUtils.childByLocalName(folder, "treechildren");
     if (!kids) return;
     
-    dump("*** trying to select items\n");
     var item = kids.firstChild;
     while (item) {
       if (item.id == aItemURI) break;
