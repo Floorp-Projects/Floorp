@@ -733,10 +733,9 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
   return NS_OK;
 }
 
-// digest needs to be a pointer to a 16 byte buffer
+// digest needs to be a pointer to a DIGEST_LENGTH (17) byte buffer
 nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest)
 {
-#define DIGEST_LENGTH 16
   nsresult rv;
   unsigned char result[DIGEST_LENGTH];
   unsigned char *presult = result;
@@ -808,6 +807,7 @@ nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32
   rv = verifier->HashUpdate(context, (const char *) result, 16);     /* then results of 1st hash */
   rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);  /* finish up 2nd pass */
   strncpy((char *) digest, (const char *) result, DIGEST_LENGTH);
+  digest[DIGEST_LENGTH] = '\0';
   return rv;
 
 }

@@ -957,7 +957,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
     char buffer[512];
     if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
     {
-      unsigned char digest[16];
+      unsigned char digest[DIGEST_LENGTH];
       char * decodedChallenge = PL_Base64Decode(m_responseText.get(), 
         m_responseText.Length() - 2 /* subtract CRLF */, nsnull);
       

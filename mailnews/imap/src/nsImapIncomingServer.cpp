@@ -3847,7 +3847,7 @@ nsImapIncomingServer::GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const c
 NS_IMETHODIMP
 nsImapIncomingServer::CramMD5Hash(const char *decodedChallenge, const char *key, char **result)
 {
-  unsigned char resultDigest[16];
+  unsigned char resultDigest[DIGEST_LENGTH];
   nsresult rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), 
         key, strlen(key), resultDigest);
   NS_ENSURE_SUCCESS(rv, rv);
