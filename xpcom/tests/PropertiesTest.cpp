@@ -29,7 +29,7 @@
 #include "plevent.h"
 #endif
 
-#define TEST_URL "resource:/res/test.PersistentProperties"
+#define TEST_URL "resource:/res/test.properties"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -46,6 +46,7 @@
 #define XPCOM_DLL "libxpcom.so"
 #endif
 #endif
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
@@ -68,10 +69,22 @@ main(int argc, char* argv[])
     printf("cannot register net service\n");
     return 1;
   }
+  ret = nsComponentManager::RegisterComponent(kEventQueueCID, NULL,
+    NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(ret)) {
+    printf("cannot register event queue\n");
+    return 1;
+  }
   ret = nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL,
     NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   if (NS_FAILED(ret)) {
     printf("cannot register event queue service\n");
+    return 1;
+  }
+  ret = nsComponentManager::RegisterComponent(kPersistentPropertiesCID, NULL,
+    NULL, RAPTORBASE_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(ret)) {
+    printf("cannot register persistent properties\n");
     return 1;
   }
 #ifdef XP_MAC    // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
