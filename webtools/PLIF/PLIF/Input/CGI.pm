@@ -84,6 +84,14 @@ sub splitArguments {
             # Some other authentication scheme
         }
     }
+    # hook in cookies
+    $self->cookies({}); # empty the list of cookies first
+    if (defined($ENV{'HTTP_COOKIE'})) {
+        foreach my $cookie (split(/; /os, $ENV{'HTTP_COOKIE'})) {
+            my($field, $value) = split(/=/os, $cookie);
+            $self->cookies->{$field} = $value;
+        }
+    }
     # decode the arguments
     $self->decodeHTTPArguments;
 }
@@ -153,4 +161,11 @@ sub registerPropertyAsMetaData {
             last;
         }
     }
+}
+
+# cookies
+sub getSessionData {
+    my $self = shift;
+    my($field) = @_;
+    return $self->cookies->{$field};
 }
