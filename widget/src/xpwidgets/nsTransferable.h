@@ -19,13 +19,15 @@
 #ifndef nsTransferable_h__
 #define nsTransferable_h__
 
+#include "nsIFormatConverter.h"
 #include "nsITransferable.h"
+#include "nsCOMPtr.h"
+
 
 class nsISupportsArray;
 class nsIDataFlavor;
 class nsDataObj;
 class nsVoidArray;
-class nsIFormatConverter;
 
 
 /**
@@ -43,11 +45,12 @@ public:
   NS_DECL_ISUPPORTS
   
   //nsITransferable
-    // Returns a copy of the flavor list
+  NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) ;
+  NS_IMETHOD FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList ) ;
   NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList);
   NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aFlavor);
 
-    // Transferable still owns |aData|. Do not delete it.
+   // Transferable still owns |aData|. Do not delete it.
   NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen);
     // Transferable consumes |aData|. Do not delete it.
   NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen);
@@ -58,10 +61,11 @@ public:
   NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
   NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter);
 
+
 protected:
 
   nsVoidArray        * mDataArray;
-  nsIFormatConverter * mFormatConv;
+  nsCOMPtr<nsIFormatConverter> mFormatConv;
 
 };
 

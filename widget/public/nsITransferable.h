@@ -37,9 +37,30 @@ class nsITransferable : public nsISupports {
     static const nsIID& GetIID() { static nsIID iid = NS_ITRANSFERABLE_IID; return iid; }
 
   /**
-    * Get the list of data flavors that this transferable supports.  
+    * Computes a list of flavors that the transferable can accept into it, either through
+    * intrinsic knowledge or input data converters.
     *
-    * @param  aDataFlavorList fills list with supported flavors
+    * @param  outFlavorList fills list with supported flavors. This is a copy of
+    *          the internal list, so it may be edited w/out affecting the transferable.
+    */
+  NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) = 0;
+
+  /**
+    * Computes a list of flavors that the transferable can export, either through
+    * intrinsic knowledge or output data converters.
+    *
+    * @param  aDataFlavorList fills list with supported flavors. This is a copy of
+    *          the internal list, so it may be edited w/out affecting the transferable.
+    */
+  NS_IMETHOD FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList ) = 0;
+
+  /**
+    * Get the list of data flavors that this transferable supports (w/out conversion). 
+    * (NOTE: We're not sure how useful this is in the presence of the above two methods,
+    * but figured we'd keep it around just in case). 
+    *
+    * @param  aDataFlavorList fills list with supported flavors. This is a copy of
+    *          the internal list, so it may be edited w/out affecting the transferable.
     */
     NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList) = 0;
 
@@ -55,13 +76,14 @@ class nsITransferable : public nsISupports {
     * Given a flavor retrieve the data. 
     *
     * @param  aFlavor the flavor of data to retrieve
-    * @param  aData the data
+    * @param  aData the data. This is NOT a copy, so the caller MUST NOT DELETE it.
     * @param  aDataLen the length of the data
     */
     NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
 
   /**
-    * Set Data into the transferable as a specified DataFlavor
+    * Set Data into the transferable as a specified DataFlavor. The transferable now
+    * owns the data, so the caller must not delete it.
     *
     * @param  aFlavor the flavor of data that is being set
     * @param  aData the data 

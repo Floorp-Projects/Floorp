@@ -24,6 +24,7 @@
 #include "nsIFormatConverter.h"
 #include "nsVoidArray.h"
 #include "nsIComponentManager.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
@@ -49,7 +50,6 @@ nsTransferable::nsTransferable()
 {
   NS_INIT_REFCNT();
   mDataArray  = new nsVoidArray();
-  mFormatConv = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -59,8 +59,6 @@ nsTransferable::nsTransferable()
 //-------------------------------------------------------------------------
 nsTransferable::~nsTransferable()
 {
-  NS_IF_RELEASE(mFormatConv);
-
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
@@ -252,14 +250,7 @@ NS_IMETHODIMP nsTransferable::IsLargeDataSet()
   */
 NS_IMETHODIMP nsTransferable::SetConverter(nsIFormatConverter * aConverter)
 {
-  if (nsnull != mFormatConv) {
-    NS_RELEASE(mFormatConv);
-  }
-
-  mFormatConv = aConverter;
-  if (nsnull != mFormatConv) {
-    NS_ADDREF(mFormatConv);
-  }
+  mFormatConv = dont_QueryInterface(aConverter);
   return NS_OK;
 }
 
@@ -271,8 +262,76 @@ NS_IMETHODIMP nsTransferable::GetConverter(nsIFormatConverter ** aConverter)
 {
   if (nsnull != mFormatConv) {
     *aConverter = mFormatConv;
-    NS_ADDREF(mFormatConv);
+    NS_ADDREF(*aConverter);
   }
   return NS_OK;
 }
+
+
+//
+// FlavorsTransferableCanImport
+//
+// Computes a list of flavors that the transferable can accept into it, either through
+// intrinsic knowledge or input data converters.
+//
+NS_IMETHODIMP
+nsTransferable :: FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList )
+{
+  if ( !outFlavorList )
+    return NS_ERROR_INVALID_ARG;
+  
+  // Get the flavor list, and on to the end of it, append the list of flavors we
+  // can also get to through a converter. This is so that we can just walk the list
+  // in one go, looking for the desired flavor.
+  GetTransferDataFlavors(outFlavorList);  // addrefs
+  nsCOMPtr<nsIFormatConverter> converter;
+  GetConverter(getter_AddRefs(converter));
+  if ( converter ) {
+    nsCOMPtr<nsISupportsArray> convertedList;
+    converter->GetInputDataFlavors(getter_AddRefs(convertedList));
+    if ( convertedList ) {
+      for (int i=0;i<convertedList->Count();i++) {
+  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
+        (*outFlavorList)->AppendElement(temp);    // this addref's for us
+      } // foreach flavor that can be converted to
+    }
+  } // if a converter exists
+
+  return NS_OK;
+  
+} // FlavorsTransferableCanImport
+
+
+//
+// FlavorsTransferableCanExport
+//
+// Computes a list of flavors that the transferable can export, either through
+// intrinsic knowledge or output data converters.
+//
+NS_IMETHODIMP
+nsTransferable :: FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList )
+{
+  if ( !outFlavorList )
+    return NS_ERROR_INVALID_ARG;
+  
+  // Get the flavor list, and on to the end of it, append the list of flavors we
+  // can also get to through a converter. This is so that we can just walk the list
+  // in one go, looking for the desired flavor.
+  GetTransferDataFlavors(outFlavorList);  // addrefs
+  nsCOMPtr<nsIFormatConverter> converter;
+  GetConverter(getter_AddRefs(converter));
+  if ( converter ) {
+    nsCOMPtr<nsISupportsArray> convertedList;
+    converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
+    if ( convertedList ) {
+      for (int i=0;i<convertedList->Count();i++) {
+  	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
+        (*outFlavorList)->AppendElement(temp);    // this addref's for us
+      } // foreach flavor that can be converted to
+    }
+  } // if a converter exists
+
+  return NS_OK;
+  
+} // FlavorsTransferableCanImport
 
