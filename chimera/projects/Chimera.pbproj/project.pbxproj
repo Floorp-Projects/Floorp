@@ -417,6 +417,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>mozProfileDirName</key>
+	<string>Chimera</string>
 </dict>
 </plist>
 ";
