@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.42 $ $Date: 2002/03/07 22:53:40 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.43 $ $Date: 2002/03/07 23:21:39 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -264,6 +264,9 @@ nssToken_LoadCerts(NSSToken *token)
 	}
 	/* ignore the rv, just work without the list */
 	(void)nssToken_TraverseCertificates(token, NULL, &search);
+	(void)nssToken_SetTrustCache(token);
+	(void)nssToken_SetCrlCache(token);
+
 	/* even if there are no certs, leave a valid list pointer should
 	 * any be imported.  Having the pointer will also prevent searches,
 	 * see below.
