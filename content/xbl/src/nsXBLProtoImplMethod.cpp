@@ -195,8 +195,16 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
   if (!aClassObject)
     return NS_OK; // Nothing to do.
 
-  if (!mName)
-    return NS_ERROR_FAILURE; // Without a valid name, we can't install the member.
+  // No parameters or body was supplied, so don't install method.
+  if (!mUncompiledMethod)
+    return NS_ERROR_FAILURE;
+
+  // Don't install method if no name or body was supplied.
+  if (!(mName && mUncompiledMethod->mBodyText.GetText())) {
+    delete mUncompiledMethod;
+    mUncompiledMethod = nsnull;
+    return NS_ERROR_FAILURE;
+  }
 
   // We have a method.
   // Allocate an array for our arguments.

@@ -156,7 +156,8 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
     }
     else if (mSecondaryState == eXBL_InBody) {
       // Get the text and add it to the method
-      mMethod->AppendBodyText(text);
+      if (mMethod)
+        mMethod->AppendBodyText(text);
     }
     else if (mSecondaryState == eXBL_InField) {
       // Get the text and add it to the method
