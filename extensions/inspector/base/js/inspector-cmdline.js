@@ -39,6 +39,7 @@
 const INSPECTOR_CMDLINE_CONTRACTID = "@mozilla.org/commandlinehandler/general-startup;1?type=inspector";
 const INSPECTOR_CMDLINE_CLSID      = Components.ID('{38293526-6b13-4d4f-a075-71939435b408}');
 const CATMAN_CONTRACTID            = "@mozilla.org/categorymanager;1";
+const nsISupports                  = Components.interfaces.nsISupports;
 const nsICategoryManager           = Components.interfaces.nsICategoryManager;
 const nsICmdLineHandler            = Components.interfaces.nsICmdLineHandler;
 const nsIComponentRegistrar        = Components.interfaces.nsIComponentRegistrar;
