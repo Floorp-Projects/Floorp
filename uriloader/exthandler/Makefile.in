@@ -88,10 +88,8 @@ endif
 
 LOCAL_INCLUDES = -I$(srcdir)
 
-EXPORTS = 	nsExternalHelperAppService.h \
-		nsExternalProtocolHandler.h \
+EXPORTS = \
 		$(OSDIR)/nsOSHelperAppService.h \
-		nsHelperAppRDF.h	    \
 			$(NULL)
 
 XPIDLSRCS = \
