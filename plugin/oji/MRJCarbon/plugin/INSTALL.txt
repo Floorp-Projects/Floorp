@@ -1,10 +1,10 @@
-MRJPluginCarbon v1.0d7 Install Note
+MRJPluginCarbon v1.0d8 Install Note
 
 This short document explains how to install the MRJ Plugin for Mac OS X. There are two ways to install the current development release of the MRJ Plugin for Mac OS X:
 
-1. The simplest method is to create an alias to the file "MRJPluginCarbon" in "/Library/Internet Plugins." As long as you leave the original "MRJPluginCarbon-1.0d7" folder intact somewhere on your hard disk, this will work just fine.
+1. The simplest method is to create an alias to the file "MRJPluginCarbon" in "/Library/Internet Plugins." As long as you leave the original "MRJPluginCarbon-1.0d8" folder intact somewhere on your hard disk, this will work just fine.
 
-2. Copy the contents of the "MRJPluginCarbon-1.0d7" folder into "/Library/Internet Plugins." This should be a total of 4 files:  MRJPlugin.jar, MRJPlugin.policy, MRJPlugin.properties
+2. Copy the contents of the "MRJPluginCarbon-1.0d8" folder into "/Library/Internet Plugins." This should be a total of 4 files:  MRJPlugin.jar, MRJPlugin.policy, MRJPlugin.properties
 and MRJPluginCarbon.
 
 The first method is preferred, because you only have to add a single file to "/Library/Internet Plugins."
