@@ -68,7 +68,6 @@ OBJS =                             \
 	.\$(OBJDIR)\nsMenuBar.obj  \
 	.\$(OBJDIR)\nsMenu.obj  \
 	.\$(OBJDIR)\nsMenuItem.obj  \
-	.\$(OBJDIR)\nsObject.obj         \
 	.\$(OBJDIR)\nsWindow.obj         \
 	.\$(OBJDIR)\nsButton.obj         \
 	.\$(OBJDIR)\nsCheckButton.obj    \
