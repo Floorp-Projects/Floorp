@@ -78,6 +78,12 @@
  {0xa6, 0xec, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
 
 //
+// nsMsgComposeSecure
+//
+#define NS_MSGCOMPOSESECURE_CONTRACTID \
+  "@mozilla.org/messengercompose/composesecure;1"
+
+//
 // nsMsgComposeParams
 //
 #define NS_MSGCOMPOSEPARAMS_CONTRACTID \
