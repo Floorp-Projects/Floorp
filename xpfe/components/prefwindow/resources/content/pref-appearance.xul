@@ -32,17 +32,17 @@
 %prefAppearanceDTD;
 ]>
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-    		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-    		orient="vertical"
-  		  onload="parent.initPanel(panel);">
+        orient="vertical"
+        onload="parent.initPanel(panel);">
 
   <script language="JavaScript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-appearance.xul";
     // the first elements in this array will be poked from chromeregistry loaded
     // overlays once overlays.rdf works properly 
-    _elementIDs = ["generalStartupBrowser", /*"toolbarStyle" */];
+    var _elementIDs = ["generalStartupBrowser", /*"toolbarStyle" */, "showHideTooltips"];
   ]]>
   </script>
           
@@ -71,5 +71,11 @@
       <radio group="toolbarStyle" data="1" value="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
     </radiogroup>
   </titledbox>
+  <box autostretch="never">
+    <checkbox id="showHideTooltips" value="&showHideTooltips.label;"
+              accesskey="&showHideTooltips.accesskey;" pref="true"
+              preftype="bool" prefstring="browser.chrome.toolbar_tips"
+              prefattribute="checked"/>
+  </box>
 
 </window>

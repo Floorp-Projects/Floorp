@@ -23,4 +23,6 @@
 <!ENTITY picsOnlyRadio.label "Pictures only">
 <!ENTITY picsOnlyRadio.accesskey "o">
 <!ENTITY textonlyRadio.label "Text only">
-<!ENTITY textonlyRadio.accesskey "t">
+<!ENTITY textonlyRadio.accesskey "x">
+<!ENTITY showHideTooltips.label "Show Tooltips.">
+<!ENTITY showHideTooltips.accesskey "t">
