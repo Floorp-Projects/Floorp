@@ -604,7 +604,7 @@ WeekView.prototype.getVisibleEvent = function( calendarEvent )
       return eventBox;
    }
    else
-      return null;
+      return false;
 
 }
 

@@ -831,7 +831,7 @@ MonthView.prototype.getVisibleEvent = function monthView_getVisibleEvent( calend
       return eventBox;
    }
    else
-      return null;
+      return false;
 }
 
 MonthView.prototype.selectBoxForEvent = function monthView_selectBoxForEvent( calendarEvent )

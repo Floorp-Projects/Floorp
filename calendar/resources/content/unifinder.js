@@ -324,7 +324,8 @@ function unifinderOnSelect( event )
       var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
       
       /* you need this in case the current day is not visible. */
-      gCalendarWindow.currentView.goToDay( eventStartDate, true);
+      if( gCalendarWindow.currentView.getVisibleEvent( calendarEvent ) == false )
+         gCalendarWindow.currentView.goToDay( eventStartDate, true);
    }
    
    gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );

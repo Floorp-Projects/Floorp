@@ -554,7 +554,7 @@ DayView.prototype.getVisibleEvent = function dayview_getVisibleEvent( calendarEv
       return eventBox;
    }
    else
-      return null;
+      return false;
 
 }
 
