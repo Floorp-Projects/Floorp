@@ -58,6 +58,10 @@ EXPORT_RESOURCE_THROBBER := \
 TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_GFX_TOOLKIT)
 TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_WIDGET_TOOLKIT)
 
+ifeq ($(MOZ_GFX_TOOLKIT),xlib)
+TOOLKIT_GFX_XLIBRGB_LIB := -lxlibrgb
+endif
+
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
 TOOLKIT_CFLAGS := \
@@ -126,6 +130,7 @@ GECKO_LIBS =			\
 	$(TOOLKIT_WIDGET_LIB)	\
 	-lraptorgfx		\
 	$(TOOLKIT_GFX_LIB)	\
+	$(TOOLKIT_GFX_XLIBRGB_LIB) \
 	-lraptorhtmlpars	\
 	-lexpat			\
 	-lxmltok		\
