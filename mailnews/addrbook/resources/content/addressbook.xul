@@ -200,12 +200,12 @@ Rights Reserved.
 	<!-- toolbar -->
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" onclick="AbNewCard()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" onclick="AbNewList()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
             	<toolbarseparator class="toolbarseparator-primary"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-editcard" value="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" onclick="AbEditCard()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" value="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" onclick="AbNewMessage()"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" onclick="goDoCommand('button_delete')"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-editcard" value="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" value="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
 				<box orient="vertical" flex="100%">
 					<spring flex="1"/> 

@@ -85,8 +85,8 @@
       </tree>
     </box>
     <box>
-      <button id="more" value="&more.label;" onclick="onMore(event);"/>
-      <button id="less" value="&less.label;" disabled="true" onclick="onLess(event);"/>
+      <button id="more" value="&more.label;" oncommand="onMore(event);"/>
+      <button id="less" value="&less.label;" disabled="true" oncommand="onLess(event);"/>
     </box>
   </box>
 

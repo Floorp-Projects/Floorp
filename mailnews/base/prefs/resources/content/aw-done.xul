@@ -63,7 +63,7 @@ Rights Reserved.
     <html>&clickFinish.label;</html>
     <!--
       <box>
-        <button class="dialog push" value="&setupAnotherButton.label;" onclick="setupAnother(event);"/>
+        <button class="dialog push" value="&setupAnotherButton.label;" oncommand="setupAnother(event);"/>
       </box>
     -->
   </box>

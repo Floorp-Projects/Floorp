@@ -120,13 +120,13 @@ Rights Reserved.
           <spring flex="1"/>
         </box>
         <box orient="vertical">
-          <button id="newButton" value="&newButton.label;" onclick="onNewFilter();"/>
-          <button id="editButton" value="&editButton.label;" onclick="onEditFilter();"/>
-          <button id="deleteButton" value="&deleteButton.label;" onclick="onDeleteFilter();"/>
+          <button id="newButton" value="&newButton.label;" oncommand="onNewFilter();"/>
+          <button id="editButton" value="&editButton.label;" oncommand="onEditFilter();"/>
+          <button id="deleteButton" value="&deleteButton.label;" oncommand="onDeleteFilter();"/>
           <spring flex="1"/>
           <!-- take out for PR2
             <button value="&runFiltersNow.label;" width="0em"/>
-            <button onclick="DumpDOM(document.getElementById('filterTree'));" value="dump"/>
+            <button oncommand="DumpDOM(document.getElementById('filterTree'));" value="dump"/>
           -->
         </box>
       </row>

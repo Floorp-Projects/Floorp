@@ -54,7 +54,7 @@ Rights Reserved.
       <box autostretch="never">
         <text class="label" value="&searchHeading.label;"/>
         <menulist id="searchableFolders" flex="2"
-                oncommand="onChooseFolder(event)"/>
+                oncommand="onChooseFolder(event);"/>
         <spring flex="1"/>
           <checkbox id="checkSearchSubFolders" value="&searchSubfolders.label;" checked="true"/>
       </box>
@@ -66,8 +66,8 @@ Rights Reserved.
         
         <box orient="vertical">
            <spring flex="1"/>
-           <button value="&searchButton.label;" oncommand="onSearch(event)"/>
-           <button value="&resetButton.label;" oncommand="onReset(event)"/>
+           <button value="&searchButton.label;" oncommand="onSearch(event);"/>
+           <button value="&resetButton.label;" oncommand="onReset(event);"/>
            <spring flex="1"/>
          </box>
       </box>
@@ -82,7 +82,7 @@ Rights Reserved.
     </titledbox>
     
     <box autostretch="never" align="right">
-      <button value="&closeButton.label;" onclick="window.close();"/>
+      <button value="&closeButton.label;" oncommand="window.close();"/>
     </box>
   
   </box>

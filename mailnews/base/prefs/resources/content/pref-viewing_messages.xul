@@ -86,7 +86,7 @@
       </menulist>
       
       <text class="label" value="&color.label;" accesskey="&color.accesskey;"/>
-      <colorpicker type="button" id="citationmenu" palettename="standard" onclick="setColorWell(this)"/>
+      <colorpicker type="button" id="citationmenu" palettename="standard" oncommand="setColorWell(this);"/>
       <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
     </box>		
 
