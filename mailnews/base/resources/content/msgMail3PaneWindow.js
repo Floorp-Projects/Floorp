@@ -34,6 +34,7 @@ var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 
 var gFolderTree;
 var gThreadTree;
+var gCurrentLoadingFolderURI
 
 // get the messenger instance
 var messenger = Components.classes[messengerProgID].createInstance();
@@ -70,18 +71,13 @@ var folderListener = {
 			if(resource)
 			{
 				var uri = resource.Value;
-				var folderTree = GetFolderTree();
-				var selArray = folderTree.selectedItems;
-				if ( selArray && (selArray.length == 1) )
+				if(uri == gCurrentLoadingFolderURI)
 				{
-					var id = selArray[0].getAttribute('id');
-					if(uri == id)
-					{
-						var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-						if(msgFolder)
-							msgFolder.EndFolderLoading();
-						RerootFolder(uri);
-					}
+					gCurrentLoadingFolderURI="";
+					var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+					if(msgFolder)
+						msgFolder.EndFolderLoading();
+					RerootFolder(uri);
 				}
 			}
 		}

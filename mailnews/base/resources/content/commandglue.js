@@ -197,6 +197,7 @@ function ChangeFolderByURI(uri)
   {
 	try
 	{
+		gCurrentLoadingFolderURI = uri;
 		msgfolder.StartFolderLoading();
 		msgfolder.UpdateFolder();
 	}
