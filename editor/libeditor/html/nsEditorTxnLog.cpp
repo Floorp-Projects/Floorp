@@ -130,7 +130,7 @@ nsEditorTxnLog::DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransactio
   Write("DidDo:    ");
   WriteTransaction(aTransaction);
   Write("(");
-  WriteInt("%d", aDoResult);
+  WriteInt(aDoResult);
   Write(")\n");
   Flush();
 
@@ -174,13 +174,13 @@ nsEditorTxnLog::DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
     Write("DidUndo:  ");
     WriteTransaction(aTransaction);
     Write("(");
-    WriteInt("%d", aUndoResult);
+    WriteInt(aUndoResult);
     Write(")\n");
   }
   else
   {
     Write("EndUndoBatch (");
-    WriteInt("%d", aUndoResult);
+    WriteInt(aUndoResult);
     Write(")\n");
   }
 
@@ -226,13 +226,13 @@ nsEditorTxnLog::DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
     Write("DidRedo:  ");
     WriteTransaction(aTransaction);
     Write(" (");
-    WriteInt("%d", aRedoResult);
+    WriteInt(aRedoResult);
     Write(")\n");
   }
   else
   {
     Write("DidRedoBatch (");
-    WriteInt("%d", aRedoResult);
+    WriteInt(aRedoResult);
     Write(")\n");
   }
 
@@ -250,7 +250,7 @@ nsEditorTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt
 
   PrintIndent(mIndentLevel);
   Write("WillBeginBatch: ");
-  WriteInt("%d", mBatchCount);
+  WriteInt(mBatchCount);
   Write("\n");
   Flush();
 
@@ -266,9 +266,9 @@ nsEditorTxnLog::DidBeginBatch(nsITransactionManager *aTxMgr, nsresult aResult)
 
   PrintIndent(mIndentLevel++);
   Write("DidBeginBatch:  ");
-  WriteInt("%d", mBatchCount++);
+  WriteInt(mBatchCount++);
   Write(" (");
-  WriteInt("%d", aResult);
+  WriteInt(aResult);
   Write(")\n");
   Flush();
 
@@ -284,7 +284,7 @@ nsEditorTxnLog::WillEndBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt)
 
   PrintIndent(--mIndentLevel);
   Write("WillEndBatch:   ");
-  WriteInt("%d", --mBatchCount);
+  WriteInt(--mBatchCount);
   Write("\n");
   Flush();
 
@@ -300,9 +300,9 @@ nsEditorTxnLog::DidEndBatch(nsITransactionManager *aTxMgr, nsresult aResult)
 
   PrintIndent(mIndentLevel);
   Write("DidEndBatch:    ");
-  WriteInt("%d", mBatchCount);
+  WriteInt(mBatchCount);
   Write(" (");
-  WriteInt("%d", aResult);
+  WriteInt(aResult);
   Write(")\n");
   Flush();
 
@@ -342,7 +342,7 @@ nsEditorTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTran
   Write(" (");
   Write(aDidMerge ? "TRUE" : "FALSE");
   Write(", ");
-  WriteInt("%d", aMergeResult);
+  WriteInt(aMergeResult);
   Write(")\n");
   Flush();
 
@@ -388,21 +388,22 @@ nsEditorTxnLog::Write(const char *aBuffer)
   if (mEditorLog)
     mEditorLog->Write(aBuffer);
   else
-    printf(aBuffer);
+  {
+    PRInt32 len = strlen(aBuffer);
+    if (len > 0)
+      fwrite(aBuffer, 1, len, stdout);
+  }
 
   return NS_OK;
 }
 
 nsresult
-nsEditorTxnLog::WriteInt(const char *aFormat, PRInt32 aInt)
+nsEditorTxnLog::WriteInt(PRInt32 aInt)
 {
-  if (!aFormat)
-    return NS_ERROR_NULL_POINTER;
-
   if (mEditorLog)
-    mEditorLog->WriteInt(aFormat, aInt);
+    mEditorLog->WriteInt(aInt);
   else
-    printf(aFormat, aInt);
+    printf("%d", aInt);
 
   return NS_OK;
 }
