@@ -67,7 +67,7 @@ nsIDocument      *gDoc = nsnull;
 
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsFrame * aFrame);
-void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
+static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 
 PRBool      nsFrame::mDoingSelection = PR_FALSE;
 PRBool      nsFrame::mDidDrag        = PR_FALSE;
