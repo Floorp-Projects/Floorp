@@ -26,6 +26,7 @@ DIRS=            \
 	ftp      \
     data     \
         http     \
+        keyword \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
