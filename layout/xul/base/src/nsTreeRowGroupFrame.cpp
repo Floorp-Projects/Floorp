@@ -59,7 +59,7 @@ void GetRowStartAndCount(nsIFrame* aFrame,
   aFrame->GetFrameType(&fType);
   if (nsLayoutAtoms::tableRowFrame == fType) {
     aStartRowIndex = ((nsTableRowFrame*)aFrame)->GetRowIndex();
-    aNumRows = 0;
+    aNumRows = 1;
   }
   else if (nsLayoutAtoms::tableRowGroupFrame == fType) { 
     aStartRowIndex = ((nsTableRowGroupFrame*)aFrame)->GetStartRowIndex();
