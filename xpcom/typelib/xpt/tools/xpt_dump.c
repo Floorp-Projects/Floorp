@@ -107,7 +107,7 @@ xpt_dump_usage(char *argv[]) {
 
 #ifdef XP_MAC
 
-static int get_args(char*** argv)
+static int mac_get_args(char*** argv)
 {
 	static char* args[] = { "xpt_dump", NULL, NULL };
 	static StandardFileReply reply;
@@ -137,17 +137,27 @@ static int get_args(char*** argv)
 int xptdump_main(int argc, char *argv[]);
 #endif
 
-#endif
+#endif 
+
+
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
+
+#define get_file_length mac_get_file_length
+extern size_t mac_get_file_length(const char* filename);
+
+#else /* !(XP_MAC && XPIDL_PLUGIN) */
 
 static size_t get_file_length(const char* filename)
 {
     struct stat file_stat;
     if (stat(filename, &file_stat) != 0) {
-        perror("FAILED: fstat");
+        perror("FAILED: get_file_length");
         exit(1);
     }
     return file_stat.st_size;
 }
+
+#endif /* !(XP_MAC && XPIDL_PLUGIN) */
 
 int 
 main(int argc, char **argv)
@@ -162,7 +172,7 @@ main(int argc, char **argv)
 
 #ifdef XP_MAC
 	if (argc == 0 || argv == NULL)
-	argc = get_args(&argv);
+	argc = mac_get_args(&argv);
 #endif
 
     switch (argc) {
