@@ -1695,9 +1695,12 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
   {
     res = InsertBasicBlock("p");
   } 
+  //XXX: TODO: Do we really want to support setting list types here?
+  // If yes, we need to add "dd", "dt" for <dl> support 
   else if (tag == "li") 
   {
-    res = InsertList("ul");
+    //XXX: Why do we assume "ul" What about "ol"? This will change an OL into a UL list!
+    res = MakeOrChangeList("ul");
   } 
   else 
   {
@@ -1949,7 +1952,7 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertList(const nsString& aListType)
+nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }

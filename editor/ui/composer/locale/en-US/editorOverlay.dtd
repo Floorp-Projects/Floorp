@@ -323,7 +323,7 @@
 <!ENTITY paragraphdesc.accesskey "d">
 
 <!-- List menu items -->
-<!ENTITY listProps.label "List">
+<!ENTITY listProps.label "List...">
 <!ENTITY formatlistmenu.accesskey "l">
 <!ENTITY listNoneCmd.label "None">
 <!ENTITY listnone.accesskey "o">
@@ -391,6 +391,8 @@
 
 <!-- debug menu items -->
 <!ENTITY debugMenu.label "Debug">
+<!ENTITY newEditorTestPage.label "Composer with Test Page">
+<!ENTITY textEditorCmd.label "Plaintext Editor">
 <!ENTITY outputTextCmd.label "Output Text">
 <!ENTITY outputHTMLCmd.label "Output HTML">
 <!ENTITY outputXIFCmd.label "Output XIF">

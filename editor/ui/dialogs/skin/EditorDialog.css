@@ -37,17 +37,23 @@ tab {
 
 /*
 titledbutton[class=~spaced] { 
-    margin-left:                5px;
-    margin-right:               5px;
+    margin-left:  5px;
+    margin-right: 5px;
 }
 
 titledbutton {
-    padding:                    2px 5px;
+    padding: 2px 5px;
 }
 */
+titledbutton#MoreFewerButton {
+  list-style-image: url(chrome://global/skin/scroll-down.gif)
+}
+titledbutton#MoreFewerButton[more="1"] {
+  list-style-image: url(chrome://global/skin/scroll-up.gif);
+}
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
-    width:                      20em;
+    width: 20em;
 }
 
 /* HTML ELEMENTS */
@@ -57,122 +63,126 @@ td, table { border: 0px;}
 
 /* Use to center vertically in a table cell */
 .vcenter { 
-  vertical-align:               middle;
+  vertical-align: middle;
 }
 
-/* Messenger uses this -- IT SHOULD BE IN XUL.CSS */
 spring.spacer {
-      width:                    5px;
-      height:                   5px;
+      width:  5px;
+      height: 5px;
 }
 
 spring.bigspacer {
-      width:                    10px;
-      height:                   10px;
+      width:  10px;
+      height: 10px;
 }
 
 div.spacer [align~=horizontal] {
-    border                    : 1px inset white;
-    height                    : 2px;
+    border:  1px inset white;
+    height:  2px;
 }
 
+div#message {
+  width:       20em; 
+  margin-left: 10px
+
+}
 /* Rest are from Ben Goodger for Advanced Edit dialog 
    These need reviewing and eliminate all but essential attributes */
 
 div.tagname {
-    font-weight               : bold;
-    font-size                 : 17px;
+    font-weight: bold;
+    font-size  : 17px;
 }
 
 div#tagLabel {
-    font-weight               : bold;
+    font-weight: bold;
 }
 
 /* styles for an attribute tree-table */
 tree.AttributesTree {
-    min-width                 : 200px;
-    min-height                : 200px;
-    border                    : 1px inset white;
+    min-width : 200px;
+    min-height: 200px;
+    border    : 1px inset white;
 }
 
 tree.AttributesTree treecell {
-    color                     : black;
-    padding-left              : 10px;
-    padding-top               : 2px;
-    padding-bottom            : 2px;
-    padding-right             : 2px;
+    color         : black;
+    padding-left  : 10px;
+    padding-top   : 2px;
+    padding-bottom: 2px;
+    padding-right : 2px;
 }
 
 tree.AttributesTree > treehead > treerow > treecell {
-    border                    : 1px outset white;
-    background-color          : #CCCCDD;
+    border          : 1px outset white;
+    background-color: #CCCCDD;
 }
 
 tree.AttributesTree > treehead > treerow > treecell:active {
-    border-left               : 1px inset white; /*inset white;*/
-    border-top                : 1px inset white;
-    border-right              : 1px solid #CCCCDD;
-    border-bottom             : 1px solid #CCCCDD;
-    padding-left              : 11px;
-    padding-top               : 3px;
-    padding-right             : 1px;
-    padding-bottom            : 1px;
+    border-left   : 1px inset white; /*inset white;*/
+    border-top    : 1px inset white;
+    border-right  : 1px solid #CCCCDD;
+    border-bottom : 1px solid #CCCCDD;
+    padding-left  : 11px;
+    padding-top   : 3px;
+    padding-right : 1px;
+    padding-bottom: 1px;
 }
 
 
 /* FILES/MOZILLAE/M96/BIN/chrome/editor/content/default/EdAdvancedEdit.xul */
 tree.AttributesTree treechildren > treeitem > treerow > treecell {
-    border-right              : 1px solid #CCCCDD;
-    border-bottom             : 1px solid #CCCCDD;
-    color                     : black;
-    background-color          : #FFFFFF;
-    padding-left              : 10px;
-    padding-top               : 2px;
-    padding-bottom            : 2px;
-    padding-right             : 2px;
+    border-right    : 1px solid #CCCCDD;
+    border-bottom   : 1px solid #CCCCDD;
+    color           : black;
+    background-color: #FFFFFF;
+    padding-left    : 10px;
+    padding-top     : 2px;
+    padding-bottom  : 2px;
+    padding-right   : 2px;
 }
 
 tree.AttributesTree treechildren > treeitem > treerow > treecell.value {
-    border-bottom             : 1px solid #CCCCDD;
-    color                     : black;
-    background-color          : #FFFFFF;
-    padding-left              : 0px;
-    padding-top               : 0px;
-    padding-bottom            : 0px;
-    padding-right             : 0px;
-    margin-left               : 0px;
+    border-bottom   : 1px solid #CCCCDD;
+    color           : black;
+    background-color: #FFFFFF;
+    padding-left    : 0px;
+    padding-top     : 0px;
+    padding-bottom  : 0px;
+    padding-right   : 0px;
+    margin-left     : 0px;
 }
 
 
 tree.AttributesTree treechildren > treeitem > treerow [selected ~= false] {
-    color                     : black;
-    background-color          : #FFFFFF;
+    color           : black;
+    background-color: #FFFFFF;
 }
 
 tree.AttributesTree treechildren > treeitem > treerow [selected ~= true] {
-    color                     : white;
-    background-color          : #666699;
+    color           : white;
+    background-color: #666699;
 }
 
 input.AttributesCell {
-    width                     : 95%;
-    border                    : none;
-    height                    : 100%;
+    width : 95%;
+    border: none;
+    height: 100%;
 }
 /*
 input.AttributesCell:active {
-    border:                     1px white inset;
+    border: 1px white inset;
 }
 
 input.AttributesCell:hover {
-    border:                     1px white inset;
+    border: 1px white inset;
 }
 */
 
 treecell input:hover {
-    background-color          : #ECECEC;
-    font-weight               : bold;
-    border                    : 2px solid #666699;
+    background-color: #ECECEC;
+    font-weight     : bold;
+    border          : 2px solid #666699;
 }
 
 box.tabpanel {

@@ -114,8 +114,11 @@ interface nsIEditorShell : nsISupports
    *  return value:
    *         false ONLY if user executed "Cancel" in the SaveAs dialog
    *         true if no changes in doc, or file was saved successfully
+   *  @param reasonToSave 
+   *         A string to append after "Save changes to <URL>"
+   *         If null, just the question mark will be appended
    */
-  boolean  CheckAndSaveDocument();
+  boolean  CheckAndSaveDocument(in wstring reasonToSave);
 
   void CloseWindow();
   void Print();
@@ -158,7 +161,7 @@ interface nsIEditorShell : nsISupports
   void InsertSource(in wstring textToInsert);
   void InsertBreak();
   
-  void InsertList(in wstring listType);
+  void MakeOrChangeList(in wstring listType);
   void RemoveList(in wstring listType);
   void Indent(in wstring indent);
   void Align(in wstring align);

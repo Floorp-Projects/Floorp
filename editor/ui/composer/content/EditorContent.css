@@ -28,8 +28,9 @@
 */
 
 a[name] {
+  /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 20px; 
-  background: url(chrome://editor/skin/images/anchor.gif) 5px 50% no-repeat; 
+  background: url(chrome://editor/skin/images/anchor.gif); 
 }
 
 table {

@@ -103,7 +103,7 @@ public:
   NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
   NS_IMETHOD RemoveParent(const nsString &aParentTag);
 
-  NS_IMETHOD InsertList(const nsString& aListType);
+  NS_IMETHOD MakeOrChangeList(const nsString& aListType);
   NS_IMETHOD RemoveList(const nsString& aListType);
   NS_IMETHOD InsertBasicBlock(const nsString& aBlockType);
   NS_IMETHOD Indent(const nsString& aIndent);

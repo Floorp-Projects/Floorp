@@ -1151,10 +1151,11 @@ nsEditorShell::Open()
 }
 
 NS_IMETHODIMP    
-nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
+nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retval)
 {
   *_retval = PR_FALSE;
 
+  nsAutoString ReasonToSave(reasonToSave);
   nsCOMPtr<nsIDOMDocument> theDoc;
   nsresult rv = GetEditorDocument(getter_AddRefs(theDoc));
   if (NS_SUCCEEDED(rv) && theDoc)
@@ -1175,7 +1176,16 @@ nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
         nsAutoString tmp2 = GetString("DontSave");
         nsAutoString title;
         GetDocumentTitle(title);
-        nsAutoString saveMsg = GetString("SaveFilePrompt")+" "+"\""+title+"\""+GetString("QuestionMark");
+        nsAutoString saveMsg = GetString("SaveFilePrompt")+" "+"\""+title+"\"";
+        if (ReasonToSave.Length() > 0) 
+        {
+          saveMsg += " ";
+          saveMsg += ReasonToSave;
+          saveMsg += GetString("QuestionMark");
+        } else {
+          saveMsg += GetString("QuestionMark");
+        }
+
         EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), saveMsg,
                                                   &tmp1, &tmp2);
         if (result == eCancel)
@@ -1234,8 +1244,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             nsString title;
             res = HTMLDoc->GetTitle(title);
 
-            // Prompt for title ONLY for a new blank doc (no filespec yet)
-            if (noFileSpec && NS_SUCCEEDED(res) && title.Length() == 0)
+            // Prompt for title if it's empty or user selected "Save As"
+            if (NS_SUCCEEDED(res) && (saveAs || title.Length() == 0))
             {
               // Use a "prompt" common dialog to get title string from user
               NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
@@ -1246,7 +1256,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                 nsAutoString msg = GetString("NeedDocTitle"); 
                 PRBool retVal = PR_FALSE;
                 res = dialog->Prompt(mContentWindow, caption.GetUnicode(), msg.GetUnicode(),
-                                     nsnull, &titleUnicode, &retVal); 
+                                     title.GetUnicode(), &titleUnicode, &retVal); 
                 
                 if( retVal == PR_FALSE)
                 {
@@ -1277,13 +1287,13 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               nsAutoString fileName;
               nsFileSpec parentPath;
 
-              titles = new nsString[2];
+              titles = new nsString[3];
               if (!titles)
               {
                 res = NS_ERROR_OUT_OF_MEMORY;
                 goto SkipFilters;
               }
-              filters = new nsString[2];
+              filters = new nsString[3];
               if (!filters)
               {
                 res = NS_ERROR_OUT_OF_MEMORY;
@@ -1301,7 +1311,9 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               *nextFilter++ = "*.htm; *.html; *.shtml";
               *nextTitle++ = TextFiles;
               *nextFilter++ = "*.txt";
-              fileWidget->SetFilterList(2, titles, filters);
+              *nextTitle++ = GetString("AllFiles");
+              *nextFilter++ = "*.*";
+              fileWidget->SetFilterList(3, titles, filters);
               
               if (noFileSpec)
               {
@@ -1313,14 +1325,14 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                   PRUnichar dot = (PRUnichar)'.';
                   PRUnichar bslash = (PRUnichar)'\\';
                   PRUnichar fslash = (PRUnichar)'/';
-                  PRUnichar amp = (PRUnichar)'@';
+                  PRUnichar at = (PRUnichar)'@';
                   PRUnichar colon = (PRUnichar)':';
                   PRUnichar underscore = (PRUnichar)'_';
                   title = title.ReplaceChar(space, underscore);
                   title = title.ReplaceChar(dot, underscore);
                   title = title.ReplaceChar(bslash, underscore);
                   title = title.ReplaceChar(fslash, underscore);
-                  title = title.ReplaceChar(amp, underscore);
+                  title = title.ReplaceChar(at, underscore);
                   title = title.ReplaceChar(colon, underscore);
                   fileName = title + nsString(".html");
                 }
@@ -1405,7 +1417,7 @@ nsEditorShell::CloseWindow()
 {
   nsresult rv = NS_OK;
   PRBool result;
-  rv = CheckAndSaveDocument(&result);
+  rv = CheckAndSaveDocument(GetString("BeforeClosing").GetUnicode(),&result);
   
   // Don't close the window if there was an error saving file or 
   //   user canceled an action along the way
@@ -1436,7 +1448,7 @@ NS_IMETHODIMP
 nsEditorShell::Exit()
 {  
   PRBool result;
-  nsresult rv = CheckAndSaveDocument(&result);
+  nsresult rv = CheckAndSaveDocument(GetString("BeforeClosing").GetUnicode(),&result);
   // Don't shutdown if there was an error saving file or 
   //   user canceled an action along the way
   if (NS_SUCCEEDED(rv) && result)
@@ -1455,9 +1467,9 @@ nsEditorShell::Exit()
 NS_IMETHODIMP
 nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType, PRUnichar **_retval)
 {
-  nsAutoString aFilterType(filterType);
-  PRBool htmlFilter = aFilterType.EqualsIgnoreCase("html");
-  PRBool imgFilter = aFilterType.EqualsIgnoreCase("img");
+  nsAutoString FilterType(filterType);
+  PRBool htmlFilter = FilterType.EqualsIgnoreCase("html");
+  PRBool imgFilter = FilterType.EqualsIgnoreCase("img");
 
   *_retval = nsnull;
   
@@ -2475,7 +2487,7 @@ nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)
 
 
 NS_IMETHODIMP
-nsEditorShell::InsertList(const PRUnichar *listType)
+nsEditorShell::MakeOrChangeList(const PRUnichar *listType)
 {
   nsresult err = NS_NOINTERFACE;
 
@@ -2484,14 +2496,24 @@ nsEditorShell::InsertList(const PRUnichar *listType)
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      err = mEditor->InsertList(aListType);
+      if (aListType == "")
+      {
+        err = mEditor->RemoveList("ol");
+        if(NS_SUCCEEDED(err))
+        {
+          err = mEditor->RemoveList("ul");
+          if(NS_SUCCEEDED(err))
+            err = mEditor->RemoveList("dl");
+        }
+      }
+      else
+        err = mEditor->MakeOrChangeList(aListType);
       break;
 
     case ePlainTextEditorType:
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
-
   return err;
 }
 
@@ -2506,7 +2528,18 @@ nsEditorShell::RemoveList(const PRUnichar *listType)
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      err = mEditor->RemoveList(aListType);
+      if (aListType == "")
+      {
+        err = mEditor->RemoveList("ol");
+        if(NS_SUCCEEDED(err))
+        {
+          err = mEditor->RemoveList("ul");
+          if(NS_SUCCEEDED(err))
+            err = mEditor->RemoveList("dl");
+        }
+      }
+      else
+        err = mEditor->RemoveList(aListType);
       break;
 
     case ePlainTextEditorType:

@@ -80,7 +80,7 @@
         <label for="border"> &borderEditField.label; </label>
       </td>
       <td>
-        <input type="text" id="borderInput" size="4" onkeyup="forceInteger('border')"/>
+        <input type="text" id="borderInput" size="4" onkeyup="forceInteger('borderInput')"/>
       </td>
       <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
            input box and make them center vertically. Used another TD instead -->
