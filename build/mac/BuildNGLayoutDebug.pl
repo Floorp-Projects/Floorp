@@ -45,9 +45,7 @@ $build{nglayout}= 0;
 # UI
 #
 
-@choices = ("pull_and_build_all", 
-						"build_all");
-#damn, this does not work on 
+@choices = ("pull_all", "build_all", "pull_and_build_all");
 
   while (GetFrontProcess	() !=  GetCurrentProcess())
   {
@@ -58,16 +56,19 @@ $build{nglayout}= 0;
 	$build{all} = 1;
 	foreach $i (@pick)
 	{
-		if ($i eq "pull_and_build_all")
+		if ($i eq "pull_all")
 		{
 			$pull{all} = 1;
-			$build{all} = 1;
 		}
 		elsif ($i eq "build_all")
 		{
 			$build{all} = 1;
 		}
-
+			elsif ($i eq "pull_and_build_all")
+		{
+			$build{all} = 1;
+			$pull{all} = 1;
+		}
 	}
 
 if ($pull{all})
