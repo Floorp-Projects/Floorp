@@ -58,6 +58,8 @@
 #include "nsCopyMessageStreamListener.h"
 #include "nsMsgCopyService.h"
 
+#include "nsMsgFolderCache.h"
+
 #ifdef DOING_FILTERS
 #include "nsMsgFilterService.h"
 #endif
@@ -287,7 +289,16 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
       rv = NS_NewMsgCopyService(aIID, aResult);
   }
   else if (mClassID.Equals(kMsgFolderCacheCID)) {
-		rv = NS_ERROR_NO_INTERFACE;
+	  nsMsgFolderCache * folderCache = nsnull;
+	  folderCache = new nsMsgFolderCache ();
+	  if (folderCache == nsnull)
+		rv = NS_ERROR_OUT_OF_MEMORY;
+		else 
+		{
+		  rv = folderCache->QueryInterface(aIID, aResult);
+		  if (NS_FAILED(rv))
+			delete folderCache;
+		}
   }
 
   return rv;
@@ -555,6 +566,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->UnregisterComponent(kMsgCopyServiceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->UnregisterComponent(kMsgFolderCacheCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
+
   return finalResult;
 }
 
