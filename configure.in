@@ -339,6 +339,10 @@ if test -n "$CROSS_COMPILE"; then
     case "${target_os}" in
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
+        openvms*)     OS_TARGET=`uname -s`
+                      OS_ARCH=`uname -s | sed -e 's|/|_|g'`
+                      OS_RELEASE=`uname -r`
+                      OS_TEST=`uname -m`;;
     esac
 else
     OS_TARGET=`uname -s`
