@@ -100,12 +100,6 @@
 // END
 #endif
 
-// Drag & Drop, Clipboard
-#include "nsWidgetsCID.h"
-#include "nsIFileWidget.h"
-#include "nsIClipboard.h"
-#include "nsITransferable.h"
-
 static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
 
