@@ -264,17 +264,15 @@ nsMsgStatusFeedback::StartMeteors()
 {
   nsresult rv;
 
-  if (!mStartTimer) {
-    rv = NS_NewTimer(getter_AddRefs(mStartTimer));
-    if (NS_FAILED(rv)) return rv;
-  }
-  
   // cancel outstanding starts
   if (mQueuedMeteorStarts>0) {
     mQueuedMeteorStarts--;
     NS_ASSERTION(mQueuedMeteorStarts == 0, "destroying unfired/uncanceled start timer");
-    mStartTimer->Cancel();
   }
+
+  // if mStartTimer already exists, then this will cancel the old timer.
+  rv = NS_NewTimer(getter_AddRefs(mStartTimer));
+  if (NS_FAILED(rv)) return rv;
 
   rv = mStartTimer->Init(notifyStartMeteors, (void *)this,
                          MSGFEEDBACK_TIMER_INTERVAL);
@@ -290,17 +288,15 @@ nsMsgStatusFeedback::StopMeteors()
 {
   nsresult rv;
 
-  if (!mStopTimer) {
-    rv = NS_NewTimer(getter_AddRefs(mStopTimer));
-    if (NS_FAILED(rv)) return rv;
-  }
-
   // cancel outstanding stops
   if (mQueuedMeteorStops>0) {
     mQueuedMeteorStops--;
     NS_ASSERTION(mQueuedMeteorStops == 0, "destroying unfired/uncanceled stop");
-    mStopTimer->Cancel();
   }
+  
+  // if mStopTimer already exists, then this will cancel the old timer.
+  rv = NS_NewTimer(getter_AddRefs(mStopTimer));
+  if (NS_FAILED(rv)) return rv;
 
   rv = mStopTimer->Init(notifyStopMeteors, (void *)this,
                         MSGFEEDBACK_TIMER_INTERVAL);
