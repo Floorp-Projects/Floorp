@@ -30,7 +30,7 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 
-  <menu class="push" label="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ignore="http://home.netscape.com/NC-rdf#MessageChild"
+  <menu class="push" label="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
     ref="msgaccounts:/">
         <template>
           <rule nc:CanCreateSubfolders="true" nc:CanCreateFoldersOnServer="true" iscontainer="true" isempty="false">
@@ -82,7 +82,6 @@ Rights Reserved.
   <menulist label="&renamefolderclickhere.label;" uri=""
     id="msgRenameFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-    ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">
         <template>
           <rule nc:CanRename="true" iscontainer="true" isempty="false">
@@ -148,7 +147,6 @@ Rights Reserved.
 
   <menulist label="&choosefolderclickhere.label;" uri="" id="msgFccFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-    ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">
         <template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -203,7 +201,6 @@ Rights Reserved.
   <menulist label="&choosefolderclickhere.label;" uri=""
     id="msgDraftsFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-    ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">
         <template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -258,7 +255,6 @@ Rights Reserved.
   <menulist label="&choosefolderclickhere.label;" uri=""
     id="msgStationeryFolderPicker"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-    ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">
         <template>
           <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -313,7 +309,6 @@ Rights Reserved.
   <menu class="push" label="&chooseaccountclickhere.label;" 
         uri="" id="msgFccAccountPicker" 
         datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
-        ignore="http://home.netscape.com/NC-rdf#MessageChild"
         ref="msgaccounts:/">
     <template>
       <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
@@ -334,7 +329,6 @@ Rights Reserved.
   <menu class="push" label="&chooseaccountclickhere.label;" 
         uri="" id="msgDraftsAccountPicker" 
         datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
-        ignore="http://home.netscape.com/NC-rdf#MessageChild"
         ref="msgaccounts:/">
     <template>
       <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
@@ -355,7 +349,6 @@ Rights Reserved.
   <menu class="push" label="&chooseaccountclickhere.label;" 
         uri="" id="msgStationeryAccountPicker" 
         datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
-        ignore="http://home.netscape.com/NC-rdf#MessageChild"
         ref="msgaccounts:/">
     <template>
       <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
