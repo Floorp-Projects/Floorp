@@ -129,8 +129,10 @@ public class Interpreter
         Icode_GETVAR1                   = -43,
         Icode_SETVAR1                   = -44,
 
+        Icode_UNDEF                     = -45,
+
     // Last icode
-        MIN_ICODE                       = -44;
+        MIN_ICODE                       = -45;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -727,7 +729,7 @@ public class Interpreter
                 iCodeTop = generateICode(child, iCodeTop);
                 if (type == Token.VOID) {
                     iCodeTop = addToken(Token.POP, iCodeTop);
-                    iCodeTop = addToken(Token.UNDEFINED, iCodeTop);
+                    iCodeTop = addIcode(Icode_UNDEF, iCodeTop);
                 } else {
                     iCodeTop = addToken(type, iCodeTop);
                 }
@@ -1008,7 +1010,6 @@ public class Interpreter
             case Token.THISFN:
             case Token.FALSE:
             case Token.TRUE:
-            case Token.UNDEFINED:
                 stackDelta = 1;
                 iCodeTop = addToken(type, iCodeTop);
                 itsStackDepth++;
@@ -1640,6 +1641,7 @@ public class Interpreter
           case Icode_REG_STR4:         return "LOAD_STR4";
           case Icode_GETVAR1:          return "GETVAR1";
           case Icode_SETVAR1:          return "SETVAR1";
+          case Icode_UNDEF:            return "UNDEF";
         }
 
         // icode without name
@@ -2776,8 +2778,8 @@ switch (op) {
     case Token.TRUE :
         stack[++stackTop] = Boolean.TRUE;
         continue Loop;
-    case Token.UNDEFINED :
-        stack[++stackTop] = Undefined.instance;
+    case Icode_UNDEF :
+        stack[++stackTop] = undefined;
         continue Loop;
     case Token.ENTERWITH : {
         Object lhs = stack[stackTop];

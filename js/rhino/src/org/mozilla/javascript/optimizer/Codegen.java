@@ -1449,10 +1449,6 @@ class BodyCodegen
                         "FALSE", "Ljava/lang/Boolean;");
                 break;
 
-              case Token.UNDEFINED:
-                Codegen.pushUndefined(cfw);
-                break;
-
               case Token.REGEXP:
                 visitRegexp(node);
                 break;

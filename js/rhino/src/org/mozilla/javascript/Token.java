@@ -131,7 +131,7 @@ public class Token
         LOCAL_LOAD  = 57,
         GETVAR      = 58,
         SETVAR      = 59,
-        UNDEFINED   = 60,
+// XXX removed unused UNDEFINED
         CATCH_SCOPE = 61,
         ENUM_INIT   = 62,
         ENUM_NEXT   = 63,
@@ -282,7 +282,6 @@ public class Token
           case LOCAL_LOAD:      return "LOCAL_LOAD";
           case GETVAR:          return "GETVAR";
           case SETVAR:          return "SETVAR";
-          case UNDEFINED:       return "UNDEFINED";
           case CATCH_SCOPE:     return "CATCH_SCOPE";
           case ENUM_INIT:       return "ENUM_INIT";
           case ENUM_NEXT:       return "ENUM_NEXT";

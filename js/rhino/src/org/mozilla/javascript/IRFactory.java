@@ -1072,7 +1072,6 @@ final class IRFactory
         switch (node.getType()) {
           case Token.FALSE:
           case Token.NULL:
-          case Token.UNDEFINED:
             return ALWAYS_FALSE_BOOLEAN;
           case Token.TRUE:
             return ALWAYS_TRUE_BOOLEAN;
