@@ -937,8 +937,6 @@ Contributor(s):
     <statusbarpanel class="statusbarpanel-progress">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
-    <statusbarpanel id="offline-status" class="statusbarpanel-iconic"
-                    observes="Communicator:WorkMode"/>
   <statusbarpanel id="security-button" class="statusbarpanel-iconic"
                   onclick="displayPageInfo()"/>    
   </statusbar> 
