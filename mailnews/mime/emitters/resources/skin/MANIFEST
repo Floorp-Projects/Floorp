@@ -20,6 +20,7 @@
 # This is a list of local files which get copied to the res\mailnews\messenger directory
 #
 
+mailheader.css
 mailheader-micro.css
 mailheader-normal.css
 mailheader-all.css

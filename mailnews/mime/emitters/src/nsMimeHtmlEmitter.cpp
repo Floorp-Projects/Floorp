@@ -54,37 +54,20 @@ nsresult
 nsMimeHtmlEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
                            const char *outCharset)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   mDocHeader = rootMailHeader;
 
   if (mDocHeader)
   {
-    if ( (!headerOnly) && (outCharset) && (*outCharset) )
-    {
-#ifdef NS_DEBUG
-printf("RICHIE: libmime: Not Emitting META Tags!\n");
-#endif
-//      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
-//      UtilityWrite(outCharset);
-//      UtilityWrite("\">");
-    }
-    UtilityWrite("<BLOCKQUOTE><table BORDER=0>");
+    UtilityWrite("<TABLE BORDER=0>");
   }  
   else
-    UtilityWrite("<BLOCKQUOTE><table BORDER=0 BGCOLOR=\"#CCCCCC\" >");
+    UtilityWrite("<TABLE BORDER=0>");
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   if ( (!field) || (!value) )
     return NS_OK;
 
@@ -101,8 +84,8 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
 
   UtilityWrite("<TR>");
 
-  UtilityWrite("<td>");
-  UtilityWrite("<div align=right>");
+  UtilityWrite("<TD>");
+  UtilityWrite("<DIV align=right>");
   UtilityWrite("<B>");
 
   // Here is where we are going to try to L10N the tagName so we will always
@@ -127,12 +110,12 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
   //
   UtilityWrite(":");
   UtilityWrite("</B>");
-  UtilityWrite("</div>");
-  UtilityWrite("</td>");
+  UtilityWrite("</DIV>");
+  UtilityWrite("</TD>");
 
-  UtilityWrite("<td>");
+  UtilityWrite("<TD>");
   UtilityWrite(newValue);
-  UtilityWrite("</td>");
+  UtilityWrite("</TD>");
 
   UtilityWrite("</TR>");
 
@@ -144,45 +127,7 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
 nsresult
 nsMimeHtmlEmitter::EndHeader()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   UtilityWrite("</TABLE></BLOCKQUOTE>");
-  return NS_OK;
-}
-
-nsresult
-nsMimeHtmlEmitter::ProcessContentType(const char *ct)
-{
-  if (mAttachContentType)
-  {
-    PR_FREEIF(mAttachContentType);
-    mAttachContentType = NULL;
-  }
-  
-  if ( (!ct) || (!*ct) )
-    return NS_OK;
-  
-  char *slash = PL_strchr(ct, '/');
-  if (!slash)
-    mAttachContentType = nsCRT::strdup(ct);
-  else
-  {
-    PRInt32 size = (nsCRT::strlen(ct) + 4 + 1);
-    mAttachContentType = (char *)PR_MALLOC( size );
-    if (!mAttachContentType)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    memset(mAttachContentType, 0, size);
-    PL_strcpy(mAttachContentType, ct);
-    
-    char *newSlash = PL_strchr(mAttachContentType, '/');
-    *newSlash = '\0';
-    PL_strcat(mAttachContentType, "%2F");
-    PL_strcat(mAttachContentType, (slash + 1));
-  }
-
   return NS_OK;
 }
 
@@ -194,96 +139,46 @@ nsMimeHtmlEmitter::ProcessContentType(const char *ct)
 nsresult
 nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
-  PR_FREEIF(mAttachContentType);
-  mAttachContentType = NULL;
-  ProcessContentType(contentType);
   UtilityWrite("<CENTER>");
-  UtilityWrite("<table BORDER CELLSPACING=0>");
+  UtilityWrite("<TABLE BORDER CELLSPACING=0>");
   UtilityWrite("<tr>");
-  UtilityWrite("<td>");
-
-  /** RICHIE Not doing a link anymore... 
-  if (mAttachContentType)
-  {
-    UtilityWrite("<a href=\"");
-    UtilityWrite(url);
-    UtilityWrite("&outformat=");
-    UtilityWrite(mAttachContentType);
-    UtilityWrite("\" target=new>");
-  }
-  ***/
+  UtilityWrite("<TD>");
 
   UtilityWrite("<CENTER>");
   UtilityWrite("<B>Attachment: </B>");
   UtilityWrite(name);
   UtilityWrite("</CENTER>");
 
-  /***
-  if (mAttachContentType)
-    UtilityWrite("</a>");
-  ****/
-
-  UtilityWrite("</td>");
-  UtilityWrite("<td>");
-  UtilityWrite("<table BORDER=0>");
+  UtilityWrite("</TD>");
+  UtilityWrite("<TD>");
+  UtilityWrite("<TABLE BORDER=0>");
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   // Don't let bad things happen
   if ( (!value) || (!*value) )
     return NS_OK;
 
   char  *newValue = nsEscapeHTML(value);
-  PRBool  linkIt = (!nsCRT::strcmp(HEADER_X_MOZILLA_PART_URL, field));
-
-  //
-  // For now, let's not output the long URL field, but when prefs are
-  // working this will change.
-  //
-  if (linkIt)
-    return NS_OK;
 
   UtilityWrite("<TR>");
 
-  UtilityWrite("<td>");
-  UtilityWrite("<div align=right>");
+  UtilityWrite("<TD>");
+  UtilityWrite("<DIV align=right>");
   UtilityWrite("<B>");
   UtilityWrite(field);
   UtilityWrite(":");
   UtilityWrite("</B>");
-  UtilityWrite("</div>");
-  UtilityWrite("</td>");
-  UtilityWrite("<td>");
-
-  if (linkIt)
-  {
-    UtilityWrite("<a href=\"");
-    UtilityWrite(value);
-    if (mAttachContentType)
-    {
-      UtilityWrite("&outformat=");
-      UtilityWrite(mAttachContentType);
-    }
-    UtilityWrite("\" target=new>");
-  }
+  UtilityWrite("</DIV>");
+  UtilityWrite("</TD>");
+  UtilityWrite("<TD>");
 
   UtilityWrite(newValue);
 
-  if (linkIt)
-    UtilityWrite("</a>");
-
-  UtilityWrite("</td>");
+  UtilityWrite("</TD>");
   UtilityWrite("</TR>");
 
   PR_FREEIF(newValue);
@@ -293,13 +188,8 @@ nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
 nsresult
 nsMimeHtmlEmitter::EndAttachment()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
-  PR_FREEIF(mAttachContentType);
   UtilityWrite("</TABLE>");
-  UtilityWrite("</td>");
+  UtilityWrite("</TD>");
   UtilityWrite("</tr>");
 
   UtilityWrite("</TABLE>");
@@ -312,33 +202,12 @@ nsMimeHtmlEmitter::EndAttachment()
 nsresult
 nsMimeHtmlEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
-  if ((bodyOnly) && (outCharset) && (*outCharset))
-  {
-#ifdef NS_DEBUG
-printf("RICHIE: libmime: Not Emitting META Tags!\n");
-#endif
-//    UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
-//    UtilityWrite(outCharset);
-//    UtilityWrite("\">");
-  }
-
   return NS_OK;
 }
-
 
 nsresult
 nsMimeHtmlEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   Write(buf, size, amountWritten);
   return NS_OK;
 }
-
-

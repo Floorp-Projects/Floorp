@@ -373,6 +373,7 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
     
   UtilityWriteCRLF("<?xml version=\"1.0\"?>");
 
+  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
   if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::MicroHeaders)
     UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
   else if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::NormalHeaders)
@@ -1270,7 +1271,6 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   PRUint32            rc = 0;
   PRUint32            needToWrite;
 
- // *m_outputFile << buf;
   //
   // Make sure that the buffer we are "pushing" into has enough room
   // for the write operation. If not, we have to buffer, return, and get
@@ -1286,7 +1286,6 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
                             needToWrite, &written);
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
-//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
     *amountWritten = written;
 
@@ -1320,11 +1319,5 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
 
-  // Only call the listener if we wrote data into the stream.
-//  if ((!mBodyStarted) && (mOutListener))
-    //mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
-
   return rc;
 }
-
-

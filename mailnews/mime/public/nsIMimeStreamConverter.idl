@@ -46,7 +46,8 @@ interface nsMimeOutput
 	const long nsMimeMessageDraftOrTemplate = 6;
 	const long nsMimeMessageEditorTemplate = 7;
 	const long nsMimeMessageXULDisplay = 8;
-	const long nsMimeUnknown = 9;
+	const long nsMimeMessagePrintOutput = 9;
+	const long nsMimeUnknown = 10;
 }; 
 
 [scriptable, uuid(FA81CAA0-6261-11d3-8311-00805F2A0107)] 

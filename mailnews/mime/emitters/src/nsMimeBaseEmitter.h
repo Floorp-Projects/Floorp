@@ -76,19 +76,12 @@ protected:
   // For header determination...
   PRBool              mDocHeader;
 
-  // For content type...
-  char                *mAttachContentType;
-
   // the url for the data being processed...
   nsIURI              *mURL;
 
   // The setting for header output...
   nsIPref             *mPrefs;          /* Connnection to prefs service manager */
   PRInt32             mHeaderDisplayType; 
-#ifdef DEBUG_rhp
-    PRBool              mReallyOutput;
-    PRFileDesc          *mLogFile;        /* Temp file to put generated HTML into. */ 
-#endif 
 };
 
 #endif /* _nsMimeBaseEmitter_h_ */

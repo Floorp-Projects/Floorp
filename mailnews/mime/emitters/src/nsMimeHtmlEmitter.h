@@ -53,13 +53,6 @@ public:
     NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset);
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
 
-    // Generic write routine. This is necessary for output that
-    // libmime needs to pass through without any particular parsing
-    // involved (i.e. decoded images, HTML Body Text, etc...
-//    NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
-
-    NS_IMETHOD    ProcessContentType(const char *ct);
-
 protected:
 };
 

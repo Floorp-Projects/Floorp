@@ -127,7 +127,6 @@ protected:
 
     // For header caching...
     nsVoidArray         *mHeaderArray;
-    // RICHIE SHERRY nsCOMPtr<nsIMimeMiscStatus>   mMiscStatus;
     nsVoidArray         *mMiscStatusArray;
     nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
 };

@@ -47,15 +47,10 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
   NS_INIT_REFCNT(); 
 
-#ifdef DEBUG_rhp
-  mLogFile = nsnull;
-#endif
-
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
   mDocHeader = PR_FALSE;
-  mAttachContentType = NULL;
   m_stringBundle = nsnull;
 
   mInputStream = nsnull;
@@ -123,10 +118,6 @@ nsMimeBaseEmitter::SetOutputListener(nsIStreamListener *listener)
 NS_IMETHODIMP
 nsMimeBaseEmitter::Complete()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_FALSE;
-#endif
-
   // If we are here and still have data to write, we should try
   // to flush it...if we try and fail, we should probably return
   // an error!
@@ -141,11 +132,6 @@ nsMimeBaseEmitter::Complete()
       mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
   }
 
-#ifdef DEBUG_rhp
-  if (mLogFile) 
-    PR_Close(mLogFile);
-#endif
-
   return NS_OK;
 }
 
@@ -154,30 +140,18 @@ NS_IMETHODIMP
 nsMimeBaseEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
                            const char *outCharset)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMimeBaseEmitter::EndHeader()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   return NS_OK;
 }
 
@@ -185,29 +159,18 @@ nsMimeBaseEmitter::EndHeader()
 NS_IMETHODIMP
 nsMimeBaseEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMimeBaseEmitter::AddAttachmentField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMimeBaseEmitter::EndAttachment()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   return NS_OK;
 }
 
@@ -215,10 +178,6 @@ nsMimeBaseEmitter::EndAttachment()
 NS_IMETHODIMP
 nsMimeBaseEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   return NS_OK;
 }
 
@@ -226,19 +185,12 @@ nsMimeBaseEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *out
 NS_IMETHODIMP
 nsMimeBaseEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMimeBaseEmitter::EndBody()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_FALSE;
-#endif
-
   return NS_OK;
 }
 
@@ -277,11 +229,6 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   PRUint32            rc = 0;
   PRUint32            needToWrite;
 
-#ifdef DEBUG_rhp
-  if ((mLogFile) && (mReallyOutput))
-    PR_Write(mLogFile, buf, size);
-#endif
-
   //
   // Make sure that the buffer we are "pushing" into has enough room
   // for the write operation. If not, we have to buffer, return, and get
@@ -298,7 +245,6 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
 
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
-//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
     *amountWritten = written;
 
     // if we couldn't write all the old data, buffer the new data
@@ -319,9 +265,6 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
 
   if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
-
-//  if (mOutListener)
-//    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
   return rc;
 }

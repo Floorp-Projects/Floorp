@@ -55,10 +55,6 @@ nsMimeRawEmitter::~nsMimeRawEmitter(void)
 NS_IMETHODIMP
 nsMimeRawEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   Write(buf, size, amountWritten);
   return NS_OK;
 }

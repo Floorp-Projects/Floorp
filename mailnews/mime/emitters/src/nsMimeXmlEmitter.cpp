@@ -59,10 +59,6 @@ nsMimeXmlEmitter::~nsMimeXmlEmitter(void)
 nsresult
 nsMimeXmlEmitter::Complete()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   char  buf[16];
 
   // Now write out the total count of attachments for this message
@@ -89,6 +85,7 @@ nsMimeXmlEmitter::WriteXMLHeader(const char *msgID)
     
   UtilityWrite("<?xml version=\"1.0\"?>");
 
+  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader.css\" type=\"text/css\"?>");
   if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::MicroHeaders)
     UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
   else if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::NormalHeaders)
@@ -159,10 +156,6 @@ nsresult
 nsMimeXmlEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
                            const char *outCharset)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   mDocHeader = rootMailHeader;
   WriteXMLHeader(msgID);
   UtilityWrite("<mailheader>");
@@ -173,10 +166,6 @@ nsMimeXmlEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const ch
 nsresult
 nsMimeXmlEmitter::AddHeaderField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   if ( (!field) || (!value) )
     return NS_OK;
 
@@ -187,10 +176,6 @@ nsMimeXmlEmitter::AddHeaderField(const char *field, const char *value)
 nsresult
 nsMimeXmlEmitter::EndHeader()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   UtilityWrite("</mailheader>");
   return NS_OK; 
 }
@@ -201,9 +186,6 @@ nsresult
 nsMimeXmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
   char    buf[128];
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
 
   ++mAttachCount;
 
@@ -217,10 +199,6 @@ nsMimeXmlEmitter::StartAttachment(const char *name, const char *contentType, con
 nsresult
 nsMimeXmlEmitter::AddAttachmentField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   WriteXMLTag(field, value);
   return NS_OK;
 }
@@ -228,10 +206,6 @@ nsMimeXmlEmitter::AddAttachmentField(const char *field, const char *value)
 nsresult
 nsMimeXmlEmitter::EndAttachment()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   UtilityWrite("</mailattachment>");
   return NS_OK;
 }
