@@ -72,35 +72,6 @@ CPPSRCS			= \
 			nsWebBrowserChrome.cpp \
 			$(NULL)
 
-EXPORT_RESOURCE_SAMPLES	:= \
-			$(wildcard $(srcdir)/samples/test*.html) \
-			$(wildcard $(srcdir)/samples/toolbarTest*.xul) \
-			$(wildcard $(srcdir)/samples/treeTest*.xul) \
-			$(wildcard $(srcdir)/samples/treeTest*.css) \
-			$(wildcard $(srcdir)/samples/slider*.xul) \
-			$(wildcard $(srcdir)/samples/scrollbar*.xul) \
-			$(srcdir)/resources/find.html \
-			$(srcdir)/resources/printsetup.html \
-			$(srcdir)/resources/image_props.html \
-			$(srcdir)/samples/aform.css \
-			$(srcdir)/samples/bform.css \
-			$(srcdir)/samples/cform.css \
-			$(srcdir)/samples/demoform.css \
-			$(srcdir)/samples/mozform.css \
-			$(srcdir)/samples/xulTest.css \
-			$(srcdir)/samples/Anieyes.gif \
-			$(srcdir)/samples/gear1.gif \
-			$(srcdir)/samples/rock_gra.gif \
-			$(srcdir)/samples/beeptest.html \
-			$(srcdir)/samples/soundtest.html \
-			$(srcdir)/samples/bg.jpg \
-			$(srcdir)/samples/raptor.jpg \
-			$(srcdir)/samples/test.wav \
-			$(srcdir)/samples/checkboxTest.xul \
-			$(NULL)
-
-EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/throbber/anim*.gif)
-
 ifeq (,$(filter beos os2 photon mac,$(MOZ_WIDGET_TOOLKIT)))
 DIRS			+= unix
 UNIX_VIEWER_TK_LIBS	= unix/$(MOZ_WIDGET_TOOLKIT)/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
@@ -199,9 +170,6 @@ CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_motif $(PROGRAM)_qt $(PROGRAM)_xlib
 
 install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
-	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 	$(INSTALL) $(srcdir)/mozilla-viewer.sh $(DIST)/bin
 endif
