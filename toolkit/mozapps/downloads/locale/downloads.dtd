@@ -1,25 +1,5 @@
-<!ENTITY name.label                       "Name">
-<!ENTITY progress.label                   "Progress">
-<!ENTITY status.label                     "Status">
-<!ENTITY timeremaining.label              "Time Remaining">
-<!ENTITY transferred.label                "Transferred">
-<!ENTITY transferrate.label               "Speed">
-<!ENTITY timeelapsed.label                "Time Elapsed">
-<!ENTITY status.label                     "Status">
-<!--<!ENTITY progresstext.label           "&#37;">-->
-<!ENTITY source.label                     "Source">
-
 <!ENTITY done.label                       "Done">
-<!ENTITY cancel.label                     "Cancel">
 <!ENTITY canceled.label                   "Canceled">
-<!ENTITY launch.label                     "Launch">
-<!ENTITY divider.label                    "-">
-<!ENTITY show.label                       "Show">
-<!ENTITY open.label                       "Open">
-<!ENTITY retry.label                      "Retry">
-<!ENTITY remove.label                     "Remove">
-<!ENTITY pause.label                      "Pause">
-<!ENTITY resume.label                     "Resume">
 <!ENTITY installing.label                 "Installing...">
 
 <!ENTITY starting.label                   "Starting...">
@@ -33,11 +13,8 @@
 <!ENTITY cmd.resume.accesskey             "R">
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "C">
-<!ENTITY cmd.show.label                   "Show">
-<!ENTITY cmd.show.accesskey               "S">
-<!ENTITY cmd.show.tooltipWin              "Show this file in Explorer">
-<!ENTITY cmd.show.tooltipMac              "Show this file in Finder">
-<!ENTITY cmd.show.tooltipUnix             "Show this file in a browser window">
+<!ENTITY cmd.show.label                   "Open Containing Folder">
+<!ENTITY cmd.show.accesskey               "F">
 <!ENTITY cmd.open.label                   "Open">
 <!ENTITY cmd.open.accesskey               "O">
 <!ENTITY cmd.openWith.label               "Open With...">

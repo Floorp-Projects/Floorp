@@ -139,7 +139,7 @@
           <xul:label value="&starting.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:label value="&cancel.label;" class="link" 
+          <xul:label value="&cmd.cancel.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('cancel');"/>
         </xul:vbox>
       </xul:hbox>
@@ -162,7 +162,7 @@
                                 xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:vbox pack="start">
-              <xul:label value="&cancel.label;" class="link"
+              <xul:label value="&cmd.cancel.label;" class="link"
                         onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
             </xul:vbox>
           </xul:hbox>                              
@@ -303,7 +303,7 @@
                                 xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:vbox pack="start">
-              <xul:label value="&cancel.label;" class="link"
+              <xul:label value="&cmd.cancel.label;" class="link"
                         onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
             </xul:vbox>
           </xul:hbox>                              
@@ -339,18 +339,9 @@
           <xul:label value="&done.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:label value="&show.label;" class="link" 
-#ifdef XP_WIN
-                     tooltip="&cmd.show.tooltipWin;"
-#else
-#ifdef XP_MACOSX
-                     tooltip="&cmd.show.tooltipMac;"
-#else
-                     tooltip="&cmd.show.tooltipUnix;"
-#endif
-#endif
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('show');"/>
-          <xul:label value="&remove.label;" class="link" 
+          <xul:label value="&cmd.open.label;" class="link" 
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('open');"/>
+          <xul:label value="&cmd.remove.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
@@ -361,7 +352,7 @@
     <content>
       <xul:hbox flex="1">
 #ifdef XP_WIN
-        <xul:vbox pack="start">
+        <xul:vbox pack="start"> 
           <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
@@ -370,9 +361,9 @@
           <xul:label value="&canceled.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:label value="&retry.label;" class="link" 
+          <xul:label value="&cmd.retry.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
-          <xul:label value="&remove.label;" class="link" 
+          <xul:label value="&cmd.remove.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
@@ -392,9 +383,9 @@
           <xul:label value="&failed.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:label value="&retry.label;" class="link" 
+          <xul:label value="&cmd.retry.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
-          <xul:label value="&remove.label;" class="link" 
+          <xul:label value="&cmd.remove.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
@@ -448,7 +439,7 @@
           <xul:label value="&done.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:label value="&remove.label;" class="link" 
+          <xul:label value="&cmd.remove.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
