@@ -169,24 +169,11 @@ nsInstallTrigger::HandleContent(const char * aContentType,
 #endif
 
     // Save the referrer if any, for permission checks
-    PRBool trustReferrer = PR_FALSE;
     nsCOMPtr<nsIURI> referringURI;
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if ( httpChannel )
     {
         httpChannel->GetReferrer(getter_AddRefs(referringURI));
-
-        // see if we should trust the referrer (which can be null):
-        //  - we are an httpChannel (we are if we're here)
-        //  - user has not turned off the feature
-        PRInt32 referrerLevel = 0;
-        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if ( prefBranch)
-        {
-            rv = prefBranch->GetIntPref( (const char*)"network.http.sendRefererHeader",
-                                         &referrerLevel );
-            trustReferrer = ( NS_SUCCEEDED(rv) && (referrerLevel >= 2) );
-        }
     }
 
 
@@ -211,7 +198,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     // going to honor this request based on PermissionManager settings
     PRBool enabled = PR_FALSE;
 
-    if ( trustReferrer )
+    if ( referringURI )
     {
         // easiest and most common case: base decision on http referrer
         //
