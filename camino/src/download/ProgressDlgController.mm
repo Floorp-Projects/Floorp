@@ -52,7 +52,6 @@
 
 static NSString *SaveFileToolbarIdentifier        = @"Save File Dialog Toolbar";
 static NSString *CancelToolbarItemIdentifier      = @"Cancel Toolbar Item";
-static NSString *PauseResumeToolbarItemIdentifier = @"Pause and Resume Toggle Toolbar Item";
 static NSString *ShowFileToolbarItemIdentifier    = @"Show File Toolbar Item";
 static NSString *OpenFileToolbarItemIdentifier    = @"Open File Toolbar Item";
 static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar Item";
@@ -95,7 +94,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 {
   [super windowDidLoad];
   
-  mDownloadIsPaused = NO;
   mDownloadIsComplete = NO;
 
   if (!mIsFileSave) {
@@ -124,7 +122,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
     return [NSArray arrayWithObjects: CancelToolbarItemIdentifier,
-        PauseResumeToolbarItemIdentifier,
         ShowFileToolbarItemIdentifier,
         OpenFileToolbarItemIdentifier,
         LeaveOpenToolbarItemIdentifier,
@@ -138,7 +135,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 - (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
     return [NSArray arrayWithObjects: CancelToolbarItemIdentifier,
-        PauseResumeToolbarItemIdentifier,
         NSToolbarFlexibleSpaceItemIdentifier,
         LeaveOpenToolbarItemIdentifier,
         NSToolbarFlexibleSpaceItemIdentifier,
@@ -178,16 +174,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
         [toolbarItem setImage:[NSImage imageNamed:@"saveCancel"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(cancel)];
-    } else if ( [itemIdent isEqual:PauseResumeToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:NSLocalizedString(@"Pause",@"Pause")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"PausePaletteLabel",@"Pause Download")];
-        [toolbarItem setToolTip:NSLocalizedString(@"PauseToolTip",@"Pause this FTP file download")];
-        [toolbarItem setImage:[NSImage imageNamed:@"savePause"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(pauseAndResumeDownload)];
-        if ( willBeInserted ) {
-            pauseResumeToggleToolbarItem = toolbarItem; //establish reference
-        }
     } else if ( [itemIdent isEqual:ShowFileToolbarItemIdentifier] ) {
         [toolbarItem setLabel:NSLocalizedString(@"Show File",@"Show File")];
         [toolbarItem setPaletteLabel:NSLocalizedString(@"Show File",@"Show File")];
@@ -249,34 +235,6 @@ static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
   // Ensure that the window goes away when we get there by flipping the 'stay alive'
   // flag. (bug 154913)
   mSaveFileDialogShouldStayOpen = NO;
-}
-
--(void)pauseAndResumeDownload
-{
-  if ( !mDownloadIsPaused )
-  {
-    mDownloadIsPaused = YES;
-    [pauseResumeToggleToolbarItem setLabel:NSLocalizedString(@"Resume",@"Resume")];
-    [pauseResumeToggleToolbarItem setPaletteLabel:NSLocalizedString(@"ResumePaletteLabel",@"Resume Download")];
-    [pauseResumeToggleToolbarItem setToolTip:NSLocalizedString(@"ResumeToolTip",@"Resume the paused FTP download")];
-    [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"saveResume"]];
-    [self killDownloadTimer];
-
-    if (mDownloader)    // we should always have one
-      mDownloader->PauseDownload();
-  } 
-  else
-  {
-    mDownloadIsPaused = NO;
-    [pauseResumeToggleToolbarItem setLabel:NSLocalizedString(@"Pause",@"Pause")];
-    [pauseResumeToggleToolbarItem setPaletteLabel:NSLocalizedString(@"PausePaletteLabel",@"Pause Download")];
-    [pauseResumeToggleToolbarItem setToolTip:NSLocalizedString(@"PauseToolTip",@"Pause this FTP file download")];
-    [pauseResumeToggleToolbarItem setImage:[NSImage imageNamed:@"savePause"]];
-    [self setupDownloadTimer];
-
-    if (mDownloader)    // we should always have one
-      mDownloader->ResumeDownload();
-  }
 }
 
 -(void)showFile

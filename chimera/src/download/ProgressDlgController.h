@@ -60,10 +60,8 @@ class nsDownloadListener;
     IBOutlet NSTextField *mToField;
     IBOutlet NSProgressIndicator *mProgressBar;
 
-    NSToolbarItem *pauseResumeToggleToolbarItem;
     NSToolbarItem *leaveOpenToggleToolbarItem;
 
-    BOOL      mDownloadIsPaused;
     BOOL      mSaveFileDialogShouldStayOpen;
     BOOL      mIsFileSave;
     BOOL      mDownloadIsComplete;
