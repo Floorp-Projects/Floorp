@@ -123,7 +123,7 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 
 PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
   mTableFrame->GetPrevInFlow(tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
@@ -146,12 +146,8 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
     nsMargin borderPadding;
     const nsStylePosition* tablePosition;
     const nsStyleSpacing* tableSpacing;
-    // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
-    nsIFrame * parent = nsnull;
-    mTableFrame->GetGeometricParent(parent);
-    parent->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
-    parent->GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
-    // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    mTableFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
+    mTableFrame->GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
     tableSpacing->CalcBorderPaddingFor(mTableFrame, borderPadding);
     if (tablePosition->mWidth.GetUnit()==eStyleUnit_Coord)
     {
@@ -177,7 +173,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
                                                      const nsReflowState& aReflowState,
                                                      nscoord aMaxWidth)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
   mTableFrame->GetPrevInFlow(tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
@@ -1640,7 +1636,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
                                                             nscoord aMaxWidth,
                                                             PRBool  aTableIsAutoWidth)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
   mTableFrame->GetPrevInFlow(tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");

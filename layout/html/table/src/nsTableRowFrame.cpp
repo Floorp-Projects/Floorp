@@ -535,9 +535,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
                                RowReflowState&  aState,
                                nsReflowMetrics& aDesiredSize)
 {
-  // For our initial reflow we expect to be given an unconstrained width
-  NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aState.availSize.width, "bad size");
-
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize;
   PRInt32   kidIndex = 0;

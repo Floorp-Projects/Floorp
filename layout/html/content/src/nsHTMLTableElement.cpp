@@ -309,6 +309,12 @@ static nsGenericHTMLElement::EnumTable kRulesTable[] = {
   { 0 }
 };
 
+static nsGenericHTMLElement::EnumTable kLayoutTable[] = {
+  { "auto",   NS_STYLE_TABLE_LAYOUT_AUTO },
+  { "fixed",  NS_STYLE_TABLE_LAYOUT_FIXED },
+  { 0 }
+};
+
 
 NS_IMETHODIMP
 nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
@@ -385,6 +391,10 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
     nsGenericHTMLElement::ParseEnumValue(aValue, kFrameTable, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+  else if (aAttribute == nsHTMLAtoms::layout) {
+    nsGenericHTMLElement::ParseEnumValue(aValue, kLayoutTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   else if (aAttribute == nsHTMLAtoms::rules) {
     nsGenericHTMLElement::ParseEnumValue(aValue, kRulesTable, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
@@ -409,6 +419,11 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::frame) {
     if (nsGenericHTMLElement::EnumValueToString(aValue, kFrameTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::layout) {
+    if (nsGenericHTMLElement::EnumValueToString(aValue, kLayoutTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -519,11 +534,19 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       }
     }
 
-    // cellpadding
+    // layout
     nsStyleTable* tableStyle=nsnull;
+    aAttributes->GetAttribute(nsHTMLAtoms::layout, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
+      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mLayoutStrategy = value.GetIntValue();
+    }
+
+    // cellpadding
     aAttributes->GetAttribute(nsHTMLAtoms::cellpadding, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      if (nsnull==tableStyle)
+        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
       tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
     }
 

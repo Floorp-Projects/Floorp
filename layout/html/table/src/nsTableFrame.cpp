@@ -29,6 +29,7 @@
 #include "nsIHTMLContent.h"
 
 #include "BasicTableLayoutStrategy.h"
+#include "FixedTableLayoutStrategy.h"
 
 #include "nsIPresContext.h"
 #include "nsCSSRendering.h"
@@ -545,7 +546,8 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   nsCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
-  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRInt32 colCount = GetColCount();
+  NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
 
   PRInt32 result;
   /*
@@ -553,7 +555,6 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
     return 1;
   */
   PRInt32 colSpan = aCell->GetColSpan();
-  PRInt32 colCount = GetColCount();
   if (colCount < (aColIndex + colSpan))
     result =  colCount - aColIndex;
   else
@@ -608,12 +609,14 @@ void nsTableFrame::ResetCellMap ()
   * if the cell map says there are more columns than this, 
   * add extra implicit columns to the content tree.
   */
+
+// XXX this and ENsureColumnsAt should be 1 method, with -1 for aColIndex meaning "do them all"
 void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
                                  nsReflowMetrics&     aDesiredSize,
                                  const nsReflowState& aReflowState,
                                  nsReflowStatus&      aStatus)
 {
-#ifdef XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  nsresult rv;
   // XXX sec should only be called on firstInFlow
   SetMinColSpanForTable();
   if (nsnull==mCellMap)
@@ -649,27 +652,30 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
   }    
   if (actualColumns < GetColCount())
   {
-    nsTableColGroup *lastColGroup=nsnull;
+    nsIHTMLContent *lastColGroup=nsnull;
     if (nsnull==lastColGroupFrame)
     {
-      lastColGroup = new nsTableColGroup (PR_TRUE);   // create an implicit colgroup
-      // XXX: instead of Append, maybe this should be insertAt(0)?
+      // create an implicit colgroup
+      nsAutoString colGroupTag;
+      nsHTMLAtoms::colgroup->ToString(colGroupTag);
+      rv = NS_CreateHTMLElement(&lastColGroup, colGroupTag);  // ADDREF a: lastColGroup++
+      //XXX mark it as implicit!
       mContent->AppendChildTo(lastColGroup, PR_FALSE);  // add the implicit colgroup to my content
       // Resolve style for the child
       nsIStyleContext* colGroupStyleContext =
         aPresContext->ResolveStyleContextFor(lastColGroup, this, PR_TRUE);      // kidStyleContext: REFCNT++
-      nsIContentDelegate* kidDel = nsnull;
-      kidDel = lastColGroup->GetDelegate(aPresContext);                         // kidDel: REFCNT++
-      nsresult rv = kidDel->CreateFrame(aPresContext, lastColGroup, this,
-                                        colGroupStyleContext, (nsIFrame *&)lastColGroupFrame);
-      NS_RELEASE(kidDel);                                                       // kidDel: REFCNT--
+
+      // Create a col group frame
+      nsIFrame* newFrame;
+      NS_NewTableColGroupFrame(lastColGroup, this, newFrame);
+      lastColGroupFrame = (nsTableColGroupFrame*)newFrame;
+      lastColGroupFrame->SetStyleContext(aPresContext, colGroupStyleContext);
       NS_RELEASE(colGroupStyleContext);                                         // kidStyleContenxt: REFCNT--
 
       // hook lastColGroupFrame into child list
       if (nsnull==firstRowGroupFrame)
       { // make lastColGroupFrame the last frame
-        nsIFrame *lastChild=nsnull;
-        LastChild(lastChild);
+        nsIFrame *lastChild = LastFrame(mFirstChild);
         lastChild->SetNextSibling(lastColGroupFrame);
       }
       else
@@ -690,17 +696,58 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       lastColGroupFrame->GetContent((nsIContent *&)lastColGroup);  // ADDREF b: lastColGroup++
     }
 
+    // XXX It would be better to do this in the style code while constructing
+    // the table's frames
+    nsAutoString colTag;
+    nsHTMLAtoms::col->ToString(colTag);
     PRInt32 excessColumns = GetColCount() - actualColumns;
+    nsIFrame* firstNewColFrame = nsnull;
+    nsIFrame* lastNewColFrame = nsnull;
     for ( ; excessColumns > 0; excessColumns--)
-    { //QQQ
-      // need to find the generic way to stamp out this content, and ::AppendChildTo it
-      nsTableCol *col = new nsTableCol(PR_TRUE);
-      lastColGroup->AppendChildTo (col, PR_FALSE);
+    {
+      nsIHTMLContent *col=nsnull;
+      // create an implicit col
+      rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
+      //XXX mark the col implicit
+      lastColGroup->AppendChildTo((nsIContent*)col, PR_FALSE);
+
+      // Create a new col frame
+      nsIFrame* colFrame;
+      NS_NewTableColFrame(col, lastColGroupFrame, colFrame);
+
+      // Set its style context
+      nsIStyleContextPtr colStyleContext =
+        aPresContext->ResolveStyleContextFor(col, lastColGroupFrame, PR_TRUE);
+      colFrame->SetStyleContext(aPresContext, colStyleContext);
+
+      // XXX Don't release this style context (or we'll end up with a double-free).\
+      // This code is doing what nsTableColGroupFrame::Reflow() does...
+      //NS_RELEASE(colStyleContext);
+
+      // Add it to our list
+      if (nsnull == lastNewColFrame) {
+        firstNewColFrame = colFrame;
+      } else {
+        lastNewColFrame->SetNextSibling(colFrame);
+      }
+      lastNewColFrame = colFrame;
+      NS_RELEASE(col);                          // ADDREF: col--
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
-    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
+
+    // Generate an appended reflow command
+    // XXX This is really yucky...
+    nsIReflowCommand* reflowCmd;
+
+    NS_NewHTMLReflowCommand(&reflowCmd, lastColGroupFrame, nsIReflowCommand::FrameAppended,
+                            firstNewColFrame);
+    nsReflowState incrReflowState(lastColGroupFrame, aReflowState, aReflowState.maxSize);
+    incrReflowState.reflowCommand = reflowCmd;
+    incrReflowState.reason = eReflowReason_Incremental;
+
+    // Reflow the frames
+    lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, incrReflowState, aStatus);
   }
-#endif
 }
 
 /** sum the columns represented by all nsTableColGroup objects
@@ -1636,39 +1683,44 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord leftInset = borderPadding.left;
   nsReflowReason  reflowReason = aReflowState.reason;
 
-  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
-    nsSize maxKidElementSize(0,0);
-    nsReflowState kidReflowState(kidFrame, aReflowState, availSize);
+  nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  if (1||NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy)
+  {
+    for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+      nsSize maxKidElementSize(0,0);
+      nsReflowState kidReflowState(kidFrame, aReflowState, availSize);
 
-    PRInt32 yCoord = y;
-    if (NS_UNCONSTRAINEDSIZE!=yCoord)
-      yCoord+= topInset;
-    kidFrame->WillReflow(*aPresContext);
-    kidFrame->MoveTo(leftInset, yCoord);
-    result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+      PRInt32 yCoord = y;
+      if (NS_UNCONSTRAINEDSIZE!=yCoord)
+        yCoord+= topInset;
+      kidFrame->WillReflow(*aPresContext);
+      kidFrame->MoveTo(leftInset, yCoord);
+      result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
-    // Place the child since some of its content fit in us.
-    if (PR_TRUE==gsDebugNT) {
-      printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
-              this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
-    }
-    kidFrame->SetRect(nsRect(leftInset, yCoord,
-                             kidSize.width, kidSize.height));
-    if (NS_UNCONSTRAINEDSIZE==kidSize.height)
-      y = NS_UNCONSTRAINEDSIZE;
-    else
-      y += kidSize.height;
-    if (kidMaxSize.width > maxSize.width) {
-      maxSize.width = kidMaxSize.width;
-    }
-    if (kidMaxSize.height > maxSize.height) {
-      maxSize.height = kidMaxSize.height;
-    }
+      // Place the child since some of its content fit in us.
+      if (PR_TRUE==gsDebugNT) {
+        printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
+                this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
+      }
+      kidFrame->SetRect(nsRect(leftInset, yCoord,
+                               kidSize.width, kidSize.height));
+      if (NS_UNCONSTRAINEDSIZE==kidSize.height)
+        y = NS_UNCONSTRAINEDSIZE;
+      else
+        y += kidSize.height;
+      if (kidMaxSize.width > maxSize.width) {
+        maxSize.width = kidMaxSize.width;
+      }
+      if (kidMaxSize.height > maxSize.height) {
+        maxSize.height = kidMaxSize.height;
+      }
 
-    if (NS_FRAME_IS_NOT_COMPLETE(result)) {
-      // If the child didn't finish layout then it means that it used
-      // up all of our available space (or needs us to split).
-      break;
+      if (NS_FRAME_IS_NOT_COMPLETE(result)) {
+        // If the child didn't finish layout then it means that it used
+        // up all of our available space (or needs us to split).
+        break;
+      }
     }
   }
 
@@ -2243,8 +2295,13 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
 
   // based on the compatibility mode, create a table layout strategy
   if (nsnull==mTableLayoutStrategy)
-  { // TODO:  build a different strategy based on the compatibility mode
-    mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
+  {
+    nsStyleTable* tableStyle;
+    GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+    if (NS_STYLE_TABLE_LAYOUT_FIXED==tableStyle->mLayoutStrategy)
+      mTableLayoutStrategy = new FixedTableLayoutStrategy(this, numCols);
+    else
+      mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
     mTableLayoutStrategy->Initialize(aMaxElementSize);
   }
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
@@ -2453,6 +2510,8 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
 {
   // probably want this assertion : NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
+  nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
   EnsureColumns(aPresContext, aDesiredSize, aReflowState, aStatus);
   if (nsnull==mColCache)
   {
@@ -2477,22 +2536,25 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
                NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
                NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
       { // if it's a row group, get the cells and set the column style if appropriate
-        nsIFrame *rowFrame;
-        childFrame->FirstChild(rowFrame);
-        while (nsnull!=rowFrame)
+        if (NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy)
         {
-          nsIFrame *cellFrame;
-          rowFrame->FirstChild(cellFrame);
-          while (nsnull!=cellFrame)
+          nsIFrame *rowFrame;
+          childFrame->FirstChild(rowFrame);
+          while (nsnull!=rowFrame)
           {
-            /* this is the first time we are guaranteed to have both the cell frames
-             * and the column frames, so it's a good time to 
-             * set the column style from the cell's width attribute (if this is the first row)
-             */
-            SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
-            cellFrame->GetNextSibling(cellFrame);
+            nsIFrame *cellFrame;
+            rowFrame->FirstChild(cellFrame);
+            while (nsnull!=cellFrame)
+            {
+              /* this is the first time we are guaranteed to have both the cell frames
+               * and the column frames, so it's a good time to 
+               * set the column style from the cell's width attribute (if this is the first row)
+               */
+              SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
+              cellFrame->GetNextSibling(cellFrame);
+            }
+            rowFrame->GetNextSibling(rowFrame);
           }
-          rowFrame->GetNextSibling(rowFrame);
         }
       }
       childFrame->GetNextSibling(childFrame);

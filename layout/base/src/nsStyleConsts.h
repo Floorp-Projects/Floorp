@@ -266,6 +266,9 @@
 #define NS_STYLE_TABLE_COLS_NONE                (-1)
 #define NS_STYLE_TABLE_COLS_ALL                 PRInt32(1 << 30)
 
+#define NS_STYLE_TABLE_LAYOUT_AUTO              0
+#define NS_STYLE_TABLE_LAYOUT_FIXED             1
+
 // constants for cell "scope" attribute
 #define NS_STYLE_CELL_SCOPE_ROW                 0
 #define NS_STYLE_CELL_SCOPE_COL                 1

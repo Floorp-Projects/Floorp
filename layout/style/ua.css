@@ -102,6 +102,7 @@ MULTICOL {
 
 TABLE {
   display: table;
+  table-layout: auto;
   border-style: outset;
   border-color: #C0C0C0;
   cell-spacing: 2px;

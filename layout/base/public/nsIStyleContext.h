@@ -154,6 +154,7 @@ protected:
 };
 
 struct nsStyleTable: public nsStyleStruct {
+  PRUint8       mLayoutStrategy;// [inherited] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
   PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
   nsStyleCoord  mCellPadding;   // [reset] 
