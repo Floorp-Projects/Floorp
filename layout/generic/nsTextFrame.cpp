@@ -1841,13 +1841,6 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
       else
         found = PR_FALSE;
     }
-  if (found){ //if range contains this frame...
-/*    nsRect frameRect;
-    GetRect(frameRect);
-    nsRect rect(0, 0, frameRect.width, frameRect.height);
-    Invalidate(rect, PR_FALSE);
-*/    ForceDrawFrame(this);
-  }
   nsFrameState  frameState;
   GetFrameState(&frameState);
   if ( aSelected )
@@ -1855,6 +1848,13 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
   else
     frameState &= ~NS_FRAME_SELECTED_CONTENT;
   SetFrameState(frameState);
+  if (found){ //if range contains this frame...
+    nsRect frameRect;
+    GetRect(frameRect);
+    nsRect rect(0, 0, frameRect.width, frameRect.height);
+    Invalidate(rect, PR_TRUE);
+//    ForceDrawFrame(this);
+  }
   return NS_OK;
 }
 
