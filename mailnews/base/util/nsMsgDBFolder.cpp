@@ -1027,3 +1027,29 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     return NS_OK;
 }
 
+
+nsresult nsMsgDBFolder::NotifyStoreClosedAllHeaders()
+{
+  nsCOMPtr <nsISimpleEnumerator> enumerator;
+
+  GetMessages(nsnull, getter_AddRefs(enumerator));
+	nsCOMPtr<nsISupports> folderSupports;
+	nsresult rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+  if (enumerator)
+  {
+		PRBool hasMoreElements;
+		while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) && hasMoreElements)
+		{
+			nsCOMPtr<nsISupports> childSupports;
+			rv = enumerator->GetNext(getter_AddRefs(childSupports));
+			if(NS_FAILED(rv))
+				return rv;
+
+      // clear out db hdr, because it won't be valid when we get rid of the .msf file
+		  nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(childSupports, &rv));
+		  if(NS_SUCCEEDED(rv) && dbMessage)
+			  dbMessage->SetMsgDBHdr(nsnull);
+    }
+  }
+  return NS_OK;
+}

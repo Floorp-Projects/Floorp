@@ -97,6 +97,7 @@ protected:
 
 	nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
 	nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
+  nsresult NotifyStoreClosedAllHeaders();
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;
 	nsString mCharset;
