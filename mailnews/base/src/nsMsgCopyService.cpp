@@ -49,7 +49,7 @@ MOZ_DECL_CTOR_COUNTER(nsCopySource)
 
 nsCopySource::nsCopySource() : m_processed(PR_FALSE)
 {
-	MOZ_COUNT_CTOR(nsCopySource);
+  MOZ_COUNT_CTOR(nsCopySource);
   nsresult rv;
   rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
 }
@@ -57,7 +57,7 @@ nsCopySource::nsCopySource() : m_processed(PR_FALSE)
 nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
     m_processed(PR_FALSE)
 {
-	MOZ_COUNT_CTOR(nsCopySource);
+  MOZ_COUNT_CTOR(nsCopySource);
   nsresult rv;
   rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
   m_msgFolder = do_QueryInterface(srcFolder, &rv);
@@ -65,7 +65,7 @@ nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
 
 nsCopySource::~nsCopySource()
 {
-	MOZ_COUNT_DTOR(nsCopySource);
+  MOZ_COUNT_DTOR(nsCopySource);
 }
 
 void nsCopySource::AddMessage(nsIMsgDBHdr* aMsg)
@@ -85,14 +85,14 @@ nsCopyRequest::nsCopyRequest() :
     m_isMoveOrDraftOrTemplate(PR_FALSE),
     m_processed(PR_FALSE)
 {
-	MOZ_COUNT_CTOR(nsCopyRequest);
+  MOZ_COUNT_CTOR(nsCopyRequest);
 }
 
 nsCopyRequest::~nsCopyRequest()
 {
- 	MOZ_COUNT_DTOR(nsCopyRequest);
+  MOZ_COUNT_DTOR(nsCopyRequest);
 
-	PRInt32 j;
+  PRInt32 j;
   nsCopySource* ncs;
   
   j = m_copySourceArray.Count();
@@ -118,10 +118,10 @@ nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
   if (listener)
       m_listener = listener;
   if (msgWindow)
-	{
+  {
     m_msgWindow = msgWindow;
     if (m_allowUndo)
-		msgWindow->GetTransactionManager(getter_AddRefs(m_txnMgr));
+			msgWindow->GetTransactionManager(getter_AddRefs(m_txnMgr));
 	}
   if (type == nsCopyFoldersType)
   {
@@ -204,7 +204,18 @@ nsMsgCopyService::QueueRequest(nsCopyRequest* aRequest, PRBool *aCopyImmediately
   for (i=0; i < cnt; i++)
   {
     copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
-    if (copyRequest->m_dstFolder.get() == aRequest->m_dstFolder.get())  //if dst are same and we already have a request, we cannot copy immediately
+    if (aRequest->m_requestType == nsCopyFoldersType)
+    {
+      // For copy folder, see if both destination folder (root)
+      // (ie, Local Folder) and folder name (ie, abc) are the same.
+      if (copyRequest->m_dstFolderName == aRequest->m_dstFolderName &&
+          copyRequest->m_dstFolder.get() == aRequest->m_dstFolder.get())
+      {
+        *aCopyImmediately = PR_FALSE;
+        break;
+      }
+    }
+    else if (copyRequest->m_dstFolder.get() == aRequest->m_dstFolder.get())  //if dst are same and we already have a request, we cannot copy immediately
     {
       *aCopyImmediately = PR_FALSE;
       break;
@@ -308,6 +319,13 @@ nsMsgCopyService::DoNextCopy()
       }
     }
     // Don't clear copy request in failure case - notify completion should do that.
+    // Hmm, this is not true in case it's a copy folder opeation and the destination
+    // folder already exists. In this case CopyFolder() returns an error and there
+    // won't be completion notification at all and the request will stay in the
+    // queue forever.
+    if (NS_FAILED(rv))
+      ClearRequest(copyRequest, rv);
+
     return rv;
 }
 
@@ -326,19 +344,34 @@ nsMsgCopyService::FindRequest(nsISupports* aSupport,
     {
         // If the src is different then check next request. 
         if (copyRequest->m_srcSupport.get() != aSupport)
+        {
+          copyRequest = nsnull;
           continue;
+        }
 
         // See if the parent of the copied folder is the same as the one when the request was made.
+        // Note if the destination folder is already a server folder then no need to get parent.
         nsCOMPtr <nsIMsgFolder> parentMsgFolder;
-        nsresult rv = dstFolder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
-        if ((NS_FAILED(rv)) || !parentMsgFolder || (copyRequest->m_dstFolder.get() != parentMsgFolder))
+        nsresult rv = NS_OK;
+        PRBool isServer=PR_FALSE;
+        dstFolder->GetIsServer(&isServer);
+        if (isServer)
+          rv = dstFolder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
+        if ((NS_FAILED(rv)) || (!parentMsgFolder && !isServer) || (copyRequest->m_dstFolder.get() != parentMsgFolder))
+        {
+          copyRequest = nsnull;
           continue;
+        }
 
         // Now checks if the folder name is the same.
         nsXPIDLString folderName;
         rv = dstFolder->GetName(getter_Copies(folderName));
         if (NS_FAILED(rv))
+        {
+          copyRequest = nsnull;
           continue;
+        }
+
         if (copyRequest->m_dstFolderName == folderName)
           break;
     }
@@ -466,48 +499,48 @@ nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
                                nsIMsgCopyServiceListener* listener,
                                nsIMsgWindow* window)
 {
-    nsCopyRequest* copyRequest;
-    nsCopySource* copySource = nsnull;
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    PRUint32 cnt;
-    nsCOMPtr<nsIFolder> folder;
-    nsCOMPtr<nsIMsgFolder> curFolder;
-    nsCOMPtr<nsISupports> support;
-
-    if (!folders || !dstFolder) return rv;
-
-	rv = folders->Count(&cnt);   //if cnt is zero it cannot to get this point, will be detected earlier
-	if ( cnt > 1)
-	     NS_ASSERTION((NS_SUCCEEDED(rv)),"More than one folders to copy");
-	
-    support = getter_AddRefs(folders->ElementAt(0));
-
-    copyRequest = new nsCopyRequest();
- 	if (!copyRequest) return NS_ERROR_OUT_OF_MEMORY;
-       
-    rv = copyRequest->Init(nsCopyFoldersType, support, dstFolder, 
-                           isMove, listener, window, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    folder = do_QueryInterface(support, &rv);
+  nsCopyRequest* copyRequest;
+  nsCopySource* copySource = nsnull;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  PRUint32 cnt;
+  nsCOMPtr<nsIFolder> folder;
+  nsCOMPtr<nsIMsgFolder> curFolder;
+  nsCOMPtr<nsISupports> support;
+  
+  if (!folders || !dstFolder) return rv;
+  
+  rv = folders->Count(&cnt);   //if cnt is zero it cannot to get this point, will be detected earlier
+  if ( cnt > 1)
+    NS_ASSERTION((NS_SUCCEEDED(rv)),"More than one folders to copy");
+  
+  support = getter_AddRefs(folders->ElementAt(0));
+  
+  copyRequest = new nsCopyRequest();
+  if (!copyRequest) return NS_ERROR_OUT_OF_MEMORY;
+  
+  rv = copyRequest->Init(nsCopyFoldersType, support, dstFolder, 
+    isMove, listener, window, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  folder = do_QueryInterface(support, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  curFolder = do_QueryInterface(folder, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  copySource = copyRequest->AddNewCopySource(curFolder);
+  if (!copySource)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  
+  if (NS_FAILED(rv))
+  {
+    delete copyRequest;
     NS_ENSURE_SUCCESS(rv, rv);
-
-    curFolder = do_QueryInterface(folder, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-        
-    copySource = copyRequest->AddNewCopySource(curFolder);
-    if (!copySource)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-	    
-    if (NS_FAILED(rv))
-	{
-        delete copyRequest;
-		NS_ENSURE_SUCCESS(rv, rv);
-	}
-    else
-        rv = DoCopy(copyRequest);
-    
-   return rv;
+  }
+  else
+    rv = DoCopy(copyRequest);
+  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -518,17 +551,17 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMsgCopyServiceListener* listener,
 	                               nsIMsgWindow* window)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    nsCopyRequest* copyRequest;
-    nsCopySource* copySource = nsnull;
-    nsCOMPtr<nsISupports> fileSupport;
-	  nsCOMPtr<nsITransactionManager> txnMgr;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsCopyRequest* copyRequest;
+  nsCopySource* copySource = nsnull;
+  nsCOMPtr<nsISupports> fileSupport;
+	nsCOMPtr<nsITransactionManager> txnMgr;
 
-    NS_ENSURE_ARG_POINTER(fileSpec);
-    NS_ENSURE_ARG_POINTER(dstFolder);
+  NS_ENSURE_ARG_POINTER(fileSpec);
+  NS_ENSURE_ARG_POINTER(dstFolder);
 
-	if (window)
-		window->GetTransactionManager(getter_AddRefs(txnMgr));
+  if (window)
+    window->GetTransactionManager(getter_AddRefs(txnMgr));
   copyRequest = new nsCopyRequest();
   if (!copyRequest) return rv;
   fileSupport = do_QueryInterface(fileSpec, &rv);
@@ -578,12 +611,3 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
   return rv;
 }
 
-nsresult
-NS_NewMsgCopyService(const nsIID& iid, void **result)
-{
-	nsMsgCopyService* copyService;
-	if (!result) return NS_ERROR_NULL_POINTER;
-	copyService = new nsMsgCopyService();
-	if (!copyService) return NS_ERROR_OUT_OF_MEMORY;
-	return copyService->QueryInterface(iid, result);
-}

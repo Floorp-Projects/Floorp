@@ -2014,6 +2014,12 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
     nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(newMsgFolder);
     if (localFolder)
       localFolder->DoNextSubFolder(srcFolder, msgWindow, listener);
+
+    // We need to call OnCopyCompleted() here because if it's an empty folder then
+    // we'll never get a callback to nsMailboxProtocol::OnStopRequest() which will
+    // eventually call OnCopyCompleted() to clean up the copy request.
+    nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(srcFolder);
+    return OnCopyCompleted(srcSupport, PR_FALSE);
   }	    
   return NS_OK;  // otherwise the front-end will say Exception::CopyFolder
 }
