@@ -54,12 +54,8 @@ extern const char *prefContractID;
 
 - (BOOL) initMozillaPrefs
 {
-    NSBundle *mainBundle = [NSBundle mainBundle];
-    NSString *path = [mainBundle bundlePath];
-    NSMutableString *mutablePath = [NSMutableString stringWithString:path];
-    [mutablePath appendString:@"/Contents/MacOS/"];
-    const char *cstr = [mutablePath cString];
-    setenv("MOZILLA_FIVE_HOME", cstr, 1);
+    NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
+    setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
 
     nsresult rv;
     rv = NS_InitEmbedding(nsnull, nsnull);
