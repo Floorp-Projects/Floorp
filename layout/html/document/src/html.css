@@ -226,7 +226,7 @@ q:after {
 }
 :link:focus, :visited:focus, :out-of-date:focus,
 :link:focus img, :visited:focus img, :out-of-date:focus img {
-  mozoutline: 1px dotted black;
+  -moz-outline: 1px dotted black;
 }
 :link:active, :visited:active, :out-of-date:active {
   color: red;
