@@ -96,11 +96,10 @@ CSRCS = \
 	pqg.c \
 	dsa.c \
 	rsa.c \
+	shvfy.c \
+	libpath.c \
 	$(MPI_SRCS) \
 	$(NULL)
-endif
-ifndef FREEBL_RECURSIVE_BUILD
-CSRCS += libpath.c
 endif
 
 ALL_CSRCS := $(CSRCS)

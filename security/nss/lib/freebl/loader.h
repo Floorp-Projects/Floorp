@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.7 2003/01/16 00:15:21 nelsonb%netscape.com Exp $
+ * $Id: loader.h,v 1.8 2003/01/30 23:36:37 relyea%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -40,7 +40,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0304
+#define FREEBL_VERSION 0x0305
 
 struct FREEBLVectorStr {
 
@@ -329,6 +329,10 @@ struct FREEBLVectorStr {
 
   /* Version 3.004 came to here */
 
+ PRBool (*p_BLAPI_SHVerify)(const char *name, PRFuncPtr addr);
+ PRBool (*p_BLAPI_VerifySelf)(const char *name);
+
+  /* Version 3.005 came to here */
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

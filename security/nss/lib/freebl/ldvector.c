@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ldvector.c,v 1.4 2003/01/16 00:15:21 nelsonb%netscape.com Exp $
+ * $Id: ldvector.c,v 1.5 2003/01/30 23:36:36 relyea%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -167,6 +167,10 @@ static const struct FREEBLVectorStr vector = {
 
     /* End of Version 3.004. */
 
+    BLAPI_SHVerify,
+    BLAPI_VerifySelf,
+
+    /* End of Version 3.005. */
 };
 
 

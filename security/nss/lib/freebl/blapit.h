@@ -32,14 +32,16 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.7 2003/01/16 00:15:20 nelsonb%netscape.com Exp $
+ * $Id: blapit.h,v 1.8 2003/01/30 23:36:36 relyea%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
 
 #include "seccomon.h"
+#include "prlink.h"
 #include "plarena.h"
+
 
 /* RC2 operation modes */
 #define NSS_RC2			0
