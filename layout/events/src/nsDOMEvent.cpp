@@ -443,7 +443,7 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
   switch (mEvent->message) {
   case NS_KEY_UP:
   case NS_KEY_DOWN:
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) && defined(DEBUG_brade)
     printf("GetCharCode used for wrong key event; should use onkeypress.\n");
 #endif
     *aCharCode = 0;
