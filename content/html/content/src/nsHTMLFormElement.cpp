@@ -245,12 +245,12 @@ public:
 
   nsAutoVoidArray mElements;  // Holds WEAK references - bug 36639
 
-  // This hash holds on to all form controls that are not named form
-  // control (see IsNamedFormControl()), this is needed to properly
-  // clean up the bi-directional references (both weak and strong)
-  // between the form and its form controls.
+  // This hash holds on to all form controls that are not contained
+  // in mElements (form.elements in JS, see ShouldBeInFormControl()).
+  // This is needed to properly clean up the bi-directional references
+  // (both weak and strong) between the form and its form controls.
 
-  nsHashtable* mNoNameLookupTable; // Holds WEAK references
+  nsHashtable* mNotInElements; // Holds WEAK references
 
 protected:
   // A map from an ID or NAME attribute to the form control(s), this
@@ -264,7 +264,7 @@ protected:
 
 
 static PRBool
-IsNamedFormControl(nsIFormControl* aFormControl)
+ShouldBeInElements(nsIFormControl* aFormControl)
 {
   PRInt32 type;
 
@@ -971,22 +971,22 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
   NS_ENSURE_TRUE(mControls, NS_ERROR_UNEXPECTED);
 
-  if (IsNamedFormControl(aChild)) {
+  if (ShouldBeInElements(aChild)) {
     mControls->mElements.AppendElement(aChild);
     // WEAK - don't addref
   } else {
-    if (!mControls->mNoNameLookupTable) {
-      mControls->mNoNameLookupTable = new nsHashtable();
-      NS_ENSURE_TRUE(mControls->mNoNameLookupTable, NS_ERROR_OUT_OF_MEMORY);
+    if (!mControls->mNotInElements) {
+      mControls->mNotInElements = new nsHashtable();
+      NS_ENSURE_TRUE(mControls->mNotInElements, NS_ERROR_OUT_OF_MEMORY);
     }
 
     nsISupportsKey key(aChild);
 
     nsISupports *item =
-      NS_STATIC_CAST(nsISupports *, mControls->mNoNameLookupTable->Get(&key));
+      NS_STATIC_CAST(nsISupports *, mControls->mNotInElements->Get(&key));
 
     if (!item) {
-      mControls->mNoNameLookupTable->Put(&key, aChild);
+      mControls->mNotInElements->Put(&key, aChild);
     }
   }
 
@@ -1010,10 +1010,10 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
 
   mControls->mElements.RemoveElement(aChild);
 
-  if (mControls->mNoNameLookupTable) {
+  if (mControls->mNotInElements) {
     nsISupportsKey key(aChild);
 
-    mControls->mNoNameLookupTable->Remove(&key);
+    mControls->mNotInElements->Remove(&key);
   }
 
   return NS_OK;
@@ -1090,7 +1090,7 @@ nsHTMLFormElement::IsDemotingForm(PRBool* aDemotingForm)
 
 nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
   : mForm(aForm),
-    mNoNameLookupTable(nsnull),
+    mNotInElements(nsnull),
     mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE)
 {
   NS_INIT_REFCNT();
@@ -1098,8 +1098,8 @@ nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
 
 nsFormControlList::~nsFormControlList()
 {
-  delete mNoNameLookupTable;
-  mNoNameLookupTable = nsnull;
+  delete mNotInElements;
+  mNotInElements = nsnull;
 
   mForm = nsnull;
   Clear();
@@ -1140,8 +1140,8 @@ nsFormControlList::Clear()
 
   mNameLookupTable.Reset();
 
-  if (mNoNameLookupTable) {
-    mNoNameLookupTable->Reset(FormControlResetEnumFunction);
+  if (mNotInElements) {
+    mNotInElements->Reset(FormControlResetEnumFunction);
   }
 }
 
@@ -1250,19 +1250,19 @@ nsresult
 nsFormControlList::AddElementToTable(nsIFormControl* aChild,
                                      const nsAReadableString& aName)
 {
-  if (!IsNamedFormControl(aChild)) {
-    if (!mNoNameLookupTable) {
-      mNoNameLookupTable = new nsHashtable();
-      NS_ENSURE_TRUE(mNoNameLookupTable, NS_ERROR_OUT_OF_MEMORY);
+  if (!ShouldBeInElements(aChild)) {
+    if (!mNotInElements) {
+      mNotInElements = new nsHashtable();
+      NS_ENSURE_TRUE(mNotInElements, NS_ERROR_OUT_OF_MEMORY);
     }
 
     nsISupportsKey key(aChild);
 
     nsISupports *item = NS_STATIC_CAST(nsISupports *,
-                                       mNoNameLookupTable->Get(&key));
+                                       mNotInElements->Get(&key));
 
     if (!item) {
-      mNoNameLookupTable->Put(&key, aChild);
+      mNotInElements->Put(&key, aChild);
     }
 
     return NS_OK;
@@ -1345,11 +1345,11 @@ nsresult
 nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
                                           const nsAReadableString& aName)
 {
-  if (!IsNamedFormControl(aChild)) {
-    if (mNoNameLookupTable) {
+  if (!ShouldBeInElements(aChild)) {
+    if (mNotInElements) {
       nsISupportsKey key(aChild);
 
-      mNoNameLookupTable->Remove(&key);
+      mNotInElements->Remove(&key);
     }
 
     return NS_OK;
