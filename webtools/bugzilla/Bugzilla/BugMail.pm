@@ -883,17 +883,17 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
 
 sub MessageToMTA ($) {
     my ($msg) = (@_);
-    return unless Param('enable_mail_sending');
+    return if (Param('mail_delivery_method') eq "none");
 
     my @args;
-    if (Param("maildeliverymethod") eq "sendmail" && !Param("sendmailnow")) {
+    if (Param("mail_delivery_method") eq "sendmail" && !Param("sendmailnow")) {
         push @args, "-ODeliveryMode=deferred";
     }
-    if (Param("maildeliverymethod") eq "smtp") {
+    if (Param("mail_delivery_method") eq "smtp") {
         push @args, Server => Param("smtpserver");
     }
-    my $mailer = new Mail::Mailer Param("maildeliverymethod"), @args;
-    if (Param("maildeliverymethod") eq "testfile") {
+    my $mailer = new Mail::Mailer Param("mail_delivery_method"), @args;
+    if (Param("mail_delivery_method") eq "testfile") {
         $Mail::Mailer::testfile::config{outfile} = "$datadir/mailer.testfile";
     }
     

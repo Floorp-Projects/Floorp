@@ -671,24 +671,20 @@ sub find_languages {
   },
 
   {
-   name => 'enable_mail_sending',
-   desc => 'If set to \'Off\', Bugzilla will not send out any email of any ' .
-           'type whatsoever.<br>For most administrators, it is useful to ' .
-           'be able to disable all mail during testing and initial setup, ' .
-           'but other than that they will want to leave it \'On\'.',
-   type => 'b',
-   default => 1
-  },
-
-  {
-   name => 'maildeliverymethod',
-   desc => 'The method used for mail delivery. The testfile method ' .
-           'is useful for debugging (for more information see the ' .
-           'Mail::Mailer manual)',
+   name => 'mail_delivery_method',
+   desc => 'Defines how email is sent, or if it is sent at all.<br><ul>' .
+           '<li>\'sendmail\', \'smtp\' and \'qmail\' are all MTAs. ' .
+           '(only SMTP is available in Windows.)</li>' .
+           '<li>\'testfile\' is useful for debugging: all email is stored' .
+           'in data/mailer.testfile instead of being sent. For more ' .
+           'information, see the Mail::Mailer manual.</li>' .
+           '<li>\'none\' will completely disable email. Bugzilla continues ' .
+           'to act as though it is sending mail, but nothing is sent or ' .
+           'stored.</li></ul>' ,
    type => 's',
    choices => $^O =~ /MSWin32/i 
-                  ? ['smtp', 'testfile']
-                  : ['sendmail', 'smtp', 'qmail', 'testfile'],
+                  ? ['smtp', 'testfile', 'none']
+                  : ['sendmail', 'smtp', 'qmail', 'testfile', 'none'],
    default => 'sendmail',
    checker => \&check_multi
   },

@@ -1282,10 +1282,10 @@ if (@oldparams) {
     close PARAMFILE;
 }
 
-# Set maildeliverymethod to SMTP and prompt for SMTP server
+# Set mail_delivery_method to SMTP and prompt for SMTP server
 # if running on Windows and set to sendmail (Mail::Mailer doesn't
 # support sendmail on Windows)
-if ($^O =~ /MSWin32/i && Param('maildeliverymethod') eq 'sendmail') {
+if ($^O =~ /MSWin32/i && Param('mail_delivery_method') eq 'sendmail') {
     print "\nBugzilla requires an SMTP server to function on Windows.\n" .
         "Please enter your SMTP server's hostname: ";
     my $smtp = $answer{'SMTP_SERVER'} 
@@ -1296,7 +1296,7 @@ if ($^O =~ /MSWin32/i && Param('maildeliverymethod') eq 'sendmail') {
         print "\nWarning: No SMTP Server provided, defaulting to localhost\n";
         $smtp = 'localhost';
     }
-    SetParam('maildeliverymethod', 'smtp');
+    SetParam('mail_delivery_method', 'smtp');
     SetParam('smtpserver', $smtp);
 }
 
