@@ -436,7 +436,7 @@ sub print_table_header {
       if ($form{noflames}) {
         print "<td rowspan=2 bgcolor=$colormap{busted}><a title='$titlemap{flames}'>$bn $textmap{flames}</a></td>";
       } else {
-        print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
+        print "<td rowspan=2 bgcolor=000000 background='$images{flames}' style='background-position: bottom; background-repeat: repeat-x;'>";
         print "<font color=white><a title='$titlemap{flames}'>$bn $textmap{flames}</a></font></td>";
       }
     }
