@@ -40,15 +40,22 @@ typedef struct _NET_StreamClass NET_StreamClass;
 typedef struct OpaqueCCCDataObject *CCCDataObject;
 typedef struct OpaqueINTL_CharSetInfo *INTL_CharSetInfo;
 
-/* How to refill when there's a cache miss */
+/* This lists the data input policies for the image lib.
+   Note that only the last 3 policies request server validation of
+   image data. These policies are very distinct from the netlib
+   cache attributes, but are used to set the netlib cache attributes
+   for a specific image request.
+*/
 typedef enum NET_ReloadMethod
 {
-    NET_DONT_RELOAD,            /* use the cache */
-    NET_RESIZE_RELOAD,          /* use the cache -- special for resizing */
-    NET_NORMAL_RELOAD,          /* use IMS gets for reload */
-    NET_SUPER_RELOAD,           /* retransfer everything */
-    NET_CACHE_ONLY_RELOAD       /* Don't do anything if we miss in the cache.
-                                   (For the image library) */
+     IMG_CACHE_ONLY,    /* imgcache, no validation, don't go to netlib cache */
+     IMG_NTWK_SERVER,   /* imgcache 1st, netcache 2nd, server 3rd, no initial validation */
+     TV_IMG_NTWK_SERVER,   /* test validation, use imgcache first. This is now
+                              implemented as TV_NTWK_SERVER_ONLY, since the image cache
+                              is not saved once we know we have to check with the server anyway.
+                           */
+     TV_NTWK_SERVER_ONLY,   /* test validation, use necko cache first */ 
+     SERVER_ONLY,       /* server only, force_reload */
 } NET_ReloadMethod;
 
 /*

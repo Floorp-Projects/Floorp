@@ -674,7 +674,26 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     if (bIsBackground) {
       (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
     }
-    
+    switch(aLoadMethod){
+        case IMG_CACHE_ONLY:
+            /* should never get here, but don't fail if you do. */
+        case IMG_NTWK_SERVER:
+            (void)channel->SetLoadAttributes(nsIChannel::VALIDATE_NEVER); 
+            break;
+
+        case TV_IMG_NTWK_SERVER:
+        case TV_NTWK_SERVER_ONLY:
+            (void)channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION);
+            break;
+
+        case SERVER_ONLY:
+           (void)channel->SetLoadAttributes(nsIChannel::FORCE_RELOAD);
+            break;
+        
+        default:
+            break;
+    }
+   
     nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
@@ -726,7 +745,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilINetContext *cx = new ImageNetContextImpl(NET_NORMAL_RELOAD,
+  ilINetContext *cx = new ImageNetContextImpl(TV_IMG_NTWK_SERVER,
                                               aLoadGroup,
                                               aReconnectCallback,
                                               aReconnectArg);
