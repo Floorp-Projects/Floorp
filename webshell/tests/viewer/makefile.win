@@ -69,6 +69,7 @@ LINCS=  \
   -I$(PUBLIC)\intl \
   -I$(PUBLIC)\rdf \
   -I$(PUBLIC)\silentdl \
+  -I$(PUBLIC)\walletlib \
 !if defined(NGPREFS)
   -I$(PUBLIC)\ngprefs \
 !endif

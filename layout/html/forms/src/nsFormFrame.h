@@ -129,6 +129,9 @@ protected:
   static char* Temp_GenerateTempFileName(PRInt32 aMaxSize, char* aBuffer);
   static void  Temp_GetContentType(char* aPathName, char* aContentType);
 
+  // XXX Hack to get document from parent html frame.  Should Document do this?
+  nsIDocument* GetParentHTMLFrameDocument(nsIDocument* doc);
+
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
   nsIFormControlFrame* mTextSubmitter;
