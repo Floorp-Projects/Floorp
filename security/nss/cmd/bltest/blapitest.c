@@ -2818,7 +2818,7 @@ int main(int argc, char **argv)
 
     /* Do FIPS self-test */
     if (bltest.commands[cmd_FIPS].activated) {
-	CK_RV ckrv = pk11_fipsPowerUpSelfTest();
+	CK_RV ckrv = sftk_fipsPowerUpSelfTest();
 	fprintf(stdout, "CK_RV: %ld.\n", ckrv);
 	return 0;
     }

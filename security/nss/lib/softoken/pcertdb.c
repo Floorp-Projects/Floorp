@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.48 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: pcertdb.c,v 1.49 2005/03/29 18:21:18 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -48,7 +48,7 @@
 #include "secitem.h"
 #include "secder.h"
 
-/* Call to PK11_FreeSlot below */
+/* Call to SFTK_FreeSlot below */
 
 #include "secasn1.h"
 #include "secerr.h"

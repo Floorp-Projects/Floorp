@@ -35,19 +35,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: tlsprf.c,v 1.4 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: tlsprf.c,v 1.5 2005/03/29 18:21:18 nelsonb%netscape.com Exp $ */
 
 #include "pkcs11i.h"
 #include "sechash.h"
 #include "alghmac.h"
 
-#define PK11_OFFSETOF(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
+#define SFTK_OFFSETOF(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
 
 #define PHASH_STATE_MAX_LEN 20
 
 /* TLS P_hash function */
 static SECStatus
-pk11_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
+sftk_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
 	SECItem *seed, SECItem *result, PRBool isFIPS)
 {
     unsigned char state[PHASH_STATE_MAX_LEN];
@@ -119,7 +119,7 @@ loser:
 }
 
 SECStatus
-pk11_PRF(const SECItem *secret, const char *label, SECItem *seed, 
+sftk_PRF(const SECItem *secret, const char *label, SECItem *seed, 
          SECItem *result, PRBool isFIPS)
 {
     SECStatus rv = SECFailure, status;
@@ -145,11 +145,11 @@ pk11_PRF(const SECItem *secret, const char *label, SECItem *seed,
 	goto loser;
     tmp.len = result->len;
 
-    status = pk11_P_hash(HASH_AlgMD5, &S1, label, seed, result, isFIPS);
+    status = sftk_P_hash(HASH_AlgMD5, &S1, label, seed, result, isFIPS);
     if (status != SECSuccess)
 	goto loser;
 
-    status = pk11_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp, isFIPS);
+    status = sftk_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp, isFIPS);
     if (status != SECSuccess)
 	goto loser;
 
@@ -164,7 +164,7 @@ loser:
     return rv;
 }
 
-static void pk11_TLSPRFNull(void *data, PRBool freeit)
+static void sftk_TLSPRFNull(void *data, PRBool freeit)
 {
     return;
 } 
@@ -181,7 +181,7 @@ typedef struct {
 } TLSPRFContext;
 
 static void
-pk11_TLSPRFHashUpdate(TLSPRFContext *cx, const unsigned char *data, 
+sftk_TLSPRFHashUpdate(TLSPRFContext *cx, const unsigned char *data, 
                         unsigned int data_len)
 {
     PRUint32 bytesUsed = cx->cxKeyLen + cx->cxDataLen;
@@ -211,7 +211,7 @@ pk11_TLSPRFHashUpdate(TLSPRFContext *cx, const unsigned char *data,
 }
 
 static void 
-pk11_TLSPRFEnd(TLSPRFContext *ctx, unsigned char *hashout,
+sftk_TLSPRFEnd(TLSPRFContext *ctx, unsigned char *hashout,
 	 unsigned int *pDigestLen, unsigned int maxDigestLen)
 {
     *pDigestLen = 0; /* tells Verify that no data has been input yet. */
@@ -219,7 +219,7 @@ pk11_TLSPRFEnd(TLSPRFContext *ctx, unsigned char *hashout,
 
 /* Compute the PRF values from the data previously input. */
 static SECStatus
-pk11_TLSPRFUpdate(TLSPRFContext *cx, 
+sftk_TLSPRFUpdate(TLSPRFContext *cx, 
                   unsigned char *sig,		/* output goes here. */
 		  unsigned int * sigLen, 	/* how much output.  */
 		  unsigned int   maxLen, 	/* output buffer size */
@@ -243,7 +243,7 @@ pk11_TLSPRFUpdate(TLSPRFContext *cx,
     sigItem.data = sig;
     sigItem.len  = maxLen;
 
-    rv = pk11_PRF(&secretItem, NULL, &seedItem, &sigItem, cx->cxIsFIPS);
+    rv = sftk_PRF(&secretItem, NULL, &seedItem, &sigItem, cx->cxIsFIPS);
     if (rv == SECSuccess && sigLen != NULL)
     	*sigLen = sigItem.len;
     return rv;
@@ -251,7 +251,7 @@ pk11_TLSPRFUpdate(TLSPRFContext *cx,
 }
 
 static SECStatus
-pk11_TLSPRFVerify(TLSPRFContext *cx, 
+sftk_TLSPRFVerify(TLSPRFContext *cx, 
                   unsigned char *sig, 		/* input, for comparison. */
 		  unsigned int   sigLen,	/* length of sig.         */
 		  unsigned char *hash, 		/* data to be verified.   */
@@ -267,9 +267,9 @@ pk11_TLSPRFVerify(TLSPRFContext *cx,
     	/* hashLen is non-zero when the user does a one-step verify.
 	** In this case, none of the data has been input yet.
 	*/
-    	pk11_TLSPRFHashUpdate(cx, hash, hashLen);
+    	sftk_TLSPRFHashUpdate(cx, hash, hashLen);
     }
-    rv = pk11_TLSPRFUpdate(cx, tmp, &tmpLen, sigLen, NULL, 0);
+    rv = sftk_TLSPRFUpdate(cx, tmp, &tmpLen, sigLen, NULL, 0);
     if (rv == SECSuccess) {
     	rv = (SECStatus)(1 - !PORT_Memcmp(tmp, sig, sigLen));
     }
@@ -278,7 +278,7 @@ pk11_TLSPRFVerify(TLSPRFContext *cx,
 }
 
 static void
-pk11_TLSPRFHashDestroy(TLSPRFContext *cx, PRBool freeit)
+sftk_TLSPRFHashDestroy(TLSPRFContext *cx, PRBool freeit)
 {
     if (freeit) {
 	if (cx->cxBufPtr != cx->cxBuf) 
@@ -288,11 +288,11 @@ pk11_TLSPRFHashDestroy(TLSPRFContext *cx, PRBool freeit)
 }
 
 CK_RV
-pk11_TLSPRFInit(PK11SessionContext *context, 
-		  PK11Object *        key, 
+sftk_TLSPRFInit(SFTKSessionContext *context, 
+		  SFTKObject *        key, 
 		  CK_KEY_TYPE         key_type)
 {
-    PK11Attribute * keyVal;
+    SFTKAttribute * keyVal;
     TLSPRFContext * prf_cx;
     CK_RV           crv = CKR_HOST_MEMORY;
     PRUint32        keySize;
@@ -303,7 +303,7 @@ pk11_TLSPRFInit(PK11SessionContext *context,
 
     context->multi = PR_TRUE;
 
-    keyVal = pk11_FindAttribute(key, CKA_VALUE);
+    keyVal = sftk_FindAttribute(key, CKA_VALUE);
     keySize = (!keyVal) ? 0 : keyVal->attrib.ulValueLen;
     blockSize = keySize + sizeof(TLSPRFContext);
     prf_cx = (TLSPRFContext *)PORT_Alloc(blockSize);
@@ -312,7 +312,7 @@ pk11_TLSPRFInit(PK11SessionContext *context,
     prf_cx->cxSize    = blockSize;
     prf_cx->cxKeyLen  = keySize;
     prf_cx->cxDataLen = 0;
-    prf_cx->cxBufSize = blockSize - PK11_OFFSETOF(TLSPRFContext, cxBuf);
+    prf_cx->cxBufSize = blockSize - SFTK_OFFSETOF(TLSPRFContext, cxBuf);
     prf_cx->cxRv      = SECSuccess;
     prf_cx->cxIsFIPS  = (key->slot->slotID == FIPS_SLOT_ID);
     prf_cx->cxBufPtr  = prf_cx->cxBuf;
@@ -321,17 +321,17 @@ pk11_TLSPRFInit(PK11SessionContext *context,
 
     context->hashInfo    = (void *) prf_cx;
     context->cipherInfo  = (void *) prf_cx;
-    context->hashUpdate  = (PK11Hash)    pk11_TLSPRFHashUpdate;
-    context->end         = (PK11End)     pk11_TLSPRFEnd;
-    context->update      = (PK11Cipher)  pk11_TLSPRFUpdate;
-    context->verify      = (PK11Verify)  pk11_TLSPRFVerify;
-    context->destroy     = (PK11Destroy) pk11_TLSPRFNull;
-    context->hashdestroy = (PK11Destroy) pk11_TLSPRFHashDestroy;
+    context->hashUpdate  = (SFTKHash)    sftk_TLSPRFHashUpdate;
+    context->end         = (SFTKEnd)     sftk_TLSPRFEnd;
+    context->update      = (SFTKCipher)  sftk_TLSPRFUpdate;
+    context->verify      = (SFTKVerify)  sftk_TLSPRFVerify;
+    context->destroy     = (SFTKDestroy) sftk_TLSPRFNull;
+    context->hashdestroy = (SFTKDestroy) sftk_TLSPRFHashDestroy;
     crv = CKR_OK;
 
 done:
     if (keyVal) 
-	pk11_FreeAttribute(keyVal);
+	sftk_FreeAttribute(keyVal);
     return crv;
 }
 

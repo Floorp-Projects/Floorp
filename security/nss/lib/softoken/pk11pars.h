@@ -51,61 +51,61 @@
 #include "secmodt.h"
 #include "pk11init.h"
 
-#define PK11_ARG_LIBRARY_PARAMETER "library="
-#define PK11_ARG_NAME_PARAMETER "name="
-#define PK11_ARG_MODULE_PARAMETER "parameters="
-#define PK11_ARG_NSS_PARAMETER "NSS="
-#define PK11_ARG_FORTEZZA_FLAG "FORTEZZA"
-#define PK11_ARG_ESCAPE '\\'
+#define SFTK_ARG_LIBRARY_PARAMETER "library="
+#define SFTK_ARG_NAME_PARAMETER "name="
+#define SFTK_ARG_MODULE_PARAMETER "parameters="
+#define SFTK_ARG_NSS_PARAMETER "NSS="
+#define SFTK_ARG_FORTEZZA_FLAG "FORTEZZA"
+#define SFTK_ARG_ESCAPE '\\'
 
-struct pk11argSlotFlagTable {
+struct sftkargSlotFlagTable {
     char *name;
     int len;
     unsigned long value;
 };
 
-#define PK11_DEFAULT_CIPHER_ORDER 0
-#define PK11_DEFAULT_TRUST_ORDER 50
+#define SFTK_DEFAULT_CIPHER_ORDER 0
+#define SFTK_DEFAULT_TRUST_ORDER 50
 
 
-#define PK11_ARG_ENTRY(arg,flag) \
+#define SFTK_ARG_ENTRY(arg,flag) \
 { #arg , sizeof(#arg)-1, flag }
-static struct pk11argSlotFlagTable pk11_argSlotFlagTable[] = {
-	PK11_ARG_ENTRY(RSA,SECMOD_RSA_FLAG),
-	PK11_ARG_ENTRY(DSA,SECMOD_RSA_FLAG),
-	PK11_ARG_ENTRY(RC2,SECMOD_RC4_FLAG),
-	PK11_ARG_ENTRY(RC4,SECMOD_RC2_FLAG),
-	PK11_ARG_ENTRY(DES,SECMOD_DES_FLAG),
-	PK11_ARG_ENTRY(DH,SECMOD_DH_FLAG),
-	PK11_ARG_ENTRY(FORTEZZA,SECMOD_FORTEZZA_FLAG),
-	PK11_ARG_ENTRY(RC5,SECMOD_RC5_FLAG),
-	PK11_ARG_ENTRY(SHA1,SECMOD_SHA1_FLAG),
-	PK11_ARG_ENTRY(MD5,SECMOD_MD5_FLAG),
-	PK11_ARG_ENTRY(MD2,SECMOD_MD2_FLAG),
-	PK11_ARG_ENTRY(SSL,SECMOD_SSL_FLAG),
-	PK11_ARG_ENTRY(TLS,SECMOD_TLS_FLAG),
-	PK11_ARG_ENTRY(AES,SECMOD_AES_FLAG),
-	PK11_ARG_ENTRY(PublicCerts,SECMOD_FRIENDLY_FLAG),
-	PK11_ARG_ENTRY(RANDOM,SECMOD_RANDOM_FLAG),
+static struct sftkargSlotFlagTable sftk_argSlotFlagTable[] = {
+	SFTK_ARG_ENTRY(RSA,SECMOD_RSA_FLAG),
+	SFTK_ARG_ENTRY(DSA,SECMOD_RSA_FLAG),
+	SFTK_ARG_ENTRY(RC2,SECMOD_RC4_FLAG),
+	SFTK_ARG_ENTRY(RC4,SECMOD_RC2_FLAG),
+	SFTK_ARG_ENTRY(DES,SECMOD_DES_FLAG),
+	SFTK_ARG_ENTRY(DH,SECMOD_DH_FLAG),
+	SFTK_ARG_ENTRY(FORTEZZA,SECMOD_FORTEZZA_FLAG),
+	SFTK_ARG_ENTRY(RC5,SECMOD_RC5_FLAG),
+	SFTK_ARG_ENTRY(SHA1,SECMOD_SHA1_FLAG),
+	SFTK_ARG_ENTRY(MD5,SECMOD_MD5_FLAG),
+	SFTK_ARG_ENTRY(MD2,SECMOD_MD2_FLAG),
+	SFTK_ARG_ENTRY(SSL,SECMOD_SSL_FLAG),
+	SFTK_ARG_ENTRY(TLS,SECMOD_TLS_FLAG),
+	SFTK_ARG_ENTRY(AES,SECMOD_AES_FLAG),
+	SFTK_ARG_ENTRY(PublicCerts,SECMOD_FRIENDLY_FLAG),
+	SFTK_ARG_ENTRY(RANDOM,SECMOD_RANDOM_FLAG),
 };
 
-#define PK11_HANDLE_STRING_ARG(param,target,value,command) \
+#define SFTK_HANDLE_STRING_ARG(param,target,value,command) \
     if (PORT_Strncasecmp(param,value,sizeof(value)-1) == 0) { \
 	param += sizeof(value)-1; \
-	target = pk11_argFetchValue(param,&next); \
+	target = sftk_argFetchValue(param,&next); \
 	param += next; \
 	command ;\
     } else  
 
-#define PK11_HANDLE_FINAL_ARG(param) \
-    { param = pk11_argSkipParameter(param); } param = pk11_argStrip(param);
+#define SFTK_HANDLE_FINAL_ARG(param) \
+    { param = sftk_argSkipParameter(param); } param = sftk_argStrip(param);
 	
 
-static int pk11_argSlotFlagTableSize = 
-	sizeof(pk11_argSlotFlagTable)/sizeof(pk11_argSlotFlagTable[0]);
+static int sftk_argSlotFlagTableSize = 
+	sizeof(sftk_argSlotFlagTable)/sizeof(sftk_argSlotFlagTable[0]);
 
 
-static PRBool pk11_argGetPair(char c) {
+static PRBool sftk_argGetPair(char c) {
     switch (c) {
     case '\'': return c;
     case '\"': return c;
@@ -118,15 +118,15 @@ static PRBool pk11_argGetPair(char c) {
     return ' ';
 }
 
-static PRBool pk11_argIsBlank(char c) {
+static PRBool sftk_argIsBlank(char c) {
    return isspace(c);
 }
 
-static PRBool pk11_argIsEscape(char c) {
+static PRBool sftk_argIsEscape(char c) {
     return c == '\\';
 }
 
-static PRBool pk11_argIsQuote(char c) {
+static PRBool sftk_argIsQuote(char c) {
     switch (c) {
     case '\'':
     case '\"':
@@ -139,7 +139,7 @@ static PRBool pk11_argIsQuote(char c) {
     return PR_FALSE;
 }
 
-static PRBool pk11_argHasChar(char *v, char c)
+static PRBool sftk_argHasChar(char *v, char c)
 {
    for ( ;*v; v++) {
 	if (*v == c) return PR_TRUE;
@@ -147,26 +147,26 @@ static PRBool pk11_argHasChar(char *v, char c)
    return PR_FALSE;
 }
 
-static PRBool pk11_argHasBlanks(char *v)
+static PRBool sftk_argHasBlanks(char *v)
 {
    for ( ;*v; v++) {
-	if (pk11_argIsBlank(*v)) return PR_TRUE;
+	if (sftk_argIsBlank(*v)) return PR_TRUE;
    }
    return PR_FALSE;
 }
 
-static char *pk11_argStrip(char *c) {
-   while (*c && pk11_argIsBlank(*c)) c++;
+static char *sftk_argStrip(char *c) {
+   while (*c && sftk_argIsBlank(*c)) c++;
    return c;
 }
 
 static char *
-pk11_argFindEnd(char *string) {
+sftk_argFindEnd(char *string) {
     char endChar = ' ';
     PRBool lastEscape = PR_FALSE;
 
-    if (pk11_argIsQuote(*string)) {
-	endChar = pk11_argGetPair(*string);
+    if (sftk_argIsQuote(*string)) {
+	endChar = sftk_argGetPair(*string);
 	string++;
     }
 
@@ -175,11 +175,11 @@ pk11_argFindEnd(char *string) {
 	    lastEscape = PR_FALSE;
 	    continue;
 	}
-	if (pk11_argIsEscape(*string) && !lastEscape) {
+	if (sftk_argIsEscape(*string) && !lastEscape) {
 	    lastEscape = PR_TRUE;
 	    continue;
 	} 
-	if ((endChar == ' ') && pk11_argIsBlank(*string)) break;
+	if ((endChar == ' ') && sftk_argIsBlank(*string)) break;
 	if (*string == endChar) {
 	    break;
 	}
@@ -189,9 +189,9 @@ pk11_argFindEnd(char *string) {
 }
 
 static char *
-pk11_argFetchValue(char *string, int *pcount)
+sftk_argFetchValue(char *string, int *pcount)
 {
-    char *end = pk11_argFindEnd(string);
+    char *end = sftk_argFindEnd(string);
     char *retString, *copyString;
     PRBool lastEscape = PR_FALSE;
 
@@ -202,9 +202,9 @@ pk11_argFetchValue(char *string, int *pcount)
     copyString = retString = (char *)PORT_Alloc(*pcount);
     if (retString == NULL) return NULL;
 
-    if (pk11_argIsQuote(*string)) string++;
+    if (sftk_argIsQuote(*string)) string++;
     for (; string < end; string++) {
-	if (pk11_argIsEscape(*string) && !lastEscape) {
+	if (sftk_argIsEscape(*string) && !lastEscape) {
 	    lastEscape = PR_TRUE;
 	    continue;
 	}
@@ -216,44 +216,44 @@ pk11_argFetchValue(char *string, int *pcount)
 }
 
 static char *
-pk11_argSkipParameter(char *string) 
+sftk_argSkipParameter(char *string) 
 {
      char *end;
      /* look for the end of the <name>= */
      for (;*string; string++) {
 	if (*string == '=') { string++; break; }
-	if (pk11_argIsBlank(*string)) return(string); 
+	if (sftk_argIsBlank(*string)) return(string); 
      }
 
-     end = pk11_argFindEnd(string);
+     end = sftk_argFindEnd(string);
      if (*end) end++;
      return end;
 }
 
 
 static SECStatus
-pk11_argParseModuleSpec(char *modulespec, char **lib, char **mod, 
+sftk_argParseModuleSpec(char *modulespec, char **lib, char **mod, 
 					char **parameters, char **nss)
 {
     int next;
-    modulespec = pk11_argStrip(modulespec);
+    modulespec = sftk_argStrip(modulespec);
 
     *lib = *mod = *parameters = *nss = 0;
 
     while (*modulespec) {
-	PK11_HANDLE_STRING_ARG(modulespec,*lib,PK11_ARG_LIBRARY_PARAMETER,;)
-	PK11_HANDLE_STRING_ARG(modulespec,*mod,PK11_ARG_NAME_PARAMETER,;)
-	PK11_HANDLE_STRING_ARG(modulespec,*parameters,
-						PK11_ARG_MODULE_PARAMETER,;)
-	PK11_HANDLE_STRING_ARG(modulespec,*nss,PK11_ARG_NSS_PARAMETER,;)
-	PK11_HANDLE_FINAL_ARG(modulespec)
+	SFTK_HANDLE_STRING_ARG(modulespec,*lib,SFTK_ARG_LIBRARY_PARAMETER,;)
+	SFTK_HANDLE_STRING_ARG(modulespec,*mod,SFTK_ARG_NAME_PARAMETER,;)
+	SFTK_HANDLE_STRING_ARG(modulespec,*parameters,
+						SFTK_ARG_MODULE_PARAMETER,;)
+	SFTK_HANDLE_STRING_ARG(modulespec,*nss,SFTK_ARG_NSS_PARAMETER,;)
+	SFTK_HANDLE_FINAL_ARG(modulespec)
    }
    return SECSuccess;
 }
 
 
 static char *
-pk11_argGetParamValue(char *paramName,char *parameters)
+sftk_argGetParamValue(char *paramName,char *parameters)
 {
     char searchValue[256];
     int paramLen = strlen(paramName);
@@ -269,19 +269,19 @@ pk11_argGetParamValue(char *paramName,char *parameters)
     while (*parameters) {
 	if (PORT_Strncasecmp(parameters,searchValue,paramLen+1) == 0) {
 	    parameters += paramLen+1;
-	    returnValue = pk11_argFetchValue(parameters,&next);
+	    returnValue = sftk_argFetchValue(parameters,&next);
 	    break;
 	} else {
-	    parameters = pk11_argSkipParameter(parameters);
+	    parameters = sftk_argSkipParameter(parameters);
 	}
-	parameters = pk11_argStrip(parameters);
+	parameters = sftk_argStrip(parameters);
    }
    return returnValue;
 }
     
 
 static char *
-pk11_argNextFlag(char *flags)
+sftk_argNextFlag(char *flags)
 {
     for (; *flags ; flags++) {
 	if (*flags == ',') {
@@ -293,16 +293,16 @@ pk11_argNextFlag(char *flags)
 }
 
 static PRBool
-pk11_argHasFlag(char *label, char *flag, char *parameters)
+sftk_argHasFlag(char *label, char *flag, char *parameters)
 {
     char *flags,*index;
     int len = strlen(flag);
     PRBool found = PR_FALSE;
 
-    flags = pk11_argGetParamValue(label,parameters);
+    flags = sftk_argGetParamValue(label,parameters);
     if (flags == NULL) return PR_FALSE;
 
-    for (index=flags; *index; index=pk11_argNextFlag(index)) {
+    for (index=flags; *index; index=sftk_argNextFlag(index)) {
 	if (PORT_Strncasecmp(index,flag,len) == 0) {
 	    found=PR_TRUE;
 	    break;
@@ -313,14 +313,14 @@ pk11_argHasFlag(char *label, char *flag, char *parameters)
 }
 
 static void
-pk11_argSetNewCipherFlags(unsigned long *newCiphers,char *cipherList)
+sftk_argSetNewCipherFlags(unsigned long *newCiphers,char *cipherList)
 {
     newCiphers[0] = newCiphers[1] = 0;
     if ((cipherList == NULL) || (*cipherList == 0)) return;
 
-    for (;*cipherList; cipherList=pk11_argNextFlag(cipherList)) {
-	if (PORT_Strncasecmp(cipherList,PK11_ARG_FORTEZZA_FLAG,
-				sizeof(PK11_ARG_FORTEZZA_FLAG)-1) == 0) {
+    for (;*cipherList; cipherList=sftk_argNextFlag(cipherList)) {
+	if (PORT_Strncasecmp(cipherList,SFTK_ARG_FORTEZZA_FLAG,
+				sizeof(SFTK_ARG_FORTEZZA_FLAG)-1) == 0) {
 	    newCiphers[0] |= SECMOD_FORTEZZA_FLAG;
 	} 
 
@@ -341,7 +341,7 @@ pk11_argSetNewCipherFlags(unsigned long *newCiphers,char *cipherList)
  * decode a number. handle octal (leading '0'), hex (leading '0x') or decimal
  */
 static long
-pk11_argDecodeNumber(char *num)
+sftk_argDecodeNumber(char *num)
 {
     int	radix = 10;
     unsigned long value = 0;
@@ -351,7 +351,7 @@ pk11_argDecodeNumber(char *num)
 
     if (num == NULL) return retValue;
 
-    num = pk11_argStrip(num);
+    num = sftk_argStrip(num);
 
     if (*num == '-') {
 	sign = -1;
@@ -387,18 +387,18 @@ pk11_argDecodeNumber(char *num)
 }
 
 static long
-pk11_argReadLong(char *label,char *params, long defValue, PRBool *isdefault)
+sftk_argReadLong(char *label,char *params, long defValue, PRBool *isdefault)
 {
     char *value;
     long retValue;
     if (isdefault) *isdefault = PR_FALSE; 
 
-    value = pk11_argGetParamValue(label,params);
+    value = sftk_argGetParamValue(label,params);
     if (value == NULL) {
 	if (isdefault) *isdefault = PR_TRUE;
 	return defValue;
     }
-    retValue = pk11_argDecodeNumber(value);
+    retValue = sftk_argDecodeNumber(value);
     if (value) PORT_Free(value);
 
     return retValue;
@@ -406,23 +406,23 @@ pk11_argReadLong(char *label,char *params, long defValue, PRBool *isdefault)
 
 
 static unsigned long
-pk11_argSlotFlags(char *label,char *params)
+sftk_argSlotFlags(char *label,char *params)
 {
     char *flags,*index;
     unsigned long retValue = 0;
     int i;
     PRBool all = PR_FALSE;
 
-    flags = pk11_argGetParamValue(label,params);
+    flags = sftk_argGetParamValue(label,params);
     if (flags == NULL) return 0;
 
     if (PORT_Strcasecmp(flags,"all") == 0) all = PR_TRUE;
 
-    for (index=flags; *index; index=pk11_argNextFlag(index)) {
-	for (i=0; i < pk11_argSlotFlagTableSize; i++) {
-	    if (all || (PORT_Strncasecmp(index, pk11_argSlotFlagTable[i].name,
-				pk11_argSlotFlagTable[i].len) == 0)) {
-		retValue |= pk11_argSlotFlagTable[i].value;
+    for (index=flags; *index; index=sftk_argNextFlag(index)) {
+	for (i=0; i < sftk_argSlotFlagTableSize; i++) {
+	    if (all || (PORT_Strncasecmp(index, sftk_argSlotFlagTable[i].name,
+				sftk_argSlotFlagTable[i].len) == 0)) {
+		retValue |= sftk_argSlotFlagTable[i].value;
 	    }
 	}
     }
@@ -432,15 +432,15 @@ pk11_argSlotFlags(char *label,char *params)
 
 
 static void
-pk11_argDecodeSingleSlotInfo(char *name,char *params,PK11PreSlotInfo *slotInfo)
+sftk_argDecodeSingleSlotInfo(char *name,char *params,PK11PreSlotInfo *slotInfo)
 {
     char *askpw;
 
-    slotInfo->slotID=pk11_argDecodeNumber(name);
-    slotInfo->defaultFlags=pk11_argSlotFlags("slotFlags",params);
-    slotInfo->timeout=pk11_argReadLong("timeout",params, 0, NULL);
+    slotInfo->slotID=sftk_argDecodeNumber(name);
+    slotInfo->defaultFlags=sftk_argSlotFlags("slotFlags",params);
+    slotInfo->timeout=sftk_argReadLong("timeout",params, 0, NULL);
 
-    askpw = pk11_argGetParamValue("askpw",params);
+    askpw = sftk_argGetParamValue("askpw",params);
     slotInfo->askpw = 0;
 
     if (askpw) {
@@ -452,12 +452,12 @@ pk11_argDecodeSingleSlotInfo(char *name,char *params,PK11PreSlotInfo *slotInfo)
 	PORT_Free(askpw);
 	slotInfo->defaultFlags |= PK11_OWN_PW_DEFAULTS;
     }
-    slotInfo->hasRootCerts = pk11_argHasFlag("rootFlags","hasRootCerts",params);
-    slotInfo->hasRootTrust = pk11_argHasFlag("rootFlags","hasRootTrust",params);
+    slotInfo->hasRootCerts = sftk_argHasFlag("rootFlags","hasRootCerts",params);
+    slotInfo->hasRootTrust = sftk_argHasFlag("rootFlags","hasRootTrust",params);
 }
 
 static char *
-pk11_argGetName(char *inString, int *next) 
+sftk_argGetName(char *inString, int *next) 
 {
     char *name=NULL;
     char *string;
@@ -466,7 +466,7 @@ pk11_argGetName(char *inString, int *next)
     /* look for the end of the <name>= */
     for (string = inString;*string; string++) {
 	if (*string == '=') { break; }
-	if (pk11_argIsBlank(*string)) break;
+	if (sftk_argIsBlank(*string)) break;
     }
 
     len = string - inString;
@@ -482,7 +482,7 @@ pk11_argGetName(char *inString, int *next)
 }
 
 static PK11PreSlotInfo *
-pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
+sftk_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
 {
     char *slotIndex;
     PK11PreSlotInfo *slotInfo = NULL;
@@ -492,8 +492,8 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
     if ((slotParams == NULL) || (*slotParams == 0))  return NULL;
 
     /* first count the number of slots */
-    for (slotIndex = pk11_argStrip(slotParams); *slotIndex; 
-		slotIndex = pk11_argStrip(pk11_argSkipParameter(slotIndex))) {
+    for (slotIndex = sftk_argStrip(slotParams); *slotIndex; 
+		slotIndex = sftk_argStrip(sftk_argSkipParameter(slotIndex))) {
 	count++;
     }
 
@@ -508,38 +508,38 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
     }
     if (slotInfo == NULL) return NULL;
 
-    for (slotIndex = pk11_argStrip(slotParams), i = 0; 
+    for (slotIndex = sftk_argStrip(slotParams), i = 0; 
 					*slotIndex && i < count ; ) {
 	char *name;
-	name = pk11_argGetName(slotIndex,&next);
+	name = sftk_argGetName(slotIndex,&next);
 	slotIndex += next;
 
-	if (!pk11_argIsBlank(*slotIndex)) {
-	    char *args = pk11_argFetchValue(slotIndex,&next);
+	if (!sftk_argIsBlank(*slotIndex)) {
+	    char *args = sftk_argFetchValue(slotIndex,&next);
 	    slotIndex += next;
 	    if (args) {
-		pk11_argDecodeSingleSlotInfo(name,args,&slotInfo[i]);
+		sftk_argDecodeSingleSlotInfo(name,args,&slotInfo[i]);
 		i++;
 		PORT_Free(args);
 	    }
 	}
 	if (name) PORT_Free(name);
-	slotIndex = pk11_argStrip(slotIndex);
+	slotIndex = sftk_argStrip(slotIndex);
     }
     *retCount = i;
     return slotInfo;
 }
 
-static char *pk11_nullString = "";
+static char *sftk_nullString = "";
 
 static char *
-pk11_formatValue(PRArenaPool *arena, char *value, char quote)
+sftk_formatValue(PRArenaPool *arena, char *value, char quote)
 {
     char *vp,*vp2,*retval;
     int size = 0, escapes = 0;
 
     for (vp=value; *vp ;vp++) {
-	if ((*vp == quote) || (*vp == PK11_ARG_ESCAPE)) escapes++;
+	if ((*vp == quote) || (*vp == SFTK_ARG_ESCAPE)) escapes++;
 	size++;
     }
     if (arena) {
@@ -550,48 +550,48 @@ pk11_formatValue(PRArenaPool *arena, char *value, char quote)
     if (retval == NULL) return NULL;
     vp2 = retval;
     for (vp=value; *vp; vp++) {
-	if ((*vp == quote) || (*vp == PK11_ARG_ESCAPE)) 
-				*vp2++ = PK11_ARG_ESCAPE;
+	if ((*vp == quote) || (*vp == SFTK_ARG_ESCAPE)) 
+				*vp2++ = SFTK_ARG_ESCAPE;
 	*vp2++ = *vp;
     }
     return retval;
 }
     
-static char *pk11_formatPair(char *name,char *value, char quote)
+static char *sftk_formatPair(char *name,char *value, char quote)
 {
     char openQuote = quote;
-    char closeQuote = pk11_argGetPair(quote);
+    char closeQuote = sftk_argGetPair(quote);
     char *newValue = NULL;
     char *returnValue;
     PRBool need_quote = PR_FALSE;
 
-    if (!value || (*value == 0)) return pk11_nullString;
+    if (!value || (*value == 0)) return sftk_nullString;
 
-    if (pk11_argHasBlanks(value) || pk11_argIsQuote(value[0]))
+    if (sftk_argHasBlanks(value) || sftk_argIsQuote(value[0]))
 							 need_quote=PR_TRUE;
 
-    if ((need_quote && pk11_argHasChar(value,closeQuote))
-				 || pk11_argHasChar(value,PK11_ARG_ESCAPE)) {
-	value = newValue = pk11_formatValue(NULL, value,quote);
-	if (newValue == NULL) return pk11_nullString;
+    if ((need_quote && sftk_argHasChar(value,closeQuote))
+				 || sftk_argHasChar(value,SFTK_ARG_ESCAPE)) {
+	value = newValue = sftk_formatValue(NULL, value,quote);
+	if (newValue == NULL) return sftk_nullString;
     }
     if (need_quote) {
     	returnValue = PR_smprintf("%s=%c%s%c",name,openQuote,value,closeQuote);
     } else {
     	returnValue = PR_smprintf("%s=%s",name,value);
     }
-    if (returnValue == NULL) returnValue = pk11_nullString;
+    if (returnValue == NULL) returnValue = sftk_nullString;
 
     if (newValue) PORT_Free(newValue);
 
     return returnValue;
 }
 
-static char *pk11_formatIntPair(char *name,unsigned long value, unsigned long def)
+static char *sftk_formatIntPair(char *name,unsigned long value, unsigned long def)
 {
     char *returnValue;
 
-    if (value == def) return pk11_nullString;
+    if (value == def) return sftk_nullString;
 
     returnValue = PR_smprintf("%s=%d",name,value);
 
@@ -599,9 +599,9 @@ static char *pk11_formatIntPair(char *name,unsigned long value, unsigned long de
 }
 
 static void
-pk11_freePair(char *pair)
+sftk_freePair(char *pair)
 {
-    if (pair && pair != pk11_nullString) {
+    if (pair && pair != sftk_nullString) {
 	PR_smprintf_free(pair);
     }
 }
@@ -609,7 +609,7 @@ pk11_freePair(char *pair)
 #define MAX_FLAG_SIZE  sizeof("internal")+sizeof("FIPS")+sizeof("moduleDB")+\
 				sizeof("moduleDBOnly")+sizeof("critical")
 static char *
-pk11_mkNSSFlags(PRBool internal, PRBool isFIPS,
+sftk_mkNSSFlags(PRBool internal, PRBool isFIPS,
 		PRBool isModuleDB, PRBool isModuleDBOnly, PRBool isCritical)
 {
     char *flags = (char *)PORT_ZAlloc(MAX_FLAG_SIZE);
@@ -644,7 +644,7 @@ pk11_mkNSSFlags(PRBool internal, PRBool isFIPS,
 }
 
 static char *
-pk11_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
+sftk_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
 {
     char *cipher = NULL;
     int i;
@@ -685,7 +685,7 @@ pk11_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
 }
 
 static char *
-pk11_mkSlotFlags(unsigned long defaultFlags)
+sftk_mkSlotFlags(unsigned long defaultFlags)
 {
     char *flags=NULL;
     int i,j;
@@ -694,9 +694,9 @@ pk11_mkSlotFlags(unsigned long defaultFlags)
 	if (defaultFlags & (1<<i)) {
 	    char *string = NULL;
 
-	    for (j=0; j < pk11_argSlotFlagTableSize; j++) {
-		if (pk11_argSlotFlagTable[j].value == (((unsigned long)1)<<i)) {
-		    string = pk11_argSlotFlagTable[j].name;
+	    for (j=0; j < sftk_argSlotFlagTableSize; j++) {
+		if (sftk_argSlotFlagTable[j].value == (((unsigned long)1)<<i)) {
+		    string = sftk_argSlotFlagTable[j].name;
 		    break;
 		}
 	    }
@@ -716,15 +716,15 @@ pk11_mkSlotFlags(unsigned long defaultFlags)
     return flags;
 }
 
-#define PK11_MAX_ROOT_FLAG_SIZE  sizeof("hasRootCerts")+sizeof("hasRootTrust")
+#define SFTK_MAX_ROOT_FLAG_SIZE  sizeof("hasRootCerts")+sizeof("hasRootTrust")
 
 static char *
-pk11_mkRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
+sftk_mkRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
 {
-    char *flags= (char *)PORT_ZAlloc(PK11_MAX_ROOT_FLAG_SIZE);
+    char *flags= (char *)PORT_ZAlloc(SFTK_MAX_ROOT_FLAG_SIZE);
     PRBool first = PR_TRUE;
 
-    PORT_Memset(flags,0,PK11_MAX_ROOT_FLAG_SIZE);
+    PORT_Memset(flags,0,SFTK_MAX_ROOT_FLAG_SIZE);
     if (hasRootCerts) {
 	PORT_Strcat(flags,"hasRootCerts");
 	first = PR_FALSE;
@@ -738,7 +738,7 @@ pk11_mkRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
 }
 
 static char *
-pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
+sftk_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
 		  unsigned long timeout, unsigned char askpw_in,
 		  PRBool hasRootCerts, PRBool hasRootTrust) {
     char *askpw,*flags,*rootFlags,*slotString;
@@ -755,10 +755,10 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
 	askpw = "any";
 	break;
     }
-    flags = pk11_mkSlotFlags(defaultFlags);
-    rootFlags = pk11_mkRootFlags(hasRootCerts,hasRootTrust);
-    flagPair=pk11_formatPair("slotFlags",flags,'\'');
-    rootFlagsPair=pk11_formatPair("rootFlags",rootFlags,'\'');
+    flags = sftk_mkSlotFlags(defaultFlags);
+    rootFlags = sftk_mkRootFlags(hasRootCerts,hasRootTrust);
+    flagPair=sftk_formatPair("slotFlags",flags,'\'');
+    rootFlagsPair=sftk_formatPair("rootFlags",rootFlags,'\'');
     if (flags) PR_smprintf_free(flags);
     if (rootFlags) PORT_Free(rootFlags);
     if (defaultFlags & PK11_OWN_PW_DEFAULTS) {
@@ -769,13 +769,13 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
     	slotString = PR_smprintf("0x%08lx=[%s %s]",
 				(PRUint32)slotID,flagPair,rootFlagsPair);
     }
-    pk11_freePair(flagPair);
-    pk11_freePair(rootFlagsPair);
+    sftk_freePair(flagPair);
+    sftk_freePair(rootFlagsPair);
     return slotString;
 }
 
 static char *
-pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
+sftk_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 	  PRBool isModuleDB,  PRBool isModuleDBOnly, PRBool isCritical, 
 	  unsigned long trustOrder, unsigned long cipherOrder,
 				unsigned long ssl0, unsigned long ssl1) {
@@ -805,29 +805,29 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
     /*
      * now the NSS structure
      */
-    nssFlags = pk11_mkNSSFlags(internal,isFIPS,isModuleDB,isModuleDBOnly,
+    nssFlags = sftk_mkNSSFlags(internal,isFIPS,isModuleDB,isModuleDBOnly,
 							isCritical); 
 	/* for now only the internal module is critical */
-    ciphers = pk11_mkCipherFlags(ssl0, ssl1);
+    ciphers = sftk_mkCipherFlags(ssl0, ssl1);
 
-    trustOrderPair=pk11_formatIntPair("trustOrder",trustOrder,
-					PK11_DEFAULT_TRUST_ORDER);
-    cipherOrderPair=pk11_formatIntPair("cipherOrder",cipherOrder,
-					PK11_DEFAULT_CIPHER_ORDER);
-    slotPair=pk11_formatPair("slotParams",slotParams,'{'); /* } */
+    trustOrderPair=sftk_formatIntPair("trustOrder",trustOrder,
+					SFTK_DEFAULT_TRUST_ORDER);
+    cipherOrderPair=sftk_formatIntPair("cipherOrder",cipherOrder,
+					SFTK_DEFAULT_CIPHER_ORDER);
+    slotPair=sftk_formatPair("slotParams",slotParams,'{'); /* } */
     if (slotParams) PORT_Free(slotParams);
-    cipherPair=pk11_formatPair("ciphers",ciphers,'\'');
+    cipherPair=sftk_formatPair("ciphers",ciphers,'\'');
     if (ciphers) PR_smprintf_free(ciphers);
-    flagPair=pk11_formatPair("Flags",nssFlags,'\'');
+    flagPair=sftk_formatPair("Flags",nssFlags,'\'');
     if (nssFlags) PORT_Free(nssFlags);
     nss = PR_smprintf("%s %s %s %s %s",trustOrderPair,
 			cipherOrderPair,slotPair,cipherPair,flagPair);
-    pk11_freePair(trustOrderPair);
-    pk11_freePair(cipherOrderPair);
-    pk11_freePair(slotPair);
-    pk11_freePair(cipherPair);
-    pk11_freePair(flagPair);
-    tmp = pk11_argStrip(nss);
+    sftk_freePair(trustOrderPair);
+    sftk_freePair(cipherOrderPair);
+    sftk_freePair(slotPair);
+    sftk_freePair(cipherPair);
+    sftk_freePair(flagPair);
+    tmp = sftk_argStrip(nss);
     if (*tmp == '\0') {
 	PR_smprintf_free(nss);
 	nss = NULL;
@@ -836,7 +836,7 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 }
 
 static char *
-pk11_mkNewModuleSpec(char *dllName, char *commonName, char *parameters, 
+sftk_mkNewModuleSpec(char *dllName, char *commonName, char *parameters, 
 								char *NSS) {
     char *moduleSpec;
     char *lib,*name,*param,*nss;
@@ -844,15 +844,15 @@ pk11_mkNewModuleSpec(char *dllName, char *commonName, char *parameters,
     /*
      * now the final spec
      */
-    lib = pk11_formatPair("library",dllName,'\"');
-    name = pk11_formatPair("name",commonName,'\"');
-    param = pk11_formatPair("parameters",parameters,'\"');
-    nss = pk11_formatPair("NSS",NSS,'\"');
+    lib = sftk_formatPair("library",dllName,'\"');
+    name = sftk_formatPair("name",commonName,'\"');
+    param = sftk_formatPair("parameters",parameters,'\"');
+    nss = sftk_formatPair("NSS",NSS,'\"');
     moduleSpec = PR_smprintf("%s %s %s %s", lib,name,param,nss);
-    pk11_freePair(lib);
-    pk11_freePair(name);
-    pk11_freePair(param);
-    pk11_freePair(nss);
+    sftk_freePair(lib);
+    sftk_freePair(name);
+    sftk_freePair(param);
+    sftk_freePair(nss);
     return (moduleSpec);
 }
 

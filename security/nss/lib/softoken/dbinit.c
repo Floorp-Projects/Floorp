@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dbinit.c,v 1.24 2005/01/04 18:20:00 wtchang%redhat.com Exp $ */
+/* $Id: dbinit.c,v 1.25 2005/03/29 18:21:18 nelsonb%netscape.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -50,7 +50,7 @@
 #include "pkcs11i.h"
 
 static char *
-pk11_certdb_name_cb(void *arg, int dbVersion)
+sftk_certdb_name_cb(void *arg, int dbVersion)
 {
     const char *configdir = (const char *)arg;
     const char *dbver;
@@ -87,7 +87,7 @@ pk11_certdb_name_cb(void *arg, int dbVersion)
 }
     
 static char *
-pk11_keydb_name_cb(void *arg, int dbVersion)
+sftk_keydb_name_cb(void *arg, int dbVersion)
 {
     const char *configdir = (const char *)arg;
     const char *dbver;
@@ -119,7 +119,7 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
 }
 
 const char *
-pk11_EvaluateConfigDir(const char *configdir,char **appName)
+sftk_EvaluateConfigDir(const char *configdir,char **appName)
 {
     if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS)-1) == 0) {
 	char *cdir;
@@ -142,7 +142,7 @@ pk11_EvaluateConfigDir(const char *configdir,char **appName)
 }
 
 static CK_RV
-pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
+sftk_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     					    NSSLOWCERTCertDBHandle **certdbPtr)
 {
     NSSLOWCERTCertDBHandle *certdb = NULL;
@@ -155,7 +155,7 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
 	prefix = "";
     }
 
-    configdir = pk11_EvaluateConfigDir(configdir, &appName);
+    configdir = sftk_EvaluateConfigDir(configdir, &appName);
 
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);
     if (name == NULL) goto loser;
@@ -166,7 +166,7 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
 
 /* fix when we get the DB in */
     rv = nsslowcert_OpenCertDB(certdb, readOnly, appName, prefix,
-				pk11_certdb_name_cb, (void *)name, PR_FALSE);
+				sftk_certdb_name_cb, (void *)name, PR_FALSE);
     if (rv == SECSuccess) {
 	crv = CKR_OK;
 	*certdbPtr = certdb;
@@ -180,7 +180,7 @@ loser:
 }
 
 static CK_RV
-pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
+sftk_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
     						NSSLOWKEYDBHandle **keydbPtr)
 {
     NSSLOWKEYDBHandle *keydb;
@@ -190,13 +190,13 @@ pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
     if (prefix == NULL) {
 	prefix = "";
     }
-    configdir = pk11_EvaluateConfigDir(configdir, &appName);
+    configdir = sftk_EvaluateConfigDir(configdir, &appName);
 
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);	
     if (name == NULL) 
 	return CKR_HOST_MEMORY;
     keydb = nsslowkey_OpenKeyDB(readOnly, appName, prefix, 
-					pk11_keydb_name_cb, (void *)name);
+					sftk_keydb_name_cb, (void *)name);
     PR_smprintf_free(name);
     if (appName) PORT_Free(appName);
     if (keydb == NULL)
@@ -225,7 +225,7 @@ pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
  * 			be opened.
  */
 CK_RV
-pk11_DBInit(const char *configdir, const char *certPrefix, 
+sftk_DBInit(const char *configdir, const char *certPrefix, 
 	    const char *keyPrefix, PRBool readOnly, 
 	    PRBool noCertDB, PRBool noKeyDB, PRBool forceOpen,
 	    NSSLOWCERTCertDBHandle **certdbPtr, NSSLOWKEYDBHandle **keydbPtr)
@@ -234,7 +234,7 @@ pk11_DBInit(const char *configdir, const char *certPrefix,
 
 
     if (!noCertDB) {
-	crv = pk11_OpenCertDB(configdir, certPrefix, readOnly, certdbPtr);
+	crv = sftk_OpenCertDB(configdir, certPrefix, readOnly, certdbPtr);
 	if (crv != CKR_OK) {
 	    if (!forceOpen) goto loser;
 	    crv = CKR_OK;
@@ -242,7 +242,7 @@ pk11_DBInit(const char *configdir, const char *certPrefix,
     }
     if (!noKeyDB) {
 
-	crv = pk11_OpenKeyDB(configdir, keyPrefix, readOnly, keydbPtr);
+	crv = sftk_OpenKeyDB(configdir, keyPrefix, readOnly, keydbPtr);
 	if (crv != CKR_OK) {
 	    if (!forceOpen) goto loser;
 	    crv = CKR_OK;
@@ -256,7 +256,7 @@ loser:
 
 
 void
-pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle, 
+sftk_DBShutdown(NSSLOWCERTCertDBHandle *certHandle, 
 		NSSLOWKEYDBHandle *keyHandle)
 {
     if (certHandle) {
@@ -270,8 +270,8 @@ pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle,
 }
 
 static int rdbmapflags(int flags);
-static rdbfunc pk11_rdbfunc = NULL;
-static rdbstatusfunc pk11_rdbstatusfunc = NULL;
+static rdbfunc sftk_rdbfunc = NULL;
+static rdbstatusfunc sftk_rdbstatusfunc = NULL;
 
 /* NOTE: SHLIB_SUFFIX is defined on the command line */
 #define RDBLIB SHLIB_PREFIX"rdb."SHLIB_SUFFIX
@@ -282,10 +282,10 @@ DB * rdbopen(const char *appName, const char *prefix,
     PRLibrary *lib;
     DB *db;
 
-    if (pk11_rdbfunc) {
-	db = (*pk11_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
-	if (!db && status && pk11_rdbstatusfunc) {
-	    *status = (*pk11_rdbstatusfunc)();
+    if (sftk_rdbfunc) {
+	db = (*sftk_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
+	if (!db && status && sftk_rdbstatusfunc) {
+	    *status = (*sftk_rdbstatusfunc)();
 	}
 	return db;
     }
@@ -300,12 +300,12 @@ DB * rdbopen(const char *appName, const char *prefix,
     }
 
     /* get the entry points */
-    pk11_rdbstatusfunc = (rdbstatusfunc) PR_FindSymbol(lib,"rdbstatus");
-    pk11_rdbfunc = (rdbfunc) PR_FindSymbol(lib,"rdbopen");
-    if (pk11_rdbfunc) {
-	db = (*pk11_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
-	if (!db && status && pk11_rdbstatusfunc) {
-	    *status = (*pk11_rdbstatusfunc)();
+    sftk_rdbstatusfunc = (rdbstatusfunc) PR_FindSymbol(lib,"rdbstatus");
+    sftk_rdbfunc = (rdbfunc) PR_FindSymbol(lib,"rdbopen");
+    if (sftk_rdbfunc) {
+	db = (*sftk_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
+	if (!db && status && sftk_rdbstatusfunc) {
+	    *status = (*sftk_rdbstatusfunc)();
 	}
 	return db;
     }
@@ -385,7 +385,7 @@ db_InitComplete(DB *db)
     /* we should have addes a version number to the RDBS structure. Since we
      * didn't, we detect that we have and 'extended' structure if the rdbstatus
      * func exists */
-    if (!pk11_rdbstatusfunc) {
+    if (!sftk_rdbstatusfunc) {
 	return 0;
     }
 

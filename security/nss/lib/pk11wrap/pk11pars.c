@@ -128,26 +128,26 @@ SECMOD_CreateModule(const char *library, const char *moduleName,
     if (parameters) {
 	mod->libraryParams = PORT_ArenaStrdup(mod->arena,parameters);
     }
-    mod->internal = pk11_argHasFlag("flags","internal",nssc);
-    mod->isFIPS = pk11_argHasFlag("flags","FIPS",nssc);
-    mod->isCritical = pk11_argHasFlag("flags","critical",nssc);
-    slotParams = pk11_argGetParamValue("slotParams",nssc);
-    mod->slotInfo = pk11_argParseSlotInfo(mod->arena,slotParams,
+    mod->internal   = sftk_argHasFlag("flags","internal",nssc);
+    mod->isFIPS     = sftk_argHasFlag("flags","FIPS",nssc);
+    mod->isCritical = sftk_argHasFlag("flags","critical",nssc);
+    slotParams      = sftk_argGetParamValue("slotParams",nssc);
+    mod->slotInfo   = sftk_argParseSlotInfo(mod->arena,slotParams,
 							&mod->slotInfoCount);
     if (slotParams) PORT_Free(slotParams);
     /* new field */
-    mod->trustOrder = pk11_argReadLong("trustOrder",nssc,
-						PK11_DEFAULT_TRUST_ORDER,NULL);
+    mod->trustOrder  = sftk_argReadLong("trustOrder",nssc,
+						SFTK_DEFAULT_TRUST_ORDER,NULL);
     /* new field */
-    mod->cipherOrder = pk11_argReadLong("cipherOrder",nssc,
-						PK11_DEFAULT_CIPHER_ORDER,NULL);
+    mod->cipherOrder = sftk_argReadLong("cipherOrder",nssc,
+						SFTK_DEFAULT_CIPHER_ORDER,NULL);
     /* new field */
-    mod->isModuleDB = pk11_argHasFlag("flags","moduleDB",nssc);
-    mod->moduleDBOnly = pk11_argHasFlag("flags","moduleDBOnly",nssc);
+    mod->isModuleDB   = sftk_argHasFlag("flags","moduleDB",nssc);
+    mod->moduleDBOnly = sftk_argHasFlag("flags","moduleDBOnly",nssc);
     if (mod->moduleDBOnly) mod->isModuleDB = PR_TRUE;
 
-    ciphers = pk11_argGetParamValue("ciphers",nssc);
-    pk11_argSetNewCipherFlags(&mod->ssl[0],ciphers);
+    ciphers = sftk_argGetParamValue("ciphers",nssc);
+    sftk_argSetNewCipherFlags(&mod->ssl[0],ciphers);
     if (ciphers) PORT_Free(ciphers);
 
     secmod_PrivateModuleCount++;
@@ -156,7 +156,7 @@ SECMOD_CreateModule(const char *library, const char *moduleName,
 }
 
 static char *
-pk11_mkModuleSpec(SECMODModule * module)
+secmod_mkModuleSpec(SECMODModule * module)
 {
     char *nss = NULL, *modSpec = NULL, **slotStrings = NULL;
     int slotCount, i, si;
@@ -189,7 +189,7 @@ pk11_mkModuleSpec(SECMODModule * module)
 	    if (module->slots[i]->defaultFlags) {
 		PORT_Assert(si < slotCount);
 		if (si >= slotCount) break;
-		slotStrings[si] = pk11_mkSlotString(module->slots[i]->slotID,
+		slotStrings[si] = sftk_mkSlotString(module->slots[i]->slotID,
 			module->slots[i]->defaultFlags,
 			module->slots[i]->timeout,
 			module->slots[i]->askpw,
@@ -200,7 +200,7 @@ pk11_mkModuleSpec(SECMODModule * module)
 	}
      } else {
 	for (i=0; i < slotCount; i++) {
-		slotStrings[i] = pk11_mkSlotString(module->slotInfo[i].slotID,
+		slotStrings[i] = sftk_mkSlotString(module->slotInfo[i].slotID,
 			module->slotInfo[i].defaultFlags,
 			module->slotInfo[i].timeout,
 			module->slotInfo[i].askpw,
@@ -210,10 +210,10 @@ pk11_mkModuleSpec(SECMODModule * module)
     }
 
     SECMOD_ReleaseReadLock(moduleLock);
-    nss = pk11_mkNSS(slotStrings,slotCount,module->internal, module->isFIPS,
+    nss = sftk_mkNSS(slotStrings,slotCount,module->internal, module->isFIPS,
 	module->isModuleDB, module->moduleDBOnly, module->isCritical,
 	module->trustOrder,module->cipherOrder,module->ssl[0],module->ssl[1]);
-    modSpec= pk11_mkNewModuleSpec(module->dllName,module->commonName,
+    modSpec= sftk_mkNewModuleSpec(module->dllName,module->commonName,
 						module->libraryParams,nss);
     PORT_Free(slotStrings);
     PR_smprintf_free(nss);
@@ -244,7 +244,7 @@ SECMOD_AddPermDB(SECMODModule *module)
 
     func  = (SECMODModuleDBFunc) module->parent->moduleDBFunc;
     if (func) {
-	moduleSpec = pk11_mkModuleSpec(module);
+	moduleSpec = secmod_mkModuleSpec(module);
 	retString = (*func)(SECMOD_MODULE_DB_FUNCTION_ADD,
 		module->parent->libraryParams,moduleSpec);
 	PORT_Free(moduleSpec);
@@ -264,7 +264,7 @@ SECMOD_DeletePermDB(SECMODModule *module)
 
     func  = (SECMODModuleDBFunc) module->parent->moduleDBFunc;
     if (func) {
-	moduleSpec = pk11_mkModuleSpec(module);
+	moduleSpec = secmod_mkModuleSpec(module);
 	retString = (*func)(SECMOD_MODULE_DB_FUNCTION_DEL,
 		module->parent->libraryParams,moduleSpec);
 	PORT_Free(moduleSpec);
@@ -300,7 +300,7 @@ SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
     /* initialize the underlying module structures */
     SECMOD_Init();
 
-    status = pk11_argParseModuleSpec(modulespec, &library, &moduleName, 
+    status = sftk_argParseModuleSpec(modulespec, &library, &moduleName, 
 							&parameters, &nss);
     if (status != SECSuccess) {
 	goto loser;
