@@ -24,10 +24,13 @@
 #include <gtk/gtkselection.h>   // for GtkSelectionData
 
 class ostrstream;
+class nsString;
 
 /**
  * Selection Manager for X11.
  * Owns the copied text, listens for selection request events.
+ *
+ * This is intended as a static class -- only one instance per application.
  */
 
 class nsSelectionMgr : public nsISelectionMgr
@@ -45,11 +48,17 @@ public:
 
   NS_IMETHOD CopyToClipboard();
 
+  NS_IMETHOD PasteTextBlocking(nsString* aPastedText);
+
   // Other methods specific to X:
   static void SetTopLevelWidget(GtkWidget* w);
 
 private:
   ostrstream* mCopyStream;
+
+  GtkSelectionData mSelectionData;
+
+  PRBool mBlocking;
 
   static GtkWidget* sWidget;    // the app's top level widget, set by nsWindow
 
@@ -57,6 +66,8 @@ private:
                          GdkEventSelection *event );
   void SelectionRequestor( GtkWidget *w,
                            GtkSelectionData *selection_data );
+  void SelectionReceiver( GtkWidget *aWidget,
+                          GtkSelectionData *aSelectionData );
 
   static void SelectionRequestCB( GtkWidget *widget, 
                                   GtkSelectionData *selection_data,
@@ -66,6 +77,9 @@ private:
   static void SelectionClearCB( GtkWidget *widget, 
                                 GdkEventSelection *event,
                                 gpointer data );
+  static void SelectionReceivedCB(GtkWidget *aWidget,
+                                  GtkSelectionData *aSelectionData,
+                                  gpointer aData);
 };
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult);

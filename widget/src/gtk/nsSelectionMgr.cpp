@@ -53,14 +53,33 @@
 
 #include <strstream.h>
 
+#include <X11/X.h>          // type Atom
+//#include <X11/Xlib.h>       // XConvertSelection
+#include <X11/Xatom.h>      // XA_STRING and other predefined types
+
+//#include <gdk/gdkx.h>       // GDK_DISPLAY
 #include <gtk/gtksignal.h>
+#include <gtk/gtkentry.h>
+#include <gtk/gtkmain.h>     // gtk_main_iteration_do
+
+#include "nsString.h"
 
 #include <stdio.h>
 
+// XXX BWEEP BWEEP This is ONLY TEMPORARY until the service manager
+// has a way of registering instances
+// (see http://bugzilla.mozilla.org/show_bug.cgi?id=3509 ).
+static nsISelectionMgr* theSelectionMgr = 0;
+// BWEEP BWEEP
+
+//
+// nsISelectionMgr interface
+//
 NS_IMPL_ADDREF(nsSelectionMgr)
 
 NS_IMPL_RELEASE(nsSelectionMgr)
 
+// The class statics:
 GtkWidget* nsSelectionMgr::sWidget = 0;
 
 nsresult nsSelectionMgr::QueryInterface(const nsIID& aIID,
@@ -91,7 +110,10 @@ nsSelectionMgr::nsSelectionMgr()
   NS_INIT_REFCNT();
 
   mCopyStream = 0;
-  sWidget = 0;
+  mBlocking = PR_FALSE;
+
+  // XXX BWEEP BWEEP see comment above
+  theSelectionMgr = this;
 }
 
 nsSelectionMgr::~nsSelectionMgr()
@@ -102,16 +124,11 @@ nsSelectionMgr::~nsSelectionMgr()
     gtk_selection_remove_all(sWidget);
   if (mCopyStream)
     delete mCopyStream;
-}
+  mCopyStream = 0;
 
-void nsSelectionMgr::SetTopLevelWidget(GtkWidget* w)
-{
-  // Don't set up any more event handlers if we're being called twice
-  // for the same toplevel widget
-  if (sWidget == w)
-    return;
-
-  sWidget = w;
+  // XXX BWEEP BWEEP see comment above
+  if (theSelectionMgr == this)
+    theSelectionMgr = 0;
 }
 
 nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
@@ -121,6 +138,54 @@ nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
   mCopyStream = new ostrstream;
   *aStream = mCopyStream;
   return NS_OK;
+}
+
+nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
+{
+  nsSelectionMgr* sm = new nsSelectionMgr;
+  static nsIID iid = NS_ISELECTIONMGR_IID;
+  return sm->QueryInterface(iid, (void**) aInstancePtrResult);
+}
+
+//
+// End of nsISelectionMgr interface
+//
+
+//
+// X/gtk specific stuff:
+//
+
+void nsSelectionMgr::SetTopLevelWidget(GtkWidget* w)
+{
+  // Don't set up any more event handlers if we're being called twice
+  // for the same toplevel widget
+  if (sWidget == w)
+    return;
+
+  sWidget = w;
+
+  // Respond to requests for the selection:
+  gtk_signal_connect(GTK_OBJECT(sWidget),
+                     "selection_get",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionRequestCB),
+                     theSelectionMgr);
+
+  // When someone else takes the selection away:
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_clear_event",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionClearCB),
+                     theSelectionMgr);
+
+  // Set up the paste handler:
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_received",
+                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionReceivedCB),
+                     theSelectionMgr);
+
+  // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
+  // Register all the target types we handle:
+  gtk_selection_add_target(sWidget, GDK_SELECTION_PRIMARY,
+                           XA_STRING, XA_STRING);
+  // Need to add entries for whatever it is that emacs uses
+  // Need to add entries for XIF and HTML
 }
 
 // Called when another app requests the selection:
@@ -144,40 +209,6 @@ void nsSelectionMgr::SelectionClearor( GtkWidget *w,
 //
 // Here follows a bunch of code which came from GTK's gtktestselection.c:
 //
-
-// XXX Scary -- this list doesn't seem to be in an include file anywhere!
-// Apparently every app which uses gtk selection is expected to copy
-// this list verbatim, and hope that it doesn't get out of sync!  Oy.
-typedef enum {
-  SEL_TYPE_NONE,
-  APPLE_PICT,
-  ATOM,
-  ATOM_PAIR,
-  BITMAP,
-  C_STRING,
-  COLORMAP,
-  COMPOUND_TEXT,
-  DRAWABLE,
-  INTEGER,
-  PIXEL,
-  PIXMAP,
-  SPAN,
-  STRING,
-  TEXT,
-  WINDOW,
-  LAST_SEL_TYPE
-} SelType;
-
-//
-// The types we support
-//
-static GtkTargetEntry targetlist[] = {
-  { "STRING",        0, STRING },
-  { "TEXT",          0, TEXT },
-  { "COMPOUND_TEXT", 0, COMPOUND_TEXT }
-  // Probably need to add entries for XIF and HTML
-};
-static gint ntargets = sizeof(targetlist) / sizeof(targetlist[0]);
 
 //
 // The event handler to handle selection requests:
@@ -205,8 +236,9 @@ void nsSelectionMgr::SelectionRequestor( GtkWidget        *widget,
 
   guchar* str = (guchar*)(mCopyStream->str());
 
-  gtk_selection_data_set (selection_data, GDK_SELECTION_TYPE_STRING,
-                          8, str, strlen((char*)str));
+  // Currently we only offer the data in XA_STRING format.
+  gtk_selection_data_set(selection_data, XA_STRING,
+                         8, str, strlen((char*)str));
   // the format arg, "8", indicates string data with no endianness
 }
 
@@ -221,7 +253,7 @@ nsresult nsSelectionMgr::CopyToClipboard()
       return NS_ERROR_NOT_INITIALIZED;
 
   // If we're already the selection owner, don't need to do anything,
-  // we're already handling the events:
+  // we'll already get the events:
   if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
     return NS_OK;
 
@@ -237,32 +269,74 @@ nsresult nsSelectionMgr::CopyToClipboard()
     return NS_ERROR_FAILURE;
   }
 
-  // Set up all the event handlers
-  gtk_selection_add_targets (sWidget, GDK_SELECTION_PRIMARY,
-                             targetlist, ntargets);
-  // Respond to requests for the selection:
-  gtk_signal_connect(GTK_OBJECT(sWidget),
-                     "selection_get",
-                     GTK_SIGNAL_FUNC(nsSelectionMgr::SelectionRequestCB),
-                     this);
-  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_clear_event",
-                     GTK_SIGNAL_FUNC (nsSelectionMgr::SelectionClearCB),
-                     this);
-
-  // Other signals we should handle in some fashion:
-  //"selection_received"  (when we've requested a paste and it's come in --
-  //   this may need to be handled by a different class, e.g. nsIEditor.
-  //"selection_request_event" (dunno what this one is, maybe we don't need it)
-  //"selection_notify_event" (don't know what this is either)
-
   return NS_OK;
 }
 
-nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
+nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
 {
-  nsSelectionMgr* sm = new nsSelectionMgr;
-  static nsIID iid = NS_ISELECTIONMGR_IID;
-  return sm->QueryInterface(iid, (void**) aInstancePtrResult);
+  mBlocking = PR_TRUE;
+  gtk_selection_convert(sWidget, GDK_SELECTION_PRIMARY, XA_STRING,
+                        GDK_CURRENT_TIME);
+#if 0
+  // Tried to use straight Xlib call but this would need more work:
+  XConvertSelection(GDK_WINDOW_XDISPLAY(sWidget->window),
+                    XA_PRIMARY, XA_STRING, gdk_selection_property, 
+                    GDK_WINDOW_XWINDOW(sWidget->window), GDK_CURRENT_TIME);
+#endif
+
+  // Now we need to wait until the callback comes in ...
+  // i is in case we get a runaway.
+  for (int i=0; mBlocking == PR_TRUE && i < 10000; ++i)
+  {
+    gtk_main_iteration_do(TRUE);
+  }
+
+  mBlocking = PR_FALSE;
+
+  *aPastedText = (char*)(mSelectionData.data);
+  delete[] mSelectionData.data;
+  return NS_OK;
 }
 
+void
+nsSelectionMgr::SelectionReceivedCB (GtkWidget *aWidget,
+                                     GtkSelectionData *aSelectionData,
+                                     gpointer aData)
+{
+  // ARGHH!  GTK doesn't pass the arg to the callback, so we can't
+  // get "this" back!  Until we solve this, use the global:
+  ((nsSelectionMgr*)theSelectionMgr)->SelectionReceiver(aWidget,
+                                                        aSelectionData);
+}
+
+void
+nsSelectionMgr::SelectionReceiver (GtkWidget *aWidget,
+                                   GtkSelectionData *data)
+{
+  if (data->length < 0)
+  {
+#ifdef DEBUG_akkana
+    g_print("Error retrieving selection: length was %d\n", data->length);
+#endif
+    return;
+  }
+
+  switch (data->type)
+	{
+	case XA_STRING:
+    mSelectionData = *data;
+    mSelectionData.data = new unsigned char[data->length + 1];
+    bcopy(data->data, mSelectionData.data, data->length);
+    mSelectionData.data[data->length] = '\0';
+    mBlocking = PR_FALSE;
+	  return;
+
+  default:
+#ifdef DEBUG_akkana
+    printf("Can't convert type %s (%ld) to string\n",
+           gdk_atom_name (data->type), data->type);
+#endif
+    return;
+	}
+}
 

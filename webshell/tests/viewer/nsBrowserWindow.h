@@ -137,6 +137,7 @@ public:
 
   void DoFileOpen();
   void DoCopy();
+  void DoPaste();
   void DoJSConsole();
   void DoPrefs();
   void DoEditorMode(nsIWebShell* aWebShell);

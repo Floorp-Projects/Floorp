@@ -21,6 +21,13 @@
 #include <strstrea.h>
 #include <windows.h>
 
+
+// XXX BWEEP BWEEP This is ONLY TEMPORARY until the service manager
+// has a way of registering instances
+// (see http://bugzilla.mozilla.org/show_bug.cgi?id=3509 ).
+static nsISelectionMgr* theSelectionMgr = 0;
+// BWEEP BWEEP
+
 /**
  * Selection Manager for Windows.
  * Owns the copied text, listens for selection request events.
@@ -34,6 +41,9 @@ nsSelectionMgr::nsSelectionMgr()
   NS_INIT_REFCNT();
 
   mCopyStream = 0;
+
+  // BWEEP see above
+  theSelectionMgr = this;
 }
 
 nsSelectionMgr::~nsSelectionMgr()
@@ -165,6 +175,11 @@ nsresult nsSelectionMgr::CopyToClipboard()
   delete mCopyStream;
   mCopyStream = 0;
   return NS_OK;
+}
+
+nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)

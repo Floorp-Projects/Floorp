@@ -19,6 +19,7 @@
 #include "nsISelectionMgr.h"
 
 class ostrstream;
+class nsString;
 
 /**
  * Selection Manager for Windows.
@@ -36,6 +37,8 @@ public:
   NS_IMETHOD GetCopyOStream(ostream** aStream);
 
   NS_IMETHOD CopyToClipboard();
+
+  NS_IMETHOD PasteTextBlocking(nsString* aPastedText);
 
 private:
   ostrstream* mCopyStream;

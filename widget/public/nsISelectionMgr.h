@@ -30,6 +30,8 @@
 // but for some reason the Mac won't accept that here.
 #include <iostream.h>
 
+class nsString;
+
 /**
  * Selection Manager interface.
  * Owns the copied text, listens for selection request events.
@@ -44,6 +46,8 @@ public:
   NS_IMETHOD GetCopyOStream(ostream** aStream) = 0;
 
   NS_IMETHOD CopyToClipboard() = 0;
+
+  NS_IMETHOD PasteTextBlocking(nsString* aPastedText) = 0;
 };
 
 #endif // nsISelectionMgr_h__

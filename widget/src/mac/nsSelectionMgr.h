@@ -19,6 +19,7 @@
 #include "nsISelectionMgr.h"
 
 #include <strstream.h>
+class nsString;
 
 /**
  * Selection Manager for the Mac.
@@ -36,6 +37,8 @@ public:
   NS_IMETHOD GetCopyOStream(ostream** aStream);
 
   NS_IMETHOD CopyToClipboard();
+
+  NS_IMETHOD PasteTextBlocking(nsString* aPastedText);
 
 private:
   stringstream* mCopyStream;
