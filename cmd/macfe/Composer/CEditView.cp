@@ -2423,10 +2423,15 @@ void CEditView::PutOnDuty(LCommander *inNewTarget)
 }
 
 
-Boolean CEditView::IsMouseInSelection( SPoint32 pt, CL_Layer *curLayer, Rect& selectRect )
+Boolean CEditView::IsMouseInSelection( SPoint32 pt, ED_HitType eHitType, Rect& selectRect )
 {
-#pragma unused(curLayer)
+//#pragma unused(curLayer)
 
+	// if we're in a table's drag region, we're in a selection; bail now
+	if (eHitType == ED_HIT_DRAG_TABLE)
+		return true;
+	
+	// otherwise assume we aren't in a selection unless determined below
 	Boolean returnValue = false;
 	
 	// zero out rectangle
@@ -2518,7 +2523,7 @@ void CEditView::ClickSelf( const SMouseDownEvent &where )
 			
 			Rect selectRect;
 			SMouseDownEvent modifiedEvent( where );
-			if ( IsMouseInSelection( firstP, NULL, selectRect ) )
+			if ( IsMouseInSelection( firstP, ED_HIT_NONE, selectRect ) )
 			{
 				// adjust/offset event point by same amount as image point
 				modifiedEvent.whereLocal.h += ( selectRect.left + 1 - firstP.h );
@@ -2560,7 +2565,7 @@ void CEditView::ClickSelf( const SMouseDownEvent &where )
 			::SetCursor( &UQDGlobals::GetQDGlobals()->arrow );
 
 		Rect selectRect;
-		Boolean isMouseInSelection = IsMouseInSelection( firstP, NULL, selectRect );
+		Boolean isMouseInSelection = IsMouseInSelection( firstP, ED_HIT_NONE, selectRect );
 		
 		// check if we should be drag/drop'ing or selecting
 		// if the shift key is down, we're not drag/drop'ing
@@ -2604,7 +2609,7 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 
 	
 	// Convert from image to layer coordinates
-	SPoint32 theImagePointStart, theImagePointEnd, newP;
+	SPoint32 theImagePointStart, theImagePointEnd, newP, scrollPos;
 	LocalToImagePoint( where.whereLocal, theImagePointStart );
 	newP = theImagePointStart;
 #ifdef SOMEDAY_MAC_EDITOR_HANDLE_LAYERS
@@ -2615,11 +2620,6 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 	theImagePointEnd.h = theImagePointEnd.v = -1;
 	
 // find out what we are doing before we start
-// ARE WE DRAGGING???
-	Rect selectRect;
-	Boolean doDragSelection = IsMouseInSelection( theImagePointStart, NULL, selectRect ) 
-								&& !((where.macEvent.modifiers & shiftKey) != 0);
-	
 // ARE WE IN TABLE (sizing or selecting)???
 	Boolean bLock = (where.macEvent.modifiers & cmdKey) == cmdKey;
 	
@@ -2630,10 +2630,13 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 	if ( pCurrentElement )	// we're in some part of a table
 	{
 		if ( iTableHit == ED_HIT_SIZE_TABLE_WIDTH || iTableHit == ED_HIT_SIZE_TABLE_HEIGHT
-		|| iTableHit == ED_HIT_SIZE_COL
+		|| iTableHit == ED_HIT_SIZE_COL || iTableHit == ED_HIT_SIZE_ROW
 		|| iTableHit == ED_HIT_ADD_ROWS || iTableHit == ED_HIT_ADD_COLS )
 		{
 			isSizing = true;
+		}
+		else if ( iTableHit == ED_HIT_DRAG_TABLE )
+		{
 		}
 		else if ( iTableHit != ED_HIT_NONE )
 		{
@@ -2649,6 +2652,11 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 			}
 		}
 	}
+	
+// ARE WE DRAGGING???
+	Rect selectRect;
+	Boolean doDragSelection = IsMouseInSelection( theImagePointStart, iTableHit, selectRect ) 
+								&& !((where.macEvent.modifiers & shiftKey) != 0);
 	
 	if ( ( pCurrentElement == NULL ) 						// we're not in a table or not in table hotspot
 	|| ( pCurrentElement &&	iTableHit == ED_HIT_NONE ) )	// get element from click record
@@ -2680,12 +2688,12 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 							newP.h, newP.v, bLock, &sizeRect ) )
 		{
 			UpdatePort();
-			
-			oldSizingRect.top = sizeRect.top;
-			oldSizingRect.bottom = sizeRect.bottom;
-			oldSizingRect.left = sizeRect.left;
-			oldSizingRect.right = sizeRect.right;
 			FocusDraw();
+			GetScrollPosition( scrollPos );
+			oldSizingRect.top = sizeRect.top + scrollPos.v;
+			oldSizingRect.bottom = sizeRect.bottom + scrollPos.v;
+			oldSizingRect.left = sizeRect.left + scrollPos.h;
+			oldSizingRect.right = sizeRect.right + scrollPos.h;
 			DisplaySelectionFeedback( LO_ELE_SELECTED, oldSizingRect );
 		}
 	}
@@ -2723,8 +2731,10 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 				// context menus at the right time
 				
 				// if the mouse is not in the selection, then we will be in "move" mode
-				if ( !IsMouseInSelection( newP, NULL, frame ) )
+				if ( !IsMouseInSelection( newP, ED_HIT_NONE, frame ) )
 				{
+					::SafeSetCursor( 131 );		// drag text cursor (drag copy is #6608)
+				
 					// get data (store!) since selection will change as we move around!
 					char *ppText = NULL;
 					int32 pTextLen;
@@ -2749,6 +2759,8 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 					theDragTask.DoDrag();
 
 					XP_FREEIF( mDragData );
+					
+					InitCursor();	// reset cursor back to arrow
 
 					return true;
 				}
@@ -2761,11 +2773,12 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 					FocusDraw();
 					DisplaySelectionFeedback( LO_ELE_SELECTED, oldSizingRect );
 					
+					GetScrollPosition( scrollPos );
 					// Save the new rect.
-					oldSizingRect.top = sizeRect.top;
-					oldSizingRect.bottom = sizeRect.bottom;
-					oldSizingRect.left = sizeRect.left;
-					oldSizingRect.right = sizeRect.right;
+					oldSizingRect.top = sizeRect.top + scrollPos.v;
+					oldSizingRect.bottom = sizeRect.bottom + scrollPos.v;
+					oldSizingRect.left = sizeRect.left + scrollPos.h;
+					oldSizingRect.right = sizeRect.right + scrollPos.h;
 					
 					// then draw new feedback
 					DisplaySelectionFeedback(LO_ELE_SELECTED, oldSizingRect);
@@ -3965,6 +3978,7 @@ void CEditView::AdjustCursorSelf( Point inPortPt, const EventRecord& inMacEvent 
 				case ED_HIT_SIZE_TABLE_WIDTH:	::SafeSetCursor( 12005 );	break;
 				case ED_HIT_SIZE_TABLE_HEIGHT:	::SafeSetCursor( 12004 );	break;
 				case ED_HIT_SIZE_COL:			::SafeSetCursor( 130 );		break;
+				case ED_HIT_SIZE_ROW:			::SafeSetCursor( 129 );		break;
 				case ED_HIT_ADD_ROWS:			::SafeSetCursor( 12006 );	break;
 				case ED_HIT_ADD_COLS:			::SafeSetCursor( 12007 );	break;
 				default:		::SafeSetCursor( iBeamCursor );

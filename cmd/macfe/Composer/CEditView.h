@@ -239,7 +239,7 @@ protected:
 	void			NoteEditorRepagination( void );
 	Boolean			CanUseCharFormatting();
 
-	Boolean			IsMouseInSelection( SPoint32 pt, CL_Layer *curLayer, Rect& selectRect );
+	Boolean			IsMouseInSelection( SPoint32 pt, ED_HitType eHitType, Rect& selectRect );
 	Boolean			mDoContinueSelection;
 
 	HTMLInlineTSMProxy*		mProxy;
