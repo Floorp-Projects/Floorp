@@ -301,7 +301,6 @@ nsCocoaWindow::nsCocoaWindow()
 : mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mWindow(nil)
-, mEventTimer(nil)
 {
 #if 0
   mMacEventHandler.reset(new nsMacEventHandler(this));
@@ -323,8 +322,6 @@ nsCocoaWindow::~nsCocoaWindow()
 {
   if ( mWindow && mWindowMadeHere ) {
     [mWindow release];
-    [mEventTimer invalidate];
-    [mEventTimer release];
     [mDelegate release];
   }
   
@@ -391,21 +388,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // setup our notification delegate. Note that setDelegate: does NOT retain.
     mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
     [mWindow setDelegate:mDelegate];
-
-//FIXME setup a timer to process PLEvents. This isn't where this should live, but
-// it's a good temporary place. There should only be one, and for embedding
-// purposes, it should live within the toolkit probably.
-    mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:mDelegate selector:@selector(eventTimer:) userInfo:nil
-                              repeats:YES];
     
     mWindowMadeHere = PR_TRUE;
   }
-
-//FIXME setup a timer to process PLEvents. This isn't where this should live, but
-// it's a good temporary place. There should only be one, and for embedding
-// purposes, it should live within the toolkit probably.
-  mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:mDelegate selector:@selector(eventTimer:) userInfo:nil
-                    repeats:YES];
 
 #if 0
   short bottomPinDelta = 0;     // # of pixels to subtract to pin window bottom
@@ -1662,24 +1647,6 @@ void StopResizing ( )
   [super init];
   mGeckoWindow = geckoWind;
   return self;
-}
-
-
-- (void)eventTimer:(NSTimer *)theTimer
-{
-//FIXME not the most efficient way to do this, but it gets us to process PLEvents on
-// a regular basis. Each window shouldn't need one of these. Perhaps I'll add it on
-// the toolkit.
-  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-  if ( service ) {
-    nsCOMPtr<nsIEventQueue> queue;
-    service->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (queue)
-    {
-      nsresult rv = queue->ProcessPendingEvents();
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
-    }
-  }
 }
 
 

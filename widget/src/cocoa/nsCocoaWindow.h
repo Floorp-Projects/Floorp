@@ -60,7 +60,6 @@ class nsCocoaWindow;
 }
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification *)aNotification;
-- (void)eventTimer:(NSTimer *)theTimer;
 @end
 
 
@@ -200,7 +199,6 @@ protected:
 	PRBool            mIsResizing;     // we originated the resize, prevent infinite recursion
 	PRBool            mWindowMadeHere; // true if we created the window, false for embedding
   NSWindow*         mWindow;         // our cocoa window [STRONG]
-  NSTimer*          mEventTimer;     // event timer [STRONG]
   WindowDelegate*   mDelegate;       // our delegate for processing window msgs [STRONG]
 
 };
