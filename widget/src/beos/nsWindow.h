@@ -91,6 +91,7 @@ public:
     NS_IMETHOD              Destroy();
     virtual nsIWidget*      GetParent(void);
     NS_IMETHOD              Show(PRBool bState);
+	NS_IMETHOD				CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD              IsVisible(PRBool & aState);
 
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
