@@ -468,6 +468,7 @@ CERT_DisableOCSPChecking;
 CERT_DisableOCSPDefaultResponder;
 CERT_EnableOCSPDefaultResponder;
 CERT_GetCertTimes;
+CERT_ImportCAChainTrusted;
 CERT_ImportCRL;
 CERT_IsCACert;
 CERT_SetOCSPDefaultResponder;
