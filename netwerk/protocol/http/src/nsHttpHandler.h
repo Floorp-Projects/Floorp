@@ -274,11 +274,11 @@ private:
     // useragent components
     nsXPIDLCString mAppName;
     nsXPIDLCString mAppVersion;
-    nsXPIDLCString mPlatform;
-    nsXPIDLCString mOscpu;
+    nsCString      mPlatform;
+    nsCString      mOscpu;
     nsXPIDLCString mSecurity;
-    nsXPIDLCString mLanguage;
-    nsXPIDLCString mMisc;
+    nsCString      mLanguage;
+    nsCString      mMisc;
     nsXPIDLCString mVendor;
     nsXPIDLCString mVendorSub;
     nsXPIDLCString mVendorComment;
