@@ -198,7 +198,6 @@ jar:resource:///chrome/modern.jar!/skin/modern/communicator/toolbar/toolbarBindi
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/tabbox.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/browser.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/button.xml
-jar:resource:///chrome/modern.jar!/skin/modern/navigator/navigatorBindings.xml
 jar:resource:///chrome/modern.jar!/skin/modern/communicator/brand/brandBindings.xml
 jar:resource:///chrome/comm.jar!/content/navigator/urlbarBindings.xml
 jar:resource:///chrome/toolkit.jar!/content/global/autocomplete.xml
