@@ -846,7 +846,7 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
           // We ran out of room looking for a </title>. Go back to the first
           // place that looked like a tag and use that as our stopping point.
           theContent.writable().Truncate(truncPos);
-          aScanner.SetPosition(altEndPos);
+          aScanner.SetPosition(altEndPos, PR_FALSE, PR_TRUE);
         }
         // else we take everything we consumed.
         mTextValue.Rebind(theContent.str());
