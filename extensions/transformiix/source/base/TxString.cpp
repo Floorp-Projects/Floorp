@@ -279,7 +279,7 @@ ostream& operator<<(ostream& output, const String& source)
 //string.
 //TK 12/09/1999 - Modified to interact only with the public interface of the
 //                source "String" object.  This ensures compatibility with
-//                subclasses of String (such as MozillaString).
+//                subclasses of String.
 //
 String& String::operator=(const String& source)
 {
