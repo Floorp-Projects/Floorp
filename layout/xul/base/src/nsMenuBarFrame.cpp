@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): Dan Rosen <dr@netscape.com>
+ *                 Dean Tessman <dean_tessman@hotmail.com>
  */
 
 #include "nsMenuListener.h"
@@ -189,6 +190,10 @@ nsMenuBarFrame::ToggleMenuActiveState()
     }
   }
   else {
+    // if the menu bar is already selected (eg. mouseover), deselect it
+    if (mCurrentMenu)
+      mCurrentMenu->SelectMenu(PR_FALSE);
+    
     // Activate the menu bar
     SetActive(PR_TRUE);
 
