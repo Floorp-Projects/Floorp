@@ -40,8 +40,6 @@ EmbeddedFramePluginInstance::~EmbeddedFramePluginInstance()
 		delete mFrame;
 }
 
-NS_IMPL_ISUPPORTS(EmbeddedFramePluginInstance, nsIPluginInstance::GetIID())
-
 NS_METHOD EmbeddedFramePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
 	mPeer = peer;
@@ -50,7 +48,7 @@ NS_METHOD EmbeddedFramePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	nsIPluginTagInfo* tagInfo = NULL;
 	if (mPeer->QueryInterface(nsIPluginTagInfo::GetIID(), &tagInfo) == NS_OK) {
 		const char* frameValue = NULL;
-		if (tagInfo->GetAttribute("FRAME", &frameValue) == NS_OK) {
+		if (tagInfo->GetAttribute("JAVAFRAME", &frameValue) == NS_OK) {
 			sscanf(frameValue, "%X", &mFrame);
 		}
 		if (mFrame != NULL)
@@ -73,10 +71,14 @@ NS_METHOD EmbeddedFramePluginInstance::GetPeer(nsIPluginInstancePeer* *resulting
 NS_METHOD EmbeddedFramePluginInstance::Destroy()
 {
 	NS_IF_RELEASE(mPeer);
+
+	// assume that Java will release this frame.
 	if (mFrame != NULL) {
-		delete mFrame;
+		mFrame->showHide(false);
+		// delete mFrame;
 		mFrame = NULL;
 	}
+
 	return NS_OK;
 }
 
@@ -102,3 +104,5 @@ void EmbeddedFramePluginInstance::setFrame(EmbeddedFrame* frame)
 {
 	mFrame = frame;
 }
+
+NS_IMPL_ISUPPORTS(EmbeddedFramePluginInstance, nsIPluginInstance::GetIID())
