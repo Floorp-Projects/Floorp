@@ -1226,13 +1226,16 @@ static blapitestCryptoFn crypto_fns[] =
 	rc5_ecb_test,
 	rc5_cbc_test,
 	rsa_test,
+	NULL,
 	dsa_test,
+	NULL,
 	md5_test,
 	md5_multi_test,
 	md2_test,
 	md2_multi_test,
 	sha1_test,
-	sha1_multi_test
+	sha1_multi_test,
+	NULL
 };
 
 static char *mode_strings[] =
@@ -1255,7 +1258,7 @@ static char *mode_strings[] =
 	"md2",
 	"md2_multi",
 	"sha1",
-	"sha1_multi"
+	"sha1_multi",
 	"#endhash"
 };
 
