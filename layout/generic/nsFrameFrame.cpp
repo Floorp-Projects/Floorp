@@ -302,11 +302,12 @@ nsSubDocumentFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize)
 {
   // <frame> processing does not use this routine, only <iframe>
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = 0;
+  if (!mContent->IsContentOfType(nsIContent::eXUL))
+    // If no width/height was specified, use 300/150.
+    // This is for compatability with IE.
+    aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  // If no width/height was specified, use 300/150.
-  // This is for compatability with IE.
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
