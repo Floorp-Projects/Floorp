@@ -426,12 +426,6 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
      * tzoff + dst.  (And mktime seems to return -1 for the exact dst
      * changeover time.)
 
-     * Still not sure if MKLINUX is necessary; this is borrowed from the NSPR20
-     * prtime.c.  I'm leaving it out - My Linux does the right thing without it
-     * (and the wrong thing with it) even though it has the tm_gmtoff, tm_zone
-     * fields.  Linux seems to be happy so long as the tm struct is zeroed out.
-     * The #ifdef in nspr is:
-     * #if defined(SUNOS4) || defined(MKLINUX) || defined (__GLIBC >= 2)
      */
 
 #if defined(SUNOS4)
