@@ -72,13 +72,13 @@ sub run_shell_command {
   # Pull core build stuff.
   print "\n\nPulling core build files...\n";
   my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/allmakefiles.sh mozilla/configure.in mozilla/Makefile.in mozilla/build mozilla/include mozilla/tools/module-deps";
-  ###$rv = run_shell_command("cvs co $core_build_files");
+  $rv = run_shell_command("cvs co $core_build_files");
   
 
   # Pull nspr
   print "\n\nPulling nspr...\n";
   my $nspr_cvs_cmd = "cvs co -rNSPRPUB_PRE_4_2_CLIENT_BRANCH  mozilla/nsprpub";
-  ###$rv = run_shell_command("$nspr_cvs_cmd");
+  $rv = run_shell_command("$nspr_cvs_cmd");
 
 
   #
