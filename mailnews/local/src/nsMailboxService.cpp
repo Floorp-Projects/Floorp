@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "nsCOMPtr.h"
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement
@@ -36,7 +37,7 @@
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
+static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 nsMailboxService::nsMailboxService()
@@ -83,38 +84,37 @@ nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr
 nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
-	nsMailboxUrl * mailboxUrl = nsnull;
-	nsIMailboxUrl * url = nsnull;
+	nsCOMPtr<nsIMailboxUrl> url;
 	nsresult rv = NS_OK;
 	NS_LOCK_INSTANCE();
 
-	mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
-	if (mailboxUrl)
+	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            nsIMailboxUrl::GetIID(),
+                                            (void **) getter_AddRefs(url));
+	if (NS_SUCCEEDED(rv) && url)
 	{
-		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &url);
-		if (NS_SUCCEEDED(rv) && url)
+		// okay now generate the url string
+		nsFilePath filePath(aMailboxPath); // convert to file url representation...
+		char * urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
+		url->SetSpec(urlSpec);
+		PR_FREEIF(urlSpec);
+		url->SetMailboxParser(aMailboxParser);
+		if (aUrlListener)
+			url->RegisterListener(aUrlListener);
+
+		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
+		if (protocol)
 		{
-			// okay now generate the url string
-			nsFilePath filePath(aMailboxPath); // convert to file url representation...
-			char * urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
-			url->SetSpec(urlSpec);
-			PR_FREEIF(urlSpec);
-			url->SetMailboxParser(aMailboxParser);
-			if (aUrlListener)
-				url->RegisterListener(aUrlListener);
+			NS_ADDREF(protocol);
+			rv = protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
+			NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
+		}
 
-			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
-			if (protocol)
-			{
-				NS_ADDREF(protocol);
-				rv = protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
-				NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
-			}
-
-			if (aURL)
-				*aURL = url;
-			else
-				NS_IF_RELEASE(url); // otherwise release our ref count on it...
+		if (aURL)
+		{
+			*aURL = url;
+			NS_IF_ADDREF(*aURL);
 		}
 	}
 
@@ -131,54 +131,51 @@ nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
                               nsIUrlListener * aUrlListener,
                               nsIURL **aURL)
 {
-	nsMailboxUrl * mailboxUrl = nsnull;
-	nsIMailboxUrl * url = nsnull;
+	nsCOMPtr<nsIMailboxUrl> url;
 	nsresult rv = NS_OK;
 	NS_LOCK_INSTANCE();
 
-	mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
-	if (mailboxUrl)
+	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            nsIMailboxUrl::GetIID(),
+                                            (void **) getter_AddRefs(url));
+	if (NS_SUCCEEDED(rv) && url)
 	{
-		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &url);
-		if (NS_SUCCEEDED(rv) && url)
+		// okay now generate the url string
+		char * urlSpec = nsnull;
+		nsString folderURI;
+		nsFileSpec folderPath ("");
+		nsMsgKey msgKey;
+		
+		nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
+		nsLocalURI2Path(kMailboxMessageRootURI, (const char *) nsAutoCString(folderURI), folderPath);
+        
+		nsFilePath filePath(folderPath); // convert to file url representation...
+		urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
+		
+		// set the url type to be a copy...
+		url->SetSpec(urlSpec);
+		PR_FREEIF(urlSpec);
+		
+		if (moveMessage)
+			url->SetMailboxAction(nsMailboxActionMoveMessage);
+		else
+			url->SetMailboxAction(nsMailboxActionCopyMessage);
+
+		url->SetMailboxCopyHandler(aMailboxCopyHandler);
+		
+		if (aUrlListener)
+			url->RegisterListener(aUrlListener);
+
+		// create a protocol instance to run the url..
+		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
+		if (protocol)
+			rv = protocol->LoadURL(url, nsnull);
+
+		if (aURL)
 		{
-			// okay now generate the url string
-			char * urlSpec = nsnull;
-			nsString folderURI;
-			nsFileSpec folderPath ("");
-			nsMsgKey msgKey;
-			
-			nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
-			char *rootURI = folderURI.ToNewCString();
-			nsLocalURI2Path(kMailboxMessageRootURI, rootURI, folderPath);
-            delete[] rootURI;
-            
-			nsFilePath filePath(folderPath); // convert to file url representation...
-			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
-			
-			// set the url type to be a copy...
-			url->SetSpec(urlSpec);
-			PR_FREEIF(urlSpec);
-			
-			if (moveMessage)
-				url->SetMailboxAction(nsMailboxActionMoveMessage);
-			else
-				url->SetMailboxAction(nsMailboxActionCopyMessage);
-
-			url->SetMailboxCopyHandler(aMailboxCopyHandler);
-			
-			if (aUrlListener)
-				url->RegisterListener(aUrlListener);
-
-			// create a protocol instance to run the url..
-			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
-			if (protocol)
-				rv = protocol->LoadURL(url, nsnull);
-
-			if (aURL)
-				*aURL = url;
-			else
-				NS_IF_RELEASE(url); // otherwise release our ref count on it...
+			*aURL = url;
+			NS_IF_ADDREF(*aURL);
 		}
 	}
 
@@ -192,45 +189,45 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 										  nsIUrlListener * aUrlListener,
                                           nsIURL ** aURL)
 {
-	nsMailboxUrl * mailboxUrl = nsnull;
-	nsIMailboxUrl * url = nsnull;
+	nsCOMPtr<nsIMailboxUrl> url;
 	nsresult rv = NS_OK;
 	NS_LOCK_INSTANCE();
+	
+	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            nsIMailboxUrl::GetIID(),
+                                            (void **) getter_AddRefs(url));
 
-	mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
-	if (mailboxUrl)
+	if (NS_SUCCEEDED(rv) && url)
 	{
-		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &url);
-		if (NS_SUCCEEDED(rv) && url)
+		// okay now generate the url string
+		char * urlSpec = nsnull;
+		
+		// decompose the uri into a full path and message id...
+		nsString folderURI;
+		nsFileSpec folderSpec;
+		nsMsgKey msgIndex;
+
+		nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
+		nsLocalURI2Path(kMailboxMessageRootURI, (const char *) nsAutoCString(folderURI), folderSpec);
+
+		nsFilePath filePath(folderSpec); // convert to file url representation...
+		urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);
+		
+		url->SetSpec(urlSpec);
+		PR_FREEIF(urlSpec);
+		if (aUrlListener)
+			url->RegisterListener(aUrlListener);
+
+		// create a protocol instance to run the url..
+		nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
+		if (protocol)
+			rv = protocol->LoadURL(url, aDisplayConsumer);
+
+		if (aURL)
 		{
-			// okay now generate the url string
-			char * urlSpec = nsnull;
-			
-			// decompose the uri into a full path and message id...
-			nsString folderURI;
-			nsFileSpec folderSpec;
-			nsMsgKey msgIndex;
-
-			nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
-			nsLocalURI2Path(kMailboxMessageRootURI, nsAutoCString(folderURI), folderSpec);
-
-			nsFilePath filePath(folderSpec); // convert to file url representation...
-			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);
-			
-			url->SetSpec(urlSpec);
-			PR_FREEIF(urlSpec);
-			if (aUrlListener)
-				url->RegisterListener(aUrlListener);
-
-			// create a protocol instance to run the url..
-			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
-			if (protocol)
-				rv = protocol->LoadURL(url, aDisplayConsumer);
-
-			if (aURL)
-				*aURL = url;
-			else
-				NS_IF_RELEASE(url); // otherwise release our ref count on it...
+			*aURL = url;
+			NS_IF_ADDREF(*aURL);
 		}
 	}
 
@@ -249,20 +246,17 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 	nsresult rv = NS_OK;
 	// extract the message key for this message number and turn around and call the other displayMessage method on it...
 	nsIMsgDatabase * mailDB = nsnull;
-	nsIMsgDatabase *mailDBFactory;
+	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
 	rv = nsComponentManager::CreateInstance(kCMailDB,
                                             nsnull,
                                             nsIMsgDatabase::GetIID(),
-                                            (void **) &mailDBFactory);
+                                            (void **) getter_AddRefs(mailDBFactory));
     nsFileSpec mailboxPath;
     // ALECF: convert uri->mailboxPath with nsLocalURI2Path
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
-	{
-		rv = mailDBFactory->Open((nsFileSpec&) mailboxPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
-		mailDBFactory->Release();
-	}
-//	rv = nsMailDatabase::Open((nsFileSpec&) mailboxPath, PR_FALSE, &mailDb);
+		rv = mailDBFactory->Open((nsFileSpec&) mailboxPath, PR_FALSE, 
+								 (nsIMsgDatabase **) mailDB, PR_FALSE);
 
 	if (NS_SUCCEEDED(rv) && mailDB)
 	{
@@ -272,8 +266,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 		{
 			nsMsgKey msgKey = msgKeys[aMessageNumber];
 			// okay, we have the msgKey so let's get rid of our db state...
-			mailDB->Close(PR_TRUE);
-			mailDB = nsnull;
+			mailDB->Close(PR_TRUE); // mscott: does close implicitly release??
 			char * uri = nsnull;
 
 			nsBuildLocalMessageURI(url, msgKey, &uri);
@@ -288,7 +281,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const char *url,
 	}
 
 	if (mailDB) // in case we slipped through the cracks without releasing the db...
-		mailDB->Close(PR_TRUE);
+		mailDB->Close(PR_TRUE); // does close implicitly release the db?
 
 	return rv;
 }
