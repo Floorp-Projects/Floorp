@@ -2130,7 +2130,7 @@ SetupHeaderParseStreamProxyEvent::SetupHeaderParseStreamProxyEvent(
             *m_streamInfo.boxSpec = *aStreamInfo->boxSpec;
             if (aStreamInfo->boxSpec->allocatedPathName)
                 m_streamInfo.boxSpec->allocatedPathName =
-                    PL_strdup(aStreamInfo->boxSpec->allocatedPathName); 
+				nsCRT::strdup(aStreamInfo->boxSpec->allocatedPathName); 
             if (aStreamInfo->boxSpec->namespaceForFolder)
                 m_streamInfo.boxSpec->namespaceForFolder = 
                     new nsIMAPNamespace(
