@@ -38,7 +38,6 @@
 #include "nsIScrollableViewProvider.h"
 
 class nsIPresState;
-class nsGfxTextControlFrame;
 class nsFormFrame;
 class nsISupportsArray;
 class nsIHTMLContent;
