@@ -1,4 +1,4 @@
-<?xml version="1.0"?>  
+<?xml version="1.0"?>
 
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -39,8 +39,9 @@
 ]>
 
 <window id="bookmark-window" windowtype="bookmarks:manager"
-        title="&bookmarksWindowTitle.label;" 
+        title="&bookmarksWindowTitle.label;"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:web="http://home.netscape.com/WEB-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="630" height="400" screenX="20" screenY="20"
         persist="width height screenX screenY sizemode"
@@ -49,25 +50,25 @@
   <!-- The order of loading of these script files is IMPORTANT -->
 
   <!-- Shared Libraries -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+
   <!-- XXX - This should SO become an XBL widget -->
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
-  
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <!-- Bookmarks Window -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksManager.js"/>
 
-  <!-- Bookmarks Window Drag and Drop -->
+  <!-- Bookmarks Window Drag & Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
-  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
-
   <commands id="commands">
-    <commandset id="selectEditMenuItems"/>
-    <commandset id="globalEditMenuItems"/>
-    <commandset id="tasksCommands"/> 
+    <commandset id="CommandUpdate_Bookmarks"
+                events="focus,tree-select"
+                oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
+    </commandset>
 
     <!-- File Menu -->
     <command id="cmd_close" oncommand="close()"/>
@@ -112,7 +113,7 @@
     <key id="key_undo"/>
     <key id="key_redo"/>
 
-    <!-- These keybindings do not have a command specified in the overlay, 
+    <!-- These keybindings do not have a command specified in the overlay,
          which is good, but we need to specify it ourselves here -->
     <key id="key_cut" command="cmd_bm_cut"/>
     <key id="key_copy" command="cmd_bm_copy"/>
@@ -124,14 +125,14 @@
          is NOT what we want! -->
     <key id="key_bm_delete" keycode="VK_DELETE" command="cmd_bm_delete"/>
 
-    <key id="bm_key_find"  
-         key="&edit.find.keybinding;"  
+    <key id="bm_key_find"
+         key="&edit.find.keybinding;"
          command="cmd_bm_find" modifiers="accel"/>
-    <key id="bm_key_properties" 
-         key="&edit.properties.keybinding;"  
+    <key id="bm_key_properties"
+         key="&edit.properties.keybinding;"
          command="cmd_bm_properties" modifiers="accel"/>
   </keyset>
-  
+
   <toolbox id="bookmarks-toolbox">
     <menubar id="main-menubar">
       <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
@@ -161,20 +162,20 @@
           <menuitem id="menu_undo" disabled="true"/>
           <menuitem id="menu_redo" disabled="true"/>
           <menuseparator/>
-          <menuitem id="menu_bm_cut"    
-                    label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" 
-          key="key_cut" command="cmd_bm_cut"/>
+          <menuitem id="menu_bm_cut"
+                    label="&cutCmd.label;" accesskey="&cutCmd.accesskey;"
+                    key="key_cut" command="cmd_bm_cut"/>
           <menuitem id="menu_bm_copy"
                     label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"
                     key="key_copy" command="cmd_bm_copy"/>
-          <menuitem id="menu_bm_paste"  
-                    label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"     
+          <menuitem id="menu_bm_paste"
+                    label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"
                     key="key_paste" command="cmd_bm_paste"/>
-          <menuitem id="menu_bm_delete" 
-                    label="&deleteCmd.label;" accesskey="&deleteCmd.label;"     
+          <menuitem id="menu_bm_delete"
+                    label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"
                     key="key_bm_delete" command="cmd_bm_delete"/>
           <menuseparator/>
-          <menuitem id="menu_bm_selectAll" 
+          <menuitem id="menu_bm_selectAll"
                     label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
                     key="key_selectAll" command="cmd_bm_selectAll"/>
           <menuseparator/>
@@ -182,8 +183,8 @@
                     accesskey="&command.moveBookmark.accesskey;"
                     command="cmd_bm_movebookmark"/>
           <menuseparator/>
-            <menuitem observes="cmd_bm_properties" key="bm_key_properties" 
-                      label="&command.properties.label;" 
+            <menuitem observes="cmd_bm_properties" key="bm_key_properties"
+                      label="&command.properties.label;"
                       accesskey="&command.properties.accesskey;" />
         </menupopup>
       </menu>
@@ -216,7 +217,7 @@
                     type="radio"
                     resource="direction" name="sortDirectionSet"/>
           <menuseparator/>
-          <menuitem label="&menuitem.personaltoolbarfolder.label;"    
+          <menuitem label="&menuitem.personaltoolbarfolder.label;"
                     command="cmd_bm_setpersonaltoolbarfolder"
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
         </menupopup>
@@ -250,14 +251,13 @@
     </toolbar>
 
     <toolbar id="bookmarks-search" align="center" pack="center">
-      <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
+      <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
       <textbox id="search-box" flex="1"
                type="timed" timeout="500"
-               callback="document.getElementById('bookmarks-view').searchBookmarks(gSearchBox.value);"/>
+               callback="document.getElementById('bookmarks-view').searchBookmarks(document.getElementById('search-box').value)"/>
     </toolbar>
-
   </toolbox>
-  
+
   <bookmarks-tree id="bookmarks-view" flex="1"/>
 
 </window>

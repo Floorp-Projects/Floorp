@@ -121,8 +121,6 @@ function onOK()
     url = getNormalizedURL(window.arguments[1]);
     rSource = BMDS.createBookmark(gName.value, url, null, null, window.arguments[3]);
   }
-  if (!gBMtxmgr)
-    gBMtxmgr= BookmarksUtils.getTransactionManager();
 
   var selection = BookmarksUtils.getSelectionFromResource(rSource);
   var target    = BookmarksUtils.getTargetFromFolder(rFolder);

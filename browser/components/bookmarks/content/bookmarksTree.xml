@@ -313,29 +313,7 @@
         <body><![CDATA[
           var tree = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
           var rootURI = tree.ref;
-          if (rootURI == "NC:BookmarksTopRoot")
-            rootURI = "NC:BookmarksRoot";
           return RDF.GetResource(rootURI);
-        ]]></body>
-      </method>
-
-      <method name="getIndexOfResourceInContainer">
-        <parameter name="aItem"/>
-        <parameter name="aParent"/>
-        <body><![CDATA[
-          if (!aParent)
-            return -1;
-          var index = this.treeBuilder.getIndexOfResource(aParent)
-          if (index == -1 && !aParent.EqualsNode(RDF.GetResource("NC:BookmarksRoot")))
-            return -1;
-          if (index != -1 && !this.treeBoxObject.view.isContainerOpen(index))
-            return -1;
-          while (++index < this.treeBoxObject.view.rowCount) {
-            if (this.treeBuilder.getResourceAtIndex(index) == aItem &&
-                this.getParentResource(index) == aParent)
-              return index;
-          }
-          return -1;
         ]]></body>
       </method>
 
@@ -497,9 +475,7 @@
         <body><![CDATA[
           this.treeBoxObject.selection.clearSelection();
           for (var i=0; i<this._itemToBeToggled.length; ++i) {
-            // getIndexOfResource does not handle duplicate resource!!!
-            // it only picks up the first occurence in the tree -->
-            index = this.getIndexOfResourceInContainer(this._itemToBeToggled[i], this._parentToBeToggled[i]);
+            index = this.treeBuilder.getIndexOfResource(this._itemToBeToggled[i]);
             if (index != -1 && !this.treeBoxObject.selection.isSelected(index))
               this.treeBoxObject.selection.toggleSelect(index);
           }
@@ -516,9 +492,9 @@
         ]]></body>
       </method>
 
-      <method name="openItem">
-      <parameter name="aEvent"/>
-      <parameter name="aClickCount"/>
+      <method name="openItemClick">
+        <parameter name="aEvent"/>
+        <parameter name="aClickCount"/>
         <body><![CDATA[
           if (aEvent.button == 2 || aEvent.originalTarget.localName != "treechildren")
             return;
@@ -558,11 +534,13 @@
         ]]></body>
       </method>
 
-      <method name="loadBookmarkBrowser">
-      <parameter name="aEvent"/>
+      <method name="openItemKey">
         <body><![CDATA[
-          var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
-          BookmarksCommand.openBookmark(this._selection, browserTarget, this.db)
+          if (this._selection.length != 1) {
+            return;
+          }
+          if (!this._selection.isContainer[0])
+            BookmarksCommand.openBookmark(this._selection, "current", this.db)
         ]]></body>
       </method>
 
@@ -570,17 +548,22 @@
       <parameter name="aInput"/>
         <body><![CDATA[
           this.treeBoxObject.selection.currentIndex=-1;
-          if (!aInput) 
-            this.tree.setAttribute("ref", "NC:BookmarksRoot");
-          else
+          if (!aInput) {
+            this.tree.setAttribute("ref", this.originalRef);
+          }
+          else {
+            if (!this.originalRef) {
+              this.originalRef = this.tree.getAttribute("ref");
+            }
             this.tree.setAttribute("ref",
                                    "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + escape(aInput));
+          }
         ]]></body>
       </method>
 
       <!-- observer -->
-      <field name="DNDObserver" readonly="true"><![CDATA[(
-      {
+      <field name="DNDObserver" readonly="true"><![CDATA[
+      ({
         mOuter: this,
         onDragStart: function (aEvent, aXferData, aDragAction)
         {
@@ -592,8 +575,8 @@
           if (aEvent.ctrlKey || !selection.containsMutable)
             aDragAction.action = kDSIID.DRAGDROP_ACTION_COPY;
         }
-      }
-     )]]></field>      
+      })
+      ]]></field>      
         
       <!-- nsIController -->
       <field name="controller" readonly="true"><![CDATA[
@@ -625,19 +608,19 @@
             break;
           default:
             // Notify the datasource that we're about to begin a batch operation
-            var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
-            observer.beginUpdateBatch(this.db);
+            //var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
+            //observer.beginUpdateBatch(this.db);
             BookmarksController.doCommand(aCommand, selection, target);
-            observer.endUpdateBatch(this.db);
+            //observer.endUpdateBatch(this.db);
 
             this.mOuter.saveSelection();
 
-            var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
-            this.mOuter.treeBoxObject.selection.currentIndex=-1;
-            this.mOuter.tree.builder.rebuild();
+            //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
+            //this.mOuter.treeBoxObject.selection.currentIndex=-1;
+            //this.mOuter.tree.builder.rebuild();
             // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
             // if the first visible row is not 0
-            this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
+            //this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
             this.mOuter.restoreSelection(aCommand);
           }
           this.mOuter.treeBoxObject.selection.selectEventsSuppressed = false;
@@ -669,7 +652,11 @@
         },
         canDropBeforeAfter: function(index, before)
         {
-          return true;
+          if (index != 0)
+            return true;
+          if (this.mOuter.getRowResource(index).Value != "NC:BookmarksRoot")
+            return true;
+          return before? false:this.mOuter.treeBoxObject.view.isContainerOpen(0)
         },
         onDrop: function(row, orientation)
         {  
@@ -677,7 +664,7 @@
           var dragSession = dragService.getCurrentSession();
           if (!dragSession)
             return;
-          var date = Date.now();
+          //var date = Date.now();
           var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
           var rItem     = this.mOuter.getRowResource(row);
           var rParent   = this.mOuter.getParentResource(row);
@@ -690,28 +677,30 @@
           else {
             target = this.mOuter.getTreeTarget(rItem, rParent, orientation);
           }
-          var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
-          this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
+          //var firstVisibleRow = this.mOuter.treeBoxObject.getFirstVisibleRow()
+          //this.mOuter.treeBoxObject.selection.selectEventsSuppressed = true;
           // Notify the datasource that we're about to begin a batch operation
-          var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
-          observer.beginUpdateBatch(this.db);
+          //var observer = this.mOuter.tree.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
+          //observer.beginUpdateBatch(this.db);
           const kDSIID = Components.interfaces.nsIDragService;
           const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
+          // disabling ctrl-DND for now bookmarks are not cloned
           if (dragSession.dragAction & kCopyAction)
-            BookmarksUtils.insertSelection("drag", selection, target, true);
+             SOUND.beep();
+            //BookmarksUtils.insertSelection("drag", selection, target, true);
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
-          observer.endUpdateBatch(this.db);
-          this.mOuter.treeBoxObject.selection.currentIndex=-1;
-          this.mOuter.treeBuilder.rebuild();
+          //observer.endUpdateBatch(this.db);
+          //this.mOuter.treeBoxObject.selection.currentIndex=-1;
+          //this.mOuter.treeBuilder.rebuild();
           // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
           // if the first visible row is not 0
-          this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
-          this.mOuter.updateTreeSelection();
+          //this.mOuter.treeBoxObject.scrollToRow(firstVisibleRow);
+          //this.mOuter.updateTreeSelection();
           // use of a timer to speedup
-          var This = this.mOuter;
-          setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
-          dump("6:"+(Date.now()-date)+"\n")
+          //var This = this.mOuter;
+          //setTimeout( function (){This.treeBoxObject.selection.selectEventsSuppressed = false}, 100)
+          //dump("6:"+(Date.now()-date)+"\n")
         },
 
         onToggleOpenState: function (aRow)
@@ -832,10 +821,10 @@
                  onkeypress="event.preventBubble();"/>
       <vbox flex="1">
         <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
-                  datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.loadBookmarkBrowser(event);"
-                  onclick="this.parentNode.parentNode.openItem(event, 1);"
-                  ondblclick="this.parentNode.parentNode.openItem(event, 2);"
+                  datasources="rdf:bookmarks rdf:internetsearch rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
+                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItemKey();"
+                  onclick="this.parentNode.parentNode.openItemClick(event, 1);"
+                  ondblclick="this.parentNode.parentNode.openItemClick(event, 2);"
                   ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
                   onselect="this.treeBoxObject.view.selectionChanged();">
           <template xmlns:nc="http://home.netscape.com/NC-rdf#">
@@ -867,8 +856,8 @@
               <treechildren>
                 <treeitem uri="rdf:*">
                   <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                    <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon" 
-                              label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                    <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
@@ -926,11 +915,10 @@
     <implementation>
       <constructor>
         // Adding the transaction listener
-        gBMtxmgr = BookmarksUtils.getTransactionManager();
-        gBMtxmgr.AddListener(this.bookmarkTreeTransactionListener)
+        BMSVC.transactionManager.AddListener(this.bookmarkTreeTransactionListener);
       </constructor>  
       <destructor>
-        gBMtxmgr.RemoveListener(this.bookmarkTreeTransactionListener)
+        BMSVC.transactionManager.RemoveListener(this.bookmarkTreeTransactionListener);
       </destructor>  
       <field name="clickCount">2</field>
     </implementation>
@@ -947,7 +935,7 @@
                  onclick="event.preventBubble();"
                  onkeypress="event.preventBubble();"/>
       <tree anonid="bookmarks-tree" flex="1" class="plain" hidecolumnpicker="true"
-                datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
+                datasources="rdf:bookmarks rdf:internetsearch rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onselect="this.parentNode.treeBoxObject.view.selectionChanged();" seltype="single">
         <template xmlns:nc="http://home.netscape.com/NC-rdf#">
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -972,26 +960,21 @@
             <treechildren>
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon" 
-                            label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                 </treerow>
               </treeitem>
             </treechildren>
           </rule>
         </template>
         <treecols anonid="treecols">
-          <treecol id="Name" flex="1" primary="true" 
-                   hideheader="true"
-                   persist="width hidden ordinal"
+          <treecol id="Name" flex="1" primary="true" hideheader="true"
                    sort="rdf:http://home.netscape.com/NC-rdf#Name"
                    sortActive="true" sortDirection="none"/>
         </treecols>
       </tree>
     </xbl:content>
     <implementation>
-      <constructor>
-        gBMtxmgr = BookmarksUtils.getTransactionManager();
-      </constructor>  
       <field name="clickCount">1</field>
     </implementation>
   </binding>
@@ -1000,8 +983,9 @@
   <binding id="bookmarks-tree-folders" extends="chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
       <tree anonid="bookmarks-tree" flex="1" hidecolumnpicker="true"
-                datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
+            xbl:inherits="rows,seltype"
+            datasources="rdf:bookmarks rdf:internetsearch rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
+            onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
         <template>
           <rule iscontainer="true">
             <treechildren>
@@ -1013,20 +997,15 @@
             </treechildren>
           </rule>
         </template>
-        <treecols>
-          <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true"
-                       class="sortDirectionIndicator" persist="width hidden"
-                       sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                       sortActive="true" sortDirection="none"/>
+        <treecols anonid="treecols">
+          <treecol id="Name" flex="1" primary="true" hideheader="true"
+                   sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                   sortActive="true" sortDirection="none"/>
         </treecols>
       </tree>
     </xbl:content>
     <implementation>
-      <constructor>
-        gBMtxmgr = BookmarksUtils.getTransactionManager();
-      </constructor>  
       <field name="clickCount">2</field>
     </implementation>
   </binding>
 </bindings>
-

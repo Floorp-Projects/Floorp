@@ -54,6 +54,7 @@ var kRDFCUIID;
 var RDFCU;
 
 var BMDS;
+var kBMSVCIID;
 var BMSVC;
 
 var kPREFContractID;
@@ -67,8 +68,6 @@ var SOUND;
 var kWINDOWContractID;
 var kWINDOWIID;
 var WINDOWSVC;
-
-var gBMtxmgr;
 
 // should be moved in a separate file
 function initServices()
@@ -95,7 +94,7 @@ function initServices()
   kPREFContractID  = "@mozilla.org/preferences-service;1";
   kPREFIID         = Components.interfaces.nsIPrefService;
   PREF             = Components.classes[kPREFContractID].getService(kPREFIID)
-                               .getBranch(null)
+                               .getBranch(null);
 
   kSOUNDContractID = "@mozilla.org/sound;1";
   kSOUNDIID        = Components.interfaces.nsISound;
@@ -109,8 +108,9 @@ function initServices()
 
 function initBMService()
 {
+  kBMSVCIID = Components.interfaces.nsIBookmarksService;
   BMDS  = RDF.GetDataSource("rdf:bookmarks");
-  BMSVC = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
+  BMSVC = BMDS.QueryInterface(kBMSVCIID);
   BookmarkInsertTransaction.prototype.RDFC = RDFC;
   BookmarkInsertTransaction.prototype.BMDS = BMDS;
   BookmarkRemoveTransaction.prototype.RDFC = RDFC;
@@ -132,7 +132,7 @@ function initBMService()
  * to change a command name. 
  *   1) the controller...
  *      - in bookmarksTree.xml if the command is tree-specifc
- *      - in bookmarksToolbar.xml if the command is DOM-specific
+ *      - in bookmarksMenu.js if the command is DOM-specific
  *      - in bookmarks.js otherwise
  *   2) the command nodes in the overlay or xul file
  *   3) the command human-readable name key in bookmarks.properties
@@ -149,7 +149,7 @@ var BookmarksCommand = {
   {
     var xulElement = document.createElementNS(XUL_NS, "menuitem");
     xulElement.setAttribute("cmd", aCommandName);
-    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length)
+    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length);
     xulElement.setAttribute("command", cmd);
     
     switch (aCommandName) {
@@ -273,7 +273,8 @@ var BookmarksCommand = {
     case "BookmarkSeparator":
       commands = ["bm_newfolder", "bm_separator", 
                   "bm_cut", "bm_copy", "bm_paste", "bm_separator",
-                  "bm_delete"];
+                  "bm_delete", "bm_separator",
+                  "bm_properties"];
       break;
     case "Bookmark":
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
@@ -290,7 +291,7 @@ var BookmarksCommand = {
                   "bm_properties"];
       break;
     case "FolderGroup":
-      commands = ["bm_openfolder", "bm_expandfolder", "bm_separator",
+      commands = ["bm_open", "bm_expandfolder", "bm_separator",
                   "bm_newfolder", "bm_separator",
                   "bm_cut", "bm_copy", "bm_paste", "bm_separator",
                   "bm_delete", "bm_separator",
@@ -326,15 +327,17 @@ var BookmarksCommand = {
   getCommandName: function (aCommand) 
   {
     var cmdName = aCommand.substring(NC_NS_CMD.length);
-    //try {
+    return BookmarksUtils.getLocaleString ("cmd_" + cmdName);
+    /*
+    try {
       // Note: this will succeed only if there's a string in the bookmarks
       //       string bundle for this command name. Otherwise, <xul:stringbundle/>
       //       will throw, we'll catch & stifle the error, and look up the command
       //       name in the datasource. 
       return BookmarksUtils.getLocaleString ("cmd_" + cmdName);
-    //}
-    //catch (e) {
-    //}   
+    }
+    catch (e) {
+    }   
     // XXX - WORK TO DO HERE! (rjc will cry if we don't fix this) 
     // need to ask the ds for the commands for this node, however we don't
     // have the right params. This is kind of a problem. 
@@ -342,6 +345,7 @@ var BookmarksCommand = {
     const rName = RDF.GetResource(NC_NS + "Name");
     const rSource = RDF.GetResource(aNodeID);
     return BMDS.GetTarget(rSource, rName, true).Value;
+    */
   },
     
   ///////////////////////////////////////////////////////////////////////////
@@ -377,13 +381,13 @@ var BookmarksCommand = {
 
   undoBookmarkTransaction: function ()
   {
-    gBMtxmgr.undoTransaction();
+    BMSVC.transactionManager.undoTransaction();
     BookmarksUtils.flushDataSource();
   },
 
   redoBookmarkTransaction: function ()
   {
-    gBMtxmgr.redoTransaction();
+    BMSVC.transactionManager.redoTransaction();
     BookmarksUtils.flushDataSource();
   },
 
@@ -427,15 +431,15 @@ var BookmarksCommand = {
 
     xferable.addDataFlavor("moz/bookmarkclipboarditem");
     bmstring.data = sBookmarkItem;
-    xferable.setTransferData("moz/bookmarkclipboarditem", bmstring, sBookmarkItem.length*2)
+    xferable.setTransferData("moz/bookmarkclipboarditem", bmstring, sBookmarkItem.length*2);
     
     xferable.addDataFlavor("text/html");
     htmlstring.data = sTextHTML;
-    xferable.setTransferData("text/html", htmlstring, sTextHTML.length*2)
+    xferable.setTransferData("text/html", htmlstring, sTextHTML.length*2);
     
     xferable.addDataFlavor("text/unicode");
     unicodestring.data = sTextUnicode;
-    xferable.setTransferData("text/unicode", unicodestring, sTextUnicode.length*2)
+    xferable.setTransferData("text/unicode", unicodestring, sTextUnicode.length*2);
     
     const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
     const kClipboardIID = Components.interfaces.nsIClipboard;
@@ -461,31 +465,34 @@ var BookmarksCommand = {
     var data    = { };
     var length  = { };
     xferable.getAnyTransferData(flavour, data, length);
-    var items, name;
+    var items, name, url;
     data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
     switch (flavour.value) {
     case "moz/bookmarkclipboarditem":
       items = data.split("\n");
       // since data are ended by \n, remove the last empty node
       items.pop(); 
-      for (var i=0; i<items.length; ++i)
-        items[i] = RDF.GetResource(items[i]);
+      for (var i=0; i<items.length; ++i) {
+        var resource = RDF.GetResource(items[i]);
+        name = BookmarksUtils.getProperty(resource, NC_NS+"Name");
+        url  = BookmarksUtils.getProperty(resource, NC_NS+"URL" );
+        items[i] = BookmarksUtils.createBookmark(name, url, null, null);
+      }
       break;
     case "text/x-moz-url":
       // there should be only one item in this case
       var ix = data.indexOf("\n");
       items = data.substring(0, ix != -1 ? ix : data.length);
       name  = data.substring(ix);
-      if (!BMSVC.isBookmarked(items))
-        // XXX: we should infer the best charset
-        BookmarksUtils.createBookmark(null, items, null, name);
+      // XXX: we should infer the best charset
+      BookmarksUtils.createBookmark(null, items, null, name);
       items = [items];
       break;
     default: 
       return;
     }
    
-    var selection = {item: items, parent:Array(items.length), length: items.length}
+    var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
     BookmarksUtils.insertSelection("paste", selection, aTarget, true);
   },
@@ -535,7 +542,7 @@ var BookmarksCommand = {
   // requires utilityOverlay.js if opening in new window for getTopWin()
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {
-    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS)
+    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
@@ -651,7 +658,7 @@ var BookmarksCommand = {
   {
     var rSeparator  = BMSVC.createSeparator();
     var selection   = BookmarksUtils.getSelectionFromResource(rSeparator);
-    BookmarksUtils.insertSelection("newseparator", selection, aTarget)
+    BookmarksUtils.insertSelection("newseparator", selection, aTarget);
   },
 
   importBookmarks: function ()
@@ -691,9 +698,9 @@ var BookmarksCommand = {
       transaction.index  .push(index);
       transaction.isValid.push(true);
     }
-    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction);
+      BMSVC.transactionManager.doTransaction(transaction);
       BookmarksUtils.flushDataSource();
     }    
   },
@@ -773,13 +780,15 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
+    if (aTarget.parent.Value == "NC:BookmarksTopRoot")
+      return false;
+
     var item0, type0;
     var length = aSelection.length;
     if (length != 0) {
       item0 = aSelection.item[0].Value;
       type0 = aSelection.type[0];
     }
-    var isValidTarget = BookmarksUtils.isValidTargetContainer(aTarget.parent)
     var i;
 
     switch(aCommand) {
@@ -789,7 +798,7 @@ var BookmarksController = {
     case "cmd_bm_redo":
       return true;
     case "cmd_bm_paste":
-      if (!isValidTarget)
+      if (!BookmarksUtils.isValidTargetContainer(aTarget.parent))
         return false;
       const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
       const kClipboardIID = Components.interfaces.nsIClipboard;
@@ -811,8 +820,10 @@ var BookmarksController = {
     case "cmd_bm_copy":
       return length > 0;
     case "cmd_bm_cut":
+      // disabling cut for now since we don't clone folders
+      return false;
     case "cmd_bm_delete":
-      return length > 0 && aSelection.containsMutable;
+      return length > 0 && aSelection.containsMutable && !aSelection.containsPTF;
     case "cmd_bm_selectAll":
       return true;
     case "cmd_bm_open":
@@ -843,7 +854,7 @@ var BookmarksController = {
     case "cmd_bm_newbookmark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return isValidTarget;
+      return BookmarksUtils.isValidTargetContainer(aTarget.parent);
     case "cmd_bm_properties":
     case "cmd_bm_rename":
       return length == 1;
@@ -854,11 +865,11 @@ var BookmarksController = {
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1)
-        return false
+        return false;
       return item0 != "NC:PersonalToolbarFolder" && type0 == "Folder";
     case "cmd_bm_setnewsearchfolder":
       if (length != 1)
-        return false
+        return false;
       return item0 != "NC:NewSearchFolder"       && 
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_movebookmark":
@@ -1038,8 +1049,7 @@ var BookmarksUtils = {
       else
         bundle = this._bundle.formatStringFromName(aStringKey, aReplaceString, aReplaceString.length);
     } catch (e) {
-      SOUND.beep();
-      dump("Bookmark bundle "+aStringKey+" not found!\n")
+      dump("Bookmark bundle "+aStringKey+" not found!\n");
       bundle = "";
     }
 
@@ -1071,9 +1081,9 @@ var BookmarksUtils = {
   // Determine the rdf:type property for the given resource.
   resolveType: function (aResource)
   {
-    var type = this.getProperty(aResource, RDF_NS+"type")
+    var type = this.getProperty(aResource, RDF_NS+"type");
     if (type != "")
-      type = type.split("#")[1]
+      type = type.split("#")[1];
     if (type == "Folder") {
       if (this.isPersonalToolbarFolder(aResource))
         type = "PersonalToolbarFolder";
@@ -1086,13 +1096,13 @@ var BookmarksUtils = {
   /////////////////////////////////////////////////////////////////////////////
   // Returns true if aResource is a folder group
   isFolderGroup: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true"
+    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true";
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // Returns true if aResource is the Personal Toolbar Folder
   isPersonalToolbarFolder: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder"
+    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder";
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1147,7 +1157,7 @@ var BookmarksUtils = {
     var rName = this.getProperty(aFolder, NC_NS+"Name");    
     var newFolder;
     if (this.isFolderGroup(aFolder))
-      newFolder = BMSVC.createGroup (rName)
+      newFolder = BMSVC.createGroup(rName);
     else
       newFolder = BMSVC.createFolder(rName);
     
@@ -1240,7 +1250,7 @@ var BookmarksUtils = {
     var isValid = new Array(aSelection.length);
     for (i=0; i<aSelection.length; ++i) {
       if (!aSelection.isValid[i] || aSelection.isImmutable[i] || 
-          !aSelection.parent [i] || aSelection.containsPTF)
+          !aSelection.parent [i])
         isValid[i] = false;
       else
         isValid[i] = true;
@@ -1269,7 +1279,6 @@ var BookmarksUtils = {
   // Returns true if aSelection can be inserted in aFolder
   isValidTargetContainer: function (aFolder, aSelection)
   {
-
     if (!aFolder)
       return false;
     if (aFolder.Value == "NC:BookmarksRoot")
@@ -1302,7 +1311,7 @@ var BookmarksUtils = {
   // Returns true is aItem is a child of aContainer
   isChildOfContainer: function (aItem, aContainer)
   {
-    RDFC.Init(BMDS, aContainer)
+    RDFC.Init(BMDS, aContainer);
     var rChildren = RDFC.GetElements();
     while (rChildren.hasMoreElements()) {
       if (aItem == rChildren.getNext())
@@ -1329,9 +1338,9 @@ var BookmarksUtils = {
     }
     if (aAction != "move" && !BookmarksUtils.all(transaction.isValid))
       SOUND.beep();
-    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction)
+      BMSVC.transactionManager.doTransaction(transaction);
       if (aAction != "move")
         BookmarksUtils.flushDataSource();
     }
@@ -1360,6 +1369,13 @@ var BookmarksUtils = {
     var index = aTarget.index;
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
+      
+      // disabling cloneFolder for now
+      if (aDoCopy && aSelection.isContainer[i]) {
+        transaction.isValid[i]=false;
+        SOUND.beep();
+      }
+
       if (transaction.isValid[i]) {
         if (aDoCopy && aSelection.isContainer[i])
           rSource = BookmarksUtils.cloneFolder(rSource);
@@ -1373,9 +1389,9 @@ var BookmarksUtils = {
     }
     if (!BookmarksUtils.all(transaction.isValid))
       SOUND.beep();
-    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction);
+      BMSVC.transactionManager.doTransaction(transaction);
       BookmarksUtils.flushDataSource();
     }
     return !isCancelled;
@@ -1387,7 +1403,7 @@ var BookmarksUtils = {
     var transaction = new BookmarkMoveTransaction(aAction, aSelection, aTarget);
     var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction);
+      BMSVC.transactionManager.doTransaction(transaction);
     } else
       SOUND.beep();
     return !isCancelled;
@@ -1398,16 +1414,17 @@ var BookmarksUtils = {
     if (aSelection.length == 0)
       return null;
     var dataSet = new TransferDataSet();
-    var data, item, parent, name;
+    var data, item, itemUrl, itemName, parent, name;
     for (var i=0; i<aSelection.length; ++i) {
-      data   = new TransferData();
-      item   = aSelection.item[i].Value;
-      parent = aSelection.parent[i].Value;
-      name   = BookmarksUtils.getProperty(item, "Name");
+      data     = new TransferData();
+      item     = aSelection.item[i].Value;
+      itemUrl  = this.getProperty(item, NC_NS+"URL");
+      itemName = this.getProperty(item, NC_NS+"Name");
+      parent   = aSelection.parent[i].Value;
       data.addDataForFlavour("moz/rdfitem",    item+"\n"+(parent?parent:""));
-      data.addDataForFlavour("text/x-moz-url", item+"\n"+name);
-      data.addDataForFlavour("text/html",      "<A HREF='"+item+"'>"+name+"</A>");
-      data.addDataForFlavour("text/unicode",   item);
+      data.addDataForFlavour("text/x-moz-url", itemUrl+"\n"+itemName);
+      data.addDataForFlavour("text/html",      "<A HREF='"+itemUrl+"'>"+itemName+"</A>");
+      data.addDataForFlavour("text/unicode",   itemUrl);
       dataSet.push(data);
     }
     return dataSet;
@@ -1444,13 +1461,9 @@ var BookmarksUtils = {
         break;
       case "text/x-moz-url":
       case "text/unicode":
-        if (!BMSVC.isBookmarked(uri)) {
-          var charSet = aDragSession.sourceDocument ? 
-                        aDragSession.sourceDocument.characterSet : null;
-          rSource = BookmarksUtils.createBookmark(null, uri, charSet, extra);
-        } else {
-          rSource = RDF.GetResource(uri);
-        }
+        var charSet = aDragSession.sourceDocument ? 
+                      aDragSession.sourceDocument.characterSet : null;
+        rSource = BookmarksUtils.createBookmark(null, uri, charSet, extra);
         parent = null;
         break;
       }
@@ -1508,100 +1521,15 @@ var BookmarksUtils = {
   flushDataSource: function ()
   {
     var remoteDS = BMDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-    setTimeout(function () {dump("Flushing Bookmark Datasource...\n"); remoteDS.Flush()}, 100);
+    setTimeout(function () {remoteDS.Flush()}, 100);
   },
-
-  getTransactionManager: function ()
-  {
-    var windows = WINDOWSVC.getEnumerator(null);
-    while(windows.hasMoreElements()) {
-      var w = windows.getNext();
-      if (w.gBMtxmgr)
-        return w.gBMtxmgr;
-    }
-
-    // Create a TransactionManager object:
-    dump("creating transaction manager...\n")
-    gBMtxmgr = Components.classes["@mozilla.org/transactionmanager;1"].createInstance();
-    // Now get the nsITransactionManager interface from the object:
-    gBMtxmgr = gBMtxmgr.QueryInterface(Components.interfaces.nsITransactionManager);
-    if (!gBMtxmgr) {
-      dump("Failed to create the Bookmark Transaction Manager!\n");
-      return null;
-    }
-    this.dispatchTransactionManager();
-    return gBMtxmgr;
-  },
-
-  dispatchTransactionManager: function ()
-  {
-    var windows = WINDOWSVC.getEnumerator(null);
-    while(windows.hasMoreElements()) {
-      var w = windows.getNext();
-      w.gBMtxmgr = gBMtxmgr;
-    }
-  },
-
-  addBookmarkForTabBrowser: function( aTabBrowser, aSelect )
-  {
-    var tabsInfo = [];
-    var currentTabInfo = { name: "", url: "", charset: null };
-
-    const activeBrowser = aTabBrowser.selectedBrowser;
-    const browsers = aTabBrowser.browsers;
-    for (var i = 0; i < browsers.length; ++i) {
-      var webNav = browsers[i].webNavigation;
-      var url = webNav.currentURI.spec;
-      var name = "";
-      var charset;
-      try {
-        var doc = webNav.document;
-        name = doc.title || url;
-        charset = doc.characterSet;
-      } catch (e) {
-        name = url;
-      }
-
-      tabsInfo[i] = { name: name, url: url, charset: charset };
-
-      if (browsers[i] == activeBrowser)
-        currentTabInfo = tabsInfo[i];
-    }
-
-    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-               "centerscreen,chrome,dialog=yes,resizable=no,dependent",
-               currentTabInfo.name, currentTabInfo.url, null,
-               currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
-  },
-
-  addBookmarkForBrowser: function (aDocShell, aShowDialog)
-  {
-    // Bug 52536: We obtain the URL and title from the nsIWebNavigation 
-    //            associated with a <browser/> rather than from a DOMWindow.
-    //            This is because when a full page plugin is loaded, there is
-    //            no DOMWindow (?) but information about the loaded document
-    //            may still be obtained from the webNavigation. 
-    var url = aDocShell.currentURI.spec;
-    var title, docCharset = null;
-    try {
-      title = aDocShell.document.title || url;
-      docCharset = aDocShell.document.characterSet;
-    }
-    catch (e) {
-      title = url;
-    }
-
-    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "", 
-               "centerscreen,chrome,dialog=yes,resizable=no,dependent", title,
-               url, null, docCharset);
-  }, 
 
   // should update the caller, aShowDialog is no more necessary
-  addBookmark: function (aURL, aTitle, aCharSet, aShowDialog)                   
-  {                                                                             
-    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",     
-               "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharSet);
-  },                                                                          
+  addBookmark: function (aURL, aTitle, aCharset)
+  {
+    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+               "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharset);
+  },
 
   getBrowserTargetFromEvent: function (aEvent)
   {
@@ -1625,14 +1553,12 @@ var BookmarksUtils = {
     var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
     BookmarksCommand.openBookmark(selection, browserTarget, aDS)
   }
-
 }
 
 
 function BookmarkInsertTransaction (aAction)
 {
   this.wrappedJSObject = this;
-  this.txmgr   = BookmarksUtils.getTransactionManager();
   this.type    = "insert";
   this.action  = aAction;
   this.item    = null;
@@ -1650,8 +1576,6 @@ BookmarkInsertTransaction.prototype =
 
   doTransaction: function ()
   {
-    dump("do ")
-    dumpTXN(this)
     for (var i=0; i<this.item.length; ++i) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
@@ -1662,8 +1586,6 @@ BookmarkInsertTransaction.prototype =
 
   undoTransaction: function ()
   {
-    dump("undo ")
-    dumpTXN(this)
     for (var i=this.item.length-1; i>=0; i--) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
@@ -1688,7 +1610,6 @@ BookmarkInsertTransaction.prototype =
 function BookmarkRemoveTransaction (aAction)
 {
   this.wrappedJSObject = this;
-  this.txmgr   = BookmarksUtils.getTransactionManager();
   this.type    = "remove";
   this.action  = aAction;
   this.item    = null;
@@ -1706,8 +1627,6 @@ BookmarkRemoveTransaction.prototype =
 
   doTransaction: function ()
   {
-    dump("do ")
-    dumpTXN(this)
     for (var i=0; i<this.item.length; ++i) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
@@ -1718,8 +1637,6 @@ BookmarkRemoveTransaction.prototype =
 
   undoTransaction: function ()
   {
-    dump("undo ")
-    dumpTXN(this);
     for (var i=this.item.length-1; i>=0; i--) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);
@@ -1744,7 +1661,6 @@ BookmarkRemoveTransaction.prototype =
 function BookmarkMoveTransaction (aAction, aSelection, aTarget)
 {
   this.wrappedJSObject = this;
-  this.txmgr     = BookmarksUtils.getTransactionManager();
   this.type      = "move";
   this.action    = aAction;
   this.selection = aSelection;
@@ -1776,7 +1692,6 @@ BookmarkMoveTransaction.prototype =
 function BookmarkImportTransaction (aAction)
 {
   this.wrappedJSObject = this;
-  this.txmgr   = BookmarksUtils.getTransactionManager();
   this.type    = "import";
   this.action  = aAction;
   this.item    = [];
@@ -1798,8 +1713,6 @@ BookmarkImportTransaction.prototype =
 
   undoTransaction: function ()
   {
-    dump("undo ")
-    dumpTXN(this)
     for (var i=this.item.length-1; i>=0; i--) {
       if (this.isValid[i]) {
         this.RDFC.Init(this.BMDS, this.parent[i]);

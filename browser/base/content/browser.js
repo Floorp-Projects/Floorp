@@ -746,18 +746,61 @@ function updateGoMenu(goMenu)
     endSep.hidden = false;
 }
 
-function addGroupmarkAs()
-{
-  BookmarksUtils.addBookmarkForTabBrowser(gBrowser, true);
-}
-
 function addBookmarkAs(aBrowser)
 {
   const browsers = aBrowser.browsers;
   if (browsers.length > 1)
-    BookmarksUtils.addBookmarkForTabBrowser(aBrowser);
+    addBookmarkForTabBrowser(aBrowser);
   else
-    BookmarksUtils.addBookmarkForBrowser(aBrowser.webNavigation, true);
+    addBookmarkForBrowser(aBrowser.webNavigation);
+}
+
+function addBookmarkForTabBrowser(aTabBrowser, aSelect)
+{
+  var tabsInfo = [];
+  var currentTabInfo = { name: "", url: "", charset: null };
+
+  const activeBrowser = aTabBrowser.selectedBrowser;
+  const browsers = aTabBrowser.browsers;
+  for (var i = 0; i < browsers.length; ++i) {
+    var webNav = browsers[i].webNavigation;
+    var url = webNav.currentURI.spec;
+    var name = "";
+    var charSet;
+    try {
+      var doc = webNav.document;
+      name = doc.title || url;
+      charSet = doc.characterSet;
+    } catch (e) {
+      name = url;
+    }
+    tabsInfo[i] = { name: name, url: url, charset: charSet };
+    if (browsers[i] == activeBrowser)
+      currentTabInfo = tabsInfo[i];
+  }
+  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+             "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+             currentTabInfo.name, currentTabInfo.url, null,
+             currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
+}
+
+function addBookmarkForBrowser(aDocShell)
+{
+  // Bug 52536: We obtain the URL and title from the nsIWebNavigation
+  // associated with a <browser/> rather than from a DOMWindow.
+  // This is because when a full page plugin is loaded, there is
+  // no DOMWindow (?) but information about the loaded document
+  // may still be obtained from the webNavigation. 
+  var url = aDocShell.currentURI.spec;
+  var title, charSet = null;
+  try {
+    title = aDocShell.document.title || url;
+    charSet = aDocShell.document.characterSet;
+  }
+  catch (e) {
+    title = url;
+  }
+  BookmarksUtils.addBookmark(url, title, charSet);
 }
 
 function openLocation()
@@ -3356,8 +3399,7 @@ nsContextMenu.prototype = {
       var docshell = document.getElementById( "content" ).webNavigation;
       BookmarksUtils.addBookmark( docshell.currentURI.spec,
                                   docshell.document.title,
-                                  docshell.document.charset,
-                                  false );
+                                  docshell.document.charset);
     },
     addBookmarkForFrame : function() {
       var doc = this.target.ownerDocument;
@@ -3365,10 +3407,7 @@ nsContextMenu.prototype = {
       var title = doc.title;
       if ( !title )
         title = uri;
-      BookmarksUtils.addBookmark( uri,
-                                  title,
-                                  doc.charset,
-                                  false );
+      BookmarksUtils.addBookmark(uri, title, doc.charset);
     },
     // Open Metadata window for node
     showMetadata : function () {
