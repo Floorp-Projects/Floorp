@@ -2477,10 +2477,6 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
                                PRInt32 status,
                                const nsString& aMsg)
 {
-  if (mThrobber) {
-    mThrobber->Stop();
-  }
-
   mToolbarBtns[gStopBtnInx]->Enable(PR_FALSE);
   mToolbarBtns[gStopBtnInx]->Invalidate(PR_TRUE);
 
