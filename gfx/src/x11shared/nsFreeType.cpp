@@ -646,6 +646,7 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
   *aRightBearing = 0;
   *aAscent = 0;
   *aDescent = 0;
+  *aWidth = 0;
 
   if (aLength < 1) {
     return NS_ERROR_FAILURE;
