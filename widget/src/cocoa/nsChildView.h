@@ -68,6 +68,8 @@ class nsIEventSink;
 
 @interface ChildView : NSQuickDrawView
 {
+  NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
+  
     // the nsChildView that created the view. It retains this NSView, so
     // the link back to it must be weak.
   nsChildView* mGeckoChild;
@@ -93,6 +95,8 @@ class nsIEventSink;
            isChar:(PRBool*)outIsChar convertChar:(PRBool)aConvertChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
+- (NSWindow*) getNativeWindow;
+- (void) setNativeWindow: (NSWindow*)aWindow;
 @end
 
 
@@ -248,8 +252,6 @@ protected:
   const char*       gInstanceClassName;
 #endif
 
-  NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
-  
   id              mView;      // my parallel cocoa view, [STRONG]
 
   NSView*         mParentView;

@@ -157,6 +157,9 @@ protected:
 
 @interface ScrollbarView : NSScroller
 {
+  // Our window [WEAK]
+  NSWindow* mWindow;
+  
     // the nsChildView that created the view. It retains this NSView, so
     // the link back to it must be weak.
   nsChildView* mGeckoChild;
@@ -167,6 +170,9 @@ protected:
     // tag for our mouse enter/exit tracking rect
   NSTrackingRectTag mMouseEnterExitTag;
 }
+
+- (NSWindow*) getNativeWindow;
+- (void) setNativeWindow: (NSWindow*)aWindow;
 @end
 
 #endif // nsScrollbar_
