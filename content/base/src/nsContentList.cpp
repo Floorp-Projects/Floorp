@@ -52,8 +52,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIContentList.h"
 
-#include "pldhash.h"
-
 nsBaseContentList::nsBaseContentList()
 {
   NS_INIT_REFCNT();
@@ -274,117 +272,15 @@ nsFormContentList::Reset()
   return nsBaseContentList::Reset();
 }
 
-// Hashtable for storing nsContentLists
-static PLDHashTable gContentListHashTable;
-
-struct ContentListHashEntry : public PLDHashEntryHdr
-{
-  nsContentList* mContentList;
-};
-
-PR_STATIC_CALLBACK(const void *)
-ContentListHashtableGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  ContentListHashEntry *e = NS_STATIC_CAST(ContentListHashEntry *, entry);
-  return NS_STATIC_CAST(nsContentListKey*, e->mContentList);
-}
-
-PR_STATIC_CALLBACK(PLDHashNumber)
-ContentListHashtableHashKey(PLDHashTable *table, const void *key)
-{
-  const nsContentListKey* list = NS_STATIC_CAST(const nsContentListKey *, key);
-  return list->GetHash();
-}
-
-PR_STATIC_CALLBACK(PRBool)
-ContentListHashtableMatchEntry(PLDHashTable *table,
-                               const PLDHashEntryHdr *entry,
-                               const void *key)
-{
-  const ContentListHashEntry *e =
-    NS_STATIC_CAST(const ContentListHashEntry *, entry);
-  const nsContentListKey* list1 = NS_STATIC_CAST(nsContentListKey*, e->mContentList);
-  const nsContentListKey* list2 = NS_STATIC_CAST(const nsContentListKey *, key);
-
-  return list1->Equals(*list2);
-}
-
-nsresult
-NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
-                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent,
-                  nsIContentList** aInstancePtrResult)
-{
-  *aInstancePtrResult = nsnull;
-  nsContentList* list = nsnull;
-
-  static PLDHashTableOps hash_table_ops =
-  {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    ContentListHashtableGetKey,
-    ContentListHashtableHashKey,
-    ContentListHashtableMatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub
-  };
-
-  // Initialize the hashtable if needed.
-  if (!gContentListHashTable.ops) {
-    PRBool success = PL_DHashTableInit(&gContentListHashTable,
-                                       &hash_table_ops, nsnull,
-                                       sizeof(ContentListHashEntry),
-                                       16);
-
-    if (!success) {
-      gContentListHashTable.ops = nsnull;
-    }
-  }
-  
-  ContentListHashEntry *entry = nsnull;
-  // First we look in our hashtable.  Then we create a content list if needed
-  if (gContentListHashTable.ops) {
-    nsContentListKey hashKey(aDocument, aMatchAtom,
-                             aMatchNameSpaceId, aRootContent);
-    
-    // A PL_DHASH_ADD is equivalent to a PL_DHASH_LOOKUP for cases
-    // when the entry is already in the hashtable.
-    entry = NS_STATIC_CAST(ContentListHashEntry *,
-                           PL_DHashTableOperate(&gContentListHashTable,
-                                                &hashKey,
-                                                PL_DHASH_ADD));
-    if (entry)
-      list = entry->mContentList;
-  }
-
-  if (!list) {
-    // We need to create a ContentList and add it to our new entry, if
-    // we have an entry
-    list = new nsContentList(aDocument, aMatchAtom,
-                             aMatchNameSpaceId, aRootContent);
-    if (entry) {
-      if (list)
-        entry->mContentList = list;
-      else
-        PL_DHashTableRawRemove(&gContentListHashTable, entry);
-    }
-  }
-
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-  *aInstancePtrResult = list;
-  NS_ADDREF(*aInstancePtrResult);
-                               
-  return NS_OK;
-}
-
 
 // nsContentList implementation
 
 nsContentList::nsContentList(const nsContentList& aContentList)
-  : nsBaseContentList(), nsContentListKey(aContentList)
+  : nsBaseContentList()
 {
   mFunc = aContentList.mFunc;
+  mMatchAtom = aContentList.mMatchAtom;
+  mDocument = aContentList.mDocument;
 
   if (aContentList.mData) {
     mData = new nsString(*aContentList.mData);
@@ -393,31 +289,39 @@ nsContentList::nsContentList(const nsContentList& aContentList)
   }
 
   mMatchAll = aContentList.mMatchAll;
+  mRootContent = aContentList.mRootContent;
   mElements = aContentList.mElements;
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument)
-  : nsBaseContentList(), nsContentListKey(aDocument, nsnull, kNameSpaceID_Unknown, nsnull)
+  : nsBaseContentList()
 {
   mFunc = nsnull;
+  mMatchAtom = nsnull;
+  mDocument = aDocument;
   mData = nsnull;
   mMatchAll = PR_FALSE;
+  mRootContent = nsnull;
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument,
                              nsIAtom* aMatchAtom,
                              PRInt32 aMatchNameSpaceId,
                              nsIContent* aRootContent)
-  : nsBaseContentList(), nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent)
+  : nsBaseContentList()
 {
+  mMatchAtom = aMatchAtom;
+  NS_IF_ADDREF(mMatchAtom);
   if (nsLayoutAtoms::wildcard == mMatchAtom) {
     mMatchAll = PR_TRUE;
   }
   else {
     mMatchAll = PR_FALSE;
   }
+  mMatchNameSpaceId = aMatchNameSpaceId;
   mFunc = nsnull;
   mData = nsnull;
+  mRootContent = aRootContent;
   Init(aDocument);
 }
 
@@ -425,7 +329,7 @@ nsContentList::nsContentList(nsIDocument *aDocument,
                              nsContentListMatchFunc aFunc,
                              const nsAString& aData,
                              nsIContent* aRootContent)
-  : nsBaseContentList(), nsContentListKey(aDocument, nsnull, kNameSpaceID_Unknown, aRootContent)
+  : nsBaseContentList()
 {
   mFunc = aFunc;
   if (!aData.IsEmpty()) {
@@ -457,11 +361,12 @@ void nsContentList::Init(nsIDocument *aDocument)
 
 nsContentList::~nsContentList()
 {
-  RemoveFromHashtable();
   if (mDocument) {
     mDocument->RemoveObserver(this);
   }
   
+  NS_IF_RELEASE(mMatchAtom);
+
   delete mData;
 }
 
@@ -662,8 +567,6 @@ NS_IMETHODIMP
 nsContentList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   if (mDocument) {
-    // Our key will change... Best remove ourselves before that happens.
-    RemoveFromHashtable();
     aDocument->RemoveObserver(this);
     mDocument = nsnull;
   }
@@ -750,12 +653,14 @@ nsContentList::MatchSelf(nsIContent *aContent)
   }
   
   aContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    nsIContent *child;
+    aContent->ChildAt(i, child);
     if (MatchSelf(child)) {
+      NS_RELEASE(child);
       return PR_TRUE;
     }
+    NS_RELEASE(child);
   }
   
   return PR_FALSE;
@@ -776,10 +681,11 @@ nsContentList::PopulateWith(nsIContent *aContent, PRBool aIncludeRoot)
   }
   
   aContent->ChildCount(count);
-  nsCOMPtr<nsIContent> child;
   for (i = 0; i < count; i++) {
-    aContent->ChildAt(i, *getter_AddRefs(child));
+    nsIContent *child;
+    aContent->ChildAt(i, child);
     PopulateWith(child, PR_TRUE);
+    NS_RELEASE(child);
   }
 }
 
@@ -792,10 +698,11 @@ nsContentList::PopulateSelf()
     PopulateWith(mRootContent, PR_FALSE);
   }
   else if (mDocument) {
-    nsCOMPtr<nsIContent> root;
-    mDocument->GetRootContent(getter_AddRefs(root));
+    nsIContent *root = nsnull;
+    mDocument->GetRootContent(&root);
     if (root) {
       PopulateWith(root, PR_TRUE);
+      NS_RELEASE(root);
     }
   }
 }
@@ -862,26 +769,7 @@ void
 nsContentList::DisconnectFromDocument()
 {
   if (mDocument) {
-    // Our key will change... Best remove ourselves before that happens.
-    RemoveFromHashtable();
     mDocument->RemoveObserver(this);
     mDocument = nsnull;
   }
 }
-
-void
-nsContentList::RemoveFromHashtable()
-{
-  if (!gContentListHashTable.ops)
-    return;
-    
-  PL_DHashTableOperate(&gContentListHashTable,
-                       NS_STATIC_CAST(nsContentListKey*, this),
-                       PL_DHASH_REMOVE);
-
-  if (gContentListHashTable.entryCount == 0) {
-    PL_DHashTableFinish(&gContentListHashTable);
-    gContentListHashTable.ops = nsnull;
-  }
-}
-
