@@ -55,7 +55,8 @@
 
 #include "plstr.h"
 #include "plevent.h"
-
+#include "nsIServiceManager.h"
+#include "nsIMailboxService.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsITransport.h"
@@ -76,12 +77,14 @@
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
+#define LOCAL_DLL  "msglocal.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
+#define LOCAL_DLL  "msglocal.so"
 #endif
 #endif
 
@@ -93,8 +96,8 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
-static NS_DEFINE_IID(kIMailboxUrlIID, NS_IMAILBOXURL_IID);
 
+static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +105,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 /////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_URL_TYPE  "mailbox://"	
-#define	DEFAULT_MAILBOX_PATH "D|/raptor/mozilla/bugsplat"
+#define	DEFAULT_MAILBOX_PATH "F|/mozilla/mozilla/client.mak"
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
@@ -122,20 +125,6 @@ NS_END_EXTERN_C
 // a transport instance. For different protocols, you'll have different url
 // functions like this one in the test harness...
 /////////////////////////////////////////////////////////////////////////////////
-
-nsresult NS_NewMailboxUrl(nsIMailboxUrl ** aResult, const nsString urlSpec)
-{
-	nsresult rv = NS_OK;
-
-	 nsMailboxUrl * mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
-	 if (mailboxUrl)
-	 {
-		mailboxUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::IID(), (void **) aResult);
-	 }
-
-	 return rv;
-}
 
 /* strip out non-printable characters */
 static void strip_nonprintable(char *string) {
@@ -163,7 +152,7 @@ static void strip_nonprintable(char *string) {
 class nsMailboxTestDriver
 {
 public:
-	nsMailboxTestDriver(nsINetService * pService, PLEventQueue *queue, nsIStreamListener * aMailboxParser);
+	nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser);
 	virtual ~nsMailboxTestDriver();
 
 	// run driver initializes the instance, lists the commands, runs the command and when
@@ -190,33 +179,24 @@ protected:
 	char m_userData[500];	// generic string buffer for storing the current user entered data...
 
 	nsIMailboxUrl		*m_url; 
-	nsITransport		*m_transport; // a handle on the current transport object being used with the protocol binding...
-	nsINetService		*m_netService;
-	nsMailboxProtocol	*m_mailboxProtocol;
 	nsIStreamListener	*m_mailboxParser;
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 
 	void InitializeProtocol(const char * urlSpec);
-    nsresult SetupUrl(char *group);
-	PRBool m_protocolInitialized; 
+    nsresult SetupUrl(char *group); 
 };
 
-nsMailboxTestDriver::nsMailboxTestDriver(nsINetService * pNetService, PLEventQueue *queue, nsIStreamListener * aMailboxParser)
+nsMailboxTestDriver::nsMailboxTestDriver(PLEventQueue *queue, nsIStreamListener * aMailboxParser)
 {
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_url = nsnull;
-	m_protocolInitialized = PR_FALSE;
 	m_runningURL = PR_TRUE;
     m_eventQueue = queue;
-	m_netService = pNetService;
-	NS_IF_ADDREF(m_netService); 
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 
-	m_transport = nsnull;
-	m_mailboxProtocol = nsnull; // we can't create it until we have a url...
 	if (aMailboxParser)
 	{
 		NS_ADDREF(aMailboxParser);
@@ -226,63 +206,25 @@ nsMailboxTestDriver::nsMailboxTestDriver(nsINetService * pNetService, PLEventQue
 		m_mailboxParser = nsnull;
 }
 
-void nsMailboxTestDriver::InitializeProtocol(const char * urlString)
-{
-	// this is called when we don't have a url nor a protocol instance yet...
-	if (m_url)
-		m_url->Release(); // get rid of our old ref count...
-
-	NS_NewMailboxUrl(&m_url, urlString);
-	m_url->SetMailboxParser(nsnull);
-	
-	NS_IF_RELEASE(m_transport);
-	
-	// create a transport socket...
-	const char * fileName = nsnull;
-	m_url->GetFile(&fileName);
-	m_netService->CreateFileSocketTransport(&m_transport, fileName);
-
-	// now create a protocol instance...
-	if (m_mailboxProtocol)
-		NS_RELEASE(m_mailboxProtocol); // delete our old instance
-	
-	// now create a new protocol instance...
-	m_mailboxProtocol = new nsMailboxProtocol(m_url, m_transport);
-	NS_IF_ADDREF(m_mailboxProtocol); 
-	m_protocolInitialized = PR_TRUE;
-}
-
 nsMailboxTestDriver::~nsMailboxTestDriver()
 {
-	NS_IF_RELEASE(m_url);
-	NS_IF_RELEASE(m_transport);
-	NS_IF_RELEASE(m_netService); 
 	NS_IF_RELEASE(m_mailboxParser);
-	NS_IF_RELEASE(m_mailboxProtocol);
 }
 
 nsresult nsMailboxTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
-
 	while (m_runningURL)
 	{
-		// if we haven't gotten started (and created a protocol) or
-		// if the protocol instance is currently not busy, then read in a new command
-		// and process it...
-		if ((!m_mailboxProtocol) || m_mailboxProtocol->IsRunningUrl() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
-		{
-			//  Mailbox is a connectionless protocol...so kill off our transport and current protocol
-			//  each command must create its own transport and protocol instance to run the url...
-			NS_IF_RELEASE(m_transport);
-			if (m_mailboxProtocol)
-			{
-				NS_RELEASE(m_mailboxProtocol);
-				m_mailboxProtocol = nsnull;
-			}
+		PRBool urlBusy = PR_FALSE;
+		if (m_url)
+			m_url->GetRunningUrlFlag(&urlBusy);
 
-			status = ReadAndDispatchCommand();	
+		if (!urlBusy) // if we aren't running the url anymore, ask ueser for another command....
+		{
+			NS_IF_RELEASE(m_url); // release the old one before we run a new one...
+			status = ReadAndDispatchCommand();
 		}  // if running url
 #ifdef XP_UNIX
 
@@ -389,6 +331,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 {
 	nsresult rv = NS_OK; 
 	char * displayString = nsnull;
+	nsFilePath filePath("");
 	
 	PL_strcpy(m_userData, DEFAULT_MAILBOX_PATH);
 
@@ -396,20 +339,20 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	rv = PromptForUserDataAndBuildUrl(displayString);
 	PR_FREEIF(displayString);
 
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "/");
-	PL_strcat(m_urlString, m_userData); // tack on recipient...
-	
-	// Mailbox is a connectionless protocol...so we always start with a new
-	// Mailbox protocol instance every time we launch a mailto url...
+	filePath = m_userData;
+	// now ask the mailbox service to parse this mailbox...
+	nsIMailboxService * mailboxService = nsnull;
+	rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::IID(), (nsISupports **) &mailboxService);
+	if (NS_SUCCEEDED(rv) && mailboxService)
+	{
+		nsIURL * url = nsnull;
+		mailboxService->ParseMailbox(filePath, m_mailboxParser, &url);
+		if (url)
+			url->QueryInterface(nsIMailboxUrl::IID(), (void **) &m_url);
+		NS_IF_RELEASE(url);
 
-	InitializeProtocol(m_urlString);  // this creates a transport
-	// set the mailbox parser to be used for the url...
-	m_url->SetMailboxParser(m_mailboxParser);
-		
-	printf("Running %s\n", m_urlString);
-	rv = m_mailboxProtocol->LoadURL(m_url);
+		nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
+	}
 	return rv;
 }
 
@@ -426,6 +369,7 @@ int main()
 
     nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsRepository::RegisterFactory(kCMailboxServiceCID, LOCAL_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
@@ -458,7 +402,7 @@ int main()
 	NS_NewMsgParser(&mailboxParser);
     
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsMailboxTestDriver * driver = new nsMailboxTestDriver(pNetService,queue, mailboxParser);
+	nsMailboxTestDriver * driver = new nsMailboxTestDriver(queue, mailboxParser);
 	if (driver)
 	{
 		driver->RunDriver();
