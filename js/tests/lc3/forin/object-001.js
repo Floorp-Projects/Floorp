@@ -120,11 +120,7 @@
         this.pCount = 0;
         for ( var p in o ) {
             this.pCount++;
-            if (!isNaN(p)) {
-                eval( "this["+p+"] = o["+p+"]" );
-            } else {
-                eval( "this." + p + " = o."+ p );
-            }
+            this[p] = o[p];
         }
     }
 
