@@ -1017,8 +1017,7 @@ Rights Reserved.
 			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
 			<toolbarseparator class="toolbarseparator-primary"/>
-			<menu id="FileButtonMenu" observes="cmd_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild">
-				<button class="button-toolbar-2 top" observes="cmd_file" id="button-file" value="&fileButton.label;"  tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
+			<menubutton class="button-toolbar-2 top" id="button-file" observes="cmd_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild" value="&fileButton.label;" tooltip="aTooltip" tooltiptext="&fileButton.tooltip;">
 				<template> 
 				<rule nc:NoSelect="true" iscontainer="true" isempty="false">
 					<menupopup>
@@ -1080,7 +1079,7 @@ Rights Reserved.
 					</rule>
 				</template>
 				<menupopup/>
-			</menu>
+			</menubutton>
 			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="cmd_nextUnreadMsg"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
       <menubutton class="menubutton-dual toolbar top" id="button-mark" value="&markButton.label;" hidden="true"

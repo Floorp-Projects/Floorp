@@ -178,7 +178,7 @@ function AddDataSources()
 
 
 	//To FileButton menu
-	SetupMoveCopyMenus('FileButtonMenu', accountManagerDataSource, folderDataSource);
+	SetupMoveCopyMenus('button-file', accountManagerDataSource, folderDataSource);
 
 	//To move and copy menus in message pane context
 	SetupMoveCopyMenus("messagePaneContext-copyMenu", accountManagerDataSource, folderDataSource);
