@@ -136,7 +136,7 @@ function previousPage(win) {
 }
 
 function initializePage(win, hash) {
-    var inputs= win.document.getElementsByTagName("FORM")[0].elements;
+    var inputs= win.document.controls;
     for (var i=0; i<inputs.length; i++) {
         restoreValue(hash, inputs[i]);
     }
@@ -154,7 +154,7 @@ function updateButtons(mapEntry, wizardWindow) {
 
 function saveContents(win, hash) {
 
-    var inputs = win.document.getElementsByTagName("FORM")[0].elements;
+    var inputs = win.document.controls;
     for (var i=0 ; i<inputs.length; i++) {
         saveValue(hash, inputs[i])
    }
