@@ -152,7 +152,7 @@ function DEF_onPageLoad( tag )
     oParent.SM.SetPageData( tag, true );  // set page data in content frame
 
     // set the focus to the first focusable element
-    var doc = window.frames[this.content_frame.name].document;
+    var doc = window.frames[0].document;
     var controls = doc.controls;
     for (i=0; i< controls.length; i++) {
       if (controls[i].focus) {
