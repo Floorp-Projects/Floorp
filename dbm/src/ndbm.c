@@ -44,7 +44,7 @@ static char sccsid[] = "@(#)ndbm.c	8.4 (Berkeley) 7/21/94";
  * This package provides a dbm compatible interface to the new hashing
  * package described in db(3).
  */
-#if !defined(_WIN32) && !defined(_WINDOWS)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(XP_OS2_VACPP)
 #include <sys/param.h>
 #endif
 

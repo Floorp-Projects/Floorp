@@ -75,7 +75,7 @@ static char sccsid[] = "@(#)hash_page.c	8.7 (Berkeley) 8/16/94";
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2_VACPP)
 #include <unistd.h>
 #endif
 
@@ -1146,12 +1146,12 @@ __free_ovflpage(HTAB *hashp, BUFHEAD *obufp)
 static int
 open_temp(HTAB *hashp)
 {
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 	sigset_t set, oset;
 #endif
 	static char namestr[] = "_hashXXXXXX";
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 	/* Block signals; make sure file goes away at process exit. */
 	(void)sigfillset(&set);
 	(void)sigprocmask(SIG_BLOCK, &set, &oset);
@@ -1159,12 +1159,12 @@ open_temp(HTAB *hashp)
 
 	if ((hashp->fp = mkstemp(namestr)) != -1) {
 		(void)unlink(namestr);
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 		(void)fcntl(hashp->fp, F_SETFD, 1);
 #endif									  
 	}
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) 
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 	(void)sigprocmask(SIG_SETMASK, &oset, (sigset_t *)NULL);
 #endif
 	return (hashp->fp != -1 ? 0 : -1);
