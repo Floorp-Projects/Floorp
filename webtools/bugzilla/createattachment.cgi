@@ -28,14 +28,6 @@ require "CGI.pl";
 
 use vars %::COOKIE, %::FILENAME;
 
-sub Punt {
-    my ($str) = (@_);
-    print "$str<P>Please hit <b>Back</b> and try again.\n";
-    PutFooter();
-    exit;
-}
-
-
 confirm_login();
 
 print "Content-type: text/html\n\n";
@@ -73,16 +65,16 @@ What kind of file is this?
 };
 } else {
     if ($::FORM{'data'} eq "" || !defined $::FILENAME{'data'}) {
-        Punt("No file was provided, or it was empty.");
+        PuntTryAgain("No file was provided, or it was empty.");
     }
     my $desc = trim($::FORM{'description'});
     if ($desc eq "") {
-        Punt("You must provide a description of your attachment.");
+        PuntTryAgain("You must provide a description of your attachment.");
     }
     my $ispatch = 0;
     my $mimetype = $::FORM{'type'};
     if (!defined $mimetype) {
-        Punt("You must select which kind of file you have.");
+        PuntTryAgain("You must select which kind of file you have.");
     }
     $mimetype = trim($mimetype);
     if ($mimetype eq "patch") {
@@ -93,7 +85,7 @@ What kind of file is this?
         $mimetype = $::FORM{'othertype'};
     }
     if ($mimetype !~ m@^(\w|-|\+|\.)+/(\w|-|\+|\.)+$@) {
-        Punt("You must select a legal mime type.  '<tt>$mimetype</tt>' simply will not do.");
+        PuntTryAgain("You must select a legal mime type.  '<tt>$mimetype</tt>' simply will not do.");
     }
     SendSQL("insert into attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) values ($id," .
             SqlQuote($::FILENAME{'data'}) . ", " . SqlQuote($desc) . ", " .
