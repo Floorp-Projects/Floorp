@@ -2492,7 +2492,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   nsAutoString itemType;
   if (aItemType) 
     itemType = *aItemType;
-  else if (!Compare(*aListType,NS_LITERAL_STRING("dl"),nsCaseInsensitiveStringComparator()))
+  else if (aListType->Equals(NS_LITERAL_STRING("dl"),nsCaseInsensitiveStringComparator()))
     itemType.Assign(NS_LITERAL_STRING("dd"));
   else
     itemType.Assign(NS_LITERAL_STRING("li"));
@@ -6148,7 +6148,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
     else if (IsInlineNode(curNode))
     {
       // if curNode is a non editable, drop it if we are going to <pre>
-      if (!Compare(tString,NS_LITERAL_STRING("pre"),nsCaseInsensitiveStringComparator()) 
+      if (tString.Equals(NS_LITERAL_STRING("pre"),nsCaseInsensitiveStringComparator()) 
         && (!mHTMLEditor->IsEditable(curNode)))
         continue; // do nothing to this block
       

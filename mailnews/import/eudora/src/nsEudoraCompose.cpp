@@ -504,7 +504,7 @@ void nsEudoraCompose::ExtractType( nsString& str)
 	// valid multipart!
 	if (str.Length() > 10) {
 		str.Left( tStr, 10);
-		if (!Compare(tStr, NS_LITERAL_STRING("multipart/"), nsCaseInsensitiveStringComparator()))
+		if (tStr.Equals(NS_LITERAL_STRING("multipart/"), nsCaseInsensitiveStringComparator()))
 			str.Truncate();
 	}
 }

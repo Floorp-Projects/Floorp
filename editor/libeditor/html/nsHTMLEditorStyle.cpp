@@ -715,7 +715,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }  
   if ( aProperty == nsIEditProperty::font &&    // or node is big or small and we are setting font size
        (NodeIsType(aNode, nsIEditProperty::big) || NodeIsType(aNode, nsIEditProperty::small)) &&
-       !Compare(*aAttribute,NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
+       aAttribute->Equals(NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
   {
     res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
   }
@@ -741,10 +741,10 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's the attribute we know about, keep looking
-    if (!Compare(attrString,*aAttribute,nsCaseInsensitiveStringComparator())) continue;
+    if (attrString.Equals(*aAttribute,nsCaseInsensitiveStringComparator())) continue;
     // if it's a special _moz... attribute, keep looking
     attrString.Left(tmp,4);
-    if (!Compare(tmp,NS_LITERAL_STRING("_moz"),nsCaseInsensitiveStringComparator())) continue;
+    if (tmp.Equals(NS_LITERAL_STRING("_moz"),nsCaseInsensitiveStringComparator())) continue;
     // otherwise, it's another attribute, so return false
     return PR_FALSE;
   }
@@ -798,7 +798,7 @@ PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode,
   attNode->GetValue(attrVal);
   
   // do values match?
-  if (!Compare(attrVal,*aValue,nsCaseInsensitiveStringComparator())) return PR_TRUE;
+  if (attrVal.Equals(*aValue,nsCaseInsensitiveStringComparator())) return PR_TRUE;
   return PR_FALSE;
 }
 

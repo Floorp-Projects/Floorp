@@ -96,7 +96,9 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     PRUnichar *prefValue;
     res = prefs->GetLocalizedUnicharPref("intl.collationOption", &prefValue);
     if (NS_SUCCEEDED(res)) {
-      mUseCodePointOrder = (Compare(nsDependentString(prefValue), NS_LITERAL_STRING("useCodePointOrder"), nsCaseInsensitiveStringComparator())==0);
+      mUseCodePointOrder =
+        nsDependentString(prefValue).Equals(NS_LITERAL_STRING("useCodePointOrder"),
+                                            nsCaseInsensitiveStringComparator());
       nsMemory::Free(prefValue);
     }
   }

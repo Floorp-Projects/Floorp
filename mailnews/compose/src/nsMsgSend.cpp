@@ -1680,7 +1680,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       nsAutoString attributeValue;
       if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
       {
-        if (!Compare(attributeValue, NS_LITERAL_STRING("true"), nsCaseInsensitiveStringComparator()))
+        if (attributeValue.Equals(NS_LITERAL_STRING("true"),
+                                  nsCaseInsensitiveStringComparator()))
           continue;
       }
     }

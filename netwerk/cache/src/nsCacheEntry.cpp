@@ -591,7 +591,7 @@ nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
     NS_ASSERTION(key !=  nsnull, "### nsCacheEntryHashTable::MatchEntry : null key");
     nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
 
-    return Compare(*cacheEntry->mKey, *(nsCString *)key) == 0;
+    return cacheEntry->mKey->Equals(*(nsCString *)key);
 }
 
 

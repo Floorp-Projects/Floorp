@@ -1030,7 +1030,7 @@ PRBool nsEudoraMac::IsValidMailboxName( nsCString& fName)
 {
 	if (m_depth > 1)
 		return( PR_TRUE);
-	if (!Compare(fName, NS_LITERAL_CSTRING("Eudora Nicknames"), nsCaseInsensitiveCStringComparator()))
+	if (fName.Equals(NS_LITERAL_CSTRING("Eudora Nicknames"), nsCaseInsensitiveCStringComparator()))
 		return( PR_FALSE);
 	return( PR_TRUE);
 }
