@@ -119,7 +119,7 @@
 #define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"   
 
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
-#define SHRIMP_PREF                    "shrimp.startup.enable"
+#define PREF_AUTOMIGRATION             "profile.allow_automigration"
 
 #if defined (XP_MAC)
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_WINDOW_BORDERS | nsIWebBrowserChrome::CHROME_WINDOW_CLOSE | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
@@ -887,11 +887,20 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to determine if we should force migration");
 	}
 
-#ifndef MOZ_XUL_APP // The phoenix/thunderbird doesn't use old profiles.
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+   
+    // First check PREF_AUTOMIGRATION. 
+    PRBool allowAutoMigration = PR_TRUE;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (NS_FAILED(rv)) return rv;
+
+    (void)prefBranch->GetBoolPref(PREF_AUTOMIGRATION, &allowAutoMigration);
 
     // Start Migaration activity
     rv = cmdLineArgs->GetCmdLineValue(INSTALLER_CMD_LINE_ARG, getter_Copies(cmdResult));
-    if (NS_SUCCEEDED(rv) || forceMigration)
+    if (allowAutoMigration && (NS_SUCCEEDED(rv) || forceMigration))
     {        
         if (cmdResult || forceMigration) {
             rv = MigrateProfileInfo();
@@ -928,8 +937,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
         }
     }
-
-#endif // MOZ_XUL_APP
 
 #ifdef DEBUG_profile_verbose
     printf("Profile Manager : Command Line Options : End\n");
