@@ -1069,6 +1069,22 @@
           ]]>
         </body>
       </method>
+      
+      <method name="attachFormFill">
+        <body><![CDATA[
+          var browsers = this.mPanelContainer.childNodes;
+          for (var i = 0; i < browsers.length; ++i)
+            browsers[i].attachFormFill();
+        ]]></body>
+      </method>
+
+      <method name="detachFormFill">
+        <body><![CDATA[
+          var browsers = this.mPanelContainer.childNodes;
+          for (var i = 0; i < browsers.length; ++i)
+            browsers[i].detachFormFill();
+        ]]></body>
+      </method>
 
       <property name="pageReport"
                 onget="return this.mCurrentBrowser.pageReport;"
