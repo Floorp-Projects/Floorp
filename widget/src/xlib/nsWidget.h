@@ -151,9 +151,6 @@ protected:
   // check to see whether or not a rect will intersect with the current scrolled area
   PRBool WidgetVisible  (nsRect   &aBounds);
 
-  PRUint32       mScrollX;
-  PRUint32       mScrollY;
-
   PRBool         mIsShown;
   PRBool         mIsMapped;
   int            mVisibility; // this is an int because that's the way X likes it
