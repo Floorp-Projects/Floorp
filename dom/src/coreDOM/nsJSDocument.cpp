@@ -34,8 +34,10 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMDocumentCSS.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentView.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -58,8 +60,10 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentCSSIID, NS_IDOMDOCUMENTCSS_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewIID, NS_IDOMDOCUMENTVIEW_IID);
+static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
@@ -927,6 +931,61 @@ DocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
 
 //
+// Native method GetOverrideStyle
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentCSSGetOverrideStyle(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMDocumentCSS> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kIDocumentCSSIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  nsIDOMCSSStyleDeclaration* nativeRet;
+  nsCOMPtr<nsIDOMElement> b0;
+  nsAutoString b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENTCSS_GETOVERRIDESTYLE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIElementIID,
+                                           NS_ConvertASCIItoUCS2("Element"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    result = nativeThis->GetOverrideStyle(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CreateElementWithNameSpace
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1120,6 +1179,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"createAttributeNS",          DocumentCreateAttributeNS,     2},
   {"getElementsByTagNameNS",          DocumentGetElementsByTagNameNS,     2},
   {"getElementById",          DocumentGetElementById,     1},
+  {"getOverrideStyle",          DocumentCSSGetOverrideStyle,     2},
   {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"createRange",          NSDocumentCreateRange,     0},
   {"load",          NSDocumentLoad,     2},

@@ -225,6 +225,7 @@
     "document.getelementsbytagnamens", \
     "document.implementation", \
     "document.importnode", \
+    "documentcss.getoverridestyle", \
     "documentstyle.stylesheets", \
     "documenttype.entities", \
     "documenttype.internalsubset", \
