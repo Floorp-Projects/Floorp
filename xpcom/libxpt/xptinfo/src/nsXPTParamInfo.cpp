@@ -16,8 +16,10 @@
  * Reserved.
  */
 
-// Convienence bits of nsXPTParamInfo that don't fit into xpt_cpp.h
-// flyweight wrappers.
+/*
+ * Convienence bits of nsXPTParamInfo that don't fit into xpt_cpp.h
+ * flyweight wrappers.
+ */
 
 #include "nsISupports.h"
 #include "nsIInterfaceInfoManager.h"
@@ -31,26 +33,67 @@
 // Placeholder - this implementation just returns NULL.
 
 nsIInterfaceInfo*
-nsXPTParamInfo::GetInterface() const
+nsXPTParamInfo::GetInterface(XPTInterfaceDirectoryEntry *entry) const
 {
-    NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,"not an interface");
+    NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,
+                    "not an interface");
 
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
         return NULL;
+    nsInterfaceInfoManager* mymgr = (nsInterfaceInfoManager *)mgr;
 
-//    nsIInterfaceInfo* info;
-//      mgr->GetInfoForIID(&InterfaceDirectoryEntryTable[type.type.interface].iid,
-//                         &info);
-    NS_RELEASE(mgr);
-//    return info;
-    return NULL;
+    // what typelib did the entry come from?
+    XPTHeader *which_header =
+        (XPTHeader *)PL_HashTableLookup(mymgr->mTypelibTable, entry);
+    NS_ASSERTION(which_header != NULL, "");
+
+    // can't use IID, because it could be null for this entry.
+    char *interface_name;
+    interface_name = which_header->interface_directory[type.type.interface].name;
+
+    nsIInterfaceInfo *info;
+    nsresult nsr = mymgr->GetInfoForName(interface_name, &info);
+    if (NS_IS_ERROR(nsr)) {
+        NS_RELEASE(mgr);
+        return NULL;
+    }
+    return info;
 }
 
 const nsIID*
-nsXPTParamInfo::GetInterfaceIID() const
+nsXPTParamInfo::GetInterfaceIID(XPTInterfaceDirectoryEntry *entry) const
 {
-    NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,"not an interface");
-//      return &InterfaceDirectoryEntryTable[type.type.interface].iid;
-    return (const nsIID*) NULL;
+    NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,
+                    "not an interface");
+
+    nsIInterfaceInfoManager* mgr;
+    if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
+        return NULL;
+    nsInterfaceInfoManager* mymgr = (nsInterfaceInfoManager *)mgr;
+
+    // what typelib did the entry come from?
+    XPTHeader *which_header =
+        (XPTHeader *)PL_HashTableLookup(mymgr->mTypelibTable, entry);
+    NS_ASSERTION(which_header != NULL, "");
+
+    // can't use IID, because it could be null for this entry.
+    char *interface_name;
+    interface_name = which_header->interface_directory[type.type.interface].name;
+
+    nsIID* iid;
+
+    nsresult nsr = mymgr->GetIIDForName(interface_name, &iid);
+    if (NS_IS_ERROR(nsr)) {
+        NS_RELEASE(mgr);
+        return NULL;
+    }
+    return iid;
 }
+
+
+
+
+
+
+

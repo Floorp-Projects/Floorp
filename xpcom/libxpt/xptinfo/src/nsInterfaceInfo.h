@@ -23,6 +23,10 @@
 #include "xpt_struct.h"
 #include "xpt_cpp.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 // XXX destroy this!
 class nsInterfaceInfo : public nsIInterfaceInfo
 {
@@ -48,10 +52,12 @@ class nsInterfaceInfo : public nsIInterfaceInfo
 public:
     virtual ~nsInterfaceInfo();
 
-    // should be private
-    XPTInterfaceDirectoryEntry* mEntry;
+#ifdef DEBUG
+    void print(FILE *fd);
+#endif
 
 private:
+    XPTInterfaceDirectoryEntry* mEntry;
     nsInterfaceInfo* mParent;
 
     uint16 mMethodBaseIndex;
@@ -59,6 +65,5 @@ private:
     uint16 mConstantBaseIndex;
     uint16 mConstantCount;
 };
-
 
 #endif /* nsInterfaceInfo_h___ */

@@ -28,6 +28,12 @@
 
 #include "nsInterfaceInfo.h"
 
+#include "nsHashtable.h"
+
+#include "plhash.h"
+
+class hash_record;
+
 class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 {
     NS_DECL_ISUPPORTS;
@@ -48,13 +54,37 @@ public:
     static nsIAllocator* GetAllocator(nsInterfaceInfoManager* iim = NULL);
 
 private:
-    // temporary hack
-    nsInterfaceInfo **mInfoArray;
-    nsInterfaceInfo *buildII(XPTInterfaceDirectoryEntry *entry);
+    friend nsIInterfaceInfo*
+        nsXPTParamInfo::GetInterface(XPTInterfaceDirectoryEntry *entry) const;
+    friend const nsIID*
+        nsXPTParamInfo::GetInterfaceIID(XPTInterfaceDirectoryEntry *entry) const;
 
-    XPTHeader *mHeader;
+    void initInterfaceTables();
+
+    // mapping between names and records
+    PLHashTable *mInterfaceTable;
+
+    // mapping between entries and typelibs (for nsXPTParamInfo::GetInterface)
+    PLHashTable *mTypelibTable;
+
+    // mapping between iids and names
+    // (record handling is looked up by name; iids are translated there)
+    nsHashtable *mIIDTable;
+
     nsInterfaceInfo *mParent;
     nsIAllocator* mAllocator;
 };
+
+// For references in the mInterfaceTable hashtable.
+class interface_record {
+public:
+    XPTHeader *which_header;
+    PRBool resolved;
+    int which;
+    XPTInterfaceDirectoryEntry *entry;
+    nsInterfaceInfo *info;
+};    
+
+
 
 #endif /* nsInterfaceInfoManager_h___ */
