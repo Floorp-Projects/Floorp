@@ -32,11 +32,10 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
 static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID); 
 
-nsString& GetEmptyString() {
-  static nsString* gEmptyStr=0;
-  if(!gEmptyStr)
-    gEmptyStr=new nsString;
-  return *gEmptyStr;
+static
+const nsString& GetEmptyString() {
+  static nsString gEmptyStr;
+  return gEmptyStr;
 }
 
 /**
