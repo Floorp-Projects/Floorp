@@ -44,6 +44,7 @@
                 mAddBookmarkSheetWindow = id; 
                 mAddBookmarkTitleField = id; 
                 mCachedBMDS = id; 
+                mHistoryDataSource = id; 
                 mImageLinkMenu = id; 
                 mImageMenu = id; 
                 mInputMenu = id; 
@@ -75,7 +76,18 @@
         {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
+        {
+            CLASS = CHHistoryDataSource; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = CHRDFOutlineViewDataSource; 
+        }, 
         {CLASS = CHLocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = CHRDFOutlineViewDataSource; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mOutlineView = id; }; 
+            SUPERCLASS = NSObject; 
+        }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
@@ -98,7 +110,8 @@
                 urlbar = id; 
             }; 
             SUPERCLASS = NSView; 
-        }
+        }, 
+        {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
     ); 
     IBVersion = 1; 
 }

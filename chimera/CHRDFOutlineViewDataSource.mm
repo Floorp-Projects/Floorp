@@ -148,16 +148,56 @@
     nsCOMPtr<nsIRDFResource> resource = !aItem ? mRootResource : [aItem resource];
     
     nsCOMPtr<nsIRDFResource> ordinalResource;
-    mContainerUtils->IndexToOrdinalResource(aIndex, getter_AddRefs(ordinalResource));
+    mContainerUtils->IndexToOrdinalResource(aIndex + 1, getter_AddRefs(ordinalResource));
     
     nsCOMPtr<nsIRDFNode> childNode;
     mDataSource->GetTarget(resource, ordinalResource, PR_TRUE, getter_AddRefs(childNode));
     if (childNode) {
+        // Yay. A regular container. We don't need to count, we can go directly to 
+        // our object. 
         nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(childNode));
         if (childResource) 
             return [self MakeWrapperFor:childResource];
     }
-    
+#if 0
+    else {
+        // Oh well, not a regular container. We need to count, dagnabbit. 
+        nsCOMPtr<nsIRDFResource> childProperty;
+        mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(childProperty));
+
+        NSLog(@"1");
+        nsCOMPtr<nsISimpleEnumerator> childNodes;
+        mDataSource->GetTargets(resource, childProperty, PR_TRUE, getter_AddRefs(childNodes));
+        
+        NSLog(@"2");
+        PRBool hasMore = PR_FALSE;
+        childNodes->HasMoreElements(&hasMore);
+        
+        PRInt32 count = 0;
+        
+        NSLog(@"3");
+        nsCOMPtr<nsISupports> supp;
+        while (hasMore && count < aIndex) {
+            childNodes->GetNext(getter_AddRefs(supp));
+            
+            NSLog(@"4");
+            ++count;
+            
+            childNodes->HasMoreElements(&hasMore);
+            NSLog(@"5");
+        }
+        nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(supp));
+        NSLog(@"6");
+        if (childResource) {
+            NSLog(@"6.5");
+            RDFOutlineViewItem* thing = [self MakeWrapperFor:childResource];
+            
+            NSLog(@"thing = %@", thing);
+            return thing;
+        }
+    }
+    NSLog(@"7");
+#endif    
     return nil;
 }
     
@@ -264,7 +304,7 @@
 
 - (id) MakeWrapperFor: (nsIRDFResource*) aRDFResource
 {
-    RDFOutlineViewItem* item = [[RDFOutlineViewItem alloc] init];
+    RDFOutlineViewItem* item = [[[RDFOutlineViewItem alloc] init] autorelease];
     [item setResource: aRDFResource];
     return item;
 }
