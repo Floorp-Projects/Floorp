@@ -31,6 +31,7 @@
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
+#include "nsIRenderingContextWin.h"
 
 BOOL nsWindow::sIsRegistered = FALSE;
 
@@ -1711,6 +1712,21 @@ PRBool nsWindow::OnPaint()
     nsRect    bounds;
     PRBool result = PR_TRUE;
     PAINTSTRUCT ps;
+
+#ifdef PAINT_DEBUG
+HRGN rgn = ::CreateRectRgn(0, 0, 0, 0);
+::GetUpdateRgn(mWnd, rgn, TRUE);
+HDC dc = ::GetDC(mWnd);
+HBRUSH brsh = ::CreateSolidBrush(RGB(255, 0, 0));
+::FillRgn(dc, rgn, brsh);
+::ReleaseDC(mWnd, dc);
+::DeleteObject(rgn);
+
+int x;
+
+for (x = 0; x < 10000000; x++);
+#endif
+
     HDC hDC = ::BeginPaint(mWnd, &ps);
 
     // XXX What is this check doing? If it's trying to check for an empty
@@ -1729,28 +1745,40 @@ PRBool nsWindow::OnPaint()
             event.rect = &rect;
             event.eventStructType = NS_PAINT_EVENT;
 
-            ::EndPaint(mWnd, &ps);
-
             static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
             static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+            static NS_DEFINE_IID(kRenderingContextWinIID, NS_IRENDERING_CONTEXT_WIN_IID);
 
-            if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext)) {
-              event.renderingContext->Init(mContext, this);
-              result = DispatchWindowEvent(&event);
+            if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
+            {
+              nsIRenderingContextWin *winrc;
+
+              if (NS_OK == event.renderingContext->QueryInterface(kRenderingContextWinIID, (void **)&winrc))
+              {
+                nsDrawingSurface surf;
+
+                //i know all of this seems a little backwards. i'll fix it, i swear. MMP
+
+                if (NS_OK == winrc->CreateDrawingSurface(hDC, surf))
+                {
+                  event.renderingContext->Init(mContext, surf);
+                  result = DispatchWindowEvent(&event);
+                  event.renderingContext->DestroyDrawingSurface(surf);
+                }
+
+                NS_RELEASE(winrc);
+              }
+
               NS_RELEASE(event.renderingContext);
-            } else {
-              result = PR_FALSE;
             }
+            else
+              result = PR_FALSE;
+
             NS_RELEASE(event.widget);
-
         }
-        else
-            ::EndPaint(mWnd, &ps);
     }
-    else
-        ::EndPaint(mWnd, &ps);
 
-//    ::EndPaint(mWnd, &ps);
+    ::EndPaint(mWnd, &ps);
 
     return result;
 }
