@@ -111,6 +111,11 @@ VIEWER MENU DISCARDABLE
       MENUITEM "Nav Quirks", VIEWER_NAV_QUIRKS_MODE
       MENUITEM "Standard", VIEWER_STANDARD_MODE
     }
+    POPUP "&Widget Rendering Mode Pref"
+    {
+      MENUITEM "Native", VIEWER_NATIVE_WIDGET_MODE
+      MENUITEM "Gfx",    VIEWER_GFX_WIDGET_MODE
+    }
   }
   POPUP "&Tools"
   {

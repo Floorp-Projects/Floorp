@@ -50,6 +50,11 @@ enum nsCompatibility {
   eCompatibility_NavQuirks  = 2
 };
 
+enum nsWidgetRendering {
+  eWidgetRendering_Native   = 1,
+  eWidgetRendering_Gfx      = 2
+};
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {
@@ -85,6 +90,12 @@ public:
    */
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult) = 0;
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
+
+  /**
+   * Access the widget rendering mode for this context
+   */
+  NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult) = 0;
+  NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode) = 0;
 
   /** 
    * Get base url for presentation

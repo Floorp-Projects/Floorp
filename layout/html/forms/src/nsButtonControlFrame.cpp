@@ -319,21 +319,23 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
   PRInt32 type;
   GetType(&type);
 
+  nsWidgetRendering mode;
+  aPresContext->GetWidgetRenderingMode(&mode);
+ 
   if (NS_FORM_INPUT_HIDDEN == type) { // there is no physical rep
     aDesiredLayoutSize.width   = 0;
     aDesiredLayoutSize.height  = 0;
     aDesiredLayoutSize.ascent  = 0;
     aDesiredLayoutSize.descent = 0;
   } else {
-#ifdef NS_GFX_RENDER_FORM_ELEMENTS
-	  nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext) );
-	  nsCOMPtr<nsIAtom> sbAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
-    aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
-
-	  const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
-	  nsMargin outlineBorder;
-	  outline->CalcBorderFor(this, outlineBorder);
-#endif
+    nsMargin outlineBorder;
+    if (eWidgetRendering_Gfx == mode) {
+      nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext));
+      nsCOMPtr<nsIAtom> sbAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
+      aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
+	    const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
+	    outline->CalcBorderFor(this, outlineBorder);
+    }
     nsSize styleSize;
     GetStyleSize(*aPresContext, aReflowState, styleSize);
     // a browse button shares its style context with its parent nsInputFile
@@ -359,16 +361,16 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
       aDesiredLayoutSize.maxElementSize->width  = minSize.width;
       aDesiredLayoutSize.maxElementSize->height = minSize.height;
     }
-#ifdef NS_GFX_RENDER_FORM_ELEMENTS
-    nscoord horOutline = outlineBorder.left + outlineBorder.right;
-    nscoord verOutline = outlineBorder.top  + outlineBorder.bottom;
-    aDesiredLayoutSize.width  += horOutline;
-    aDesiredLayoutSize.height += verOutline;
-    if (aDesiredLayoutSize.maxElementSize) {
-      aDesiredLayoutSize.maxElementSize->width  += horOutline;
-      aDesiredLayoutSize.maxElementSize->height += verOutline; 
+    if (eWidgetRendering_Gfx == mode) {
+      nscoord horOutline = outlineBorder.left + outlineBorder.right;
+      nscoord verOutline = outlineBorder.top  + outlineBorder.bottom;
+      aDesiredLayoutSize.width  += horOutline;
+      aDesiredLayoutSize.height += verOutline;
+      if (aDesiredLayoutSize.maxElementSize) {
+        aDesiredLayoutSize.maxElementSize->width  += horOutline;
+        aDesiredLayoutSize.maxElementSize->height += verOutline; 
+      }
     }
-#endif
   }
 
   aDesiredWidgetSize.width = aDesiredLayoutSize.width;
@@ -468,10 +470,12 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {
- 
-#ifndef NS_GFX_RENDER_FORM_ELEMENTS
-  return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-#else
+  nsWidgetRendering mode;
+  aPresContext.GetWidgetRenderingMode(&mode);
+
+  if (eWidgetRendering_Native == mode) {
+    return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  } 
 
   // if disabled do nothing
   if (nsFormFrame::GetDisabled(this)) {
@@ -501,8 +505,7 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 		  if (mPressed)
 			   mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "PRESSED", PR_TRUE);
           else
-               mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "ROLLOVER", PR_TRUE);
-
+        mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "ROLLOVER", PR_TRUE);
 	      break;
         case NS_MOUSE_LEFT_BUTTON_DOWN: 
           mGotFocus = PR_TRUE;
@@ -541,7 +544,6 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
   return NS_OK;
 
-#endif
 }
 
 void 

@@ -303,8 +303,10 @@ protected:
                                 nsAbsoluteItems& aAbsoluteItems,
                                 nsIFrame*&       aNewFrame,
                                 PRBool &         aProcessChildren,
-                                PRBool &         aIsAbsolutelyPositioned,
-                                PRBool &         aFrameHasBeenInitialized);
+                                PRBool           aIsAbsolutelyPositioned,
+                                PRBool &         aFrameHasBeenInitialized,
+                                PRBool           aIsFixedPositioned,
+                                nsAbsoluteItems& aFixedItems);
 
   nsresult ConstructFrameByTag(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,

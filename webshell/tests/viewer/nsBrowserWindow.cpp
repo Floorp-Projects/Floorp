@@ -2872,6 +2872,15 @@ nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
   }
 }
 
+void 
+nsBrowserWindow::SetWidgetRenderingMode(PRBool aIsNative)
+{
+  if (nsnull != mPrefs) { 
+    int32 prefInt = (aIsNative) ? eWidgetRendering_Native : eWidgetRendering_Gfx;
+    mPrefs->SetIntPref("nglayout.widget.mode", prefInt);
+    mPrefs->SavePrefFile();
+  }
+}
 
 nsEventStatus
 nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
@@ -2966,6 +2975,13 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
     SetCompatibilityMode(VIEWER_STANDARD_MODE == aID);
     result = nsEventStatus_eConsumeNoDefault;
     break;
+
+  case VIEWER_NATIVE_WIDGET_MODE:
+  case VIEWER_GFX_WIDGET_MODE:
+    SetWidgetRenderingMode(VIEWER_NATIVE_WIDGET_MODE == aID);
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
   }
   return result;
 }

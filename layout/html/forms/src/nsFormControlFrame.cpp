@@ -61,7 +61,6 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
-
 nsFormControlFrame::nsFormControlFrame()
   : nsLeafFrame()
 {
@@ -234,12 +233,14 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
     dx->SupportsNativeWidgets(requiresWidget);
   }
 
-#ifdef NS_GFX_RENDER_FORM_ELEMENTS
-    // Check with the frame to see if requires a widget to render
-  if (PR_TRUE == requiresWidget) {
-    RequiresWidget(requiresWidget);   
+  nsWidgetRendering mode;
+  aPresContext.GetWidgetRenderingMode(&mode);
+  if (eWidgetRendering_Gfx == mode) {
+      // Check with the frame to see if requires a widget to render
+    if (PR_TRUE == requiresWidget) {
+      RequiresWidget(requiresWidget);   
+    }
   }
-#endif
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 

@@ -41,6 +41,8 @@ public:
   NS_IMETHOD GetPrefs(nsIPref** aPrefsResult);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
+  NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);
+  NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode);
   NS_IMETHOD GetBaseURL(nsIURL** aURLResult);
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
   NS_IMETHOD ResolveStyleContextFor(nsIContent* aContent,
@@ -112,6 +114,7 @@ protected:
   nsVoidArray           mImageLoaders;
   nsIEventStateManager* mEventManager;
   nsCompatibility       mCompatibilityMode;
+  nsWidgetRendering     mWidgetRenderingMode;
   nsIURL*               mBaseURL;
   PRBool                mStopped;
 

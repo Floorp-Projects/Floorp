@@ -102,24 +102,27 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredLayoutSize,
                                   nsSize&                  aDesiredWidgetSize)
 {
-#ifndef NS_GFX_RENDER_FORM_ELEMENTS
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  aDesiredWidgetSize.width  = GetRadioboxSize(p2t);
-  aDesiredWidgetSize.height = aDesiredWidgetSize.width;
 
-  aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
-  aDesiredLayoutSize.height = aDesiredWidgetSize.height;
-  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
-  aDesiredLayoutSize.descent = 0;
-  if (aDesiredLayoutSize.maxElementSize) {
-    aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
-    aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+  nsWidgetRendering mode;
+  aPresContext->GetWidgetRenderingMode(&mode);
+  if (eWidgetRendering_Native == mode) {
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    aDesiredWidgetSize.width  = GetRadioboxSize(p2t);
+    aDesiredWidgetSize.height = aDesiredWidgetSize.width;
+
+    aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
+    aDesiredLayoutSize.height = aDesiredWidgetSize.height;
+    aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+    aDesiredLayoutSize.descent = 0;
+    if (aDesiredLayoutSize.maxElementSize) {
+      aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
+      aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+    }
+  } else {
+    nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
+                                    aDesiredWidgetSize);
   }
-#else
-  nsFormControlFrame::GetDesiredSize(aPresContext,aReflowState,aDesiredLayoutSize,
-                                  aDesiredWidgetSize);
-#endif
 }
 
 void 

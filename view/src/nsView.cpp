@@ -777,7 +777,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   PRBool handledByChild = PR_FALSE;
 
   //see if any of this view's children can process the event
-  if (aStatus == nsEventStatus_eIgnore && !(mEventFlags & NS_VIEW_FLAG_DONT_CHECK_CHILDREN)) {
+  if (aStatus == nsEventStatus_eIgnore && !(mVFlags & NS_VIEW_FLAG_DONT_CHECK_CHILDREN)) {
     PRInt32 numkids;
     nsRect  trect;
     nscoord x, y;
@@ -1292,7 +1292,7 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
 
 NS_IMETHODIMP nsView :: SetViewFlags(PRInt32 aFlags)
 {
-  mVFlags &= aFlags;
+  mVFlags |= aFlags;
   return NS_OK;
 }
 
