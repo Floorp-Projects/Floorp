@@ -288,7 +288,8 @@ class nsIUBidiUtils : public nsISupports {
 
 #define IS_HEBREW_CHAR(c) (((0x0590 <= (c)) && ((c)<= 0x05FF)) || (((c) >= 0xfb1d) && ((c) <= 0xfb4f)))
 #define IS_06_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
-#define IS_FE_CHAR(c) ((0xfe70 <= (c)) && ((c)<= 0xfeFF))
+#define IS_FE_CHAR(c) (((0xfb50 <= (c)) && ((c)<= 0xfbFF)) \
+                       || ((0xfe70 <= (c)) && ((c)<= 0xfeFC)))
 #define IS_ARABIC_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
 #define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && !IS_HINDI_DIGIT(c))
 

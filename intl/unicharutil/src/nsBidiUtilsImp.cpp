@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roozbeh Pournader <roozbeh@sharif.edu>
  */
 #ifdef IBMBIDI
 #include "nsCom.h"
@@ -65,7 +66,7 @@ static nsCharType cc2ucd[5] = {
 
 #define FE_TO_06_OFFSET 0xfe70
 
-static PRUnichar  FE_TO_06 [][2] = {
+static PRUnichar FE_TO_06 [][2] = {
     {0x064b,0x0000},{0x064b,0x0640},{0x064c,0x0000},
     {0x0000,0x0000},{0x064d,0x0000},{0x0000,0x0000},
     {0x064e,0x0000},{0x064e,0x0640},{0x064f,0x0000},
@@ -112,9 +113,39 @@ static PRUnichar  FE_TO_06 [][2] = {
     {0x064a,0x0000},{0x064a,0x0000},{0x064a,0x0000},
     {0x064a,0x0000},{0x0644,0x0622},{0x0644,0x0622},
     {0x0644,0x0623},{0x0644,0x0623},{0x0644,0x0625},
-    {0x0644,0x0625},{0x0644,0x0627},{0x0644,0x0627},
-    {0x0000,0x0000},{0x0000,0x0000},{0x0000,0x0000}
+    {0x0644,0x0625},{0x0644,0x0627},{0x0644,0x0627}
 };
+
+static PRUnichar FB_TO_06 [] = {
+    0x0671,0x0671,0x067B,0x067B,0x067B,0x067B,0x067E,0x067E, //FB50-FB57
+    0x067E,0x067E,0x0680,0x0680,0x0680,0x0680,0x067A,0x067A, //FB58-FB5F
+    0x067A,0x067A,0x067F,0x067F,0x067F,0x067F,0x0679,0x0679, //FB60-FB67
+    0x0679,0x0679,0x06A4,0x06A4,0x06A4,0x06A4,0x06A6,0x06A6, //FB68-FB6F
+    0x06A6,0x06A6,0x0684,0x0684,0x0684,0x0684,0x0683,0x0683, //FB70-FB77
+    0x0683,0x0683,0x0686,0x0686,0x0686,0x0686,0x0687,0x0687, //FB78-FB7F
+    0x0687,0x0687,0x068D,0x068D,0x068C,0x068C,0x068E,0x068E, //FB80-FB87
+    0x0688,0x0688,0x0698,0x0698,0x0691,0x0691,0x06A9,0x06A9, //FB88-FB8F
+    0x06A9,0x06A9,0x06AF,0x06AF,0x06AF,0x06AF,0x06B3,0x06B3, //FB90-FB97
+    0x06B3,0x06B3,0x06B1,0x06B1,0x06B1,0x06B1,0x06BA,0x06BA, //FB98-FB9F
+    0x06BB,0x06BB,0x06BB,0x06BB,0x06C0,0x06C0,0x06C1,0x06C1, //FBA0-FBA7
+    0x06C1,0x06C1,0x06BE,0x06BE,0x06BE,0x06BE,0x06D2,0x06D2, //FBA8-FBAF
+    0x06D3,0x06D3,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000, //FBB0-FBB7
+    0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000, //FBB8-FBBF
+    0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000, //FBC0-FBC7
+    0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000, //FBC8-FBCF
+    0x0000,0x0000,0x0000,0x06AD,0x06AD,0x06AD,0x06AD,0x06C7, //FBD0-FBD7
+    0x06C7,0x06C6,0x06C6,0x06C8,0x06C8,0x0677,0x06CB,0x06CB, //FBD8-FBDF
+    0x06C5,0x06C5,0x06C9,0x06C9,0x06D0,0x06D0,0x06D0,0x06D0, //FBE0-FBE7
+    0x0649,0x0649,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000, //FBE8-FBEF
+    0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000, //FBF0-FBF7
+    0x0000,0x0000,0x0000,0x0000,0x06CC,0x06CC,0x06CC,0x06CC  //FBF8-FBFF
+};
+
+#define PresentationToOriginal(c, order)                  \
+    (((0xFE70 <= (c) && (c) <= 0xFEFC)) ?                 \
+         FE_TO_06[(c)- FE_TO_06_OFFSET][order] :                    \
+     (((0xFB50 <= (c) && (c) <= 0xFBFF) && (order) == 0) ? \
+         FB_TO_06[(c)-0xFB50] : (PRUnichar) 0x0000))
 
 //============ Begin Arabic Basic to Presentation Form B Code ============
 // Note: the following code are moved from gfx/src/windows/nsRenderingContextWin.cpp
@@ -130,12 +161,29 @@ static PRUint8 gArabicMap2[] = {
 0xED, 0xEF, 0xF1                                // 0648-064A
 };
 
-#define PresentationFormB(c, form)                           \
-  (((0x0622<=(c)) && ((c)<=0x063A)) ?                        \
-    (0xFE00|(gArabicMap1[(c)-0x0622] + (form))) :            \
-     (((0x0641<=(c)) && ((c)<=0x064A)) ?                     \
-      (0xFE00|(gArabicMap2[(c)-0x0641] + (form))) : (c)))
+static PRUint8 gArabicMapEx[] = {
+      0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0671-0677
+0x00, 0x66, 0x5E, 0x52, 0x00, 0x00, 0x56, 0x62, // 0678-067F
+0x5A, 0x00, 0x00, 0x76, 0x72, 0x00, 0x7A, 0x7E, // 0680-0687
+0x88, 0x00, 0x00, 0x00, 0x84, 0x82, 0x86, 0x00, // 0688-068F
+0x00, 0x8C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0690-0697
+0x8A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0698-069F
+0x00, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x6E, 0x00, // 06A0-06A7
+0x00, 0x8E, 0x00, 0x00, 0x00, 0xD3, 0x00, 0x92, // 06A8-06AF
+0x00, 0x9A, 0x00, 0x96, 0x00, 0x00, 0x00, 0x00, // 06B0-06B7
+0x00, 0x00, 0x00, 0xA0, 0x00, 0x00, 0xAA, 0x00, // 06B8-06BF
+0xA4, 0xA6, 0x00, 0x00, 0x00, 0xE0, 0xD9, 0xD7, // 06C0-06C7
+0xDB, 0xE2, 0x00, 0xDE, 0xFC, 0x00, 0x00, 0x00, // 06C8-06CF
+0xE4, 0x00, 0xAE, 0xB0                          // 06D0-06D3
+};
 
+#define PresentationFormB(c, form)                                       \
+    (((0x0622<=(c)) && ((c)<=0x063A)) ?                                  \
+      (0xFE00|(gArabicMap1[(c)-0x0622] + (form))) :                      \
+       (((0x0641<=(c)) && ((c)<=0x064A)) ?                               \
+        (0xFE00|(gArabicMap2[(c)-0x0641] + (form))) :                    \
+         (((0x0671<=(c)) && ((c))<=0x06D3) && gArabicMapEx[(c)-0x0671]) ? \
+          (0xFB00|(gArabicMapEx[(c)-0x0671] + (form))) : (c)))
 enum {
    eIsolated,  // or Char N
    eFinal,     // or Char R
@@ -147,7 +195,7 @@ enum {
    eRJ = 1, // Right-Joining
    eLJ = 2, // Left-Joining
    eDJ = 3, // Dual-Joining
-   eNJ  = 4,// Non-Joining
+   eNJ = 4, // Non-Joining
    eJC = 7, // Joining Causing
    eRightJCMask = 2, // bit of Right-Join Causing 
    eLeftJCMask = 1   // bit of Left-Join Causing 
@@ -168,20 +216,42 @@ enum {
                          : eIsolated))                      \
     )                     : eIsolated))                     \
 
-
+// All letters without an equivalen in the FB50 block are 'eNJ' here. This
+// should be fixed after finding some better mechanism for handling Arabic.
 static PRInt8 gJoiningClass[] = {
-          eRJ, eRJ, eRJ, eRJ, eDJ, eRJ, // 0620-0627
+          eNJ, eRJ, eRJ, eRJ, eRJ, eDJ, eRJ, // 0621-0627
 eDJ, eRJ, eDJ, eDJ, eDJ, eDJ, eDJ, eRJ, // 0628-062F
 eRJ, eRJ, eRJ, eDJ, eDJ, eDJ, eDJ, eDJ, // 0630-0637
 eDJ, eDJ, eDJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0638-063F
 eJC, eDJ, eDJ, eDJ, eDJ, eDJ, eDJ, eDJ, // 0640-0647
 eRJ, eRJ, eDJ, eTr, eTr, eTr, eTr, eTr, // 0648-064F
-eTr, eTr, eTr                           // 0650-0652
+eTr, eTr, eTr, eTr, eTr, eTr, eNJ, eNJ, // 0650-0657
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0658-065F
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0660-0667
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0668-066F
+eTr, eRJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0670-0677
+eNJ, eDJ, eDJ, eDJ, eNJ, eNJ, eDJ, eDJ, // 0678-067F
+eDJ, eNJ, eNJ, eDJ, eDJ, eNJ, eDJ, eDJ, // 0680-0687
+eRJ, eNJ, eNJ, eNJ, eRJ, eRJ, eRJ, eNJ, // 0688-068F
+eNJ, eRJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0690-0697
+eRJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0698-069F
+eNJ, eNJ, eNJ, eNJ, eDJ, eNJ, eDJ, eNJ, // 06A0-06A7
+eNJ, eDJ, eNJ, eNJ, eNJ, eDJ, eNJ, eDJ, // 06A8-06AF
+eNJ, eDJ, eNJ, eDJ, eNJ, eNJ, eNJ, eNJ, // 06B0-06B7
+eNJ, eNJ, eNJ, eDJ, eNJ, eNJ, eDJ, eNJ, // 06B8-06BF
+eRJ, eDJ, eNJ, eNJ, eNJ, eRJ, eRJ, eRJ, // 06C0-06C7
+eRJ, eRJ, eNJ, eRJ, eDJ, eNJ, eNJ, eNJ, // 06C8-06CF
+eDJ, eNJ, eRJ, eRJ, eNJ, eNJ, eTr, eTr, // 06D0-06D7
+eTr, eTr, eTr, eTr, eTr, eTr, eTr, eTr, // 06D8-06DF
+eTr, eTr, eTr, eTr, eTr, eNJ, eNJ, eTr, // 06E0-06E7
+eTr, eNJ, eTr, eTr, eTr, eTr, eNJ, eNJ, // 06E8-06EF
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 06F0-06F7
+eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ  // 06F8-06FF
 };
 
 #define GetJoiningClass(c)                   \
-  (((0x0622 <= (c)) && ((c) <= 0x0652)) ?    \
-       (gJoiningClass[(c) - 0x0622]) :       \
+  (((0x0621 <= (c)) && ((c) <= 0x06FF)) ?    \
+       (gJoiningClass[(c) - 0x0621]) :       \
       ((0x200D == (c)) ? eJC : eTr))
 
 static PRUint16 gArabicLigatureMap[] = 
@@ -417,10 +487,10 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
       break; // no need to convert char after the NULL
     if (IS_FE_CHAR(aSrcUnichars[i])) {
       //ahmed for lamalf
-      PRUnichar ch = (FE_TO_06[aSrcUnichars[i] - FE_TO_06_OFFSET][1]);
+      PRUnichar ch = (PresentationToOriginal(aSrcUnichars[i], 1));
       if(ch)
         aDst += ch;
-      ch=(FE_TO_06[aSrcUnichars[i] - FE_TO_06_OFFSET][0]);
+      ch=(PresentationToOriginal(aSrcUnichars[i], 0));
       if(ch)
         aDst += ch;
       else //if it is 00, just output what we have in FExx
@@ -467,10 +537,10 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsStri
       for (i=endArabic; i>=beginArabic; i--) {
         if(IS_FE_CHAR(aSrcUnichars[i])) {
           //ahmed for the bug of lamalf
-          aDst += FE_TO_06[aSrcUnichars[i] - FE_TO_06_OFFSET][0];
-          if (FE_TO_06[aSrcUnichars[i] - FE_TO_06_OFFSET][1]) {
+          aDst += PresentationToOriginal(aSrcUnichars[i], 0);
+          if (PresentationToOriginal(aSrcUnichars[i], 1)) {
             // Two characters, we have to resize the buffer :(
-            aDst += FE_TO_06[aSrcUnichars[i] - FE_TO_06_OFFSET][1];
+             aDst += PresentationToOriginal(aSrcUnichars[i], 1);
           } // if expands to 2 char
         } else {
           // do we need to check the following if ?
