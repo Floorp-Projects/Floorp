@@ -10401,7 +10401,20 @@ void CEditImageElement::StreamOut( IStreamOut *pOut){
 
 
     if( m_href != ED_LINK_ID_NONE ){
-        pOut->WriteZString( m_href->hrefStr );
+        // Must make URLs absolute when copying
+        CEditBuffer *pBuffer = GetEditBuffer();
+        char *pAbsolute = NULL;
+        if( pBuffer )
+            pAbsolute = NET_MakeAbsoluteURL(LO_GetBaseURL(pBuffer->m_pContext), m_href->hrefStr);
+
+        if( pAbsolute )
+        {
+            pOut->WriteZString( pAbsolute );
+            XP_FREE(pAbsolute);
+        }
+        else
+            pOut->WriteZString( m_href->hrefStr );
+
         pOut->WriteZString( m_href->pExtra );
     }
     else {
