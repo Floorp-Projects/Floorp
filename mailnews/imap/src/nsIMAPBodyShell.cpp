@@ -749,7 +749,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
   // No children for a leaf - just parse this
   
   // Eat the buffer into the parser
-  fNextToken = GetNextToken();
+  AdvanceToNextToken();
   
   // body type  ("application", "text", "image", etc.)
   if (ContinueParse())
@@ -757,7 +757,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
     fNextToken++;	// eat the first '('
     m_bodyType = CreateNilString();
     if (ContinueParse())
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
     else
       SetIsValid(PR_FALSE);
   }
@@ -769,7 +769,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
   {
     m_bodySubType = CreateNilString();
     if (ContinueParse())
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
     else
       SetIsValid(PR_FALSE);
   }
@@ -794,12 +794,12 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
         }
         else
         {
-          fNextToken = GetNextToken();
+          AdvanceToNextToken();
         }
       }
     }
     else if (!PL_strcasecmp(fNextToken, "NIL"))
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
   }
   else
     SetIsValid(PR_FALSE);
@@ -809,7 +809,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
   {
     m_bodyID = CreateNilString();
     if (ContinueParse())
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
     else
       SetIsValid(PR_FALSE);
   }
@@ -821,7 +821,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
   {
     m_bodyDescription = CreateNilString();
     if (ContinueParse())
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
     else
       SetIsValid(PR_FALSE);
   }
@@ -833,7 +833,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
   {
     m_bodyEncoding = CreateNilString();
     if (ContinueParse())
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
     else
       SetIsValid(PR_FALSE);
   }
@@ -854,7 +854,7 @@ PRBool nsIMAPBodypartLeaf::ParseIntoObjects()
       SetIsValid(PR_FALSE);
     
     if (ContinueParse())
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
     else
       SetIsValid(PR_FALSE);
   }
@@ -1386,14 +1386,14 @@ PRBool nsIMAPBodypartMultipart::ParseIntoObjects()
     // Parse what's left of this.
     
     // Eat the buffer into the parser
-    fNextToken = GetNextToken();
+    AdvanceToNextToken();
     if (ContinueParse())
     {
       // multipart subtype (mixed, alternative, etc.)
       fNextToken++;
       m_bodySubType = CreateNilString();
       if (ContinueParse())
-        fNextToken = GetNextToken();
+        AdvanceToNextToken();
       else
         SetIsValid(PR_FALSE);
     }
@@ -1407,7 +1407,7 @@ PRBool nsIMAPBodypartMultipart::ParseIntoObjects()
       {
         char *attribute = CreateNilString();
         if (ContinueParse())
-          fNextToken = GetNextToken();
+          AdvanceToNextToken();
         else
           SetIsValid(PR_FALSE);
         
@@ -1422,7 +1422,7 @@ PRBool nsIMAPBodypartMultipart::ParseIntoObjects()
           }
           
           if (ContinueParse())
-            fNextToken = GetNextToken();
+            AdvanceToNextToken();
           else
             SetIsValid(PR_FALSE);
           PR_Free(attribute);
@@ -1432,14 +1432,10 @@ PRBool nsIMAPBodypartMultipart::ParseIntoObjects()
           PR_FREEIF(attribute);
           if (ContinueParse())
           {
-            // removed because parser was advancing one too many tokens
-            //fNextToken = GetNextToken();
             char *value = CreateNilString();
             PR_FREEIF(value);
             if (ContinueParse())
-              fNextToken = GetNextToken();
-            //if (ContinueParse())
-            //	fNextToken = GetNextToken();
+              AdvanceToNextToken();
           }
         }
       }

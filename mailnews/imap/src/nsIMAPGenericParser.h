@@ -93,7 +93,7 @@ protected:
   virtual void        SetSyntaxError(PRBool error);
   virtual PRBool     at_end_of_line();
 
-  char *GetNextToken();
+  void AdvanceToNextToken();
   void AdvanceToNextLine();
 	void AdvanceTokenizerStartingPoint (int32 bytesToAdvance);
   void ResetLexAnalyzer();

@@ -208,14 +208,14 @@ PRBool nsIMAPGenericParser::at_end_of_line()
 void nsIMAPGenericParser::skip_to_CRLF()
 {
   while (Connected() && !at_end_of_line())
-    fNextToken = GetNextToken();
+    AdvanceToNextToken();
 }
 
 // fNextToken initially should point to
 // a string after the initial open paren ("(")
 // After this call, fNextToken points to the
 // first character after the matching close
-// paren.  Only call GetNextToken to get the NEXT
+// paren.  Only call AdvanceToNextToken() to get the NEXT
 // token after the one returned in fNextToken.
 void nsIMAPGenericParser::skip_to_close_paren()
 {
@@ -225,7 +225,7 @@ void nsIMAPGenericParser::skip_to_close_paren()
     numberOfCloseParensNeeded--;
     fNextToken++;
     if (!fNextToken || !*fNextToken)
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
   }
   
   while (ContinueParse() && numberOfCloseParensNeeded > 0)
@@ -245,17 +245,17 @@ void nsIMAPGenericParser::skip_to_close_paren()
       {
         fNextToken = loc + 1;
         if (!fNextToken || !*fNextToken)
-          fNextToken = GetNextToken();
+          AdvanceToNextToken();
         break;	// exit the loop
       }
     }
     
     if (numberOfCloseParensNeeded > 0)
-      fNextToken = GetNextToken();
+      AdvanceToNextToken();
   }
 }
 
-char *nsIMAPGenericParser::GetNextToken()
+void nsIMAPGenericParser::AdvanceToNextToken()
 {
   if (!fCurrentLine || fAtEndOfLine)
     AdvanceToNextLine();
@@ -276,8 +276,6 @@ char *nsIMAPGenericParser::GetNextToken()
       fNextToken = CRLF;
     }
   }
-  
-  return fNextToken;
 }
 
 void nsIMAPGenericParser::AdvanceToNextLine()
@@ -323,8 +321,7 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
   NS_PRECONDITION(bytesToAdvance>=0, "bytesToAdvance must not be negative");
   if(!fStartOfLineOfTokens)
       return;
-
-  // In the last call to GetNextToken(), the token separator was cleared to '\0'
+  // The last call to AdvanceToNextToken() cleared the token separator to '\0'
   // iff |fCurrentTokenPlaceHolder|.  We must recover this token separator now.
   if (fCurrentTokenPlaceHolder)
   {
@@ -347,7 +344,7 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 // Quoted:  "Test Folder 1"
 // Literal: {13}Test Folder 1
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
-// the end of the Astring.  Call GetNextToken() to get the token after it.
+// the end of the Astring.  Call AdvanceToNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateAstring()
 {
   if (*fNextToken == '{')
@@ -367,11 +364,10 @@ char *nsIMAPGenericParser::CreateAstring()
 
 // Create an atom
 // This function does not advance the parser.
-// Call GetNextToken() to get the next token after the atom.
+// Call AdvanceToNextToken() to get the next token after the atom.
 char *nsIMAPGenericParser::CreateAtom()
 {
   char *rv = PL_strdup(fNextToken);
-  //fNextToken = GetNextToken();
   return (rv);
 }
 
@@ -379,14 +375,13 @@ char *nsIMAPGenericParser::CreateAtom()
 // Call with fNextToken pointing to the thing which we think is the nilstring.
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
 // the end of the string, if it is a string, or at the NIL.
-// Regardless of type, call GetNextToken() to get the token after it.
+// Regardless of type, call AdvanceToNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateNilString()
 {
   if (!PL_strncasecmp(fNextToken, "NIL", 3))
   {
     if (strlen(fNextToken) != 3)
       fNextToken += 3;
-    //fNextToken = GetNextToken();
     return NULL;
   }
   else
@@ -397,7 +392,7 @@ char *nsIMAPGenericParser::CreateNilString()
 // Create a string, which can either be quoted or literal,
 // but not an atom.
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
-// the end of the String.  Call GetNextToken() to get the token after it.
+// the end of the String.  Call AdvanceToNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateString()
 {
   if (*fNextToken == '{')
@@ -408,7 +403,6 @@ char *nsIMAPGenericParser::CreateString()
   else if (*fNextToken == '"')
   {
     char *rv = CreateQuoted();		// quoted
-    //fNextToken = GetNextToken();
     return (rv);
   }
   else
@@ -418,9 +412,8 @@ char *nsIMAPGenericParser::CreateString()
   }
 }
 
-
-// This function leaves us off with fCurrentTokenPlaceHolder immediately after
-// the end of the closing quote.  Call GetNextToken() to get the token after it.
+// This function sets fCurrentTokenPlaceHolder immediately after the end of the
+// closing quote.  Call AdvanceToNextToken() to get the token after it.
 // QUOTED_CHAR     ::= <any TEXT_CHAR except quoted_specials> /
 //                     "\" quoted_specials
 // TEXT_CHAR       ::= <any CHAR except CR and LF>
@@ -498,8 +491,8 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 
 
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
-// the end of the literal string.  Call GetNextToken() to get the token after it
-// the literal string.
+// the end of the literal string.  Call AdvanceToNextToken() to get the token
+// after the literal string.
 char *nsIMAPGenericParser::CreateLiteral()
 {
   int32 numberOfCharsInMessage = atoi(fNextToken + 1);
@@ -642,7 +635,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
       {
         if (*fCurrentTokenPlaceHolder == '{')
         {
-          fNextToken = GetNextToken();
+          AdvanceToNextToken();
           NS_ASSERTION(fNextToken, "out of memory?or invalid syntax");
           if (fNextToken)
           {
@@ -670,7 +663,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
                 returnString.Append(lit);
                 //fCurrentTokenPlaceHolder += nsCRT::strlen(lit);
                 //AdvanceTokenizerStartingPoint(nsCRT::strlen(lit));
-                //fNextToken = GetNextToken();
+                //AdvanceToNextToken();
                 extractReset = PR_TRUE;
                 PR_Free(lit);
               }
@@ -697,7 +690,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
             bytesUsed = 0;
           }
           
-          fNextToken = GetNextToken();
+          AdvanceToNextToken();
           NS_ASSERTION(fNextToken, "syntax error or out of memory creating paren group");
           if (fNextToken)
           {
@@ -753,7 +746,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
       returnString.Append(buf);
       buf.Truncate();
     }
-    fNextToken = GetNextToken();
+    AdvanceToNextToken();
   }
   
   return ToNewCString(returnString);
