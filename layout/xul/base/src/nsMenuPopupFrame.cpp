@@ -95,7 +95,7 @@ GetPopupSetFrame(nsPresContext* aPresContext)
  
   nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
   if (!rootBox)
-    return nsnsull;
+    return nsnull;
 
   nsIFrame* popupSetFrame;
   rootBox->GetPopupSetFrame(&popupSetFrame);
@@ -911,7 +911,8 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   // above/below or to the left/right.
   PRBool anchoredToParent = PR_FALSE;
   PRBool readjustAboveBelow = PR_FALSE;
-  
+
+  NS_ERROR("aaa");
   if ( aXPos != -1 || aYPos != -1 ) {
   
     // for this case, we've been handed a specific x/y location (in client coordinates) for
@@ -1144,9 +1145,9 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
 
     // shrink to fit onto the screen, vertically and horizontally
     if(mRect.width > screenWidthTwips) 
-        mRect.width = screenWidthTwips;    
+      mRect.width = screenWidthTwips;    
     if(mRect.height > screenHeightTwips)
-        mRect.height = screenHeightTwips;   
+      mRect.height = screenHeightTwips;   
     
     // we now know where the view is...make sure that it's still onscreen at all!
     if ( screenViewLocX < screenLeftTwips ) {
