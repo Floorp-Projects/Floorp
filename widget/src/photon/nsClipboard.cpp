@@ -350,7 +350,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 		We can have a HTML flavour from a previous copy and a TEXT flavour from a more recent copy from another application
 		( from instance from ped or pterm ). The HTML flavour and TEXT flavour are desynchronized and we have
 		to use only the most recent one */
-		unsigned long *dont_use_flavour = ( unsigned long * ) calloc( 1, cnt );
+		unsigned long *dont_use_flavour = ( unsigned long * ) calloc( cnt, sizeof( unsigned long ) );
 		if( !dont_use_flavour ) {
 			PhClipboardPasteFinish( clipPtr );
 			return NS_ERROR_FAILURE;
