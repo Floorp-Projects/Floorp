@@ -133,6 +133,11 @@ public:
    */
   NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
+  /*
+   * Like nsDocument::IsInSelection except it always includes the body node
+   */
+  virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
+
 protected:
   // Find/Search Method/Data member
   PRBool SearchBlock(BlockText    & aBlockText, 
