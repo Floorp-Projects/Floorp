@@ -4124,7 +4124,11 @@ NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsIPresContext* aPresContext,
    nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
    nsEventStatus* aEventStatus)
 {
-   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
+  // XXX This is a disgusting hack to prevent the doc from going
+  // away until after we've finished handling the event.
+  // We will be coming up with a better general solution later.
+  nsCOMPtr<nsIDocument> kungFuDeathGrip(mDocument);
+  return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
 }
 
 //----------------------------------------------------------------------
