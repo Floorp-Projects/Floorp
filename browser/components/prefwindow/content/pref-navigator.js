@@ -11,6 +11,21 @@ const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
 const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/appshell/window-mediator;1";
 const PREFSERVICE_CONTRACTID    = "@mozilla.org/preferences-service;1";
 
+function Startup()
+{
+  var clearHistButton = document.getElementById("browserClearHistory");
+  try {
+    var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
+                               .getService(Components.interfaces.nsIUrlbarHistory);
+    var isBtnLocked = parent.hPrefWindow.getPrefIsLocked(clearHistButton.getAttribute("prefstring"));
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIBrowserHistory);
+    clearHistButton.disabled = ( urlBarHist.count == 0 && globalHistory.count == 0) || isBtnLocked;
+  }
+  catch(ex) {
+  }
+}
+
 function selectFile()
 {
   var fp = Components.classes[FILEPICKER_CONTRACTID]
@@ -57,4 +72,12 @@ function setHomePageToDefaultPage()
   homePageField.value = url;
 }
 
-  
+function prefClearGlobalHistory()
+{
+  var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                .getService(Components.interfaces.nsIBrowserHistory);
+  globalHistory.removeAllPages();
+  var urlBarHistory = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
+                                .getService(Components.interfaces.nsIUrlbarHistory);
+  urlBarHistory.clearHistory();
+}

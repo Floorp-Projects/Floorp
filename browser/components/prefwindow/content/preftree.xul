@@ -65,11 +65,6 @@
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell url="chrome://browser/content/pref/pref-history.xul" label="&history.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
             <treecell url="chrome://browser/content/pref/pref-languages.xul" label="&languages.label;"/> 
           </treerow>
         </treeitem>
