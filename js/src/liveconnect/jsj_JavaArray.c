@@ -52,7 +52,7 @@ try_convert_to_jsint(JSContext *cx, jsval idval)
     if (JS7_ISDEC(*cp)) {
         jsuint index = JS7_UNDEC(*cp++);
         jsuint oldIndex = 0;
-        jsuint c;
+        jsuint c = 0;
         if (index != 0) {
             while (JS7_ISDEC(*cp)) {
                 oldIndex = index;

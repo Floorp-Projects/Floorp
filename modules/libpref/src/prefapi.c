@@ -1108,7 +1108,7 @@ PREF_GetColorPrefDWord(const char *pref_name, uint32 *colorref)
 {
 	char colstr[8];
 	int iSize = 8;
-	uint8 red, green, blue;
+	uint8 red=0, green=0, blue=0;
 
 	int result = PREF_GetCharPref(pref_name, colstr, &iSize);
 	
@@ -1283,7 +1283,7 @@ PREF_GetDefaultColorPrefDWord(const char *pref_name, uint32 * colorref)
 {
 	char colstr[8];
 	int iSize = 8;
-	uint8 red, green, blue;
+	uint8 red=0, green=0, blue=0;
 
 	int result = PREF_GetDefaultCharPref(pref_name, colstr, &iSize);
 	
@@ -2092,7 +2092,7 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 PR_IMPLEMENT(int)
 pref_printDebugInfo(PRHashEntry *he, int i, void *arg)
 {
-	char *buf1, *buf2;
+	char *buf1=NULL, *buf2=NULL;
 	PrefValue val;
 	PrefChildIter* pcs = (PrefChildIter*) arg;
 	PrefNode *pref = (PrefNode *) he->value;
