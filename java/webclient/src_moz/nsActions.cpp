@@ -19,6 +19,7 @@
  *
  * Contributor(s): Kirk Baker <kbaker@eb.com>
  *               Ian Wilkinson <iw@ennoble.com>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
@@ -32,6 +33,8 @@
 #include "nsCOMPtr.h"
 #include "nsIContentViewer.h"
 #include "nsIBaseWindow.h"
+#include "nsISHEntry.h"
+#include "nsIURI.h"
 
 
 void *          handleEvent     (PLEvent * event);
@@ -73,7 +76,7 @@ nsActionEvent::nsActionEvent ()
                 (PLDestroyEventProc) ::destroyEvent);
 }
 
-wsHistoryActionEvent::wsHistoryActionEvent(nsISessionHistory *yourHistory)
+wsHistoryActionEvent::wsHistoryActionEvent(nsISHistory *yourHistory)
 {
     mHistory = yourHistory;
 }
@@ -82,9 +85,9 @@ wsHistoryActionEvent::wsHistoryActionEvent(nsISessionHistory *yourHistory)
  * wsResizeEvent
  */
 
-wsResizeEvent::wsResizeEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) :
+wsResizeEvent::wsResizeEvent(nsIBaseWindow* baseWindow, PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) :
         nsActionEvent(),
-        mWebShell(webShell),
+        mBaseWindow(baseWindow),
         mLeft(x),
         mBottom(y),
         mWidth(w),
@@ -97,17 +100,9 @@ void *
 wsResizeEvent::handleEvent ()
 {
     nsresult rv = NS_ERROR_FAILURE;
-    if (mWebShell) {
-        
-        nsCOMPtr<nsIBaseWindow> baseWindow;
-        
-        rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                       getter_AddRefs(baseWindow));
-        
-        if (NS_FAILED(rv)) {
-            return nsnull;
-        }
-        rv = baseWindow->SetPositionAndSize(mLeft, mBottom, mWidth, mHeight, 
+    if (mBaseWindow) {
+
+        rv = mBaseWindow->SetPositionAndSize(mLeft, mBottom, mWidth, mHeight, 
                                             PR_TRUE);
         
         
@@ -123,9 +118,9 @@ wsResizeEvent::handleEvent ()
  * wsLoadURLEvent
  */
 
-wsLoadURLEvent::wsLoadURLEvent(nsIWebShell* webShell, PRUnichar * urlString) :
+wsLoadURLEvent::wsLoadURLEvent(nsIWebNavigation* webNavigation, PRUnichar * urlString) :
         nsActionEvent(),
-        mWebShell(webShell),
+        mWebNavigation(webNavigation),
         mURL(nsnull)
 {
         mURL = new nsString(urlString);
@@ -135,18 +130,17 @@ wsLoadURLEvent::wsLoadURLEvent(nsIWebShell* webShell, PRUnichar * urlString) :
 void *
 wsLoadURLEvent::handleEvent ()
 {
-        if (mWebShell && mURL) {
-                
-                nsresult rv = mWebShell->LoadURL(mURL->GetUnicode());
-        }
-        return nsnull;
+  if (mWebNavigation && mURL) {
+    nsresult rv = mWebNavigation->LoadURI(mURL->GetUnicode());
+  }
+  return nsnull;
 } // handleEvent()
 
 
 wsLoadURLEvent::~wsLoadURLEvent ()
 {
-        if (mURL != nsnull)
-                delete mURL;
+  if (mURL != nsnull)
+    delete mURL;
 }
 
 
@@ -155,9 +149,9 @@ wsLoadURLEvent::~wsLoadURLEvent ()
  * wsStopEvent
  */
 
-wsStopEvent::wsStopEvent(nsIWebShell* webShell) :
+wsStopEvent::wsStopEvent(nsIWebNavigation* webNavigation) :
         nsActionEvent(),
-        mWebShell(webShell)
+        mWebNavigation(webNavigation)
 {
 }
 
@@ -165,8 +159,8 @@ wsStopEvent::wsStopEvent(nsIWebShell* webShell) :
 void *
 wsStopEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv = mWebShell->Stop();
+        if (mWebNavigation) {
+                nsresult rv = mWebNavigation->Stop();
         }
         return nsnull;
 } // handleEvent()
@@ -177,9 +171,10 @@ wsStopEvent::handleEvent ()
  * wsShowEvent
  */
 
-wsShowEvent::wsShowEvent(nsIWebShell* webShell) :
+wsShowEvent::wsShowEvent(nsIBaseWindow* baseWindow, PRBool state) :
         nsActionEvent(),
-        mWebShell(webShell)
+        mBaseWindow(baseWindow),
+	mState(state)
 {
 }
 
@@ -187,17 +182,8 @@ wsShowEvent::wsShowEvent(nsIWebShell* webShell) :
 void *
 wsShowEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv;
-                nsCOMPtr<nsIBaseWindow> baseWindow;
-                
-                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-                
-                if (NS_FAILED(rv)) {
-                    return nsnull;
-                }
-                baseWindow->SetVisibility(PR_TRUE);
+        if (mBaseWindow) {
+                mBaseWindow->SetVisibility(mState);
         }
         return nsnull;
 } // handleEvent()
@@ -208,9 +194,9 @@ wsShowEvent::handleEvent ()
  * wsHideEvent
  */
 
-wsHideEvent::wsHideEvent(nsIWebShell* webShell) :
+wsHideEvent::wsHideEvent(nsIBaseWindow* baseWindow) :
         nsActionEvent(),
-        mWebShell(webShell)
+        mBaseWindow(baseWindow)
 {
 }
 
@@ -218,17 +204,8 @@ wsHideEvent::wsHideEvent(nsIWebShell* webShell) :
 void *
 wsHideEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv;
-                nsCOMPtr<nsIBaseWindow> baseWindow;
-                
-                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-                
-                if (NS_FAILED(rv)) {
-                    return nsnull;
-                }
-                baseWindow->SetVisibility(PR_FALSE);
+        if (mBaseWindow) {
+                mBaseWindow->SetVisibility(PR_FALSE);
         }
         return nsnull;
 } // handleEvent()
@@ -239,9 +216,9 @@ wsHideEvent::handleEvent ()
  * wsMoveToEvent
  */
 
-wsMoveToEvent::wsMoveToEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y) :
+wsMoveToEvent::wsMoveToEvent(nsIBaseWindow* baseWindow, PRInt32 x, PRInt32 y) :
         nsActionEvent(),
-        mWebShell(webShell),
+        mBaseWindow(baseWindow),
         mX(x),
         mY(y)
 {
@@ -251,17 +228,8 @@ wsMoveToEvent::wsMoveToEvent(nsIWebShell* webShell, PRInt32 x, PRInt32 y) :
 void *
 wsMoveToEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv;
-                nsCOMPtr<nsIBaseWindow> baseWindow;
-                
-                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-                
-                if (NS_FAILED(rv)) {
-                    return nsnull;
-                }
-                rv = baseWindow->SetPosition(mX, mY);
+        if (mBaseWindow) {
+               nsresult rv = mBaseWindow->SetPosition(mX, mY);
         }
         return nsnull;
 } // handleEvent()
@@ -271,9 +239,9 @@ wsMoveToEvent::handleEvent ()
  * wsSetFocusEvent
  */
 
-wsSetFocusEvent::wsSetFocusEvent(nsIWebShell* webShell) :
+wsSetFocusEvent::wsSetFocusEvent(nsIBaseWindow* baseWindow) :
         nsActionEvent(),
-        mWebShell(webShell)
+        mBaseWindow(baseWindow)
 {
 }
 
@@ -281,17 +249,8 @@ wsSetFocusEvent::wsSetFocusEvent(nsIWebShell* webShell) :
 void *
 wsSetFocusEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv;
-                nsCOMPtr<nsIBaseWindow> baseWindow;
-                
-                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-                
-                if (NS_FAILED(rv)) {
-                    return nsnull;
-                }
-                rv = baseWindow->SetFocus();
+        if (mBaseWindow) {
+               nsresult rv = mBaseWindow->SetFocus();
         }
         return nsnull;
 } // handleEvent()
@@ -302,9 +261,9 @@ wsSetFocusEvent::handleEvent ()
  * wsRemoveFocusEvent
  */
 
-wsRemoveFocusEvent::wsRemoveFocusEvent(nsIWebShell* webShell) :
+wsRemoveFocusEvent::wsRemoveFocusEvent(nsIBaseWindow* baseWindow) :
         nsActionEvent(),
-        mWebShell(webShell)
+        mBaseWindow(baseWindow)
 {
 }
 
@@ -312,8 +271,9 @@ wsRemoveFocusEvent::wsRemoveFocusEvent(nsIWebShell* webShell) :
 void *
 wsRemoveFocusEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv = mWebShell->RemoveFocus();
+        if (mBaseWindow) {
+	  //PENDING (Ashu) : No removeFocus functionality provided in M15
+	  //                nsresult rv = mWebShell->RemoveFocus();
         }
         return nsnull;
 } // handleEvent()
@@ -324,9 +284,9 @@ wsRemoveFocusEvent::handleEvent ()
  * wsRepaintEvent
  */
 
-wsRepaintEvent::wsRepaintEvent(nsIWebShell* webShell, PRBool forceRepaint) :
+wsRepaintEvent::wsRepaintEvent(nsIBaseWindow* baseWindow, PRBool forceRepaint) :
         nsActionEvent(),
-        mWebShell(webShell),
+        mBaseWindow(baseWindow),
         mForceRepaint(forceRepaint)
 {
 }
@@ -335,17 +295,8 @@ wsRepaintEvent::wsRepaintEvent(nsIWebShell* webShell, PRBool forceRepaint) :
 void *
 wsRepaintEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv;
-                nsCOMPtr<nsIBaseWindow> baseWindow;
-                
-                rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-                
-                if (NS_FAILED(rv)) {
-                    return nsnull;
-                }
-                rv = baseWindow->Repaint(mForceRepaint);
+        if (mBaseWindow) {
+               nsresult rv = mBaseWindow->Repaint(mForceRepaint);
         }
         return nsnull;
 } // handleEvent()
@@ -356,8 +307,9 @@ wsRepaintEvent::handleEvent ()
  * wsCanBackEvent
  */
 
-wsCanBackEvent::wsCanBackEvent(nsISessionHistory* yourSessionHistory) :
-        wsHistoryActionEvent(yourSessionHistory)
+wsCanBackEvent::wsCanBackEvent(nsIWebNavigation* webNavigation) :
+        nsActionEvent(),
+	mWebNavigation(webNavigation)
 {
 
 }
@@ -366,11 +318,11 @@ void *
 wsCanBackEvent::handleEvent ()
 {
     void *result = nsnull;
-    if (mHistory) {
+    if (mWebNavigation) {
         nsresult rv;
         PRBool canGoBack;
         
-        rv = mHistory->CanGoBack(&canGoBack);
+        rv = mWebNavigation->GetCanGoBack(&canGoBack);
         
         if (NS_FAILED(rv)) {
             return result;
@@ -385,9 +337,11 @@ wsCanBackEvent::handleEvent ()
  * wsCanForwardEvent
  */
 
-wsCanForwardEvent::wsCanForwardEvent(nsISessionHistory* yourSessionHistory) :
-        wsHistoryActionEvent(yourSessionHistory)
+wsCanForwardEvent::wsCanForwardEvent(nsIWebNavigation* webNavigation) :
+        nsActionEvent(),
+	mWebNavigation(webNavigation)
 {
+
 }
 
 
@@ -395,11 +349,11 @@ void *
 wsCanForwardEvent::handleEvent ()
 {
     void *result = nsnull;
-    if (mHistory) {
+    if (mWebNavigation) {
         nsresult rv;
         PRBool canGoForward;
         
-        rv = mHistory->CanGoForward(&canGoForward);
+        rv = mWebNavigation->GetCanGoForward(&canGoForward);
         
         if (NS_FAILED(rv)) {
             return result;
@@ -417,9 +371,9 @@ wsCanForwardEvent::handleEvent ()
  * wsBackEvent
  */
 
-wsBackEvent::wsBackEvent(nsISessionHistory* yourSessionHistory, 
-                         nsIWebShell *yourWebShell) :
-    wsHistoryActionEvent(yourSessionHistory), mWebShell(yourWebShell)
+wsBackEvent::wsBackEvent(nsIWebNavigation* webNavigation) :
+  nsActionEvent(),
+  mWebNavigation(webNavigation)
 {
 }
 
@@ -428,8 +382,8 @@ void *
 wsBackEvent::handleEvent ()
 {
     void *result = nsnull;
-    if (mHistory && mWebShell) {
-        nsresult rv = mHistory->GoBack(mWebShell);
+    if (mWebNavigation) {
+        nsresult rv = mWebNavigation->GoBack();
         
         result = (void *) rv;
     }
@@ -442,10 +396,9 @@ wsBackEvent::handleEvent ()
  * wsForwardEvent
  */
 
-wsForwardEvent::wsForwardEvent(nsISessionHistory *yourSessionHistory,
-                               nsIWebShell* webShell) :
-        wsHistoryActionEvent(yourSessionHistory),
-        mWebShell(webShell)
+wsForwardEvent::wsForwardEvent(nsIWebNavigation* webNavigation) :
+  nsActionEvent(),
+  mWebNavigation(webNavigation)     
 {
 }
 
@@ -454,9 +407,9 @@ void *
 wsForwardEvent::handleEvent ()
 {
     void *result = nsnull;
-    if (mHistory && mWebShell) {
+    if (mWebNavigation) {
                 
-        nsresult rv = mHistory->GoForward(mWebShell);
+        nsresult rv = mWebNavigation->GoForward();
         result = (void *) rv;
     }
     return result;
@@ -468,10 +421,9 @@ wsForwardEvent::handleEvent ()
  * wsGoToEvent
  */
 
-wsGoToEvent::wsGoToEvent(nsISessionHistory *yourSessionHistory,
-                         nsIWebShell* webShell, PRInt32 historyIndex) :
-        wsHistoryActionEvent(yourSessionHistory),
-        mWebShell(webShell), mHistoryIndex(historyIndex)
+wsGoToEvent::wsGoToEvent(nsIWebNavigation* webNavigation, PRInt32 historyIndex) :
+        nsActionEvent(),
+        mWebNavigation(webNavigation), mHistoryIndex(historyIndex)
 {
 }
 
@@ -480,9 +432,11 @@ void *
 wsGoToEvent::handleEvent ()
 {
     void *result = nsnull;
-    if (mHistory && mWebShell) {
-        nsresult rv = mHistory->Goto(mHistoryIndex, mWebShell, PR_TRUE);
-        result = (void *) rv;
+    nsresult rv = nsnull;
+    if (mWebNavigation) {
+      //PENDING (Ashu) : GoTo Functionality seems to be missing in M15
+      //        nsresult rv = mHistory->Goto(mHistoryIndex, mWebShell, PR_TRUE);
+      result = (void *) rv;
     }
     return result;
 } // handleEvent()
@@ -493,8 +447,9 @@ wsGoToEvent::handleEvent ()
  * wsGetHistoryLengthEvent
  */
 
-wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(nsISessionHistory* yourSessionHistory) :
-    wsHistoryActionEvent(yourSessionHistory)
+wsGetHistoryLengthEvent::wsGetHistoryLengthEvent(nsISHistory * sHistory) :
+     nsActionEvent(),
+     mHistory(sHistory)
 {
 }
 
@@ -506,7 +461,7 @@ wsGetHistoryLengthEvent::handleEvent ()
     if (mHistory) {
         PRInt32 historyLength = 0;
         
-        nsresult rv = mHistory->GetHistoryLength(&historyLength);
+        nsresult rv = mHistory->GetCount(&historyLength);
         result = (void *) historyLength;
     }
     return result;
@@ -518,8 +473,9 @@ wsGetHistoryLengthEvent::handleEvent ()
  * wsGetHistoryIndexEvent
  */
 
-wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(nsISessionHistory *yourSessionHistory) :
-        wsHistoryActionEvent(yourSessionHistory)
+wsGetHistoryIndexEvent::wsGetHistoryIndexEvent(nsISHistory * sHistory) :
+        nsActionEvent(),
+	mHistory(sHistory)
 {
 }
 
@@ -531,7 +487,7 @@ wsGetHistoryIndexEvent::handleEvent ()
     if (mHistory) {
         PRInt32 historyIndex = 0;
 
-        nsresult rv = mHistory->GetCurrentIndex(&historyIndex);
+        nsresult rv = mHistory->GetIndex(&historyIndex);
         result = (void *) historyIndex;
     }
     return result;
@@ -543,8 +499,9 @@ wsGetHistoryIndexEvent::handleEvent ()
  * wsGetURLEvent
  */
 
-wsGetURLEvent::wsGetURLEvent(nsISessionHistory* yourSessionHistory) :
-        wsHistoryActionEvent(yourSessionHistory)
+wsGetURLEvent::wsGetURLEvent(nsISHistory * sHistory) :
+        nsActionEvent(),
+	mHistory(sHistory)
 {
 }
 
@@ -560,16 +517,28 @@ wsGetURLEvent::handleEvent ()
         char *currentURL = nsnull;
         nsresult rv;
 
-        rv = mHistory->GetCurrentIndex(&currentIndex);
+        rv = mHistory->GetIndex(&currentIndex);
         
         if (NS_FAILED(rv)) {
             return result;
         }
         
-        // THIS STRING NEEDS TO BE deleted!!!!!!
-        rv = mHistory->GetURLForIndex(currentIndex, &currentURL);
+        nsISHEntry * Entry;
+        rv = mHistory->GetEntryAtIndex(currentIndex, PR_FALSE, &Entry);
 
         if (NS_FAILED(rv)) {
+            return result;
+        }
+
+	nsIURI * URI;
+	rv = Entry->GetURI(&URI);
+
+	if (NS_FAILED(rv)) {
+            return result;
+        }
+	
+	rv = URI->GetSpec(&currentURL);
+	if (NS_FAILED(rv)) {
             return result;
         }
         
@@ -582,10 +551,11 @@ wsGetURLEvent::handleEvent ()
  * wsGetURLForIndexEvent
  */
 
-wsGetURLForIndexEvent::wsGetURLForIndexEvent(nsISessionHistory *yourSessionHistory, 
+wsGetURLForIndexEvent::wsGetURLForIndexEvent(nsISHistory * sHistory, 
                                              PRInt32 historyIndex) :
-        wsHistoryActionEvent(yourSessionHistory),
-        mHistoryIndex(historyIndex)
+  nsActionEvent(),
+  mHistory(sHistory),
+  mHistoryIndex(historyIndex)
 {
 }
 
@@ -597,11 +567,25 @@ wsGetURLForIndexEvent::handleEvent ()
     if (mHistory) {
         nsresult rv;
         char *indexURL = nsnull;
-        rv = mHistory->GetURLForIndex(mHistoryIndex, &indexURL);
 
+	nsISHEntry * Entry;
+        rv = mHistory->GetEntryAtIndex(mHistoryIndex, PR_FALSE, &Entry);
         if (NS_FAILED(rv)) {
             return result;
         }
+
+	nsIURI * URI;
+	rv = Entry->GetURI(&URI);
+
+	if (NS_FAILED(rv)) {
+            return result;
+        }
+	
+	rv = URI->GetSpec(&indexURL);
+	if (NS_FAILED(rv)) {
+            return result;
+        }	
+
         result = (void *) indexURL;
     }
     return result;
@@ -615,23 +599,50 @@ wsGetURLForIndexEvent::handleEvent ()
  * wsRefreshEvent
  */
 
-wsRefreshEvent::wsRefreshEvent(nsIWebShell* webShell, long yourLoadFlags) :
+wsRefreshEvent::wsRefreshEvent(nsIWebNavigation* webNavigation, PRInt32 reloadType) :
         nsActionEvent(),
-        mWebShell(webShell)
+        mWebNavigation(webNavigation),
+	mReloadType(reloadType)
 {
-    loadFlags = (nsLoadFlags) yourLoadFlags;
+
 }
 
 
 void *
 wsRefreshEvent::handleEvent ()
 {
-        if (mWebShell) {
-                nsresult rv = mWebShell->Reload(loadFlags);
+        if (mWebNavigation) {
+                nsresult rv = mWebNavigation->Reload(mReloadType);
                 return (void *) rv;
         }
         return nsnull;
 } // handleEvent()
+
+
+
+wsViewSourceEvent::wsViewSourceEvent(nsIDocShell* docShell, PRBool viewMode) :
+    nsActionEvent(),
+    mDocShell(docShell),
+    mViewMode(viewMode)
+{
+}
+
+void *
+wsViewSourceEvent::handleEvent ()
+{
+    if(mDocShell) {
+        if(mViewMode) {
+            nsresult rv = mDocShell->SetViewMode(nsIDocShell::viewSource);
+            return (void *) rv;
+        }
+        else
+            {
+                nsresult rv = mDocShell->SetViewMode(nsIDocShell::viewNormal);
+                return (void *) rv;
+            }
+    }
+    return nsnull;
+}
 
 wsAddDocLoaderObserverEvent::wsAddDocLoaderObserverEvent(nsIDocShell* yourDocShell,
                                                          nsIDocumentLoaderObserver *yourObserver) :

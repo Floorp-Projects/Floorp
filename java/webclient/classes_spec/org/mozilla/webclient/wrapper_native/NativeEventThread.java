@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):  Ed Burns <edburns@acm.org>
+ *                  Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
 package org.mozilla.webclient.wrapper_native;
@@ -176,7 +177,7 @@ public void delete()
 
 public void run() 
 {
-    this.setPriority(Thread.MIN_PRIORITY);
+    //   this.setPriority(Thread.MIN_PRIORITY);
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
 
@@ -200,20 +201,22 @@ public void run()
             if (null == this.browserControlCanvas) {
                 return;
             }
+
             synchronized (this.browserControlCanvas.getTreeLock()) {
                 nativeProcessEvents(nativeWebShell);
             }
             
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();
-                while (tempEnum.hasMoreElements()) {
-                    nativeAddListener(nativeWebShell,
-                                      (WebclientEventListener)
-                                      tempEnum.nextElement());
+                    while (tempEnum.hasMoreElements()) {
+                        nativeAddListener(nativeWebShell,
+                                          (WebclientEventListener)
+                                          tempEnum.nextElement());
+                    }
+                    listenersToAdd.clear();
                 }
-                listenersToAdd.clear();
-            }
-            doRemoveListeners();
+                doRemoveListeners();
+            
         }
     }
 }
@@ -327,31 +330,28 @@ void nativeEventOccurred(WebclientEventListener target, long eventType,
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
     
-    synchronized(this.browserControlCanvas.getTreeLock()) {
-        WebclientEvent event = null;
-        
-        if (target instanceof DocumentLoadListener) {
-            event = new DocumentLoadEvent(this, eventType, eventData);
-        }
-        else if (target instanceof MouseListener) {
-            Assert.assert(target instanceof WCMouseListenerImpl);
-
-            // We create a plain vanilla WebclientEvent, which the
-            // WCMouseListenerImpl target knows how to deal with.
-
-            // Also, the source happens to be the browserControlCanvas
-            // to satisfy the java.awt.event.MouseEvent's requirement
-            // that the source be a java.awt.Component subclass.
-
-            event = new WebclientEvent(browserControlCanvas, eventType, eventData);
-        }
-        // else...
-        
-        // PENDING(edburns): maybe we need to put this in some sort of
-        // event queue?
-
-        target.eventDispatched(event);
+    WebclientEvent event = null;
+    
+    if (target instanceof DocumentLoadListener) {
+        event = new DocumentLoadEvent(this, eventType, eventData);
     }
+    else if (target instanceof MouseListener) {
+        Assert.assert(target instanceof WCMouseListenerImpl);
+        
+        // We create a plain vanilla WebclientEvent, which the
+        // WCMouseListenerImpl target knows how to deal with.
+        
+        // Also, the source happens to be the browserControlCanvas
+        // to satisfy the java.awt.event.MouseEvent's requirement
+        // that the source be a java.awt.Component subclass.
+        
+        event = new WebclientEvent(browserControlCanvas, eventType, eventData);
+    }
+    // else...
+    
+    // PENDING(edburns): maybe we need to put this in some sort of
+    // event queue?
+    target.eventDispatched(event);
 }
 
 //

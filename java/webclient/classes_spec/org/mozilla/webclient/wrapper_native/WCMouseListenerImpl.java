@@ -116,6 +116,7 @@ public void eventDispatched(WebclientEvent event)
     int modifiers = 0, x = -1, y = -1, clickCount = 0;
     String str;
     boolean bool;
+    if (null != props) { 
     if (null != (str = props.getProperty("ClientX"))) {
         x = Integer.valueOf(str).intValue();
     }
@@ -160,6 +161,7 @@ public void eventDispatched(WebclientEvent event)
         if (bool) {
             modifiers += InputEvent.SHIFT_MASK;
         }
+    }
     }
     switch ((int) event.getType()) {
     case (int) WCMouseEvent.MOUSE_DOWN_EVENT_MASK:

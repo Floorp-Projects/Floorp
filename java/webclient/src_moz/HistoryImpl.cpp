@@ -22,7 +22,7 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
- *               Ann Sunhachawee
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
 #include "HistoryImpl.h"
@@ -47,7 +47,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
     
     if (initContext->initComplete) {
       wsBackEvent	* actionEvent = 
-          new wsBackEvent(initContext->sessionHistory, initContext->webShell);
+          new wsBackEvent(initContext->webNavigation);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
       ::util_PostSynchronousEvent(initContext, event);
@@ -63,7 +63,8 @@ JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanBack
     jboolean result = JNI_FALSE;
     JNIEnv	*	pEnv = env;
     jobject		jobj = obj;
-    void        *       voidResult;
+        void        *       voidResult;
+    //    PRBool voidResult;
     
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
     
@@ -73,12 +74,12 @@ JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanBack
     }
     
     if (initContext->initComplete) {
-        wsCanBackEvent	* actionEvent = 
-            new wsCanBackEvent(initContext->sessionHistory);
+                wsCanBackEvent	* actionEvent = 
+            new wsCanBackEvent(initContext->webNavigation);
       PLEvent			* event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
-      
+        
       result =  (PR_FALSE == ((PRBool) voidResult)) ? JNI_FALSE : JNI_TRUE;
     }
 
@@ -115,8 +116,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_na
     
     if (initContext->initComplete) {
       wsForwardEvent	* actionEvent = 
-          new wsForwardEvent(initContext->sessionHistory,
-                             initContext->webShell);
+          new wsForwardEvent(initContext->webNavigation);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
       
       ::util_PostSynchronousEvent(initContext, event);
@@ -142,7 +142,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImp
     
     if (initContext->initComplete) {
       wsCanForwardEvent	* actionEvent = 
-          new wsCanForwardEvent(initContext->sessionHistory);
+          new wsCanForwardEvent(initContext->webNavigation);
       PLEvent			* event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -195,8 +195,16 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetCurrentHistoryIn
     }
 
     if (initContext->initComplete) {
+      nsISHistory* sHistory;
+      nsresult rv = initContext->webNavigation->GetSessionHistory(&sHistory);
+    
+      if ( NS_FAILED(rv)) {
+	::util_ThrowExceptionToJava(env, "Exception: couldn't get History for passing to raptorWebShellGetHistoryIndex");
+	return result;
+      }
+
       wsGetHistoryIndexEvent	* actionEvent = 
-          new wsGetHistoryIndexEvent(initContext->sessionHistory);
+          new wsGetHistoryIndexEvent(sHistory);
       PLEvent	   		* event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -224,8 +232,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeSetCurrentHistoryIn
 
     if (initContext->initComplete) {
       wsGoToEvent	* actionEvent = 
-          new wsGoToEvent(initContext->sessionHistory,
-                          initContext->webShell, historyIndex);
+          new wsGoToEvent(initContext->webNavigation, historyIndex);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -249,10 +256,18 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryLength
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetHistoryLength");
       return result;
     }
-    
+
     if (initContext->initComplete) {
+      nsISHistory* sHistory;
+      nsresult rv = initContext->webNavigation->GetSessionHistory(&sHistory);
+      
+      if ( NS_FAILED(rv)) {
+	::util_ThrowExceptionToJava(env, "Exception: couldn't get History for passing to raptorWebShellGetHistoryIndex");
+	return result;
+      }
+   
       wsGetHistoryLengthEvent	* actionEvent = 
-          new wsGetHistoryLengthEvent(initContext->sessionHistory);
+          new wsGetHistoryLengthEvent(sHistory);
       PLEvent	   	        * event       = (PLEvent*) *actionEvent;
       
       voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -277,11 +292,19 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetURL");
       return nsnull;
     }
-    
+
     if (initContext->initComplete) {
-        wsGetURLForIndexEvent * actionEvent = 
-            new wsGetURLForIndexEvent(initContext->sessionHistory,
-                                      historyIndex);
+      nsISHistory* sHistory;
+      nsresult rv = initContext->webNavigation->GetSessionHistory(&sHistory);
+      
+      if ( NS_FAILED(rv)) {
+	::util_ThrowExceptionToJava(env, "Exception: couldn't get History for passing to raptorWebShellGetHistoryIndex");
+	return nsnull;
+      }
+      
+      wsGetURLForIndexEvent * actionEvent = 
+	new wsGetURLForIndexEvent(initContext->sHistory,
+				  historyIndex);
       PLEvent	   	  	* event       = (PLEvent*) *actionEvent;
       
       charResult = (char *) ::util_PostSynchronousEvent(initContext, event);

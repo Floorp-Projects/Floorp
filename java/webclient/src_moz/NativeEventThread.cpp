@@ -22,31 +22,47 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
  */
 
 #include "NativeEventThread.h"
+#include "CBrowserContainer.h"
 
 #include "jni_util.h"
-#include "EventRegistration.h" // event callbacks
+#include "ns_globals.h"
 
+#include "nsIServiceManager.h"  // for NS_InitXPCOM
 
+#include "nsIProfile.h" // for the profile manager
+#include "nsICmdLineService.h" // for the cmdline service to give to the
+                               // profile manager.
+
+#include "nsCRT.h" // for nsCRT::strcmp
+#include "prenv.h"
+#include "nsILocalFile.h"
+// #include "WrapperFactoryImpl.cpp"
 
 #ifdef XP_PC
 #include <windows.h>
 #endif
 
 #include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
-#include "nsIBaseWindow.h" // to get methods like SetVisibility
 #include "nsCOMPtr.h" // to get nsIBaseWindow from webshell
 //nsIDocShell is included in jni_util.h
 #include "nsIEventQueueService.h" // for PLEventQueue
-#include "nsIPref.h" // for preferences
 #include "nsRepository.h"
 #include "nsIServiceManager.h" // for do_GetService
-#include "nsISessionHistory.h" // for history
+#include "nsIPref.h" // for preferences
 #include "nsIThread.h" // for PRThread
+#include "nsIDocShell.h"
+#include "nsIBaseWindow.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsCWebBrowser.h"
+#include "nsIEventQueueService.h"
+#include "nsIThread.h"
 //nsIWebShell is included in jni_util.h
+
 
 #include "prlog.h" // for PR_ASSERT
 
@@ -59,8 +75,51 @@
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
-static NS_DEFINE_IID(kISessionHistoryIID, NS_ISESSIONHISTORY_IID);
-static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
+static NS_DEFINE_IID(kISHistoryIID, NS_ISHISTORY_IID);
+static NS_DEFINE_CID(kSHistoryCID, NS_SHISTORY_CID);
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+
+static const char *NS_DOCSHELL_PROGID = "component://netscape/docshell/html";
+//static const char *NS_WEBBROWSER_PROGID = "component://netscape/embedding/browser/nsWebBrowser";
+
+extern const char * gBinDir;
+
+#ifdef XP_PC
+
+// All this stuff is needed to initialize the history
+
+#define APPSHELL_DLL "appshell.dll"
+#define BROWSER_DLL  "nsbrowser.dll"
+#define EDITOR_DLL "ender.dll"
+
+#else
+
+#ifdef XP_MAC
+
+#define APPSHELL_DLL "APPSHELL_DLL"
+#define EDITOR_DLL  "ENDER_DLL"
+
+#else
+
+// XP_UNIX || XP_BEOS
+#define APPSHELL_DLL  "libnsappshell"MOZ_DLL_SUFFIX
+#define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
+#define EDITOR_DLL  "libender"MOZ_DLL_SUFFIX
+
+#endif // XP_MAC
+
+#endif // XP_PC
+
+//
+// Functions to hook into mozilla
+// 
+
+extern "C" void NS_SetupRegistry();
+extern nsresult NS_AutoregisterComponents();
+
 
 //
 // Local functions
@@ -76,8 +135,8 @@ int processEventLoop(WebShellInitContext * initContext);
 
 /**
 
- * Called from Java nativeInitialize to create the webshell, history,
- * prefs, and other mozilla things, then start the event loop.
+ * Called from Java nativeInitialize to create the webshell, history
+ * and other mozilla things, then start the event loop.
 
  */
 
@@ -87,7 +146,13 @@ nsresult InitMozillaStuff (WebShellInitContext * arg);
 // Local data
 //
 
-nsISessionHistory *gHistory = nsnull;
+nsISHistory *gHistory = nsnull;
+nsIComponentManager *gComponentManager = nsnull;
+static PRBool	gFirstTime = PR_TRUE;
+static PLEventQueue	*	gActionQueue;
+static PRThread		*	gEmbeddedThread;
+
+
 
 char * errorMessages[] = {
 	"No Error",
@@ -101,11 +166,6 @@ char * errorMessages[] = {
 
  * a null terminated array of listener interfaces we support.
 
- * PENDING(): this should probably live in EventRegistration.h
-
- * PENDING(edburns): need to abstract this out so we can use it from uno
- * and JNI.
-
  */
 
 const char *gSupportedListenerInterfaces[] = {
@@ -114,8 +174,7 @@ const char *gSupportedListenerInterfaces[] = {
     nsnull
 };
 
-// these index into the gSupportedListenerInterfaces array, this should
-// also live in EventRegistration.h
+// these index into the gSupportedListenerInterfaces array
 
 typedef enum {
     DOCUMENT_LOAD_LISTENER = 0,
@@ -191,8 +250,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
  * PENDING(): implement nativeRemoveListener, which must call
  * RemoveGlobalRef.
 
- * See the comments for EventRegistration.h:addDocumentLoadListener
-
  */
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener
@@ -204,7 +261,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
         return;
     }
-    
     if (nsnull == initContext->nativeEventThread) {
         // store the java EventRegistrationImpl class in the initContext
         initContext->nativeEventThread = 
@@ -242,15 +298,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't create NewGlobalRef\n\tfor argument");
         return;
     }
+    PR_ASSERT(initContext->browserContainer);
 
     switch(listenerType) {
     case DOCUMENT_LOAD_LISTENER:
-        addDocumentLoadListener(env, initContext, globalRef); 
+        initContext->browserContainer->AddDocumentLoadListener(globalRef); 
         break;
     case MOUSE_LISTENER:
-        addMouseListener(env, initContext, globalRef); 
+        initContext->browserContainer->AddMouseListener(globalRef); 
         break;
     }
+
 }
 
 JNIEXPORT void JNICALL 
@@ -263,9 +321,8 @@ Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllList
         return;
     }
 
-    removeAllListeners(env, initContext);
+    //   removeAllListeners(env, initContext);
 }
-
 
 /**
 
@@ -343,99 +400,173 @@ static void event_processor_callback(gpointer data,
 #endif
 //
 
+
+void DoMozInitialization(WebShellInitContext * initContext)
+{    
+    if (gFirstTime) {
+        nsILocalFile * pathFile = nsnull;
+        nsresult rv = nsnull;
+        JNIEnv *   env = initContext->env;
+        const char * BinDir = gBinDir;
+
+        rv = NS_NewLocalFile(BinDir, &pathFile);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "call to NS_NewLocalFile failed.");
+            return;
+        }
+    
+        // It is vitally important to call NS_InitXPCOM before calling
+        // anything else.
+        NS_InitXPCOM(nsnull, pathFile);
+        NS_SetupRegistry();
+        rv = NS_GetGlobalComponentManager(&gComponentManager);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "NS_GetGlobalComponentManager() failed.");
+            return;
+        }
+        prLogModuleInfo = PR_NewLogModule("webclient");
+        const char *webclientLogFile = PR_GetEnv("WEBCLIENT_LOG_FILE");
+        if (nsnull != webclientLogFile) {
+            PR_SetLogFile(webclientLogFile);
+            // If this fails, it just goes to stdout/stderr
+        }
+
+        gComponentManager->RegisterComponentLib(kSHistoryCID, nsnull, 
+                                                nsnull, APPSHELL_DLL, 
+                                                PR_FALSE, PR_FALSE);
+        NS_AutoregisterComponents();
+
+        // handle the profile manager nonsense
+        nsCOMPtr<nsICmdLineService> cmdLine =do_GetService(kCmdLineServiceCID);
+        nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_PROGID);
+        if (!cmdLine || !profile) {
+            ::util_ThrowExceptionToJava(env, "Can't get the profile manager.");
+            return;
+        }
+        char *argv[1];
+        argv[0] = strdup(gBinDir);
+        rv = cmdLine->Initialize(1, argv);
+        nsCRT::free(argv[0]);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Can't initialize nsICmdLineService.");
+            return;
+        }
+        rv = profile->StartupWithArgs(cmdLine);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
+            return;
+        }
+    }
+} 
+
+
+
 nsresult InitMozillaStuff (WebShellInitContext * initContext) 
 {
+    nsresult rv = nsnull;
+
+    DoMozInitialization(initContext);
+    
     PR_ASSERT(gComponentManager);
 
-    nsCOMPtr<nsIEventQueueService> 
-        aEventQService = do_GetService(NS_EVENTQUEUESERVICE_PROGID);
+    if (gFirstTime)
+        {
+            nsCOMPtr<nsIEventQueueService> 
+                aEventQService = do_GetService(NS_EVENTQUEUESERVICE_PROGID);
 
-    // if we get here, we know that aEventQService is not null.
-    nsresult rv = NS_ERROR_FAILURE;
-    PRBool allowPlugins = PR_FALSE;
+            // if we get here, we know that aEventQService is not null.
+            nsresult rv = NS_ERROR_FAILURE;
 
-    //TODO Add tracing from nspr.
+            //TODO Add tracing from nspr.
     
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", 
-               initContext));
-    }
-#endif
-    
-    // Create the Event Queue for the UI thread...
-    if (!aEventQService) {
-        initContext->initFailCode = kEventQueueError;
-        return rv;
-    }
-    
-    // Create the event queue.
-    rv = aEventQService->CreateThreadEventQueue();
-
-    initContext->embeddedThread = PR_GetCurrentThread();
-
-    // Create the action queue
-    if (initContext->embeddedThread) {
-
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-		PR_LOG(prLogModuleInfo, 3, ("InitMozillaStuff(%lx): embeddedThread != nsnull\n", initContext));
-    }
-#endif
-		if (initContext->actionQueue == nsnull) {
-#if DEBUG_RAPTOR_CANVAS
+            #if DEBUG_RAPTOR_CANVAS
             if (prLogModuleInfo) {
-                PR_LOG(prLogModuleInfo, 3, ("InitMozillaStuff(%lx): Create the action queue\n", initContext));
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", 
+                        initContext));
             }
-#endif
-            // We need to do something different for Unix
-            nsIEventQueue * EQueue = nsnull;
-            
-            rv = aEventQService->GetThreadEventQueue(initContext->embeddedThread, 
-                                                     &EQueue);
-            if (NS_FAILED(rv)) {
-                initContext->initFailCode = kCreateWebShellError;
+            #endif
+    
+            // Create the Event Queue for the UI thread...
+            if (!aEventQService) {
+                initContext->initFailCode = kEventQueueError;
                 return rv;
             }
-
-#ifdef XP_UNIX
-            gdk_input_add(EQueue->GetEventQueueSelectFD(),
-                          GDK_INPUT_READ,
-                          event_processor_callback,
-                          EQueue);
-#endif
-
-            PLEventQueue * plEventQueue = nsnull;
-
-            EQueue->GetPLEventQueue(&plEventQueue);
-            initContext->actionQueue = plEventQueue;
-		}
-	}
-    else {
-        initContext->initFailCode = kCreateWebShellError;
-        return NS_ERROR_UNEXPECTED;
-    }
-
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): Create the WebShell...\n", initContext));
-    }
-#endif
-    // Create the WebShell.
-    rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, getter_AddRefs(initContext->webShell));
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kCreateWebShellError;
-        return rv;
-    }
     
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): Init the WebShell...\n", initContext));
-    }
-#endif
+            // Create the event queue.
+            rv = aEventQService->CreateThreadEventQueue();
+            initContext->embeddedThread = PR_GetCurrentThread();
+            gEmbeddedThread = initContext->embeddedThread;
+
+            // Create the action queue
+            if (initContext->embeddedThread) {
+
+                if (initContext->actionQueue == nsnull) {
+                    printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
+	
+                    // We need to do something different for Unix
+                    nsIEventQueue * EQueue = nsnull;
+	
+                    rv = aEventQService->GetThreadEventQueue(initContext->embeddedThread, 
+                                                             &EQueue);
+                    if (NS_FAILED(rv)) {
+                        initContext->initFailCode = kCreateWebShellError;
+                        return rv;
+                    }
+
+                    #ifdef XP_UNIX
+                    gdk_input_add(EQueue->GetEventQueueSelectFD(),
+                                  GDK_INPUT_READ,
+                                  event_processor_callback,
+                                  EQueue);
+                    #endif
+	
+                    PLEventQueue * plEventQueue = nsnull;
+                    
+                    EQueue->GetPLEventQueue(&plEventQueue);
+                    initContext->actionQueue = plEventQueue;
+                    gActionQueue = initContext->actionQueue;
+                }
+            }
+            else {
+                initContext->initFailCode = kCreateWebShellError;
+                return NS_ERROR_UNEXPECTED;
+            }
+        }
+    else
+        {
+            initContext->embeddedThread = gEmbeddedThread;
+            initContext->actionQueue = gActionQueue;
+        }
+    
+    // Setup Prefs obj and read default prefs
+    if (gFirstTime)
+        {
+            nsCOMPtr<nsIPref> mPrefs(do_GetService(kPrefCID));
+            if (!mPrefs) {
+                initContext->initFailCode = kCreateWebShellError;
+                return NS_ERROR_UNEXPECTED;
+            }
+            rv = mPrefs->StartUp();  
+            rv = mPrefs->ReadUserPrefs();
+            gFirstTime = PR_FALSE;
+        }
+    PRBool allowPlugins = PR_TRUE;
+
+    // Create the WebBrowser.
+	  nsCOMPtr<nsIWebBrowser> webBrowser;
+		webBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+    
+  initContext->webBrowser = webBrowser;
+  
+    // Get the BaseWindow from the DocShell - upcast
+  //  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(webBrowser));
+	nsCOMPtr<nsIBaseWindow> docShellAsWin;
+	rv = webBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), getter_AddRefs(docShellAsWin));
+
+    initContext->baseWindow = docShellAsWin;
+
+    printf ("Init the baseWindow\n");
    
 #ifdef XP_UNIX
     GdkSuperWin * superwin;
@@ -445,83 +576,90 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     if (prLogModuleInfo) {
       PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - before Init Call...\n", initContext));
     }
-    rv = initContext->webShell->Init((nsNativeWidget *)superwin, initContext->x, initContext->y, initContext->w, initContext->h);
+    rv = initContext->baseWindow->InitWindow((nativeWindow) superwin, nsnull, initContext->x, initContext->y, initContext->w, initContext->h);
     if (prLogModuleInfo) {
       PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - after Init Call...\n", initContext));
     }
 #else    
-    rv = initContext->webShell->Init((nsNativeWidget *)initContext->parentHWnd,
+    rv = initContext->baseWindow->InitWindow((nativeWindow) initContext->parentHWnd, nsnull,
                                      initContext->x, initContext->y, initContext->w, initContext->h);
 #endif
 
-    
+    printf("Create the BaseWindow...\n");
+
+    rv = initContext->baseWindow->Create();
+
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kInitWebShellError;
         return rv;
     }
 
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): Install Prefs in the Webshell...\n", initContext));
-    }
-#endif
+    // Create the DocShell
 
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
-    
-    if (prefs) {
-        if (nsnull == gComponentManager) { // only do this once per app.
-            prefs->ReadUserPrefs();
-        }
-        // Set the prefs in the outermost webshell.
-        initContext->webShell->SetPrefs(prefs);
+    nsIDocShell * docShell;
+    rv = webBrowser->GetDocShell(getter_AddRefs(&docShell));
+    initContext->docShell = docShell;
+    printf("docShell is %l \n", docShell);
+
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kCreateDocShellError;
+        return rv;
     }
+
+    // create our BrowserContainer, which implements many many things.
+
+    initContext->browserContainer = 
+        new CBrowserContainer(initContext->webBrowser, initContext->env, 
+                              initContext);
+
+    // set the WebShellContainer.  This is a pain.  It's necessary
+    // because nsWebShell.cpp still checks for mContainer all over the
+    // place.
+    nsCOMPtr<nsIWebShellContainer> wsContainer(do_QueryInterface(initContext->browserContainer));
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+    webShell->SetContainer(wsContainer);
+
+    // set the URIContentListener
+    nsCOMPtr<nsIURIContentListener> contentListener(do_QueryInterface(initContext->browserContainer));
+    webBrowser->SetParentURIContentListener(contentListener);
+
+    // set the TreeOwner
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(initContext->browserContainer));
+    docShellAsItem->SetTreeOwner(treeOwner);
+
+    // set the docloaderobserver
+    nsCOMPtr<nsIDocumentLoaderObserver> observer(do_QueryInterface(initContext->browserContainer));
+    docShell->SetDocLoaderObserver(observer);
 
     if (nsnull == gHistory) {
-        rv = gComponentManager->CreateInstance(kSessionHistoryCID, nsnull, 
-                                               kISessionHistoryIID, 
+        rv = gComponentManager->CreateInstance(kSHistoryCID, nsnull, 
+                                               kISHistoryIID, 
                                                (void**)&gHistory);
-        if (NS_FAILED(rv)) {
-            initContext->initFailCode = kHistoryWebShellError;
-            return rv;
-        }
+      if (NS_FAILED(rv)) {
+	initContext->initFailCode = kHistoryWebShellError;
+	return rv;
+      }
     }
-    initContext->webShell->SetSessionHistory(gHistory);
 
-    // set the sessionHistory in the initContexn
-    initContext->sessionHistory = gHistory;
-    
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
-               ("InitMozillaStuff(%lx): Show the WebShell...\n", initContext));
-    }
-#endif
+	printf("Creation Done.....\n");
+    // Get the WebNavigation Object from the DocShell
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(initContext->docShell));
+    initContext->webNavigation = webNav;
 
-    nsCOMPtr<nsIBaseWindow> baseWindow;
+    // Set the History
+    //    initContext->webNavigation->SetSessionHistory(gHistory);
+
+    // Save the sessionHistory in the initContext
+    //    initContext->sHistory = gHistory;
     
-    rv = initContext->webShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-    
+    printf("Show the webBrowser\n");
+    // Show the webBrowser
+    rv = initContext->baseWindow->SetVisibility(PR_TRUE);
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kShowWebShellError;
         return rv;
     }
-    rv = baseWindow->SetVisibility(PR_TRUE);
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kShowWebShellError;
-        return rv;
-    }
-
-    // set the docShell
-    rv = initContext->webShell->QueryInterface(NS_GET_IID(nsIDocShell),
-                                               getter_AddRefs(initContext->docShell));
-    
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kHistoryWebShellError;
-        return rv;
-    }
-    
     
     initContext->initComplete = TRUE;
     
@@ -531,9 +669,14 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
                ("InitMozillaStuff(%lx): enter event loop\n", initContext));
     }
 #endif
-
+    PRThread *thread = PR_GetCurrentThread();
+    printf("debug: edburns: InitMozillaStuff currentThread %p\n", thread);
+    
     // Just need to loop once to clear out events before returning
     processEventLoop(initContext);
 
     return rv;
 }
+
+
+

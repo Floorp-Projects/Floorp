@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Ed Burns <edburns@acm.org>
+ *                 Ashutosh Kulkarni <ashuk@eng.sun.com>
  *
  */
 
@@ -27,6 +28,10 @@
  * Global data
 
  */
+
+#include "nsIWebShell.h" // for nsIWebShell
+#include "nsIEventQueueService.h" // for PLEventQueue
+
 
 #ifndef ns_globals_h
 #define ns_globals_h
@@ -46,7 +51,8 @@ extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactory.cpp
  */
 
 class nsIComponentManager;
-extern nsIComponentManager *gComponentManager; // defined in WrapperFactoryImpl.cpp
+extern nsIComponentManager *gComponentManager; // defined in NativeEventThread.cpp
+extern const char * gBinDir; // defined in WrapperFactoryImpl.cpp
 
 /**
 
@@ -58,9 +64,14 @@ extern nsIComponentManager *gComponentManager; // defined in WrapperFactoryImpl.
 
  */
 
-class nsISessionHistory;
-extern nsISessionHistory *gHistory; // defined in NativeEventThread.cpp
+class nsISHistory;
+extern nsISHistory *gHistory; // defined in NativeEventThread.cpp
 
 
+class nsIEventQueueService;
+extern PLEventQueue	*	gActionQueue; // defined in NativeEventThread.cpp
+
+class nsIThread;
+extern PRThread		*	gEmbeddedThread; // defined in NativeEventThread.cpp
 
 #endif // ns_globals_h

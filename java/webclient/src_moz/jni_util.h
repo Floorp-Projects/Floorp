@@ -22,6 +22,7 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
  */
 
@@ -38,13 +39,19 @@
 #include <jni.h>
 
 #include "nsCOMPtr.h" // so we can save the docShell
+#include "nsIWebBrowser.h"
 #include "nsIDocShell.h" // so we can save our nsIDocShell
-#include "nsISessionHistory.h" // so we can save our nsISessionHistory
+#include "nsIBaseWindow.h" // to get methods like SetVisibility
+#include "nsIWebNavigation.h" // for all Navigation commands
+#include "nsISHistory.h" // for session history
+#include "nsIPresShell.h"
 #include "nsIThread.h" // for PRThread
 #include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsISearchContext.h" // for Find
 #include "nsIDOMDocument.h"
+
+#include "wcIBrowserContainer.h" // our BrowserContainer
 
 #include "ns_globals.h"
 
@@ -71,7 +78,11 @@ struct WebShellInitContext {
 #endif
 	nsCOMPtr<nsIWebShell> webShell;
     nsCOMPtr<nsIDocShell> docShell;
-	nsISessionHistory*	sessionHistory;
+    nsCOMPtr<nsIBaseWindow> baseWindow;
+  nsCOMPtr<nsISHistory> sHistory;
+  nsCOMPtr<nsIWebNavigation> webNavigation;
+  nsCOMPtr<nsIPresShell> presShell;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
 	PLEventQueue	*	actionQueue;
 	PRThread		*	embeddedThread;
     JNIEnv          *   env;
@@ -83,22 +94,24 @@ struct WebShellInitContext {
 	int					y;
 	int					w;
 	int					h;
-        int                                     gtkWinPtr;
-  nsCOMPtr<nsISearchContext> searchContext;
-  nsCOMPtr<nsIDOMDocument> currentDocument;
+    int                 gtkWinPtr;
+    nsCOMPtr<nsISearchContext> searchContext;
+    nsCOMPtr<nsIDOMDocument> currentDocument;
     jclass propertiesClass;
+    nsCOMPtr<wcIBrowserContainer> browserContainer;
 };
 
 enum {
 	kEventQueueError = 1,
 	kCreateWebShellError,
+	kCreateDocShellError,
+	kGetBaseWindowError,
 	kInitWebShellError,
 	kShowWebShellError,
 	kHistoryWebShellError,
 	kClipboardWebShellError,
 	kFindComponentError,
-	kSearchContextError,
-	kSelectAllError
+	kSearchContextError
 };
 
 extern JavaVM *gVm; // defined in jni_util.cpp

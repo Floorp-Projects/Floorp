@@ -22,6 +22,7 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
  */
 
@@ -50,7 +51,7 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetBounds
 	}
 	if (initContext->initComplete) {
 		wsResizeEvent	* actionEvent = 
-            new wsResizeEvent(initContext->webShell, x, y, w, h);
+            new wsResizeEvent(initContext->baseWindow, x, y, w, h);
         PLEvent			* event       = (PLEvent*) *actionEvent;
         
 		::util_PostEvent(initContext, event);
@@ -83,8 +84,12 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->initFailCode = 0;
     initContext->parentHWnd = parentHWnd;
     initContext->webShell = nsnull;
+    initContext->docShell = nsnull;
+    initContext->baseWindow = nsnull;
+    initContext->sHistory = nsnull;
+    initContext->webNavigation = nsnull;
+    initContext->presShell = nsnull;
     initContext->embeddedThread = nsnull;
-    initContext->sessionHistory = nsnull;
     initContext->actionQueue = nsnull;
     initContext->env = env;
     initContext->nativeEventThread = nsnull;
@@ -96,6 +101,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->searchContext = nsnull;
     initContext->currentDocument = nsnull;
     initContext->propertiesClass = nsnull;
+    initContext->browserContainer = nsnull;
 
 #ifdef XP_UNIX
     initContext->gtkWinPtr = 
@@ -128,9 +134,10 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
     // see http://bugzilla.mozilla.org/show_bug.cgi?id=38271
 
     initContext->webShell = nsnull;
-
-    //NOTE we don't de-allocate the global session history here.
-    initContext->sessionHistory = nsnull;
+    initContext->webNavigation = nsnull;
+    initContext->presShell = nsnull;
+    initContext->sHistory = nsnull;
+    initContext->baseWindow = nsnull;
 
     // PENDING(edburns): not sure if these need to be deleted
     initContext->actionQueue = nsnull;
@@ -151,6 +158,7 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
     initContext->searchContext = nsnull;
     initContext->currentDocument = nsnull;
     initContext->propertiesClass = nsnull;
+    initContext->browserContainer = nsnull;
 
     delete initContext;
 }
@@ -167,7 +175,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 	}
 
 	if (initContext->initComplete) {
-		wsMoveToEvent	* actionEvent = new wsMoveToEvent(initContext->webShell, x, y);
+		wsMoveToEvent	* actionEvent = new wsMoveToEvent(initContext->baseWindow, x, y);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
 		::util_PostEvent(initContext, event);
@@ -185,7 +193,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 	}
 
 	if (initContext->initComplete) {
-		wsRemoveFocusEvent	* actionEvent = new wsRemoveFocusEvent(initContext->webShell);
+		wsRemoveFocusEvent	* actionEvent = new wsRemoveFocusEvent(initContext->baseWindow);
         PLEvent				* event       = (PLEvent*) *actionEvent;
 
 		::util_PostEvent(initContext, event);
@@ -203,7 +211,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 	}
 
 	if (initContext->initComplete) {
-		wsRepaintEvent	* actionEvent = new wsRepaintEvent(initContext->webShell, (PRBool) forceRepaint);
+		wsRepaintEvent	* actionEvent = new wsRepaintEvent(initContext->baseWindow, (PRBool) forceRepaint);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
 		::util_PostEvent(initContext, event);
@@ -214,24 +222,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetVisible
 (JNIEnv *env, jobject obj, jint webShellPtr, jboolean newState)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    nsCOMPtr<nsIBaseWindow> baseWindow;
-    nsresult rv;
-    
-    rv = initContext->webShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
-                                               getter_AddRefs(baseWindow));
-    
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kShowWebShellError;
-        return;
-    }
-    rv = baseWindow->SetVisibility(JNI_TRUE == newState ? PR_TRUE : PR_FALSE);
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kShowWebShellError;
-		::util_ThrowExceptionToJava(env, "Exception: can't SetVisibility");
-        return;
-    }
 
+  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+  if (initContext == nsnull) {
+    ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRepaint");
+    return;
+  }
+  if (initContext->initComplete) {
+    wsShowEvent * actionEvent = new  wsShowEvent(initContext->baseWindow, JNI_TRUE == newState ? PR_TRUE : PR_FALSE);
+    PLEvent			* event       = (PLEvent*) *actionEvent;
+    ::util_PostEvent(initContext, event);
+  }
+  
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetFocus
@@ -245,12 +247,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 	}
 
 	if (initContext->initComplete) {
-		wsSetFocusEvent	* actionEvent = new wsSetFocusEvent(initContext->webShell);
+		wsSetFocusEvent	* actionEvent = new wsSetFocusEvent(initContext->baseWindow);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
 		::util_PostEvent(initContext, event);
 	}
 }
-
-
-

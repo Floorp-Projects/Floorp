@@ -22,7 +22,7 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
- *               Ann Sunhachawee
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
 /*
@@ -53,6 +53,11 @@
 #include "nsIDOMRange.h"
 #include "nsIContentViewer.h"
 #include "nsIServiceManager.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerEdit.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIInterfaceRequestor.h"
 
 static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -63,29 +68,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    nsCOMPtr<nsIPresShell> presShell;
-    nsresult rv;
-
-    rv = initContext->docShell->GetPresShell(getter_AddRefs(presShell));
-    // PENDING() should this be done using an nsActionEvent subclass?
-
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kHistoryWebShellError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't Copy to Clipboard");
-        return;
-    }
-
-    presShell->DoCopy();
-
-    /***
-
-        This looks like the right way to do it, but as of 01/13/00, it
-        doesn't work.  See a post on n.p.m.embedding:
-
-        Message-ID: <85ll4n$nli$1@nnrp1.deja.com>
-
-
-     **/
+    nsIContentViewer* contentViewer ;
+    nsresult rv = nsnull;
+    rv = initContext->docShell->GetContentViewer(&contentViewer);
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
+    rv = contentViewerEdit->CopySelection();
+ 
 }
 
 /*
@@ -99,6 +87,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
 
+  
   //First get the FindComponent object
   nsresult rv;
   
@@ -109,9 +98,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
         return;
   }
 
-  // Create a Search Context for the FindComponent
+  nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+ 
+
   nsCOMPtr<nsISupports> searchContext;
-  rv = findComponent->CreateContext(initContext->webShell, nsnull, getter_AddRefs(searchContext));
+  rv = findComponent->CreateContext(domWindow, nsnull, getter_AddRefs(searchContext));
   if (NS_FAILED(rv))  {
         initContext->initFailCode = kSearchContextError;
         ::util_ThrowExceptionToJava(env, "Exception: can't create SearchContext for Find");
@@ -141,6 +134,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
   // Save in initContext struct for future findNextInPage calls
   initContext->searchContext = srchcontext;
+
 }
 
 
@@ -201,13 +195,14 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 	}
 
 	if (initContext->initComplete) {
-        nsISessionHistory *yourHistory;
+	  //        nsISessionHistory *yourHistory;
+	nsISHistory* yourHistory;
         nsresult rv;
         
-        rv = initContext->webShell->GetSessionHistory(yourHistory);
+        rv = initContext->webNavigation->GetSessionHistory(&yourHistory);
         
         if (NS_FAILED(rv)) {
-            ::util_ThrowExceptionToJava(env, "Exception: can't get SessionHistory from webshell");
+            ::util_ThrowExceptionToJava(env, "Exception: can't get SessionHistory from webNavigation");
             return urlString;
         }
 
@@ -272,8 +267,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
 (JNIEnv * env, jobject jobj)
 {
-
     jstring result = nsnull;
+    
     return result;
 }
 
@@ -283,18 +278,20 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
  * Signature: ()[B
  */
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv * env, jobject jobj, jint webShellPtr, jboolean mode)
+(JNIEnv * env, jobject jobj, jint webShellPtr, jboolean viewMode)
 {
-/*
-  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-  nsCOMPtr <nsIDocShell> docShell = initContext->docShell;
 
-  if (mode)
-    docShell->SetViewMode(nsIDocShell::viewSource);
-  else
-    docShell->SetViewMode(nsIDocShell::viewNormal);
-*/
- 
+
+  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+
+  if (initContext->initComplete) {
+      wsViewSourceEvent * actionEvent = 
+          new wsViewSourceEvent(initContext->docShell, ((JNI_TRUE == viewMode)? PR_TRUE : PR_FALSE));
+      PLEvent	   	* event       = (PLEvent*) *actionEvent;
+
+      ::util_PostSynchronousEvent(initContext, event);
+  }
+
     jbyteArray result = nsnull;
     return result;
 }
@@ -319,82 +316,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
-	WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    nsCOMPtr<nsIPresShell> presShell;
-    nsresult rv;
-
-    rv = initContext->docShell->GetPresShell(getter_AddRefs(presShell));
-
-    if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get PresShell");
-        return;
-    }
-
-	nsCOMPtr<nsIDOMSelection> selection;
-	rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-	if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMSelection");
-        return;
-    }
-
-	nsCOMPtr<nsIContentViewer> contentViewer;
-	rv = initContext->docShell->GetContentViewer(getter_AddRefs(contentViewer));
-	if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get contentViewer");
-        return;
-    }
-
-	nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-	
-	nsCOMPtr<nsIDocument> doc;
-	rv = docViewer->GetDocument(*getter_AddRefs(doc));
-	if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get Document object");
-        return;
-    }
-
-
-	nsCOMPtr<nsIDOMHTMLDocument> htmldoc;
-	rv = doc->QueryInterface(kIDOMHTMLDocumentIID, getter_AddRefs(htmldoc));
-	if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMHTMLDocument");
-        return;
-    }
-
-	nsCOMPtr<nsIDOMHTMLElement>bodyElement;
-	rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
-	if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMHTMLElement");
-        return;
-    }
-
-	nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
-	if (!bodyNode) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMNode");
-        return;
-    }
-
-	rv = selection->ClearSelection();
-
-	nsCOMPtr<nsIDOMRange> range;
-	rv = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-		                                    NS_GET_IID(nsIDOMRange),
-			                               getter_AddRefs(range));
-
-	rv = range->SelectNodeContents(bodyNode);
-
-	rv = selection->AddRange(range);
-	
-	if (NS_FAILED(rv)) {
-        initContext->initFailCode = kSelectAllError;
-        ::util_ThrowExceptionToJava(env, "Exception: can't get final Select working");
-        return;
-    }
+        WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+        nsIContentViewer* contentViewer ;
+        nsresult rv = nsnull;
+        rv = initContext->docShell->GetContentViewer(&contentViewer);
+        nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
+        rv = contentViewerEdit->SelectAll();
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Exception: can't do SelectAll through contentViewerEdit");
+        }
 }

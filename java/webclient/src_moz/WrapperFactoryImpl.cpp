@@ -22,53 +22,17 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
  */
 
 #include "WrapperFactoryImpl.h"
 
 #include "jni_util.h"
-
-#include "nsIServiceManager.h"  // for NS_InitXPCOM
-#include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
 #include "nsCRT.h" // for nsCRT::strcmp
 
-#include "prenv.h"
 
-static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
-
-#ifdef XP_PC
-
-// All this stuff is needed to initialize the history
-
-#define APPSHELL_DLL "appshell.dll"
-#define BROWSER_DLL  "nsbrowser.dll"
-#define EDITOR_DLL "ender.dll"
-
-#else
-
-#ifdef XP_MAC
-
-#define APPSHELL_DLL "APPSHELL_DLL"
-#define EDITOR_DLL  "ENDER_DLL"
-
-#else
-
-// XP_UNIX || XP_BEOS
-#define APPSHELL_DLL  "libnsappshell"MOZ_DLL_SUFFIX
-#define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
-#define EDITOR_DLL  "libender"MOZ_DLL_SUFFIX
-
-#endif // XP_MAC
-
-#endif // XP_PC
-
-//
-// file data
-// 
-
-
-static nsFileSpec gBinDir; 
+const char * gBinDir; 
 
 PRLogModuleInfo *prLogModuleInfo = NULL; // declared in jni_util.h
 
@@ -86,53 +50,20 @@ const char *gImplementedInterfaces[] = {
 // global data
 //
 
-nsIComponentManager *gComponentManager = nsnull;
 
 //
 // Functions to hook into mozilla
 // 
 
-extern "C" void NS_SetupRegistry();
-extern nsresult NS_AutoregisterComponents();
-
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize(
 										JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath)
 {
-  static PRBool	gFirstTime = PR_TRUE;
-  nsresult rv;
-  
-  if (gFirstTime) {
+
     const char *nativePath = (const char *) ::util_GetStringUTFChars(env, 
                                                                      verifiedBinDirAbsolutePath);
-    gBinDir = nativePath;
-    
-    // It is vitally important to call NS_InitXPCOM before calling
-    // anything else.
-    NS_InitXPCOM(nsnull, &gBinDir);
-    NS_SetupRegistry();
-    rv = NS_GetGlobalComponentManager(&gComponentManager);
-    if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "NS_GetGlobalComponentManager() failed.");
-        ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, 
-                                     nativePath);
-        return;
-    }
-    prLogModuleInfo = PR_NewLogModule("webclient");
-    const char *webclientLogFile = PR_GetEnv("WEBCLIENT_LOG_FILE");
-    if (nsnull != webclientLogFile) {
-        PR_SetLogFile(webclientLogFile);
-        // If this fails, it just goes to stdout/stderr
-    }
-
-    gComponentManager->RegisterComponentLib(kSessionHistoryCID, nsnull, 
-                                            nsnull, APPSHELL_DLL, 
-                                            PR_FALSE, PR_FALSE);
-    NS_AutoregisterComponents();
-    gFirstTime = PR_FALSE;
+    gBinDir = PL_strdup(nativePath);
     ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, nativePath);
-
-  }
 }
 
 JNIEXPORT void JNICALL 
@@ -141,6 +72,8 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeTerminate
 {
     gComponentManager = nsnull;
     gHistory = nsnull;
+    nsCRT::free((char *) gBinDir);
+    gBinDir = nsnull;
 }
 
 JNIEXPORT jboolean JNICALL 

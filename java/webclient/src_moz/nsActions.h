@@ -19,6 +19,7 @@
  *
  * Contributor(s): Kirk Baker <kbaker@eb.com>
  *               Ian Wilkinson <iw@ennoble.com>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
@@ -37,11 +38,11 @@
 #include "nsIDocShell.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIWebShell.h"
-#include "nsISessionHistory.h"
+#include "nsISHistory.h"
+#include "nsIBaseWindow.h"
+#include "nsIWebNavigation.h"
 #include "nsString.h"
 #include "plevent.h"
-
-#include "DocumentLoaderObserverImpl.h"
 
 /**
 
@@ -95,20 +96,20 @@ protected:
 
 class wsHistoryActionEvent : public nsActionEvent {
 public:
-    wsHistoryActionEvent(nsISessionHistory *yourHistory);
+    wsHistoryActionEvent(nsISHistory *yourHistory);
     virtual ~wsHistoryActionEvent() {};
 
 protected:
-    nsISessionHistory *mHistory;
+    nsISHistory *mHistory;
 };
 
 class wsResizeEvent : public nsActionEvent {
 public:
-                        wsResizeEvent  (nsIWebShell* webShell, PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
+                        wsResizeEvent  (nsIBaseWindow* baseWindow, PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIBaseWindow *   mBaseWindow;
         PRInt32         mLeft;
         PRInt32         mBottom;
         PRInt32         mWidth;
@@ -118,56 +119,57 @@ protected:
 
 class wsLoadURLEvent : public nsActionEvent {
 public:
-                        wsLoadURLEvent (nsIWebShell* webShell, PRUnichar * urlString);
+                        wsLoadURLEvent (nsIWebNavigation* webNavigation, PRUnichar * urlString);
                        ~wsLoadURLEvent ();
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIWebNavigation *   mWebNavigation;
         nsString    *   mURL;
 };
 
 
 class wsStopEvent : public nsActionEvent {
 public:
-                        wsStopEvent    (nsIWebShell* webShell);
+                        wsStopEvent    (nsIWebNavigation* webNavigation);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIWebNavigation *   mWebNavigation;
 };
 
 
 
 class wsShowEvent : public nsActionEvent {
 public:
-                        wsShowEvent    (nsIWebShell* webShell);
+                        wsShowEvent    (nsIBaseWindow* baseWindow, PRBool state);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIBaseWindow *   mBaseWindow;
+  PRBool mState;
 };
 
 
 
 class wsHideEvent : public nsActionEvent {
 public:
-                        wsHideEvent    (nsIWebShell* webShell);
+                        wsHideEvent    (nsIBaseWindow* baseWindow);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+       nsIBaseWindow *   mBaseWindow;
 };
 
 
 
 class wsMoveToEvent : public nsActionEvent {
 public:
-                        wsMoveToEvent  (nsIWebShell* webShell, PRInt32 x, PRInt32 y);
+                        wsMoveToEvent  (nsIBaseWindow* baseWindow, PRInt32 x, PRInt32 y);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIBaseWindow *   mBaseWindow;
         PRInt32         mX;
         PRInt32         mY;
 };
@@ -176,119 +178,131 @@ protected:
 
 class wsSetFocusEvent : public nsActionEvent {
 public:
-                        wsSetFocusEvent(nsIWebShell* webShell);
+                        wsSetFocusEvent(nsIBaseWindow* baseWindow);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIBaseWindow *   mBaseWindow;
 };
 
 
 
 class wsRemoveFocusEvent : public nsActionEvent {
 public:
-                        wsRemoveFocusEvent(nsIWebShell* webShell);
+                        wsRemoveFocusEvent(nsIBaseWindow* baseWindow);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIBaseWindow *   mBaseWindow;
 };
 
 
 
 class wsRepaintEvent : public nsActionEvent {
 public:
-                        wsRepaintEvent (nsIWebShell* webShell, PRBool forceRepaint);
+                        wsRepaintEvent (nsIBaseWindow* baseWindow, PRBool forceRepaint);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIBaseWindow *   mBaseWindow;
         PRBool          mForceRepaint;
 };
 
 
 
-class wsCanBackEvent : public wsHistoryActionEvent {
+//class wsCanBackEvent : public wsHistoryActionEvent {
+class wsCanBackEvent : public nsActionEvent {
 public:
-                        wsCanBackEvent (nsISessionHistory* yourSessionHistory);
+                        wsCanBackEvent (nsIWebNavigation* webNavigation);
         void    *       handleEvent    (void);
+protected:
+        nsIWebNavigation * mWebNavigation;
 };
 
 
 
-class wsCanForwardEvent : public wsHistoryActionEvent {
+//class wsCanForwardEvent : public wsHistoryActionEvent {
+class wsCanForwardEvent : public nsActionEvent { 
 public:
-                        wsCanForwardEvent(nsISessionHistory* yourSessionHistory);
+                        wsCanForwardEvent(nsIWebNavigation* webNavigation);
         void    *       handleEvent    (void);
+protected:
+        nsIWebNavigation * mWebNavigation;
 };
 
 
-class wsBackEvent : public wsHistoryActionEvent {
+class wsBackEvent : public nsActionEvent {
 public:
-                        wsBackEvent    (nsISessionHistory* yourSessionHistory,
-                                        nsIWebShell *yourWebShell);
+                        wsBackEvent    (nsIWebNavigation* webNavigation);
         void    *       handleEvent    (void);
 
 protected:
-    nsIWebShell *mWebShell;
+    nsIWebNavigation * mWebNavigation;
 };
 
 
-class wsForwardEvent : public wsHistoryActionEvent {
+class wsForwardEvent : public nsActionEvent {
 public:
-                        wsForwardEvent (nsISessionHistory* yourSessionHistory,
-                                        nsIWebShell *yourWebShell);
+                        wsForwardEvent (nsIWebNavigation* webNavigation);
         void    *       handleEvent    (void);
 
 protected:
-    nsIWebShell *mWebShell;
+    nsIWebNavigation * mWebNavigation;
 };
 
 
-class wsGoToEvent : public wsHistoryActionEvent {
+class wsGoToEvent : public nsActionEvent {
 public:
-                        wsGoToEvent    (nsISessionHistory *yourSessionHistory,
-                                        nsIWebShell* webShell, 
+                        wsGoToEvent    (nsIWebNavigation* webNavigation, 
                                         PRInt32 historyIndex);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
+        nsIWebNavigation *   mWebNavigation;
         PRInt32         mHistoryIndex;
 };
 
 
 
-class wsGetHistoryLengthEvent : public wsHistoryActionEvent {
+class wsGetHistoryLengthEvent : public nsActionEvent {
 public:
-                       wsGetHistoryLengthEvent(nsISessionHistory* yourSessionHistory);
+                       wsGetHistoryLengthEvent(nsISHistory * sHistory);
         void    *      handleEvent     (void);
+
+protected:
+    nsISHistory * mHistory;
 };
 
 
 
-class wsGetHistoryIndexEvent : public wsHistoryActionEvent {
+class wsGetHistoryIndexEvent : public nsActionEvent {
 public:
-                       wsGetHistoryIndexEvent (nsISessionHistory *yourSessionHistory);
+                       wsGetHistoryIndexEvent (nsISHistory * sHistory);
         void    *      handleEvent     (void);
+protected:
+    nsISHistory * mHistory;
 };
 
 
 
-class wsGetURLEvent : public wsHistoryActionEvent {
+class wsGetURLEvent : public nsActionEvent {
 public:
-                       wsGetURLEvent   (nsISessionHistory* yourSessionHistory);
+                       wsGetURLEvent   (nsISHistory * sHistory);
         void    *      handleEvent     (void);
+protected:
+    nsISHistory * mHistory;
 };
 
-class wsGetURLForIndexEvent : public wsHistoryActionEvent {
+
+class wsGetURLForIndexEvent : public nsActionEvent {
 public:
-                 wsGetURLForIndexEvent(nsISessionHistory *yourSessionHistory, 
+                 wsGetURLForIndexEvent(nsISHistory * sHistory, 
                                        PRInt32 historyIndex);
         void    *       handleEvent    (void);
 
 protected:
-        PRInt32         mHistoryIndex;
+  nsISHistory * mHistory;
+  PRInt32         mHistoryIndex;
 };
 
 
@@ -296,14 +310,25 @@ protected:
 // added by Mark Goddard OTMP 9/2/1999 
 class wsRefreshEvent : public nsActionEvent {
 public:
-                        wsRefreshEvent (nsIWebShell* webShell, 
-                                        long yourLoadFlags);
+                        wsRefreshEvent (nsIWebNavigation* webNavigation, 
+                                        PRInt32 reloadType);
         void    *       handleEvent    (void);
 
 protected:
-        nsIWebShell *   mWebShell;
-        nsLoadFlags loadFlags;
+        nsIWebNavigation *   mWebNavigation;
+        PRInt32 mReloadType;
 };
+
+class wsViewSourceEvent : public nsActionEvent {
+public:
+    wsViewSourceEvent (nsIDocShell * docShell, PRBool viewMode);
+    void * handleEvent (void);
+
+protected:
+    nsIDocShell * mDocShell;
+    PRBool mViewMode;
+};
+
 
 class wsAddDocLoaderObserverEvent : public nsActionEvent {
 public:

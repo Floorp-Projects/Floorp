@@ -26,21 +26,20 @@ MAKE_OBJ_TYPE	= DLL
 
 MODULE=webclient 
 
+
 OBJS =                              \
     .\$(OBJDIR)\jni_util.obj  \
     .\$(OBJDIR)\jni_util_export.obj  \
     .\$(OBJDIR)\rdf_util.obj  \
     .\$(OBJDIR)\dom_util.obj  \
     .\$(OBJDIR)\nsActions.obj  \
-    .\$(OBJDIR)\BookmarksImpl.obj  \
     .\$(OBJDIR)\CurrentPageImpl.obj  \
-    .\$(OBJDIR)\DocumentLoaderObserverImpl.obj  \
-    .\$(OBJDIR)\DOMMouseListenerImpl.obj  \
-    .\$(OBJDIR)\EventRegistration.obj  \
     .\$(OBJDIR)\HistoryImpl.obj  \
+    .\$(OBJDIR)\BookmarksImpl.obj  \
     .\$(OBJDIR)\WrapperFactoryImpl.obj  \
     .\$(OBJDIR)\WindowControlImpl.obj  \
     .\$(OBJDIR)\NavigationImpl.obj  \
+    .\$(OBJDIR)\CBrowserContainer.obj  \
     .\$(OBJDIR)\NativeEventThread.obj  \
     .\$(OBJDIR)\RDFEnumeration.obj  \
     .\$(OBJDIR)\RDFTreeNode.obj  \
@@ -80,9 +79,9 @@ LLIBS = \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\gkgfxwin.lib \
 	$(DIST)\lib\nsreg.lib \
-	$(DIST)\lib\nspr3.lib \
-	$(DIST)\lib\plds3.lib \
-	$(DIST)\lib\plc3.lib \
+	$(DIST)\lib\nspr4.lib \
+	$(DIST)\lib\plc4.lib \
+	$(DIST)\lib\plds4.lib \
 #	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
 

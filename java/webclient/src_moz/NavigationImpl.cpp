@@ -22,6 +22,7 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
  */
 
@@ -66,7 +67,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     }
     
     if (initContext->initComplete) {
-      wsLoadURLEvent	* actionEvent = new wsLoadURLEvent(initContext->webShell, urlStringChars);
+      wsLoadURLEvent	* actionEvent = new wsLoadURLEvent(initContext->webNavigation, urlStringChars);
       PLEvent			* event       = (PLEvent*) *actionEvent;
       
       ::util_PostEvent(initContext, event);
@@ -90,7 +91,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 	}
 
 	if (initContext->initComplete) {
-		wsRefreshEvent	* actionEvent = new wsRefreshEvent(initContext->webShell, (long) loadFlags);
+		wsRefreshEvent	* actionEvent = new wsRefreshEvent(initContext->webNavigation, (PRInt32) loadFlags);
         PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
         voidResult = ::util_PostSynchronousEvent(initContext, event);
@@ -115,7 +116,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 	}
 
 	if (initContext->initComplete) {
-		wsStopEvent		* actionEvent = new wsStopEvent(initContext->webShell);
+		wsStopEvent		* actionEvent = new wsStopEvent(initContext->webNavigation);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
         ::util_PostEvent(initContext, event);

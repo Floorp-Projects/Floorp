@@ -51,7 +51,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.14 2000/06/08 02:16:06 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.15 2000/06/30 00:01:58 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -121,6 +121,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		MenuItem sourceItem = new MenuItem("View Page Source");
 		MenuItem pageInfoItem = new MenuItem("View Page Info");
 		MenuItem selectAllItem = new MenuItem("Select All");
+        MenuItem copyItem = new MenuItem("Copy");
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
 		menuBar.add(searchMenu);
@@ -139,6 +140,8 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		pageInfoItem.addActionListener(this);
 		editMenu.add(selectAllItem);
 		selectAllItem.addActionListener(this);
+        editMenu.add(copyItem);
+        copyItem.addActionListener(this);
 
 		// Create the URL field
 		urlField = new TextField("", 30);
@@ -363,6 +366,9 @@ public void actionPerformed (ActionEvent evt)
             }
             else if (command.equals("Select All")) {
                 currentPage.selectAll();
+            }
+            else if (command.equals("Copy")) {
+                currentPage.copyCurrentSelectionToSystemClipboard();
             }
 	    }
         // deal with the button bar commands
