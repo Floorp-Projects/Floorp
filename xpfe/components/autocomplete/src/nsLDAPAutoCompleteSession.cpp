@@ -184,6 +184,14 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
         mState = SEARCHING;
         return StartLDAPSearch();
 
+    case INITIALIZING:
+        // We don't need to do anything here (for now at least), because
+        // we can't really abandon the initialization. If we allowed the
+        // initialization to be aborted, we could potentially lock the
+        // UI thread again, since the DNS service might be stalled.
+        //
+        return NS_OK;
+
     case BINDING:
     case SEARCHING:
         // we should never get here
@@ -222,28 +230,36 @@ nsLDAPAutoCompleteSession::OnStopLookup()
         // nothing to stop
         return NS_OK;
 
-    case BINDING:
-        // XXXdmose should this really be the same as searching?
-        // waiting for nsILDAPService landing to see.  mState should at
-        // least be set differently.
+    case INITIALIZING:
+        // We can't or shouldn't abor the initialization, because then the
+        // DNS service can hang again...
+        //
+        return NS_OK;
 
+    case BINDING:
     case SEARCHING:
-        nsresult rv = mOperation->Abandon();
-        if (NS_FAILED(rv)) {
-            // since there's nothing interesting that can or should be done
-            // if this abandon failed, warn about it and move on
+        // Abandon the operation, if there is one
+        //
+        if (mOperation) {
+            nsresult rv = mOperation->Abandon();
+
+            if (NS_FAILED(rv)) {
+                // since there's nothing interesting that can or should be
+                // done if this abandon failed, warn about it and move on
+                //
+                NS_WARNING("nsLDAPAutoCompleteSession::OnStopLookup(): "
+                           "error calling mOperation->Abandon()");
+            }
+
+            // force nsCOMPtr to release mOperation
             //
-            NS_WARNING("nsLDAPAutoCompleteSession::OnStopLookup(): "
-                       "error calling mOperation->Abandon()");
+            mOperation = 0;
         }
 
-        // force nsCOMPtr to release mOperation
+        // Set the status properly, set to UNBOUND of we were binding, or
+        // to BOUND if we were searching.
         //
-        mOperation = 0;
-
-        // reset the status
-        //
-        mState = BOUND;
+        mState = (mState == BINDING ? UNBOUND : BOUND);
     }
 
     mResultsArray = 0;
@@ -393,6 +409,95 @@ nsLDAPAutoCompleteSession::OnLDAPMessage(nsILDAPMessage *aMessage)
                  "LDAP message received");
         return NS_OK;
     }
+}
+
+// void onLDAPInit (in nsresult aStatus);
+//
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::OnLDAPInit(nsresult aStatus)
+{
+    nsresult rv;        // temp for xpcom return values
+    nsCOMPtr<nsILDAPMessageListener> selfProxy;
+
+    // Check the status from the initialization of the LDAP connection
+    //
+    if (NS_FAILED(aStatus)) {
+        mState = UNBOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_FAILURE;
+    }
+
+    // create and initialize an LDAP operation (to be used for the bind)
+    //  
+    mOperation = do_CreateInstance("@mozilla.org/network/ldap-operation;1", 
+                                   &rv);
+    if (NS_FAILED(rv)) {
+        mState = UNBOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_FAILURE;
+    }
+
+    // get a proxy object so the callback happens on the main thread
+    //
+    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              NS_GET_IID(nsILDAPMessageListener), 
+                              NS_STATIC_CAST(nsILDAPMessageListener *, this), 
+                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              getter_AddRefs(selfProxy));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPInit(): couldn't "
+                 "create proxy to this object for callback");
+        mState = UNBOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_FAILURE;
+    }
+
+    // our OnLDAPMessage accepts all result callbacks
+    //
+    rv = mOperation->Init(mConnection, selfProxy);
+    if (NS_FAILED(rv)) {
+        mState = UNBOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_UNEXPECTED; // this should never happen
+    }
+
+    // kick off a bind operation 
+    // 
+    PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+           ("nsLDAPAutoCompleteSession:OnLDAPInit(): initiating "
+            "SimpleBind\n"));
+    rv = mOperation->SimpleBind(NULL); 
+    if (NS_FAILED(rv)) {
+
+        switch (rv) {
+
+        case NS_ERROR_LDAP_SERVER_DOWN:
+            // XXXdmose try to rebind for this one?  wait for nsILDAPServer to 
+            // see...
+            //
+        case NS_ERROR_LDAP_CONNECT_ERROR:
+        case NS_ERROR_LDAP_ENCODING_ERROR:
+        case NS_ERROR_OUT_OF_MEMORY:
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::OnLDAPInit(): mSimpleBind "
+                    "failed, rv = 0x%lx", rv));
+            mState = UNBOUND;
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+            return NS_OK;
+
+        case NS_ERROR_UNEXPECTED:
+        default:
+            mState = UNBOUND;
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
+
+    // Change our state to binding.
+    //
+    mState = BINDING;
+
+    return NS_OK;
 }
 
 nsresult
@@ -820,8 +925,8 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
 nsresult
 nsLDAPAutoCompleteSession::InitConnection()
 {
-    nsCOMPtr<nsILDAPMessageListener> selfProxy;
     nsresult rv;        // temp for xpcom return values
+    nsCOMPtr<nsILDAPMessageListener> selfProxy;
     
     // create an LDAP connection
     //
@@ -865,13 +970,35 @@ nsLDAPAutoCompleteSession::InitConnection()
         return NS_ERROR_FAILURE;
     }
         
-    rv = mConnection->Init(host, port, 0);
+    // get a proxy object so the callback happens on the main thread
+    //
+    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              NS_GET_IID(nsILDAPMessageListener), 
+                              NS_STATIC_CAST(nsILDAPMessageListener *, this), 
+                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              getter_AddRefs(selfProxy));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPAutoCompleteSession::InitConnection(): couldn't "
+                 "create proxy to this object for callback");
+        mState = UNBOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_FAILURE;
+    }
+
+    // Initialize the connection. This will cause an asynchronous DNS
+    // lookup to occur, and we'll finish the binding of the connection
+    // in the OnLDAPInit() listener function.
+    //
+    rv = mConnection->Init(host, port, 0, selfProxy);
     if NS_FAILED(rv) {
         switch (rv) {
 
         case NS_ERROR_OUT_OF_MEMORY:
         case NS_ERROR_NOT_AVAILABLE:
         case NS_ERROR_FAILURE:
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::InitConnection(): mSimpleBind "
+                    "failed, rv = 0x%lx", rv));
             mState = UNBOUND;
             FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
             return rv;
@@ -884,75 +1011,9 @@ nsLDAPAutoCompleteSession::InitConnection()
         }
     }
 
-    // create and initialize an LDAP operation (to be used for the bind)
-    //  
-    mOperation = do_CreateInstance("@mozilla.org/network/ldap-operation;1", 
-                                   &rv);
-    if (NS_FAILED(rv)) {
-        mState = UNBOUND;
-        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
-        return NS_ERROR_FAILURE;
-    }
-
-    // get a proxy object so the callback happens on the main thread
+    // set our state to initializing
     //
-    rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                              NS_GET_IID(nsILDAPMessageListener), 
-                              NS_STATIC_CAST(nsILDAPMessageListener *, this), 
-                              PROXY_ASYNC | PROXY_ALWAYS, 
-                              getter_AddRefs(selfProxy));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPAutoCompleteSession::InitLDAPConnection(): couldn't "
-                 "create proxy to this object for callback");
-        mState = UNBOUND;
-        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
-        return NS_ERROR_FAILURE;
-    }
-
-    // our OnLDAPMessage accepts all result callbacks
-    //
-    rv = mOperation->Init(mConnection, selfProxy);
-    if (NS_FAILED(rv)) {
-        mState = UNBOUND;
-        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
-        return NS_ERROR_UNEXPECTED; // this should never happen
-    }
-
-    // kick off a bind operation 
-    // 
-    PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
-           ("nsLDAPAutoCompleteSession:InitConnection: initiating "
-            "SimpleBind\n"));
-    rv = mOperation->SimpleBind(NULL); 
-    if (NS_FAILED(rv)) {
-
-        switch (rv) {
-
-        case NS_ERROR_LDAP_SERVER_DOWN:
-            // XXXdmose try to rebind for this one?  wait for nsILDAPServer to 
-            // see...
-            //
-        case NS_ERROR_LDAP_CONNECT_ERROR:
-        case NS_ERROR_LDAP_ENCODING_ERROR:
-        case NS_ERROR_OUT_OF_MEMORY:
-            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
-                   ("nsLDAPAutoCompleteSession::InitConnection(): mSimpleBind "
-                    "failed, rv = 0x%lx", rv));
-            mState = UNBOUND;
-            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
-            return NS_OK;
-
-        case NS_ERROR_UNEXPECTED:
-        default:
-            mState = UNBOUND;
-            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
-            return NS_ERROR_UNEXPECTED;
-        }
-    }
-
-    // set our state
-    //
-    mState = BINDING;
+    mState = INITIALIZING;
 
     return NS_OK;
 }
@@ -993,6 +1054,11 @@ nsLDAPAutoCompleteSession::FinishAutoCompleteLookup(AutoCompleteStatus
     mResults = 0;
     mListener = 0;
     mOperation = 0;
+
+    // If we are unbound, drop the connection (if any)
+    //
+    if (mState == UNBOUND)
+        mConnection = 0;
 }
 
 // methods for nsILDAPAutoCompleteSession

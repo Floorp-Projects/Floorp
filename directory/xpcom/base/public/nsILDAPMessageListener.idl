@@ -51,5 +51,14 @@ interface nsILDAPMessageListener : nsISupports
      * XXX semantics of NULL?
      */
     void onLDAPMessage(in nsILDAPMessage aMessage);
-};
 
+    /**
+     * Notify the listener that the Init has completed, passing
+     * in the results from the connection initialization. The
+     * Reason for this is to allow us to do asynchronous DNS
+     * lookups, preresolving hostnames.
+     *
+     * @arg aStatus   The result from the LDAP connection init
+     */
+    void onLDAPInit(in nsresult aStatus);
+};

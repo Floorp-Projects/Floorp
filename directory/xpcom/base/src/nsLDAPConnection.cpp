@@ -45,8 +45,13 @@
 #include "nsLDAPMessage.h"
 #include "nsIEventQueueService.h"
 #include "nsIConsoleService.h"
+#include "nsIDNSService.h"
+#include "nsIRequestObserver.h"
+#include "nsIProxyObjectManager.h"
+#include "netCore.h"
 
 const char kConsoleServiceContractId[] = "@mozilla.org/consoleservice;1";
+const char kDNSServiceContractId[] = "@mozilla.org/network/dns-service;1";
 
 extern "C" int nsLDAPThreadDataInit(void);
 extern "C" int nsLDAPThreadFuncsInit(LDAP *aLDAP);
@@ -57,7 +62,8 @@ nsLDAPConnection::nsLDAPConnection()
     : mConnectionHandle(0),
       mBindName(0),
       mPendingOperations(0),
-      mRunnable(0)
+      mRunnable(0),
+      mDNSRequest(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -97,6 +103,17 @@ nsLDAPConnection::~nsLDAPConnection()
       delete mPendingOperations;
   }
 
+  // Cancel the DNS lookup if needed, and also drop the reference to the
+  // Init listener (if still there).
+  //
+  if (mDNSRequest) {
+      mDNSRequest->Cancel(NS_BINDING_ABORTED);
+      mDNSRequest = 0;
+  }
+  mInitListener = 0;
+
+  // Release the reference to the runnable object.
+  //
   NS_IF_RELEASE(mRunnable);
 }
 
@@ -107,8 +124,10 @@ nsLDAPConnection::~nsLDAPConnection()
 // since converting to the strong reference isn't MT safe.
 //
 NS_IMPL_THREADSAFE_ADDREF(nsLDAPConnection);
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsLDAPConnection, nsILDAPConnection,
-                                    nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_QUERY_INTERFACE3(nsLDAPConnection,
+                                    nsILDAPConnection,
+                                    nsISupportsWeakReference,
+                                    nsIDNSListener);
 
 nsrefcnt
 nsLDAPConnection::Release(void)
@@ -153,11 +172,14 @@ nsLDAPConnection::Release(void)
 
 NS_IMETHODIMP
 nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
-                       const PRUnichar *aBindName)
+                       const PRUnichar *aBindName,
+                       nsILDAPMessageListener *aMessageListener)
+
 {
+    nsCOMPtr<nsIDNSListener> selfProxy;
     nsresult rv;
 
-    if ( !aHost ) {
+    if ( !aHost || !aMessageListener) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
@@ -172,6 +194,12 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
     }
 #endif
 
+    // Make sure we haven't called Init earlier, i.e. there's a DNS
+    // request pending.
+    //
+    NS_ASSERTION(!mDNSRequest, "nsLDAPConnection::Init() "
+                 "Connection was already initialized\n");
+
     // XXXdmose - is a bindname of "" equivalent to a bind name of
     // NULL (which which means bind anonymously)?  if so, we don't
     // need to go through these contortions.
@@ -185,25 +213,22 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
         mBindName = 0;
     }
 
-    // initialize the connection
+    // Save the port number for later use, once the DNS server(s) has
+    // resolved the host part.
     //
-    mConnectionHandle = ldap_init(aHost, aPort == -1 ? LDAP_PORT : aPort);
-    if ( !mConnectionHandle ) {
-        return NS_ERROR_FAILURE;  // the LDAP C SDK API gives no useful error
-    }
+    mPort = aPort;
 
-    // initialize the threading functions for this connection
+    // Save the Init listener reference, we need it when the async
+    // DNS resolver has finished.
     //
-    if (!nsLDAPThreadFuncsInit(mConnectionHandle)) {
-        return NS_ERROR_UNEXPECTED;
-    }
+    mInitListener = aMessageListener;
 
     // initialize the thread-specific data for the calling thread as necessary
     //
     if (!nsLDAPThreadDataInit()) {
         return NS_ERROR_FAILURE;
     }
-
+        
     // allocate a hashtable to keep track of pending operations.
     // 10 buckets seems like a reasonable size, and we do want it to 
     // be threadsafe
@@ -214,44 +239,52 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
         return NS_ERROR_FAILURE;
     }
 
-#ifdef DEBUG_dmose
-    const int lDebug = 0;
-    ldap_set_option(mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
-    ldap_set_option(mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
-                    NS_REINTERPRET_CAST(void *, 0));
-#endif
-
-    // Create a new runnable object, and increment the refcnt. The
-    // thread will also hold a strong ref to the runnable, but we need
-    // to make sure it doesn't get destructed until we are done with
-    // all locking etc. in nsLDAPConnection::Release().
+    // get a proxy object so the callback happens on the main thread
     //
-    mRunnable = new nsLDAPConnectionLoop();
-    NS_ADDREF(mRunnable);
-    rv = mRunnable->Init();
+    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+                              NS_GET_IID(nsIDNSListener), 
+                              NS_STATIC_CAST(nsIDNSListener*, this), 
+                              PROXY_ASYNC | PROXY_ALWAYS, 
+                              getter_AddRefs(selfProxy));
+
     if (NS_FAILED(rv)) {
-        return NS_ERROR_OUT_OF_MEMORY;
+        NS_ERROR("nsLDAPConnection::Init(): couldn't "
+                 "create proxy to this object for callback");
+        return NS_ERROR_FAILURE;
     }
 
-    // Here we keep a weak reference in the runnable object to the
-    // nsLDAPConnection ("this"). This avoids the problem where a connection
-    // can't get destructed because of the new thread keeping a strong
-    // reference to it. It also helps us know when we need to exit the new
-    // thread: when we can't convert the weak reference to a strong ref, we
-    // know that the nsLDAPConnection object is gone, and we need to stop
-    // the thread running.
+    // Do the pre-resolve of the hostname, using the DNS service. This
+    // will also initialize the LDAP connection properly, once we have
+    // the IPs resolved for the hostname. This includes creating the
+    // new thread for this connection.
     //
-    nsCOMPtr<nsILDAPConnection> conn = NS_STATIC_CAST(nsILDAPConnection *,
-                                                      this);
-    mRunnable->mWeakConn = do_GetWeakReference(conn);
+    // XXX - What return codes can we expect from the DNS service?
+    //
+    nsCOMPtr<nsIDNSService>
+        pDNSService(do_GetService(kDNSServiceContractId, &rv));
 
-    // kick off a thread for result listening and marshalling
-    // XXXdmose - should this be JOINABLE?
-    //
-    rv = NS_NewThread(getter_AddRefs(mThread), mRunnable, 0,
-                      PR_UNJOINABLE_THREAD);
     if (NS_FAILED(rv)) {
-        return NS_ERROR_NOT_AVAILABLE;
+        NS_ERROR("nsLDAPConnection::Init(): couldn't "
+                 "create the DNS Service object");
+
+        return NS_ERROR_FAILURE;
+    }
+    rv = pDNSService->Lookup(aHost, 
+                             selfProxy,
+                             nsnull, 
+                             getter_AddRefs(mDNSRequest));
+
+    if (NS_FAILED(rv)) {
+        switch (rv) {
+        case NS_ERROR_OUT_OF_MEMORY:
+        case NS_ERROR_UNKNOWN_HOST:
+        case NS_ERROR_FAILURE:
+        case NS_ERROR_OFFLINE:
+            return rv;
+
+        default:
+            return NS_ERROR_UNEXPECTED;
+        }
     }
 
     return NS_OK;
@@ -260,6 +293,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
 // who we're binding as
 //
 // readonly attribute string bindName
+//
 NS_IMETHODIMP
 nsLDAPConnection::GetBindName(PRUnichar **_retval)
 {
@@ -615,7 +649,8 @@ nsLDAPConnectionLoop::Run(void)
 
         // XXX deal with timeouts better
         //
-        // returnCode = ldap_result(rawConn->mConnectionHandle,
+        NS_ASSERTION(rawConn->mConnectionHandle, "nsLDAPConnection::Run(): "
+                     "no connection created.\n");
         returnCode = ldap_result(rawConn->mConnectionHandle,
                                  LDAP_RES_ANY, LDAP_MSG_ONE,
                                  &timeout, &msgHandle);
@@ -777,4 +812,199 @@ nsLDAPConnectionLoop::Run(void)
     // This will never happen, but here just in case.
     //
     return NS_OK;
+}
+
+//
+// nsIDNSListener implementation, for asynchronous DNS. Once the lookup
+// has finished, we will initialize the LDAP connection properly.
+//
+NS_IMETHODIMP
+nsLDAPConnection::OnStartLookup(nsISupports *aContext, const char *aHostName)
+{
+    // Initialize some members which will be used in the other callbacks.
+    //
+    mDNSStatus = NS_OK;
+    mResolvedIP = "";
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPConnection::OnFound(nsISupports *aContext, 
+                          const char* aHostName,
+                          nsHostEnt *aHostEnt) 
+{
+    PRUint32 index = 0;
+    PRNetAddr netAddress;
+    char addrbuf[64];
+
+    // Do we have a proper host entry? If not, set the internal DNS
+    // status to indicate that host lookup failed.
+    //
+    if (!aHostEnt->hostEnt.h_addr_list || !aHostEnt->hostEnt.h_addr_list[0]) {
+        mDNSStatus = NS_ERROR_UNKNOWN_HOST;
+
+        return NS_ERROR_UNKNOWN_HOST;
+    }
+    
+    // Make sure our address structure is initialized properly
+    //
+    memset(&netAddress, 0, sizeof(netAddress));
+    PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &netAddress);
+
+    // Loop through the addresses, and add them to our IP string.
+    //
+    while (aHostEnt->hostEnt.h_addr_list[index]) {
+        if (aHostEnt->hostEnt.h_addrtype == PR_AF_INET6) {
+            memcpy(&netAddress.ipv6.ip, aHostEnt->hostEnt.h_addr_list[index],
+                   sizeof(netAddress.ipv6.ip));
+        } else {
+            // Can this ever happen? Not sure, cause everything seems to be
+            // IPv6 internally, even in the DNS service.
+            //
+            PR_ConvertIPv4AddrToIPv6(*(PRUint32*)aHostEnt->hostEnt.h_addr_list[0],
+                                     &netAddress.ipv6.ip);
+        }
+        if (PR_IsNetAddrType(&netAddress, PR_IpAddrV4Mapped)) {
+            // If there are more IPs in the list, we separate them with
+            // a space, as supported/used by the LDAP C-SDK.
+            //
+            if (index)
+                mResolvedIP.Append(' ');
+
+            // Convert the IPv4 address to a string, and append it to our
+            // list of IPs.
+            //
+            PR_NetAddrToString(&netAddress, addrbuf, sizeof(addrbuf));
+            if ((addrbuf[0] == ':') && (nsCRT::strlen(addrbuf) > 7))
+                mResolvedIP.Append(addrbuf+7);
+            else
+                mResolvedIP.Append(addrbuf);
+        }
+        index++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPConnection::OnStopLookup(nsISupports *aContext,
+                               const char *aHostName,
+                               nsresult aStatus)
+{
+    nsCOMPtr<nsILDAPMessageListener> selfProxy;
+    nsresult rv = NS_OK;
+
+    // Release our reference to the DNS Request...
+    //
+    mDNSRequest = 0;
+
+    if (NS_FAILED(mDNSStatus)) {
+        // We failed previously in the OnFound() callback
+        //
+        switch (mDNSStatus) {
+        case NS_ERROR_UNKNOWN_HOST:
+        case NS_ERROR_FAILURE:
+            rv = mDNSStatus;
+            break;
+
+        default:
+            rv = NS_ERROR_UNEXPECTED;
+            break;
+        }
+    } else if (NS_FAILED(aStatus)) {
+        // The DNS service failed , lets pass something reasonable
+        // back to the listener.
+        //
+        switch (aStatus) {
+        case NS_ERROR_OUT_OF_MEMORY:
+        case NS_ERROR_UNKNOWN_HOST:
+        case NS_ERROR_FAILURE:
+        case NS_ERROR_OFFLINE:
+            rv = aStatus;
+            break;
+
+        default:
+            rv = NS_ERROR_UNEXPECTED;
+            break;
+        }
+    } else if (!mResolvedIP.Length()) {
+        // We have no host resolved, that is very bad, and should most
+        // likely have been caught earlier.
+        //
+        NS_ERROR("nsLDAPConnection::OnStopLookup(): the resolved IP "
+                 "string is empty.\n");
+        
+        rv = NS_ERROR_UNKNOWN_HOST;
+    } else {
+        // We've got the IP(s) for the hostname, now lets setup the
+        // LDAP connection using this information. Note that if the
+        // LDAP server returns a referral, the C-SDK will perform a
+        // new, synchronous DNS lookup, which might hang (but hopefully
+        // if we've come this far, DNS is working properly).
+        //
+        mConnectionHandle = ldap_init(mResolvedIP.get(),
+                                      mPort == -1 ? LDAP_PORT : mPort);
+
+        // Check that we got a proper connection, and if so, setup the
+        // threading functions for this connection.
+        //
+        if ( !mConnectionHandle ) {
+            rv = NS_ERROR_FAILURE;  // LDAP C SDK API gives no useful error
+        } else if (!nsLDAPThreadFuncsInit(mConnectionHandle)) {
+            rv = NS_ERROR_UNEXPECTED;
+        } else {
+#ifdef DEBUG_dmose
+            const int lDebug = 0;
+            ldap_set_option(mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
+            ldap_set_option(mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
+                            NS_REINTERPRET_CAST(void *, 0));
+#endif
+        }
+
+        // Create a new runnable object, and increment the refcnt. The
+        // thread will also hold a strong ref to the runnable, but we need
+        // to make sure it doesn't get destructed until we are done with
+        // all locking etc. in nsLDAPConnection::Release().
+        //
+        mRunnable = new nsLDAPConnectionLoop();
+        NS_ADDREF(mRunnable);
+        rv = mRunnable->Init();
+        if (NS_FAILED(rv)) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        } else {
+            // Here we keep a weak reference in the runnable object to the
+            // nsLDAPConnection ("this"). This avoids the problem where a
+            // connection can't get destructed because of the new thread
+            // keeping a strong reference to it. It also helps us know when
+            // we need to exit the new thread: when we can't convert the weak
+            // reference to a strong ref, we know that the nsLDAPConnection
+            // object is gone, and we need to stop the thread running.
+            //
+            nsCOMPtr<nsILDAPConnection> conn =
+                NS_STATIC_CAST(nsILDAPConnection *, this);
+
+            mRunnable->mWeakConn = do_GetWeakReference(conn);
+
+            // kick off a thread for result listening and marshalling
+            // XXXdmose - should this be JOINABLE?
+            //
+            rv = NS_NewThread(getter_AddRefs(mThread), mRunnable, 0,
+                          PR_UNJOINABLE_THREAD);
+            if (NS_FAILED(rv)) {
+                rv = NS_ERROR_NOT_AVAILABLE;
+            }
+        }
+    }
+
+    // Drop the DNS request object, we no longer need it.
+    //
+    mDNSRequest = 0;
+
+    // Call the listener, and then we can release our reference to it.
+    //
+    mInitListener->OnLDAPInit(rv);
+    mInitListener = 0;
+
+    return rv;
 }

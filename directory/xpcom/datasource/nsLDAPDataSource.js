@@ -74,6 +74,30 @@ nsISupportsArrayEnumerator.prototype = {
                        this.array.GetElementAt(this.index++) : null; }
 }
 
+/**
+ * getProxyOnUIThread returns a proxy to aObject on the main (UI) thread.
+ * We need this because the RDF service should only be used on the main
+ * thread. Moreover, the RDF classes aren't (marked as?) thread-safe, so
+ * any objects we create using the RDF service should only be used on the
+ * main thread.
+ */
+function getProxyOnUIThread(aObject, aInterface) {
+    var eventQSvc = Components.
+            classes["@mozilla.org/event-queue-service;1"].
+            getService(Components.interfaces.nsIEventQueueService);
+    var uiQueue = eventQSvc.
+            getSpecialEventQueue(Components.interfaces.
+            nsIEventQueueService.UI_THREAD_EVENT_QUEUE);
+    var proxyMgr = Components.
+            classes["@mozilla.org/xpcomproxy;1"].
+            getService(Components.interfaces.nsIProxyObjectManager);
+
+    return proxyMgr.getProxyForObject(uiQueue, 
+            aInterface, aObject, 5); 
+    // 5 == PROXY_ALWAYS | PROXY_SYNC
+}
+
+
 // the datasource object itself
 //
 const NS_LDAPDATASOURCE_CONTRACTID = 
@@ -790,20 +814,25 @@ nsLDAPMessageRDFDelegateFactory.prototype =
     //                     [retval, iid_is(aIID)] out nsQIResult aResult);
     CreateDelegate: function (aOuter, aKey, aIID) {
         
-        function generateGetTargetsBoundCallback(callerObject, outer) {
-            function getTargetsBoundCallback(callerObject, outer) {
-                this.callerObject = callerObject;
-                this.outer = outer;
+        function generateGetTargetsBoundCallback() {
+            function getTargetsBoundCallback() {
             }
 
-            getTargetsBoundCallback.prototype.callerObject = null;
-            getTargetsBoundCallback.prototype.outer = {};
+            getTargetsBoundCallback.prototype.QueryInterface =
+                function(iid) {
+                    if (!iid.equals(Components.interfaces.nsISupports) &&
+                        !iid.equals(Components.interfaces.nsILDAPMessageListener))
+                        throw Components.results.NS_ERROR_NO_INTERFACE;
+
+                    return this;
+                }
 
             getTargetsBoundCallback.prototype.onLDAPMessage = 
                 function(aMessage) {
                     if (DEBUG) {
-                        dump("boundCallback() called with scope: \n\t" +
-                        this.outer.Value + "\n\n");
+                        dump("getTargetsBoundCallback.onLDAPMessage()" +
+                             "called with scope: \n\t" +
+                             aOuter.Value + "\n\n");
                     }
 
                     // XXX how do we deal with this in release builds?
@@ -811,6 +840,10 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     //
                     if (aMessage.type != aMessage.RES_BIND) {
                         dump("bind failed\n");
+                        if (aKey == "messagelist.ldap") {
+                            delete callerObject.mInProgressHash[queryURL.spec];
+                        }
+                        return;
                     }
 
                     // kick off a search
@@ -822,25 +855,53 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
                     // XXX err handling
                     searchOp.init(connection,
-                            generateGetTargetsSearchCallback(this.callerObject,
-                                                             this.outer));
+                                  generateGetTargetsSearchCallback());
                     // XXX err handling (also for url. accessors)
                     // XXX constipate this
                     // XXX real timeout
-                    searchOp.searchExt(url.dn, url.scope, url.filter, 0, -1);
+                    searchOp.searchExt(url.dn, url.scope, url.filter, 0,
+                                       new Array(), 0, -1);
                 }
 
-            return new getTargetsBoundCallback(callerObject, outer);
+            getTargetsBoundCallback.prototype.onLDAPInit = 
+                function(aStatus) {
+                    if (DEBUG) {
+                        dump("getTargetsBoundCallback.onLDAPInit()" +
+                             " called with status of " + aStatus + "\n\n");
+                    }
+
+                    // get and initialize an operation object
+                    //
+                    var operation = Components.classes
+                           ["@mozilla.org/network/ldap-operation;1"].
+                           createInstance(Components.interfaces.nsILDAPOperation);
+                    operation.init(connection,
+                                   getProxyOnUIThread(this, Components.interfaces.
+                                                            nsILDAPMessageListener));
+
+                    caller.mInProgressHash[aOuter.Value] = 1;
+
+                    // bind to the server.  we'll get a callback when this
+                    // finishes. XXX handle a password
+                    //
+                    operation.simpleBind(null);
+                }
+
+            return getProxyOnUIThread(new getTargetsBoundCallback(),
+                                      Components.interfaces.nsILDAPMessageListener);
         }
 
-        function generateGetTargetsSearchCallback(callerObject, outer) {
-            function getTargetsSearchCallback(callerObject, outer) {
-                this.callerObject = callerObject;
-                this.outer = outer;
+        function generateGetTargetsSearchCallback() {
+            function getTargetsSearchCallback() {
             }
 
-            getTargetsSearchCallback.prototype.callerObject = null;
-            getTargetsSearchCallback.prototype.outer = null;
+            getTargetsSearchCallback.prototype.QueryInterface = function(iid) {
+                if (!iid.equals(Components.interfaces.nsISupports) &&
+                    !iid.equals(Components.interfaces.nsILDAPMessageListener))
+                    throw Components.results.NS_ERROR_NO_INTERFACE;
+
+                return this;
+            };
 
             getTargetsSearchCallback.prototype.onLDAPMessage = 
                 function(aMessage) {
@@ -849,13 +910,11 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                                " of type " + aMessage.type + "\n\n");
                     }
 
-                    const caller = this.callerObject;
-
                     if (aMessage.type == aMessage.RES_SEARCH_ENTRY) {
                         if (DEBUG) {
                             dump("getTargetsSearchCallback() called with " + 
                                  "message " + aMessage.dn + " for " + 
-                                 this.outer.Value + "\n\n");
+                                 aOuter.Value + "\n\n");
                         }
 
                         // XXX (pvdb) Should get this out of nsILDAPMessage
@@ -882,18 +941,18 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                             // the query resource and onAssert the result
                             // as a child of the query resource.
                             var listHash = caller.mMessagesListHash;
-                            if (!listHash.hasOwnProperty(this.outer.Value)) {
+                            if (!listHash.hasOwnProperty(aOuter.Value)) {
                                 // No entry for the query resource in the
                                 // results hashlist, let's create one.
-                                listHash[this.outer.Value] = Components.classes
+                                listHash[aOuter.Value] = Components.classes
                                     ["@mozilla.org/supports-array;1"].
                                     createInstance(
                                        Components.interfaces.nsISupportsArray);
                             }
-                            listHash[this.outer.Value].AppendElement(
+                            listHash[aOuter.Value].AppendElement(
                                 newResource);
                             caller.mLDAPDataSource.onAssert(
-                                caller.mLDAPDataSource, this.outer,
+                                caller.mLDAPDataSource, aOuter,
                                 caller.kNC_child, newResource);
                         } else if (aKey == "message.ldap") {
                             // XXX - we need to onAssert this resource. However,
@@ -906,11 +965,12 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                         }
                     }
                     else if (aMessage.type == aMessage.RES_SEARCH_RESULT) {
-                        delete caller.mInProgressHash[this.outer.Value];
+                        delete caller.mInProgressHash[aOuter.Value];
                     }
                 }
 
-            return new getTargetsSearchCallback(callerObject, outer);
+            return getProxyOnUIThread(new getTargetsSearchCallback(),
+                                      Components.interfaces.nsILDAPMessageListener);
         }
 
         // end of closure decls; the CreateDelegate code proper begins below
@@ -922,6 +982,8 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             dump("GetDelegate() called with args: \n\t" + aOuter.Value + 
              "\n\t" + aKey + "\n\t" + aIID + "\n\n");
         }
+
+        var caller = this;
 
         if (aKey == "messagelist.ldap") {
             if (this.mMessagesListHash.hasOwnProperty(aOuter.Value)) {
@@ -953,24 +1015,8 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             var connection = Components.classes
                     ["@mozilla.org/network/ldap-connection;1"].
                     createInstance(Components.interfaces.nsILDAPConnection);
-            connection.init(url.host, url.port, null);
-
-            // get and initialize an operation object
-            //
-            var operation = Components.classes
-                    ["@mozilla.org/network/ldap-operation;1"].
-                    createInstance(Components.interfaces.nsILDAPOperation);
-            operation.init(connection, 
-                           generateGetTargetsBoundCallback(this, aOuter));
-
-            if (aKey == "messagelist.ldap") {
-                this.mInProgressHash[aOuter.Value] = 1;
-            }
-
-            // bind to the server.  we'll get a callback when this finishes.
-            // XXX handle a password
-            //
-            operation.simpleBind(null);
+            connection.init(url.host, url.port, null,
+                            generateGetTargetsBoundCallback())
 
             // XXXdmose - in this case, we almost certainly shouldn't be
             // falling through to an error case, but instead returning 

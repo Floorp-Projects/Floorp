@@ -696,9 +696,18 @@ nsLDAPService::OnLDAPMessage(nsILDAPMessage *aMessage)
     return NS_OK;
 }
 
+// void onLDAPInit (in nsresult aStatus); */
+//
+NS_IMETHODIMP
+nsLDAPService::OnLDAPInit(nsresult aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // Helper function to establish an LDAP connection properly.
 //
-nsresult nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
+nsresult
+nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
                                             nsILDAPMessageListener *aListener)
 {
     nsCOMPtr<nsILDAPOperation> operation;
@@ -754,7 +763,7 @@ nsresult nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
 
     // Here we need to provide the binddn, see bug #75990
     //
-    rv = conn->Init(host, port, 0);
+    rv = conn->Init(host, port, 0, this);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of

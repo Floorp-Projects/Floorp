@@ -104,21 +104,6 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString host;
-    rv = mURL->GetHost(getter_Copies (host));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 port;
-    rv = mURL->GetPort(&port);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsXPIDLCString dn;
-    rv = mURL->GetDn(getter_Copies (dn)); 
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mConnection->Init(host, port, NS_ConvertASCIItoUCS2(dn).get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mInitializedConnection = PR_TRUE;
     return rv;
 }

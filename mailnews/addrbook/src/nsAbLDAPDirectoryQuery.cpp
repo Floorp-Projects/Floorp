@@ -221,6 +221,28 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     return rv;
 }
 
+NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
+{
+    nsresult rv;
+
+    // Make sure that the Init() worked properly
+    NS_ENSURE_SUCCESS(aStatus, aStatus);
+
+    // Initiate the LDAP operation
+    nsCOMPtr<nsILDAPOperation> ldapOperation =
+        do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ldapOperation->Init(mConnection, this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Bind
+    rv = ldapOperation->SimpleBind(NULL);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return rv;
+}
+
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessage)
 {
     if (mBound == PR_TRUE)
@@ -523,7 +545,6 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     rv = GetLDAPConnection (getter_AddRefs (ldapConnection));
     NS_ENSURE_SUCCESS(rv, rv);
 
-
     // Initiate contextID for message listener
     PRInt32 contextID;
     // Enter lock
@@ -560,17 +581,10 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     *_retval = contextID;
 
-
-    // Initiate the LDAP operation
-    nsCOMPtr<nsILDAPOperation> ldapOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ldapOperation->Init(ldapConnection, messageListener);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-
-    // Bind
-    rv = ldapOperation->SimpleBind(NULL);
+    // Now lets initialize the LDAP connection properly. We'll kick
+    // off the bind operation in the callback function, |OnLDAPInit()|.
+    rv = ldapConnection->Init(host, port, NS_ConvertASCIItoUCS2(dn).get(),
+                              messageListener);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;

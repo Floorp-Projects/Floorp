@@ -47,7 +47,8 @@
 #include "nspr.h"
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
-
+#include "nsIDNSListener.h"
+#include "nsIRequest.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
@@ -56,7 +57,9 @@
  { 0x8e, 0xa9, 0x83, 0x17, 0x78, 0xc7, 0x8e, 0x93 }}
 
 class nsLDAPConnection : public nsILDAPConnection,
-                         public nsSupportsWeakReference
+                         public nsSupportsWeakReference,
+                         public nsIDNSListener
+
 {
     friend class nsLDAPOperation;
     friend class nsLDAPMessage;
@@ -65,6 +68,7 @@ class nsLDAPConnection : public nsILDAPConnection,
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSILDAPCONNECTION
+    NS_DECL_NSIDNSLISTENER
 
     // constructor & destructor
     //
@@ -110,6 +114,13 @@ class nsLDAPConnection : public nsILDAPConnection,
 
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
     nsLDAPConnectionLoop *mRunnable;    // nsIRunnable object
+
+    PRInt16 mPort;						// The LDAP port we're binding to
+
+    nsCString mResolvedIP;              // Preresolved list of host IPs
+    nsCOMPtr<nsILDAPMessageListener> mInitListener; // Init callback
+    nsCOMPtr<nsIRequest> mDNSRequest;   // The "active" DNS request
+    nsresult mDNSStatus;                // The status of DNS lookup (rv cache)
 };
 
 // This class implements the nsIRunnable interface, in this case just a

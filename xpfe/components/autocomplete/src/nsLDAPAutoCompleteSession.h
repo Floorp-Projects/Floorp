@@ -52,7 +52,8 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     virtual ~nsLDAPAutoCompleteSession();
 
   protected:
-    enum SessionState { UNBOUND, BINDING, BOUND, SEARCHING } mState;
+    enum SessionState { UNBOUND, INITIALIZING, BINDING, BOUND,
+                        SEARCHING } mState;
     PRUint32 mEntriesReturned;                    // # of entries returned?
     nsCOMPtr<nsILDAPConnection> mConnection;      // connection used for search
     nsCOMPtr<nsILDAPOperation> mOperation;        // current ldap op

@@ -616,7 +616,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
     //
-    rv = mConnection->Init(host, port, 0);
+    rv = mConnection->Init(host, port, 0, this);
     switch (rv) {
     case NS_OK:
         break;
@@ -796,6 +796,14 @@ nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage)
     NS_ENSURE_SUCCESS(rv,rv);
     
     return NS_OK;
+}
+
+// void onLDAPInit (in nsresult aStatus); */
+//
+NS_IMETHODIMP
+nsLDAPChannel::OnLDAPInit(nsresult aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // void OnLDAPSearchResult (in nsILDAPMessage aMessage);

@@ -322,7 +322,7 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
                             LDAPControl **clientctrls)
 {
     nsresult rv;
-    int retVal;
+    nsresult retStatus = NS_OK;
 
     if ( mMessageListener == 0 || mMsgID == 0 ) {
         NS_ERROR("nsLDAPOperation::AbandonExt(): mMessageListener or "
@@ -330,9 +330,9 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    retVal = ldap_abandon_ext(mConnectionHandle, mMsgID, serverctrls, 
-                              clientctrls);
-    switch (retVal) {
+    rv = ldap_abandon_ext(mConnectionHandle, mMsgID, serverctrls, 
+                          clientctrls);
+    switch (rv) {
 
     case LDAP_SUCCESS:
         break;
@@ -341,7 +341,8 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
         return NS_ERROR_LDAP_ENCODING_ERROR;
     
     case LDAP_SERVER_DOWN:
-        return NS_ERROR_LDAP_SERVER_DOWN;
+        retStatus = NS_ERROR_LDAP_SERVER_DOWN;
+        break;
 
     case LDAP_NO_MEMORY:
         return NS_ERROR_OUT_OF_MEMORY;
@@ -373,7 +374,7 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
                    "mConnection->RemovePendingOperation(this) failed.");
     }
 
-    return NS_OK;
+    return retStatus;
 }
 
 NS_IMETHODIMP
