@@ -440,7 +440,7 @@ input[type=button][value]:-moz-buttonlabel {
 
 /* submit */
 input[type=submit]:-moz-buttonlabel {
-  content:"submit";
+  content:"Submit Query";
   font-family: sans-serif;
   font-size: small;
 }
@@ -453,7 +453,7 @@ input[type=submit][value]:-moz-buttonlabel {
 
 /* reset */
 input[type=reset]:-moz-buttonlabel {
-  content:"reset";
+  content:"Reset";
   font-family: sans-serif;
   font-size: small;
 }
