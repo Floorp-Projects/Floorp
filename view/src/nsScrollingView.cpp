@@ -1234,7 +1234,6 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
       PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
 
       scrollv->SetPosition(newpos);
-      widget->Invalidate(PR_FALSE);
 
       dy = NSTwipsToIntPixels((oldpos - newpos), t2p);
 
@@ -1263,7 +1262,6 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
       PRUint32  newpos = NSIntPixelsToTwips(NSTwipsToIntPixels(aX, t2p), p2t);
 
       scrollh->SetPosition(newpos);
-      widget->Invalidate(PR_FALSE);
 
       dx = NSTwipsToIntPixels((oldpos - newpos), t2p);
 
