@@ -347,7 +347,8 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
     const char* readBuffer;
 
     *readCount = 0;
-    while (count > 0) {
+    PRUint32 amt = count;
+    while (amt > 0) {
         rv = pipe->GetReadSegment(0, &readBuffer, &readBufferLen);
         if (NS_FAILED(rv))
             goto done;
@@ -368,7 +369,7 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             continue;
         }
 
-        readBufferLen = PR_MIN(readBufferLen, count);
+        readBufferLen = PR_MIN(readBufferLen, amt);
         while (readBufferLen > 0) {
             PRUint32 writeCount;
             rv = writer(closure, readBuffer, *readCount, readBufferLen, &writeCount);
@@ -388,7 +389,7 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             readBuffer += writeCount;
             readBufferLen -= writeCount;
             *readCount += writeCount;
-            count -= writeCount;
+            amt -= writeCount;
             pipe->mReadCursor += writeCount;
         }
         if (pipe->mReadCursor == pipe->mReadLimit) {
@@ -413,6 +414,7 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
 
     if (rv == NS_BASE_STREAM_CLOSED)    // EOF
         rv = NS_OK;
+    NS_ASSERTION(*readCount <= count, "read more than expected");
     return *readCount == 0 ? rv : NS_OK;
 }
 
@@ -597,6 +599,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
 {
     nsresult rv = NS_OK;
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
+    PRUint32 amt = count;
     {
         nsAutoCMonitor mon(pipe);
 
@@ -607,7 +610,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             goto done;
         }
 
-        while (count > 0) {
+        while (amt > 0) {
             PRUint32 writeBufLen;
             char* writeBuf;
             rv = pipe->GetWriteSegment(&writeBuf, &writeBufLen);
@@ -629,7 +632,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 continue;
             }
 
-            writeBufLen = PR_MIN(writeBufLen, count);
+            writeBufLen = PR_MIN(writeBufLen, amt);
             while (writeBufLen > 0) {
                 PRUint32 readCount = 0;
                 rv = reader(closure, writeBuf, *writeCount, writeBufLen, &readCount);
@@ -656,7 +659,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
                 writeBuf += readCount;
                 writeBufLen -= readCount;
                 *writeCount += readCount;
-                count -= readCount;
+                amt -= readCount;
                 pipe->mWriteCursor += readCount;
             }
             if (pipe->mWriteCursor == pipe->mWriteLimit) {
@@ -676,6 +679,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
     if (pipe->mObserver && *writeCount > 0) {
         pipe->mObserver->OnWrite(pipe, *writeCount);
     }
+    NS_ASSERTION(*writeCount <= count, "wrote more than expected");
     return *writeCount == 0 ? rv : NS_OK;
 }
 
