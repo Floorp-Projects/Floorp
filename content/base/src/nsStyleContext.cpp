@@ -468,7 +468,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
   mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_BASELINE;
   mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_LEFT;
 
-  mMolecule.positionFlags = NS_STYLE_POSITION_STATIC;
   mMolecule.floats = 0;
 
   // XXX If it's a B guy then make it inline
