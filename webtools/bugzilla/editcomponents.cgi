@@ -423,7 +423,11 @@ if ($action eq 'new') {
     unlink "data/versioncache";
 
     print "OK, done.<p>\n";
-    PutTrailer($localtrailer);
+    if ($product) {
+        PutTrailer("<A HREF=\"editcomponents.cgi?product=" . url_quote($product) . "\">edit</A> more components or <A HREF=\"editcomponents.cgi?product=". url_quote($product) . "&action=add\">Add</A> another component");
+    } else {
+        PutTrailer("<A HREF=\"editcomponents.cgi\">edit</A> more components or <A HREF=\"editcomponents.cgi?action=add\">Add</A> another component");
+    }
     exit;
 }
 
