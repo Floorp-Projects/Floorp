@@ -53,7 +53,8 @@ interface nsIPrefService : nsISupports
   /*
    * resetUserPrefs
    * 
-   * flush all current user prefrences (reset all preferences to the default values)
+   * flush all current user prefrences (reset all preferences to the default
+   * values)
    */
   void resetUserPrefs();
 
@@ -64,11 +65,39 @@ interface nsIPrefService : nsISupports
    */
   void savePrefFile(in nsIFile aFile);
 
+
   /*
    * branch operations
+   * 
+   * These methods return a Preferences "Branch" from which preference data
+   * may be accessed or manipulated. For example, if "browser.startup." is
+   * passed in as the branch root, the branch will be able to access the
+   * preferences "browser.startup.homepage",
+   * "browser.startup.homepage_override", and "browser.startup.page".
+   * 
+   * pass in null or "" to have access to all preferences.
    */
 
+  /*
+   * getBranch
+   * 
+   * returns a Preferences "Branch" which accesses user preference data. If
+   * no user preference has been set, the default value will be returned.
+   * 
+   * When using a Set function, this will always create or set a user
+   * preference.
+   */
   nsIPrefBranch getBranch(in string aPrefRoot);
+
+  /*
+   * getDefaultBranch
+   * 
+   * returns a Preferences "Branch" which accesses the default preference
+   * data directly.
+   * 
+   * When using a Set function, this will always create or set a default
+   * preference.
+   */
   nsIPrefBranch getDefaultBranch(in string aPrefRoot);
 
 };
