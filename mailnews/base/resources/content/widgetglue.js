@@ -627,7 +627,6 @@ function MsgShowFolders()
 
 function MsgFolderProperties() {}
 
-function MsgShowMsgToolbar() {}
 function MsgShowLocationbar() {}
 function MsgSortByFlag() {}
 function MsgSortByPriority() {}

@@ -55,23 +55,6 @@ Rights Reserved.
 	<commandset id="globalEditMenuItems"/>
 </commands>
 
-<keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
-	<key id="key_close"/>
-	<key id="key_quit"/>
-	<!-- Edit Menu -->
-	<key id="key_undo"/>
-	<key id="key_redo"/>
-	<key id="key_cut"/>
-	<key id="key_copy"/>
-	<key id="key_paste"/>
-	<key id="key_delete"/>
-	<key id="key_selectAll"/>
-	<key id="key_preferences"/>
-</keyset>
-
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
@@ -96,6 +79,23 @@ Rights Reserved.
 	<broadcaster id="Messenger:LoadingProgress"/>
 </broadcasterset>
 
+<keyset id="keyset">
+	<!-- File Menu -->
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
+	<key id="key_close"/>
+	<key id="key_quit"/>
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
+	<key id="key_preferences"/>
+</keyset>
+
   <!-- The main mail three pane frame -->
   <box align="horizontal" style="height:100px" flex="1">
     <box id="sidebarbox" />
@@ -105,7 +105,10 @@ Rights Reserved.
         <menubar>
           <menu id="menu_File">
             <menupopup id="menu_FilePopup">
-              <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
+              <menuitem value="&newMessage.label;"
+                        accessKey="&newMessage.accesskey;"
+                        key="key_newMessage"
+                        observes="cmd_newMessage"/>
               <menu id="menu_New">
                 <menupopup>
                   <menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
@@ -120,18 +123,28 @@ Rights Reserved.
               <menuitem value="&openAttachmentCmd.label;" oncommand="MsgOpenAttachment();"/>
               <menuseparator/>
               <menuitem id="menu_close"/>
-              <menu value="&saveAsMenu.label;">
+              <menu value="&saveAsMenu.label;" accessKey="&saveAsMenu.accesskey;">
                 <menupopup>
-                  <menuitem value="&saveAsFileCmd.label;" oncommand="MsgSaveAsFile();"/>
-                  <menuitem value="&saveAsTemplateCmd.label;" oncommand="MsgSaveAsTemplate();"/>
+                  <menuitem value="&saveAsFileCmd.label;"
+                            accessKey="&saveAsFileCmd.accesskey;"
+                            oncommand="MsgSaveAsFile();"/>
+                  <menuitem value="&saveAsTemplateCmd.label;"
+                            accessKey="&saveAsTemplateCmd.accesskey;"
+                            oncommand="MsgSaveAsTemplate();"/>
                 </menupopup>
               </menu>
               <menuseparator/>
-              <menuitem value="&getNewMsgCmd.label;" oncommand="MsgGetMessage();"/>
-              <menuitem value="&sendUnsentCmd.label;" oncommand="MsgSendUnsentMsg();"/>
+              <menuitem value="&getNewMsgCmd.label;"
+                        accessKey="&getNewMsgCmd.accesskey;"
+                        oncommand="MsgGetMessage();"/>
+              <menuitem value="&sendUnsentCmd.label;"
+                        accessKey="&sendUnsentCmd.accesskey;"
+                        oncommand="MsgSendUnsentMsg();"/>
               <menuitem value="&loadFirstDraft.label;" oncommand="MsgLoadFirstDraft();"/>      
               <menuitem value="&emptyTrashCmd.label;" oncommand="MsgEmptyTrash();"/>
-              <menuitem value="&subscribeCmd.label;" oncommand="MsgSubscribe();"/>
+              <menuitem value="&subscribeCmd.label;"
+                        accessKey="&subscribeCmd.accesskey;"
+                        oncommand="MsgSubscribe();"/>
               <menuseparator/>
               <menuitem value="&renameFolder.label;" oncommand="MsgRenameFolder();"/>
               <menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
@@ -183,31 +196,36 @@ Rights Reserved.
     
     <menu id="menu_View">
 	  <menupopup>
-      <menu value="&showToolbarMenu.label;">
-        <menupopup>
-		<menuitem value="&showMessengerToolbarCmd.label;" oncommand="MsgShowMsgToolbar();"/>
+        <menu id="menu_Toolbars">
+          <menupopup>
+            <menuitem id="menu_showMessengerToolbar"
+                      value="&showMessengerToolbarCmd.label;"
+                      accesskey="&showMessengerToolbarCmd.accesskey;"
+                      oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
+                      checked="true"/>
+            <menuitem id="menu_showTaskbar"/>
+          </menupopup>
+        </menu>
         <menuitem value="&showMessageCmd.label;" oncommand="MsgToggleMessagePane();"/>
         <menuitem value="&showFoldersCmd.label;" oncommand="MsgToggleFolderPane();"/>
-		</menupopup>
-      </menu>
-      <menuseparator/>
-      <menu value="&sortMenu.label;">
-        <menupopup>
-		<menuitem value="&sortByDateCmd.label;" oncommand="MsgSortByDate();"/>
-        <menuitem value="&sortByFlagCmd.label;" oncommand="MsgSortByFlag();"/>
-        <menuitem value="&sortByPriorityCmd.label;" oncommand="MsgSortByPriority();"/>
-        <menuitem value="&sortBySenderCmd.label;" oncommand="MsgSortBySender();"/>
-        <menuitem value="&sortBySizeCmd.label;" oncommand="MsgSortBySize();"/>
-        <menuitem value="&sortByStatusCmd.label;" oncommand="MsgSortByStatus();"/>
-        <menuitem value="&sortBySubjectCmd.label;" oncommand="MsgSortBySubject();"/>
-        <menuitem value="&sortByThreadCmd.label;" oncommand="MsgSortByThread();"/>
-        <menuitem value="&sortByUnreadCmd.label;" oncommand="MsgSortByUnread();"/>
-        <menuitem value="&sortByOrderReceivedCmd.label;" oncommand="MsgSortByOrderReceived();"/>
         <menuseparator/>
-        <menuitem value="&sortAscendCmd.label;" oncommand="MsgSortAscending();"/>
-        <menuitem value="&sortDescendCmd.label;" oncommand="MsgSortDescending();"/>
-		</menupopup>
-      </menu>
+        <menu value="&sortMenu.label;">
+          <menupopup>
+		    <menuitem value="&sortByDateCmd.label;" oncommand="MsgSortByDate();"/>
+            <menuitem value="&sortByFlagCmd.label;" oncommand="MsgSortByFlag();"/>
+            <menuitem value="&sortByPriorityCmd.label;" oncommand="MsgSortByPriority();"/>
+            <menuitem value="&sortBySenderCmd.label;" oncommand="MsgSortBySender();"/>
+            <menuitem value="&sortBySizeCmd.label;" oncommand="MsgSortBySize();"/>
+            <menuitem value="&sortByStatusCmd.label;" oncommand="MsgSortByStatus();"/>
+            <menuitem value="&sortBySubjectCmd.label;" oncommand="MsgSortBySubject();"/>
+            <menuitem value="&sortByThreadCmd.label;" oncommand="MsgSortByThread();"/>
+            <menuitem value="&sortByUnreadCmd.label;" oncommand="MsgSortByUnread();"/>
+            <menuitem value="&sortByOrderReceivedCmd.label;" oncommand="MsgSortByOrderReceived();"/>
+            <menuseparator/>
+            <menuitem value="&sortAscendCmd.label;" oncommand="MsgSortAscending();"/>
+            <menuitem value="&sortDescendCmd.label;" oncommand="MsgSortDescending();"/>
+		  </menupopup>
+        </menu>
       <menu value="&msgsMenu.label;">
 	    <menupopup>
 	    <menuitem value="&threadsMsgsCmd.label;" oncommand="MsgViewAllThreadMsgs();"/>
@@ -448,7 +466,7 @@ Rights Reserved.
 
     </toolbox>
 	  <toolbox>
-		  <toolbar>
+        <toolbar id="msgToolbar" persist="collapsed">
 		  <titledbutton src="&getMsgButton.img;" align="top" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
 		  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
 		  <html:div class="separator" align="vertical"/> 

@@ -50,6 +50,26 @@ Contributor(s): ______________________________________. -->
 <html:script language="javascript" src="navigator.js" />
 <html:script language="javascript" src="tooltip.js" />
 
+<!-- broadcasters are appended from the overlay -->
+<broadcasterset id="broadcasterset">
+  <broadcaster id="canReload" value="&reloadCmd.label;"  oncommand="BrowserReallyReload(0);"/>
+  <broadcaster id="canStop"/>
+  <broadcaster id="canPrint"/>
+  <broadcaster id="Browser:LoadingProgress"/>
+  <broadcaster id="Browser:Status"/>
+  <broadcaster id="Browser:ProtocolIcon" uri=""/>
+  <broadcaster id="Browser:Throbber" busy="false"/>
+  <broadcaster id="args" value=""/>
+</broadcasterset>
+
+<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+<broadcaster id="dialog.start" ready="false"/>
+<observes element="dialog.start" attribute="ready" onbroadcast="onLoadWithArgs()"/>
+  
+<!-- keys are appended from the overlay -->
+<keyset id="keyset"/>
+  
+
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
 <popupset>
   <popup id="aTooltip" 
@@ -187,31 +207,11 @@ Contributor(s): ______________________________________. -->
   var gBookmarkPopup = null;
 </html:script>
 
-<broadcaster id="canReload" value="&reloadCmd.label;"  oncommand="BrowserReallyReload(0);"/>
-<broadcaster id="canStop"/>
-<broadcaster id="canPrint"/>
-<broadcaster id="Browser:LoadingProgress"/>
-<broadcaster id="Browser:Status"/>
-<broadcaster id="Browser:ProtocolIcon" uri=""/>
-<broadcaster id="Browser:Throbber" busy="false"/>
-<broadcaster id="args" value=""/>
-
-<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-<broadcaster id="dialog.start" ready="false"/>
-<observes element="dialog.start" attribute="ready" onbroadcast="onLoadWithArgs()"/>
-  
-  	
-<!-- keys are appended from the overlay -->
-<keyset id="keyset"/>
-  
-<!-- broadcasters are appended from the overlay -->
-<broadcasterset id="broadcasterset"/>
-
 <toolbox id="main-toolbox">
 		<!-- Menu -->
   	<menubar id="main-menubar"/>
 
-  <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed">
+  <toolbar id="nav-bar" class="main-bar" chromeclass="toolbar" persist="collapsed">
     <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />  
 
     <titledbutton id="forward-button" align="top" value="&forwardButton.label;" observes="canGoForward" />

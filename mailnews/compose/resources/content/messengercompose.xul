@@ -44,6 +44,47 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
 
+
+<broadcasterset id="broadcasterset">
+	<!-- File Menu -->
+	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newMessage"/>
+	<broadcaster id="cmd_close" oncommand="CloseWindow()"/>
+ 	<broadcaster id="cmd_quit"/>
+	<!-- Edit Menu -->
+	<broadcaster id="cmd_undo"/>
+	<broadcaster id="cmd_redo"/>
+	<broadcaster id="cmd_cut"/>
+	<broadcaster id="cmd_copy"/>
+	<broadcaster id="cmd_paste"/>
+	<broadcaster id="cmd_delete"/>
+	<broadcaster id="cmd_selectAll"/>
+	<broadcaster id="cmd_preferences"/>
+</broadcasterset>
+
+<broadcaster id="args" value="editorType=default"/>
+
+<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+<broadcaster id="dialog.start" ready="false"/>
+<observes element="dialog.start" attribute="ready" onbroadcast="ComposeStartup()"/>
+
+<keyset id="keyset">
+	<!-- File Menu -->
+	<key id="key_newNavigator"/>
+	<key id="key_newMessage"/>
+	<key id="key_close"/>
+	<key id="key_quit"/>
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
+	<key id="key_preferences"/>
+</keyset>
+
 <!--- REMOVE KEYSET UNTIL IT WORKS CORRECTLY ON MAC!
 ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF THE MODIFIERS PRESSED, THE COMMAND IS EXECUTED.
 
@@ -63,45 +104,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 </keyset>
 
 -->
-	<!-- how to handle return, enter, tab, function keys, arrow keys, others? -->
-
-<broadcaster id="args" value="editorType=default"/>
-
-<broadcasterset id="broadcasterset">
-	<!-- File Menu -->
-	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newMessage"/>
-	<broadcaster id="cmd_close" oncommand="CloseWindow()"/>
- 	<broadcaster id="cmd_quit"/>
-	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo"/>
-	<broadcaster id="cmd_redo"/>
-	<broadcaster id="cmd_cut"/>
-	<broadcaster id="cmd_copy"/>
-	<broadcaster id="cmd_paste"/>
-	<broadcaster id="cmd_delete"/>
-	<broadcaster id="cmd_selectAll"/>
-</broadcasterset>
-
-<keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
-	<key id="key_close"/>
-	<key id="key_quit"/>
-	<!-- Edit Menu -->
-	<key id="key_undo"/>
-	<key id="key_redo"/>
-	<key id="key_cut"/>
-	<key id="key_copy"/>
-	<key id="key_paste"/>
-	<key id="key_delete"/>
-	<key id="key_selectAll"/>
-</keyset>
-
-<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-<broadcaster id="dialog.start" ready="false"/>
-<observes element="dialog.start" attribute="ready" onbroadcast="ComposeStartup()"/>
 
 <!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
 <toolbox>
@@ -167,13 +169,22 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	</menu>
 	<menu id="menu_View">
 		<menupopup>
-		<menuitem value="&showCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
-		<menuitem value="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuitem value="&attachmentsCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
-		<menuitem value="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
-		<menuseparator/>
+			<menu id="menu_Toolbars">
+				<menupopup>
+		            <menuitem id="menu_showComposeToolbar"
+		                      value="&showComposeToolbarCmd.label;"
+		                      accesskey="&showComposeToolbarCmd.accesskey;"
+		                      oncommand="goToggleToolbar('composeToolbar', 'menu_showComposeToolbar')"
+		                      checked="true"/>
+					<menuitem id="menu_showTaskbar"/>
+				</menupopup>
+			</menu>
+			<menuseparator/>
+			<menuitem value="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&attachmentsCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuseparator/>
+			<menuitem value="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuseparator/>
 			<menu value="&dcharMenu.label;">
 			<menupopup>
 			<menuitem value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-1');"/>
@@ -278,7 +289,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	<spring flex="100%"/>
   </menubar>
 
-	<toolbar>
+    <toolbar id="composeToolbar" persist="collapsed">
  		<titledbutton src="&sendButton.img;" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
  		<html:div class="separator" align="vertical"/>
  		<titledbutton src="&addressButton.img;" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>

@@ -130,15 +130,16 @@ Rights Reserved.
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-			<menuseparator/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
-			<menuitem value="&searchCmd.label;" oncommand="AbSearch();"/>
-			<menuseparator/>
-			<menuitem value="&htmlDomainCmd.label;" oncommand="AbHTMLDomain();"/>
-			<menuitem value="&abPropsCmd.label;" oncommand="AbEditCard();"/>
+			<menuitem value="&editCardCmd.label;"
+			          accesskey="&editCardCmd.accesskey;"
+			          oncommand="AbEditCard();"/>
+			<menuitem value="&htmlDomainCmd.label;"
+			          accesskey="&htmlDomainCmd.accesskey;"
+			          oncommand="AbHTMLDomain();"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://addressbook/content/pref-addressing.xul')"/>
 		  </menupopup>
@@ -146,43 +147,47 @@ Rights Reserved.
 	    
 		<menu id="menu_View">
 		    <menupopup>
-			<menu value="&showMenu.label;">
-				<menupopup>
-				<menuitem value="&showAbToolbarCmd.label;" oncommand="AbShowToolbar()"/>
+				<menu id="menu_Toolbars">
+					<menupopup>
+						<menuitem id="menu_showAbToolbar"
+								  value="&showAbToolbarCmd.label;"
+								  accesskey="&showAbToolbarCmd.accesskey;"
+								  oncommand="goToggleToolbar('abToolbar', 'menu_showAbToolbar')"
+								  checked="true"/>
+						<menuitem id="menu_showTaskbar"/>
+					</menupopup>
+				</menu>
 				<menuitem value="&showCardPane.label;" oncommand="AbShowCardPane()"/>
-				<menuitem value="&showTaskbar.label;" oncommand="AbShowTaskbar()"/>
-				</menupopup>
-			</menu>
-			<menu value="&sortMenu.label;">
-			    <menupopup>
-				<menuitem value="&sortByNameCmd.label;"
-						  id="cmd_SortByName"
-						  disabled="true"
-						  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')"/>
-				<menuitem value="&sortByEmailCmd.label;"
-						  id="cmd_SortByEmail"
-						  disabled="true"
-						  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')"/>
-				<menuitem value="&sortByOrganizationCmd.label;" oncommand="AbSortByOrganization()"/>
-				<menuitem value="&sortByNicknameCmd.label;" oncommand="AbSortByNickname()"/>
-				<menuitem value="&sortByPhoneCmd.label;"
-						  id="cmd_SortByPhone"
-						  disabled="true"
-						  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')"/>
-				<menuitem value="&sortByCityCmd.label;" oncommand="AbSortByCity()"/>
-				<menuseparator/>
-				<menuitem value="&sortAscendingCmd.label;" oncommand="AbSortAscending()"/>
-				<menuitem value="&sortDescendingCmd.label;" oncommand="AbSortDescending()"/>
-				</menupopup>
-			</menu>
-		  </menupopup>
+				<menu value="&sortMenu.label;">
+				    <menupopup>
+						<menuitem value="&sortByNameCmd.label;"
+								  id="cmd_SortByName"
+								  disabled="true"
+								  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')"/>
+						<menuitem value="&sortByEmailCmd.label;"
+								  id="cmd_SortByEmail"
+								  disabled="true"
+								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')"/>
+						<menuitem value="&sortByOrganizationCmd.label;" oncommand="AbSortByOrganization()"/>
+						<menuitem value="&sortByNicknameCmd.label;" oncommand="AbSortByNickname()"/>
+						<menuitem value="&sortByPhoneCmd.label;"
+								  id="cmd_SortByPhone"
+								  disabled="true"
+								  oncommand="top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone')"/>
+						<menuitem value="&sortByCityCmd.label;" oncommand="AbSortByCity()"/>
+						<menuseparator/>
+						<menuitem value="&sortAscendingCmd.label;" oncommand="AbSortAscending()"/>
+						<menuitem value="&sortDescendingCmd.label;" oncommand="AbSortDescending()"/>
+					</menupopup>
+				</menu>
+			</menupopup>
 		</menu>
 	    
 		<menu id="tasksMenu"/>
 		<menu id="menu_Help"/>
 		<spring flex="100%"/>
 	</menubar>
-		<toolbar>
+		<toolbar id="abToolbar" persist="collapsed">
 			<titledbutton src="&newcardButton.img;" align="top" value="&newcardButton.label;" onclick="AbNewCard()"/>
 			<titledbutton src="&newlistButton.img;" align="top" value="&newlistButton.label;" onclick="AbNewList()"/>
 			<titledbutton src="&editButton.img;" align="top" value="&editButton.label;" onclick="AbEditCard()"/>

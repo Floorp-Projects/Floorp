@@ -43,15 +43,15 @@ Rights Reserved.
 <!ENTITY deleteAbCmd.label					"Delete Address Book">  
 <!ENTITY deleteCardCmd.label				"Delete Card">  
 <!ENTITY deleteCardsCmd.label				"Delete Selected Cards">  
-<!ENTITY searchCmd.label					".Search..."> 
+<!ENTITY editCardCmd.label					"Edit Card...">  
+<!ENTITY editCardCmd.accesskey				"e">  
 <!ENTITY htmlDomainCmd.label				".HTML Domains...">  
-<!ENTITY abPropsCmd.label					"Properties">  
+<!ENTITY htmlDomainCmd.accesskey			"h">  
 
 <!-- View Menu -->
-<!ENTITY showMenu.label						".Show"> 
-<!ENTITY showAbToolbarCmd.label					".Address Book Toolbar">  
-<!ENTITY showCardPane.label						".Card Pane">  
-<!ENTITY showTaskbar.label						".Taskbar">  
+<!ENTITY showAbToolbarCmd.label				"Show Address Book Toolbar">  
+<!ENTITY showAbToolbarCmd.accesskey			"a">  
+<!ENTITY showCardPane.label					".Card Pane">  
 <!ENTITY sortMenu.label						"Sort"> 
 <!ENTITY sortByNameCmd.label					"by Name">  
 <!ENTITY sortByEmailCmd.label					"by Email">  

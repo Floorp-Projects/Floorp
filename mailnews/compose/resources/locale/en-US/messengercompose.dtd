@@ -35,7 +35,8 @@
 <!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
 
 <!-- View menu items -->
-<!ENTITY showCmd.label ".Show">
+<!ENTITY showComposeToolbarCmd.label			"Show Message Toolbar">
+<!ENTITY showComposeToolbarCmd.accesskey		"m">
 <!ENTITY addressCmd.label ".Address">
 <!ENTITY attachmentsCmd.label ".Attachments">
 <!ENTITY wrapCmd.label ".Wrap Long Lines">

@@ -81,9 +81,9 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
 	
-	<broadcaster id="cmd_viewnavbar" oncommand="toggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
-	<broadcaster id="cmd_viewpersonaltoolbar"  oncommand="toggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-	<broadcaster id="cmd_viewtaskbar" oncommand="toggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+	<broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
+	<broadcaster id="cmd_viewpersonaltoolbar"  oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+	<broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
 	<broadcaster id="Browser:NewEditor"       value="&newBlankPageCmd.label;"         					 oncommand="BrowserNewEditorWindow();"/>
 	<broadcaster id="Browser:NewEditorTemplate" value="&newPageFromTemplateCmd.label;"    disabled="true"  oncommand="BrowserNewWindow();"/>
