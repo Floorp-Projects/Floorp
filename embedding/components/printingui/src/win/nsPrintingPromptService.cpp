@@ -237,7 +237,6 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
             mPrintProgress->OpenProgressDialog(parentDOMIntl, 
                                                isForPrinting?kPrintProgressDialogURL:kPrtPrvProgressDialogURL, 
                                                *printProgressParams, openDialogObserver, notifyOnOpen);
-            *notifyOnOpen = PR_TRUE;
         }
     }
 
