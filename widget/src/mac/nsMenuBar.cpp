@@ -108,9 +108,10 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mIsMenuBarAdded = PR_FALSE;
   
   mOriginalMacMBarHandle = nsnull;
-  mOriginalMacMBarHandle = ::GetMenuBar();
-  
-  ::ClearMenuBar();
+  mMacMBarHandle = nsnull;
+  mMacMBarHandle = ::GetMenuBar(); // Get a copy of the menu list
+  //::SetMenuBar(mMacMBarHandle); // Make the copy the current menu list
+  ::ClearMenuBar(); // Clear the copy
 }
 
 //-------------------------------------------------------------------------
@@ -214,7 +215,14 @@ NS_METHOD nsMenuBar::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 {
-  //aData = (void *)mMenu;
+  aData = (void *) mMacMBarHandle;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::SetNativeData(void* aData)
+{
+  mMacMBarHandle = (Handle) aData;
   return NS_OK;
 }
 
