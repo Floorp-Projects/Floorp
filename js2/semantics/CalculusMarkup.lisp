@@ -883,6 +883,7 @@
 ;;; Tuples and Records
 
 ; (new <type> <field-expr1> ... <field-exprn>)
+; A <field-expr> may be :uninit to indicate an uninitialized field, which must have kind :opt-const or :opt-var.
 (defun depict-new (markup-stream world level type type-name &rest annotated-exprs)
   (let* ((tag (type-tag type))
          (mutable (tag-mutable tag)))
@@ -893,21 +894,24 @@
            (depict-type-name markup-stream type-name :reference)
            (if (tag-keyword tag)
              (assert-true (null annotated-exprs))
-             (depict-list markup-stream
-                          #'(lambda (markup-stream parameter)
-                              (let ((field (pop fields)))
+             (let ((fields-and-parameters (mapcan #'(lambda (field parameter)
+                                                      (and (not (eq parameter :uninit))
+                                                           (list (cons field parameter))))
+                                                  fields annotated-exprs)))
+               (depict-list markup-stream
+                            #'(lambda (markup-stream field-and-parameter)
                                 (depict-logical-block (markup-stream 4)
-                                  (depict-label-name markup-stream type (field-label field) nil)
+                                  (depict-label-name markup-stream type (field-label (car field-and-parameter)) nil)
                                   (depict markup-stream ":")
                                   (depict-break markup-stream 1)
-                                  (depict-expression markup-stream world parameter %expr%))))
-                          annotated-exprs
-                          :indent 4
-                          :prefix (if mutable :record-begin :tuple-begin)
-                          :suffix (if mutable :record-end :tuple-end)
-                          :separator ","
-                          :break 1
-                          :empty nil)))))
+                                  (depict-expression markup-stream world (cdr field-and-parameter) %expr%)))
+                            fields-and-parameters
+                            :indent 4
+                            :prefix (if mutable :record-begin :tuple-begin)
+                            :suffix (if mutable :record-end :tuple-end)
+                            :separator ","
+                            :break 1
+                            :empty nil))))))
       
       (if mutable
         (depict-expr-parentheses (markup-stream level %prefix%)
@@ -918,6 +922,7 @@
 
 
 ; (& <label> <record-expr>)
+; (&opt <label> <record-expr>)
 (defun depict-& (markup-stream world level record-type label annotated-expr)
   (depict-expr-parentheses (markup-stream level %suffix%)
     (depict-expression markup-stream world annotated-expr %suffix%)
@@ -987,6 +992,13 @@
 ; (not-in <type> <expr>)
 (defun depict-not-in (markup-stream world level value-annotated-expr type type-expr)
   (depict-in-or-not-in markup-stream world level value-annotated-expr type type-expr :not-member-10 :not-equal))
+
+
+; (assert-in <expr> <type>)
+; (assert-not-in <expr> <type>)
+(defun depict-assert-in (markup-stream world level value-annotated-expr type type-expr)
+  (declare (ignore type type-expr))
+  (depict-expression markup-stream world value-annotated-expr level))
 
 
 ;;; Writable Cells
@@ -1120,6 +1132,7 @@
 
 
 ; (&= <label> <record-expr> <value-expr>)
+; (&const= <label> <record-expr> <value-expr>)
 (defun depict-&= (markup-stream world semicolon last-paragraph-style record-type label record-annotated-expr value-annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
     (depict-& markup-stream world %unary% record-type label record-annotated-expr)
@@ -1518,7 +1531,7 @@
 
 
 ; (deftuple <name> (<name1> <type1>) ... (<namen> <typen>))
-; (defrecord <name> (<name1> <type1>) ... (<namen> <typen>))
+; (defrecord <name> (<name1> <type1> [:const | :var | :opt-const | :opt-var]) ... (<namen> <typen> [:const | :var | :opt-const | :opt-var]))
 (defun depict-deftuple (markup-stream world depict-env name &rest fields)
   (let* ((type (scan-kinded-type world name :tag))
          (tag (type-tag type))
