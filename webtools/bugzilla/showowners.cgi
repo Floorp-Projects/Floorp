@@ -83,11 +83,11 @@ foreach $person (@list) {
 	my $qperson = SqlQuote($person);
 
 	SendSQL("select program,value from components\
-		 where initialowner = $qperson order by program,value;");
+		 where initialowner = $qperson order by program,value");
 	$firstcell = FetchAndFormat();
 
 	SendSQL("select program,value from components\
-		 where initialqacontact = $qperson order by program,value;");
+		 where initialqacontact = $qperson order by program,value");
 	$secondcell = FetchAndFormat();
 
 	$_ = $person;		# Anti-spam
