@@ -67,11 +67,10 @@ class nsAppShell : public nsIAppShell
     NS_DECL_NSIAPPSHELL
   
   private:
-    nsDispatchListener             *mDispatchListener;    // note: we don't own this, but it can be NULL
     nsCOMPtr<nsIToolkit>           mToolkit;
     auto_ptr<nsMacMessagePump>     mMacPump;
     PRBool                         mExitCalled;
-	static PRBool                  mInitializedToolbox;
+    static PRBool                  mInitializedToolbox;
 };
 
 #endif // nsAppShell_h__

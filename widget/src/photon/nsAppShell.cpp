@@ -110,12 +110,6 @@ nsAppShell::~nsAppShell()
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
 //
 // Enter a message handler loop
 //
