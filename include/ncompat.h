@@ -54,6 +54,7 @@
 #define	_COMPAT_H_
 
 #include <sys/types.h>
+#include "platform.h"
 
 /*
  * If your system doesn't typedef u_long, u_short, or u_char, change
@@ -89,7 +90,7 @@ typedef unsigned int	sigset_t;
  * If your system's vsprintf returns a char *, not an int,
  * change the 0 to a 1.
  */
-#if defined (__sun) && !defined(SVR4) /* SUNOS */
+#ifdef SUNOS4
 #define	VSPRINTF_CHARSTAR
 #endif
 /*
