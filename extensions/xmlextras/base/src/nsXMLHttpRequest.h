@@ -64,7 +64,7 @@ class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIDOMLoadListener,
                          public nsIDOMEventTarget,
                          public nsIStreamListener,
-                         public nsIHttpEventSink, 
+                         public nsIHttpEventSink,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference
 {
@@ -74,10 +74,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  // nsIXMLHttpRequest  
+  // nsIXMLHttpRequest
   NS_DECL_NSIXMLHTTPREQUEST
 
-  // nsIJSXMLHttpRequest  
+  // nsIJSXMLHttpRequest
   NS_DECL_NSIJSXMLHTTPREQUEST
 
   // nsIDOMEventTarget
@@ -160,7 +160,7 @@ protected:
   nsCString mResponseBody;
 
   nsCString mOverrideMimeType;
-  
+
   PRUint32 mState;
 };
 

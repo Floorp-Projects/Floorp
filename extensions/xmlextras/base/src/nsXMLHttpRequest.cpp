@@ -264,12 +264,12 @@ nsXMLHttpRequest::nsXMLHttpRequest()
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
 {
-  if (mState & (XML_HTTP_REQUEST_STOPPED | 
-                XML_HTTP_REQUEST_SENT | 
+  if (mState & (XML_HTTP_REQUEST_STOPPED |
+                XML_HTTP_REQUEST_SENT |
                 XML_HTTP_REQUEST_INTERACTIVE)) {
     Abort();
-  }    
-  
+  }
+
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 }
@@ -329,7 +329,7 @@ nsXMLHttpRequest::AddEventListener(const nsAString& type,
 
 /* void removeEventListener (in string type, in nsIDOMEventListener
    listener); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::RemoveEventListener(const nsAString & type,
                                       nsIDOMEventListener *listener,
                                       PRBool useCapture)
@@ -363,7 +363,7 @@ nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt, PRBool *_retval)
 }
 
 /* attribute nsIOnReadystatechangeHandler onreadystatechange; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetOnreadystatechange(nsIOnReadystatechangeHandler * *aOnreadystatechange)
 {
   NS_ENSURE_ARG_POINTER(aOnreadystatechange);
@@ -374,7 +374,7 @@ nsXMLHttpRequest::GetOnreadystatechange(nsIOnReadystatechangeHandler * *aOnready
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::SetOnreadystatechange(nsIOnReadystatechangeHandler * aOnreadystatechange)
 {
   mOnReadystatechangeListener = aOnreadystatechange;
@@ -386,7 +386,7 @@ nsXMLHttpRequest::SetOnreadystatechange(nsIOnReadystatechangeHandler * aOnreadys
 
 
 /* attribute nsIDOMEventListener onload; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetOnload(nsIDOMEventListener * *aOnLoad)
 {
   NS_ENSURE_ARG_POINTER(aOnLoad);
@@ -397,7 +397,7 @@ nsXMLHttpRequest::GetOnload(nsIDOMEventListener * *aOnLoad)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::SetOnload(nsIDOMEventListener * aOnLoad)
 {
   mOnLoadListener = aOnLoad;
@@ -408,7 +408,7 @@ nsXMLHttpRequest::SetOnload(nsIDOMEventListener * aOnLoad)
 }
 
 /* attribute nsIDOMEventListener onerror; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetOnerror(nsIDOMEventListener * *aOnerror)
 {
   NS_ENSURE_ARG_POINTER(aOnerror);
@@ -419,7 +419,7 @@ nsXMLHttpRequest::GetOnerror(nsIDOMEventListener * *aOnerror)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
 {
   mOnErrorListener = aOnerror;
@@ -482,7 +482,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
 {
   // This code here is basically a copy of a similar thing in
   // nsScanner::Append(const char* aBuffer, PRUint32 aLen).
-  // If we get illegal characters in the input we replace 
+  // If we get illegal characters in the input we replace
   // them and don't just fail.
 
   PRInt32 dataLen = mResponseBody.Length();
@@ -525,7 +525,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   if (NS_FAILED(rv))
     return rv;
 
-  PRUnichar * outBuffer = 
+  PRUnichar * outBuffer =
     NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc((outBufferLength + 1) *
                                                sizeof(PRUnichar)));
   if (!outBuffer) {
@@ -538,9 +538,9 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
 
   do {
     PRInt32 inBufferLength = dataLen;
-    rv = decoder->Convert(inBuffer, 
-                          &inBufferLength, 
-                          &outBuffer[outBufferIndex], 
+    rv = decoder->Convert(inBuffer,
+                          &inBufferLength,
+                          &outBuffer[outBufferIndex],
                           &outLen);
     totalChars += outLen;
     if (NS_FAILED(rv)) {
@@ -584,21 +584,21 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 }
 
 /* readonly attribute unsigned long status; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
 {
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   if (httpChannel) {
     return httpChannel->GetResponseStatus(aStatus);
-  } 
+  }
   *aStatus = 0;
 
   return NS_OK;
 }
 
 /* readonly attribute AUTF8String statusText; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
 {
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
@@ -615,7 +615,7 @@ nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
 }
 
 /* void abort (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::Abort()
 {
   if (mReadRequest) {
@@ -659,12 +659,12 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
     NS_RELEASE(visitor);
     return rv;
   }
-  
+
   return NS_OK;
 }
 
 /* ACString getResponseHeader (in AUTF8String header); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
                                     nsACString& _retval)
 {
@@ -680,7 +680,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   return rv;
 }
 
-nsresult 
+nsresult
 nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
   NS_ENSURE_ARG_POINTER(aLoadGroup);
@@ -733,7 +733,7 @@ nsXMLHttpRequest::CreateEvent(nsEvent* aEvent, nsIDOMEvent** aDOMEvent)
   }
 
   rv = manager->CreateEvent(nsnull, aEvent,
-                            NS_LITERAL_STRING("HTMLEvents"), 
+                            NS_LITERAL_STRING("HTMLEvents"),
                             aDOMEvent);
   if (NS_FAILED(rv)) {
     return rv;
@@ -823,17 +823,17 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
 
 /* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
 NS_IMETHODIMP
-nsXMLHttpRequest::OpenRequest(const nsACString& method, 
-                              const nsACString& url, 
-                              PRBool async, 
-                              const nsAString& user, 
+nsXMLHttpRequest::OpenRequest(const nsACString& method,
+                              const nsACString& url,
+                              PRBool async,
+                              const nsAString& user,
                               const nsAString& password)
 {
   NS_ENSURE_ARG(!method.IsEmpty());
   NS_ENSURE_ARG(!url.IsEmpty());
-  
+
   nsresult rv;
-  nsCOMPtr<nsIURI> uri; 
+  nsCOMPtr<nsIURI> uri;
   PRBool authp = PR_FALSE;
 
   if (mState & XML_HTTP_REQUEST_ABORTED) {
@@ -843,7 +843,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     // proceed as normal
 
     mState &= ~XML_HTTP_REQUEST_ABORTED;
-  } else if (mState & (XML_HTTP_REQUEST_OPENED | 
+  } else if (mState & (XML_HTTP_REQUEST_OPENED |
                        XML_HTTP_REQUEST_LOADED |
                        XML_HTTP_REQUEST_INTERACTIVE |
                        XML_HTTP_REQUEST_SENT |
@@ -888,10 +888,10 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
   // which in turn keeps STOP button from becoming active
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup, 
+  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
                      nsnull, nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) return rv;
-  
+
   //mChannel->SetAuthTriedWithPrehost(authp);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
@@ -905,7 +905,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 }
 
 /* void open (in AUTF8String method, in AUTF8String url); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
 {
   nsresult rv;
@@ -935,7 +935,7 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
     rv = NS_NewURI(getter_AddRefs(targetURI), url, nsnull, GetBaseURI());
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
@@ -998,29 +998,29 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   char* postData;
 
   // We want to encode the string as utf-8, so get the right encoder
-  nsCOMPtr<nsICharsetConverterManager> charsetConv = 
+  nsCOMPtr<nsICharsetConverterManager> charsetConv =
            do_GetService(kCharsetConverterManagerCID, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  
+
   rv = charsetConv->GetUnicodeEncoderRaw("UTF-8",
                                          getter_AddRefs(encoder));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-  
+
   // Convert to utf-8
   PRInt32 charLength;
   const PRUnichar* unicodeBuf = aStr;
   PRInt32 unicodeLength = aLength;
-    
+
   rv = encoder->GetMaxLength(unicodeBuf, unicodeLength, &charLength);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
+
 
   // Allocate extra space for the trailing and leading CRLF
   postData = (char*)nsMemory::Alloc(charLength + 5);
   if (!postData) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = encoder->Convert(unicodeBuf, 
+  rv = encoder->Convert(unicodeBuf,
                         &unicodeLength, postData+2, &charLength);
   if (NS_FAILED(rv)) {
     nsMemory::Free(postData);
@@ -1031,10 +1031,10 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   if (!httpChannel) {
     return NS_ERROR_FAILURE;
   }
-  
+
   // If no content type header was set by the client, we set it to text/xml.
   nsCAutoString header;
-  if( NS_FAILED(httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), header)) )  
+  if( NS_FAILED(httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), header)) )
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
                                   NS_LITERAL_CSTRING("text/xml"),
                                   PR_FALSE);
@@ -1115,7 +1115,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
 }
 
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   NS_ENSURE_ARG_POINTER(inStr);
@@ -1127,7 +1127,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInp
 }
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   // Don't do anything if we have been aborted
@@ -1162,9 +1162,9 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   // Create an empty document from it (resets current document as well)
   const nsAString& emptyStr = EmptyString();
-  rv = implementation->CreateDocument(emptyStr, 
-                                      emptyStr, 
-                                      nsnull, 
+  rv = implementation->CreateDocument(emptyStr,
+                                      emptyStr,
+                                      nsnull,
                                       getter_AddRefs(mDocument));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
@@ -1180,8 +1180,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
     // This will addref the proxy
-    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
-                                                      proxy), 
+    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*,
+                                                      proxy),
                                        NS_GET_IID(nsIDOMLoadListener));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
@@ -1205,7 +1205,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       channel->SetContentType(mOverrideMimeType);
     }
   }
-  
+
   if (mState & XML_HTTP_REQUEST_PARSEBODY) {
     nsCOMPtr<nsIStreamListener> listener;
     nsCOMPtr<nsILoadGroup> loadGroup;
@@ -1223,12 +1223,12 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     mXMLParserStreamListener = listener;
     return mXMLParserStreamListener->OnStartRequest(request, ctxt);
   }
-  
+
   return NS_OK;
 }
 
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
   // Don't do anything if we have been aborted
@@ -1247,7 +1247,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   // here.
 
   // Is this good enough here?
-  if (mState & XML_HTTP_REQUEST_PARSEBODY && mXMLParserStreamListener) { 
+  if (mState & XML_HTTP_REQUEST_PARSEBODY && mXMLParserStreamListener) {
     parser = do_QueryInterface(mXMLParserStreamListener);
     NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
     rv = mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
@@ -1300,7 +1300,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   return rv;
 }
 
-nsresult 
+nsresult
 nsXMLHttpRequest::RequestCompleted()
 {
   nsresult rv = NS_OK;
@@ -1348,7 +1348,7 @@ nsXMLHttpRequest::RequestCompleted()
 }
 
 /* void send (in nsIVariant aBody); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsIVariant *aBody)
 {
   nsresult rv;
@@ -1357,7 +1357,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (XML_HTTP_REQUEST_SENT & mState) {
     return NS_ERROR_FAILURE;
   }
-  
+
   // Make sure we've been opened
   if (!mChannel || !(XML_HTTP_REQUEST_OPENED & mState)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1382,7 +1382,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
     PRUint16 dataType;
     rv = aBody->GetDataType(&dataType);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
       return rv;
 
     switch (dataType) {
@@ -1392,7 +1392,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         nsCOMPtr<nsISupports> supports;
         nsID *iid;
         rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
-        if (NS_FAILED(rv)) 
+        if (NS_FAILED(rv))
           return rv;
         if (iid)
           nsMemory::Free(iid);
@@ -1401,10 +1401,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
         if (doc) {
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
-          if (NS_FAILED(rv)) return rv;  
+          if (NS_FAILED(rv)) return rv;
 
           rv = serializer->SerializeToString(doc, serial);
-          if (NS_FAILED(rv)) 
+          if (NS_FAILED(rv))
             return rv;
         } else {
           // nsISupportsString?
@@ -1431,18 +1431,18 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       return NS_ERROR_INVALID_ARG;
     default:
       // try variant string
-      rv = aBody->GetAsWString(getter_Copies(serial));    
-      if (NS_FAILED(rv)) 
+      rv = aBody->GetAsWString(getter_Copies(serial));
+      if (NS_FAILED(rv))
         return rv;
       break;
     }
 
     if (serial) {
       // Convert to a byte stream
-      rv = GetStreamForWString(serial.get(), 
+      rv = GetStreamForWString(serial.get(),
                                nsCRT::strlen(serial.get()),
                                getter_AddRefs(postDataStream));
-      if (NS_FAILED(rv)) 
+      if (NS_FAILED(rv))
         return rv;
     }
 
@@ -1514,7 +1514,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       mEventQService->PopThreadEventQueue(modalEventQueue);
     }
     return rv;
-  }  
+  }
 
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
@@ -1533,7 +1533,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 }
 
 /* void setRequestHeader (in AUTF8String header, in AUTF8String value); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
                                    const nsACString& value)
 {
@@ -1555,7 +1555,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
 }
 
 /* readonly attribute long readyState; */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetReadyState(PRInt32 *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
@@ -1573,7 +1573,7 @@ nsXMLHttpRequest::GetReadyState(PRInt32 *aState)
   } else {
     NS_ERROR("Should not happen");
   }
-  
+
   return NS_OK;
 }
 
@@ -1702,7 +1702,7 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
   nsresult rv = NS_OK;
   if ((mState & XML_HTTP_REQUEST_ASYNC) &&
       (aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
-      aBroadcast && 
+      aBroadcast &&
       mOnReadystatechangeListener) {
     nsCOMPtr<nsIJSContextStack> stack;
     JSContext *cx = nsnull;
@@ -1749,14 +1749,14 @@ nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel,
     if (!cx)
       return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return rv;
 
     nsCOMPtr<nsIURI> newURI;
     rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The redirected URI
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
       return rv;
 
     stack->Push(cx);
@@ -1764,7 +1764,7 @@ nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel,
     rv = secMan->CheckSameOrigin(cx, newURI);
 
     stack->Pop(&cx);
-    
+
     if (NS_FAILED(rv))
       return rv;
   }
