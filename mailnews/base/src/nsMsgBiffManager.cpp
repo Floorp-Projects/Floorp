@@ -260,8 +260,10 @@ nsresult nsMsgBiffManager::SetNextBiffTime(nsBiffEntry *biffEntry, nsTime startT
 		return rv;
 	//Add 60 secs/minute in microseconds to current time. biffEntry->nextBiffTime's
 	//constructor makes it the current time.
+        nsInt64 chosenTimeInterval = biffInterval;
+        chosenTimeInterval *= 60000000;
 	biffEntry->nextBiffTime = startTime;
-	biffEntry->nextBiffTime += (60000000 * biffInterval);
+        biffEntry->nextBiffTime += chosenTimeInterval;
 	return NS_OK;
 }
 
