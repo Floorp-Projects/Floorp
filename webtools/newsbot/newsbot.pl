@@ -184,11 +184,12 @@ RDFHEAD
 print $header;
 
 my $index =  @articles - 1;
-if ( $index > 15) {
-    $index = 15;
-    }
-for (my $i=$index; $i > 0 ; $i--) {
-#may need to substitute &amp;lt; for &lt; since rdf adds extra layer
+# only print newest 15 articles
+my $min = 0;
+if ($index > 15) {
+    $min = $index - 15;
+}
+for (my $i=$index; $i > $min ; $i--) {
     print ("  <item>\n");
     print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
     print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . $articles[$i]->{'Message-ID'} . "&gt;</link>\n");
