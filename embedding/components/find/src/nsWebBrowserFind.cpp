@@ -99,7 +99,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
 
     nsCOMPtr<nsIDOMWindow> rootFrame = do_QueryReferent(mRootSearchFrame);
-    NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_TRUE(rootFrame, NS_ERROR_NOT_INITIALIZED);
     
     // first, if there's a "cmd_findagain" observer around, check to see if it
     // wants to perform the find again command . If it performs the find again
