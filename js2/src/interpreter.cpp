@@ -32,6 +32,7 @@
  */
 
 #include "interpreter.h"
+#include "jsclasses.h"
 #include "world.h"
 
 #include <assert.h>
@@ -623,7 +624,19 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_OBJECT:
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
-                    (*registers)[dst(no).first] = JSValue(new JSObject());
+                    (*registers)[dst(no).first] = new JSObject();
+                }
+                break;
+            case NEW_CLASS:
+                {
+                    NewClass* nc = static_cast<NewClass*>(instruction);
+                    JSValue value = mGlobal->getVariable(*src1(nc));
+                    if (value.isType()) {
+                        using JSClasses::JSClass;
+                        using JSClasses::JSInstance;
+                        JSClass* thisClass = static_cast<JSClass*>(value.type);
+                        (*registers)[dst(nc).first] = new(thisClass) JSInstance(thisClass);
+                    }
                 }
                 break;
             case NEW_FUNCTION:
