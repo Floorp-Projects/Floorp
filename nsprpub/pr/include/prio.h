@@ -156,7 +156,7 @@ struct PRIPv6Addr {
 #define pr_s6_addr		_S6_un._S6_u8
 #define pr_s6_addr16	_S6_un._S6_u16
 #define pr_s6_addr32	_S6_un._S6_u32
-#define pr_s6_addr64 	_S6_un._S6_addr64
+#define pr_s6_addr64 	_S6_un._S6_u64
 
 typedef struct PRIPv6Addr PRIPv6Addr;
 
