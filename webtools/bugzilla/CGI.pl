@@ -1317,7 +1317,7 @@ Edit <a href="userprefs.cgi">prefs</a>
             $html .= ", <a href=\"editkeywords.cgi\">keywords</a>\n";
         }
         if (UserInGroup("tweakparams")) {
-            $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a> |\n";
+            $html .= "| <a href=\"sanitycheck.cgi\">Sanity&nbsp;check</a>\n";
         }
 
         $html .= qq{ 
