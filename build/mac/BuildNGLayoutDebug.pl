@@ -81,6 +81,7 @@ $build{dist} 			= 0;
 $build{dist_runtime}	= 0;	# Implied by $build{dist}
 $build{resources} 		= 0;
 $build{idl}             = 0;
+$build{xpidl}			= 0;
 $build{stubs} 			= 0;
 $build{runtime}			= 0;
 $build{common} 			= 0;
