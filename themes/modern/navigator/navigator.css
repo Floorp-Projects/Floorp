@@ -372,14 +372,14 @@ toolbox {
 }
 
 #nav-bar-buttons {
-  margin-left: 3px;
+  margin: 0px 0px 3px 3px;
 }
 
 /* ::::: navbar-inner - the grooved area around the urlbar ::::: */
 
 #nav-bar-inner {
   -moz-box-align: center;
-  margin: 7px 0px 0px 5px;
+  margin: 7px 0px 3px 5px;
   border: 2px solid;
   -moz-border-top-colors: #A2AFBD #EBF4FF;
   -moz-border-right-colors: #D1D9E0 #A2AFBD;
@@ -505,6 +505,7 @@ toolbox {
 
 #throbber-box {
   background: none; /* override bg used to cover toolbar line */
+  margin: 0px 0px 2px 0px;
 }
 
 /* ::::: personal toolbar ::::: */
