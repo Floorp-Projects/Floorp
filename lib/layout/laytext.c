@@ -260,7 +260,15 @@ lo_DefaultFont(lo_DocState *state, MWContext *context)
 	return(fptr);
 }
 
-
+/*
+** lo_PushAlignment
+**
+** Pushes a new alignment entry onto the alignment stack.  Alignment
+** entries are tagged with both the actually alignment type (CENTER,
+** LEFT, RIGHT, MIDDLE, etc.) as well as the tag that contained the
+** alignment attribute.  The latter is so we can accurately lookup the
+** alignment for a given tag type..
+*/
 void
 lo_PushAlignment(lo_DocState *state, intn tag_type, int32 alignment)
 {
@@ -281,6 +289,11 @@ lo_PushAlignment(lo_DocState *state, intn tag_type, int32 alignment)
 }
 
 
+/*
+** lo_PopAlignment
+**
+** Pops off the top entry from the alignment stack.
+*/
 lo_AlignStack *
 lo_PopAlignment(lo_DocState *state)
 {
@@ -541,97 +554,6 @@ lo_NewLinefeed(lo_DocState *state, MWContext * context, uint32 break_type, uint3
 
 	lo_FillInLineFeed( context, state, break_type, clear_type, linefeed );
 
-	/*
-	linefeed->type = LO_LINEFEED;
-	linefeed->ele_id = NEXT_ELEMENT;
-	linefeed->x = state->x;
-	linefeed->x_offset = 0;
-	linefeed->y = state->y;
-	linefeed->y_offset = 0;
-	*/
-    /* 
-     * If we're laying out a block, we want the contents of the block
-     * to determine the size of the block. The right margin is nothing
-     * more than a hint for where to wrap the contents. We don't want 
-     * the linefeed to extend out to the right margin, because it 
-     * unnecessarily extends the block contents.
-     */
-	/*
-	if (state->layer_nest_level > 0) {
-        linefeed->width = 0;
-    }
-    else
-	*/
-	/*
-	linefeed->width = state->right_margin - state->x;
-	if (linefeed->width < 0)
-	{
-		linefeed->width = 0;
-	}
-	linefeed->height = state->line_height;
-	*/
-	/*
-	 * if this linefeed has a zero height, make it the height
-	 * of the current font.
-	 */
-	/*
-	if (linefeed->height == 0)
-	{
-		linefeed->height = state->text_info.ascent +
-			state->text_info.descent;
-		if ((linefeed->height <= 0)&&(state->font_stack != NULL)&&
-			(state->font_stack->text_attr != NULL))
-		{
-			lo_fillin_text_info(context, state);
-			linefeed->height = state->text_info.ascent +
-				state->text_info.descent;
-		}
-	*/
-		/*
-		 * This should never happen, but we have it
-		 * covered just in case it does :-)
-		 */
-	/*
-		if (linefeed->height <= 0)
-		{
-			linefeed->height = state->default_line_height;
-		}
-	}
-	linefeed->line_height = linefeed->height;
-
-	linefeed->FE_Data = NULL;
-	linefeed->anchor_href = state->current_anchor;
-
-	if (state->font_stack == NULL)
-	{
-		LO_TextAttr tmp_attr;
-		LO_TextAttr *tptr;
-	*/
-		/*
-		 * Fill in default font information.
-		 */
-	/*
-		lo_SetDefaultFontAttr(state, &tmp_attr, context);
-		tptr = lo_FetchTextAttr(state, &tmp_attr);
-		linefeed->text_attr = tptr;
-	}
-	else
-	{
-		linefeed->text_attr = state->font_stack->text_attr;
-	}
-
-	linefeed->baseline = state->baseline;
-
-	linefeed->ele_attrmask = 0;
-
-	linefeed->sel_start = -1;
-	linefeed->sel_end = -1;
-
-	linefeed->next = NULL;
-	linefeed->prev = NULL;
-	linefeed->break_type = (uint8) break_type;
-	*/
-
 	return(linefeed);
 }
 
@@ -691,133 +613,15 @@ lo_InsertLineBreak(MWContext *context, lo_DocState *state, uint32 break_type, ui
 
 	lo_UpdateStateAfterLineBreak( context, state, TRUE );
 
-	/*
-	 * if this linefeed has a zero height, make it the height
-	 * of the current font.
-	 */
-	/*
-	if (state->line_height == 0)
-	{
-		state->line_height = state->text_info.ascent +
-			state->text_info.descent;
-		if ((state->line_height <= 0)&&(state->font_stack != NULL)&&
-			(state->font_stack->text_attr != NULL))
-		{
-			lo_fillin_text_info(context, state);
-			state->line_height = state->text_info.ascent +
-				state->text_info.descent;
-		}
-	*/
-		/*
-		 * This should never happen, but we have it
-		 * covered just in case it does :-)
-		 */
-	/*
-		if (state->line_height <= 0)
-		{
-			state->line_height = state->default_line_height;
-		}
-	}
-
-	if (state->end_last_line != NULL)
-	{
-		line_width = state->end_last_line->lo_any.x + state->win_right;
-	}
-	else
-	{
-		line_width = state->x + state->win_right;
-	}
-
-	if (line_width > state->max_width)
-	{
-		state->max_width = line_width;
-	}
-	*/
-
-	/* if LineHeightStack exists use it to offset the new Y value */
-	/*
-    if(state->cur_ele_type != LO_SUBDOC && state->line_height_stack)
-	{
-		state->y += state->line_height_stack->height;
-	}
-	else
-	{
-		state->y = state->y + state->line_height;
-	}
-
-	state->x = state->left_margin;
-	state->width = 0;
-	state->at_begin_line = TRUE;
-	state->trailing_space = FALSE;
-	state->line_height = 0;
-	state->break_holder = state->x;
-
-	state->linefeed_state++;
-	if (state->linefeed_state > 2)
-	{
-		state->linefeed_state = 2;
-	}
-
-	*/
-
 	lo_UpdateFEProgressBar(context, state);
 
-	/*
-	if (state->is_a_subdoc == SUBDOC_NOT)
-	{
-		int32 percent;
-
-		if (state->top_state->total_bytes < 1)
-		{
-			percent = -1;
-		}
-		else
-		{
-			percent = (100 * state->top_state->layout_bytes) /
-				state->top_state->total_bytes;
-			if (percent > 100)
-			{
-				percent = 100;
-			}
-		}
-		if ((percent == 100)||(percent < 0)||
-			(percent > (state->top_state->layout_percent + 1)))
-		{
-			if(!state->top_state->is_binary)
-				FE_SetProgressBarPercent(context, percent);
-			state->top_state->layout_percent = (intn)percent;
-		}
-	}
-	*/
-
 	lo_UpdateFEDocSize( context, state );
+
 
 	/*
 	 * Tell the front end how big the document is right now.
 	 * Only do this for the top level document.
 	 */
-	/*
-	if ((state->is_a_subdoc == SUBDOC_NOT)
-        &&(state->display_blocked == FALSE)
-#ifdef EDITOR
-		&&(!state->edit_relayout_display_blocked)
-#endif
-        )
-	{
-	*/
-
-        /* 
-         * Don't resize the layer if we're laying out a block. This
-         * will be done when the line is added to the block.
-         */
-	/*
-        if (!lo_InsideLayer(state))
-		{
-            LO_SetDocumentDimensions(context, state->max_width, state->y);
-		}
-	}
-	*/
-
 	if ((state->display_blocked != FALSE)&&
 #ifdef EDITOR
 		(!state->edit_relayout_display_blocked)&&
@@ -3884,16 +3688,7 @@ lo_FormatBullet(MWContext *context, lo_DocState *state,
 #endif
 		return;
 	}
-/*
-	if(state->font_stack)
-    {
-        lo_CopyTextAttr(state->font_stack->text_attr, &tmp_attr);
-    }
-    else
-    {
-		lo_SetDefaultFontAttr(state, &tmp_attr, context);
-	}
-*/
+
 	tptr = bullet->text_attr;
 
 	memset (&tmp_text, 0, sizeof (tmp_text));
@@ -3911,10 +3706,7 @@ lo_FormatBullet(MWContext *context, lo_DocState *state,
 	tmp_text.text_attr = tptr;
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
-/*
-	bullet->bullet_size = (text_info.ascent + text_info.descent) / 2;
-	bullet->text_attr = tptr;
-*/
+
 	/* contain the bullet size so that it doesn't extend off the
 	 * left side of the page since we are using a negative offset
 	 * to place the bullet
@@ -4998,21 +4790,6 @@ void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_Text
 				element->lo_any.next = NULL;
 				lo_RecycleElements( context, state, element );
 				
-#if 0
-                /* toshok: I'm #if 0'ing these two calls to
-                   lo_rl_AddSoftBreakAndFlushLine, since we shouldn't
-                   be adding these line breaks while we're consuming
-                   the old ones.  They will be added again by the text
-                   layout machinery.  This fixes the problem of blank
-                   regions in <pre>'s growing with every resize.
-
-                   An alternative for this would be to just remove the
-                   \n's from the pre text once we've inserted the line
-                   breaks.*/
-
-				/* and then add a new linefeed */
-				lo_rl_AddSoftBreakAndFlushLine ( context, state );
-#endif
 				break;
 			
 			default:
@@ -5081,22 +4858,7 @@ void lo_RelayoutTextElements ( MWContext * context, lo_DocState * state, LO_Text
 				element->lo_any.prev = NULL;
 				element->lo_any.next = NULL;
 				lo_RecycleElements( context, state, element );
-				
-#if 0
-                /* toshok: I'm #if 0'ing these two calls to
-                   lo_rl_AddSoftBreakAndFlushLine, since we shouldn't
-                   be adding these line breaks while we're consuming
-                   the old ones.  They will be added again by the text
-                   layout machinery.  This fixes the problem of blank
-                   regions in <pre>'s growing with every resize. 
 
-                   An alternative for this would be to just remove the
-                   \n's from the pre text once we've inserted the line
-                   breaks.*/
-
-				/* and then add a new linefeed */
-				lo_rl_AddSoftBreakAndFlushLine ( context, state );
-#endif
 				break;
 			
 			default:
