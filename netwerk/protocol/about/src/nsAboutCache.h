@@ -28,15 +28,25 @@
 #include "nsString.h"
 #include "nsIOutputStream.h"
 
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheVisitor.h"
+#include "nsCOMPtr.h"
+#else
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
+#endif
 
 class nsAboutCache : public nsIAboutModule 
+#ifdef MOZ_NEW_CACHE
+                   , public nsICacheVisitor
+#endif
 {
 public:
     NS_DECL_ISUPPORTS
-
     NS_DECL_NSIABOUTMODULE
+#ifdef MOZ_NEW_CACHE
+    NS_DECL_NSICACHEVISITOR
+#endif
 
     nsAboutCache() { NS_INIT_REFCNT(); }
     virtual ~nsAboutCache() {}
@@ -45,6 +55,9 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+#ifdef MOZ_NEW_CACHE
+    nsCOMPtr<nsIOutputStream> mStream;
+#else
     void DumpCacheInfo(nsIOutputStream *aStream,
                        nsINetDataCache *aCache);
 
@@ -57,6 +70,7 @@ protected:
     nsresult DumpCacheEntries(nsIOutputStream *aStream,
                               nsINetDataCacheManager *aCacheMgr,
                               nsINetDataCache *aCache);
+#endif
     nsCString mBuffer;
 };
 
@@ -68,4 +82,4 @@ protected:
     {0x9b, 0xe2, 0x00, 0xe0, 0x98, 0x72, 0xa4, 0x16} \
 }
 
-#endif // nsAboutCache_h__
+#endif /* !defined(nsAboutCache_h__) */
