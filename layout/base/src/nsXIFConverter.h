@@ -55,6 +55,7 @@ private:
   nsString mEndComment;
   nsString mQuote;
   nsString mEqual;
+  nsString mMarkupDeclarationOpen;
   nsIDOMSelection*  mSelection;
 
 public:
@@ -93,6 +94,8 @@ public:
   void AddContent(const nsString& aContent);
   void AddComment(const nsString& aComment);
   void AddContentComment(const nsString& aComment);
+  
+  void AddMarkupDeclaration(const nsString& aComment);
 
   void AddHTMLAttribute(const nsString& aName, const nsString& aValue);
 

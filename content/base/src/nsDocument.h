@@ -304,8 +304,8 @@ public:
     * document to XIF (XML Interchange Format)
     * and places the result in aBuffer.
     */
-  virtual void CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
-  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+  NS_IMETHOD   CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
+  NS_IMETHOD   ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);

@@ -112,6 +112,9 @@ static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 
+#include "nsIHTMLDocument.h"
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
                                   public nsIDocumentObserver
@@ -2647,7 +2650,7 @@ void nsDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aN
   while ((result == NS_OK) && (child != nsnull))
   { 
     nsIDOMNode* temp = child;
-    ToXIF(aConverter,child);    
+    result=ToXIF(aConverter,child);    
     result = child->GetNextSibling(&child);
     NS_RELEASE(temp);
   }
@@ -2668,17 +2671,17 @@ void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNod
   }
 }
 
-
-void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+NS_IMETHODIMP
+nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
+  nsresult result=NS_OK;
   nsIDOMSelection* sel = aConverter.GetSelection();
-
   if (sel != nsnull)
   {
     nsIContent* content = nsnull;
-    nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+    result=aNode->QueryInterface(kIContentIID, (void**)&content);
 
-    if (NS_SUCCEEDED(isContent) && content)
+    if (NS_SUCCEEDED(result) && content)
     {
       PRBool  isInSelection = IsInSelection(sel,content);
 
@@ -2701,10 +2704,14 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
     ConvertChildrenToXIF(aConverter,aNode);
     FinishConvertToXIF(aConverter,aNode);
   }
+  return result;
 }
 
-void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
+NS_IMETHODIMP
+nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
+  nsresult result=NS_OK;
+
   nsXIFConverter converter(aBuffer);
 
   converter.SetSelection(aSelection);
@@ -2721,49 +2728,60 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter.AddEndTag("section_head");
   converter.AddStartTag("section_body");
 
-  nsIDOMElement* root = nsnull;
-  if (NS_SUCCEEDED(GetDocumentElement(&root)))
-  {  
-#if 1
-    ToXIF(converter,root);
-#else
-    // Make a content iterator over the selection:
-    nsCOMPtr<nsIContentIterator> iter;
-    nsresult res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                      nsIContentIterator::GetIID(), 
-                                                      getter_AddRefs(iter));
-    if ((NS_SUCCEEDED(res)) && iter)
-    {
-      nsCOMPtr<nsIContent> rootContent (do_QueryInterface(root));
-      if (rootContent)
-      {
-        iter->Init(rootContent);
-        // loop through the content iterator for each content node
-        while (NS_COMFALSE == iter->IsDone())
+  nsIHTMLDocument* htmldoc=nsnull;
+  result=this->QueryInterface(kIHTMLDocumentIID,(void**)&htmldoc);
+  if(NS_SUCCEEDED(result)) {
+    nsAutoString docTypeStr;
+    htmldoc->GetDocTypeStr(docTypeStr);
+    if(docTypeStr.Length()>0) converter.AddMarkupDeclaration(docTypeStr);
+
+    nsIDOMElement* root = nsnull;
+    result=GetDocumentElement(&root);
+    if (NS_SUCCEEDED(result))
+    {  
+  #if 1
+      result=ToXIF(converter,root);
+  #else
+     if(NS_SUCCEEDED(rv)) {
+        // Make a content iterator over the selection:
+        nsCOMPtr<nsIContentIterator> iter;
+        result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                          nsIContentIterator::GetIID(), 
+                                                          getter_AddRefs(iter));
+        if ((NS_SUCCEEDED(result)) && iter)
         {
-          nsCOMPtr<nsIContent> content;
-          res = iter->CurrentNode(getter_AddRefs(content));
-          if (NS_FAILED(res))
-            break;
-          //content->BeginConvertToXIF(converter);
-          content->ConvertContentToXIF(converter);
-          //content->FinishConvertToXIF(converter);
-#if 0
-          nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
-          if (node)
-            ToXIF(converter, node);
-#endif
-          iter->Next();
+          nsCOMPtr<nsIContent> rootContent (do_QueryInterface(root));
+          if (rootContent)
+          {
+            iter->Init(rootContent);
+            // loop through the content iterator for each content node
+            while (NS_COMFALSE == iter->IsDone())
+            {
+              nsCOMPtr<nsIContent> content;
+              res = iter->CurrentNode(getter_AddRefs(content));
+              if (NS_FAILED(res))
+                break;
+              //content->BeginConvertToXIF(converter);
+              content->ConvertContentToXIF(converter);
+              //content->FinishConvertToXIF(converter);
+    #if 0
+              nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
+              if (node)
+                ToXIF(converter, node);
+    #endif
+              iter->Next();
+            }
+          }
         }
-      }
-    }
-#endif
-    NS_RELEASE(root);
+     }
+    #endif
+        NS_RELEASE(root);
+     }
   }
-
   converter.AddEndTag("section_body");
-
   converter.AddEndTag("section");
+  NS_IF_RELEASE(htmldoc);
+  return result;
 }
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -2792,36 +2810,37 @@ nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selectio
   if (NS_SUCCEEDED(rv))
   {
  	  nsString buffer;
-	  CreateXIF(buffer, selection);			// if selection is null, ignores the selection
+	  rv=CreateXIF(buffer, selection);			// if selection is null, ignores the selection
 
-    nsCOMPtr<nsIHTMLContentSink> sink;
+    if(NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIHTMLContentSink> sink;
 
-    switch (aOutputFormat)
-    {
-    case eOutputText:
-      rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
-      break;
-    case eOutputHTML:
-      rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
-      break;
-    default:
-      rv = NS_ERROR_INVALID_ARG;
-    }
-
-    if (NS_SUCCEEDED(rv) && sink)
-    {
-      parser->SetContentSink(sink);
-      parser->SetDocumentCharset(charsetStr, kCharsetFromPreviousLoading);
-      nsCOMPtr<nsIDTD>  dtd;
-      rv = NS_NewXIFDTD(getter_AddRefs(dtd));
-      if (NS_SUCCEEDED(rv) && dtd)
+      switch (aOutputFormat)
       {
-        parser->RegisterDTD(dtd);
-        parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);           
+      case eOutputText:
+        rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
+        break;
+      case eOutputHTML:
+        rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), aStream, &charsetStr, 0);
+        break;
+      default:
+        rv = NS_ERROR_INVALID_ARG;
+      }
+
+      if (NS_SUCCEEDED(rv) && sink)
+      {
+        parser->SetContentSink(sink);
+        parser->SetDocumentCharset(charsetStr, kCharsetFromPreviousLoading);
+        nsCOMPtr<nsIDTD>  dtd;
+        rv = NS_NewXIFDTD(getter_AddRefs(dtd));
+        if (NS_SUCCEEDED(rv) && dtd)
+        {
+          parser->RegisterDTD(dtd);
+          parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);           
+        }
       }
     }
   }
-
   return rv;
 }
 
