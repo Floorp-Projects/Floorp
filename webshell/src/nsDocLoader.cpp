@@ -16,8 +16,13 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#ifdef XP_MAC
 #include "nsIDocumentLoader.h"
 #define NS_IMPL_IDS
+#else
+#define NS_IMPL_IDS
+#include "nsIDocumentLoader.h"
+#endif
 #include "prmem.h"
 #include "plstr.h"
 #include "nsString.h"
