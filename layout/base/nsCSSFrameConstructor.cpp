@@ -13747,8 +13747,8 @@ void nsCSSFrameConstructor::RestyleEvent::HandleEvent() {
   NS_ASSERTION(viewManager, "Must have view manager for update");
 
   viewManager->BeginUpdateViewBatch();
-  constructor->ProcessPendingRestyles();
   constructor->mRestyleEventQueue = nsnull;
+  constructor->ProcessPendingRestyles();
   viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
 
