@@ -56,6 +56,9 @@ PRInt32 g_LockCount = 0;
 PRUint16 g_uf0201Mapping[] = {
 #include "jis0201.uf"
 };
+PRUint16 g_uf0201GLMapping[] = {
+#include "jis0201gl.uf"
+};
 
 PRUint16 g_uf0208Mapping[] = {
 #include "jis0208.uf"
