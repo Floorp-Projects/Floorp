@@ -42,7 +42,7 @@
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
     contentIds = [pboard propertyListForType:@"MozBookmarkType"];
     if (contentIds) {
-      for (int i = 0; i < [contentIds count]; ++i) {
+      for (unsigned int i = 0; i < [contentIds count]; ++i) {
         BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
         nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
         BookmarksService::DeleteBookmark(bookmarkElt);
