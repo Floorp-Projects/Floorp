@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://sql/locale/sqlPrefsOverlay.dtd">
+
+<overlay id="sqlPrefsOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- category tree entries for sql -->
+  <treechildren id="panelChildren">
+    <treeitem id="sql">
+      <treerow>
+        <treecell label="&sql.label;" url="chrome://sql/content/pref-sql.xul"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+
+</overlay>

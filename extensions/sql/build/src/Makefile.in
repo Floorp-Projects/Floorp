@@ -1,0 +1,40 @@
+DEPTH			= ../../../..
+topsrcdir		= @top_srcdir@
+srcdir			= @srcdir@
+VPATH			= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE			= sql
+MODULE_NAME    		= sqlModule
+LIBRARY_NAME		= sql
+SHORT_LIBNAME		= sql
+EXPORT_LIBRARY  	= 1
+IS_COMPONENT		= 1
+REQUIRES		= xpcom \
+		  	  string \
+		  	  rdf \
+			  $(NULL)
+
+CPPSRCS			= \
+  		  	  mozSqlModule.cpp
+
+SHARED_LIBRARY_LIBS	= \
+		 	  $(DIST)/lib/$(LIB_PREFIX)sqlbase_s.$(LIB_SUFFIX)
+
+EXTRA_DSO_LDOPTS	= \
+			  $(MOZ_COMPONENT_LIBS) \
+			  $(MOZ_UNICHARUTIL_LIBS) \
+    			  $(NULL)
+
+ifdef MOZ_ENABLE_PGSQL
+DEFINES             	+= -DMOZ_ENABLE_PGSQL
+SHARED_LIBRARY_LIBS 	+= $(DIST)/lib/$(LIB_PREFIX)sqlpgsql_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS    	+= -L$(MOZ_PGSQL_LIBS) -lpq
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_ENABLE_PGSQL
+INCLUDES		+= -I$(MOZ_PGSQL_INCLUDES)
+endif

@@ -1,0 +1,7 @@
+<!ENTITY window.title "Alias">
+
+<!ENTITY name.label "Name:">
+<!ENTITY type.label "Type:">
+<!ENTITY hostname.label "Hostname:">
+<!ENTITY port.label "Port:">
+<!ENTITY database.label "Database:">

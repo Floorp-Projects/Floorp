@@ -1,0 +1,28 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= sql
+LIBRARY_NAME	= sqlpgsql_s
+REQUIRES	= xpcom \
+		  string \
+		  locale \
+		  rdf \
+		  $(NULL)
+
+CPPSRCS		= \
+		mozSqlConnectionPgsql.cpp \
+		mozSqlResultPgsql.cpp
+
+EXPORTS		= \
+		mozSqlConnectionPgsql.h \
+		mozSqlResultPgsql.h
+
+FORCE_STATIC_LIB=1
+
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES	+= -I$(MOZ_PGSQL_INCLUDES)

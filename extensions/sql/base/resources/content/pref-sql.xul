@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://sql/locale/pref-sql.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  headertitle="&header.label;"
+  onload="parent.initPanel('chrome://sql/content/pref-sql.xul');">
+
+  <script type="application/x-javascript" src="pref-sql.js"/>
+
+  <groupbox flex="1">
+    <caption label="&aliases.label;"/>
+    <hbox flex="1">
+      <tree id="aliasesTree" flex="1"
+            seltype="single"
+            datasources="rdf:sql" ref="SQL:AliasesRoot" flags="dont-build-content"
+            onselect="updateButtons()">
+        <treecols>
+          <treecol id="nameCol" flex="1" label="&nameCol.label;"
+                   sort="rdf:http://www.mozilla.org/SQL-rdf#name"
+                   sortActive="true" sortDirection="ascending"/>
+          <treecol id="typeCol" flex="1" label="&typeCol.label;"
+                   sort="rdf:http://www.mozilla.org/SQL-rdf#type"/>
+          <treecol id="hostnameCol" flex="1" label="&hostnameCol.label;"
+                   sort="rdf:http://www.mozilla.org/SQL-rdf#hostname"/>
+          <treecol id="portCol" flex="1" label="&portCol.label;"
+                   sort="rdf:http://www.mozilla.org/SQL-rdf#port"/>
+          <treecol id="databaseCol" flex="1" label="&databaseCol.label;"
+                   sort="rdf:http://www.mozilla.org/SQL-rdf#database"/>
+        </treecols>
+        <template>
+          <treechildren>
+            <treeitem uri="rdf:*">
+              <treerow>
+                <treecell label="rdf:http://www.mozilla.org/SQL-rdf#name"/>
+                <treecell label="rdf:http://www.mozilla.org/SQL-rdf#type"/>
+                <treecell label="rdf:http://www.mozilla.org/SQL-rdf#hostname"/>
+                <treecell label="rdf:http://www.mozilla.org/SQL-rdf#port"/>
+                <treecell label="rdf:http://www.mozilla.org/SQL-rdf#database"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </template>
+      </tree>
+      <vbox>
+        <button id="addButton" label="&add.label;" oncommand="addAlias()"/>
+        <button id="updateButton" label="&update.label;" disabled="true" oncommand="updateAlias()"/>
+        <button id="removeButton" label="&remove.label;" disabled="true" oncommand="removeAlias()"/>
+      </vbox>
+    </hbox>
+  </groupbox>
+
+</page>

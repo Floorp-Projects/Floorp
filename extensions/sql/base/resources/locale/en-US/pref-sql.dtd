@@ -1,0 +1,12 @@
+<!ENTITY header.label "SQL support">
+
+<!ENTITY aliases.label "Aliases">
+<!ENTITY nameCol.label "Name">
+<!ENTITY typeCol.label "Type">
+<!ENTITY hostnameCol.label "Hostname">
+<!ENTITY portCol.label "Port">
+<!ENTITY databaseCol.label "Database">
+
+<!ENTITY add.label "Add alias">
+<!ENTITY update.label "Update alias">
+<!ENTITY remove.label "Remove alias">

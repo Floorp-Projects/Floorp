@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://sql/locale/aliasDialog.dtd">
+
+<dialog id="aliasDialog"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="&window.title;"
+  width="250" height="180"
+  buttons="accept,cancel" buttonpack="center"
+  ondialogaccept="return onAccept(event);"
+  onload="init()">
+
+  <script type="application/x-javascript" src="aliasDialog.js"/>
+
+  <grid flex="1">
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row>
+        <label value="&name.label;"/>
+        <textbox id="name"/>
+      </row>
+      <row>
+        <label value="&type.label;"/>
+        <textbox id="type"/>
+      </row>
+      <row>
+        <label value="&hostname.label;"/>
+        <textbox id="hostname"/>
+      </row>
+      <row>
+        <label value="&port.label;"/>
+        <textbox id="port"/>
+      </row>
+      <row>
+        <label value="&database.label;"/>
+        <textbox id="database"/>
+      </row>
+    </rows>
+  </grid>
+
+</dialog>

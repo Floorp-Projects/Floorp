@@ -1,0 +1,19 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+MODULE		= sql
+
+XPIDLSRCS	= \
+		mozISqlConnection.idl \
+		mozISqlRequest.idl \
+		mozISqlDataSource.idl \
+		mozISqlInputStream.idl \
+		mozISqlRequestObserver.idl \
+		mozISqlResult.idl \
+		mozISqlResultEnumerator.idl \
+		mozISqlService.idl \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,8 @@
+#include "nsISupports.idl"
+
+[scriptable, uuid(0cf1eefe-611d-48fa-ae27-0a6f40d6a33e)]
+
+interface mozISqlConnectionPgsql : nsISupports
+{
+
+};

@@ -1,0 +1,33 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= sql
+LIBRARY_NAME	= sqlbase_s
+REQUIRES	= xpcom \
+		  string \
+		  unicharutil \
+		  locale \
+		  necko \
+		  rdf \
+		  windowwatcher \
+		  $(NULL)
+
+CPPSRCS		= \
+		  mozSqlConnection.cpp \
+		  mozSqlRequest.cpp \
+		  mozSqlResult.cpp \
+		  mozSqlService.cpp
+
+EXPORTS		= \
+		  mozSqlConnection.h \
+		  mozSqlRequest.h \
+		  mozSqlResult.h \
+		  mozSqlService.h
+
+FORCE_STATIC_LIB=1
+
+include $(topsrcdir)/config/rules.mk

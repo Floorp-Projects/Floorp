@@ -1,0 +1,14 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+MODULE		= sql
+XPIDL_MODULE	= sqlpgsql
+
+XPIDLSRCS	= \
+		mozISqlConnectionPgsql.idl \
+		mozISqlResultPgsql.idl \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
