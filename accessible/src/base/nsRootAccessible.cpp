@@ -486,8 +486,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   // Turn DOM events in accessibility events
 
   // Get info about event and target
-  // optionTargetNode is set to current option for HTML selects
-  nsCOMPtr<nsIDOMNode> targetNode, optionTargetNode; 
+  nsCOMPtr<nsIDOMNode> targetNode; 
   GetTargetNode(aEvent, getter_AddRefs(targetNode));
   if (!targetNode)
     return NS_ERROR_FAILURE;
@@ -505,19 +504,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     printf("\ndebugging events in tree, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
   }
 #endif
-
-  // Check to see if it's a select element. If so, need the currently focused option
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(targetNode));
-  if (selectElement)     // ----- Target Node is an HTML <select> element ------
-    nsHTMLSelectOptionAccessible::GetFocusedOptionNode(targetNode, getter_AddRefs(optionTargetNode));
-
-  // for focus events on Radio Groups we give the focus to the selected button
-  nsCOMPtr<nsIDOMXULSelectControlElement> selectControl(do_QueryInterface(targetNode));
-  if (selectControl) {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> selectItem;
-    selectControl->GetSelectedItem(getter_AddRefs(selectItem));
-    optionTargetNode = do_QueryInterface(selectItem);
-  }
 
   nsCOMPtr<nsIPresShell> eventShell;
   GetEventShell(targetNode, getter_AddRefs(eventShell));
@@ -596,24 +582,26 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 #endif
-  
-  if (eventType.LowerCaseEqualsLiteral("focus") || 
-           eventType.LowerCaseEqualsLiteral("dommenuitemactive")) { 
-    if (optionTargetNode &&
-        NS_SUCCEEDED(mAccService->GetAccessibleInShell(optionTargetNode, eventShell,
-                                                       getter_AddRefs(accessible)))) {
-      if (eventType.LowerCaseEqualsLiteral("focus")) {
-        nsCOMPtr<nsIAccessible> selectAccessible;
-        mAccService->GetAccessibleInShell(targetNode, eventShell,
-                                          getter_AddRefs(selectAccessible));
-        if (selectAccessible) {
-          FireAccessibleFocusEvent(selectAccessible, targetNode);
-        }
+  else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
+    nsCOMPtr<nsIAccessible> containerAccessible = accessible;
+    PRUint32 containerState = 0;
+    do {
+      nsIAccessible *tempAccessible = containerAccessible;
+      tempAccessible->GetParent(getter_AddRefs(containerAccessible));
+      if (!containerAccessible) {
+        break;
       }
-      FireAccessibleFocusEvent(accessible, optionTargetNode);
+      containerAccessible->GetFinalState(&containerState);
     }
-    else
+    while ((containerState & STATE_HASPOPUP) == 0);
+
+    // Only fire focus event for DOMMenuItemActive is not inside collapsed popup
+    if (0 == (containerState & STATE_COLLAPSED)) {
       FireAccessibleFocusEvent(accessible, targetNode);
+    }
+  }
+  else if (eventType.LowerCaseEqualsLiteral("focus")) {
+    FireAccessibleFocusEvent(accessible, targetNode);
   }
   else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
@@ -687,10 +675,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
       }
     }
-    else if (optionTargetNode && // use focused option
-        NS_SUCCEEDED(mAccService->GetAccessibleInShell(optionTargetNode, eventShell,
-                                                       getter_AddRefs(accessible))))
-      FireAccessibleFocusEvent(accessible, optionTargetNode);
     else
       FireAccessibleFocusEvent(accessible, targetNode);
   }
@@ -706,6 +690,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   // XXX todo: value change events for ATK are done with 
   // AtkPropertyChange, PROP_VALUE. Need the old and new value.
   // Not sure how we'll get the old value.
+  // Aaron: I think this is a problem with the ATK API -- it's much harder to
+  // grab the old value for all the application developers than it is for
+  // AT's to cache old values when they need to (when would that be!?)
   else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
                               accessible, nsnull);

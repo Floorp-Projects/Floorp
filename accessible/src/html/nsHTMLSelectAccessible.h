@@ -82,6 +82,8 @@ public:
   nsHTMLSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsHTMLSelectableAccessible() {}
 
+  NS_IMETHOD GetName(nsAString &aName) { return GetHTMLName(aName, PR_FALSE); }
+
 protected:
 
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);

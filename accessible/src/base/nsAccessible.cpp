@@ -613,8 +613,9 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled)) {
     *aState |= STATE_UNAVAILABLE;
   }
-  else if (!mRoleMapEntry || content->IsFocusable()) {
-    // Default state is focusable unless role manually set
+  else if ((!mRoleMapEntry && content->IsContentOfType(nsIContent::eELEMENT)) ||
+           content->IsFocusable()) {
+    // Default state for element accessible is focusable unless role manually set
     // Subclasses of nsAccessible will clear focusable state if necessary
     *aState |= STATE_FOCUSABLE;
     if (gLastFocusedNode == mDOMNode) {
@@ -1217,7 +1218,7 @@ nsIContent *nsAccessible::GetLabelForId(nsIContent *aLookContent,
   *   the DOM tree to the form, concatonating label elements as it goes. Then checks for
   *   labels with the for="controlID" property.
   */
-nsresult nsAccessible::GetHTMLName(nsAString& aLabel)
+nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtree)
 {
   if (!mWeakShell || !mDOMNode) {
     return NS_ERROR_FAILURE;   // Node shut down
@@ -1235,6 +1236,13 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel)
     }
   }
 
+  if (!aCanAggregateSubtree) {
+    // Don't use AppendFlatStringFromSubtree for container widgets like menulist
+    // Still try the title as as fallback method in that case.
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel);
+    return NS_OK;
+  }
+
   return nsAccessible::GetName(aLabel);
 }
 
@@ -1250,7 +1258,7 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel)
   *  the control that uses the control="controlID" syntax will use
   *  the child label for its Name.
   */
-nsresult nsAccessible::GetXULName(nsAString& aLabel)
+nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "No nsIContent for DOM node");
@@ -1289,7 +1297,14 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel)
     aLabel = label;
     return NS_OK;
   }
-  
+
+  if (!aCanAggregateSubtree) {
+    // Don't use AppendFlatStringFromSubtree for container widgets like menulist
+    // Still try the title as as fallback method in that case.
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel);
+    return NS_OK;
+  }
+
   return AppendFlatStringFromSubtree(content, &aLabel);
 }
 
@@ -1323,7 +1338,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"menubar", ROLE_MENUBAR, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menuitem", ROLE_MENUITEM, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menuitem-checkbox", ROLE_MENUITEM, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
-  {"grid", ROLE_TABLE, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"grid", ROLE_TABLE, eTitleOnly, STATE_FOCUSABLE, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
   {"gridcell", ROLE_CELL, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
   {"option", ROLE_LISTITEM, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
   {"progress-meter", ROLE_PROGRESSBAR, eTitleOnly, STATE_READONLY, {"valuenow", "unknown", STATE_MIXED}, {0, 0, 0}, {0, 0, 0}},
@@ -1394,6 +1409,8 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
   if (NS_FAILED(rv) || !mRoleMapEntry) {
     return rv;
   }
+
+  *aState &= ~STATE_READONLY;  // Once DHTML role is used, we're only readonly if DHTML readonly used
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content) {

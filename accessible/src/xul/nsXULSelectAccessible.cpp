@@ -77,9 +77,9 @@ nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
-NS_IMETHODIMP nsXULSelectableAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsXULSelectableAccessible::GetName(nsAString& aName)
 {
-  return GetXULName(_retval);
+  return GetXULName(aName, PR_FALSE);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULSelectableAccessible, nsAccessible, nsIAccessibleSelectable)

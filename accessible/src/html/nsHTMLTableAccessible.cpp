@@ -103,6 +103,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetRole(PRUint32 *aResult)
 NS_IMETHODIMP nsHTMLTableAccessible::GetState(PRUint32 *aResult)
 {
   nsAccessible::GetState(aResult);
+  *aResult |= STATE_READONLY;
   *aResult &= ~STATE_FOCUSABLE;   // Inherit all states except focusable state since tables cannot be focused
   return NS_OK;
 }

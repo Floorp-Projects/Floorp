@@ -182,6 +182,10 @@
             this.setAttribute('label', val.getAttribute('label'));
             this.setAttribute('description', val.getAttribute('description'));
 
+            var event = document.createEvent("Events");
+            event.initEvent("ValueChange", true, true);
+            this.dispatchEvent(event);
+            
             return val;
           ]]>
         </setter>
