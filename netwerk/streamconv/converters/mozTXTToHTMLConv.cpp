@@ -121,17 +121,17 @@ mozTXTToHTMLConv::UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PR
       subString = &aInString[i];
       if (!nsCRT::strncmp(subString, "&lt;", MinInt(4, aLength - remainingChars)))
       {
-        aOutString += '<';
+        aOutString.AppendWithConversion('<');
         i += 4;
       }
       else if (!nsCRT::strncmp(subString, "&gt;", MinInt(4, aLength - remainingChars)))
       {
-        aOutString += '>';
+        aOutString.AppendWithConversion('>');
         i += 4;
       }
       else if (!nsCRT::strncmp(subString, "&amp;", MinInt(5, aLength - remainingChars)))
       {
-        aOutString += '&';
+        aOutString.AppendWithConversion('&');
         i += 5;
       }
       else

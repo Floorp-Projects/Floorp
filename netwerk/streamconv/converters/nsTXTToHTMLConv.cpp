@@ -56,7 +56,7 @@ nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 // nsIStreamObserver methods
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
-    mBuffer = "<html>\n<head><title>";
+    mBuffer.AssignWithConversion("<html>\n<head><title>");
     mBuffer.Append(mPageTitle);
     mBuffer.AppendWithConversion("</title></head>\n<body>\n");
     if (mPreFormatHTML) {     // Use <pre> tags
@@ -78,7 +78,7 @@ nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
     if (mPreFormatHTML) {
       mBuffer.AppendWithConversion("</pre>\n");
     }
-    mBuffer += "\n</body></html>";    
+    mBuffer.AppendWithConversion("\n</body></html>");    
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
@@ -125,7 +125,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
         if (NS_FAILED(rv)) return rv;
 
         buffer[read] = '\0';
-        mBuffer += buffer;
+        mBuffer.AppendWithConversion(buffer);
         amtRead += read;
 
         PRInt32 front = -1, back = -1, tokenLoc = -1, cursor = 0; 
@@ -199,14 +199,14 @@ nsTXTToHTMLConv::Init() {
     convToken *token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_TRUE;
-    token->token = "http://"; // XXX need to iterate through all protos
+    token->token.AssignWithConversion("http://"); // XXX need to iterate through all protos
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_TRUE;
-    token->token = '@';
-    token->modText = "mailto:";
+    token->token.AssignWithConversion('@');
+    token->modText.AssignWithConversion("mailto:");
     mTokens.AppendElement(token);
   
     return rv;
@@ -244,16 +244,16 @@ nsTXTToHTMLConv::CatHTML(PRInt32 front, PRInt32 back) {
         // href is implied
         PRInt32 modLen = mToken->modText.Length();
         mBuffer.Mid(linkText, front, back-front);
-        mBuffer.Insert("<a href=\"", front);
+        mBuffer.InsertWithConversion("<a href=\"", front);
         cursor += front+9;
         if (modLen)
             mBuffer.Insert(mToken->modText, cursor);
         cursor += modLen-front+back;
-        mBuffer.Insert("\">", cursor);
+        mBuffer.InsertWithConversion("\">", cursor);
         cursor += 2;
         mBuffer.Insert(linkText, cursor);
         cursor += linkText.Length();
-        mBuffer.Insert("</a>", cursor);
+        mBuffer.InsertWithConversion("</a>", cursor);
         cursor += 4;
     }
     mToken = nsnull; // indicates completeness
