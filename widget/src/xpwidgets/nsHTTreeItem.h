@@ -56,6 +56,7 @@ public:
 	// the concrete implementation.
 	virtual PRBool IsExpanded() const { return IsExpandedDelegate(); };
 	virtual PRUint32 GetIndentationLevel() const { return GetIndentationLevelDelegate(); };
+	virtual void SetIndentationLevel(PRUint32 n) { SetIndentationLevelDelegate(n); };
 	// End of delegated functions
 
 	virtual void GetItemStyle(nsIDeviceContext* dc, 

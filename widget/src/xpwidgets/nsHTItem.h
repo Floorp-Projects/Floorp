@@ -31,13 +31,15 @@ public:
 
 	virtual PRBool IsExpandedDelegate() const;
 	virtual PRUint32 GetIndentationLevelDelegate() const;
-	
+	virtual void SetIndentationLevelDelegate(PRUint32 n);
+
 public:
 	nsIContent* FindChildWithName(const nsString& name) const; // Caller must release the content ptr.
 	
 protected:
 	nsHierarchicalDataModel* mDataModel;
 	nsIContent* mContentNode;
+	PRUint32 mIndentationLevel;
 };
 
 #endif /* nsHTItem_h___ */
