@@ -586,11 +586,14 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 #endif /* TIMEBOMB_ON */
 
         /* Start the URL load... */
-        NET_GetURL (URL_s,                      /* URL_Struct      */
+        if (0 > NET_GetURL (URL_s,                      /* URL_Struct      */
                     FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
                     (MWContext *)  stubContext, /* MWContext       */
-                    bam_exit_routine);          /* Exit routine... */
-
+                    bam_exit_routine))          /* Exit routine... */
+        {
+            //Not releasing anything since bam_exit_routine will still be called.
+            goto loser;
+        }
         /* Remember, the URL_s may have been freed ! */
 
         /* 
