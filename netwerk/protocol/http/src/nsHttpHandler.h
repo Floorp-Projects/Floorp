@@ -170,6 +170,7 @@ private:
     void     InitUserAgentComponents();
     void     PrefsChanged(const char *pref = nsnull);
 
+    nsresult SetAccept(const char *);
     nsresult SetAcceptLanguages(const char *);
     nsresult SetAcceptEncodings(const char *);
     nsresult SetAcceptCharsets(const char *);
@@ -211,6 +212,7 @@ private:
     PRInt32  mMaxIdleConnections;
     PRInt32  mMaxIdleConnectionsPerServer;
 
+    nsCString mAccept;
     nsCString mAcceptLanguages;
     nsCString mAcceptEncodings;
     nsCString mAcceptCharsets;
