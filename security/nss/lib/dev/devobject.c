@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.11 $ $Date: 2002/01/09 21:09:19 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.12 $ $Date: 2002/01/18 03:35:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -603,7 +603,7 @@ nssToken_TraverseCertificatesByNickname
      * leaving it in until I have surveyed more tokens to see if it needed.
      * well, its needed by the builtin token...
      */
-    nick_template[1].ulValueLen++;
+    nick_template[2].ulValueLen++;
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 nick_template, ntsize,
                                          retrieve_cert, search);
