@@ -53,14 +53,38 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-        rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\interview.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\interview.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\index.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\privacy.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample1.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample2.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample3.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample4.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample5.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample6.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample7.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample8.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample9.html
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\sample10.html
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\WalletEditor.xul
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\WalletEditor.js
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\WalletEditor.properties
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\WalletEditor.dtd
 
 install:: $(DLL)
-        $(MAKE_INSTALL) interview.html $(DIST)\bin\chrome\packages\core\communicator\content\wallet
+        $(MAKE_INSTALL) interview.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) index.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) privacy.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample1.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample2.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample3.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample4.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample5.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample6.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample7.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample8.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample9.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) sample10.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
         $(MAKE_INSTALL) WalletEditor.xul $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) WalletEditor.js $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) WalletEditor.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet

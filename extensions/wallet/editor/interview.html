@@ -47,11 +47,7 @@ your Form Manager Information here</font></font></font></h3></center>
   }
 
   function Demo() {
-    pref = Components.classes['component://netscape/preferences'];
-    pref = pref.getService();
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-    server = pref.getLocalizedUnicharPref("wallet.Samples");
-    window._content.location.href = server + 'wallet2.html';
+    window._content.location.href = 'index.html';
   }
 
   function getElementById(id) {
@@ -1617,7 +1613,7 @@ this information.</font>
 <p><a NAME="Section VIII"></a><b><font face="Verdana, Helvetica, Arial, sans-serif"><font color="#CC6600"><font size=-1>VIII.
 Demonstration of Form Filling</font></font></font></b>
 <p>Pick one of these&nbsp;<input type="button" value="samples" onclick="Demo()">&nbsp;
-then select <i>Prefill Form</i> from the EDIT menu.&nbsp;</form>
+then select <i>Prefill Form Data</i> from the EDIT menu.&nbsp;</form>
 <br><!-- /CONTENT --></td>
 </tr>
 </table>
