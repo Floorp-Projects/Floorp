@@ -153,15 +153,19 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
           i < mailbox_count;
           ++i, ++iEA, ++iCV, ++iCII, ++iCEI, ++iCert, walk += nsCRT::strlen(walk) + 1)
       {
-        *iEA = ToNewUnicode(nsDependentCString(walk));
+        nsDependentCString email(walk);
+        *iEA = ToNewUnicode(email);
 
         *iCert = nsnull;
         *iCV = 0;
         *iCII = nsnull;
         *iCEI = nsnull;
 
+        nsCString email_lowercase;
+        ToLowerCase(email, email_lowercase);
+
         nsCOMPtr<nsIX509Cert> cert;
-        if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, walk, getter_AddRefs(cert))) 
+        if (NS_SUCCEEDED(certdb->GetCertByEmailAddress(nsnull, email_lowercase.get(), getter_AddRefs(cert))) 
             && cert)
         {
           *iCert = cert;

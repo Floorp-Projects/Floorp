@@ -38,6 +38,7 @@
 #include "nsIServiceManager.h"
 #include "nsIMsgIdentity.h"
 #include "nsIMsgCompFields.h"
+#include "nsReadableUtils.h"
 
 // String bundle for smime. Class static.
 nsCOMPtr<nsIStringBundle> nsMsgComposeSecure::mSMIMEBundle = nsnull;
@@ -908,12 +909,14 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   /* If the message is to be encrypted, then get the recipient certs */
   if (aEncrypt) {
 	  mailbox = mailbox_list;
+	  nsCString mailbox_lowercase;
+	  ToLowerCase(nsDependentCString(mailbox), mailbox_lowercase);
 
     PRBool already_added_self_cert = PR_FALSE;
 
 	  for (; count > 0; count--) {
       nsCOMPtr<nsIX509Cert> cert;
-		  certdb->GetCertByEmailAddress(nsnull, mailbox, getter_AddRefs(cert));
+      certdb->GetCertByEmailAddress(nsnull, mailbox_lowercase.get(), getter_AddRefs(cert));
 		  if (!cert) {
         // failure to find an encryption cert is
         // fatal for now. We won't be able to encrypt anyway
