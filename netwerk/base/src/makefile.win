@@ -32,6 +32,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsSocketTransportService.obj   \
         .\$(OBJDIR)\nsStandardUrl.obj              \
         .\$(OBJDIR)\nsNetModuleMgr.obj             \
+        .\$(OBJDIR)\nsNetModRegEntry.obj           \
         $(NULL)
 
 LINCS =                     \
