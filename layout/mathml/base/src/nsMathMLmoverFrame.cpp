@@ -89,7 +89,7 @@ nsMathMLmoverFrame::Reflow(nsIPresContext&          aPresContext,
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(childFrame);      
+      ReflowEmptyChild(aPresContext, childFrame);      
     }
     else if (2 > count) {
       nsHTMLReflowState childReflowState(aPresContext, aReflowState, 
@@ -140,8 +140,8 @@ nsMathMLmoverFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent -= leading;
   rect[0].y -= leading;
 //   
-  child[0]->SetRect(rect[0]);
-  child[1]->SetRect(rect[1]); 
+  child[0]->SetRect(&aPresContext, rect[0]);
+  child[1]->SetRect(&aPresContext, rect[1]); 
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

@@ -123,18 +123,19 @@ nsMathMLContainerFrame::IsOnlyWhitespace(nsIFrame* aFrame)
 }
 
 void
-nsMathMLContainerFrame::ReflowEmptyChild(nsIFrame* aFrame)
+nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext& aPresContext,
+                                         nsIFrame*       aFrame)
 {
 //  nsHTMLReflowMetrics emptySize(nsnull);
 //  nsHTMLReflowState emptyReflowState(aPresContext, aReflowState, aFrame, nsSize(0,0));
 //  nsresult rv = ReflowChild(aFrame, aPresContext, emptySize, emptyReflowState, aStatus);
  
   // 0-size the frame
-  aFrame->SetRect(nsRect(0,0,0,0));
+  aFrame->SetRect(&aPresContext, nsRect(0,0,0,0));
 
-  // 0-size the view 
+  // 0-size the view, if any
   nsIView* view = nsnull;
-  aFrame->GetView(&view);
+  aFrame->GetView(&aPresContext, &view);
   if (view) {
     nsCOMPtr<nsIViewManager> vm;
     view->GetViewManager(*getter_AddRefs(vm));
@@ -404,7 +405,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(childFrame);
+      ReflowEmptyChild(aPresContext, childFrame);
     }
     else {
       nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame, availSize);
@@ -417,7 +418,8 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
       // At this stage, the origin points of the children have no use, so we will use the
       // origins as placeholders to store the child's ascent and descent. Before return,
       // we should set the origins so as to overwrite what we are storing there now.
-      childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+      childFrame->SetRect(&aPresContext,
+                          nsRect(childDesiredSize.descent, childDesiredSize.ascent,
                           childDesiredSize.width, childDesiredSize.height));
 
       aDesiredSize.width += childDesiredSize.width;
@@ -455,7 +457,8 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
       aMathMLFrame->Stretch(aPresContext, stretchDir, parentSize, childSize);
       // store the updated metrics
-      childFrame->SetRect(nsRect(childSize.descent, childSize.ascent,
+      childFrame->SetRect(&aPresContext,
+                          nsRect(childSize.descent, childSize.ascent,
                                  childSize.width, childSize.height));
     }
  
@@ -479,7 +482,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
   while (nsnull != childFrame) {
     childFrame->GetRect(rect);
     offset.y = aDesiredSize.ascent - rect.y;
-    childFrame->MoveTo(offset.x,offset.y);
+    childFrame->MoveTo(&aPresContext, offset.x,offset.y);
     offset.x += rect.width;
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");

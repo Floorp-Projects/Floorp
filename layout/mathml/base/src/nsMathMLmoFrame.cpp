@@ -358,7 +358,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
     while (nsnull != childFrame) {
       if (!IsOnlyWhitespace(childFrame)) {
         childFrame->GetRect(rect);
-        childFrame->MoveTo(dx, rect.y + mCharOffset.y);
+        childFrame->MoveTo(&aPresContext, dx, rect.y + mCharOffset.y);
         dx += rect.width; 
       }
       childFrame->GetNextSibling(&childFrame);

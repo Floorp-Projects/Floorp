@@ -89,7 +89,7 @@ nsMathMLmsubFrame::Reflow(nsIPresContext&          aPresContext,
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(childFrame);      
+      ReflowEmptyChild(aPresContext, childFrame);      
     }
     else if (2 > count) {
       nsHTMLReflowState childReflowState(aPresContext, aReflowState,
@@ -151,8 +151,8 @@ subscriptOffset = PR_MAX(subscriptOffset,fmAscent-(xHeight*4)/5);
   rect[1].y = aDesiredSize.height - rect[1].height;
   aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
-  child[0]->SetRect(rect[0]);
-  child[1]->SetRect(rect[1]);
+  child[0]->SetRect(&aPresContext, rect[0]);
+  child[1]->SetRect(&aPresContext, rect[1]);
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

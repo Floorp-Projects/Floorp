@@ -182,7 +182,7 @@ nsMathMLmfracFrame::Reflow(nsIPresContext&          aPresContext,
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(childFrame);
+      ReflowEmptyChild(aPresContext, childFrame);
     }
     else if (2 > count)  {
 
@@ -238,8 +238,8 @@ nsMathMLmfracFrame::Reflow(nsIPresContext&          aPresContext,
   rect[0].y = 0;
   rect[1].y = aDesiredSize.height - rect[1].height;
   
-  child[0]->SetRect(rect[0]);
-  child[1]->SetRect(rect[1]); 
+  child[0]->SetRect(&aPresContext, rect[0]);
+  child[1]->SetRect(&aPresContext, rect[1]); 
   SetLineOrigin(nsPoint(0,rect[0].height)); // position the fraction bar  
 
   if (nsnull != aDesiredSize.maxElementSize) {

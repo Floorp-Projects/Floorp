@@ -93,7 +93,7 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(childFrame);
+      ReflowEmptyChild(aPresContext, childFrame);
     }
     else {
       nsCOMPtr<nsIContent> childContent;
@@ -150,7 +150,8 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
         // At this stage, the origin points of the children have no use, so we will use the
         // origins to store the child's ascent and descent. At the next pass, we should 
         // set the origins so as to overwrite what we are storing there now
-        childFrame->SetRect(nsRect(childDesiredSize.descent, childDesiredSize.ascent,
+        childFrame->SetRect(&aPresContext,
+                            nsRect(childDesiredSize.descent, childDesiredSize.ascent,
                             childDesiredSize.width, childDesiredSize.height));                        
         isSubscript = !isSubscript;
         count++;
@@ -198,7 +199,7 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
       childFrame->GetRect(rect[0]);
       rect[0].x = offset;
       rect[0].y = aDesiredSize.height - subHeight;
-      childFrame->SetRect(rect[0]);
+      childFrame->SetRect(&aPresContext, rect[0]);
       offset += rect[0].width;
     }
     else if (mprescriptsFrame != childFrame) { 
@@ -219,8 +220,8 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
           rect[0].x = offset + (width - rect[0].width) / 2; // centering
           rect[1].x = offset + (width - rect[1].width) / 2; 
 
-          child[0]->SetRect(rect[0]);
-          child[1]->SetRect(rect[1]);          
+          child[0]->SetRect(&aPresContext, rect[0]);
+          child[1]->SetRect(&aPresContext, rect[1]);          
           offset += width;
         }        
       }
