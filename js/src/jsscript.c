@@ -1036,7 +1036,7 @@ js_SweepScriptFilenames(JSRuntime *rt)
     JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
                                  js_script_filename_sweeper,
                                  rt);
-#ifdef DEBUG_brendan
+#ifdef DEBUG_notme
     printf("script filename table savings so far: %u\n", sftbl_savings);
 #endif
 }
