@@ -2,5 +2,6 @@
 chrome/xforms.jar
 components/schemval.dll
 components/schemavalidation.xpt
+components/nsSchemaValidatorRegexp.js
 components/xforms.dll
 components/xforms.xpt
