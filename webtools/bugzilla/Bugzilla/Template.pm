@@ -121,6 +121,13 @@ $Template::Stash::LIST_OPS->{ containsany } =
       return 0;
   };
 
+# Allow us to still get the scalar if we use the list operation ".0" on it,
+# as we often do for defaults in query.cgi and other places.
+$Template::Stash::SCALAR_OPS->{ 0 } = 
+  sub {
+      return $_[0];
+  };
+
 # Add a "substr" method to the Template Toolkit's "scalar" object
 # that returns a substring of a string.
 $Template::Stash::SCALAR_OPS->{ substr } = 

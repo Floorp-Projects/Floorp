@@ -32,7 +32,10 @@ use strict;
 use IO::Handle;
 use vars @::legal_product;
 
+use lib ".";
 require "globals.pl";
+use Bugzilla::Search;
+use Bugzilla::User;
 
 use Bugzilla;
 
@@ -78,6 +81,8 @@ my $tend = time;
 #print "Total time taken " . delta_time($tstart, $tend) . "\n";
 
 &calculate_dupes();
+
+CollectSeriesData();
 
 # Generate a static RDF file containing the default view of the duplicates data.
 open(CGI, "GATEWAY_INTERFACE=cmdline REQUEST_METHOD=GET QUERY_STRING=ctype=rdf ./duplicates.cgi |")
@@ -420,4 +425,72 @@ sub delta_time {
     my $minutes = int($delta/60) - ($hours * 60);
     my $seconds = $delta - ($minutes * 60) - ($hours * 3600);
     return sprintf("%02d:%02d:%02d" , $hours, $minutes, $seconds);
+}
+
+sub CollectSeriesData {
+    # We need some way of randomising the distribution of series, such that
+    # all of the series which are to be run every 7 days don't run on the same
+    # day. This is because this might put the server under severe load if a
+    # particular frequency, such as once a week, is very common. We achieve
+    # this by only running queries when:
+    # (days_since_epoch + series_id) % frequency = 0. So they'll run every
+    # <frequency> days, but the start date depends on the series_id.
+    my $days_since_epoch = int(time() / (60 * 60 * 24));
+    my $today = today_dash();
+
+    CleanupChartTables() if ($days_since_epoch % 7 == 0);
+
+    my $dbh = Bugzilla->dbh;
+    my $serieses = $dbh->selectall_hashref("SELECT series_id, query " .
+                      "FROM series " .
+                      "WHERE frequency != 0 AND " . 
+                      "($days_since_epoch + series_id) % frequency = 0",
+                      "series_id");
+
+    # We prepare the insertion into the data table, for efficiency.
+    my $sth = $dbh->prepare("INSERT INTO series_data " .
+                            "(series_id, date, value) " .
+                            "VALUES (?, " . $dbh->quote($today) . ", ?)");
+
+    foreach my $series_id (keys %$serieses) {
+        # We set up the user for Search.pm's permission checking - each series
+        # runs with the permissions of its creator.
+        $::vars->{'user'} =
+                      new Bugzilla::User($serieses->{$series_id}->{'creator'});
+
+        my $cgi = new Bugzilla::CGI($serieses->{$series_id}->{'query'});
+        my $search = new Bugzilla::Search('params' => $cgi,
+                                          'fields' => ["bugs.bug_id"]);
+        my $sql = $search->getSQL();
+        
+        # We need to count the returned rows. Without subselects, we can't
+        # do this directly in the SQL for all queries. So we do it by hand.
+        my $data = $dbh->selectall_arrayref($sql);
+        
+        my $count = scalar(@$data) || 0;
+
+        $sth->execute($series_id, $count);
+    }
+}
+
+sub CleanupChartTables {
+    my $dbh = Bugzilla->dbh;
+
+    $dbh->do("LOCK TABLES series WRITE, user_series_map AS usm READ");
+
+    # Find all those that no-one subscribes to
+    my $series_data = $dbh->selectall_arrayref("SELECT series.series_id " .
+                              "FROM series LEFT JOIN user_series_map AS usm " .
+                              "ON series.series_id = usm.series_id " .
+                              "WHERE usm.series_id IS NULL");
+
+    my $series_ids = join(",", map({ $_->[0] } @$series_data));
+
+    # Stop collecting data on all series which no-one is subscribed to.
+    if ($series_ids) {
+        $dbh->do("UPDATE series SET frequency = 0 " . 
+                 "WHERE series_id IN($series_ids)");
+    }
+   
+    $dbh->do("UNLOCK TABLES");
 }

@@ -197,6 +197,36 @@
   'bug.delta', 
 ],
 
+'reports/chart.html.tmpl' => [
+  'width', 
+  'height', 
+  'imageurl', 
+  'sizeurl', 
+  'height + 100', 
+  'height - 100', 
+  'width + 100', 
+  'width - 100', 
+],
+
+'reports/series-common.html.tmpl' => [
+  'sel.name', 
+  'sel.accesskey', 
+  '"onchange=\'$sel.onchange\'" IF sel.onchange', 
+],
+
+'reports/chart.csv.tmpl' => [
+  'data.$j.$i', 
+],
+
+'reports/create-chart.html.tmpl' => [
+  'series.series_id', 
+  'newidx',
+],
+
+'reports/edit-series.html.tmpl' => [
+  'default.series_id', 
+],
+
 'list/change-columns.html.tmpl' => [
   'column', 
   'field_descs.${column} || column', #
@@ -293,6 +323,7 @@
   'old_email', # email address
   'new_email', # email address
   'message_tag', 
+  'series.frequency * 2',
 ],
 
 'global/select-menu.html.tmpl' => [

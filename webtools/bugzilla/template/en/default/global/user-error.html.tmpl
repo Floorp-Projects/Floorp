@@ -255,7 +255,7 @@
     You entered <tt>[% value FILTER html %]</tt>, which isn't.
     
   [% ELSIF error == "illegal_date" %]
-    [% title = "Your Query Makes No Sense" %]
+    [% title = "Illegal Date" %]
     '<tt>[% date FILTER html %]</tt>' is not a legal date.
     
   [% ELSIF error == "illegal_email_address" %]
@@ -265,6 +265,11 @@
     [% Param('emailregexpdesc') %]
     It must also not contain any of these special characters:
     <tt>\ ( ) &amp; &lt; &gt; , ; : &quot; [ ]</tt>, or any whitespace.
+    
+  [% ELSIF error == "illegal_frequency" %]
+    [% title = "Too Frequent" %]
+    Unless you are an administrator, you may not create series which are 
+    run more often than once every [% minimum FILTER html %] days.
     
   [% ELSIF error == "illegal_group_control_combination" %]
     [% title = "Your Group Control Combination Is Illegal" %]
@@ -282,6 +287,18 @@
     The name of your query cannot contain any of the following characters: 
     &lt;, &gt;, &amp;.
 
+  [% ELSIF error == "illegal_series_creation" %]
+    You are not authorised to create series.
+        
+  [% ELSIF error == "illegal_series_edit" %]
+    You are not authorised to edit this series. To do this, you must either
+    be its creator, or an administrator.
+        
+  [% ELSIF error == "insufficient_data" %]
+    [% title = "Insufficient Data" %]
+    None of the series you selected have any data associated with them, so a
+    chart cannot be plotted.
+        
   [% ELSIF error == "insufficient_data_points" %]
     We don't have enough data points to make a graph (yet).
         
@@ -352,10 +369,19 @@
     if you are going to accept it.  Part of accepting 
     a bug is giving an estimate of when it will be fixed.
 
+  [% ELSIF error == "misarranged_dates" %]
+    [% title = "Misarranged Dates" %]
+    Your start date ([% datefrom FILTER html %]) is after 
+    your end date ([% dateto FILTER html %]).
+    
   [% ELSIF error == "missing_attachment_description" %]
     [% title = "Missing Attachment Description" %]
     You must enter a description for the attachment.
     
+  [% ELSIF error == "missing_category" %]
+    [% title = "Missing Category" %]
+    You did not specify a category for this series.
+                
   [% ELSIF error == "missing_content_type" %]
     [% title = "Missing Content-Type" %]
      You asked Bugzilla to auto-detect the content type, but
@@ -383,14 +409,26 @@
     You must specify one or more fields in which to search for
     <tt>[% email FILTER html %]</tt>.
     
+  [% ELSIF error == "missing_frequency" %]
+    [% title = "Missing Frequency" %]
+    You did not specify a valid frequency for this series.
+                
+  [% ELSIF error == "missing_name" %]
+    [% title = "Missing Name" %]
+    You did not specify a name for this series.
+                
   [% ELSIF error == "missing_query" %]
     [% title = "Missing Query" %]
     The query named <em>[% queryname FILTER html %]</em> does not
     exist.
         
+  [% ELSIF error == "missing_subcategory" %]
+    [% title = "Missing Subcategory" %]
+    You did not specify a subcategory for this series.
+                
   [% ELSIF error == "need_component" %]
     [% title = "Component Required" %]
-    You must specify a component to help determine the new owner of these bugs.                            
+    You must specify a component to help determine the new owner of these bugs.
 
   [% ELSIF error == "need_numeric_value" %]
     [% title = "Numeric Value Required" %]

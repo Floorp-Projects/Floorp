@@ -1,0 +1,67 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # This template has no interface. However, to use it, you need to fulfill
+  # the interfaces of search/form.html.tmpl, reports/series.html.tmpl and
+  # search/boolean-charts.html.tmpl.
+  #%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Create New Data Set"
+  onload = "selectProduct(document.forms['chartform']);"
+%]
+
+[% button_name = "I'm Feeling Buggy" %]
+
+<form method="get" action="chart.cgi" name="chartform">
+  
+[% PROCESS search/form.html.tmpl %]
+
+<table>
+  <tr>
+    <td>
+      <input type="radio" id="action-search"
+             name="action" value="search" checked="checked">
+      <label for="action-search">Run this search</label></td>
+  </tr>
+
+  <tr>
+    <td>
+      <input type="radio" id="action-create" name="action" value="create">
+      <label for="action-create">
+        Start recording bug count data for this search, as follows:
+      </label>
+      <br>
+      
+      [% INCLUDE reports/series.html.tmpl %]
+      
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+[% PROCESS "search/boolean-charts.html.tmpl" %]
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

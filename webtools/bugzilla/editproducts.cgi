@@ -33,9 +33,11 @@ use vars qw ($template $vars);
 use Bugzilla::Constants;
 require "CGI.pl";
 require "globals.pl";
+use Bugzilla::Series;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
+use vars qw(@legal_bug_status @legal_resolution);
 
 sub sillyness {
     my $zz;
@@ -272,6 +274,8 @@ if ($action eq 'add') {
     print "</TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
+    print "<INPUT TYPE=HIDDEN NAME='subcategory' VALUE='-All-'>\n";
+    print "<INPUT TYPE=HIDDEN NAME='open_name' VALUE='All Open'>\n";
     print "</FORM>";
 
     my $other = $localtrailer;
@@ -349,7 +353,7 @@ if ($action eq 'new') {
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
-    if(Param("makeproductgroups")) {
+    if (Param("makeproductgroups")) {
         # Next we insert into the groups table
         SendSQL("INSERT INTO groups " .
                 "(name, description, isbuggroup, last_changed) " .
@@ -390,8 +394,39 @@ if ($action eq 'new') {
                 PopGlobalSQLState();
             }
         }
+    }
 
-        
+    # Insert default charting queries for this product.
+    # If they aren't using charting, this won't do any harm.
+    GetVersionTable();
+
+    my @series;
+
+    # We do every status, every resolution, and an "opened" one as well.
+    foreach my $bug_status (@::legal_bug_status) {
+        push(@series, [$bug_status, "bug_status=$bug_status"]);
+    }
+
+    foreach my $resolution (@::legal_resolution) {
+        next if !$resolution;
+        push(@series, [$resolution, "resolution=$resolution"]);
+    }
+
+    # For localisation reasons, we get the name of the "global" subcategory
+    # and the title of the "open" query from the submitted form.
+    my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
+    my $query = join("&", map { "bug_status=$_" } @openedstatuses);
+    push(@series, [$::FORM{'open_name'}, $query]);
+
+    foreach my $sdata (@series) {
+        # We create the series with an nonsensical series_id, which is
+        # guaranteed not to exist. This is OK, because we immediately call
+        # createInDatabase().
+        my $series = new Bugzilla::Series(-1, $product,
+                                          $::FORM{'subcategory'},
+                                          $sdata->[0], $::userid, 1,
+                                          $sdata->[1] . "&product=$product");
+        $series->createInDatabase();
     }
 
     # Make versioncache flush

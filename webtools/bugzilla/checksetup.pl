@@ -26,6 +26,7 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Tobias Burnus <burnus@net-b.de>
+#                 Gervase Markham <gerv@gerv.net>
 #
 #
 # Direct any questions on this source code to
@@ -112,6 +113,8 @@
 #
 
 use strict;
+use lib ".";
+
 use vars qw( $db_name %answer );
 use Bugzilla::Constants;
 
@@ -1737,6 +1740,42 @@ $table{group_control_map} =
      unique(product_id, group_id),
      index(group_id)';
 
+# 2003-06-26 gerv@gerv.net, bug 16009
+# Generic charting over time of arbitrary queries.
+# Queries are disabled when frequency == 0.
+$table{series} =
+    'series_id    mediumint   auto_increment primary key,
+     creator      mediumint   not null,
+     category     smallint    not null,
+     subcategory  smallint    not null,
+     name         varchar(64) not null,
+     frequency    smallint    not null,
+     last_viewed  datetime    default null,
+     query        mediumtext  not null,
+     
+     index(creator),
+     unique(creator, category, subcategory, name)';
+
+$table{series_data} = 
+    'series_id mediumint not null,
+     date      datetime  not null,
+     value     mediumint not null,
+     
+     unique(series_id, date)';
+
+$table{user_series_map} =
+    'user_id   mediumint not null,
+     series_id mediumint not null, 
+     
+     index(series_id),
+     unique(user_id, series_id)';
+     
+$table{series_categories} =
+    'category_id smallint    auto_increment primary key,
+     name        varchar(64) not null,
+     
+     unique(name)';
+     
 ###########################################################################
 # Create tables
 ###########################################################################
@@ -3527,6 +3566,109 @@ if ($mapcnt == 0) {
                          CONTROLMAPNA . ", 0)");
             }
         }
+    }
+}
+
+# 2003-06-26 Copy the old charting data into the database, and create the
+# queries that will keep it all running. When the old charting system goes
+# away, if this code ever runs, it'll just find no files and do nothing.
+my $series_exists = $dbh->selectrow_array("SELECT 1 FROM series LIMIT 1");
+
+if (!$series_exists) {
+    print "Migrating old chart data into database ...\n" unless $silent;
+    
+    use Bugzilla::Series;
+      
+    # We prepare the handle to insert the series data    
+    my$seriesdatasth = $dbh->prepare("INSERT INTO series_data " . 
+                                     "(series_id, date, value) " . 
+                                     "VALUES (?, ?, ?)");
+    
+    # Fields in the data file (matches the current collectstats.pl)
+    my @statuses = 
+                qw(NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED VERIFIED CLOSED);
+    my @resolutions = 
+             qw(FIXED INVALID WONTFIX LATER REMIND DUPLICATE WORKSFORME MOVED);
+    my @fields = (@statuses, @resolutions);
+
+    # We have a localisation problem here. Where do we get these values?
+    my $all_name = "-All-";
+    my $open_name = "All Open";
+        
+    # We can't give the Series we create a meaningful owner; that's not a big 
+    # problem. But we do need to set this global, otherwise Series.pm objects.
+    $::userid = 0;
+    
+    my $products = $dbh->selectall_arrayref("SELECT name FROM products");
+     
+    foreach my $product ((map { $_->[0] } @$products), "-All-") {
+        # First, create the series
+        my %queries;
+        my %seriesids;
+        
+        my $query_prod = "";
+        if ($product ne "-All-") {
+            $query_prod = "product=" . html_quote($product) . "&";
+        }
+        
+        # The query for statuses is different to that for resolutions.
+        $queries{$_} = ($query_prod . "status=$_") foreach (@statuses);
+        $queries{$_} = ($query_prod . "resolution=$_") foreach (@resolutions);
+        
+        foreach my $field (@fields) {            
+            # Create a Series for each field in this product
+            my $series = new Bugzilla::Series(-1, $product, $all_name,
+                                              $field, $::userid, 1,
+                                              $queries{$field});
+            $series->createInDatabase();
+            $seriesids{$field} = $series->{'series_id'};
+        }
+        
+        # We also add a new query for "Open", so that migrated products get
+        # the same set as new products (see editproducts.cgi.)
+        my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
+        my $query = join("&", map { "bug_status=$_" } @openedstatuses);
+        my $series = new Bugzilla::Series(-1, $product, $all_name,
+                                          $open_name, $::userid, 1, 
+                                          $query_prod . $query);
+        $series->createInDatabase();
+        
+        # Now, we attempt to read in historical data, if any
+        # Convert the name in the same way that collectstats.pl does
+        my $product_file = $product;
+        $product_file =~ s/\//-/gs;
+        $product_file = "data/mining/$product_file";
+
+        # There are many reasons that this might fail (e.g. no stats for this
+        # product), so we don't worry if it does.        
+        open(IN, $product_file) or next;
+
+        # The data files should be in a standard format, even for old 
+        # Bugzillas, because of the conversion code further up this file.
+        my %data;
+        
+        while (<IN>) {
+            if (/^(\d+\|.*)/) {
+                my @numbers = split(/\||\r/, $1);
+                for my $i (0 .. $#fields) {
+                    # $numbers[0] is the date
+                    $data{$fields[$i]}{$numbers[0]} = $numbers[$i + 1];
+                }
+            }
+        }
+
+        close(IN);
+
+        foreach my $field (@fields) {            
+            # Insert values into series_data: series_id, date, value
+            my %fielddata = %{$data{$field}};
+            foreach my $date (keys %fielddata) {
+                # We prepared this above
+                $seriesdatasth->execute($seriesids{$field},
+                                        $dbh->quote($date), 
+                                        $fielddata{$date});
+            }
+        }        
     }
 }
 

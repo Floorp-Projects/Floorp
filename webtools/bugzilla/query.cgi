@@ -137,7 +137,9 @@ sub PrefillForm {
                       "status_whiteboard_type", "bug_id",
                       "bugidtype", "keywords", "keywords_type",
                       "x_axis_field", "y_axis_field", "z_axis_field",
-                      "chart_format", "cumulate", "x_labels_vertical") 
+                      "chart_format", "cumulate", "x_labels_vertical",
+                      "category", "subcategory", "name", "newcategory",
+                      "newsubcategory", "public", "frequency") 
     {
         # This is a bit of a hack. The default, empty list has 
         # three entries to accommodate the needs of the email fields -
@@ -377,6 +379,11 @@ if ($::FORM{'order'}) { $deforder = $::FORM{'order'} }
 $vars->{'userdefaultquery'} = $userdefaultquery;
 $vars->{'orders'} = \@orders;
 $default{'querytype'} = $deforder || 'Importance';
+
+if (($::FORM{'query_format'} || $::FORM{'format'}) eq "create-series") {
+    require Bugzilla::Chart;
+    $vars->{'category'} = Bugzilla::Chart::getVisibleSeries();
+}
 
 # Add in the defaults.
 $vars->{'default'} = \%default;

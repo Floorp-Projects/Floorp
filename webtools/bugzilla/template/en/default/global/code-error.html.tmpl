@@ -132,6 +132,11 @@
     [% title = "Invalid Dimensions" %]
     The width or height specified is not a positive integer.
     
+  [% ELSIF error == "invalid_series_id" %]
+    [% title = "Invalid Series" %]
+    The series_id [% series_id FILTER html %] is not valid. It may be that
+    this series has been deleted.
+    
   [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
     Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
     is attached to bug [% attach_bug_id FILTER html %], but you tried to 
@@ -177,6 +182,12 @@
     
   [% ELSIF error == "missing_bug_id" %]
     No bug ID was given.
+    
+  [% ELSIF error == "missing_series_id" %]
+    Having inserted a series into the database, no series_id was returned for
+    it. Series: [% series.category FILTER html %] / 
+    [%+ series.subcategory FILTER html %] / 
+    [%+ series.name FILTER html %].
     
   [% ELSIF error == "no_y_axis_defined" %]
     No Y axis was defined when creating report. The X axis is optional,

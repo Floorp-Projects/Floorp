@@ -31,6 +31,8 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
+use Bugzilla::Series;
+
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
@@ -352,6 +354,8 @@ if ($action eq 'add') {
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
+    print "<INPUT TYPE=HIDDEN NAME='open_name' VALUE='All Open'>\n";
+    print "<INPUT TYPE=HIDDEN NAME='closed_name' VALUE='All Closed'>\n";
     print "</FORM>";
 
     my $other = $localtrailer;
@@ -439,6 +443,32 @@ if ($action eq 'new') {
           SqlQuote($description) . "," .
           SqlQuote($initialownerid) . "," .
           SqlQuote($initialqacontactid) . ")");
+
+    # Insert default charting queries for this product.
+    # If they aren't using charting, this won't do any harm.
+    GetVersionTable();
+
+    my @series;
+    my $prodcomp = "&product=$product&component=$component";
+
+    # For localisation reasons, we get the title of the queries from the
+    # submitted form.
+    my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
+    my $statuses = join("&", map { "bug_status=$_" } @openedstatuses);
+    push(@series, [$::FORM{'open_name'}, $statuses . $prodcomp]);
+
+    my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---";
+    push(@series, [$::FORM{'closed_name'}, $resolved . $prodcomp]);
+
+    foreach my $sdata (@series) {
+        # We create the series with an nonsensical series_id, which is
+        # guaranteed not to exist. This is OK, because we immediately call
+        # createInDatabase().
+        my $series = new Bugzilla::Series(-1, $product, $component,
+                                          $sdata->[0], $::userid, 1,
+                                          $sdata->[1]);
+        $series->createInDatabase();
+    }
 
     # Make versioncache flush
     unlink "data/versioncache";
