@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.34 2001/07/17 20:46:32 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.35 2001/07/27 17:24:25 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -569,7 +569,6 @@ public void actionPerformed (ActionEvent evt)
             }
         }
         else if (command.equals("POST")) {
-            System.out.println("debug: edburns: post");
             navigation.post(urlField.getText(),
                             null,
                             "TESTDATA\r\n",
