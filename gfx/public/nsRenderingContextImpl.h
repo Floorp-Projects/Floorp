@@ -28,11 +28,19 @@
 
 class nsRenderingContextImpl : public nsIRenderingContext
 {
+
+// CLASS MEMBERS
+public:
+
+
+protected:
+  nsTransform2D		  *mTranMatrix;		// The rendering contexts transformation matrix
+
 public:
   nsRenderingContextImpl();
 
 
-
+// CLASS METHODS
   /** ---------------------------------------------------
    *  See documentation in nsIRenderingContext.h
    *	@update 03/29/00 dwc
@@ -43,7 +51,7 @@ public:
    *  See documentation in nsIRenderingContext.h
    *	@update 03/29/00 dwc
    */
-  NS_IMETHOD DrawPath(nsPoint aPointArray[],PRInt32 aNumPts);
+  NS_IMETHOD DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
 
 protected:
   virtual ~nsRenderingContextImpl();
@@ -72,5 +80,67 @@ protected:
 public:
 
 };
+
+
+/** ---------------------------------------------------
+ *  Class QBezierCurve, a quadratic bezier curve
+ *	@update 4/27/2000 dwc
+ */
+class QBezierCurve
+{
+
+public:
+	nsPoint	mAnc1;
+	nsPoint	mCon;
+	nsPoint mAnc2;
+
+  QBezierCurve() {mAnc1.x=0;mAnc1.y=0;mCon=mAnc2=mAnc1;}
+  void SetControls(nsPoint &aAnc1,nsPoint &aCon,nsPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
+  void SetPoints(nscoord a1x,nscoord a1y,nscoord acx,nscoord acy,nscoord a2x,nscoord a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
+ *  else it is so small that it can be approximated by 2 lineto calls
+ *  @param aRenderingContext -- The RenderingContext to use to draw with
+ *  @param aPointArray[] -- A list of points we can put line calls into instead of drawing.  If null, lines are drawn
+ *  @param aCurInex -- a pointer to an Integer that tells were to put the points into the array, incremented when finished
+ *	@update 3/26/99 dwc
+ */
+  void SubDivide(nsIRenderingContext *aRenderingContext,nsPoint  aPointArray[],PRInt32 *aCurIndex);
+
+/** ---------------------------------------------------
+ *  Divide a Quadratic Bezier curve at the mid-point
+ *	@update 3/26/99 dwc
+ *  @param aCurve1 -- Curve 1 as a result of the division
+ *  @param aCurve2 -- Curve 2 as a result of the division
+ */
+  void MidPointDivide(QBezierCurve *A,QBezierCurve *B);
+};
+
+  enum eSegType {eUNDEF,eLINE,eQCURVE,eCCURVE};
+
+
+/** ---------------------------------------------------
+ *  A class to iterate through a nsPathPoint array and return segments
+ *	@update 04/27/00 dwc
+ */
+class nsPathIter {
+
+public:
+  enum eSegType {eUNDEF,eLINE,eQCURVE,eCCURVE};
+
+private:
+  PRUint32    mCurPoint;
+  PRUint32    mNumPoints;
+  nsPathPoint *mThePath;
+
+public:
+  nsPathIter();
+  nsPathIter(nsPathPoint* aThePath,PRUint32 aNumPts);
+
+  PRBool  NextSeg(QBezierCurve& TheSegment,eSegType& aCurveType);
+
+};
+
 
 #endif /* nsRenderingContextImpl */
