@@ -59,24 +59,36 @@
             </Settings>
             <References>
                 <Reference
-                    Name = "System"
-                    AssemblyName = "System"
+                    Name = "MSHTML"
+                    AssemblyName = "MSHTML"
                 />
                 <Reference
-                    Name = "System.Data"
-                    AssemblyName = "System.Data"
+                    Name = "AxSHDocVw"
+                    AssemblyName = "AxSHDocVw"
                 />
                 <Reference
-                    Name = "System.Drawing"
-                    AssemblyName = "System.Drawing"
+                    Name = "MOZILLACONTROLLib"
+                    AssemblyName = "MOZILLACONTROLLib"
+                />
+                <Reference
+                    Name = "AxMOZILLACONTROLLib"
+                    AssemblyName = "AxMOZILLACONTROLLib"
                 />
                 <Reference
                     Name = "System.Windows.Forms"
                     AssemblyName = "System.Windows.Forms"
                 />
                 <Reference
-                    Name = "System.XML"
-                    AssemblyName = "System.Xml"
+                    Name = "System.Data"
+                    AssemblyName = "System.Data"
+                />
+                <Reference
+                    Name = "System"
+                    AssemblyName = "System"
+                />
+                <Reference
+                    Name = "System.Drawing"
+                    AssemblyName = "System.Drawing"
                 />
             </References>
         </Build>
@@ -104,6 +116,16 @@
                     RelPath = "browser\aboutdialog.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\BrowserDisplayPanel.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\BrowserDisplayPanel.resx"
+                    DependentUpon = "BrowserDisplayPanel.cs"
+                    BuildAction = "EmbeddedResource"
                 />
                 <File
                     RelPath = "browser\browser-menu.xml"
@@ -134,6 +156,20 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "browser\PrefPanel.cs"
+                    SubType = "Component"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "browser\PrefPanel.resx"
+                    DependentUpon = "PrefPanel.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "browser\PrefPanels.xml"
+                    BuildAction = "Content"
+                />
+                <File
                     RelPath = "browser\PrefsDialog.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
@@ -160,7 +196,7 @@
                 />
                 <File
                     RelPath = "layout\layoutabstraction.cs"
-                    SubType = "Component"
+                    SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
@@ -188,7 +224,7 @@
                 />
                 <File
                     RelPath = "toolkit\toolkit.toolbars.cs"
-                    SubType = "Component"
+                    SubType = "Code"
                     BuildAction = "Compile"
                 />
             </Include>

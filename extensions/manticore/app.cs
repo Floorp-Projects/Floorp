@@ -15,7 +15,7 @@ namespace Silverstone.Manticore.App
     // XXX Need to do something here more similar
     //     to what mozilla does here for parameterized
     //     window types.
-    private Queue mBrowserWindows;
+    private Hashtable mBrowserWindows;
     private Preferences mPreferences;
     private Bookmarks mBookmarks;
 
@@ -33,7 +33,7 @@ namespace Silverstone.Manticore.App
 
     public ManticoreApp()
     {
-      mBrowserWindows = new Queue();
+      mBrowserWindows = new Hashtable();
 
       // Initialize default and user preferences
       mPreferences = new Preferences();
@@ -49,17 +49,31 @@ namespace Silverstone.Manticore.App
       Application.Run();
     }
 
-    ~ManticoreApp()
+    public void Quit() 
     {
       // Flush preferences to disk.
       mPreferences.FlushPreferencesFile("user-prefs.xml");
+      
+      Application.Exit();
+    }
+
+    public void WindowClosed(BrowserWindow aWindow) 
+    {
+      if (mBrowserWindows.ContainsKey(aWindow.GetHashCode()))
+        mBrowserWindows.Remove(aWindow.GetHashCode());
+      
+      // When window count drops to zero, quit. 
+      // XXX - a little hacky for now, will eventually reflect
+      //       all windows. 
+      if (mBrowserWindows.Count == 0)
+        Quit();
     }
 
     // Opens and displays a new browser window
     public void OpenNewBrowser()
     {
       BrowserWindow window = new BrowserWindow(this);
-      mBrowserWindows.Enqueue(window);
+      mBrowserWindows.Add(window.GetHashCode(), window);
       window.Show();
     }
 

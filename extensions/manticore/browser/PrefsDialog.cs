@@ -39,7 +39,10 @@ namespace Silverstone.Manticore.Browser
   using System.Collections;
   using System.ComponentModel;
   using System.Windows.Forms;
-  
+
+  using System.IO;
+  using System.Xml;
+
   using Silverstone.Manticore.Toolkit;
 
 	/// <summary>
@@ -48,24 +51,16 @@ namespace Silverstone.Manticore.Browser
 	public class PrefsDialog : ManticoreDialog
 	{
     private System.Windows.Forms.TreeView treeView1;
-    private System.Windows.Forms.Panel panel1;
     private System.Windows.Forms.Button cancelButton;
     private System.Windows.Forms.Button okButton;
-    private System.Windows.Forms.GroupBox groupBox1;
-    private System.Windows.Forms.Label label1;
-    private System.Windows.Forms.TextBox textBox1;
-    private System.Windows.Forms.Button button1;
-    private System.Windows.Forms.Label label2;
-    private System.Windows.Forms.Button button2;
-    private System.Windows.Forms.GroupBox groupBox2;
-    private System.Windows.Forms.RadioButton radioButton1;
-    private System.Windows.Forms.RadioButton radioButton2;
-    private System.Windows.Forms.RadioButton radioButton3;
-    private System.Windows.Forms.Button restoreSessionSettingsButton;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
 		private System.ComponentModel.Container components = null;
+
+    private Hashtable mNodes = null;
+    private Hashtable mPanels = null;
+    private PrefPanel mCurrentPanel = null;
 
 		public PrefsDialog(Form aOpener) : base(aOpener)
 		{
@@ -74,10 +69,118 @@ namespace Silverstone.Manticore.Browser
 			//
 			InitializeComponent();
 
+      mNodes = new Hashtable();
+      mPanels = new Hashtable();
+
+      //
+      // Initialize all the preference panels.
+      //
+      InitializePanels();
+
+      // Add select handler for tree view so that we can
+      // switch panels.
+      treeView1.AfterSelect += new TreeViewEventHandler(OnTreeSelect);
+
       //
       // Initialize the category list. 
       //
       InitializeCategoryList();
+
+      // XXX - eventually we want to remember user state. This will do
+      //       for now. 
+      treeView1.ExpandAll();
+    }
+
+    public void OnTreeSelect(Object sender, TreeViewEventArgs e) 
+    {
+      TreeNode selectedNode = e.Node;
+      String panelID = mNodes[selectedNode.GetHashCode()] as String;
+      PrefPanel newPanel = mPanels[panelID] as PrefPanel;
+      if (mCurrentPanel != null) 
+        mCurrentPanel.Visible = false;
+      if (newPanel != null) {
+        Console.WriteLine("toggling visibility of panel");
+        newPanel.Visible = true;
+        mCurrentPanel = newPanel;
+      }
+      else {
+        if (selectedNode.FirstNode != null) {
+          TreeView treeview = sender as TreeView;
+          treeview.SelectedNode = selectedNode.FirstNode;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Create all the preferences panels.
+    /// </summary>
+    public void InitializePanels() 
+    {
+      BrowserDisplayPanel bdp = new BrowserDisplayPanel();
+      mPanels.Add("browser-display", bdp);
+    }
+
+    /// <summary>
+    /// Load the category list from XML and select the initial
+    /// panel.
+    /// </summary>
+    private void InitializeCategoryList() 
+    {
+      mNodes = new Hashtable();
+
+      XmlTextReader reader;
+      reader = new XmlTextReader("browser\\PrefPanels.xml");
+      
+      reader.WhitespaceHandling = WhitespaceHandling.None;
+      reader.MoveToContent();
+
+      CatListRecurse(reader, treeView1);
+    }
+
+    private void CatListRecurse(XmlTextReader aReader, Object aRootNode) 
+    {
+      String inner = aReader.ReadInnerXml();
+    
+      NameTable nt = new NameTable();
+      XmlNamespaceManager nsmgr = new XmlNamespaceManager(nt);
+      XmlParserContext ctxt = new XmlParserContext(null, nsmgr, null, XmlSpace.None);
+      XmlTextReader reader2 = new XmlTextReader(inner, XmlNodeType.Element, ctxt);
+
+      TreeNode node;
+
+      while (reader2.Read()) {
+        if (reader2.NodeType == XmlNodeType.Element) {
+          switch (reader2.LocalName) {
+          case "panel":
+            // Tree node with children. Retrieve label and id. Label is 
+            // used for visual presentation, id is hashed against node
+            // and is used as a key when looking for which panel to 
+            // load. 
+            String[] values = new String[2] {"", ""};
+            String[] names = new String[2] {"label", "id"};
+            for (int i = 0; i < names.Length; ++i) {
+              if (reader2.MoveToAttribute(names[i]) &&
+                reader2.ReadAttributeValue())
+                values[i] = reader2.Value; 
+              reader2.MoveToElement();
+            }
+
+            node = new TreeNode(values[0], 0, 0);
+            if (aRootNode is TreeView) {
+              TreeView rootView = aRootNode as TreeView;
+              rootView.Nodes.Add(node);
+            }
+            else if (aRootNode is TreeNode) {
+              TreeNode rootNode = aRootNode as TreeNode;
+              rootNode.Nodes.Add(node);
+            }
+
+            mNodes.Add(node.GetHashCode(), values[1]);
+            CatListRecurse(reader2, node);
+            break;
+          }
+        }
+      }
     }
 
 		/// <summary>
@@ -102,56 +205,10 @@ namespace Silverstone.Manticore.Browser
 		/// </summary>
 		private void InitializeComponent()
 		{
-      this.button1 = new System.Windows.Forms.Button();
-      this.button2 = new System.Windows.Forms.Button();
-      this.radioButton3 = new System.Windows.Forms.RadioButton();
-      this.restoreSessionSettingsButton = new System.Windows.Forms.Button();
       this.cancelButton = new System.Windows.Forms.Button();
-      this.radioButton1 = new System.Windows.Forms.RadioButton();
       this.treeView1 = new System.Windows.Forms.TreeView();
-      this.radioButton2 = new System.Windows.Forms.RadioButton();
-      this.panel1 = new System.Windows.Forms.Panel();
-      this.groupBox2 = new System.Windows.Forms.GroupBox();
-      this.groupBox1 = new System.Windows.Forms.GroupBox();
-      this.label2 = new System.Windows.Forms.Label();
-      this.textBox1 = new System.Windows.Forms.TextBox();
-      this.label1 = new System.Windows.Forms.Label();
       this.okButton = new System.Windows.Forms.Button();
-      this.panel1.SuspendLayout();
-      this.groupBox2.SuspendLayout();
-      this.groupBox1.SuspendLayout();
       this.SuspendLayout();
-      // 
-      // button1
-      // 
-      this.button1.Location = new System.Drawing.Point(221, 72);
-      this.button1.Name = "button1";
-      this.button1.Size = new System.Drawing.Size(75, 24);
-      this.button1.TabIndex = 2;
-      this.button1.Text = "Browse...";
-      // 
-      // button2
-      // 
-      this.button2.Location = new System.Drawing.Point(136, 72);
-      this.button2.Name = "button2";
-      this.button2.TabIndex = 4;
-      this.button2.Text = "Use Current";
-      // 
-      // radioButton3
-      // 
-      this.radioButton3.Location = new System.Drawing.Point(16, 72);
-      this.radioButton3.Name = "radioButton3";
-      this.radioButton3.Size = new System.Drawing.Size(152, 16);
-      this.radioButton3.TabIndex = 2;
-      this.radioButton3.Text = "Restore previous session";
-      // 
-      // restoreSessionSettingsButton
-      // 
-      this.restoreSessionSettingsButton.Location = new System.Drawing.Point(224, 72);
-      this.restoreSessionSettingsButton.Name = "restoreSessionSettingsButton";
-      this.restoreSessionSettingsButton.TabIndex = 3;
-      this.restoreSessionSettingsButton.Text = "Settings...";
-      this.restoreSessionSettingsButton.Click += new System.EventHandler(this.restoreSessionSettingsButton_Click);
       // 
       // cancelButton
       // 
@@ -161,14 +218,6 @@ namespace Silverstone.Manticore.Browser
       this.cancelButton.TabIndex = 2;
       this.cancelButton.Text = "Cancel";
       // 
-      // radioButton1
-      // 
-      this.radioButton1.Location = new System.Drawing.Point(16, 24);
-      this.radioButton1.Name = "radioButton1";
-      this.radioButton1.Size = new System.Drawing.Size(120, 16);
-      this.radioButton1.TabIndex = 0;
-      this.radioButton1.Text = "Show home page";
-      // 
       // treeView1
       // 
       this.treeView1.ImageIndex = -1;
@@ -177,77 +226,6 @@ namespace Silverstone.Manticore.Browser
       this.treeView1.SelectedImageIndex = -1;
       this.treeView1.Size = new System.Drawing.Size(136, 264);
       this.treeView1.TabIndex = 0;
-      // 
-      // radioButton2
-      // 
-      this.radioButton2.Location = new System.Drawing.Point(16, 48);
-      this.radioButton2.Name = "radioButton2";
-      this.radioButton2.Size = new System.Drawing.Size(112, 16);
-      this.radioButton2.TabIndex = 1;
-      this.radioButton2.Text = "Show blank page";
-      // 
-      // panel1
-      // 
-      this.panel1.Controls.AddRange(new System.Windows.Forms.Control[] {
-                                                                         this.groupBox2,
-                                                                         this.groupBox1});
-      this.panel1.Location = new System.Drawing.Point(160, 16);
-      this.panel1.Name = "panel1";
-      this.panel1.Size = new System.Drawing.Size(320, 264);
-      this.panel1.TabIndex = 1;
-      // 
-      // groupBox2
-      // 
-      this.groupBox2.Controls.AddRange(new System.Windows.Forms.Control[] {
-                                                                            this.restoreSessionSettingsButton,
-                                                                            this.radioButton3,
-                                                                            this.radioButton2,
-                                                                            this.radioButton1});
-      this.groupBox2.Location = new System.Drawing.Point(8, 0);
-      this.groupBox2.Name = "groupBox2";
-      this.groupBox2.Size = new System.Drawing.Size(312, 104);
-      this.groupBox2.TabIndex = 1;
-      this.groupBox2.TabStop = false;
-      this.groupBox2.Text = "When Manticore starts, ";
-      // 
-      // groupBox1
-      // 
-      this.groupBox1.Controls.AddRange(new System.Windows.Forms.Control[] {
-                                                                            this.button2,
-                                                                            this.label2,
-                                                                            this.button1,
-                                                                            this.textBox1,
-                                                                            this.label1});
-      this.groupBox1.Location = new System.Drawing.Point(8, 112);
-      this.groupBox1.Name = "groupBox1";
-      this.groupBox1.Size = new System.Drawing.Size(312, 104);
-      this.groupBox1.TabIndex = 0;
-      this.groupBox1.TabStop = false;
-      this.groupBox1.Text = "Home Page";
-      // 
-      // label2
-      // 
-      this.label2.Location = new System.Drawing.Point(8, 48);
-      this.label2.Name = "label2";
-      this.label2.Size = new System.Drawing.Size(56, 16);
-      this.label2.TabIndex = 3;
-      this.label2.Text = "Location:";
-      // 
-      // textBox1
-      // 
-      this.textBox1.Location = new System.Drawing.Point(64, 48);
-      this.textBox1.Name = "textBox1";
-      this.textBox1.Size = new System.Drawing.Size(232, 20);
-      this.textBox1.TabIndex = 1;
-      this.textBox1.Text = "http://www.silverstone.net.nz/";
-      // 
-      // label1
-      // 
-      this.label1.Location = new System.Drawing.Point(8, 24);
-      this.label1.Name = "label1";
-      this.label1.Size = new System.Drawing.Size(280, 16);
-      this.label1.TabIndex = 0;
-      this.label1.Text = "Clicking the Home button takes you to this page:";
       // 
       // okButton
       // 
@@ -267,7 +245,6 @@ namespace Silverstone.Manticore.Browser
       this.Controls.AddRange(new System.Windows.Forms.Control[] {
                                                                   this.okButton,
                                                                   this.cancelButton,
-                                                                  this.panel1,
                                                                   this.treeView1});
       this.HelpButton = true;
       this.Name = "PrefsDialog";
@@ -275,9 +252,6 @@ namespace Silverstone.Manticore.Browser
       this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
       this.Text = "Options";
       this.Load += new System.EventHandler(this.PrefsDialog_Load);
-      this.panel1.ResumeLayout(false);
-      this.groupBox2.ResumeLayout(false);
-      this.groupBox1.ResumeLayout(false);
       this.ResumeLayout(false);
 
     }

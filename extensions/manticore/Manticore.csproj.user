@@ -1,7 +1,7 @@
 <VisualStudioProject>
     <CSHARP>
         <Build>
-            <Settings ReferencePath = "" >
+            <Settings ReferencePath = "C:\WINNT\Microsoft.NET\Framework\v1.0.2914;C:\builds\mozilla\extensions\manticore;" >
                 <Config
                     Name = "Debug"
                     EnableASPDebugging = "false"

@@ -57,8 +57,18 @@ namespace Silverstone.Manticore.Browser
 		{
 			// This call is required by the Windows.Forms Form Designer.
 			InitializeComponent();
+ 
+      Console.WriteLine("Pref panel startup");
 
-      this.VisibleChanged += new EventHandler(OnVisibleChanged);
+      // All preferences panels have these properties initially.
+      this.Location = new System.Drawing.Point(160, 16);
+      this.Size = new System.Drawing.Size(320, 264);
+      this.TabIndex = 1;
+      this.Visible = false;
+
+      // When the preference panel is shown for the first time, we
+      // need to fill its fields from preferences. 
+      this.VisibleChanged += new EventHandler(VisibilityChanged);
 		}
 
     /// <summary>
@@ -66,8 +76,9 @@ namespace Silverstone.Manticore.Browser
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    public void OnVisibleChanged(Object sender, EventArgs e) 
+    public void VisibilityChanged(Object sender, EventArgs e) 
     {
+      Console.WriteLine("Visibility changed!");
       if (!mGenerated) {
         // The first time we display the panel, read the values 
         // for UI elements from preferences and fill the controls.

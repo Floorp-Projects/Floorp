@@ -43,9 +43,8 @@ DEBUG=FALSE
 
 _CS_WINFORMS_IMPORTS=/R:System.DLL /R:System.Windows.Forms.DLL \
 	/R:System.Drawing.DLL
-_CS_XML_IMPORTS=/R:System.DLL /R:System.Data.DLL /R:System.XML.DLL
+_CS_XML_IMPORTS=/R:System.Data.DLL /R:System.XML.DLL
 _CS_LAYOUT_IMPORTS=/R:AxSHDocVw.DLL /R:MSHTML.DLL /R:AxMOZILLACONTROLLib.DLL /R:MOZILLACONTROLLib.dll
-_CS_CTL_IMPORTS=/R:StdFormat.dll /R:MSDATASRC.dll /R:stdole.dll /R:AxComCtl3.dll /R:ComCtl3.dll /R:VBRUN.dll
 
 _IMPORTS=$(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS)
 
@@ -61,9 +60,11 @@ _COMPILE_CMD=csc /nologo /t:exe /out:$(_OUT_FILE) $(_DEBUG_FLAGS) $(_IMPORTS)
 FILES =	app.cs \
 	browser\browserwindow.cs \
 	browser\aboutdialog.cs \
+	browser\PrefPanel.cs \
 	browser\PrefsDialog.cs \
 	browser\RestoreSessionSettings.cs \
 	browser\OpenLocDialog.cs \
+	browser\BrowserDisplayPanel.cs \
 	layout\layoutabstraction.cs \
 	toolkit\toolkit.menus.cs \
 	toolkit\toolkit.toolbars.cs \

@@ -54,16 +54,21 @@ namespace Silverstone.Manticore.Browser
     protected internal WebBrowser webBrowser;
 
     protected internal StatusBar mStatusBar;
-
-    protected internal ManticoreApp application;
+    protected internal ManticoreApp mApplication;
 
     public BrowserWindow(ManticoreApp app)
     {
-      application = app;
+      mApplication = app;
 
-      Console.WriteLine("init component");
       // Set up UI
       InitializeComponent();
+
+      this.Closed += new EventHandler(OnFormClosed);
+    }
+
+    public void OnFormClosed(Object sender, EventArgs e) 
+    {
+      mApplication.WindowClosed(this);
     }
 
     public override void Dispose()
@@ -123,14 +128,14 @@ namespace Silverstone.Manticore.Browser
 
     private void LoadStartPage(object sender, EventArgs e)
     {
-      int startMode = application.Prefs.GetIntPref("browser.homepage.mode");
+      int startMode = mApplication.Prefs.GetIntPref("browser.homepage.mode");
       switch (startMode) {
       case 0:
         // Don't initialize jack
         break;
       case 1:
         // Load the homepage
-        String homepageURL = application.Prefs.GetStringPref("browser.homepage");
+        String homepageURL = mApplication.Prefs.GetStringPref("browser.homepage");
         webBrowser.LoadURL(homepageURL, false);
         break;
       case 2:
@@ -144,7 +149,7 @@ namespace Silverstone.Manticore.Browser
     // Menu Command Handlers
     public void OpenNewBrowser()
     {
-      application.OpenNewBrowser();
+      mApplication.OpenNewBrowser();
     }
 
     public void Open()
@@ -152,6 +157,11 @@ namespace Silverstone.Manticore.Browser
       OpenDialog dlg = new OpenDialog();
       if (dlg.ShowDialog() == DialogResult.OK)
         webBrowser.LoadURL(dlg.URL, false);
+    }
+
+    public void Quit() 
+    {
+      mApplication.Quit();
     }
   }
 
@@ -172,6 +182,9 @@ namespace Silverstone.Manticore.Browser
           break;
         case "file-open":
           mBrowserWindow.Open();
+          break;
+        case "file-exit":
+          mBrowserWindow.Quit();
           break;
         case "view-go-back":
           mBrowserWindow.webBrowser.GoBack();

@@ -67,7 +67,7 @@ namespace Silverstone.Manticore.Layout
     public void RealizeLayoutEngine()
     {
       if (gecko == null && trident == null) {
-        String layoutEngine = mBrowserWindow.application.Prefs.GetStringPref("browser.layoutengine");
+        String layoutEngine = mBrowserWindow.mApplication.Prefs.GetStringPref("browser.layoutengine");
         if (layoutEngine == "") 
           layoutEngine = "gecko";
         SwitchLayoutEngine(layoutEngine);
@@ -116,8 +116,7 @@ namespace Silverstone.Manticore.Layout
         this.Controls.Add(host);
       }
 
-      mBrowserWindow.application.Prefs.SetStringPref("browser.layoutengine", id);
-      mBrowserWindow.application.Prefs.FlushPreferencesFile("user-prefs.xml");
+      mBrowserWindow.mApplication.Prefs.SetStringPref("browser.layoutengine", id);
 
       LoadURL(url, false);
     }
