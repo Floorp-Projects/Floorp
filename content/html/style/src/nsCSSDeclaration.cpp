@@ -482,8 +482,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
   aValue.Truncate(0);
 
   // simple properties are easy.
-  if (!nsCSSProps::IsShorthand(aProperty) &&
-      aProperty != eCSSProperty_play_during) {
+  if (!nsCSSProps::IsShorthand(aProperty)) {
     AppendValueToString(aProperty, aValue);
     return NS_OK;
   }
@@ -632,7 +631,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_play_during: {
-      if (AppendValueToString(eCSSProperty_play_during, aValue)) {
+      if (AppendValueToString(eCSSProperty_play_during_uri, aValue)) {
         nsAutoString tmp;
         if (AppendValueToString(eCSSProperty_play_during_flags, tmp)) {
           aValue.Append(PRUnichar(' '));

@@ -3848,6 +3848,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_x_spacing:
   case eCSSProperty_border_y_spacing:
   case eCSSProperty_play_during_flags:
+  case eCSSProperty_play_during_uri:
   case eCSSProperty_size_height:
   case eCSSProperty_size_width:
     // The user can't use these
@@ -3941,6 +3942,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_x_spacing:
   case eCSSProperty_border_y_spacing:
   case eCSSProperty_play_during_flags:
+  case eCSSProperty_play_during_uri:
   case eCSSProperty_size_height:
   case eCSSProperty_size_width:
     NS_ERROR("not currently parsed here");
@@ -5337,7 +5339,7 @@ PRBool CSSParserImpl::ParsePlayDuring(PRInt32& aErrorCode)
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_play_during, playDuring);
+      AppendValue(eCSSProperty_play_during_uri, playDuring);
       AppendValue(eCSSProperty_play_during_flags, flags);
       return PR_TRUE;
     }

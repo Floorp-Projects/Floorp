@@ -1091,7 +1091,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   mPauseBefore.AppendToString(buffer, eCSSProperty_pause_before);
   mPitch.AppendToString(buffer, eCSSProperty_pitch);
   mPitchRange.AppendToString(buffer, eCSSProperty_pitch_range);
-  mPlayDuring.AppendToString(buffer, eCSSProperty_play_during);
+  mPlayDuring.AppendToString(buffer, eCSSProperty_play_during_uri);
   mPlayDuringFlags.AppendToString(buffer, eCSSProperty_play_during_flags);
   mRichness.AppendToString(buffer, eCSSProperty_richness);
   mSpeak.AppendToString(buffer, eCSSProperty_speak);

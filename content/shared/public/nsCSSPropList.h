@@ -387,9 +387,10 @@ CSS_PROP_BACKENDONLY(pause-after, pause_after, PauseAfter, Aural, mPauseAfter, e
 CSS_PROP_BACKENDONLY(pause-before, pause_before, PauseBefore, Aural, mPauseBefore, eCSSType_Value, PR_FALSE)
 CSS_PROP_BACKENDONLY(pitch, pitch, Pitch, Aural, mPitch, eCSSType_Value, PR_FALSE)
 CSS_PROP_BACKENDONLY(pitch-range, pitch_range, PitchRange, Aural, mPitchRange, eCSSType_Value, PR_FALSE)
-CSS_PROP_BACKENDONLY(play-during, play_during, PlayDuring, Aural, mPlayDuring, eCSSType_Value, PR_FALSE)
+CSS_PROP_SHORTHAND(play-during, play_during, PlayDuring)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BACKENDONLY(-x-play-during-flags, play_during_flags, PlayDuringFlags, Aural, mPlayDuringFlags, eCSSType_Value, PR_FALSE) // XXX why is this here?
+CSS_PROP_BACKENDONLY(-x-play-during-uri, play_during_uri, PlayDuringURI, Aural, mPlayDuring, eCSSType_Value, PR_FALSE) // XXX why is this here?
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
 CSS_PROP_DISPLAY(position, position, Position, Display, mPosition, eCSSType_Value, PR_FALSE)
 CSS_PROP_QUOTES(quotes, quotes, Quotes, Content, mQuotes, eCSSType_Quotes, PR_FALSE)
