@@ -356,7 +356,7 @@ Contributor(s): ______________________________________. -->
   
                 <!-- this is the search/go button --> 
                 <titledbutton id="search-button" value="&searchButton.label;"
-                  onclick="OpenSearch('internet',document.getElementById('urlbar').value);" 
+                  onclick="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 /> 
   
              <!-- this is for other functionality --> 
@@ -378,7 +378,7 @@ Contributor(s): ______________________________________. -->
 
       <titledbutton id="search-button" crop="right" flex="1" align="top"
                     value="&searchButton.label;"
-                    onclick="OpenSearch('internet', document.getElementById('urlbar').value);"/>
+                    onclick="OpenSearch('internet', false, document.getElementById('urlbar').value);"/>
 
       <titledbutton id="print-button" crop="right" flex="1" align="top" 
                     value="&printButton.label;" onclick="BrowserPrint()">
