@@ -35,7 +35,13 @@ PRBool LoopInDir(nsILocalFile* file)
         PRBool isDir;
         printf("%s\n", name);
         rv = file->IsDirectory(&isDir);
-        if (isDir == PR_TRUE)
+        if (NS_FAILED(rv))
+		{
+			printf("IsDirectory Failed!!!\n");
+				return PR_FALSE;
+		}
+
+		if (isDir == PR_TRUE)
         {
            nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
            LoopInDir(lfile);   
