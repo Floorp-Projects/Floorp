@@ -480,6 +480,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 {
     PRLibrary *lm;
     PRLibrary* result;
+    PRInt32 oserr;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -490,7 +491,10 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     if (result != NULL) goto unlock;
 
     lm = PR_NEWZAP(PRLibrary);
-    if (lm == NULL) goto unlock;
+    if (lm == NULL) {
+        oserr = _MD_ERRNO();
+        goto unlock;
+    }
     lm->staticTable = NULL;
 
 #ifdef XP_OS2  /* Why isn't all this stuff in MD code?! */
@@ -502,6 +506,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         retry:
               ulRc = DosLoadModule(pszError, _MAX_PATH, (PSZ) name, &h);
           if (ulRc != NO_ERROR) {
+              oserr = ulRc;
               PR_DELETE(lm);
               goto unlock;
           }
@@ -519,6 +524,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 
     h = LoadLibrary(name);
     if (h < (HINSTANCE)HINSTANCE_ERROR) {
+        oserr = _MD_ERRNO();
         PR_DELETE(lm);
         goto unlock;
     }
@@ -562,7 +568,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     if (strchr(name, PR_PATH_SEPARATOR) == NULL)
     {
         if (strchr(name, PR_DIRECTORY_SEPARATOR) == NULL)
-    {
+        {
         /*
          * The name did not contain a ":", so it must be a
          * library name.  Convert the name to a Pascal string
@@ -594,7 +600,10 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
                 &connectionID, &main, errName);
 #endif
         if (err != noErr)
+        {
+            oserr = err;
             goto unlock;    
+        }
         
         libName = name;
     }
@@ -624,7 +633,10 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         /* Copy the name: we'll change it */
         cMacPath = strdup(name);    
         if (cMacPath == NULL)
+        {
+            oserr = _MD_ERRNO();
             goto unlock;
+        }
             
         /* First, get the vRefNum */
         position = strchr(cMacPath, PR_PATH_SEPARATOR);
@@ -646,6 +658,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
             index--;
         if (index == 0 || index == strlen(cMacPath))
         {
+            oserr = _MD_ERRNO();
             PR_DELETE(cMacPath);
             goto unlock;
         }
@@ -668,14 +681,20 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         pb.dirInfo.ioFDirIndex = 0;
         err = PBGetCatInfoSync(&pb);
         if (err != noErr)
+        {
+            oserr = err;
             goto unlock;
+        }
         fileSpec.parID = pb.dirInfo.ioDrDirID;
 
         /* Resolve an alias if this was one */
         err = ResolveAliasFile(&fileSpec, true, &tempUnusedBool,
                 &tempUnusedBool);
         if (err != noErr)
+        {
+            oserr = err;
             goto unlock;
+        }
 
         /* Finally, try to load the library */
         err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, 
@@ -683,7 +702,10 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 
         libName = cName;
         if (err != noErr)
+        {
+            oserr = err;
             goto unlock;
+        }
     }
     
     lm->name = strdup(libName);
@@ -740,6 +762,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 #error Configuration error
 #endif
     if (!h) {
+        oserr = _MD_ERRNO();
         PR_DELETE(lm);
         goto unlock;
     }
@@ -769,10 +792,8 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 		h = load_add_on( name );
 
 	if( h == B_ERROR || h <= 0 ) {
-	    h = 0;
-	    result = NULL;
+	    oserr = h;
 	    PR_DELETE( lm );
-	    lm = NULL;
 	    goto unlock;
 	}
 	lm->name = strdup(name);
@@ -787,8 +808,8 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 
   unlock:
     if (result == NULL) {
-        PR_SetError(PR_LOAD_LIBRARY_ERROR, _MD_ERRNO());
-        DLLErrorInternal(_MD_ERRNO());  /* sets error text */
+        PR_SetError(PR_LOAD_LIBRARY_ERROR, oserr);
+        DLLErrorInternal(oserr);  /* sets error text */
     }
     PR_ExitMonitor(pr_linker_lock);
     return result;
