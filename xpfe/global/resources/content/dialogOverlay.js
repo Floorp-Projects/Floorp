@@ -70,6 +70,12 @@ function moveToAlertPosition()
 	var yOffset = (opener.outerHeight *2)/10;
 	
 	xOffset  = xOffset> 0 ? xOffset : 0;
+	if ((opener.screenX + xOffset + window.outerWidth) > screen.availWidth)
+        xOffset = screen.availWidth - window.outerWidth - opener.screenX;
+    if((opener.screenY + yOffset + window.outerHeight) > screen.availHeight)
+            yOffset = screen.availHeight - window.outerHeight - opener.screenY;
+    xOffset = ( xOffset > 0 ) ? xOffset : 0;
+    yOffset = ( yOffset > 0 ) ? yOffset : 0;
 	dump( "Move window by " + xOffset + ","+yOffset+"\n");
 	dump( "screen x "+ opener.screenX +"screen y "+ opener.screenY +"\n");
 	window.moveTo( opener.screenX + xOffset, opener.screenY + yOffset );
