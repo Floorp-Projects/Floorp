@@ -32,7 +32,8 @@
  * @created         08/Dec/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsLatin1ToUnicodeFactory : public nsIFactory, nsICharsetConverterInfo
+class nsLatin1ToUnicodeFactory : public nsIFactory, 
+public nsICharsetConverterInfo
 {
   NS_DECL_ISUPPORTS
 

@@ -30,7 +30,8 @@
  * Factory class for the nsISO88597ToUnicode objects.
  * 
  */
-class nsISO88597ToUnicodeFactory : public nsIFactory, nsICharsetConverterInfo
+class nsISO88597ToUnicodeFactory : public nsIFactory, 
+public nsICharsetConverterInfo
 {
   NS_DECL_ISUPPORTS
 
