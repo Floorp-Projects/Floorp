@@ -25,13 +25,13 @@
 [% PROCESS global/variables.none.tmpl %]
 
 <form method="get" action="show_bug.cgi">
-  <table width="100%">
+  <table width="100%" cellspacing="4">
     <tr>
       <td>
         Actions:
       </td>
       
-      <td valign="middle" nowrap="nowrap">
+      <td valign="middle">
         <a href="enter_bug.cgi">New</a> | 
         <a href="query.cgi">Search</a> |
         
@@ -48,36 +48,46 @@
         [% END %]
         
         [% IF user && Param('usevotes') %]
-          | <a href="votes.cgi?action=show_user">My Votes</a>
+          | <a href="votes.cgi?action=show_user">My&nbsp;Votes</a>
         [% END %]      
+        
+        [% IF user.login %] 
+            [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' 
+                                                  IF user.groups.tweakparams %]
+            | <a href="relogin.cgi">Log&nbsp;out</a>&nbsp;
+              [% user.login FILTER html %]
+        [% ELSE %]
+            [% IF Param('createemailregexp') %]
+              | <a href="createaccount.cgi">New&nbsp;Account</a>
+            [% END %]
+            | <a href="query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+        [% END %]
       </td>
-
-      <td>&nbsp;</td>
+    </tr>
       
     [% IF user.login %] 
-
+    <tr>
+      <td>
+        Edit:
+      </td>
       <td valign="middle">
-        Edit <a href="userprefs.cgi">prefs</a>
-        [% ', <a href="editparams.cgi">parameters</a>' 
-                                                   IF user.groups.tweakparams %]
-        [% ', <a href="editusers.cgi">users</a>'     IF user.groups.editusers 
+        <a href="userprefs.cgi">Prefs</a>
+        [% ' | <a href="editparams.cgi">Parameters</a>' 
+                                                  IF user.groups.tweakparams %]
+        [% ' | <a href="editusers.cgi">Users</a>'     IF user.groups.editusers 
                                                   || user.can_bless %]
-        [% ', <a href="editproducts.cgi">products</a>' 
-                                                IF user.groups.editcomponents %]
-        [% ', <a href="editflagtypes.cgi">flags</a>'
-                                                IF user.groups.editcomponents %]
-        [% ', <a href="editgroups.cgi">groups</a>' 
-                                                  IF user.groups.creategroups %]
-        [% ', <a href="editkeywords.cgi">keywords</a>' 
-                                                  IF user.groups.editkeywords %]
-        [% Hook.process("edit") %]
-        [% ' | <a href="sanitycheck.cgi">Sanity&nbsp;check</a>' 
-                                                   IF user.groups.tweakparams %]
-
-        | <a href="relogin.cgi">Log&nbsp;out</a>&nbsp;
-          [% user.login FILTER html %]
+        [% ' | <a href="editproducts.cgi">Products</a>' 
+                                               IF user.groups.editcomponents %]
+        [% ' | <a href="editflagtypes.cgi">Flags</a>'
+                                               IF user.groups.editcomponents %]
+        [% ' | <a href="editgroups.cgi">Groups</a>' 
+                                                 IF user.groups.creategroups %]
+        [% ' | <a href="editkeywords.cgi">Keywords</a>' 
+                                                 IF user.groups.editkeywords %]
       </td>
     </tr> 
+    [% END %]
+    
 
     [%# Saved searches %]
     
@@ -88,7 +98,7 @@
         </td>
       [% END %]
       
-      <td colspan="3">
+      <td valign="middle">
         [% IF user.showmybugslink %]
           [% filtered_username = user.login FILTER url_quote %]
           <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;[% terms.Bugs %]</a>
@@ -102,16 +112,6 @@
         [% END %]
       </td>
     </tr>
-
-    [% ELSE %]
-      <td valign="middle" align="right">
-        [% IF Param('createemailregexp') %]
-          <a href="createaccount.cgi">New&nbsp;Account</a> |
-        [% END %]
-        <a href="query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
-      </td>
-    </tr>
-    [% END %]
-
+    
   </table>
 </form>
