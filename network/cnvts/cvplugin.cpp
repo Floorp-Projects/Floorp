@@ -98,7 +98,7 @@ register_converter(char *mime_type, void *data_id)
 
 	if ((mime_type == NULL)||(data_id == NULL))
 	{
-		return False;
+		return PR_FALSE;
 	}
 
 	while (converter != NULL)
@@ -106,7 +106,7 @@ register_converter(char *mime_type, void *data_id)
 		if ((converter->data_id == data_id)&&
 		    (PL_strcmp(converter->mime_type, mime_type) == 0))
 		{
-			return False;
+			return PR_FALSE;
 		}
 		converter = converter->next;
 	}
@@ -115,7 +115,7 @@ register_converter(char *mime_type, void *data_id)
 	converter->data_id = data_id;
 	converter->next = RegisteredConverters;
 	RegisteredConverters = converter;
-	return True;
+	return PR_TRUE;
 }
 
 
@@ -181,7 +181,7 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 	}
 
 	can_use = register_converter(mime_type, (void *)URL_s);
-	if (can_use == False)
+	if (can_use == PR_FALSE)
 	{
 		return NULL;
 	}
