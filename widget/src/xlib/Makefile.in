@@ -42,12 +42,10 @@ CPPSRCS = \
 	nsPopUpMenu.cpp \
 	nsRadioButton.cpp \
 	nsScrollBar.cpp \
-	nsTabWidget.cpp \
 	nsTextAreaWidget.cpp \
 	nsTextHelper.cpp \
 	nsTextWidget.cpp \
 	nsToolkit.cpp \
-	nsTooltipWidget.cpp \
 	nsWidget.cpp \
 	nsWidgetFactory.cpp \
 	nsWindow.cpp \
