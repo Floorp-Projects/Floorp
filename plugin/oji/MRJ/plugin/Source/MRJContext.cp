@@ -47,7 +47,6 @@
 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
-static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
 
 extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
@@ -205,7 +204,7 @@ void MRJContext::processAppletTag()
 					
 					// establish a page context for this applet to run in.
 					nsIJVMPluginTagInfo* jvmTagInfo = NULL;
-					if (mPeer->QueryInterface(kIJVMPluginTagInfoIID, &jvmTagInfo) == NS_OK) {
+					if (mPeer->QueryInterface(nsIJVMPluginTagInfo::GetIID(), &jvmTagInfo) == NS_OK) {
 						PRUint32 documentID;
 						const char* codeBase;
 						const char* archive;
