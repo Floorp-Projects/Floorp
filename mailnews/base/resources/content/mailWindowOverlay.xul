@@ -1748,13 +1748,14 @@
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
       
-      <deck id="deck-junk" oncommand="goDoCommand('button_junk')">
-        <toolbarbutton id="button-junk" class="toolbarbutton-1"
+      <deck id="button-junk" observes="button_junk"
+            oncommand="goDoCommand('button_junk')">
+        <toolbarbutton class="toolbarbutton-1"
                  label="&junkButton.label;"
                  tooltiptext="&junkButton.tooltip;" 
                  observes="button_junk"/>
 
-        <toolbarbutton id="button-junk" class="toolbarbutton-1"
+        <toolbarbutton class="toolbarbutton-1"
                  label="&notJunkButton.label;"
                  tooltiptext="&notJunkButton.tooltip;" 
                  observes="button_junk"/>

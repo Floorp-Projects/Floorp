@@ -588,7 +588,7 @@ function InitMessageMark()
 
 function UpdateJunkToolbarButton()
 {
-  var junkButtonDeck = document.getElementById("deck-junk");
+  var junkButtonDeck = document.getElementById("button-junk");
   junkButtonDeck.selectedIndex = SelectedMessagesAreJunk() ? 1 : 0;
 }
 
