@@ -57,9 +57,6 @@
 #include "xprintutil.h"
 #include "prenv.h" /* for PR_GetEnv */
 
-/* misc defines */
-#define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
-
 /* NS_XPRINT_RGB_DITHER: Macro to check whether we should dither or not.
  * In theory we only have to look at the visual and depth ("TrueColor" with 
  * enougth bits for the colors or GrayScale/StaticGray with enougth bits for
@@ -186,19 +183,17 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::Init()\n"));
   nsresult rv = NS_ERROR_FAILURE;
 
-  int   prefDepth = 8;  /* 24 or 8 for PS DDX, 24, 8, 1 for PCL DDX... 
-                         * I wish current Xprt would have a 1bit/8bit StaticGray 
-                         * visual for the PS DDX... ;-( 
-                         */
-/* I can't get any other visual than the 8bit peudocolor one working... BAD...
- * This env var allows others to test this without hacking their own binaries...
- */
-#ifdef XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING  
-  if( PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_USE_24BIT_VISUAL") != nsnull )
+  int   prefDepth = 24;  /* 24 or 8 for PS DDX, 24, 8, 1 for PCL DDX... 
+                          * I wish current Xprt would have a 1bit/8bit StaticGray 
+                          * visual for the PS DDX... ;-( 
+                          */
+  /* Safeguard for production use (see bug 80562),
+   * Make sure we can switch back to the
+   * extensively tested 8bit Pseudocolor visual on demand... */
+  if( PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_DISABLE_24BIT_VISUAL") != nsnull )
   {
-    prefDepth = 24;
+    prefDepth = 8;
   }
-#endif /* XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING */  
   
   unsigned short width, height;
   XRectangle rect;
@@ -256,10 +251,23 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
   else
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("printing color\n"));
-    xargs.xtemplate.depth   = prefDepth;
-    xargs.xtemplate.c_class = (prefDepth>12)?(TrueColor):(PseudoColor);
-    xargs.xtemplate_mask    = VisualDepthMask|VisualClassMask;
-    mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+    if (prefDepth > 12)
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying TrueColor %d bit\n", prefDepth));
+      xargs.xtemplate.depth   = prefDepth;
+      xargs.xtemplate.c_class = TrueColor;
+      xargs.xtemplate_mask    = VisualDepthMask|VisualClassMask;
+      mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+    }  
+
+    if (!mXlibRgbHandle)
+    {
+      PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("trying PseudoColor 8 bit\n"));
+      xargs.xtemplate.depth   = 8;
+      xargs.xtemplate.c_class = PseudoColor;
+      xargs.xtemplate_mask    = VisualDepthMask|VisualClassMask;
+      mXlibRgbHandle = xxlib_rgb_create_handle(mPDisplay, mScreen, &xargs);
+    }  
   }
   
   /* No XlibRgb handle ? Either we do not have a matching visual or no memory... */
@@ -319,8 +327,17 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
   xattributes.border_pixel     = foreground;
   xattributes.colormap         = xxlib_rgb_get_cmap(mXlibRgbHandle);
   xattributes_mask             = CWBorderPixel | CWBackPixel;
-  if( xattributes.colormap )
+  if( xattributes.colormap != None )
+  {
     xattributes_mask |= CWColormap;
+
+    /* XXX: Why do we need this ? See bug 80562 ("Xprint does not support any
+     * other visuals than Xprt's default one..").*/
+    if (mDepth > 12)
+    {
+      XInstallColormap(mPDisplay, xattributes.colormap);
+    }  
+  }
 
   mDrawable = (Drawable)XCreateWindow(mPDisplay, parent_win, x, y,
                                       width, height, 0,
