@@ -337,7 +337,6 @@ function HandlePermissionKeyPress(e) {
 
 function showFontsAndColors()
 {
-  top.hPrefWindow.registerOKCallbackFunc(saveFontPrefs);
   openDialog("chrome://browser/content/pref/pref-fonts.xul", "", "centerscreen,chrome,modal=yes,dialog=yes");
 }
 
