@@ -40,7 +40,8 @@
       <treecell style="background-color: green"/>
       <treecell style="background-color: red"/>
     </treeitem>
-  </treebody>
+  <<treebody rdf:containment="http://home.netscape.com/NC-rdf#child"
+rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"> >
 
 </tree>
 </window>
