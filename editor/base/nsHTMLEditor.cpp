@@ -1784,8 +1784,23 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
       // Set caret after element, but check for special case 
       //  of inserting table-related elements: set in first cell instead
       if (!SetCaretInTableCell(aElement))
+      {
         res = SetCaretAfterElement(aElement);
-
+        if (NS_FAILED(res)) return res;
+      }
+      // check for inserting a whole table at the end of a block. If so insert a br after it.
+      if (nsHTMLEditUtils::IsTable(node))
+      {
+        PRBool isLast;
+        res = IsLastEditableChild(node, &isLast);
+        if (NS_FAILED(res)) return res;
+        if (isLast)
+        {
+          nsCOMPtr<nsIDOMNode> brNode;
+          res = CreateBR(parentSelectedNode, offsetForInsert+1, address_of(brNode));
+          if (NS_FAILED(res)) return res;
+        }
+      }
     }
   }
   res = mRules->DidDoAction(selection, &ruleInfo, res);
