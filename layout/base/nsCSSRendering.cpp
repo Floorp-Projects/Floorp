@@ -3240,7 +3240,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
 #if (!defined(XP_UNIX) && !defined(XP_BEOS)) || defined(XP_MACOSX)
   // Restore clipping
-  aRenderingContext.PopState(clipState);
+  aRenderingContext.PopState();
 #endif
 
 }
