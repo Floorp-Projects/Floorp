@@ -215,13 +215,14 @@ menubutton:not([disabled="true"]):hover:active {
   border: 0px !important;
 }
 
-toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker:hover {
+toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(0 29px 15px 15px) !important;
 }
 
-toolbarbutton[disabled="true"] > stack > .toolbarbutton-menubutton-dropmarker[disabled="true"],
-toolbarbutton[disabled="true"]:hover > stack > .toolbarbutton-menubutton-dropmarker[disabled="true"]:hover {
-  -moz-image-region: rect(0 44px 15px 30px) !important;
+toolbarbutton[disabled="true"] > stack > .toolbarbutton-menubutton-dropmarker,
+toolbarbutton[disabled="true"]:hover > stack > .toolbarbutton-menubutton-dropmarker:hover {
+  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
+  -moz-image-region: rect(0px 44px 15px 30px) !important;
 }
 
 toolbarbutton[open="true"] > stack > .toolbarbutton-menubutton-dropmarker {
