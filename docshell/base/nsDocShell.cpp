@@ -83,6 +83,7 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIWyciwygChannel.h"
 
 // The following are for bug #13871: Prevent frameset spoofing
 #include "nsICodebasePrincipal.h"
@@ -1123,7 +1124,8 @@ nsDocShell::SetParentURIContentListener(nsIURIContentListener * aParent)
 }
 
 /* [noscript] void setCurrentURI (in nsIURI uri); */
-NS_IMETHODIMP nsDocShell::SetCurrentURI(nsIURI *aURI)
+NS_IMETHODIMP
+nsDocShell::SetCurrentURI(nsIURI *aURI)
 {
     mCurrentURI = aURI;         //This assignment addrefs
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
@@ -3322,8 +3324,32 @@ NS_IMETHODIMP
 nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
+    nsresult rv;
     // Update the busy cursor
     if ((~aStateFlags & (STATE_START | STATE_IS_NETWORK)) == 0) {
+        nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));        
+        if (wcwgChannel && !mLSHE && (mItemType == typeContent)) {
+            nsCOMPtr<nsIURI> uri;
+            wcwgChannel->GetURI(getter_AddRefs(uri));
+        
+            PRBool equalUri = PR_TRUE;
+            // Store the wyciwyg url in session history, only if it is
+            // being loaded fresh for the first time. We don't want 
+            // multiple entries for successive loads
+            if (mCurrentURI &&
+                NS_SUCCEEDED(uri->Equals(mCurrentURI, &equalUri)) &&
+                !equalUri) {
+                // This is a document.write(). Get the made-up url
+                // from the channel and store it in session history.
+                rv = AddToSessionHistory(uri, wcwgChannel, getter_AddRefs(mLSHE));
+                SetCurrentURI(uri);
+                // Save history state of the previous page
+                rv = PersistLayoutHistoryState();
+                if (mOSHE)
+                    mOSHE = mLSHE;
+            }
+        
+      }
         // Page has begun to load
         mBusyFlags = BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD;
         nsCOMPtr<nsIWidget> mainWidget;
