@@ -65,6 +65,7 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class nsLabelFrame : public nsHTMLContainerFrame
 {
@@ -160,10 +161,32 @@ nsLabelFrame::HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus& aEventStatus)
 {
+  // if we don't have a control to send the event to
+  // then what is the point?
   if (!mControlFrame) {
     return NS_OK;
   }
 
+  // check to see if the label is disabled and if not, 
+  // then check to see if the control in the label is disabled
+  if (nsEventStatus_eConsumeNoDefault != aEventStatus) { 
+    if ( nsFormFrame::GetDisabled(this) ) {
+      return NS_OK;
+    } else {
+      nsIFrame * frame;
+      if (NS_OK == mControlFrame->QueryInterface(kIFrameIID, (void**)&frame)) {
+        if ( nsFormFrame::GetDisabled(frame)) {
+          return NS_OK;
+        }
+      } else {
+        // if I can't get the nsIFrame something is really wrong
+        // so leave
+        return NS_OK;
+      }
+    }
+  }
+
+  // send the mouse click events down into the control
   aEventStatus = nsEventStatus_eIgnore;
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
