@@ -29,5 +29,29 @@
     </content>
   </binding>
 
+  <binding name="treecell-indented-folder">
+    <content>
+      <xul:treeindentation/>
+      <xul:titledbutton class="twisty" allowevents="true"/>
+      <xul:titledbutton class="tree-icon tree-button" inherits="crop,value,align,src" 
+                    flex="1" align="left" crop="right"/>
+    </content>
+  </binding>
+
+  <binding name="treecell-indented-leaf">
+    <content>
+      <xul:treeindentation/>
+      <xul:titledbutton class="twisty" disabled="true" allowevents="true"/>
+      <xul:titledbutton class="tree-icon tree-button" inherits="crop,value,align,src" 
+                    flex="1" align="left" crop="right"/>
+    </content>
+  </binding>
+
+  <binding name="treecell">
+    <content>
+      <xul:titledbutton class="tree-button" inherits="crop,value,align,src" 
+                    flex="1" align="left" crop="right"/>
+    </content>
+  </binding>
 
 </bindings>
