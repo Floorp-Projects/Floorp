@@ -222,7 +222,7 @@ nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
 
   }
 }
@@ -467,11 +467,10 @@ nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::GetFont(nsIPresContext*        aPresContext, 
-                             nsFont&                aFont)
+nsFileControlFrame::GetFont(nsIPresContext* aPresContext, 
+                            const nsFont*&  aFont)
 {
-  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-  return NS_OK;
+  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 nscoord 
 nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
