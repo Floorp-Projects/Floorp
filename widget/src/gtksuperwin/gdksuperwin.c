@@ -25,7 +25,7 @@ static void gdk_superwin_expose_area  (GdkSuperWin *superwin,
                                        gint         width,
                                        gint         height);
 
-static int  gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, unsigned long serial);
+static int  gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, XEvent *xevent);
 static void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial);
 
 typedef struct _GdkSuperWinTranslate GdkSuperWinTranslate;
@@ -314,7 +314,7 @@ gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
     /* if we pulled something out of the rect queue for this
        window it means that it was handled earlier as part of a scroll
        so just ignore it. */
-    if (!gdk_superwin_clear_rect_queue(superwin, xevent->xany.serial))
+    if (!gdk_superwin_clear_rect_queue(superwin, xevent))
     {
       /* otherwise, translate the coords for this expose normally. */
       tmp_list = superwin->translate_queue;
@@ -404,7 +404,7 @@ gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial)
   }
 }
 
-int gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, unsigned long serial)
+int gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, XEvent *xevent)
 {
   GdkSuperWinRect *rect;
   GList *tmp_list;
@@ -415,7 +415,15 @@ int gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, unsigned long serial)
     tmp_list = superwin->rect_queue;
     while (tmp_list) {
       rect = tmp_list->data;
-      if (serial == rect->serial) {
+      /* if the serial matches something in the list and the rect is the
+         same size then this is the expose event that was put into the xlate
+         queue.  remove it and note via the return value that something was
+         removed from the queue */
+      if (xevent->xany.serial == rect->serial &&
+          xevent->xexpose.x == rect->x &&
+          xevent->xexpose.y == rect->y &&
+          xevent->xexpose.width == rect->width &&
+          xevent->xexpose.height == rect->height) {
         retval = 1;
         g_free(tmp_list->data);
         superwin->rect_queue = g_list_remove_link(superwin->rect_queue, tmp_list);
