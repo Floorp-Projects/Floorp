@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.22 2002/01/10 00:43:39 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.23 2002/01/23 21:43:30 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -1888,6 +1888,114 @@ CERT_EncodeTrustString(CERTCertTrust *trust)
     return(retstr);
 }
 
+/* in 3.4, this will only set trust */
+SECStatus
+CERT_SaveImportedCert(CERTCertificate *cert, SECCertUsage usage,
+		      PRBool caOnly, char *nickname)
+{
+    SECStatus rv;
+    PRBool saveit;
+    CERTCertTrust trust;
+    PRBool isCA;
+    unsigned int certtype;
+    
+    isCA = CERT_IsCACert(cert, NULL);
+    if ( caOnly && ( !isCA ) ) {
+	return(SECSuccess);
+    }
+    
+    saveit = PR_TRUE;
+    
+    PORT_Memset((void *)&trust, 0, sizeof(trust));
+
+    certtype = cert->nsCertType;
+
+    /* if no CA bits in cert type, then set all CA bits */
+    if ( isCA && ( ! ( certtype & NS_CERT_TYPE_CA ) ) ) {
+	certtype |= NS_CERT_TYPE_CA;
+    }
+
+    /* if no app bits in cert type, then set all app bits */
+    if ( ( !isCA ) && ( ! ( certtype & NS_CERT_TYPE_APP ) ) ) {
+	certtype |= NS_CERT_TYPE_APP;
+    }
+
+    switch ( usage ) {
+      case certUsageEmailSigner:
+      case certUsageEmailRecipient:
+	if ( isCA ) {
+	    if ( certtype & NS_CERT_TYPE_EMAIL_CA ) {
+		trust.emailFlags = CERTDB_VALID_CA;
+	    }
+	} else {
+	    if ( cert->emailAddr == NULL ) {
+		saveit = PR_FALSE;
+	    }
+	    
+	    if ( certtype & NS_CERT_TYPE_EMAIL ) {
+		trust.emailFlags = CERTDB_VALID_PEER;
+		if ( ! ( cert->rawKeyUsage & KU_KEY_ENCIPHERMENT ) ) {
+		    /* don't save it if KeyEncipherment is not allowed */
+		    saveit = PR_FALSE;
+		}
+	    }
+	}
+	break;
+      case certUsageUserCertImport:
+	if ( isCA ) {
+	    if ( certtype & NS_CERT_TYPE_SSL_CA ) {
+		trust.sslFlags = CERTDB_VALID_CA;
+	    }
+	    
+	    if ( certtype & NS_CERT_TYPE_EMAIL_CA ) {
+		trust.emailFlags = CERTDB_VALID_CA;
+	    }
+	    
+	    if ( certtype & NS_CERT_TYPE_OBJECT_SIGNING_CA ) {
+		trust.objectSigningFlags = CERTDB_VALID_CA;
+	    }
+	    
+	} else {
+	    if ( certtype & NS_CERT_TYPE_SSL_CLIENT ) {
+		trust.sslFlags = CERTDB_VALID_PEER;
+	    }
+	    
+	    if ( certtype & NS_CERT_TYPE_EMAIL ) {
+		trust.emailFlags = CERTDB_VALID_PEER;
+	    }
+	    
+	    if ( certtype & NS_CERT_TYPE_OBJECT_SIGNING ) {
+		trust.objectSigningFlags = CERTDB_VALID_PEER;
+	    }
+	}
+	break;
+      case certUsageAnyCA:
+	trust.sslFlags = CERTDB_VALID_CA;
+	break;
+      case certUsageSSLCA:
+	trust.sslFlags = CERTDB_VALID_CA | 
+			CERTDB_TRUSTED_CA | CERTDB_TRUSTED_CLIENT_CA;
+	break;
+      default:	/* XXX added to quiet warnings; no other cases needed? */
+	break;
+    }
+
+    if ( saveit ) {
+	rv = CERT_ChangeCertTrust(cert->dbhandle, cert, &trust);
+	if ( rv != SECSuccess ) {
+	    goto loser;
+	}
+    }
+
+    rv = SECSuccess;
+    goto done;
+
+loser:
+    rv = SECFailure;
+done:
+    return(rv);
+}
+
 SECStatus
 CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 		 unsigned int ncerts, SECItem **derCerts,
@@ -1926,6 +2034,9 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 		} else {
 		    rv = PK11_ImportCert(PK11_GetInternalKeySlot(),certs[i],
 				CK_INVALID_HANDLE,nickname,PR_TRUE);
+		}
+		if (rv == SECSuccess) {
+		    CERT_SaveImportedCert(certs[i], usage, caOnly, NULL);
 		}
 		/* don't care if it fails - keep going */
 	    }
