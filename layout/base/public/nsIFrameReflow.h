@@ -67,6 +67,7 @@ struct nsReflowMetrics {
 
 /**
  * The reason the frame is being reflowed.
+ *
  * XXX Should probably be a #define so it can be extended for specialized
  * reflow interfaces...
  *
@@ -149,7 +150,6 @@ struct nsReflowState {
  * extension bits).
  *
  * @see #Reflow()
- * @see #CreateContinuingFrame()
  */
 typedef PRUint32 nsReflowStatus;
 
