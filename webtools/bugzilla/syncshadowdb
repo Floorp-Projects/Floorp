@@ -86,8 +86,12 @@ $::param{'queryagainstshadowdb'} = 1; # Force us to be able to use the
 
 ConnectToDatabase(1);
 
-Verbose("Aquiring lock.");
-SendSQL("SELECT GET_LOCK('synclock', 1)");
+Verbose("Acquiring lock");
+if ( $syncall == 1) {
+    SendSQL("SELECT GET_LOCK('synclock', 2700)");
+} else {
+    SendSQL("SELECT GET_LOCK('synclock', 1)");
+}
 if (!FetchOneColumn()) {
     Verbose("Couldn't get the lock to do the shadow database syncing.");
     exit;
