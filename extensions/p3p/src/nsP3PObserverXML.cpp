@@ -102,7 +102,11 @@ nsP3PObserverXML::~nsP3PObserverXML( ) {
 
   if (mObserverService) {
     mObserverService->RemoveObserver( this,
-                                      mObserverTopic.GetUnicode( ) );
+                                      NS_LITERAL_STRING("text/xml") );
+    mObserverService->RemoveObserver( this,
+                                      NS_LITERAL_STRING("application/xml") );
+    mObserverService->RemoveObserver( this,
+                                      NS_LITERAL_STRING("application/xhtml+xml") );
   }
 }
 
@@ -122,9 +126,6 @@ nsP3PObserverXML::Init( ) {
           PR_LOG_NOTICE,
           ("P3PObserverXML:  Init, initializing.\n") );
 
-  // Set the topic to be observed
-  mObserverTopic.AssignWithConversion( kXMLTextContentType );
-
   // Get the observer service
   mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
                                    &rv );
@@ -132,7 +133,15 @@ nsP3PObserverXML::Init( ) {
   if (NS_SUCCEEDED( rv )) {
     // Register to observer XML tags
     rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.GetUnicode( ) );
+                                      NS_LITERAL_STRING("text/xml") );
+    if (NS_SUCCEEDED(rv)) {
+      rv = mObserverService->AddObserver( this,
+                                        NS_LITERAL_STRING("application/xml") );
+      if (NS_SUCCEEDED(rv)) {
+        rv = mObserverService->AddObserver( this,
+                                          NS_LITERAL_STRING("application/xhtml+xml") );
+      }
+    }
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

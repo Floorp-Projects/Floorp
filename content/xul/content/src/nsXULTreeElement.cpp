@@ -241,7 +241,7 @@ nsXULTreeElement::AddItemToSelection(nsIDOMXULElement* aTreeItem)
 
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, NS_LITERAL_STRING("true"), PR_TRUE);
 
   if (!mSuppressOnSelect)
     FireOnSelectHandler();
@@ -267,10 +267,10 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
   mSelectedItems->GetLength(&length);
   
   nsAutoString multiple;
-  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("multiple"), multiple);
+  mOuter->GetAttribute(NS_LITERAL_STRING("multiple"), multiple);
 
   nsAutoString isSelected;
-  aTreeItem->GetAttribute(NS_ConvertASCIItoUCS2("selected"), isSelected);
+  aTreeItem->GetAttribute(NS_LITERAL_STRING("selected"), isSelected);
 
   PRBool suppressSelect = mSuppressOnSelect;
   SetSuppressOnSelect(PR_TRUE);
@@ -292,7 +292,7 @@ NS_IMETHODIMP
 nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)
 {
   nsAutoString multiple;
-  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("multiple"), multiple);
+  mOuter->GetAttribute(NS_LITERAL_STRING("multiple"), multiple);
 
   if (!multiple.EqualsWithConversion("true")) {
     // We're a single selection tree only. This
@@ -479,7 +479,7 @@ nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
   NS_IF_ADDREF(aCurrentItem);
   current = do_QueryInterface(mCurrentItem);
   if (current) 
-    current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+    current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_LITERAL_STRING("true"), PR_TRUE);
   return NS_OK;
 }
 

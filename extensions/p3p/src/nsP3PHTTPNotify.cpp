@@ -726,7 +726,9 @@ nsP3PHTTPNotify::IsHTMLorXML( nsCString&  aContentType ) {
   }
 
   return (csContentType.EqualsIgnoreCase( "text/html" ) ||
-          csContentType.EqualsIgnoreCase( "text/xml" ));
+          csContentType.EqualsIgnoreCase( "text/xml" )  ||
+          csContentType.EqualsIgnoreCase( "application/xml" )  ||
+          csContentType.EqualsIgnoreCase( "application/xhtml+xml" ));
 }
 
 // P3P HTTP Notify: GetDocShellTreeItem

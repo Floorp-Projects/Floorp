@@ -163,7 +163,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows/mail
-    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
+    mLineBreak.AssignWithConversion("\r\n");
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) // Mac
     mLineBreak.Assign(PRUnichar('\r'));
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) // Unix/DOM
@@ -666,27 +666,27 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     }
   }
   else if (type == eHTMLTag_q) {
-    Write(NS_ConvertASCIItoUCS2("\""));
+    Write(NS_LITERAL_STRING("\""));
   }
   else if (type == eHTMLTag_sup && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("^"));
+    Write(NS_LITERAL_STRING("^"));
   }
   else if (type == eHTMLTag_sub && mStructs && !IsCurrentNodeConverted()) { 
-    Write(NS_ConvertASCIItoUCS2("_"));
+    Write(NS_LITERAL_STRING("_"));
   }
   else if (type == eHTMLTag_code && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("|"));
+    Write(NS_LITERAL_STRING("|"));
   }
   else if ((type == eHTMLTag_strong || type == eHTMLTag_b)
            && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("*"));
+    Write(NS_LITERAL_STRING("*"));
   }
   else if ((type == eHTMLTag_em || type == eHTMLTag_i)
            && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("/"));
+    Write(NS_LITERAL_STRING("/"));
   }
   else if (type == eHTMLTag_u && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("_"));
+    Write(NS_LITERAL_STRING("_"));
   }
 
   return NS_OK;
@@ -796,32 +796,32 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   }
   else if (type == eHTMLTag_a && !IsCurrentNodeConverted() && !mURL.IsEmpty()) {
     nsAutoString temp; 
-    temp.Assign(NS_LITERAL_STRING(" <"));
+    temp.AssignWithConversion(" <");
     temp += mURL;
     temp.Append(PRUnichar('>'));
     Write(temp);
     mURL.Truncate();
   }
   else if (type == eHTMLTag_q) {
-    Write(NS_ConvertASCIItoUCS2("\""));
+    Write(NS_LITERAL_STRING("\""));
   }
   else if ((type == eHTMLTag_sup || type == eHTMLTag_sub) 
            && mStructs && !IsCurrentNodeConverted()) {
     Write(kSpace);
   }
   else if (type == eHTMLTag_code && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("|"));
+    Write(NS_LITERAL_STRING("|"));
   }
   else if ((type == eHTMLTag_strong || type == eHTMLTag_b)
            && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("*"));
+    Write(NS_LITERAL_STRING("*"));
   }
   else if ((type == eHTMLTag_em || type == eHTMLTag_i)
            && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("/"));
+    Write(NS_LITERAL_STRING("/"));
   }
   else if (type == eHTMLTag_u && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2("_"));
+    Write(NS_LITERAL_STRING("_"));
   }
 
   return NS_OK;

@@ -424,7 +424,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
   }
 
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBindingDocument));
-  rec->RemoveEventListener(NS_ConvertASCIItoUCS2("load"), (nsIDOMLoadListener*)this, PR_FALSE);
+  rec->RemoveEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)this, PR_FALSE);
 
   mBindingRequests.Clear();
   mDocument = nsnull;
@@ -1244,7 +1244,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
     
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
-    rec->AddEventListener(NS_ConvertASCIItoUCS2("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
+    rec->AddEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
 
     // Add ourselves to the list of loading docs.
     nsCOMPtr<nsIBindingManager> bindingManager;

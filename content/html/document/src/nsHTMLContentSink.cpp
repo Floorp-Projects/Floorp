@@ -2441,7 +2441,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
 
   // Make head part
-  rv = mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("head"),
+  rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("head"),
                                      nsnull, kNameSpaceID_None,
                                      *getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3819,7 +3819,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("base"),
+    mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("base"),
                                   nsnull, kNameSpaceID_None,
                                   *getter_AddRefs(nodeInfo));
 
@@ -4081,9 +4081,9 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
   ParseLinkTypes(aRel, linkTypes);
   PRBool isAlternate = PR_FALSE;
 
-  if (-1 != linkTypes.IndexOf(NS_ConvertASCIItoUCS2("stylesheet"))) {  // is it a stylesheet link?
+  if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet"))) {  // is it a stylesheet link?
 
-    if (-1 != linkTypes.IndexOf(NS_ConvertASCIItoUCS2("alternate"))) { // if alternate, does it have title?
+    if (-1 != linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) { // if alternate, does it have title?
       if (0 == aTitle.Length()) { // alternates must have title
         return NS_OK; //return without error, for now
       } else {
@@ -4128,7 +4128,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
       }
 
-      if (-1 == linkTypes.IndexOf(NS_ConvertASCIItoUCS2("alternate"))) {
+      if (-1 == linkTypes.IndexOf(NS_LITERAL_STRING("alternate"))) {
         if (0 < aTitle.Length()) {  // possibly preferred sheet
           if (0 == mPreferredStyle.Length()) {
             mPreferredStyle = aTitle;
@@ -4299,7 +4299,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
   if (nsnull != parent) {
     // Create content object
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    rv = mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("meta"), nsnull,
+    rv = mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("meta"), nsnull,
                                        kNameSpaceID_None,
                                        *getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(rv, rv);

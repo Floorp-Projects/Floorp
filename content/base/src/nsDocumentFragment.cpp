@@ -180,7 +180,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nimgr->GetNodeInfo(NS_ConvertASCIItoUCS2("#document-fragment"),
+  rv = nimgr->GetNodeInfo(NS_LITERAL_STRING("#document-fragment"),
                           nsnull, kNameSpaceID_None,
                           *getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);

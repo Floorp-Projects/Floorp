@@ -1208,6 +1208,8 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
         theDTDClassID=&kNavDTDCID;
       }
       else if(aMimeType->EqualsWithConversion(kXMLTextContentType) ||
+        aMimeType->EqualsWithConversion(kXMLApplicationContentType) ||
+        aMimeType->EqualsWithConversion(kXHTMLApplicationContentType) ||
         aMimeType->EqualsWithConversion(kXULTextContentType) ||
         aMimeType->EqualsWithConversion(kRDFTextContentType)) {
         theDTDClassID=&kWellFormedDTDCID;

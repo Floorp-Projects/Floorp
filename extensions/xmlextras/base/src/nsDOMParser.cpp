@@ -27,7 +27,6 @@
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "nsIByteArrayInputStream.h"
-
 #include "nsIXPConnect.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIServiceManager.h"
@@ -363,7 +362,9 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   nsCOMPtr<nsIPrincipal> principal;
 
   // For now, we can only create XML documents.
-  if (nsCRT::strcmp(contentType, "text/xml") != 0) {
+  if (nsCRT::strcmp(contentType, "text/xml") != 0 &&
+    nsCRT::strcmp(contentType, "application/xml") != 0 &&
+    nsCRT::strcmp(contentType, "application/xhtml+xml") != 0) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 

@@ -4015,7 +4015,7 @@ nsresult DocumentViewerImpl::GetSelectionDocument(nsIDeviceContextSpec * aDevSpe
   if (!htmlElement) { return NS_ERROR_NULL_POINTER; }
     // create the head
 
-  nimgr->GetNodeInfo(NS_ConvertASCIItoUCS2("head"), nsnull,
+  nimgr->GetNodeInfo(NS_LITERAL_STRING("head"), nsnull,
                      kNameSpaceID_None, *getter_AddRefs(nodeInfo));
 
   rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), nodeInfo);
