@@ -78,7 +78,7 @@ class nsIMemory;
 class NS_COM nsRecyclingAllocator {
  protected:
     struct Block {
-      PRUint32 bytes;
+      PRSize bytes;
     };
 
     // Make |BlockStoreNode| a |friend| so it can access |Block|.
@@ -87,7 +87,7 @@ class NS_COM nsRecyclingAllocator {
 
     struct BlockStoreNode {
       BlockStoreNode() : bytes(0), block(nsnull), next(nsnull) {};
-      PRUint32 bytes;
+      PRSize bytes;
       Block *block;
       BlockStoreNode *next;
     };
@@ -150,10 +150,10 @@ class NS_COM nsRecyclingAllocator {
     nsresult Init(PRUint32 nbucket, PRUint32 recycleAfter, const char *id);
 
     // Allocation and free routines
-    void* Malloc(PRUint32 size, PRBool zeroit = PR_FALSE);
+    void* Malloc(PRSize size, PRBool zeroit = PR_FALSE);
     void  Free(void *ptr);
 
-    void* Calloc(PRUint32 items, PRUint32 size)
+    void* Calloc(PRUint32 items, PRSize size)
     {
         return Malloc(items * size, PR_TRUE);
     }
@@ -168,7 +168,7 @@ class NS_COM nsRecyclingAllocator {
 
     // Freelist management
     // FindFreeBlock: return a free block that can hold bytes (best fit)
-    Block* FindFreeBlock(PRUint32 bytes);
+    Block* FindFreeBlock(PRSize bytes);
     // AddToFreeList: adds block into our freelist for future retrieval.
     //  Returns PR_TRUE is addition was successful. PR_FALSE otherewise.
     PRBool AddToFreeList(Block* block);
