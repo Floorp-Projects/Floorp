@@ -788,27 +788,28 @@ nsLDAPDataSource.prototype = {
             return (delegate != null);
         }
 
-		// Find a different arc. See if we're looking for an LDAP attribute
-		// arc. If so, get the message delegate for aSource, if we find one
-		// get the attribute array for the specified LDAP attribute and
-		// return true if it contains at least one value.
-		var refStart = aArc.Value.indexOf("#");
-		if (aArc.Value.slice(0, refStart + 1) == LDAPATTR_NAMESPACE_URI) {
-			try {
-				delegate = aSource.GetDelegate("message.ldap",
-						Components.interfaces.nsILDAPMessage);
-			}
-			catch (e) {
-			}
-			if (delegate != null) {
-				var attributeName = aArc.Value.slice(refStart + 1);
-				var attributeArray = this.getAttributeArray(delegate, 
-															attributeName);
-				if (attributeArray.length > 0) {
-					return true;
-				}
-			}
-		}
+        // Find a different arc. See if we're looking for an LDAP attribute
+        // arc. If so, get the message delegate for aSource, if we find one
+        // get the attribute array for the specified LDAP attribute and
+        // return true if it contains at least one value.
+        var refStart = aArc.Value.indexOf("#");
+        if (aArc.Value.slice(0, refStart + 1) == LDAPATTR_NAMESPACE_URI) {
+            try {
+                delegate = aSource.GetDelegate("message.ldap",
+                        Components.interfaces.nsILDAPMessage);
+            }
+            catch (e) {
+            }
+            if (delegate != null) {
+                var attributeName = aArc.Value.slice(refStart + 1);
+                var attributeArray = this.getAttributeArray(delegate, 
+                                                            attributeName);
+                if (attributeArray.length > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     },
 
     /**
@@ -1202,28 +1203,28 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
         switch (queryType) {
             case MESSAGE:
-	            if (this.mMessagesHash.hasOwnProperty(aOuter.Value)) {
-	                return (this.mMessagesHash[aOuter.Value].QueryInterface(aIID));
-	            }
-	            break;
+                if (this.mMessagesHash.hasOwnProperty(aOuter.Value)) {
+                    return (this.mMessagesHash[aOuter.Value].QueryInterface(aIID));
+                }
+                break;
             case FLAT_LIST:
-	            if (this.mMessagesListHash.hasOwnProperty(aOuter.Value)) {
-	                return (this.mMessagesListHash[aOuter.Value].QueryInterface(aIID));
-	            }
-	            break;
+                if (this.mMessagesListHash.hasOwnProperty(aOuter.Value)) {
+                    return (this.mMessagesListHash[aOuter.Value].QueryInterface(aIID));
+                }
+                break;
             case RECURSIVE_LIST:
-	            queryURL = Components.classes["@mozilla.org/network/ldap-url;1"]
-	                  .createInstance(Components.interfaces.nsILDAPURL);
-	            queryURL.spec = aOuter.Value;
-	            if (queryURL.scope == SCOPE_BASE) {
-	                // Retarget the URL, asking for recursive children on
-	                // a base URL should descend, so we do a one-level search.
-	                queryURL.scope = SCOPE_ONELEVEL;
-	            }
-	            if (this.mMessagesListHash.hasOwnProperty(queryURL.spec)) {
-	                return (this.mMessagesListHash[queryURL.spec].QueryInterface(aIID));
-	            }
-	            break;
+                queryURL = Components.classes["@mozilla.org/network/ldap-url;1"]
+                      .createInstance(Components.interfaces.nsILDAPURL);
+                queryURL.spec = aOuter.Value;
+                if (queryURL.scope == SCOPE_BASE) {
+                    // Retarget the URL, asking for recursive children on
+                    // a base URL should descend, so we do a one-level search.
+                    queryURL.scope = SCOPE_ONELEVEL;
+                }
+                if (this.mMessagesListHash.hasOwnProperty(queryURL.spec)) {
+                    return (this.mMessagesListHash[queryURL.spec].QueryInterface(aIID));
+                }
+                break;
         }
 
         if (queryURL == null) {
