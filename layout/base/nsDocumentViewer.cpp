@@ -1418,7 +1418,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
 #if SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
                      // (this part needs to be added)
   if (aIsSubDoc == nsnull) {
-    NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
+    NS_ENSURE_SUCCESS( aDContext->BeginDocument(nsnull), NS_ERROR_FAILURE );
   }
 #endif
 
@@ -1523,7 +1523,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
   if (!aIsSubDoc || (aIsSubDoc && canPrintFrame)) {
 #ifndef SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
                          // (this part needs to be removed)
-    NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
+    NS_ENSURE_SUCCESS( aDContext->BeginDocument(nsnull), NS_ERROR_FAILURE );
 #endif
 
     if (docTitleStr != nsnull) {
