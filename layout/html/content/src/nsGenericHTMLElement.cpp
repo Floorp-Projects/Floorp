@@ -1975,8 +1975,7 @@ nsGenericHTMLElement::GetStyleHintForCommonAttributes(const nsIContent* aNode,
     *aHint = NS_STYLE_HINT_VISUAL;
   }
   else {
-    // XXX Make sure we at least set it to something
-    *aHint = NS_STYLE_HINT_REFLOW;
+    *aHint = NS_STYLE_HINT_CONTENT; // only frames will get notified...
     setHint = PR_FALSE;
   }
   return setHint;

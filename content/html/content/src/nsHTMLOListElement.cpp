@@ -240,11 +240,11 @@ nsHTMLOListElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::start) {
+  if ((aAttribute == nsHTMLAtoms::start) ||
+      (aAttribute == nsHTMLAtoms::compact)) {
     *aHint = NS_STYLE_HINT_CONTENT;
   }
-  else if ((aAttribute == nsHTMLAtoms::type) ||
-           (aAttribute == nsHTMLAtoms::compact)) {
+  else if (aAttribute == nsHTMLAtoms::type) {
     *aHint = NS_STYLE_HINT_REFLOW;
   }
   else {

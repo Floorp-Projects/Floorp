@@ -303,7 +303,8 @@ nsHTMLTableColGroupElement::GetStyleHintForAttributeChange(
     // Do nothing
   }
   else {
-    *aHint = NS_STYLE_HINT_REFLOW;
+    // XXX put in real handling for known attributes, return CONTENT for anything else
+    *aHint = NS_STYLE_HINT_CONTENT;
   }
   return NS_OK;
 }

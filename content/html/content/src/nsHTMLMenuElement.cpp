@@ -214,7 +214,7 @@ nsHTMLMenuElement::GetStyleHintForAttributeChange(
     PRInt32 *aHint) const
 {
   if (aAttribute == nsHTMLAtoms::compact) {
-    *aHint = NS_STYLE_HINT_REFLOW;
+    *aHint = NS_STYLE_HINT_CONTENT;
   }
   else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
