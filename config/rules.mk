@@ -502,14 +502,20 @@ else
 AR_LIST		:= ar t
 AR_EXTRACT	:= ar x
 endif
-SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib}; done;)
+ifeq ($(OS_ARCH),OSF1)
+CLEANUP1	:= | egrep -v '(________64ELEL_)'
+CLEANUP2	:= rm -f ________64ELEL_
+else
+CLEANUP2	:= true
+endif
+SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 
 $(LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
-	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; done
+	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
 endif
 	$(AR) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
