@@ -200,7 +200,7 @@ sub show_graph {
   print "</li>\n";
 
   print "<li>\n";
-  print "<a href=\"rawdata.cgi?tbox=$TBOX&testname=$TESTNAME&days=$DAYS\">Print the raw data for this plot.</a>";
+  print "<a href=\"rawdata.cgi?tbox=$TBOX&testname=$TESTNAME&days=$DAYS\">Show the raw data for this plot.</a>";
   print "</li>\n";
 
   print "</font>";
