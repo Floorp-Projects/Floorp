@@ -22,6 +22,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMDocument.h"
 #include "nsMsgI18N.h"
+#include "nsMsgCompCID.h"
 #include "nsMsgSend.h"
 #include "nsIMessenger.h"	//temporary!
 #include "nsIMessage.h"		//temporary!

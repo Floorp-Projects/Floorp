@@ -27,10 +27,6 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 
-#define NS_MSGQUOTE_CID \
-  {0x1C7ABF0C, 0x21E5, 0x11d3, \
-    { 0x8E, 0xF1, 0x00, 0xA0, 0x24, 0xA7, 0xD1, 0x44 }}
-
 class nsMsgQuote;
 
 class nsMsgQuoteListener: public nsIMimeStreamConverterListener
