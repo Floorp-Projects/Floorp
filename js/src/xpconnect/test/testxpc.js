@@ -125,7 +125,8 @@ echo.SendManyTypes(send_params[0],
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
-    if((""+reciever_results[i]) != (""+send_params[i])) {
+    if(((""+reciever_results[i]).toLowerCase()) != 
+        ((""+send_params[i]).toLowerCase())) {
         if(all_ok)
             print("SendManyTypes - failed...");
         all_ok = false;
@@ -186,7 +187,8 @@ echo.SendInOutManyTypes(inout_params[0] ,
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
-    if((""+reciever_results[i]) != (""+send_params[i])) {
+    if(((""+reciever_results[i]).toLowerCase()) != 
+        ((""+send_params[i]).toLowerCase())) {
         if(all_ok)
             print("SendInOutManyTypes - failed...");
         all_ok = false;
@@ -195,7 +197,8 @@ for(i = 0; i < 16; i++) {
 }
 
 for(i = 0; i < 16; i++) {
-    if((""+resend_params[i]) != (""+inout_params[i].value)) {
+    if(((""+resend_params[i]).toLowerCase()) != 
+        ((""+inout_params[i].value).toLowerCase())) {
         if(all_ok)
             print("SendInOutManyTypes - failed...");
         all_ok = false;
@@ -281,6 +284,85 @@ catch(e) {
 if(all_ok)
     print("FailInJSTest - passed");
 
+////////////////////
+// nsID tests...
+
+function idTest(name, iid, same)
+{
+    result = true;
+    var idFromName = new nsID(name);
+    var idFromIID  = new nsID(iid);
+
+    if(!idFromName.isValid() || !idFromIID.isValid()) {
+        return (same && idFromName.isValid() == idFromIID.isValid()) ||
+               (!same && idFromName.isValid() != idFromIID.isValid());
+    }
+
+    if(same != idFromName.equals(idFromIID) ||
+       same != idFromIID.equals(idFromName)) {
+        print("iid equals test failed for "+name+" "+iid);
+        result = false;
+    }
+
+    nameNormalized = name.toLowerCase();
+    iidNormalized  = iid.toLowerCase();
+
+    idFromName_NameNormalized = idFromName.toName() ? 
+                                    idFromName.toName().toLowerCase() :
+                                    idFromName.toName();
+
+    idFromIID_NameNormalized = idFromIID.toName() ? 
+                                    idFromIID.toName().toLowerCase() :
+                                    idFromIID.toName();
+
+    idFromName_StringNormalized = idFromName.toString() ? 
+                                    idFromName.toString().toLowerCase() :
+                                    idFromName.toString();
+
+    idFromIID_StringNormalized = idFromIID.toString() ? 
+                                    idFromIID.toString().toLowerCase() :
+                                    idFromIID.toString();
+
+    if(idFromName_NameNormalized != nameNormalized ||
+       same != (idFromIID_NameNormalized == nameNormalized)) {
+        print("iid toName test failed for "+name+" "+iid);
+        result = false;
+    }
+
+    if(idFromIID_StringNormalized != iidNormalized ||
+       same != (idFromName_StringNormalized == iidNormalized)) {
+        print("iid toString test failed for "+name+" "+iid);
+        result = false;
+    }
+    
+    if(!idFromName.equals(new nsID(idFromName)) || 
+       !idFromIID.equals(new nsID(idFromIID))) {
+        print("new id from id test failed for "+name+" "+iid);
+        result = false;
+    }
+
+    return result;
+}    
+
+var all_ok = true;
+// these 4 should be valid and the same
+all_ok = idTest("nsISupports",   "{00000000-0000-0000-c000-000000000046}", true)  && all_ok;
+all_ok = idTest("nsITestXPCFoo", "{159E36D0-991E-11d2-AC3F-00C09300144B}", true)  && all_ok;
+all_ok = idTest("nsITestXPCFoo2","{5F9D20C0-9B6B-11d2-9FFE-000064657374}", true)  && all_ok;
+all_ok = idTest("nsIEcho",       "{CD2F2F40-C5D9-11d2-9838-006008962422}", true)  && all_ok;
+// intentional mismatches
+all_ok = idTest("nsISupports",   "{CD2F2F40-C5D9-11d2-9838-006008962422}", false) && all_ok;
+all_ok = idTest("nsITestXPCFoo", "{00000000-0000-0000-c000-000000000046}", false) && all_ok;
+// intentional bad name
+all_ok = idTest("bogus",         "{CD2F2F40-C5D9-11d2-9838-006008962422}", false) && all_ok;
+// intentional bad iid
+all_ok = idTest("nsISupports",   "{XXXXXXXX-C5D9-11d2-9838-006008962422}", false) && all_ok;
+// intentional bad name AND iid
+all_ok = idTest("bogus",         "{XXXXXXXX-C5D9-11d2-9838-006008962422}", true)  && all_ok;
+
+print("nsID tests - "+(all_ok ? "passed" : "failed"));
+
+/***************************************************************************/
 
 print(".......................................");
 print("simple speed tests...");

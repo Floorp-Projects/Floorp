@@ -24,58 +24,158 @@
 class IDData
 {
 public:
-    IDData();   // not implemented
-    IDData(const nsID& aID);
-    IDData(JSContext *cx, const IDData& r);
-    ~IDData();  // no virtual functions
+    static IDData* NewIDData(JSContext *cx, const nsID& id);
+    static IDData* NewIDData(JSContext *cx, const IDData& data);
+    static IDData* NewIDData(JSContext *cx, JSString* str);
+    static void    DeleteIDData(JSContext *cx, IDData* data);
 
-    JSBool  GetString(JSContext *cx, jsval *rval);
+    void  GetNameString(JSContext *cx, jsval *rval);
+    void  GetIDString(JSContext *cx, jsval *rval);
     const nsID&  GetID() const {return mID;}
     JSBool  Equals(const IDData& r);
-    void    Cleanup(JSContext *cx);
+
+    IDData();   // not implemented
+    ~IDData();  // no virtual functions
 private:
+    IDData(JSContext *cx, const nsID& aID, 
+           JSString* aIDString, JSString* aNameString);
+private:
+    static JSString* gNoString;
     nsID      mID;
-    JSString* mStr;
+    JSString* mIDString;
+    JSString* mNameString;
 };
 
-IDData::IDData(const nsID& aID) : mID(aID), mStr(NULL) {}
+/* static */ JSString* IDData::gNoString = (JSString*)"";
 
-IDData::IDData(JSContext *cx, const IDData& r) : mID(r.mID), mStr(r.mStr)
+IDData::IDData(JSContext *cx, const nsID& aID, 
+               JSString* aIDString, JSString* aNameString)
+    : mID(aID), mIDString(aIDString), mNameString(aNameString)
 {
-    if(mStr)
-        JS_AddRoot(cx, &mStr);
+    if(mNameString && mNameString != gNoString)
+        JS_AddRoot(cx, &mNameString);
+
+    if(mIDString && mIDString != gNoString)
+        JS_AddRoot(cx, &mIDString);
 }
-IDData::~IDData()
+
+// static 
+IDData* 
+IDData::NewIDData(JSContext *cx, const nsID& id)
 {
-    NS_ASSERTION(!mStr, "deleting IDData without calling Cleanup first");
+    return new IDData(cx, id, NULL, NULL);
+}        
+
+// static 
+IDData* 
+IDData::NewIDData(JSContext *cx, const IDData& data)
+{
+    return new IDData(cx, data.mID, data.mIDString, data.mNameString);
+}        
+
+// static 
+IDData* 
+IDData::NewIDData(JSContext *cx, JSString* str)
+{
+    char* bytes;
+    if(!str || !JS_GetStringLength(str) || !(bytes = JS_GetStringBytes(str)))
+        return NULL;
+
+    nsID id;
+    if(bytes[0] == '{')
+        if(id.Parse(bytes))
+            return new IDData(cx, id, JS_NewStringCopyZ(cx, bytes), NULL);
+
+    nsIInterfaceInfoManager* iim;
+    if(!(iim = nsXPConnect::GetInterfaceInfoManager()))
+        return NULL;
+
+    IDData* data = NULL;
+    nsID* pid;
+
+    if(NS_SUCCEEDED(iim->GetIIDForName(bytes, &pid)) && pid)
+    {
+        data = new IDData(cx, *pid, NULL, JS_NewStringCopyZ(cx, bytes));
+
+        nsIAllocator* al = nsXPConnect::GetAllocator();
+        if(al)
+        {
+            al->Free(pid);
+            NS_RELEASE(al);
+        }
+    }
+    NS_RELEASE(iim);
+    return data;
+}        
+
+IDData::~IDData() {}
+
+// static 
+void 
+IDData::DeleteIDData(JSContext *cx, IDData* data)
+{
+    NS_PRECONDITION(cx, "bad JSContext");
+    NS_PRECONDITION(data, "bad IDData");
+
+    if(data->mNameString && data->mNameString != gNoString)
+        JS_RemoveRoot(cx, &data->mNameString);
+
+    if(data->mIDString && data->mIDString != gNoString)
+        JS_RemoveRoot(cx, &data->mIDString);
+
+    delete data;
+}        
+
+void
+IDData::GetIDString(JSContext *cx, jsval *rval)
+{
+    if(!mIDString)
+    {
+        char* str = mID.ToString();
+        if(str)
+        {
+            if(NULL != (mIDString = JS_NewStringCopyZ(cx, str)))
+                JS_AddRoot(cx, &mIDString);
+            delete [] str;
+        }
+        if(!mIDString)
+            mIDString = gNoString;
+    }
+    if(mIDString == gNoString)
+        *rval = JSVAL_NULL;
+    else
+        *rval = STRING_TO_JSVAL(mIDString);
 }
 
 void
-IDData::Cleanup(JSContext *cx)
+IDData::GetNameString(JSContext *cx, jsval *rval)
 {
-    if(mStr)
+    if(!mNameString)
     {
-        JS_RemoveRoot(cx, &mStr);
-        mStr = NULL;
-    }
-}
-
-JSBool
-IDData::GetString(JSContext *cx, jsval *rval)
-{
-    if(!mStr)
-    {
-        char* str = mID.ToString();
-        NS_ASSERTION(str, "nsID.ToString failed");
-        if(str)
+        nsIInterfaceInfoManager* iim;
+        if(NULL != (iim = nsXPConnect::GetInterfaceInfoManager()))
         {
-            if(NULL != (mStr = JS_NewStringCopyZ(cx, str)))
-                JS_AddRoot(cx, &mStr);
-            delete [] str;
+            char* name;
+            if(NS_SUCCEEDED(iim->GetNameForIID(&mID, &name)) && name)
+            {
+                if(NULL != (mNameString = JS_NewStringCopyZ(cx, name)))
+                    JS_AddRoot(cx, &mNameString);
+                nsIAllocator* al = nsXPConnect::GetAllocator();
+                if(al)
+                {
+                    al->Free(name);
+                    NS_RELEASE(al);
+                }
+            }
+            NS_RELEASE(iim);
         }
+        if(!mNameString)
+            mNameString = gNoString;
     }
-    *rval = STRING_TO_JSVAL(mStr);
-    return (JSBool) mStr;
+    if(mNameString == gNoString)
+        *rval = JSVAL_NULL;
+    else
+        *rval = STRING_TO_JSVAL(mNameString);
 }
 
 JSBool
@@ -91,10 +191,7 @@ nsID_finalize(JSContext *cx, JSObject *obj)
 {
     IDData* data = (IDData*) JS_GetPrivate(cx, obj);
     if(data)
-    {
-        data->Cleanup(cx);
-        delete data;
-    }
+        IDData::DeleteIDData(cx, data);
 }
 
 static JSClass nsID_class = {
@@ -109,11 +206,38 @@ nsID_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 {
     IDData* data=NULL;
 
-    if(!JS_InstanceOf(cx, obj, &nsID_class, NULL) ||
-       !(data = (IDData*) JS_GetPrivate(cx, obj)))
-        return JS_FALSE;
+    if(JS_InstanceOf(cx, obj, &nsID_class, NULL) &&
+       NULL != (data = (IDData*) JS_GetPrivate(cx, obj)))
+        data->GetIDString(cx, rval);
+    else
+        *rval = JSVAL_NULL;
+    return JS_TRUE;
+}
 
-    return data->GetString(cx, rval);
+JS_STATIC_DLL_CALLBACK(JSBool)
+nsID_toName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    IDData* data=NULL;
+
+    if(JS_InstanceOf(cx, obj, &nsID_class, NULL) &&
+       NULL != (data = (IDData*) JS_GetPrivate(cx, obj)))
+        data->GetNameString(cx, rval);
+    else
+        *rval = JSVAL_NULL;
+    return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+nsID_isValid(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    IDData* data=NULL;
+
+    if(JS_InstanceOf(cx, obj, &nsID_class, NULL) &&
+       NULL != (data = (IDData*) JS_GetPrivate(cx, obj)))
+        *rval = JSVAL_TRUE;
+    else
+        *rval = JSVAL_FALSE;
+    return JS_TRUE;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -129,13 +253,16 @@ nsID_equals(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
        !JS_InstanceOf(cx, obj2, &nsID_class, NULL) ||
        !(data1 = (IDData*) JS_GetPrivate(cx, obj)) ||
        !(data2 = (IDData*) JS_GetPrivate(cx, obj2)))
-        return JS_FALSE;
-
-    return data1->Equals(*data2);
+        *rval = JSVAL_FALSE;
+    else        
+        *rval = data1->Equals(*data2) ? JSVAL_TRUE : JSVAL_FALSE;
+    return JS_TRUE;
 }
 
 static JSFunctionSpec nsID_methods[] = {
     {"toString",    nsID_toString,  0},
+    {"toName",      nsID_toName,    0},
+    {"isValid",     nsID_isValid,   0},
     {"equals",      nsID_equals,    0},
     {0}
 };
@@ -145,7 +272,6 @@ nsID_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     IDData* data = NULL;
     JSString* str;
-    nsID      id;
 
     if(argc == 0)
     {
@@ -158,20 +284,25 @@ nsID_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
         IDData* src = (IDData*)JS_GetPrivate(cx,JSVAL_TO_OBJECT(argv[0]));
         if(src)
-            data = new IDData(cx, *src);
+            data = IDData::NewIDData(cx, *src);
     }
-    else if(NULL != (str = JS_ValueToString(cx, argv[0])) &&
-            id.Parse(JS_GetStringBytes(str)))
+    else if(NULL != (str = JS_ValueToString(cx, argv[0])))
     {
-        data = new IDData(id);
+        data = IDData::NewIDData(cx, str);
     }
 
+/*
+*
+* It does not work to return a null value from a ctor. Having the private set
+* to null is THE indication that this object is not valid.
+*
     if(!data)
     {
-        JS_ReportError(cx, "could not constuct nsID");
-        return JS_FALSE;
+//        JS_ReportError(cx, "could not constuct nsID");
+        *rval = JSVAL_NULL;
+        return JS_TRUE;
     }
-
+*/
     if(!JS_IsConstructing(cx))
     {
         obj = JS_NewObject(cx, &nsID_class, NULL, NULL);
@@ -198,21 +329,35 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID)
 {
     JSObject *obj;
 
+    IDData* data = IDData::NewIDData(cx, aID);
+    if(! data)
+        return NULL;
+
     obj = JS_NewObject(cx, &nsID_class, NULL, NULL);
     if(obj)
-        JS_SetPrivate(cx, obj, new IDData(aID));
+        JS_SetPrivate(cx, obj, data);
+    else
+        IDData::DeleteIDData(cx, data);
+
     return obj;
 }
 
 const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj)
 {
-    IDData* data=NULL;
-
-    if(!cx || !obj ||
-       !JS_InstanceOf(cx, obj, &nsID_class, NULL) ||
-       !(data = (IDData*) JS_GetPrivate(cx, obj)))
+    if(!cx || !obj)
         return NULL;
 
-    return &data->GetID();
+    if(JS_InstanceOf(cx, obj, &nsID_class, NULL))
+    {
+        IDData* data = (IDData*) JS_GetPrivate(cx, obj);
+        if(data)
+            return &data->GetID();
+        else
+            return NULL;
+    }
+    // XXX it would be nice to construct one from an object that can be 
+    // converted into a string. BUT since we return a const & we need to
+    // have some storage space for the iid and that get complicated...
+    return NULL;
 }
