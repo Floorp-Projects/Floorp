@@ -240,6 +240,15 @@ NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, PRBool *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & output)
+{
+  nsAutoString outUTF16;
+  nsresult rv = stringPrep(NS_ConvertUTF8toUTF16(input), outUTF16);
+  if (NS_SUCCEEDED(rv))
+    CopyUTF16toUTF8(outUTF16, output);
+  return rv;
+}
+
 //-----------------------------------------------------------------------------
 
 static void utf16ToUcs4(const nsAString& in, PRUint32 *out, PRUint32 outBufLen, PRUint32 *outLen)

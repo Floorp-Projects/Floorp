@@ -82,4 +82,10 @@ interface nsIIDNService : nsISupports
      * Checks if the input string is ACE encoded or not.
      */
     boolean isACE(in ACString input);
+
+    /**
+     * Performs the unicode normalization needed for hostnames in IDN,
+     * for callers that want early normalization.
+     */
+    AUTF8String normalize(in AUTF8String input);
 };
