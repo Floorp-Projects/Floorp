@@ -61,8 +61,8 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsBrowserStatusHandler.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsBrowserContentListener.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserContentListener.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
@@ -605,9 +605,9 @@ Contributor(s):
     
         <menu label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-              ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
+              ref="NC:BookmarksRoot" flags="dont-test-empty"
               oncommand="OpenBookmarkURL(event.target, this.database)">
-          <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
+          <template xmlns:nc="http://home.netscape.com/NC-rdf#">
             <rule nc:FolderGroup="true" iscontainer="true">
               <menupopup>
                 <menuitem class="menuitem-iconic bookmark-group" 
@@ -815,7 +815,7 @@ Contributor(s):
            oncommand="OpenBookmarkURL(event.target, this.database)"
            rdf:type="http://home.netscape.com/NC-rdf#Folder">
         <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
-          <vbox id="ptTooltipTextBox" flex="1">  
+          <vbox flex="1">  
             <label id="ptTitleText" />
             <label id="ptUrlText" />
           </vbox>
