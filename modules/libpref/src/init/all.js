@@ -568,14 +568,15 @@ pref("network.prefetch-next", true);
 
 
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),
-// which provides transparent Kerberos authentication using the SPNEGO protocol.
-// Each pref is a comma-separated list of keys, where each key has the format:
+// which provides transparent Kerberos or NTLM authentication using the SPNEGO
+// protocol.  Each pref is a comma-separated list of keys, where each key has
+// the format:
 //   [scheme "://"] [host [":" port]]
 // For example, "foo.com" would match "http://www.foo.com/bar", etc.
 
-// This list controls which URIs can support the negotiate auth protocol.  This
+// This list controls which URIs can use the negotiate-auth protocol.  This
 // list should be limited to the servers you know you'll need to login to.
-pref("network.negotiate-auth.trusted-uris", "https://");
+pref("network.negotiate-auth.trusted-uris", "");
 // This list controls which URIs can support delegation.
 pref("network.negotiate-auth.delegation-uris", "");
 
