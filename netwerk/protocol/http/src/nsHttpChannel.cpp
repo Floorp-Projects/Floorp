@@ -3528,6 +3528,8 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         // is guaranteed to own a reference to the connection.
         mSecurityInfo = mTransaction->SecurityInfo();
 
+        NS_ASSERTION(mResponseHead == nsnull, "leaking mResponseHead");
+
         // all of the response headers have been acquired, so we can take ownership
         // of them from the transaction.
         mResponseHead = mTransaction->TakeResponseHead();
@@ -3986,6 +3988,10 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     gHttpHandler->OnModifyRequest(this);
 
     mIsPending = PR_TRUE;
+
+    // get rid of the old response headers
+    delete mResponseHead;
+    mResponseHead = nsnull;
 
     // set sticky connection flag and disable pipelining.
     mCaps |=  NS_HTTP_STICKY_CONNECTION;
