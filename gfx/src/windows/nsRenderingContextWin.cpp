@@ -377,7 +377,7 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mSurface = (nsDrawingSurfaceWin *)new nsRenderingContextWin();
+  mSurface = (nsDrawingSurfaceWin *)new nsDrawingSurfaceWin();
 
   if (nsnull != mSurface)
   {
