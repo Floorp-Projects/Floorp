@@ -88,35 +88,35 @@ Rights Reserved.
 <!-- View Menu -->
 <!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate below line. -->
 <!ENTITY showSidebarMenu.label				".SideBar">
-<!ENTITY showMessengerToolbarCmd.label		"Show Toolbar">
+<!ENTITY showMessengerToolbarCmd.label		"Show Mail Toolbar">
 <!-- LOCALIZATION NOTE showMessengerToolbarCmd.accesskey	: DONT_TRANSLATE -->
-<!ENTITY showMessengerToolbarCmd.accesskey	"t">
-<!ENTITY showMessageCmd.label				"Message">  
-<!ENTITY showFoldersCmd.label				"Folders">  
+<!ENTITY showMessengerToolbarCmd.accesskey	"o">
+<!ENTITY showLocationToolbarCmd.label		".Show Location Toolbar">
+<!ENTITY showLocationToolbarCmd.accesskey	"l">
+<!ENTITY showMessageCmd.label				".Message">  
 <!ENTITY sortMenu.label "Sort"> 
 <!ENTITY sortByDateCmd.label "by Date">  
-<!ENTITY sortByFlagCmd.label "by Flag">  
+<!ENTITY sortByFlagCmd.label ".by Flag">  
 <!ENTITY sortByPriorityCmd.label "by Priority">  
 <!ENTITY sortBySenderCmd.label "by Sender">  
 <!ENTITY sortBySizeCmd.label "by Size">  
 <!ENTITY sortByStatusCmd.label "by Status">  
 <!ENTITY sortBySubjectCmd.label "by Subject">  
-<!ENTITY sortByThreadCmd.label "by Thread">  
 <!ENTITY sortByUnreadCmd.label ".by Unread">  
 <!ENTITY sortByOrderReceivedCmd.label ".by Order Received">  
 <!ENTITY sortAscendCmd.label ".Ascending">  
 <!ENTITY sortDescendCmd.label ".Descending">  
-<!ENTITY msgsMenu.label "Messages"> 
+<!ENTITY msgsMenu.label ".Messages"> 
 <!ENTITY threadsMsgsCmd.label ".Threads">  
-<!ENTITY allMsgsCmd.label "All">  
-<!ENTITY unreadMsgsCmd.label "Unread">  
+<!ENTITY allMsgsCmd.label ".All">  
+<!ENTITY unreadMsgsCmd.label ".Unread">  
 <!ENTITY threadsWithUnreadMsgsCmd.label ".Threads with Unread">  
 <!ENTITY watchedThreadsMsgsCmd.label ".Watched Threads with Unread">  
 <!ENTITY ignoreThreadMsgsCmd.label ".Ignore Thread">  
-<!ENTITY headersMenu.label "Headers"> 
-<!ENTITY headersAllCmd.label "All">  
-<!ENTITY headersNormalCmd.label "Normal">  
-<!ENTITY headersBriefCmd.label "Brief">  
+<!ENTITY headersMenu.label ".Headers"> 
+<!ENTITY headersAllCmd.label ".All">  
+<!ENTITY headersNormalCmd.label ".Normal">  
+<!ENTITY headersBriefCmd.label ".Brief">  
 <!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">  
 <!ENTITY wrapLongLinesCmd.label ".Wrap Long Lines">  
 <!ENTITY increaseFontCmd.label ".Enlarge Text Size">
