@@ -70,6 +70,8 @@ enum
 	cmd_ShowFrameSize,
 	cmd_ShowStyleSize,
 	cmd_DebugSave,
+	cmd_DebugOutputText,
+	cmd_DebugOutputHTML,	
 	cmd_DebugToggleSelection,
 	cmd_DebugRobot,
 	cmd_ShowContentQuality,
@@ -280,7 +282,9 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_ShowFrameSize:			xpID = VIEWER_SHOW_FRAME_SIZE;			break;
 				case cmd_ShowStyleSize:			xpID = VIEWER_SHOW_STYLE_SIZE;			break;
 				
-				case cmd_DebugSave:							xpID = VIEWER_DEBUGSAVE;						break;
+				case cmd_DebugSave:							xpID = VIEWER_DEBUGSAVE;					break;
+				case cmd_DebugOutputText:				xpID = VIEWER_DISPLAYTEXT;				break;
+				case cmd_DebugOutputHTML:				xpID = VIEWER_DISPLAYHTML;				break;
 				case cmd_DebugToggleSelection:	xpID = VIEWER_TOGGLE_SELECTION;			break;
 				case cmd_DebugRobot:						xpID = VIEWER_DEBUGROBOT;						break;
 				case cmd_ShowContentQuality:		xpID =VIEWER_SHOW_CONTENT_QUALITY;	break;
