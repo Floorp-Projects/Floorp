@@ -290,9 +290,9 @@ void ModifyPref(char *buffer, CString entity, CString newvalue, BOOL bLockPref)
 
 	if (bLockPref)
 	{
-		// If it's not lock_pref( already.
-		if (buf.Find("lock_pref(") < 0)
-			buf.Replace("pref(", "lock_pref(");
+		// If it's not lockPref( already.
+		if (buf.Find("lockPref(") < 0)
+			buf.Replace("pref(", "lockPref(");
 	}
 
 	strcpy(buffer, (char *)(LPCTSTR) buf);
@@ -367,7 +367,7 @@ void AddPref(CString xpifile, CString entity, CString newvalue, BOOL bUseQuotes,
 	}
 
 	CString Quote = bUseQuotes? quotes : "";
-	CString FuncName = bLockPref? "lock_pref(" : "pref(";
+	CString FuncName = bLockPref? "lockPref(" : "pref(";
 	tf<< FuncName << entity << ", " << Quote << newvalue << Quote << ");\n";
 
 	pf.close();
@@ -508,8 +508,8 @@ void ModifyEntity1(char *buffer, CString entity, CString newvalue, BOOL bLockPre
 	if (bLockPref)
 	{
 		// If it's not LockPref( already, change Pref( to LockPref(.
-		if (buf.Find("lock_pref(") < 0)
-			buf.Replace("pref(", "lock_pref(");
+		if (buf.Find("lockPref(") < 0)
+			buf.Replace("pref(", "lockPref(");
 	}
 
 	strcpy(buffer, (char *)(LPCTSTR) buf);
@@ -577,8 +577,8 @@ void ModifyEntity2(char *buffer, CString entity, CString newvalue, BOOL bLockPre
 	if (bLockPref)
 	{
 		// If it's not LockPref( already.
-		if (buf.Find("lock_pref(") < 0)
-			buf.Replace("pref(", "lock_pref(");
+		if (buf.Find("lockPref(") < 0)
+			buf.Replace("pref(", "lockPref(");
 	}
 
 	strcpy(buffer, (char *)(LPCTSTR) buf);
