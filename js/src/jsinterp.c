@@ -3749,10 +3749,6 @@ out:
               case JSTRAP_ERROR:
                 cx->throwing = JS_FALSE;
                 goto no_catch;
-              case JSTRAP_CONTINUE:
-                cx->throwing = JS_FALSE;
-                ok = JS_TRUE;
-                goto advance_pc;
               case JSTRAP_RETURN:
                 ok = JS_TRUE;
                 cx->throwing = JS_FALSE;
@@ -3760,6 +3756,7 @@ out:
                 goto no_catch;
               case JSTRAP_THROW:
                 cx->exception = rval;
+              case JSTRAP_CONTINUE:
               default:;
             }
         }
