@@ -1123,7 +1123,10 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
         break;
         
 			nsMouseEvent mouseEvent;
-			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN);
+			PRUint32 mouseButton = NS_MOUSE_LEFT_BUTTON_DOWN;
+			if ( aOSEvent.modifiers & controlKey )
+			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
+			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
 			if (widgetHit)
 			{
