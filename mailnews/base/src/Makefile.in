@@ -27,11 +27,13 @@ LIBRARY_NAME=mailnewsbase
 NO_SHARED_LIB=1
 
 EXPORTS = \
+	nsMsgPtrArray.h \
 	nsMsgGroupRecord.h \
 	nsMsgRFC822Parser.h \
 	$(NULL)
 
 CPPSRCS = \
+	nsMsgPtrArray.h \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
 	$(NULL)
