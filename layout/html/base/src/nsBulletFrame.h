@@ -52,7 +52,7 @@ public:
                     nsReflowStatus& aStatus);
 
   // nsBulletFrame
-  PRInt32 SetListItemOrdinal(PRInt32 aNextOrdinal);
+  PRInt32 SetListItemOrdinal(PRInt32 aNextOrdinal, PRBool* aChanged);
 
 protected:
   void GetDesiredSize(nsIPresContext* aPresContext,
