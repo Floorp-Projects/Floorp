@@ -840,8 +840,8 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
   return buttonPressed;
 }
 
-PUBLIC void
-Wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
+PRIVATE void
+wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
 {
   nsresult res;  
   NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
@@ -852,6 +852,17 @@ Wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
   const nsAutoString message = szMessage;
   PRUnichar * title = Wallet_Localize("CaveatTitle");
   res = dialog->Alert(window, title, message.GetUnicode());
+  Recycle(title);
+  return;     // XXX should return the error
+}
+
+PRIVATE void
+wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
+{
+  nsresult res;  
+  const nsAutoString message = szMessage;
+  PRUnichar * title = Wallet_Localize("CaveatTitle");
+  res = dialog->Alert(title, message.GetUnicode());
   Recycle(title);
   return;     // XXX should return the error
 }
@@ -1887,12 +1898,16 @@ wallet_ReadFromURLFieldToSchemaFile
 /*********************************************************************/
 
 PUBLIC void
-Wallet_GiveCaveat(nsIDOMWindow* window) {
+Wallet_GiveCaveat(nsIDOMWindow* window, nsIPrompt* dialog) {
   /* test for first capturing of data ever and give caveat if so */
   if (!SI_GetBoolPref(pref_Caveat, PR_FALSE)) {
     SI_SetBoolPref(pref_Caveat, PR_TRUE);
     PRUnichar * message = Wallet_Localize("Caveat");
-    Wallet_Alert(message, window);
+    if (window) {
+      wallet_Alert(message, window);
+    } else {
+      wallet_Alert(message, dialog);
+    }
     Recycle(message);
   }
 }
@@ -2956,7 +2971,7 @@ if (!changingPassword) {
   SI_SetBoolPref(pref_Crypto, SI_GetBoolPref(pref_Crypto, PR_TRUE));
 
 //  message = Wallet_Localize("Converted");
-//  Wallet_Alert(message, (nsIDOMWindow *)window);
+//  wallet_Alert(message, (nsIDOMWindow *)window);
 //  Recycle(message);
   level--;
   return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
@@ -2966,7 +2981,7 @@ fail:
 
   /* alert the user to the failure */
   message = Wallet_Localize("NotConverted");
-  Wallet_Alert(message, (nsIDOMWindow *)window);
+  wallet_Alert(message, (nsIDOMWindow *)window);
   Recycle(message);
   level--;
   return 1;
@@ -3364,7 +3379,7 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) 
     *status = -1; /* UnableToCapture */
   } else if (captureCount) {
     /* give caveat if this is the first time data is being captured */
-    Wallet_GiveCaveat(win);
+    Wallet_GiveCaveat(win, nsnull);
     *status = 0; /* Captured */
   } else {
     *status = +1; /* NotCaptured */
@@ -3546,7 +3561,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
             /* conditions all met, now give notification */
             PRUnichar * notification = Wallet_Localize("WalletNotification");
             wallet_SetWalletNotificationPref(PR_TRUE);
-            Wallet_Alert(notification, window);
+            wallet_Alert(notification, window);
             Recycle(notification);
           }
 #else
@@ -3555,7 +3570,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
               (OKToPrompt) && wallet_OKToCapture(URLName, window)) {
 
             /* give caveat if this is the first time data is being captured */
-            Wallet_GiveCaveat(window);
+            Wallet_GiveCaveat(window, nsnull);
 
             /* conditions all met, now save it */
             for (PRUint32 elementY = 0; elementY < numElements; elementY++) {

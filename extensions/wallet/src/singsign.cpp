@@ -1921,7 +1921,7 @@ si_RememberSignonData
       data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
 
       if (si_OkToSave(passwordRealm, data2->value, window)) {
-        Wallet_GiveCaveat(window);
+        Wallet_GiveCaveat(window, nsnull);
         for (j=0; j<signonData->Count(); j++) {
           data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
           nsAutoString value = data2->value;
@@ -2264,6 +2264,7 @@ SINGSIGN_PromptUsernameAndPassword
     return NS_OK;
   }
   if (checked) {
+    Wallet_GiveCaveat(nsnull, dialog);
     si_RememberSignonDataFromBrowser (passwordRealm, nsAutoString(*user), nsAutoString(*pwd));
   }
 

@@ -33,6 +33,7 @@
 #include "nsIPresShell.h"
 #include "nsString.h"
 #include "nsFileSpec.h"
+#include "nsIPrompt.h"
 
 XP_BEGIN_PROTOS
 
@@ -102,7 +103,7 @@ extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window);
 
 extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window);
 
-extern void Wallet_GiveCaveat(nsIDOMWindow* window);
+extern void Wallet_GiveCaveat(nsIDOMWindow* window, nsIPrompt* dialog);
 
 extern nsresult
 Wallet_Encrypt2(const nsString& text, nsString& crypt);
