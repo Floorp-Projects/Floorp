@@ -947,7 +947,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
     jsval argv[2], retval, NSGetModule_val;
 
     if (!JS_GetProperty(cx, global, "NSGetModule", &NSGetModule_val) ||
-        JSVAL_IS_VOID(NSGetModule_val) {
+        JSVAL_IS_VOID(NSGetModule_val)) {
         return nsnull;
     }
 
