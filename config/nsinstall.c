@@ -48,6 +48,8 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <dirent.h>
+#include <limits.h>
 
 #ifndef XP_OS2_VACPP
 #include <grp.h>
@@ -97,6 +99,14 @@ getopt(int nargc, char **nargv, char *ostr);
 #define S_ISLNK(a)	(((a) & S_IFMT) == S_IFLNK)
 #endif
 #endif
+
+#ifndef _DIRECTORY_SEPARATOR
+#ifdef XP_OS2
+#define _DIRECTORY_SEPARATOR "\\"
+#else
+#define _DIRECTORY_SEPARATOR "/"
+#endif
+#endif /* _DIRECTORY_SEPARATOR */
 
 #ifdef NEED_FCHMOD_PROTO
 extern int fchmod(int fildes, mode_t mode);
@@ -148,6 +158,11 @@ mkdirs(char *path, mode_t mode)
 
     /* strip trailing "/." */
     l = strlen(path);
+#ifdef XP_OS2
+    /* if path is nothing but drive letter, return successfully */
+    if( l == 2 && path[1] == ':' )
+      return 0;
+#endif
     if(l > 1 && path[l - 1] == '.' && path[l - 2] == '/')
         path[l - 2] = 0;
 
@@ -204,6 +219,137 @@ togid(char *group)
     return gid;
 }
 #endif
+
+static void
+copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
+          int dotimes, uid_t uid, gid_t gid )
+{
+  int fromfd, tofd, cc, wc, exists;
+  char buf[BUFSIZ], *bp;
+  struct stat sb, tosb;
+  struct utimbuf utb;
+
+  exists = (lstat(toname, &tosb) == 0);
+
+#ifdef XP_OS2_FIX
+  fromfd = open(name, O_RDONLY | O_BINARY);
+#else
+  fromfd = open(name, O_RDONLY);
+#endif
+  if (fromfd < 0 || fstat(fromfd, &sb) < 0)
+    fail("cannot access %s", name);
+  if (exists && (!S_ISREG(tosb.st_mode) || access(toname, W_OK) < 0))
+    (void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
+#ifdef XP_OS2
+  chmod(toname, S_IREAD | S_IWRITE);
+#endif
+#ifdef XP_OS2_FIX
+  tofd = open(toname, O_CREAT | O_WRONLY | O_BINARY, 0666);
+#else
+  tofd = open(toname, O_CREAT | O_WRONLY, 0666);
+#endif
+  if (tofd < 0)
+    fail("cannot create %s", toname);
+
+  bp = buf;
+  while ((cc = read(fromfd, bp, sizeof buf)) > 0)
+  {
+    while ((wc = write(tofd, bp, (unsigned int)cc)) > 0)
+    {
+      if ((cc -= wc) == 0)
+        break;
+      bp += wc;
+    }
+    if (wc < 0)
+      fail("cannot write to %s", toname);
+  }
+  if (cc < 0)
+    fail("cannot read from %s", name);
+
+  if (ftruncate(tofd, sb.st_size) < 0)
+    fail("cannot truncate %s", toname);
+#ifndef XP_OS2
+  if (dotimes)
+  {
+    utb.actime = sb.st_atime;
+    utb.modtime = sb.st_mtime;
+    if (utime(toname, &utb) < 0)
+      fail("cannot set times of %s", toname);
+  }
+#ifdef HAVE_FCHMOD
+  if (fchmod(tofd, mode) < 0)
+#else
+  if (chmod(toname, mode) < 0)
+#endif
+    fail("cannot change mode of %s", toname);
+#endif
+  if ((owner || group) && fchown(tofd, uid, gid) < 0)
+    fail("cannot change owner of %s", toname);
+
+  /* Must check for delayed (NFS) write errors on close. */
+  if (close(tofd) < 0)
+    fail("cannot write to %s", toname);
+  close(fromfd);
+#ifdef XP_OS2
+  if (dotimes)
+  {
+    utb.actime = sb.st_atime;
+    utb.modtime = sb.st_mtime;
+    if (utime(toname, &utb) < 0)
+      fail("cannot set times of %s", toname);
+  }
+  if (chmod(toname, (mode & (S_IREAD | S_IWRITE))) < 0)
+    fail("cannot change mode of %s", toname);
+#endif
+}
+
+static void
+copydir( char *from, char *to, mode_t mode, char *group, char *owner,
+         int dotimes, uid_t uid, gid_t gid)
+{
+  int i;
+  DIR *dir;
+  struct dirent *ep;
+  struct stat sb;
+  char *base, *destdir, *direntry, *destentry;
+
+  base = xbasename(from);
+
+  // create destination directory
+  destdir = xmalloc((unsigned int)(strlen(to) + 1 + strlen(base) + 1));
+  sprintf(destdir, "%s%s%s", to, _DIRECTORY_SEPARATOR, base);
+  if (mkdirs(destdir, mode) != 0) {
+    fail("cannot make directory %s\n", destdir);
+    return;
+  }
+
+  dir = opendir(from);
+
+  direntry = xmalloc((unsigned int)PATH_MAX);
+  destentry = xmalloc((unsigned int)PATH_MAX);
+
+  while ((ep = readdir(dir)))
+  {
+    if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
+      continue;
+
+    sprintf(direntry, "%s/%s", from, ep->d_name);
+    sprintf(destentry, "%s%s%s", destdir, _DIRECTORY_SEPARATOR, ep->d_name);
+
+#ifdef XP_OS2_VACPP
+    if (ep->d_attribute & A_DIR)
+#else
+    if (stat(direntry, &sb) == 0 && S_ISDIR(sb.st_mode))
+#endif
+      copydir( direntry, destdir, mode, group, owner, dotimes, uid, gid );
+    else
+      copyfile( direntry, destentry, mode, group, owner, dotimes, uid, gid );
+  }
+
+  free(direntry);
+  free(destentry);
+  closedir(dir);
+}
 
 int
 main(int argc, char **argv)
@@ -318,7 +464,7 @@ main(int argc, char **argv)
 	base = xbasename(name);
 	bnlen = strlen(base);
 	toname = xmalloc((unsigned int)(tdlen + 1 + bnlen + 1));
-	sprintf(toname, "%s/%s", todir, base);
+	sprintf(toname, "%s%s%s", todir, _DIRECTORY_SEPARATOR, base);
 	exists = (lstat(toname, &tosb) == 0);
 
 	if (dodir) {
@@ -391,73 +537,17 @@ main(int argc, char **argv)
 	    }
 	} else {
 	    /* Copy from name to toname, which might be the same file. */
-#ifdef XP_OS2_FIX
-	    fromfd = open(name, O_RDONLY | O_BINARY);
-#else
-	    fromfd = open(name, O_RDONLY);
-#endif
-	    if (fromfd < 0 || fstat(fromfd, &sb) < 0)
-		fail("cannot access %s", name);
-	    if (exists && (!S_ISREG(tosb.st_mode) || access(toname, W_OK) < 0))
-		(void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
-#ifdef XP_OS2
-	    chmod(toname, S_IREAD | S_IWRITE);
-#endif
-#ifdef XP_OS2_FIX
-	    tofd = open(toname, O_CREAT | O_WRONLY | O_BINARY, 0666);
-#else
-	    tofd = open(toname, O_CREAT | O_WRONLY, 0666);
-#endif
-	    if (tofd < 0)
-		fail("cannot create %s", toname);
-
-	    bp = buf;
-	    while ((cc = read(fromfd, bp, sizeof buf)) > 0) {
-		while ((wc = write(tofd, bp, (unsigned int)cc)) > 0) {
-		    if ((cc -= wc) == 0)
-			break;
-		    bp += wc;
-		}
-		if (wc < 0)
-		    fail("cannot write to %s", toname);
-	    }
-	    if (cc < 0)
-		fail("cannot read from %s", name);
-
-	    if (ftruncate(tofd, sb.st_size) < 0)
-		fail("cannot truncate %s", toname);
-#ifndef XP_OS2
-	    if (dotimes) {
-		utb.actime = sb.st_atime;
-		utb.modtime = sb.st_mtime;
-		if (utime(toname, &utb) < 0)
-		    fail("cannot set times of %s", toname);
-	    }
-#ifdef HAVE_FCHMOD
-	    if (fchmod(tofd, mode) < 0)
-#else
-	    if (chmod(toname, mode) < 0)
-#endif
-		fail("cannot change mode of %s", toname);
-#endif
-	    if ((owner || group) && fchown(tofd, uid, gid) < 0)
-		fail("cannot change owner of %s", toname);
-
-	    /* Must check for delayed (NFS) write errors on close. */
-	    if (close(tofd) < 0)
-		fail("cannot write to %s", toname);
-	    close(fromfd);
-#ifdef XP_OS2
-	    if (dotimes) {
-		utb.actime = sb.st_atime;
-		utb.modtime = sb.st_mtime;
-		if (utime(toname, &utb) < 0)
-		    fail("cannot set times of %s", toname);
-	    }
-	    if (chmod(toname, (mode & (S_IREAD | S_IWRITE))) < 0)
-		fail("cannot change mode of %s", toname);
-#endif
-	}
+      if( stat(name, &sb) == 0 && S_IFDIR & sb.st_mode )
+      {
+        /* then is directory: must explicitly create destination dir  */
+        /*  and manually copy files over                              */
+        copydir( name, todir, mode, group, owner, dotimes, uid, gid );
+      } 
+      else
+      {
+        copyfile(name, toname, mode, group, owner, dotimes, uid, gid);
+      }
+    }
 
 	free(toname);
     }
