@@ -281,7 +281,7 @@ function SetWidgetsForMisspelledWord()
 
 function CheckWord()
 {
-  word = gDialog.ReplaceWordInput.value;
+  var word = gDialog.ReplaceWordInput.value;
   if (word) 
   {
     if (gSpellChecker.CheckCurrentWord(word))
