@@ -22,7 +22,7 @@
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@:@srcdir@/unix
+VPATH		= @srcdir@
 
 MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
@@ -42,7 +42,7 @@ XPIDLSRCS = \
 
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
-	nsOSHelperAppService.cpp	\
+	unix/nsOSHelperAppService.cpp	\
 	$(NULL)
 	
 	
