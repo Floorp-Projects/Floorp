@@ -911,7 +911,12 @@ typelib_op_dcl(TreeState *state)
         num_args++;             /* count params */
     if (op->op_type_spec && !op_notxpcom)
         num_args++;             /* fake param for _retval */
-    if (op->f_noscript || op_noscript || op_notxpcom)
+
+    /*
+     * don't look at op->f_noscript, because we want 'noscript' as a bare keyword
+     * to go away.  (it becomes __f_noscript in libIDL 0.6.8)
+     */
+    if (op_noscript || op_notxpcom)
         op_flags |= XPT_MD_HIDDEN;
     if (op->f_varargs)
         op_flags |= XPT_MD_VARARGS;
