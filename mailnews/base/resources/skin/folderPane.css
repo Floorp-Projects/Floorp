@@ -86,6 +86,10 @@ treeitem[BiffState="NewMail"] > treerow > treecell > .tree-icon {
  list-style-image: url("chrome://messenger/skin/FolderNew.gif");
 }
 
+treeitem[SpecialFolder="Inbox"][BiffState="NewMail"] > treerow > treecell > .tree-icon {
+ list-style-image: url("chrome://messenger/skin/FolderInboxNew.gif");
+}
+
 /* IMAP folders */
 treeitem[ServerType="imap"] > treerow > treecell > .tree-icon {
     list-style-image: url("chrome://messenger/skin/FolderServer.gif");
