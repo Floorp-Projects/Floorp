@@ -85,7 +85,7 @@ CToken::~CToken() {
 void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
   if(0==aString.Length()) 
     mTextValue.Truncate(0);
-  else mTextValue.SetString(aString);
+  else mTextValue=aString;
   mAttrCount=0;
   mTypeID=aTag;
   mAttrCount=0;
