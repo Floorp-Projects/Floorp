@@ -45,6 +45,60 @@ const PREF_EM_APP_VERSION       = "app.version";
 const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT         = "update.extensions.count";
 
+function getDir(aKey, aSubDirs)
+{
+  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                              .getService(Components.interfaces.nsIProperties);
+  
+  var dir = fileLocator.get(aKey, Components.interfaces.nsIFile);
+  for (var i = 0; i < aSubDirs.length; ++i) {
+    dir.append(aSubDirs[i]);
+    if (!dir.exists())
+      dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+  }
+  return dir;
+}
+
+function nsInstallLogger(aExtensionID, aIsProfile)
+{
+  this._isProfile = aIsProfile; // XXXben
+  this._extensionDir = getDir(aIsProfile ? "ProfD" : "ProfD", ["extensions", aExtensionID]); // XXXben XCurProcDir
+  this._uninstallDir = this._extensionDir.clone();
+  this._uninstallDir.append("uninstall");
+  var uninstallLog = this._uninstallDir.clone();
+  uninstallLog.append("uninstall.rdf");
+  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                         .getService(Components.interfaces.nsIIOService);
+  var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+  this._ds = rdf.GetDataSourceBlocking(fph.getURLSpecFromFile(uninstallLog));
+}
+
+nsInstallLogger.prototype = {
+  _extensionDir: null,
+  _uninstallDir: null,
+  _ds: null,
+  
+  addFile: function (aFile) 
+  {
+    var aFileLF = aFile.QueryInterface(Components.interfaces.nsILocalFile);
+    var eDirLF = this._extensionDir.QueryInterface(Components.interfaces.nsILocalFile);
+    // dump("*** reldesc1 = " + aFileLF.getRelativeDescriptor(this._extensionDir) + "\n");
+    // dump("*** reldesc2 = " + eDirLF.getRelativeDescriptor(aFile) + "\n");
+  },
+  
+  replaceFile: function (aFile)
+  {
+  
+  },
+  
+  removeFile: function (aFile)
+  {
+  
+  }
+};
+
 function VersionChecker(aExtensionResource, aAppID, aAppVersion, aDataSource)
 {
   this._extensionResource = aExtensionResource;
@@ -117,6 +171,74 @@ VersionChecker.prototype = {
   }
 }
 
+function nsJarFileExtractor(aXPIFile, aTargetDir)
+{
+  this._xpiFile = aXPIFile.path;
+  this._targetDir = aTargetDir.path;
+  this._proxyObject(Components, Components.interfaces.nsIXPCComponents, "_components");
+  /* 
+  this._proxyObject(aXPIFile,   Components.interfaces.nsIFile, "_xpiFile");
+  this._proxyObject(aTargetDir, Components.interfaces.nsIFile, "_targetDir");
+   */
+}
+
+nsJarFileExtractor.prototype = {
+  // proxied objects
+  _xpiFile: null,
+  _targetDir: null,
+  _components: null,
+  
+  _proxyObject: function (aObject, aIID, aTarget)
+  {
+    const nsIEventQueueService = Components.interfaces.nsIEventQueueService;
+    var eqService = Components.classes["@mozilla.org/event-queue-service;1"]
+                              .getService(nsIEventQueueService);
+    var uiQ = eqService.getSpecialEventQueue(nsIEventQueueService.UI_THREAD_EVENT_QUEUE);
+    
+    var proxyObjectManager = Components.classes["@mozilla.org/xpcomproxy;1"]
+                                       .getService(Components.interfaces.nsIProxyObjectManager);
+    const PROXY_SYNC = 0x01;
+    const PROXY_ALWAYS = 0x04;
+    this[aTarget] = proxyObjectManager.getProxyForObject(uiQ, aIID, aObject, 
+                                                         PROXY_SYNC | PROXY_ALWAYS);
+  },
+  
+  extract: function ()
+  {
+    const nsIThread = Components.interfaces.nsIThread;
+    var thread = Components.classes["@mozilla.org/thread;1"]
+                           .createInstance(nsIThread);
+    thread.init(this, 0, nsIThread.PRIORITY_NORMAL,
+                nsIThread.SCOPE_GLOBAL,
+                nsIThread.STATE_JOINABLE);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIRunnable
+  run: function ()
+  { 
+    // dump("*** RUNNING THREAD\n");
+    /*
+    var xpiFile = Components.classes["@mozilla.org/file/local;1"]
+                            .createInstance(Components.interfaces.nsILocalFile);
+    xpiFile.initWithPath(this._xpiFile);
+    var targetDir = Components.classes["@mozilla.org/file/local;1"]
+                              .createInstance(Components.interfaces.nsILocalFile);
+    targetDir.initWithPath(this._targetDir);
+    
+    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                              .createInstance(Components.interfaces.nsIZipReader);
+    zipReader.init(xpiFile);
+
+    var entries = zipReader.findEntries("*");
+    while (entries.hasMoreElements()) {
+      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
+      dump("*** zip entry = " + entry.name + "\n");
+    }
+    */
+  }
+};
+
 function nsExtensionManager()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -154,11 +276,25 @@ nsExtensionManager.prototype = {
         // and as such we must load it now and see what needs to happen.
         this._ensureDS();
         
+        // Look for items that need to be installed
+        var items = this._ds.getItemsWithFlagSet("toBeInstalled");
+        for (var i = 0; i < items.length; ++i)
+          this._finalizeInstall(items[i]);
+        
         // Look for extensions that need to be enabled
+        items = this._ds.getItemsWithFlagSet("toBeEnabled");
+        for (var i = 0; i < items.length; ++i)
+          this._finalizeEnable(items[i]);
         
         // Look for extensions that need to be disabled
+        items = this._ds.getItemsWithFlagSet("toBeDisabled");
+        for (var i = 0; i < items.length; ++i)
+          this._finalizeDisable(items[i]);
         
         // Look for extensions that need to be removed
+        items = this._ds.getItemsWithFlagSet("toBeUninstalled");
+        for (var i = 0; i < items.length; ++i)
+          this._finalizeUninstall(items[i]);
         
         // Now that we've finalized the EM operation, remove the autoreg file so
         // we don't do this every time we start.
@@ -342,28 +478,132 @@ nsExtensionManager.prototype = {
   
   /////////////////////////////////////////////////////////////////////////////  
   // nsIExtensionManager
-  installExtensionFromStream: function (aStream, aUseProfile)
+  installExtensionFromXPI: function (aZipReader, aFlags)
   {
-    var parser = Components.classes["@mozilla.org/rdf/xml-parser;1"]
-                           .createInstance(Components.interfaces.nsIRDFXMLParser);
-    var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
-                       .createInstance(Components.interfaces.nsIRDFDataSource);
-    var streamListener = parser.parseAsync(ds, null);
+    // Since we're installing a "new type" extension, we assume a file layout
+    // within the XPI like so:
+    // foo.xpi/
+    //         extension.rdf
+    //         chrome/
+    //         components/ 
+    //         defaults/
+    //                  prefs/
+    var installProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
+    var tempManifest = getDir(installProfile ? "ProfD" : "ProfD", 
+                              ["extensions", "temp"]);
+    tempManifest.append("extension.rdf");
+    aZipReader.extract("extension.rdf", tempManifest);
     
-    var bytesAvailable;
-    do {
-      bytesAvailable = aStream.available();
-      if (!bytesAvailable)
-        break;
-      
-      streamListener.onDataAvailable(null, null, aStream, 0, bytesAvailable);
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+    var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    var ds = rdf.GetDataSourceBlocking(fph.getURLSpecFromFile(tempManifest));
+    
+    // We do a basic version check first just to make sure we somehow weren't 
+    // tricked into installing an incompatible extension...
+    var extensionID = this._canInstallExtension(ds);
+    if (extensionID) {
+      this._ensureDS();
+      this._ds.addExtensionEntry(extensionID, installProfile);
+      // Then we stage the extension's files into a temporary directory so we 
+      // can install them after the next restart. 
+      this._stageExtensionFiles(aZipReader, extensionID, 
+                                aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE);
     }
-    while (1);
+    tempManifest.remove(false);
     
-    this._ensureDS();
-    
-    this._ds.installExtension(ds, aUseProfile);
     this._writeProfileData();
+  },
+  
+  _canInstallExtension: function (aDataSource)
+  {
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                        .getService(Components.interfaces.nsIRDFService);
+    var manifestRoot = rdf.GetResource("extension:manifest");
+    var id = rdf.GetResource(EM_NS("id"));
+    // XXXben - do version check
+    var idLiteral = aDataSource.GetTarget(manifestRoot, id, true);
+    return idLiteral.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  },
+  
+  _stageExtensionFiles: function (aZipReader, aExtensionID, aInstallProfile)
+  {
+    // Get the staging dir
+    var dir = getDir(aInstallProfile ? "ProfD" : "ProfD", 
+                     ["extensions", "temp", aExtensionID]);
+
+    var entries = aZipReader.findEntries("*");
+    while (entries.hasMoreElements()) {
+      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
+      
+      var file = dir.clone();
+      var parts = entry.name.split("/");
+      for (var i = 0; i < parts.length; ++i) {
+        file.append(parts[i]);
+        if (!file.exists() && i < parts.length - 1)
+          file.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+      }
+      if (!file.exists() || !file.isDirectory())
+        aZipReader.extract(entry.name, file);
+    }
+
+    // (new nsJarFileExtractor(aZipReader.file, dir)).extract();
+  },
+  
+  // This function is called on the next startup 
+  _finalizeInstall: function (aExtensionID)
+  {
+    var installLocation = this._ds.getExtensionProperty(aExtensionID, "installLocation");
+    var logger = new nsInstallLogger(aExtensionID, installLocation == "profile");
+    
+    // Move files from the staging dir into the extension's final home.
+    // This function generates uninstall log files and creates backups of
+    // existing files. 
+    this._installExtensionFiles(aExtensionID, logger);
+    
+    // Load the metadata datasource
+    
+    // Add metadata for the extension to the global extension metadata set
+    this._ds.addExtensionMetaData(aExtensionID, logger);
+    
+    // Register chrome packages for files specified in the extension manifest
+    this._registerChromeForExtension(aExtensionID, logger);
+  },
+  
+  _installExtensionFiles: function (aExtensionID, aLogger)
+  {
+    var tempDir = getDir(aLogger._isProfile ? "ProfD" : "ProfD", ["extensions", "temp", aExtensionID]); // XXXben XCurProcDir
+    this._goatFile(tempDir, aLogger);
+  },
+  
+  _goatFile: function (aParent, aLogger)
+  {
+    var entries = aParent.directoryEntries; 
+    while (entries.hasMoreElements()) {
+      var entry = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+      if (entry.isDirectory())
+        this._goatFile(entry, aLogger);
+      else
+        aLogger.addFile(entry);
+      return;
+    }
+  },
+  
+  _finalizeEnable: function (aExtensionID)
+  {
+  
+  },
+  
+  _finalizeDisable: function (aExtensionID)
+  {
+  
+  },
+  
+  _finalizeUninstall: function (aExtensionID)
+  {
+  
   },
       
   uninstallExtension: function (aExtensionID)
@@ -628,6 +868,24 @@ nsExtensionsDataSource.prototype = {
     return items;
   },
   
+  getItemsWithFlagSet: function (aFlag)
+  {
+    var items = [];
+    var sources = this.GetSources(this._emR(aFlag), this._emL("true"), true);
+    while (sources.hasMoreElements()) {
+      var e = sources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      
+      items.push(this._stripPrefix(e.Value));
+    }
+    return items;
+  },
+  
+  addExtensionEntry: function (aExtensionID, aInstallProfile)
+  {
+    this._setExtensionProperty(aExtensionID, this._emR("toBeInstalled"), 
+                               this._emL("true"), aInstallProfile);
+  },
+  
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
   {
     var oldValue = aDS.GetTarget(aSource, aProperty, true);
@@ -647,16 +905,18 @@ nsExtensionsDataSource.prototype = {
     return "";
   },
   
-  _setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue)
+  _setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue, aIsProfile)
   {
     var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
-    var installLocation = this.GetTarget(extension, this._emR("installLocation"), true);
-    var isProfile = installLocation.EqualsNode(this._emL("profile"));
-    var ds = isProfile ? this._profileExtensions : this._appExtensions;
+    if (aIsProfile === undefined) {
+      var installLocation = this.GetTarget(extension, this._emR("installLocation"), true);
+      aIsProfile = installLocation.EqualsNode(this._emL("profile"));
+    }
+    var ds = aIsProfile ? this._profileExtensions : this._appExtensions;
     
     this._setProperty(ds, extension, aPropertyArc, aPropertyValue);
 
-    this._flush(isProfile);  
+    this._flush(aIsProfile);  
   },
   
   enableExtension: function (aExtensionID)
