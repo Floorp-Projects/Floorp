@@ -79,24 +79,6 @@
 
 #include "nsIServiceManager.h"
 
-NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
-NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
-NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-
-static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
-static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
-
 //----------------------------------------------------------------------
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)
@@ -133,7 +115,7 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   if (nsnull != mContent) {
     mContent->ChildAt(aIndex, content);
     if (nsnull != content) {
-      res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+      res = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
       NS_RELEASE(content);
     }
     else {
@@ -365,7 +347,6 @@ nsCheapVoidArray::SwitchToVector()
 // we'd find a better way.
 nsIDOMScriptObjectFactory* nsGenericElement::gScriptObjectFactory = nsnull;
 
-static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
 static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 nsresult 
@@ -375,7 +356,7 @@ nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
 
   if (nsnull == gScriptObjectFactory) {
     result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          kIDOMScriptObjectFactoryIID,
+                                          NS_GET_IID(nsIDOMScriptObjectFactory),
                                           (nsISupports **)&gScriptObjectFactory);
     if (result != NS_OK) {
       return result;
@@ -503,7 +484,7 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
   nsresult res = NS_OK;
 
   if (nsnull != mParent) {
-    res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    res = mParent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aParentNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
   }
   else if (nsnull == mDocument) {
@@ -513,7 +494,8 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
     // If we don't have a parent, but we're in the document, we must
     // be the root node of the document. The DOM says that the root
     // is the document.
-    res = mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    res = mDocument->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                    (void**)aParentNode);
   }
 
   return res;
@@ -543,7 +525,8 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
   }
 
   if (nsnull != sibling) {
-    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aPrevSibling);
+    result = sibling->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                     (void**)aPrevSibling);
     NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
     NS_RELEASE(sibling); // balance the AddRef in ChildAt()
   }
@@ -578,7 +561,8 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
   }
 
   if (nsnull != sibling) {
-    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
+    result = sibling->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                     (void**)aNextSibling);
     NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
     NS_RELEASE(sibling); // balance the AddRef in ChildAt()
   }
@@ -596,7 +580,8 @@ nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   // the element has been created. We should be able to get at it
   // whether or not we are attached to the document.
   if (nsnull != mDocument) {
-    return mDocument->QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
+    return mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
+                                     (void **)aOwnerDocument);
   }
   else {
     *aOwnerDocument = nsnull;
@@ -707,7 +692,7 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
     NS_ADDREF(slots->mAttributeMap);
   }
 
-  return slots->mAttributeMap->QueryInterface(kIDOMNamedNodeMapIID, 
+  return slots->mAttributeMap->QueryInterface(NS_GET_IID(nsIDOMNamedNodeMap),
                                               (void **)aAttributes);
 }
 
@@ -779,7 +764,7 @@ nsGenericElement::GetAttributeNode(const nsAReadableString& aName,
     nsIDOMNode* node;
     result = map->GetNamedItem(aName, &node);
     if ((NS_OK == result) && (nsnull != node)) {
-      result = node->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+      result = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void **)aReturn);
       NS_IF_RELEASE(node);
     }
     NS_RELEASE(map);
@@ -801,11 +786,13 @@ nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsIDOMNode *node, *returnNode;
-    result = aAttribute->QueryInterface(kIDOMNodeIID, (void **)&node);
+    result = aAttribute->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                        (void **)&node);
     if (NS_OK == result) {
       result = map->SetNamedItem(node, &returnNode);
       if ((NS_OK == result) && (nsnull != returnNode)) {
-        result = returnNode->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+        result = returnNode->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                            (void **)aReturn);
         NS_IF_RELEASE(returnNode);
       }
       NS_RELEASE(node);
@@ -835,7 +822,8 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
       nsIDOMNode* node;
       result = map->RemoveNamedItem(name, &node);
       if ((NS_OK == result) && (nsnull != node)) {
-        result = node->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+        result = node->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                      (void **)aReturn);
         NS_RELEASE(node);
       }
     }
@@ -957,7 +945,7 @@ nsGenericElement::GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
     nsIDOMNode* node;
     result = map->GetNamedItemNS(aNamespaceURI, aLocalName, &node);
     if ((NS_OK == result) && (nsnull != node)) {
-      result = node->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+      result = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void **)aReturn);
       NS_IF_RELEASE(node);
     }
     NS_RELEASE(map);
@@ -979,11 +967,12 @@ nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
   *aReturn = nsnull;
   if (NS_OK == result) {
     nsIDOMNode *node, *returnNode;
-    result = aNewAttr->QueryInterface(kIDOMNodeIID, (void **)&node);
+    result = aNewAttr->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&node);
     if (NS_OK == result) {
       result = map->SetNamedItemNS(node, &returnNode);
       if ((NS_OK == result) && (nsnull != returnNode)) {
-        result = returnNode->QueryInterface(kIDOMAttrIID, (void **)aReturn);
+        result = returnNode->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                            (void **)aReturn);
         NS_IF_RELEASE(returnNode);
       }
       NS_RELEASE(node);
@@ -1027,7 +1016,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return list->QueryInterface(kIDOMNodeListIID, (void **)aReturn);
+  return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aReturn);
 }
 
 nsresult
@@ -1091,28 +1080,23 @@ nsresult
 nsGenericElement::JoinTextNodes(nsIContent* aFirst,
                                 nsIContent* aSecond)
 {
-  nsresult result = NS_OK;
-  nsIDOMText *firstText, *secondText;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMText> firstText(do_QueryInterface(aFirst, &rv));
 
-  result = aFirst->QueryInterface(kIDOMTextIID, (void**)&firstText);
-  if (NS_OK == result) {
-    result = aSecond->QueryInterface(kIDOMTextIID, (void**)&secondText);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDOMText> secondText(do_QueryInterface(aSecond, &rv));
 
-    if (NS_OK == result) {
+    if (NS_SUCCEEDED(rv)) {
       nsAutoString str;
 
-      result = secondText->GetData(str);
-      if (NS_OK == result) {
-        result = firstText->AppendData(str);
+      rv = secondText->GetData(str);
+      if (NS_SUCCEEDED(rv)) {
+        rv = firstText->AppendData(str);
       }
-      
-      NS_RELEASE(secondText);
     }
-    
-    NS_RELEASE(firstText);
   }
   
-  return result;
+  return rv;
 }
 
 nsresult
@@ -1462,7 +1446,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // hasn't been malloc'd.  Force a copy of the data here so the
         // DOM Event is still valid.
         nsIPrivateDOMEvent *privateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&privateEvent)) {
+        if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
           privateEvent->DuplicatePrivateData();
           NS_RELEASE(privateEvent);
         }
@@ -1777,7 +1761,8 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
 {
   nsIScriptObjectOwner *owner;
 
-  if (NS_OK != mContent->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner)) {
+  if (NS_OK != mContent->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
+                                        (void **)&owner)) {
     return PR_FALSE;
   }
 
@@ -2622,7 +2607,7 @@ nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
       nsIContent* child = (nsIContent*)mChildren.ElementAt(index);
       if (nsnull != child) {
         nsIDOMNode* node;
-        result = child->QueryInterface(kIDOMNodeIID, (void**)&node);
+        result = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
         if (NS_OK == result) {
           nsIDOMNode* newNode;
           
@@ -2630,7 +2615,8 @@ nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
           if (NS_OK == result) {
             nsIContent* newContent;
             
-            result = newNode->QueryInterface(kIContentIID, (void**)&newContent);
+            result = newNode->QueryInterface(NS_GET_IID(nsIContent),
+                                             (void**)&newContent);
             if (NS_OK == result) {
               result = aDst->AppendChildTo(newContent, PR_FALSE);
               NS_RELEASE(newContent);
@@ -2663,7 +2649,8 @@ nsGenericContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     NS_ADDREF(slots->mChildNodes);
   }
 
-  return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
+  return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList),
+                                            (void **)aChildNodes);
 }
 
 nsresult
@@ -2683,7 +2670,8 @@ nsGenericContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(0);
   if (nsnull != child) {
-    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                         (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
@@ -2696,7 +2684,8 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
   if (nsnull != child) {
-    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                         (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
