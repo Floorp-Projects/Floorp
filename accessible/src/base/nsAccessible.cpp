@@ -243,7 +243,8 @@ NS_IMETHODIMP nsAccessible::Init()
       if (StringBeginsWith(roleString, prefix)) {
         roleString.Cut(0, prefix.Length());
         nsCString utf8Role = NS_ConvertUCS2toUTF8(roleString); // For easy comparison
-        for (PRUint32 index = 0; gWAIRoleMap[index].roleString; index ++) {
+        PRUint32 index;
+        for (index = 0; gWAIRoleMap[index].roleString; index ++) {
           if (utf8Role.Equals(gWAIRoleMap[index].roleString)) {
             break; // The dynamic role attribute maps to an entry in our table
           }
@@ -1099,7 +1100,8 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
     return NS_OK;
   }
 
-  for (PRUint32 index = 0; index < numChildren; index++) {
+  PRUint32 index;
+  for (index = 0; index < numChildren; index++) {
     AppendFlatStringFromSubtree(aContent->GetChildAt(index), aFlatString);
   }
   return NS_OK;
