@@ -45,11 +45,16 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   <hbox autostretch="never">
     <text class="label" value="&filtersForPrefix.label;"/>
       <menulist oncommand="onServerClick(event);" id="serverMenu">
-        <menupopup datasources="rdf:msgaccountmanager"
+        <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                    containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
           <template>
             <rule nc:SupportsFilters="true">
-              <menuitem uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <menuitem uri="..." value="..."
+                 class="folderMenuItem menuitem-iconic"
+                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                 IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                 label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </rule>
           </template>
         </menupopup>
