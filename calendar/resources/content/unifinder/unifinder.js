@@ -99,17 +99,22 @@ var unifinderEventDataSourceObserver =
       if( calendarEvent )
       {
          unifinderRefesh();
+
+         selectEventInUnifinder( calendarEvent );
       }
    },
 
    onModifyItem : function( calendarEvent, originalEvent )
    {
       unifinderRefesh();
+
+      selectEventInUnifinder( calendarEvent );
    },
 
    onDeleteItem : function( calendarEvent )
    {
       unifinderRefesh();
+
    },
 
    onAlarm : function( calendarEvent )

@@ -243,6 +243,8 @@ function dayEventItemDoubleClick( eventBox, event )
 function dayViewHourClick( hourNumber, event )
 {
    gCalendarWindow.setSelectedHour( hourNumber );
+
+   deselectEventInUnifinder();
 }
 
 
@@ -258,6 +260,8 @@ function dayViewHourDoubleClick( hourNumber, event )
    
    var startDate = gCalendarWindow.dayView.getNewEventDate();
    newEvent( startDate );
+
+   deselectEventInUnifinder();
 }
 
 
@@ -315,6 +319,8 @@ function weekViewHourClick( dayIndex, hourNumber, event )
    gCalendarWindow.setSelectedDate( newDate );
 
    gCalendarWindow.setSelectedHour( hourNumber );
+
+   deselectEventInUnifinder();
 }
 
 
@@ -334,6 +340,8 @@ function weekViewHourDoubleClick( dayIndex, hourNumber, event )
    
    var startDate = gCalendarWindow.weekView.getNewEventDate();
    newEvent( startDate );
+
+   deselectEventInUnifinder();
    
 }
 
@@ -412,8 +420,9 @@ function deselectEventInUnifinder( )
    {
       var Tree = document.getElementById( "unifinder-categories-tree" );
       
-      //HACK THIS DOESN"T WORK RIGHT NOW FOR MIKE POTTER????
-      //Tree.clearItemSelection( );
+      var TreeItem = document.getElementById( "unifinder-treeitem-"+gUnifinderSelection );
+      
+      Tree.removeItemFromSelection( TreeItem );
       
       gUnifinderSelection = null;
    }
