@@ -46,7 +46,9 @@ class nsString;
 class nsINameSpace;
 
 #define kNameSpaceID_Unknown -1
-#define kNameSpaceID_None     0
+// 0 is special at C++, so use a static const PRInt32 for
+// kNameSpaceID_None to keep if from being cast to pointers
+static const PRInt32 kNameSpaceID_None = 0;
 #define kNameSpaceID_XMLNS    1 // not really a namespace, but it needs to play the game
 #define kNameSpaceID_XML      2
 #define kNameSpaceID_XHTML    3
