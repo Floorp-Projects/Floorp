@@ -2,6 +2,7 @@
 
 interface nsIOutputStream;
 interface nsIMsgIncomingServer;
+interface nsIMsgDBHdr;
 
 [scriptable, uuid(24ca5ee5-4b0b-4d7b-b53c-13fa2279ccf0)]
 interface nsISpamSettings: nsISupports {
@@ -41,6 +42,7 @@ interface nsISpamSettings: nsISupports {
   void clearLog();
   void ensureLogFile();
   void flushLogIfNecessary();
+  void logJunkHit(in nsIMsgDBHdr aMsgHdr, in boolean aMoveMessage);
 
   void clone(in nsISpamSettings aSpamSettings); 
 };

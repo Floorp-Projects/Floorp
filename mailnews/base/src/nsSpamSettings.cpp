@@ -4,6 +4,8 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "nsIFileStreams.h"
+#include "nsIMsgHdr.h"
+#include "nsEscape.h"
 
 #define MOVE_TARGET_MODE_JUNK_ON_ACCOUNT 0
 #define MOVE_TARGET_MODE_FOLDER          1
@@ -345,3 +347,87 @@ NS_IMETHODIMP nsSpamSettings::GetSpamFolderURI(char **aSpamFolderURI)
     return rv;
 }
 
+
+#define LOG_ENTRY_START_TAG "<p>\n"
+#define LOG_ENTRY_START_TAG_LEN (strlen(LOG_ENTRY_START_TAG))
+#define LOG_ENTRY_END_TAG "</p>\n"
+#define LOG_ENTRY_END_TAG_LEN (strlen(LOG_ENTRY_END_TAG))
+
+NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessage)
+{
+  PRBool loggingEnabled;
+  nsresult rv = GetLoggingEnabled(&loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!loggingEnabled)
+    return NS_OK;
+
+  nsCOMPtr <nsIOutputStream> logStream;
+  rv = GetLogStream(getter_AddRefs(logStream));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRTime date;
+  char dateStr[40];	/* 30 probably not enough */
+  
+  nsXPIDLCString author;
+  nsXPIDLCString subject;
+  
+  rv = aMsgHdr->GetDate(&date);
+  PRExplodedTime exploded;
+  PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
+  PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
+  
+  aMsgHdr->GetAuthor(getter_Copies(author));
+  aMsgHdr->GetSubject(getter_Copies(subject));
+  
+  nsCString buffer;
+  // this is big enough to hold a log entry.  
+  // do this so we avoid growing and copying as we append to the log.
+  buffer.SetCapacity(512);  
+  
+  buffer = "Detected junk message from ";
+  buffer +=  (const char*)author;
+  buffer +=  " - ";
+  buffer +=  (const char *)subject;
+  buffer +=  " at ";
+  buffer +=  dateStr;
+  buffer +=  "\n";
+  
+  if (aMoveMessage) {
+    nsXPIDLCString msgId;
+    aMsgHdr->GetMessageId(getter_Copies(msgId));
+    
+    nsXPIDLCString junkFolderURI;
+    GetSpamFolderURI(getter_Copies(junkFolderURI));
+    
+    buffer += "Move message id = ";
+    buffer += msgId.get();
+    buffer += " to ";
+    buffer += junkFolderURI.get();
+    buffer += "\n";
+  }
+  
+  PRUint32 writeCount;
+  
+  rv = logStream->Write(LOG_ENTRY_START_TAG, LOG_ENTRY_START_TAG_LEN, &writeCount);
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ASSERTION(writeCount == LOG_ENTRY_START_TAG_LEN, "failed to write out start log tag");
+  
+  // html escape the log for security reasons.
+  // we don't want some to send us a message with a subject with
+  // html tags, especially <script>
+  char *escapedBuffer = nsEscapeHTML(buffer.get());
+  if (!escapedBuffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  PRUint32 escapedBufferLen = strlen(escapedBuffer);
+  rv = logStream->Write(escapedBuffer, escapedBufferLen, &writeCount);
+  PR_FREEIF(escapedBuffer);
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ASSERTION(writeCount == escapedBufferLen, "failed to write out log hit");
+  
+  rv = logStream->Write(LOG_ENTRY_END_TAG, LOG_ENTRY_END_TAG_LEN, &writeCount);
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ASSERTION(writeCount == LOG_ENTRY_END_TAG_LEN, "failed to write out end log tag");
+  return NS_OK;
+}

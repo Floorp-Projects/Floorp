@@ -3399,19 +3399,28 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus a
   
   rv = GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv, rv); 
+  
   rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
   NS_ENSURE_SUCCESS(rv, rv); 
-  if (aClassification == nsIJunkMailPlugin::JUNK && ! (mFlags & MSG_FOLDER_FLAG_JUNK))
-  {
 
-    spamSettings->GetMoveOnSpam(&moveOnSpam);
-    if (moveOnSpam)
+  if (aClassification == nsIJunkMailPlugin::JUNK)
+  {
+    PRBool willMoveMessage = PR_FALSE;
+    if (!(mFlags & MSG_FOLDER_FLAG_JUNK))
     {
+      spamSettings->GetMoveOnSpam(&moveOnSpam);
+      if (moveOnSpam)
+      {
         nsMsgKey msgKey;
         msgHdr->GetMessageKey(&msgKey);
         mSpamKeysToMove.Add(msgKey);
+        willMoveMessage = PR_TRUE;
+      }
     }
+    rv = spamSettings->LogJunkHit(msgHdr, willMoveMessage);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
+
   if (--mNumFilterClassifyRequests == 0 && mSpamKeysToMove.GetSize() > 0)
   {
     spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));

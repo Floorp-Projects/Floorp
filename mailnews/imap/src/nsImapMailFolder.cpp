@@ -623,7 +623,6 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
   return folderOpen;
 }
 
-
 NS_IMETHODIMP
 nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 {
@@ -4908,9 +4907,11 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     else
       aProtocol->NotifyBodysToDownload(nsnull, 0/*keysToFetch.GetSize() */);
   }
+
 #ifdef DEBUG_bienvenu
 #define DO_FILTER_PLUGIN
 #endif
+
 #ifdef DO_FILTER_PLUGIN
   CallFilterPlugins();
 #endif
@@ -7115,40 +7116,51 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClas
   rv = GetMsgDBHdrFromURI(aMsgURL, getter_AddRefs(msgHdr));
   NS_ENSURE_SUCCESS(rv, rv);
   msgHdr->SetStringProperty("junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
-  if (aClassification == nsIJunkMailPlugin::JUNK && ! (mFlags & MSG_FOLDER_FLAG_JUNK))
+
+  if (aClassification == nsIJunkMailPlugin::JUNK)
   {
     nsCOMPtr<nsISpamSettings> spamSettings;
-    nsXPIDLCString spamFolderURI;
-    PRBool moveOnSpam = PR_FALSE;
-    
-    nsresult rv = GetServer(getter_AddRefs(server));
+    rv = GetServer(getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv, rv); 
     rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
     NS_ENSURE_SUCCESS(rv, rv); 
-
-    spamSettings->GetMoveOnSpam(&moveOnSpam);
-    if (moveOnSpam)
+    
+    PRBool willMoveMessage = PR_FALSE;
+    
+    if (!(mFlags & MSG_FOLDER_FLAG_JUNK))
     {
-      spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
-      if (!spamFolderURI.IsEmpty())
+      nsXPIDLCString spamFolderURI;
+      PRBool moveOnSpam = PR_FALSE;
+        
+      spamSettings->GetMoveOnSpam(&moveOnSpam);
+      if (moveOnSpam)
       {
+        spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
+        if (!spamFolderURI.IsEmpty())
+        {
           nsMsgKey msgKey;
           msgHdr->GetMessageKey(&msgKey);
           nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
           NS_ENSURE_SUCCESS(rv, rv);
-
+          
           nsCOMPtr<nsIRDFResource> res;
           rv = rdfService->GetResource(spamFolderURI, getter_AddRefs(res));
           if (NS_FAILED(rv))
             return rv;
-
+          
           nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
           if (NS_FAILED(rv))
             return rv;        
-           if (NS_SUCCEEDED(GetMoveCoalescer()))
+          if (NS_SUCCEEDED(GetMoveCoalescer())) {
             m_moveCoalescer->AddMove(folder, msgKey);
+            willMoveMessage = PR_TRUE;
+          }
+        }
       }
     }
+
+    rv = spamSettings->LogJunkHit(msgHdr, willMoveMessage);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
   if (--m_numFilterClassifyRequests == 0 && m_moveCoalescer)
     m_moveCoalescer->PlaybackMoves();
