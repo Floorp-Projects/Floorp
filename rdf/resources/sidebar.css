@@ -104,17 +104,11 @@ box#sidebox {
 
 box.sidebartitle {
   background-color: #505888;
-  padding: 0px;
-  border: 0px;
-  margin: 0px;
   font: 10pt sans-serif;
 }
 
 box.panelbar {
   background-color: #006870;
-  padding: 1px;
-  border: 0px;
-  margin: 0px;
   font: 10pt sans-serif;
 }
 
