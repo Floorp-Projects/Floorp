@@ -79,39 +79,39 @@ nsWalletViewer.prototype =
         try {
           if (pref.getBoolPref("wallet.namePanel.hide")) {
             panel = document.getElementById("pnameID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
             panel = document.getElementById("snameID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
             panel = document.getElementById("bnameID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
           }
           if (pref.getBoolPref("wallet.addressPanel.hide")) {
             panel = document.getElementById("paddressID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
             panel = document.getElementById("saddressID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
             panel = document.getElementById("baddressID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
           }
           if (pref.getBoolPref("wallet.phonePanel.hide")) {
             panel = document.getElementById("pphoneID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
             panel = document.getElementById("sphoneID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
             panel = document.getElementById("bphoneID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
           }
           if (pref.getBoolPref("wallet.creditPanel.hide")) {
             panel = document.getElementById("pcreditID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
           }
           if (pref.getBoolPref("wallet.employPanel.hide")) {
             panel = document.getElementById("pemployID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
           }
           if (pref.getBoolPref("wallet.miscPanel.hide")) {
             panel = document.getElementById("pmiscID");
-            panel.setAttribute("style", "display:none;");
+            panel.setAttribute("hidden", "true");
           }
         } catch(e) {
           // error -- stop hiding if prefs are missing
