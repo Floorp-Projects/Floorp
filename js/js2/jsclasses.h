@@ -112,7 +112,7 @@ namespace JSClasses {
             return mConstructor;
         }
         
-        JSSlot& addSlot(const String& name, JSType* type)
+        JSSlot& defineSlot(const String& name, JSType* type)
         {
             JSSlot& slot = mSlots[name];
             ASSERT(slot.mType == 0);
@@ -139,6 +139,14 @@ namespace JSClasses {
         uint32 getSlotCount()
         {
             return mSlotCount;
+        }
+        
+        /**
+         * Define a static/class variable.
+         */
+        JSValue& defineStatic(const String& name, JSType* type)
+        {
+            return mScope->defineVariable(name, type);
         }
     };
 
