@@ -44,7 +44,8 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\plugin                \
       -I$(PUBLIC)\java                  \
       -I$(PUBLIC)\uconv                 \
-      -I$(PUBLIC)\oji                  
+      -I$(PUBLIC)\appcores				\
+      -I$(PUBLIC)\oji    
 #      -I..\browser
 
 MAKE_OBJ_TYPE = EXE

@@ -41,6 +41,19 @@ static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 
+/*********************************************
+ AppCores
+*********************************************/
+
+#ifdef XP_PC
+#include "nsAppCoresCIDs.h"
+#include "nsIDOMAppCores.h"
+
+static nsIDOMAppCores *gAppCores = nsnull;
+static NS_DEFINE_IID(kIAppCoresIID, NS_IDOMAPPCORES_IID);
+static NS_DEFINE_IID(kAppCoresCID,  NS_AppCores_CID);
+#endif
+/*********************************************/
 
 /*
  * This routine translates the nsresult into a platform specific return
@@ -180,6 +193,17 @@ int main(int argc, char* argv[])
   if (NS_FAILED(rv)) {
     goto done;
   }
+
+#ifdef XP_PC
+	rv = nsRepository::CreateInstance(kAppCoresCID, nsnull, kIAppCoresIID, (void**) &gAppCores);
+	if (rv == NS_OK) {
+		if (gAppCores->Startup() != NS_OK) {
+			gAppCores->Shutdown();
+			NS_RELEASE(gAppCores);
+		}
+	}
+#endif
+
   /*
    * XXX: Currently, the CID for the "controller" is passed in as an argument 
    *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
@@ -212,6 +236,13 @@ done:
   if (nsnull != appShell) {
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
+
+#ifdef XP_PC
+  if (nsnull != gAppCores) {
+		gAppCores->Shutdown();
+		NS_RELEASE(gAppCores);
+  }
+#endif
 
   /* 
    * Translate the nsresult into an appropriate platform-specific return code.
