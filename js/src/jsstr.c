@@ -4442,6 +4442,11 @@ static uint32
 Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
 {
     uint32 ucs4Char;
+    uint32 minucs4Char;
+    // from Unicode 3.1, non-shortest form is illegal 
+    static const uint32 minucs4Table[] = {
+        0x00000080, 0x00000800, 0x0001000, 0x0020000, 0x0400000
+    };
 
     JS_ASSERT(utf8Length >= 1 && utf8Length <= 6);
     if (utf8Length == 1) {
@@ -4451,9 +4456,14 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
         JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) ==
                   (0x100 - (1 << (8-utf8Length))));
         ucs4Char = *utf8Buffer++ & ((1<<(7-utf8Length))-1);
+        minucs4Char = minucs4Table[utf8Length-2];
         while (--utf8Length) {
             JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
             ucs4Char = ucs4Char<<6 | (*utf8Buffer++ & 0x3F);
+        }
+        if (ucs4Char < minucs4Char || 
+            ucs4Char == 0xFFFE || ucs4Char == 0xFFFF) {
+            ucs4Char = 0xFFFD;
         }
     }
     return ucs4Char;
