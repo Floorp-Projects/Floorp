@@ -218,6 +218,7 @@ Permission_Check(
     permission_changed = PR_TRUE;
     Permission_Save();
   }
+  Recycle(remember_string);
   return permission;
 }
 
