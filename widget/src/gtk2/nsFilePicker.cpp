@@ -43,7 +43,7 @@
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsILocalFile.h"
-#include "nsISupportsArray.h"
+#include "nsArrayEnumerator.h"
 #include "nsVoidArray.h"
 #include "nsMemory.h"
 #include "nsEnumeratorUtils.h"
@@ -80,6 +80,7 @@ typedef enum
 
 
 typedef gchar* (*_gtk_file_chooser_get_filename_fn)(GtkFileChooser *chooser);
+typedef GSList* (*_gtk_file_chooser_get_filenames_fn)(GtkFileChooser *chooser);
 typedef GtkWidget* (*_gtk_file_chooser_dialog_new_fn)(const gchar *title,
                                                       GtkWindow *parent,
                                                       GtkFileChooserAction action,
@@ -95,6 +96,7 @@ typedef void (*_gtk_file_filter_set_name_fn)(GtkFileFilter* filter, const gchar*
 
 
 DECL_FUNC_PTR(gtk_file_chooser_get_filename);
+DECL_FUNC_PTR(gtk_file_chooser_get_filenames);
 DECL_FUNC_PTR(gtk_file_chooser_dialog_new);
 DECL_FUNC_PTR(gtk_file_chooser_set_select_multiple);
 DECL_FUNC_PTR(gtk_file_chooser_set_current_name);
@@ -148,6 +150,7 @@ nsFilePicker::LoadSymbolsGTK24()
     GET_LIBGTK_FUNC(gtk_file_chooser_get_filename);
   }
 
+  GET_LIBGTK_FUNC(gtk_file_chooser_get_filenames);
   GET_LIBGTK_FUNC(gtk_file_chooser_dialog_new);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_select_multiple);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_name);
@@ -212,12 +215,36 @@ nsFilePicker::~nsFilePicker()
 }
 
 void
+ReadMultipleFiles(gpointer filename, gpointer array)
+{
+  nsCOMPtr<nsILocalFile> localfile;
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(NS_STATIC_CAST(char*, filename)),
+                                      PR_FALSE,
+                                      getter_AddRefs(localfile));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMArray<nsILocalFile>& files = *NS_STATIC_CAST(nsCOMArray<nsILocalFile>*, array);
+    files.AppendObject(localfile);
+  }
+
+  g_free(filename);
+}
+
+void
 nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
 {
-  // Grab the filename
-  gchar *filename = _gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(file_chooser));
-  mFile.Assign(filename);
-  g_free(filename);
+  mFiles.Clear();
+
+  if (mMode == nsIFilePicker::modeOpenMultiple) {
+    mFile.Truncate();
+
+    GSList *list = _gtk_file_chooser_get_filenames (GTK_FILE_CHOOSER(file_chooser));
+    g_slist_foreach(list, ReadMultipleFiles, NS_STATIC_CAST(gpointer, &mFiles));
+    g_slist_free(list);
+  } else {
+    gchar *filename = _gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(file_chooser));
+    mFile.Assign(filename);
+    g_free(filename);
+  }
 
   // Remember last used directory.
   nsCOMPtr<nsILocalFile> file;
