@@ -192,7 +192,6 @@ protected:
   nsresult ResolveStyleContext(nsIPresContext*   aPresContext,
                                nsIFrame*         aParentFrame,
                                nsIContent*       aContent,
-                               nsIAtom*          aTag,
                                nsIStyleContext** aStyleContext);
 
   nsresult ConstructFrame(nsIPresShell*            aPresShell,
@@ -427,7 +426,8 @@ protected:
   nsresult TableProcessChild(nsIPresShell*            aPresShell, 
                              nsIPresContext*          aPresContext,
                              nsFrameConstructorState& aState,
-                             nsIContent&              aChildContent,
+                             nsIContent*              aChildContent,
+                             nsIContent*              aParentContent,
                              nsIFrame*                aParentFrame,
                              nsIAtom*                 aParentFrameType,
                              nsIStyleContext*         aParentStyleContext,

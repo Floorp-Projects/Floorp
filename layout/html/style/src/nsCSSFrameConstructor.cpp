@@ -1433,6 +1433,9 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
 {
   *aResult = nsnull; // initialize OUT parameter
 
+  if (!aContent->IsContentOfType(nsIContent::eELEMENT))
+    return PR_FALSE;
+
   // Probe for the existence of the pseudo-element
   nsCOMPtr<nsIStyleContext> pseudoStyleContext;
   aPresContext->ProbePseudoStyleContextFor(aContent, aPseudoElement, aStyleContext,
@@ -1476,9 +1479,9 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         // Create another pseudo style context to use for all the generated child
         // frames
         nsIStyleContext*  textStyleContext;
-        aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
-                                                   pseudoStyleContext, PR_FALSE,
-                                                   &textStyleContext);
+        aPresContext->ResolveStyleContextForNonElement(
+                                                  pseudoStyleContext, PR_FALSE,
+                                                  &textStyleContext);
 
         // Now create content objects (and child frames) for each value of the
         // 'content' property
@@ -2937,8 +2940,12 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresShell*            aPresShell,
        iter != last;
        ++iter) {
     nsCOMPtr<nsIContent> childContent = *iter;
-    if (childContent && NeedFrameFor(aParentFrame, childContent)) {
-      rv = TableProcessChild(aPresShell, aPresContext, aState, *childContent, aParentFrame,
+    if (childContent &&
+        (childContent->IsContentOfType(nsIContent::eELEMENT) ||
+         childContent->IsContentOfType(nsIContent::eTEXT)) &&
+        NeedFrameFor(aParentFrame, childContent)) {
+      rv = TableProcessChild(aPresShell, aPresContext, aState, childContent,
+                             aContent, aParentFrame,
                              parentFrameType, parentStyleContext,
                              aTableCreator, aChildItems, aCaption);
     }
@@ -2958,7 +2965,8 @@ nsresult
 nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell, 
                                          nsIPresContext*          aPresContext,
                                          nsFrameConstructorState& aState,
-                                         nsIContent&              aChildContent,
+                                         nsIContent*              aChildContent,
+                                         nsIContent*              aParentContent,
                                          nsIFrame*                aParentFrame,
                                          nsIAtom*                 aParentFrameType,
                                          nsIStyleContext*         aParentStyleContext,
@@ -2975,15 +2983,15 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
   nsCOMPtr<nsIStyleContext> childStyleContext;
 
   // Resolve the style context and get its display
-  aPresContext->ResolveStyleContextFor(&aChildContent, aParentStyleContext, PR_FALSE,
-                                       getter_AddRefs(childStyleContext));
+  ResolveStyleContext(aPresContext, aParentFrame, aChildContent,
+                      getter_AddRefs(childStyleContext));
   const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
     childStyleContext->GetStyleData(eStyleStruct_Display);
 
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_TABLE:
     nsIFrame* innerTableFrame;
-    rv = ConstructTableFrame(aPresShell, aPresContext, aState, &aChildContent, aParentFrame,
+    rv = ConstructTableFrame(aPresShell, aPresContext, aState, aChildContent, aParentFrame,
                              childStyleContext, aTableCreator, PR_FALSE, aChildItems,
                              childFrame, innerTableFrame, isPseudoParent);
     break;
@@ -2991,7 +2999,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
   case NS_STYLE_DISPLAY_TABLE_CAPTION:
     if (!aCaption) {  // only allow one caption
       nsIFrame* parentFrame = GetOuterTableFrame(aParentFrame);
-      rv = ConstructTableCaptionFrame(aPresShell, aPresContext, aState, &aChildContent, 
+      rv = ConstructTableCaptionFrame(aPresShell, aPresContext, aState, aChildContent, 
                                       parentFrame, childStyleContext, aTableCreator, 
                                       aChildItems, aCaption, isPseudoParent);
     }
@@ -2999,7 +3007,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
     break;
 
   case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-    rv = ConstructTableColGroupFrame(aPresShell, aPresContext, aState, &aChildContent, 
+    rv = ConstructTableColGroupFrame(aPresShell, aPresContext, aState, aChildContent, 
                                      aParentFrame, childStyleContext, aTableCreator, 
                                      PR_FALSE, aChildItems, childFrame, isPseudoParent);
     break;
@@ -3007,19 +3015,19 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
   case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
   case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
   case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-    rv = ConstructTableRowGroupFrame(aPresShell, aPresContext, aState, &aChildContent, 
+    rv = ConstructTableRowGroupFrame(aPresShell, aPresContext, aState, aChildContent, 
                                      aParentFrame, childStyleContext, aTableCreator, 
                                      PR_FALSE, aChildItems, childFrame, isPseudoParent);
     break;
 
   case NS_STYLE_DISPLAY_TABLE_ROW:
-    rv = ConstructTableRowFrame(aPresShell, aPresContext, aState, &aChildContent, 
+    rv = ConstructTableRowFrame(aPresShell, aPresContext, aState, aChildContent, 
                                 aParentFrame, childStyleContext, aTableCreator, 
                                 PR_FALSE, aChildItems, childFrame, isPseudoParent);
     break;
 
   case NS_STYLE_DISPLAY_TABLE_COLUMN:
-    rv = ConstructTableColFrame(aPresShell, aPresContext, aState, &aChildContent, 
+    rv = ConstructTableColFrame(aPresShell, aPresContext, aState, aChildContent, 
                                 aParentFrame, childStyleContext, aTableCreator, 
                                 PR_FALSE, aChildItems, childFrame, isPseudoParent);
     break;
@@ -3027,13 +3035,16 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
 
   case NS_STYLE_DISPLAY_TABLE_CELL:
     nsIFrame* innerCell;
-    rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, &aChildContent, 
+    rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aChildContent, 
                                  aParentFrame, childStyleContext, aTableCreator, PR_FALSE, 
                                  aChildItems, childFrame, innerCell, isPseudoParent);
     break;
 
+  case NS_STYLE_DISPLAY_NONE:
+    break;
+
   default:
-    rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, &aChildContent, 
+    rv = ConstructTableForeignFrame(aPresShell, aPresContext, aState, aChildContent, 
                                     aParentFrame, childStyleContext, aTableCreator, 
                                     aChildItems, childFrame, isPseudoParent);
     break;
@@ -3230,9 +3241,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     }
 
     if (resolveStyle) {
-      nsCOMPtr<nsIAtom> tag;
-      aDocElement->GetTag(*getter_AddRefs(tag));
-      rv = ResolveStyleContext(aPresContext, aParentFrame, aDocElement, tag, getter_AddRefs(styleContext));
+      rv = ResolveStyleContext(aPresContext, aParentFrame, aDocElement,
+                               getter_AddRefs(styleContext));
       if (NS_FAILED(rv))
         return rv;
     }
@@ -6506,7 +6516,6 @@ nsresult
 nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
                                            nsIFrame*         aParentFrame,
                                            nsIContent*       aContent,
-                                           nsIAtom*          aTag,
                                            nsIStyleContext** aStyleContext)
 {
   nsresult rv = NS_OK;
@@ -6515,43 +6524,23 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
   nsCOMPtr<nsIStyleContext> parentStyleContext;
 
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
-  if (nsLayoutAtoms::textTagName == aTag) {
-    // Use a special pseudo element style context for text
-    nsCOMPtr<nsIContent> parentContent;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-    }
-    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                    nsHTMLAtoms::textPseudo, 
-                                                    parentStyleContext,
-                                                    PR_FALSE,
-                                                    aStyleContext);
-  } else if (nsLayoutAtoms::commentTagName == aTag) {
-    // Use a special pseudo element style context for comments
-    nsCOMPtr<nsIContent> parentContent;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-    }
-    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                    nsHTMLAtoms::commentPseudo, 
-                                                    parentStyleContext,
-                                                    PR_FALSE,
-                                                    aStyleContext);
-    } else if (nsLayoutAtoms::processingInstructionTagName == aTag) {
-    // Use a special pseudo element style context for comments
-    nsCOMPtr<nsIContent> parentContent;
-    if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-    }
-    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                    nsHTMLAtoms::processingInstructionPseudo, 
-                                                    parentStyleContext,
-                                                    PR_FALSE,
-                                                    aStyleContext);
-  } else {
+  if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
     rv = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext,
                                               PR_FALSE,
                                               aStyleContext);
+  } else {
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIAtom> tag;
+      aContent->GetTag(*getter_AddRefs(tag));
+      NS_ASSERTION(tag == nsLayoutAtoms::textTagName,
+                   "shouldn't waste time creating style contexts for "
+                   "comments and processing instructions");
+    }
+#endif
+    rv = aPresContext->ResolveStyleContextForNonElement(parentStyleContext,
+                                                        PR_FALSE,
+                                                        aStyleContext);
   }
   return rv;
 }
@@ -6926,8 +6915,14 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
   nsCOMPtr<nsIAtom>  tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
+  // never create frames for comments on PIs
+  if (tag == nsLayoutAtoms::commentTagName ||
+      tag == nsLayoutAtoms::processingInstructionTagName)
+    return rv;
+
   nsCOMPtr<nsIStyleContext> styleContext;
-  rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, tag, getter_AddRefs(styleContext));
+  rv = ResolveStyleContext(aPresContext, aParentFrame, aContent,
+                           getter_AddRefs(styleContext));
 
   if (NS_SUCCEEDED(rv)) {
     
@@ -6984,7 +6979,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
         return NS_OK;
 
       if (resolveStyle) {
-        rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, aTag, getter_AddRefs(styleContext));
+        rv = ResolveStyleContext(aPresContext, aParentFrame, aContent,
+                                 getter_AddRefs(styleContext));
         if (NS_FAILED(rv))
           return rv;
       }
@@ -8294,6 +8290,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                        PRInt32         aIndexInContainer,
                                        nsILayoutHistoryState* aFrameState)
 {
+  // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
+  // the :empty pseudo-class?
+
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentInserted container=%p child=%p index=%d\n",
@@ -8360,9 +8359,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             // to check it for subsequent display changes (e.g., when you next
             // reopen).
             nsCOMPtr<nsIStyleContext> styleContext;
-            nsCOMPtr<nsIAtom> tagName;
-            aChild->GetTag(*getter_AddRefs(tagName));
-            ResolveStyleContext(aPresContext, innerFrame, aChild, tagName, getter_AddRefs(styleContext));
+            ResolveStyleContext(aPresContext, innerFrame, aChild,
+                                getter_AddRefs(styleContext));
 
             // Pre-check for display "none" - if we find that, don't reflow at all.
             const nsStyleDisplay* display = (const nsStyleDisplay*)
@@ -8998,6 +8996,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                       nsIContent*     aChild,
                                       PRInt32         aIndexInContainer)
 {
+  // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
+  // the :empty pseudo-class?
+
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentRemoved container=%p child=%p index=%d\n",
@@ -10295,9 +10296,8 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   nsIStyleContext* textStyleContext;
 
   NS_NewTextFrame(aPresShell, &textFrame);
-  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
-                                             aStyleContext, PR_FALSE,
-                                             &textStyleContext);
+  aPresContext->ResolveStyleContextForNonElement(aStyleContext, PR_FALSE,
+                                                 &textStyleContext);
 
   textFrame->Init(aPresContext, altTextContent, containerFrame,
                   textStyleContext, nsnull);
@@ -12528,15 +12528,9 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                   GetFloaterContainingBlock(aPresContext, aParentFrame), 
                                   mTempFrameTreeState);
 
-    // Get the element's tag
-    nsCOMPtr<nsIAtom>  tag;
-    aChild->GetTag(*getter_AddRefs(tag));
-
-    PRInt32 namespaceID;
-    aChild->GetNameSpaceID(namespaceID);
-
     nsCOMPtr<nsIStyleContext> styleContext;
-    rv = ResolveStyleContext(aPresContext, aParentFrame, aChild, tag, getter_AddRefs(styleContext));
+    rv = ResolveStyleContext(aPresContext, aParentFrame, aChild,
+                             getter_AddRefs(styleContext));
 
     if (NS_SUCCEEDED(rv)) {
       // Pre-check for display "none" - only if we find that, do we create
@@ -12549,6 +12543,12 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
         return NS_OK;
       }
     }
+
+    nsCOMPtr<nsIAtom> tag;
+    aChild->GetTag(*getter_AddRefs(tag));
+
+    PRInt32 namespaceID;
+    aChild->GetNameSpaceID(namespaceID);
 
     rv = ConstructFrameInternal(shell, aPresContext, state, aChild, aParentFrame, tag, namespaceID, 
                                 styleContext, frameItems, PR_FALSE);

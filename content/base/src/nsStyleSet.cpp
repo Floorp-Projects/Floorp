@@ -118,6 +118,11 @@ public:
                                            nsIStyleContext* aParentContext,
                                            PRBool aForceUnique = PR_FALSE);
 
+  virtual nsIStyleContext* ResolveStyleForNonElement(
+                                           nsIPresContext* aPresContext,
+                                           nsIStyleContext* aParentContext,
+                                           PRBool aForceUnique = PR_FALSE);
+
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,
@@ -856,6 +861,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
   NS_ASSERTION(aContent, "must have content");
   NS_ASSERTION(aPresContext, "must have pres context");
+  NS_ASSERTION(aContent->IsContentOfType(nsIContent::eELEMENT),
+               "content must be element");
 
   if (aContent && aPresContext) {
     GatherRuleProcessors();
@@ -880,6 +887,35 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   STYLESET_STOP_TIMER(NS_TIMER_STYLE_RESOLUTION);
   return result;
 }
+
+nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
+                                               nsIPresContext* aPresContext,
+                                               nsIStyleContext* aParentContext,
+                                               PRBool aForceUnique)
+{
+  MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleForNonElement(), this=%p\n", this));
+  STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
+
+  nsIStyleContext* result = nsnull;
+
+  NS_ASSERTION(aPresContext, "must have pres context");
+
+  if (aPresContext) {
+    GatherRuleProcessors();
+    if (mBackstopRuleProcessors ||
+        mDocRuleProcessors ||
+        mOverrideRuleProcessors) {
+      EnsureRuleWalker(aPresContext);
+      result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
+      NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
+    }
+  }
+
+  MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ResolveStyleForNonElement(), this=%p\n", this));
+  STYLESET_STOP_TIMER(NS_TIMER_STYLE_RESOLUTION);
+  return result;
+}
+
 
 struct PseudoRulesMatchingData {
   PseudoRulesMatchingData(nsIPresContext* aPresContext,
@@ -933,6 +969,9 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(aPresContext, "must have pres context");
+  NS_ASSERTION(!aParentContent ||
+               aParentContent->IsContentOfType(nsIContent::eELEMENT),
+               "content (if non-null) must be element");
 
   if (aPseudoTag && aPresContext) {
     GatherRuleProcessors();
@@ -972,6 +1011,9 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(aPresContext, "must have pres context");
+  NS_ASSERTION(!aParentContent ||
+               aParentContent->IsContentOfType(nsIContent::eELEMENT),
+               "content (if non-null) must be element");
 
   if (aPseudoTag && aPresContext) {
     GatherRuleProcessors();
@@ -1168,7 +1210,11 @@ StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
                                      nsIContent*     aContent)
 {
   GatherRuleProcessors();
-  if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {  
+
+  if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
+      (mBackstopRuleProcessors ||
+       mDocRuleProcessors ||
+       mOverrideRuleProcessors)) {  
     nsIAtom* medium = nsnull;
     aPresContext->GetMedium(&medium);
     StatefulData data(aPresContext, medium, aContent);

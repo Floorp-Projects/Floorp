@@ -3226,7 +3226,8 @@ MOZ_DECL_CTOR_COUNTER(SelectorMatchesData)
 
 struct SelectorMatchesData {
   SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsRuleWalker* aRuleWalker, nsCompatibility* aCompat = nsnull);
+                      nsRuleWalker* aRuleWalker,
+                      nsCompatibility* aCompat = nsnull);
   
   virtual ~SelectorMatchesData() 
   {
@@ -3274,11 +3275,15 @@ struct SelectorMatchesData {
   SelectorMatchesData* mParentData;
 };
 
-SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                nsRuleWalker* aRuleWalker,
-                nsCompatibility* aCompat /*= nsnull*/)
+SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext,
+                                         nsIContent* aContent, 
+                                         nsRuleWalker* aRuleWalker,
+                                         nsCompatibility* aCompat /*= nsnull*/)
 {
   MOZ_COUNT_CTOR(SelectorMatchesData);
+
+  NS_ASSERTION(!aContent || aContent->IsContentOfType(nsIContent::eELEMENT),
+               "non-element leaked into SelectorMatches");
 
   mPresContext = aPresContext;
   mContent = aContent;
@@ -3404,7 +3409,7 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
   return PR_FALSE;
 }
 
-static PRBool IsEventPseudo(nsIAtom* aAtom)
+inline PRBool IsEventPseudo(nsIAtom* aAtom)
 {
   return PRBool ((nsCSSAtoms::activePseudo == aAtom)   || 
                  (nsCSSAtoms::dragOverPseudo == aAtom) || 
@@ -3414,14 +3419,14 @@ static PRBool IsEventPseudo(nsIAtom* aAtom)
                  // XXX selected, enabled, disabled, selection?
 }
 
-static PRBool IsLinkPseudo(nsIAtom* aAtom)
+inline PRBool IsLinkPseudo(nsIAtom* aAtom)
 {
   return PRBool ((nsCSSAtoms::linkPseudo == aAtom) || 
                  (nsCSSAtoms::visitedPseudo == aAtom) ||
                  (nsCSSAtoms::anyLinkPseudo == aAtom));
 }
 
-static PRBool PR_CALLBACK IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aSelectorIsGlobal)
+inline PRBool IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aSelectorIsGlobal)
 {
   // if the selector is global, meaning it is not tied to a tag, then
   // we restrict the application of the event pseudo to the following tags
@@ -3433,11 +3438,7 @@ static PRBool PR_CALLBACK IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTa
                    (nsHTMLAtoms::li == aContentTag)     ||
                    (nsHTMLAtoms::label == aContentTag)  ||
                    (nsHTMLAtoms::select == aContentTag) ||
-                   (nsHTMLAtoms::textarea == aContentTag) ||
-                   (nsHTMLAtoms::textPseudo == aContentTag) ||
-                   // We require a Layout Atom too
-                   (nsLayoutAtoms::textTagName == aContentTag)
-                  );
+                   (nsHTMLAtoms::textarea == aContentTag));
   } else {
     // selector is not global, so apply the event pseudo to everything except HTML and BODY
     return PRBool ((nsHTMLAtoms::html != aContentTag) && 
@@ -3952,6 +3953,8 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
   NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
+  NS_PRECONDITION(aContent->IsContentOfType(nsIContent::eELEMENT),
+                  "content must be element");
 
   RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
 
@@ -4066,6 +4069,9 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
   NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
+  NS_PRECONDITION(!aParentContent ||
+                  aParentContent->IsContentOfType(nsIContent::eELEMENT),
+                  "content (if present) must be element");
 
   RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
 
@@ -4116,6 +4122,9 @@ CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
                                          nsIAtom* aMedium, 
                                          nsIContent* aContent)
 {
+  NS_PRECONDITION(aContent->IsContentOfType(nsIContent::eELEMENT),
+                  "content must be element");
+
   PRBool isStateful = PR_FALSE;
 
   RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
@@ -4288,7 +4297,6 @@ CSSRuleProcessor::ClearRuleCascades(void)
     delete data;
     data = next;
   }
-  mRuleCascades = nsnull;
   return NS_OK;
 }
 
@@ -4302,7 +4310,7 @@ PRBool BuildHashEnum(nsISupports* aRule, void* aHash)
   return PR_TRUE;
 }
 
-static
+inline
 PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
   nsAtomList* pseudoClass = aSelector.mPseudoClassList;

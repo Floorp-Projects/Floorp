@@ -1631,7 +1631,13 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
     else {
       NS_ASSERTION(localContent, "non pseudo-element frame without content node");
-      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_TRUE, &newContext);
+      if (content->IsContentOfType(nsIContent::eELEMENT)) {
+        aPresContext->ResolveStyleContextFor(content, aParentContext,
+                                             PR_TRUE, &newContext);
+      } else {
+        aPresContext->ResolveStyleContextForNonElement(aParentContext,
+                                                       PR_TRUE, &newContext);
+      }
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1845,7 +1851,13 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
     else {
       NS_ASSERTION(localContent, "non pseudo-element frame without content node");
-      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_TRUE, &newContext);
+      if (content->IsContentOfType(nsIContent::eELEMENT)) {
+        aPresContext->ResolveStyleContextFor(content, aParentContext,
+                                             PR_TRUE, &newContext);
+      } else {
+        aPresContext->ResolveStyleContextForNonElement(aParentContext,
+                                                       PR_TRUE, &newContext);
+      }
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1927,13 +1939,20 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         nsIStyleContext* undisplayedContext = nsnull;
         undisplayed->mStyle->GetPseudoType(pseudoTag);
         if (undisplayed->mContent && pseudoTag == nsnull) {  // child content
-          aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
-                                              PR_TRUE, &undisplayedContext);
+          if (undisplayed->mContent->IsContentOfType(nsIContent::eELEMENT)) {
+            aPresContext->ResolveStyleContextFor(undisplayed->mContent,
+                                                 newContext,
+                                                 PR_TRUE, &undisplayedContext);
+          } else {
+            aPresContext->ResolveStyleContextForNonElement(newContext,
+                                                 PR_TRUE, &undisplayedContext);
+          }
         }
         else {  // pseudo element
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
-          aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
-                                                    &undisplayedContext);
+          aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag,
+                                                     newContext, PR_FALSE,
+                                                     &undisplayedContext);
         }
         NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {

@@ -432,7 +432,7 @@ noframes {
 
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
-noembed, noscript, param, *|*:-moz-comment, *|*:-moz-pi {
+noembed, noscript, param {
    display: none;
 }
 
