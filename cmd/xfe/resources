@@ -4426,6 +4426,9 @@ by @NAME@'s plug-ins or @NAME@'s helper applications.
 *popup.openFrameInWindow.mnemonic:		 i
 *popup.editLink.labelString:			Open Link in Composer
 *popup.editLink.mnemonic:				 e
+*popup.fileBookmarksSubmenu.labelString:	File Bookmark
+*popup.fileBookmarksSubmenu.mnemonic:		l
+
 !                                       ------------------------
 ! back
 ! forward

@@ -35,6 +35,11 @@
 #ifdef EDITOR
 #include "EditorFrame.h"
 #endif
+
+#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
+#include "BookmarkMenu.h"	  // Need for file bookmark generate function
+#endif
+
 #include "bkmks.h"
 #include "net.h"
 #include "layers.h"
@@ -218,6 +223,22 @@ MenuSpec XFE_HTMLView::copyImage_spec[] = {
   { xfeCmdCopyImage, PUSHBUTTON },
   { NULL },
 };
+
+#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
+MenuSpec XFE_HTMLView::fileBookmark_spec[] = 
+{
+	{ 
+		"fileBookmarksSubmenu",     
+		DYNA_FANCY_CASCADEBUTTON, 
+		NULL, 
+		NULL, 
+		False, 
+		(void *) True,					// Only headers 
+		XFE_BookmarkMenu::generate
+	},
+	{ NULL },
+};
+#endif
 
 extern Boolean fe_IsPageLoaded (MWContext *context);
 
@@ -2051,6 +2072,10 @@ XFE_HTMLView::doPopup(MWContext *context, CL_Layer *layer,
 		  if (isFrame)                             ADD_SPEC ( openFrameNew_spec );
 #ifdef EDITOR
 		  if (isBrowserLink)                       ADD_SPEC ( openLinkEdit_spec );
+#endif
+#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
+		  ADD_MENU_SEPARATOR;
+		  if (isBrowserLink)                       ADD_SPEC ( fileBookmark_spec );
 #endif
 		  ADD_MENU_SEPARATOR;
 		  if (isBrowser)                           ADD_SPEC ( page_details_spec );

@@ -125,6 +125,10 @@ private:
   static MenuSpec copyLink_spec[];
   static MenuSpec copyImage_spec[];
 
+#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
+  static MenuSpec fileBookmark_spec[];
+#endif
+
   URL_Struct *m_urlUnderMouse;
   URL_Struct *m_imageUnderMouse;
   URL_Struct *m_backgroundUnderMouse;
