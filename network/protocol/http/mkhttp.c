@@ -61,7 +61,7 @@
 
 #include "xp_error.h"
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
 #include "progress.h"
 #endif
 
@@ -907,7 +907,7 @@ net_begin_upload_file (ActiveEntry *ce)
   status_msg = PR_smprintf("Uploading file %s", filename);
   if(status_msg)
     {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_Status(ce->window_id, ce->URL_s, status_msg);
 #else
     NET_Progress(ce->window_id, status_msg);
@@ -1684,7 +1684,7 @@ net_send_http_request (ActiveEntry *ce)
             char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_WAIT_REPLY),
                             nonProxyHost);
             if (msg) {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_Status(ce->window_id, ce->URL_s, msg);
 #else
                 NET_Progress(ce->window_id, msg);
@@ -1763,7 +1763,7 @@ net_http_send_post_data (ActiveEntry *ce)
         char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_WAIT_REPLY),
                     nonProxyHost);
         if (msg) {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
           PM_Status(ce->window_id, ce->URL_s, msg);
 #else
           NET_Progress(ce->window_id, msg);
@@ -1780,7 +1780,7 @@ net_http_send_post_data (ActiveEntry *ce)
   else if(cd->total_size_of_files_to_post && ce->status > 0)
     {
       cd->total_amt_written += ce->status;
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
       PM_Progress(ce->window_id,
                   ce->URL_s,
                   cd->total_amt_written,
@@ -2489,7 +2489,7 @@ net_setup_http_stream(ActiveEntry * ce) {
         int status;
         NET_ClearReadSelect(ce->window_id, cd->connection->sock);
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Suspend(ce->window_id, ce->URL_s);
 #endif
 
@@ -2499,7 +2499,7 @@ net_setup_http_stream(ActiveEntry * ce) {
                     ce->URL_s->protection_template,
                     cd->sent_authorization);
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Resume(ce->window_id, ce->URL_s);
 #endif
 
@@ -2550,7 +2550,7 @@ net_setup_http_stream(ActiveEntry * ce) {
         else
             proxyServer = cd->proxy_server;
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Suspend(ce->window_id, ce->URL_s);
 #endif
 
@@ -2562,7 +2562,7 @@ net_setup_http_stream(ActiveEntry * ce) {
         else
             ce->URL_s->dont_cache = TRUE;
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Resume(ce->window_id, ce->URL_s);
 #endif
 
@@ -2840,7 +2840,7 @@ net_setup_http_stream(ActiveEntry * ce) {
         cd->use_copy_from_cache = FALSE;
 
     } else {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Progress(ce->window_id,
                     ce->URL_s,
                     0,
@@ -2868,7 +2868,7 @@ net_setup_http_stream(ActiveEntry * ce) {
             char* msg = PR_smprintf(XP_GetString(XP_PROGRESS_TRANSFER_DATA),
                         nonProxyHost);
             if (msg) {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_Status(ce->window_id, ce->URL_s, msg);
 #else
                 NET_Progress(ce->window_id, msg);
@@ -2888,7 +2888,7 @@ net_setup_http_stream(ActiveEntry * ce) {
             (*cd->stream->is_write_ready)(cd->stream);
             ce->status = PUTBLOCK(cd->line_buffer, cd->line_buffer_size);
             ce->bytes_received = cd->line_buffer_size;
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             PM_Progress(ce->window_id,
                         ce->URL_s,
                         ce->bytes_received, 
@@ -3081,7 +3081,7 @@ net_pull_http_data(ActiveEntry * ce)
     if(ce->status > 0)
       {
         ce->bytes_received += ce->status;
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Progress(ce->window_id,
                     ce->URL_s,
                     ce->bytes_received,
@@ -3241,7 +3241,7 @@ net_HTTPLoad (ActiveEntry * ce)
                xpFileToPost))
         cd->total_size_of_files_to_post += stat_entry.st_size;
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
       PM_Progress(ce->window_id,
                   ce->URL_s,
                   0,
@@ -3525,7 +3525,7 @@ HG51096
                 cd->stream = 0;
             }
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             /* XXX what to do if redirected to cache? */
             PM_StopBinding(ce->window_id, ce->URL_s, 0, NULL);
 #endif
@@ -3603,7 +3603,7 @@ HG51096
                 PR_Free(cd->connection);
             }
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             PM_StopBinding(ce->window_id, ce->URL_s, -1, NULL);
 #endif
 
@@ -3634,7 +3634,7 @@ HG51096
                 ce->URL_s->post_data_is_file = FALSE;
             }
 
-#if !defined(SMOOTH_PROGRESS) || defined(MODULAR_NETLIB)
+#if !defined(SMOOTH_PROGRESS)
             if(cd->destroy_graph_progress)
                 FE_GraphProgressDestroy(ce->window_id,
                     ce->URL_s, 
@@ -3679,7 +3679,7 @@ HG51096
                     && !cd->posting) {
                 /* Could be a HTTP 0/1 compability problem. */
                 TRACEMSG(("HTTP: Read error trying again with HTTP0 request."));
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_Status(ce->window_id, ce->URL_s, XP_GetString(XP_PROGRESS_TRYAGAIN));
 #else
                 NET_Progress (ce->window_id, XP_GetString(XP_PROGRESS_TRYAGAIN));

@@ -72,8 +72,10 @@ nsHttpURLFactory::CreateURL(nsIURL* *aResult,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(url);
     nsresult err = url->ParseURL(aSpec, aContextURL);
-    if (err != NS_OK) 
+    if (err != NS_OK) {
+		NS_RELEASE(url);
         return err;
+	}
     *aResult = url;
     return NS_OK;
 }

@@ -2352,12 +2352,8 @@ net_IntSetCookieString(MWContext * context,
 	 *   since it might do file I/O and uses the preferences
 	 *   global context + objects.
 	 */
-#if !defined(MODULAR_NETLIB)
-        result= (JSCFResult)ET_JSCFExecute(context, script_name, cd, &changed);
-#else
         /* XXX:  This is probably not correct, but it will fix the build for now... */
         result= JSCF_Execute(context, script_name, cd, &changed);
-#endif /* MODULAR_NETLIB */
 		if( result != JSCF_error) {
 			if( changed ) {
 				if( cd->path_from_header != path_from_header ) {

@@ -25,7 +25,7 @@
 /* The puropse of this file is simply to add a level of abstraction between netlib
  * and the XP_File* api. */
 
-#if defined(MODULAR_NETLIB) && defined(NS_NET_FILE)
+#if defined(NS_NET_FILE)
 
 extern int NET_I_XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type);
 #define NET_XP_Stat(name, out, type) NET_I_XP_Stat(name, out, type)
@@ -88,6 +88,6 @@ extern int NET_I_XP_FileRemove(const char * name, XP_FileType type);
 #define NET_XP_FileClose(fp) XP_FileClose(fp)
 
 #define NET_XP_FileRemove(name, type) XP_FileRemove(name, type) 
-#endif /* MODULAR_NETLIB */
+#endif /* NS_NET_FILE */
 
 #endif /* _net_xp_file_h */

@@ -24,10 +24,10 @@
 #include "prmem.h"
 #include "nsCacheManager.h"
 #include "plstr.h"
-#if defined(MODULAR_NETLIB) && defined(XP_PC)
+#if defined(XP_PC)
 #include <direct.h>
 #include "nspr.h"
-#endif /* MODULAR_NETLIB */
+#endif /* XP_PC */
 
 #ifdef XP_MAC
 #include "uprefd.h"
@@ -128,7 +128,7 @@ nsCachePref::SetupPrefs(const char* i_Pref)
 	    }
         else //TODO set to temp folder
         {
-#if defined(MODULAR_NETLIB) && defined(XP_PC)
+#if defined(XP_PC)
             char tmpBuf[_MAX_PATH];
             PRFileInfo dir;
             PRStatus status;
@@ -151,14 +151,8 @@ nsCachePref::SetupPrefs(const char* i_Pref)
                 }
             }
             m_DiskCacheFolder = cacheDir;
-#else 
-            m_DiskCacheFolder = new char [1];
-            if (!m_DiskCacheFolder)
-                return;
-            *m_DiskCacheFolder = '\0';
-#endif /* MODULAR_NETLIB */
+#endif /* XP_PC */
         }
-
     }
 
     if (tempPref)

@@ -47,5 +47,4 @@
 
 /* ...and define the Raptor specific things */
 #define STANDALONE_IMAGE_LIB 	/* libimg */
-#define MODULAR_NETLIB 			/* network */
 #define MOZ_NGLAYOUT

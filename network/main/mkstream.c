@@ -132,11 +132,7 @@ NET_HaveConverterForMimeType(char *content_type)
 
 /* Find a converter routine to create a stream and return the stream struct
 */
-#ifdef MODULAR_NETLIB
 PR_IMPLEMENT(NET_StreamClass *)
-#else
-NET_StreamClass *
-#endif /* MODULAR_NETLIB */
 NET_StreamBuilder  (FO_Present_Types format_out,
                     URL_Struct  *URL_s,
                     MWContext   *context)

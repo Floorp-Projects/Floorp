@@ -872,11 +872,7 @@ HG29784
           }
 
         /* Separate the headers from the data with a CR and LF. */
-#if defined(MODULAR_NETLIB)
         if(URL_s->post_headers && !data_obj->CRSent) {
-#else
-        if(!data_obj->CRSent) {
-#endif
             data_obj->buffer[0] = CR;
             data_obj->buffer[1] = LF;
             data_obj->buffer[2] = '\0';
@@ -899,11 +895,7 @@ HG29784
                 data_obj->LFSent = TRUE;
         }
 
-#if defined(MODULAR_NETLIB)
         if(URL_s->post_headers && !data_obj->LFSent) {
-#else
-        if(!data_obj->LFSent) {
-#endif
             data_obj->buffer[0] = LF;
             data_obj->buffer[1] = '\0';
             amtWritten = PR_Write(sock, data_obj->buffer, PL_strlen(data_obj->buffer));

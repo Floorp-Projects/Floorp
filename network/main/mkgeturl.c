@@ -100,16 +100,7 @@
 #include "jspubtd.h"
 #endif
 
-/* nglayout should render the prefered image load hack obsolete */
-#ifndef MODULAR_NETLIB
-#include "libimg.h"             /* Image Lib public API. */ 
-#include "il_strm.h"             /* Image Lib public API. */
-#endif
-
 #include "libi18n.h"
-#ifndef MODULAR_NETLIB
-#include "htmldlgs.h"
-#endif
 
 #include "np.h"
 #include "prefapi.h"
@@ -139,11 +130,6 @@
 
 #include "xplocale.h"
 
-/* This is only until all platforms have libfont/ checked in */
-#ifndef MODULAR_NETLIB
-#define WEBFONTS
-#endif
-
 #ifdef WEBFONTS
 #include "nf.h"
 #endif /* WEBFONTS */
@@ -151,9 +137,7 @@
 /* plugins:  */
 #include "np.h"
 
-#ifdef MODULAR_NETLIB
 void net_ReleaseContext(MWContext *context);
-#endif /* MODULAR_NETLIB */
 
 #if defined(NETLIB_THREAD)
 void net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
@@ -171,7 +155,7 @@ void net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
 #include "mkaccess.h"		/* change to trust.h for phase 2 */
 #endif
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
 #include "progress.h"
 #endif
 
@@ -1243,9 +1227,7 @@ net_push_url_on_wait_queue(int                 url_type,
 							MK_OUT_OF_MEMORY,
 							format_out,
 							context);
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(wus->window_id);
-#endif
 		return(MK_OUT_OF_MEMORY);
 	  }
 
@@ -1340,11 +1322,7 @@ net_release_urls_for_processing(XP_Bool release_prefered, XP_Bool release_prefet
 		if(!release_prefered
 		   || ( (wus->format_out != FO_INTERNAL_IMAGE
 			    && wus->format_out != FO_CACHE_AND_INTERNAL_IMAGE)
-#if defined(MOZILLA_CLIENT) && !defined(MODULAR_NETLIB)
-			    || IL_PreferredStream(wus->URL_s) ) )
-#else
 		  ) )
-#endif /* MOZILLA_CLIENT */
 		  {
 			/* if the type passed in NOT Prefetch_priority then only
 			 * release URL's that are NOT Prefetch_priority
@@ -1492,9 +1470,7 @@ net_AbortWaitingURL(MWContext * window_id, Bool all, XP_List *list)
 			 * funky doubly linked list stuff.
 			 */
 			XP_ListRemoveObject(list, wus);
-#if defined(MODULAR_NETLIB)
             net_ReleaseContext(wus->window_id);
-#endif
 			FREE(wus);
 		  }
 		else
@@ -1766,9 +1742,7 @@ NET_ShutdownNetLib(void)
 							 tmpEntry->status,
 							 tmpEntry->format_out,
 							 tmpEntry->window_id);
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(tmpEntry->window_id);
-#endif
 	 	PR_Free(tmpEntry);  /* free the no longer active entry */
       }
 
@@ -1857,11 +1831,7 @@ PRIVATE net_number_of_proto_impls = 0;
 /* registers a protocol impelementation for a particular url_type
  * see NET_URL_Type() for types
  */
-#ifdef MODULAR_NETLIB
 PR_IMPLEMENT(void)
-#else
-void
-#endif /* MODULAR_NETLIB */
  NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type)
 {
 
@@ -1980,9 +1950,7 @@ NET_GetURL (URL_Struct *URL_s,
 								MK_INTERRUPTED,
 								output_format,
 								window_id);
-#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
-#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 		}
 	}
@@ -2122,9 +2090,7 @@ NET_GetURL (URL_Struct *URL_s,
 	  NET_TotalNumberOfProcessingURLs++;
 	  net_CheckForWaitingURL(window_id, 0, load_background);
 
-#if defined(MODULAR_NETLIB)
       net_ReleaseContext(window_id);
-#endif
 	  LIBNET_UNLOCK_AND_RETURN(MK_MALFORMED_URL_ERROR);
 	}
 
@@ -2145,7 +2111,7 @@ NET_GetURL (URL_Struct *URL_s,
 															exit_routine));
 	}
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_StartBinding(window_id, URL_s);
 #endif
 
@@ -2281,9 +2247,7 @@ NET_GetURL (URL_Struct *URL_s,
 
 			net_CheckForWaitingURL(window_id, 0, load_background);
 
-#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
-#endif
 		LIBNET_UNLOCK_AND_RETURN(MK_TIMEBOMB_URL_PROHIBIT);
 		  }
 	  }
@@ -2367,9 +2331,7 @@ NET_GetURL (URL_Struct *URL_s,
 									window_id);
 		net_CheckForWaitingURL(window_id, 0, load_background);
 
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(window_id);
-#endif
 		LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 		      }
 		  }
@@ -2395,9 +2357,7 @@ NET_GetURL (URL_Struct *URL_s,
 								output_format,
 								window_id);
 			
-#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
-#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_OUT_OF_MEMORY);
 		}       
 
@@ -2417,9 +2377,7 @@ NET_GetURL (URL_Struct *URL_s,
 							    MK_INTERRUPTED,
 							    output_format,
 							    window_id);
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(window_id);
-#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 	}
 #endif
@@ -2812,9 +2770,7 @@ NET_GetURL (URL_Struct *URL_s,
 								window_id);
 			net_CheckForWaitingURL(window_id, type, load_background);
 
-#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
-#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_OBJECT_NOT_IN_CACHE);
 		  }
 		else
@@ -2851,9 +2807,7 @@ NET_GetURL (URL_Struct *URL_s,
 							output_format,
 							window_id);
 
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(window_id);
-#endif
 		LIBNET_UNLOCK_AND_RETURN(MK_OUT_OF_MEMORY);
 	  }
 
@@ -2913,9 +2867,7 @@ NET_GetURL (URL_Struct *URL_s,
 				net_CheckForWaitingURL(window_id, this_entry->protocol, 
 									   load_background);
 
-#if defined(MODULAR_NETLIB)
                 net_ReleaseContext(window_id);
-#endif
 				PR_Free(this_entry);  /* not needed any more */
 
 				LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -2951,9 +2903,7 @@ NET_GetURL (URL_Struct *URL_s,
 			net_CheckForWaitingURL(window_id, this_entry->protocol,
 								   load_background);
 
-#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
-#endif
 			PR_Free(this_entry);  /* not needed any more */
 
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -3011,16 +2961,11 @@ redo_load_switch:   /* come here on file/ftp retry */
 	else
 	  {
         char *proxy_address = NULL;
-#ifdef MODULAR_NETLIB
         /* If this url struct indicates that it doesn't want to use a proxy,
          * skip it. */
         if (!this_entry->URL_s->bypassProxy) {
             proxy_address = NET_FindProxyHostForUrl(type, this_entry->URL_s->address);
         }
-#else
-        proxy_address = NET_FindProxyHostForUrl(type, this_entry->URL_s->address);
-#endif /* MODULAR_NETLIB */
-
   		  if(proxy_address)
 			{
 				this_entry->protocol = HTTP_TYPE_URL;
@@ -3155,9 +3100,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 							   this_entry->protocol,
 							   load_background);
 
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(this_entry->window_id);
-#endif
 		PR_Free(this_entry);
 		LIBNET_UNLOCK_AND_RETURN(MK_OFFLINE);
       }
@@ -3180,9 +3123,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 		net_CheckForWaitingURL(this_entry->window_id, 
 							   this_entry->protocol,
 							   load_background);
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(this_entry->window_id);
-#endif
 		PR_Free(this_entry);  /* not needed any more */
       }
 
@@ -3514,9 +3455,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type) {
                     }
 #endif /* MILAN */
 
-#if defined(MODULAR_NETLIB)
                     net_ReleaseContext(tmpEntry->window_id);
-#endif
                 } /* end status variable if statements */
 
                 PR_Free(tmpEntry);  /* free the now non active entry */
@@ -3586,9 +3525,7 @@ net_InterruptActiveStream (ActiveEntry *entry, Bool show_warning)
 		FE_AllConnectionsComplete(entry->window_id);
 
 	/* free the no longer active entry */
-#if defined(MODULAR_NETLIB)
     net_ReleaseContext(entry->window_id);
-#endif
 	PR_Free(entry);
 
 	return 0;
@@ -3720,7 +3657,7 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 	  {
 	if (tmpEntry->URL_s == URL_s)
 		  {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
               /* When the URL load gets redirected to another window,
                  we need to notify the progress manager from the old
                  window that the URL need no longer be tracked */
@@ -3742,7 +3679,7 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 			old_window_id = tmpEntry->window_id;
 	    tmpEntry->window_id = new_context;
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             /* Inform the progress manager in the new context about
                the URL that it just received */
             PM_StartBinding(tmpEntry->window_id, URL_s);
@@ -3765,9 +3702,7 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 		if(!NET_AreThereActiveConnectionsForWindow(old_window_id))
 				FE_AllConnectionsComplete(old_window_id);
 
-#if defined(MODULAR_NETLIB)
         net_ReleaseContext(old_window_id);
-#endif
 			LIBNET_UNLOCK();
 	    return(0);
 	  }
@@ -4565,7 +4500,7 @@ net_HTMLPanelLoad(ActiveEntry *ce)
 {
 	if(ce->URL_s)
 		StrAllocCopy(ce->URL_s->charset, INTL_ResourceCharSet());
-#ifndef MODULAR_NETLIB
+#if 0 /* Used to be MODULAR_NETLIB */
 	XP_HandleHTMLPanel(ce->URL_s);
 #endif
 	return -1;
@@ -4576,7 +4511,7 @@ net_HTMLDialogLoad(ActiveEntry *ce)
 {
 	if(ce->URL_s)
 		StrAllocCopy(ce->URL_s->charset, INTL_ResourceCharSet());
-#ifndef MODULAR_NETLIB
+#if 0 /* Used to be MODULAR_NETLIB */
 	XP_HandleHTMLDialog(ce->URL_s);
 #endif
 	return -1;
