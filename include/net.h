@@ -51,18 +51,18 @@
 /* #include "jri.h" */
 
 /*
-	prototypes for external structures
+    prototypes for external structures
 */
 typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 
 /* ------------------------------------------------------------------------ */
 /* ============= Typedefs for the network module structures =============== */ 
 
-#define VIEW_SOURCE_URL_PREFIX	"view-source:"
-#define NETHELP_URL_PREFIX		"nethelp:"
+#define VIEW_SOURCE_URL_PREFIX  "view-source:"
+#define NETHELP_URL_PREFIX      "nethelp:"
 
 /* spider begin */
-#define MARIMBA_URL_PREFIX		"castanet:"
+#define MARIMBA_URL_PREFIX      "castanet:"
 /* spider end */
 
 /* Format out codes
@@ -82,41 +82,41 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
  *      front end person that is working on your product immediately.
  *      GAB
  */
-#define FO_PRESENT				1
-#define FO_INTERNAL_IMAGE		2
-#define FO_OUT_TO_PROXY_CLIENT	3
-#define FO_VIEW_SOURCE			4
-#define FO_SAVE_AS				5
-#define FO_SAVE_AS_TEXT			6
-#define FO_SAVE_AS_POSTSCRIPT	7
-#define FO_QUOTE_MESSAGE		8	/* very much like FO_SAVE_AS_TEXT */
-#define FO_MAIL_TO				9
-#define FO_OLE_NETWORK			10
-#define FO_MULTIPART_IMAGE		11
-#define FO_EMBED				12
-#define FO_PRINT				13
-#define FO_PLUGIN				14
-#define FO_APPEND_TO_FOLDER		15	/* used by the mail/news code */
-#define FO_DO_JAVA				16
-#define FO_BYTERANGE			17
-#define FO_EDT_SAVE_IMAGE		18
-#define FO_EDIT					19
+#define FO_PRESENT              1
+#define FO_INTERNAL_IMAGE       2
+#define FO_OUT_TO_PROXY_CLIENT  3
+#define FO_VIEW_SOURCE          4
+#define FO_SAVE_AS              5
+#define FO_SAVE_AS_TEXT         6
+#define FO_SAVE_AS_POSTSCRIPT   7
+#define FO_QUOTE_MESSAGE        8   /* very much like FO_SAVE_AS_TEXT */
+#define FO_MAIL_TO              9
+#define FO_OLE_NETWORK          10
+#define FO_MULTIPART_IMAGE      11
+#define FO_EMBED                12
+#define FO_PRINT                13
+#define FO_PLUGIN               14
+#define FO_APPEND_TO_FOLDER     15  /* used by the mail/news code */
+#define FO_DO_JAVA              16
+#define FO_BYTERANGE            17
+#define FO_EDT_SAVE_IMAGE       18
+#define FO_EDIT                 19
 #define FO_LOAD_HTML_HELP_MAP_FILE 20
-#define FO_SAVE_TO_NEWS_DB		21 /* used by off-line news for art. caching */
-#define FO_OPEN_DRAFT			22 /* used by the mail/news code */
+#define FO_SAVE_TO_NEWS_DB      21 /* used by off-line news for art. caching */
+#define FO_OPEN_DRAFT           22 /* used by the mail/news code */
 #define FO_PRESENT_INLINE       23 /* like FO_PRESENT, but doesn't blow away */
-#define FO_OBJECT				24 /* see layobj.c */
-#define FO_FONT					25 /* Downloadable Fonts */
-#define FO_SOFTWARE_UPDATE		26 /* Software updates */
+#define FO_OBJECT               24 /* see layobj.c */
+#define FO_FONT                 25 /* Downloadable Fonts */
+#define FO_SOFTWARE_UPDATE      26 /* Software updates */
 #define FO_JAVASCRIPT_CONFIG    27
-#define FO_QUOTE_HTML_MESSAGE	28
+#define FO_QUOTE_HTML_MESSAGE   28
 #define FO_CMDLINE_ATTACHMENTS  29 /* for initializing compose window with attachments via commandline */
-#define FO_MAIL_MESSAGE_TO		30	/* for S/MIME */
+#define FO_MAIL_MESSAGE_TO      30  /* for S/MIME */
 #define FO_LOCATION_INDEPENDENCE 31 /* Location independence stuff */
-#define FO_RDF			32
-#define FO_CRAWL_PAGE			33 /* for crawling HTML pages */
-#define FO_CRAWL_RESOURCE		34 /* for crawling images and resources */
-#define FO_ROBOTS_TXT			35 /* web robots control */
+#define FO_RDF          32
+#define FO_CRAWL_PAGE           33 /* for crawling HTML pages */
+#define FO_CRAWL_RESOURCE       34 /* for crawling images and resources */
+#define FO_ROBOTS_TXT           35 /* web robots control */
 #define FO_XMLCSS               36 /* CSS for formatting XML */
 #define FO_XMLHTML              37 /* HTML inclusions in XML */
 #define FO_NGLAYOUT             38 /* NGLayout streams */
@@ -125,84 +125,84 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 
 /* bitfield detectable CACHE FO's
  */
-#define FO_CACHE_ONLY					64
-#define FO_CACHE_AND_PRESENT			(FO_CACHE_ONLY | FO_PRESENT)
-#define FO_CACHE_AND_INTERNAL_IMAGE		(FO_CACHE_ONLY | FO_INTERNAL_IMAGE)
+#define FO_CACHE_ONLY                   64
+#define FO_CACHE_AND_PRESENT            (FO_CACHE_ONLY | FO_PRESENT)
+#define FO_CACHE_AND_INTERNAL_IMAGE     (FO_CACHE_ONLY | FO_INTERNAL_IMAGE)
 #define FO_CACHE_AND_OUT_TO_PROXY_CLIENT (FO_CACHE_ONLY | \
-										  FO_OUT_TO_PROXY_CLIENT)
-#define FO_CACHE_AND_VIEW_SOURCE		(FO_CACHE_ONLY | FO_VIEW_SOURCE)
-#define FO_CACHE_AND_SAVE_AS			(FO_CACHE_ONLY | FO_SAVE_AS)
-#define FO_CACHE_AND_SAVE_AS_TEXT		(FO_CACHE_ONLY | FO_SAVE_AS_TEXT)
-#define FO_CACHE_AND_SAVE_AS_POSTSCRIPT	(FO_CACHE_ONLY | FO_SAVE_AS_POSTSCRIPT)
-#define FO_CACHE_AND_QUOTE_MESSAGE		(FO_CACHE_ONLY | FO_QUOTE_MESSAGE)
-#define FO_CACHE_AND_MAIL_TO			(FO_CACHE_ONLY | FO_MAIL_TO)
-#define FO_CACHE_AND_MAIL_MESSAGE_TO	(FO_CACHE_ONLY | FO_MAIL_MESSAGE_TO)
-#define FO_CACHE_AND_OLE_NETWORK		(FO_CACHE_ONLY | FO_OLE_NETWORK)
-#define FO_CACHE_AND_MULTIPART_IMAGE	(FO_CACHE_ONLY | FO_MULTIPART_IMAGE)
-#define FO_CACHE_AND_EMBED				(FO_CACHE_ONLY | FO_EMBED)
-#define FO_CACHE_AND_PRINT				(FO_CACHE_ONLY | FO_PRINT)
-#define FO_CACHE_AND_PLUGIN				(FO_CACHE_ONLY | FO_PLUGIN)
-#define FO_CACHE_AND_APPEND_TO_FOLDER	(FO_CACHE_ONLY | FO_APPEND_TO_FOLDER)
-#define FO_CACHE_AND_DO_JAVA			(FO_CACHE_ONLY | FO_DO_JAVA)
-#define FO_CACHE_AND_BYTERANGE			(FO_CACHE_ONLY | FO_BYTERANGE)
-#define FO_CACHE_AND_EDIT				(FO_CACHE_ONLY | FO_EDIT)
-#define FO_CACHE_AND_LOAD_HTML_HELP_MAP_FILE	(FO_CACHE_ONLY | FO_LOAD_HTML_HELP_MAP_FILE)
+                                          FO_OUT_TO_PROXY_CLIENT)
+#define FO_CACHE_AND_VIEW_SOURCE        (FO_CACHE_ONLY | FO_VIEW_SOURCE)
+#define FO_CACHE_AND_SAVE_AS            (FO_CACHE_ONLY | FO_SAVE_AS)
+#define FO_CACHE_AND_SAVE_AS_TEXT       (FO_CACHE_ONLY | FO_SAVE_AS_TEXT)
+#define FO_CACHE_AND_SAVE_AS_POSTSCRIPT (FO_CACHE_ONLY | FO_SAVE_AS_POSTSCRIPT)
+#define FO_CACHE_AND_QUOTE_MESSAGE      (FO_CACHE_ONLY | FO_QUOTE_MESSAGE)
+#define FO_CACHE_AND_MAIL_TO            (FO_CACHE_ONLY | FO_MAIL_TO)
+#define FO_CACHE_AND_MAIL_MESSAGE_TO    (FO_CACHE_ONLY | FO_MAIL_MESSAGE_TO)
+#define FO_CACHE_AND_OLE_NETWORK        (FO_CACHE_ONLY | FO_OLE_NETWORK)
+#define FO_CACHE_AND_MULTIPART_IMAGE    (FO_CACHE_ONLY | FO_MULTIPART_IMAGE)
+#define FO_CACHE_AND_EMBED              (FO_CACHE_ONLY | FO_EMBED)
+#define FO_CACHE_AND_PRINT              (FO_CACHE_ONLY | FO_PRINT)
+#define FO_CACHE_AND_PLUGIN             (FO_CACHE_ONLY | FO_PLUGIN)
+#define FO_CACHE_AND_APPEND_TO_FOLDER   (FO_CACHE_ONLY | FO_APPEND_TO_FOLDER)
+#define FO_CACHE_AND_DO_JAVA            (FO_CACHE_ONLY | FO_DO_JAVA)
+#define FO_CACHE_AND_BYTERANGE          (FO_CACHE_ONLY | FO_BYTERANGE)
+#define FO_CACHE_AND_EDIT               (FO_CACHE_ONLY | FO_EDIT)
+#define FO_CACHE_AND_LOAD_HTML_HELP_MAP_FILE    (FO_CACHE_ONLY | FO_LOAD_HTML_HELP_MAP_FILE)
 #define FO_CACHE_AND_PRESENT_INLINE     (FO_CACHE_ONLY | FO_PRESENT_INLINE)
-#define FO_CACHE_AND_OBJECT				(FO_CACHE_ONLY | FO_OBJECT)
-#define FO_CACHE_AND_FONT				(FO_CACHE_ONLY | FO_FONT)
+#define FO_CACHE_AND_OBJECT             (FO_CACHE_ONLY | FO_OBJECT)
+#define FO_CACHE_AND_FONT               (FO_CACHE_ONLY | FO_FONT)
 #define FO_CACHE_AND_JAVASCRIPT_CONFIG   (FO_CACHE_ONLY | FO_JAVASCRIPT_CONFIG)
 #define FO_CACHE_AND_SOFTUPDATE   (FO_CACHE_ONLY | FO_SOFTWARE_UPDATE)
 #define FO_CACHE_AND_RDF   (FO_CACHE_ONLY | FO_RDF)
 #define FO_CACHE_AND_XMLCSS   (FO_CACHE_ONLY | FO_XMLCSS)
 #define FO_CACHE_AND_XMLHTML   (FO_CACHE_ONLY | FO_XMLHTML)
-#define FO_CACHE_AND_CRAWL_PAGE			(FO_CACHE_ONLY | FO_CRAWL_PAGE)
-#define FO_CACHE_AND_CRAWL_RESOURCE		(FO_CACHE_ONLY | FO_CRAWL_RESOURCE)
-#define FO_CACHE_AND_ROBOTS_TXT			(FO_CACHE_ONLY | FO_ROBOTS_TXT)
+#define FO_CACHE_AND_CRAWL_PAGE         (FO_CACHE_ONLY | FO_CRAWL_PAGE)
+#define FO_CACHE_AND_CRAWL_RESOURCE     (FO_CACHE_ONLY | FO_CRAWL_RESOURCE)
+#define FO_CACHE_AND_ROBOTS_TXT         (FO_CACHE_ONLY | FO_ROBOTS_TXT)
 #define FO_CACHE_AND_NGLAYOUT           (FO_CACHE_ONLY | FO_NGLAYOUT)
 #define FO_CACHE_AND_AUTOUPDATE         (FO_CACHE_ONLY | FO_AUTOUPDATE)
 
 /* bitfield detectable ONLY_FROM_CACHE FO's
  */
-#define FO_ONLY_FROM_CACHE						128
-#define FO_ONLY_FROM_CACHE_AND_PRESENT			(FO_ONLY_FROM_CACHE | \
-												 FO_PRESENT)
-#define FO_ONLY_FROM_CACHE_AND_INTERNAL_IMAGE	(FO_ONLY_FROM_CACHE | \
-												 FO_INTERNAL_IMAGE)
-#define FO_ONLY_FROM_CACHE_AND_OUT_TO_PROXY_CLIENT	(FO_ONLY_FROM_CACHE | \
-													 FO_OUT_TO_PROXY_CLIENT)
-#define FO_ONLY_FROM_CACHE_AND_VIEW_SOURCE		(FO_ONLY_FROM_CACHE | \
-												 FO_VIEW_SOURCE)
-#define FO_ONLY_FROM_CACHE_AND_SAVE_AS			(FO_ONLY_FROM_CACHE | \
-												 FO_SAVE_AS)
-#define FO_ONLY_FROM_CACHE_AND_SAVE_AS_TEXT		(FO_ONLY_FROM_CACHE | \
-												 FO_SAVE_AS_TEXT)
+#define FO_ONLY_FROM_CACHE                      128
+#define FO_ONLY_FROM_CACHE_AND_PRESENT          (FO_ONLY_FROM_CACHE | \
+                                                 FO_PRESENT)
+#define FO_ONLY_FROM_CACHE_AND_INTERNAL_IMAGE   (FO_ONLY_FROM_CACHE | \
+                                                 FO_INTERNAL_IMAGE)
+#define FO_ONLY_FROM_CACHE_AND_OUT_TO_PROXY_CLIENT  (FO_ONLY_FROM_CACHE | \
+                                                     FO_OUT_TO_PROXY_CLIENT)
+#define FO_ONLY_FROM_CACHE_AND_VIEW_SOURCE      (FO_ONLY_FROM_CACHE | \
+                                                 FO_VIEW_SOURCE)
+#define FO_ONLY_FROM_CACHE_AND_SAVE_AS          (FO_ONLY_FROM_CACHE | \
+                                                 FO_SAVE_AS)
+#define FO_ONLY_FROM_CACHE_AND_SAVE_AS_TEXT     (FO_ONLY_FROM_CACHE | \
+                                                 FO_SAVE_AS_TEXT)
 #define FO_ONLY_FROM_CACHE_AND_SAVE_AS_POSTSCRIPT (FO_ONLY_FROM_CACHE | \
-												   FO_SAVE_AS_POSTSCRIPT)
-#define FO_ONLY_FROM_CACHE_AND_QUOTE_MESSAGE	 (FO_ONLY_FROM_CACHE | \
-												  FO_QUOTE_MESSAGE)
-#define FO_ONLY_FROM_CACHE_AND_MAIL_TO			(FO_ONLY_FROM_CACHE | \
-												 FO_MAIL_TO)
-#define FO_ONLY_FROM_CACHE_AND_MAIL_MESSAGE_TO	(FO_ONLY_FROM_CACHE | \
-												 FO_MAIL_MESSAGE_TO)
-#define FO_ONLY_FROM_CACHE_AND_OLE_NETWORK		(FO_ONLY_FROM_CACHE | \
-												 FO_OLE_NETWORK)
-#define FO_ONLY_FROM_CACHE_AND_MULTIPART_IMAGE	(FO_ONLY_FROM_CACHE | \
-												 FO_MULTIPART_IMAGE)
-#define FO_ONLY_FROM_CACHE_AND_EMBED			(FO_ONLY_FROM_CACHE | FO_EMBED)
+                                                   FO_SAVE_AS_POSTSCRIPT)
+#define FO_ONLY_FROM_CACHE_AND_QUOTE_MESSAGE     (FO_ONLY_FROM_CACHE | \
+                                                  FO_QUOTE_MESSAGE)
+#define FO_ONLY_FROM_CACHE_AND_MAIL_TO          (FO_ONLY_FROM_CACHE | \
+                                                 FO_MAIL_TO)
+#define FO_ONLY_FROM_CACHE_AND_MAIL_MESSAGE_TO  (FO_ONLY_FROM_CACHE | \
+                                                 FO_MAIL_MESSAGE_TO)
+#define FO_ONLY_FROM_CACHE_AND_OLE_NETWORK      (FO_ONLY_FROM_CACHE | \
+                                                 FO_OLE_NETWORK)
+#define FO_ONLY_FROM_CACHE_AND_MULTIPART_IMAGE  (FO_ONLY_FROM_CACHE | \
+                                                 FO_MULTIPART_IMAGE)
+#define FO_ONLY_FROM_CACHE_AND_EMBED            (FO_ONLY_FROM_CACHE | FO_EMBED)
 
-#define FO_ONLY_FROM_CACHE_AND_PRINT			(FO_ONLY_FROM_CACHE | FO_PRINT)
+#define FO_ONLY_FROM_CACHE_AND_PRINT            (FO_ONLY_FROM_CACHE | FO_PRINT)
 
-#define FO_ONLY_FROM_CACHE_AND_PLUGIN			(FO_ONLY_FROM_CACHE | FO_PLUGIN)
+#define FO_ONLY_FROM_CACHE_AND_PLUGIN           (FO_ONLY_FROM_CACHE | FO_PLUGIN)
 
-#define FO_ONLY_FROM_CACHE_AND_APPEND_TO_FOLDER	(FO_ONLY_FROM_CACHE | \
-												 FO_APPEND_TO_FOLDER)
-#define FO_ONLY_FROM_CACHE_AND_DO_JAVA			(FO_ONLY_FROM_CACHE | FO_DO_JAVA)
+#define FO_ONLY_FROM_CACHE_AND_APPEND_TO_FOLDER (FO_ONLY_FROM_CACHE | \
+                                                 FO_APPEND_TO_FOLDER)
+#define FO_ONLY_FROM_CACHE_AND_DO_JAVA          (FO_ONLY_FROM_CACHE | FO_DO_JAVA)
 
-#define FO_ONLY_FROM_CACHE_AND_BYTERANGE		(FO_ONLY_FROM_CACHE | FO_BYTERANGE)
+#define FO_ONLY_FROM_CACHE_AND_BYTERANGE        (FO_ONLY_FROM_CACHE | FO_BYTERANGE)
 
-#define FO_ONLY_FROM_CACHE_AND_EDIT				(FO_ONLY_FROM_CACHE | FO_EDIT)
-#define FO_ONLY_FROM_CACHE_AND_LOAD_HTML_HELP_MAP_FILE		(FO_ONLY_FROM_CACHE | FO_LOAD_HTML_HELP_MAP_FILE)
-#define FO_ONLY_FROM_CACHE_AND_PRESENT_INLINE				(FO_ONLY_FROM_CACHE | FO_PRESENT_INLINE)
+#define FO_ONLY_FROM_CACHE_AND_EDIT             (FO_ONLY_FROM_CACHE | FO_EDIT)
+#define FO_ONLY_FROM_CACHE_AND_LOAD_HTML_HELP_MAP_FILE      (FO_ONLY_FROM_CACHE | FO_LOAD_HTML_HELP_MAP_FILE)
+#define FO_ONLY_FROM_CACHE_AND_PRESENT_INLINE               (FO_ONLY_FROM_CACHE | FO_PRESENT_INLINE)
 #define FO_ONLY_FROM_CACHE_AND_NGLAYOUT         (FO_ONLY_FROM_CACHE | FO_NGLAYOUT)
 
 #define MAX_FORMATS_OUT (FO_LASTFORMAT | FO_ONLY_FROM_CACHE)+1
@@ -236,23 +236,23 @@ class MSG_Pane;
  * and external cache
  */
 typedef struct _ExtCacheDBInfo {
-	DB		*database;
-	char	*filename;
-	char	*path;
-	char	*name;
-	Bool	queried_this_session;
-	int		type;
-	uint32	DiskCacheSize; 
-	uint32	NumberInDiskCache;
-	uint32  MaxSize;
-	void	*logFile;
+    DB      *database;
+    char    *filename;
+    char    *path;
+    char    *name;
+    Bool    queried_this_session;
+    int     type;
+    uint32  DiskCacheSize; 
+    uint32  NumberInDiskCache;
+    uint32  MaxSize;
+    void    *logFile;
 
 } ExtCacheDBInfo;
 
 typedef enum {
-	Normal_priority,
-	Prefetch_priority,				/* passed in to prefetch a URL in the background */
-	CurrentlyPrefetching_priority   /* a prefetch url currently loading */
+    Normal_priority,
+    Prefetch_priority,              /* passed in to prefetch a URL in the background */
+    CurrentlyPrefetching_priority   /* a prefetch url currently loading */
 } URLLoadPriority;
 
 /* passing in structure 
@@ -263,243 +263,243 @@ typedef enum {
  * This structure can then be used to look up associated
  * data after the transfer has taken place
  *
- *	WARNING!!  If you ever change this structure, there is a good chance
- *	you will have to also change History_entry, and the functions
+ *  WARNING!!  If you ever change this structure, there is a good chance
+ *  you will have to also change History_entry, and the functions
  *  SHIST_CreateHistoryEntry and SHIST_CreateURLStructFromHistoryEntry which
  *  copy URLs to and from the history.  You may also need to change the
  *  net_CacheObject structure in mkcache.c, and the code therein which copies
  *  URLs to and from the memory and disk caches.
  */
 struct URL_Struct_ {
-	URLLoadPriority priority;       /* load priority */
+    URLLoadPriority priority;       /* load priority */
     char *  address;            /* the URL part */
 
     char * username; /* Put username/password info into the URL struct without */
     char * password; /* using the address field.  The problem was that the user's password
                       * became visible on screen in a number of cases. Bug 35243, 39418 */
 
-  	char *  destination;        /* for copy and move methods */
-    char *  IPAddressString;	/* ASCII string of IP address.
-								 * If this field exists, then NET_BeginConnect
-								 * should use it rather than the hostname in
-								 * the address.
-								 * This is here for Java DNS security firedrill
-								 *  see jar or jsw...
-								 */
+    char *  destination;        /* for copy and move methods */
+    char *  IPAddressString;    /* ASCII string of IP address.
+                                 * If this field exists, then NET_BeginConnect
+                                 * should use it rather than the hostname in
+                                 * the address.
+                                 * This is here for Java DNS security firedrill
+                                 *  see jar or jsw...
+                                 */
     int     method;             /* post or get or ... */
-    char *  referer;			/* What document points to this url */
+    char *  referer;            /* What document points to this url */
     char *  post_data;          /* data to be posted */
-	int32   post_data_size;     /* size of post_data */
-	char *  range_header;       /* requested ranges (bytes usually) */
+    int32   post_data_size;     /* size of post_data */
+    char *  range_header;       /* requested ranges (bytes usually) */
     char *  post_headers;       /* Additional headers for the post. 
-								 * Should end with \n */
+                                 * Should end with \n */
     NET_ReloadMethod
             force_reload;       /* forced refresh? either NORMAL or SUPER */
     char *  http_headers;       /* headers that can be passed into
                                  * HTTPLoad.  Used to support
                                  * proxying
                                  */
-	char  * window_target;      /* named window support */
-	Chrome * window_chrome;     /* pointer to a Chrome structure that
-								 * if non-null specifies the characteristics
-								 * of the target window named in 
-								 * the window_target variable
-								 */
+    char  * window_target;      /* named window support */
+    Chrome * window_chrome;     /* pointer to a Chrome structure that
+                                 * if non-null specifies the characteristics
+                                 * of the target window named in 
+                                 * the window_target variable
+                                 */
 
     /* attributes of the URL that are assembled
      * during and after transfer of the data
      */
-	int      server_status;               /* status code returned by server */
+    int      server_status;               /* status code returned by server */
     int32    content_length;              /* length of the incoming data */
     int32    real_content_length;         /* real length of the partial file */
     char   * content_type;                /* the content type of incoming 
-										   * data 
-										   */
-	char   * content_name;                /* passed in name for object */
+                                           * data 
+                                           */
+    char   * content_name;                /* passed in name for object */
     char   * transfer_encoding;           /* first encoding of incoming data */
     char   * content_encoding;            /* encoding of incoming data */
 
-	char   *x_mac_creator, *x_mac_type;   /* If we somehow know the Mac-types
-											 of this document, these are they.
-											 This is only of interest on Macs,
-											 and currently only happens with
-											 mail/news attachments. */
+    char   *x_mac_creator, *x_mac_type;   /* If we somehow know the Mac-types
+                                             of this document, these are they.
+                                             This is only of interest on Macs,
+                                             and currently only happens with
+                                             mail/news attachments. */
 
-	char   * charset;                     /* charset of the data */
-	char   * boundary;                    /* mixed multipart boundary */
+    char   * charset;                     /* charset of the data */
+    char   * boundary;                    /* mixed multipart boundary */
     char   * redirecting_url;             /* the Location: of the redirect */
     char   * authenticate;                /* auth scheme */
     char   * proxy_authenticate;          /* proxy auth scheme */
     char   * protection_template;         /* name of server auth template */
-	uint32   refresh;                     /* refresh interval */
-	char   * refresh_url;                 /* url to refresh */
-	char   * wysiwyg_url;                 /* URL for WYSIWYG printing/saving */
+    uint32   refresh;                     /* refresh interval */
+    char   * refresh_url;                 /* url to refresh */
+    char   * wysiwyg_url;                 /* URL for WYSIWYG printing/saving */
     time_t   expires;
     time_t   last_modified;
     time_t   server_date;                 /* Date: header returned by 
-										   * HTTP servers
-										   */
+                                           * HTTP servers
+                                           */
     char   * cache_file;                  
                                            /* if non-NULL then it contains
                                            * the filename of its local cache 
-										   * file containing it's data
-										   */
+                                           * file containing it's data
+                                           */
 #ifdef NU_CACHE
     void*    cache_object;
 #else
-	net_MemoryCacheObject * memory_copy;  /* if non-NULL then it contains 
-										   * a structure with
+    net_MemoryCacheObject * memory_copy;  /* if non-NULL then it contains 
+                                           * a structure with
                                            * a pointer to a list of 
-										   * memory segments
+                                           * memory segments
                                            * containing it's data
                                            */
 #endif
 
-	void   * fe_data; 					  /* random front end data to be passed
-										   * up the line
-										   */
+    void   * fe_data;                     /* random front end data to be passed
+                                           * up the line
+                                           */
 
 #if defined(XP_WIN) || defined(XP_OS2)
-	void *ncapi_data;	/* Window ncapi data structure
-				 * to track loads by URL and not context
-				 */
+    void *ncapi_data;   /* Window ncapi data structure
+                 * to track loads by URL and not context
+                 */
 #endif /* XP_WIN */
     uint32 localIP;                       /* a local ip address that should be
                                            * bound to the socket. */
                
     int     history_num;                  /* == add this to history list 
-										   * dflt TRUE 
-										   */
+                                           * dflt TRUE 
+                                           */
 
-	uint32   position;                    /* for plug-in streams */
-	uint32   low_range;                    
-	uint32   high_range;                  /* these range tags represent
-										   * the byte offsets that
-										   * this URL contains.
-										   * if high_range is non-zero
-										   * then this URL represents
-										   * just a subset of the URL.
-										   */
+    uint32   position;                    /* for plug-in streams */
+    uint32   low_range;                    
+    uint32   high_range;                  /* these range tags represent
+                                           * the byte offsets that
+                                           * this URL contains.
+                                           * if high_range is non-zero
+                                           * then this URL represents
+                                           * just a subset of the URL.
+                                           */
 
-	int32   position_tag;                 /* tag number of last position */
+    int32   position_tag;                 /* tag number of last position */
 
-	SHIST_SavedData savedData;			  /* layout data */
+    SHIST_SavedData savedData;            /* layout data */
 
-    Net_GetUrlExitFunc *pre_exit_fn;	  /* If set, called just before the
-											 exit routine that was passed
-											 in to NET_GetURL. */
+    Net_GetUrlExitFunc *pre_exit_fn;      /* If set, called just before the
+                                             exit routine that was passed
+                                             in to NET_GetURL. */
 
-	/* Security information */
-    int     security_on;				  /* is security on? */
+    /* Security information */
+    int     security_on;                  /* is security on? */
     /* Security info on a connection is opaque */
     unsigned char *sec_info;
     unsigned char *redirect_sec_info;
     
-	void   *sec_private;				  /* private libsec info */
+    void   *sec_private;                  /* private libsec info */
 
-	char   *error_msg;                   /* what went wrong */
+    char   *error_msg;                   /* what went wrong */
 
-	char  **files_to_post;               /* zero terminated array
-										  * of char * filenames
-										  * that need to be posted
-										  */
-	char **post_to;               /* Only meaningful if files_to_post is set.  If post_to is non-NULL, it is a NULL-terminated 
+    char  **files_to_post;               /* zero terminated array
+                                          * of char * filenames
+                                          * that need to be posted
+                                          */
+    char **post_to;               /* Only meaningful if files_to_post is set.  If post_to is non-NULL, it is a NULL-terminated 
                                             array of the URLs to post the files in files_to_post to.  If NULL, files_to_post along with 
                                             address(a directory) will be used to decide where to post the files (like before). */
   XP_Bool *add_crlf; /* Only meaningful if files_to_post is non-NULL.  If set, it specifies for each file in files_to_post,
                         whether or not to make all line endings be crlf. */
-    uint32    auto_scroll;				  /* set this if you want
-										   * the window to autoscroll
-										   * to the bottom at all times
-										   * The value represents
-										   * the number of lines to
-										   * buffer
-										   */
-	PRPackedBool
+    uint32    auto_scroll;                /* set this if you want
+                                           * the window to autoscroll
+                                           * to the bottom at all times
+                                           * The value represents
+                                           * the number of lines to
+                                           * buffer
+                                           */
+    PRPackedBool
             bypassProxy,                /* should we bypass the proxy (if any) */
-			dontAllowDiffHostRedirect,  /* Do we want to allow a redirect from host A to host B */		
-		    post_data_is_file,			/* is the post_data field a filename? */
-    	    address_modified,			/* was the address modified? */
-			resize_reload,				/* persistent NET_RESIZE_RELOAD flag */
-		    use_local_copy,				/* ignore force reload */
-			is_directory,				/* filled in upon return in to indicate
-										 * the url points to a directory 
-										 */
-			preset_content_type,         /* set this if you want to pass in
-										  * a known content-type 
-										  */
-			is_binary,					 /* should mailto and save-as be 
-										  * wary of this object 
-										  */
-		    is_active,                   /* is it an active stream */
-		    is_netsite,                  /* did it come from Netsite? */
-		    intr_on_load,                /* set this to interrupt any
-										  * existing transfers for the window
-										  * when this URL begins to load
-										  */
-		    internal_url,                 /* set to true if this
-										   * is a for internal use
-										   * only url.  If it's not
-										   * set for an internal
-										   * URL the netlib will
-										   * return an unrecognized url
-										   * error
-										   */
-		    ext_cache_file,               /* the cache file referenced
-										   * is from an external cache
-										   */
+            dontAllowDiffHostRedirect,  /* Do we want to allow a redirect from host A to host B */      
+            post_data_is_file,          /* is the post_data field a filename? */
+            address_modified,           /* was the address modified? */
+            resize_reload,              /* persistent NET_RESIZE_RELOAD flag */
+            use_local_copy,             /* ignore force reload */
+            is_directory,               /* filled in upon return in to indicate
+                                         * the url points to a directory 
+                                         */
+            preset_content_type,         /* set this if you want to pass in
+                                          * a known content-type 
+                                          */
+            is_binary,                   /* should mailto and save-as be 
+                                          * wary of this object 
+                                          */
+            is_active,                   /* is it an active stream */
+            is_netsite,                  /* did it come from Netsite? */
+            intr_on_load,                /* set this to interrupt any
+                                          * existing transfers for the window
+                                          * when this URL begins to load
+                                          */
+            internal_url,                 /* set to true if this
+                                           * is a for internal use
+                                           * only url.  If it's not
+                                           * set for an internal
+                                           * URL the netlib will
+                                           * return an unrecognized url
+                                           * error
+                                           */
+            ext_cache_file,               /* the cache file referenced
+                                           * is from an external cache
+                                           */
 
-		 	must_cache,					  /* overrides cache logic, used by plugins */
+            must_cache,                   /* overrides cache logic, used by plugins */
 
-		    dont_cache,              	  /* This gets set by a mime
-										   * header and tells us not
-										   * to cache the document
-										   */
-		    can_reuse_connection,         /* set when the connetion is reusable
-										   * as in HTTP/1.1 or NG.
-										   */
-		    server_can_do_byteranges,     /* can the server do byteranges */
+            dont_cache,                   /* This gets set by a mime
+                                           * header and tells us not
+                                           * to cache the document
+                                           */
+            can_reuse_connection,         /* set when the connetion is reusable
+                                           * as in HTTP/1.1 or NG.
+                                           */
+            server_can_do_byteranges,     /* can the server do byteranges */
             server_can_do_restart,        /* can the (ftp) server do restarts? */
    
-    	    load_background,              /* Load in the "background".
+            load_background,              /* Load in the "background".
                                              Suppress thermo, progress, etc. */
-			mailto_post,				  /* is this a mailto: post? */
-			allow_content_change,		  /* Set to TRUE if we are allowed to change the
-										     content that it is displayed to the user.
-											 Currently only used for IMAP partial fetches. */
-			content_modified,			  /* TRUE if the content of this URL has been modified
-										     internally.  Used for IMAP partial fetches. */
-			open_new_window_specified,	  /* TRUE if the invoker of the URL has specifically
-											 set the open_new_window bit - otherwise, msg_GetURL
-											 will clear it. */
-			open_new_window;			  /* TRUE if the invoker of the URL wants a new window 
-											 to open */
+            mailto_post,                  /* is this a mailto: post? */
+            allow_content_change,         /* Set to TRUE if we are allowed to change the
+                                             content that it is displayed to the user.
+                                             Currently only used for IMAP partial fetches. */
+            content_modified,             /* TRUE if the content of this URL has been modified
+                                             internally.  Used for IMAP partial fetches. */
+            open_new_window_specified,    /* TRUE if the invoker of the URL has specifically
+                                             set the open_new_window bit - otherwise, msg_GetURL
+                                             will clear it. */
+            open_new_window;              /* TRUE if the invoker of the URL wants a new window 
+                                             to open */
 #ifdef XP_CPLUSPLUS
     class MSG_Pane                *msg_pane; 
 #else
     struct MSG_Pane               *msg_pane; 
 #endif
 
-	NET_AllHeaders all_headers;           /* All headers that can be passed into
+    NET_AllHeaders all_headers;           /* All headers that can be passed into
                                            * HTTPLOAD. Used to support 
                                            * URLConnection object of Java
                                            */
-	int ref_count;			/* how many people have a pointer to me */
-	ExtCacheDBInfo *SARCache;						  /* a pointer to the structure telling
-										   * us which cache this is in, if it's 
-										   * NULL it's in the normal navigator
-										   * cache
-										   */ /* larubbio */
-	int		 owner_id;					  /* unique ID for each library:
-												NPL (plugins) => 0x0000BAC0;
-										   */
-	void	*owner_data;				  /* private data owned by whomever created the URL_Struct */			
-	char    *page_services_url;
-	char	*privacy_policy_url;
-	char	*etag;						  /* HTTP/1.1 Etag */
-	char    *origin_url;                  /* original referrer of javascript: URL */
+    int ref_count;          /* how many people have a pointer to me */
+    ExtCacheDBInfo *SARCache;                         /* a pointer to the structure telling
+                                           * us which cache this is in, if it's 
+                                           * NULL it's in the normal navigator
+                                           * cache
+                                           */ /* larubbio */
+    int      owner_id;                    /* unique ID for each library:
+                                                NPL (plugins) => 0x0000BAC0;
+                                           */
+    void    *owner_data;                  /* private data owned by whomever created the URL_Struct */           
+    char    *page_services_url;
+    char    *privacy_policy_url;
+    char    *etag;                        /* HTTP/1.1 Etag */
+    char    *origin_url;                  /* original referrer of javascript: URL */
 #ifdef TRUST_LABELS
-	XP_List	*TrustList;					  /* the list of trust labels that came in the header */
+    XP_List *TrustList;                   /* the list of trust labels that came in the header */
 #endif
 };
 
@@ -550,15 +550,15 @@ struct _NET_StreamClass {
                                 */
 
     MKStreamWriteReadyFunc  is_write_ready;   /* checks to see if the stream is ready
-											   * for writing.  Returns 0 if not ready
-											   * or the number of bytes that it can
-											   * accept for write
-											   */
+                                               * for writing.  Returns 0 if not ready
+                                               * or the number of bytes that it can
+                                               * accept for write
+                                               */
     MKStreamWriteFunc       put_block;        /* writes a block of data to the stream */
-    MKStreamCompleteFunc    complete; 		  /* normal end */
-    MKStreamAbortFunc       abort;    		  /* abnormal end */
+    MKStreamCompleteFunc    complete;         /* normal end */
+    MKStreamAbortFunc       abort;            /* abnormal end */
 
-	Bool					is_multipart; 	 /* is the stream part of a multipart sequence */
+    Bool                    is_multipart;    /* is the stream part of a multipart sequence */
 };
 
 /*DSR040197 - new and improved position for BEGIN_PROTOS*/
@@ -594,8 +594,8 @@ typedef struct {
     char *desc;
     char *icon;
     char *alt_text;
-	Bool  is_default; /* is it the default because a type couldn't be found? */
-	void *fe_data;   /* used by fe to save ext. viewer/save to disk options */
+    Bool  is_default; /* is it the default because a type couldn't be found? */
+    void *fe_data;   /* used by fe to save ext. viewer/save to disk options */
 } NET_cinfo;
 
 /* this is a list item struct that holds extension lists and
@@ -608,13 +608,13 @@ typedef struct _cdata {
     int            num_exts;
     char         **exts;
     NET_cinfo      ci;
-    Bool	   is_external;  /* did this entry come from an external file? */
-    Bool	   is_modified;  /* Is this entry modified externally; default = False */
-    Bool	   is_local;    /* Is personal copy*/
-    Bool  	   is_new;	/* indicate if this is 
-				   added by user via helper */
-    char*	   src_string;  /* For output use */
-	char*	   pref_name; /* If the mimetype came from preferences */
+    Bool       is_external;  /* did this entry come from an external file? */
+    Bool       is_modified;  /* Is this entry modified externally; default = False */
+    Bool       is_local;    /* Is personal copy*/
+    Bool       is_new;  /* indicate if this is 
+                   added by user via helper */
+    char*      src_string;  /* For output use */
+    char*      pref_name; /* If the mimetype came from preferences */
 } NET_cdataStruct;
 
 
@@ -643,131 +643,131 @@ typedef struct _mdata {
    instead, to help catch typos, and make central management of them easier.
  */
 
-#define AUDIO_WILDCARD						"audio/*"
-#define IMAGE_WILDCARD						"image/*"
+#define AUDIO_WILDCARD                      "audio/*"
+#define IMAGE_WILDCARD                      "image/*"
 
-#define APPLICATION_APPLEFILE				"application/applefile"
-#define APPLICATION_BINHEX					"application/mac-binhex40"
-#define APPLICATION_MACBINARY				"application/x-macbinary"
-#define APPLICATION_COMPRESS				"application/x-compress"
-#define APPLICATION_COMPRESS2				"application/compress"
-#define APPLICATION_FORTEZZA_CKL			"application/x-fortezza-ckl"
-#define APPLICATION_FORTEZZA_KRL			"application/x-fortezza-krl"
-#define APPLICATION_GZIP					"application/x-gzip"
-#define APPLICATION_GZIP2					"application/gzip"
-#define APPLICATION_HTTP_INDEX				"application/http-index"
-#define APPLICATION_JAVASCRIPT				"application/x-javascript"
-#define APPLICATION_NETSCAPE_REVOCATION		"application/x-netscape-revocation"
-#define APPLICATION_NS_PROXY_AUTOCONFIG		"application/x-ns-proxy-autoconfig"
-#define APPLICATION_NS_JAVASCRIPT_AUTOCONFIG		"application/x-javascript-config"
-#define APPLICATION_OCTET_STREAM			"application/octet-stream"
-#define APPLICATION_PGP						"application/pgp"
-#define APPLICATION_PGP2					"application/x-pgp-message"
-#define APPLICATION_POSTSCRIPT				"application/postscript"
-#define APPLICATION_PRE_ENCRYPTED			"application/pre-encrypted"
-#define APPLICATION_UUENCODE				"application/x-uuencode"
-#define APPLICATION_UUENCODE2				"application/x-uue"
-#define APPLICATION_UUENCODE3				"application/uuencode"
-#define APPLICATION_UUENCODE4				"application/uue"
-#define APPLICATION_X509_CA_CERT			"application/x-x509-ca-cert"
-#define APPLICATION_X509_SERVER_CERT		"application/x-x509-server-cert"
-#define APPLICATION_X509_EMAIL_CERT			"application/x-x509-email-cert"
-#define APPLICATION_X509_USER_CERT			"application/x-x509-user-cert"
-#define APPLICATION_X509_CRL				"application/x-pkcs7-crl"
-#define APPLICATION_XPKCS7_MIME 			"application/x-pkcs7-mime"
-#define APPLICATION_XPKCS7_SIGNATURE		"application/x-pkcs7-signature"
-#define APPLICATION_WWW_FORM_URLENCODED		"application/x-www-form-urlencoded"
-#define APPLICATION_OLEOBJECT				"application/oleobject"
-#define APPLICATION_OLEOBJECT2				"application/x-oleobject"
-#define APPLICATION_JAVAARCHIVE				"application/java-archive"
-#define APPLICATION_MARIMBA 				"application/marimba"
-#define APPLICATION_XMARIMBA 				"application/x-marimba"
+#define APPLICATION_APPLEFILE               "application/applefile"
+#define APPLICATION_BINHEX                  "application/mac-binhex40"
+#define APPLICATION_MACBINARY               "application/x-macbinary"
+#define APPLICATION_COMPRESS                "application/x-compress"
+#define APPLICATION_COMPRESS2               "application/compress"
+#define APPLICATION_FORTEZZA_CKL            "application/x-fortezza-ckl"
+#define APPLICATION_FORTEZZA_KRL            "application/x-fortezza-krl"
+#define APPLICATION_GZIP                    "application/x-gzip"
+#define APPLICATION_GZIP2                   "application/gzip"
+#define APPLICATION_HTTP_INDEX              "application/http-index"
+#define APPLICATION_JAVASCRIPT              "application/x-javascript"
+#define APPLICATION_NETSCAPE_REVOCATION     "application/x-netscape-revocation"
+#define APPLICATION_NS_PROXY_AUTOCONFIG     "application/x-ns-proxy-autoconfig"
+#define APPLICATION_NS_JAVASCRIPT_AUTOCONFIG        "application/x-javascript-config"
+#define APPLICATION_OCTET_STREAM            "application/octet-stream"
+#define APPLICATION_PGP                     "application/pgp"
+#define APPLICATION_PGP2                    "application/x-pgp-message"
+#define APPLICATION_POSTSCRIPT              "application/postscript"
+#define APPLICATION_PRE_ENCRYPTED           "application/pre-encrypted"
+#define APPLICATION_UUENCODE                "application/x-uuencode"
+#define APPLICATION_UUENCODE2               "application/x-uue"
+#define APPLICATION_UUENCODE3               "application/uuencode"
+#define APPLICATION_UUENCODE4               "application/uue"
+#define APPLICATION_X509_CA_CERT            "application/x-x509-ca-cert"
+#define APPLICATION_X509_SERVER_CERT        "application/x-x509-server-cert"
+#define APPLICATION_X509_EMAIL_CERT         "application/x-x509-email-cert"
+#define APPLICATION_X509_USER_CERT          "application/x-x509-user-cert"
+#define APPLICATION_X509_CRL                "application/x-pkcs7-crl"
+#define APPLICATION_XPKCS7_MIME             "application/x-pkcs7-mime"
+#define APPLICATION_XPKCS7_SIGNATURE        "application/x-pkcs7-signature"
+#define APPLICATION_WWW_FORM_URLENCODED     "application/x-www-form-urlencoded"
+#define APPLICATION_OLEOBJECT               "application/oleobject"
+#define APPLICATION_OLEOBJECT2              "application/x-oleobject"
+#define APPLICATION_JAVAARCHIVE             "application/java-archive"
+#define APPLICATION_MARIMBA                 "application/marimba"
+#define APPLICATION_XMARIMBA                "application/x-marimba"
 
-#define AUDIO_BASIC							"audio/basic"
+#define AUDIO_BASIC                         "audio/basic"
 
-#define IMAGE_GIF							"image/gif"
-#define IMAGE_JPG							"image/jpeg"
-#define IMAGE_PJPG							"image/pjpeg"
-#define IMAGE_PNG							"image/png"
-#define IMAGE_PPM							"image/x-portable-pixmap"
-#define IMAGE_XBM							"image/x-xbitmap"
-#define IMAGE_XBM2							"image/x-xbm"
-#define IMAGE_XBM3							"image/xbm"
+#define IMAGE_GIF                           "image/gif"
+#define IMAGE_JPG                           "image/jpeg"
+#define IMAGE_PJPG                          "image/pjpeg"
+#define IMAGE_PNG                           "image/png"
+#define IMAGE_PPM                           "image/x-portable-pixmap"
+#define IMAGE_XBM                           "image/x-xbitmap"
+#define IMAGE_XBM2                          "image/x-xbm"
+#define IMAGE_XBM3                          "image/xbm"
 
-#define MESSAGE_EXTERNAL_BODY				"message/external-body"
-#define MESSAGE_NEWS						"message/news"
-#define MESSAGE_RFC822						"message/rfc822"
+#define MESSAGE_EXTERNAL_BODY               "message/external-body"
+#define MESSAGE_NEWS                        "message/news"
+#define MESSAGE_RFC822                      "message/rfc822"
 
-#define MULTIPART_ALTERNATIVE				"multipart/alternative"
-#define MULTIPART_APPLEDOUBLE				"multipart/appledouble"
-#define MULTIPART_DIGEST					"multipart/digest"
-#define MULTIPART_HEADER_SET				"multipart/header-set"
-#define MULTIPART_MIXED						"multipart/mixed"
-#define MULTIPART_PARALLEL					"multipart/parallel"
-#define MULTIPART_SIGNED					"multipart/signed"
-#define MULTIPART_RELATED					"multipart/related"
-#define SUN_ATTACHMENT						"x-sun-attachment"
+#define MULTIPART_ALTERNATIVE               "multipart/alternative"
+#define MULTIPART_APPLEDOUBLE               "multipart/appledouble"
+#define MULTIPART_DIGEST                    "multipart/digest"
+#define MULTIPART_HEADER_SET                "multipart/header-set"
+#define MULTIPART_MIXED                     "multipart/mixed"
+#define MULTIPART_PARALLEL                  "multipart/parallel"
+#define MULTIPART_SIGNED                    "multipart/signed"
+#define MULTIPART_RELATED                   "multipart/related"
+#define SUN_ATTACHMENT                      "x-sun-attachment"
 
-#define TEXT_ENRICHED						"text/enriched"
-#define TEXT_CALENDAR						"text/calendar"
-#define TEXT_HTML							"text/html"
-#define TEXT_MDL							"text/mdl"
-#define TEXT_PLAIN							"text/plain"
-#define TEXT_RICHTEXT						"text/richtext"
-#define TEXT_VCARD							"text/x-vcard"
-#define TEXT_CSS							"text/css"
-#define TEXT_JSSS							"text/jsss"
+#define TEXT_ENRICHED                       "text/enriched"
+#define TEXT_CALENDAR                       "text/calendar"
+#define TEXT_HTML                           "text/html"
+#define TEXT_MDL                            "text/mdl"
+#define TEXT_PLAIN                          "text/plain"
+#define TEXT_RICHTEXT                       "text/richtext"
+#define TEXT_VCARD                          "text/x-vcard"
+#define TEXT_CSS                            "text/css"
+#define TEXT_JSSS                           "text/jsss"
 #define TEXT_XML                            "text/xml"
 
-#define VIDEO_MPEG							"video/mpeg"
+#define VIDEO_MPEG                          "video/mpeg"
 
 /* x-uuencode-apple-single. QuickMail made me do this. */
-#define UUENCODE_APPLE_SINGLE				"x-uuencode-apple-single"
+#define UUENCODE_APPLE_SINGLE               "x-uuencode-apple-single"
 
 /* The standard MIME message-content-encoding values:
  */
-#define ENCODING_7BIT						"7bit"
-#define ENCODING_8BIT						"8bit"
-#define ENCODING_BINARY						"binary"
-#define ENCODING_BASE64						"base64"
-#define ENCODING_QUOTED_PRINTABLE			"quoted-printable"
+#define ENCODING_7BIT                       "7bit"
+#define ENCODING_8BIT                       "8bit"
+#define ENCODING_BINARY                     "binary"
+#define ENCODING_BASE64                     "base64"
+#define ENCODING_QUOTED_PRINTABLE           "quoted-printable"
 
 /* Some nonstandard encodings.  Note that the names are TOTALLY RANDOM,
    and code that looks for these in network-provided data must look for
    all the possibilities.
  */
-#define ENCODING_COMPRESS					"x-compress"
-#define ENCODING_COMPRESS2					"compress"
-#define ENCODING_ZLIB						"x-zlib"
-#define ENCODING_ZLIB2						"zlib"
-#define ENCODING_GZIP						"x-gzip"
-#define ENCODING_GZIP2						"gzip"
-#define ENCODING_DEFLATE					"x-deflate"
-#define ENCODING_DEFLATE2					"deflate"
-#define ENCODING_UUENCODE					"x-uuencode"
-#define ENCODING_UUENCODE2					"x-uue"
-#define ENCODING_UUENCODE3					"uuencode"
-#define ENCODING_UUENCODE4					"uue"
+#define ENCODING_COMPRESS                   "x-compress"
+#define ENCODING_COMPRESS2                  "compress"
+#define ENCODING_ZLIB                       "x-zlib"
+#define ENCODING_ZLIB2                      "zlib"
+#define ENCODING_GZIP                       "x-gzip"
+#define ENCODING_GZIP2                      "gzip"
+#define ENCODING_DEFLATE                    "x-deflate"
+#define ENCODING_DEFLATE2                   "deflate"
+#define ENCODING_UUENCODE                   "x-uuencode"
+#define ENCODING_UUENCODE2                  "x-uue"
+#define ENCODING_UUENCODE3                  "uuencode"
+#define ENCODING_UUENCODE4                  "uue"
 
 /* Some names of parameters that various MIME headers include.
  */
-#define PARAM_PROTOCOL						"protocol"
-#define PARAM_MICALG						"micalg"
-#define PARAM_MICALG_MD2					"rsa-md2"
-#define PARAM_MICALG_MD5					"rsa-md5"
-#define PARAM_MICALG_SHA1					"sha1"
-#define PARAM_MICALG_SHA1_2					"sha-1"
-#define PARAM_MICALG_SHA1_3					"rsa-sha1"
-#define PARAM_MICALG_SHA1_4					"rsa-sha-1"
-#define PARAM_MICALG_SHA1_5					"rsa-sha"
-#define PARAM_X_MAC_CREATOR					"x-mac-creator"
-#define PARAM_X_MAC_TYPE					"x-mac-type"
+#define PARAM_PROTOCOL                      "protocol"
+#define PARAM_MICALG                        "micalg"
+#define PARAM_MICALG_MD2                    "rsa-md2"
+#define PARAM_MICALG_MD5                    "rsa-md5"
+#define PARAM_MICALG_SHA1                   "sha1"
+#define PARAM_MICALG_SHA1_2                 "sha-1"
+#define PARAM_MICALG_SHA1_3                 "rsa-sha1"
+#define PARAM_MICALG_SHA1_4                 "rsa-sha-1"
+#define PARAM_MICALG_SHA1_5                 "rsa-sha"
+#define PARAM_X_MAC_CREATOR                 "x-mac-creator"
+#define PARAM_X_MAC_TYPE                    "x-mac-type"
 
 
 /* This is like text/html, but also implies that the charset is that of
    the window.  This type should not escape to the outside world!
  */
-#define INTERNAL_PARSER						"internal/parser"
+#define INTERNAL_PARSER                     "internal/parser"
 
 /* This type represents a document whose type was unknown.  Note that this
    is not the same as "application/octet-stream".  UNKNOWN_CONTENT_TYPE is
@@ -779,10 +779,10 @@ typedef struct _mdata {
    feed a content type to an external consumer, we must translate this type
    to application/octet-stream first.
  */
-#define UNKNOWN_CONTENT_TYPE			   "application/x-unknown-content-type"
+#define UNKNOWN_CONTENT_TYPE               "application/x-unknown-content-type"
 
 /* I have no idea what these are... */
-#define MAGNUS_INTERNAL_UNKNOWN				"magnus-internal/unknown"
+#define MAGNUS_INTERNAL_UNKNOWN             "magnus-internal/unknown"
 /* pre-encrypted file that has passed the cache */
 #define INTERNAL_PRE_ENCRYPTED              "internal/pre-encrypted"
 /* html file that needs to be pre-encrypted */
@@ -794,13 +794,13 @@ typedef struct _mdata {
 #define NET_RETRY_WITH_AUTH                 4
 
 #ifdef  XP_UNIX
-#define NET_COMMAND_NETSCAPE		"internal"
-#define NET_COMMAND_PLUGIN		"plugin:"
-#define NET_COMMAND_SAVE_TO_DISK	"save"
-#define NET_COMMAND_SAVE_BY_NETSCAPE	"plugin-error"
-#define NET_COMMAND_UNKNOWN		"prompt"
-#define NET_COMMAND_DELETED		"deleted"
-#define NET_MOZILLA_FLAGS		"x-mozilla-flags"
+#define NET_COMMAND_NETSCAPE        "internal"
+#define NET_COMMAND_PLUGIN      "plugin:"
+#define NET_COMMAND_SAVE_TO_DISK    "save"
+#define NET_COMMAND_SAVE_BY_NETSCAPE    "plugin-error"
+#define NET_COMMAND_UNKNOWN     "prompt"
+#define NET_COMMAND_DELETED     "deleted"
+#define NET_MOZILLA_FLAGS       "x-mozilla-flags"
 #endif
 
 /* the entry file info structure contains information about
@@ -809,23 +809,23 @@ typedef struct _mdata {
 typedef struct _NET_FileEntryInfo {
     char      *  filename;
     NET_cinfo *  cinfo;
-	char      *	 content_type;
+    char      *  content_type;
     int          special_type;
     time_t       date;
     int32        size;
-    Bool      	 display;    /* show this entry? */
-	int32 		 permissions;
+    Bool         display;    /* show this entry? */
+    int32        permissions;
 } NET_FileEntryInfo;
 
-#define NET_FILE_TYPE		 0
-#define NET_DIRECTORY  		 1
-#define NET_SYM_LINK  		 2
+#define NET_FILE_TYPE        0
+#define NET_DIRECTORY        1
+#define NET_SYM_LINK         2
 #define NET_SYM_LINK_TO_DIR  3
 #define NET_SYM_LINK_TO_FILE 4
 
 /* bit wise or'able permissions */
-#define NET_READ_PERMISSION		4
-#define NET_WRITE_PERMISSION	2
+#define NET_READ_PERMISSION     4
+#define NET_WRITE_PERMISSION    2
 #define NET_EXECUTE_PERMISSION  1
 
 typedef struct _HTTPIndexParserData HTTPIndexParserData;
@@ -928,8 +928,8 @@ extern NET_StreamClass *
 /* bit flags for determining what we want to parse from the URL
  */
 #define GET_ALL_PARTS              127
-#define GET_PASSWORD_PART			64
-#define GET_USERNAME_PART			32
+#define GET_PASSWORD_PART           64
+#define GET_USERNAME_PART           32
 #define GET_PROTOCOL_PART          16
 #define GET_HOST_PART               8
 #define GET_PATH_PART               4
@@ -940,8 +940,8 @@ extern NET_StreamClass *
  /* return codes used by NET_BeginConnection
  * and MSG_BeginOpenFolder
  */
-#define MK_WAITING_FOR_CONNECTION	100
-#define MK_CONNECTED          		101
+#define MK_WAITING_FOR_CONNECTION   100
+#define MK_CONNECTED                101
 
 /* This function assumes a url that includes the protocol.
  * Parses and returns peices of URL as defined by the
@@ -988,7 +988,7 @@ extern void NET_SetMailRelayHost(char * host);
 
 extern int
 NET_SendMessageUnattended(MWContext* context, char* to, char* subject,
-						  char* otherheaders, char* body);
+                          char* otherheaders, char* body);
 
 
 
@@ -1010,12 +1010,12 @@ extern int NET_AddCoordinatesToURLStruct(URL_Struct * url_struct, int32 x_coord,
  * returns 0 on failure and 1 on success
  */
 extern int NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data, 
-										  URL_Struct * url_struct);
+                                          URL_Struct * url_struct);
 
 typedef enum {
-	IdententifyViaUniqueID,
-	IdentintifyViaEmailAddress,
-	DoNotIdentifyMe
+    IdententifyViaUniqueID,
+    IdentintifyViaEmailAddress,
+    DoNotIdentifyMe
 } IdentifyMeEnum;
 
 /* set the method that the user wishes to identify themselves
@@ -1026,22 +1026,22 @@ extern void NET_SetIdentifyMeType(IdentifyMeEnum method);
 
 /* set the users cookie prefs */
 typedef enum {
-	NET_SilentCookies,
-	NET_WhineAboutCookies,
-	NET_DontAcceptNewCookies,
-	NET_DisableCookies
+    NET_SilentCookies,
+    NET_WhineAboutCookies,
+    NET_DontAcceptNewCookies,
+    NET_DisableCookies
 } NET_CookiePrefsEnum;
 
 /* sets users inline cookie prefs */
 typedef enum {
-	NET_AllowForeignCookies,
-	NET_DoNotAllowForeignCookies
+    NET_AllowForeignCookies,
+    NET_DoNotAllowForeignCookies
 } NET_ForeignCookiesEnum;
 
 typedef enum {
-	NET_Accept,
-	NET_DontAcceptForeign,
-	NET_DontUse
+    NET_Accept,
+    NET_DontAcceptForeign,
+    NET_DontUse
 } NET_CookieBehaviorEnum;
 
 
@@ -1095,9 +1095,9 @@ NET_RemoveDiskCacheObjects(uint32 remove_num);
  * that begin with the cacheing prefix
  *
  * on entry:  Set
- *	dir_name: equal to the name of the directory where cache files reside
+ *  dir_name: equal to the name of the directory where cache files reside
  *    prefix:   equal to the file prefix that cache files use. 
- *			  (i.e. "cache" if all files begin with cacheXXXX)
+ *            (i.e. "cache" if all files begin with cacheXXXX)
  *
  *  remember that cache file names were generated by WH_TempName with
  *  the xpCache enum
@@ -1119,8 +1119,8 @@ extern Bool NET_ChangeCacheFileLock(URL_Struct *URL_s, Bool set);
  */
 extern NET_StreamClass *
 NET_CloneWysiwygCacheFile(MWContext *context, URL_Struct *URL_s, 
-			  uint32 nbytes, const char * wysiwyg_url,
-			  const char * base_href);
+              uint32 nbytes, const char * wysiwyg_url,
+              const char * base_href);
 
 /* returns TRUE if the url is in the disk cache
  */
@@ -1182,7 +1182,7 @@ extern int32 NET_GetMemoryCacheSize(void);
 /* returns the ceiling on the memory cache
  */
 extern int32 NET_GetMaxMemoryCacheSize(void);
-	
+    
 /* returns the number of bytes currently in use by the disk cache
  */
 extern int32 NET_GetDiskCacheSize(void);
@@ -1337,7 +1337,7 @@ PUBLIC char * NET_Escape (const char * str, int mask);
  * in *out_len, and uses len instead of NUL termination.
  */
 PUBLIC char * NET_EscapeBytes (const char * str, int32 len, int mask,
-			       int32 * out_len);
+                   int32 * out_len);
 
 /* return the size of a string if it were to be escaped.
  */
@@ -1370,26 +1370,26 @@ extern void NET_DownloadAutoAdminCfgFile();
 #ifdef MOZ_LI
 
 /* LDAP METHOD IDs for URL_s->method */
-#define LDAP_SEARCH_METHOD	100 /* Address book search */
-#define LDAP_LI_SEARCH_METHOD	101 /* Get LDAPMessage* results from a LDAP URL to search */
-#define LDAP_LI_ADD_METHOD	102 /* Add an entry given LDAPMods */
-#define LDAP_LI_MOD_METHOD	103 /* Modify an entry given LDAPMods */
-#define LDAP_LI_DEL_METHOD	104 /* Delete an entry given the DN */
-#define LDAP_LI_PUTFILE_METHOD	105 /* Put a file into a given DN and attribute, given a local path */
-#define LDAP_LI_GETFILE_METHOD	106 /* Retreive an attribute into a local file, given DN and attribute */
+#define LDAP_SEARCH_METHOD  100 /* Address book search */
+#define LDAP_LI_SEARCH_METHOD   101 /* Get LDAPMessage* results from a LDAP URL to search */
+#define LDAP_LI_ADD_METHOD  102 /* Add an entry given LDAPMods */
+#define LDAP_LI_MOD_METHOD  103 /* Modify an entry given LDAPMods */
+#define LDAP_LI_DEL_METHOD  104 /* Delete an entry given the DN */
+#define LDAP_LI_PUTFILE_METHOD  105 /* Put a file into a given DN and attribute, given a local path */
+#define LDAP_LI_GETFILE_METHOD  106 /* Retreive an attribute into a local file, given DN and attribute */
 #define LDAP_LI_ADDGLM_METHOD 107 /* Add an entry, then return the result
-								   *  of a search for the modified entry's
-								   *  modifyTimeStamp attribute
-								   */
+                                   *  of a search for the modified entry's
+                                   *  modifyTimeStamp attribute
+                                   */
 #define LDAP_LI_MODGLM_METHOD 108 /* Modify an entry, then return the result
-								   *  of a search for the modified entry's
-								   *  modifyTimeStamp attribute
-								   */
+                                   *  of a search for the modified entry's
+                                   *  modifyTimeStamp attribute
+                                   */
 #define LDAP_LI_GETLASTMOD_METHOD 109 /* Return an entry's modifyTimeStamp attribute.
-								       * Any attributes specified in the URL will be ignored
-									   */
-#define LDAP_LI_BIND_METHOD 110		/* Bind as a particular user DN to an ldap server. 
-									 */
+                                       * Any attributes specified in the URL will be ignored
+                                       */
+#define LDAP_LI_BIND_METHOD 110     /* Bind as a particular user DN to an ldap server. 
+                                     */
 #endif
 
 /*
@@ -1418,12 +1418,12 @@ extern int
 NET_GetURL (URL_Struct * URL_s,
         FO_Present_Types output_format,
         MWContext * context,
-        Net_GetUrlExitFunc*	exit_routine);
+        Net_GetUrlExitFunc* exit_routine);
 PUBLIC int
 NET_GetURLQuick (URL_Struct * URL_s,
         FO_Present_Types output_format,
         MWContext * context,
-        Net_GetUrlExitFunc*	exit_routine);
+        Net_GetUrlExitFunc* exit_routine);
 
 /* URL methods
  */
@@ -1436,29 +1436,29 @@ NET_GetURLQuick (URL_Struct * URL_s,
 #define URL_MOVE_METHOD   6
 #define URL_INDEX_METHOD  7
 #define URL_GETPROPERTIES_METHOD 8
-#define URL_COPY_METHOD	9
+#define URL_COPY_METHOD 9
 
 /* LDAP METHOD IDs for URL_s->method */
-#define LDAP_SEARCH_METHOD	100 /* Address book search */
-#define LDAP_LI_GET_METHOD	101 /* Get LDAPMessage* results from a LDAP URL to search */
-#define LDAP_LI_ADD_METHOD	102 /* Add an entry given LDAPMods */
-#define LDAP_LI_MOD_METHOD	103 /* Modify an entry given LDAPMods */
-#define LDAP_LI_DEL_METHOD	104 /* Delete an entry given the DN */
-#define LDAP_LI_PUTFILE_METHOD	105 /* Put a file into a given DN and attribute, given a local path */
-#define LDAP_LI_GETFILE_METHOD	106 /* Retreive an attribute into a local file, given DN and attribute */
+#define LDAP_SEARCH_METHOD  100 /* Address book search */
+#define LDAP_LI_GET_METHOD  101 /* Get LDAPMessage* results from a LDAP URL to search */
+#define LDAP_LI_ADD_METHOD  102 /* Add an entry given LDAPMods */
+#define LDAP_LI_MOD_METHOD  103 /* Modify an entry given LDAPMods */
+#define LDAP_LI_DEL_METHOD  104 /* Delete an entry given the DN */
+#define LDAP_LI_PUTFILE_METHOD  105 /* Put a file into a given DN and attribute, given a local path */
+#define LDAP_LI_GETFILE_METHOD  106 /* Retreive an attribute into a local file, given DN and attribute */
 #define LDAP_LI_ADDGLM_METHOD 107 /* Add an entry, then return the result
-								   *  of a search for the modified entry's
-								   *  modifyTimeStamp attribute
-								   */
+                                   *  of a search for the modified entry's
+                                   *  modifyTimeStamp attribute
+                                   */
 #define LDAP_LI_MODGLM_METHOD 108 /* Modify an entry, then return the result
-								   *  of a search for the modified entry's
-								   *  modifyTimeStamp attribute
-								   */
+                                   *  of a search for the modified entry's
+                                   *  modifyTimeStamp attribute
+                                   */
 #define LDAP_LI_GETLASTMOD_METHOD 109 /* Return an entry's modifyTimeStamp attribute.
-								       * Any attributes specified in the URL will be ignored
-									   */
-#define LDAP_LI_BIND_METHOD 110		/* Bind as a particular user DN to an ldap server. 
-									 */
+                                       * Any attributes specified in the URL will be ignored
+                                       */
+#define LDAP_LI_BIND_METHOD 110     /* Bind as a particular user DN to an ldap server. 
+                                     */
 
 /*
  * NET_ProcessNet should be called repeatedly from the
@@ -1501,7 +1501,7 @@ extern int NET_InterruptWindow(MWContext * window_id);
 extern int NET_SilentInterruptWindow(MWContext * window_id);
 
 /*
- *	NET_InterruptStream kills just stream associated with an URL.
+ *  NET_InterruptStream kills just stream associated with an URL.
  */
 extern int NET_InterruptStream (URL_Struct *nurl);
 
@@ -1632,14 +1632,14 @@ extern void NET_DeregisterContentTypeConverter (char          * format_in,
 
 extern void
 NET_RegisterExternalViewerCommand(char * format_in,
-            			char * system_command,
+                        char * system_command,
                                 unsigned int stream_block_size);
 
 /* register a routine to decode a stream
  */
-extern void NET_RegisterEncodingConverter (char			  * encoding_in,
-										   void           * data_obj,
-										   NET_Converter  * converter_func);
+extern void NET_RegisterEncodingConverter (char           * encoding_in,
+                                           void           * data_obj,
+                                           NET_Converter  * converter_func);
 
 #ifdef NEW_DECODERS
 /* removes all registered converters of any kind
@@ -1653,8 +1653,8 @@ extern void NET_ClearAllConverters(void);
  * converter
  */
 extern void NET_RegisterExternalDecoderCommand (char * format_in,
-												char * format_out,
-												char * system_command);
+                                                char * format_out,
+                                                char * system_command);
 #endif /* XP_UNIX */
 
 
@@ -1743,7 +1743,7 @@ extern void NET_ChangeMaxNumberOfConnectionsPerContext(int max_number_of_connect
  */
 extern int NET_ChangeSocketBufferSize (int size);
 
-typedef enum {	
+typedef enum {  
         FTP_PROXY = 0,
         GOPHER_PROXY,
         HTTP_PROXY,
@@ -1832,9 +1832,9 @@ PUBLIC char * NET_GetProxyConfigSource(void);
 
 
 typedef enum {
-	CU_CHECK_PER_SESSION,
-	CU_CHECK_ALL_THE_TIME,
-	CU_NEVER_CHECK
+    CU_CHECK_PER_SESSION,
+    CU_CHECK_ALL_THE_TIME,
+    CU_NEVER_CHECK
 } CacheUseEnum;
 
 /* set the way the cache objects should
@@ -1889,7 +1889,7 @@ extern Bool NET_CheckForTimeBomb(MWContext *context);
  */
 PUBLIC Bool
 NET_ParseMimeHeader(FO_Present_Types outputFormat,
-					MWContext  *context,
+                    MWContext  *context,
                     URL_Struct *URL_s,
                     char       *name,
                     char       *value,
@@ -1907,7 +1907,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
  */
 
 extern int NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
-						   char *output, int output_size, XP_Bool urls_only_p);
+                           char *output, int output_size, XP_Bool urls_only_p);
 
 
 /* Takes an arbitrary chunk of HTML, and returns another chunk which has had
@@ -1933,9 +1933,9 @@ extern char * NET_EscapeDoubleQuote(const char * string);
 /* register a newsrc file mapping
  */
 extern Bool NET_RegisterNewsrcFile(char *filename, 
-								   char *hostname, 
-								   Bool  is_secure,
-								   Bool  is_newsgroups_file);
+                                   char *hostname, 
+                                   Bool  is_secure,
+                                   Bool  is_newsgroups_file);
 
 /* removes a newshost to file mapping.  Removes both
  * the newsrc and the newsgroups mapping
@@ -1956,8 +1956,8 @@ extern void NET_OnNewsHostDeleted (const char *host);
  * returns NULL on error or no mapping.
  */
 extern char * NET_MapNewsrcHostToFilename(char *host, 
-										  Bool  is_secure,
-								          Bool  is_newsgroups_file);
+                                          Bool  is_secure,
+                                          Bool  is_newsgroups_file);
 
 /* save newsrc file mappings from memory onto disk
  */
@@ -1997,8 +1997,8 @@ extern void NET_DelExternalURLType(char * type);
 
 /*
  *  NET_SetNewContext changes the context associated with a URL Struct.
- *	can also change the url exit routine, which will cause the old one
- *	to be called with a status of MK_CHANGING_CONTEXT
+ *  can also change the url exit routine, which will cause the old one
+ *  to be called with a status of MK_CHANGING_CONTEXT
  */
 extern int NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc *exit_routine);
 
@@ -2151,31 +2151,32 @@ extern void NET_PlusToSpace(char *str);
 #define POP3_TYPE_URL           17
 #define MAILBOX_TYPE_URL        18
 #define INTERNAL_NEWS_TYPE_URL  19
-#define SECURITY_TYPE_URL		20
-#define MOCHA_TYPE_URL			21
-#define VIEW_SOURCE_TYPE_URL	22
+#define SECURITY_TYPE_URL       20
+#define MOCHA_TYPE_URL          21
+#define VIEW_SOURCE_TYPE_URL    22
 #define HTML_DIALOG_HANDLER_TYPE_URL 23
 #define HTML_PANEL_HANDLER_TYPE_URL 24
 #define INTERNAL_SECLIB_TYPE_URL 25
 #define MSG_SEARCH_TYPE_URL     26
-#define IMAP_TYPE_URL			27
-#define LDAP_TYPE_URL			28
-#define SECURE_LDAP_TYPE_URL	29
-#define WYSIWYG_TYPE_URL		30
-#define ADDRESS_BOOK_TYPE_URL	31
-#define CLASSID_TYPE_URL		32
-#define JAVA_TYPE_URL			33
-#define DATA_TYPE_URL			34
-#define NETHELP_TYPE_URL		35
-#define NFS_TYPE_URL		    36
-#define MARIMBA_TYPE_URL	    37
+#define IMAP_TYPE_URL           27
+#define LDAP_TYPE_URL           28
+#define SECURE_LDAP_TYPE_URL    29
+#define WYSIWYG_TYPE_URL        30
+#define ADDRESS_BOOK_TYPE_URL   31
+#define CLASSID_TYPE_URL        32
+#define JAVA_TYPE_URL           33
+#define DATA_TYPE_URL           34
+#define NETHELP_TYPE_URL        35
+#define NFS_TYPE_URL            36
+#define MARIMBA_TYPE_URL        37
 #define INTERNAL_CERTLDAP_TYPE_URL 38
 #define ADDRESS_BOOK_LDAP_TYPE_URL 39
 #define LDAP_REPLICATION_TYPE_URL  40
 #define LDAP_QUERY_DSE_TYPE_URL    41
-#define CALLBACK_TYPE_URL		42
+#define CALLBACK_TYPE_URL       42
+#define SOCKSTUB_TYPE_URL         43
 
-#define LAST_URL_TYPE 40  /* defines the max number of URL types there are */
+#define LAST_URL_TYPE 43  /* defines the max number of URL types there are */
 
 /* A usefull function to test URL types (mkutils.cpp)
  * Unfortunately, we can't get to return values
