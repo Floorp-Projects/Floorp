@@ -25,6 +25,7 @@
 #include "nsGUIEvent.h"
 #include "nsStyleStruct.h"
 
+class nsIAtom;
 class nsIContent;
 class nsIFrame;
 class nsIPresContext;
@@ -567,6 +568,19 @@ public:
                              nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent) = 0;
+
+  /**
+   * This call is invoked when the value of a content objects's attribute
+   * is changed. * The first frame that maps that content is asked to deal
+   * with the change by generating an incremental reflow command.
+   *
+   * @param aChild the content object
+   * @param aAttribute the attribute whose value changed
+   */
+  NS_IMETHOD  AttributeChanged(nsIPresShell*   aShell,
+                               nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               nsIAtom*        aAttribute) = 0;
 
   /**
    * Return the reflow metrics for this frame. If the frame is a
