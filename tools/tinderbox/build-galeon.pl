@@ -11,7 +11,10 @@
 # but it works for now.  Feel free to improve this mechanism to properly
 # return values & stuff.  -mcafee
 #
-
+# Things to do:
+#   * Get pull by branch working
+#
+#
 use strict;
 
 package PostMozilla;
@@ -25,7 +28,7 @@ sub checkout {
   # checkout galeon source
   $ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
 
-  my $status = TinderUtils::run_shell_command("cvs checkout galeon");
+  my $status = TinderUtils::run_shell_command("$Settings::CVS checkout galeon");
 
   # hack in the galeon prefs, if needed
 
@@ -38,6 +41,7 @@ sub main {
 
   TinderUtils::print_log "Post-Mozilla build goes here.\n";
 
+  # Pending a config file, stuff things here.
   my $post_status = 'success';  # Success until we report a failure.
   my $status = 0;
   my $galeon_alive_test = 1;
