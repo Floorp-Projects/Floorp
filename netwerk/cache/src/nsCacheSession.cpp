@@ -40,6 +40,8 @@ nsCacheSession::nsCacheSession(const char *         clientID,
 
   if (streamBased) MarkStreamBased();
   else SetStoragePolicy(nsICache::STORE_IN_MEMORY);
+
+  MarkDoomEntriesIfExpired();
 }
 
 nsCacheSession::~nsCacheSession()
