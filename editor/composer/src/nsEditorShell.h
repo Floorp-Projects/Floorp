@@ -242,6 +242,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsInterfaceState        *mStateMaintainer;      // we hold the owning ref to this.
 
     nsIEditorController     *mEditorController;     // temporary weak ref to the editor controller
+    nsIEditorController     *mComposerController;   // temporary weak ref to the nsComposerController
     nsIDocShell             *mDocShell;              // weak reference
 
     // The webshell that contains the document being edited.
