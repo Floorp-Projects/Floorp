@@ -82,9 +82,10 @@ public:
   virtual ~nsSelectOptionAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD GetAccName(nsAWritableString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval);
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval);
 
 protected:
   

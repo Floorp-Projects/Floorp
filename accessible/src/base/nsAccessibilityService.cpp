@@ -46,6 +46,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLLinkAccessible.h"
+#include "nsHTMLObjectAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsHTMLTextAccessible.h"
@@ -503,6 +504,24 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISup
 }
 
 NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLObjectAccessible(nsISupports *aFrame, nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = new nsHTMLObjectAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
   nsIFrame* frame;
@@ -808,6 +827,24 @@ nsAccessibilityService::CreateXULListboxAccessible(nsIDOMNode *aNode, nsIAccessi
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
   *_retval = new nsXULListboxAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+#else
+  *_retval = nsnull;
+#endif // MOZ_XUL
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateXULListitemAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+#ifdef MOZ_XUL
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULListitemAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -258,14 +258,16 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     // capture Form change events 
     rv = target->AddEventListener(NS_LITERAL_STRING("change"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+
     // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
     rv = target->AddEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-    // add ourself as a RadiobuttonStateChange listener (custom event fired in nsHTMLInputElement.cpp)
-    rv = target->AddEventListener(NS_LITERAL_STRING("RadiobuttonStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+
+    // add ourself as a RadioStateChange Listener ( custom event fired in in nsHTMLInputElement.cpp  & radio.xml)
+    rv = target->AddEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
-    rv = target->AddEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    rv = target->AddEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
 
     rv = target->AddEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -314,10 +316,11 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
       target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("change"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
-      target->RemoveEventListener(NS_LITERAL_STRING("RadiobuttonStateChange"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+      target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+      target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     }
  
     if (mTimer) {
@@ -392,14 +395,22 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         else 
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
       }
-      else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || 
-               eventType.EqualsIgnoreCase("RadiobuttonStateChange"))
+      else if (eventType.EqualsIgnoreCase("ListitemStateChange")){
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible);
+      }
+      else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
+      }
       else if (eventType.EqualsIgnoreCase("RadioStateChange") ) {
+        // first the XUL radio buttons
         if (targetNode &&
             NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible);
+        }
+        else { // for the html radio buttons -- apparently the focus code just works. :-)
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible);
         }
       }
       else if (eventType.EqualsIgnoreCase("popupshowing")) 

@@ -41,6 +41,8 @@
 #include "nsXULSelectAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIServiceManager.h"
@@ -153,6 +155,39 @@ nsListboxAccessible(aDOMNode, aShell)
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULListboxAccessible, nsListboxAccessible, nsIAccessibleSelectable)
 
 /**
+  * Let Accessible count them up
+  */
+NS_IMETHODIMP nsXULListboxAccessible::GetAccChildCount(PRInt32 *_retval)
+{
+  return nsAccessible::GetAccChildCount(_retval);
+}
+
+/**
+  * As a nsXULListboxAccessible we can have the following states:
+  *     STATE_FOCUSED
+  *     STATE_READONLY
+  *     STATE_FOCUSABLE
+  */
+NS_IMETHODIMP nsXULListboxAccessible::GetAccState(PRUint32 *_retval)
+{
+  // Get focus status from base class
+  nsListboxAccessible::GetAccState(_retval);
+
+// see if we are multiple select if so set ourselves as such
+  nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
+  if (element) {
+    nsAutoString selType;
+    element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
+    if (!selType.IsEmpty() && selType.Equals(NS_LITERAL_STRING("multiple")))
+        *_retval |= STATE_MULTISELECTABLE;
+  }
+
+  *_retval |= STATE_FOCUSABLE ;
+
+  return NS_OK;
+}
+
+/**
   * Our value is the value of our ( first ) selected child. nsIDOMXULSelectElement
   *     returns this by default with GetValue().
   */
@@ -165,6 +200,12 @@ NS_IMETHODIMP nsXULListboxAccessible::GetAccValue(nsAWritableString& _retval)
     return selectedItem->GetValue(_retval);
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsXULListboxAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_LIST;
+  return NS_OK;
 }
 
 /**
@@ -189,35 +230,103 @@ NS_IMETHODIMP nsXULListboxAccessible::GetSelectedChildren(nsISupportsArray **_re
   if (!selectedAccessibles || !accService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNode> optionNode, nextOptionNode;
-  mDOMNode->GetFirstChild(getter_AddRefs(optionNode));
-
-  while (PR_TRUE) {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> option(do_QueryInterface(optionNode));
-    if (!option)
-      break;
-    PRBool isSelected = PR_FALSE;
-    option->GetSelected(&isSelected);
-    if (isSelected) {
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> listbox (do_QueryInterface(mDOMNode));
+  PRInt32 length = 0;
+  if (listbox) {
+    listbox->GetSelectedCount(&length);
+    for ( PRInt32 i = 0 ; i < length ; i++ ) {
       nsCOMPtr<nsIAccessible> tempAccessible;
-      accService->CreateXULSelectOptionAccessible(optionNode, getter_AddRefs(tempAccessible));
+      nsCOMPtr<nsIDOMXULSelectControlItemElement> tempNode;
+      listbox->GetSelectedItem(i, getter_AddRefs(tempNode));
+      nsCOMPtr<nsIDOMNode> tempDOMNode (do_QueryInterface(tempNode));
+      accService->CreateXULListitemAccessible(tempDOMNode, getter_AddRefs(tempAccessible));
       if (tempAccessible)
         selectedAccessibles->AppendElement(tempAccessible);
     }
-
-    optionNode->GetNextSibling(getter_AddRefs(nextOptionNode));
-    optionNode = nextOptionNode;
   }
 
-  PRUint32 length = 0;
-  selectedAccessibles->Count(&length); // reusing length
-  if ( length != 0 ) { // length of nsISupportsArray containing selected options
+  PRUint32 uLength = 0;
+  selectedAccessibles->Count(&uLength); 
+  if ( uLength != 0 ) { // length of nsISupportsArray containing selected options
     *_retval = selectedAccessibles;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
+    NS_ADDREF(*_retval);
   }
 
   // no options, not a select or none of the options are selected
+  return NS_OK;
+}
+
+/** ----- nsXULListitemAccessible ----- */
+
+/** Constructor */
+nsXULListitemAccessible::nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
+nsXULMenuitemAccessible(aDOMNode, aShell)
+{
+}
+
+/** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsXULMenuitemAccessible)
+
+/**
+  * If there is a Listcell as a child ( not anonymous ) use it, otherwise
+  *   default to getting the name from GetXULAccName
+  */
+NS_IMETHODIMP nsXULListitemAccessible::GetAccName(nsAWritableString& _retval)
+{
+  nsCOMPtr<nsIDOMNode> child;
+  if (NS_SUCCEEDED(mDOMNode->GetFirstChild(getter_AddRefs(child)))) {
+    nsCOMPtr<nsIDOMElement> childElement (do_QueryInterface(child));
+    if (childElement) {
+      nsAutoString tagName;
+      childElement->GetLocalName(tagName);
+      if (tagName.Equals(NS_LITERAL_STRING("listcell"))) {
+        childElement->GetAttribute(NS_LITERAL_STRING("label"), _retval);
+        return NS_OK;
+      }
+    }
+  }
+  return GetXULAccName(_retval);
+}
+
+/**
+  *
+  */
+NS_IMETHODIMP nsXULListitemAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_LISTITEM;
+  return NS_OK;
+}
+
+/**
+  *
+  */
+NS_IMETHODIMP nsXULListitemAccessible::GetAccState(PRUint32 *_retval)
+{
+//  nsAccessible::GetAccState(_retval); // get focused state
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem (do_QueryInterface(mDOMNode));
+  if (listItem) {
+    PRBool isSelected;
+    listItem->GetSelected(&isSelected);
+    if (isSelected)
+      *_retval |= STATE_SELECTED;
+
+    nsCOMPtr<nsIDOMNode> domParent;
+    mDOMNode->GetParentNode(getter_AddRefs(domParent));
+    nsCOMPtr<nsIDOMXULMultiSelectControlElement> parent(do_QueryInterface(domParent));
+    if (parent) {
+      nsCOMPtr<nsIDOMXULSelectControlItemElement> current;
+      parent->GetCurrentItem(getter_AddRefs(current));
+      if (listItem == current)
+        *_retval |= STATE_FOCUSED;
+    }
+
+  *_retval |= STATE_FOCUSABLE | STATE_SELECTABLE;
+
+  }
+
+
   return NS_OK;
 }
 

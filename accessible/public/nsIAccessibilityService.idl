@@ -46,6 +46,9 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
+// new
+  nsIAccessible CreateHTMLObjectAccessible(in nsISupports aFrame);
+// end new
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
@@ -62,6 +65,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULGroupboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULListboxAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULListitemAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenubarAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenuitemAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenupopupAccessible(in nsIDOMNode aNode);
