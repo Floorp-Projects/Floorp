@@ -112,7 +112,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	newshost.gif \
 	next-disabled.gif \
 	next-hover-active.gif \
-	next-hover.gifnext.gif \
+	next-hover.gif \
+	next.gif \
 	open-mailfolder.gif \
 	outbox.gif \
 	pref-mailnews.css \
