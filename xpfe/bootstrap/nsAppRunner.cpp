@@ -184,7 +184,11 @@ PrintUsage(void)
   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
-static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) {
+static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) 
+{
+#ifdef DEBUG_CMD_LINE
+    printf("OpenWindow(%s,?)\n",urlstr);
+#endif /* DEBUG_CMD_LINE */
     nsresult rv;
     NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
     if ( NS_SUCCEEDED( rv ) ) {
@@ -216,6 +220,10 @@ static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) {
 
 static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
 {
+#ifdef DEBUG_CMD_LINE
+    printf("OpenChromURL(%s,%d,%d)\n",urlstr,height,width);
+#endif /* DEBUG_CMD_LINE */
+
 	nsCOMPtr<nsIURI> url;
 	nsresult  rv;
 	rv = NS_NewURI(getter_AddRefs(url), urlstr);
@@ -887,8 +895,9 @@ int main(int argc, char* argv[])
 
 #ifdef DETECT_WEBSHELL_LEAKS
   unsigned long count;
-  if ( count = NS_TotalWebShellsInExistence() )  {
-    printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
+  count = NS_TotalWebShellsInExistence();
+  if (count)  {
+    printf("XXX WARNING: Number of webshells being leaked: %d \n", (int)count);
   }
 #endif
 
