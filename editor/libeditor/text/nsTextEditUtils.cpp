@@ -107,11 +107,12 @@ nsTextEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
   if (node)
   {
     nsCOMPtr<nsIDOMElement> rootElement;
-    nsresult res = editor->GetRootElement(getter_AddRefs(rootElement));
-    if (NS_FAILED(res))
-      return res;
+    editor->GetRootElement(getter_AddRefs(rootElement));
+
     nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
-    if (!rootNode) return NS_ERROR_NULL_POINTER;
+    if (!rootNode)
+      return PR_FALSE;
+
     nsCOMPtr<nsIDOMNode> tmp;
     nsCOMPtr<nsIDOMNode> p = node;
     while (p && p != rootNode)

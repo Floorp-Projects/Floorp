@@ -278,11 +278,6 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     if (!(mFlags & eEditorPlaintextMask))
       context->SetLinkHandler(0);  
 
-    nsCOMPtr<nsIDOMElement> bodyElement;
-    result = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
-    if (NS_FAILED(result)) { return result; }
-    if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
-
     // init the type-in state
     mTypeInState = new TypeInState();
     if (!mTypeInState) {return NS_ERROR_NULL_POINTER;}

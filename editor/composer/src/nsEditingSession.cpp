@@ -44,6 +44,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
 #include "nsIScriptGlobalObject.h"
@@ -721,11 +722,36 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
     }
 
     // Document level notification...
-    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
-    {
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+      PRBool progressIsForTargetDocument =
+        IsProgressForTargetDocument(aWebProgress);
+
+      if (progressIsForTargetDocument) {
+        nsCOMPtr<nsIDOMWindow> window;
+        aWebProgress->GetDOMWindow(getter_AddRefs(window));
+
+        nsCOMPtr<nsIDOMDocument> doc;
+        window->GetDocument(getter_AddRefs(doc));
+
+        nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
+
+        if (htmlDoc && htmlDoc->IsWriting()) {
+          nsCOMPtr<nsIDOMNSHTMLDocument> htmlDomDoc(do_QueryInterface(doc));
+          nsAutoString designMode;
+
+          htmlDomDoc->GetDesignMode(designMode);
+
+          if (designMode.EqualsLiteral("on")) {
+            // This notification is for data coming in through
+            // document.open/write/close(), ignore it.
+
+            return NS_OK;
+          }
+        }
+      }
+
       mCanCreateEditor = PR_TRUE;
-      (void)StartDocumentLoad(aWebProgress,
-                              IsProgressForTargetDocument(aWebProgress));
+      StartDocumentLoad(aWebProgress, progressIsForTargetDocument);
 #ifdef NOISY_DOC_LOADING
       printf("STATE_START & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
 #endif

@@ -2005,6 +2005,16 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     mRootContent = root;
   }
 
+  if (mEditingIsOn) {
+    // Reset() blows away all event listeners in the document, and our
+    // editor relies heavily on those. Midas is turned on, to make it
+    // work, re-initialize it to give it a chance to add its event
+    // listeners again.
+
+    SetDesignMode(NS_LITERAL_STRING("off"));
+    SetDesignMode(NS_LITERAL_STRING("on"));
+  }
+
   // Store the security info of the caller now that we're done
   // resetting the document.
   mSecurityInfo = securityInfo;
@@ -2076,7 +2086,16 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // Add a wyciwyg channel request into the document load group
   NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::OpenCommon(): wyciwyg "
                "channel already exists!");
+
+  // In case the editor is listening and will see the new channel
+  // being added, make sure mWriteLevel is non-zero so that the editor
+  // knows that document.open/write/close() is being called on this
+  // document.
+  ++mWriteLevel;
+
   CreateAndAddWyciwygChannel();
+
+  --mWriteLevel;
 
   return rv;
 }
