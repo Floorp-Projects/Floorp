@@ -30,6 +30,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIStorageStream.h"
 #include "nsNetUtil.h"
+#include "prtime.h"
 
 //-----------------------------------------------------------------------------
 // nsISupports implementation
@@ -329,6 +330,22 @@ nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 // helper methods
 //-----------------------------------------------------------------------------
 
+static PRTime SecondsToPRTime(PRUint32 t_sec)
+{
+    PRTime t_usec, usec_per_sec;
+    LL_I2L(t_usec, t_sec);
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+    LL_MUL(t_usec, t_usec, usec_per_sec);
+    return t_usec;
+}
+static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
+{
+    PRExplodedTime et;
+    PRTime t_usec = SecondsToPRTime(t_sec);
+    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
+    PR_FormatTime(buf, bufsize, "%c", &et);
+}
+
 #define TD_RIGHT_ALIGN "<td valign=top align=right>"
 
 #define APPEND_ROW(label, value) \
@@ -372,23 +389,85 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
         buffer.Append(str);
     buffer.Append("</td></tr>");
 
-    // Since meta data enumeration is not hooked up yet, let's just look for some
-    // well known (HTTP) meta data tags.
 
-    str = 0;
-    descriptor->GetMetaDataElement("request-time", getter_Copies(str));
-    if (str)
-        APPEND_ROW("request-time", str);
+    // temp vars for reporting
+    char timeBuf[255];
+    PRUint32 u = 0;
+    PRInt32  i = 0;
+    nsCAutoString s;
 
-    str = 0;
-    descriptor->GetMetaDataElement("response-time", getter_Copies(str));
-    if (str)
-        APPEND_ROW("response-time", str);
+    // Fetch Count
+    s.Truncate();
+    descriptor->GetFetchCount(&i);
+    s.AppendInt(i);
+    APPEND_ROW("fetch count", s);
 
+    // Last Fetched
+    descriptor->GetLastFetched(&u);
+    if (u) {
+        PrintTimeString(timeBuf, sizeof(timeBuf), u);
+        APPEND_ROW("last fetched", timeBuf);
+    } else {
+        APPEND_ROW("last fetched", "No last fetch time");
+    }
+
+    // Last Modified
+    descriptor->GetLastModified(&u);
+    if (u) {
+        PrintTimeString(timeBuf, sizeof(timeBuf), u);
+        APPEND_ROW("last modified", timeBuf);
+    } else {
+        APPEND_ROW("last modified", "No last modified time");
+    }
+
+    // Expiration Time
+    descriptor->GetExpirationTime(&u);
+    if (u) {
+        PrintTimeString(timeBuf, sizeof(timeBuf), u);
+        APPEND_ROW("expires", timeBuf);
+    } else {
+        APPEND_ROW("expires", "No expiration time");
+    }
+
+    // Data Size
+    s.Truncate();
+    descriptor->GetDataSize(&u);
+    s.AppendInt((PRInt32)u);     // XXX nsICacheEntryInfo interfaces should be fixed.
+    APPEND_ROW("Data size", s);
+
+    // Storage Policy
+
+    // XXX Stream Based?
+
+    // XXX Cache Device
+    // File on disk
+
+    // Security Info
     str = 0;
-    descriptor->GetMetaDataElement("http-headers", getter_Copies(str));
-    if (str)
-        APPEND_ROW("http-headers", str);
+    nsCOMPtr<nsISupports> securityInfo;
+    descriptor->GetSecurityInfo(getter_AddRefs(securityInfo));
+    if (securityInfo) {
+        APPEND_ROW("Security", "This is a secure document.");
+    } else {
+        APPEND_ROW("Security",
+                   "This document does not have any security info associated with it.");
+    }
+
+    buffer.Append("</table>");
+    // Meta Data
+    // let's just look for some well known (HTTP) meta data tags, for now.
+    buffer.Append("<hr><table>");
+
+    // Client ID
+    str = 0;
+    descriptor->GetClientID(getter_Copies(str));
+    if (str)  APPEND_ROW("Client", str);
+
+
+    mBuffer = &buffer;  // make it available for VisitMetaDataElement()
+    descriptor->VisitMetaData(this);
+    mBuffer = nsnull;
+    
 
     buffer.Append("</table>");
 
@@ -456,4 +535,25 @@ nsAboutCacheEntry::ParseURI(nsCString &clientID, PRBool &streamBased, nsCString 
     return NS_OK;
 }
 
+
+//-----------------------------------------------------------------------------
+// nsICacheMetaDataVisitor implementation
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsAboutCacheEntry::VisitMetaDataElement(const char * key,
+                                        const char * value,
+                                        PRBool *     keepGoing)
+{
+    mBuffer->Append("<tr><td valign=top align=right><tt><b>");
+    mBuffer->Append(key);
+    mBuffer->Append(":</b></tt></td>\n<td><pre>");
+    mBuffer->Append(value);
+    mBuffer->Append("</pre></td></tr>\n");
+
+    *keepGoing = PR_TRUE;
+    return NS_OK;
+}
+
 #endif // MOZ_NEW_CACHE
+

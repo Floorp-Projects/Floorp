@@ -56,7 +56,10 @@ public:
 
 protected:
 #ifdef MOZ_NEW_CACHE
+    nsresult  ParseURI(nsIURI * uri, nsCString &deviceID);
+
     nsCOMPtr<nsIOutputStream> mStream;
+    nsCString                 mDeviceID;
 #else
     void DumpCacheInfo(nsIOutputStream *aStream,
                        nsINetDataCache *aCache);
