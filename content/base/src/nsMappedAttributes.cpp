@@ -92,7 +92,7 @@ void* nsMappedAttributes::operator new(size_t aSize, PRUint32 aAttrCount)
 
   // aSize will include the mAttrs buffer so subtract that.
   void* newAttrs = ::operator new(aSize - sizeof(void*[1]) +
-                                  (aAttrCount - 1) * sizeof(InternalAttr));
+                                  aAttrCount * sizeof(InternalAttr));
 
 #ifdef DEBUG
   if (newAttrs) {
