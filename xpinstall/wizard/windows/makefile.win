@@ -22,6 +22,12 @@
 
 DEPTH=..\..\..
 
-DIRS=$(DIRS) nsinstall nsztool setup setuprsc ren8dot3
+DIRS=$(DIRS) nsinstall \
+!if "$(WINOS)"=="WINNT"
+             nsztool   \
+!endif
+             setup     \
+             setuprsc  \
+             ren8dot3
 
 include <$(DEPTH)\config\rules.mak>
