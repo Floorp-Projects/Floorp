@@ -75,10 +75,6 @@
     test_array[i] = new TestValue(  "java.net.URL" );
     i++;
 
-    java_array[i] = new JavaValue(  java.rmi.RMISecurityManager  );
-    test_array[i] = new TestValue(  "java.rmi.RMISecurityManager" );
-    i++;
-
     java_array[i] = new JavaValue(  java.text.DateFormat  );
     test_array[i] = new TestValue(  "java.text.DateFormat" );
     i++;
