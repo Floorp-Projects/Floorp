@@ -212,8 +212,8 @@ nsImapProtocol::nsImapProtocol() :
     m_imapMiscellaneousSink = nsnull;
     
     m_trackingTime = PR_FALSE;
-    m_startTime = 0;
-    m_endTime = 0;
+    LL_I2L(m_startTime, 0);
+    LL_I2L(m_endTime, 0);
     m_tooFastTime = 0;
     m_idealTime = 0;
     m_chunkAddSize = 0;
@@ -1741,18 +1741,23 @@ nsImapProtocol::GetArbitraryHeadersToDownload()
 void
 nsImapProtocol::AdjustChunkSize()
 {
+	PRInt32 t32;
+
 	m_endTime = PR_Now();
 	m_trackingTime = FALSE;
-	PRTime t = m_endTime - m_startTime;
-	if (t < 0)
+	PRTime t;
+	LL_SUB(t, m_endTime, m_startTime);
+	if (! LL_GE_ZERO(t))
 		return;							// bogus for some reason
-	if (t <= m_tooFastTime) {
+	
+	LL_L2I(t32, t);
+	if (t32 <= m_tooFastTime) {
 		m_chunkSize += m_chunkAddSize;
 		m_chunkThreshold = m_chunkSize + (m_chunkSize / 2);
 		if (m_chunkSize > m_maxChunkSize)
 			m_chunkSize = m_maxChunkSize;
 	}
-	else if (t <= m_idealTime)
+	else if (t32 <= m_idealTime)
 		return;
 	else {
 		if (m_chunkSize > m_chunkStartSize)
