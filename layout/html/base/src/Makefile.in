@@ -34,8 +34,6 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
-	nsFrameList.cpp			\
-	nsFrameTraversal.cpp          \
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
