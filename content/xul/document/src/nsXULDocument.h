@@ -33,7 +33,6 @@
 #include "nsICSSLoader.h"
 #include "nsIContent.h"
 #include "nsIDOMEventCapturer.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
@@ -532,7 +531,6 @@ protected:
     nsString                   mCommand;
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRBool                     mIsPopup;
-    nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     nsCOMPtr<nsIBindingManager> mBindingManager; // [OWNER] of all bindings

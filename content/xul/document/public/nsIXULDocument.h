@@ -41,7 +41,6 @@ class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class.
 class nsForwardReference;
 class nsIAtom;
 class nsIDOMElement;
-class nsIDOMHTMLFormElement;
 class nsIPrincipal;
 class nsIRDFContentModelBuilder;
 class nsIRDFResource;

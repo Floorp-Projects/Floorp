@@ -2027,6 +2027,17 @@ nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
 //----------------------------------------------------------------------
 // nsIScriptObjectOwner interface
 
+static PRBool CanHaveBinding(nsIAtom* aTag) {
+  // The layout atoms (the boxes, stacks, and springs) are dodgy here.  Technically
+  // they could have bindings, but this will only apply for display: none elts
+  // anyway, so we're getting into a real edge case.
+  return (aTag != nsXULAtoms::broadcaster) && (aTag != nsXULAtoms::commandset) &&
+    (aTag != nsXULAtoms::commands) && (aTag != nsXULAtoms::command) && (aTag != nsXULAtoms::popupset) &&
+    (aTag != nsXULAtoms::broadcasterset) && (aTag != nsXULAtoms::templateAtom) &&
+    (aTag != nsXULAtoms::box) && (aTag != nsXULAtoms::hbox) && (aTag != nsXULAtoms::vbox) &&
+    (aTag != nsXULAtoms::stack) && (aTag != nsXULAtoms::spring);
+}
+         
 NS_IMETHODIMP 
 nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
@@ -2113,7 +2124,9 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 #endif
 
         // See if we have a frame.
-        if (mDocument) {
+        nsCOMPtr<nsIAtom> ourTag;
+        GetTag(*getter_AddRefs(ourTag));
+        if (mDocument && CanHaveBinding(ourTag)) {
           nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
           if (shell) {
             nsIFrame* frame;
@@ -2132,7 +2145,12 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                 if (viewCSS) {
                   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
                   nsAutoString empty;
-                  viewCSS->GetComputedStyle(this, empty, getter_AddRefs(cssDecl));
+                  viewCSS->GetComputedStyle(this, empty, getter_AddRefs(cssDecl));                  
+                  /*nsString str;
+                  ourTag->ToString(str);
+                  nsCString cstr; cstr.AssignWithConversion(str);
+                  printf("XUL ELEMENT UH-OH! %s\n", (const char*)cstr);
+*/
                   if (cssDecl) {
                     nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("-moz-binding"));
                     nsAutoString value;
