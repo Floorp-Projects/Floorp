@@ -480,8 +480,12 @@ sub view
     $filename =~ s/^.*[\/\\]//;
     my $filesize = length($thedata);
 
+    # escape quotes and backslashes in the filename, per RFCs 2045/822
+    $filename =~ s/\\/\\\\/g; # escape backslashes
+    $filename =~ s/"/\\"/g; # escape quotes
+
     print Bugzilla->cgi->header(-type=>"$contenttype; name=\"$filename\"",
-                                -content_disposition=> "inline; filename=$filename",
+                                -content_disposition=> "inline; filename=\"$filename\"",
                                 -content_length => $filesize);
 
     print $thedata;
