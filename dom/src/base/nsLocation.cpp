@@ -25,6 +25,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIWebNavigation.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -610,15 +611,13 @@ LocationImpl::SetSearch(const nsString& aSearch)
 NS_IMETHODIMP    
 LocationImpl::Reload(PRBool aForceget)
 {
-   nsresult result = NS_OK;
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
-   if(mDocShell)
-      {
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      result = webShell->Reload(nsIChannel::LOAD_NORMAL);
-      }
+   NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::reloadNormal), 
+      NS_ERROR_FAILURE);
 
-   return result;
+   return NS_OK;
 }
 
 NS_IMETHODIMP    
