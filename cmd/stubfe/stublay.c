@@ -47,3 +47,8 @@ FE_HandleEmbedEvent(MWContext *context,
 {
 }
 
+void
+FE_ShowMinibuffer(MWContext *context)
+{
+
+}
