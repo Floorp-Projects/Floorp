@@ -28,8 +28,13 @@
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 
+#undef USE_SELECTION_MGR	// toggle this when nsSelectionMgr.cpp is added to the Mac build
+
 #include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
+#ifdef USE_SELECTION_MGR
+#include "nsSelectionMgr.h"
+#endif /* USE_SELECTION_MGR */
 #include "nsToolKit.h"
 #include <Quickdraw.h>
 #include <Fonts.h>
@@ -69,6 +74,13 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
 	mToolKit = auto_ptr<nsToolkit>( new nsToolkit() );
+
+#ifdef USE_SELECTION_MGR
+  // Create the selection manager
+  if (!mSelectionMgr)
+      NS_NewSelectionMgr(&mSelectionMgr);
+#endif /* USE_SELECTION_MGR */
+
 	return NS_OK;
 }
 
@@ -132,6 +144,7 @@ nsAppShell::nsAppShell()
   }
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
+  mSelectionMgr = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -141,6 +154,9 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+#ifdef USE_SELECTION_MGR
+  NS_IF_RELEASE(mSelectionMgr);
+#endif /* USE_SELECTION_MGR */
 }
 
 //-------------------------------------------------------------------------
@@ -171,3 +187,14 @@ nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
 {
   return NS_ERROR_FAILURE;
 }
+
+NS_METHOD
+nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
+{
+  *aSelectionMgr = mSelectionMgr;
+  NS_IF_ADDREF(mSelectionMgr);
+  if (!mSelectionMgr)
+    return NS_ERROR_NOT_INITIALIZED;
+  return NS_OK;
+}
+
