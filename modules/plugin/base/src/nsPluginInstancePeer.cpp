@@ -208,7 +208,7 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
 	// construct the URL we'll use later in calls to GetURL()
 	mFileURL = mFileSpec;	
 
-	printf("File URL = %s\n", (const char*)mFileURL);
+	printf("File URL = %s\n", mFileURL.operator const char* const());
 }
 
 nsPluginStreamToFile::~nsPluginStreamToFile()
@@ -250,7 +250,7 @@ nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
 	PRUint32 actualCount;
 	mFileThing->Write(aBuf, aCount, &actualCount);
 	mFileThing->Close();
-	mOwner->GetURL(mFileURL, mTarget, nsnull);
+	mOwner->GetURL(mFileURL.operator const char* const(), mTarget, nsnull);
 
 	return NS_OK;
 }
@@ -258,7 +258,7 @@ nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
 NS_IMETHODIMP
 nsPluginStreamToFile::Close(void)
 {
-	mOwner->GetURL(mFileURL, mTarget, nsnull);
+	mOwner->GetURL(mFileURL.operator const char* const(), mTarget, nsnull);
 
 	return NS_OK;
 }
