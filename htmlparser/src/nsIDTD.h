@@ -59,6 +59,7 @@ class nsIContentSink;
 class nsIDTD : public nsISupports {
   public:
 
+    static const nsIID& GetIID() { static nsIID iid = NS_IDTD_IID; return iid; }
   
     /**
      * Default constructor

@@ -98,6 +98,8 @@ public:
 class nsIParser : public nsISupports {
   public:
 
+    static const nsIID& GetIID() { static nsIID iid = NS_IPARSER_IID; return iid; }
+
     /**
      *  Call this method if you have a DTD that you want to share with the parser.
 	   *  Registered DTD's get remembered until the system shuts down.
