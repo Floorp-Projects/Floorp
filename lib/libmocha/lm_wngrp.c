@@ -163,7 +163,6 @@ LMWindowGroup *_lm_NewWindowGroup(int priority)
 	newgrp->js_timeout_insertion_point = NULL;
 	newgrp->js_timeout_running = NULL;
 	newgrp->inputRecurring = 0;
-        PR_ExitMonitor(newgrp->owner_monitor);
     }
     return newgrp;
 }

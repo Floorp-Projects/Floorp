@@ -1218,6 +1218,13 @@ real_win_open(JSContext *cx, JSObject *obj,
             (void) ET_PostDestroyWindow(context);
             goto fail;
         }
+
+        /* Everything went well.  Tell the new window it's okay to start
+         * reading events.
+         */
+        if(newGroup)  {
+            lm_StartWindowGroup(grp);
+        }
     }
 
     new_decoder->opener = obj;
