@@ -62,6 +62,7 @@
 #include "nsNetUtil.h"
 #include "nsICharsetConverterManager.h"
 #include "nsUnicharUtilCIID.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
@@ -69,7 +70,8 @@ static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static PRInt32 SplitString(nsACString &in,nsCString out[],PRInt32 size);
 static void doubleReverseHack(nsACString &s);
 
-myspAffixMgr::myspAffixMgr() 
+myspAffixMgr::myspAffixMgr() :
+  mReplaceTable(nsnull)
 {
 }
 
@@ -77,6 +79,7 @@ myspAffixMgr::myspAffixMgr()
 myspAffixMgr::~myspAffixMgr() 
 {
   mPersonalDictionary = nsnull;
+  delete[] mReplaceTable;
 }
 
 nsresult myspAffixMgr::GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary)
@@ -160,7 +163,6 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
   PRInt32 numents;
   nsLineBuffer *lineBuffer;
   nsresult rv = NS_InitLineBuffer(&lineBuffer);
-  nsCAutoString line;
   PRBool moreData=PR_TRUE;
   PRInt32 pos;
   nsCString cmds[5];
@@ -169,6 +171,9 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
   prefixes.clear();
   suffixes.clear();
   
+  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   numents = 0;      // number of affentry structures to parse
   char flag='\0';   // affix char identifier
   {  
@@ -179,6 +184,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
     // read in each line ignoring any that do not
     // start with PFX or SFX
 
+    nsCAutoString line;
     while (moreData) {
       NS_ReadLine(strm,lineBuffer,line,&moreData);
       /* parse in the try string */
@@ -191,11 +197,56 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
 
       /* parse in the name of the character set used by the .dict and .aff */
       if (Substring(line,0,3).Equals("SET")) {
-
         pos = line.FindChar(' ');
         if(pos != -1){
           mEncoding.Assign(Substring(line,pos+1,line.Length()-pos-1));
           mEncoding.CompressWhitespace(PR_TRUE,PR_TRUE);
+
+          rv = ccm->GetUnicodeDecoder(mEncoding.get(), getter_AddRefs(mDecoder));
+          NS_ENSURE_SUCCESS(rv, rv);
+          rv = ccm->GetUnicodeEncoder(mEncoding.get(), getter_AddRefs(mEncoder));
+          if (mEncoder && NS_SUCCEEDED(rv)) {
+            mEncoder->SetOutputErrorBehavior(mEncoder->kOnError_Signal, nsnull, '?');
+          }
+          NS_ENSURE_SUCCESS(rv, rv);
+        } 
+      }
+
+      /* parse in the typical fault correcting table */
+      if (Substring(line,0,3).Equals("REP")) {
+        PRInt32 numFields = SplitString(line, cmds, 3);
+
+        if (numFields == 2)
+          numents = atoi(cmds[1].get());
+
+        mReplaceTable = new mozReplaceTable[numents];
+        mReplaceTableLength = numents;
+
+        PRInt32 i = 0;
+        nsAutoString pattern, replacement;
+
+        for (j = 0; (j < numents) && moreData; j++) {
+          NS_ReadLine(strm,lineBuffer,line,&moreData);
+
+          numFields = SplitString(line, cmds, 3);
+
+          if(!cmds[0].Equals("REP")) { //consistency check
+            NS_WARNING("REP line from .aff file is inconsitent");
+            continue;
+          }
+
+          rv = DecodeString(cmds[1], pattern);
+          NS_ENSURE_SUCCESS(rv, rv);
+          rv = DecodeString(cmds[2], replacement);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // Make sure the replacements are lower case.
+          // We don't want to convert them for every lookup.
+          ToLowerCase(pattern);
+          ToLowerCase(replacement);
+          mReplaceTable[i].pattern = pattern.get();
+          mReplaceTable[i].replacement = replacement.get();
+          
+          i++;
         } 
       }
 
@@ -207,7 +258,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
         numents = 0;
         ff=0;
         // split line into pieces
-        PRInt32 numFields=SplitString(line,cmds,5);
+        PRInt32 numFields=SplitString(line, cmds, 5);
         if(numFields > 1)flag=cmds[1].First();
         if((numFields > 2)&&(cmds[2].First()=='Y'))ff=XPRODUCT;
         if(numFields >3)numents = atoi(cmds[3].get());
@@ -219,7 +270,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
           nsString tempStr;
 
           if((numFields < 5)||(cmds[1].First()!=flag)){ //consistency check
-            //complain loudly
+            NS_WARNING("PFX/SFX line from .aff file is inconsitent");
             continue;
           }
           if(cmds[3].Equals("0")){
@@ -239,7 +290,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
             else{ // cmds[2] != 0
               newMod.mAppend.Assign( cmds[2]);
               if((cmds[2].Length()>cmds[4].Length())||!cmds[2].Equals(Substring(cmds[4],0,cmds[2].Length()))){
-                //complain loudly
+                NS_WARNING("PFX/SFX line from .aff file is inconsitent");
                 continue;
               }
               cmds[3].Append(Substring(cmds[4],cmds[2].Length(),cmds[4].Length()-cmds[2].Length()));
@@ -262,7 +313,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
               newMod.mAppend.Assign( cmds[2]);
               if((cmds[2].Length()>cmds[4].Length())||
                  !cmds[2].Equals(Substring(cmds[4],cmds[4].Length()-cmds[2].Length(),cmds[2].Length()))){
-                //complain loudly
+                NS_WARNING("PFX/SFX line from .aff file is inconsitent");
                 continue;
               }
               suffixTest=Substring(cmds[4],0,cmds[4].Length()-cmds[2].Length());
@@ -276,17 +327,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
     }
   }
 
-  // We do this here, instead of where we set the charset, 
-  // to prevent all kind of leakage in case it fails.
-  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ccm->GetUnicodeDecoder(mEncoding.get(), getter_AddRefs(mDecoder));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ccm->GetUnicodeEncoder(mEncoding.get(), getter_AddRefs(mEncoder));
-  if (mEncoder && NS_SUCCEEDED(rv)) {
-    mEncoder->SetOutputErrorBehavior(mEncoder->kOnError_Signal, nsnull, '?');
-  }
-  return rv;
+  return NS_OK;
 }
 
 
@@ -354,6 +395,16 @@ void myspAffixMgr::get_try_string(nsAString &aTryString)
       free(tmpPtr);
     }
   }
+}
+
+mozReplaceTable *myspAffixMgr::getReplaceTable()
+{
+  return mReplaceTable;
+}
+
+PRUint32 myspAffixMgr::getReplaceTableLength()
+{
+  return mReplaceTableLength;
 }
 
 PRBool 
@@ -463,6 +514,27 @@ PRBool myspAffixMgr::check(const nsAFlatString &word)
   if(NS_FAILED(rv))
     return PR_FALSE;
   return good;
+}
+
+nsresult
+myspAffixMgr::DecodeString(const nsAFlatCString &aSource, nsAString &aDest)
+{
+  if (!mDecoder) {
+    aDest.Assign(NS_LITERAL_STRING(""));
+    return NS_OK;
+  }
+  PRInt32 inLength = aSource.Length();
+  PRInt32 outLength;
+  nsresult rv = mDecoder->GetMaxLength(aSource.get(), inLength, &outLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRUnichar *dest = (PRUnichar *)malloc(sizeof(PRUnichar) * (outLength + 1));
+  if (!dest)
+    return NS_ERROR_OUT_OF_MEMORY;
+  rv = mDecoder->Convert(aSource.get(), &inLength, dest, &outLength);
+  dest[outLength] = 0;
+  aDest = dest;
+  free(dest);
+  return rv;
 }
 
 

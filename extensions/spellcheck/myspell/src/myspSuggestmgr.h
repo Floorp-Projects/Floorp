@@ -78,6 +78,7 @@ public:
   nsresult suggest(PRUnichar ***slst, const nsAFlatString &word, PRUint32 *num);
 
 protected:
+   nsresult replacechars(PRUnichar **wlst,const  nsAFlatString &word, PRUint32 *num);
    nsresult forgotchar(PRUnichar **wlst,const  nsAFlatString &word, PRUint32 *num);
    nsresult swapchar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *num);
    nsresult extrachar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *num);
