@@ -90,6 +90,38 @@ CERT_CertTimesValid(CERTCertificate *c)
 }
 
 /*
+ * verify the signature of a signed data object with the given DER publickey
+ */
+SECStatus
+CERT_VerifySignedDataWithPubKeyInfo(CERTSignedData *sd, 
+                                    CERTSubjectPublicKeyInfo *pubKeyInfo,
+		                    void *wincx)
+{
+    SECKEYPublicKey *pubKey;
+    SECStatus        rv;
+    SECOidTag        algid;
+    SECItem          sig;
+
+    /* get cert's public key */
+    pubKey = SECKEY_ExtractPublicKey(pubKeyInfo);
+    if ( !pubKey )
+	return SECFailure;
+
+    /* check the signature */
+    sig = sd->signature;
+    /* convert sig->len from bit counts to byte count. */
+    DER_ConvertBitString(&sig);
+
+    algid = SECOID_GetAlgorithmTag(&sd->signatureAlgorithm);
+    rv = VFY_VerifyData(sd->data.data, sd->data.len, pubKey, &sig,
+			algid, wincx);
+
+    SECKEY_DestroyPublicKey(pubKey);
+
+    return rv ? SECFailure : SECSuccess;
+}
+
+/*
  * verify the signature of a signed data object with the given certificate
  */
 SECStatus
