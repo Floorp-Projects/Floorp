@@ -77,6 +77,9 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIWebNavigation.h"
+#include "nsIWebNavigationInfo.h"
+#include "nsDocShellCID.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
@@ -500,25 +503,22 @@ IsSupportedImageMimeType(const char *aMimeType)
 }
 
 static PRBool
-IsSupportedDocumentMimeType(const char *aMimeType)
+IsSupportedDocumentMimeType(nsIContent* aOurContent,
+                            const nsCString& aMimeType)
 {
-  nsCOMPtr<nsICategoryManager> catman =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-  if (!catman)
-    return PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIWebNavigationInfo> info(
+    do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv));
+  PRUint32 supported;
+  if (info) {
+    nsCOMPtr<nsIWebNavigation> webNav =
+      do_GetInterface(aOurContent->GetCurrentDoc()->GetScriptGlobalObject());
+    rv = info->IsTypeSupported(aMimeType, webNav, &supported);
+  }
 
-  nsXPIDLCString value;
-  nsresult rv = catman->GetCategoryEntry("Gecko-Content-Viewers", aMimeType,
-                                         getter_Copies(value));
-
-  // If we have a content viewer entry in the catagory manager for
-  // this mime type and it's not the full-page plugin one, return
-  // PR_TRUE to act like an IFRAME.
-  return
-    NS_SUCCEEDED(rv) && 
-    !value.IsEmpty() &&
-    !value.Equals("@mozilla.org/content/plugin/document-loader-factory;1");
-
+  return NS_SUCCEEDED(rv) &&
+    supported != nsIWebNavigationInfo::UNSUPPORTED &&
+    supported != nsIWebNavigationInfo::PLUGIN;
 }
 
 // static
@@ -621,7 +621,7 @@ nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
 #endif
       return PR_FALSE;
 
-  return IsSupportedDocumentMimeType(typeStr.get());
+  return IsSupportedDocumentMimeType(aContent, typeStr);
 }
 
 NS_IMETHODIMP
@@ -3072,6 +3072,11 @@ void nsObjectFrame::FixUpURLS(const nsString &name, nsAString &value)
 void
 nsObjectFrame::PluginNotAvailable(const char *aMimeType)
 {
+  if (!aMimeType) {
+    NS_ERROR("bogus type... behavior will be broken");
+    return;
+  }
+  
   // Tell mContent about the mime type
 
   nsCOMPtr<nsIDOMHTMLObjectElement> object(do_QueryInterface(mContent));
@@ -3094,7 +3099,7 @@ nsObjectFrame::PluginNotAvailable(const char *aMimeType)
   // For non-image and non-document mime types, fire the plugin not
   // found event and mark this plugin as broken.
   if (!IsSupportedImageMimeType(aMimeType) &&
-      !IsSupportedDocumentMimeType(aMimeType)) {
+      !IsSupportedDocumentMimeType(mContent, nsDependentCString(aMimeType))) {
     FirePluginNotFoundEvent(mContent);
 
     mIsBrokenPlugin = PR_TRUE;

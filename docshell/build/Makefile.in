@@ -79,6 +79,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  rdf \
 		  prefetch \
+		  imglib2 \
 		  $(NULL)
 
 EXPORTS = \

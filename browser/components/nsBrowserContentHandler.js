@@ -57,6 +57,7 @@ const nsIWebNavigation       = Components.interfaces.nsIWebNavigation;
 const nsIWindowMediator      = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const nsICategoryManager     = Components.interfaces.nsICategoryManager;
+const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 
 const NS_BINDING_ABORTED = 0x80020006;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
@@ -248,10 +249,11 @@ var nsBrowserContentHandler = {
 
   handleContent : function bch_handleContent(contentType, context, request) {
     try {
-      var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                             .getService(nsICategoryManager);
-      var entry = catMan.getCategoryEntry("Gecko-Content-Viewers",
-                                          contentType);
+      var webNavInfo = Components.classes["@mozilla.org/webnavigation-info;1"]
+                                 .getService(nsIWebNavigationInfo);
+      if (!webNavInfo.isTypeSupported(contentType, null)) {
+        throw NS_ERROR_WONT_HANDLE_CONTENT;
+      }
     } catch (e) {
       throw NS_ERROR_WONT_HANDLE_CONTENT;
     }

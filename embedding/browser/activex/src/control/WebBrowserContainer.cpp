@@ -43,8 +43,10 @@
 
 #include "WebBrowserContainer.h"
 
-#include "nsICategoryManager.h"
 #include "nsReadableUtils.h"
+
+#include "nsServiceManagerUtils.h"
+#include "nsIWebNavigationInfo.h"
 
 CWebBrowserContainer::CWebBrowserContainer(CMozillaBrowser *pOwner) :
     mOwner(pOwner),
@@ -405,28 +407,25 @@ NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, char *
 NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
     *_retval = PR_FALSE;
+    *aDesiredContentType = nsnull;
     
     if (aContentType)
     {
-        nsCOMPtr<nsICategoryManager> catMgr;
-        nsresult rv;
-        catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsXPIDLCString value;
-        rv = catMgr->GetCategoryEntry("Gecko-Content-Viewers",
-            aContentType, 
-            getter_Copies(value));
-
-        // If the category manager can't find what we're looking for
-        // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
-        // that to the caller since it's really not a failure
-
-        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
-            return rv;
-
-        if (value && *value)
-            *_retval = PR_TRUE;
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mOwner->mWebBrowser));
+        nsCOMPtr<nsIWebNavigationInfo> webNavInfo(
+           do_GetService("@mozilla.org/webnavigation-info;1"));
+        if (webNavInfo)
+        {
+            PRUint32 canHandle;
+            nsresult rv =
+                webNavInfo->IsTypeSupported(nsDependentCString(aContentType),
+                                            webNav,
+                                            &canHandle);
+            NS_ENSURE_SUCCESS(rv, rv);
+            *_retval = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
+        }
     }
+
     return NS_OK;
 }
 

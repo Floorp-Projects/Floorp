@@ -39,8 +39,12 @@
 
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+
+#include "nsDocShellCID.h"
+
 #include "nsWebShell.h"
 #include "nsDefaultURIFixup.h"
+#include "nsWebNavigationInfo.h"
 
 // uriloader
 #include "nsURILoader.h"
@@ -61,6 +65,7 @@
 // docshell
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWebShell, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWebNavigationInfo, Init)
 
 // uriloader
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
@@ -98,6 +103,11 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       NS_DEFAULTURIFIXUP_CID,
       NS_URIFIXUP_CONTRACTID,
       nsDefaultURIFixupConstructor
+    },
+    { "Webnavigation info service",
+      NS_WEBNAVIGATION_INFO_CID,
+      NS_WEBNAVIGATION_INFO_CONTRACTID,
+      nsWebNavigationInfoConstructor
     },
 
     // uriloader

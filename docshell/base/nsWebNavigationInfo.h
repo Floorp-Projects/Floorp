@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla gecko engine.
+ * The Original Code is Mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Benjamin Smedberg <bsmedberg@covad.net>.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Boris Zbarsky <bzbarsky@mit.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,18 +35,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDocShellCID_h__
-#define nsDocShellCID_h__
+#ifndef nsWebNavigationInfo_h__
+#define nsWebNavigationInfo_h__
 
-#define NS_GLOBALHISTORY2_CONTRACTID \
-    "@mozilla.org/browser/global-history;2"
+#include "nsIWebNavigationInfo.h"
+#include "nsCOMPtr.h"
+#include "nsICategoryManager.h"
+#include "imgILoader.h"
+#include "nsStringFwd.h"
 
-/**
- * A contract that can be used to get a service that provides
- * meta-information about nsIWebNavigation objects' capabilities.
- * @implements nsIWebNavigationInfo
- */
-#define NS_WEBNAVIGATION_INFO_CONTRACTID \
-    "@mozilla.org/webnavigation-info;1"
+// Class ID for webnavigationinfo
+#define NS_WEBNAVIGATION_INFO_CID \
+ { 0xf30bc0a2, 0x958b, 0x4287,{0xbf, 0x62, 0xce, 0x38, 0xba, 0x0c, 0x81, 0x1e}}
 
-#endif // nsDocShellCID_h__
+class nsWebNavigationInfo : public nsIWebNavigationInfo
+{
+public:
+  nsWebNavigationInfo() {}
+  
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIWEBNAVIGATIONINFO
+
+  nsresult Init();
+
+private:
+  ~nsWebNavigationInfo() {}
+  
+  // Check whether aType is supported.  If this method throws, the
+  // value of aIsSupported is not changed.
+  nsresult IsTypeSupportedInternal(const nsCString& aType,
+                                   PRUint32* aIsSupported);
+  
+  nsCOMPtr<nsICategoryManager> mCategoryManager;
+  // XXXbz we only need this because images register for the same
+  // contractid as documents, so we can't tell them apart based on
+  // contractid.
+  nsCOMPtr<imgILoader> mImgLoader;
+};
+
+#endif  // nsWebNavigationInfo_h__
