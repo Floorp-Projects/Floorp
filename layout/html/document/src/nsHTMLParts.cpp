@@ -113,7 +113,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
     rv = NS_NewHTMLHead(aInstancePtrResult, atom);
     break;
   case eHTMLTag_hr:
-    rv = NS_NewHRulePart(aInstancePtrResult, atom);
+    rv = NS_NewHTMLHR(aInstancePtrResult, atom);
     break;
   case eHTMLTag_html:
     break;
