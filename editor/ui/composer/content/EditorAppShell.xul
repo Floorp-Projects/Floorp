@@ -21,11 +21,6 @@
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 			  onload="Startup()" title="&editorWindow.title;">
 
-  <html:script>
-  	var editorType = "html";
-    var editorName = "EditorAppCoreHTML";
-  </html:script>
-
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
 
