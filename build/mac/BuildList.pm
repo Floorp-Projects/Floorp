@@ -142,7 +142,7 @@ sub BuildMozilla()
 		{
 			if ( $main::MOZ_MEDIUM == 1 )
 			{
-				BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"MailNews$D.o");
+				BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",						"MailNews$D.o");
 				BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",					"Composer$D.o");
 				BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Moz_Resources");
 			}
