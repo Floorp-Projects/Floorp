@@ -2147,6 +2147,8 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
   return rv;
 }
 
+// XXX we need aFrameSubTree's prev-sibling in order to properly
+// place its replacement!
 NS_IMETHODIMP  
 HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
                                       nsIContent*     aContent,
@@ -2168,16 +2170,9 @@ HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
     rv = document->QueryInterface(kIXMLDocumentIID, (void **)&xmlDocument);
 
     if (NS_SUCCEEDED(rv)) {
-      nsIReflowCommand* reflowCmd;
-
-      rv = NS_NewHTMLReflowCommand(&reflowCmd, aParentFrame,
-                                   nsIReflowCommand::FrameRemoved,
-                                   aFrameSubTree);
-      
+      rv = aParentFrame->RemoveFrame(*aPresContext, *shell,
+                                     nsnull, aFrameSubTree);
       if (NS_SUCCEEDED(rv)) {
-        shell->AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
-        
         nsIFrame *newChild;
         // XXX See ConstructXMLContents for an explanation of why
         // we create this pseudostyle
@@ -2189,14 +2184,8 @@ HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
                                       aParentFrame, rootPseudoStyle, newChild);
 
         if (NS_SUCCEEDED(rv)) {
-          rv = NS_NewHTMLReflowCommand(&reflowCmd, aParentFrame,
-                                       nsIReflowCommand::FrameInserted,
-                                       newChild);
-          
-          if (NS_SUCCEEDED(rv)) {
-            shell->AppendReflowCommand(reflowCmd);
-            NS_RELEASE(reflowCmd);
-          }
+          rv = aParentFrame->InsertFrames(*aPresContext, *shell,
+                                          nsnull, nsnull, newChild);
         }
         NS_IF_RELEASE(rootPseudoStyle);
       }
@@ -2342,28 +2331,18 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
     // Notify the parent frame with a reflow command, passing it the list of
     // new frames.
     if (NS_SUCCEEDED(result)) {
-      nsIReflowCommand* reflowCmd;
-      result = NS_NewHTMLReflowCommand(&reflowCmd, adjustedParentFrame,
-                                       nsIReflowCommand::FrameAppended,
-                                       firstAppendedFrame);
-      if (NS_SUCCEEDED(result)) {
-        shell->AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
-      }
+      result = adjustedParentFrame->AppendFrames(*aPresContext, *shell,
+                                                 nsnull, firstAppendedFrame);
 
+      // XXX update comment and code!
       // If there are new absolutely positioned child frames then send a reflow
       // command for them, too.
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
       if (nsnull != absoluteItems.childList) {
-        result = NS_NewHTMLReflowCommand(&reflowCmd, absoluteItems.containingBlock,
-                                         nsIReflowCommand::FrameAppended,
-                                         absoluteItems.childList);
-        if (NS_SUCCEEDED(result)) {
-          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
-          shell->AppendReflowCommand(reflowCmd);
-          NS_RELEASE(reflowCmd);
-        }
+        absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                    nsnull,
+                                                    absoluteItems.childList);
       }
     }
   }
@@ -2491,30 +2470,23 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
       // Notify the parent frame with a reflow command.
       if (isAppend) {
         // Generate a FrameAppended reflow command
-        rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                     nsIReflowCommand::FrameAppended, newFrame);
+        rv = parentFrame->AppendFrames(*aPresContext, *shell,
+                                       nsnull, newFrame);
       } else {
         // Generate a FrameInserted reflow command
-        rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame, newFrame, prevSibling);
-      }
-      if (NS_SUCCEEDED(rv)) {
-        shell->AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
+        rv = parentFrame->InsertFrames(*aPresContext, *shell, nsnull,
+                                       prevSibling, newFrame);
       }
 
+      // XXX update the comment and code!
       // If there are new absolutely positioned child frames then send a reflow
       // command for them, too.
       // XXX We can't just assume these frames are being appended, we need to
       // determine where in the list they should be inserted...
-      if (nsnull != absoluteItems.childList) {
-        rv = NS_NewHTMLReflowCommand(&reflowCmd, absoluteItems.containingBlock,
-                                     nsIReflowCommand::FrameAppended,
-                                     absoluteItems.childList);
-        if (NS_SUCCEEDED(rv)) {
-          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
-          shell->AppendReflowCommand(reflowCmd);
-          NS_RELEASE(reflowCmd);
-        }
+      if (NS_SUCCEEDED(rv) && (nsnull != absoluteItems.childList)) {
+        rv = absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                         nsLayoutAtoms::absoluteList,
+                                                         absoluteItems.childList);
       }
     }
   }
@@ -2564,30 +2536,17 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
       nsIFrame* parentFrame;
       childFrame->GetParent(parentFrame);
   
-      // Notify the parent frame with a reflow command.
-      nsIReflowCommand* reflowCmd;
-      rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                   nsIReflowCommand::FrameRemoved, childFrame);
-  
-      if (NS_SUCCEEDED(rv)) {
-        reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
-        shell->AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
-      }
+      // Update the parent frame
+      rv = parentFrame->RemoveFrame(*aPresContext, *shell,
+                                    nsLayoutAtoms::absoluteList, childFrame);
 
       // Now the placeholder frame
       nsIFrame* placeholderFrame;
-
       shell->GetPlaceholderFrameFor(childFrame, placeholderFrame);
       if (nsnull != placeholderFrame) {
         placeholderFrame->GetParent(parentFrame);
-        rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                     nsIReflowCommand::FrameRemoved, placeholderFrame);
-        
-        if (NS_SUCCEEDED(rv)) {
-          shell->AppendReflowCommand(reflowCmd);
-          NS_RELEASE(reflowCmd);
-        }
+        rv = parentFrame->RemoveFrame(*aPresContext, *shell,
+                                      nsnull, placeholderFrame);
       }
 
     } else {
@@ -2598,15 +2557,9 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
       childFrame->GetParent(parentFrame);
       NS_ASSERTION(nsnull != parentFrame, "null content parent frame");
   
-      // Notify the parent frame with a reflow command.
-      nsIReflowCommand* reflowCmd;
-      rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                   nsIReflowCommand::FrameRemoved, childFrame);
-  
-      if (NS_SUCCEEDED(rv)) {
-        shell->AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
-      }
+      // Update the parent frame
+      rv = parentFrame->RemoveFrame(*aPresContext, *shell,
+                                    nsnull, childFrame);
     }
   }
 
