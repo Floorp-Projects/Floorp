@@ -276,16 +276,35 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   nsPoint tmp;
   *aFrame = this;
 
+  // Attempt to find the first child that contains the desired
+  // point. We try to use a quick check on the child frames bbox to
+  // avoid a potentially expensive recursion into the child frames
+  // GetFrameForPoint method.
   FirstChild(aList, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
+    // Do a quick check and see if the child frame contains the point
     if (kidRect.Contains(aPoint)) {
+      // The child frame contains the point. Now see if it really
+      // contains the point.
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
+      nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aFrame);
+      if (NS_SUCCEEDED(rv)) {
+        // We found the target frame somewhere in the child frame.
+        return rv;
+      }
+
+      // We failed to find in the child frame the target frame. We
+      // need to break out of this loop and look elsewhere so that
+      // situations where overlap occurs (e.g. floaters overlapping
+      // the background of a block element) find the floater.
+      break;
     }
     kid->GetNextSibling(&kid);
   }
 
+  // Try again, this time looking only inside child frames that have
+  // outside children.
   FirstChild(aList, &kid);
   while (nsnull != kid) {
     nsFrameState state;
