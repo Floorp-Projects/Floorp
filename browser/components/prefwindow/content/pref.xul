@@ -5,10 +5,6 @@
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref.dtd" >
 
-
-<!-- This dialog has a fixed size and is not resizable. 
-     You MAY NOT increase the size of this dialog. 
-     Questions, Comments -> ben@netscape.com -->
 <dialog id="prefDialog" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
