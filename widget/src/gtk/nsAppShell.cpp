@@ -48,7 +48,9 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
   gtk_init (argc, &argv);
 
-  gtk_rc_init();
+  gdk_rgb_init();
+
+//  gtk_rc_init();
 
   // Windows and Mac don't create anything here, so why should we?
 //  mTopLevel = gtk_window_new (GTK_WINDOW_TOPLEVEL);

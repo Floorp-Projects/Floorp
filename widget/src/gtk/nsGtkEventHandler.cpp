@@ -146,8 +146,8 @@ void nsGtkWidget_InitNSEvent(GdkEvent *aGev,
   anEvent.eventStructType = NS_GUI_EVENT;
 
   if (anXEv != NULL) {
-    anEvent.point.x = anXEv->x;
-    anEvent.point.y = anXEv->y;
+    anEvent.point.x = nscoord(anXEv->x);
+    anEvent.point.y = nscoord(anXEv->y);
   }
 
   anEvent.time = anXEv->time;
