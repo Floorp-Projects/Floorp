@@ -851,22 +851,12 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
     // space of the block frame that contains it
     GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
 
-    // The y-offset is the baseline of where the text would be if it were
-    // in the flow. We need the top position and not the baseline position
-    nsIFontMetrics*     metrics;
-    const nsStyleFont*  font;
+    // Use the top of the inline box which the placeholder lives in as the
+    // hypothetical box's top.
+    nsPoint  offset;
+    aPlaceholderFrame->GetOrigin(offset);
+    placeholderOffset.y -= offset.y;
 
-    frame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
-    aPresContext->GetMetricsFor(font->mFont, &metrics);
-    if (metrics) {
-      nscoord   ascent;
-
-      // Adjust the y-offset up by the font ascent. That will translate from
-      // the baseline to the top of where the text would be
-      metrics->GetMaxAscent(ascent);
-      placeholderOffset.y -= ascent;
-      NS_RELEASE(metrics);
-    }
     aHypotheticalBox.mTop = placeholderOffset.y;
 
     // To determine the left and right offsets we need to look at the block's 'direction'
