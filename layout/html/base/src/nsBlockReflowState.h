@@ -770,14 +770,17 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 nsresult
-NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags)
+NS_NewBlockFrame(nsIFrame** aNewFrame)
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsBlockFrame* it = new nsBlockFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->SetFlags(aFlags);
-  aNewFrame = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 
@@ -1298,9 +1301,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // Set our width to the max width if we aren't already that
         // wide. Note that the max-width has nothing to do with our
         // contents (CSS2 section XXX)
-        nscoord maxWidth = borderPadding.left + aState.mContentArea.width +
+        computedWidth = borderPadding.left + aState.mContentArea.width +
           borderPadding.right;
-        computedWidth = maxWidth;
+//        maxWidth = aState.mMaxElementSize.width +
+//          borderPadding.left + borderPadding.right;
       }
       else if (aState.mComputeMaxElementSize) {
         if (aState.mNoWrap) {
@@ -2714,7 +2718,6 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 
     // Pull frames and reflow them until we can't
     while (LINE_REFLOW_OK == lineReflowStatus) {
-      nsIFrame* frame;
       rv = PullFrame(aState, aLine, frame);
       if (NS_FAILED(rv)) {
         return rv;
@@ -5383,6 +5386,10 @@ nsBlockFrame::ComputeTextRuns(nsIPresContext* aPresContext)
 nsresult
 NS_NewAnonymousBlockFrame(nsIFrame** aNewFrame)
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsAnonymousBlockFrame* it = new nsAnonymousBlockFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

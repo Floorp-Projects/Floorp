@@ -28,6 +28,21 @@
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
 
+nsresult
+NS_NewPageFrame(nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsPageFrame* it = new nsPageFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
 nsPageFrame::nsPageFrame()
 {
 }
@@ -157,17 +172,3 @@ nsPageFrame::IsPercentageBase(PRBool& aBase) const
   aBase = PR_TRUE;
   return NS_OK;
 }
-
-//----------------------------------------------------------------------
-
-nsresult
-NS_NewPageFrame(nsIFrame*& aResult)
-{
-  nsPageFrame*  it = new nsPageFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aResult = it;
-  return NS_OK;
-}
-

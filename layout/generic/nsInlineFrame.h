@@ -30,7 +30,7 @@ class nsAnonymousBlockFrame;
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
-  friend nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewInlineFrame(nsIFrame** aNewFrame);
 
   // nsISupports overrides
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

@@ -48,7 +48,7 @@ class nsListControlFrame : public nsScrollFrame,
                            public nsIListControlFrame
 {
 public:
-  friend nsresult NS_NewListControlFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewListControlFrame(nsIFrame** aNewFrame);
 
    // nsISupports
   NS_DECL_ISUPPORTS

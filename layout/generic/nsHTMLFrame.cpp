@@ -91,13 +91,17 @@ private:
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewRootFrame(nsIFrame*& aResult)
+NS_NewRootFrame(nsIFrame** aNewFrame)
 {
-  RootFrame* frame = new RootFrame;
-  if (nsnull == frame) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  RootFrame* it = new RootFrame;
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = it;
   return NS_OK;
 }
 

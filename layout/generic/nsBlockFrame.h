@@ -54,7 +54,7 @@ extern const nsIID kBlockFrameCID;
 class nsBlockFrame : public nsBlockFrameSuper
 {
 public:
-  friend nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+  friend nsresult NS_NewBlockFrame(nsIFrame** aNewFrame);
 
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);

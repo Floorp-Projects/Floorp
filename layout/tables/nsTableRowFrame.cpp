@@ -1541,13 +1541,17 @@ nsTableRowFrame::GetFrameType(nsIAtom** aType) const
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableRowFrame(nsIFrame*& aResult)
+NS_NewTableRowFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* it = new nsTableRowFrame;
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableRowFrame* it = new nsTableRowFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

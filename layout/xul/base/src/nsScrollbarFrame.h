@@ -32,7 +32,7 @@
 class nsString;
 
 
-nsresult NS_NewScrollbarFrame(nsIFrame*& aResult) ;
+nsresult NS_NewScrollbarFrame(nsIFrame** aResult) ;
 
 
 class nsScrollbarFrame : public nsLeafFrame

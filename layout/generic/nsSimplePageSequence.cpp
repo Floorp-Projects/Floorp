@@ -29,6 +29,25 @@
 #include "nsIStyleSet.h"
 
 nsresult
+NS_NewSimplePageSequenceFrame(nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsSimplePageSequenceFrame*  it = new nsSimplePageSequenceFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
+nsSimplePageSequenceFrame::nsSimplePageSequenceFrame()
+{
+}
+
+nsresult
 nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
@@ -425,17 +444,3 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
 
   return rv;
 }
-
-//----------------------------------------------------------------------
-
-nsresult
-NS_NewSimplePageSequenceFrame(nsIFrame*& aResult)
-{
-  nsSimplePageSequenceFrame*  it = new nsSimplePageSequenceFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aResult = it;
-  return NS_OK;
-}
-

@@ -159,14 +159,18 @@ void StripeTimer::Notify(nsITimer *timer)
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewProgressMeterFrame ( nsIFrame*& aNewFrame )
+NS_NewProgressMeterFrame ( nsIFrame** aNewFrame )
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsProgressMeterFrame* it = new nsProgressMeterFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // it->SetFlags(aFlags);
-  aNewFrame = it;
+  *aNewFrame = it;
   return NS_OK;
   
 } // NS_NewProgressMeterFrame

@@ -53,7 +53,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableRowGroupFrame(nsIFrame*& aResult);
+  NS_NewTableRowGroupFrame(nsIFrame** aResult);
 
   NS_METHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

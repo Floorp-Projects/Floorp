@@ -63,7 +63,7 @@ class nsString;
 class nsIContent;
 
 
-nsresult NS_NewTriStateCheckboxFrame(nsIFrame*& aResult) ;
+nsresult NS_NewTriStateCheckboxFrame(nsIFrame** aResult) ;
 
 
 class nsTriStateCheckboxFrame : public nsLeafFrame

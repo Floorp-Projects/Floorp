@@ -235,9 +235,8 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 
 // Factory methods for creating html layout objects
 
-extern nsresult NS_NewAreaFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
-extern nsresult NS_NewBRFrame(nsIFrame*& aNewFrame);
-extern nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+// These are variations on AreaFrame with slightly different layout
+// policies.
 
 // Flags for block/area frames
 #define NS_BLOCK_SHRINK_WRAP     0x1
@@ -245,56 +244,99 @@ extern nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 #define NS_BLOCK_MARGIN_ROOT     0x4
 #define NS_BLOCK_DOCUMENT_ROOT   0x8
 #define NS_AREA_NO_SPACE_MGR     0x10
+#define NS_AREA_WRAP_HEIGHT      0x20
 
-extern nsresult NS_NewCommentFrame(nsIFrame*& aFrameResult);
-extern nsresult NS_NewHRFrame(nsIFrame*& aNewFrame);
+// Create a basic area frame. By default, area frames will extend
+// their height to cover any children that "stick out".
+extern nsresult NS_NewAreaFrame(nsIFrame** aNewFrame,
+                                PRUint32 aFlags = NS_AREA_WRAP_HEIGHT);
+
+// These AreaFrame's shrink wrap around their contents
+inline nsresult NS_NewTableCellInnerFrame(nsIFrame** aNewFrame) {
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT);
+}
+inline nsresult NS_NewTableCaptionFrame(nsIFrame** aNewFrame) {
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT);
+}
+
+// This type of AreaFrame shrink wraps, and is the document root and is a
+// margin root for margin collapsing.
+inline nsresult NS_NewDocumentElementFrame(nsIFrame** aNewFrame) {
+  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_DOCUMENT_ROOT |
+                         NS_BLOCK_MARGIN_ROOT | NS_BLOCK_SHRINK_WRAP);
+}
+
+// This type of AreaFrame is a margin root, but does not shrink wrap
+inline nsresult NS_NewAbsoluteItemWrapperFrame(nsIFrame** aNewFrame) {
+  return NS_NewAreaFrame(aNewFrame, NS_BLOCK_MARGIN_ROOT);
+}
+
+// This type of AreaFrame shrink wraps
+inline nsresult NS_NewFloatingItemWrapperFrame(nsIFrame** aNewFrame) {
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT|NS_BLOCK_SHRINK_WRAP);
+}
+
+// This type of AreaFrame doesn't use its own space manager and
+// doesn't shrink wrap.
+inline nsresult NS_NewRelativeItemWrapperFrame(nsIFrame** aNewFrame) {
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_NO_SPACE_MGR);
+}
+
+extern nsresult NS_NewBRFrame(nsIFrame** aNewFrame);
+
+// Create a frame that supports "display: block" layout behavior
+extern nsresult NS_NewBlockFrame(nsIFrame** aNewFrame);
+
+extern nsresult NS_NewCommentFrame(nsIFrame** aFrameResult);
+extern nsresult NS_NewHRFrame(nsIFrame** aNewFrame);
 
 // <frame> and <iframe> 
-extern nsresult NS_NewHTMLFrameOuterFrame(nsIFrame*& aNewFrame);
+extern nsresult NS_NewHTMLFrameOuterFrame(nsIFrame** aNewFrame);
 // <frameset>
-extern nsresult NS_NewHTMLFramesetFrame(nsIFrame*& aNewFrame);
+extern nsresult NS_NewHTMLFramesetFrame(nsIFrame** aNewFrame);
 
-extern nsresult NS_NewViewportFrame(nsIFrame*& aNewFrame);
-extern nsresult NS_NewRootFrame(nsIFrame*& aNewFrame);
-extern nsresult NS_NewImageFrame(nsIFrame*& aFrameResult);
-extern nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame);
-extern nsresult NS_NewPositionedInlineFrame(nsIFrame*& aNewFrame);
-extern nsresult NS_NewObjectFrame(nsIFrame*& aFrameResult);
-extern nsresult NS_NewSpacerFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTextFrame(nsIFrame*& aResult);
-extern nsresult NS_NewWBRFrame(nsIFrame*& aResult);
-extern nsresult NS_NewScrollFrame(nsIFrame*& aResult);
-extern nsresult NS_NewSimplePageSequenceFrame(nsIFrame*& aResult);
-extern nsresult NS_NewPageFrame(nsIFrame*& aResult);
+extern nsresult NS_NewViewportFrame(nsIFrame** aNewFrame);
+extern nsresult NS_NewRootFrame(nsIFrame** aNewFrame);
+extern nsresult NS_NewImageFrame(nsIFrame** aFrameResult);
+extern nsresult NS_NewInlineFrame(nsIFrame** aNewFrame);
+extern nsresult NS_NewPositionedInlineFrame(nsIFrame** aNewFrame);
+extern nsresult NS_NewObjectFrame(nsIFrame** aFrameResult);
+extern nsresult NS_NewSpacerFrame(nsIFrame** aResult);
+extern nsresult NS_NewTextFrame(nsIFrame** aResult);
+extern nsresult NS_NewEmptyFrame(nsIFrame** aResult);
+inline nsresult NS_NewWBRFrame(nsIFrame** aResult) {
+  return NS_NewEmptyFrame(aResult);
+}
+extern nsresult NS_NewScrollFrame(nsIFrame** aResult);
+extern nsresult NS_NewSimplePageSequenceFrame(nsIFrame** aResult);
+extern nsresult NS_NewPageFrame(nsIFrame** aResult);
 extern nsresult NS_NewFirstLetterFrame(nsIFrame** aNewFrame);
 extern nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
 
 // forms
-extern nsresult NS_NewFormFrame(nsIFrame*& aResult);
-extern nsresult NS_NewButtonControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewImageControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewHTMLButtonControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewCheckboxControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewFieldSetFrame(nsIFrame*& aResult);
-extern nsresult NS_NewFileControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewLabelFrame(nsIFrame*& aResult);
-extern nsresult NS_NewLegendFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTextControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewRadioControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewSelectControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewListControlFrame(nsIFrame*& aResult);
-extern nsresult NS_NewComboboxControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewFormFrame(nsIFrame** aResult);
+extern nsresult NS_NewButtonControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewImageControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewHTMLButtonControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewCheckboxControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewFieldSetFrame(nsIFrame** aResult);
+extern nsresult NS_NewFileControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewLabelFrame(nsIFrame** aResult);
+extern nsresult NS_NewLegendFrame(nsIFrame** aResult);
+extern nsresult NS_NewTextControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewRadioControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewSelectControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewListControlFrame(nsIFrame** aResult);
+extern nsresult NS_NewComboboxControlFrame(nsIFrame** aResult);
 
-// table frame factories
-
-extern nsresult NS_NewTableOuterFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTableFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTableColFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTableColGroupFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTableRowFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTableRowGroupFrame(nsIFrame*& aResult);
-extern nsresult NS_NewTableCellFrame(nsIFrame*& aResult);
-
+// Table frame factories
+extern nsresult NS_NewTableOuterFrame(nsIFrame** aResult);
+extern nsresult NS_NewTableFrame(nsIFrame** aResult);
+extern nsresult NS_NewTableColFrame(nsIFrame** aResult);
+extern nsresult NS_NewTableColGroupFrame(nsIFrame** aResult);
+extern nsresult NS_NewTableRowFrame(nsIFrame** aResult);
+extern nsresult NS_NewTableRowGroupFrame(nsIFrame** aResult);
+extern nsresult NS_NewTableCellFrame(nsIFrame** aResult);
 
 // XXX passing aWebShell into this is wrong
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,

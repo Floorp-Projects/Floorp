@@ -19,7 +19,7 @@
 
 class nsTreeIndentationFrame : public nsFrame {
 public:
-  friend nsresult NS_NewTreeIndentationFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewTreeIndentationFrame(nsIFrame** aNewFrame);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,

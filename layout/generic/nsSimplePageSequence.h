@@ -25,6 +25,8 @@
 class nsSimplePageSequenceFrame : public nsContainerFrame,
                                   public nsIPageSequenceFrame {
 public:
+  friend nsresult NS_NewSimplePageSequenceFrame(nsIFrame** aResult);
+
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -49,6 +51,7 @@ public:
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
 
 protected:
+  nsSimplePageSequenceFrame();
   virtual void PaintChild(nsIPresContext&      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
@@ -58,10 +61,6 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 };
-
-/* prototypes */
-nsresult
-NS_NewSimplePageSequenceFrame(nsIFrame*& aResult);
 
 #endif /* nsSimplePageSequence_h___ */
 

@@ -34,6 +34,8 @@
 
 class SpacerFrame : public nsFrame {
 public:
+  friend nsresult NS_NewSpacerFrame(nsIFrame** aNewFrame);
+
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -43,18 +45,27 @@ public:
   PRUint8 GetType();
 
 protected:
+  SpacerFrame();
   virtual ~SpacerFrame();
 };
 
 nsresult
-NS_NewSpacerFrame(nsIFrame*& aResult)
+NS_NewSpacerFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* frame = new SpacerFrame;
-  if (nsnull == frame) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  SpacerFrame* it = new SpacerFrame;
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = it;
   return NS_OK;
+}
+
+SpacerFrame::SpacerFrame()
+{
 }
 
 SpacerFrame::~SpacerFrame()

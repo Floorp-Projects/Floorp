@@ -32,7 +32,7 @@ public:
 
   enum TruncationStyle { Left, Right, Center };
 
-  friend nsresult NS_NewTitledButtonFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewTitledButtonFrame(nsIFrame** aNewFrame);
 
   // nsIBox frame interface
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);

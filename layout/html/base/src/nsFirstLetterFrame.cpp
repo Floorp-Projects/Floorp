@@ -55,7 +55,7 @@ protected:
 nsresult
 NS_NewFirstLetterFrame(nsIFrame** aNewFrame)
 {
-  NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }

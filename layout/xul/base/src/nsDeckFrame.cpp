@@ -38,13 +38,17 @@
 
 
 nsresult
-NS_NewDeckFrame ( nsIFrame*& aNewFrame )
+NS_NewDeckFrame ( nsIFrame** aNewFrame )
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsDeckFrame* it = new nsDeckFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  aNewFrame = it;
+  *aNewFrame = it;
   return NS_OK;
   
 } // NS_NewDeckFrame
@@ -138,17 +142,7 @@ nsDeckFrame::GetSelectedFrame()
   }
 
   // get the child at that index. 
-  nscoord count = 0;
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-  while (nsnull != childFrame) 
-  {  
-     if (count == index)
-        break;
-
-     nsresult rv = childFrame->GetNextSibling(&childFrame);
-     count++;
-  }
-
+  nsIFrame* childFrame = mFrames.FrameAt(index); 
   return childFrame;
 }
 

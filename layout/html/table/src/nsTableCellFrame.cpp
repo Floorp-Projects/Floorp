@@ -380,25 +380,27 @@ void DebugCheckChildSize(nsIFrame*            aChild,
   if (aMet.width > aAvailSize.width) {
     nsAutoString tmp;
     aChild->GetFrameName(tmp);
-    printf("WARNING: cell %s content has desired width %d given avail width %d\n",
-            tmp, aMet.width, aAvailSize.width);
+    printf("WARNING: cell ");
+    fputs(tmp, stdout);
+    printf(" content has desired width %d given avail width %d\n",
+            aMet.width, aAvailSize.width);
   }
   if (aIsPass2Reflow) {
     if ((aMet.width < 0) || (aMet.width > 60000)) {
-      printf("WARNING: cell content %X has large width %d \n", aChild, aMet.width);
+      printf("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
     }
     if ((aMet.height < 0) || (aMet.height > 60000)) {
-      printf("WARNING: cell content %X has large height %d \n", aChild, aMet.height);
+      printf("WARNING: cell content %p has large height %d \n", aChild, aMet.height);
     }
   }
   if (aMet.maxElementSize) {
     nscoord tmp = aMet.maxElementSize->width;
     if ((tmp < 0) || (tmp > 60000)) {
-      printf("WARNING: cell content %X has large max element width %d \n", aChild, tmp);
+      printf("WARNING: cell content %p has large max element width %d \n", aChild, tmp);
     }
     tmp = aMet.maxElementSize->height;
     if ((tmp < 0) || (tmp > 60000)) {
-      printf("WARNING: cell content %X has large max element height %d \n", aChild, tmp);
+      printf("WARNING: cell content %p has large max element height %d \n", aChild, tmp);
     }
   }
 }
@@ -435,7 +437,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   nsSize *pMaxElementSize = aDesiredSize.maxElementSize;
   if (NS_UNCONSTRAINEDSIZE==aReflowState.availableWidth)
     pMaxElementSize = &maxElementSize;
-  nscoord x = 0;
+
   // SEC: what about ascent and decent???
 
   // Compute the insets (sum of border and padding)
@@ -768,8 +770,6 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
 
 PRBool nsTableCellFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
 {
-  PRInt32 result = 0;
-
   if (aValue.GetUnit() == eHTMLUnit_Pixel)
     aResult = aValue.GetPixelValue();
   else if (aValue.GetUnit() == eHTMLUnit_Empty)
@@ -937,13 +937,17 @@ NS_IMPL_ISUPPORTS_INHERITED(nsTableCellFrame, nsHTMLContainerFrame, nsITableCell
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableCellFrame(nsIFrame*& aResult)
+NS_NewTableCellFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* it = new nsTableCellFrame;
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableCellFrame* it = new nsTableCellFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

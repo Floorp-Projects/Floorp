@@ -65,13 +65,17 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 #define ALIGN_UNSET PRUint8(-1)
 
 nsresult
-NS_NewImageFrame(nsIFrame*& aResult)
+NS_NewImageFrame(nsIFrame** aNewFrame)
 {
-  nsImageFrame* frame = new nsImageFrame;
-  if (nsnull == frame) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsImageFrame* it = new nsImageFrame;
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = it;
   return NS_OK;
 }
 

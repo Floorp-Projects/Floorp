@@ -25,7 +25,7 @@ class nsTreeCellFrame;
 class nsTreeFrame : public nsTableFrame
 {
 public:
-  friend nsresult NS_NewTreeFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewTreeFrame(nsIFrame** aNewFrame);
 
   void SetSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void ClearSelection(nsIPresContext& presContext);

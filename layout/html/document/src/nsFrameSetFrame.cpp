@@ -1006,7 +1006,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           aPresContext.ResolveStyleContextFor(child, mStyleContext,
                                               PR_FALSE, &kidSC);
           if (nsHTMLAtoms::frameset == tag) {
-            result = NS_NewHTMLFramesetFrame(frame);
+            result = NS_NewHTMLFramesetFrame(&frame);
             frame->Init(aPresContext, child, this, kidSC, nsnull);
 
             childTypes[mChildCount] = FRAMESET;
@@ -1016,7 +1016,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             childFrame->SetParentBorderColor(borderColor);
             childBorderColors[mChildCount].Set(childFrame->GetBorderColor());
           } else { // frame
-            result = NS_NewHTMLFrameOuterFrame(frame);
+            result = NS_NewHTMLFrameOuterFrame(&frame);
             frame->Init(aPresContext, child, this, kidSC, nsnull);
 
             childTypes[mChildCount] = FRAME;
@@ -1510,13 +1510,17 @@ nsHTMLFramesetFrame::EndMouseDrag()
 }  
 
 nsresult
-NS_NewHTMLFramesetFrame(nsIFrame*& aResult)
+NS_NewHTMLFramesetFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* frame = new nsHTMLFramesetFrame;
-  if (nsnull == frame) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsHTMLFramesetFrame* it = new nsHTMLFramesetFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = it;
   return NS_OK;
 }
 

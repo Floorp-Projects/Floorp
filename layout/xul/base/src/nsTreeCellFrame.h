@@ -24,7 +24,7 @@ class nsTreeFrame;
 class nsTreeCellFrame : public nsTableCellFrame
 {
 public:
-  friend nsresult NS_NewTreeCellFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewTreeCellFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);

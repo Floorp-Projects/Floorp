@@ -780,7 +780,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
                                                  &colGroupStyleContext);        // colGroupStyleContext: REFCNT++
       // Create a col group frame
       nsIFrame* newFrame;
-      NS_NewTableColGroupFrame(newFrame);
+      NS_NewTableColGroupFrame(&newFrame);
       newFrame->Init(aPresContext, lastColGroupElement, this, colGroupStyleContext,
                      nsnull);
       lastColGroupFrame = (nsTableColGroupFrame*)newFrame;
@@ -814,7 +814,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
                                                  lastColGroupStyle,
                                                  PR_TRUE,
                                                  &colStyleContext);             // colStyleContext: REFCNT++
-      NS_NewTableColFrame(colFrame);
+      NS_NewTableColFrame(&colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame,
                      colStyleContext, nsnull);
       NS_RELEASE(colStyleContext);
@@ -4908,13 +4908,17 @@ void nsTableFrame::GetColumnsByType(const nsStyleUnit aType,
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableFrame(nsIFrame*& aResult)
+NS_NewTableFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* it = new nsTableFrame;
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableFrame* it = new nsTableFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

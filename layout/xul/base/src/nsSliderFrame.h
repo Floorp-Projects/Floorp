@@ -32,7 +32,7 @@
 class nsString;
 
 
-nsresult NS_NewSliderFrame(nsIFrame*& aResult) ;
+nsresult NS_NewSliderFrame(nsIFrame** aResult) ;
 
 
 class nsSliderFrame : public nsLeafFrame

@@ -32,7 +32,7 @@
 class nsString;
 
 
-nsresult NS_NewColorPickerFrame(nsIFrame*& aResult) ;
+nsresult NS_NewColorPickerFrame(nsIFrame** aResult) ;
 
 
 class nsColorPickerFrame : public nsLeafFrame

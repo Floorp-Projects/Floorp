@@ -85,7 +85,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 
         // Create a new col frame
         nsIFrame* colFrame;
-        NS_NewTableColFrame(colFrame);
+        NS_NewTableColFrame(&colFrame);
 
         // Set its style context
         nsCOMPtr<nsIStyleContext> colStyleContext;
@@ -698,13 +698,17 @@ PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableColGroupFrame(nsIFrame*& aResult)
+NS_NewTableColGroupFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* it = new nsTableColGroupFrame;
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableColGroupFrame* it = new nsTableColGroupFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

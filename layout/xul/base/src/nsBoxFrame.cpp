@@ -39,13 +39,17 @@
 #define CONSTANT float(0.0)
 
 nsresult
-NS_NewBoxFrame ( nsIFrame*& aNewFrame )
+NS_NewBoxFrame ( nsIFrame** aNewFrame )
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsBoxFrame* it = new nsBoxFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  aNewFrame = it;
+  *aNewFrame = it;
   return NS_OK;
   
 } // NS_NewBoxFrame

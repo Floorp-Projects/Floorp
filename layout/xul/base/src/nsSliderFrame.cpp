@@ -34,11 +34,16 @@
 // Wrapper for creating a new spinner
 //
 nsresult
-NS_NewSliderFrame(nsIFrame*& aResult)
+NS_NewSliderFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsSliderFrame;
-  if ( !aResult )
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsSliderFrame* it = new nsSliderFrame;
+  if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
+  *aNewFrame = it;
   return NS_OK;
 }
 

@@ -52,11 +52,16 @@ nsTriStateCheckboxFrame :: GetDepressAtom ( nsCOMPtr<nsIAtom>* outAtom )
 // Wrapper for creating a new tristate checkbox
 //
 nsresult
-NS_NewTriStateCheckboxFrame(nsIFrame*& aResult)
+NS_NewTriStateCheckboxFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsTriStateCheckboxFrame;
-  if ( !aResult )
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTriStateCheckboxFrame* it = new nsTriStateCheckboxFrame;
+  if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
+  *aNewFrame = it;
   return NS_OK;
 }
 

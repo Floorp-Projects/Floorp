@@ -66,14 +66,18 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
-nsresult NS_NewTextControlFrame(nsIFrame*& aResult);
 nsresult
-NS_NewTextControlFrame(nsIFrame*& aResult)
+NS_NewTextControlFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsTextControlFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTextControlFrame* it = new nsTextControlFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 

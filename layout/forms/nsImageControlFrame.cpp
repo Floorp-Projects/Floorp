@@ -143,12 +143,17 @@ nsImageControlFrame::nsImageControlFrame()
 }
 
 nsresult
-NS_NewImageControlFrame(nsIFrame*& aResult)
+NS_NewImageControlFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsImageControlFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsImageControlFrame* it = new nsImageControlFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 

@@ -163,12 +163,17 @@ protected:
 };
 
 nsresult
-NS_NewSelectControlFrame(nsIFrame*& aResult)
+NS_NewSelectControlFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsSelectControlFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsSelectControlFrame* it = new nsSelectControlFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 

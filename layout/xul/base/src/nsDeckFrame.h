@@ -35,7 +35,7 @@ class nsDeckFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
-  friend nsresult NS_NewDeckFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewDeckFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
   NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);

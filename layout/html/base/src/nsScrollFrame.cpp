@@ -47,6 +47,25 @@ static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 //----------------------------------------------------------------------
 
+nsresult
+NS_NewScrollFrame(nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsScrollFrame* it = new nsScrollFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
+nsScrollFrame::nsScrollFrame()
+{
+}
+
 NS_IMETHODIMP
 nsScrollFrame::Init(nsIPresContext&  aPresContext,
                     nsIContent*      aContent,
@@ -591,16 +610,4 @@ NS_IMETHODIMP
 nsScrollFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Scroll", aResult);
-}
-
-//----------------------------------------------------------------------
-
-nsresult
-NS_NewScrollFrame(nsIFrame*&  aResult)
-{
-  aResult = new nsScrollFrame;
-  if (nsnull == aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
 }
