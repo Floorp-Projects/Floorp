@@ -37,7 +37,8 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgdb \
 		  mime \
-      profile\
+		  profile \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \
