@@ -255,6 +255,15 @@ interface nsIEditor  : nsISupports
   void EndPlaceHolderTransaction();
   void ShouldTxnSetSelection(out boolean result);
 
+  /** Set the flag that prevents InsertElementTxn from changing the selection
+    * @param   should  Set false to suppress changing the selection;
+    *                  i.e., before using InsertElement() to insert under <head> element
+    * WARNING: You must be very careful to reset back to PR_TRUE after
+    *          setting PR_FALSE, else selection/caret is trashed
+    *          for further editing
+    */
+  void SetShouldTxnSetSelection(in boolean should);
+
   /* ------------ Clipboard methods -------------- */
 
   /** cut the currently selected text, putting it into the OS clipboard

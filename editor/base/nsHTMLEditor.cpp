@@ -615,6 +615,9 @@ nsHTMLEditor::SetDocumentTitle(const nsAReadableString &aTitle)
 
     if (NS_SUCCEEDED(result)) 
     {
+      //Don't let Rules System change the selection
+      nsAutoTxnsConserveSelection dontChangeSelection(this);
+
       result = nsEditor::Do(txn);  
     }
     // The transaction system (if any) has taken ownwership of txn

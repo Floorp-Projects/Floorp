@@ -742,13 +742,20 @@ nsEditor::EndPlaceHolderTransaction()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsEditor::ShouldTxnSetSelection(PRBool *aResult)
+NS_IMETHODIMP
+nsEditor::ShouldTxnSetSelection(PRBool *aResult)
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
   *aResult = mShouldTxnSetSelection;
   return NS_OK;
 }
 
+NS_IMETHODIMP  
+nsEditor::SetShouldTxnSetSelection(PRBool aShould)
+{
+  mShouldTxnSetSelection = aShould;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
@@ -4315,12 +4322,6 @@ nsEditor::GetShouldTxnSetSelection()
   return mShouldTxnSetSelection;
 }
 
-
-void   
-nsEditor::SetShouldTxnSetSelection(PRBool aShould)
-{
-  mShouldTxnSetSelection = aShould;
-}
 
 #ifdef XP_MAC
 #pragma mark -

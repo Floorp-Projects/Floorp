@@ -366,7 +366,6 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
     // We can encounter "__moz_text" nodes here -- must find a row
     while (nextRow && !IsRowNode(nextRow))
     {
-      nsCOMPtr<nsIDOMNode> nextNode;
       res = nextRow->GetNextSibling(getter_AddRefs(nextNode));
       if (NS_FAILED(res)) return res;
 

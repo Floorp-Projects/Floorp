@@ -516,7 +516,6 @@ public:
   nsresult EndUpdateViewBatch(void);
 
   PRBool GetShouldTxnSetSelection();
-  void   SetShouldTxnSetSelection(PRBool aShould);
 
 public:
   // Argh!  These transaction names are used by PlaceholderTxn and

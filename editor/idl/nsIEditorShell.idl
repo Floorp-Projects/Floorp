@@ -318,13 +318,16 @@ interface nsIEditorShell : nsISupports
    * Insert an element under parent at position.
    * No checking is done to verify the legality of the insertion.
    *  That is the responsibility of the caller.
-   * element:   The DOM element to insert.
-   * parent:    The element to insert the new object under
-   * position:  The place in parent to insert the new element
-   *                  0=first child, 1=second child, etc.
-   *                  any number > number of current children = last child
+   * element:             The DOM element to insert.
+   * parent:              The element to insert the new object under
+   * position:            The place in parent to insert the new element
+   *                        0=first child, 1=second child, etc.
+   *                        any number > number of current children = last child
+   * dontChangeSelection  If false, selection is set to just after new element
+   *                      If true, preserve existing selection 
+   *                        (use when inserting under <head> element)
    */
-  void InsertElement(in nsIDOMElement element, in nsIDOMElement parent, in PRInt32 position);
+  void InsertElement(in nsIDOMElement element, in nsIDOMElement parent, in PRInt32 position, in PRBool dontChangeSelection);
 
   /** 
     * DeleteNode removes element from the document
