@@ -669,36 +669,60 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
+  nsIDeviceContext *theDeviceContext;
+  float            scale;
+
+  aContext.GetDeviceContext(theDeviceContext);
+  theDeviceContext->GetCanonicalPixelScale(scale);
+  
+
+  PRInt32
+    destinationX = 0,
+    destinationY = 0,
+    destinationWidth  = mBHead->biWidth*scale,
+    destinationHeight = mBHead->biHeight*scale;
+
   PRInt32
     validX = 0,
     validY = 0,
     validWidth  = mBHead->biWidth,
     validHeight = mBHead->biHeight;
+
   
   // limit the image rectangle to the size of the image data which
   // has been validated.
   if (mDecodedY2 < mBHead->biHeight) {
     validHeight = mDecodedY2 - mDecodedY1;
+    destinationHeight = validHeight*scale;
   }
   if (mDecodedX2 < mBHead->biWidth) {
     validWidth = mDecodedX2 - mDecodedX1;
+    destinationHeight = validWidth*scale;
   }
   if (mDecodedY1 > 0) {   
     validHeight -= mDecodedY1;
+    destinationY -= mDecodedY1*scale;
+    destinationHeight = validHeight*scale;
     validY = mDecodedY1;
   }
   if (mDecodedX1 > 0) {
     validWidth -= mDecodedX1;
+    destinationX -= mDecodedX1*scale;
+    destinationHeight = validWidth*scale;
     validX = mDecodedX1; 
   }
+
+  // put the width and hieght into the devices coordinates
 
   PRInt32 aY0 = aTileRect.y - aSYOffset,
           aX0 = aTileRect.x - aSXOffset,
           aY1 = aTileRect.y + aTileRect.height,
           aX1 = aTileRect.x + aTileRect.width;
 
-  nscoord aWidth = mBHead->biWidth;
-  nscoord aHeight = mBHead->biHeight;
+  // this is the width and height of the image in pixels
+  // we need to map this to the pixel height of the device
+  nscoord aWidth = mBHead->biWidth*scale;
+  nscoord aHeight = mBHead->biHeight*scale;
 
   nscoord tileWidth = aTileRect.width;
   nscoord tileHeight = aTileRect.height;
@@ -721,7 +745,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       for(x=aX0;x<aX1;x+=aWidth){
       Draw(aContext, aSurface,
            0, 0, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y),
-           x, y, PR_MIN(validWidth, aX1-x), PR_MIN(validHeight, aY1-y));
+           x, y, PR_MIN(destinationWidth, aX1-x), PR_MIN(destinationHeight, aY1-y));
       }
     } 
     return(PR_TRUE);
