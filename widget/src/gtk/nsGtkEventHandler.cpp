@@ -185,13 +185,16 @@ void InitMouseEvent(GdkEventButton *aGEB,
     anEvent.time = aGEB->time;
 
     switch(aGEB->type)
-    {
+      {
       case GDK_BUTTON_PRESS:
         anEvent.clickCount = 1;
-	break;
+        break;
       case GDK_2BUTTON_PRESS:
         anEvent.clickCount = 2;
-	break;
+        break;
+      case GDK_3BUTTON_PRESS:  /* Clamp to double-click */
+        anEvent.clickCount = 2;
+        break;
       default:
         anEvent.clickCount = 1;
     }
@@ -435,20 +438,52 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
   nsMouseEvent mevent;
   int b = 0;
 
-  switch (event->button)
-  {
-    case 1:
-      b = NS_MOUSE_LEFT_BUTTON_DOWN;
-      break;
-    case 2:
-      b = NS_MOUSE_MIDDLE_BUTTON_DOWN;
-      break;
-    case 3:
-      b = NS_MOUSE_RIGHT_BUTTON_DOWN;
-      break;
-    default:
-      b = NS_MOUSE_LEFT_BUTTON_DOWN;
-      break;
+  /* Switch on single, double, triple click. */
+  switch (event->type) {
+  case GDK_BUTTON_PRESS:   /* Single click. */
+    switch (event->button)  /* Which button? */
+      {
+      case 1:
+        b = NS_MOUSE_LEFT_BUTTON_DOWN;
+        break;
+      case 2:
+        b = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+        break;
+      case 3:
+        b = NS_MOUSE_RIGHT_BUTTON_DOWN;
+        break;
+      default:
+        /* Single-click default. */
+        b = NS_MOUSE_LEFT_BUTTON_DOWN;
+        break;
+      }
+    break;
+
+  case GDK_2BUTTON_PRESS:   /* Double click. */
+    switch (event->button)  /* Which button? */
+      {
+      case 1:
+        b = NS_MOUSE_LEFT_DOUBLECLICK;
+        break;
+      case 2:
+        b = NS_MOUSE_MIDDLE_DOUBLECLICK;
+        break;
+      case 3:
+        b = NS_MOUSE_RIGHT_DOUBLECLICK;
+        break;
+      default:
+        /* Double-click default. */
+        b = NS_MOUSE_LEFT_DOUBLECLICK;
+        break;
+      }
+    break;
+
+  case GDK_3BUTTON_PRESS:   /* Triple click. */
+    printf("handle_button_press_event(): Unhandled triple click.\n");
+    break;
+
+  default:
+    printf("handle_button_press_event(): Unhandled event type\n");
   }
   InitMouseEvent(event, p, mevent, b);
 
