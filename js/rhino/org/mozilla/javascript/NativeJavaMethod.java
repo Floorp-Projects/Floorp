@@ -154,6 +154,17 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             return "(" + javaSignature(paramTypes) + ")";
         }
     }
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        for (int i=0; i < methods.length; i++) {
+            sb.append(javaSignature(methods[i].getReturnType()));
+            sb.append(' ');
+            sb.append(signature(methods[i]));
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)

@@ -854,6 +854,10 @@ public class NativeFunction extends ScriptableObject implements Function {
             String message = Context.getMessage("msg.incompat.call", errArgs);
             throw NativeGlobal.constructError(cx, "TypeError", message, funObj);
         }
+        if (val instanceof NativeJavaMethod) {
+            return "\nfunction " + ((NativeFunction) val).jsGet_name() +
+                "() {/*\n" + val.toString() + "*/}\n";
+        }
 
         int indent = 0;
         if (args.length > 0)
