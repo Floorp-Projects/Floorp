@@ -682,7 +682,8 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream *aRequestStream)
         req->mConnection->GetLoadAttributes(&loadAttributes);
 
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        req->mConnection->GetNotificationCallbacks(getter_AddRefs(callbacks));
+
+        callbacks = do_QueryInterface(NS_STATIC_CAST(nsIHTTPChannel*, req->mConnection));
         mTransport->SetNotificationCallbacks(callbacks,
                          (loadAttributes & nsIChannel::LOAD_BACKGROUND));
     }
@@ -1148,7 +1149,8 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest()
         req->mConnection->GetLoadAttributes(&flags);
 
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        mTransport->GetNotificationCallbacks(getter_AddRefs(callbacks));
+
+        callbacks = do_QueryInterface(NS_STATIC_CAST(nsIHTTPChannel*, req->mConnection));
         mTransport->SetNotificationCallbacks(callbacks,
                                              (flags & nsIChannel::LOAD_BACKGROUND));
         NS_RELEASE(req);
