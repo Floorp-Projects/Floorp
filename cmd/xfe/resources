@@ -4493,7 +4493,9 @@ from the network, or save to a file and then play from the file?
 
 ! For SUN platforms, user wants default font size to be 12 pt on the message list to be readable
 @ONLYSUN@@CLASS@*XmLGrid*fontList:\
--*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*, -*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-*=BOLD, -*-helvetica-medium-o-*-*-*-120-*-*-*-*-iso8859-*=ITALIC
+-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*,\
+-*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-*=BOLD,\
+-*-helvetica-medium-o-*-*-*-120-*-*-*-*-iso8859-*=ITALIC
 
 ! Font for the Mail/News banner
 ! For non-SUN platforms, user can accept font size to be 10 pt to be default on the message list
