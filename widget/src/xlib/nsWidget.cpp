@@ -325,6 +325,13 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::SetName(const char * aName)
+{
+  mName = aName;
+
+  return NS_OK;
+}
+
 Window
 nsWidget::GetFocusWindow(void)
 {
