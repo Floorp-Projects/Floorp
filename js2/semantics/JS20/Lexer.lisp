@@ -19,9 +19,6 @@
 ;;; Waldemar Horwat (waldemar@netscape.com)
 ;;;
 
-(defun digit-char-16 (char)
-  (assert-non-null (digit-char-p char 16)))
-
 
 (progn
   (defparameter *lw*
@@ -57,18 +54,18 @@
                                                           (($default-action $default-action)))
                (:a-s-c-i-i-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                  (($default-action $default-action)
-                                  (decimal-value digit-value)))
+                                  (decimal-value $digit-value)))
                (:non-zero-digit (#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
-                                ((decimal-value digit-value)))
+                                ((decimal-value $digit-value)))
                (:octal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7)
                              (($default-action $default-action)
-                              (octal-value digit-value)))
+                              (octal-value $digit-value)))
                (:zero-to-three (#\0 #\1 #\2 #\3)
-                               ((octal-value digit-value)))
+                               ((octal-value $digit-value)))
                (:four-to-seven (#\4 #\5 #\6 #\7)
-                               ((octal-value digit-value)))
+                               ((octal-value $digit-value)))
                (:hex-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\A #\B #\C #\D #\E #\F #\a #\b #\c #\d #\e #\f)
-                           ((hex-value digit-value)))
+                           ((hex-value $digit-value)))
                (:letter-e (#\E #\e) (($default-action $default-action)))
                (:letter-x (#\X #\x) (($default-action $default-action)))
                ((:literal-string-char single) (- :unicode-character (+ (#\' #\\) :line-terminator))
@@ -83,8 +80,8 @@
                 (($default-action $default-action)))
                ((:ordinary-reg-exp-char guillemet) (- :non-terminator (#\\ #?00BB))
                 (($default-action $default-action))))
-              (($default-action character identity (*))
-               (digit-value integer digit-char-16 ((:global-variable "digitValue") "(" * ")"))))
+              (($default-action character nil identity)
+               ($digit-value integer digit-value digit-char-36)))
        
        (rule :$next-token
              ((token token) (reg-exp-may-follow boolean))
@@ -250,10 +247,9 @@
        (define (member (id string) (list (vector string))) boolean
          (if (empty list)
            false
-           (let ((s string (first list)))
-             (if (string-equal id s)
-               true
-               (member id (rest list))))))
+           (if (string-equal id (nth list 0))
+             true
+             (member id (subseq list 1)))))
        
        (rule :identifier-or-reserved-word
              ((token token) (reg-exp-may-follow boolean))

@@ -234,19 +234,19 @@
          (eval (eval :primary-lvalue)))
        (production (:member-lvalue call) (:lvalue :arguments) member-lvalue-call-member-lvalue
          ((eval (e env))
-          (letexc (function-reference reference ((eval :lvalue) e))
-            (letexc (function value (reference-get-value function-reference))
+          (letexc (f-reference reference ((eval :lvalue) e))
+            (letexc (f value (reference-get-value f-reference))
               (letexc (arguments (vector value) ((eval :arguments) e))
                 (let ((this object-or-null
-                            (case function-reference
+                            (case f-reference
                               (((value-reference virtual-reference)) (oneof null-object-or-null))
                               ((place-reference p place) (oneof object-object-or-null (& base p))))))
-                  (call-object function this arguments)))))))
+                  (call-object f this arguments)))))))
        (production (:member-lvalue call) ((:member-expression no-call no-l-value) :arguments) member-lvalue-call-member-expression-no-call
          ((eval (e env))
-          (letexc (function value ((eval :member-expression) e))
+          (letexc (f value ((eval :member-expression) e))
             (letexc (arguments (vector value) ((eval :arguments) e))
-              (call-object function (oneof null-object-or-null) arguments)))))
+              (call-object f (oneof null-object-or-null) arguments)))))
        (production (:member-lvalue :member-expr-kind) ((:member-expression :member-expr-kind any-value) \[ :expression \]) member-lvalue-array
          ((eval (e env))
           (letexc (container value ((eval :member-expression) e))
@@ -311,8 +311,8 @@
            (letexc (name prop-name (coerce-to-string property))
              (oneof normal (oneof place-reference (tuple place obj name))))))
        
-       (define (call-object (function value) (this object-or-null) (arguments (vector value))) reference-or-exception
-         (case function
+       (define (call-object (f value) (this object-or-null) (arguments (vector value))) reference-or-exception
+         (case f
            (((undefined-value null-value boolean-value double-value string-value))
             (typed-oneof reference-or-exception abrupt (make-error (oneof coerce-to-object-error))))
            ((object-value o object)
@@ -551,13 +551,13 @@
              less
              (if (empty right)
                greater
-               (let ((left-char-code integer (character-to-code (first left)))
-                     (right-char-code integer (character-to-code (first right))))
+               (let ((left-char-code integer (character-to-code (nth left 0)))
+                     (right-char-code integer (character-to-code (nth right 0))))
                  (if (< left-char-code right-char-code)
                    less
                    (if (> left-char-code right-char-code)
                      greater
-                     (compare-strings (rest left) (rest right) less equal greater))))))))
+                     (compare-strings (subseq left 1) (subseq right 1) less equal greater))))))))
        
        (%section "Equality Operators")
        

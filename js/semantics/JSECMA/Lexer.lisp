@@ -19,10 +19,6 @@
 ;;; Waldemar Horwat (waldemar@netscape.com)
 ;;;
 
-(defun digit-char-16 (char)
-  (assert-non-null (digit-char-p char 16)))
-
-
 (progn
   (defparameter *lw*
     (generate-world
@@ -42,26 +38,26 @@
                                    ((character-value character-value)))
                (:decimal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                ((character-value character-value)
-                                (decimal-value digit-value)))
+                                (decimal-value $digit-value)))
                (:non-zero-digit (#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
-                                ((decimal-value digit-value)))
+                                ((decimal-value $digit-value)))
                (:octal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7)
                              ((character-value character-value)
-                              (octal-value digit-value)))
+                              (octal-value $digit-value)))
                (:zero-to-three (#\0 #\1 #\2 #\3)
-                               ((octal-value digit-value)))
+                               ((octal-value $digit-value)))
                (:four-to-seven (#\4 #\5 #\6 #\7)
-                               ((octal-value digit-value)))
+                               ((octal-value $digit-value)))
                (:hex-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\A #\B #\C #\D #\E #\F #\a #\b #\c #\d #\e #\f)
-                           ((hex-value digit-value)))
+                           ((hex-value $digit-value)))
                (:exponent-indicator (#\E #\e) ())
                (:hex-indicator (#\X #\x) ())
                (:plain-string-char (- :unicode-character (+ (#\' #\" #\\) :octal-digit :line-terminator))
                                    ((character-value character-value)))
                (:string-non-escape (- :non-terminator (+ :octal-digit (#\x #\u #\' #\" #\\ #\b #\f #\n #\r #\t #\v)))
                                    ((character-value character-value))))
-              ((character-value character identity (*))
-               (digit-value integer digit-char-16 ((:global-variable "digitValue") "(" * ")"))))
+              ((character-value character nil identity)
+               ($digit-value integer digit-value digit-char-36)))
        
        (%section "Comments")
        (production :line-comment (#\/ #\/ :line-comment-characters) line-comment)
@@ -159,10 +155,10 @@
        (define (member (id string) (list (vector string))) boolean
          (if (empty list)
            false
-           (let ((s string (first list)))
+           (let ((s string (nth list 0)))
              (if (string-equal id s)
                true
-               (member id (rest list))))))
+               (member id (subseq list 1))))))
        
        (declare-action token :identifier-or-reserved-word token)
        (production :identifier-or-reserved-word (:identifier-name) identifier-or-reserved-word-identifier-name
