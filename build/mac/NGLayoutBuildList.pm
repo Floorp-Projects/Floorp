@@ -795,7 +795,8 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
-	
+	_InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",					"$distdirectory:netwerk:");
+
 	#EXTENSIONS
 	_InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",						"$distdirectory:cookie:");
 	_InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
