@@ -65,47 +65,67 @@ extern "C" void CARTMAN_UIEventLoop(void *data);
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMUIHandlerImpl, nsIPSMUIHandler)
 
 NS_METHOD
-nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, const char *urlStr)
+nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, const char *urlStr, nsIDOMWindow * win)
 {
     nsresult rv;
-    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    nsCOMPtr<nsIDOMWindow> parentWindow;
     JSContext *jsContext;
+	jsval	*argv = NULL;
 
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-	if (NS_SUCCEEDED(rv))
-	{
-		rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                    &jsContext );
+	if (win) {
+		// Get script global object for the window.
+		nsCOMPtr<nsIScriptGlobalObject> sgo;
+		sgo = do_QueryInterface(win);
+		if (!sgo) { rv = NS_ERROR_FAILURE; goto loser; }
 
-	     if ( NS_SUCCEEDED( rv ) ) 
-         {
-            // Set up arguments for "window.open"
-            void *stackPtr;
-            char params[36];
+		// Get script context from that.
+		nsCOMPtr<nsIScriptContext> scriptContext;
+		sgo->GetContext( getter_AddRefs( scriptContext ) );
+		if (!scriptContext) { rv = NS_ERROR_FAILURE; goto loser; }
 
-            if (modal)  // if you change this, remember to change the buffer size above.
-                strcpy(params, "menubar=no,height=%d,width=%d,modal");
-            else
-                strcpy(params, "menubar=no,height=%d,width=%d");
+		// Get JSContext from the script context.
+		jsContext = (JSContext*)scriptContext->GetNativeContext();
+		if (!jsContext) { rv = NS_ERROR_FAILURE; goto loser; }
 
-            char buffer[256];
-            PR_snprintf(buffer,
-                        sizeof(buffer),
-                        params,
-                        height,
-                        width );
+		parentWindow = win;
+	} else {
+		NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+		if (NS_FAILED(rv)) {
+			goto loser;
+		}
+		rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( parentWindow ),
+				                                        &jsContext );
+		if ( NS_FAILED( rv ) ) {
+			goto loser;
+		}
+	}
 
-            jsval	*argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
-            if (argv)
-            {
-	            // open the window
-	            nsIDOMWindow	*newWindow;
-	            hiddenWindow->Open(jsContext, argv, 3, &newWindow);
-                newWindow->ResizeTo(width, height);
-	            JS_PopArguments(jsContext, stackPtr);
-            }
-        }
-    }
+    // Set up arguments for "window.open"
+    void *stackPtr;
+    char params[36];
+
+    if (modal) {  // if you change this, remember to change the buffer size above.
+	    strcpy(params, "menubar=no,height=%d,width=%d,modal");
+    } else {
+		strcpy(params, "menubar=no,height=%d,width=%d");
+	}
+
+	char buffer[256];
+    PR_snprintf(buffer,
+		sizeof(buffer),
+        params,
+        height,
+        width );
+
+	argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
+	if (argv) {
+		// open the window
+		nsIDOMWindow	*newWindow;
+		parentWindow->Open(jsContext, argv, 3, &newWindow);
+        newWindow->ResizeTo(width, height);
+        JS_PopArguments(jsContext, stackPtr);
+	}
+loser:
     return rv;
 }
 
@@ -208,7 +228,7 @@ PRStatus InitPSMUICallbacks(PCMT_CONTROL control)
     return PR_SUCCESS;
 }
 
-PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, const char *hostName)
+PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, const char *hostName, nsIDOMWindow * window)
 {
     CMUint32 advRID = 0;
     CMInt32 width = 0;
@@ -284,7 +304,7 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, con
         return PR_FAILURE;
 
     /* Fire the URL up in a window of its own. */
-    pwin = CartmanUIHandler(advRID, nsnull, width, height, CM_FALSE, (char*)urlItem.data, NULL);
+    pwin = CartmanUIHandler(advRID, nsnull, width, height, CM_TRUE,(char*)urlItem.data, window);
     
     //allocated by cmt, we can free with free:
     free(urlItem.data);
@@ -301,7 +321,7 @@ void* CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uin
     NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
     
     if(NS_SUCCEEDED(rv))
-	    handler->DisplayURI(width, height, isModal, urlStr);
+	    handler->DisplayURI(width, height, isModal, urlStr, (nsIDOMWindow*)data);
 
     return nsnull;
 }
