@@ -25,6 +25,8 @@
 #include "nscore.h"
 #include "plevent.h"
 
+class nsFileTransport;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT  4
@@ -35,26 +37,36 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIFileTransportService methods:
-    NS_IMETHOD AsyncRead(PLEventQueue* appEventQueue,
+    NS_IMETHOD AsyncRead(const char* path, 
                          nsISupports* context,
+                         PLEventQueue* appEventQueue,
                          nsIStreamListener* listener,
-                         const char* path, 
                          nsITransport* *result);
-    NS_IMETHOD AsyncWrite(PLEventQueue* appEventQueue,
-                          nsISupports* context,
-                          nsIStreamObserver* observer,
+    NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
                           const char* path,
+                          nsISupports* context,
+                          PLEventQueue* appEventQueue,
+                          nsIStreamObserver* observer,
                           nsITransport* *result);
-    NS_IMETHOD Shutdown();
+    NS_IMETHOD OpenInputStream(const char* path, 
+                               nsISupports* context,
+                               nsIInputStream* *result);
+    NS_IMETHOD OpenOutputStream(const char* path, 
+                                nsISupports* context,
+                                nsIOutputStream* *result);
+    NS_IMETHOD ProcessPendingRequests(void);
 
     // nsFileTransportService methods:
     nsFileTransportService();
     virtual ~nsFileTransportService();
 
     nsresult Init();
+    nsresult Suspend(nsFileTransport* request);
+    nsresult Resume(nsFileTransport* request);
 
 protected:
     nsIThreadPool*              mPool;
+    nsISupportsArray*           mSuspended;
 
 };
 

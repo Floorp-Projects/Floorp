@@ -22,6 +22,7 @@
 #include "nsIFileStream.h"
 #include "prcmon.h"
 #include "prmem.h"
+#include "nsIStreamListener.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileTransportService methods:
@@ -43,23 +44,31 @@ nsFileTransportService::Init()
 
 nsFileTransportService::~nsFileTransportService()
 {
+    // this will wait for all outstanding requests to be processed, then
+    // join with the worker threads, and finally free the pool:
     NS_IF_RELEASE(mPool);
 }
 
 NS_IMPL_ISUPPORTS(nsFileTransportService, nsIFileTransportService::GetIID());
 
 NS_IMETHODIMP
-nsFileTransportService::AsyncRead(PLEventQueue* appEventQueue,
+nsFileTransportService::AsyncRead(const char* path, 
                                   nsISupports* context,
+                                  PLEventQueue* appEventQueue,
                                   nsIStreamListener* listener,
-                                  const char* path, 
                                   nsITransport* *result)
 {
+    nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = trans->Init(path, listener, appEventQueue, context);
+    nsIStreamListener* asyncListener;
+    rv = NS_NewAsyncStreamListener(&asyncListener, appEventQueue, listener);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = trans->Init(path, context, asyncListener, this);
+    NS_RELEASE(asyncListener);
     if (NS_FAILED(rv)) {
         delete trans;
         return rv;
@@ -77,19 +86,90 @@ nsFileTransportService::AsyncRead(PLEventQueue* appEventQueue,
 }
 
 NS_IMETHODIMP
-nsFileTransportService::AsyncWrite(PLEventQueue* appEventQueue,
-                                   nsISupports* context,
-                                   nsIStreamObserver* observer,
+nsFileTransportService::AsyncWrite(nsIInputStream* fromStream,
                                    const char* path,
+                                   nsISupports* context,
+                                   PLEventQueue* appEventQueue,
+                                   nsIStreamObserver* observer,
                                    nsITransport* *result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFileTransportService::Shutdown()
+nsFileTransportService::OpenInputStream(const char* path, 
+                                        nsISupports* context,
+                                        nsIInputStream* *result)
 {
-    return mPool->Shutdown();
+    nsresult rv;
+    nsFileTransport* trans = new nsFileTransport();
+    if (trans == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsIStreamListener* syncListener;
+    nsIInputStream* inStr;
+    rv = NS_NewSyncStreamListener(&syncListener, &inStr);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = trans->Init(path, context, syncListener, this);
+    NS_RELEASE(syncListener);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(inStr);
+        delete trans;
+        return rv;
+    }
+    NS_ADDREF(trans);
+
+    rv = mPool->DispatchRequest(NS_STATIC_CAST(nsIRunnable*, trans));
+    NS_RELEASE(trans);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(inStr);
+        return rv;
+    }
+
+    *result = inStr;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransportService::OpenOutputStream(const char* path, 
+                                         nsISupports* context,
+                                         nsIOutputStream* *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransportService::ProcessPendingRequests(void)
+{
+    return mPool->ProcessPendingRequests();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsFileTransportService::Suspend(nsFileTransport* request)
+{
+    nsresult rv;
+    if (mSuspended == nsnull) {
+        rv = NS_NewISupportsArray(&mSuspended);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return mSuspended->AppendElement(NS_STATIC_CAST(nsITransport*, request));
+}
+
+nsresult
+nsFileTransportService::Resume(nsFileTransport* request)
+{
+    nsresult rv;
+    if (mSuspended == nsnull)
+        return NS_ERROR_FAILURE;
+    rv = mSuspended->RemoveElement(NS_STATIC_CAST(nsITransport*, request));
+    if (NS_FAILED(rv)) return rv;
+
+    // restart the request
+    rv = mPool->DispatchRequest(NS_STATIC_CAST(nsIRunnable*, request));
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -26,6 +26,7 @@
 class nsFileTransportService;
 class nsIInputStream;
 class nsIString;
+class nsIByteBufferInputStream;
 
 class nsFileTransport : public nsITransport, public nsIRunnable
 {
@@ -47,16 +48,30 @@ public:
     virtual ~nsFileTransport();
 
     nsresult Init(const char* path,
+                  nsISupports* context,
                   nsIStreamListener* listener,
-                  PLEventQueue* appEventQueue,
-                  nsISupports* context);
+                  nsFileTransportService* service);
+    void Continue(void);
+
+    enum State {
+        STARTING,
+        RUNNING,
+        SUSPENDED,
+        ENDING,
+        ENDED
+    };
 
 protected:
-    nsISupports*        mContext;
-    char*               mPath;
-    nsIStreamListener*  mListener;
-    PRBool              mCanceled;
-    
+    char*                       mPath;
+    nsISupports*                mContext;
+    nsIStreamListener*          mListener;
+    nsFileTransportService*     mService;
+    State                       mState;
+
+    // state variables:
+    nsIInputStream*             mFileStream;
+    nsIByteBufferInputStream*   mBufferStream;
+    nsresult                    mStatus;
 };
 
 #define NS_FILE_TRANSPORT_BUFFER_SIZE   (4*1024)

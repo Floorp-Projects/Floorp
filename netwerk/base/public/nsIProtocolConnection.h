@@ -38,8 +38,6 @@ class nsIProtocolConnection : public nsICancelable
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROTOCOLCONNECTION_IID);
 
-    NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink) = 0;
-
     // can be called after Open
     // freed by caller with delete[]
     NS_IMETHOD GetContentType(char* *contentType) = 0;
@@ -56,6 +54,8 @@ public:
                           void* closure) = 0;
 
 };
+
+#define NS_ERROR_NOT_CONNECTED  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
 
 #endif /* nsIIProtocolConnection_h___ */
 

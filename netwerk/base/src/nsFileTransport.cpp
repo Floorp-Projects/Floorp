@@ -31,26 +31,28 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // nsFileTransport methods:
 
 nsFileTransport::nsFileTransport()
-    : mContext(nsnull), mPath(nsnull), mListener(nsnull), mCanceled(PR_FALSE)
+    : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(STARTING),
+      mFileStream(nsnull), mBufferStream(nsnull), mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 }
 
 nsFileTransport::~nsFileTransport()
 {
-    if (mPath)
-        delete mPath;
+    if (mPath) delete[] mPath;
     NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mContext);
+    NS_IF_RELEASE(mService);
+    NS_IF_RELEASE(mFileStream);
+    NS_IF_RELEASE(mBufferStream);
 }
 
 nsresult
 nsFileTransport::Init(const char* path,
+                      nsISupports* context,
                       nsIStreamListener* listener,
-                      PLEventQueue* appEventQueue,
-                      nsISupports* context)
+                      nsFileTransportService* service)
 {
-    nsresult rv;
     mPath = nsCRT::strdup(path);
     if (mPath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -58,10 +60,13 @@ nsFileTransport::Init(const char* path,
     mContext = context;
     NS_IF_ADDREF(mContext);
 
-    rv = NS_NewMarshalingStreamListener(appEventQueue, listener, &mListener);
-    if (NS_FAILED(rv)) return rv;
+    mListener = listener;
+    NS_ADDREF(mListener);
 
-    return rv;
+    mService = service;
+    NS_ADDREF(mService);
+
+    return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsFileTransport);
@@ -94,20 +99,133 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 NS_IMETHODIMP
 nsFileTransport::Cancel(void)
 {
-    mCanceled = PR_TRUE;
-    return NS_OK;
+    nsresult rv = NS_OK;
+    PR_CEnterMonitor(this);
+    mStatus = NS_BINDING_ABORTED;
+    switch (mState) {
+      case RUNNING:
+        mState = ENDING;
+        break;
+      case SUSPENDED:
+        rv = Resume();
+        break;
+      default:
+        rv = NS_ERROR_FAILURE;
+        break;
+    }
+    PR_CExitMonitor(this);
+    return rv;
 }
 
 NS_IMETHODIMP
 nsFileTransport::Suspend(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    PR_CEnterMonitor(this);
+    switch (mState) {
+      case RUNNING:
+        // XXX close the stream here?
+        mStatus = mService->Suspend(this);
+
+        mState = SUSPENDED;
+        break;
+      default:
+        rv = NS_ERROR_FAILURE;
+        break;
+    }
+    PR_CExitMonitor(this);
+    return rv;
 }
 
 NS_IMETHODIMP
 nsFileTransport::Resume(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    PR_CEnterMonitor(this);
+    switch (mState) {
+      case SUSPENDED:
+        mStatus = mService->Resume(this);
+
+        mState = RUNNING;
+        break;
+      default:
+        rv = NS_ERROR_FAILURE;
+        break;
+    }
+    PR_CExitMonitor(this);
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void
+nsFileTransport::Continue(void)
+{
+    PR_CEnterMonitor(this);
+    switch (mState) {
+      case STARTING: {
+          nsISupports* fs;
+          nsFileSpec spec(mPath);
+
+          mStatus = mListener->OnStartBinding(mContext);  // always send the start notification
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = NS_NewTypicalInputFileStream(&fs, spec);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&mFileStream);
+          NS_RELEASE(fs);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = NS_NewByteBufferInputStream(&mBufferStream, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mState = RUNNING;
+          break;
+      }
+      case RUNNING: {
+          if (NS_FAILED(mStatus)) goto error;
+
+          PRUint32 amt;
+          mStatus = mBufferStream->Fill(mFileStream, &amt);
+          if (mStatus == NS_BASE_STREAM_EOF) goto error; 
+          if (NS_FAILED(mStatus)) goto error;
+
+          // and feed the buffer to the application via the byte buffer stream:
+          mStatus = mListener->OnDataAvailable(mContext, mBufferStream, amt);      // XXX maybe amt should be bufStr->GetLength()
+          if (NS_FAILED(mStatus)) goto error;
+          
+          // stay in the RUNNING state
+          break;
+      }
+      case SUSPENDED: {
+          NS_NOTREACHED("trying to continue a suspended file transfer");
+          break;
+      }
+      case ENDING: {
+          NS_IF_RELEASE(mBufferStream);
+          mBufferStream = nsnull;
+          NS_IF_RELEASE(mFileStream);
+          mFileStream = nsnull;
+
+          // XXX where do we get the error message?
+          (void)mListener->OnStopBinding(mContext, mStatus, nsnull);
+
+          mState = ENDED;
+          break;
+      }
+      case ENDED: {
+          NS_NOTREACHED("trying to continue an ended file transfer");
+          break;
+      }
+    }
+    PR_CExitMonitor(this);
+    return;
+
+  error:
+    mState = ENDING;
+    PR_CExitMonitor(this);
+    return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,46 +233,10 @@ nsFileTransport::Resume(void)
 NS_IMETHODIMP
 nsFileTransport::Run(void)
 {
-    nsresult rv;
-    nsISupports* fs;
-    nsIInputStream* fileStr = nsnull;
-    nsIByteBufferInputStream* bufStr = nsnull;
-    nsFileSpec spec(mPath);
-
-    rv = mListener->OnStartBinding(mContext);  // always send the start notification
-    if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
-
-    rv = NS_NewTypicalInputFileStream(&fs, spec);
-    if (NS_FAILED(rv)) goto done;
-
-    rv = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&fileStr);
-    NS_RELEASE(fs);
-    if (NS_FAILED(rv)) goto done;
-
-    rv = NS_NewByteBufferInputStream(NS_FILE_TRANSPORT_BUFFER_SIZE, &bufStr);
-    if (NS_FAILED(rv)) goto done;
-
-    while (PR_TRUE) {
-        PRUint32 amt;
-        rv = bufStr->Fill(fileStr, &amt);
-        if (rv == NS_BASE_STREAM_EOF) {
-            rv = NS_OK;
-            break;
-        }
-        if (NS_FAILED(rv)) break;
-
-        // and feed the buffer to the application via the byte buffer stream:
-        rv = mListener->OnDataAvailable(mContext, bufStr, amt);      // XXX maybe amt should be bufStr->GetLength()
-        if (NS_FAILED(rv)) break;
+    while (mState != ENDED && mState != SUSPENDED) {
+        Continue();
     }
-
-  done:
-    NS_IF_RELEASE(bufStr);
-    NS_IF_RELEASE(fileStr);
-
-    // XXX where do we get the error message?
-    rv = mListener->OnStopBinding(mContext, rv, nsnull);
-    return rv;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

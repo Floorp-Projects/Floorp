@@ -25,6 +25,8 @@
 class nsIStreamObserver;
 class nsIStreamListener;
 class nsITransport;
+class nsIInputStream;
+class nsIOutputStream;
 
 #define NS_IFILETRANSPORTSERVICE_IID                 \
 { /* 2355dca0-ea35-11d2-931b-00104ba0fd40 */         \
@@ -47,20 +49,34 @@ class nsIFileTransportService : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILETRANSPORTSERVICE_IID);
 
+    // Async routines: By calling these the calling thread agrees
+    // to eventually return to an event loop that will be notified
+    // with incoming data, calling the listener.
 
-    NS_IMETHOD AsyncRead(PLEventQueue* appEventQueue,
+    NS_IMETHOD AsyncRead(const char* path, 
                          nsISupports* context,
+                         PLEventQueue* appEventQueue,
                          nsIStreamListener* listener,
-                         const char* path, 
                          nsITransport* *result) = 0;
 
-    NS_IMETHOD AsyncWrite(PLEventQueue* appEventQueue,
-                          nsISupports* context,
-                          nsIStreamObserver* observer,
+    NS_IMETHOD AsyncWrite(nsIInputStream* fromStream,
                           const char* path,
+                          nsISupports* context,
+                          PLEventQueue* appEventQueue,
+                          nsIStreamObserver* observer,
                           nsITransport* *result) = 0;
 
-    NS_IMETHOD Shutdown() = 0;
+    // Synchronous routines
+
+    NS_IMETHOD OpenInputStream(const char* path, 
+                               nsISupports* context,
+                               nsIInputStream* *result) = 0;
+
+    NS_IMETHOD OpenOutputStream(const char* path, 
+                                nsISupports* context,
+                                nsIOutputStream* *result) = 0;
+
+    NS_IMETHOD ProcessPendingRequests(void) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -20,9 +20,18 @@
 #include "nscore.h"
 #include "nsIUrl.h"
 #include "nsIHttpEventSink.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+//#include "nsISocketTransportService.h"
+#include "nsIFileTransportService.h"    // XXX temporary
+
+//static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);        // XXX temporary
+
+////////////////////////////////////////////////////////////////////////////////
 
 nsHttpProtocolConnection::nsHttpProtocolConnection()
-    : mUrl(nsnull), mEventSink(nsnull)
+    : mUrl(nsnull), mEventSink(nsnull), mConnected(PR_FALSE)
 {
 }
 
@@ -68,54 +77,62 @@ nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink)
 NS_IMETHODIMP
 nsHttpProtocolConnection::Cancel(void)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Suspend(void)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Resume(void)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolConnection methods:
 
 NS_IMETHODIMP
-nsHttpProtocolConnection::Open(nsIUrl* url, nsISupports* eventSink)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpProtocolConnection::GetContentType(char* *contentType)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::GetInputStream(nsIInputStream* *result)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::GetOutputStream(nsIOutputStream* *result)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::AsyncWrite(nsIInputStream* data, PRUint32 count,
-                          nsresult (*callback)(void* closure, PRUint32 count),
-                          void* closure)
+                                     nsresult (*callback)(void* closure, PRUint32 count),
+                                     void* closure)
 {
-    return NS_OK;
+    if (!mConnected)
+        return NS_ERROR_NOT_CONNECTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,25 +141,32 @@ nsHttpProtocolConnection::AsyncWrite(nsIInputStream* data, PRUint32 count,
 NS_IMETHODIMP
 nsHttpProtocolConnection::Get(void)
 {
-    return NS_OK;
+    nsresult rv;
+//    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+
+    NS_WITH_SERVICE(nsIFileTransportService, sts, kFileTransportServiceCID, &rv);
+
+//    rv = sts->AsyncWrite();
+
+    return rv;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::GetByteRange(PRUint32 from, PRUint32 to)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Put(void)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Post(void)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
