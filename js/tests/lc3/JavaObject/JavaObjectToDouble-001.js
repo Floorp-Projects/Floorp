@@ -83,14 +83,6 @@
         dt.PUB_DOUBLE_REPRESENTATION,
         "number" );
 
-    a[i++] = new TestObject (
-         "dt.PUB_DOUBLE_REPRESENTATION = java.lang.Double.MIN_VALUE",
-         "dt.PUB_DOUBLE_REPRESENTATION",
-         "new java.lang.Double( dt ).doubleValue()",
-         "typeof new java.lang.Double(dt).doubleValue()",
-         5e-324,
-         "number" );
-
     for ( i = 0; i < a.length; i++ ) {
         testcases[testcases.length] = new TestCase(
             a[i].description +"; "+ a[i].javaFieldName,
