@@ -184,6 +184,8 @@ nsEditor::Commit(PRBool aCtrlKey)
 {
   if (aCtrlKey)
   {
+    COM_auto_ptr<nsSelectionRange> 
+    mSelectionP->
   }
   else
   {
