@@ -623,8 +623,6 @@ public:
   NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
   NS_IMETHOD GetScrollableView(nsIScrollableView **aScrollableView);
-  NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
-  NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -1222,20 +1220,6 @@ NS_IMETHODIMP nsTextInputSelectionImpl::GetScrollableView(nsIScrollableView **aS
 {
   if(mFrameSelection) 
     return mFrameSelection->GetScrollableView(aScrollableView);
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsTextInputSelectionImpl::SetMouseDoubleDown(PRBool aDoubleDown)
-{
-  if(mFrameSelection) 
-    return mFrameSelection->SetMouseDoubleDown(aDoubleDown);
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsTextInputSelectionImpl::GetMouseDoubleDown(PRBool *aDoubleDown)
-{
-  if(mFrameSelection) 
-    return mFrameSelection->GetMouseDoubleDown(aDoubleDown);
   return NS_ERROR_FAILURE;
 }
 
