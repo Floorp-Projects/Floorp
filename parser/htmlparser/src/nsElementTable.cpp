@@ -1015,7 +1015,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*requiredAncestor*/                eHTMLTag_unknown, eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gInForm,&gInForm,
     /*autoclose starttags and endtags*/ &gInputAutoClose,0,0,0,
-    /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity|kDLChild,
+    /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity|kDLChild|kHeadMisc, // Added kHeadMisc to fix bug 287349
     /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
     /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown,
     /*contain-func*/                    0
