@@ -51,6 +51,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 		-L$(DIST)/bin \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
