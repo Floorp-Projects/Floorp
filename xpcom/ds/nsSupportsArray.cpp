@@ -213,14 +213,11 @@ nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
 
-  nsSupportsArray *it = new nsSupportsArray();
-  if (it == NULL)
+  nsCOMPtr<nsISupportsArray> it = new nsSupportsArray();
+  if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(it);
-  nsresult rv = it->QueryInterface(aIID, aResult);
-  NS_RELEASE(it);
-  return rv;
+  return it->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsSupportsArray, nsISupportsArray, nsICollection, nsISerializable)
@@ -368,7 +365,7 @@ nsSupportsArray::ElementAt(PRUint32 aIndex)
 {
   if (aIndex < mCount) {
     nsISupports*  element = mArray[aIndex];
-    NS_ADDREF(element);
+    NS_IF_ADDREF(element);
     return element;
   }
   return 0;
@@ -417,9 +414,6 @@ nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
-  if (!aElement) {
-    return PR_FALSE;
-  }
   if (aIndex <= mCount) {
     if (mArraySize < (mCount + 1)) {
       // need to grow the array
@@ -435,7 +429,7 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
     }
 
     mArray[aIndex] = aElement;
-    NS_ADDREF(aElement);
+    NS_IF_ADDREF(aElement);
     mCount++;
 
 #if DEBUG_SUPPORTSARRAY
@@ -501,8 +495,8 @@ NS_IMETHODIMP_(PRBool)
 nsSupportsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
   if (aIndex < mCount) {
-    NS_ADDREF(aElement);  // addref first in case it's the same object!
-    NS_RELEASE(mArray[aIndex]);
+    NS_IF_ADDREF(aElement);  // addref first in case it's the same object!
+    NS_IF_RELEASE(mArray[aIndex]);
     mArray[aIndex] = aElement;
     return PR_TRUE;
   }
@@ -515,7 +509,7 @@ nsSupportsArray::RemoveElementsAt(PRUint32 aIndex, PRUint32 aCount)
   if (aIndex < mCount) {
     for (PRUint32 i = 0; i < aCount; i++)
     {
-      NS_RELEASE(mArray[aIndex+i]);
+      NS_IF_RELEASE(mArray[aIndex+i]);
     }
     mCount -= aCount;
     PRInt32 slide = (mCount - aIndex);
@@ -588,7 +582,7 @@ nsSupportsArray::Clear(void)
   if (0 < mCount) {
     do {
       --mCount;
-      NS_RELEASE(mArray[mCount]);
+      NS_IF_RELEASE(mArray[mCount]);
     } while (0 != mCount);
   }
   return NS_OK;
