@@ -79,6 +79,7 @@ endif
 	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 	$(INSTALL) -m 644 $(CORECONF_INSTALL)/public $(DIST)
+	$(INSTALL) -m 644 $(CORECONF_INSTALL)/private $(DIST)
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
