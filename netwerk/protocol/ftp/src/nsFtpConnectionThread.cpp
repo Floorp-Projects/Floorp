@@ -77,6 +77,28 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+// nsICancelable methods:
+
+NS_IMETHODIMP
+nsFtpConnectionThread::Cancel(void) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFtpConnectionThread::Suspend(void) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFtpConnectionThread::Resume(void) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIRunnable method:
+
 // main event loop
 NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
