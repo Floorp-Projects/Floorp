@@ -12,11 +12,11 @@ if (!$win32) {
 }
 
 #--------------------------------------------------------------------------
-# If $ENV{PACKAGE_MSI} is not true, exit.
+# If $ENV{MOZ_PACKAGE_MSI} is not true, exit.
 #--------------------------------------------------------------------------
 
-if (!exists($ENV{PACKAGE_MSI}) or !defined($ENV{PACKAGE_MSI}) or ($ENV{PACKAGE_MSI} ne 1) ) {
-    Print("PACKAGE_MSI environment variable is not true.. exiting.\n");
+if (!exists($ENV{MOZ_PACKAGE_MSI}) or !defined($ENV{MOZ_PACKAGE_MSI}) or ($ENV{MOZ_PACKAGE_MSI} ne 1) ) {
+    Print("MOZ_PACKAGE_MSI environment variable is not true.. exiting.\n");
     exit;
 }
 
