@@ -1661,7 +1661,7 @@ nsresult nsDocViwerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
 }
 
 
-NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged()
+NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
 {
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 

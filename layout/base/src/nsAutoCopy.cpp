@@ -20,16 +20,28 @@
  * Original Author: Michael F. Judge (mjudge@netscape.com)
  *
  * Contributor(s): 
+ * shaver@mozilla.org
  */
 
 #include "nsCOMPtr.h"
-#include "nsIAutoCopyService.h"
+#include "nsIServiceManager.h"
+
+#include "nsIAutoCopy.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMSelectionListener.h"
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsIDOMDocument.h"
+
+#include "nsIDocument.h"
+#include "nsSupportsPrimitives.h"
 
 class nsAutoCopyService : public nsIAutoCopyService , public nsIDOMSelectionListener
 {
 public:
-  nsAutoCopyService(){}
+  NS_DECL_ISUPPORTS
+
+  nsAutoCopyService();
   ~nsAutoCopyService(){}//someday maybe we have it able to shutdown during run
 
   //nsIAutoCopyService interfaces
@@ -37,21 +49,142 @@ public:
   //end nsIAutoCopyService
 
   //nsIDOMSelectionListener interfaces
-  NS_IMETHOD NotifySelectionChanged();
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel);
   //end nsIDOMSelectionListener 
+protected:
+  nsCOMPtr<nsIClipboard> mClipboard;
+  nsCOMPtr<nsIFormatConverter> mXIF;
+  nsCOMPtr<nsITransferable> mTransferable;
+  nsCOMPtr<nsIFormatConverter> mConverter;
 };
 
+// Implement our nsISupports methods
+NS_IMPL_ISUPPORTS2(nsAutoCopyService, nsIAutoCopyService,nsIDOMSelectionListener)
+
+nsresult
+NS_NewAutoCopyService(nsIAutoCopyService** aResult)
+{
+  *aResult = new nsAutoCopyService;
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsAutoCopyService::nsAutoCopyService()
+{
+  NS_INIT_REFCNT();
+}
 
 NS_IMETHODIMP
-nsAutoCopyService::Listen(nsIFrameSelection *aDomSelection)
+nsAutoCopyService::Listen(nsIDOMSelection *aDomSelection)
 {
-  aDomSelection->AddSelectionListener(this);
+  return aDomSelection->AddSelectionListener(this);
 }
 
 
+/*
+ * What we do now:
+ * On every selection change, we copy to the clipboard anew, creating a
+ * XIF buffer, a transferable, a XIFFormatConverter, an nsISupportsWString and
+ * a huge mess every time.  This is basically what nsPresShell::DoCopy does
+ * to move the selection into the clipboard for Edit->Copy.
+ * 
+ * What we should do, to make our end of the deal faster:
+ * Create a singleton transferable with our own magic converter.  When selection
+ * changes (use a quick cache to detect ``real'' changes), we put the new
+ * nsIDOMSelection in the transferable.  Our magic converter will take care of
+ * transferable->XIF->whatever-other-format when the time comes to actually
+ * hand over the clipboard contents.
+ *
+ * Other issues:
+ * - which X clipboard should we populate?
+ * - should we use a different one than Edit->Copy, so that inadvertant
+ *   selections (or simple clicks, which currently cause a selection
+ *   notification, regardless of if they're in the document which currently has
+ *   selection!) don't lose the contents of the ``application''?  Or should we
+ *   just put some intelligence in the ``is this a real selection?'' code to
+ *   protect our selection against clicks in other documents that don't create
+ *   selections?
+ * - maybe we should just never clear the X clipboard?  That would make this 
+ *   problem just go away, which is very tempting.
+ */
 NS_IMETHODIMP
-nsAutoCopyService::NotifySelectionChanged()
+nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel)
 {
-}
+  nsresult rv;
 
+  if (!mClipboard) {
+    static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
+    mClipboard = do_GetService(kCClipboardCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  PRBool collapsed;
+  if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
+#ifdef DEBUG_CLIPBOARD
+    fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
+#endif
+    /* clear X clipboard? */
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> doc;
+  doc = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,aDoc),&rv);
+  nsAutoString xifBuffer;
+  /* nsPresShell::DoCopy thinks that this is infalliable -- do you? */
+  if (NS_FAILED(doc->CreateXIF(xifBuffer, aSel)))
+    return NS_ERROR_FAILURE;
+  
+  /* create a transferable */
+  static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          NS_GET_IID(nsITransferable),
+                                          (void **)getter_AddRefs(trans));
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!mXIF) {
+    static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
+    rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull,
+                                            NS_GET_IID(nsIFormatConverter),
+                                            (void **)getter_AddRefs(mXIF));
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  trans->AddDataFlavor(kXIFMime);
+  trans->SetConverter(mXIF);
+  
+  nsCOMPtr<nsISupportsWString> dataWrapper;
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
+                                          NS_GET_IID(nsISupportsWString),
+                                          getter_AddRefs(dataWrapper));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  dataWrapper->SetData( NS_CONST_CAST(PRUnichar*,xifBuffer.GetUnicode()));
+  
+  nsCOMPtr<nsISupports> generic(do_QueryInterface(dataWrapper));
+  /* Length() is in characters, *2 gives bytes. */
+  trans->SetTransferData(kXIFMime, generic, xifBuffer.Length() * 2);
+  mClipboard->SetData(trans, nsnull);
+
+#ifdef DEBUG_CLIPBOARD
+  static char *reasons[] = {
+    "UNKNOWN", "NEW", "REMOVED", "ALTERED",
+    "BOGUS4", "BOGUS5", "BOGUS6", "BOGUS7", "BOGUS8"
+  };
+
+  nsAutoString str;
+  aSel->ToString(str);
+  char *selStr = str.ToNewCString();
+  fprintf(stderr, "SELECTION: %s, %p, %p [%s]\n", reasons[reason], doc, aSel,
+          selStr);
+  nsAllocator::Free(selStr);
+#endif
+  return NS_OK;
+}
 

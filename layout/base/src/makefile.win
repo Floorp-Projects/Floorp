@@ -28,6 +28,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS =				\
+  nsAutoCopy.cpp      \
 	nsCommentNode.cpp		\
 	nsGenericElement.cpp		\
 	nsGenericDOMDataNode.cpp	\
@@ -76,6 +77,7 @@ REQUIRES=xpcom raptor dom
 # EXPORTS=
 
 CPP_OBJS=					\
+  .\$(OBJDIR)\nsAutoCopy.obj      \
 	.\$(OBJDIR)\nsCommentNode.obj		\
 	.\$(OBJDIR)\nsGenericDOMDataNode.obj	\
 	.\$(OBJDIR)\nsGenericDOMNodeList.obj	\

@@ -308,7 +308,7 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 #endif
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged()
+NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *)
 {
 
 	if (mVisible)

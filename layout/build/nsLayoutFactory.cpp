@@ -55,6 +55,9 @@
 
 #include "nsIXBLService.h"
 
+#include "nsIAutoCopy.h"
+
+
 class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -92,6 +95,8 @@ static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 
+static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
+
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
@@ -111,6 +116,8 @@ extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
 extern nsresult NS_NewXBLService(nsIXBLService** aResult);
+
+extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 
 //----------------------------------------------------------------------
 
@@ -356,6 +363,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewXBLService((nsIXBLService**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewXBLService", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kAutoCopyServiceCID)) {
+    res = NS_NewAutoCopyService((nsIAutoCopyService**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewAutoCopyService", res);
       return res;
     }
   }
