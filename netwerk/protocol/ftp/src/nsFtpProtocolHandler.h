@@ -31,14 +31,14 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIProtocolHandler methods:
-    NS_IMETHOD GetScheme(const char* *result);
-    NS_IMETHOD GetDefaultPort(PRInt32 *result);    
+    NS_IMETHOD GetScheme(const char* *result) const;
+    NS_IMETHOD GetDefaultPort(PRInt32 *result) const ;    
     NS_IMETHOD MakeAbsoluteUrl(const char* aSpec,
                                nsIUrl* aBaseUrl,
-                               char* *result);
+                               char* *result) const ;
     NS_IMETHOD NewUrl(const char* aSpec,
                       nsIUrl* *result,
-                      nsIUrl* aBaseUrl=0);
+                      nsIUrl* aBaseUrl=0) const;
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
                              nsIEventQueue* eventQueue,

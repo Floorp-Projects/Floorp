@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, nsIProtocolHandler::GetIID());
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetScheme(const char* *result)
+nsFtpProtocolHandler::GetScheme(const char* *result) const
 {
     *result = nsCRT::strdup("ftp");
     if (*result == nsnull)
@@ -49,22 +49,22 @@ nsFtpProtocolHandler::GetScheme(const char* *result)
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetDefaultPort(PRInt32 *result)
+nsFtpProtocolHandler::GetDefaultPort(PRInt32 *result) const
 {
-    *result = 80;
+    *result = 21; 
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFtpProtocolHandler::MakeAbsoluteUrl(const char* aSpec,
                                        nsIUrl* aBaseUrl,
-                                       char* *result)
+                                       char* *result) const
 {
     // XXX optimize this to not needlessly construct the URL
 
     nsresult rv;
     nsIUrl* url;
-    rv = NewUrl(aSpec, aBaseUrl, &url);
+    rv = NewUrl(aSpec, &url, aBaseUrl);
     if (NS_FAILED(rv)) return rv;
 
     rv = url->ToNewCString(result);
@@ -75,7 +75,7 @@ nsFtpProtocolHandler::MakeAbsoluteUrl(const char* aSpec,
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewUrl(const char* aSpec,
                               nsIUrl* *result,
-                              nsIUrl* aBaseUrl)
+                              nsIUrl* aBaseUrl) const
 {
     nsresult rv;
 
