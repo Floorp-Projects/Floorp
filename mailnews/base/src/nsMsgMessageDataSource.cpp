@@ -62,6 +62,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_FlaggedSort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Priority= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_PriorityString= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_PrioritySort= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_DateSort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Size= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_SizeSort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Lines= nsnull;
@@ -118,6 +119,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_PRIORITY, &kNC_Priority);
 		rdf->GetResource(NC_RDF_PRIORITY_STRING, &kNC_PriorityString);
 		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
+		rdf->GetResource(NC_RDF_DATE_SORT, &kNC_DateSort);
 		rdf->GetResource(NC_RDF_SIZE, &kNC_Size);
 		rdf->GetResource(NC_RDF_SIZE_SORT, &kNC_SizeSort);
 		rdf->GetResource(NC_RDF_LINES, &kNC_Lines);
@@ -171,6 +173,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Priority, refcnt);
 		NS_RELEASE2(kNC_PriorityString, refcnt);
 		NS_RELEASE2(kNC_PrioritySort, refcnt);
+		NS_RELEASE2(kNC_DateSort, refcnt);
 		NS_RELEASE2(kNC_Size, refcnt);
 		NS_RELEASE2(kNC_SizeSort, refcnt);
 		NS_RELEASE2(kNC_Lines, refcnt);
@@ -361,6 +364,17 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTarget(nsIRDFResource* source,
 	// we only have positive assertions in the mail data source.
 	if (! tv)
 		return NS_RDF_NO_VALUE;
+
+#if 0
+    nsXPIDLCString srcval;
+    nsXPIDLCString propval;
+    source->GetValue(getter_Copies(srcval));
+    property->GetValue(getter_Copies(propval));
+
+    printf("nsMsgMessageDataSource::GetTarget(%s, %s)\n",
+           (const char*)srcval,
+           (const char*)propval);
+#endif
 
 	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
@@ -1158,6 +1172,9 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessagePriorityNode(message, target, PR_TRUE);
 	else if ((kNC_PrioritySort == property))
 		rv = createMessagePrioritySortNode(message, target);
+    // date is a common secondary sort, this avoids an extra GetTarget()
+    else if ((kNC_DateSort == property))    
+		rv = createMessageDateNode(message, target);
 	else if ((kNC_Size == property))
 		rv = createMessageSizeNode(message, target, PR_FALSE);
 	else if ((kNC_SizeSort == property))

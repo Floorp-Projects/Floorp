@@ -240,6 +240,7 @@ protected:
 	static nsIRDFResource* kNC_Priority;
 	static nsIRDFResource* kNC_PriorityString;
 	static nsIRDFResource* kNC_PrioritySort;
+	static nsIRDFResource* kNC_DateSort;
 	static nsIRDFResource* kNC_Size;
 	static nsIRDFResource* kNC_SizeSort;
 	static nsIRDFResource* kNC_Lines;
