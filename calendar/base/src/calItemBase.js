@@ -34,11 +34,12 @@ calItemBase.prototype = {
         this.mCreationDate = createCalDateTime();
         this.mAlarmTime = createCalDateTime();
 
+        this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
+                           createInstance(Components.interfaces.nsIWritablePropertyBag);
 
         this.mRecurrenceInfo = null;
         this.mAttachments = null;
         this.mContacts = null;
-        this.mProperties = null;
     },
 
 
@@ -99,6 +100,9 @@ calItemBase.prototype = {
 
 function calItemOccurrence () {
     this.wrappedJSObject = this;
+
+    this.occurrenceStartDate = createCalDateTime();
+    this.occurrenceEndDate = createCalDateTime();
 }
 
 calItemOccurrence.prototype = {
