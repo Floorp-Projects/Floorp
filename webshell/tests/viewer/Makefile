@@ -92,18 +92,18 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-PROGRAM   = main
+PROGS = main
 
-TARGETS = $(PROGRAM)
+TARGETS = $(PROGS)
 
 include $(DEPTH)/config/rules.mk
 
-fish:$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(EX_LIBS)
+$(PROGS): $(OBJS) $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
-	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
 
 export::
