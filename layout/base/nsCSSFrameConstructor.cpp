@@ -3054,36 +3054,33 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // See if it's absolutely positioned
     const nsStylePosition* position;
     childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-      // Generate two reflow commands. First for the absolutely positioned
-      // frame and then for its placeholder frame
+    if (position->IsAbsolutelyPositioned()) {
+      // Get the placeholder frame
+      nsIFrame* placeholderFrame;
+      shell->GetPlaceholderFrameFor(childFrame, placeholderFrame);
+
+      // Remove the mapping from the frame to its placeholder
+      shell->SetPlaceholderFrameFor(childFrame, nsnull);
+
+      // Generate two notifications. First for the absolutely positioned
+      // frame
       nsIFrame* parentFrame;
       childFrame->GetParent(parentFrame);
-  
-      // Update the parent frame
       rv = parentFrame->RemoveFrame(*aPresContext, *shell,
                                     nsLayoutAtoms::absoluteList, childFrame);
 
       // Now the placeholder frame
-      nsIFrame* placeholderFrame;
-      shell->GetPlaceholderFrameFor(childFrame, placeholderFrame);
       if (nsnull != placeholderFrame) {
         placeholderFrame->GetParent(parentFrame);
-        rv = parentFrame->RemoveFrame(*aPresContext, *shell,
-                                      nsnull, placeholderFrame);
+        rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull,
+                                      placeholderFrame);
       }
 
     } else {
-      // Get the parent frame.
-      // Note that we use the content parent, and not the geometric parent,
-      // in case the frame has been moved out of the flow...
+      // Notify the parent frame that it should delete the frame
       nsIFrame* parentFrame;
       childFrame->GetParent(parentFrame);
-      NS_ASSERTION(nsnull != parentFrame, "null content parent frame");
-  
-      // Update the parent frame
-      rv = parentFrame->RemoveFrame(*aPresContext, *shell,
-                                    nsnull, childFrame);
+      rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull, childFrame);
     }
 
     if (mInitialContainingBlock == childFrame) {

@@ -1454,7 +1454,11 @@ PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
     }
   }
 
-  mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
+  if (nsnull == aPlaceholderFrame) {
+    mPlaceholderMap->Remove(aFrame);
+  } else {
+    mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
+  }
   return NS_OK;
 }
 
