@@ -110,14 +110,23 @@ nsHistoryLoadListener::OnStateChange(nsIWebProgress *aWebProgress,
         
     } else {
         nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+
+        // there should be a better way to handle non-html docs
+        if (!htmlDoc) return NS_OK;
         // somehow get the title, and store it in history
         nsAutoString title;
         htmlDoc->GetTitle(title);
 
         mHistory->SetPageTitle(urlString, title.get());
+
+#if 0
+        nsAutoString referrer;
+        htmlDoc->GetReferrer(referrer);
+        mHistory->SetReferrer(urlString, referrer.get());
+#endif
     }
     printf("nsHistoryLoadListener::OnStateChange(w,r, %8.8X, %d)\n", aStateFlags, aStatus);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
