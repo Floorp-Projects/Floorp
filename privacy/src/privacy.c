@@ -261,8 +261,6 @@ extern int PRVCY_POLICY_FILE_NAME;
 PUBLIC void
 PRVCY_CheckStandardLocation(MWContext * context)
 {
-  XPDialogStrings *fileName = 0;
-  
   if (context) {
     History_entry * entry = SHIST_GetCurrent(&context->hist);
     URL_Struct *pUrl;
@@ -284,13 +282,7 @@ PRVCY_CheckStandardLocation(MWContext * context)
     /* Create a URL for privacy_policy.html */
     privacyURL = NET_ParseURL(entry->address, GET_PROTOCOL_PART | GET_HOST_PART);
     StrAllocCat(privacyURL, "/");
-    
-    /* fixing a mess */
-    fileName = XP_GetDialogStrings(PRVCY_POLICY_FILE_NAME);
-    if (fileName) StrAllocCat(privacyURL, fileName->contents);
-    /* steve, this looks like a leak.  what is the lifetime of the XPDialogStrings */
-    /* "fileName" above supposed to be?  -joe */
-    
+    StrAllocCat(privacyURL, XP_GetString(PRVCY_POLICY_FILE_NAME));
     if (prvcy_inCache(privacyURL, &found)) {
       if (found) {
 	entry->privacy_policy_url = privacyURL;
