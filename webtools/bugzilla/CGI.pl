@@ -593,6 +593,9 @@ sub CheckEmailSyntax {
     if ($addr !~ /$match/) {
         print "Content-type: text/html\n\n";
 
+        # For security, escape HTML special characters.
+        $addr = html_quote($addr);
+
         PutHeader("Check e-mail syntax");
         print "The e-mail address you entered\n";
         print "(<b>$addr</b>) didn't match our minimal\n";
