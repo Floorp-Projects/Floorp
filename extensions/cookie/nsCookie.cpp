@@ -356,11 +356,15 @@ nsresult cookie_Get(nsInputFileStream strm, char& c) {
 
   if (next == count) {
     if (count < BUFSIZE) {
+      next = BUFSIZE;
+      count = BUFSIZE;
       return NS_ERROR_FAILURE;
     }
     count = strm.read(buffer, BUFSIZE);
     next = 0;
     if (count == 0) {
+      next = BUFSIZE;
+      count = BUFSIZE;
       return NS_ERROR_FAILURE;
     }
   }
