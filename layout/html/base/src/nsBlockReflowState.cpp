@@ -887,6 +887,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
       mY += mAvailSpaceRect.height;
       GetAvailableSpace();
     } else {
+      // This quirk matches the one in nsBlockFrame::ReflowFloat
       // IE handles float tables in a very special way
 
       // see if the previous float is also a table and has "align"
