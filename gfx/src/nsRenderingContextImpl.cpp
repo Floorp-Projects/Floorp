@@ -736,7 +736,7 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   if (!surface) return NS_ERROR_FAILURE;
 
   return img->Draw(*this, surface, sr.x, sr.y, sr.width, sr.height,
-                   pt.x + sr.x, pt.y + sr.y, sr.width, sr.height);
+                   pt.x , pt.y, sr.width, sr.height);
 }
 
 /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */

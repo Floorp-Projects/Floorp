@@ -1163,8 +1163,6 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
       // draw it
       nsPoint p(inner.x, inner.y);
       nsRect r(0,0,size,size);
-      r.x -= mBorderPadding.left;
-      r.y -= mBorderPadding.top;
       aRenderingContext.DrawImage(imgCon, &r, &p);
       iconUsed = PR_TRUE;
     }
@@ -1306,15 +1304,16 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
           }
 
           if (mLoads[0].mIntrinsicSize == mComputedSize) {
-            nsPoint p(inner.x, inner.y);
             inner.IntersectRect(inner, aDirtyRect);
+            nsPoint p(inner.x, inner.y);
             nsRect r(inner.x, inner.y, inner.width, inner.height);
             r.x -= mBorderPadding.left;
             r.y -= mBorderPadding.top;
             if (mPrevInFlow) {
               r.y = offsetY;
-              p.y = 0;
+              p.y = 0; 
             }
+
             aRenderingContext.DrawImage(imgCon, &r, &p);
           } else {
             nsTransform2D trans;

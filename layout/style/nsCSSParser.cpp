@@ -260,6 +260,8 @@ protected:
   PRBool ParseBackgroundPosition(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorder(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderColor(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+  PRBool ParseBorderColors(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint,
+                           nsCSSProperty aProperty);
   PRBool ParseBorderSpacing(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderSide(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
                          const nsCSSProperty aPropIDs[], PRInt32& aChangeHint);
@@ -278,6 +280,7 @@ protected:
   PRBool ParseFont(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseFontWeight(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseFamily(PRInt32& aErrorCode, nsCSSValue& aValue);
+  PRBool ParseImageRegion(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseListStyle(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseMargin(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseMarks(PRInt32& aErrorCode, nsCSSValue& aValue);
@@ -3415,6 +3418,11 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseBorderSide(aErrorCode, aDeclaration, kBorderRightIDs, aChangeHint);
   case eCSSProperty_border_top:
     return ParseBorderSide(aErrorCode, aDeclaration, kBorderTopIDs, aChangeHint);
+  case eCSSProperty_border_bottom_colors:
+  case eCSSProperty_border_left_colors:
+  case eCSSProperty_border_right_colors:
+  case eCSSProperty_border_top_colors:
+    return ParseBorderColors(aErrorCode, aDeclaration, aChangeHint, aPropID);
   case eCSSProperty_border_width:
     return ParseBorderWidth(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty__moz_border_radius:
@@ -3436,6 +3444,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseCursor(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_font:
     return ParseFont(aErrorCode, aDeclaration, aChangeHint);
+  case eCSSProperty_image_region:
+    return ParseImageRegion(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_list_style:
     return ParseListStyle(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_margin:
@@ -3467,6 +3477,10 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case eCSSProperty_clip_left:
   case eCSSProperty_clip_right:
   case eCSSProperty_clip_top:
+  case eCSSProperty_image_region_bottom:
+  case eCSSProperty_image_region_left:
+  case eCSSProperty_image_region_right:
+  case eCSSProperty_image_region_top:
   case eCSSProperty_play_during_flags:
   case eCSSProperty_quotes_close:
   case eCSSProperty_quotes_open:
@@ -3527,6 +3541,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_background_position:
   case eCSSProperty_border:
   case eCSSProperty_border_color:
+  case eCSSProperty_border_bottom_colors:
+  case eCSSProperty_border_left_colors:
+  case eCSSProperty_border_right_colors:
+  case eCSSProperty_border_top_colors:
   case eCSSProperty_border_spacing:
   case eCSSProperty_border_style:
   case eCSSProperty_border_bottom:
@@ -3541,6 +3559,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_cue:
   case eCSSProperty_cursor:
   case eCSSProperty_font:
+  case eCSSProperty_image_region:
   case eCSSProperty_list_style:
   case eCSSProperty_margin:
 #ifdef ENABLE_OUTLINE
@@ -3562,6 +3581,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_clip_left:
   case eCSSProperty_clip_right:
   case eCSSProperty_clip_top:
+  case eCSSProperty_image_region_bottom:
+  case eCSSProperty_image_region_left:
+  case eCSSProperty_image_region_right:
+  case eCSSProperty_image_region_top:
   case eCSSProperty_play_during_flags:
   case eCSSProperty_quotes_close:
   case eCSSProperty_quotes_open:
@@ -4278,6 +4301,40 @@ PRBool CSSParserImpl::ParseOutlineRadius(PRInt32& aErrorCode, nsICSSDeclaration*
 }
 #endif
 
+PRBool CSSParserImpl::ParseBorderColors(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
+                                        PRInt32& aChangeHint, nsCSSProperty aProperty)
+{
+  nsCSSValue value;
+  if (ParseVariant(aErrorCode, value, VARIANT_HCK, nsCSSProps::kBorderColorKTable)) {
+    nsCSSValueList* listHead = new nsCSSValueList();
+    nsCSSValueList* list = listHead;
+    if (!list) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      return PR_FALSE;
+    }
+    list->mValue = value;
+
+    while (list) {
+      if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+        aErrorCode = aDeclaration->AppendStructValue(aProperty, listHead);
+        return NS_SUCCEEDED(aErrorCode);
+      }
+      if (ParseVariant(aErrorCode, value, VARIANT_HCK, nsCSSProps::kBorderColorKTable)) {
+        list->mNext = new nsCSSValueList();
+        list = list->mNext;
+        if (list)
+          list->mValue = value;
+        else
+          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else
+        break;
+    }
+    delete listHead;
+  }
+  return PR_FALSE;
+}
+
 PRBool CSSParserImpl::ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
                                 PRInt32& aChangeHint)
 {
@@ -4346,6 +4403,74 @@ PRBool CSSParserImpl::ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
   } else {
     UngetToken();
   }
+  return PR_FALSE;
+}
+
+PRBool CSSParserImpl::ParseImageRegion(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
+                                       PRInt32& aChangeHint)
+{
+  static const nsCSSProperty kImageRegionIDs[] = {
+    eCSSProperty_image_region_top,
+    eCSSProperty_image_region_right,
+    eCSSProperty_image_region_bottom,
+    eCSSProperty_image_region_left
+  };
+
+  if (!GetToken(aErrorCode, PR_TRUE))
+    return PR_FALSE;
+
+  PRInt32 index;
+  if ((eCSSToken_Ident == mToken.mType) && 
+      mToken.mIdent.EqualsIgnoreCase("auto")) {
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      nsCSSValue valueAuto(eCSSUnit_Auto);
+      for (index = 0; index < 4; index++) {
+        AppendValue(aDeclaration, kImageRegionIDs[index], valueAuto, aChangeHint);
+      }
+      return PR_TRUE;
+    }
+  } else if ((eCSSToken_Ident == mToken.mType) && 
+             mToken.mIdent.EqualsIgnoreCase("inherit")) {
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      nsCSSValue  inherit(eCSSUnit_Inherit);
+      for (index = 0; index < 4; index++) {
+        AppendValue(aDeclaration, kImageRegionIDs[index], inherit, aChangeHint);
+      }
+      return PR_TRUE;
+    }
+  } 
+  else if ((eCSSToken_Ident == mToken.mType) && 
+             mToken.mIdent.EqualsIgnoreCase("-moz-initial")) {
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      nsCSSValue  initial(eCSSUnit_Initial);
+      for (index = 0; index < 4; index++) {
+        AppendValue(aDeclaration, kImageRegionIDs[index], initial, aChangeHint);
+      }
+      return PR_TRUE;
+    }
+  } else if ((eCSSToken_Function == mToken.mType) && 
+             mToken.mIdent.EqualsIgnoreCase("rect")) {
+    if (!ExpectSymbol(aErrorCode, '(', PR_TRUE))
+      return PR_FALSE;
+    nsCSSValue  values[4];
+    for (index = 0; index < 4; index++) {
+      if (!ParseVariant(aErrorCode, values[index], VARIANT_AL, nsnull))
+        return PR_FALSE;
+      if (3 != index) {
+        // skip optional commas between elements
+        ExpectSymbol(aErrorCode, ',', PR_TRUE);
+      }
+    }
+    if (!ExpectSymbol(aErrorCode, ')', PR_TRUE))
+      return PR_FALSE;
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      for (index = 0; index < 4; index++)
+        AppendValue(aDeclaration, kImageRegionIDs[index], values[index], aChangeHint);
+      return PR_TRUE;
+    }
+  } 
+  else
+    UngetToken();
   return PR_FALSE;
 }
 

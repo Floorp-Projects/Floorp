@@ -130,7 +130,7 @@ protected:
 
   nsImageBoxFrame(nsIPresShell* aShell);
 
-  void GetImageSource(nsString& aResult);
+  void GetImageSource();
 
   void GetBaseURI(nsIURI **uri);
 
@@ -142,6 +142,11 @@ private:
 
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
+
+  nsString mSrc; // The raw image source.
+  PRBool mUseSrcAttr; // Whether or not the image src comes from an attribute.
+  
+  nsRect mSubRect; // If set, indicates that only the portion of the image specified by the rect should be used.
 
   nsSize mIntrinsicSize;
   PRInt32 mLoadFlags;

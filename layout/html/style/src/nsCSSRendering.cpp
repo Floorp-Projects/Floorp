@@ -1554,10 +1554,18 @@ nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFra
 ((a==NS_STYLE_BORDER_STYLE_BG_INSET) || (a==NS_STYLE_BORDER_STYLE_BG_OUTSET))
 
 static
-PRBool GetBorderColor(const nsStyleColor* aColor, const nsStyleBorder& aBorder, PRUint8 aSide, nscolor& aColorVal)
+PRBool GetBorderColor(const nsStyleColor* aColor, const nsStyleBorder& aBorder, PRUint8 aSide, nscolor& aColorVal,
+                      nsBorderColors** aCompositeColors = nsnull)
 {
   PRBool transparent;
   PRBool foreground;
+
+  if (aCompositeColors) {
+    aBorder.GetCompositeColors(aSide, aCompositeColors);
+    if (*aCompositeColors)
+      return PR_TRUE;
+  }
+
   aBorder.GetBorderColor(aSide, aColorVal, transparent, foreground);
   if (foreground)
     aColorVal = aColor->mColor;
@@ -1657,7 +1665,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   // rounded version of the outline
   // check for any corner that is rounded
   for(i=0;i<4;i++){
-    if(borderRadii[i] > 0){
+    if(borderRadii[i] > 0 && !aBorderStyle.mBorderColors){
       PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,&aBorderStyle,nsnull,aStyleContext,aSkipSides,borderRadii,aGap,PR_FALSE);
       return;
     }
@@ -1711,55 +1719,188 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   aPresContext->GetScaledPixelsToTwips(&p2t);
   twipsPerPixel = NSIntPixelsToTwips(1,p2t);
 
-
+  static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
   nscolor sideColor;
-  if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
-    if (GetBorderColor(ourColor, aBorderStyle, NS_SIDE_BOTTOM, sideColor)) {
-      DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
-               aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
-               sideColor,
-               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM)) ? 
-                mozBGColor->mBackgroundColor :
-                bgColor->mBackgroundColor,
-               outerRect,innerRect, aSkipSides,
-               twipsPerPixel, aGap);
+  nsBorderColors* compositeColors = nsnull;
+  for (cnt = 0; cnt < 4; cnt++) {
+    PRUint8 side = sideOrder[cnt];
+    if (0 == (aSkipSides & (1<<side))) {
+      if (GetBorderColor(ourColor, aBorderStyle, side, sideColor, &compositeColors)) {
+        if (compositeColors)
+          DrawCompositeSide(aRenderingContext, side, compositeColors, outerRect, innerRect, borderRadii,
+                            twipsPerPixel, aGap);
+        else
+          DrawSide(aRenderingContext, side,
+                   aBorderStyle.GetBorderStyle(side),
+                   sideColor,
+                   MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(side)) ? 
+                    mozBGColor->mBackgroundColor :
+                    bgColor->mBackgroundColor,
+                   outerRect,innerRect, aSkipSides,
+                   twipsPerPixel, aGap);
+      }
     }
   }
-  if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
-    if (GetBorderColor(ourColor, aBorderStyle, NS_SIDE_LEFT, sideColor)) {
-      DrawSide(aRenderingContext, NS_SIDE_LEFT,
-               aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
-               sideColor,
-               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_LEFT)) ? 
-                mozBGColor->mBackgroundColor :
-                bgColor->mBackgroundColor,
-               outerRect, innerRect,aSkipSides,
-               twipsPerPixel, aGap);
+}
+
+void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
+                                       PRIntn aWhichSide,
+                                       nsBorderColors* aCompositeColors,
+                                       const nsRect& aOuterRect,
+                                       const nsRect& aInnerRect,
+                                       PRInt16* aBorderRadii,
+                                       nscoord twipsPerPixel,
+                                       nsRect* aGap)
+
+{
+  // Loop over each color and at each iteration shrink the length of the
+  // lines that we draw.
+  nsRect currOuterRect(aOuterRect);
+
+  // XXXdwh This border radius code is rather hacky and will only work for
+  // small radii, but it will be sufficient to get a major performance
+  // improvement in themes with small curvature (like Modern).
+  // Still, this code should be rewritten if/when someone chooses to pick
+  // up the -moz-border-radius gauntlet.
+  // Alternatively we could add support for a -moz-border-diagonal property, which is
+  // what this code actually draws (instead of a curve).
+  nscoord startRadius, endRadius;
+  startRadius = aBorderRadii[aWhichSide];
+  endRadius = (aWhichSide == NS_SIDE_LEFT) ? aBorderRadii[0] : aBorderRadii[aWhichSide+1];
+  PRInt32 level = 0;
+  while (currOuterRect.width > aInnerRect.width) {
+    nscoord xshrink = 0;
+    nscoord yshrink = 0;
+    nscoord widthshrink = 0;
+    nscoord heightshrink = 0;
+
+    if (startRadius || endRadius) {
+      if (aWhichSide == NS_SIDE_TOP || aWhichSide == NS_SIDE_BOTTOM) {
+        xshrink = startRadius;
+        widthshrink = startRadius + endRadius;
+      }
+      else if (aWhichSide == NS_SIDE_LEFT || aWhichSide == NS_SIDE_RIGHT) {
+        yshrink = startRadius-1;
+        heightshrink = yshrink + endRadius;
+      }
     }
-  }
-  if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
-    if (GetBorderColor(ourColor, aBorderStyle, NS_SIDE_TOP, sideColor)) {
-      DrawSide(aRenderingContext, NS_SIDE_TOP,
-               aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
-               sideColor,
-               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_TOP)) ? 
-                mozBGColor->mBackgroundColor :
-                bgColor->mBackgroundColor,
-               outerRect, innerRect,aSkipSides,
-               twipsPerPixel, aGap);
+
+    nsRect newOuterRect(currOuterRect);
+    newOuterRect.x += xshrink;
+    newOuterRect.y += yshrink;
+    newOuterRect.width -= widthshrink;
+    newOuterRect.height -= heightshrink;
+
+    nsRect borderInside(newOuterRect.x+twipsPerPixel, newOuterRect.y+twipsPerPixel, 
+                        newOuterRect.width - 2*twipsPerPixel,
+                        newOuterRect.height - 2*twipsPerPixel);
+    nsPoint theSide[MAX_POLY_POINTS];
+    PRInt32 np = MakeSide(theSide, aRenderingContext, aWhichSide, newOuterRect, borderInside, 0,
+                          BORDER_FULL, 1.0f, twipsPerPixel);
+    NS_ASSERTION(np == 2, "Composite border should always be single pixel!");
+    aRenderingContext.SetColor(aCompositeColors->mColor);
+    DrawLine(aRenderingContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
+  
+    if (aWhichSide == NS_SIDE_TOP) {
+      if (startRadius) {
+        // Connecting line between top/left
+        nscoord distance = (startRadius+twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder) 
+          distance += twipsPerPixel - remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+startRadius, currOuterRect.y, 
+                 currOuterRect.x+(startRadius-distance), currOuterRect.y+distance, aGap);
+      }
+      if (endRadius) {
+        // Connecting line between top/right
+        nscoord distance = (endRadius+twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder) 
+          distance += twipsPerPixel - remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel, currOuterRect.y, 
+                 currOuterRect.x+currOuterRect.width-endRadius-twipsPerPixel+distance,
+                 currOuterRect.y+distance, aGap);
+      }
     }
-  }
-  if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
-    if (GetBorderColor(ourColor, aBorderStyle, NS_SIDE_RIGHT, sideColor)) {
-      DrawSide(aRenderingContext, NS_SIDE_RIGHT,
-               aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT),
-               sideColor,
-               MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT)) ? 
-                mozBGColor->mBackgroundColor :
-                bgColor->mBackgroundColor,
-               outerRect, innerRect,aSkipSides,
-               twipsPerPixel, aGap);
+    else if (aWhichSide == NS_SIDE_BOTTOM) {
+      if (startRadius) {
+        // Connecting line between bottom/right
+        nscoord distance = (endRadius+twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder) 
+          distance += twipsPerPixel - remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-startRadius-twipsPerPixel, 
+                 currOuterRect.y+currOuterRect.height-twipsPerPixel, 
+                 currOuterRect.x+currOuterRect.width-(startRadius-distance)-twipsPerPixel, 
+                 currOuterRect.y+currOuterRect.height-distance-twipsPerPixel, aGap);
+      }
+      if (endRadius) {
+        nscoord distance = (startRadius+twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder) 
+          distance += twipsPerPixel - remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+endRadius, 
+                 currOuterRect.y+currOuterRect.height-twipsPerPixel, currOuterRect.x+(endRadius-distance), 
+                 currOuterRect.y+currOuterRect.height-distance-twipsPerPixel, aGap);
+      }
+    
     }
+    else if (aWhichSide == NS_SIDE_LEFT) {
+      if (startRadius) {
+        // Connecting line between left/bottom
+        nscoord distance = (endRadius-twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder)
+          distance -= remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+distance, 
+                 currOuterRect.y+currOuterRect.height-twipsPerPixel-(startRadius-distance), 
+                 currOuterRect.x, currOuterRect.y+currOuterRect.height-twipsPerPixel-startRadius, aGap);
+      }
+      if (endRadius) {
+        // Connecting line between left/top
+        nscoord distance = (endRadius-twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder)
+          distance -= remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+distance, currOuterRect.y+(endRadius-distance), 
+                 currOuterRect.x, currOuterRect.y+endRadius, aGap);
+      }
+    }
+    else if (aWhichSide == NS_SIDE_RIGHT) {
+     if (startRadius) {
+        // Connecting line between right/top
+        nscoord distance = (startRadius-twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder)
+          distance -= remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-distance-twipsPerPixel, 
+          //currOuterRect.y-2,     
+          currOuterRect.y+(startRadius-distance), 
+         currOuterRect.x+currOuterRect.width-twipsPerPixel, 
+         //currOuterRect.y-2, aGap);
+         currOuterRect.y+startRadius, aGap);
+      }
+      if (endRadius) {
+        // Connecting line between right/bottom
+        nscoord distance = (endRadius-twipsPerPixel)/2;
+        nscoord remainder = distance%twipsPerPixel;
+        if (remainder)
+          distance -= remainder;
+        DrawLine(aRenderingContext, currOuterRect.x+currOuterRect.width-twipsPerPixel-distance, 
+                 currOuterRect.y+currOuterRect.height-twipsPerPixel-(endRadius-distance), 
+                 currOuterRect.x+currOuterRect.width-twipsPerPixel, 
+                 currOuterRect.y+currOuterRect.height-twipsPerPixel-endRadius, aGap);
+      }
+    }
+
+    if (aCompositeColors->mNext)
+      aCompositeColors = aCompositeColors->mNext;
+    currOuterRect.x += twipsPerPixel;
+    currOuterRect.y += twipsPerPixel;
+    currOuterRect.width -= 2*twipsPerPixel;
+    currOuterRect.height -= 2*twipsPerPixel;
+    startRadius -= twipsPerPixel; if (startRadius < 0) startRadius = 0;
+    endRadius -= twipsPerPixel; if (endRadius < 0) endRadius = 0;
   }
 }
 
@@ -2248,12 +2389,25 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
 
       // rounded version of the border
-      for(i=0;i<4;i++){
-        if (borderRadii[i] > 0){
-          PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,
-                                 aBorderArea,aColor,aDX,aDY,borderRadii);
-          return;
+      if (!aBorder.mBorderColors) {
+        // XXXdwh Composite borders (with multiple colors per side) use their own border radius
+        // algorithm now, since the current one doesn't work right for small radii.
+        for(i=0;i<4;i++){
+          if (borderRadii[i] > 0){
+            PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,
+                                   aBorderArea,aColor,aDX,aDY,borderRadii);
+            return;
+          }
         }
+      }
+      else {
+        nsMargin border;
+        aBorder.GetBorder(border);
+        nsRect borderArea(aBorderArea);
+        borderArea.Deflate(border);
+        aRenderingContext.SetColor(aColor.mBackgroundColor);
+        aRenderingContext.FillRect(borderArea);
+        return;
       }
 
       aRenderingContext.SetColor(aColor.mBackgroundColor);

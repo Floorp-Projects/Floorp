@@ -941,6 +941,11 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     return SearchKeywordTable(aValue, kFontWeightKTable);  
 
   case eCSSProperty_height:
+  case eCSSProperty_image_region:
+  case eCSSProperty_image_region_top:
+  case eCSSProperty_image_region_left:
+  case eCSSProperty_image_region_bottom:
+  case eCSSProperty_image_region_right:
     break;
 
   case eCSSProperty_key_equivalent:

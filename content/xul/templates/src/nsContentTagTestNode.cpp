@@ -81,7 +81,7 @@ nsContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations, vo
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
         Value value;
         if (! inst->mAssignments.GetAssignmentFor(mContentVariable, &value)) {
-            NS_ERROR("cannot handle open-ended tag name query");
+           // NS_ERROR("cannot handle open-ended tag name query");
             return NS_ERROR_UNEXPECTED;
         }
 

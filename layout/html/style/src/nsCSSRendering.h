@@ -223,6 +223,15 @@ protected:
                        nsRect* aGap = 0);
 
 
+  static void DrawCompositeSide(nsIRenderingContext& aContext,
+                                PRIntn aWhichSide,
+                                nsBorderColors* aCompositeColors,
+                                const nsRect& aOuterRect,
+                                const nsRect& aInnerRect,
+                                PRInt16* aBorderRadii,
+                                nscoord aTwipsPerPixel,
+                                nsRect* aGap);
+
   static void DrawLine (nsIRenderingContext& aContext, 
                         nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,
                         nsRect* aGap);

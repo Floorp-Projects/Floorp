@@ -419,7 +419,8 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSMargin::nsCSSMargin(void)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull)
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderColors(nsnull),
+    mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSMargin);
 }
@@ -427,6 +428,7 @@ nsCSSMargin::nsCSSMargin(void)
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   : mMargin(nsnull), mPadding(nsnull), 
     mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull),
+    mBorderColors(nsnull),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
@@ -441,6 +443,11 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   CSS_IF_COPY(mBorderStyle, nsCSSRect);
   CSS_IF_COPY(mBorderRadius, nsCSSRect);
   CSS_IF_COPY(mOutlineRadius, nsCSSRect);
+  if (aCopy.mBorderColors) {
+    EnsureBorderColors();
+    for (PRInt32 i = 0; i < 4; i++)
+      CSS_IF_COPY(mBorderColors[i], nsCSSValueList);
+  }
 }
 
 nsCSSMargin::~nsCSSMargin(void)
@@ -453,6 +460,11 @@ nsCSSMargin::~nsCSSMargin(void)
   CSS_IF_DELETE(mBorderStyle);
   CSS_IF_DELETE(mBorderRadius);
   CSS_IF_DELETE(mOutlineRadius);
+  if (mBorderColors) {
+    for (PRInt32 i = 0; i < 4; i++)
+      CSS_IF_DELETE(mBorderColors[i]);
+    delete []mBorderColors;
+  }
 }
 
 const nsID& nsCSSMargin::GetID(void)
@@ -524,6 +536,16 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
+inline void nsCSSMargin::EnsureBorderColors()
+{
+  if (!mBorderColors) {
+    PRInt32 i;
+    mBorderColors = new nsCSSValueList*[4];
+    for (i = 0; i < 4; i++)
+      mBorderColors[i] = nsnull;
+  }
+}
+
 // --- nsCSSPosition -----------------
 
 nsCSSPosition::nsCSSPosition(void)
@@ -588,6 +610,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
 // --- nsCSSList -----------------
 
 nsCSSList::nsCSSList(void)
+:mImageRegion(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSList);
 }
@@ -595,14 +618,17 @@ nsCSSList::nsCSSList(void)
 nsCSSList::nsCSSList(const nsCSSList& aCopy)
   : mType(aCopy.mType),
     mImage(aCopy.mImage),
-    mPosition(aCopy.mPosition)
+    mPosition(aCopy.mPosition),
+    mImageRegion(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSList);
+  CSS_IF_COPY(mImageRegion, nsCSSRect);
 }
 
 nsCSSList::~nsCSSList(void)
 {
   MOZ_COUNT_DTOR(nsCSSList);
+  CSS_IF_DELETE(mImageRegion);
 }
 
 const nsID& nsCSSList::GetID(void)
@@ -620,6 +646,16 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
   mImage.AppendToString(buffer, eCSSProperty_list_style_image);
   mPosition.AppendToString(buffer, eCSSProperty_list_style_position);
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+
+  if (mImageRegion) {
+    static const nsCSSProperty trbl[] = {
+      eCSSProperty_top,
+      eCSSProperty_right,
+      eCSSProperty_bottom,
+      eCSSProperty_left
+    };
+    mImageRegion->List(out, aIndent, trbl);
+  }
 }
 
 // --- nsCSSTable -----------------
@@ -1676,6 +1712,23 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
       }
       break;
 
+    case eCSSProperty_image_region_top:
+    case eCSSProperty_image_region_right:
+    case eCSSProperty_image_region_bottom:
+    case eCSSProperty_image_region_left:
+      CSS_ENSURE(List) {
+        CSS_ENSURE_RECT(mList->mImageRegion) {
+          switch(aProperty) {
+            case eCSSProperty_image_region_top:     mList->mImageRegion->mTop = aValue;     break;
+            case eCSSProperty_image_region_right:   mList->mImageRegion->mRight = aValue;   break;
+            case eCSSProperty_image_region_bottom:  mList->mImageRegion->mBottom = aValue;  break;
+            case eCSSProperty_image_region_left:    mList->mImageRegion->mLeft = aValue;    break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
       // nsCSSTable
     case eCSSProperty_border_collapse:
     case eCSSProperty_border_x_spacing:
@@ -1883,6 +1936,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_clip:
     case eCSSProperty_cue:
     case eCSSProperty_font:
+    case eCSSProperty_image_region:
     case eCSSProperty_list_style:
     case eCSSProperty_margin:
     case eCSSProperty_outline:
@@ -1984,6 +2038,38 @@ CSSDeclarationImpl::AppendStructValue(nsCSSProperty aProperty, void* aStruct)
       CSS_ENSURE(UserInterface) {
         CSS_IF_DELETE(mUserInterface->mKeyEquivalent);
         mUserInterface->mKeyEquivalent = (nsCSSValueList*)aStruct;
+      }
+      break;
+
+    case eCSSProperty_border_top_colors:
+      CSS_ENSURE(Margin) {
+        mMargin->EnsureBorderColors();
+        CSS_IF_DELETE(mMargin->mBorderColors[0]);
+        mMargin->mBorderColors[0] = (nsCSSValueList*)aStruct;
+      }
+      break;
+
+    case eCSSProperty_border_right_colors:
+      CSS_ENSURE(Margin) {
+        mMargin->EnsureBorderColors();
+        CSS_IF_DELETE(mMargin->mBorderColors[1]);
+        mMargin->mBorderColors[1] = (nsCSSValueList*)aStruct;
+      }
+      break;
+
+    case eCSSProperty_border_bottom_colors:
+      CSS_ENSURE(Margin) {
+        mMargin->EnsureBorderColors();
+        CSS_IF_DELETE(mMargin->mBorderColors[2]);
+        mMargin->mBorderColors[2] = (nsCSSValueList*)aStruct;
+      }
+      break;
+
+    case eCSSProperty_border_left_colors:
+      CSS_ENSURE(Margin) {
+        mMargin->EnsureBorderColors();
+        CSS_IF_DELETE(mMargin->mBorderColors[3]);
+        mMargin->mBorderColors[3] = (nsCSSValueList*)aStruct;
       }
       break;
 
@@ -2264,6 +2350,50 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         }
         break;
 
+      case eCSSProperty_border_top_colors:
+        if (mMargin && mMargin->mBorderColors) {
+          CSS_ENSURE_IMPORTANT(Margin) {
+            mImportant->mMargin->EnsureBorderColors();
+            CSS_IF_DELETE(mImportant->mMargin->mBorderColors[0]);
+            mImportant->mMargin->mBorderColors[0] = mMargin->mBorderColors[0];
+            mMargin->mBorderColors[0] = nsnull;
+          }
+        }
+        break;
+
+      case eCSSProperty_border_right_colors:
+        if (mMargin && mMargin->mBorderColors) {
+          CSS_ENSURE_IMPORTANT(Margin) {
+            mImportant->mMargin->EnsureBorderColors();
+            CSS_IF_DELETE(mImportant->mMargin->mBorderColors[1]);
+            mImportant->mMargin->mBorderColors[1] = mMargin->mBorderColors[1];
+            mMargin->mBorderColors[1] = nsnull;
+          }
+        }
+        break;
+
+      case eCSSProperty_border_bottom_colors:
+        if (mMargin && mMargin->mBorderColors) {
+          CSS_ENSURE_IMPORTANT(Margin) {
+            mImportant->mMargin->EnsureBorderColors();
+            CSS_IF_DELETE(mImportant->mMargin->mBorderColors[2]);
+            mImportant->mMargin->mBorderColors[0] = mMargin->mBorderColors[2];
+            mMargin->mBorderColors[2] = nsnull;
+          }
+        }
+        break;
+
+      case eCSSProperty_border_left_colors:
+        if (mMargin && mMargin->mBorderColors) {
+          CSS_ENSURE_IMPORTANT(Margin) {
+            mImportant->mMargin->EnsureBorderColors();
+            CSS_IF_DELETE(mImportant->mMargin->mBorderColors[3]);
+            mImportant->mMargin->mBorderColors[0] = mMargin->mBorderColors[3];
+            mMargin->mBorderColors[3] = nsnull;
+          }
+        }
+        break;
+
       case eCSSProperty_border_top_style:
       case eCSSProperty_border_right_style:
       case eCSSProperty_border_bottom_style:
@@ -2402,6 +2532,27 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_list_style_image,     mList->mImage);
               CSS_CASE_IMPORTANT(eCSSProperty_list_style_position,  mList->mPosition);
               CSS_BOGUS_DEFAULT; // make compiler happy
+            }
+          }
+        }
+        break;
+
+      case eCSSProperty_image_region_top:
+      case eCSSProperty_image_region_right:
+      case eCSSProperty_image_region_bottom:
+      case eCSSProperty_image_region_left:
+        if (mList) {
+          if (mList->mImageRegion) {
+            CSS_ENSURE_IMPORTANT(Position) {
+              CSS_ENSURE_RECT(mImportant->mList->mImageRegion) {
+                switch (aProperty) {
+                  CSS_CASE_IMPORTANT(eCSSProperty_image_region_top,    mList->mImageRegion->mTop);
+                  CSS_CASE_IMPORTANT(eCSSProperty_image_region_right,  mList->mImageRegion->mRight);
+                  CSS_CASE_IMPORTANT(eCSSProperty_image_region_bottom, mList->mImageRegion->mBottom);
+                  CSS_CASE_IMPORTANT(eCSSProperty_image_region_left,   mList->mImageRegion->mLeft);
+                  CSS_BOGUS_DEFAULT; // make compiler happy
+                }
+              }
             }
           }
         }
@@ -2694,6 +2845,12 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         SetValueImportant(eCSSProperty_font_weight);
         SetValueImportant(eCSSProperty_font_size);
         SetValueImportant(eCSSProperty_line_height);
+        break;
+      case eCSSProperty_image_region:
+        SetValueImportant(eCSSProperty_image_region_top);
+        SetValueImportant(eCSSProperty_image_region_right);
+        SetValueImportant(eCSSProperty_image_region_bottom);
+        SetValueImportant(eCSSProperty_image_region_left);
         break;
       case eCSSProperty_list_style:
         SetValueImportant(eCSSProperty_list_style_type);
@@ -3017,6 +3174,23 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
       }
       break;
 
+    case eCSSProperty_border_top_colors:
+    case eCSSProperty_border_right_colors:
+    case eCSSProperty_border_bottom_colors:
+    case eCSSProperty_border_left_colors:
+      CSS_CHECK(Margin) {
+        if (mMargin->mBorderColors) {
+          switch (aProperty) {
+            case eCSSProperty_border_top_colors:     CSS_IF_DELETE(mMargin->mBorderColors[0]);    break;
+            case eCSSProperty_border_right_colors:   CSS_IF_DELETE(mMargin->mBorderColors[1]);  break;
+            case eCSSProperty_border_bottom_colors:  CSS_IF_DELETE(mMargin->mBorderColors[2]); break;
+            case eCSSProperty_border_left_colors:    CSS_IF_DELETE(mMargin->mBorderColors[3]);   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
     case eCSSProperty_border_top_style:
     case eCSSProperty_border_right_style:
     case eCSSProperty_border_bottom_style:
@@ -3134,6 +3308,23 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
           case eCSSProperty_list_style_image:     mList->mImage.Reset();    break;
           case eCSSProperty_list_style_position:  mList->mPosition.Reset(); break;
           CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    case eCSSProperty_image_region_top:
+    case eCSSProperty_image_region_right:
+    case eCSSProperty_image_region_bottom:
+    case eCSSProperty_image_region_left:
+      CSS_CHECK(List) {
+        CSS_CHECK_RECT(mList->mImageRegion) {
+          switch (aProperty) {
+            case eCSSProperty_image_region_top:    mList->mImageRegion->mTop.Reset();    break;
+            case eCSSProperty_image_region_right:  mList->mImageRegion->mRight.Reset();   break;
+            case eCSSProperty_image_region_bottom: mList->mImageRegion->mBottom.Reset(); break;
+            case eCSSProperty_image_region_left:   mList->mImageRegion->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
         }
       }
       break;
@@ -3373,6 +3564,11 @@ CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
       RemoveProperty(eCSSProperty_font_weight);
       RemoveProperty(eCSSProperty_font_size);
       RemoveProperty(eCSSProperty_line_height);
+      break;
+    case eCSSProperty_image_region:
+      CSS_CHECK(List) {
+        CSS_IF_DELETE(mList->mImageRegion);
+      }
       break;
     case eCSSProperty_list_style:
       RemoveProperty(eCSSProperty_list_style_type);
@@ -3878,6 +4074,24 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       }
       break;
 
+    case eCSSProperty_image_region_top:
+    case eCSSProperty_image_region_right:
+    case eCSSProperty_image_region_bottom:
+    case eCSSProperty_image_region_left:
+      if (mList && mList->mImageRegion) {
+        switch (aProperty) {
+          case eCSSProperty_image_region_top:    aValue = mList->mImageRegion->mTop;    break;
+          case eCSSProperty_image_region_right:  aValue = mList->mImageRegion->mRight;  break;
+          case eCSSProperty_image_region_bottom: aValue = mList->mImageRegion->mBottom; break;
+          case eCSSProperty_image_region_left:   aValue = mList->mImageRegion->mLeft;   break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+
       // nsCSSTable
     case eCSSProperty_border_collapse:
     case eCSSProperty_border_x_spacing:
@@ -4100,6 +4314,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_clip:
     case eCSSProperty_cue:
     case eCSSProperty_font:
+    case eCSSProperty_image_region:
     case eCSSProperty_list_style:
     case eCSSProperty_margin:
     case eCSSProperty_outline:
@@ -4423,6 +4638,16 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty,
         }
         aValue.Append(PRUnichar(' '));
         AppendValueToString(eCSSProperty_font_family, aValue);
+      }
+      break;
+    case eCSSProperty_image_region:
+      if (HAS_RECT(mList,mImageRegion)) {
+        aValue.Append(NS_LITERAL_STRING("rect("));
+        AppendValueToString(eCSSProperty_image_region_top, aValue);     aValue.Append(PRUnichar(' '));
+        AppendValueToString(eCSSProperty_image_region_right, aValue);   aValue.Append(PRUnichar(' '));
+        AppendValueToString(eCSSProperty_image_region_bottom, aValue);  aValue.Append(PRUnichar(' '));
+        AppendValueToString(eCSSProperty_image_region_left, aValue);
+        aValue.Append(PRUnichar(')'));
       }
       break;
     case eCSSProperty_list_style:
