@@ -25,6 +25,7 @@
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var dialogParams;
+var itemCount = 0;
 
 function onLoad()
 {
@@ -49,24 +50,38 @@ function onLoad()
     setText("issuer", message2);
 
     var selectElement = document.getElementById("nicknames");
-    for (var i=0; i < dialogParams.GetInt(1); i++) {
+    itemCount = dialogParams.GetInt(1);
+    for (var i=0; i < itemCount; i++) {
         var menuItemNode = document.createElement("menuitem");
         var nick = dialogParams.GetString(i+4);
-        menuItemNode.setAttribute("value", nick);
-        menuItemNode.setAttribute("label", nick);
+        menuItemNode.setAttribute("value", i);
+        menuItemNode.setAttribute("label", nick); // this is displayed
         selectElement.firstChild.appendChild(menuItemNode);
         if (i == 0) {
             selectElement.selectedItem = menuItemNode;
         }
     }
+
+    setDetails();
+}
+
+function setDetails()
+{
+  var index = parseInt(document.getElementById("nicknames").value);
+  details = dialogParams.GetString(index+itemCount+4);
+  document.getElementById("details").setAttribute("value", details);
+}
+
+function onCertSelected()
+{
+  setDetails();
 }
 
 function doOK()
 {
-  var nicknameList = document.getElementById("nicknames");
-  var nickname = nicknameList.value;
   dialogParams.SetInt(1,1);
-  dialogParams.SetString(1, nickname);
+  var index = parseInt(document.getElementById("nicknames").value);
+  dialogParams.SetInt(2, index);
   window.close();
 }
 

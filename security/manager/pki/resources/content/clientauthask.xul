@@ -26,13 +26,12 @@
 <window id="ssl_warning" title="&clientAuthAsk.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  height="360"
-  width="400"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/clientauthask.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
@@ -40,18 +39,25 @@
   <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close();"/>
 </keyset>
 
-<vbox style="margin: 5px;" flex="1">
+<vbox style="margin: 5px;">
     <groupbox orient="vertical">
-    <html>&clientAuthAsk.message1;</html>
+    <html style="font-weight: bold;">&clientAuthAsk.message1;</html>
     <html id="hostname"/>
     <html id="organization"/>
     <html id="issuer"/>
     </groupbox>
     <groupbox orient="vertical">
-    <html>&clientAuthAsk.message2;</html>
-    <menulist id="nicknames">
+    <html style="font-weight: bold;">&clientAuthAsk.message2;</html>
+    <broadcaster id="certSelected" oncommand="onCertSelected();"/>
+    <!-- The items in this menulist must never be sorted,
+         but remain in the order filled by the application
+    -->
+    <menulist id="nicknames" observes="certSelected">
         <menupopup/>
     </menulist>
+    <html>&clientAuthAsk.message3;</html>
+    <textbox readonly="true" id="details" multiline="true"
+      style="height: 10em; width=80em;"/>
     </groupbox>
   <separator/>
   <hbox>
@@ -59,6 +65,8 @@
           oncommand="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
           oncommand="doCancel();"/> 
+  <button id="help-button" class="dialog" label="&help.label;"
+     style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?which_cert');" /> 
   </hbox>
 </vbox>
 </window>

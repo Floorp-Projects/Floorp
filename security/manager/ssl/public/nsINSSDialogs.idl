@@ -151,8 +151,9 @@ interface nsIClientAuthDialogs : nsISupports
                         in wstring organization,
                         in wstring issuer,
                         [array, size_is(count)] in wstring certNickList,
+                        [array, size_is(count)] in wstring certDetailsList,
                         in PRUint32 count,
-                        out wstring certNick,
+                        out PRInt32 selectedIndex,
                         out boolean canceled);
 };
 
