@@ -3014,156 +3014,25 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             // initialize the list control 
             InitAndRestoreFrame(aPresContext, aState, aContent, 
                                 comboboxFrame, gfxListStyle, nsnull, listFrame);
-#if 1
+
             nsHTMLContainerFrame::CreateViewForFrame(aPresContext, listFrame,
                                            gfxListStyle, PR_TRUE);
-#else
-            {
-              // Get nsStyleColor and nsStyleDisplay
-              const nsStyleColor* color = (const nsStyleColor*)
-                gfxListStyle->GetStyleData(eStyleStruct_Color);
-              const nsStyleDisplay* display = (const nsStyleDisplay*)
-                gfxListStyle->GetStyleData(eStyleStruct_Display);
-              const nsStylePosition* position = (const nsStylePosition*)
-                aStyleContext->GetStyleData(eStyleStruct_Position);
-
-              PRInt32 zIndex = 0;
-              if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-                zIndex = position->mZIndex.GetIntValue();
-              }
-
-              PRBool  autoZIndex = PR_FALSE;
-              PRBool  fixedBackgroundAttachment = PR_FALSE;
-              nsIView * view;
-              // Create a view
-              nsIFrame* parent;
-
-              listFrame->GetParentWithView(aPresContext, &parent);
-              NS_ASSERTION(parent, "GetParentWithView failed");
-              nsIView* parentView;
-   
-              parent->GetView(aPresContext, &parentView);
-              NS_ASSERTION(parentView, "no parent with view");
-
-              // Create a view
-              static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-              static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-              static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-
-              nsresult result = nsComponentManager::CreateInstance(kViewCID, 
-                                                             nsnull, 
-                                                             kIViewIID, 
-                                                             (void **)&view);
-              if (NS_OK == result) {
-                nsIViewManager* viewManager;
-                parentView->GetViewManager(viewManager);
-                NS_ASSERTION(nsnull != viewManager, "null view manager");
-
-                viewManager->GetRootView(parentView);
-                // Initialize the view
-                nsRect bounds;
-                listFrame->GetRect(bounds);
-                view->Init(viewManager, bounds, parentView);
-
-                // Insert the view into the view hierarchy. If the parent view is a
-                // scrolling view we need to do this differently
-                nsIScrollableView*  scrollingView;
-                if (NS_SUCCEEDED(parentView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
-                  scrollingView->SetScrolledView(view);
-                } else {
-                  viewManager->InsertChild(parentView, view, zIndex);
-
-                  if (autoZIndex) {
-                    viewManager->SetViewAutoZIndex(view, PR_TRUE);
-                  }
-                }
-
-                // See if the view should be hidden
-                PRBool  viewIsVisible = PR_TRUE;
-                PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
-                          NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
-
-                if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
-                  viewIsVisible = PR_FALSE;
-                }
-                else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
-                  // If it has a widget, hide the view because the widget can't deal with it
-                  nsIWidget* widget = nsnull;
-                  view->GetWidget(widget);
-                  if (widget) {
-                    viewIsVisible = PR_FALSE;
-                    NS_RELEASE(widget);
-                  }
-                  else {
-                    // If it's a container element, then leave the view visible, but
-                    // mark it as having transparent content. The reason we need to
-                    // do this is that child elements can override their parent's
-                    // hidden visibility and be visible anyway
-                    nsIContent* content;
-
-                    // Because this function is called before processing the content
-                    // object's child elements, we can't tell if it's a leaf by looking
-                    // at whether the frame has any child frames
-                    listFrame->GetContent(&content);
-                    if (content) {
-                      PRBool  isContainer;
-
-                      content->CanContainChildren(isContainer);
-                      if (isContainer) {
-                        // The view needs to be visible, but marked as having transparent
-                        // content
-                        viewHasTransparentContent = PR_TRUE;
-                      } else {
-                        // Go ahead and hide the view
-                        viewIsVisible = PR_FALSE;
-                      }
-                      NS_RELEASE(content);
-                    }
-                  }
-                }
-
-                if (viewIsVisible) {
-                  if (viewHasTransparentContent) {
-                    viewManager->SetViewContentTransparency(view, PR_TRUE);
-                  }
-
-                } else {
-                  view->SetVisibility(nsViewVisibility_kHide);
-                }
-
-                // XXX If it's fixed positioned, then create a widget so it floats
-                // above the scrolling area
-                const nsStylePosition* position = (const nsStylePosition*)
-                  aStyleContext->GetStyleData(eStyleStruct_Position);
-
-                if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-                  view->CreateWidget(kCChildCID);
-                } else {
-                  nsWidgetInitData widgetData;
-                  view->SetFloating(PR_TRUE);
-                  widgetData.mWindowType  = eWindowType_popup;
-                  widgetData.mBorderStyle = eBorderStyle_default;
+            nsIView * view;
+            listFrame->GetView(aPresContext, &view);
+            if (view != nsnull) {
+              nsWidgetInitData widgetData;
+              view->SetFloating(PR_TRUE);
+              widgetData.mWindowType  = eWindowType_popup;
+              widgetData.mBorderStyle = eBorderStyle_default;
     
 #ifdef XP_MAC
-                  static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
-                  view->CreateWidget(kCPopUpCID, &widgetData, nsnull);
+              static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
+              view->CreateWidget(kCPopUpCID, &widgetData, nsnull);
 #else
-                  view->CreateWidget(kCChildCID, &widgetData, nsnull);
+              static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+              view->CreateWidget(kCChildCID, &widgetData, nsnull);
 #endif   
-                }
-
-                viewManager->SetViewOpacity(view, color->mOpacity);
-                NS_RELEASE(viewManager);
-              }
-
-              // Remember our view
-              listFrame->SetView(aPresContext, view);
-
-              NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-                ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p view=%p",
-                 listFrame));
-    }
-#endif
+            }
 
             // create the area frame we are scrolling 
             PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
@@ -6083,14 +5952,16 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
       nsIFrame * listFrame;
       if (NS_SUCCEEDED(res) && comboboxFrame) {
         comboboxFrame->GetDropDown(&listFrame);
-        if (nsnull != listFrame) {
-          listFrame->FirstChild(aPresContext, nsnull, &frame);
-        }
       } else {
-        res = frame->QueryInterface(NS_GET_IID(nsIListControlFrame),
-                                                 (void**)&listFrame);
-        if (NS_SUCCEEDED(res) && listFrame) {
-          frame->FirstChild(aPresContext, nsnull, &frame);
+        listFrame = frame;
+      }
+
+      if (listFrame != nsnull) {
+        nsIListControlFrame * list;
+        res = listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame),
+                                                 (void**)&list);
+        if (NS_SUCCEEDED(res) && list) {
+          list->GetOptionsContainer(aPresContext, &frame);
         } 
       }
     } else {
