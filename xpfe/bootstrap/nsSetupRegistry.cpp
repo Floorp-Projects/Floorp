@@ -120,7 +120,7 @@ nsresult NS_AutoregisterComponents()
 extern "C" void
 NS_SetupRegistry_1()
 {
-  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
   // This *has* to happen after registration of nsIFileLocator as the call
   // required it.
