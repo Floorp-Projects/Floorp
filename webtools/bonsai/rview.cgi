@@ -167,8 +167,9 @@ my @dirs = ();
 
 
 DIR:
-while( <*> ){
+while( <.* *> ){
     if( -d $_ ){
+        next if $_ =~ /^\.{1,2}$/;  
         push @dirs, $_;
     }
 }
@@ -199,7 +200,7 @@ if( @dirs != 0 ){
 
 print "<P><FONT SIZE=+1><B>Files:</B></FONT>\n";
 print "<table>\n<TR VALIGN=TOP>\n<td>\n";
-my @files = <*,v>;
+my @files = <.*,v *,v>;
 $j = 1;
 $split = int(@files/4)+1;
 
