@@ -139,13 +139,11 @@ public:
     PRBool              IsComplete() { return mComplete; }
     nsresult            HandleRequest(nsDNSRequest* req);
     nsresult            InitiateLookup(void);
-    nsresult            CompletedLookup(nsresult status);
+    nsresult            CompleteLookup(nsresult status);
     nsresult            Suspend(nsDNSRequest* req);
     nsresult            Resume(nsDNSRequest* req);
     static PRBool       FindCompleted(nsHashKey *aKey, void *aData, void* closure);
-    static PRBool       CompletedEntry(nsHashKey *aKey, void *aData, void* closure);
-    static PRBool       DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
-    PRBool              IsExpired() { 
+    PRBool              IsExpired() {
 #ifdef xDEBUG
         char buf[256];
         PRExplodedTime et;
@@ -544,7 +542,11 @@ nsDNSLookup::InitiateLookup(void)
             }
             mHostEntry.hostEnt.h_addr_list[1] = nsnull;
 
-            rv = CompletedLookup(NS_OK);
+            rv = CompleteLookup(NS_OK);
+
+            // XXX remove from hashtable and release - for now
+            nsStringKey key(mHostName);
+            (void) nsDNSService::gService->mLookups.Remove(&key);
         }
         nsAllocator::Free(netAddr);
         if(PR_SUCCESS == status) // it WAS numeric, we're done.
@@ -555,7 +557,7 @@ nsDNSLookup::InitiateLookup(void)
 
 #if defined(XP_MAC)
     OSErr   err;
-	
+    
     err = OTInetStringToAddress(nsDNSService::gService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
     if (err != noErr)
         rv = NS_ERROR_UNEXPECTED;
@@ -593,7 +595,12 @@ nsDNSLookup::InitiateLookup(void)
                                 PR_NETDB_BUF_SIZE, 
                                 &(mHostEntry.hostEnt));    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
 
-    return CompletedLookup(rv);
+    rv = CompleteLookup(rv);
+
+    // XXX remove from hashtable and release - for now
+    nsStringKey key(mHostName);
+    (void) nsDNSService::gService->mLookups.Remove(&key);
+    
 #endif /* XP_UNIX */
 
     return rv;
@@ -603,7 +610,7 @@ nsDNSLookup::InitiateLookup(void)
 //#define EXPIRATION_INTERVAL  (30*1000000)         // 30 sec worth of microseconds
 
 nsresult
-nsDNSLookup::CompletedLookup(nsresult status)
+nsDNSLookup::CompleteLookup(nsresult status)
 {
     nsresult rv;
     nsAutoCMonitor mon(this);	// protect mRequests
@@ -613,6 +620,7 @@ nsDNSLookup::CompletedLookup(nsresult status)
     mComplete = PR_TRUE;
 
     while (PR_TRUE) {
+        NS_ASSERTION(mRequests != nsnull, "mRequests is null.");
         nsDNSRequest* req = (nsDNSRequest*)mRequests->ElementAt(0);
         if (req == nsnull) break;
 
@@ -631,10 +639,6 @@ nsDNSLookup::CompletedLookup(nsresult status)
         NS_ASSERTION(NS_SUCCEEDED(rv), "req->FireStop() failed.");
         // continue notifying requests, even if one fails
     }
-    
-    // XXX remove from hashtable and release - for now
-    nsStringKey key(mHostName);
-    (void) nsDNSService::gService->mLookups.Remove(&key);
     
     return NS_OK;
 }
@@ -744,7 +748,7 @@ nsDNSLookup::FindCompleted(nsHashKey *aKey, void *aData, void* closure)
 }
 
 LRESULT
-nsDNSService::LookupComplete(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+nsDNSService::ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     nsresult rv;
     nsDNSLookup* lookup = nsnull;
@@ -760,9 +764,14 @@ nsDNSService::LookupComplete(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     if (lookup) {
         int error = WSAGETASYNCERROR(lParam);
-        rv = lookup->CompletedLookup(error ? NS_ERROR_UNKNOWN_HOST : NS_OK);
-        gService->FreeMsgID(lookup->mMsgID); 
-        NS_IF_RELEASE(lookup);
+        rv = lookup->CompleteLookup(error ? NS_ERROR_UNKNOWN_HOST : NS_OK);
+        gService->FreeMsgID(lookup->mMsgID);
+
+        // XXX remove from hashtable and release - for now
+        nsStringKey key(lookup->mHostName);
+        (void) nsDNSService::gService->mLookups.Remove(&key);
+
+        NS_RELEASE(lookup);
         return NS_SUCCEEDED(rv) ? 0 : -1;
     }
     return -1;  // XXX right result?
@@ -775,7 +784,7 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     int     error = nsnull;
 
  	if ((uMsg >= WM_USER) && (uMsg < WM_USER+128)) {
-        result = nsDNSService::gService->LookupComplete(hWnd, uMsg, wParam, lParam);
+        result = nsDNSService::gService->ProcessLookup(hWnd, uMsg, wParam, lParam);
     }
     else if (uMsg == WM_DNS_SHUTDOWN) {
         // dispose DNS EventHandler Window
@@ -799,19 +808,10 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // nsDNSService methods:
 ////////////////////////////////////////////////////////////////////////////////
 
-PRBool
-nsDNSLookup::DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsDNSLookup* lookup = (nsDNSLookup*)aData;
-    delete lookup;
-    return PR_TRUE;     // keep iterating
-}
-
 nsDNSService::nsDNSService()
     : mState(NS_OK),
       mMonitor(nsnull),
       mLookups(64)
-//      mLookups(nsnull, nsnull, nsDNSLookup::DeleteEntry, nsnull)
 #ifdef DNS_TIMING
       ,
       mCount(0),
@@ -867,7 +867,8 @@ nsDNSService::Init()
     nsresult rv = NS_OK;
 
     NS_ASSERTION(mMonitor == nsnull, "nsDNSService not shut down");
-    mMonitor = PR_NewMonitor();
+    mMonitor = nsAutoMonitor::NewMonitor("nsDNSService");
+    
     if (mMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -937,8 +938,9 @@ nsDNSService::~nsDNSService()
     NS_ASSERTION(mThread == nsnull, "DNS shutdown failed");
     NS_ASSERTION(mLookups.Count() == 0, "didn't clean up lookups");
 
-    if (mMonitor)
-        PR_DestroyMonitor(mMonitor);
+    if (mMonitor) {
+        nsAutoMonitor::DestroyMonitor(mMonitor);
+    }
 
     NS_ASSERTION(gService==this,"multiple nsDNSServices allocated.");
     gService = nsnull;
@@ -1051,14 +1053,21 @@ nsDNSService::Run(void)
                 continue;		// assert
         
             lookup = lookupElement->lookup;
-            // convert InetHostInfo to nsHostEnt
-            rv = lookup->FinishHostEntry();
-            if (NS_SUCCEEDED(rv)) {
-            	NS_ADDREF(lookup);
-                rv = lookup->CompletedLookup(NS_OK);    // sets lookup->mComplete = PR_TRUE;
-                NS_RELEASE(lookup);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "Completed failed");
+            if (NS_SUCCEEDED(lookup->mStatus)) {
+                // convert InetHostInfo to nsHostEnt
+                rv = lookup->FinishHostEntry();
+                lookup->mStatus = rv;
             }
+            
+            NS_ADDREF(lookup);
+            rv = lookup->CompleteLookup(lookup->mStatus);    // sets lookup->mComplete = PR_TRUE;
+
+            // XXX remove from hashtable and release - for now
+            nsStringKey key(lookup->mHostName);
+            (void) nsDNSService::gService->mLookups.Remove(&key);
+
+            NS_RELEASE(lookup);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Completed failed");
         }
 	}
 #endif /* XP_MAC */
@@ -1105,7 +1114,8 @@ nsDNSService::Lookup(const char*     hostName,
 
     req = new nsDNSRequest();
     if (req == nsnull) {
-        return NS_ERROR_OUT_OF_MEMORY;
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
     }
 
     NS_ADDREF(req);
@@ -1116,8 +1126,8 @@ nsDNSService::Lookup(const char*     hostName,
 
   done:
 
+    NS_IF_RELEASE(req);
     NS_RELEASE(lookup);
-    NS_RELEASE(req);
     if (NS_SUCCEEDED(rv)) {
         *result = req;
     }
@@ -1167,16 +1177,17 @@ nsDNSService::GetLookupEntry(const char* hostName,
     return rv;
 }
 
-PRBool
-nsDNSLookup::CompletedEntry(nsHashKey *aKey, void *aData, void* closure)
+static PRBool PR_CALLBACK
+_AbortLookup(nsHashKey *aKey, void *aData, void* closure)
 {
     nsresult rv;
     nsDNSLookup* lookup = (nsDNSLookup*)aData;
-    nsresult* status = (nsresult*)closure;
 
-    rv = lookup->CompletedLookup(*status);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "lookup Completed failed");
-    return PR_TRUE;     // keep iterating
+    if (lookup) {
+        rv = lookup->CompleteLookup(NS_BINDING_ABORTED);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "lookup Completed failed");
+    }
+    return PR_TRUE;     // tells nsHashtable::Reset() to remove and keep iterating
 }
 
 NS_IMETHODIMP
@@ -1191,17 +1202,13 @@ nsDNSService::Shutdown()
     {
         nsAutoMonitor mon(mMonitor);        // protect mLookups
 
-        nsresult status = NS_BINDING_ABORTED;
-        mLookups.Enumerate(nsDNSLookup::CompletedEntry, &status);
-        mLookups.Reset();
-
 #if defined(XP_MAC)
-
         mThreadRunning = PR_FALSE;
 
-        // deallocate Open Transport Service Provider
+		// let's shutdown Open Transport so outstanding lookups won't complete while we're cleaning them up
         (void) OTCloseProvider((ProviderRef)mServiceRef);
-        CloseOpenTransport();           // should be moved to terminate routine
+        CloseOpenTransport();           // terminate routine should check flag and do this if Shutdown() is bypassed somehow
+
         PRThread* dnsServiceThread;
         rv = mThread->GetPRThread(&dnsServiceThread);
         if (dnsServiceThread)
@@ -1217,6 +1224,11 @@ nsDNSService::Shutdown()
         // XXXX - ?
 #endif
     }
+
+    // clean up outstanding lookups
+    //   - we can't be in monitor when we do this, so we wait until DNS thread is gone so we can't collide
+    mLookups.Enumerate(_AbortLookup, nsnull);
+    mLookups.Reset();
 
     // Have to break the cycle here, otherwise nsDNSService holds onto the thread
     // and the thread holds onto the nsDNSService via its mRunnable
