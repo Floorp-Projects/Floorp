@@ -322,8 +322,8 @@ BookmarksUIElement.prototype = {
     case "newseparator":
       nfseln = this.getBestItem ();
       var parentNode = this.findRDFNode(nfseln, false);
-      var args = [{ property: NC_NS + "parent", 
-                    resource: NODE_ID(parentNode) }];
+      args = [{ property: NC_NS + "parent", 
+                resource: NODE_ID(parentNode) }];
       BookmarksUtils.doBookmarksCommand(NODE_ID(nfseln), 
                                         NC_NS_CMD + "newseparator", args);
       break;
