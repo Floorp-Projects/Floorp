@@ -57,6 +57,11 @@ components\nspng.dll
 ; Components: (need to trim fat)
 ; 
 
+; accessibility (out of process API support)
+; see http://www.mozilla.org/projects/ui/accessibility/vendors-win.html
+;components\accessibility.dll              
+;components\accessibility.xpt                 
+
 ; appshell 
 components\appshell.dll                 
 components\appshell.xpt                 
