@@ -21,6 +21,7 @@
 # Contributor(s): Dave Miller <justdave@syndicomm.com>
 #                 Joel Peshkin <bugreport@peshkin.net>
 #                 Jacob Steenhagen <jake@bugzilla.org>
+#                 Vlad Dascalu <jocuri@softhome.net>
 
 # Code derived from editowners.cgi and editusers.cgi
 
@@ -29,6 +30,8 @@ use lib ".";
 
 use Bugzilla::Constants;
 require "CGI.pl";
+
+use vars qw($template $vars);
 
 ConnectToDatabase();
 confirm_login();
@@ -282,51 +285,11 @@ if ($action eq 'changeform') {
 #
 
 if ($action eq 'add') {
-    PutHeader("Add group");
+    print Bugzilla->cgi->header();
 
-    print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR>\n";
-    print "<th>New Name</th>";
-    print "<th>New Description</th>";
-    print "<th>New User RegExp</th>";
-    print "<th>Use For Bugs</th>";
-    print "</tr><tr>";
-    print "<td><input size=20 name=\"name\"></td>\n";
-    print "<td><input size=40 name=\"desc\"></td>\n";
-    print "<td><input size=30 name=\"regexp\"></td>\n";
-    print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
-    print "</TR></TABLE>\n<HR>\n";
-    print "<input type=\"checkbox\" name=\"insertnew\" value=\"1\"";
-    print " checked" if Param("makeproductgroups");
-    print ">\n";
-    print "Insert new group into all existing products.<P>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "</FORM>";
-
-    print "<p>";
-    print "<b>Name</b> is what is used with the UserInGroup() function in any
-customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain set of groups.  It
-may not contain any spaces.<p>";
-    print "<b>Description</b> is what will be shown in the bug reports to
-members of the group where they can choose whether the bug will be restricted
-to others in the same group.<p>";
-    print "The <b>Use For Bugs</b> flag determines whether or not the group is eligible to be used for bugs.
-If you clear this, it will no longer be possible for users to add bugs
-to this group, although bugs already in the group will remain in the group.
-Doing so is a much less drastic way to stop a group from growing
-than deleting the group would be.  <b>Note: If you are creating a group, you
-probably want it to be usable for bugs, in which case you should leave this checked.</b><p>";
-    print "<b>User RegExp</b> is optional, and if filled in, will ";
-    print "automatically grant membership to this group to anyone with an ";
-    print "email address that matches this regular expression.<p>\n";
-    print "By default, the new group will be associated with existing ";
-    print "products. Unchecking the \"Insert new group into all existing ";
-    print "products\" option will prevent this and make the group become ";
-    print "visible only when its controls have been added to a product.<P>\n";
-
-    PutTrailer("back to the <a href=\"editgroups.cgi\">group list</a>");
+    $template->process("admin/add-group.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    
     exit;
 }
 
