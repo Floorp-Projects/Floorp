@@ -241,8 +241,9 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
           m_desired_type = 0;
         }
       }
-      /* If the Mail charset is ISO_2022_JP we force it to use Base64 for attachments (bug#104255). 
-      Use 7 bit for other STATFUL charsets ( e.g. ISO_2022_KR). */
+
+      // If the Mail charset is ISO_2022_JP we force it to use Base64 for attachments (bug#104255). 
+      // Use 7 bit for other STATFUL charsets ( e.g. ISO_2022_KR). 
       if ((PL_strcasecmp(charset, "iso-2022-jp") == 0) &&
         (PL_strcasecmp(m_type, TEXT_HTML) == 0))
         needsB64 = PR_TRUE;
@@ -615,7 +616,24 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     delete mOutFile;
     mOutFile = nsnull;
   }
-  
+
+  // First things first, we are now going to see if this is an HTML
+  // Doc and if it is, we need to see if we can determine the charset 
+  // for this part by sniffing the HTML file.
+  //
+  if ( (m_type) &&  (*m_type) ) 
+  {
+    if (PL_strcasecmp(m_type, TEXT_HTML) == 0)
+    {
+      char *tmpCharset = (char *)nsMsgI18NParseMetaCharset(mFileSpec);
+      if (tmpCharset[0] != '\0')
+      {
+        PR_FREEIF(m_charset);
+        m_charset = PL_strdup(tmpCharset);
+      }
+    }
+  }
+
   if (NS_FAILED(status))
   {
 	  if (m_mime_delivery_state->m_status >= 0)

@@ -889,7 +889,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 												   turl,
 												   m_digest_p,
 												   ma,
-												   mCompFields->GetCharacterSet(),
+                           ma->m_charset, // rhp - this needs to be the charset we determine from
+                                          // the file or none at all!
                            ma->m_content_id);
 			if (!hdrs)
 				goto FAILMEM;
