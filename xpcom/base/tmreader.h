@@ -43,6 +43,7 @@ PR_BEGIN_EXTERN_C
 
 typedef struct tmreader     tmreader;
 typedef struct tmevent      tmevent;
+typedef struct tmcounts     tmcounts;
 typedef struct tmgraphedge  tmgraphedge;
 typedef struct tmgraphnode  tmgraphnode;
 typedef struct tmcallsite   tmcallsite;
@@ -73,10 +74,10 @@ struct tmevent {
     } u;
 };
 
-typedef struct tmcounts {
+struct tmcounts {
     int32           direct;     /* things allocated by this node's code */
     int32           total;      /* direct + things from all descendents */
-} tmcounts;
+};
 
 struct tmgraphnode {
     PLHashEntry     entry;      /* key is serial or name, value must be name */
@@ -126,11 +127,22 @@ struct tmreader {
 
 typedef void (*tmeventhandler)(tmreader *tmr, tmevent *event);
 
+/* The tmreader constructor and destructor. */
 extern tmreader     *tmreader_new(const char *program, void *data);
 extern void         tmreader_destroy(tmreader *tmr);
-extern int          tmreader_loop(tmreader *tmr, const char *filename,
-                                  tmeventhandler eventhandler);
-extern tmcallsite   *tmreader_get_callsite(tmreader *tmr, uint32 serial);
+
+/*
+ * Return -1 on permanent fatal error, 0 if filename can't be opened or is not
+ * a trace-malloc logfile, and 1 on success.
+ */
+extern int          tmreader_eventloop(tmreader *tmr, const char *filename,
+                                       tmeventhandler eventhandler);
+
+/* Map serial number or name to graphnode or callsite. */
+extern tmgraphnode  *tmreader_library(tmreader *tmr, uint32 serial);
+extern tmgraphnode  *tmreader_component(tmreader *tmr, const char *name);
+extern tmgraphnode  *tmreader_method(tmreader *tmr, uint32 serial);
+extern tmcallsite   *tmreader_callsite(tmreader *tmr, uint32 serial);
 
 PR_END_EXTERN_C
 

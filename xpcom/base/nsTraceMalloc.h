@@ -42,7 +42,8 @@ PR_BEGIN_EXTERN_C
 /**
  * Magic "number" at start of a trace-malloc log file.  Inspired by the PNG
  * magic string, which inspired XPCOM's typelib (.xpt) file magic.  See the
- * NS_TraceMalloc comment for magic number differences in log file structure.
+ * NS_TraceMallocStartup comment (below) for magic number differences in log
+ * file structure.
  */
 #define NS_TRACE_MALLOC_MAGIC           "XPCOM\nTMLog02\r\n\032"
 #define NS_TRACE_MALLOC_MAGIC_SIZE      16
@@ -76,7 +77,7 @@ typedef struct nsTMStats {
 #define NS_TMSTATS_STATIC_INITIALIZER {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 
 /**
- * Call NS_TraceMalloc with a valid log file descriptor to enable logging
+ * Call NS_TraceMallocStartup with a valid file descriptor to enable logging
  * of compressed malloc traces, including callsite chains.  Integers may be
  * unsigned serial numbers, sizes, or offsets, and require at most 32 bits.
  * They're encoded as follows:
@@ -103,6 +104,15 @@ typedef struct nsTMStats {
  *
  * See xpcom/base/bloatblame.c for an example log-file reader.
  */
+#define TM_EVENT_LIBRARY        'L'
+#define TM_EVENT_METHOD         'N'
+#define TM_EVENT_CALLSITE       'S'
+#define TM_EVENT_MALLOC         'M'
+#define TM_EVENT_CALLOC         'C'
+#define TM_EVENT_REALLOC        'R'
+#define TM_EVENT_FREE           'F'
+#define TM_EVENT_STATS          'Z'
+
 PR_EXTERN(void) NS_TraceMallocStartup(int logfd);
 
 /**
