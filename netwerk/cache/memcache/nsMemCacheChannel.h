@@ -56,6 +56,8 @@ protected:
     PRUint32                     mStartOffset;
     nsresult                     mStatus;
 
+    nsLoadFlags                  mLoadAttributes;
+
     friend class MemCacheWriteStreamWrapper;
     friend class AsyncReadStreamAdaptor;
 };

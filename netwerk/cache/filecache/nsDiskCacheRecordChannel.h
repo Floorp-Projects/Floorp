@@ -64,6 +64,7 @@ class nsDiskCacheRecordChannel : public nsIChannel,
 
   nsDiskCacheRecord*                    mRecord ;
   nsCOMPtr<nsILoadGroup>                mLoadGroup ;
+  nsLoadFlags                           mLoadAttributes;
   nsCOMPtr<nsISupports>                 mOwner ;
   nsCOMPtr<nsIChannel>                  mFileTransport ;
   nsCOMPtr< nsIFile >                   mSpec ;
