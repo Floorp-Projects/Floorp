@@ -66,6 +66,9 @@ public:
 	// from nsIMailboxUrl:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer);
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
+	NS_IMETHOD SetMailboxCopyHandler(nsIStreamListener *  aConsumer);
+	NS_IMETHOD GetMailboxCopyHandler(nsIStreamListener ** aConsumer);
+	
 	NS_IMETHOD SetFilePath(const nsFileSpec& aFilePath);
 	NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath);
 	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageKey);
@@ -96,6 +99,7 @@ protected:
 
 	// mailboxurl specific state
 	nsIStreamListener *m_mailboxParser;
+	nsIStreamListener *m_mailboxCopyHandler;
 
 	// manager of all of current url listeners....
 	nsIUrlListenerManager * m_urlListeners;

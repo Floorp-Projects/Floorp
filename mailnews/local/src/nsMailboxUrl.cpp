@@ -46,7 +46,8 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     NS_INIT_REFCNT();
 
 	// nsIMailboxUrl specific code...
-	m_mailboxParser = nsnull;
+	m_mailboxParser = nsnull;	
+	m_mailboxCopyHandler = nsnull;
 	m_errorMessage = nsnull;
 
     // nsINetLibUrl specific state
@@ -76,6 +77,8 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
  
 nsMailboxUrl::~nsMailboxUrl()
 {
+	NS_IF_RELEASE(m_mailboxParser);
+	NS_IF_RELEASE(m_mailboxCopyHandler);
 	NS_IF_RELEASE(m_urlListeners);
 
     NS_IF_RELEASE(m_container);
@@ -168,6 +171,31 @@ nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 	{
 		NS_IF_ADDREF(m_mailboxParser);
 		*aConsumer = m_mailboxParser;
+	}
+	NS_UNLOCK_INSTANCE();
+	return  NS_OK;
+}
+
+nsresult nsMailboxUrl::SetMailboxCopyHandler(nsIStreamListener * aMailboxCopyHandler)
+{
+	NS_LOCK_INSTANCE();
+	if (aMailboxCopyHandler)
+	{
+		NS_IF_RELEASE(m_mailboxCopyHandler);
+		NS_ADDREF(aMailboxCopyHandler);
+		m_mailboxCopyHandler = aMailboxCopyHandler;
+	}
+	NS_UNLOCK_INSTANCE();
+	return NS_OK;
+}
+
+nsresult nsMailboxUrl::GetMailboxCopyHandler(nsIStreamListener ** aMailboxCopyHandler)
+{
+	NS_LOCK_INSTANCE();
+	if (aMailboxCopyHandler)
+	{
+		NS_IF_ADDREF(m_mailboxCopyHandler);
+		*aMailboxCopyHandler = m_mailboxCopyHandler;
 	}
 	NS_UNLOCK_INSTANCE();
 	return  NS_OK;
