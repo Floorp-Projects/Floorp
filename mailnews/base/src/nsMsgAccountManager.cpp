@@ -80,6 +80,7 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #define PREF_NEWS_DIRECTORY "news.directory"
 #define PREF_MAIL_DIRECTORY "mail.directory"
 #define PREF_PREMIGRATION_MAIL_DIRECTORY "premigration.mail.directory"
+#define PREF_PREMIGRATION_NEWS_DIRECTORY "premigration.news.directory"
 #define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
 
 #define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
@@ -2044,13 +2045,21 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	
 	inputStream.close();
 #else /* USE_NEWSRC_MAP_FILE */
-	rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
+    rv = m_prefs->CopyCharPref(PREF_PREMIGRATION_NEWS_DIRECTORY, &news_directory_value);
+    if (NS_FAILED(rv) || !news_directory_value || (PL_strlen(news_directory_value) == 0)) {
+#ifdef DEBUG_ACCOUNTMANAGER
+      printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_NEWS_DIRECTORY,PREF_NEWS_DIRECTORY);
+#endif
+      PR_FREEIF(news_directory_value);
+      rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
+    }
+    
 	if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
       newsrcDir = news_directory_value;
       PR_FREEIF(news_directory_value);
     }
     else {
-      // if that fails, use the home directory.
+      // "news.directory" and "premigration.news.directory" fail, use the home directory.
 #ifdef XP_UNIX
       nsSpecialSystemDirectory homeDir(nsSpecialSystemDirectory::Unix_HomeDirectory);
 #elif XP_BEOS
