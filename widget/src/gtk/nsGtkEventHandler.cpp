@@ -363,7 +363,15 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   rect.y = 0;
   rect.width = alloc->width;
   rect.height = alloc->height;
-  if (widget->mIsToplevel || widget->mResizeEventsPending) {
+  // always send toplevel resize events and don't lock it.
+  if (widget->mIsToplevel) {
+    printf("handle_size_allocate: top level resize\n");
+    widget->mResizeEventsPending = 0;
+    widget->OnResizing = PR_TRUE;
+    widget->OnResize(rect);
+    widget->OnResizing = PR_FALSE;
+  }
+  else if (widget->mResizeEventsPending) {
     //    printf("%d resize events pending.\n", widget->mResizeEventsPending);
     // reset the counter
     widget->mResizeEventsPending = 0;
