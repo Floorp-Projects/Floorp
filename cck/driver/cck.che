@@ -30,7 +30,5 @@ ShellInstallTextFile=%Root%Configs\Default\Workspace\Autorun\install.txt
 IntSetupBgBitmap=%Root%Configs\Default\Workspace\ISetup\nscplogo.gif
 Company_Name=
 TechSupportNumber=
-NCIFileList=
-NCIFileEditor=notepad
 CustomComponent1=Please select an executable to install.
 CustomComponent137=Please select an executable to install.
