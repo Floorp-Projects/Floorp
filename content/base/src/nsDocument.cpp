@@ -420,6 +420,7 @@ nsDocument::nsDocument()
   mInDestructor = PR_FALSE;
   mDOMStyleSheets = nsnull;
   mNameSpaceManager = nsnull;
+  mHeaderData = nsnull;
 
   Init();/* XXX */
 }
@@ -469,6 +470,10 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mListenerManager);
   NS_IF_RELEASE(mDOMStyleSheets);
   NS_IF_RELEASE(mNameSpaceManager);
+  if (nsnull != mHeaderData) {
+    delete mHeaderData;
+    mHeaderData = nsnull;
+  }
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -640,6 +645,58 @@ void nsDocument::SetDocumentCharacterSet(nsCharSetID aCharSetID)
   mCharacterSet = aCharSetID;
 }
 
+NS_IMETHODIMP
+nsDocument::GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const
+{
+  aData.Truncate();
+  const nsDocHeaderData* data = mHeaderData;
+  while (nsnull != data) {
+    if (data->mField == aHeaderField) {
+      aData = data->mData;
+      break;
+    }
+    data = data->mNext;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsString& aData)
+{
+  if (nsnull != aHeaderField) {
+    if (nsnull == mHeaderData) {
+      if (0 < aData.Length()) { // don't bother storing empty string
+        mHeaderData = new nsDocHeaderData(aHeaderField, aData);
+      }
+    }
+    else {
+      nsDocHeaderData* data = mHeaderData;
+      nsDocHeaderData** lastPtr = &mHeaderData;
+      do {  // look for existing and replace
+        if (data->mField == aHeaderField) {
+          if (0 < aData.Length()) {
+            data->mData = aData;
+          }
+          else {  // don't store empty string
+            (*lastPtr)->mNext = data->mNext;
+            data->mNext = nsnull;
+            delete data;
+          }
+          return NS_OK;
+        }
+        lastPtr = &(data->mNext);
+        data = data->mNext;
+      } while (nsnull != data);
+      // didn't find, append
+      if (0 < aData.Length()) {
+        *lastPtr = new nsDocHeaderData(aHeaderField, aData);
+      }
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
 #if 0
 // XXX Temp hack: moved to nsMarkupDocument
 nsresult nsDocument::CreateShell(nsIPresContext* aContext,
@@ -755,15 +812,20 @@ nsIStyleSheet* nsDocument::GetStyleSheetAt(PRInt32 aIndex)
   return sheet;
 }
 
-void nsDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
+PRInt32 nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet)
 {
-  aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it first
+  return mStyleSheets.IndexOf(aSheet);
+}
+
+void nsDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
+{
+  mStyleSheets.AppendElement(aSheet);
 }
 
 void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  mStyleSheets.AppendElement(aSheet);
+  InternalAddStyleSheet(aSheet);
   NS_ADDREF(aSheet);
   aSheet->SetOwningDocument(this);
 
@@ -777,7 +839,7 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
       nsIStyleSet* set = shell->GetStyleSet();
       if (nsnull != set) {
-        AddStyleSheetToSet(aSheet, set);
+        set->AddDocStyleSheet(aSheet, this);
         NS_RELEASE(set);
       }
     }
@@ -795,12 +857,11 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                             PRBool aDisabled)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  PRInt32 count;
   PRInt32 index = mStyleSheets.IndexOf((void *)aSheet);
+  PRInt32 count;
   // If we're actually in the document style sheet list
   if (-1 != index) {
     count = mPresShells.Count();
-    PRInt32 index;
     for (index = 0; index < count; index++) {
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
       nsIStyleSet* set = shell->GetStyleSet();
@@ -809,7 +870,7 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
           set->RemoveDocStyleSheet(aSheet);
         }
         else {
-          AddStyleSheetToSet(aSheet, set);
+          set->AddDocStyleSheet(aSheet, this);
         }
         NS_RELEASE(set);
       }

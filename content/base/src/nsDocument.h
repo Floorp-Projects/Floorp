@@ -51,6 +51,29 @@ protected:
   PRInt32 mDataLen;
 };
 
+class nsDocHeaderData
+{
+public:
+  nsDocHeaderData(nsIAtom* aField, const nsString& aData)
+  {
+    mField = aField;
+    NS_IF_ADDREF(mField);
+    mData = aData;
+    mNext = nsnull;
+  }
+  ~nsDocHeaderData(void)
+  {
+    NS_IF_RELEASE(mField);
+    if (nsnull != mNext) {
+      delete mNext;
+      mNext = nsnull;
+    }
+  }
+
+  nsIAtom*         mField;
+  nsAutoString     mData;
+  nsDocHeaderData* mNext;
+};
 
 // Base class for our document implementations
 class nsDocument : public nsIDocument, 
@@ -98,6 +121,13 @@ public:
   virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID);
 
   /**
+   * Access HTTP header data (this may also get set from other sources, like
+   * HTML META tags).
+   */
+  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
+  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
+
+  /**
    * Create a new presentation shell that will use aContext for
    * it's presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
@@ -135,6 +165,7 @@ public:
    */
   virtual PRInt32 GetNumberOfStyleSheets();
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
+  virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled);
@@ -305,8 +336,7 @@ protected:
 
 protected:
 
-
-  virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
 
   nsDocument();
   virtual ~nsDocument(); 
@@ -330,6 +360,7 @@ protected:
   PRBool mInDestructor;
   nsDOMStyleSheetCollection *mDOMStyleSheets;
   nsINameSpaceManager* mNameSpaceManager;
+  nsDocHeaderData* mHeaderData;
 };
 
 #endif /* nsDocument_h___ */
