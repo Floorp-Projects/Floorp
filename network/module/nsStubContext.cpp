@@ -32,6 +32,9 @@
 #include "nsNetStream.h"
 
 
+/* forward declaration */
+extern "C" void NET_ResumeWithAuth (void *);
+
 void free_stub_context(MWContext *window_id);
 
 
@@ -345,7 +348,7 @@ PRIVATE XP_Bool _stub_PromptUsernameAndPassword(MWContext *context,
   nsINetSupport *ins;
   XP_Bool bResult = FALSE;
     
-#if 0
+#ifndef XP_UNIX
   if (nsnull != (ins = getNetSupport(context->modular_data))) {
     nsAutoString str(msg);
     nsAutoString userStr(*username);
@@ -361,7 +364,7 @@ PRIVATE XP_Bool _stub_PromptUsernameAndPassword(MWContext *context,
   } 
   /* No nsINetSupport interface... */
   else
-#endif /* 0 */
+#endif /* !XP_UNIX */
  {
     NET_AuthClosure *auth_closure = (NET_AuthClosure *) closure;
     char buf[256];
