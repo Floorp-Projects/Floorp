@@ -2114,7 +2114,7 @@ public class LDAPConnection
         
         // cleanup required for referral connections
         while (results.hasMoreElements()) {
-            ; // do nothing
+            results.nextElement();
         }
         
         return entry;
@@ -2196,7 +2196,6 @@ public class LDAPConnection
                 throw new LDAPException("No socket factory for LDAPUrl",
                                          LDAPException.OTHER);
             }
-            System.err.println(factory);
             connection.setSocketFactory(factory);
         }
         connection.connect (host, port);
