@@ -268,7 +268,7 @@ morkFile::NewFileErrnoError(morkEnv* ev) const
 
 // ````` ````` ````` ````` newlines ````` ````` ````` `````  
 
-#if defined(MORK_MAC) || defined(MORK_OBSOLETE)
+#if defined(MORK_MAC)
        static const char* morkFile_kNewlines = 
        "\015\015\015\015\015\015\015\015\015\015\015\015\015\015\015\015";
 #      define morkFile_kNewlinesCount 16

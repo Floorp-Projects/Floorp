@@ -52,7 +52,6 @@
 // { %%%%% begin platform defs peculiar to Mork %%%%%
 
 //#define XP_MAC 1
-//#define MORK_ALONE 1
 
 #ifdef XP_MAC
 #define MORK_MAC 1
@@ -75,10 +74,6 @@
 #define MORK_BEOS 1
 #endif
 
-#ifdef MORK_OBSOLETE
-#undef MORK_MAC
-#endif
-
 // } %%%%% end platform defs peculiar to Mork %%%%%
 
 #if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS)
@@ -93,9 +88,7 @@
 #include <unistd.h>  /* for SEEK_SET, SEEK_END */
 #endif
 
-#ifndef MORK_ALONE
 #include "nsDebug.h" 
-#endif /*MORK_ALONE*/
 
 #define MORK_ISPRINT(c) isprint(c) 
 
@@ -105,18 +98,6 @@
 #define MORK_FILEFLUSH(file) fflush(file) 
 #define MORK_FILECLOSE(file) fclose(file) 
 #endif /*MORK_WIN*/
-
-#ifdef MORK_OBSOLETE
-#include "xp_file.h" 
-#include <ctype.h> 
-#define MORK_ISPRINT(c) isprint(c) 
-
-#define MORK_FILETELL(file) XP_FileTell(file) 
-#define MORK_FILESEEK(file, where, how) XP_FileSeek(file, where, how) 
-#define MORK_FILEREAD(outbuf, insize, file) XP_FileRead(outbuf, insize, file) 
-#define MORK_FILEFLUSH(file) XP_FileFlush(file) 
-#define MORK_FILECLOSE(file) XP_FileClose(file) 
-#endif /*MORK_OBSOLETE*/
 
 /* ===== separating switchable features ===== */
 
@@ -144,7 +125,7 @@
 #define mork_kTAB '\011'
 #define mork_kCRLF "\015\012"     /* A CR LF equivalent string */
 
-#if defined(MORK_MAC) || defined(MORK_OBSOLETE)
+#if defined(MORK_MAC)
 #  define mork_kNewline             "\015"
 #  define mork_kNewlineSize 1
 #else
@@ -170,10 +151,6 @@ extern void mork_assertion_signal(const char* inMessage);
 
 // { %%%%% begin standard c utility methods %%%%%
 /*define MORK_USE_XP_STDLIB 1*/
-
-#ifdef MORK_OBSOLETE 
-#define MORK_PROVIDE_STDLIB 1
-#endif /*MORK_OBSOLETE*/
 
 #if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS)
 #define MORK_USE_C_STDLIB 1

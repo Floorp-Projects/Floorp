@@ -315,7 +315,7 @@ morkStream::PutByteThenNewline(morkEnv* ev, int inByte)
 mork_size
 morkStream::PutLineBreak(morkEnv* ev)
 {
-#if defined(MORK_MAC) || defined(MORK_OBSOLETE)
+#if defined(MORK_MAC)
 
   this->Putc(ev, mork_kCR);
   return 1;

@@ -50,49 +50,11 @@
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
-/* ----- ----- ----- ----- MORK_OBSOLETE ----- ----- ----- ----- */
-#if defined(MORK_OBSOLETE) || defined(MORK_ALONE)
-
-#include <Types.h>
-//#include "plstr.h"
-  
-  static void // copied almost verbatim from the IronDoc debugger sources:
-  mork_mac_break_string(register const char* inMessage) /*i*/
-  {
-    Str255 pascalStr; // to hold Pascal string version of inMessage
-    mork_u4 length = MORK_STRLEN(inMessage);
-    
-    // if longer than maximum 255 bytes, just copy 255 bytes worth
-    pascalStr[ 0 ] = (mork_u1) ((length > 255)? 255 : length);
-    if ( length ) // anything to copy? */
-    {
-      register mork_u1* p = ((mork_u1*) &pascalStr) + 1; // after length byte
-      register mork_u1* end = p + length; // one past last byte to copy
-      while ( p < end ) // more bytes to copy?
-      {
-        register int c = (mork_u1) *inMessage++;
-        if ( c == ';' ) // c is the MacsBug ';' metacharacter?
-          c = ':'; // change to ':', rendering harmless in a MacsBug context
-        *p++ = (mork_u1) c;
-      }
-    }
-    
-    DebugStr(pascalStr); /* call Mac debugger entry point */
-  }
-#endif /*MORK_OBSOLETE*/
-/* ----- ----- ----- ----- MORK_OBSOLETE ----- ----- ----- ----- */
-
 void mork_assertion_signal(const char* inMessage)
 {
-#if defined(MORK_OBSOLETE) || defined(MORK_ALONE)
-  mork_mac_break_string(inMessage);
-#endif /*MORK_OBSOLETE*/
-
 #if defined(MORK_WIN) || defined(MORK_MAC)
   // asm { int 3 }
-#ifndef MORK_ALONE
   NS_ASSERTION(0, inMessage);
-#endif /*MORK_ALONE*/
 #endif /*MORK_WIN*/
 }
 
