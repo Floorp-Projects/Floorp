@@ -131,6 +131,9 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
 {
   MOZ_COUNT_CTOR(nsTextTransformer);
 
+  if (aLineBreaker == nsnull && aWordBreaker == nsnull )
+    NS_ASSERTION(0, "invalid creation of nsTextTransformer");
+  
 #ifdef DEBUG
   static PRBool firstTime = PR_TRUE;
   if (firstTime) {
