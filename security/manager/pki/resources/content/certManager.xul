@@ -37,7 +37,7 @@
 <window id="certmanager" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&certmgr.title;"
-        onload="LoadCerts()">
+        onload="LoadCerts();">
 
   <script type="application/x-javascript" src="chrome://help/content/help.js" />
   <script src="chrome://global/content/strres.js" />

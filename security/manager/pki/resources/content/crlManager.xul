@@ -41,7 +41,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
         orient="vertical"
-        onload="onLoad()">
+        onload="onLoad();">
 
   <script src="chrome://global/content/strres.js"/>
   <script src="crlManager.js"/>
