@@ -272,6 +272,11 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset, nsIMsgSend *mime_deliv
       {
         needsB64 = PR_TRUE;
       }
+      else if (charset && nsMsgI18Nstateful_charset(charset)) 
+      {
+        PR_FREEIF(m_encoding);
+        m_encoding = PL_strdup (ENCODING_7BIT);
+      }
       else if (encode_p &&
         m_size > 500 &&
         m_unprintable_count > (m_size / 10))
