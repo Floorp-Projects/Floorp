@@ -53,6 +53,7 @@ psm2            0
 embedding_test  1
 carbon          0
 cache           1
+useimg2         1
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
