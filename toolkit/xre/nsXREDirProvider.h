@@ -50,8 +50,8 @@ public:
   nsXREDirProvider(const nsACString& aProductName);
   virtual ~nsXREDirProvider();
 
-  NS_DECL_ISUPPORTS;
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
 private:
   nsresult GetProductDirectory(nsILocalFile** aFile);
