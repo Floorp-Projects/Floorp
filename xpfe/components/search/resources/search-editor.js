@@ -219,7 +219,7 @@ function chooseCategory( aNode )
 	var treeNode = document.getElementById("engineList");
 	if (treeNode)
 	{
-		dump("\nSet search engine list to category='" + category + "'\n\n");
+		debug("\nSet search engine list to category='" + category + "'\n\n");
 		treeNode.setAttribute( "ref", category );
 	}
 	return(true);
