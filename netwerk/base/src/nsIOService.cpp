@@ -161,7 +161,6 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
 
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
-    nsCRT::free(scheme);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIEventQueue> eventQ;
