@@ -218,7 +218,7 @@ struct graphnode {
     graphnode   *up;
     int32       direct;         /* bytes allocated by this node's code */
     int32       total;          /* direct + bytes from all descendents */
-    int         visited;        /* flag used during walk_callsite_tree */
+    int32       visited;        /* counter used as flag when computing totals */
 };
 
 #define graphnode_name(node)    ((char*) (node)->entry.value)
@@ -348,6 +348,17 @@ static PLHashTable *methods;
 static PLHashTable *callsites;
 static callsite     calltree_root;
 
+static void compute_callsite_totals(callsite *site)
+{
+    callsite *kid;
+
+    site->total += site->direct;
+    for (kid = site->kids; kid; kid = kid->siblings) {
+        compute_callsite_totals(kid);
+        site->total += kid->total;
+    }
+}
+
 static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
 {
     callsite *parent;
@@ -382,13 +393,13 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
                                     lib->total += site->total;
                                 connect_nodes(plib, lib, site);
                             }
-                            lib->visited = 1;
+                            lib->visited++;
                         }
                     }
-                    comp->visited = 1;
+                    comp->visited++;
                 }
             }
-            meth->visited = 1;
+            meth->visited++;
         }
     }
 
@@ -405,11 +416,11 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
     }
 
     if (meth) {
-        meth->visited = 0;
+        meth->visited--;
         if (comp) {
-            comp->visited = 0;
+            comp->visited--;
             if (lib)
-                lib->visited = 0;
+                lib->visited--;
         }
     }
 }
@@ -779,7 +790,7 @@ int main(int argc, char **argv)
           case 'R': {
             const void *key;
             PLHashNumber hash;
-            callsite *site, *tmp;
+            callsite *site;
             int32 delta;
             graphnode *meth, *comp, *lib;
 
@@ -794,8 +805,6 @@ int main(int argc, char **argv)
 
             delta = (int32)event.u.alloc.size - (int32)event.u.alloc.oldsize;
             site->direct += delta;
-            for (tmp = site; tmp; tmp = tmp->parent)
-                tmp->total += delta;
             meth = site->method;
             if (meth) {
                 meth->direct += delta;
@@ -815,6 +824,7 @@ int main(int argc, char **argv)
         }
     }
 
+    compute_callsite_totals(&calltree_root);
     walk_callsite_tree(&calltree_root, 0, 0, fp);
 
     dump_graph(libraries, "Library", fp);
