@@ -67,7 +67,7 @@ protected:
   void GetUserSheetURL(nsCString & aURL);
 
 private:
-  NS_IMETHOD ReallyUpdateOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI,
+  NS_IMETHOD ReallyUpdateOverlayFromDataSource(char *aDocURI, const PRUnichar *aOverlayURI,
                                                PRBool aRemove);
   NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
                             PRBool aUseProfileDirOnly = PR_FALSE);
