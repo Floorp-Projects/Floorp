@@ -26,7 +26,32 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= src
+MODULE		= editor
+LIBRARY_NAME	= texteditor_s
+IS_COMPONENT	= 1
+# REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
+
+CPPSRCS		=                           \
+		nsPlaintextDataTransfer.cpp \
+		nsPlaintextEditor.cpp       \
+		nsTextEditUtils.cpp         \
+		nsTextEditRules.cpp         \
+		nsEditorEventListeners.cpp  \
+		nsWrapUtils.cpp  \
+		nsInternetCiter.cpp  \
+		nsAOLCiter.cpp  \
+		$(NULL)
+
+ifdef IBMBIDI
+CPPSRCS		+= \
+		nsTextEditRulesBidi.cpp \
+		$(NULL)
+endif                
+
+# don't want the shared lib; force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES        += -I../base
 

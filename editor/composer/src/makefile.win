@@ -1,0 +1,73 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..
+
+include <$(DEPTH)/config/config.mak>
+
+LIBRARY_NAME=composer
+
+CPPSRCS =                                \
+          nsEditorShell.cpp              \
+          nsEditorShellMouseListener.cpp \
+          nsInterfaceState.cpp           \
+          nsComposerController.cpp       \
+          nsComposerCommands.cpp         \
+          nsComposerRegistration.cpp     \
+          nsEditorParserObserver.cpp     \
+          $(NULL)
+
+CPP_OBJS =                                            \
+          .\$(OBJDIR)\nsEditorShell.obj              \
+          .\$(OBJDIR)\nsEditorShellMouseListener.obj \
+          .\$(OBJDIR)\nsInterfaceState.obj           \
+          .\$(OBJDIR)\nsComposerController.obj       \
+          .\$(OBJDIR)\nsComposerCommands.obj         \
+          .\$(OBJDIR)\nsComposerRegistration.obj     \
+          .\$(OBJDIR)\nsEditorParserObserver.obj     \
+           $(NULL)
+
+MODULE=composer 
+
+MAKE_OBJ_TYPE = DLL
+DLLNAME = composer
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+# These are the libraries we need to link with to create the dll
+LLIBS =                                \
+        $(DIST)\lib\xpcom.lib          \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib

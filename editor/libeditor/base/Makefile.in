@@ -26,7 +26,45 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= src
+MODULE		= editor
+LIBRARY_NAME	= editorbase_s
+# REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
+
+# Internal header files, needed by other editor sublibs:
+INTERNAL_HDR_DIR = ../internal
+
+CPPSRCS		=                           \
+		nsEditor.cpp                \
+		nsEditorCommands.cpp        \
+		nsEditorController.cpp      \
+		nsEditorService.cpp         \
+		nsEditorUtils.cpp           \
+		nsSelectionState.cpp        \
+		$(NULL)
+
+# Transactions: we'd like to split these off,
+# but currently they and nsEditor are too intertwined!
+CPPSRCS		+=                          \
+		EditTxn.cpp                 \
+		PlaceholderTxn.cpp          \
+		ChangeAttributeTxn.cpp      \
+		CreateElementTxn.cpp        \
+		DeleteElementTxn.cpp        \
+		DeleteRangeTxn.cpp          \
+		DeleteTextTxn.cpp           \
+		EditAggregateTxn.cpp        \
+		IMETextTxn.cpp              \
+		InsertElementTxn.cpp        \
+		InsertTextTxn.cpp           \
+		JoinElementTxn.cpp          \
+		SetDocTitleTxn.cpp          \
+		SplitElementTxn.cpp         \
+		nsStyleSheetTxns.cpp        \
+		TransactionFactory.cpp      \
+		$(NULL)
+
+# don't want the shared lib; force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
