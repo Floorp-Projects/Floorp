@@ -340,10 +340,12 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
 
       // dispatch to the DOM
       nsCOMPtr<nsIContent> lastContent;
-      mGestureDownFrame->GetContent(getter_AddRefs(lastContent));
-      if ( lastContent )
-        lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
- 
+      if ( mGestureDownFrame ) {
+        mGestureDownFrame->GetContent(getter_AddRefs(lastContent));
+        if ( lastContent )
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+      
       // dispatch to the frame
       if ( mGestureDownFrame )
         mGestureDownFrame->HandleEvent(aPresContext, &event, status);   
@@ -680,7 +682,8 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         nsCOMPtr<nsIContent> lastContent;
         nsCOMPtr<nsIContent> targetContent;
 
-        mCurrentTarget->GetContent(getter_AddRefs(targetContent));
+        if ( mCurrentTarget )
+          mCurrentTarget->GetContent(getter_AddRefs(targetContent));
 
         if (mLastMouseOverFrame) {
           //fire mouseout
