@@ -25,7 +25,7 @@
 interface nsIMsgFolder;
 interface nsIMsgDatabase;
 interface nsIFileSpec;
-
+interface nsIMsgWindow;
 
 [scriptable, uuid(2af7d7a2-e5b6-11d4-a5b7-0060b0fc04b7)]
 
@@ -34,8 +34,8 @@ interface nsIFileSpec;
 interface nsIMsgFolderCompactor :  nsISupports
 {
   void Init(in nsIMsgFolder folder, in string baseMsgUri, in nsIMsgDatabase db,
-                           in nsIFileSpec pathSpec);
-  void InitCompactAll(in nsIMsgFolder folder);
+                           in nsIFileSpec pathSpec, in nsIMsgWindow aMsgWindow);
+  void InitCompactAll(in nsIMsgFolder folder, in nsIMsgWindow aMsgWindow);
   // we probably want to add the ability to set an enumerator to determine which
   // messages to copy over in the compaction process.
   void StartCompacting();

@@ -1333,7 +1333,7 @@ nsresult nsMsgDBFolder::CompactOfflineStore(nsIMsgWindow *inWindow)
     {
       nsCOMPtr<nsIFileSpec> pathSpec;
       rv = GetPath(getter_AddRefs(pathSpec));
-      rv = folderCompactor->Init(this, mBaseMessageURI, mDatabase, pathSpec);
+      rv = folderCompactor->Init(this, mBaseMessageURI, mDatabase, pathSpec, inWindow);
       if (NS_SUCCEEDED(rv))
         rv = folderCompactor->StartCompacting();
     }

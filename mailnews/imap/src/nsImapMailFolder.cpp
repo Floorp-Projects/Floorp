@@ -1000,7 +1000,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   return GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, aResult);
 }
-NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener)
+NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   // compact offline part purely for testing purposes
@@ -1019,9 +1019,9 @@ NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener)
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener)
+NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener,  nsIMsgWindow *aMsgWindow)
 {
-return Compact(aListener);  //for now
+  return Compact(aListener, aMsgWindow);  //for now
 }
 
 NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,

@@ -94,8 +94,8 @@ public:
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
-  NS_IMETHOD Compact(nsIUrlListener *aListener);
-  NS_IMETHOD CompactAll(nsIUrlListener *aListener);
+  NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *msgWindow);
+  NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *msgWindow);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
   NS_IMETHOD Rename(const PRUnichar *name, nsIMsgWindow *msgWindow);
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);

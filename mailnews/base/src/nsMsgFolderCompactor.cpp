@@ -35,10 +35,12 @@
 #include "nsIDBFolderInfo.h"
 #include "nsRDFCID.h"
 #include "nsMsgFolderCompactor.h"
+#include "nsIStringBundle.h"
+#include "nsTextFormatter.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
-
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 //////////////////////////////////////////////////////////////////////////////
 // nsFolderCompactState
 //////////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
   return rv;
 }
 
-NS_IMETHODIMP nsFolderCompactState::InitCompactAll(nsIMsgFolder *folder)
+NS_IMETHODIMP nsFolderCompactState::InitCompactAll(nsIMsgFolder *folder, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgFolder> rootFolder;
@@ -142,6 +144,7 @@ NS_IMETHODIMP nsFolderCompactState::InitCompactAll(nsIMsgFolder *folder)
   rv = allDescendents->Count(&cnt);
   NS_ENSURE_SUCCESS(rv,rv);
   
+  m_window = aMsgWindow;
   NS_NewISupportsArray(getter_AddRefs(m_folderArray));
   PRUint32 expungedBytes=0;
   for (PRUint32 i=0; i< cnt;i++)
@@ -199,7 +202,7 @@ nsFolderCompactState::CompactHelper(nsIMsgFolder *folder)
    rv = folder->GetBaseMessageURI(&baseMessageURI);
    NS_ENSURE_SUCCESS(rv,rv);
     
-   rv = Init(folder, baseMessageURI, db, pathSpec);
+   rv = Init(folder, baseMessageURI, db, pathSpec, m_window);
    if (NS_SUCCEEDED(rv))
       rv = StartCompacting();
 
@@ -209,9 +212,46 @@ nsFolderCompactState::CompactHelper(nsIMsgFolder *folder)
    return rv;
 }
 
+
+
+#define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
+
+nsresult nsFolderCompactState::GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval)
+{
+  nsCOMPtr<nsIStringBundle> stringBundle;
+
+  nsresult res = NS_OK;
+  char    *propertyURL = MESSENGER_STRING_URL;
+
+  NS_WITH_SERVICE(nsIStringBundleService, sBundleService,
+                      kStringBundleServiceCID, &res);
+  if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+  {
+    res = sBundleService->CreateBundle(propertyURL, nsnull,
+                                             getter_AddRefs(stringBundle));
+  }
+  if (stringBundle)
+  {
+		res = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(statusMsgName).get(), retval);
+  }
+  return res;
+}
+
+nsresult nsFolderCompactState::ShowStatusMsg(const PRUnichar *aMsg)
+{
+  nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+  if (m_window)
+  {
+    m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
+    if (statusFeedback && aMsg)
+      return statusFeedback->ShowStatusString (aMsg);
+  }
+  return NS_OK;
+}
+
 nsresult
 nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgDatabase *db,
-                           nsIFileSpec *pathSpec)
+                           nsIFileSpec *pathSpec, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
 
@@ -222,6 +262,7 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
 
   pathSpec->GetFileSpec(&m_fileSpec);
   m_fileSpec.SetLeafName("nstmp");
+  m_window = aMsgWindow;
 
   InitDB(db);
 
@@ -251,6 +292,18 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
   nsresult rv = NS_OK;
   if (m_size > 0)
   {
+    nsXPIDLString formatString;
+
+    rv = GetStatusFromMsgName("compactingFolder", getter_Copies(formatString));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLString folderName;
+      m_folder->GetName(getter_Copies(folderName));
+      PRUnichar *u = nsTextFormatter::smprintf((const PRUnichar *) formatString, (const PRUnichar *) folderName);
+      if (u)
+        ShowStatusMsg(u);
+      PR_FREEIF(u);
+    }
     AddRef();
     rv = BuildMessageURI(m_baseMessageUri,
                                 m_keyArray[0],
@@ -377,7 +430,7 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   m_db->CopyHdrFromExistingHdr(m_startOfNewMsg, msgHdr, PR_TRUE,
                                getter_AddRefs(newMsgHdr));
 
-  m_db->Commit(nsMsgDBCommitType::kLargeCommit);
+//  m_db->Commit(nsMsgDBCommitType::kLargeCommit);  // no sense commiting until the end
     // advance to next message 
   m_curIndex ++;
   if (m_curIndex >= m_size)
@@ -390,6 +443,13 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   }
   else
   {
+    nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+    if (m_window)
+    {
+      m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
+      if (statusFeedback)
+        statusFeedback->ShowProgress (100 * m_curIndex / m_size);
+    }
     m_messageUri.SetLength(0); // clear the previous message uri
     rv = BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
                                 m_messageUri);

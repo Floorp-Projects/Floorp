@@ -1007,7 +1007,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void
 							accountManager->SetFolderDoingCleanupInbox(inboxFolder);
 							urlListener = do_QueryInterface(accountManager, &rv);
                     
-							inboxFolder->Compact(urlListener);
+							inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
 							if (NS_SUCCEEDED(rv) && isImap && urlListener)
 		                    {
 								PRBool inProgress = PR_FALSE;

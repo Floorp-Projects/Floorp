@@ -28,7 +28,7 @@
 #include "nsIMsgFolder.h"	 
 #include "nsIStreamListener.h"
 #include "nsIMsgFolderCompactor.h"
-
+#include "nsIMsgWindow.h"
 class nsIMsgMessageService;
 
 class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListener
@@ -49,6 +49,9 @@ public:
 
   nsresult GetMessage(nsIMsgDBHdr **message);
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
+  nsresult GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval);
+  nsresult ShowStatusMsg(const PRUnichar *aMsg);
+
   char *m_baseMessageUri; // base message uri
   nsCString m_messageUri; // current message uri being copy
   nsCOMPtr<nsIMsgFolder> m_folder; // current folder being compact
@@ -64,6 +67,7 @@ public:
   nsIMsgMessageService* m_messageService; // message service for copying
                                           // message 
   nsCOMPtr<nsISupportsArray> m_folderArray; // to store all the folders in case of compact all
+  nsCOMPtr <nsIMsgWindow> m_window;
   PRUint32 m_folderIndex; // tells which folder to compact in case of compact all
   PRBool m_compactAll;  //flag for compact all
 

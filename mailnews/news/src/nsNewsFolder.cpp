@@ -1828,7 +1828,7 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
   return rv;
 
 }
-NS_IMETHODIMP nsMsgNewsFolder::Compact(nsIUrlListener *aListener)
+NS_IMETHODIMP nsMsgNewsFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
 

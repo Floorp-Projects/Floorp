@@ -146,8 +146,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	*/
 	void createStorageIfMissing(in nsIUrlListener urlListener);
   
-  void compact(in nsIUrlListener aListener);
-  void compactAll(in nsIUrlListener aListener);
+  void compact(in nsIUrlListener aListener, in nsIMsgWindow aMsgWindow);
+  void compactAll(in nsIUrlListener aListener, in nsIMsgWindow aMsgWindow);
   void emptyTrash(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
 
   /**

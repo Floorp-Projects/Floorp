@@ -839,20 +839,20 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener)
+NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && folderCompactor)
   {
-      rv=folderCompactor->InitCompactAll(this);  // start with each folder compaction from there
+      rv=folderCompactor->InitCompactAll(this, aMsgWindow);  // start with each folder compaction from there
   }
   return rv;
 }
 
 // **** jefft -- needs to provide nsIMsgWindow for the compact status
 // update; come back later
-NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener)
+NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
@@ -878,7 +878,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener)
     
       if (NS_SUCCEEDED(rv)) 
       {
-        rv = folderCompactor->Init(this, mBaseMessageURI, db, pathSpec);
+        rv = folderCompactor->Init(this, mBaseMessageURI, db, pathSpec, aMsgWindow);
         if (NS_SUCCEEDED(rv))
           rv = folderCompactor->StartCompacting();
       }
