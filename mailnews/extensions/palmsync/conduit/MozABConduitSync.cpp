@@ -230,6 +230,26 @@ long CMozABConduitSync::GetRemoteDBInfo(int iIndex)
     return retval;
 }
 
+BOOL CMozABConduitSync::CategoryExists(CPString &mozABName)
+{
+    CPCategory * pCategory = m_dbHH->GetFirstCategory();
+    // Palm only allows 15 chars for category names.
+    CPString cutOffName;
+    if (mozABName.Length() > 15)
+        cutOffName = mozABName.Left(15);
+    else
+        cutOffName = mozABName;
+    while (pCategory)
+    {
+        CPString catName(pCategory->GetName());
+        if (!catName.CompareNoCase(cutOffName.GetBuffer(0)))
+          return TRUE;
+        // Process next category
+        pCategory = m_dbHH->GetNextCategory();
+    }
+    return FALSE;
+}
+
 // this is done in separate thread since the main thread in this DLL
 // needs to call SyncYieldCycles(1) atleast once every 7 seconds
 DWORD WINAPI DoFastSync(LPVOID lpParameter)
@@ -466,7 +486,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
     // and the case where Palm ABs have been deleted.
     for(mozABIndex=0; mozABIndex<mozABCount; mozABIndex++)
     {
-        if(mozIsFirstSyncList[mozABIndex])
+        if(mozIsFirstSyncList[mozABIndex] && !sync->CategoryExists(*mozABNameList[mozABIndex]))
         {
             CONDUIT_LOG3(gFD, "\nMoz AB[%d] category index = %d, name = '%s' doesn't exist on Palm so needs to be added to palm\n",
                     mozABIndex, mozCatIndexList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
