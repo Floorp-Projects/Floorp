@@ -259,9 +259,19 @@ class nsWindowBeOS : public BWindow, public nsIWidgetStore {
   public:
     nsWindowBeOS(nsIWidget *aWidgetWindow,  BRect aFrame, const char *aName, window_look aLook,
         window_feel aFeel, int32 aFlags, int32 aWorkspace = B_CURRENT_WORKSPACE);
+       virtual ~nsWindowBeOS();
 
     virtual bool QuitRequested( void );  
 	virtual void MessageReceived(BMessage *msg);
+       virtual void FrameResized(float width, float height);
+       
+       void ResizeToWithoutEvent(float width, float height);
+
+private:
+       void DoFrameResized();
+
+       float lastWidth, lastHeight;
+       BMessageRunner *resizeRunner;
 };
 
 //
@@ -270,8 +280,6 @@ class nsWindowBeOS : public BWindow, public nsIWidgetStore {
 class nsViewBeOS : public BView, public nsIWidgetStore {
 	BRegion	paintregion;
 	uint32	buttons;
-	nsRect	currsizerect;
-	bool	currsizechanged;
 
 public:
 					nsViewBeOS( nsIWidget *aWidgetWindow, BRect aFrame, const char *aName,
@@ -279,12 +287,10 @@ public:
 
 	virtual void	AttachedToWindow();
 	virtual void	Draw(BRect updateRect);
-	virtual void	FrameResized(float width, float height);
 	virtual void	MouseDown(BPoint point);
 	virtual void	MouseMoved(BPoint point, uint32 transit, const BMessage *message);
 	virtual void	MouseUp(BPoint point);
 	bool			GetPaintRect(nsRect &r);
-	bool			GetSizeRect(nsRect &r);
 	void KeyDown(const char *bytes, int32 numBytes);
 	void KeyUp(const char *bytes, int32 numBytes);
 };
