@@ -23,4 +23,4 @@ DEPTH		= ..\..\..\..
 
 DIRS		= en-US
 
-include <$(DEPTH)\config\rules.mk>
+include <$(DEPTH)/config/rules.mak>

@@ -19,8 +19,18 @@
 # Contributor(s): 
 #
 
-DEPTH		= ..\..\..
+DEPTH		= ..\..\..\..\..
 
-DIRS		= content locale
+EXPORT_PREF_CONTENT = \
+	.\pref-irc.dtd \
+	$(NULL)
+
+EXPORT_RESOURCE_CONTENT = \
+	.\chatzillaOverlay.dtd \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: 
+	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\pref\locale\en-US
+	$(MAKE_INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)\bin\chrome\chatzilla\locale\en-US

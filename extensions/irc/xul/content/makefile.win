@@ -19,18 +19,19 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../../..
+DEPTH	= ..\..\..\..
+
+include <$(DEPTH)\config\rules.mak>
 
 EXPORT_PREF_CONTENT = \
-	.\pref-irc.dtd \
-	$(NULL)
+		.\pref-irc.xul \
+		$(NULL)
 
 EXPORT_RESOURCE_CONTENT = \
-	.\chatzillaOverlay.dtd \
-	$(NULL)
-
-include <$(DEPTH)\config\rules.mk>
+		.\chatzillaOverlay.xul \
+		.\chatzillaOverlay.js \
+		$(NULL)
 
 install:: 
-	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\pref\locale\en-US
-	$(MAKE_INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)\bin\chrome\chatzilla\locale/en-US
+	$(MAKE_INSTALL) $(EXPORT_PREF_CONTENT) $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)\bin\chrome\chatzilla\content\default
