@@ -44,6 +44,11 @@ interface nsIGlobalHistory : nsISupports
     // Remove the specified page from the global history
     void RemovePage(in string aURL);
 
+    // Remove all pages from the given host.
+    // If aEntireDomain is true, will assume aHost is a domain,
+    // and remove all pages from the entire domain.
+    void RemovePagesFromHost(in string aHost, in boolean aEntireDomain);
+
     // Remove all pages from global history
     void RemoveAllPages();
 

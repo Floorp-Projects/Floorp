@@ -104,6 +104,7 @@ en-US.jar:
     locale/en-US/communicator/directory/directory.dtd           (directory/locale/en-US/directory.dtd)
     locale/en-US/communicator/history/history.dtd               (history/resources/locale/en-US/history.dtd)
     locale/en-US/communicator/history/historyTreeOverlay.dtd    (history/resources/locale/en-US/historyTreeOverlay.dtd)
+    locale/en-US/communicator/history/history.properties        (history/resources/locale/en-US/history.properties)
     locale/en-US/communicator/pref/pref-advanced.dtd            (prefwindow/resources/locale/en-US/pref-advanced.dtd)
     locale/en-US/communicator/pref/pref-appearance.dtd          (prefwindow/resources/locale/en-US/pref-appearance.dtd)
     locale/en-US/communicator/pref/pref-applications.dtd        (prefwindow/resources/locale/en-US/pref-applications.dtd)
