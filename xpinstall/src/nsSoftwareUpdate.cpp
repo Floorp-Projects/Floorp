@@ -544,7 +544,9 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
         return NS_ERROR_NULL_POINTER;
 
     if (logName)
-        PL_strcpy(mLogName, logName);
+        PL_strdup(mLogName, logName);
+    if (!mLogName)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     // only allow once, it could be a mess if we've already started installing
     mStubLockout = PR_TRUE;
