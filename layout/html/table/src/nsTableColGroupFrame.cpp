@@ -718,7 +718,7 @@ nsTableColGroupFrame::GetColGroupFrameContaining(nsFrameList&     aColGroupList,
       nsTableColFrame* colFrame = nsnull;
       childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
       while (colFrame) {
-        if (colFrame = &aColFrame) {
+        if (colFrame == &aColFrame) {
           NS_RELEASE(frameType);
           return (nsTableColGroupFrame *)childFrame;
         }
