@@ -44,7 +44,6 @@ function SetupHTMLEditorCommands()
   gHTMLEditorCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
 
   gHTMLEditorCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
-  gHTMLEditorCommandManager.registerCommand("cmd_preferences", nsPreferencesCommand);
 
   gHTMLEditorCommandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
   gHTMLEditorCommandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
@@ -144,6 +143,7 @@ function SetupComposerWindowCommands()
   commandManager.registerCommand("cmd_preview",       nsPreviewCommand);
   commandManager.registerCommand("cmd_quit",          nsQuitCommand);
   commandManager.registerCommand("cmd_close",         nsCloseCommand);
+  commandManager.registerCommand("cmd_preferences",   nsPreferencesCommand);
 
   // Edit Mode commands
   commandManager.registerCommand("cmd_NormalMode",         nsNormalModeCommand);
@@ -311,10 +311,10 @@ var nsSaveAsCharsetCommand =
     window.ok = false;
     if (window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
     {
-      if( window.ok ) 
-        return window.editorShell.saveDocument(true, false);
+      window.ok = window.editorShell.saveDocument(true, false);
     }
-    return false;
+    window._content.focus();
+    return window.ok;
   }
 };
 
@@ -432,6 +432,7 @@ var nsOpenRemoteCommand =
 	     and loading into existing browser option is removed
 	   */
 	  window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", 0);
+    window._content.focus();
   }
 };
 
@@ -562,6 +563,7 @@ var nsSpellingCommand =
         }
         catch(ex) {
           dump("*** Exception error: SpellChecker Dialog Closing\n");
+          window._content.focus();
           return;
         }
       }
@@ -580,6 +582,7 @@ var nsImageCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdImageProps.xul","_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
   }
 };
 
@@ -602,6 +605,7 @@ var nsHLineCommand =
     if (hLine) {
       // We only open the dialog for an existing HRule
       window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
+      window._content.focus();
     } else {
       hLine = window.editorShell.CreateElementWithDefaults(tagName);
 
@@ -666,6 +670,7 @@ var nsLinkCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdLinkProps.xul","_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
   }
 };
 
@@ -679,6 +684,7 @@ var nsAnchorCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "_blank", "chrome,close,titlebar,modal", "");
+    window._content.focus();
   }
 };
 
@@ -692,6 +698,7 @@ var nsInsertHTMLCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizable", "");
+    window._content.focus();
   }
 };
 
@@ -744,6 +751,7 @@ var nsListPropertiesCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
   }
 };
 
@@ -822,7 +830,10 @@ var nsObjectPropertiesCommand =
 function doAdvancedProperties(element)
 {
   if (element)
+  {
     window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", element);
+    window._content.focus();
+  }
 }
 
 var nsAdvancedPropertiesCommand =
@@ -849,6 +860,7 @@ var nsColorPropertiesCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "");
+    window._content.focus();
   }
 };
 
