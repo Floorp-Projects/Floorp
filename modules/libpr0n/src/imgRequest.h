@@ -37,6 +37,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsVoidArray.h"
+#include "nsWeakReference.h"
 
 #include "nsString.h"
 
@@ -64,7 +65,8 @@ enum {
 
 class imgRequest : public imgIRequest,
                    public imgIDecoderObserver, 
-                   public nsIStreamListener
+                   public nsIStreamListener,
+                   public nsSupportsWeakReference
 {
 public:
   imgRequest();

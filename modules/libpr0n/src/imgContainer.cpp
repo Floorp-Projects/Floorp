@@ -65,7 +65,7 @@ NS_IMETHODIMP imgContainer::Init(nscoord aWidth, nscoord aHeight, imgIContainerO
 
   mSize.SizeTo(aWidth, aHeight);
 
-  mObserver = aObserver;
+  mObserver = getter_AddRefs(NS_GetWeakReference(aObserver));
 
   return NS_OK;
 }
@@ -329,7 +329,14 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
 
   if(!mAnimating || !mTimer)
     return;
-  
+
+  nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
+  if (!observer) {
+    // the imgRequest that owns us is dead, we should die now too.
+    this->StopAnimation();
+    return;
+  }
+
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
   PRUint32 numFrames;
@@ -381,22 +388,20 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     
     
   nsRect dirtyRect;
+
   // update the composited frame
   if(mCompositingFrame && (previousAnimationFrameIndex != mCurrentAnimationFrameIndex)) {
     nsCOMPtr<gfxIImageFrame> frameToUse;
     DoComposite(getter_AddRefs(frameToUse), &dirtyRect, previousAnimationFrameIndex, mCurrentAnimationFrameIndex);
 
     // do notification to FE to draw this frame, but hand it the compositing frame
-    if (mObserver) {
-      mObserver->FrameChanged(this, nsnull, mCompositingFrame, &dirtyRect);
-    }
+    observer->FrameChanged(this, nsnull, mCompositingFrame, &dirtyRect);
   } 
   else {
     nextFrame->GetRect(dirtyRect);
 
     // do notification to FE to draw this frame
-    if (mObserver)
-      mObserver->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
+    observer->FrameChanged(this, nsnull, nextFrame, &dirtyRect);
   }
 
 

@@ -51,9 +51,10 @@
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_ISUPPORTS6(imgRequest, imgIRequest, nsIRequest,
+NS_IMPL_ISUPPORTS7(imgRequest, imgIRequest, nsIRequest,
                    imgIDecoderObserver, imgIContainerObserver,
-                   nsIStreamListener, nsIStreamObserver)
+                   nsIStreamListener, nsIStreamObserver,
+                   nsISupportsWeakReference)
 
 imgRequest::imgRequest() : 
   mObservers(0), mLoading(PR_FALSE), mProcessing(PR_FALSE), mStatus(imgIRequest::STATUS_NONE), mState(0)
