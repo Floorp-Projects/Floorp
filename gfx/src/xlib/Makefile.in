@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
 #
 
 DEPTH		= ../../..
@@ -56,7 +57,13 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
+# Code shared between GTK+, Xlib and Xprint gfx modules
+# (empty for now - but this will be filled soon...)
+X11SHARED_LCPPSRCS = \
+		$(NULL)
+
 CPPSRCS		= \
+		$(X11SHARED_LCPPSRCS) \
 		nsDeviceContextSpecFactoryX.cpp \
 		nsDeviceContextSpecXlib.cpp \
 		nsDeviceContextXlib.cpp \
@@ -86,7 +93,7 @@ XPU_LCSRCS	 = xprintutil.c
 CSRCS           += $(XPU_LCSRCS)
 endif
 
-GARBAGE                += $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -117,12 +124,17 @@ INCLUDES	+= -I$(srcdir)/../xprint
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
 endif
 
-INCLUDES	+= \
+LOCAL_INCLUDES	+= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
+		-I$(srcdir)/../x11shared \
 		$(NULL)
 
 ifdef MOZ_ENABLE_XPRINT
-export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS))
+export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS)) $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
+	$(INSTALL) $^ .
+else
+export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
 	$(INSTALL) $^ .
 endif
+
