@@ -361,8 +361,6 @@ NS_IMETHODIMP nsScrollPortView::GetScrollbarVisibility(PRBool *aVerticalVisible,
 void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
 {
 
-  PRInt32           numkids;
-  aView->GetChildCount(numkids);
   nscoord           offx, offy;
 
   if (aScrolling == aView)
@@ -377,10 +375,9 @@ void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsIView 
   aDx += offx;
   aDy += offy;
 
-  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+  nsIView *kid;
+  for (aView->GetChild(0, kid); kid != nsnull; kid->GetNextSibling(kid))
   {
-    nsIView   *kid;
-    aView->GetChild(cnt, kid);
     nsIWidget *win;
     kid->GetWidget(win);
 
