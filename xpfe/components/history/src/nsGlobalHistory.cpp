@@ -95,6 +95,7 @@ nsIRDFResource* nsGlobalHistory::kNC_child;
 nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
+nsIMdbFactory* nsGlobalHistory::gMdbFactory = nsnull;
 
 #define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
@@ -523,6 +524,8 @@ nsGlobalHistory::~nsGlobalHistory()
     NS_IF_RELEASE(kNC_URL);
     NS_IF_RELEASE(kNC_HistoryRoot);
     NS_IF_RELEASE(kNC_HistoryByDate);
+    
+    NS_IF_RELEASE(gMdbFactory);
   }
 
   if (mSyncTimer)
@@ -2191,16 +2194,12 @@ nsGlobalHistory::OpenDB()
                                           getter_AddRefs(factoryfactory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Leaving XPCOM, entering MDB. They may look like XPCOM interfaces,
-  // but they're not. The 'factory' is an interface; however, it isn't
-  // reference counted. So no, this isn't a leak.
-  nsIMdbFactory* factory;
-  rv = factoryfactory->GetMdbFactory(&factory);
+  rv = factoryfactory->GetMdbFactory(&gMdbFactory);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mdb_err err;
 
-  err = factory->MakeEnv(nsnull, &mEnv);
+  err = gMdbFactory->MakeEnv(nsnull, &mEnv);
   mEnv->SetAutoClear(PR_TRUE);
   NS_ASSERTION((err == 0), "unable to create mdb env");
   if (err != 0) return NS_ERROR_FAILURE;
@@ -2214,12 +2213,12 @@ nsGlobalHistory::OpenDB()
 
   historyFile->Exists(&exists);
     
-  if (!exists || NS_FAILED(rv = OpenExistingFile(factory, filePath))) {
+  if (!exists || NS_FAILED(rv = OpenExistingFile(gMdbFactory, filePath))) {
 
     // we couldn't open the file, so it's either corrupt or doesn't exist.
     // attempt to delete the file, but ignore the error
     historyFile->Remove(PR_FALSE);
-    rv = OpenNewFile(factory, filePath);
+    rv = OpenNewFile(gMdbFactory, filePath);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);

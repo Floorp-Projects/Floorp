@@ -321,6 +321,7 @@ protected:
   static nsIRDFResource* kNC_HistoryRoot;
   static nsIRDFResource* kNC_HistoryByDate;
 
+  static nsIMdbFactory* gMdbFactory;
   //
   // custom enumerators
   //
