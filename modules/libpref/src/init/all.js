@@ -239,11 +239,13 @@ localDefPref("security.directory",              "");
 
 pref("autoupdate.enabled",              true);
 pref("autoupdate.confirm_install",				false);
-pref("autoupdate.background_download_enabled",  true);
-pref("autoupdate.background_download_directory",  "");
-pref("autoupdate.background_download_byte_range",  3000);
-pref("autoupdate.background_download_interval",  10000);
 pref("autoupdate.unsigned_jar_support",  false);
+
+pref("silentdownload.enabled",    true);
+pref("silentdownload.directory",  "");
+pref("silentdownload.range",      3000);
+pref("silentdownload.interval",  10000);
+
 
 pref("imap.io.mac.logging", false);
 
