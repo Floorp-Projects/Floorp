@@ -33,6 +33,7 @@ LCFLAGS = \
 LINCS= \
 	  -I..\..\base                      \
     -I$(XPDIST)\public\prefm       \
+    -I$(XPDIST)\public\rdf         \
     -I$(XPDIST)\public\js          \
     -I$(XPDIST)\public\netlib      \
     -I$(XPDIST)\public\network     \
@@ -43,6 +44,7 @@ LINCS= \
     -I$(XPDIST)\public\pref        \
     -I$(XPDIST)\public\raptor      \
     -I$(XPDIST)\public\libreg      \
+    -I$(XPDIST)\public\xpfe\components \
     $(NULL)
 
 LLIBS =                      \
@@ -50,18 +52,20 @@ LLIBS =                      \
     $(DIST)\lib\xpcom.lib    \
     $(DIST)\lib\plc3.lib     \
     $(DIST)\lib\xppref32.lib \
+	$(DIST)\lib\netlib.lib  \
     $(LIBNSPR)               \
     $(NULL)
 
 OBJS = \
     .\$(OBJDIR)\nsprefmigration.obj        \
     .\$(OBJDIR)\nsprefmigrationfactory.obj \
+	.\$(OBJDIR)\nsPrefMigrationProgressDialog.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
 
 clobber::

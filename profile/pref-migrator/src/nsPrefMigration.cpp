@@ -36,6 +36,7 @@
 #include "net.h"
 
 #include "nsPrefMigration.h"
+#include "nsPrefMigrationProgressDialog.h"
 
 /*-----------------------------------------------------------------
  * Globals
@@ -101,29 +102,18 @@ NS_IMPL_RELEASE(nsPrefMigration)
  *
  *-------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50, nsresult *aResult)
+nsPrefMigration::ProcessPrefs(char* profilePath, char* newProfilePath, nsresult *aResult)
 {
-/*
-  PRFileDesc *reg4file, *prefs4file;   
-    *reg5file,
-    *prefs5file,
-    *cfg5file,
-    *cfg4file, 
-    *cssfile;
-*/
+
   char *mailFileArray[200], *newsFileArray[200];
   char *oldMailPath, *oldNewsPath;
   char *newMailPath, *newNewsPath;
-  char *newProfilePath;
-  PRUint32 totalMailSize = 0, totalNewsSize = 0;
+  PRUint32 totalMailSize = 0, totalNewsSize = 0, numberOfMailFiles = 0, numberOfNewsFiles = 0;
   PRInt32 oldDirLength = 0;
 
-  if((newProfilePath = (char*) PR_MALLOC(PL_strlen(profilePath) + 2)) == NULL)
-  {
-    PR_Free(newProfilePath);
-    *aResult = NS_ERROR_FAILURE;
-    return 0;
-  }
+#if defined(NS_DEBUG)
+  printf("*Entered Actual Migration routine*\n");
+#endif
 
   if((newMailPath = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
@@ -182,8 +172,8 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50, nsresult *
   }
 
   /* Read the user's 4.x files from their profile */
-  success = Read4xFiles(oldMailPath, mailFileArray, &totalMailSize);
-  success = Read4xFiles(oldNewsPath, newsFileArray, &totalNewsSize);
+  success = Read4xFiles(oldMailPath, mailFileArray, &numberOfMailFiles, &totalMailSize);
+  success = Read4xFiles(oldNewsPath, newsFileArray, &numberOfNewsFiles, &totalNewsSize);
 
   if(CheckForSpace(newMailPath, totalMailSize) != NS_OK)
 	  return -1;  /* Need error code for not enough space */
@@ -217,52 +207,8 @@ nsPrefMigration::ProcessPrefs(char* profilePath, char* installPath50, nsresult *
 nsresult
 nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
 {
-  char* users5Dir;
+
   char* prefsFile;
-  int newDirLength = _MAX_PATH, i=0, j=0, len=0;
-  PRInt32 idx = 0, sbidx = 0;
-
-  if ((users5Dir = (char*) PR_MALLOC(PL_strlen(oldProfilePath) + 32)) == NULL)
-  {
-    PR_Free(users5Dir);
-    return -1;
-  }
-
-#ifdef XP_PC
-  PL_strcpy(users5Dir, oldProfilePath);
-  len = strlen(users5Dir);
-  i = len;
-
-  while (users5Dir[i] != separator)
-    i--;
-
-  j = i;
-  users5Dir[i] = '5';
-  i++; 
-  users5Dir[i] = eolnChar;
-#endif /* XP_PC */
-
-#ifdef DKB
-#ifdef XP_MAC
-  nsSpecialSystemDirectory docDir = nsSpecialSystemDirectory::Mac_DocumentsDirectory;
-  docDir += ":netscape:users5";
-  users5Dir = docDir.mPath;
-#endif /* XP_MAC */
-#endif /* DKB */
-
-  /* Create 5.x profile directory tree */
-  if (!PR_OpenDir(users5Dir))     /* users5 directory doesn't exist */
-    PR_MkDir(users5Dir, PR_RDWR);
-
-  while ((oldProfilePath[j] != eolnChar) && (j <= len)) /* reassemble the user5 path */
-  {
-    users5Dir[i] = oldProfilePath[j];
-    i++;
-    j++;
-  }
-  users5Dir[i] = '\0';
-  PR_MkDir(users5Dir, PR_RDWR);         /* Create the actual profile dir */
-  PL_strcpy(newProfilePath, users5Dir); /* set newProfilePath for reference parameter */
 
   /* Copy the old prefs.js file to the new profile directory for modification and reading */
   if ((prefsFile = (char*) PR_MALLOC(PL_strlen(oldProfilePath) + 32)) == NULL)
@@ -270,15 +216,23 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
     PR_Free(prefsFile);
     return -1;
   }
+
   PL_strcpy(prefsFile, oldProfilePath);
   PL_strcat(prefsFile, "\\prefs.js\0");
 
   nsFileSpec oldPrefsFile(prefsFile);
   nsFileSpec newPrefsFile(newProfilePath);
+      
+  if (!newPrefsFile.Exists())
+  {
+	newPrefsFile.CreateDirectory();
+  }
 
   oldPrefsFile.Copy(newPrefsFile);
+  newPrefsFile += "prefs.js";
+  newPrefsFile.Rename("prefs50.js");
 
-  PR_Free(users5Dir);
+  //PR_Free(users5Dir);
   PR_Free(prefsFile);
 
   return NS_OK;
@@ -313,7 +267,7 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
 
   if(PREF_Init(prefs_jsPath))
   {
-    if(PREF_GetCharPref(pref, oldPath, &oldDirLength) > -1) /* found the pref */
+    if(PREF_GetCharPref(pref, oldPath, &oldDirLength) != 0) /* found the pref */
     {
       PL_strcpy(newPath, oldPath);
       PL_strcat(newPath, "5");
@@ -343,7 +297,8 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
  * RETURNS: NS_OK if successful
  *--------------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::Read4xFiles(char* ProfilePath, char* fileArray[], PRUint32* sizeTotal)
+nsPrefMigration::Read4xFiles(char* ProfilePath, char* fileArray[], 
+                             PRUint32* fileTotal, PRUint32* sizeTotal)
 {
   char* fullFileName;
   int i = 0;
@@ -382,7 +337,7 @@ nsPrefMigration::Read4xFiles(char* ProfilePath, char* fileArray[], PRUint32* siz
       fileSize = 0;	
     }
   }
-
+  *fileTotal = i-1;
   fileArray[i] = NULL; /* Put a Null in the array after the last file name */
   PR_Free(fullFileName);
 
@@ -422,9 +377,14 @@ nsPrefMigration::CheckForSpace(char* newProfilePath, PRFloat64 requiredSpace)
  *
  *--------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::DoTheCopy(char* oldPath, char* newPath, char* fileArray[])
+nsPrefMigration::DoTheCopy(const char* oldPath, const char* newPath, char* fileArray[])
 {
   PRInt32 i = 0, succeeded = 0;
+
+  nsPrefMigrationProgressDialog* pProgressMeter = new nsPrefMigrationProgressDialog;
+
+  
+  pProgressMeter->CreateProfileProgressDialog();
 
   while ((fileArray[i] != NULL) && (i < 200))
   {
@@ -436,9 +396,10 @@ nsPrefMigration::DoTheCopy(char* oldPath, char* newPath, char* fileArray[])
   	//targetFile.GetParent(parentofTargetFile);
 
 	  succeeded = sourceFile.Copy(targetFile);
-
+    pProgressMeter->IncrementProgressBar();
     i++;
   }
+  pProgressMeter->KillProfileProgressDialog();
   return NS_OK;
 }
 

@@ -16,11 +16,16 @@
 # Reserved.
 
 DEPTH=..\..\..
+
+MODULE=include 
+
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS= nsIPrefMigration.h   \
          nsPrefMigrationIIDs.h  \
 
-MODULE=prefm 
+XPIDLSRCS = .\nsIPrefMigrationProgress.idl        
+
+
 
 include <$(DEPTH)\config\rules.mak>
 
