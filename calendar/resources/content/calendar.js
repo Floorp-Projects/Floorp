@@ -388,9 +388,7 @@ function weekEventItemClick( eventBox, event )
    {
       gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
 
-      var newDate = gCalendarWindow.getSelectedDate();
-
-      newDate.setDate( eventBox.calendarEventDisplay.event.start.day );
+      var newDate = new Date( eventBox.calendarEventDisplay.displayDate );
 
       gCalendarWindow.setSelectedDate( newDate, false );
    }
