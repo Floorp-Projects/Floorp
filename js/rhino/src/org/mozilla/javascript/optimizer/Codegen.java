@@ -1121,16 +1121,17 @@ class BodyCodegen
                 itsForcedObjectParameters = true;
                 for (int i = 0; i != directParameterCount; ++i) {
                     OptLocalVariable lVar = fnCurrent.getVar(i);
-                    cfw.addALoad(lVar.getJRegister());
+                    short reg = lVar.getJRegister();
+                    cfw.addALoad(reg);
                     cfw.add(ByteCode.GETSTATIC,
                             "java/lang/Void",
                             "TYPE",
                             "Ljava/lang/Class;");
                     int isObjectLabel = cfw.acquireLabel();
                     cfw.add(ByteCode.IF_ACMPNE, isObjectLabel);
-                    cfw.addDLoad(lVar.getJRegister() + 1);
+                    cfw.addDLoad(reg + 1);
                     addDoubleWrap();
-                    cfw.addAStore(lVar.getJRegister());
+                    cfw.addAStore(reg);
                     cfw.markLabel(isObjectLabel);
                 }
             }
@@ -1204,27 +1205,31 @@ class BodyCodegen
             short firstUndefVar = -1;
             for (int i = 0; i < fnCurrent.getVarCount(); i++) {
                 OptLocalVariable lVar = fnCurrent.getVar(i);
+                short reg = -1;
                 if (lVar.isNumber()) {
-                    lVar.assignJRegister(getNewWordPairLocal());
+                    reg = getNewWordPairLocal();
                     cfw.addPush(0.0);
-                    cfw.addDStore(lVar.getJRegister());
+                    cfw.addDStore(reg);
                 } else if (lVar.isParameter()) {
                     if (directParameterCount < 0) {
-                        lVar.assignJRegister(getNewWordLocal());
+                        reg = getNewWordLocal();
                         cfw.addALoad(argsLocal);
                         cfw.addPush(i);
                         cfw.add(ByteCode.AALOAD);
-                        cfw.addAStore(lVar.getJRegister());
+                        cfw.addAStore(reg);
                     }
                 } else {
-                    lVar.assignJRegister(getNewWordLocal());
+                    reg = getNewWordLocal();
                     if (firstUndefVar == -1) {
                         Codegen.pushUndefined(cfw);
-                        firstUndefVar = lVar.getJRegister();
+                        firstUndefVar = reg;
                     } else {
                         cfw.addALoad(firstUndefVar);
                     }
-                    cfw.addAStore(lVar.getJRegister());
+                    cfw.addAStore(reg);
+                }
+                if (reg >= 0) {
+                    lVar.assignJRegister(reg);
                 }
                 lVar.setStartPC(cfw.getCurrentCodeOffset());
             }
@@ -2219,8 +2224,9 @@ class BodyCodegen
                     OptLocalVariable lVar = OptLocalVariable.get(child);
                     if (lVar != null && lVar.isParameter()) {
                         handled = true;
-                        cfw.addALoad(lVar.getJRegister());
-                        cfw.addDLoad(lVar.getJRegister() + 1);
+                        short reg = lVar.getJRegister();
+                        cfw.addALoad(reg);
+                        cfw.addDLoad(reg + 1);
                     }
                 }
                 if (!handled) {
@@ -2760,23 +2766,26 @@ class BodyCodegen
         Node child = node.getFirstChild();
         if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
             OptLocalVariable lVar = OptLocalVariable.get(child);
-            if (lVar.getJRegister() == -1)
-                lVar.assignJRegister(getNewWordPairLocal());
-            cfw.addDLoad(lVar.getJRegister());
+            short reg = lVar.getJRegister();
+            if (reg == -1) {
+                reg = getNewWordPairLocal();
+                lVar.assignJRegister(reg);
+            }
+            cfw.addDLoad(reg);
             cfw.add(ByteCode.DUP2);
             cfw.addPush(1.0);
             cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
-            cfw.addDStore(lVar.getJRegister());
+            cfw.addDStore(reg);
         } else {
             int childType = child.getType();
             if (hasVarsInRegs && childType == Token.GETVAR) {
                 OptLocalVariable lVar = OptLocalVariable.get(child);
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
-                int reg = lVar.getJRegister();
+                short reg = lVar.getJRegister();
                 if (reg == -1) {
-                    lVar.assignJRegister(getNewWordLocal());
-                    reg = lVar.getJRegister();
+                    reg = getNewWordLocal();
+                    lVar.assignJRegister(reg);
                 }
                 cfw.addALoad(reg);
                 cfw.add(ByteCode.DUP);
@@ -3220,11 +3229,15 @@ class BodyCodegen
         if (hasVarsInRegs && lVar == null)
             lVar = fnCurrent.getVar(name);
         if (lVar != null) {
-            if (lVar.getJRegister() == -1)
-                if (lVar.isNumber())
-                    lVar.assignJRegister(getNewWordPairLocal());
-                else
-                    lVar.assignJRegister(getNewWordLocal());
+            short reg = lVar.getJRegister();
+            if (reg == -1) {
+                if (lVar.isNumber()) {
+                    reg = getNewWordPairLocal();
+                } else {
+                    reg = getNewWordLocal();
+                }
+                lVar.assignJRegister(reg);
+            }
             if (lVar.isParameter() && inDirectCallFunction &&
                 !itsForcedObjectParameters)
             {
@@ -3235,15 +3248,15 @@ class BodyCodegen
 
 */
                 if (isNumber) {
-                    dcpLoadAsNumber(lVar.getJRegister());
+                    dcpLoadAsNumber(reg);
                 } else {
-                    dcpLoadAsObject(lVar.getJRegister());
+                    dcpLoadAsObject(reg);
                 }
             } else {
                 if (lVar.isNumber())
-                    cfw.addDLoad(lVar.getJRegister());
+                    cfw.addDLoad(reg);
                 else
-                    cfw.addALoad(lVar.getJRegister());
+                    cfw.addALoad(reg);
             }
             return;
         }
@@ -3267,18 +3280,21 @@ class BodyCodegen
             lVar = fnCurrent.getVar(child.getString());
         if (lVar != null) {
             generateCodeFromNode(child.getNext(), node);
-            if (lVar.getJRegister() == -1) {
-                if (lVar.isNumber())
-                    lVar.assignJRegister(getNewWordPairLocal());
-                else
-                    lVar.assignJRegister(getNewWordLocal());
+            short reg = lVar.getJRegister();
+            if (reg == -1) {
+                if (lVar.isNumber()) {
+                    reg = getNewWordPairLocal();
+                } else {
+                    reg = getNewWordLocal();
+                }
+                lVar.assignJRegister(reg);
             }
             if (lVar.isParameter()
                         && inDirectCallFunction
                         && !itsForcedObjectParameters) {
                 if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                     if (needValue) cfw.add(ByteCode.DUP2);
-                    cfw.addALoad(lVar.getJRegister());
+                    cfw.addALoad(reg);
                     cfw.add(ByteCode.GETSTATIC,
                             "java/lang/Void",
                             "TYPE",
@@ -3288,25 +3304,25 @@ class BodyCodegen
                     cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
                     short stack = cfw.getStackTop();
                     addDoubleWrap();
-                    cfw.addAStore(lVar.getJRegister());
+                    cfw.addAStore(reg);
                     cfw.add(ByteCode.GOTO, beyond);
                     cfw.markLabel(isNumberLabel, stack);
-                    cfw.addDStore(lVar.getJRegister() + 1);
+                    cfw.addDStore(reg + 1);
                     cfw.markLabel(beyond);
                 }
                 else {
                     if (needValue) cfw.add(ByteCode.DUP);
-                    cfw.addAStore(lVar.getJRegister());
+                    cfw.addAStore(reg);
                 }
             }
             else {
                 if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-                      cfw.addDStore(lVar.getJRegister());
-                      if (needValue) cfw.addDLoad(lVar.getJRegister());
+                      cfw.addDStore(reg);
+                      if (needValue) cfw.addDLoad(reg);
                 }
                 else {
-                    cfw.addAStore(lVar.getJRegister());
-                    if (needValue) cfw.addALoad(lVar.getJRegister());
+                    cfw.addAStore(reg);
+                    if (needValue) cfw.addALoad(reg);
                 }
             }
             return;
