@@ -269,7 +269,17 @@
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onchange="EditorStartup('html')"/>
     
-  <menubar>
+  <broadcaster id="Editor:Document:Dirty" dirty="false"/>
+
+  <broadcaster id="Editor:Style:IsBold" bold="false"/>
+  <broadcaster id="Editor:Style:IsItalic" italic="false"/>
+  <broadcaster id="Editor:Style:IsUnderline" underline="false"/>
+  <broadcaster id="Editor:Paragraph:Format" format=""/>
+  <broadcaster id="Editor:Font:Face" font=""/>
+  <broadcaster id="Editor:Font:Size" size=""/>
+
+  <toolbox id="EditorToolbars">
+    <menubar>
     <menu value="&fileMenu.label;">
 	  <menupopup>
 		  <menuitem value="&newCmd.label;" onaction="EditorNew()"/>
@@ -531,18 +541,9 @@
       <menuitem value="&aboutCmd.label;" onaction=""/>
 	  </menupopup>
     </menu>
+	<spring flex="100%"/>
   </menubar>
-  
-  <broadcaster id="Editor:Document:Dirty" dirty="false"/>
 
-  <broadcaster id="Editor:Style:IsBold" bold="false"/>
-  <broadcaster id="Editor:Style:IsItalic" italic="false"/>
-  <broadcaster id="Editor:Style:IsUnderline" underline="false"/>
-  <broadcaster id="Editor:Paragraph:Format" format=""/>
-  <broadcaster id="Editor:Font:Face" font=""/>
-  <broadcaster id="Editor:Font:Size" size=""/>
-
-    <toolbox id="EditorToolbars">
       <toolbar id="EditToolbar">
 	      <titledbutton src="&newEditorIcon.url;" align="top" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
 	      <titledbutton src="&openEditorIcon.url;" align="top" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
