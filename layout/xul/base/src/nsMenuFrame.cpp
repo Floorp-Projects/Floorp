@@ -417,9 +417,16 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 
   // We've got some children for real.
   if (child) {
+    // When we sync the popup view with the frame, we'll show the popup if |menutobedisplayed|
+    // is set by setting the |menuactive| attribute. This trips CSS to make the view visible.
+    // We wait until the last possible moment to show to avoid flashing, but we can just go
+    // ahead and hide it here if we're told to (no additional stages necessary).
     if (aActivateFlag)
-      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-    else child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, "true", PR_TRUE);
+    else {
+      child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
+    }
   }
 
   return NS_OK;
@@ -509,6 +516,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
+    ActivateMenu(PR_TRUE);
+  
     if (menuPopup) {
       // Install a keyboard navigation listener if we're the root of the menu chain.
       PRBool onMenuBar = PR_TRUE;
@@ -550,8 +559,6 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
     }
 
-    ActivateMenu(PR_TRUE);
-  
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
     UpdateDismissalListener(childPopup);
 

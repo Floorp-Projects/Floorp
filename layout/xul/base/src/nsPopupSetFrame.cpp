@@ -441,8 +441,9 @@ void
 nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
 {
   if (aActivateFlag) {
-    nsIFrame* activeChild = GetActiveChild();
+    ActivatePopup(PR_TRUE);
 
+    nsIFrame* activeChild = GetActiveChild();
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
     UpdateDismissalListener(childPopup);
     childPopup->InstallKeyboardNavigator();
@@ -471,9 +472,16 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
   nsCOMPtr<nsIContent> content;
   GetActiveChildElement(getter_AddRefs(content));
   if (content) {
+    // When we sync the popup view with the frame, we'll show the popup if |menutobedisplayed|
+    // is set by setting the |menuactive| attribute. This trips CSS to make the view visible.
+    // We wait until the last possible moment to show to avoid flashing, but we can just go
+    // ahead and hide it here if we're told to (no additional stages necessary).
     if (aActivateFlag)
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-    else content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, "true", PR_TRUE);
+    else {
+      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
+    }
   }
 }
 
