@@ -7,7 +7,6 @@ nsINetService.h
 nsINetSupport.h
 nsIRelatedLinks.h
 nsIURL.h
-nsIPostToServer.h
 nsIHttpUrl.h
 nsIRefreshUrl.h
 nsIConnectionInfo.h
