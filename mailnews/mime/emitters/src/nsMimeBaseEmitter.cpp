@@ -682,14 +682,13 @@ nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix()
     mHTMLHeaders.Append("<br><hr width=\"90%\" size=4><br>");
 
   mFirstHeaders = PR_FALSE;
-  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\">"); 
   return NS_OK;
 }
 
 nsresult
 nsMimeBaseEmitter::WriteHeaderFieldHTMLPostfix()
 {
-  mHTMLHeaders.Append("</table><br>");
+  mHTMLHeaders.Append("<br>");
   return NS_OK;
 }
 
