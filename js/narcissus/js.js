@@ -50,6 +50,7 @@
  *      Object.prototype.__defineSetter__
  *      Object.prototype.__defineProperty__
  *      Object.prototype.__proto__
+ *      filename and line number arguments to *Error constructors
  *
  * SpiderMonkey extensions supported metacircularly:
  *      catch guards
