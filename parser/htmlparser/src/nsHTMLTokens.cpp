@@ -130,7 +130,6 @@ void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
 PRInt32 CStartToken::GetTypeID(){
   if(eHTMLTag_unknown==mTypeID) {
     nsAutoString tmp(mTextValue);
-    tmp.ToUpperCase();
     char cbuf[20];
     tmp.ToCString(cbuf, sizeof(cbuf));
     mTypeID = NS_TagToEnum(cbuf);
@@ -334,7 +333,6 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
 PRInt32 CEndToken::GetTypeID(){
   if(eHTMLTag_unknown==mTypeID) {
     nsAutoString tmp(mTextValue);
-    tmp.ToUpperCase();
     char cbuf[200];
     tmp.ToCString(cbuf, sizeof(cbuf));
     mTypeID = NS_TagToEnum(cbuf);
