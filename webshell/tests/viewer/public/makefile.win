@@ -28,6 +28,10 @@ MODULE=raptor
 EXPORTS =					\
         nsIXPBaseWindow.h			\
         nsIWindowListener.h			\
+        nsIButton.h			\
+        nsILabel.h			\
+        nsICheckButton.h			\
+        nsITextWidget.h			\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
