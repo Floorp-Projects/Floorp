@@ -4437,6 +4437,9 @@ GetNextSiblingAcrossLines(nsIPresContext *aPresContext, nsIFrame *aFrame)
  *
  * Also correct for the frame tree mangling that happens when we create
  * wrappers for :before/:after.
+ *
+ * Also skip anonymous scrolled-content parents; inherit directly from the
+ * outer scroll frame.
  */
 static nsresult
 GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
@@ -4461,6 +4464,19 @@ GetCorrectedParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
           parent = GetNextSiblingAcrossLines(aPresContext, parent);
       } else {
         parent = parent->GetParent();
+      }
+      parentPseudo = parent->GetStyleContext()->GetPseudoType();
+    }
+
+    // if this frame itself is not scrolled-content, then skip any scrolled-content
+    // parents since they're basically anonymous as far as the style system goes
+    if (parentPseudo == nsCSSAnonBoxes::scrolledContent) {
+      nsCOMPtr<nsIAtom> pseudo = aFrame->GetStyleContext()->GetPseudoType();
+      if (pseudo != nsCSSAnonBoxes::scrolledContent) {
+        do {
+          parent = parent->GetParent();
+          parentPseudo = parent->GetStyleContext()->GetPseudoType();
+        } while (parentPseudo == nsCSSAnonBoxes::scrolledContent);
       }
     }
 

@@ -1135,7 +1135,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext, aRootView);
 
   nsRect finalTransparentRect;
-  OptimizeDisplayList(&displayList, aRegion, finalTransparentRect, opaqueRgn);
+  OptimizeDisplayList(&displayList, aRegion, finalTransparentRect, opaqueRgn, PR_FALSE);
 
 #ifdef DEBUG_roc
   // ShowDisplayList(&displayList);
@@ -2867,13 +2867,22 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
     }
   }
 
-  // We DO need to use OptimizeDisplayList here to eliminate views that are covered by views we know
-  // are opaque. Typically aView itself is opaque and we want to eliminate views behind aView, such as
-  // aView's parent, that aren't being scrolled and would otherwise cause us to decide not to blit.
+  // We DO need to use OptimizeDisplayList here to eliminate views
+  // that are covered by views we know are opaque. Typically aView's
+  // scrolled view is opaque and we want to eliminate views behind it,
+  // such as aView itself, that aren't being moved and would otherwise
+  // cause us to decide not to blit.  Note that if for some view,
+  // view->HasUniformBackground(), that's also sufficient to ignore
+  // views behind 'view'; we've been promised that they produce only a
+  // uniform background, which is still blittable. So we can treat
+  // 'view' as opaque.
 
-  // (Of course it's possible that aView's parent is actually in front of aView (if aView has a negative
-  // z-index) but if so, this code still does the right thing. Yay for the display list based approach!)
-  OptimizeDisplayList(&displayList, nsRegion(r), finalTransparentRect, opaqueRegion);
+  // (Note that it's possible for aView's parent to actually be in
+  // front of aView (if aView has a negative z-index) but if so, this
+  // code still does the right thing. Yay for the display list based
+  // approach!)
+
+  OptimizeDisplayList(&displayList, nsRegion(r), finalTransparentRect, opaqueRegion, PR_TRUE);
 
   PRBool anyUnscrolledViews = PR_FALSE;
   PRBool anyUnblittableViews = PR_FALSE;
@@ -3613,7 +3622,7 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
 */
 void nsViewManager::OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsRegion& aDamageRegion,
                                         nsRect& aFinalTransparentRect,
-                                        nsRegion &aOpaqueRegion)
+                                        nsRegion &aOpaqueRegion, PRBool aTreatUniformAsOpaque)
 {
   for (PRInt32 i = aDisplayList->Count() - 1; i >= 0; i--) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, aDisplayList->ElementAt(i));
@@ -3628,7 +3637,8 @@ void nsViewManager::OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsR
         element->mBounds = tmpRgn.GetBounds();
 
         // a view is opaque if it is neither transparent nor transluscent
-        if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))) {
+        if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))
+            || (element->mView->HasUniformBackground() && aTreatUniformAsOpaque)) {
           aOpaqueRegion.Or(aOpaqueRegion, element->mBounds);
         }
       }

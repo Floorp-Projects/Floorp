@@ -548,11 +548,41 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
   // view's contents should be repainted and not bitblt'd
   vm->SetViewBitBltEnabled(aView, !fixedBackground);
 
+  nsCOMPtr<nsIAtom> pseudo = aFrame->GetStyleContext()->GetPseudoType();
+
+  // If the frame has a solid background color, 'background-clip:border',
+  // and it's a kind of frame that paints its background, and rounded borders aren't
+  // clipping the background, then it's opaque.
   PRBool  viewHasTransparentContent =
-    !hasBG ||
-    (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
-    !aFrame->CanPaintBackground() ||
-    HasNonZeroBorderRadius(aStyleContext);
+    !(hasBG && !(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
+      bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
+      aFrame->CanPaintBackground() &&
+      !HasNonZeroBorderRadius(aStyleContext));
+
+  PRBool drawnOnUniformField = PR_FALSE;
+  if (pseudo == nsCSSAnonBoxes::scrolledContent) {
+    // If the nsGfxScrollFrame draws a solid unclipped background
+    // color, and nothing else, then tell the view system that we're
+    // drawn on a uniform field. Note that it's OK if the background
+    // is clipped to the padding area, since the scrollport is within
+    // the borders.
+    nsIFrame* scrollFrame = aFrame->GetParent();
+    nsCOMPtr<nsIAtom> parentPseudo;
+    while ((parentPseudo = scrollFrame->GetStyleContext()->GetPseudoType())
+           == nsCSSAnonBoxes::scrolledContent) {
+      scrollFrame = scrollFrame->GetParent();
+    }
+    PRBool scrollFrameIsCanvas;
+    const nsStyleBackground* scrollFrameBG;
+    PRBool scrollFrameHasBG =
+      nsCSSRendering::FindBackground(aPresContext, scrollFrame, &scrollFrameBG,
+                                     &scrollFrameIsCanvas);
+    drawnOnUniformField = scrollFrameHasBG &&
+      !(scrollFrameBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
+      (scrollFrameBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) &&
+      !HasNonZeroBorderRadius(scrollFrame->GetStyleContext());
+  }
+  aView->SetHasUniformBackground(drawnOnUniformField);
 
   if (isCanvas) {
     nsIView* rootView;
