@@ -56,11 +56,6 @@ public:
       PRUnichar * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
       uMappingTable  * aMappingTable);
 
-  NS_IMETHOD ConvertByTables(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      uRange * aRangeArray, uShiftTable ** aShiftTable, 
-      uMappingTable ** aMappingTable);
-
   NS_IMETHOD ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       uRange * aRangeArray, uShiftTable ** aShiftTable, 
@@ -138,21 +133,6 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(
   *aSrcLength = src - aSrc;
   *aDestLength  = dest - aDest;
   return res;
-}
-
-NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTables(
-                                     const char * aSrc, 
-                                     PRInt32 * aSrcLength, 
-                                     PRUnichar * aDest, 
-                                     PRInt32 * aDestLength, 
-                                     PRInt32 aTableCount, 
-                                     uRange * aRangeArray, 
-                                     uShiftTable ** aShiftTable, 
-                                     uMappingTable ** aMappingTable)
-{
-  // XXX deprecated
-  return ConvertByMultiTable(aSrc, aSrcLength, aDest, aDestLength, 
-      aTableCount, aRangeArray, aShiftTable, aMappingTable);
 }
 
 NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
