@@ -56,6 +56,14 @@ struct RowReflowState {
 };
 
 /**
+ * Additional frame-state bits
+ */
+#define NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN 0x80000000  // set if child cells have been
+                                                            // added to the table
+
+#define NS_TABLE_MAX_ROW_INDEX  (1<<20)
+
+/**
  * nsTableRowFrame is the frame that maps table rows 
  * (HTML tag TR). This class cannot be reused
  * outside of an nsTableRowGroupFrame.  It assumes that its parent is an nsTableRowGroupFrame,  
@@ -285,32 +293,39 @@ protected:
                                       PRInt32       aNumColSpans,
                                       nscoord       aCellSpacingX);
 
+public:
+  struct RowBits {
+    unsigned mRowIndex:20;
+    unsigned mMinRowSpan:12;        // the smallest row span among all my child cells
+  };
+
 private:
-  PRInt32  mRowIndex;
+  union {
+    PRUint32 mAllBits;
+    RowBits  mBits;
+  };
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
   nscoord  mCellMaxTopMargin;
   nscoord  mCellMaxBottomMargin;
-  PRInt32  mMinRowSpan;           // the smallest row span among all my child cells
   nsSize   mMaxElementSize;       // cached max element size
-  PRBool   mInitializedChildren;  // PR_TRUE if child cells have been initialized 
-                                  // (for now, that means "added to the table", and
-                                  // is NOT the same as having nsIFrame::Init() called.)
-  
 };
 
 inline PRInt32 nsTableRowFrame::GetRowIndex() const
 {
-  NS_ASSERTION(0<=mRowIndex, "bad state: row index");
-  return (mRowIndex);
+  return PRInt32(mBits.mRowIndex);
 }
 
 inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
-  mRowIndex = aRowIndex;
+  NS_PRECONDITION((aRowIndex >= 0) && (aRowIndex < NS_TABLE_MAX_ROW_INDEX),
+                  "unexpected row index");
+  mBits.mRowIndex = unsigned(aRowIndex);
 }
 
 inline void nsTableRowFrame::ResetInitChildren()
-{ mInitializedChildren=PR_FALSE; } 
+{
+  mState &= ~NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN;
+}
 
 inline void nsTableRowFrame::GetMaxElementSize(nsSize& aMaxElementSize) const
 {

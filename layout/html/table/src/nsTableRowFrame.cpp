@@ -51,9 +51,9 @@ nsTableRowFrame::nsTableRowFrame()
     mTallestCell(0),
     mCellMaxTopMargin(0),
     mCellMaxBottomMargin(0),
-    mMinRowSpan(1),
-    mInitializedChildren(PR_FALSE)
+    mAllBits(0)
 {
+  mBits.mMinRowSpan = 1;
 }
 
 NS_IMETHODIMP
@@ -242,12 +242,12 @@ nsTableRowFrame::InitChildrenWithIndex(PRInt32 aRowIndex)
 
   // each child cell can only be added to the table one time.
   // for now, we remember globally whether we've added all or none
-  if (PR_FALSE==mInitializedChildren)
+  if (0 == (mState & NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN))
   {
     result = nsTableFrame::GetTableFrame(this, table);
     if ((NS_OK==result) && (table != nsnull))
     {
-      mInitializedChildren=PR_TRUE;
+      mState |= NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN;
       SetRowIndex(aRowIndex);
     
       for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
@@ -277,7 +277,7 @@ nsTableRowFrame::InitChildren()
 
   // each child cell can only be added to the table one time.
   // for now, we remember globally whether we've added all or none
-  if (PR_FALSE==mInitializedChildren)
+  if (0 == (mState & NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN))
   {
     result = nsTableFrame::GetTableFrame(this, table);
     if ((NS_OK==result) && (table != nsnull))
@@ -308,7 +308,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
     const nsStyleDisplay *kidDisplay;
     cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
-      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, (nsTableCellFrame *)cellFrame);
+      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(GetRowIndex(), (nsTableCellFrame *)cellFrame);
       nscoord cellHeight = rowCellHeight;
       // add in height of rows spanned beyond the 1st one
       nsIFrame* nextRow = nsnull;
@@ -560,7 +560,7 @@ void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
     frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
     {
-      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
+      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(GetRowIndex(), ((nsTableCellFrame *)frame));
       if (-1==minRowSpan)
         minRowSpan = rowSpan;
       else if (minRowSpan>rowSpan)
@@ -568,7 +568,7 @@ void nsTableRowFrame::GetMinRowSpan(nsTableFrame *aTableFrame)
     }
     frame->GetNextSibling(&frame);
   }
-  mMinRowSpan = minRowSpan;
+  mBits.mMinRowSpan = unsigned(minRowSpan);
 }
 
 void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
@@ -580,8 +580,8 @@ void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
     frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
     {
-      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
-      if (mMinRowSpan==rowSpan)
+      PRInt32 rowSpan = aTableFrame->GetEffectiveRowSpan(GetRowIndex(), ((nsTableCellFrame *)frame));
+      if (PRInt32(mBits.mMinRowSpan) ==rowSpan)
       {
         nsRect rect;
         frame->GetRect(rect);
@@ -1138,8 +1138,8 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
 
         // Update maxCellHeight and maxVertCellSpace. When determining this we
         // don't include cells that span rows
-        PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan(mRowIndex, ((nsTableCellFrame *)frame));
-        if (mMinRowSpan == rowSpan) {
+        PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan(GetRowIndex(), ((nsTableCellFrame *)frame));
+        if (PRInt32(mBits.mMinRowSpan) == rowSpan) {
           // Get the cell's desired height the last time it was reflowed
           nsSize  desiredSize = ((nsTableCellFrame *)frame)->GetDesiredSize();
 
