@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="mathml.css" type="text/css"?>
+<!DOCTYPE math SYSTEM "file:///C:\Mozilla/src/mozilla/layout/mathml/tests/mathml.dtd">
+<!-- 
+  *  The contents of this file are subject to the Mozilla Public
+  *  License Version 1.1 (the "License"); you may not use this file
+  *  except in compliance with the License. You may obtain a copy of
+  *  the License at http://www.mozilla.org/MPL/
+  *  
+  *  Software distributed under the License is distributed on an "AS
+  *  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  *  implied. See the License for the specific language governing
+  *  rights and limitations under the License.
+  *  
+  *  The Original Code is Mozilla MathML Project.
+  *  
+  *  The Initial Developer of the Original Code is The University of
+  *  Queensland.  Portions created by The University of Queensland are
+  *  Copyright (C) The University of Queensland.  All
+  *  Rights Reserved.
+  *  
+  *  Contributor(s):
+  *    Roger B. Sidje <rbs@maths.uq.edu.au>
+  -->
+
+<para>
+
+Testing tensor indices &lt;mmultiscripts&gt;:
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
+<math:mmultiscripts><math:mi>R</math:mi><math:mi>i</math:mi><math:mi>1</math:mi><math:mi>j</math:mi><math:mi>2</math:mi><math:mprescripts/><math:mi>k</math:mi><math:mi>3</math:mi></math:mmultiscripts></math>;
+
+This with &lt;none/&gt;, 
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- {{} \atop i} A {p \atop q} -->
+<math:mmultiscripts><math:mi>A</math:mi><math:mi>q</math:mi><math:mi>p</math:mi><math:mprescripts/><math:mi>i</math:mi><none/></math:mmultiscripts></math>;
+
+A bit of calculus
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- \int_a^b f(x)dx -->
+<math:msubsup><math:mo>&Integral;</math:mo><math:mi>a</math:mi><math:mi>b</math:mi></math:msubsup><math:mi>f(x)dx</math:mi>
+
+<!-- \frac{\partial}{\partial x}F(x,y) + \frac{\partial}{\partial y}F(x,y) -->
+<math:mrow><math:mfrac><math:mo>&PartialD;</math:mo><math:mrow><math:mo>&PartialD;</math:mo><math:mi>x</math:mi></math:mrow></math:mfrac><math:mi>F(x,y)</math:mi><math:mo>
++ </math:mo><math:mfrac><math:mo>&PartialD;</math:mo><math:mrow><math:mo>&PartialD;</math:mo><math:mi>y</math:mi></math:mrow></math:mfrac><math:mi>F(x,y)</math:mi></math:mrow>
+</math>;
+
+Here is the alphabet with invisible
+portions wrapped by &lt;mphantom&gt; in between:
+
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<math:mi>a</math:mi> <math:mi>b</math:mi> <math:mi>c</math:mi> <math:mphantom><math:mi>d</math:mi> <math:mi>e</math:mi> <math:mi>f</math:mi> <math:mi>g</math:mi>
+<math:mi>h</math:mi> <math:mi>i</math:mi> <math:mi>j</math:mi></math:mphantom> <math:mi>k</math:mi> <math:mi>l</math:mi> <math:mi>m</math:mi> <math:mi>n</math:mi>
+<math:mi>o</math:mi> <math:mphantom><math:mi>p</math:mi> <math:mi>q</math:mi> <math:mi>r</math:mi> <math:mi>s</math:mi></math:mphantom> 
+<math:mi>t</math:mi> <math:mi>u</math:mi> <math:mi>v</math:mi> <math:mi>w</math:mi> <math:mi>x</math:mi> <math:mi>y</math:mi> <math:mi>z</math:mi></math>.
+
+Testing MathML &lt;msub&gt;:
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- a_b -->
+<math:msub><math:mi>a</math:mi><math:mi>b</math:mi></math:msub></math>;
+
+<!-- a_i -->
+<math xmlns:math="http://www.w3.org/Math/MathML"><math:msub><math:mi>a</math:mi><math:mi>i</math:mi></math:msub></math>;
+
+<!-- A_{I_{k}} -->
+<math xmlns:math="http://www.w3.org/Math/MathML"><math:msub><math:mi>A</math:mi><math:msub><math:mi>I</math:mi><math:mi>k</math:mi></math:msub></math:msub></math>;
+
+
+Testing MathML &lt;msup&gt;:
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- d^b -->
+<math:msup><math:mi>d</math:mi><math:mi>b</math:mi></math:msup>
+
+<!-- 2^{a_x} -->
+<math:msup><math:mn>2</math:mn><math:msub><math:mi>a</math:mi><math:mi>x</math:mi></math:msub></math:msup>
+
+<!-- 2^{2^x} -->
+<math:msup><math:msup><math:mn>2</math:mn><math:mn>2</math:mn></math:msup><math:mi>x</math:mi></math:msup>
+
+<!-- {\frac{1}{2}}^{y^{a_x}} -->
+<math:msup><math:mrow><math:mo>(</math:mo><math:mfrac><math:mn>1</math:mn><math:mn>2</math:mn></math:mfrac><math:mo>)</math:mo></math:mrow><math:msup><math:mi>y</math:mi><math:msub><math:mi>a</math:mi><math:mi>x</math:mi></math:msub></math:msup></math:msup>
+</math>.
+
+Testing MathML &lt;munder&gt;, &lt;mover&gt;, and &lt;munderover&gt;:
+
+<math xmlns:math="http://www.w3.org/Math/MathML">
+    <math:munder><math:mi>abcd</math:mi><math:mi>un</math:mi></math:munder>
+     <math:mover><math:mi>abcd</math:mi><math:mi>ov</math:mi></math:mover>
+<math:munderover><math:mi>abcd</math:mi><math:mi>under</math:mi><math:mi>over</math:mi></math:munderover>
+</math>.
+
+
+Testing MathML &lt;msubsup&gt;:
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- a_b^c -->
+<math:msubsup><math:mi>a</math:mi><math:mi>p</math:mi><math:mi>q</math:mi></math:msubsup>
+<math:msubsup><math:mi>a</math:mi><math:mi>b+c</math:mi><math:mi>x</math:mi></math:msubsup>
+</math>.
+
+
+Testing MathML &lt;mrow&gt;:
+
+
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- d^{a/b} -->
+<math:msup><math:mi>d</math:mi><math:mrow><math:mo>(</math:mo><math:mfrac><math:mi>a</math:mi><math:mi>b</math:mi></math:mfrac><math:mo>)</math:mo></math:mrow></math:msup>
+</math>;
+
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- x^2  +  4*x  +  \frac{p}{q} = 0 --> 
+<math:mrow>
+<math:mrow><math:msup><math:mi>x</math:mi><math:mn>2</math:mn></math:msup><math:mo> + </math:mo>
+<math:mrow><math:mn>4</math:mn><math:mo>*</math:mo><math:mi>x</math:mi></math:mrow>
+<math:mo> + </math:mo><math:mfrac><math:mi>p</math:mi><math:mi>q</math:mi></math:mfrac></math:mrow>
+<math:mo> = </math:mo><math:mn>0</math:mn></math:mrow></math>,
+    
+with this &lt;mfrac&gt; hanging here
+
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<!-- \frac{d*b^{\frac{i+j}{n!}} + p_y*q} 
+          {p^x*b_x + \frac{a+c}{d}} -->
+<math:mfrac><math:mrow><math:mi>d</math:mi><math:mo>*</math:mo><math:msup><math:mi>T</math:mi><math:mrow><math:mo>(</math:mo><math:mfrac><math:mi>i + j</math:mi><math:mi>n</math:mi></math:mfrac><math:mo>)</math:mo></math:mrow></math:msup><math:mo> 
++ </math:mo><math:msub><math:mi>p</math:mi><math:mi>y</math:mi></math:msub><math:mo>*</math:mo><math:mi>q</math:mi></math:mrow><math:mrow><math:msup><math:mi>p</math:mi><math:mi>x</math:mi></math:msup><math:mo>*</math:mo><math:msub><math:mi>b</math:mi><math:mi>x</math:mi></math:msub><math:mo> 
++ </math:mo><math:mfrac><math:mrow><math:mi>a</math:mi><math:mo> 
++ </math:mo><math:mi>c</math:mi></math:mrow><math:mi>d</math:mi></math:mfrac></math:mrow></math:mfrac>
+</math>
+
+in the middle of a lot of running text to try to explain what this means to those who care
+to read.
+
+Testing MathML merror, mtext,
+
+<math xmlns:math="http://www.w3.org/Math/MathML">
+<math:mtext>This is a text in mtext</math:mtext>
+<math:merror>This is a text in merror</math:merror>
+</math>
+
+</para>

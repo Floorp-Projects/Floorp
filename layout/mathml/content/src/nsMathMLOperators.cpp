@@ -1,0 +1,283 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla MathML Project.
+ *
+ * The Initial Developer of the Original Code is The University Of
+ * Queensland.  Portions created by The University Of Queensland are
+ * Copyright (C) 1999 The University Of Queensland.  All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ */
+
+#include "nsString.h"
+#include "nsAVLTree.h"
+
+#include "nsMathMLOperators.h"
+
+
+// get the actual value generated for NS_MATHML_OPERATOR_COUNT
+#define WANT_MATHML_OPERATOR_COUNT
+#include "nsMathMLOperatorList.h"
+#undef WANT_MATHML_OPERATOR_COUNT
+
+
+// define a zero-separated linear array of all MathML Operators in Unicode
+#define WANT_MATHML_OPERATOR_UNICHAR
+const PRUnichar kMathMLOperator[] = {
+#include "nsMathMLOperatorList.h"
+};
+#undef WANT_MATHML_OPERATOR_UNICHAR
+
+
+// operator dictionary entry
+struct OperatorNode {
+  OperatorNode(void)
+    : mStr(),
+      mFlags(0),
+      mLeftSpace(0.0f),
+      mRightSpace(0.0f)
+  {
+    nsStr::Initialize(mStr, eTwoByte); // with MathML, we are two-byte by default
+  }
+
+  OperatorNode(const nsStr& aStringValue, const nsOperatorFlags aFlags)
+    : mStr(),
+      mFlags(aFlags),
+      mLeftSpace(0.0f),
+      mRightSpace(0.0f)
+  { // point to the incomming buffer
+    // note that the incomming buffer may really be 2 byte
+    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity,
+                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
+  }
+  
+  void
+  Init(const nsOperatorFlags aFlags, 
+       const float           aLeftSpace, 
+       const float           aRightSpace)
+  {
+    mFlags      = aFlags;
+    mLeftSpace  = aLeftSpace;
+    mRightSpace = aRightSpace;
+  };
+
+  // member data
+  nsString        mStr;
+  nsOperatorFlags mFlags;
+  float           mLeftSpace;   // unit is em
+  float           mRightSpace;  // unit is em
+};
+
+// index comparitor: based on the string of the operator and its form bits
+class OperatorComparitor: public nsAVLNodeComparitor {
+public:
+  virtual ~OperatorComparitor(void) {}
+  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
+    OperatorNode* one = (OperatorNode*)anItem1;
+    OperatorNode* two = (OperatorNode*)anItem2;
+
+    PRInt32 rv;
+    rv = one->mStr.Compare(two->mStr, PR_FALSE);
+    if (rv == 0) {
+      nsOperatorFlags form1 = NS_MATHML_OPERATOR_GET_FORM(one->mFlags);
+      nsOperatorFlags form2 = NS_MATHML_OPERATOR_GET_FORM(two->mFlags);
+      if (form1 < form2)      rv = -1;
+      else if (form1 > form2) rv =  1;
+    }
+    return rv;
+  }
+};
+
+
+static PRInt32             gTableRefCount;
+static OperatorNode*       gOperatorArray;
+static nsAVLTree*          gOperatorTree;
+static OperatorComparitor* gComparitor;
+
+
+void
+nsMathMLOperators::AddRefTable(void)
+{
+  if (0 == gTableRefCount++) {
+    if (! gOperatorArray) {
+      gOperatorArray = new OperatorNode[NS_MATHML_OPERATOR_COUNT];
+      gComparitor = new OperatorComparitor();
+      if (gComparitor) {
+        gOperatorTree = new nsAVLTree(*gComparitor, nsnull);
+      }
+      if (gOperatorArray && gOperatorTree) {
+#define MATHML_OPERATOR(_i,_operator,_flags,_lspace,_rspace) \
+gOperatorArray[_i].Init(nsOperatorFlags(_flags),float(_lspace),float(_rspace));
+#include "nsMathMLOperatorList.h"
+#undef MATHML_OPERATOR
+        const PRUnichar* cp = &kMathMLOperator[0];
+        PRInt32 i = -1;
+        while (++i < PRInt32(NS_MATHML_OPERATOR_COUNT)) {
+          gOperatorArray[i].mStr = *cp++;
+          while (*cp) { gOperatorArray[i].mStr.Append(*cp++); }
+          cp++; // skip null separator
+          gOperatorTree->AddItem(&(gOperatorArray[i]));
+        }
+      }
+    }
+  }
+}
+
+void
+nsMathMLOperators::ReleaseTable(void)
+{
+  if (0 == --gTableRefCount) {
+    if (gOperatorArray) {
+      delete[] gOperatorArray;
+      gOperatorArray = nsnull;
+    }
+    if (gOperatorTree) {
+      delete gOperatorTree;
+      gOperatorTree = nsnull;
+    }
+    if (gComparitor) {
+      delete gComparitor;
+      gComparitor = nsnull;
+    }
+  }
+}
+
+
+PRBool
+nsMathMLOperators::LookupOperator(const nsStr&          aOperator, 
+                                  const nsOperatorFlags aForm,
+                                  nsOperatorFlags*      aFlags,
+                                  float*                aLeftSpace,
+                                  float*                aRightSpace)
+{
+  NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
+  if (gOperatorTree) {
+    OperatorNode node(aOperator, aForm);
+    OperatorNode* found = (OperatorNode*)gOperatorTree->FindItem(&node);
+    if (found) {
+      NS_ASSERTION(found->mStr.Equals(aOperator), "bad tree");
+      *aFlags = found->mFlags;
+      *aLeftSpace = found->mLeftSpace;
+      *aRightSpace = found->mRightSpace;
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+
+#if 0
+// DEBUG
+// BEGIN TEST CODE: 
+// code used to test the dictionary
+//#include <stdio.h>
+
+void DEBUG_PrintString(const nsString aString) 
+{
+  for (PRInt32 i = 0; i<aString.Length(); i++) {
+    PRUnichar ch = aString.CharAt(i);
+    if (ch < 0x00FF)
+      printf("%c", char(ch));
+    else
+      printf("[0x%04X]", ch);
+  }
+}
+
+static const char* kJunkOperator[] = {
+  nsnull,
+  "",
+  ")(",
+  "#",
+  "<!",
+  "<@>"
+};
+
+// define an array of all the flags
+#define MATHML_OPERATOR(_i,_operator,_flags,_lspace,_rspace) nsOperatorFlags(_flags),
+const nsOperatorFlags kMathMLOperatorFlags[] = {
+#include "nsMathMLOperatorList.h"
+};
+#undef MATHML_OPERATOR
+
+int 
+TestOperators() {
+  AddRefTable();
+  	
+  int rv = 0;
+
+  // First make sure we can find all of the operators that are supposed to
+  // be in the table.
+  extern const PRUnichar kMathMLOperator[];
+
+  PRBool found;
+
+  nsOperatorFlags flags, form;
+  float lspace, rspace;
+
+  printf("\nChecking the operator dictionary...\n");
+    
+  nsAutoString aOperator;
+  nsStr::Initialize(aOperator, eTwoByte);
+
+  int i = 0;
+  const PRUnichar* cp = &kMathMLOperator[0];
+  while (i < NS_MATHML_OPERATOR_COUNT) {
+
+    aOperator = *cp++;
+    while (*cp) { aOperator.Append(*cp++); }
+    cp++; // skip null separator
+
+    form = NS_MATHML_OPERATOR_GET_FORM(kMathMLOperatorFlags[i]);
+    found = nsMathMLOperators::LookupOperator(aOperator, form, 
+                               &flags, &lspace, &rspace);       
+
+    if (!found) {
+      printf("bug: can't find operator="); DEBUG_PrintString(aOperator);
+      rv = -1;
+    }
+    if (flags != kMathMLOperatorFlags[i]) {
+      printf("bug: operator="); DEBUG_PrintString(aOperator);
+      printf(" .... flags are wrong\n");
+      getchar();
+      rv = -1;
+    }
+    i++;
+
+    if (i<10) { 
+      DEBUG_PrintString(aOperator);
+      printf(" tested. Press return to continue...");
+      getchar();
+    }
+
+  }
+
+  // Now make sure we don't find some garbage
+  for (int j = 0; j < (int) (sizeof(kJunkOperator) / sizeof(const char*)); j++) {
+    const char* name = kJunkOperator[j];    
+    found = nsMathMLOperators::LookupOperator(nsCAutoString(name), form, 
+                               &flags, &lspace, &rspace);
+    if (found) {
+      printf("bug: found '%s'\n", name ? name : "(null)");
+      rv = -1;
+    }
+  }
+
+  printf("%d operators.",i);
+  printf((rv == 0)? " All tests passed!\n" : " ERROR *** Corrupted Dictionary\n");
+
+  ReleaseTable();
+  return rv;
+}
+// END TEST CODE
+#endif
+

@@ -1,0 +1,480 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="mathml-doc.css" type="text/css"?>
+<!DOCTYPE math SYSTEM "file:///C:\Mozilla/src/mozilla/layout/mathml/tests/mathml.dtd">
+<!-- 
+  *  The contents of this file are subject to the Mozilla Public
+  *  License Version 1.1 (the "License"); you may not use this file
+  *  except in compliance with the License. You may obtain a copy of
+  *  the License at http://www.mozilla.org/MPL/
+  *  
+  *  Software distributed under the License is distributed on an "AS
+  *  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  *  implied. See the License for the specific language governing
+  *  rights and limitations under the License.
+  *  
+  *  The Original Code is Mozilla MathML Project.
+  *  
+  *  The Initial Developer of the Original Code is The University of
+  *  Queensland.  Portions created by The University of Queensland are
+  *  Copyright (C) The University of Queensland.  All
+  *  Rights Reserved.
+  *  
+  *  Contributor(s):
+  *    Roger B. Sidje <rbs@maths.uq.edu.au>
+  -->
+
+<para>
+
+<math xmlns="http://www.w3.org/Math/MathML">
+<!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
+<mmultiscripts>
+   <mi>R</mi>
+      <mi>i</mi><mi>1</mi>
+      <mi>j</mi><mi>2</mi>
+   <mprescripts/>
+      <mi>k</mi><mi>3</mi>
+</mmultiscripts>
+
+<!-- {{} \atop i} A {p \atop q} -->
+<mmultiscripts>
+    <mi>A</mi>
+    <mi>q</mi><mi>p</mi>
+  <mprescripts/>
+    <mi>i</mi><none/>
+</mmultiscripts>
+
+<!-- \int_a^b f(x)dx -->
+<msubsup>
+   <mo>&Integral;</mo>
+   <mi>a</mi>
+   <mi>b</mi>
+</msubsup>
+<mrow>
+    <mi>f</mi>
+    <mo>(</mo>
+    <mi>x</mi>
+    <mo>)</mo>
+    <mo>d</mo>
+    <mi>x</mi>
+</mrow>
+
+<!-- \frac{\partial}{\partial x}F(x,y) + \frac{\partial}{\partial y}F(x,y) -->
+
+<mrow>
+   <mfrac>
+      <mo>&PartialD;</mo>
+      <mrow>
+         <mo>&PartialD;</mo>
+         <mi>x</mi>
+      </mrow>
+   </mfrac>
+
+   <mrow>
+       <mi>F</mi>
+       <mo>(</mo>
+       <mi>x</mi>
+       <mo>,</mo>
+       <mi>y</mi>
+       <mo>)</mo>
+   </mrow>  
+
+   <mo>+</mo>
+
+   <mfrac>
+      <mo>&PartialD;</mo>
+      <mrow>
+         <mo>&PartialD;</mo>
+         <mi>y</mi>
+     </mrow>
+   </mfrac>
+
+   <mrow>
+       <mi>F</mi>
+       <mo>(</mo>
+       <mi>x</mi>
+       <mo>,</mo>
+       <mi>y</mi>
+       <mo>)</mo>
+   </mrow>
+</mrow>
+
+   <mo>&Exists;</mo>
+   <mi>a</mi> 
+   <mi>b</mi> <mi>c</mi> 
+   <mphantom>
+      <mi>d</mi> <mi>e</mi> <mi>f</mi> <mi>g</mi> 
+      <mi>h</mi> <mi>i</mi> <mi>j</mi> <mi>k</mi>
+   </mphantom> 
+   <mi>l</mi> <mi>m</mi> 
+   <mi>n</mi> <mi>o</mi> 
+   <mphantom>
+      <mi>p</mi> <mi>q</mi> <mi>r</mi> <mi>s</mi>
+   </mphantom> 
+   <mi>t</mi> <mi>u</mi> <mi>v</mi> <mi>w</mi>
+   <mi>x</mi> <mi>y</mi> <mi>z</mi>
+
+<!-- a_b -->
+<msub>
+  <mi>a</mi>
+  <mi>b</mi>
+</msub>
+
+<!-- a_i -->
+<msub>
+  <mi>a</mi>
+  <mi>i</mi>
+</msub>
+
+<!-- A_{I_{k}} -->
+
+
+<mrow>
+    <mi>A</mi>
+    <mi>A</mi>
+</mrow>
+
+<msub>
+  <mi>A</mi>
+  <msub>
+     <mi>A</mi>
+     <msub>
+        <mi>A</mi>
+        <mi>A</mi>
+     </msub>
+  </msub>
+</msub>
+
+<!-- d^b -->
+<msup>
+  <mi>d</mi>
+  <mi>b</mi>
+</msup>
+
+<!-- 2^{a_x} -->
+<msup>
+  <mn>2</mn>
+  <msub>
+    <mi>a</mi>
+    <mi>x</mi>
+  </msub>
+</msup>
+
+<!-- 2^{2^x} -->
+<msup>
+   <msup>
+      <mn>2</mn>
+      <mn>2</mn>
+   </msup>
+   <mi>x</mi>
+</msup>
+
+<!-- {\left( \frac{1}{2} \right) }^{y^{a_x}} -->
+
+<msup>
+  <mrow>
+    <mo>(</mo>
+    <mfrac>
+      <mn>1</mn>
+      <mn>2</mn>
+    </mfrac>
+    <mo>)</mo>
+  </mrow>
+  <msup>
+    <mi>y</mi>
+    <msub>
+      <mi>a</mi>
+      <mi>x</mi>
+    </msub>
+  </msup>
+</msup>
+
+
+<munder>
+  <mi>abcd</mi>
+  <mi>un</mi>
+</munder>
+
+<mover>
+  <mi>abcd</mi>
+  <mi>ov</mi>
+</mover>
+<munderover>
+  <mi>abcd</mi>
+  <mi>under</mi>
+  <mi>over</mi>
+</munderover>
+
+
+<!-- a_b^c -->
+<msubsup>
+  <mi>a</mi>
+  <mi>p</mi>
+  <mi>q</mi>
+</msubsup>
+
+<!-- a_{b+c}^x -->
+<msubsup>
+  <mi>a</mi>
+  <mrow>
+     <mi>a</mi>
+     <mo>+</mo>
+     <mi>b</mi>
+  </mrow>
+  <mi>x</mi>
+</msubsup>
+
+
+<!-- d^{ \left( \frac{a}{b} \right) } -->
+
+<msup>
+  <mi>d</mi>
+  <mrow>
+     <mo>(</mo>
+     <mfrac>
+        <mi>a</mi>
+        <mi>b</mi>
+     </mfrac>
+     <mo>)</mo>
+  </mrow>
+</msup>
+
+
+<!-- \frac{d*b^{ \left( \frac{i+j}{n!} \right) } + p_y*q} 
+          {p^x*b_x + \frac{a+c}{d}} -->
+
+<mfrac>
+   <mrow>
+      <mi>d</mi>
+      <mo>*</mo>
+      <msup>
+         <mi>T</mi>
+         <mrow>
+            <mo>(</mo>
+            <mfrac>
+               <mrow>
+                  <mi>i</mi>
+                  <mo>+</mo> 
+                  <mi>j</mi>
+               </mrow>
+               <mi>n</mi>
+            </mfrac>
+            <mo>)</mo>
+         </mrow>
+      </msup>
+      <mo>+</mo>
+      <msub>
+         <mi>p</mi>
+         <mi>y</mi>
+      </msub>
+      <mo>*</mo>
+      <mi>q</mi>
+   </mrow>
+   <mrow>
+      <msup>
+         <mi>p</mi>
+         <mi>x</mi>
+      </msup>
+      <mo>*</mo>
+      <msub>
+         <mi>b</mi>
+         <mi>x</mi>
+      </msub>
+      <mo>+</mo>
+      <mfrac>
+         <mrow>
+            <mi>a</mi>
+            <mo>+</mo>
+            <mi>c</mi>
+         </mrow>
+         <mi>d</mi>
+      </mfrac>
+   </mrow>
+</mfrac>
+
+
+<ms>This is a text in ms</ms>
+
+<!-- x^2  +  4*x  +  \frac{p}{q} = 0 --> 
+
+<mrow>
+   <mrow>
+      <msup>
+         <mi>x</mi>
+         <mn>2</mn>
+      </msup>
+      <mo>+</mo>
+      <mrow>
+         <mn>4</mn>
+         <mo>*</mo>
+         <mi>x</mi>
+      </mrow>
+      <mo>+</mo>
+      <mfrac>
+         <mi>p</mi>
+         <mi>q</mi>
+      </mfrac>
+   </mrow>
+  <mo>=</mo>
+  <mn>0</mn>
+</mrow>
+
+
+<mtext>This is a text in mtext</mtext>
+<merror>This is a text in merror</merror>
+
+<mrow>
+  <msub>
+     <mi>a</mi>
+     <mn>0</mn>
+  </msub>
+  <mo>+</mo>
+  <mfrac>
+     <mstyle scriptlevel="0">
+        <mn>1</mn>
+     </mstyle>
+     <mstyle scriptlevel="0">
+        <mrow>
+          <msub>
+             <mi>a</mi>
+             <mn>1</mn>
+          </msub>
+          <mo>+</mo>
+          <mfrac>
+            <mstyle scriptlevel="0">
+               <mn>1</mn>
+            </mstyle>
+            <mstyle scriptlevel="0">
+               <mrow>
+                 <msub>
+                    <mi>a</mi>
+                    <mn>2</mn>
+                 </msub>
+                 <mo>+</mo>
+                 <mfrac>
+                   <mstyle scriptlevel="0">
+                      <mn>1</mn>
+                   </mstyle>               
+                   <mstyle scriptlevel="0">
+                      <msub>
+                         <mi>a</mi>
+                         <mn>3</mn>
+                      </msub>
+                   </mstyle>
+                 </mfrac>      
+               </mrow>
+            </mstyle>
+          </mfrac>      
+        </mrow> 
+     </mstyle> 
+  </mfrac>  
+</mrow>
+
+<mo>;</mo>
+
+<mrow>
+   <msub>
+      <mi>c</mi>
+      <mrow>
+         <mi>i</mi><mo>+</mo><mi>j</mi>
+      </mrow>
+   </msub>
+   <mo>&LeftArrow;</mo>
+   <mrow>
+      <msub><mi>a</mi><mi>i</mi></msub>
+      <mo>*</mo>
+      <msub><mi>b</mi><mi>j</mi></msub>
+   </mrow>
+</mrow>
+
+<p/>
+
+  <mrow> 
+      <msup>
+         <mi>e</mi>
+         <mrow>
+            <mi>i</mi>
+            <mo>&pi;</mo>
+         </mrow>
+      </msup>
+      <mo>+</mo>
+      <mn>1</mn>
+      <mo>=</mo>
+      <mn>0</mn>
+
+      <mo>;</mo>
+</mrow>
+
+<mrow>
+   <mi>G</mi>
+   <mo>=</mo>
+   <mfrac>
+      <mrow>
+        <mi>F</mi>        
+        <msup><mi>d</mi><mn>2</mn></msup>
+      </mrow>
+      <mrow>
+        <msub><mi>m</mi><mn>1</mn></msub>
+        <msub><mi>m</mi><mn>2</mn></msub>
+      </mrow>
+   </mfrac>
+</mrow>
+
+<mo>;</mo>
+
+<mrow>
+<mi>t</mi><mo>+=</mo><mi>dt</mi>
+</mrow>
+
+<p/> 
+
+
+
+<mrow>
+      <mi>x</mi>
+      <mo>=</mo>
+      <mi>a</mi>
+      <mo>*</mo>
+      <mi>b</mi>
+      <mo>+</mo>
+      <mrow>
+         <mo stretchy="false">(</mo>
+            <mfrac linethickness="2">
+               <mrow>
+                  <mi>aa</mi>
+                  <mo>+</mo>
+                  <mi>b</mi>
+               </mrow>
+               <mfrac>
+                  <mi>xy</mi>
+                  <mi>z</mi>
+               </mfrac>
+            </mfrac>
+         <mo>)</mo>
+      </mrow>
+</mrow>
+
+<mfrac>
+      <mfrac>
+         <mi>x</mi>
+         <mi>z</mi>
+      </mfrac>
+      <mstyle scriptlevel="-3">
+         <mfrac>
+            <mi>dy</mi>
+            <mstyle scriptlevel="1">
+               <mi>z</mi>
+            </mstyle>
+         </mfrac>
+      </mstyle>
+</mfrac>
+
+
+<mfrac>
+      <mstyle scriptlevel="-2">
+         <mi>x</mi>
+      </mstyle>
+      <mi>z</mi>
+</mfrac>
+
+</math>
+</para>
