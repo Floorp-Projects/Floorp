@@ -150,7 +150,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 
 printf("nsClipboard::setNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
 
-#if defined(DEBUG) && 1
+#if defined(DEBUG) && 0
 {
   unsigned char *ptr = data;
   int i=0;
@@ -164,12 +164,12 @@ printf("nsClipboard::setNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, 
 #endif
 
            int     len;
-           char *mbsbuffer = calloc(dataLen,1);					/* MEMORY LEAK */
-           len = wcstombs (mbsbuffer, data, dataLen);
+           char *mbsbuffer = (char *) calloc(dataLen,1);					/* MEMORY LEAK */
+           len = wcstombs (mbsbuffer, (const wchar_t*) data, dataLen);
 
 printf("nsClipboard::setNativeClipboardData 2 mbsbuffer=<%s> dataLen=<%d> len=<%d> \n", mbsbuffer, dataLen, len );
 
-#if defined(DEBUG) && 1
+#if defined(DEBUG) && 0
 {
   unsigned char *ptr = mbsbuffer;
   int i=0;
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData(nsITransferable * aTransferabl
 
 printf("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
 
-#if defined(DEBUG) && 1
+#if defined(DEBUG) && 0
 {
   unsigned char *ptr = data;
   int i=0;
@@ -290,8 +290,8 @@ printf("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, 
 #endif
 
            int     len;
-           wchar_t    *wbuffer  = calloc(dataLen*3, 1);					/* MEMORY LEAK */
-           len = mbstowcs(wbuffer, data, dataLen*3);
+           wchar_t    *wbuffer  = (wchar_t *) calloc(dataLen*3, 1);					/* MEMORY LEAK */
+           len = mbstowcs(wbuffer, (const char *) data, dataLen*3);
 
         printf("nsClipboard::GetNativeClipboardData  %s(%d)\n", data, len );
         
@@ -300,7 +300,7 @@ printf("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, 
 
 printf("nsClipboard::GetNativeClipboardData 2 data=<%s> dataLen=<%d>\n", data, dataLen );
 
-#if defined(DEBUG) && 1
+#if defined(DEBUG) && 0
 {
   unsigned char *ptr = data;
   int i=0;
