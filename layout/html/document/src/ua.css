@@ -499,6 +499,10 @@ NOFRAMES {
   display: inherit;
 }
 
+:WRAPPED-FRAME {
+  display: inherit;
+}
+
 :XML-ROOT {
   background-color: inherit;
 }
