@@ -44,6 +44,11 @@ install::
 	$(MAKE_INSTALL) charsetOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetDetectorsOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) charsetDetectorsOverlay.xul $(DISTBROWSER)
-
+  $(MAKE_INSTALL) widgetStateManager.js $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardHandlerSet.js $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardManager.js $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardOverlay.js $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardOverlay.xul $(DISTBROWSER)
+  
 clobber::
   rm -f $(DIST)\bin\chrome\global\content\default\*.*

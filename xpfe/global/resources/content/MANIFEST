@@ -13,3 +13,10 @@ charsetOverlay.xul
 charsetOverlay.js
 charsetDetectorsOverlay.js
 charsetDetectorsOverlay.xul
+widgetStateManager.js
+wizardHandlerSet.js
+wizardManager.js
+wizardOverlay.js
+wizardOverlay.xul
+
+
