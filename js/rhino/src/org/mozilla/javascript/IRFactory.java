@@ -1239,11 +1239,20 @@ final class IRFactory
           }
           case Token.GET_REF: {
             Node ref = left.getFirstChild();
+            checkMutableReference(ref);
             return new Node(Token.SET_REF, ref, right);
           }
         }
 
         throw Kit.codeBug();
+    }
+
+    private void checkMutableReference(Node n)
+    {
+        int memberTypeFlags = n.getIntProp(Node.MEMBER_TYPE_PROP, 0);
+        if ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0) {
+            parser.reportError("msg.bad.assign.left");
+        }
     }
 
     Node createAssignment(int assignType, Node left, Node right)
@@ -1297,6 +1306,7 @@ final class IRFactory
           }
           case Token.GET_REF: {
             Node ref = left.getFirstChild();
+            checkMutableReference(ref);
             Node opLeft = new Node(Token.USE_STACK);
             Node op = new Node(assignOp, opLeft, right);
             return new Node(Token.SET_REF_OP, ref, op);
