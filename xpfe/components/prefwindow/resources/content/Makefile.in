@@ -65,7 +65,6 @@ CHROME_CONTENT = \
 		pref-proxy-manual.xul \
 		pref-publish.xul \
 		pref-mousewheel.xul \
-		pref-mousewheel.js \
 		pref-wallet.xul \
 		pref-search.js \
 		pref-search.xul \
