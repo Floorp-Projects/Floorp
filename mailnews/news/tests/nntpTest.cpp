@@ -182,6 +182,7 @@ public:
 	nsresult OnGetGroup();		// lists the status of the user specified group...
 	nsresult OnListArticle();
 	nsresult OnSearch();
+	nsresult OnReadNewsRC();
 	nsresult OnExit(); 
 protected:
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
@@ -367,6 +368,9 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
 	case 5:
 		status = OnSearch();
 		break;
+	case 6:
+		status = OnReadNewsRC();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -384,6 +388,7 @@ nsresult nsNntpTestDriver::ListCommands()
 	printf("3) List ids. \n");
 	printf("4) Get an article. \n");
 	printf("5) Perform Search. \n");
+	printf("6) Read NewsRC file. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -564,6 +569,7 @@ nsresult nsNntpTestDriver::OnSearch()
 	
 
 }
+
 nsresult nsNntpTestDriver::OnGetGroup()
 {
 	nsresult rv = NS_OK;
@@ -607,6 +613,29 @@ nsresult nsNntpTestDriver::OnGetGroup()
 
 	return rv;
 }
+
+
+nsresult nsNntpTestDriver::OnReadNewsRC()
+{
+	nsresult rv = NS_OK;
+	m_urlString[0] = '\0';
+	PL_strcpy(m_urlString, m_urlSpec);
+
+	if (m_protocolInitialized == PR_FALSE)
+		InitializeProtocol(m_urlString);
+	else
+		m_url->SetSpec(m_urlString); // reset spec
+
+
+	// a read newsrc url is of the form: news://
+	// or news://HOST
+	rv = m_nntpProtocol->LoadURL(m_url);
+	return rv;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// End on command handlers for news
+////////////////////////////////////////////////////////////////////////////////
 
 int main()
 {
