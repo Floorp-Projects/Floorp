@@ -197,6 +197,43 @@ RegisterGenericFactory(nsIComponentManager* compMgr,
     return rv;
 }
 
+// in order to support the installer, we need
+// to be told out of band if we should cause
+// an autoregister.  if a file exists named
+// ".autoreg" next to the application, this
+// will signal us to cause autoreg.
+static PRBool CheckAndRemoveUpdateFile()
+{
+    nsresult rv;
+    nsCOMPtr<nsIProperties> directoryService;
+    nsDirectoryService::Create(nsnull, 
+                               NS_GET_IID(nsIProperties), 
+                               getter_AddRefs(directoryService));  
+    
+    if (!directoryService) 
+        return PR_FALSE;
+
+    nsCOMPtr<nsIFile> file;
+    rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                               NS_GET_IID(nsIFile), 
+                               getter_AddRefs(file));
+
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Getting NS_XPCOM_CURRENT_PROCESS_DIR failed");
+        return PR_FALSE;
+    }
+
+    file->AppendNative(nsDependentCString(".autoreg"));
+    
+    PRBool exists = PR_FALSE;
+    file->Exists(&exists);
+    if (!exists)
+        return exists;
+
+    file->Remove(PR_FALSE);
+    return exists;
+}
+
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsIProperties     *gDirectoryService = NULL;
@@ -482,12 +519,12 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     }
 #endif
 
-    if ( NS_FAILED(rv) ) {
+    if ( NS_FAILED(rv) || CheckAndRemoveUpdateFile()) {
         // if we find no persistent registry, we will try to autoregister
         // the default components directory.
         nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);        
     }
-
+    
     // Pay the cost at startup time of starting this singleton.
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);
@@ -500,6 +537,7 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     
     return rv;
 }
+
 
 static nsVoidArray* gExitRoutines;
 

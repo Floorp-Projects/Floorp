@@ -100,7 +100,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
             NS_ASSERTION(PR_FALSE, "Could not QI to registrar");
             return rv;
         }
-
+#ifdef DEBUG
         rv = registrar->AutoRegister(nsnull);
 
         if (NS_FAILED(rv))
@@ -133,7 +133,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
                 }
             }
         }
-
+#endif
         sRegistryInitializedFlag = PR_TRUE;
     }
 
