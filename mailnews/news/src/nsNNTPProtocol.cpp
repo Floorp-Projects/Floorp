@@ -59,7 +59,6 @@
 #include "nsMsgKeySet.h"
 
 #include "nsNewsUtils.h"
-#include "nsIPref.h"
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -132,7 +131,6 @@ char * NET_SACat (char **destination, const char *source);
 
 }
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
