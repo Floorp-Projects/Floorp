@@ -85,7 +85,7 @@ NS_IMETHODIMP
 nsFileTransportService::CreateTransport(nsFileSpec& spec,
                                         const char* command,
                                         nsIEventSinkGetter* getter,
-                                        nsITransport** result)
+                                        nsIChannel** result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -105,7 +105,7 @@ NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
                                                   const char *command,
                                                   nsIEventSinkGetter *getter,
-                                                  nsITransport** result)
+                                                  nsIChannel** result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();

@@ -134,10 +134,10 @@ NS_IMETHODIMP
 nsFileTransport::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(NS_GET_IID(nsITransport)) ||
+    if (aIID.Equals(NS_GET_IID(nsIChannel)) ||
         aIID.Equals(NS_GET_IID(nsIRequest)) ||
         aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsITransport*, this);
+        *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -749,6 +749,58 @@ NS_IMETHODIMP
 nsFileTransport::OnEmpty(nsIPipe* pipe)
 {
     return Resume();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// other nsIChannel methods:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileTransport::GetURI(nsIURI * *aURI)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetContentType(char * *aContentType)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetContentLength(PRInt32 *aContentLength)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetOwner(nsISupports * *aOwner)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetOwner(nsISupports * aOwner)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
