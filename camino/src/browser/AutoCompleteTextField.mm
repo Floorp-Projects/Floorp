@@ -535,7 +535,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // need to use one of its routines to update the autocomplete status or
   // we could find ourselves with stale results and the popup still open. If
   // it doesn't have focus, we can bypass all that and just use normal routines.
-  if ( [[self window] firstResponder] == [self fieldEditor] ) {
+  if ( [self fieldEditor] && [[self window] firstResponder] == [self fieldEditor] ) {
     [self setStringUndoably:aURI fromLocation:0];		// updates autocomplete correctly
 
     // set insertion point to the end of the url. setStringUndoably:fromLocation:
