@@ -442,6 +442,8 @@ public:
 protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURI* aURL);
+  nsresult StopBeforeRequestingURL(void);
+  nsresult StopAfterURLAvailable(void);
 
   nsIEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
@@ -1900,7 +1902,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
   // Stop loading the current document (if any...).  This call may result in
   // firing an EndLoadURL notification for the old document...
-  Stop();
+  StopBeforeRequestingURL();
 
 
   // Tell web-shell-container we are loading a new url
@@ -2107,6 +2109,50 @@ NS_IMETHODIMP nsWebShell::Stop(void)
 
   return NS_OK;
 }
+
+// This "stops" the current document load enough so that the document loader
+// can be used to load a new URL.
+nsresult
+nsWebShell::StopBeforeRequestingURL()
+{
+  if (mDocLoader) {
+    // Stop any documents that are currently being loaded...
+    mDocLoader->Stop();
+  }
+
+  // Recurse down the webshell hierarchy.
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsWebShell* shell = (nsWebShell*) mChildren.ElementAt(i);
+    shell->StopBeforeRequestingURL();
+  }
+
+  return NS_OK;
+}
+
+// This "stops" the current document load completely and is called once
+// it has been determined that the new URL is valid and ready to be thrown
+// at us from netlib.
+nsresult
+nsWebShell::StopAfterURLAvailable()
+{
+  if (nsnull != mContentViewer) {
+    mContentViewer->Stop();
+  }
+
+  // Cancel any timers that were set for this loader.
+  CancelRefreshURLTimers();
+
+  // Recurse down the webshell hierarchy.
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsWebShell* shell = (nsWebShell*) mChildren.ElementAt(i);
+    shell->StopAfterURLAvailable();
+  }
+
+  return NS_OK;
+}
+
 
 #ifdef NECKO
 NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
@@ -2981,6 +3027,13 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   if (NS_FAILED(rv)) return rv;
 #endif
 
+
+  // Stop loading of the earlier document completely when the document url
+  // load starts.  Now we know that this url is valid and available.
+  const char* url;
+  aURL->GetSpec(&url);
+  if (0 == PL_strcmp(url, mURL.GetBuffer()))
+    StopAfterURLAvailable();
 
   // XXX This is a temporary hack for meeting the M4 milestone
   // for seamonkey.  I think Netlib should send a message to all stream listeners
