@@ -35,7 +35,7 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsHashtable.h"
+#include "pldhash.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAttributes.h"
 #include "nsILink.h"
@@ -701,76 +701,55 @@ TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 // -----------------------------------------------------------
 
-class AttributeKey: public nsHashKey
-{
-public:
-  AttributeKey(nsIHTMLMappedAttributes* aAttributes);
-  virtual ~AttributeKey(void);
-
-  PRBool      Equals(const nsHashKey* aOther) const;
-  PRUint32    HashCode(void) const;
-  nsHashKey*  Clone(void) const;
-
-private:
-  AttributeKey(void);
-  AttributeKey(const AttributeKey& aCopy);
-  AttributeKey& operator=(const AttributeKey& aCopy);
-
-public:
-  nsIHTMLMappedAttributes*  mAttributes;
-  union {
-    struct {
-      PRUint32  mHashSet: 1;
-      PRUint32  mHashCode: 31;
-    } mBits;
-    PRUint32    mInitializer;
-  } mHash;
+struct MappedAttrTableEntry : public PLDHashEntryHdr {
+  nsIHTMLMappedAttributes *mAttributes;
 };
 
-MOZ_DECL_CTOR_COUNTER(AttributeKey)
-
-AttributeKey::AttributeKey(nsIHTMLMappedAttributes* aAttributes)
-  : mAttributes(aAttributes)
+PR_STATIC_CALLBACK(PLDHashNumber)
+MappedAttrTable_HashKey(PLDHashTable *table, const void *key)
 {
-  MOZ_COUNT_CTOR(AttributeKey);
-  NS_ADDREF(mAttributes);
-  mHash.mInitializer = 0;
+  nsIHTMLMappedAttributes *attributes =
+    NS_STATIC_CAST(nsIHTMLMappedAttributes*, NS_CONST_CAST(void*, key));
+
+  PRUint32 hash;
+  attributes->HashValue(hash);
+  return hash;
 }
 
-AttributeKey::~AttributeKey(void)
+PR_STATIC_CALLBACK(void)
+MappedAttrTable_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  MOZ_COUNT_DTOR(AttributeKey);
-  NS_RELEASE(mAttributes);
+  MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*, hdr);
+
+  entry->mAttributes->DropStyleSheetReference();
+  memset(entry, 0, sizeof(MappedAttrTableEntry));
 }
 
-PRBool AttributeKey::Equals(const nsHashKey* aOther) const
+PR_STATIC_CALLBACK(PRBool)
+MappedAttrTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                           const void *key)
 {
-  const AttributeKey* other = (const AttributeKey*)aOther;
-  PRBool  equals;
-  mAttributes->Equals(other->mAttributes, equals);
-  return equals;
+  nsIHTMLMappedAttributes *attributes =
+    NS_STATIC_CAST(nsIHTMLMappedAttributes*, NS_CONST_CAST(void*, key));
+  const MappedAttrTableEntry *entry =
+    NS_STATIC_CAST(const MappedAttrTableEntry*, hdr);
+
+  PRBool equal;
+  attributes->Equals(entry->mAttributes, equal);
+  return equal;
 }
 
-PRUint32 AttributeKey::HashCode(void) const
-{
-  if (0 == mHash.mBits.mHashSet) {
-    AttributeKey* self = (AttributeKey*)this; // break const
-    PRUint32  hash;
-    mAttributes->HashValue(hash);
-    self->mHash.mBits.mHashCode = (0x7FFFFFFF & hash);
-    self->mHash.mBits.mHashSet = 1;
-  }
-  return mHash.mBits.mHashCode;
-}
-
-nsHashKey* AttributeKey::Clone(void) const
-{
-  AttributeKey* clown = new AttributeKey(mAttributes);
-  if (nsnull != clown) {
-    clown->mHash.mInitializer = mHash.mInitializer;
-  }
-  return clown;
-}
+static PLDHashTableOps MappedAttrTable_Ops = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  PL_DHashGetKeyStub,
+  MappedAttrTable_HashKey,
+  MappedAttrTable_MatchEntry,
+  PL_DHashMoveEntryStub,
+  MappedAttrTable_ClearEntry,
+  PL_DHashFinalizeStub,
+  NULL
+};
 
 // -----------------------------------------------------------
 
@@ -871,7 +850,7 @@ protected:
     // NOTE: if adding more rules, be sure to update 
     // the SizeOf method to include them
 
-  nsHashtable          mMappedAttrTable;
+  PLDHashTable         mMappedAttrTable;
 };
 
 
@@ -919,6 +898,7 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mDocumentColorRule(nsnull)
 {
   NS_INIT_REFCNT();
+  mMappedAttrTable.ops = nsnull;
 }
 
 nsresult
@@ -955,14 +935,6 @@ HTMLStyleSheetImpl::Init()
   NS_ADDREF(mDocumentColorRule);
 
   return NS_OK;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-MappedDropSheet(nsHashKey *aKey, void *aData, void* closure)
-{
-  nsIHTMLMappedAttributes* mapped = (nsIHTMLMappedAttributes*)aData;
-  mapped->DropStyleSheetReference();
-  return PR_TRUE;
 }
 
 HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
@@ -1004,7 +976,8 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
     mTableTHRule->mSheet = nsnull;
     NS_RELEASE(mTableTHRule);
   }
-  mMappedAttrTable.Enumerate(MappedDropSheet);
+  if (mMappedAttrTable.ops)
+    PL_DHashTableFinish(&mMappedAttrTable);
 }
 
 NS_IMPL_ADDREF(HTMLStyleSheetImpl)
@@ -1278,8 +1251,10 @@ HTMLStyleSheetImpl::Reset(nsIURI* aURL)
   mTableColRule->Reset();
   mTableTHRule->Reset();
 
-  mMappedAttrTable.Enumerate(MappedDropSheet);
-  mMappedAttrTable.Reset();
+  if (mMappedAttrTable.ops) {
+    PL_DHashTableFinish(&mMappedAttrTable);
+    mMappedAttrTable.ops = nsnull;
+  }
 
   return NS_OK;
 }
@@ -1367,40 +1342,49 @@ NS_IMETHODIMP
 HTMLStyleSheetImpl::UniqueMappedAttributes(nsIHTMLMappedAttributes* aMapped,
                                            nsIHTMLMappedAttributes*& aUniqueMapped)
 {
-  nsresult result = NS_OK;
-
-  AttributeKey key(aMapped);
-  nsIHTMLMappedAttributes* sharedAttrs =
-    (nsIHTMLMappedAttributes*)mMappedAttrTable.Get(&key);
-
-  if (!sharedAttrs) {  // we have a new unique set
-    mMappedAttrTable.Put(&key, aMapped);
+  aUniqueMapped = nsnull;
+  if (!mMappedAttrTable.ops) {
+    PRBool res = PL_DHashTableInit(&mMappedAttrTable, &MappedAttrTable_Ops,
+                                   nsnull, sizeof(MappedAttrTableEntry), 16);
+    if (!res) {
+      mMappedAttrTable.ops = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*,
+    PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_ADD));
+  if (!entry)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!entry->mAttributes) {
+    // We added a new entry to the hashtable, so we have a new unique set.
+    entry->mAttributes = aMapped;
     aMapped->SetUniqued(PR_TRUE);
-    NS_ADDREF(aMapped);
-    aUniqueMapped = aMapped;
   }
-  else {  // found existing set
-    aUniqueMapped = sharedAttrs;
-    NS_ADDREF(aUniqueMapped);
-  }
-  return result;
+  aUniqueMapped = entry->mAttributes;
+  NS_ADDREF(aUniqueMapped);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::DropMappedAttributes(nsIHTMLMappedAttributes* aMapped)
 {
-  if (aMapped) {
-    PRBool inTable = PR_FALSE;
-    aMapped->GetUniqued(inTable);
-    if (inTable) {
-      AttributeKey key(aMapped);
-      nsIHTMLMappedAttributes* old =
-        (nsIHTMLMappedAttributes*)mMappedAttrTable.Remove(&key);
-      NS_ASSERTION(old == aMapped, "not in table");
+  NS_ENSURE_TRUE(aMapped, NS_OK);
 
-      aMapped->SetUniqued(PR_FALSE);
-    }
-  }
+  PRBool inTable = PR_FALSE;
+  aMapped->GetUniqued(inTable);
+  if (!inTable)
+    return NS_OK;
+
+  NS_ASSERTION(mMappedAttrTable.ops, "table uninitialized");
+#ifdef DEBUG
+  PRUint32 entryCount = mMappedAttrTable.entryCount - 1;
+#endif
+
+  PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_REMOVE);
+
+  NS_ASSERTION(entryCount == mMappedAttrTable.entryCount, "not removed");
+
   return NS_OK;
 }
 
@@ -1434,19 +1418,21 @@ struct MappedAttributeSizeEnumData
   nsUniqueStyleItems *uniqueItems;
 };
 
-PR_STATIC_CALLBACK(PRBool)
-MappedSizeAttributes(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+MappedSizeAttributes(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                     PRUint32 number, void *arg)
 {
-  MappedAttributeSizeEnumData *pData = (MappedAttributeSizeEnumData *)closure;
+  MappedAttributeSizeEnumData *pData = (MappedAttributeSizeEnumData *)arg;
   NS_ASSERTION(pData,"null closure is not supported");
-  nsIHTMLMappedAttributes* mapped = (nsIHTMLMappedAttributes*)aData;
+  MappedAttrTableEntry *entry = NS_STATIC_CAST(MappedAttrTableEntry*, hdr);
+  nsIHTMLMappedAttributes* mapped = entry->mAttributes;
   NS_ASSERTION(mapped, "null item in enumeration fcn is not supported");
   // if there is an attribute and it has not been counted, the get its size
   if(mapped){
     PRUint32 size=0;
     mapped->SizeOf(pData->aHandler, size);
   }  
-  return PR_TRUE;
+  return PL_DHASH_NEXT;
 }
 
 
@@ -1561,17 +1547,17 @@ HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   //   number of entries X sizeof each hash-entry 
   //   + the size of a hash table (see plhash.h and nsHashTable.h)
   //  then we add up the size of each unique attribute
-  localSize = sizeof(mMappedAttrTable);
-  if(mMappedAttrTable.Count() >0){
-    localSize += sizeof(PLHashTable);
-    localSize += mMappedAttrTable.Count() * sizeof(PLHashEntry);
-  }
-  tag = getter_AddRefs(NS_NewAtom("MappedAttrTable"));
-  aSizeOfHandler->AddSize(tag,localSize);
+  if (mMappedAttrTable.ops) {
+    localSize =
+      PL_DHASH_TABLE_SIZE(&mMappedAttrTable) * mMappedAttrTable.entrySize;
+    tag = do_GetAtom("MappedAttrTable");
+    aSizeOfHandler->AddSize(tag,localSize);
 
-  // now get each unique attribute
-  MappedAttributeSizeEnumData sizeEnumData(aSizeOfHandler, uniqueItems);
-  mMappedAttrTable.Enumerate(MappedSizeAttributes, &sizeEnumData);
+    // now get each unique attribute
+    MappedAttributeSizeEnumData sizeEnumData(aSizeOfHandler, uniqueItems);
+    PL_DHashTableEnumerate(&mMappedAttrTable, &MappedSizeAttributes,
+                           &sizeEnumData);
+  }
 
   // that's it
 }
