@@ -118,11 +118,11 @@
     case eTry:
         {
             int32 finallyOffset = BytecodeContainer::getOffset(pc);
-            if (finallyOffset != NotALabel)
+            if (finallyOffset != (int32)NotALabel)
                 pushHandler(pc + finallyOffset);
             pc += sizeof(int32);
             int32 catchOffset = BytecodeContainer::getOffset(pc);
-            if (catchOffset != NotALabel)
+            if (catchOffset != (int32)NotALabel)
                 pushHandler(pc + catchOffset);
             pc += sizeof(int32);
         }
@@ -158,3 +158,5 @@
         }
         break;
     
+
+

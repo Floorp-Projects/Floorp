@@ -357,7 +357,7 @@ static REbool calculateBitmapSize(REState *pState, RENode *target)
 
 {
 
-    REchar rangeStart;
+    REchar rangeStart = 0;
     const REchar *src = (const REchar *)(target->child);
     const REchar *end = target->data.chclass.end;
 
@@ -1205,7 +1205,7 @@ static void addCharacterRangeToCharSet(RECharSet *cs, REchar c1, REchar c2)
 
 static REbool processCharSet(REState *pState, RENode *target)
 {
-    REchar rangeStart, thisCh;
+    REchar rangeStart = 0, thisCh;
     const REchar *src = (const REchar *)(target->child);
     const REchar *end = target->data.chclass.end;
 
@@ -1666,12 +1666,12 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
 {
     REOp op = (REOp)(*pc++);
     REContinuationData currentContinuation;
-    REMatchState *result;
+    REMatchState *result = NULL;
     REBackTrackData *backTrackData;
     REint32 k, length, offset, index;
     REuint32 parenIndex;
     REbool anchor = RE_FALSE;
-    REchar anchorCh;
+    REchar anchorCh = 0;
     REchar matchCh;
     REuint8 *nextpc;
     REOp nextop;
@@ -1810,7 +1810,7 @@ static REMatchState *executeREBytecode(REuint8 *pc, REGlobalData *gData, REMatch
             pc += ARG_LEN;
             x->parens[parenIndex].length = x->endIndex 
                                                 - x->parens[parenIndex].index;
-            if (parenIndex > gData->lastParen)
+            if ((REint32)parenIndex > gData->lastParen)
                 gData->lastParen = (REint32)parenIndex;
             op = (REOp)(*pc++);
             continue;

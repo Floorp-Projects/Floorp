@@ -194,7 +194,6 @@ static js2val Array_pop(JS2Metadata *meta, const js2val thisValue, js2val * /*ar
     if (length > 0) {
         Multiname mn(numberToString(length - 1), meta->publicNamespace);
         LookupKind lookup(false, JS2VAL_NULL);
-        const String *id = numberToString(length - 1);
         js2val result = JS2VAL_UNDEFINED;
         bool deleteResult;
         meta->readDynamicProperty(thisObj, &mn, &lookup, RunPhase, &result);

@@ -254,8 +254,8 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 {
     const String *S = meta->toString(thisValue);
 
-    js2val searchValue;
-    js2val replaceValue;
+    js2val searchValue = JS2VAL_UNDEFINED;
+    js2val replaceValue = JS2VAL_UNDEFINED;
 
     if (argc > 0) searchValue = argv[0];
     if (argc > 1) replaceValue = argv[1];

@@ -107,7 +107,7 @@ namespace MetaData {
                     HandlerData *hndlr = (HandlerData *)mTryStack.top();
                     ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
                 
-                    js2val x;
+                    js2val x = JS2VAL_UNDEFINED;
                     if (curAct != hndlr->mActivation) {
                         ASSERT(!activationStackEmpty());
                         ActivationFrame *prev;
@@ -351,9 +351,9 @@ namespace MetaData {
     #define INIT_STRINGATOM(n) n##_StringAtom(allocStringPtr(&world.identifiers[#n]))
 
     JS2Engine::JS2Engine(World &world)
-                : pc(NULL),
+                : meta(NULL),
+		  pc(NULL),
                   bCon(NULL),
-                  meta(NULL),
                   retval(JS2VAL_VOID),
                   INIT_STRINGATOM(true),
                   INIT_STRINGATOM(false),

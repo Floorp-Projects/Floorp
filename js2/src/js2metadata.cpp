@@ -1417,7 +1417,7 @@ namespace MetaData {
                 return a;
             }
             Namespace *na = checked_cast<Namespace *>(a);
-            if (b->kind == NamespaceAttr) {
+            if (b->attrKind == NamespaceAttr) {
                 Namespace *nb = checked_cast<Namespace *>(b);
                 CompoundAttribute *c = new CompoundAttribute();
                 c->addNamespace(na);
@@ -1449,7 +1449,7 @@ namespace MetaData {
             ca->dynamic |= cb->dynamic;
             if (ca->memberMod == NoModifier)
                 ca->memberMod = cb->memberMod;
-            if (ca->overrideMod == NoModifier)
+            if (ca->overrideMod == NoOverride)
                 ca->overrideMod = cb->overrideMod;
             ca->prototype |= cb->prototype;
             ca->unused |= cb->unused;
@@ -1957,10 +1957,10 @@ doUnary:
         case ExprNode::numUnit:
             {
                 NumUnitExprNode *n = checked_cast<NumUnitExprNode *>(p);
-                if (n->str == L"UL")
+                if (n->str.compare(String(widenCString("UL"))) == 0)
                     bCon->addUInt64((uint64)(n->num), p->pos);
                 else
-                    if (n->str == L"L")
+                    if (n->str.compare(String(widenCString("L"))) == 0)
                         bCon->addInt64((uint64)(n->num), p->pos);
                     else
                         reportError(Exception::badValueError, "Unrecognized unit", p->pos);
@@ -2468,8 +2468,8 @@ doUnary:
         }
         Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
-
-        for (StaticBindingIterator b = localFrame->staticReadBindings.lower_bound(*id),
+	StaticBindingIterator b, end; 
+        for (b = localFrame->staticReadBindings.lower_bound(*id),
                 end = localFrame->staticReadBindings.upper_bound(*id); (b != end); b++) {
             if (mn->matches(b->second->qname))
                 reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
@@ -3017,7 +3017,7 @@ doUnary:
         const DynamicPropertyMap::value_type e(*name, newValue);
         dynamicProperties.insert(e);
 
-        char16 *numEnd;        
+        const char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
         uint32 index = JS2Engine::float64toUInt32(f);
 
@@ -3755,7 +3755,7 @@ deleteClassProperty:
             return (JS2VAL_TO_BOOLEAN(x)) ? 1.0 : 0.0;
         if (JS2VAL_IS_STRING(x)) {
             String *str = JS2VAL_TO_STRING(x);
-            char16 *numEnd;
+            const char16 *numEnd;
             return stringToDouble(str->data(), str->data() + str->length(), numEnd);
         }
         if (JS2VAL_IS_INACCESSIBLE(x))

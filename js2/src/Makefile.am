@@ -2,9 +2,11 @@ include $(top_srcdir)/common.mk
 
 bin_PROGRAMS = epimetheus
 DEFS = -DEPIMETHEUS
+LIBS = -L$(FDLIBM_DIR) -lfdm
 epimetheus_DEPENDENCIES = $(LIBFDLIBM)
 epimetheus_SOURCES =  \
 	bytecodecontainer.cpp \
+	epimetheus.cpp \
 	exception.cpp \
 	formatter.cpp \
 	hash.cpp \
