@@ -56,13 +56,13 @@
 
     <content> 
       <RDF:Description about="chrome://sidebar/content/">
-	    <base>resource:/res/rdf/</base>
+	    <base>resource:/chrome/sidebar/content/default/</base>
       </RDF:Description> 
     </content> 
 
     <skin> 
       <RDF:Description about="chrome://sidebar/skin/">
-        <base>resource:/res/rdf/</base>
+        <base>resource:/chrome/sidebar/skin/default/</base>
         <main>sidebar.css</main> 
       </RDF:Description> 
     </skin> 
