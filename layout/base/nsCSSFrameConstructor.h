@@ -244,7 +244,6 @@ protected:
                                      nsIContent*              aContent,
                                      nsStyleContext*          aStyleContext,
                                      nsIAtom*                 aPseudoElement,
-                                     nsIFrame**               aWrapperFrame,
                                      nsIFrame**               aResult);
 
   nsresult AppendFrames(nsIPresContext*  aPresContext,
