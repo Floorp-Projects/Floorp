@@ -960,7 +960,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
                                                               prompter, PROXY_SYNC,
                                                               (void**)&proxyprompter);
 
-        PRUnichar *user, *passwd;
+        PRUnichar *user=NULL, *passwd=NULL;
         PRBool retval;
 
         nsAutoString message = "Enter username for "; //TODO localize it!
