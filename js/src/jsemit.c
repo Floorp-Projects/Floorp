@@ -775,6 +775,8 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             if (!JOF_TYPE_IS_EXTENDED_JUMP(type)) {
                 span = SD_TARGET_OFFSET(sd) - pivot;
                 if (span < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < span) {
+                    ptrdiff_t deltaFromTop = 0;
+
                     done = JS_FALSE;
 
                     switch (op) {
@@ -793,8 +795,28 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
                     *pc = (jsbytecode) op;
 
                     for (sd2 = sdtop; sd2 < sdlimit && sd2->top == top; sd2++) {
-                        if (sd2 > sd)
+                        if (sd2 <= sd) {
+                            /*
+                             * sd2->offset already includes delta as it stood
+                             * before we entered this loop, but it must also
+                             * include the delta relative to top due to all the
+                             * extended jump offset immediates for the opcode
+                             * starting at top, which we extend in this loop.
+                             *
+                             * If there is only one extended jump offset, then
+                             * sd2->offset won't change and this for loop will
+                             * iterate once only.
+                             */
+                            sd2->offset += deltaFromTop;
+                            deltaFromTop += JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN;
+                        } else {
+                            /*
+                             * sd2 comes after sd, and won't be revisited by
+                             * the outer for loop, so we have to increase its
+                             * offset by delta, not merely by deltaFromTop.
+                             */
                             sd2->offset += delta;
+                        }
 
                         delta += JUMPX_OFFSET_LEN - JUMP_OFFSET_LEN;
                         UpdateJumpTargets(cg->jumpTargets, sd2->offset,
