@@ -594,9 +594,11 @@
             event.preventDefault();
             var c = this.currentIndex;
             var selection = this.outlinerBoxObject.selection;
-            if (!selection.isSelected(c)) {
+            if (event.ctrlKey || !selection.isSelected(c)) {
               selection.toggleSelect(c);
-              this.selectElement.setOptionsSelectedByIndex(c, c, true, false, false, false);
+              this.selectElement.setOptionsSelectedByIndex(c, c,
+                                                           selection.isSelected(c),
+                                                           false, false, false);
               if ("onchange" in this)
                 this.onchange();
             }
