@@ -1269,6 +1269,9 @@ nsCacheService::SetMemoryCacheCapacity(PRInt32  capacity)
 #include <os2.h>
 #elif defined(XP_WIN)
 #include <windows.h>
+#elif defined(_AIX)
+#include <cf.h>
+#include <sys/cfgodm.h>
 #endif
 
 
@@ -1326,6 +1329,19 @@ nsCacheService::CacheMemoryAvailable()
                     sizeof(ulPhysMem));
     kbytes = (long)(ulPhysMem / 1024);
       
+#elif defined(_AIX)
+
+    int how_many;
+    struct CuAt *obj;
+    if (odm_initialize() == 0) {
+        obj = getattr("sys0", "realmem", 0, &how_many);
+        if (obj != NULL) {
+            kbytes = atoi(obj->value);
+            free(obj);
+        }
+        odm_terminate();
+    }
+
 #else
     return MEMORY_CACHE_CAPACITY;
 #endif
