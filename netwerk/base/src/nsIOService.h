@@ -51,13 +51,6 @@ public:
                     nsIURI* *result, nsIProtocolHandler* *hdlrResult);
 
 protected:
-    nsresult BuildAppVersion();
-
-    nsCString   *mAppName;
-    nsCString   *mAppCodeName;
-    nsCString   *mAppVersion;
-    nsCString   *mAppLanguage;
-    nsCString   *mAppPlatform;
     PRBool      mOffline;
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsIFileTransportService>   mFileTransportService;
