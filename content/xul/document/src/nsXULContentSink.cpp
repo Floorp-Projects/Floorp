@@ -649,23 +649,35 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
         if (! aCreateTextNode)
             break;
 
+        nsXULPrototypeNode* node;
+        rv = mContextStack.GetTopNode(&node);
+        if (NS_FAILED(rv)) return rv;
+
+        PRBool stripWhitespace = PR_FALSE;
+        if (node->mType == nsXULPrototypeNode::eType_Element) {
+            nsINodeInfo *nodeInfo =
+                NS_STATIC_CAST(nsXULPrototypeElement*, node)->mNodeInfo;
+
+            if (nodeInfo->NamespaceEquals(kNameSpaceID_XUL))
+                stripWhitespace = !nodeInfo->Equals(nsXULAtoms::label) &&
+                                  !nodeInfo->Equals(nsXULAtoms::description);
+        }
+
         // Don't bother if there's nothing but whitespace.
-        // XXX This could cause problems...
-        if (! IsDataInBuffer(mText, mTextLength))
+        if (stripWhitespace && ! IsDataInBuffer(mText, mTextLength))
             break;
 
         // Don't bother if we're not in XUL document body
         if (mState != eInDocumentElement || mContextStack.Depth() == 0)
             break;
 
-        // Trim the leading and trailing whitespace
         nsXULPrototypeText* text = new nsXULPrototypeText();
         if (! text)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        text->mValue.SetCapacity(mTextLength + 1);
-        text->mValue.Append(mText, mTextLength);
-        text->mValue.Trim(" \t\n\r");
+        text->mValue.Assign(mText, mTextLength);
+        if (stripWhitespace)
+            text->mValue.Trim(" \t\n\r");
 
         // hook it up
         nsVoidArray* children;
