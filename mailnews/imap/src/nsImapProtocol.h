@@ -38,6 +38,14 @@
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
 
+// State Flags (Note, I use the word state in terms of storing 
+// state information about the connection (authentication, have we sent
+// commands, etc. I do not intend it to refer to protocol state)
+// Use these flags in conjunction with SetFlag/TestFlag/ClearFlag instead
+// of creating PRBools for everything....
+
+#define IMAP_RECEIVED_GREETING		0x00000001  /* should we pause for the next read */
+
 class nsImapProtocol : public nsIImapProtocol
 {
 public:
@@ -129,7 +137,7 @@ public:
 	// Comment from 4.5: We really need to break out the thread synchronizer from the
 	// connection class...Not sure what this means
 	PRBool	GetShowAttachmentsInline();
-	PRBool GetPseudoInterrupted();
+	PRBool  GetPseudoInterrupted();
 	void	PseudoInterrupt(PRBool the_interrupt);
 
 	PRUint32 GetMessageSize(nsString2 &messageId, PRBool idsAreUids);
@@ -188,14 +196,10 @@ public:
 	// more imap commands
 	void Logout();
 	void Noop();
-	void Capability();
 	void XServerInfo();
 	void XMailboxInfo(const char *mailboxName);
-	void Namespace();
 	void MailboxData();
 	void GetMyRightsForFolder(const char *mailboxName);
-	void GetACLForFolder(const char *mailboxName);
-	void StatusForFolder(const char *mailboxName);
 	void AutoSubscribeToMailboxIfNecessary(const char *mailboxName);
 	void Bodystructure(const char *messageId, PRBool idIsUid);
 	void PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts);
@@ -222,6 +226,7 @@ public:
 
     void WaitForFEEventCompletion();
     void HandleMemoryFailure();
+	void HandleCurrentUrlError();
 
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
@@ -232,22 +237,34 @@ private:
 	nsIImapUrl		*m_runningUrl; // the nsIImapURL that is currently running
 	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
-	char			*m_dataBuf;
+	char			*m_dataOutputBuf;
+	char			*m_dataInputBuf; // Note: no one should manipulate this buffer except for ReadLineFromBuffer!!!
     PRUint32		m_allocatedSize; // allocated size
     PRUint32        m_totalDataSize; // total data size
     PRUint32        m_curReadIndex;  // current read index
 
 	// Ouput stream for writing commands to the socket
 	nsITransport			* m_transport; 
+	nsIInputStream			* m_inputStream;	// this is the stream netlib writes data into for us to read.
 	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
 
+
+	// this is a method designed to buffer data coming from the input stream and efficiently extract out 
+	// a line on each call. We read out as much of the stream as we can and store the extra that doesn't
+	// for the next line in aDataBuffer. We always check the buffer for a complete line first, 
+	// if it doesn't have a line, we read in data from the stream and try again. If we still don't have
+	// a complete line, we WAIT for more data to arrive by waiting onthe m_dataAvailable monitor. So this function
+	// BLOCKS until we get a new line. Eventually I'd like to move this method out into a utiliity method
+	// so I can resuse it for the other mail protocols...
+	char * ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataBufferSize, nsIInputStream * aInputStream);
+
     // ******* Thread support *******
-    nsIImapHostSessionList *m_hostSessionList;
     PLEventQueue *m_sinkEventQueue;
     PLEventQueue *m_eventQueue;
     PRThread     *m_thread;
-    PRMonitor    *m_dataAvailableMonitor;
+    PRMonitor    *m_dataAvailableMonitor;   // used to notify the arrival of data from the server
+	PRMonitor    *m_urlReadyToRunMonitor;	// used to notify the arrival of a new url to be processed
 	PRMonitor	 *m_pseudoInterruptMonitor;
     PRMonitor	 *m_dataMemberMonitor;
 	PRMonitor	 *m_threadDeathMonitor;
@@ -259,26 +276,28 @@ private:
     static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
-    nsISupports* m_consumer;
-    PRInt32 m_connectionStatus;
+    nsISupports			*m_consumer;
+    PRInt32				 m_connectionStatus;
     nsIMsgIncomingServer * m_server;
 
     nsImapLogProxy *m_imapLog;
     nsImapMailFolderProxy *m_imapMailFolder;
     nsImapMessageProxy *m_imapMessage;
+
     nsImapExtensionProxy *m_imapExtension;
     nsImapMiscellaneousProxy *m_imapMiscellaneous;
     // helper function to setup imap sink interface proxies
     void SetupSinkProxy();
-    PRBool GetDeleteIsMoveToTrash();
+	// End thread support stuff
 
+    PRBool GetDeleteIsMoveToTrash();
     PRMonitor *GetDataMemberMonitor();
     nsString2 m_currentCommand;
     nsImapServerResponseParser m_parser;
     nsImapServerResponseParser& GetServerStateParser() { return m_parser; };
 
     virtual void ProcessCurrentURL();
-	void ProcessSelectedStateURL();
+	void EstablishServerConnection();
     virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
 
 	// biff
@@ -326,18 +345,54 @@ private:
     void IncrementCommandTagNumber();
     char *GetServerCommandTag();  
 
-    PRBool m_trackingTime;
-    PRTime m_startTime;
-    PRTime m_endTime;
-    PRInt32 m_tooFastTime;
-    PRInt32 m_idealTime;
-    PRInt32 m_chunkAddSize;
-    PRInt32 m_chunkStartSize;
-    PRInt32 m_maxChunkSize;
-    PRBool m_fetchByChunks;
-    PRInt32 m_chunkSize;
-    PRInt32 m_chunkThreshold;
+	// login related methods. All of these methods actually issue protocol
+	void Capability(); // query host for capabilities.
+	void Namespace();
+	void InsecureLogin(const char *userName, const char *password);
+	void AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag);
+	void ProcessAuthenticatedStateURL();
+	void ProcessAfterAuthenticated();
+	void ProcessSelectedStateURL();
+	PRBool TryToLogon();
+
+	// Process Authenticated State Url used to be one giant if statement. I've broken out a set of actions
+	// based on the imap action passed into the url. The following functions are imap protocol handlers for
+	// each action. They are called by ProcessAuthenticatedStateUrl.
+	void OnLSubFolders();
+	void OnGetMailAccount();
+	void OnOfflineToOnlineMove();
+	void OnAppendMsgFromFile();
+	char * OnCreateServerSourceFolderPathString();
+	void OnCreateFolder(const char * aSourceMailbox);
+	void OnSubscribe(const char * aSourceMailbox);
+	void OnUnsubscribe(const char * aSourceMailbox);
+	void OnRefreshACLForFolder(const char * aSourceMailbox);
+	void OnRefreshAllACLs();
+	void OnListFolder(const char * aSourceMailbox, PRBool aBool);
+	void OnUpgradeToSubscription();
+	void OnStatusForFolder(const char * sourceMailbox);
+	void OnDeleteFolder(const char * aSourceMailbox);
+	void OnRenameFolder(const char * aSourceMailbox);
+	void OnMoveFolderHierarchy(const char * aSourceMailbox);
+
+
+	// End Process AuthenticatedState Url helper methods
+
+    PRBool		m_trackingTime;
+    PRTime		m_startTime;
+    PRTime		m_endTime;
+    PRInt32		m_tooFastTime;
+    PRInt32		m_idealTime;
+    PRInt32		m_chunkAddSize;
+    PRInt32		m_chunkStartSize;
+    PRInt32		m_maxChunkSize;
+    PRBool		m_fetchByChunks;
+    PRInt32		m_chunkSize;
+    PRInt32		m_chunkThreshold;
     TLineDownloadCache m_downloadLineCache;
+
+	nsIImapHostSessionList * m_hostSessionList;
+
     PRBool m_fromHeaderSeen;
 
 	// progress stuff
