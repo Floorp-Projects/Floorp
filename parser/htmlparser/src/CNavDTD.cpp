@@ -2610,9 +2610,11 @@ PRInt32 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
         nsString& str=aToken->GetText();
         CToken*   skippedToken=0;
         if(str.EqualsIgnoreCase("SCRIPT") ||
-           str.EqualsIgnoreCase("STYLE") ||
-           str.EqualsIgnoreCase("TITLE") ||
+           str.EqualsIgnoreCase("STYLE")  ||
+           str.EqualsIgnoreCase("APPLET") ||
+           str.EqualsIgnoreCase("TITLE")  ||
            str.EqualsIgnoreCase("TEXTAREA")) {
+
           result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
     
           if((kNoError==result) && skippedToken){
