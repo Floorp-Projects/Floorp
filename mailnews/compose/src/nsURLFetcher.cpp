@@ -46,7 +46,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
-NS_IMPL_ISUPPORTS7(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsIHttpEventSink, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS6(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsISupportsWeakReference)
 
 
 /* 
@@ -68,7 +68,6 @@ nsURLFetcher::nsURLFetcher()
   mContentType = nsnull;
   mCharset = nsnull;
   mOnStopRequestProcessed = PR_FALSE;
-  mRedirection = PR_FALSE;
 }
 
 nsURLFetcher::~nsURLFetcher()
@@ -246,8 +245,6 @@ nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputS
 nsresult
 nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  mRedirection = PR_FALSE;  // start a new request, reset mRedirection
-  
   nsMsgAttachmentHandler *attachmentHdl = (nsMsgAttachmentHandler *)mTagData;
   if (attachmentHdl)
   {
@@ -411,7 +408,7 @@ nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
   if (NS_FAILED(aStatus))
   {
     //... but we must ignore abort message caused by a redirection!
-    if (aStatus == NS_BINDING_ABORTED && mRedirection)
+    if (aStatus == NS_BINDING_REDIRECTED)
         return NS_OK;
 
     OnStopRequest(aRequest, nsnull, aStatus);
@@ -443,11 +440,4 @@ nsURLFetcher::OnSecurityChange(nsIWebProgress *aWebProgress,
                                PRInt32 state)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsURLFetcher::OnRedirect(nsIHttpChannel *aOldChannel, nsIChannel *aNewChannel)
-{
-  mRedirection = PR_TRUE;
-  return NS_OK;
 }

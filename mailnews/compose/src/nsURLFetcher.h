@@ -32,7 +32,6 @@
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
-#include "nsIHttpEventSink.h"
 #include "nsWeakReference.h"
 
 
@@ -41,7 +40,6 @@ class nsURLFetcher : public nsIURLFetcher,
                      public nsIURIContentListener, 
                      public nsIInterfaceRequestor,
                      public nsIWebProgressListener,
-                     public nsIHttpEventSink,
                      public nsSupportsWeakReference
 { 
 public: 
@@ -69,9 +67,6 @@ public:
   // Methods for nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  // Methods for nsIHttpEventSink
-  NS_DECL_NSIHTTPEVENTSINK
-
 private:
   nsOutputFileStream              *mOutStream;    // the output file stream
   PRBool                          mStillRunning;  // Are we still running?
@@ -82,7 +77,6 @@ private:
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   PRBool                          mOnStopRequestProcessed; // used to prevent calling OnStopRequest multiple times
-  PRBool                          mRedirection;   // Set when we get a redirection, should ignore stop message.
 }; 
 
 #endif /* nsURLFetcher_h_ */
