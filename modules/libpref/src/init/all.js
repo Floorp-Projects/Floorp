@@ -261,7 +261,7 @@ pref("intl.charset_menu.static",           "iso-8859-1, iso-2022-jp, shift_jis, 
 pref("intl.charset_menu.cache",            "");
 
 pref("browser.enable_webfonts",         true);
-pref("browser.use_document_fonts",              2); // 0 = never, 1 = quick, 2 = always
+pref("browser.use_document_fonts",              1); // 0 = never, 1 = quick, 2 = always
 
 // -- folders (Mac: these are binary aliases.)
 localDefPref("browser.download_directory",      "");
