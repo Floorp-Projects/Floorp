@@ -24,7 +24,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= pics
 
-EXPORTS	= nsIPICS.h
+EXPORTS	=                       \
+        nspics.h                \
+        nsIPICS.h               \
+        nsPICSElementObserver.h \
+        $(NULL)
+
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
+include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk

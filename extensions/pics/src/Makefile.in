@@ -53,4 +53,6 @@ MKSHLIB :=
 # we don't want the shared lib
 NO_SHARED_LIB=1
 
+include $(topsrcdir)/config/config.mk
+
 include $(topsrcdir)/config/rules.mk
