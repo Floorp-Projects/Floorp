@@ -41,12 +41,12 @@ treecell {
 } 
 
 treeitem[selected] {
- color: green;
-}
-
-treecell[selectedcell] {
  background-color: yellow;
 }
+
+//treecell[selectedcell] {
+ //background-color: yellow;
+//}
  
 treehead treeitem treecell { 
  background-color: #00C0FF; 
@@ -54,3 +54,7 @@ treehead treeitem treecell {
  border-color: white #707070 #707070 white;
  vertical-align: middle;
 }
+
+//popup {
+ //display: none;
+//}
