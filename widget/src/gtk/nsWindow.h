@@ -135,6 +135,9 @@ public:
 
   // Return the Gdk window used for rendering
   virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
+
+  // grab in progress
+  PRBool GrabInProgress(void);
   //  XXX Chris - fix these
   //  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
 
@@ -187,6 +190,8 @@ protected:
   GtkWidget   *mMozAreaClosestParent;
 
   nsIMenuBar *mMenuBar;
+  // are we doing a grab?
+  static PRBool mIsGrabbing;
 private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
