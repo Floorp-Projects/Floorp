@@ -45,7 +45,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
 #define DEBUG_NOISY_NEWS 1
 #endif
 
@@ -1087,7 +1087,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 {
   nsresult rv = NS_OK;
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NOISY_NEWS
   printf("GetNewMessages (for news)  uri = %s\n",mURI);
 #endif
 
@@ -1111,7 +1111,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
   rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
                               (void **)&nntpServer);
   if (NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NOISY_NEWS
     printf("Getting new news articles....\n");
 #endif
     rv = nntpService->GetNewNews(nsnull,nntpServer,nsnull,mURI);
