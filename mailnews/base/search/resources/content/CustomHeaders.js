@@ -74,6 +74,9 @@ function onOk()
   {
     var hdrs = gArrayHdrs.join(": ");
     gPrefs.setCharPref("mailnews.customHeaders", hdrs);
+    // flush prefs to disk, in case we crash, to avoid dataloss and problems with filters that use the custom headers
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+    prefService.savePrefFile(null);
   }
   window.close();
 }
