@@ -382,6 +382,7 @@ protected:
   PRUint32 mReflowLockCount;
   PRBool mIsDestroying;
   nsIFrame* mCurrentEventFrame;
+  nsIContent* mCurrentEventContent;
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
@@ -393,6 +394,7 @@ private:
   void DisableScrolling(){mScrollingEnabled = PR_FALSE;}
   void EnableScrolling(){mScrollingEnabled = PR_TRUE;}
   PRBool IsScrollingEnabled(){return mScrollingEnabled;}
+  nsIFrame* GetCurrentEventFrame();
 };
 
 #ifdef NS_DEBUG
@@ -459,6 +461,7 @@ PresShell::PresShell()
   mIsDestroying = PR_FALSE;
   mCaretEnabled = PR_FALSE;
   mDisplayNonTextSelection = PR_FALSE;
+  mCurrentEventContent = nsnull;
   EnableScrolling();
 }
 
@@ -540,6 +543,8 @@ PresShell::~PresShell()
   mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
 
   mIsDestroying = PR_TRUE;
+
+  NS_IF_RELEASE(mCurrentEventContent);
   if (mViewManager) {
     // Disable paints during tear down of the frame tree
     mViewManager->DisableRefresh();
@@ -1285,6 +1290,7 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   }
   
   if (aFrame == mCurrentEventFrame) {
+    mCurrentEventFrame->GetContent(&mCurrentEventContent);
     mCurrentEventFrame = nsnull;
   }
   return NS_OK;
@@ -1965,6 +1971,16 @@ PresShell::Paint(nsIView              *aView,
   return rv;
 }
 
+nsIFrame*
+PresShell::GetCurrentEventFrame()
+{
+  if (!mCurrentEventFrame && mCurrentEventContent) {
+    GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
+  }
+
+  return mCurrentEventFrame;
+}
+
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
@@ -2003,15 +2019,16 @@ PresShell::HandleEvent(nsIView         *aView,
       //we are a listener now.
     }
     frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
-    if (nsnull != mCurrentEventFrame) {
+    NS_IF_RELEASE(mCurrentEventContent);
+    if (nsnull != GetCurrentEventFrame()) {
       //Once we have the targetFrame, handle the event in this order
       nsIEventStateManager *manager;
       if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
         //1. Give event to event manager for pre event state changes and generation of synthetic events.
-        rv = manager->PreHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus);
+        rv = manager->PreHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
 
         //2. Give event to the DOM for third party and JS use.
-        if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+        if (nsnull != GetCurrentEventFrame() && NS_OK == rv) {
           nsIContent* targetContent;
           if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
             rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
@@ -2022,11 +2039,11 @@ PresShell::HandleEvent(nsIView         *aView,
           //3. Give event to the Frames for browser default processing.
           // XXX The event isn't translated into the local coordinate space
           // of the frame...
-          if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+          if (nsnull != GetCurrentEventFrame() && NS_OK == rv) {
             rv = mCurrentEventFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
 
             //4. Give event to event manager for post event state changes and generation of synthetic events.
-            if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+            if (nsnull != GetCurrentEventFrame() && NS_OK == rv) {
               rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
             }
           }

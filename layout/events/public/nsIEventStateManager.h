@@ -44,7 +44,8 @@ public:
   NS_IMETHOD PreHandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent *aEvent, 
                          nsIFrame* aTargetFrame,
-                         nsEventStatus& aStatus) = 0;
+                         nsEventStatus& aStatus,
+                         nsIView* aView) = 0;
 
   NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent *aEvent, 
