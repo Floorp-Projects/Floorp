@@ -56,6 +56,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
 #include "nsHTMLAtoms.h"
+#include "nsXULAtoms.h"
 
 #include "nsICSSLoader.h"
 #include "nsIStyleRuleProcessor.h"
@@ -462,7 +463,7 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
         continue;
 
 #ifdef USE_IMG2
-      if (tag.get() == nsHTMLAtoms::image) {
+      if (tag.get() == nsXULAtoms::image) {
         // Obtain our src attribute.  
         // Construct a URI out of our src attribute.
         // We need to ensure the image loader is constructed.
