@@ -738,6 +738,7 @@ nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const
     nsAutoString valueStr(value);
     result = editor->SetAttribute(element, attributeStr, valueStr); 
   }
+  UpdateInterfaceState();
   return result;
 }
 
@@ -753,6 +754,7 @@ nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
     nsAutoString attributeStr(attr);
     result = editor->RemoveAttribute(element, attributeStr);
   }
+  UpdateInterfaceState();
   return result;
 }
 
@@ -817,6 +819,7 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  UpdateInterfaceState();
   NS_RELEASE(styleAtom);
   return err;
 }

@@ -145,23 +145,6 @@ public:
    */
   NS_IMETHOD DecreaseFontSize()=0;
 
-  /**
-   * GetTypingState() gets the state for typing (which may differ from that of
-   * the current selection).
-   *
-   * @param aProperty   the property to get state for 
-   * @param aFirst      [OUT] PR_TRUE if the state is set on the current type-in state
-   */
-  NS_IMETHOD GetTypingState(nsIAtom *aProperty, PRBool &aSet)=0;
-
-  /**
-   * GetTypingStateValue() gets the state for typing (which may differ from that of
-   * the current selection).
-   *
-   * @param aValue      the property to get state for 
-   * @param aFirst      [OUT] the value of the current state
-   */
-  NS_IMETHOD GetTypingStateValue(nsIAtom *aProperty, nsString &aValue)=0;
 
   /* ------------ HTML content methods -------------- */
 

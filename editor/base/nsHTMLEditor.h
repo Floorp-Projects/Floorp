@@ -103,8 +103,6 @@ public:
   NS_IMETHOD RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute);
   NS_IMETHOD IncreaseFontSize();
   NS_IMETHOD DecreaseFontSize();
-  NS_IMETHOD GetTypingState(nsIAtom *aProperty, PRBool &aSet);
-  NS_IMETHOD GetTypingStateValue(nsIAtom *aProperty, nsString &aValue);
 
   NS_IMETHOD InsertBreak();
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
@@ -310,6 +308,10 @@ protected:
   void CacheInlineStyles(nsIDOMNode *aNode);
   void ClearInlineStylesCache();
   
+  // typing state getters
+  NS_IMETHOD GetTypingState(nsIAtom *aProperty, PRBool &aPropIsSet, PRBool &aSetting);
+  NS_IMETHOD GetTypingStateValue(nsIAtom *aProperty, PRBool &aPropIsSet, nsString &aValue);
+
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode);

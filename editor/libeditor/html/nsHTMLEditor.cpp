@@ -1084,24 +1084,45 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
       if (!collapsedNode) return NS_ERROR_FAILURE;
       // refresh the cache if we need to
       if (collapsedNode != mCachedNode) CacheInlineStyles(collapsedNode);
-      // cache now current, use it!  But *or* it with typeInState results...
-      PRBool isSet;
+      // cache now current, use it!  But override it with typeInState results if any...
+      PRBool isSet, theSetting;
       if (aProperty == mBoldAtom.get())
       {
-        GetTypingState(aProperty, isSet);
-        aFirst = aAny = aAll = (mCachedBoldStyle || isSet);
+        GetTypingState(aProperty, isSet, theSetting);
+        if (isSet) 
+        {
+          aFirst = aAny = aAll = theSetting;
+        }
+        else
+        {
+          aFirst = aAny = aAll = mCachedBoldStyle;
+        }
         return NS_OK;
       }
       else if (aProperty == mItalicAtom.get())
       {
-        GetTypingState(aProperty, isSet);
-        aFirst = aAny = aAll = (mCachedItalicStyle || isSet);
+        GetTypingState(aProperty, isSet, theSetting);
+        if (isSet) 
+        {
+          aFirst = aAny = aAll = theSetting;
+        }
+        else
+        {
+          aFirst = aAny = aAll = mCachedItalicStyle;
+        }
         return NS_OK;
       }
       else if (aProperty == mUnderlineAtom.get())
       {
-        GetTypingState(aProperty, isSet);
-        aFirst = aAny = aAll = (mCachedUnderlineStyle || isSet);
+        GetTypingState(aProperty, isSet, theSetting);
+        if (isSet) 
+        {
+          aFirst = aAny = aAll = theSetting;
+        }
+        else
+        {
+          aFirst = aAny = aAll = mCachedUnderlineStyle;
+        }
         return NS_OK;
       }
       else if (aProperty == mFontAtom.get())
@@ -1330,7 +1351,7 @@ NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetTypingState(nsIAtom *aProperty, PRBool &aSet)
+NS_IMETHODIMP nsHTMLEditor::GetTypingState(nsIAtom *aProperty, PRBool &aPropIsSet, PRBool &aSetting)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -1343,13 +1364,14 @@ NS_IMETHODIMP nsHTMLEditor::GetTypingState(nsIAtom *aProperty, PRBool &aSet)
   if (styleEnum == NS_TYPEINSTATE_UNKNOWN)
     return NS_ERROR_UNEXPECTED;
   
-  mTypeInState->GetProp(styleEnum, aSet);
+  aPropIsSet = mTypeInState->IsSet(styleEnum);
+  if (aPropIsSet) mTypeInState->GetProp(styleEnum, aSetting);
   
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::GetTypingStateValue(nsIAtom *aProperty, nsString &aValue)
+NS_IMETHODIMP nsHTMLEditor::GetTypingStateValue(nsIAtom *aProperty, PRBool &aPropIsSet, nsString &aValue)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -1362,7 +1384,8 @@ NS_IMETHODIMP nsHTMLEditor::GetTypingStateValue(nsIAtom *aProperty, nsString &aV
   if (styleEnum == NS_TYPEINSTATE_UNKNOWN)
     return NS_ERROR_UNEXPECTED;
   
-  mTypeInState->GetPropValue(styleEnum, aValue);
+  aPropIsSet = mTypeInState->IsSet(styleEnum);
+  if (aPropIsSet) mTypeInState->GetPropValue(styleEnum, aValue);
   
   return NS_OK;
 }
