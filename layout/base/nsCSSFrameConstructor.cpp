@@ -709,7 +709,9 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
+nsCSSFrameConstructor::CreateInputFrame(nsIPresContext *aPresContext,
+                                        nsIContent     *aContent, 
+                                        nsIFrame      *&aFrame)
 {
   nsresult  rv;
 
@@ -738,19 +740,19 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
       rv = NS_NewImageControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
-      rv = NS_NewTextControlFrame(&aFrame);
+      rv = ConstructTextControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("radio")) {
       rv = NS_NewRadioControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("text")) {
-      rv = NS_NewTextControlFrame(&aFrame);
+      rv = ConstructTextControlFrame(aPresContext, aFrame);
     }
     else {
-      rv = NS_NewTextControlFrame(&aFrame);
+      rv = ConstructTextControlFrame(aPresContext, aFrame);
     }
   } else {
-    rv = NS_NewTextControlFrame(&aFrame);
+    rv = ConstructTextControlFrame(aPresContext, aFrame);
   }
 
   return rv;
@@ -2203,6 +2205,28 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
 }
 
 nsresult
+nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresContext*          aPresContext,
+                                                 nsIFrame*&               aNewFrame)
+{
+  if (!aPresContext) { return NS_ERROR_NULL_POINTER;}
+  nsresult rv = NS_OK;
+  nsWidgetRendering mode;
+  aPresContext->GetWidgetRenderingMode(&mode);
+  if (eWidgetRendering_Gfx == mode) 
+  {
+    rv = NS_NewGfxTextControlFrame(&aNewFrame);
+    if (NS_FAILED(rv)) {
+      aNewFrame = nsnull;
+    }
+  }
+  if (!aNewFrame)
+  {
+    rv = NS_NewNativeTextControlFrame(&aNewFrame);
+  }
+  return rv;
+}
+
+nsresult
 nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContext,
                                             nsFrameConstructorState& aState,
                                             nsIContent*              aContent,
@@ -2246,6 +2270,11 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
             nsIFrame * listFrame;
             rv = NS_NewListControlFrame(&listFrame);
 
+            // Get the style context that has been set for the combo box so it can be passed used
+            // to create the style context's for the drop down list.
+            nsIStyleContext* comboStyleContext;
+            comboboxFrame->GetStyleContext(&comboStyleContext);
+
             // This is important to do before it is initialized
             // it tells it that it is in "DropDown Mode"
             nsIListControlFrame * listControlFrame;
@@ -2261,25 +2290,28 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
               // Dropdown list style
             nsCOMPtr<nsIStyleContext> listStyle;
             aPresContext->ResolvePseudoStyleContextFor
-                   (aContent, nsHTMLAtoms::dropDownList, aStyleContext, PR_FALSE,
+                   (aContent, nsHTMLAtoms::dropDownList, comboStyleContext, PR_FALSE,
                     getter_AddRefs(listStyle));
          
               // Dropdown list visible style
             nsCOMPtr<nsIStyleContext> visiblePseudoStyle;
             aPresContext->ResolvePseudoStyleContextFor
-                                (aContent, nsHTMLAtoms::dropDownVisible, aStyleContext, PR_FALSE, 
+                                (aContent, nsHTMLAtoms::dropDownVisible, comboStyleContext, PR_FALSE, 
                                  getter_AddRefs(visiblePseudoStyle));
  
              // Dropdown list hidden style
             nsCOMPtr<nsIStyleContext> hiddenPseudoStyle;
             aPresContext->ResolvePseudoStyleContextFor
-                                (aContent, nsHTMLAtoms::dropDownHidden, aStyleContext, PR_FALSE,
+                                (aContent, nsHTMLAtoms::dropDownHidden, comboStyleContext, PR_FALSE,
                                  getter_AddRefs(hiddenPseudoStyle));
 
+              // Done creating drop-down list style contexts 
+            NS_RELEASE(comboStyleContext);
 
             // Initialize the scroll frame as absolutely positioned.
             InitializeScrollFrame(aPresContext, aState, listFrame, aContent, comboboxFrame,
                                   listStyle, aNewFrame, PR_TRUE, PR_FALSE, PR_TRUE);
+
 
               // Set flag so the events go to the listFrame not child frames.
               // XXX: We should replace this with a real widget manager similar
@@ -2447,11 +2479,11 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       }
       else if (nsHTMLAtoms::input == aTag) {
         isReplaced = PR_TRUE;
-        rv = CreateInputFrame(aContent, newFrame);
+        rv = CreateInputFrame(aPresContext, aContent, newFrame);
       }
       else if (nsHTMLAtoms::textarea == aTag) {
         isReplaced = PR_TRUE;
-        rv = NS_NewTextControlFrame(&newFrame);
+        rv = ConstructTextControlFrame(aPresContext, newFrame);
       }
       else if (nsHTMLAtoms::select == aTag) {
         isReplaced = PR_TRUE;
@@ -2656,7 +2688,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::radio)
       rv = NS_NewRadioControlFrame(&newFrame);
     else if (aTag == nsXULAtoms::text)
-      rv = NS_NewTextControlFrame(&newFrame);
+      rv = ConstructTextControlFrame(aPresContext, newFrame);
     else if (aTag == nsXULAtoms::widget)
       rv = NS_NewObjectFrame(&newFrame);
   
