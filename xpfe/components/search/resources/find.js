@@ -13,40 +13,26 @@ function doFind()
 
 	// get RDF datasource to query
 	var datasourceNode = document.getElementById("datasource");
-	if (!datasourceNode)	return(false);
-	var x = datasourceNode.selectedIndex;
-	if (x < 0)		return(false);
-	var datasource = datasourceNode.options[x].value;
-	if (!datasource)	return(false);
-	gDatasourceName = datasourceNode.options[x].text;
+  var dataSource = datasourceNode.selectedItem.data;
+  gDataSourceName = datasourceNode.selectedItem.value;
 	dump("Datasource: " + gDatasourceName + "\n");
 
 	// get match
 	var matchNode = document.getElementById("match");
-	if (!matchNode)		return(false);
-	x = matchNode.selectedIndex;
-	if (x < 0)		return(false);
-	var match = matchNode.options[x].value;
-	if (!match)		return(false);
-	gMatchName = matchNode.options[x].text;
+  var match = matchNode.selectedItem.data;
+  gMatchName = matchNode.selectedItem.value;
 	dump("Match: " + gMatchName + "\n");
 
 	// get method
 	var methodNode = document.getElementById("method");
-	if (!methodNode)	return(false);
-	x = methodNode.selectedIndex;
-	if (x < 0)		return(false);
-	var method = methodNode.options[x].value;
-	if (!method)		return(false);
-	gMethodName = methodNode.options[x].text;
+  var method = methodNode.selectedItem.data;
+  gMethodName = methodNode.selectedItem.value;
 	dump("Method: " + method + "\n");
 
 	// get user text to find
 	var textNode = document.getElementById("findtext");
-	if (!textNode)	return(false);
-	var text = textNode.value;
-	if (!text)	return(false);
-	gTextName = text;
+	if (!textNode.value) return false;
+	gTextName = textNode.value;
 	dump("Find text: " + text + "\n");
 
 	// construct find URL
@@ -58,15 +44,13 @@ function doFind()
 
 	// load find URL into results pane
 	var resultsTree = parent.frames[1].document.getElementById("findresultstree");
-	if (!resultsTree)	return(false);
-        resultsTree.setAttribute("ref", url);
+	if (!resultsTree)	return false;
+  resultsTree.setAttribute("ref", url);
 
 	// enable "Save Search" button
 	var searchButton = document.getElementById("SaveSearch");
 	if (searchButton)
-	{
 		searchButton.removeAttribute("disabled", "false");
-	}
 
 	dump("doFind done.\n");
 	return(true);
