@@ -1009,10 +1009,12 @@ oeICalContainerFilter::oeICalContainerFilter()
     m_completed = new oeFilterDateTime();
     m_completed->SetFieldType( ICAL_COMPLETED_PROPERTY );
     m_completed->m_parent = this;
+    NS_ADDREF( m_completed );
 }
 
 oeICalContainerFilter::~oeICalContainerFilter()
 {
+    NS_RELEASE( m_completed );
 }
 
 NS_IMETHODIMP oeICalContainerFilter::GetId(char **aRetVal)
