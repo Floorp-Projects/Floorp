@@ -38,10 +38,4 @@ interface nsIObserverService : nsISupports {
 
 #define NS_OBSERVERSERVICE_CLASSNAME "Observer Service"
 
-#define NS_DECL_IOBSERVERSERVICE \
-  NS_IMETHOD AddObserver(nsIObserver*, const PRUnichar*);              \
-  NS_IMETHOD RemoveObserver(nsIObserver*, const PRUnichar*);           \
-  NS_IMETHOD EnumerateObserverList(const PRUnichar*, nsIEnumerator**); \
-  NS_IMETHOD Notify(nsISupports*, const PRUnichar*, const PRUnichar*); \
-
 %}

@@ -51,7 +51,7 @@ public:
     }
     virtual ~TestObserver() {}
     NS_DECL_ISUPPORTS
-    NS_DECL_IOBSERVER
+    NS_DECL_NSIOBSERVER
     nsString mName;
 };
 

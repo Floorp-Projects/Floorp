@@ -68,7 +68,7 @@ public:
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
   /* methode for nsIObserver */
-  NS_DECL_IOBSERVER
+  NS_DECL_NSIOBSERVER
 
   /* methode for nsIMetaCharsetService */
   NS_IMETHOD Start();

@@ -31,7 +31,7 @@ public:
 
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_OBSERVER_CID )
  
-    NS_DECL_IOBSERVER
+    NS_DECL_NSIOBSERVER
  
     nsObserver(nsISupports* outer);
     virtual ~nsObserver(void);
