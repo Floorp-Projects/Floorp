@@ -103,8 +103,6 @@
 #endif
 
 #include "nsContentUtils.h"
-#include "nsIJSContextStack.h"
-#include "nsIScriptSecurityManager.h"
 
 // An |AtomKey| is to be used for storage in the hashtable, and a
 // |DependentAtomKey| should be used on the stack to avoid the performance
@@ -2359,8 +2357,6 @@ CSSStyleSheetImpl::StyleRuleCount(PRInt32& aCount) const
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 {
-  // Important: If this function is ever made scriptable, we must add
-  // a security check here. See GetCSSRules below for an example.
   nsresult result = NS_ERROR_ILLEGAL_VALUE;
 
   if (mInner && mInner->mOrderedRules) {
@@ -2779,33 +2775,6 @@ CSSStyleSheetImpl::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
-  //-- Security check: Only scripts from the same origin as the
-  //   style sheet can access rule collections
-
-  // Get JSContext from stack
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-  NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
-
-  JSContext *cx = nsnull;
-  nsresult rv;
-
-  rv = stack->Peek(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
-  // Get the security manager and do the same-origin check
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = secMan->CheckSameOrigin(cx, mInner->mURL);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  // OK, security check passed, so get the rule collection
   if (nsnull == mRuleCollection) {
     mRuleCollection = new CSSRuleListImpl(this);
     if (nsnull == mRuleCollection) {
