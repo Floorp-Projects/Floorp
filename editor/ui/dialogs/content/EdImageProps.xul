@@ -49,7 +49,7 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <xul:broadcaster id="args" value=""/>
-
+  <keyset id="keyset"/>
 
 <!-- /////////////////////// Parent  table //////////////////////////////// -->
 

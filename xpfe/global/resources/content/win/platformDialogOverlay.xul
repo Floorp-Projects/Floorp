@@ -14,7 +14,7 @@
 		<spring flex="100%"/>
 		<!-- centering offset for two 10px springs that are not hidden -->
 		<spring style="width:20px"/>
-		<titledbutton id="ok" value="&okButton.label;" onclick="doOKButton()"/>	
+		<titledbutton id="ok" value="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>	
 		<spring style="width:10px"/>
 		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
 		<spring style="width:10px"/>
@@ -24,4 +24,9 @@
 		<spring flex="100%"/>
 	</box>
 	
+	<keyset id="keyset">
+		<key keycode="VK_ENTER" oncommand="doOKButton()"/>
+		<key keycode="VK_ESCAPE" oncommand="doCancelButton()"/>
+	</keyset>
+
 </overlay>		

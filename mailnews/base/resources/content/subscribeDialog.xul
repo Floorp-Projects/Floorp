@@ -33,6 +33,9 @@ Rights Reserved.
         style="padding:10px"> 
         
 <html:script language="JavaScript" src="chrome://messenger/content/newFolderNameDialog.js"/>
+
+	<keyset id="keyset"/>
+
 	<box align="vertical" style="width:36em; min-height:12em">
 		
 		<spring flex="100%"/>

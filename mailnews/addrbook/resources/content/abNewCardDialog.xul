@@ -36,6 +36,8 @@ Rights Reserved.
 
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
+	<keyset id="keyset"/>
+
 	<box align="horizontal">
 		<html:label for="abPopup">&chooseAddressBook.label;</html:label>
 		<html:select id="abPopup" ref="abdirectory://" datasources="rdf:addressdirectory"> 

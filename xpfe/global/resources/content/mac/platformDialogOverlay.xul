@@ -18,8 +18,15 @@
 		<spring style="width:10px"/>
 		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="ok" value="&okButton.label;" onclick="doOKButton()"/>	
+		<titledbutton id="ok" value="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>	
 		<spring style="width:10px"/>
 	</box>
 	
+	<keyset id="keyset">
+		<key keycode="VK_ENTER" oncommand="doOKButton()"/>
+		<key keycode="VK_RETURN" oncommand="doOKButton()"/>
+		<key keycode="VK_ESCAPE" oncommand="doCancelButton()"/>
+		<key command="true" charcode="." oncommand="doCancelButton()"/>
+	</keyset>
+
 </overlay>		

@@ -12,7 +12,9 @@
 	height ="200"> 
     <html:script language="JavaScript" src="chrome://global/content/selectDialog.js" />
      
-    <box align="vertical" style="width: 24em;margin: 5px;">
+	    <keyset id="keyset"/>
+
+	    <box align="vertical" style="width: 24em;margin: 5px;">
 				<html:div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;" flex="100%">
 				</html:div>
 	

@@ -30,6 +30,7 @@ Rights Reserved.
 		class="dialog"
 		align="vertical">
 
+	<keyset id="keyset"/>
 
 	<box id="editcard"/>
 	

@@ -13,6 +13,9 @@
         onload="onLoad(event);">
 
     <html:script src="AccountManager.js"/>
+
+	<keyset id="keyset"/>
+
 	<box align="horizontal" flex="90%" style="padding: 10px">
 		<box align="vertical" flex="25%">
 <html:div style="border-style:inset" flex="100%">

@@ -15,6 +15,9 @@
     align="vertical"> 
 
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgAttachPage.js"/> 
+
+	<keyset id="keyset"/>
+
 	<box align="horizontal">
 		<html:div>Web Page (URL):</html:div>
 		<html:input type="text" id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
