@@ -105,6 +105,7 @@ function Startup()
   gFolderTree = document.getElementById("folders");
   
   var shouldSetOKButton = true;
+  var dialogElement = document.documentElement;
   if ("arguments" in window) {
     var folderItem;
     var arg;
@@ -119,8 +120,7 @@ function Startup()
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       document.getElementById("nameseparator").setAttribute("hidden", "true");
       sizeToContent();
-      var dialogNode = document.getElementById("newBookmarkDialog");
-      dialogNode.setAttribute("title", windowNode.getAttribute("title-selectFolder"));
+      dialogElement.setAttribute("title", dialogElement.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
       folderItem = document.getElementById(window.arguments[2]);
       if (folderItem)
@@ -131,11 +131,10 @@ function Startup()
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
       document.getElementById("folderbox").setAttribute("hidden", "true");
-      windowNode = document.getElementById("newBookmarkDialog");
-      windowNode.removeAttribute("persist");
-      windowNode.removeAttribute("height");
-      windowNode.removeAttribute("width");
-      windowNode.setAttribute("style", windowNode.getAttribute("style"));
+      dialogElement.removeAttribute("persist");
+      dialogElement.removeAttribute("height");
+      dialogElement.removeAttribute("width");
+      dialogElement.setAttribute("style", dialogElement.getAttribute("style"));
       sizeToContent();
       break;
     default:
@@ -151,7 +150,7 @@ function Startup()
   }
   
   if (shouldSetOKButton)
-    onLocationInput();
+    onFieldInput();
   gFld_Name.select();
   gFld_Name.focus();
 } 
@@ -161,17 +160,17 @@ function setupFields()
   // New bookmark in predetermined folder. 
   gFld_Name.value = window.arguments[0] || "";
   gFld_URL.value = window.arguments[1] || "";
-  onLocationInput();
+  onFieldInput();
   gFld_Name.select();
   gFld_Name.focus();
   gBookmarkCharset = window.arguments [3] || null;
 }
 
-function onLocationInput ()
+function onFieldInput()
 {
-  var ok = document.getElementById("newBookmarkDialog").getButton("accept");
-  ok.disabled = gFld_URL.value == "";
-}
+  var ok = document.documentElement.getButton("accept");
+  ok.disabled = gFld_URL.value == "" || gFld_Name.value == "";
+}    
 
 function onOK()
 {
