@@ -287,12 +287,16 @@ Title=Upgrade
 Sub Title=Upgrades an existing $ProductName$ installation.
 ;*** LOCALIZE ME BABY ***
 Message Cleanup=A previous $ProductNameInternal$ installation has been found in the chosen folder.
+; XXXben - we need a strategy for uninstallation that obviates the need for "Safe Upgrade" which can doing nasty things if you have installed the app into a stupid location.
 ;*** LOCALIZE ME BABY ***
-Checkbox Clean Install=Perform a Safe Upgrade
+;Checkbox Clean Install=Perform a Safe Upgrade
+Checkbox Clean Install=Perform a Clean Install
 ;*** LOCALIZE ME BABY ***
-Message Clean Install=A Safe Upgrade will completely remove the old installation. Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities. 
+;Message Clean Install=A Safe Upgrade will completely remove the old installation. Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities. 
+Message Clean Install=A Clean Install will COMPLETELY REMOVE the contents of the install folder! Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities. (XXXben) 
 ;*** LOCALIZE ME BABY ***
-Message Install Over=If you choose not to perform a Safe Upgrade, third party components will not be removed, which may cause unpredictable behavior. 
+;Message Install Over=If you choose not to perform a Safe Upgrade, third party components will not be removed, which may cause unpredictable behavior. 
+Message Install Over=If you choose not to perform a Clean Install, third party components will not be removed, which may cause unpredictable behavior. 
 ;*** LOCALIZE ME BABY ***
 Message Install Over Windir=A Safe Upgrade of $ProductNameInternal$ cannot be performed because the program is installed within the Windows folder. It is recommended that you choose another folder to install $ProductNameInternal$ into. 
 
