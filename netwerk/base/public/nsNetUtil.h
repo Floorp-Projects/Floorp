@@ -68,6 +68,7 @@
 #include "nsIFileStreams.h"
 #include "nsXPIDLString.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIProxyInfo.h"
 #include "prio.h"       // for read/write flags, permissions, etc.
 
 #include "nsNetCID.h"
@@ -748,4 +749,37 @@ NS_NewResumableEntityID(nsIResumableEntityID** aRes,
     return NS_OK;
 }
 
+inline nsresult
+NS_ExamineForProxy(const char* scheme, const char* host, PRInt32 port, 
+                   nsIProxyInfo* *proxyInfo)
+{
+    nsresult rv;
+
+    static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
+    nsCOMPtr<nsIProtocolProxyService> pps = do_GetService(kPPSServiceCID,&rv);
+
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString spec(scheme);
+    spec.Append("://");
+    spec.Append(host);
+    spec.Append(':');
+    spec.AppendInt(port);
+    
+    // XXXXX - Under no circumstances whatsoever should any code which
+    // wants a uri do this. I do this here because I do not, in fact,
+    // actually want a uri (the dummy uris created here may not be 
+    // syntactically valid for the specific protocol), and all we need
+    // is something which has a valid scheme, hostname, and a string
+    // to pass to PAC if needed - bbaetz
+    static NS_DEFINE_CID(kSTDURLCID, NS_STANDARDURL_CID);    
+    nsCOMPtr<nsIURI> uri = do_CreateInstance(kSTDURLCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = uri->SetSpec(spec.get());
+    if (NS_FAILED(rv)) return rv;
+
+    return pps->ExamineForProxy(uri, proxyInfo);
+}
+
 #endif // nsNetUtil_h__
+
