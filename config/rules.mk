@@ -997,7 +997,9 @@ SUB_SHLOBJS = $(SUB_LOBJS)
 endif
 
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
+ifndef INCREMENTAL_LINKER
 	rm -f $@
+endif
 ifneq ($(MOZ_OS2_TOOLS),VACPP)
 ifeq ($(OS_ARCH),OpenVMS)
 	@if test ! -f $(VMS_SYMVEC_FILE); then \

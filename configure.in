@@ -352,6 +352,7 @@ case "$target" in
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
         fi
+        INCREMENTAL_LINKER=1
 
         # Check midl version
         _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
@@ -5071,6 +5072,7 @@ AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(USE_PREBINDING)
+AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
