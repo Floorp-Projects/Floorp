@@ -3817,9 +3817,14 @@ PRInt32 nsNNTPProtocol::DoCancel()
 
   nsCOMPtr <nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
   if (NS_FAILED(rv) || !prefs) return -1;  /* unable to get the pref service */
-
-  nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
-  if (NS_FAILED(rv) || !dialog) return -1;  /* unable to get the dialog service */
+  
+  nsCOMPtr<nsIPrompt> dialog;
+  if (m_runningURL)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(m_runningURL));    
+    rv = GetPromptDialogFromUrl(msgUrl, getter_AddRefs(dialog));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NS_ASSERTION (id && newsgroups, "null ptr");
   if (!id || !newsgroups) return -1; /* "unknown error"... */
@@ -3883,12 +3888,12 @@ PRInt32 nsNNTPProtocol::DoCancel()
   
   // QA needs to be able to disable this confirm dialog, for the automated tests.  see bug #31057
   rv = prefs->GetBoolPref(PREF_NEWS_CANCEL_CONFIRM, &requireConfirmationForCancel);
-  if (NS_FAILED(rv) || requireConfirmationForCancel) {
-	/* Last chance to cancel the cancel.
-	*/
-	GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
-	rv = dialog->Confirm(nsnull, confirmText, &confirmCancelResult);
-	// XXX:  todo, check rv?
+  if (NS_FAILED(rv) || requireConfirmationForCancel) 
+  {
+       /* Last chance to cancel the cancel.*/
+	      GetNewsStringByName("cancelConfirm", getter_Copies(confirmText));
+	      rv = dialog->Confirm(nsnull, confirmText, &confirmCancelResult);
+	      // XXX:  todo, check rv?
   } 
   else {
 	confirmCancelResult = 1;
@@ -5050,23 +5055,29 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 nsresult
 nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
 {
-	nsresult rv;
-	nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!dialog) return NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
 
-	nsXPIDLString newsString;
-	rv = GetNewsStringByID(errorCode, getter_Copies(newsString));
-	if (NS_FAILED(rv)) return rv;
+  // get the prompt from the running url....
+  if (m_runningURL)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(m_runningURL));
+    nsCOMPtr<nsIPrompt> dialog;
+    rv = GetPromptDialogFromUrl(msgUrl, getter_AddRefs(dialog));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-	nsAutoString alertText;
-	alertText.AssignWithConversion("NEWS ERROR:  ");
-	alertText.Append((const PRUnichar *)newsString);
+    nsXPIDLString newsString;
+	  rv = GetNewsStringByID(errorCode, getter_Copies(newsString));
+	  if (NS_FAILED(rv)) return rv;
 
-	if (text) {
-		alertText.AppendWithConversion(text);
-	}
+	  nsAutoString alertText;
+	  alertText.AssignWithConversion("NEWS ERROR:  ");
+	  alertText.Append((const PRUnichar *)newsString);
 
-	rv = dialog->Alert(nsnull, alertText.GetUnicode());
-    return rv;
+	  if (text)
+		  alertText.AppendWithConversion(text);
+
+	  rv = dialog->Alert(nsnull, alertText.GetUnicode());
+  }
+  
+  return rv;
 }
