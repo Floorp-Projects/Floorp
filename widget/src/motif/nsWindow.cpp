@@ -663,11 +663,20 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
-                  gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
+//#if 0
+  printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
+         gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
+//#endif
+
+  // ignore resizes smaller than or equal to 1x1
+  if (aWidth <=1 || aHeight <= 1)
+    return NS_OK;
+
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  if (aRepaint)
+    Invalidate(PR_FALSE);
   return NS_OK;
 }
 
@@ -677,14 +686,11 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
+                           PRUint32 aHeight, PRBool aRepaint)
 {
-  mBounds.x      = aX;
-  mBounds.y      = aY;
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
-                        XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  Resize(aWidth,aHeight,aRepaint);
+  Move(aX,aY);
   return NS_OK;
 }
 
@@ -1446,8 +1452,6 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
-  nsRect* size = aEvent.windowSize;
-
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
@@ -1499,26 +1503,6 @@ void nsWindow::SetResized(PRBool aResized)
 PRBool nsWindow::GetResized()
 {
   return(mResized);
-}
-
-void nsWindow::UpdateVisibilityFlag()
-{
-  Widget parent = XtParent(mWidget);
-
-  if (parent) {
-    PRUint32 pWidth = 0;
-    PRUint32 pHeight = 0; 
-    XtVaGetValues(parent, XmNwidth, &pWidth, XmNheight, &pHeight, nsnull);
-    if ((mBounds.y + mBounds.height) > pHeight) {
-      mVisible = PR_FALSE;
-      return;
-    }
- 
-    if (mBounds.y < 0)
-     mVisible = PR_FALSE;
-  }
-  
-  mVisible = PR_TRUE;
 }
 
 void nsWindow::UpdateDisplay()
