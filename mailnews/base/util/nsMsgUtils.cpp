@@ -509,3 +509,55 @@ PRBool IsValidFolderURI(const char *aFolderURI)
   rv = thisFolder->GetParent(getter_AddRefs(parentFolder));
   return (NS_SUCCEEDED(rv) && parentFolder);
 }
+
+PRBool IsAFromSpaceLine(char *start, const char *end)
+{
+  nsresult rv = PR_FALSE;
+  while ((start < end) && (*start == '>'))
+    start++;
+  // If the leading '>'s are followed by an 'F' then we have a possible case here.
+  if ( (*start == 'F') && (end-start > 4) && !strncmp(start, "From ", 5) )
+    rv = PR_TRUE;
+  return rv;
+}
+
+//
+// This function finds all lines starting with "From " or "From " preceeding
+// with one or more '>' (ie, ">From", ">>From", etc) in the input buffer
+// (between 'start' and 'end') and prefix them with a ">" .
+//
+nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end)
+{
+  nsresult rv;
+  char *pChar;
+  PRInt32 written;
+
+  pChar = start;
+  while (start < end)
+  {
+    while ((pChar < end) && (*pChar != nsCRT::CR) && (*(pChar+1) != nsCRT::LF))
+      pChar++;
+
+    if (pChar < end)
+    {
+      // Found a line so check if it's a qualified "From " line.
+      if (IsAFromSpaceLine(start, pChar))
+        rv = pDst->Write(">", 1, &written);
+
+      rv = pDst->Write(start, pChar-start+2, &written);
+      NS_ENSURE_SUCCESS(rv,rv);
+      pChar += 2;
+      start = pChar;
+    }
+    else if (start < end)
+    {
+      // Check and flush out the remaining data and we're done.
+      if (IsAFromSpaceLine(start, end))
+        rv = pDst->Write(">", 1, &written);
+      rv = pDst->Write(start, end-start, &written);
+      NS_ENSURE_SUCCESS(rv,rv);
+      break;
+    }
+  }
+  return NS_OK;
+}

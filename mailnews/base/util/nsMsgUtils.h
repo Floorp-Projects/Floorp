@@ -79,5 +79,9 @@ NS_MSG_BASE PRBool WeAreOffline();
 // Check if a given folder uri is valid and exists
 NS_MSG_BASE PRBool IsValidFolderURI(const char *aFolderURI);
 
+// Escape lines starting with "From ", ">From ", etc. in a buffer.
+NS_MSG_BASE nsresult EscapeFromSpaceLine(nsIFileSpec *pDst, char *start, const char *end);
+NS_MSG_BASE PRBool IsAFromSpaceLine(char *start, const char *end);
+
 #endif
 

@@ -49,6 +49,7 @@
 
 #include "nsMimeTypes.h"
 #include "nsIPref.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID( kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
@@ -947,7 +948,8 @@ nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec 
 	char	lastChar = 0;
 
 	if (NS_SUCCEEDED( rv)) {
-		rv = pDst->Write( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, &written);
+    rv = EscapeFromSpaceLine(pDst, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
+    NS_ENSURE_SUCCESS(rv,rv);
 		if (copy.m_bytesInBuf)
 			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
 		copy.m_writeOffset = copy.m_bytesInBuf;
