@@ -10,7 +10,7 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<!-- OK & Cancel Buttons -->
-	 <box id="okCancelButtons" align="horizontal" style="margin-top: 0.5em">
+         <box id="okCancelButtons" align="horizontal">
 		<spring flex="100%"/>
 		<!-- centering offset for two 10px springs that are not hidden -->
 		<spring id="OKSpring" style="width:20px"/>
