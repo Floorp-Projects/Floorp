@@ -21,12 +21,10 @@
 
 /* Main Composer window UI control */
 
-var EdAppCore = null;
-var EdAppCoreName = "";
+var editorShell;
 var toolbar;
 var documentModified;
 var EditorDisplayStyle = true;
-var prefs = null;
 
 var gTagToFormat = {
     "P"          : "Normal",	// these should really be entities. Not sure how to do that from JS
@@ -61,7 +59,7 @@ function EditorStartup(editorType)
   window.content.addEventListener("load", EditorDocumentLoaded, true, false);  
   
   dump("Trying to make an Editor Shell through the component manager...\n");
-  editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+  var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
   if (editorShell)
     editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
   
@@ -362,20 +360,9 @@ function EditorShowClipboard()
 
 // --------------------------- View menu ---------------------------
 
-function EditorViewSource() 
+function EditorViewSource()
 {
-   var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-   if (!toolkitCore) {
-     toolkitCore = new ToolkitCore();
-     if (toolkitCore) {
-       toolkitCore.Init("ToolkitCore");
-     }
-   }
-   if (toolkitCore) {
-     var url = window.content.location;
-     dump("Opening view of source for" + url + "\n");
-     toolkitCore.ShowWindowWithArgs("chrome://editor/content/viewSource.xul", window, url);
-   }
+  window.openDialog( "chrome://editor/content/viewsource.xul", null, "all,dialog=no", window.content.location );
 }
 
 
