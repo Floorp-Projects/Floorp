@@ -31,7 +31,10 @@ Rights Reserved.
 <!ENTITY newFolderCmd.accesskey			"f">  
 <!ENTITY newAccountCmd.label			"Account...">  
 <!ENTITY newAccountCmd.accesskey		"a">  
-<!ENTITY openAttachmentCmd.label		".Open Attachment">  
+<!ENTITY openMessageCmd.label		"Open Message">
+<!ENTITY openMessageCmd.accesskey		"o">
+<!ENTITY openMessageCmd.key			"o">
+<!ENTITY openAttachmentCmd.label		"Attachments">  
 <!ENTITY openAttachmentCmd.accesskey		"a">  
 <!ENTITY saveAsMenu.label				"Save As"> 
 <!ENTITY saveAsMenu.accesskey			"s"> 

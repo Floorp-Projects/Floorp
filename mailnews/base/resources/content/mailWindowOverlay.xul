@@ -535,7 +535,7 @@ Rights Reserved.
 
 <menubar id="mailMenubar">
 	<menu id="menu_File">
-		<menupopup id="menu_FilePopup">
+		<menupopup id="menu_FilePopup" oncreate="file_init();">
 			<menuitem value="&newMsgCmd.label;"
 			accesskey="&newMsgCmd.accesskey;"
 			key="key_newMessage"
@@ -557,6 +557,7 @@ Rights Reserved.
 				observes="cmd_openMessage"
 				accesskey="&openMessageWindowCmd.accesskey;"
 				key="key_openMessage"/>
+			<menu id="fileAttachmentMenu" value="&openAttachmentCmd.label;"/>
 			<menuseparator/>
 			<menuitem id="menu_close"/>
 			<menu value="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
