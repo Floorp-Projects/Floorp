@@ -247,7 +247,7 @@
   
             <menuitem id="menu-view-startup" label="&StartupVisitCmd.label;"
               accesskey="&StartupVisitCmd.aKey;" type="checkbox"
-              observes="cmd_startup_visit"/>
+              observes="cmd_toggle_startup_visit"/>
             <menuitem label="&ClearViewCmd.label;"
               accesskey="&ClearViewCmd.aKey;"
               observes="cmd_clearview" key="key_clearview"/>
