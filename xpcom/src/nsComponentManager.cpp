@@ -849,6 +849,13 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
                 PR_GetErrorText(errorMsg);
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Load(%s) FAILED with error:%s", aEntry->dll->GetFullPath(), errorMsg));
+#if defined(XP_UNIX) || defined(XP_PC)
+			// Put the error message on the screen.
+            printf("**************************************************\n"
+		   "nsComponentManager: Load(%s) FAILED with error: %s\n"
+            	   "**************************************************\n",
+		   aEntry->dll->GetFullPath(), errorMsg);
+#endif
 
             return NS_ERROR_FAILURE;
         }
