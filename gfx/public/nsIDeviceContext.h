@@ -129,12 +129,6 @@ typedef void * nsNativeDeviceContext;
 /* Xprint module specific: Xprt server broken */
 #define NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+24)
-/* The document is still being loaded, can't Print Preview */
-#define NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+25)
-/* The document is still being loaded, can't Print */
-#define NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PRT \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+26)
 
 
 /**
