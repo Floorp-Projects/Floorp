@@ -339,7 +339,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	return( rv);
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #define kMsgHeaderSize		220
 #define	kMsgFirstOffset		278
 #else
@@ -1009,8 +1009,12 @@ nsresult nsEudoraMailbox::ExamineAttachment( SimpleBufferTonyRCopiedOnce& data)
 				fileName.Append( pStart, nameLen);
 				fileName.Trim( kWhitespace);
 				if (fileName.Length()) {
+#ifdef XP_MACOSX
+					return NS_OK;
+#else
 					if( AddAttachment( fileName))
 						return( NS_OK);
+#endif
 				}
 			}
 		}

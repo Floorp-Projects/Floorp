@@ -45,8 +45,27 @@
 #include <files.h>
 #include <TextUtils.h>
 
+#ifdef XP_MACOSX
+#include "nsILocalFileMac.h"
+#include "MoreFilesX.h"
+
+static nsresult NS_FileSpecToILocalFileMac(nsFileSpec *aSpec, nsILocalFileMac **aLocalFileMac)
+{
+  nsCOMPtr<nsILocalFile> localFile;
+  nsresult rv = NS_FileSpecToIFile(aSpec, getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(localFile);
+  if (!macFile)
+    return NS_ERROR_FAILURE;
+   
+  NS_IF_ADDREF(*aLocalFileMac = macFile);
+  return NS_OK;
+}
+#else
 #include "MoreFiles.h"
 #include "MoreFilesExtras.h"
+#endif
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
@@ -120,7 +139,19 @@ PRBool nsEudoraMac::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni, ns
 					if (NS_SUCCEEDED( rv)) {
 						// find a file with TEXT, CSOm that isn't the nicknames file
 						// or just cheat and look for more than 1 file?
+#ifdef XP_MACOSX
+  {
+    nsCOMPtr<nsILocalFileMac> macFile;
+    rv = NS_FileSpecToILocalFileMac(&spec, getter_AddRefs(macFile));
+    if (NS_SUCCEEDED(rv))
+    {
+      macFile->GetFileCreator(&creator);
+      macFile->GetFileType(&type);
+    }
+  }
+#else
 						rv = spec.GetFileTypeAndCreator( &type, &creator);
+#endif
 						if (NS_SUCCEEDED( rv)) {
 							if ((type == 'TEXT') && (creator == 'CSOm'))
 								count++;
@@ -280,7 +311,19 @@ nsresult nsEudoraMac::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *pA
 					if (NS_SUCCEEDED( rv)) {
 						type = 0;
 						creator = 0;
-						spec.GetFileTypeAndCreator( &type, &creator);
+#ifdef XP_MACOSX
+  {
+    nsCOMPtr<nsILocalFileMac> macFile;
+    rv = NS_FileSpecToILocalFileMac(&spec, getter_AddRefs(macFile));
+    if (NS_SUCCEEDED(rv))
+    {
+      macFile->GetFileCreator(&creator);
+      macFile->GetFileType(&type);
+    }
+  }
+#else
+    spec.GetFileTypeAndCreator( &type, &creator);
+#endif
 						if ((type == 'TEXT') && IsValidMailboxName( fName) && IsValidMailboxFile( entry)) {
 							rv = FoundMailbox( entry, fName.get(), pArray, pImport);
 						}
@@ -389,7 +432,24 @@ PRBool nsEudoraMac::CreateTocFromResource( nsIFileSpec *pMail, nsIFileSpec *pToc
 	nsresult rv = pMail->GetFileSpec( &spec);
 	if (NS_FAILED( rv))
 		return( PR_FALSE);
-	short resFile = FSpOpenResFile( spec.GetFSSpecPtr(), fsRdPerm);
+        short resFile = -1;
+#ifdef XP_MACOSX
+        {
+          nsCOMPtr<nsILocalFileMac> macFile;
+          rv = NS_FileSpecToILocalFileMac(&spec, getter_AddRefs(macFile));
+          if (NS_FAILED(rv))
+            return PR_FALSE;
+
+          FSSpec fsSpec;
+          rv = macFile->GetFSSpec(&fsSpec);
+	  if (NS_FAILED(rv))
+            return PR_FALSE;
+
+          resFile = FSpOpenResFile( &fsSpec, fsRdPerm);
+        }
+#else
+        resFile = FSpOpenResFile( spec.GetFSSpecPtr(), fsRdPerm);
+#endif
 	if (resFile == -1)
 		return( PR_FALSE);
 	Handle	resH = nil;
@@ -463,7 +523,19 @@ nsresult nsEudoraMac::FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **ppTOCFi
 		nsFileSpec	spec;
 		rv = (*ppTOCFile)->GetFileSpec( &spec);
 		if (NS_SUCCEEDED( rv))
+#ifdef XP_MACOSX
+  {
+    nsCOMPtr<nsILocalFileMac> macFile;
+    rv = NS_FileSpecToILocalFileMac(&spec, getter_AddRefs(macFile));
+    if (NS_SUCCEEDED(rv))
+    {
+      macFile->GetFileCreator(&creator);
+      macFile->GetFileType(&type);
+    }
+  }
+#else
 			spec.GetFileTypeAndCreator( &type, &creator);
+#endif
 	}
 	
 
@@ -510,8 +582,25 @@ PRBool nsEudoraMac::GetSettingsFromResource( nsIFileSpec *pSettings, short resId
 	nsresult rv = pSettings->GetFileSpec( &spec);
 	if (NS_FAILED( rv))
 		return( PR_FALSE);
-		
-	short resFile = FSpOpenResFile( spec.GetFSSpecPtr(), fsRdPerm);
+
+        short resFile = -1;
+#ifdef XP_MACOSX
+        {
+          nsCOMPtr<nsILocalFileMac> macFile;
+          rv = NS_FileSpecToILocalFileMac(&spec, getter_AddRefs(macFile));
+	  if (NS_FAILED(rv))
+            return PR_FALSE;
+
+          FSSpec fsSpec;
+          rv = macFile->GetFSSpec(&fsSpec);
+	  if (NS_FAILED(rv))
+            return PR_FALSE;
+
+          resFile = FSpOpenResFile( &fsSpec, fsRdPerm);
+        }
+#else
+	resFile = FSpOpenResFile( spec.GetFSSpecPtr(), fsRdPerm);
+#endif
 	if (resFile == -1)
 		return( PR_FALSE);
 		
@@ -532,7 +621,7 @@ PRBool nsEudoraMac::GetSettingsFromResource( nsIFileSpec *pSettings, short resId
 		GetIndString( pStr[2], resId, kReturnAddressID); 
 		GetIndString( pStr[3], resId, kFullNameID);
 		GetIndString( pStr[4], resId, kLeaveMailOnServerID);
-		CloseResFile( resFile);
+		CloseResFile( resFile); 
 		
 		theStr = pStr[0];
 		if (*theStr) {
@@ -586,14 +675,13 @@ PRBool nsEudoraMac::GetSettingsFromResource( nsIFileSpec *pSettings, short resId
 		return( PR_TRUE);
 	}
 	else {
-		CloseResFile( resFile);
+		CloseResFile( resFile); 
 		return( PR_FALSE);
 	}
 }
 
 PRBool nsEudoraMac::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **localMailAccount)
 {
-	PRBool		result = PR_FALSE;
 	nsresult	rv;
 
 	nsCOMPtr<nsIMsgAccountManager> accMgr = 
@@ -851,10 +939,8 @@ void nsEudoraMac::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc
 }
 
 
-
 nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSpec, nsCString& mimeType)
 {
-
 	mimeType.Truncate();
 
 	// Sample attachment line
@@ -919,7 +1005,37 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	IMPORT_LOG3( "\tAttachment type: %s, creator: %s, fileNum: %ld\n", typeStr.get(), creatStr.get(), fNum);
 	IMPORT_LOG1( "\tAttachment file name: %s\n", str.get());
 #endif
-	
+	FSSpec	spec;
+	memset( &spec, 0, sizeof( spec));
+#ifdef XP_MACOSX
+        {
+          nsresult rv = pSpec->SetNativePath(str.get());
+          if (NS_FAILED(rv)) {
+            IMPORT_LOG0("\tfailed to set native path\n");
+            return rv;
+          }
+  
+          nsFileSpec tempFileSpec;
+          rv = pSpec->GetFileSpec(&tempFileSpec);
+          if (NS_FAILED(rv)) {
+            IMPORT_LOG0("\tfailed to get file spec\n");
+            return rv;
+          }
+
+          nsCOMPtr<nsILocalFileMac> macFile;
+          rv = NS_FileSpecToILocalFileMac(&tempFileSpec, getter_AddRefs(macFile));
+          if (NS_FAILED(rv)) {
+            IMPORT_LOG0("\tfailed to get local mac file\n");
+            return rv;
+          }
+          
+          rv = macFile->GetFSSpec(&spec);
+          if (NS_FAILED(rv)) {
+            IMPORT_LOG0("\tfailed to get FSSpec\n");
+            return rv;
+          }
+        }
+#else
 	// Now we have all of the pertinent info, find out if the file exists?
 	nsCString	fileName;
 	if ((str.CharAt( 0) == '"') && (str.Last() == '"')) {
@@ -938,7 +1054,6 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	
 	// Create a FSSpec from the volume name, fileName, and folderNumber
 	// Assume that we are looking for a file on the volume with macFileId
-	FSSpec	spec;
 	Str63	str63;
 	short	vRefNum = 0;
 	if (volumeName.Length() > 63) {
@@ -956,7 +1071,6 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 		return( NS_ERROR_FAILURE);
 	}
 	
-	memset( &spec, 0, sizeof( spec));
 	err = FSpResolveFileIDRef( nil, vRefNum, (long) fNum, &spec);
 	if (err != noErr) {
 		IMPORT_LOG1( "\t*** Error, cannot resolve fileIDRef: %ld\n", (long) err);
@@ -973,18 +1087,23 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	
 	nsFileSpec	fSpec( spec);
 	pSpec->SetFromFileSpec( fSpec);
+#endif
 	
-	// Need to find the mime type for the attachment?
-	long	dataSize = 0;
-	long	rsrcSize = 0;
-	
-	err = FSpGetFileSize( &spec, &dataSize, &rsrcSize);
-	
-	// TLR: FIXME: Need to get the mime type from the Mac file type.
-	// Currently we just applsingle if there is a resource fork, otherwise,
-	// just default to something.
-	
-	if (rsrcSize)
+#ifdef XP_MACOSX
+	if (HasResourceFork(&spec)) 
+#else
+        // Need to find the mime type for the attachment?
+        long    dataSize = 0;
+        long    rsrcSize = 0;
+ 
+        err = FSpGetFileSize( &spec, &dataSize, &rsrcSize);
+ 
+        // TLR: FIXME: Need to get the mime type from the Mac file type.
+        // Currently we just applsingle if there is a resource fork, otherwise,
+        // just default to something.
+ 
+        if (rsrcSize)
+#endif
 		mimeType = "application/applefile";
 	else
 		mimeType = "application/octet-stream";
@@ -993,7 +1112,18 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	
 	return( NS_OK);
 }
-
+		
+PRBool nsEudoraMac::HasResourceFork(FSSpec *fsSpec)
+{
+  FSRef fsRef;
+  if (::FSpMakeFSRef(fsSpec, &fsRef) == noErr)
+  {
+    FSCatalogInfo catalogInfo;
+    OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoRsrcSizes, &catalogInfo, nsnull, nsnull, nsnull);
+    return (err == noErr && catalogInfo.rsrcLogicalSize != 0);
+  }
+  return PR_FALSE;
+}
 
 
 #define		kNumBadFolderNames		7
@@ -1176,7 +1306,19 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 				if (NS_SUCCEEDED( rv)) {
 					type = 0;
 					creator = 0;
+#ifdef XP_MACOSX
+  {
+    nsCOMPtr<nsILocalFileMac> macFile;
+    rv = NS_FileSpecToILocalFileMac(&fSpec, getter_AddRefs(macFile));
+    if (NS_SUCCEEDED(rv))
+    {
+      macFile->GetFileCreator(&creator);
+      macFile->GetFileType(&type);
+    }
+  }
+#else
 					fSpec.GetFileTypeAndCreator( &type, &creator);
+#endif
 					if (type == 'TEXT') {
 						rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
 						if (NS_SUCCEEDED( rv)) {

@@ -82,6 +82,7 @@ private:
 private:
 	PRUint32		m_depth;
 	nsIFileSpec *	m_mailImportLocation;
+        PRBool HasResourceFork(FSSpec *fsSpec);
 };
 
 

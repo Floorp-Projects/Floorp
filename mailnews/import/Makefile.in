@@ -28,6 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src text comm4x
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+DIRS		+= eudora
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= eudora
 ifneq ($(_MSC_VER),1100)

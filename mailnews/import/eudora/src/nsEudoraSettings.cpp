@@ -33,7 +33,7 @@
 #if defined(XP_WIN) || defined(XP_OS2)
 #include "nsEudoraWin32.h"
 #endif
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsEudoraMac.h"
 #endif
 
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsEudoraSettings::Import(nsIMsgAccount **localMailAccount, PRBool 
 			}
 		}
 #endif
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 		if (NS_SUCCEEDED( rv = NS_NewFileSpec( &m_pLocation))) {
 			if (!nsEudoraMac::FindSettingsFile( m_pLocation)) {
 				NS_IF_RELEASE( m_pLocation);
@@ -137,7 +137,7 @@ NS_IMETHODIMP nsEudoraSettings::Import(nsIMsgAccount **localMailAccount, PRBool 
 #if defined(XP_WIN) || defined(XP_OS2)
 	*_retval = nsEudoraWin32::ImportSettings( m_pLocation, localMailAccount);
 #endif
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 	*_retval = nsEudoraMac::ImportSettings( m_pLocation, localMailAccount);
 #endif
 

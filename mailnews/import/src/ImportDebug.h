@@ -51,5 +51,4 @@ extern PRLogModuleInfo *IMPORTLOGMODULE;  // Logging module
 #define IMPORT_LOG2(x, y, z)    PR_LOG(IMPORTLOGMODULE, PR_LOG_DEBUG, (x, y, z))
 #define IMPORT_LOG3(a, b, c, d) PR_LOG(IMPORTLOGMODULE, PR_LOG_DEBUG, (a, b, c, d))
 
-
 #endif
