@@ -29,8 +29,6 @@ messenger.jar:
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     
 classic.jar:
-    skin/classic/messenger/icons/twisty-open.gif    (skin/icons/twisty-open.gif)
-    skin/classic/messenger/icons/twisty-clsd.gif    (skin/icons/twisty-clsd.gif)
     skin/classic/messenger/aboutDialog.css          (skin/aboutDialog.css)
 +   skin/classic/global/tree.css                    (skin/tree.css)
 +   skin/classic/global/Preview.png                 (skin/Preview.png) 
