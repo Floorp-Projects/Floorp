@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.12 $ $Date: 2002/01/18 03:35:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.13 $ $Date: 2002/01/23 01:20:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -165,8 +165,8 @@ find_object_by_template
 )
 {
     CK_SESSION_HANDLE hSession;
-    CK_OBJECT_HANDLE rvObject;
-    CK_ULONG count;
+    CK_OBJECT_HANDLE rvObject = CK_INVALID_HANDLE;
+    CK_ULONG count = 0;
     CK_RV ckrv;
     nssSession *session;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
@@ -296,14 +296,18 @@ static NSSCertificateType
 nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
 {
     CK_CERTIFICATE_TYPE ckCertType;
+    if (!attrib->pValue) {
+	/* default to PKIX */
+	return NSSCertificateType_PKIX;
+    }
     ckCertType = *((CK_ULONG *)attrib->pValue);
     switch (ckCertType) {
     case CKC_X_509:
 	return NSSCertificateType_PKIX;
-	break;
     default:
-	return NSSCertificateType_Unknown;
+	break;
     }
+    return NSSCertificateType_Unknown;
 }
 
 /* Create a certificate from an object handle. */
@@ -578,6 +582,7 @@ nssToken_TraverseCertificatesByNickname
     CK_ATTRIBUTE nick_template[3];
     CK_ULONG ntsize;
     NSS_CK_TEMPLATE_START(nick_template, attr, ntsize);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, name);
     /* Set the search to token/session only if provided */
     if (search->searchType == nssTokenSearchType_SessionOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
@@ -585,7 +590,6 @@ nssToken_TraverseCertificatesByNickname
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, name);
     NSS_CK_TEMPLATE_FINISH(nick_template, attr, ntsize);
     if (search->cached) {
 	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
@@ -603,7 +607,7 @@ nssToken_TraverseCertificatesByNickname
      * leaving it in until I have surveyed more tokens to see if it needed.
      * well, its needed by the builtin token...
      */
-    nick_template[2].ulValueLen++;
+    nick_template[0].ulValueLen++;
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 nick_template, ntsize,
                                          retrieve_cert, search);
@@ -624,6 +628,7 @@ nssToken_TraverseCertificatesByEmail
     CK_ATTRIBUTE email_template[3];
     CK_ULONG etsize;
     NSS_CK_TEMPLATE_START(email_template, attr, etsize);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL, email);
     /* Set the search to token/session only if provided */
     if (search->searchType == nssTokenSearchType_SessionOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
@@ -631,7 +636,6 @@ nssToken_TraverseCertificatesByEmail
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
-    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL, email);
     NSS_CK_TEMPLATE_FINISH(email_template, attr, etsize);
     if (search->cached) {
 	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
@@ -647,7 +651,7 @@ nssToken_TraverseCertificatesByEmail
     /* This is to workaround the fact that PKCS#11 doesn't specify
      * whether the '\0' should be included.  XXX Is that still true?
      */
-    email_tmpl[1].ulValueLen++;
+    email_tmpl[0].ulValueLen--;
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 email_tmpl, etsize,
                                          retrieve_cert, search);
