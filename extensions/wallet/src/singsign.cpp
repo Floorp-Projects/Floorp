@@ -798,6 +798,26 @@ si_GetURL(char * URLName) {
   return (NULL);
 }
 
+static nsresult MangleUrl(const char *url, char **result)
+{
+	if (!url || !result) return NS_ERROR_FAILURE;
+
+	nsCAutoString temp(url);
+
+	temp.ReplaceSubstring("@","-");
+	temp.ReplaceSubstring("/","-");
+	temp.ReplaceSubstring(":","-");
+	temp.ReplaceSubstring("#","-");
+	temp.ReplaceSubstring("&","-");
+	temp.ReplaceSubstring("?","-");
+	temp.ReplaceSubstring(".","-");
+
+	*result = PL_strdup((const char *)temp);
+
+	printf("mangling %s into %s\n", url, *result);
+	return NS_OK;
+}
+
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
 si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
@@ -846,7 +866,8 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save, PRBool strip) {
       }
     }
   } else {
-    host = (nsAutoString(":") + URLName).ToNewCString();
+    res = MangleUrl(URLName, &host);
+    if (NS_FAILED(res)) return PR_FALSE;
   }
 
   si_lock_signon_list();
@@ -2502,7 +2523,8 @@ SINGSIGN_PromptUsernameAndPassword
       return res;
     }
   } else {
-    host = (nsAutoString(":") + urlname).ToNewCString();
+    res = MangleUrl(urlname, &host);
+    if (NS_FAILED(res)) return res;
   }
 
   /* prefill with previous username/password if any */
@@ -2559,25 +2581,27 @@ SINGSIGN_PromptPassword
       return res;
     }
   } else {
-    host = (nsAutoString(":") + urlname).ToNewCString();
+    res = MangleUrl(urlname, &host);
+    if (NS_FAILED(res)) return res;
   }
 
   /* extract username from uri -- note: prehost is <username>:<password> */
-  char * prehostCString;
-  res = uri->GetPreHost(&prehostCString);
-  if (NS_FAILED(res)) {
-    PR_FREEIF(host);
-    return res;
+  if (strip) {
+	  char * prehostCString;
+	  res = uri->GetPreHost(&prehostCString);
+	  if (NS_FAILED(res)) {
+	    PR_FREEIF(host);
+	    return res;
+	  }
+	  nsAutoString prehost = nsAutoString(prehostCString);
+	  PRInt32 colon = prehost.FindChar(':');
+	  if (colon == -1) {
+	    username = prehost;
+	  } else {
+	    prehost.Left(username, colon);  
+	  }
+	  PR_FREEIF(prehostCString);
   }
-  nsAutoString prehost = nsAutoString(prehostCString);
-  PRInt32 colon = prehost.FindChar(':');
-  if (colon == -1) {
-    username = prehost;
-  } else {
-    prehost.Left(username, colon);  
-  }
-
-  PR_FREEIF(prehostCString);
 
   /* get previous password used with this username, pick first user if no username found */
   si_RestoreOldSignonDataFromBrowser(host, (username.Length() == 0), username, password);
@@ -2635,7 +2659,8 @@ SINGSIGN_Prompt
       return res;
     }
   } else {
-    host = (nsAutoString(":") + urlname).ToNewCString();
+    res = MangleUrl(urlname, &host);
+    if (NS_FAILED(res)) return res;
   }
 
   /* get previous data used with this hostname */

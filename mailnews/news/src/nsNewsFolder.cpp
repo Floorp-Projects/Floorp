@@ -76,8 +76,6 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
-#define NEWSGROUP_USERNAME_PREF_PREFIX "newsgroup.username."
-#define NEWSGROUP_PASSWORD_PREF_PREFIX "newsgroup.password."
 #define NEWSRC_FILE_BUFFER_SIZE 1024
 
 #define NEWS_SCHEME "news:"
@@ -1221,7 +1219,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
     nsCAutoString signonURI(mURI);
     signonURI += "#username";
 
-    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_TRUE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_FALSE, nsnull);
     return rv;
 }
 
@@ -1237,7 +1235,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
     nsCAutoString signonURI(mURI);
     signonURI += "#password";
 
-    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_TRUE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_FALSE, nsnull);
     return rv;
 }
 
@@ -1275,7 +1273,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
             nsCAutoString signonURI(mURI);
             signonURI += "#password";
 
-            rv = dialog->PromptPassword((const char *)signonURI, PR_TRUE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
+            rv = dialog->PromptPassword((const char *)signonURI, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;
@@ -1326,7 +1324,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             nsCAutoString signonURI(mURI);
             signonURI += "#username";
 
-            rv = dialog->Prompt((const char *)signonURI, PR_TRUE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
+            rv = dialog->Prompt((const char *)signonURI, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;

@@ -577,7 +577,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			nsXPIDLCString serverUri;
 			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
-			rv = dialog->PromptPassword(serverUri, PR_TRUE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
+			rv = dialog->PromptPassword(serverUri, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
             		if (NS_FAILED(rv)) return rv;
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
@@ -614,7 +614,7 @@ nsMsgIncomingServer::ForgetPassword()
     if (NS_FAILED(rv)) return rv;
     
     
-    rv = walletservice->SI_RemoveUser((const char *)serverUri, PR_TRUE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)serverUri, PR_FALSE, nsnull);
     return rv;
 }
 
