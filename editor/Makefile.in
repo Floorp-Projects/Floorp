@@ -22,10 +22,10 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public txmgr
+DIRS = public
 
 ifdef MOZ_EDITOR
-DIRS += core guimgr
+DIRS += core guimgr txmgr
 
 ifdef ENABLE_TESTS
 DIRS += tests
