@@ -4,26 +4,25 @@ MARGINHEIGHT=0 MARGINWIDTH=0>
 
 <H1 ALIGN=CENTER>module owners</H1><P>
 
-An <I>Owner</I> is responsible for fielding bug reports, enhancement requests,
-patch submissions, and so on.  The owner should facilitate good development,
-as defined by the developer community.  Many of the owners below happen to work 
-for Netscape, but that's not a prerequisite. Module owners should only be 
-contacted directly with urls to bugzilla bugs for code submissions; Questions 
-or discussion of the module should be directed to the relevant 
-newsgroup/mailing list for wider discussion.
+This page lists mozilla.org Module Owners and their Peers.
 <P>
-A <I>Module</I> is a collection of source files that form a coherent bundle,
-probably a library (whether DLL/DSO or static).  Some modules, notably the
-Front Ends, link as executables.  We would like most modules to use
-<A href='#XP-COM'>XP-COM</A>, but only a few have been converted and released
-to mozilla.org so far.
+A <I>Module</I> is a collection of source files that form a coherent bundle.
+An <I>Owner</I> is the person in charge of a Module.
+A <I>Peer</I> is a person whom the Owner has designated to help maintain the
+Module.
+If a Module has an Owner, the Owner or a Peer should in general review all
+code changes that go into that module. 
 <P>
-A <I>Platform</I> is pragmatically defined by the kind of code you have to
-port, which is mostly UI code in the <A href='#StubFE'>Front Ends</A>.
-CPU architecture and OS dependencies are mostly abstracted by
-<A href='#NSPR'>NSPR</A>.  If you're contemplating a port (e.g., to BeOS on one
-or more hardware platforms), please mail <A href='mailto:brendan@mozilla.org'>brendan</A>,
-nominate some peers, and provide some documents.
+The
+<A HREF="http://despot.mozilla.org/despot.cgi">database</A> from which this
+document is generated sometimes gets out of date.
+In order to identify the people to talk to about a particular source tree
+directory, it may be better to consult
+<A HREF="http://bonsai.mozilla.org">Bonsai</A>, to see who is regularly
+checking in changes.
+<P>
+Questions about module ownership should be directed to
+<A HREF="mailto:staff@mozilla.org">staff@mozilla.org</A>.
 <P>
 
 <form method="get" action="http://despot.mozilla.org/despot.cgi">
