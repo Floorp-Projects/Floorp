@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.253 $ ';
+$::UtilsVersion = '$Revision: 1.254 $ ';
 
 package TinderUtils;
 
@@ -895,7 +895,7 @@ sub BuildIt {
             # more than one cvs tree so set CVSROOT here to avoid confusion.
             $ENV{CVSROOT} = $Settings::moz_cvsroot;
             
-            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk");
+            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $TreeSpecific::extrafiles");
           }
           
           # Create toplevel source directory.
@@ -964,17 +964,20 @@ sub BuildIt {
               $make = "$Settings::Make -f $Settings::moz_client_mk fast-update && $Settings::Make -f $Settings::moz_client_mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
             }
 
-            # Build up target string.
-            my $targets;
-            $targets = $TreeSpecific::clobber_target unless $Settings::BuildDepend;
-            $targets .= " $TreeSpecific::build_target";
-
             # Make sure we have an ObjDir if we need one.
             mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
-            # Run the make command.
+            # Run the clobber target.
+            if (!$Settings::BuildDepend && $build_status ne 'busted') {
+                $status = run_shell_command "$make $TreeSpecific::clobber_target";
+                if ($status != 0) {
+                    $build_status = 'busted';
+                }
+            }
+
+            # Run the build target.
             if ($build_status ne 'busted') {
-                $status = run_shell_command "$make $targets";
+                $status = run_shell_command "$make $TreeSpecific::build_target";
                 if ($status != 0) {
                     $build_status = 'busted';
                 } elsif (not BinaryExists($full_binary_name)) {
