@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: lfinger.pl,v 1.5 1998/07/29 05:56:54 leif Exp $
+# $Id: lfinger.pl,v 1.6 1998/07/29 08:19:12 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -84,7 +84,7 @@ $user=$ARGV[$[];
 #
 $conn = new Mozilla::LDAP::Conn($ld{host}, $ld{port}, $ld{bind},
 				$ld{pswd}, $ld{cert});
-die "Could't connect to LDAP server $ld{host}" unless $ld{conn};
+die "Could't connect to LDAP server $ld{host}" unless $conn;
 
 
 #############################################################################
@@ -102,4 +102,4 @@ while($entry)
 #############################################################################
 # Close the connection.
 #
-$ld{conn}->close if $ld{conn};
+$conn->close if $conn;
