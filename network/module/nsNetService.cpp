@@ -189,45 +189,68 @@ nsNetlibService::~nsNetlibService()
 
 
 
-void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) {
-    nsresult result;
-    NET_ReloadMethod reloadType;
-    nsILoadAttribs* loadAttribs = aUrl->GetLoadAttribs();
-    PRInt32 type = aUrl->GetReloadType();
+void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) 
+{
+  nsresult rv;
+  nsILoadAttribs* loadAttribs = aUrl->GetLoadAttribs();
 
+
+  /* If this url has load attributes, setup the underlying url struct
+   * accordingly. */
+  if (loadAttribs) {
+    nsURLLoadType loadType;
+    nsURLReloadType reloadType;
+    PRUint32 localIP;
+
+    NS_VERIFY_THREADSAFE_INTERFACE(loadAttribs);
+
+    rv = loadAttribs->GetReloadType(&reloadType);
+    if (NS_FAILED(rv)) {
+      reloadType = nsURLReload;
+    }
+    if ((reloadType == nsURLReloadBypassProxy) ||
+        (reloadType == nsURLReloadBypassCacheAndProxy)) {
+      PRBool bBypassProxy;
+
+      rv = loadAttribs->GetBypassProxy(&bBypassProxy);
+      if (NS_FAILED(rv)) {
+        bBypassProxy = PR_FALSE;
+      }
+      aURL_s->bypassProxy = bBypassProxy;
+    }
     /* Set the NET_ReloadMethod to correspond with what we've 
      * been asked to do.
      *
-     * 0 = nsReload (normal)
-     * 1 = nsReloadBypassCache
-     * 2 = nsReloadBypassProxy
-     * 3 = nsReloadBypassCacheAndProxy
+     * 0 = nsURLReload (normal)
+     * 1 = nsURLReloadBypassCache
+     * 2 = nsURLReloadBypassProxy
+     * 3 = nsURLReloadBypassCacheAndProxy
      */
-    if (type == 1 || type == 3) {
-        reloadType = NET_SUPER_RELOAD;
+    if ((reloadType == nsURLReloadBypassCache) ||
+        (reloadType == nsURLReloadBypassCacheAndProxy)) {
+      aURL_s->force_reload = NET_SUPER_RELOAD;
     } else {
-        reloadType = NET_NORMAL_RELOAD;
+      aURL_s->force_reload = NET_NORMAL_RELOAD;
     }
 
-
-    /* If this url has load attributes, setup the underlying url struct
-     * accordingly. */
-    if (loadAttribs) {
-        PRUint32 localIP = 0;
-
-        NS_VERIFY_THREADSAFE_INTERFACE(loadAttribs);
-        if (type == 2 || type == 3) {
-            result = loadAttribs->GetBypassProxy((int *)&(aURL_s->bypassProxy));
-            if (result != NS_OK)
-                aURL_s->bypassProxy = FALSE;
-        }
-
-        result = loadAttribs->GetLocalIP(&localIP);
-        if (result != NS_OK)
-            localIP = 0;
-        aURL_s->localIP = localIP;
-        NS_RELEASE(loadAttribs);
+    rv = loadAttribs->GetLoadType(&loadType);
+    if (NS_FAILED(rv)) {
+      loadType = nsURLLoadNormal;
     }
+    if (loadType == nsURLLoadBackground) {
+      aURL_s->load_background = PR_TRUE;
+    } else {
+      aURL_s->load_background = PR_FALSE;
+    }
+
+    rv = loadAttribs->GetLocalIP(&localIP);
+    if (NS_FAILED(rv)) {
+      localIP = 0;
+    }
+    aURL_s->localIP = localIP;
+
+    NS_RELEASE(loadAttribs);
+  }
 }
 
 nsresult nsNetlibService::OpenStream(nsIURL *aUrl, 
@@ -237,7 +260,6 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     nsConnectionInfo *pConn;
     nsIProtocolConnection *pProtocol;
     nsresult result;
-    NET_ReloadMethod reloadType;
     nsIStreamListener* consumer;
 
     if ((NULL == aConsumer) || (NULL == aUrl)) {
@@ -280,7 +302,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
     /* Create the URLStruct... */
 
-    URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
+    URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
     if (NULL == URL_s) {
         NS_RELEASE(pConn);
         return NS_FALSE;
@@ -366,7 +388,6 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
         /* Create the blocking stream... */
         pBlockingStream = new nsBlockingStream();
-        NET_ReloadMethod reloadType;
 
         if (NULL == pBlockingStream) {
             goto loser;
@@ -404,7 +425,7 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
         /* Create the URLStruct... */
 
-        URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
+        URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
         if (NULL == URL_s) {
             NS_RELEASE(pBlockingStream);
             NS_RELEASE(pConn);
