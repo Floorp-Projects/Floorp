@@ -60,15 +60,6 @@ ifeq ($(OS_ARCH), SunOS)
     OS_CFLAGS += -v
 endif
 
-# Unfortunately, since the DBM and SECURITY libraries were compiled with
-# the "-taso" switch (in ns/coreconf/OSF1.mk), we must ALSO compile the
-# JSS dynamic libraries with the "-taso" switch (unless USE_64 is specified)
-ifeq ($(OS_ARCH), OSF1)
-	ifneq ($(USE_64), 1)
-		LD_LIBS += -taso 
-	endif
-endif
-
 # Add symbolic binding values to MKSHLIB and LINK_DLL to
 # encompass special link options for dynamic libraries
 
