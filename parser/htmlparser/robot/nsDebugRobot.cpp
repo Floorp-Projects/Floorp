@@ -243,17 +243,6 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_ADDREF(myObserver);
   g_workList = workList;
 
-/*
-  nsIDTDDebug * pIDTDDebug;
-  nsresult rval = NS_NewDTDDebug(&pIDTDDebug);
-  if (NS_OK != rval) {
-    fputs("Cannot create parser debugger.\n", stdout);
-    NS_RELEASE(myObserver);
-    return -1;
-  }
-  pIDTDDebug->SetVerificationDirectory(verify_dir);
-*/
-
   for (;;) {
     PRInt32 n = g_workList->Count();
     if (0 == n) {
@@ -363,9 +352,6 @@ extern "C" NS_EXPORT int DebugRobot(
 
   NS_RELEASE(pl);
   NS_RELEASE(myObserver);
-
-//  pIDTDDebug->DumpVectorRecord();
-  //NS_RELEASE(pIDTDDebug);
 
   return 0;
 }
