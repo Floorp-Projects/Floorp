@@ -51,10 +51,8 @@ public:
 
   nsGIFDecoder2();
   virtual ~nsGIFDecoder2();
-
-  static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   
-  NS_METHOD ProcessData(unsigned char *data, PRUint32 count);
+  nsresult ProcessData(unsigned char *data, PRUint32 count, PRUint32 *_retval);
 
   NS_METHOD FlushImageData();
 
