@@ -717,7 +717,8 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	{
 		ShowWindow(PR_TRUE);
     if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
-		nsMsgDisplayMessageByID(prompt, rv);
+      if (NS_FAILED(nsMsgDisplayMessageByID(prompt, rv)))
+        nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
 	}
 	
 	return rv;
@@ -821,7 +822,8 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
       nsCOMPtr<nsIPrompt> prompt;
       if (m_window)
         m_window->GetPrompter(getter_AddRefs(prompt));
-			nsMsgDisplayMessageByID(prompt, rv);
+			if (NS_FAILED(nsMsgDisplayMessageByID(prompt, rv)))
+		    nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
     }
 	}
 	return rv;
