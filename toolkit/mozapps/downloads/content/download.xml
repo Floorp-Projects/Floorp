@@ -288,7 +288,11 @@
           <xul:label xbl:inherits="value=target" flex="1" crop="center"/>
           <xul:progressmeter mode="normal" value="0" flex="1"
                             xbl:inherits="value=progress,mode=progressmode"/>
-          <xul:label xbl:inherits="value=status"/>
+          <xul:hbox align="center">
+            <xul:label value="&cmd.resume.label;" class="link"
+                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"/>
+            <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
+          </xul:hbox>                            
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cancel.label;" class="link"
