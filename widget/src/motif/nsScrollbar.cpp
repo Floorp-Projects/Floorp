@@ -215,6 +215,7 @@ PRUint32 nsScrollbar::GetPosition()
 void nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
     XtVaSetValues(mWidget, XmNpageIncrement, (int)aSize, nsnull);
+    XtVaSetValues(mWidget, XmNsliderSize, (int)aSize, nsnull);
     if (DBG) printf("SetThumbSize %d\n", aSize);
 }
 
@@ -271,6 +272,7 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                            XmNmaximum,   aMaxRange,
                            XmNminimum,   0,
                            XmNsliderSize, aThumbSize,
+                           XmNpageIncrement, aThumbSize,
                            XmNvalue,     aPosition, 
                            nsnull);
 
