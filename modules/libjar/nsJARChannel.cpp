@@ -176,7 +176,6 @@ nsJARInputThunk::ReadSegments(nsWriteSegmentFun writer, void *closure,
                               PRUint32 count, PRUint32 *countRead)
 {
     // stream transport does only calls Read()
-    NS_NOTREACHED("nsJarInputThunk::ReadSegments");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

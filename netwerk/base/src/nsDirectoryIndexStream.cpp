@@ -446,7 +446,6 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 NS_IMETHODIMP
 nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("ReadSegments");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -353,7 +353,6 @@ nsFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     // the writer does not consume all data.  If you want to call ReadSegments,
     // wrap a BufferedInputStream around the file stream.  That will call
     // Read().
-    NS_NOTREACHED("ReadSegments");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

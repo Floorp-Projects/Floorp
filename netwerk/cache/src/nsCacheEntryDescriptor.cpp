@@ -529,7 +529,7 @@ nsresult nsCacheEntryDescriptor::
 nsInputStreamWrapper::ReadSegments(nsWriteSegmentFun writer, void *closure,
                                    PRUint32 count, PRUint32 *countRead)
 {
-    NS_NOTREACHED("cache stream not buffered");
+    // cache stream not buffered
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
