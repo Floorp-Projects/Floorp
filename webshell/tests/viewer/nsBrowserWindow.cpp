@@ -66,6 +66,9 @@
 #include "nsILabel.h"
 #include "nsWidgetSupport.h"
 
+#include "nsXPBaseWindow.h"
+#include "nsFindDialog.h"
+
 #include "nsIContentConnector.h"
 
 #include "resources.h"
@@ -130,6 +133,7 @@ static NS_DEFINE_IID(kDialogCID, NS_DIALOG_CID);
 static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kRadioButtonCID, NS_RADIOBUTTON_CID);
 static NS_DEFINE_IID(kLabelCID, NS_LABEL_CID);
+static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
@@ -153,6 +157,7 @@ static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 
 
 static const char* gsAOLFormat = "AOLMAIL";
@@ -462,6 +467,11 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_PRINT:
     DoPrint();
     break;
+
+  case VIEWER_PRINT_SETUP:
+    DoPrintSetup();
+    break;
+
 #if defined(XP_WIN) || defined(XP_MAC)
   case VIEWER_TREEVIEW:
 	// Instantiate a tree widget
@@ -920,144 +930,34 @@ nsBrowserWindow::DoTreeView()
 void
 nsBrowserWindow::DoFind()
 {
-  if (mDialog == nsnull) {
-    nscoord txtHeight   = 24;
-    nscolor textBGColor = NS_RGB(0, 0, 0);
-    nscolor textFGColor = NS_RGB(255, 255, 255);
-
-    nsILookAndFeel * lookAndFeel;
-    if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-       lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
-       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
-       NS_RELEASE(lookAndFeel);
-    }
-
-
-    nsIDeviceContext* dc = mWindow->GetDeviceContext();
-    float t2d;
-    dc->GetTwipsToDevUnits(t2d);
-    nsFont font(DIALOG_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-		NS_FONT_WEIGHT_NORMAL, 0,
-		nscoord(t2d * NSIntPointsToTwips(DIALOG_FONT_SIZE)));
-    NS_RELEASE(dc);
-
-    // create a Dialog
-    //
-    nsRect rect;
-    rect.SetRect(0, 0, 380, 110);  
-
-    nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
-    if (nsnull == mDialog)
-      return;		// why no error value?
-    nsIWidget* widget = nsnull;
-    NS_CreateDialog(mWindow,mDialog,rect,HandleEvent,&font);
-    if (NS_OK == mDialog->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-	widget->SetClientData(this);
-	NS_RELEASE(widget);
-    }
-    mDialog->SetLabel("Find");
-
-    nscoord xx = 5;
-    // Create Label
-    rect.SetRect(xx, 8, 75, 24);  
-    nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
-    NS_CreateLabel(mDialog,mLabel,rect,HandleEvent,&font);
-    if (NS_OK == mLabel->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-	widget->SetClientData(this);
-	mLabel->SetAlignment(eAlign_Right);
-	mLabel->SetLabel("Find what:");
-	NS_RELEASE(widget);
-    }
-    xx += 75 + 5;
-
-    // Create TextField
-    rect.SetRect(xx, 5, 200, txtHeight);  
-    nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
-    NS_CreateTextWidget(mDialog,mTextField,rect,HandleEvent,&font);
-    if (NS_OK == mTextField->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-      widget->SetBackgroundColor(textBGColor);
-      widget->SetForegroundColor(textFGColor);
-      widget->SetClientData(this);
-      widget->SetFocus();
-	    NS_RELEASE(widget);
-    }
-    xx += 200 + 5;
-  
-    nscoord w = 65;
-    nscoord x = 205+80-w;
-    nscoord y = txtHeight + 10;
-    nscoord h = 19;
-
-    // Create Up RadioButton
-    rect.SetRect(x, y, w, h);  
-    nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
-    NS_CreateRadioButton(mDialog,mUpRadioBtn,rect,HandleEvent,&font);
-    if (NS_OK == mUpRadioBtn->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-      widget->SetClientData(this);
-      mUpRadioBtn->SetLabel("Up");
-	    NS_RELEASE(widget);
-    }
-    y += h + 2;
-  
-    // Create Up RadioButton
-    rect.SetRect(x, y, w, h);  
-    nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
-    NS_CreateRadioButton(mDialog,mDwnRadioBtn,rect,HandleEvent,&font);
-    if (NS_OK == mDwnRadioBtn->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-	    widget->SetClientData(this);
-	    mDwnRadioBtn->SetLabel("Down");
-	    NS_RELEASE(widget);
-    }
-  
-    // Create Match CheckButton
-    rect.SetRect(5, y, 125, 24);  
-    nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
-    NS_CreateCheckButton(mDialog,mMatchCheckBtn,rect,HandleEvent,&font);
-    if (NS_OK == mMatchCheckBtn->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-	    widget->SetClientData(this);
-	    mMatchCheckBtn->SetLabel("Match Case");
-	    NS_RELEASE(widget);
-    }
-
-    mUpRadioBtn->SetState(PR_FALSE);
-    mDwnRadioBtn->SetState(PR_TRUE);
-  
-    // Create Find Next Button
-    rect.SetRect(xx, 5, 75, 24);  
-    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
-    NS_CreateButton(mDialog,mFindBtn,rect,HandleEvent,&font);
-    if (NS_OK == mFindBtn->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-	    widget->SetClientData(this);
-	    mFindBtn->SetLabel("Find Next");
-	    NS_RELEASE(widget);
-    }
-  
-    // Create Cancel Button
-    rect.SetRect(xx, 35, 75, 24);  
-    nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
-    NS_CreateButton(mDialog,mCancelBtn,rect,HandleEvent,&font);
-    if (NS_OK == mCancelBtn->QueryInterface(kIWidgetIID,(void**)&widget))
-    {
-	    widget->SetClientData(this);
-	    mCancelBtn->SetLabel("Cancel");
-	    NS_RELEASE(widget);
-    }  
+  if (mXPDialog) {
+    NS_RELEASE(mXPDialog);
+    //mXPDialog->SetVisible(PR_TRUE);
+    //return;
   }
-  else {
-		nsIWidget* dialogWidget = nsnull;               
-		if (NS_OK ==  mDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget)) {
-	    dialogWidget->Show(PR_TRUE);
-	  }
+
+  nsString findHTML("resource:/res/samples/find.html");
+  //nsString findHTML("resource:/res/samples/find-table.html");
+  nsRect rect(0, 0, 510, 170);
+  //nsRect rect(0, 0, 470, 126);
+  nsString title("Find");
+
+  nsXPBaseWindow * dialog = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+                                             kIXPBaseWindowIID,
+                                             (void**) &dialog);
+  if (rv == NS_OK) {
+    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, findHTML, title, rect, PRUint32(~0), PR_FALSE);
+    dialog->SetVisible(PR_TRUE);
+ 	  if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
+    }
   }
-  mTextField->SelectAll();
+
+  nsFindDialog * findDialog = new nsFindDialog(this);
+  if (nsnull != findDialog) {
+    dialog->AddWindowListener(findDialog);
+  }
+  //NS_IF_RELEASE(dialog);
 
 }
 
@@ -2190,6 +2090,60 @@ void nsBrowserWindow::DoPrint(void)
   }
 }
 
+//---------------------------------------------------------------
+void nsBrowserWindow::DoPrintSetup()
+{
+  if (mXPDialog) {
+    NS_RELEASE(mXPDialog);
+    //mXPDialog->SetVisible(PR_TRUE);
+    //return;
+  }
+
+  nsString printHTML("resource:/res/samples/printsetup.html");
+  nsRect rect(0, 0, 375, 510);
+  nsString title("Print Setup");
+
+  nsXPBaseWindow * dialog = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kXPBaseWindowCID, nsnull,
+                                             kIXPBaseWindowIID,
+                                             (void**) &dialog);
+  if (rv == NS_OK) {
+    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, printHTML, title, rect, PRUint32(~0), PR_FALSE);
+    dialog->SetVisible(PR_TRUE);
+ 	  if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
+    }
+  }
+
+  mPrintSetupInfo.mPortrait         = PR_TRUE;
+  mPrintSetupInfo.mBevelLines       = PR_TRUE;
+  mPrintSetupInfo.mBlackText        = PR_FALSE;
+  mPrintSetupInfo.mBlackLines       = PR_FALSE;
+  mPrintSetupInfo.mLastPageFirst    = PR_FALSE;
+  mPrintSetupInfo.mPrintBackgrounds = PR_FALSE;
+  mPrintSetupInfo.mTopMargin        = 0.50;
+  mPrintSetupInfo.mBottomMargin     = 0.50;
+  mPrintSetupInfo.mLeftMargin       = 0.50;
+  mPrintSetupInfo.mRightMargin      = 0.50;
+
+  mPrintSetupInfo.mDocTitle         = PR_TRUE;
+  mPrintSetupInfo.mDocLocation      = PR_TRUE;
+
+  mPrintSetupInfo.mHeaderText       = "Header Text";
+  mPrintSetupInfo.mFooterText       = "Footer Text";
+
+  mPrintSetupInfo.mPageNum          = PR_TRUE;
+  mPrintSetupInfo.mPageTotal        = PR_TRUE;
+  mPrintSetupInfo.mDatePrinted      = PR_TRUE;
+
+
+  nsPrintSetupDialog * printSetupDialog = new nsPrintSetupDialog(this);
+  if (nsnull != printSetupDialog) {
+    dialog->AddWindowListener(printSetupDialog);
+  }
+  printSetupDialog->SetSetupInfo(mPrintSetupInfo);
+  //NS_IF_RELEASE(dialog);
+
+}
 //----------------------------------------------------------------------
 
 void

@@ -18,6 +18,8 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+DIRS=public
+
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\viewer.exe
 RESFILE = viewer.res
@@ -34,6 +36,10 @@ MISCDEP=                        \
 
 
 OBJS =                                      \
+	.\$(OBJDIR)\nsBaseDialog.obj     \
+	.\$(OBJDIR)\nsFindDialog.obj     \
+	.\$(OBJDIR)\nsPrintSetupDialog.obj     \
+	.\$(OBJDIR)\nsXPBaseWindow.obj     \
 	.\$(OBJDIR)\nsBrowserWindow.obj     \
 	.\$(OBJDIR)\nsEditorInterfaces.obj  \
 	.\$(OBJDIR)\nsEditorMode.obj        \
@@ -102,6 +108,8 @@ OS_CFLAGS = $(OS_CFLAGS) -DNGPREFS
 
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+	$(MAKE_INSTALL) resources\find.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) resources\printsetup.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test0.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test1.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test2.html $(DIST)\bin\res\samples
@@ -143,6 +151,8 @@ install:: $(PROGRAM)
 
 clobber::
 	rm -f $(DIST)\bin\viewer.exe
+	rm -f $(DIST)\bin\res\samples\find.html
+	rm -f $(DIST)\bin\res\samples\printsetup.html
 	rm -f $(DIST)\bin\res\samples\test0.html
 	rm -f $(DIST)\bin\res\samples\test1.html
 	rm -f $(DIST)\bin\res\samples\test2.html
