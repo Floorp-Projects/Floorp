@@ -34,7 +34,7 @@
 #include "nsRDFResource.h"
 #include "nsIMsgHdr.h"
 #include "nsCOMPtr.h"
-
+#include "nsWeakPtr.h"
 
 class NS_MSG_BASE nsMessage: public nsRDFResource, public nsIDBMessage
 {
@@ -50,9 +50,10 @@ public:
 	NS_IMETHOD Init(const char *aURI);
 
 protected:
-	nsIMsgFolder *mFolder;
 	nsCOMPtr<nsIMsgDBHdr> mMsgHdr;
 
+private:
+  nsWeakPtr mFolder;
 };
 
 #endif //nsMessage_h__

@@ -487,14 +487,16 @@ NS_IMETHODIMP nsMessage::SetThreadParent(nsMsgKey inKey)
 }
 
 
-NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **folder)
+NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **aFolder)
 {
-	if(!folder)
-		return NS_ERROR_NULL_POINTER;
-	*folder = mFolder;
-	if(mFolder)
-	{
-		NS_ADDREF(mFolder);
+  NS_ENSURE_ARG_POINTER(aFolder);
+
+  nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder = do_QueryReferent(mFolder, &rv);
+
+  if (*aFolder) {
+    *aFolder = folder;
+    NS_ADDREF(*aFolder);
 		return NS_OK;
 	}
 	else
@@ -504,8 +506,7 @@ NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **folder)
 
 NS_IMETHODIMP nsMessage::SetMsgFolder(nsIMsgFolder *folder)
 {
-	mFolder = folder;
-	//We don't want to own folder, so don't AddRef
+	mFolder = NS_GetWeakReference(folder);
 	return NS_OK;
 }
 
