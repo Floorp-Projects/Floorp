@@ -38,7 +38,11 @@
 #include <Gestalt.h>
 #include <CodeFragments.h>
 #include <Fonts.h>
+#include <TextEdit.h>
+#include <Controls.h>
+
 #include <SIOUX.h>
+#include <SIOUXWindows.h>
 
 static CFBundleRef getBundle(CFStringRef frameworkPath)
 {
@@ -223,6 +227,16 @@ short SIOUXHandleOneEvent(EventRecord *userevent)
         static short (*handle_event) (EventRecord*) = (short (*) (EventRecord*)) find_symbol(gConsoleLibrary, "\pSIOUXHandleOneEvent");
         if (handle_event)
             return handle_event(userevent);
+    }
+    return false;
+}
+
+Boolean SIOUXIsAppWindow(WindowPtr window)
+{
+    if (gConsoleLibrary) {
+        static Boolean (*is_app_window) (WindowPtr) = (Boolean (*) (WindowPtr)) find_symbol(gConsoleLibrary, "\pSIOUXIsAppWindow");
+        if (is_app_window)
+            return is_app_window(window);
     }
     return false;
 }
