@@ -130,51 +130,44 @@ nsPresContext::GetFontPreferences()
       value = nsnull;
     }
     if (mLangGroup) {
-      nsAutoString pref("font.size.");
+      nsAutoString pref("font.size.variable.");
       const PRUnichar* langGroup = nsnull;
       mLangGroup->GetUnicode(&langGroup);
       pref.Append(langGroup);
       char name[128];
       pref.ToCString(name, sizeof(name));
-      mPrefs->CopyCharPref(name, &value);
-      char* defaultSize = "16px";
-      if (!value) {
-        value = defaultSize;
+      PRInt32 variableSize = 16;
+      mPrefs->GetIntPref(name, &variableSize);
+      pref = "font.size.fixed.";
+      pref.Append(langGroup);
+      pref.ToCString(name, sizeof(name));
+      PRInt32 fixedSize = 14;
+      mPrefs->GetIntPref(name, &fixedSize);
+      char* unit = nsnull;
+      mPrefs->CopyCharPref("font.size.unit", &unit);
+      char* defaultUnit = "px";
+      if (!unit) {
+        unit = defaultUnit;
       }
-      char* p = value;
-      PRInt32 size = 0;
-      while ((*p >= '0') && (*p <= '9')) {
-        size = ((size * 10) + (*p - '0'));
-        p++;
-      }
-      if (!size) {
-        while (*p) {
-          p++;
-        }
-      }
-      nscoord sz;
-      if (!PL_strcmp(p, "px")) {
+      if (!PL_strcmp(unit, "px")) {
         float p2t;
         GetScaledPixelsToTwips(&p2t);
-        sz = NSFloatPixelsToTwips((float) size, p2t);
-        mDefaultFont.size = sz;
-        mDefaultFixedFont.size = sz;
+        mDefaultFont.size = NSFloatPixelsToTwips((float) variableSize, p2t);
+        mDefaultFixedFont.size = NSFloatPixelsToTwips((float) fixedSize, p2t);
       }
-      else if (!PL_strcmp(p, "pt")) {
-        sz = NSIntPointsToTwips(size);
-        mDefaultFont.size = sz;
-        mDefaultFixedFont.size = sz;
+      else if (!PL_strcmp(unit, "pt")) {
+        mDefaultFont.size = NSIntPointsToTwips(variableSize);
+        mDefaultFixedFont.size = NSIntPointsToTwips(fixedSize);
       }
       else {
         float p2t;
         GetScaledPixelsToTwips(&p2t);
-        sz = NSFloatPixelsToTwips(16.0, p2t);
-        mDefaultFont.size = sz;
-        mDefaultFixedFont.size = sz;
+        mDefaultFont.size = NSFloatPixelsToTwips((float) variableSize, p2t);
+        mDefaultFixedFont.size = NSFloatPixelsToTwips((float) fixedSize, p2t);
       }
-      if (value != defaultSize) {
-        nsAllocator::Free(value);
-        value = nsnull;
+      if (unit != defaultUnit) {
+        nsAllocator::Free(unit);
+        unit = nsnull;
       }
     }
   }
