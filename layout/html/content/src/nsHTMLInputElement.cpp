@@ -799,6 +799,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMEventTarget> oldTarget;
+      
   // Do not process any DOM events if the element is disabled
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
@@ -848,6 +850,14 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
       if (!privateEvent) {
         return NS_ERROR_FAILURE;
+      }
+
+      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
+
+      nsCOMPtr<nsIDOMEventTarget> originalTarget;
+      (*aDOMEvent)->GetOriginalTarget(getter_AddRefs(originalTarget));
+      if (!originalTarget) {
+        privateEvent->SetOriginalTarget(oldTarget);
       }
 
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface((nsIDOMHTMLInputElement*)this);
@@ -911,7 +921,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }
 
       // This will reset the target to its original value
-      privateEvent->SetTarget(nsnull);
+      privateEvent->SetTarget(oldTarget);
     }
   }
 
