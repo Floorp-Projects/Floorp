@@ -71,10 +71,29 @@ sub SetDefaultSkin($)
     
     print "Setting default skin to $skin\n";
     
+  	local(*CHROMEFILE);
     open(CHROMEFILE, ">>${chrome_subdir}:installed-chrome.txt") || die "Failed to open installed_chrome.txt\n";
     print(CHROMEFILE "skin,install,select,$skin\n");
     close(CHROMEFILE);
 }
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Select a default locale
+#//--------------------------------------------------------------------------------------------------
+
+sub SetDefaultLocale($$)
+{
+    my($locale, $chrome_dir) = @_;
+
+    print "Setting default locale to $locale\n";
+    
+  	local(*CHROMEFILE);
+    open(CHROMEFILE, ">>${chrome_dir}:installed-chrome.txt") || die "Failed to open installed_chrome.txt\n";
+    print(CHROMEFILE "locale,install,select,$locale\n");
+    close(CHROMEFILE);
+}
+
 
 #//--------------------------------------------------------------------------------------------------
 #// InstallDefaultsFiles
@@ -460,6 +479,9 @@ sub PackageEmbeddingChrome($$)
     unlink($temp_manifest);    
   }
   
+  # we have to select a default locale, otherwise we won't know about a bunch
+  # of files in embed.jar if the app doesn't call the code to auto-detect the locale.
+  SetDefaultLocale("en-US", $embed_dir);
 }
 
 #//--------------------------------------------------------------------------------------------------
