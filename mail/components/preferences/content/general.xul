@@ -57,6 +57,10 @@
                   name="mail.checkDefaultNews"
                   onchange="return gGeneralPane.onWriteDefaultNewsPref();"
                   type="bool"/>
+      <preference id="mail.checkDefaultFeed"
+                  name="mail.checkDefaultFeed"
+                  onchange="return gGeneralPane.onWriteDefaultFeed();"
+                  type="bool"/>
       <preference id="mail.pane_config.dynamic" name="mail.pane_config.dynamic" type="int"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="mailnews.start_page.enabled" name="mailnews.start_page.enabled" type="bool"/>
@@ -86,6 +90,10 @@
         <checkbox id="defaultNewsClient" label="&setDefaultNewsClient.label;"
                   preference="mail.checkDefaultNews"                
                   accesskey="&setDefaultNewsClient.accesskey;"/>
+
+        <checkbox id="defaultFeedClient" label="&setDefaultFeedClient.label;" hidden="true"
+                  preference="mail.checkDefaultFeed"                
+                  accesskey="&setDefaultFeedClient.accesskey;"/>
       </hbox>
 #endif
 

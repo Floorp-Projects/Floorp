@@ -49,8 +49,12 @@ var gGeneralPane = {
 
     this.playSoundCheck();
 
+#ifdef XP_WIN
     this.onReadDefaultMailPref();
     this.onReadDefaultNewsPref();
+    this.onReadDefaultFeedPref();
+#endif
+
 #ifdef XP_MACOSX
     document.getElementById("defaultClientBox").hidden = true;
 #endif
@@ -98,6 +102,22 @@ var gGeneralPane = {
     if (mapiRegistry.isDefaultNewsClient != makeDefaultNewsClient) 
       mapiRegistry.isDefaultNewsClient = makeDefaultNewsClient;
   },
+
+  onReadDefaultFeedPref: function()
+  {
+    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
+    document.getElementById('defaultFeedClient').checked = mapiRegistry.isDefaultFeedClient;   
+    return mapiRegistry.isDefaultFeedClient;   
+  },
+
+  onWriteDefaultFeed: function()
+  {
+    var mapiRegistry = Components.classes["@mozilla.org/mapiregistry;1"].getService(Components.interfaces.nsIMapiRegistry);
+    var makeDefaultFeedClient = document.getElementById('mail.checkDefaultFeed').value;   
+    if (mapiRegistry.isDefaultFeedClient != makeDefaultFeedClient) 
+      mapiRegistry.isDefaultFeedClient = makeDefaultFeedClient;
+  },
+
 #endif
 
 #ifdef MOZ_WIDGET_GTK2

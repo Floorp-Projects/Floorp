@@ -4,6 +4,10 @@
 <!ENTITY setDefaultMailClient.accesskey    "M">
 <!ENTITY setDefaultNewsClient.label        "News">
 <!ENTITY setDefaultNewsClient.accesskey    "N">
+<!ENTITY setDefaultMailClient.label        "Mail">
+<!ENTITY setDefaultMailClient.accesskey    "M">
+<!ENTITY setDefaultFeedClient.label        "RSS Feeds">
+<!ENTITY setDefaultFeedClient.accesskey    "R">
 <!ENTITY checkNow.label                    "Check Now">
 <!ENTITY checkNow.accesskey                "N">
 <!ENTITY whenStartingCheck.label           "When starting, &brandShortName; should check to see if it is the default application for">
