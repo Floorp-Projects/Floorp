@@ -609,7 +609,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   else
     inPopupDoc->GetPopupNode(getter_AddRefs(targetNode));
 
-  NS_WARN_IF_FALSE(targetNode, "no popup/tooltip node on document!");
+  //NS_WARN_IF_FALSE(targetNode, "no popup/tooltip node on document!");
   nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
   nsCOMPtr<nsIWidget> targetDocumentWidget;
   if ( targetAsContent ) {
@@ -632,7 +632,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
       }
     }
   }
-  NS_WARN_IF_FALSE(targetDocumentWidget, "ACK, BAD TARGET");
+  //NS_WARN_IF_FALSE(targetDocumentWidget, "ACK, BAD TARGET");
 
   // the offset we need is the difference between the upper left corner of the two widgets. Use
   // screen coordinates to find the global offset between them.
