@@ -21,7 +21,8 @@
  * jce2@po.cwru.edu <Jason Eager>: Added pref to turn on/off 
  *                                 syntax highlighting in view source
  *                                 window.
- *                                
+ * Boris Zbarsky <bzbarsky@mit.edu>
+ * rbs@maths.uq.edu.au                                
  * 
  */
 
@@ -47,8 +48,6 @@
 #  define START_TIMER()
 #endif
 
-#define VIEW_SOURCE_HTML
-
 #include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
 #include "nsCRT.h"
@@ -60,15 +59,8 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-#ifdef VIEW_SOURCE_HTML
 #include "nsHTMLEntities.h"
-#endif // VIEW_SOURCE_HTML
-
-// For Coloring pref only
-// If we aren't going to define it, then should save on bloat.
 #include "nsIPref.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #include "COtherDTD.h"
 #include "nsElementTable.h"
@@ -90,15 +82,16 @@ Stopwatch vsTimer;
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
 static int gErrorThreshold = 10;
 
-//#define rickgdebug
-#ifdef rickgdebug
-#include <fstream.h>
-  fstream* gDumpFile=0;
-#endif
+// Define this to dump the viewsource stuff to a file
+//#define DUMP_TO_FILE
+#ifdef DUMP_TO_FILE
+#include <stdio.h>
+  FILE* gDumpFile=0;
+  static const char* gDumpFileName = "/tmp/viewsource.html";
+//  static const char* gDumpFileName = "\\temp\\viewsource.html";
+#endif // DUMP_TO_FILE
 
-#ifdef VIEW_SOURCE_HTML
 static const char* kPreClass = "viewsource";
-#endif // VIEW_SOURCE_HTML
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -190,7 +183,7 @@ public:
     mTokenNode(),
     mErrorNode(),
     mITextToken(),
-    mErrorToken(NS_ConvertASCIItoUCS2("error")) {
+    mErrorToken(NS_LITERAL_STRING("error")) {
   }
   
   ~CSharedVSContext() {
@@ -209,7 +202,6 @@ public:
   CTextToken          mErrorToken;
 };
 
-#ifdef VIEW_SOURCE_HTML
 enum {
   VIEW_SOURCE_START_TAG = 0,
   VIEW_SOURCE_END_TAG = 1,
@@ -274,7 +266,39 @@ static char* kAfterText[] = {
   ""
 };
 
-#endif // VIEW_SOURCE_HTML
+#ifdef DUMP_TO_FILE
+static char* kDumpFileBeforeText[] = {
+  "&lt;",
+  "&lt;/",
+  "",
+  "",
+  "",
+  "",
+  "&amp;",
+  "",
+  "",
+  "=",
+  "",
+  "",
+  ""
+};
+
+static char* kDumpFileAfterText[] = {
+  "&gt;",
+  "&gt;",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  ""
+};
+#endif // DUMP_TO_FILE
 
 /**
  *  Default constructor
@@ -283,10 +307,9 @@ static char* kAfterText[] = {
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
+CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   NS_INIT_REFCNT();
 
-#ifdef VIEW_SOURCE_HTML
   mStartTag = VIEW_SOURCE_START_TAG;
   mEndTag = VIEW_SOURCE_END_TAG;
   mCommentTag = VIEW_SOURCE_COMMENT;
@@ -303,24 +326,9 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   nsresult result=NS_OK;
   mSyntaxHighlight = PR_FALSE;
   // This determines the value of the boolean syntax_highlight preference.
-  NS_WITH_SERVICE(nsIPref, thePrefsService, kPrefCID, &result);
-  if (NS_SUCCEEDED(result) && thePrefsService)
-      thePrefsService->GetBoolPref("view_source.syntax_highlight", &mSyntaxHighlight);
-#else
-  mStartTag.AssignWithConversion("start");
-  mEndTag.AssignWithConversion("end");
-  mCommentTag.AssignWithConversion("comment");
-  mCDATATag.AssignWithConversion("cdata");
-  mMarkupDeclaration.AssignWithConversion("markupdeclaration");
-  mDocTypeTag.AssignWithConversion("doctype");
-  mPITag.AssignWithConversion("pi");
-  mEntityTag.AssignWithConversion("entity");
-  mText.AssignWithConversion("txt");
-  mKey.AssignWithConversion("key");
-  mValue.AssignWithConversion("val");
-  mSummaryTag.AssignWithConversion("summary");
-  mPopupTag.AssignWithConversion("popup");
-#endif // VIEW_SOURCE_HTML
+  nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
+  if (thePrefsService)
+    thePrefsService->GetBoolPref("view_source.syntax_highlight", &mSyntaxHighlight);
 
   mParser=0;
   mSink=0;
@@ -329,15 +337,16 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mDocType=eHTML3Text;
   mValidator=0;
   mHasOpenRoot=PR_FALSE;
+  mHasOpenBody=PR_FALSE;
   mInCDATAContainer = PR_FALSE;
 
   //set this to 1 if you want to see errors in your HTML markup.
   char* theEnvString = PR_GetEnv("MOZ_VALIDATE_HTML"); 
   mShowErrors=PRBool(theEnvString);
 
-#ifdef rickgdebug
-  gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
-#endif
+#ifdef DUMP_TO_FILE
+  gDumpFile = fopen(gDumpFileName,"w");
+#endif // DUMP_TO_FILE
 
 }
 
@@ -427,14 +436,11 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
 #endif 
 
   STOP_TIMER();
-#ifdef VIEW_SOURCE_HTML
   mSink=(nsIHTMLContentSink*)aSink;
-#else
-  mSink=(nsIXMLContentSink*)aSink;
-#endif // VIEW_SOURCE_HTML
 
   if((!aParserContext.mPrevContext) && (mSink)) {
 
+    mFilename=aParserContext.mScanner->GetFilename();
     mTags.Truncate();
     mErrors.Assign(NS_LITERAL_STRING(" HTML 4.0 Strict-DTD validation (enabled); [Should use Transitional?].\n"));
 
@@ -446,10 +452,23 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     mErrorCount=0;
     mTagCount=0;
 
-  #ifdef rickgdebug
-    (*gDumpFile) << theHeader << endl;
-    (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
-  #endif
+#ifdef DUMP_TO_FILE
+    if (gDumpFile) {
+      nsCAutoString filename;
+      filename.AssignWithConversion(mFilename);
+
+      fprintf(gDumpFile, "<html>\n");
+      fprintf(gDumpFile, "<head>\n");
+      fprintf(gDumpFile, "<title>");
+      fprintf(gDumpFile, "Source of: ");
+      fprintf(gDumpFile, filename);
+      fprintf(gDumpFile, "</title>\n");
+      fprintf(gDumpFile, "<link rel=\"stylesheet\" type=\"text/css\" href=\"resource:/res/viewsource.css\">\n");
+      fprintf(gDumpFile, "</head>\n");
+      fprintf(gDumpFile, "<body>\n");
+      fprintf(gDumpFile, "<pre>\n");
+    }
+#endif //DUMP_TO_FILE
   }
 
 
@@ -479,56 +498,82 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
+    nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
+    nsAutoString tag;
 
     if(!mHasOpenRoot) {
-#ifdef VIEW_SOURCE_HTML
       // For the stack-allocated tokens below, it's safe to pass a null
       // token allocator, because there are no attributes on the tokens.
-      nsAutoString tag;
+      PRBool didBlock = PR_FALSE;
 
       tag.Assign(NS_LITERAL_STRING("HTML"));
       CStartToken htmlToken(tag, eHTMLTag_html);
       nsCParserNode htmlNode(&htmlToken,0,0/*stack token*/);
       mSink->OpenHTML(htmlNode);
 
+      tag.Assign(NS_LITERAL_STRING("HEAD"));
+      CStartToken headToken(tag, eHTMLTag_head);
+      nsCParserNode headNode(&headToken,0,0/*stack token*/);
+      mSink->OpenHead(headNode);
+
+      // Note that XUL with automatically add the prefix "Source of: "
+      mSink->SetTitle(mFilename);
+
+      if (mSyntaxHighlight && theAllocator) {
+        tag.Assign(NS_LITERAL_STRING("LINK"));
+        CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_link,tag));
+        if(theToken) {
+          CAttributeToken *theAttr;
+          nsCParserNode theNode(theToken,0,theAllocator);
+
+          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("stylesheet"));
+          theAttr->SetKey(NS_LITERAL_STRING("rel"));
+          theNode.AddAttribute(theAttr);
+
+          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("text/css"));
+          theAttr->SetKey(NS_LITERAL_STRING("type"));
+          theNode.AddAttribute(theAttr);
+
+          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("resource:/res/viewsource.css"));
+          theAttr->SetKey(NS_LITERAL_STRING("href"));
+          theNode.AddAttribute(theAttr);
+
+          result = mSink->AddLeaf(theNode);
+          didBlock = result == NS_ERROR_HTMLPARSER_BLOCK;
+        }
+      }
+
+      CEndToken endHeadToken(eHTMLTag_head);
+      nsCParserNode endHeadNode(&endHeadToken,0,0/*stack token*/);
+      result = mSink->CloseHead(endHeadNode);
+      if(NS_SUCCEEDED(result)) {
+        mHasOpenRoot = PR_TRUE;
+        if (didBlock) {
+          result = NS_ERROR_HTMLPARSER_BLOCK;
+        }
+      }
+    }
+    if (NS_SUCCEEDED(result) && !mHasOpenBody) {
       tag.Assign(NS_LITERAL_STRING("BODY"));
       CStartToken bodyToken(tag, eHTMLTag_body);
       nsCParserNode bodyNode(&bodyToken,0,0/*stack token*/);
       mSink->OpenBody(bodyNode);
-#else
-      CCommentToken ssToken(NS_LITERAL_STRING("<?xml version=\"1.0\"?>"));
-      nsCParserNode ssNode(&ssToken,0,nsnull);
-      result= mSink->AddCharacterData(ssNode,0,mTokenizer->GetTokenAllocator());
-#endif // VIEW_SOURCE_HTML
 
-      nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
       if(theAllocator) {
-#ifdef VIEW_SOURCE_HTML
         tag.Assign(NS_LITERAL_STRING("PRE"));
         CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre,tag));
-#else
-        //now let's automatically open the root container...
-        CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown,NS_LITERAL_STRING("viewsource")));
-#endif // VIEW_SOURCE_HTML
 
         if(theToken) {
           CAttributeToken *theAttr=nsnull;
 
           nsCParserNode theNode(theToken,0,theAllocator);
      
-#ifdef VIEW_SOURCE_HTML
           theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreClass));
           theAttr->SetKey(NS_LITERAL_STRING("class"));
-#else
-          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("http://www.mozilla.org/viewsource"));
-          theAttr->SetKey(NS_LITERAL_STRING("xmlns"));
-#endif // VIEW_SOURCE_HTML
-
-          if(theAttr)
-            theNode.AddAttribute(theAttr);
-
+          theNode.AddAttribute(theAttr);
+            
           result=mSink->OpenContainer(theNode);
-          if(NS_SUCCEEDED(result)) mHasOpenRoot=PR_TRUE;
+          if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
         }
 
         IF_FREE(theToken,theAllocator);
@@ -594,24 +639,20 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
     mParser=(nsParser*)aParser;  //debug XXX
     STOP_TIMER();
 
-#ifdef VIEW_SOURCE_HTML
     mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
-#else
-    mSink=(nsIXMLContentSink*)aParser->GetContentSink();
-#endif // VIEW_SOURCE_HTML
     if((aNotifySink) && (mSink)) {
-        //now let's automatically auto-opened containers...
+        //now let's close automatically auto-opened containers...
 
-#ifdef rickgdebug
-  if(gDumpFile){
-    (*gDumpFile) << "</viewsource>" << endl;
-    gDumpFile->close();
-    delete gDumpFile;
-  }
-#endif
+#ifdef DUMP_TO_FILE
+      if(gDumpFile) {
+        fprintf(gDumpFile, "</pre>\n");
+        fprintf(gDumpFile, "</body>\n");
+        fprintf(gDumpFile, "</html>\n");
+        fclose(gDumpFile);
+      }
+#endif // DUMP_TO_FILE
 
       if(ePlainText!=mDocType) {
-#ifdef VIEW_SOURCE_HTML
         CEndToken theToken(eHTMLTag_pre);
         nsCParserNode preNode(&theToken,0,0/*stack token*/);
         mSink->CloseContainer(preNode);
@@ -623,15 +664,6 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
         CEndToken htmlToken(eHTMLTag_html);
         nsCParserNode htmlNode(&htmlToken,0,0/*stack token*/);
         mSink->CloseHTML(htmlNode);
-#else
-        //now let's automatically close the root container...
-
-        GenerateSummary();
-
-        CEndToken theToken(NS_LITERAL_STRING("viewsource"));
-        nsCParserNode theNode(&theToken,0);
-        mSink->CloseContainer(theNode);
-#endif // VIEW_SOURCE_HTML
       }
       result = mSink->DidBuildModel(1);
     }
@@ -769,32 +801,20 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  */
 NS_IMETHODIMP CViewSourceHTML::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 {
-#ifdef VIEW_SOURCE_HTML
   *aIntTag = nsHTMLTags::LookupTag(aTag);
   return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif // VIEW_SOURCE_HTML
 }
 
 NS_IMETHODIMP CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
 {
-#ifdef VIEW_SOURCE_HTML
   aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag));
   return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif // VIEW_SOURCE_HTML
 }
 
 NS_IMETHODIMP CViewSourceHTML::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
 {
-#ifdef VIEW_SOURCE_HTML
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
   return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif // VIEW_SOURCE_HTML
 }
 
 
@@ -869,11 +889,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
  *  @param   
  *  @return  result status
  */
-#ifdef VIEW_SOURCE_HTML
 nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAReadableString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
-#else
-nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
-#endif // VIEW_SOURCE_HTML
   static nsString       theString;
 
   nsresult result=NS_OK;
@@ -885,7 +901,6 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
   if(0==theAllocator)
     return NS_ERROR_FAILURE;
 
-#ifdef VIEW_SOURCE_HTML
   if (kBeforeText[aTagType][0] != 0) {
     nsAutoString beforeText;
     beforeText.AssignWithConversion(kBeforeText[aTagType]);
@@ -893,56 +908,57 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
     nsCParserNode theNode(&theContext.mITextToken,0,0/*stack token*/);
     mSink->AddLeaf(theNode);
   }
+#ifdef DUMP_TO_FILE
+  if (gDumpFile && kDumpFileBeforeText[aTagType][0])
+    fprintf(gDumpFile, kDumpFileBeforeText[aTagType]);
+#endif // DUMP_TO_FILE
+  
+  if (mSyntaxHighlight && aTagType != mText) {
+    CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_span,NS_LITERAL_STRING("SPAN")));
 
-  CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_span,NS_LITERAL_STRING("SPAN")));
-#else
-  CStartToken* theTagToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown,theXMLTagName));
-#endif // VIEW_SOURCE_HTML
-
-  if (mSyntaxHighlight)
-  {
     theContext.mStartNode.Init(theTagToken,mLineNumber,theAllocator);
-#ifdef VIEW_SOURCE_HTML
     CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kElementClasses[aTagType]));
     theAttr->SetKey(NS_LITERAL_STRING("class"));
     theContext.mStartNode.AddAttribute(theAttr);
-#endif // VIEW_SOURCE_HTML
+    mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
+#ifdef DUMP_TO_FILE
+    if (gDumpFile) {
+      fprintf(gDumpFile, "<span class=\"");
+      fprintf(gDumpFile, kElementClasses[aTagType]);
+      fprintf(gDumpFile, "\">");
+    }
+#endif // DUMP_TO_FILE
   }
 
   STOP_TIMER();
-
-  mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
-
-#ifdef rickgdebug
-
-      if(aNewlineRequired) {
-        (*gDumpFile)<<endl;
-      }
-
-      nsCAutoString cstr(theXMLTagName);
-      (*gDumpFile) << "<" << cstr << ">";
-      cstr.Assign(aText);
-      (*gDumpFile) << cstr;
-#endif
-  
 
   theContext.mITextToken.SetIndirectString(aText);  //now emit the tag name...
 
   nsCParserNode theNode(&theContext.mITextToken,0,0/*stack token*/);
   mSink->AddLeaf(theNode);
+#ifdef DUMP_TO_FILE
+  if (gDumpFile) {
+    nsCAutoString cstr;
+    cstr.AssignWithConversion(aText);
+    fprintf(gDumpFile, cstr);
+  }
+#endif // DUMP_TO_FILE
+
+  if (mSyntaxHighlight && aTagType != mText) {
+    theContext.mStartNode.ReleaseAll(); 
+    CEndToken theEndToken(eHTMLTag_span);
+    theContext.mEndNode.Init(&theEndToken,mLineNumber,0/*stack token*/);
+    mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+#ifdef DUMP_TO_FILE
+    if (gDumpFile)
+      fprintf(gDumpFile, "</span>");
+#endif //DUMP_TO_FILE
+  }
 
   if(attrCount){
     result=WriteAttributes(attrCount);
   }
 
-#ifdef VIEW_SOURCE_HTML
-  if (mSyntaxHighlight)
-  {
-    theContext.mStartNode.ReleaseAll(); 
-    CEndToken theEndToken(eHTMLTag_span);
-    theContext.mEndNode.Init(&theEndToken,mLineNumber,0/*stack token*/);
-    mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
-  }
   if (kAfterText[aTagType][0] != 0) {
     nsAutoString afterText;
     afterText.AssignWithConversion(kAfterText[aTagType]);
@@ -950,15 +966,11 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
     nsCParserNode theNode(&theContext.mITextToken,0,0/*stack token*/);
     mSink->AddLeaf(theNode);
   }
-#else
-  theContext.mEndNode.Init(&theTagToken,mLineNumber,0/*stack token*/);
-  mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
-#endif // VIEW_SOURCE_HTML
+#ifdef DUMP_TO_FILE
+  if (gDumpFile && kDumpFileAfterText[aTagType][0])
+    fprintf(gDumpFile, kDumpFileAfterText[aTagType]);
+#endif // DUMP_TO_FILE
 
-#ifdef rickgdebug
-      cstr.Assign(theXMLTagName);
-      (*gDumpFile) << "</" << cstr << ">";
-#endif
 
   START_TIMER();
 
@@ -972,11 +984,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,const nsAReadableStri
  *  @param   
  *  @return  result status
  */
-#ifdef VIEW_SOURCE_HTML
 nsresult CViewSourceHTML::WriteTagWithError(PRInt32 aTagType,const nsAReadableString& aStr,PRInt32 attrCount,PRBool aNewlineRequired) {
-#else
-nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,const nsAReadableString& aStr,PRInt32 attrCount,PRBool aNewlineRequired) {
-#endif // VIEW_SOURCE_HTML
 
   STOP_TIMER();
 
@@ -984,23 +992,16 @@ nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,const nsARea
   nsresult result=NS_OK;
   
   if(ePlainText!=mDocType) {
-
     //first write the error tag itself...
-
     theContext.mErrorNode.Init(&theContext.mErrorToken,mLineNumber,0/*stack token*/);
     result=mSink->OpenContainer(theContext.mErrorNode);  //emit <error>...
   }
 
-#ifdef VIEW_SOURCE_HTML
-    //now write the tag from the source file...
+  //now write the tag from the source file...
   result=WriteTag(aTagType,aStr,attrCount,aNewlineRequired);
-#else
-  result=WriteTag(theXMLTagName,aStr,attrCount,aNewlineRequired);
-#endif // VIEW_SOURCE_HTML
 
   if(ePlainText!=mDocType) {
-
-   //now close the error tag...
+    //now close the error tag...
     STOP_TIMER();
     theContext.mErrorNode.Init(&theContext.mErrorToken,0,0/*stack token*/);
     mSink->CloseContainer(theContext.mErrorNode);
@@ -1047,11 +1048,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
  
   mParser=(nsParser*)aParser;
-#ifdef VIEW_SOURCE_HTML
   mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
-#else
-  mSink=(nsIXMLContentSink*)aParser->GetContentSink();
-#endif // VIEW_SOURCE_HTML
  
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
   theContext.mTokenNode.Init(theToken,mLineNumber,mTokenizer->GetTokenAllocator());
