@@ -31,7 +31,7 @@ LIBRARY_NAME	= necko
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= necko_core_and_primary_protocols
-REQUIRES	= xpcom string nkcache pref mimetype util jar locale intl
+REQUIRES	= xpcom string nkcache pref mimetype util jar locale intl $(ZLIB_REQUIRES)
 
 CPPSRCS		= nsNetModule.cpp
 EXPORTS		= nsNetCID.h

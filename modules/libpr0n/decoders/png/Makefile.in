@@ -32,7 +32,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPNGDecoderModule
 
-REQUIRES	= xpcom necko layout png gfx2 imglib2
+REQUIRES	= xpcom necko layout gfx2 imglib2 $(PNG_REQUIRES) $(ZLIB_REQUIRES)
 
 CPPSRCS		= nsPNGDecoder.cpp nsPNGFactory.cpp
 

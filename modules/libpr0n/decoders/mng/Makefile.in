@@ -29,6 +29,8 @@ LIBRARY_NAME	= imgmng
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMNGDecoderModule
 
+REQUIRES	= $(MNG_REQUIRES) $(JPEG_REQUIRES) $(ZLIB_REQUIRES)
+
 CPPSRCS		= nsMNGDecoder.cpp nsMNGFactory.cpp imgContainerMNG.cpp
 
 EXTRA_DSO_LDOPTS = $(MNG_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
