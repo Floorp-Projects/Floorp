@@ -179,7 +179,8 @@ _destroyJSDContext(JSDContext* jsdc)
     *
     * XXX we also leak the locks
     */
-
+    JS_DestroyContext(jsdc->dumbContext);
+    jsdc->dumbContext = NULL;
 }
 
 /***************************************************************************/
