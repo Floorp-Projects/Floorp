@@ -54,7 +54,6 @@ quietly_check_login();
 ###############################################################################
 
 $vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
-$vars->{'subst'} = { 'userid' => $vars->{'username'} };
 
 # Return the appropriate HTTP response headers.
 print "Content-Type: text/html\n\n";

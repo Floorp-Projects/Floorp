@@ -58,7 +58,6 @@ function addSidebar() {
   <a href="reports.cgi">Get summary reports</a><br>
   </p><p>
 [% IF username %]
-  <a href="[% PerformSubsts(Param('mybugstemplate'), subst) %]">My Bugs</a><br>
   <a href="userprefs.cgi">Change password or user preferences</a><br>
   <a href="relogin.cgi">Logout [% username FILTER html %]</a><br>
 [% ELSE %]

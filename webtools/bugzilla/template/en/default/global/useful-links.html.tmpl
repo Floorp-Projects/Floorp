@@ -98,7 +98,8 @@
       
       <td colspan="3">
         [% IF user.showmybugslink %]
-          <a href="buglist.cgi?bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;email1=[% user.login FILTER url_quote %]&amp;emailtype1=exact&amp;emailassigned_to1=1&amp;emailreporter1=1">My&nbsp;Bugs</a>
+          [% filtered_username = user.login FILTER url_quote %]
+          <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;Bugs</a>
           [% print_pipe = 1 %]
         [% END %]
 
