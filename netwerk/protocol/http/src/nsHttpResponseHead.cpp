@@ -32,6 +32,19 @@
 //-----------------------------------------------------------------------------
 
 void
+nsHttpResponseHead::SetContentLength(PRInt32 len)
+{
+    mContentLength = len;
+    if (len < 0)
+        SetHeader(nsHttp::Content_Length, nsnull);
+    else {
+        nsCAutoString buf;
+        buf.AppendInt(len);
+        SetHeader(nsHttp::Content_Length, buf.get());
+    }
+}
+
+void
 nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
 {
     if (mVersion == NS_HTTP_VERSION_0_9)
