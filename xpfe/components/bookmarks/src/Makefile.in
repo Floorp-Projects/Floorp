@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= bookmarks
 LIBRARY_NAME	= bookmarks
+SHORT_LIBNAME	= bookmark
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsBookmarksService.cpp
@@ -35,9 +36,8 @@ CPPSRCS		= nsBookmarksService.cpp
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
-		$(XPCOM_LIBS) \
-		-lmozjs \
-		$(NSPR_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

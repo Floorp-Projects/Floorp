@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_$(MOZ_WIDGET_TOOLKIT)
+SHORT_LIBNAME	= wdgt$(MOZ_WIDGET_TOOLKIT)
 
 CPPSRCS		= nsWidgetSupport.cpp
 
@@ -37,8 +38,8 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(addprefix $(DIST)/lib/libraptorwidget,$(addsuffix _s.a,$(MOZ_WIDGET_TOOLKIT))) \
-		$(DIST)/lib/libraptorbasewidget_s.a \
+		$(addprefix $(DIST)/lib/libraptorwidget,$(addsuffix _s.$(LIB_SUFFIX),$(MOZ_WIDGET_TOOLKIT))) \
+		$(DIST)/lib/libraptorbasewidget_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

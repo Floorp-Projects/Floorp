@@ -52,7 +52,9 @@ EXPORTS		= zlib.h zconf.h
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # need a static lib for some components (pngcom, say)
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 override NO_STATIC_LIB=
+endif
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
