@@ -555,9 +555,12 @@ PERMISSION_TypeCount(PRInt32 host) {
   return hostStruct->permissionList->Count();
 }
 
-PUBLIC void
+PUBLIC nsresult
 PERMISSION_Enumerate
     (PRInt32 hostNumber, PRInt32 typeNumber, char **host, PRInt32 *type, PRBool *capability) {
+  if (hostNumber > PERMISSION_HostCount()  || typeNumber > PERMISSION_TypeCount(hostNumber)) {
+    return NS_ERROR_FAILURE;
+  }
   permission_HostStruct *hostStruct;
   permission_TypeStruct * typeStruct;
 
@@ -571,6 +574,7 @@ PERMISSION_Enumerate
     (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeNumber));
   *capability = typeStruct->permission;
   *type = typeStruct->type;
+  return NS_OK;
 }
 
 PRIVATE void
