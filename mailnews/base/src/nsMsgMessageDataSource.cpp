@@ -471,15 +471,15 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *ite
 	{
 		if(PL_strcmp("Status", property) == 0)
 		{
-			nsAutoString oldStatusStr, newStatusStr;
+			nsAutoString oldStatusStr((const char *)"",eOneByte), newStatusStr ((const char *)"", eOneByte);
 			rv = createStatusStringFromFlag(oldFlag, oldStatusStr);
 			if(NS_FAILED(rv))
 				return rv;
 			rv = createStatusStringFromFlag(newFlag, newStatusStr);
 			if(NS_FAILED(rv))
 				return rv;
-			rv = NotifyPropertyChanged(resource, kNC_Status, nsAutoCString(oldStatusStr), 
-								  nsAutoCString(newStatusStr));
+			rv = NotifyPropertyChanged(resource, kNC_Status, oldStatusStr.GetBuffer(), 
+								  newStatusStr.GetBuffer());
 		}
 	}
 	return rv;
