@@ -10,7 +10,7 @@
     <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
 
     <!-- Composer Charset Menu -->
-    <menu id="composerCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" onpopupshowing="UpdateMenus()">
+    <menu id="composerCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" onpopupshowing="CreateMenu('composer');UpdateMenus()" onpopupshown="CreateMenu('more-menu');">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -108,7 +108,7 @@
     </menu>
 
     <!-- Mail View Charset Menu -->
-    <menu id="mailviewCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" onpopupshowing="UpdateMailMenus()">
+    <menu id="mailviewCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" onpopupshowing="CreateMenu('mailview');UpdateMailMenus()" onpopupshown="CreateMenu('more-menu');">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -206,7 +206,7 @@
     </menu>
 
     <!-- Mail Edit Charset Menu -->
-    <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="InitCharsetMenuCheckMark();">
+    <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
         <template>
             <rule>
                 <menupopup>
@@ -222,7 +222,7 @@
     </menu>
 
     <!-- Charset Menu -->
-    <menu id="charsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" onpopupshowing="UpdateMenus(event)">
+    <menu id="charsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
