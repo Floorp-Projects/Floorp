@@ -309,6 +309,31 @@ void
 nsWebCrawler::LoadNextURLCallback(nsITimer *aTimer, void *aClosure)
 {
   nsWebCrawler* self = (nsWebCrawler*) aClosure;
+
+  // if we are doing printing regression tests, check to see 
+  // if we can print (a previous job is not printing)
+  if (self->mPrinterTestType > 0) {
+    nsCOMPtr<nsIWebShell> webshell;
+    self->mBrowser->GetWebShell(*getter_AddRefs(webshell));
+    if (webshell){
+      nsCOMPtr <nsIContentViewer> viewer;
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webshell));
+      docShell->GetContentViewer(getter_AddRefs(viewer));
+      if (viewer){
+        nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+        if (viewerFile) {
+          PRBool printable;
+          viewerFile->GetPrintable(&printable);
+          if (PR_TRUE !=printable){
+            self->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+            self->mTimer->Init(LoadNextURLCallback, self, self->mDelay);
+            return;
+          }
+        }
+      }
+    }
+  }
+
   self->DumpRegressionData();
   self->LoadNextURL(PR_FALSE);
 }
@@ -420,6 +445,12 @@ nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress,
     }
 
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if(mPrinterTestType>0){
+      mDelay = 5000;     // printing needs more time to load, so give it plenty
+    } else {
+      mDelay = 200;
+    }    
+    
     if ((0 < mQueuedLoadURLs) || (0 < mPendingURLs.Count())) {
       mTimer->Init(LoadNextURLCallback, this, mDelay);
     }
