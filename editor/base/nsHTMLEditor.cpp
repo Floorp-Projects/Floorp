@@ -5352,13 +5352,12 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
   aIsSet = PR_FALSE;  // must be initialized to false for code below to work
   nsAutoString propName;
   aProperty->ToString(propName);
-  nsCOMPtr<nsIDOMNode>parent;
-  result = aNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(result)) return;
-  while (parent)
+  nsCOMPtr<nsIDOMNode>node = aNode;
+
+  while (node)
   {
     nsCOMPtr<nsIDOMElement>element;
-    element = do_QueryInterface(parent);
+    element = do_QueryInterface(node);
     if (element)
     {
       nsAutoString tag;
@@ -5370,7 +5369,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
         {
           nsAutoString value;
           element->GetAttribute(*aAttribute, value);
-          if (0!=value.Length())
+          if (value.Length())
           {
             if (!aValue) {
               found = PR_TRUE;
@@ -5394,12 +5393,12 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
       }
     }
     nsCOMPtr<nsIDOMNode>temp;
-    result = parent->GetParentNode(getter_AddRefs(temp));
+    result = node->GetParentNode(getter_AddRefs(temp));
     if (NS_SUCCEEDED(result) && temp) {
-      parent = do_QueryInterface(temp);
+      node = do_QueryInterface(temp);
     }
     else {
-      parent = do_QueryInterface(nsnull);
+      node = do_QueryInterface(nsnull);
     }
   }
 }

@@ -164,6 +164,8 @@ protected:
                        PRBool *outIsEmptyBlock, 
                        PRBool aMozBRDoesntCount = PR_FALSE,
                        PRBool aListItemsNotEmpty = PR_FALSE);
+  
+  PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
 
   // data members
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor
