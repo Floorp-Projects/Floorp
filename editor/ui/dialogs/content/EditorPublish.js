@@ -417,6 +417,13 @@ function ValidateSettings()
     ShowErrorInPanel(gSettingsPanel, "MissingSiteNameError", gDialog.SiteNameInput);
     return false;
   }
+  if (PublishSiteNameExists(siteName, gPublishSiteData, gDialog.SiteList.selectedIndex))
+  {
+    SwitchPanel(gSettingsPanel);
+    ShowInputErrorMessage(GetString("DuplicateSiteNameError").replace(/%name%/, siteName));            
+    SetTextboxFocus(gDialog.SiteNameInput);
+    return false;
+  }
 
   // Extract username and password while removing them from publishingUrl
   var urlUserObj = {};
