@@ -38,7 +38,7 @@ CPPSRCS =				\
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor dom js
+REQUIRES = xpcom raptor dom js netlib
 
 include $(DEPTH)/config/config.mk
 
