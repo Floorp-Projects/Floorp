@@ -30,12 +30,20 @@ include $(DEPTH)/config/autoconf.mk
 REQUIRES = $(NULL)
 
 CSRCS += \
-		msmap2tsv.c \
-		msdump2symdb.c \
-		nm2tsv.c \
 		codesighs.c \
 		maptsvdifftool.c \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CSRCS += \
+		msmap2tsv.c \
+		msdump2symdb.c \
+		$(NULL)
+else
+CSRCS += \
+		nm2tsv.c \
+		$(NULL)
+endif
 
 SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
 
