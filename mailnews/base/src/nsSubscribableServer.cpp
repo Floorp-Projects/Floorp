@@ -32,13 +32,14 @@
 #include "nsIFolder.h"
 
 #include "rdf.h"
-#include "nsMsgUtils.h"
+#include "nsICharsetConverterManager.h"
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_SUBSCRIBE 1
 #endif
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsSubscribableServer);
 
@@ -136,6 +137,51 @@ nsSubscribableServer::UpdateSubscribedInSubscribeDS()
 	return NS_OK;
 }
 
+
+// copied code, this needs to be put in msgbaseutil.
+nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUnicodeStr)
+{
+  if (!aUnicodeStr)
+	  return NS_ERROR_NULL_POINTER;
+
+  PRUnichar *convertedString = NULL;
+  nsresult res;
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+
+  if(NS_SUCCEEDED(res) && (nsnull != ccm))
+  {
+    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
+    PRUnichar *unichars = nsnull;
+    PRInt32 unicharLength;
+
+    // convert utf7 to unicode
+    nsIUnicodeDecoder* decoder = nsnull;
+
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
+    {
+      PRInt32 srcLen = PL_strlen(aSourceString);
+      res = decoder->GetMaxLength(aSourceString, srcLen, &unicharLength);
+      // temporary buffer to hold unicode string
+      unichars = new PRUnichar[unicharLength + 1];
+      if (unichars == nsnull) 
+      {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else 
+      {
+        res = decoder->Convert(aSourceString, &srcLen, unichars, &unicharLength);
+        unichars[unicharLength] = 0;
+      }
+      NS_IF_RELEASE(decoder);
+      nsString unicodeStr(unichars);
+      convertedString = unicodeStr.ToNewUnicode();
+	  delete [] unichars;
+    }
+  }
+  *aUnicodeStr = convertedString;
+  return (convertedString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 NS_IMETHODIMP
 nsSubscribableServer::AddToSubscribeDS(const char *aName)
 {
