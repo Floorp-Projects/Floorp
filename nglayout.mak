@@ -89,7 +89,12 @@ DIST_DIRS =			\
   base                          \
   lib\xp			\
   lib\libpwcac			\
-  network
+  network			\
+!if defined(NGPREFS)
+  cmd\wincom			\
+  cmd\winfe\prefs		\
+!endif
+  $(NULL)
 
 # The list of directories to build the nglayout layout engine and
 # related libraries.
@@ -159,6 +164,12 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/security/freenav
 	$(CVSCO_LIBPREF) $(MOZ_TOP)/modules/libpref
 	$(CVSCO_PLUGIN) $(MOZ_TOP)/modules/plugin
+!if defined(NGPREFS)
+	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/wincom
+	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/defaults.h
+	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/nsIDefaultBrowser.h
+	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/prefs
+!endif
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
