@@ -37,12 +37,16 @@
 <!ENTITY windowTitle.label "Field Set Properties">
 
 <!ENTITY Legend.label "Legend">
+<!ENTITY Legend.accesskey "L">
 
 <!ENTITY EditLegendText.label "Edit Legend:">
+<!ENTITY EditLegendText.accesskey "T">
 <!ENTITY LegendAlign.label "Align Legend:">
+<!ENTITY LegendAlign.accesskey "A">
 <!ENTITY AlignDefault.label "Default">
 <!ENTITY AlignLeft.label "Left">
 <!ENTITY AlignCenter.label "Center">
 <!ENTITY AlignRight.label "Right">
 
 <!ENTITY RemoveFieldSet.label "Remove Field Set">
+<!ENTITY RemoveFieldSet.accesskey "R">

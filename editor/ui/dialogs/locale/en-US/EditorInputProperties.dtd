@@ -38,6 +38,7 @@
 <!ENTITY windowTitleImage.label "Form Image Properties">
 
 <!ENTITY InputType.label "Field Type">
+<!ENTITY InputType.accesskey "T">
 <!ENTITY text.value "Text">
 <!ENTITY password.value "Password">
 <!ENTITY checkbox.value "Check Box">
@@ -52,16 +53,28 @@
 <!ENTITY InputSettings.label "Field Settings">
 <!ENTITY InputName.label "Field Name:">
 <!ENTITY GroupName.label "Group Name:">
+<!ENTITY Name.accesskey "N">
 <!ENTITY InputValue.label "Field Value:">
 <!ENTITY InitialValue.label "Initial Value:">
-<!ENTITY tabIndex.label "Tab Index:">
-<!ENTITY InputDisabled.label "Disabled">
+<!ENTITY Value.accesskey "V">
 <!ENTITY InputChecked.label "Initially Checked">
+<!ENTITY InputChecked.accesskey "C">
 <!ENTITY InputSelected.label "Initially Selected">
+<!ENTITY InputSelected.accesskey "S">
 <!ENTITY InputReadOnly.label "Read Only">
+<!ENTITY InputReadOnly.accesskey "R">
+<!ENTITY InputDisabled.label "Disabled">
+<!ENTITY InputDisabled.accesskey "D">
+<!ENTITY tabIndex.label "Tab Index:">
+<!ENTITY tabIndex.accesskey "I">
 <!ENTITY TextSize.label "Field Size:">
+<!ENTITY TextSize.accesskey "F">
 <!ENTITY TextLength.label "Maximum Length:">
+<!ENTITY TextLength.accesskey "L">
 <!ENTITY AccessKey.label "Access Key:">
+<!ENTITY AccessKey.accesskey "K">
 <!ENTITY Accept.label "Accept Types:">
+<!ENTITY Accept.accesskey "A">
 
 <!ENTITY ImageProperties.label "Image Properties...">
+<!ENTITY ImageProperties.accesskey "E">

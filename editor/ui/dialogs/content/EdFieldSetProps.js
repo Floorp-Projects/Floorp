@@ -62,9 +62,9 @@ function Startup()
     // Find a selected fieldset, or if one is at start or end of selection.
     fieldsetElement = editor.getSelectedElement(kTagName);
     if (!fieldsetElement)
-      fieldsetElement = editor.getElementOrParentBykTagName(kTagName, editor.selection.anchorNode);
+      fieldsetElement = editor.getElementOrParentByTagName(kTagName, editor.selection.anchorNode);
     if (!fieldsetElement)
-      fieldsetElement = editor.getElementOrParentBykTagName(kTagName, editor.selection.focusNode);
+      fieldsetElement = editor.getElementOrParentByTagName(kTagName, editor.selection.focusNode);
   } catch (e) {}
 
   if (fieldsetElement)
@@ -95,8 +95,7 @@ function Startup()
   {
     newLegend = false;
     var range = editor.document.createRange();
-    range.setStart(legendElement, 0);
-    range.setEnd(legendElement, legendElement.childNodes.length);
+    range.selectNode(legendElement);
     gDialog.legendText.value = range.toString();
     if (/</.test(legendElement.innerHTML))
     {
@@ -151,10 +150,8 @@ function RemoveFieldSet()
   editor.beginTransaction();
   try {
     if (!newLegend)
-      editor.DeleteNode(legendElement);
-    // This really needs to call the C++ function RemoveBlockContainer
-    // which inserts any <BR>s needed
-    RemoveElementKeepingChildren(fieldsetElement);
+      editor.deleteNode(legendElement);
+    RemoveBlockContainer(fieldsetElement);
   } finally {
     editor.endTransaction();
   }
@@ -184,9 +181,15 @@ function onAccept()
     editor.cloneAttributes(legendElement, globalElement);
  
     if (insertNew)
+    {
+      if (gDialog.legendText.value)
+      {
+        fieldsetElement.appendChild(legendElement);
+        legendElement.appendChild(editor.document.createTextNode(gDialog.legendText.value));
+      }
       InsertElementAroundSelection(fieldsetElement);
-
-    if (gDialog.editText.checked)
+    }
+    else if (gDialog.editText.checked)
     {
       editor.setShouldTxnSetSelection(false);
 
@@ -199,7 +202,7 @@ function onAccept()
         editor.insertNode(editor.document.createTextNode(gDialog.legendText.value), legendElement, 0);
       }
       else if (!newLegend)
-        editor.DeleteNode(legendElement);
+        editor.deleteNode(legendElement);
 
       editor.setShouldTxnSetSelection(true);
     }

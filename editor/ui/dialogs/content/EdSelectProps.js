@@ -270,7 +270,6 @@ optionObject.prototype.appendOption = function appendOption(child, parent)
 
 // OPTGROUP element wrapper object
 
-// 
 function optgroupObject(optgroup)
 {
   this.element = optgroup;

@@ -56,20 +56,20 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical"><caption label="&Settings.label;"/>
+  <groupbox><caption label="&Settings.label;" accesskey="&Settings.accesskey;"/>
     <grid><columns><column/><column/></columns>
       <rows>
         <row align="center">
-          <checkbox id="EditText" label="&EditLabelText.label;" checked="true" disabled="true"
+          <checkbox id="EditText" label="&EditLabelText.label;" accesskey="&EditLabelText.accesskey;" checked="true" disabled="true"
             oncommand="gDialog.labelText.disabled = !gDialog.editText.checked;"/>
-          <textbox id="LabelText"/>
+          <textbox id="LabelText" accesskey="&Settings.accesskey;"/>
         </row>
         <row align="center">
-          <label value="&LabelFor.label;"/>
+          <label control="LabelFor" value="&LabelFor.label;" accesskey="&LabelFor.accesskey;"/>
           <textbox id="LabelFor"/>
         </row>
         <row align="center">
-          <label value="&AccessKey.label;"/>
+          <label control="LabelAccessKey" value="&AccessKey.label;" accesskey="&AccessKey.accesskey;"/>
           <hbox>
             <textbox id="LabelAccessKey" class="narrow"/>
           </hbox>
@@ -80,7 +80,7 @@
 
   <!-- from EdDialogOverlay -->
   <hbox flex="1" style="margin-top: 0.2em">
-    <button id="RemoveLabel" label="&RemoveLabel.label;" oncommand="RemoveLabel();"/>
+    <button id="RemoveLabel" label="&RemoveLabel.label;" accesskey="&RemoveLabel.accesskey;" oncommand="RemoveLabel();"/>
     <!-- This will right-align the button -->
     <spacer flex="1"/>
     <button id="AdvancedEditButton"/>

@@ -56,11 +56,11 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical"><caption label="&Settings.label;"/>
+  <groupbox><caption label="&Settings.label;"/>
     <grid><columns><column/><column/></columns>
       <rows>
         <row align="center">
-          <label value="&ButtonType.label;"/>
+          <label control="ButtonType" value="&ButtonType.label;" accesskey="&ButtonType.accesskey;"/>
           <menulist id="ButtonType">
             <menupopup>
               <menuitem label="&submit.value;"/>
@@ -70,11 +70,11 @@
           </menulist>
         </row>
         <row align="center">
-          <label value="&ButtonName.label;"/>
+          <label control="ButtonName" value="&ButtonName.label;" accesskey="&ButtonName.accesskey;"/>
           <textbox id="ButtonName"/>
         </row>
         <row align="center">
-          <label value="&ButtonValue.label;"/>
+          <label control="ButtonValue" value="&ButtonValue.label;" accesskey="&ButtonValue.accesskey;"/>
           <textbox id="ButtonValue"/>
         </row>
       </rows>
@@ -86,16 +86,16 @@
       <rows>
         <row>
           <spacer/>
-          <checkbox id="ButtonDisabled" label="&ButtonDisabled.label;"/>
+          <checkbox id="ButtonDisabled" label="&ButtonDisabled.label;" accesskey="&ButtonDisabled.accesskey;"/>
         </row>
         <row align="center">
-          <label value="&tabIndex.label;"/>
+          <label control="ButtonTabIndex" value="&tabIndex.label;" accesskey="&tabIndex.accesskey;"/>
           <hbox>
             <textbox id="ButtonTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&AccessKey.label;"/>
+          <label control="ButtonAccessKey" value="&AccessKey.label;" accesskey="&AccessKey.accesskey;"/>
           <hbox>
             <textbox id="ButtonAccessKey" class="narrow"/>
           </hbox>
@@ -106,7 +106,7 @@
 
   <!-- from EdDialogOverlay -->
   <hbox flex="1" style="margin-top: 0.2em">
-    <button id="RemoveButton" label="&RemoveButton.label;" oncommand="RemoveButton();"/>
+    <button id="RemoveButton" label="&RemoveButton.label;" accesskey="&RemoveButton.accesskey;" oncommand="RemoveButton();"/>
     <!-- This will right-align the button -->
     <spacer flex="1"/>
     <button id="AdvancedEditButton"/>

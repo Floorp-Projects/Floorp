@@ -60,10 +60,9 @@ function Startup()
 
   InitDialog();
 
-  try {
-    editor.selectElement(labelElement);
-    gDialog.labelText.value = GetSelectionAsText();
-  } catch (e) {}
+  var range = editor.document.createRange();
+  range.selectNode(labelElement);
+  gDialog.labelText.value = range.toString();
 
   if (/</.test(labelElement.innerHTML))
   {
@@ -93,9 +92,7 @@ function onEditText()
 
 function RemoveLabel()
 {
-  // RemoveTextProperty might work
-  // but only because the label was selected to get its text
-  RemoveElementKeepingChildren(labelElement);
+  RemoveContainer(labelElement);
   SaveWindowLocation();
   window.close();
 }
@@ -129,11 +126,8 @@ function onAccept()
 
       while (labelElement.firstChild)
         editor.deleteNode(labelElement.firstChild);
-      if (gDialog.labelText.value) {
-        var textNode = editor.document.createTextNode(gDialog.labelText.value);
-        editor.insertNode(textNode, labelElement, 0);
-        editor.selectElement(labelElement);
-      }
+      if (gDialog.labelText.value)
+        editor.insertNode(editor.document.createTextNode(gDialog.labelText.value), labelElement, 0);
 
       editor.setShouldTxnSetSelection(true);
     }

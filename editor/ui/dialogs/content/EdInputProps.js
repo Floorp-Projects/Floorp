@@ -44,6 +44,7 @@ function Startup()
   var editor = GetCurrentEditor();
   if (!editor)
   {
+    dump("Failed to get active editor!\n");
     window.close();
     return;
   }
@@ -72,8 +73,10 @@ function Startup()
   };
 
   // Get a single selected input element
-  var tagName = "input";
-  inputElement = editor.getSelectedElement(tagName);
+  const kTagName = "input";
+  try {
+    inputElement = editor.getSelectedElement(kTagName);
+  } catch (e) {}
 
   if (inputElement)
     // We found an element and don't need to insert one
@@ -84,8 +87,10 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      inputElement = editor.createElementWithDefaults(kTagName);
+    } catch (e) {}
 
-    inputElement = editor.createElementWithDefaults(tagName);
     if (!inputElement)
     {
       dump("Failed to get selected element or create a new one!\n");
