@@ -3993,7 +3993,7 @@ nsCSSFrameConstructor::HasGfxScrollbars()
     if (pref) {
       pref->GetBoolPref("nglayout.widget.gfxscrollbars", &mHasGfxScrollbars);
       pref->GetBoolPref("nglayout.widget.gfxlistbox", &mDoGfxListbox);
-      pref->GetBoolPref("nglayout.widget.gfxcombobox", &mDoGfxCombobox);
+      pref->GetBoolPref("nglayout.widget.gfxcombobox",  &mDoGfxCombobox);
       mGotGfxPrefs = PR_TRUE;
     } else {
       mHasGfxScrollbars = PR_FALSE;
@@ -5064,7 +5064,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
     //      to advertise full support of :before and :after for release 1
     // first, create it's "before" generated content
     nsIFrame* generatedFrame;
-    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, newFrame, aContent,
+    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
                                     aStyleContext, nsCSSAtoms::beforePseudo,
                                     PR_FALSE, &generatedFrame)) {
       // Add the generated frame to the child list
@@ -5200,7 +5200,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
     }
 
     // finally, create it's "after" generated content
-    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, newFrame, aContent,
+    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
                                     aStyleContext, nsCSSAtoms::afterPseudo,
                                     PR_FALSE, &generatedFrame)) {
       // Add the generated frame to the child list
