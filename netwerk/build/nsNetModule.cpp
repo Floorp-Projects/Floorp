@@ -214,6 +214,7 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define INDEX_TO_HTML                "?from=application/http-index-format&to=text/html"
 #define MULTI_MIXED_X                "?from=multipart/x-mixed-replace&to=*/*"
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
+#define MULTI_BYTERANGES             "?from=multipart/byteranges&to=*/*"
 #define UNKNOWN_CONTENT              "?from=application/x-unknown-content-type&to=*/*"
 #define CHUNKED_TO_UNCHUNKED         "?from=chunked&to=unchunked"
 #define UNCHUNKED_TO_CHUNKED         "?from=unchunked&to=chunked"
@@ -233,6 +234,7 @@ static char *g_StreamConverterArray[] = {
         INDEX_TO_HTML,
         MULTI_MIXED_X,
         MULTI_MIXED,
+        MULTI_BYTERANGES,
         UNKNOWN_CONTENT,
         CHUNKED_TO_UNCHUNKED,
         UNCHUNKED_TO_CHUNKED,
@@ -697,6 +699,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { "MultiMixedConverter", 
       NS_MULTIMIXEDCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY MULTI_MIXED_X, 
+      CreateNewMultiMixedConvFactory
+    },
+
+    { "MultiMixedByteRange", 
+      NS_MULTIMIXEDCONVERTER_CID,
+      NS_ISTREAMCONVERTER_KEY MULTI_BYTERANGES, 
       CreateNewMultiMixedConvFactory
     },
 
