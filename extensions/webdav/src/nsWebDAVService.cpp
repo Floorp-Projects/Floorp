@@ -196,6 +196,7 @@ nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
                                   NS_LITERAL_CSTRING("0"), PR_FALSE);
     }
 
+#ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
@@ -203,6 +204,7 @@ nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
         uri->GetSpec(spec);
         LOG(("%s starting for %s", method, spec.get()));
     }
+#endif
 
     return channel->AsyncOpen(listener, channel);
 }
@@ -403,6 +405,7 @@ nsWebDAVService::PropfindInternal(nsIWebDAVResource *resource,
                 return NS_ERROR_INVALID_ARG;
             }
 
+#ifdef PR_LOGGING
             if (LOG_ENABLED()) {
                 nsACString::const_iterator s = start;
                 
@@ -411,6 +414,7 @@ nsWebDAVService::PropfindInternal(nsIWebDAVResource *resource,
                 
                 LOG(("prop ns: '%s', name: '%s'", propNamespace.get(), propName.get()));
             }
+#endif
 
             NS_ConvertASCIItoUTF16 propNamespace(nsDependentCSubstring(saveStart, start)),
                 propName(nsDependentCSubstring(++start, saveEnd));
@@ -521,6 +525,7 @@ nsWebDAVService::Put(nsIWebDAVResource *resource,
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("PUT"));
 
+#ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
@@ -528,6 +533,7 @@ nsWebDAVService::Put(nsIWebDAVResource *resource,
         uri->GetSpec(spec);
         LOG(("PUT starting for %s", spec.get()));
     }
+#endif
 
     return channel->AsyncOpen(streamListener, channel);
 }
@@ -566,6 +572,7 @@ nsWebDAVService::Remove(nsIWebDAVResource *resource,
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("DELETE"));
 
+#ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
@@ -573,6 +580,7 @@ nsWebDAVService::Remove(nsIWebDAVResource *resource,
         uri->GetSpec(spec);
         LOG(("DELETE starting for %s", spec.get()));
     }
+#endif
 
     return channel->AsyncOpen(streamListener, channel);
 }
@@ -594,6 +602,7 @@ nsWebDAVService::MakeCollection(nsIWebDAVResource *resource,
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("MKCOL"));
 
+#ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
@@ -601,6 +610,7 @@ nsWebDAVService::MakeCollection(nsIWebDAVResource *resource,
         uri->GetSpec(spec);
         LOG(("MKCOL starting for %s", spec.get()));
     }
+#endif
 
     return channel->AsyncOpen(streamListener, channel);
 }
@@ -637,6 +647,7 @@ nsWebDAVService::MoveTo(nsIWebDAVResource *resource,
     channel->SetRequestHeader(NS_LITERAL_CSTRING("Destination"),
                               destination, PR_FALSE);
 
+#ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
@@ -645,6 +656,7 @@ nsWebDAVService::MoveTo(nsIWebDAVResource *resource,
         LOG(("MOVE starting for %s -> %s", spec.get(),
              nsCAutoString(destination).get()));
     }
+#endif
 
     return channel->AsyncOpen(streamListener, channel);
 }
@@ -689,6 +701,7 @@ nsWebDAVService::CopyTo(nsIWebDAVResource *resource,
     channel->SetRequestHeader(NS_LITERAL_CSTRING("Destination"),
                               destination, PR_FALSE);
 
+#ifdef PR_LOGGING
     if (LOG_ENABLED()) {
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
@@ -697,6 +710,7 @@ nsWebDAVService::CopyTo(nsIWebDAVResource *resource,
         LOG(("COPY starting for %s -> %s", spec.get(),
              nsCAutoString(destination).get()));
     }
+#endif
 
     return channel->AsyncOpen(streamListener, channel);
 }
