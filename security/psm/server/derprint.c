@@ -161,7 +161,7 @@ prettyPrintStringStart(PRFileDesc *out, unsigned char *str,
     int rv;
 
     if (len >= BUF_SIZE) {
-      //len = BUF_SIZE - 1;
+      /* len = BUF_SIZE - 1; */
         buf = dynamicBuf = SSM_NEW_ARRAY(char, len+1);
     } else {
         buf = staticBuf;
@@ -650,7 +650,7 @@ prettyPrintItem(PRFileDesc *out, unsigned char *data, unsigned char *end,
 		    return rv;
 		break;
 	      case SEC_ASN1_OCTET_STRING:
-		//rv = prettyPrintOctetString(out,data,slen,lv+1);
+		/* rv = prettyPrintOctetString(out,data,slen,lv+1); */
 		rv = prettyPrintItem(out,data,data+slen,lv+1, raw);
 		if (rv < 0)
 		    return rv;
