@@ -51,7 +51,16 @@ use vars qw($vars $template);
 
 confirm_login();
 
-ValidateComment($::FORM{'comment'});
+
+# The format of the initial comment can be structured by adding fields to the
+# enter_bug template and then referencing them in the comment template.
+my $comment;
+
+$vars->{'form'} = \%::FORM;
+$template->process("entry/comment.txt.tmpl", $vars, \$comment)
+  || ThrowTemplateError($template->error());
+
+ValidateComment($comment);
 
 my $product = $::FORM{'product'};
 
@@ -197,7 +206,6 @@ foreach my $field (@used_fields) {
     $sql .= SqlQuote($::FORM{$field}) . ",";
 }
 
-my $comment = $::FORM{'comment'};
 $comment =~ s/\r\n?/\n/g;     # Get rid of \r.
 $comment = trim($comment);
 # If comment is all whitespace, it'll be null at this point. That's
