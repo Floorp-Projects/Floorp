@@ -24,7 +24,6 @@
 #include "nsIByteBufferInputStream.h"
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
-#include "nsXPComCIID.h"
 
 #include "prprf.h" // PR_sscanf
 
