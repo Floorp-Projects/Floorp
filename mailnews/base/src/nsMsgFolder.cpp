@@ -39,7 +39,8 @@ nsMsgFolder::nsMsgFolder(void)
     mNumUnreadMessages(-1),	mNumTotalMessages(0),
     mCsid(0),
     mDepth(0), 
-    mPrefFlags(0)
+    mPrefFlags(0),
+		mListeners(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -72,6 +73,14 @@ nsMsgFolder::~nsMsgFolder(void)
 
 		NS_RELEASE(mSubFolders);
 	}
+
+  if (mListeners) {
+      for (PRInt32 i = mListeners->Count() - 1; i >= 0; --i) {
+          mListeners->RemoveElementAt(i);
+      }
+		NS_RELEASE(mListeners);
+  }
+
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsMsgFolder, nsRDFResource, nsIMsgFolder)
@@ -124,6 +133,30 @@ nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
 {
   return mSubFolders->Enumerate(result);
 }
+
+NS_IMETHODIMP nsMsgFolder::AddFolderListener(nsIFolderListener * listener)
+{
+	nsresult rv;
+  if (! mListeners)
+	{
+		rv = NS_NewISupportsArray(&mListeners);
+    if (!NS_SUCCEEDED(rv))
+      return rv;
+  }
+  mListeners->AppendElement(listener);
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
+{
+  if (! mListeners)
+    return NS_OK;
+  mListeners->RemoveElement(listener);
+  return NS_OK;
+
+}
+
 
 NS_IMETHODIMP
 nsMsgFolder::GetMessages(nsIEnumerator* *result)
@@ -405,7 +438,7 @@ NS_IMETHODIMP nsMsgFolder::SetName(char * name)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetChildNamed(char* name, nsISupports* *result)
+NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char* name, nsISupports* *result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -590,10 +623,10 @@ NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *, nsIMsgFolder**, PRUint3
 }
 
 
-NS_IMETHODIMP nsMsgFolder::Rename(char *name)
+NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
 {
     nsresult status = NS_OK;
-	status = SetName(name);
+	status = SetName((char*)name);
 	//After doing a SetName we need to make sure that broadcasting this message causes a
 	//new sort to happen.
 #ifdef HAVE_MASTER
@@ -610,7 +643,7 @@ NS_IMETHODIMP nsMsgFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32* outPos
 
 }
 
-NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(char *name, PRBool* containsChild)
+NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const char *name, PRBool* containsChild)
 {
 	nsIMsgFolder *child;
 	
@@ -703,7 +736,7 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf(nsIMsgFolder *child, PRBool deep, PRBool *
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(char *prefix, nsIMsgFolder *otherFolder,
+NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder,
                                                        char **name)
 {
 	if(!name)

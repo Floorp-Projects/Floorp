@@ -55,9 +55,12 @@ public:
   NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue((const char**)&name); }
   NS_IMETHOD GetName(char **name);
   NS_IMETHOD SetName(char *name);
-  NS_IMETHOD GetChildNamed(char *name, nsISupports* *result);
+  NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
   NS_IMETHOD GetParent(nsIFolder* *parent);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
+	NS_IMETHOD AddFolderListener(nsIFolderListener * listener);
+	NS_IMETHOD RemoveFolderListener(nsIFolderListener * listener);
+
 
   // nsIMsgFolder methods:
   NS_IMETHOD AddUnique(nsISupports* element);
@@ -139,14 +142,14 @@ public:
 
   NS_IMETHOD CreateSubfolder(const char *leafNameFromuser, nsIMsgFolder** outFolder, PRUint32* outPos);
 
-  NS_IMETHOD Rename(char *name);
+  NS_IMETHOD Rename(const char *name);
   NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32*);
 
-  NS_IMETHOD ContainsChildNamed(char *name, PRBool *containsChild);
+  NS_IMETHOD ContainsChildNamed(const char *name, PRBool *containsChild);
   NS_IMETHOD FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** aParent);
   NS_IMETHOD IsParentOf(nsIMsgFolder *, PRBool deep, PRBool *isParent);
 
-  NS_IMETHOD GenerateUniqueSubfolderName(char *prefix, nsIMsgFolder *otherFolder,
+  NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder,
                                          char **name);
 
   NS_IMETHOD GetDepth(PRUint32 *depth);
@@ -273,6 +276,8 @@ public:
   NS_IMETHOD GetHostName(char **hostName);
 
  virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db) = 0;
+ 	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
+
 
 protected:
   nsString mName;
@@ -282,6 +287,7 @@ protected:
                                          tried to find out.) */
   PRInt32 mNumTotalMessages;         /* count of existing messages. */
   nsISupportsArray *mSubFolders;
+	nsISupportsArray *mListeners;
 #ifdef HAVE_MASTER
   MSG_Master  *mMaster;
 #endif
