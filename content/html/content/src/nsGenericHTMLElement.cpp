@@ -3542,30 +3542,31 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
   RemoveFocus(presContext);
 }
 
-nsresult nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
+void
+nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
 {
   // first check to see if we have an access key
   nsAutoString accessKey;
   nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_CONTENT_ATTR_NOT_THERE == rv || accessKey.IsEmpty()) {
-    return NS_OK;
+  if (NS_FAILED(rv) || NS_CONTENT_ATTR_NOT_THERE == rv ||
+      accessKey.IsEmpty()) {
+    return;
   }
 
   // We have an access key, so get the ESM from the pres context.
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  nsIEventStateManager *esm = presContext->EventStateManager();
+  if (presContext) {
+    nsIEventStateManager *esm = presContext->EventStateManager();
 
-  // Register or unregister as appropriate.
-  if (aDoReg) {
-    rv = esm->RegisterAccessKey(this, (PRUint32)accessKey.First());
-  } else {
-    rv = esm->UnregisterAccessKey(this, (PRUint32)accessKey.First());
+    // Register or unregister as appropriate.
+    if (aDoReg) {
+      esm->RegisterAccessKey(this, (PRUint32)accessKey.First());
+    } else {
+      esm->UnregisterAccessKey(this, (PRUint32)accessKey.First());
+    }
   }
-  return rv;
 }
 
 // static
