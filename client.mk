@@ -187,7 +187,7 @@ checkout:
 	@echo $(CVSCO) mozilla/client.mk; \
         cd $(ROOTDIR); \
 	$(CVSCO) mozilla/client.mk && \
-	make -f mozilla/client.mk real_checkout
+	$(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
 	@: Backup the last checkout log.
