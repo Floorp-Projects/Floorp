@@ -1770,6 +1770,12 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const {
       }
       break;
 
+    case eHTMLTag_table:
+      if(aParent==aChild) {
+        break;
+      }
+      //else fall through...
+
     default:
       if(IsContainer(aChild) && HasOpenContainer(aChild))
         result=IsGatedFromClosing(aChild);
