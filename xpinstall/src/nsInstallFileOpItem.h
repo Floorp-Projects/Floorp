@@ -73,7 +73,6 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       Complete();
     PRUnichar*         toString();
     void          Abort();
-    float         GetInstallOrder();
     
   /* should these be protected? */
     PRBool        CanUninstall();

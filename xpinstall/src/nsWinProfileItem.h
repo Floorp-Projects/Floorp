@@ -47,9 +47,6 @@ public:
    * - writes the data into the .INI file
    */
   PRInt32 Complete();
-  
-  float GetInstallOrder();
-  
   PRUnichar* toString();
   
   // no need for special clean-up

@@ -183,11 +183,6 @@ PRInt32 nsInstallFileOpItem::Complete()
 	return aReturn;
 }
   
-float nsInstallFileOpItem::GetInstallOrder()
-{
-	return 3;
-}
-
 PRUnichar* nsInstallFileOpItem::toString()
 {
   nsString result;

@@ -53,7 +53,6 @@ nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const
 
 nsWinRegItem::~nsWinRegItem()
 {
-  if (mReg)     delete mReg;
   if (mSubkey)  delete mSubkey;
   if (mName)    delete mName;
   if (mValue)   delete mValue;
@@ -95,11 +94,6 @@ PRInt32 nsWinRegItem::Complete()
 	return aReturn;
 }
   
-float nsWinRegItem::GetInstallOrder()
-{
-	return 3;  // <-- what is this???
-}
-
 #define kCRK "Create Registry Key "
 #define kDRK "Delete Registry Key "
 #define kDRV "Delete Registry Value "
