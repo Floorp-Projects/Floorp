@@ -404,6 +404,10 @@ hr {
   cursor: pointer;
 }
 
+img, area {
+  -moz-user-select: none !important;
+}
+
 img[usemap], object[usemap] {
   color: blue;
   -moz-user-focus: normal;
