@@ -10912,7 +10912,6 @@ keepLooking:
       printf("skipping hint because parent frame is special\n");
 #endif
       }
-      firstTime = PR_FALSE;
     }
     if (!kidFrame) {  // we didn't have enough info to prune, start searching from the beginning
       aParentFrame->FirstChild(aPresContext, listName, &kidFrame);
@@ -10970,6 +10969,18 @@ keepLooking:
         printf("  searching sibling frame %p\n", kidFrame);
       }
 #endif
+    }
+
+    if (firstTime) {
+      firstTime = PR_FALSE;
+
+      // If we get here, and we had a hint, then we didn't find a
+      // frame. The hint may have been a floated or absolutely
+      // positioned frame, in which case we'd be off in the weeds
+      // looking through something other than primary frame
+      // list. Reboot the search from scratch.
+      if (aHint)
+        goto keepLooking;
     }
 
     NS_IF_RELEASE(listName);
