@@ -627,33 +627,35 @@ js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
     return tt;
 }
 
-#define TBINCR         64
+#define TBMIN   64
 
 static JSBool
 GrowTokenBuf(JSContext *cx, JSTokenBuf *tb)
 {
     jschar *base;
     ptrdiff_t offset, length;
-    size_t tbincr, tbsize;
+    size_t tbsize;
     JSArenaPool *pool;
 
     base = tb->base;
     offset = PTRDIFF(tb->ptr, base, jschar);
-    length = PTRDIFF(tb->limit, base, jschar);
-    tbincr = (length + TBINCR) * sizeof(jschar);
     pool = &cx->tempPool;
     if (!base) {
-	JS_ARENA_ALLOCATE_CAST(base, jschar *, pool, tbincr);
+        tbsize = TBMIN * sizeof(jschar);
+        length = TBMIN;
+        JS_ARENA_ALLOCATE_CAST(base, jschar *, pool, tbsize);
     } else {
-	tbsize = (size_t)(length * sizeof(jschar));
-	JS_ARENA_GROW_CAST(base, jschar *, pool, tbsize, tbincr);
+        length = PTRDIFF(tb->limit, base, jschar);
+        tbsize = length * sizeof(jschar);
+        length <<= 1;
+        JS_ARENA_GROW_CAST(base, jschar *, pool, tbsize, tbsize);
     }
     if (!base) {
 	JS_ReportOutOfMemory(cx);
 	return JS_FALSE;
     }
     tb->base = base;
-    tb->limit = base + length + length + TBINCR;
+    tb->limit = base + length;
     tb->ptr = base + offset;
     return JS_TRUE;
 }
