@@ -3313,6 +3313,11 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
     PK11Context *context;
     SECStatus rv;
 	
+    PORT_Assert(slot != NULL);
+    if (!slot) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
     context = (PK11Context *) PORT_Alloc(sizeof(PK11Context));
     if (context == NULL) {
 	return NULL;
