@@ -275,9 +275,8 @@ public:
 
   /**
    * Get the cursor for a given point in the frame tree. The
-   * call returns the desired cursor (or NS_STYLE_CURSOR_INHERIT if
-   * no cursor is wanted). In addition, if a cursor is desired
-   * then *aFrame is set to the frame that wants the cursor.
+   * call returns the desired cursor. In addition, aFrame is 
+   * set to the frame that wants the cursor.
    */
   NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
                           const nsPoint&  aPoint,
