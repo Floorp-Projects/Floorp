@@ -242,7 +242,6 @@ public:
 	enum { IDD = IDD_PUBLISH };
 	CString	m_csUserName;
 	CString	m_csPassword;
-	BOOL	m_bRememberPassword;
     CString m_csFilename;
     CString m_csTitle;
 	//}}AFX_DATA

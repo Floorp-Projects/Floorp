@@ -1947,9 +1947,7 @@
 #define IDC_DOC_CLASIFICATION           2232
 #define IDC_PUBLISH_HTTP                2232
 #define IDC_PUBLISH_PASSWORD            2233
-#define IDC_APPLET_CLASS_NAME           2234
-#define IDC_PUBLISH_SAVE_PASSWORD       2234
-#define IDC_PUBLISH_REMEMBER_PASSWORD   2235
+#define IDC_NETCENTER_LOCATION          2234
 #define IDC_NEW_DOC_TEMPLATE            2236
 #define IDC_RESTORE_DEFAULT_TEMPLATE    2237
 #define IDC_EDAL_A                      2238

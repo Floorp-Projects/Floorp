@@ -676,29 +676,8 @@ void CTablePage::OnChangeWidth()
 
 void CTablePage::OnChangeWidthType()
 {
-    // See if type has changed and we need to convert
-    //   to opposite type (pixels <-> percent of parent)
-    int iWidthType = ((CComboBox*)GetDlgItem(IDC_WIDTH_PIX_OR_PERCENT))->GetCurSel();
-    if( iWidthType != m_iWidthType )
-    {
-        // Get current data from edit box before converting
-        // Note that validation uses NEW width type 
-        if( ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, iWidthType, m_iHeightType) )
-        {
-            if( iWidthType )
-                // Convert previous from % to pixels
-                m_iWidth = (m_iWidth * m_iParentWidth ) / 100;
-            else 
-                // Convert previous value from pixels to %
-                m_iWidth = (m_iWidth * 100) / m_iParentWidth;
-
-            // This will trigger OnChange for width,
-            //  which will set the IDC_OVERRIDE_WIDTH checkbox
-            UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
-            SetModified(TRUE);
-        }
-        m_iWidthType = iWidthType;
-    }
+    m_iWidthType = ((CComboBox*)GetDlgItem(IDC_WIDTH_PIX_OR_PERCENT))->GetCurSel();
+    SetModified(TRUE);
 }
 
 
@@ -714,29 +693,8 @@ void CTablePage::OnChangeHeight()
 
 void CTablePage::OnChangeHeightType()
 {
-    // See if type has changed and we need to convert
-    //   to opposite type (pixels <-> percent of parent)
-    int iHeightType = ((CComboBox*)GetDlgItem(IDC_HEIGHT_PIX_OR_PERCENT))->GetCurSel();
-    if( iHeightType != m_iHeightType )
-    {
-        // Get current data from edit box before converting
-        // Note that validation uses NEW height type 
-        if( ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, m_iWidthType, iHeightType) )
-        {
-            if( iHeightType )
-                // Convert previous from % to pixels
-                m_iHeight = (m_iHeight * m_iParentHeight ) / 100;
-            else 
-                // Convert previous value from pixels to %
-                m_iHeight = (m_iHeight * 100) / m_iParentHeight;
-
-            // This will trigger OnChange for height,
-            //  which will set the IDC_OVERRIDE_HEIGHT checkbox
-            UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
-            SetModified(TRUE);
-        }
-        m_iHeightType = iHeightType;
-    }
+    m_iHeightType = ((CComboBox*)GetDlgItem(IDC_HEIGHT_PIX_OR_PERCENT))->GetCurSel();
+    SetModified(TRUE);
 }
 
 void CTablePage::OnOverrideColor() 
@@ -1436,31 +1394,8 @@ void CTableCellPage::OnChangeWidth()
 
 void CTableCellPage::OnChangeWidthType()
 {
-    // See if type has changed and we need to convert
-    //   to opposite type (pixels <-> percent of parent)
-    int iWidthType = ((CComboBox*)GetDlgItem(IDC_WIDTH_PIX_OR_PERCENT))->GetCurSel();
-    if( iWidthType != m_iWidthType )
-    {
-        // Get current data from edit box before converting
-        // Note that validation uses NEW width type 
-        if( ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, iWidthType, m_iHeightType) )
-        {
-            if( iWidthType ) 
-            {
-                // New type = %
-                // Convert previous value from pixels to %
-                m_iWidth = (m_iWidth * 100) / m_iParentWidth;
-            } else {
-                // New type = pixels
-                // Convert previous from % to pixels
-                m_iWidth = (m_iWidth * m_iParentWidth ) / 100;
-            }
-
-            UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
-            SetModified(TRUE);
-        }
-        m_iWidthType = iWidthType;
-    }
+    m_iWidthType = ((CComboBox*)GetDlgItem(IDC_WIDTH_PIX_OR_PERCENT))->GetCurSel();
+    SetModified(TRUE);
 }
 
 void CTableCellPage::OnChangeHeight()
@@ -1475,27 +1410,8 @@ void CTableCellPage::OnChangeHeight()
 
 void CTableCellPage::OnChangeHeightType()
 {
-    // See if type has changed and we need to convert
-    //   to opposite type (pixels <-> percent of parent)
-    int iHeightType = ((CComboBox*)GetDlgItem(IDC_HEIGHT_PIX_OR_PERCENT))->GetCurSel();
-    if( iHeightType != m_iHeightType )
-    {
-        // Get current data from edit box before converting
-        // Note that validation uses NEW height type 
-        if( ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, m_iWidthType, iHeightType) )
-        {
-            if( iHeightType )
-                // Convert previous from % to pixels
-                m_iHeight = (m_iHeight * m_iParentHeight ) / 100;
-            else 
-                // Convert previous value from pixels to %
-                m_iHeight = (m_iHeight * 100) / m_iParentHeight;
-
-            UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
-            SetModified(TRUE);
-        }
-        m_iHeightType = iHeightType;
-    }
+    m_iHeightType = ((CComboBox*)GetDlgItem(IDC_HEIGHT_PIX_OR_PERCENT))->GetCurSel();
+    SetModified(TRUE);
 }
 
 void CTableCellPage::OnOverrideColor() 

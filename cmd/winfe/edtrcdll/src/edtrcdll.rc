@@ -495,8 +495,7 @@ BEGIN
                     ES_AUTOHSCROLL
     PUSHBUTTON      "Use &Default Location",IDC_PUBLISH_DEFAULT_LOCATION,191,
                     74,91,14
-    CONTROL         "&Save password",IDC_PUBLISH_REMEMBER_PASSWORD,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,191,94,92,11
+    PUSHBUTTON     "N&etcenter Location",IDC_NETCENTER_LOCATION,191,94,91,14
     GROUPBOX        "Other files to include ",IDC_STATIC,7,115,276,74
     CONTROL         "&Files associated with this page",
                     IDC_INCLUDE_IMAGE_FILES,"Button",BS_AUTORADIOBUTTON | 

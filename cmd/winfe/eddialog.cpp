@@ -478,7 +478,6 @@ CPublishDlg::CPublishDlg(CWnd *pParent,
 	m_csPassword = _T("");
 	m_csTitle = _T("");
 	m_csFilename = _T("");
-	m_bRememberPassword = TRUE;
 	//}}AFX_DATA_INIT
     ASSERT( pMWContext );
 }
@@ -506,7 +505,6 @@ void CPublishDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_PUBLISH_PASSWORD, m_csPassword);
 	DDX_Text(pDX, IDC_DOC_TITLE, m_csTitle);
 	DDX_Text(pDX, IDC_PUBLISH_FILENAME, m_csFilename);
-	DDX_Check(pDX, IDC_PUBLISH_REMEMBER_PASSWORD, m_bRememberPassword);
 	//}}AFX_DATA_MAP
 }
 
@@ -543,10 +541,6 @@ BOOL CPublishDlg::OnInitDialog()
 
     CComboBox *pLocationComboBox;
     VERIFY(pLocationComboBox = (CComboBox*)GetDlgItem(IDC_PUBLISH_LOCATION_LIST));
-
-    XP_Bool bRem;
-    PREF_GetBoolPref("editor.publish_save_password",&bRem);
-    m_bRememberPassword = bRem;
 
     char * pPassword = NULL;
     char * pFilename = NULL;

@@ -3406,8 +3406,10 @@ void CNetscapeEditView::OnPublish()
                         dlg.m_ppIncludedFiles, 
                         dlg.m_pFullLocation,
                         bKeepImages,
-                        bKeepLinks,
-                        dlg.m_bRememberPassword);
+                        bKeepLinks, 
+                        TRUE); // We always "remember" the password now,
+                               // This simply means we copy it to the pref
+                               //  so Single Signon can use it
     }
 
     XP_FREE(pSrcURL);
