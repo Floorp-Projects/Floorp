@@ -560,23 +560,23 @@
         <menuitem name="Netscape"  onclick="window.frames[0].frames[1].location.href='http://www.netscape.com'"/>
       </menu>
 
-	  <menu name="Viewer">  // Viewer tests.
-        <menuitem name="Demo #0"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test0.html'"/>
-        <menuitem name="Demo #1"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test1.html'"/>
-        <menuitem name="Demo #2"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="Demo #3"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test3.html'"/>
-        <menuitem name="Demo #4"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test4.html'"/>
-        <menuitem name="Demo #5"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test5.html'"/>
-        <menuitem name="Demo #6"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
-        <menuitem name="Demo #7"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test7.html'"/>
-        <menuitem name="Demo #8"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test8.html'"/>
-        <menuitem name="Demo #9"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test9.html'"/>
-        <menuitem name="Demo #10" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test10.html'"/>
-        <menuitem name="Demo #11" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
-        <menuitem name="Demo #12" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
-        <menuitem name="Demo #13" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
-	<menuitem name="Demo #14" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
-	<menuitem name="Demo #15" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
+	  <menu name="Viewer Demos">  // Viewer tests.
+        <menuitem name="#0 Basic Styles"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test0.html'"/>
+        <menuitem name="#1 CSS Styles"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test1.html'"/>
+        <menuitem name="#2 Images"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="#3 Basic Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test3.html'"/>
+        <menuitem name="#4 Simple Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test4.html'"/>
+        <menuitem name="#5 More Styles"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test5.html'"/>
+        <menuitem name="#6 Deeply Nested Tables"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="#7 Scaled Anim Image"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test7.html'"/>
+        <menuitem name="#8 Forms"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test8.html'"/>
+        <menuitem name="#9 Frames"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test9.html'"/>
+        <menuitem name="#10 Anim Images" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test10.html'"/>
+        <menuitem name="#11 Fixed Positioning" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
+        <menuitem name="#12 More Fixed Pos" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
+        <menuitem name="#13 DHTML" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
+	<menuitem name="#14 XML Sorting" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
+	<menuitem name="#15 XML IRS" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
       </menu>
 
       <menu name="XPToolkit"> // XPToolkit tests.
