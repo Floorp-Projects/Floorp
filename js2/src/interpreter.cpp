@@ -910,6 +910,12 @@ using JSString throughout.
                     mGlobal = mGlobal->getParent();
                 }
                 break;
+            case DEBUGGER:
+                {          
+                    if (mListeners.size())
+                        broadcast(EV_DEBUG);
+                    break;
+                }
             default:
                 NOT_REACHED("bad opcode");
                 break;
@@ -955,6 +961,7 @@ using JSString throughout.
             }
             rv = x.value;
         }
+
     }
 
     return rv;

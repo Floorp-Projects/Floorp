@@ -46,6 +46,8 @@ namespace Debugger {
 
     using namespace Interpreter;
     
+    typedef const Reader *ResolveFileCallback (const String &fileName);
+    
     class Breakpoint {
     public:
         /* representation of a breakpoint */
@@ -114,9 +116,11 @@ namespace Debugger {
 
     class Shell : public Context::Listener {
     public:        
-        Shell (World &aWorld, FILE *aIn, Formatter &aOut, Formatter &aErr) :
+        Shell (World &aWorld, FILE *aIn, Formatter &aOut, Formatter &aErr,
+               ResolveFileCallback *aCallback = 0) :
             mWorld(aWorld), mIn(aIn), mOut(aOut), mErr(aErr),
-            mStopMask(Context::EV_ALL), mTraceFlag(true)
+            mResolveFileCallback(aCallback), mStopMask(Context::EV_DEBUG),
+            mTraceFlag(true)
         {
             mDebugger = new ICodeDebugger();
         }
@@ -124,6 +128,14 @@ namespace Debugger {
         ~Shell ()
         {
             delete mDebugger;
+        }
+        
+        ResolveFileCallback
+            *setResolveFileCallback (ResolveFileCallback  *aCallback)
+        {
+            ResolveFileCallback *rv = mResolveFileCallback;
+            mResolveFileCallback = aCallback;
+            return rv;
         }
         
         void listen(Context *context, Context::Event event);
@@ -147,13 +159,17 @@ namespace Debugger {
         }
 
     private:
-        bool doCommand (Context *context, const String &aSource);
+        bool doCommand (Context *cx, const String &aSource);
         void doSetVariable (Lexer &lex);
         void doPrint (Context *cx, Lexer &lex);
+
+        void showOpAtPC(Context* cx, InstructionIterator pc);
+        void showSourceAtPC(Context* cx, InstructionIterator pc);
         
         World &mWorld;
         FILE *mIn;
         Formatter &mOut, &mErr;
+        ResolveFileCallback *mResolveFileCallback;
         ICodeDebugger *mDebugger;
         uint32 mStopMask;
         bool mTraceFlag;

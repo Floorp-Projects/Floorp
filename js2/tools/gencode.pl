@@ -73,6 +73,11 @@ $ops{"NOP"} =
    super  => "Instruction",
    rem    => "do nothing and like it",
   };
+$ops{"DEBUGGER"} = 
+  {
+   super  => "Instruction",
+   rem    => "drop to the debugger",
+  };
 $ops{"MOVE"} =
   {
    super  => "Instruction_2",

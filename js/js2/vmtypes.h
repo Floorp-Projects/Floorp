@@ -66,6 +66,7 @@ namespace VM {
         COMPARE_LE, /* dest, source1, source2 */
         COMPARE_LT, /* dest, source1, source2 */
         COMPARE_NE, /* dest, source1, source2 */
+        DEBUGGER, /* drop to the debugger */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         FUNCTION, /* Defines a function */
@@ -130,6 +131,7 @@ namespace VM {
         "COMPARE_LE    ",
         "COMPARE_LT    ",
         "COMPARE_NE    ",
+        "DEBUGGER      ",
         "DIVIDE        ",
         "ELEM_XCR      ",
         "FUNCTION      ",
@@ -553,6 +555,21 @@ namespace VM {
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_NE, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+    };
+
+    class Debugger : public Instruction {
+    public:
+        /* drop to the debugger */
+        Debugger () :
+            Instruction
+            (DEBUGGER) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[DEBUGGER];
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
+            return f;
+        }
     };
 
     class Divide : public Arithmetic {
