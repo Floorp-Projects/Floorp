@@ -48,7 +48,7 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
   ($full_logfile, $linenum) = split /:/,  $args;
   ($tree, $logfile)        = split /\//, $full_logfile;
 
-  my $br = find_build_record($tree, $logfile);
+  my $br = tb_find_build_record($tree, $logfile);
   $errorparser = $br->{errorparser};
   $buildname   = $br->{buildname};
   $buildtime   = $br->{buildtime};
