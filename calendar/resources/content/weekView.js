@@ -160,10 +160,6 @@ WeekView.prototype.refreshEvents = function( )
       
       var TextNode = document.getElementById( "all-day-content-box-text-week-"+dayIndex );
       
-      //set the seperator to nothing. After the first one, we'll change it to ", " so that we add commas between text.
-      
-      var Seperator = "";
-   
       // get the events for the day and loop through them
       dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
       
@@ -286,15 +282,10 @@ WeekView.prototype.refreshEvents = function( )
             //note the use of the WeekViewAllDayText Attribute.  
             //This is used to remove the text when the day is changed.
             
-            SeperatorNode = document.createElement( "label" );
-            SeperatorNode.setAttribute( "value", Seperator );
-            SeperatorNode.setAttribute( "WeekViewAllDayText", "true" );
-   
-            newHTMLNode = document.createElement( "description" );
-                        
-            newTextNode = document.createTextNode( eventText );
-            //newTextNode.setAttribute( "value", eventText );
-            newHTMLNode.appendChild( newTextNode );
+            newHTMLNode = document.createElement( "label" );
+            newHTMLNode.setAttribute( "crop", "end" );
+            newHTMLNode.setAttribute( "flex", "1" );            
+            newHTMLNode.setAttribute( "value", eventText );
             newHTMLNode.setAttribute( "WeekViewAllDayText", "true" );
             newHTMLNode.calendarEventDisplay = calendarEventDisplay;
             newHTMLNode.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
@@ -302,7 +293,6 @@ WeekView.prototype.refreshEvents = function( )
             newHTMLNode.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newHTMLNode.setAttribute( "tooltip", "savetip" );
          
-
             newImage = document.createElement("image");
 				newImage.setAttribute( "class", "all-day-event-class" );
             newImage.setAttribute( "WeekViewAllDayText", "true" );
@@ -312,12 +302,8 @@ WeekView.prototype.refreshEvents = function( )
             newImage.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newImage.setAttribute( "tooltip", "savetip" );
             
-            //ThisDayAllDayBox.appendChild( SeperatorNode );
             ThisDayAllDayBox.appendChild( newImage );
-            //ThisDayAllDayBox.appendChild( newHTMLNode );
-            
-            //change the seperator to add commas after the text.
-            Seperator = ", ";
+            ThisDayAllDayBox.appendChild( newHTMLNode );
          }
          else if ( calendarEventDisplay.CurrentSpot <= 4 ) 
          {
@@ -528,7 +514,6 @@ WeekView.prototype.refreshDisplay = function( )
          {
             arrayOfBoxes[i].setAttribute( "weekend", "true" );
          }
-
       }
       else
       {
@@ -540,7 +525,6 @@ WeekView.prototype.refreshDisplay = function( )
             arrayOfBoxes[i].removeAttribute( "weekend" );
          }
       }
-
 
       // advance to next day 
       

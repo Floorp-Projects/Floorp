@@ -52,10 +52,10 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    >
-   <script src="chrome://global/content/nsDragAndDrop.js"/>
-   <script src="chrome://global/content/nsTransferable.js"/>
-   <script src="chrome://global/content/nsJSSupportsUtils.js"/>
-   <script src="chrome://global/content/nsJSComponentManager.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/calendarWeekView.js"/>
    
    <script type="application/x-javascript">
@@ -145,18 +145,19 @@
          </box>
       </box>
           
-      <box id="week-view-all-day-content-box" align="center">
-         <vbox id="weekview-daynumber-spacer-left" flex="1">
-            <label class="all-day-content-box-text-title" value="All Day Events"/>
+      <box id="week-view-all-day-content-box" align="center" flex="1" >
+         <vbox id="weekview-daynumber-spacer-left">
+            <label class="all-day-content-box-text-title" value="&allDayEvents.label;"/>
          </vbox>
-               
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-1"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-2"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-3"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-4"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-5"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-6"/>
-         <hbox class="all-day-content-box-week" id="all-day-content-box-week-7"/>
+         <box equalsize="always" flex="1">
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
+         <hbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
+         </box>
          <vbox id="all-day-content-spacer"/>
       </box>
             
@@ -169,7 +170,7 @@
             <stack id="week-view-content-board" flex="1">    
    
 		  <grid id="week-view-content-holder" flex="1">
-		     <columns>
+		     <columns equalsize="always">
 			<column id="week-view-top-left-box">
                    <!-- HOURS -->
                    <box class="week-view-hours-only-box-class" id="week-tree-hour-0">
