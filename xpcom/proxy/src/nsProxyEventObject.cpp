@@ -435,7 +435,9 @@ nsProxyEventObject::~nsProxyEventObject()
                 nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mDestQueue);
                 nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
                 void* value = realToProxyMap->Remove(&key);
+#ifdef DEBUG_dougt
                 NS_ASSERTION(value, "failed to remove from realToProxyMap");
+#endif
             }
         }
     }
