@@ -193,6 +193,19 @@ DEFINES		+= -DEXPORT_JS_API
 
 INCLUDES	+= -I$(srcdir)
 
+# MSVC '-Gy' cc flag and '/OPT:REF' linker flag cause JS_GetArgument and
+# JS_GetLocalVariable to be folded to the same address by the linker, 
+# leading to a crash on startup. See bug 151066. So, in optimized builds,
+# add the /OPT:NOICF flag, which turns off 'identical COMDAT folding'.
+#
+# N.B.: 'identical COMDAT folding' that folds functions whose addresses
+# are taken violates the ISO C and C++ standards.
+ifndef MOZ_DEBUG
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+LDFLAGS         += /OPT:NOICF
+endif
+endif
+
 GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
 ifneq ($(OS_ARCH),WINNT)
@@ -307,6 +320,19 @@ endif
 ifeq ($(OS_ARCH),AIX)
 jsdtoa.o: jsdtoa.c Makefile.in
 	$(CC) -o $@ -c $(filter-out -O, $(COMPILE_CFLAGS)) $<
+endif
+
+# MSVC '-Gy' optimization flag causes JS_GetArgument and JS_GetLocalVariable
+# to be folded to the same address by the linker, leading to a crash on
+# startup. bug 151066 So, make sure '-Gy' is not used, and for optimization
+# levels "O[12]?", use the flags for '-O1' except for '-Gy'.
+#
+# N.B.: 'identical COMDAT folding' that folds functions whose addresses
+# are taken violates the ISO C and C++ standards.
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+jsinterp.obj: jsinterp.c
+	$(CC) -o $@ -c $(shell echo '$(COMPILE_CFLAGS)' | sed 's/-Gy//g' \
+	      | sed 's/-O\([12]\)\?/-Og -Os -Oy -Ob1 -Gs -Gf/g') $(srcdir)/$*.c
 endif
 
 $(FDLIBM_LIBRARY):

@@ -77,6 +77,17 @@ FDLIBM_LIBRARY	=	fdlibm\$(OBJDIR)\fdlibm.lib
 LLIBS=$(LIBNSPR) $(FDLIBM_LIBRARY)
 LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API
 
+# MSVC '-Gy' cc flag and '/OPT:REF' linker flag cause JS_GetArgument and
+# JS_GetLocalVariable to be folded to the same address by the linker, 
+# leading to a crash on startup. See bug 151066. So, in optimized builds,
+# add the /OPT:NOICF flag, which turns off 'identical COMDAT folding'.
+#
+# N.B.: 'identical COMDAT folding' that folds functions whose addresses
+# are taken violates the ISO C and C++ standards.
+!if !defined(MOZ_DEBUG)
+LLFLAGS= /OPT:REF /OPT:NOICF
+!endif
+
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)
