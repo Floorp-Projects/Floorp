@@ -752,6 +752,29 @@ function delayedOnLoadMessenger()
     gSearchEmailAddress = (window.arguments.length > 2) ? window.arguments[2] : null;
   }
 
+  if (this.CheckForUnsentMessages != undefined && CheckForUnsentMessages())
+  {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    if (!ioService.offline) 
+    {
+      InitPrompts();
+      InitServices();
+
+      if (gPromptService) 
+      {
+        var buttonPressed = gPromptService.confirmEx(window, 
+                            gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
+                            gOfflinePromptsBundle.getString('sendMessagesLabel'),
+                            gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
+                              gPromptService.BUTTON_POS_1),
+                            gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
+                            gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
+                            null, null, {value:0});
+        if (buttonPressed == 0) 
+          SendUnsentMessages();
+      }
+    }
+  }
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
 
   // FIX ME - later we will be able to use onload from the overlay

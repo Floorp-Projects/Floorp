@@ -552,17 +552,8 @@ function OpenInboxForServer(server)
             if (server.type != "imap")
                 GetMessagesForInboxOnServer(server);
         }
-        else {
-            var option = PromptGetMessagesOffline();
-            if(option == 0) {
-                if (!gOfflineManager) 
-                    GetOfflineMgrService();
-
-                gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                                         false /* playbackOfflineImapOperations */, 
-                                         msgWindow);
+        else if (DoGetNewMailWhenOffline()) {
                 GetMessagesForInboxOnServer(server);
-            }
         }
     }
     catch (ex) {
