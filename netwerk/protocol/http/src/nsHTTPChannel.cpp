@@ -45,6 +45,7 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIEnumerator.h"
 #include "nsAuthEngine.h"
@@ -67,7 +68,6 @@
 
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #if defined(PR_LOGGING)
@@ -397,7 +397,7 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     // No response yet...  Try to determine the content-type based
     // on the file extension of the URI...
     //
-    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
     if (NS_SUCCEEDED(rv)) {
         rv = MIMEService->GetTypeFromURI(mURI, aContentType);
         if (NS_SUCCEEDED(rv)) return rv;
@@ -634,7 +634,7 @@ nsHTTPChannel::BuildNotificationProxies ()
         rv = proxyManager -> GetProxyForObject (eventQ,
                                 NS_GET_IID(nsIHTTPEventSink),
                                 mRealEventSink,
-                                PROXY_SYNC | PROXY_ALWAYS,
+                                PROXY_ASYNC | PROXY_ALWAYS,
                                 getter_AddRefs(mEventSink) );
         if (NS_FAILED (rv))
             return rv;

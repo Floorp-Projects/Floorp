@@ -24,6 +24,7 @@
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "netCore.h"
 #include "nsIFileTransportService.h"
@@ -33,7 +34,6 @@
 #include "prio.h"	// Need to pick up def of PR_RDONLY
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -430,7 +430,7 @@ nsFileChannel::GetContentType(char * *aContentType)
             mContentType = "application/http-index-format";
         }
         else {
-            NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+            nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_PROGID, &rv));
             if (NS_FAILED(rv)) return rv;
 
             rv = MIMEService->GetTypeFromFile(mFile, aContentType);
@@ -712,7 +712,7 @@ nsFileChannel::OnStatus(nsIChannel *aChannel, nsISupports* ctxt,
 {
     nsresult rv = NS_OK;
     if (mProgress) {
-        rv = mProgress->OnStatus(aChannel, ctxt, aStatus, aStatusArg);
+        rv = mProgress->OnStatus(this, ctxt, aStatus, aStatusArg);
     }
     return rv;
 }
