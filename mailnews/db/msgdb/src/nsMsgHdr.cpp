@@ -30,6 +30,7 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 #define FLAGS_INITED 0x1
 #define CACHED_VALUES_INITED 0x2
+#define REFERENCES_INITED 0x4
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
@@ -285,9 +286,22 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultReference)
 {
 	nsresult err = NS_OK;
-	nsAutoString	allReferences;
-	m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_referencesColumnToken, allReferences);
-	nsCAutoString cStr(allReferences);
+
+	if(!(m_initedValues & REFERENCES_INITED))
+	{
+		m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_referencesColumnToken, m_references);
+
+		if(NS_SUCCEEDED(err))
+			m_initedValues |= REFERENCES_INITED;
+	}
+#ifdef DEBUG_bienvenu
+	else
+	{
+		printf("hit string ref cache!\n");
+	}
+#endif
+
+	nsCAutoString cStr(m_references);
 	const char *startNextRef = cStr.GetBuffer();
 	PRInt32 refIndex;
 	for (refIndex = 0; refIndex <= refNum && startNextRef; refIndex++)
@@ -341,6 +355,9 @@ NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 		m_numReferences++;
 	}
 	SetUInt32Column(m_numReferences, m_mdb->m_numReferencesColumnToken);
+
+	m_references = references;
+	m_initedValues |= REFERENCES_INITED;
 
 	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
 }
