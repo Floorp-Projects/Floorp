@@ -67,6 +67,7 @@ public:
 
   static nsIAtom* data;
   static nsIAtom* dir;
+  static nsIAtom* disabled;
   static nsIAtom* div;
   static nsIAtom* dl;
 
@@ -129,6 +130,7 @@ public:
   static nsIAtom* pre;
   static nsIAtom* prompt;
 
+  static nsIAtom* readonly;
   static nsIAtom* rel;
   static nsIAtom* rightpadding;
   static nsIAtom* rows;

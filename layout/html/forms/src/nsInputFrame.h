@@ -158,7 +158,7 @@ public:
     * Perform opertations before the widget associated with this frame has been
     * created.
     */
-  virtual nsWidgetInitData* GetWidgetInitData();  
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);  
 
   static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
                              const nsString& aString, nsSize& aSize);
@@ -166,6 +166,9 @@ public:
                              PRInt32 aNumChars, nsSize& aSize);
 
   static PRInt32 gScrollBarWidth;
+
+  void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
+                                            aSize.height = mWidgetSize.height; }
 
 protected:
 

@@ -39,7 +39,7 @@ public:
   nsInputTextFrame(nsIContent* aContent,
                    nsIFrame* aParentFrame);
 
-  virtual nsWidgetInitData* GetWidgetInitData();
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -75,7 +75,7 @@ nsInputTextFrame::GetIID()
   static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
   static NS_DEFINE_IID(kTextAreaIID, NS_ITEXTAREAWIDGET_IID);
 
-  if (kInputTextArea == GetTextType()) {
+  if (kInputText_Area == GetTextType()) {
     return kTextAreaIID;
   }
   else {
@@ -89,7 +89,7 @@ nsInputTextFrame::GetCID()
   static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
   static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
 
-  if (kInputTextArea == GetTextType()) {
+  if (kInputText_Area == GetTextType()) {
     return kTextAreaCID;
   }
   else {
@@ -122,7 +122,9 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
   
   PRBool widthExplicit, heightExplicit;
   PRInt32 ignore;
-  if ((kInputTextText == textType) || (kInputTextPassword == textType)) {
+  if ((kInputText_Text == textType) || (kInputText_Password == textType) ||
+      (kInputText_FileText == textType)) 
+  {
     nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsHTMLAtoms::value,
                                   20, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 
@@ -135,7 +137,7 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
                   widthExplicit, heightExplicit, ignore);
   }
   if (!heightExplicit) {
-    if (kInputTextArea == textType) {
+    if (kInputText_Area == textType) {
       size.height += gScrollBarWidth;
     } 
     else {
@@ -143,7 +145,7 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
 
-  if (!widthExplicit && (kInputTextArea == textType)) {
+  if (!widthExplicit && (kInputText_Area == textType)) {
     size.width += gScrollBarWidth;
   }
 
@@ -156,14 +158,15 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 nsWidgetInitData*
-nsInputTextFrame::GetWidgetInitData()
+nsInputTextFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {
   static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
 
   nsTextWidgetInitData* data = nsnull;
   nsInputText* content;
   GetContent((nsIContent *&) content);
-  if (kInputTextPassword == content->GetTextType()) {
+
+  if (kInputText_Password == content->GetTextType()) {
     data = new nsTextWidgetInitData();
     data->mIsPassword = PR_TRUE;
   }
@@ -264,14 +267,17 @@ nsInputText::Reset()
 
 void nsInputText::GetType(nsString& aResult) const
 {
-  if (kInputTextText == mType) {
+  if (kInputText_Text == mType) {
     aResult = "text";
   } 
-  else if (kInputTextPassword == mType) {
+  else if (kInputText_Password == mType) {
     aResult = "password";
   }
-  else if (kInputTextArea == mType) {   
+  else if (kInputText_Area == mType) {   
     aResult = "";
+  }
+  else if (kInputText_FileText == mType) {   
+    aResult = "filetext";
   }
 }
 
@@ -280,10 +286,10 @@ void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   if (aAttribute == nsHTMLAtoms::maxlength) {
     CacheAttribute(aValue, ATTR_NOTSET, mMaxLength);
   }
-  else if ((aAttribute == nsHTMLAtoms::rows) && (kInputTextArea == mType)) {
+  else if ((aAttribute == nsHTMLAtoms::rows) && (kInputText_Area == mType)) {
     CacheAttribute(aValue, ATTR_NOTSET, mNumRows);
   }
-  else if ((aAttribute == nsHTMLAtoms::cols) && (kInputTextArea == mType)) {
+  else if ((aAttribute == nsHTMLAtoms::cols) && (kInputText_Area == mType)) {
     CacheAttribute(aValue, ATTR_NOTSET, mNumCols);
   }
   else {
@@ -297,10 +303,10 @@ nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::maxlength) {
     return GetCacheAttribute(mMaxLength, aResult, eHTMLUnit_Integer);
   } 
-  else if ((aAttribute == nsHTMLAtoms::rows) && (kInputTextArea == mType)) {
+  else if ((aAttribute == nsHTMLAtoms::rows) && (kInputText_Area == mType)) {
     return GetCacheAttribute(mNumRows, aResult, eHTMLUnit_Integer);
   }
-  else if ((aAttribute == nsHTMLAtoms::cols) && (kInputTextArea == mType)) {
+  else if ((aAttribute == nsHTMLAtoms::cols) && (kInputText_Area == mType)) {
     return GetCacheAttribute(mNumCols, aResult, eHTMLUnit_Integer);
   }
   else {
@@ -317,7 +323,7 @@ NS_NewHTMLInputText(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputTextText);
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputText_Text);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -334,7 +340,24 @@ NS_NewHTMLInputPassword(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputTextPassword);
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputText_Password);
+
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+}
+
+nsresult
+NS_NewHTMLInputFileText(nsIHTMLContent** aInstancePtrResult,
+                        nsIAtom* aTag, nsIFormManager* aManager)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputText_FileText);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -351,7 +374,7 @@ NS_NewHTMLTextArea(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputTextArea);
+  nsIHTMLContent* it = new nsInputText(aTag, aManager, kInputText_Area);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -20,10 +20,29 @@
 #define nsInputFile_h___
 
 #include "nsInput.h"
+#include "nsInlineFrame.h"
+#include "nsInputFrame.h"
+
 class nsIAtom;
 class nsString;
 
 // this class definition will move to nsInputFile.cpp
+
+class nsInputFileFrame : public nsInlineFrame {
+public:
+  nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aCX,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          nsReflowStatus&  aStatus);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
+  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
+  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
+
+protected:
+  virtual ~nsInputFileFrame();
+};
 
 class nsInputFile : public nsInput {
 public:
@@ -35,14 +54,14 @@ public:
                                nsIStyleContext* aStyleContext,
                                nsIFrame*&       aResult);
 
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
 protected:
   virtual ~nsInputFile();
 
   virtual void GetType(nsString& aResult) const;
 
-  nsString* mValue;
-  PRInt32 mSize;
-  PRInt32 mMaxLength;
+  //PRInt32 mMaxLength;
 };
 
 #endif

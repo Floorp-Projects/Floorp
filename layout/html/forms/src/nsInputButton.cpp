@@ -18,6 +18,7 @@
 
 #include "nsInput.h"
 #include "nsInputFrame.h"
+#include "nsInputFile.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
 #include "nsIRenderingContext.h"
@@ -53,7 +54,8 @@ enum nsButtonType {
   kButton_Reset,
   kButton_Submit,
   kButton_Image,
-  kButton_Hidden
+  kButton_Hidden,
+  kButton_Browse,
 };
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -193,6 +195,9 @@ void nsInputButton::GetType(nsString& aResult) const
     case kButton_Hidden:
       aResult.Append("hidden");
       break;
+    case kButton_Browse:
+      aResult.Append("browse");
+      break;
     case kButton_Submit:
     default:
       aResult.Append("submit");
@@ -207,6 +212,8 @@ nsInputButton::GetDefaultLabel(nsString& aString)
     aString = "Reset";
   } else if (kButton_Submit == mType) {
     aString = "Submit";
+  } else if (kButton_Browse == mType) {
+    aString = "Browse...";
   } else {
     aString = "noname";
   }
@@ -355,7 +362,7 @@ NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
   }
 
   // First paint background and borders
-  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
   nsIImage* image = mImageLoader.GetImage();
   if (nsnull == image) {
@@ -381,13 +388,17 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
     nsButtonTagType butTagType = button->GetButtonTagType();
     if (kButton_Reset == butType) {
       formMan->OnReset();
-    } else if ((kButton_Submit == butType) ||
-               ((kButton_Image == butType) && (kButtonTag_Input == butTagType))) {
+    } 
+    else if ((kButton_Submit == butType) ||
+             ((kButton_Image == butType) && (kButtonTag_Input == butTagType))) {
       //NS_ADDREF(this);
       nsIFormControl* control;
       mContent->QueryInterface(kIFormControlIID, (void**)&control);
       formMan->OnSubmit(aPresContext, this, control);
       //NS_RELEASE(this);
+    }
+    else if (kButton_Browse == butType) {
+      ((nsInputFileFrame *)mContentParent)->MouseClicked(aPresContext);
     }
     NS_RELEASE(formMan);
   }
@@ -439,6 +450,11 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
     else {  // there is a widget
       nsSize styleSize;
       GetStyleSize(*aPresContext, styleSize);
+      // a browse button shares is style context with its parent nsInputFile
+      // it uses everything from it except width
+      if (kButton_Browse == GetButtonType()) {
+        styleSize.width = CSS_NOTSET;
+      }
       nsSize size;
       PRBool widthExplicit, heightExplicit;
       PRInt32 ignore;
@@ -485,7 +501,9 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
     button->SetLabel(value);
   } 
   else {
-    button->SetLabel(" ");
+    nsAutoString label;
+    content->GetDefaultLabel(label);
+    button->SetLabel(label);
   }
 
   NS_RELEASE(content);
@@ -564,4 +582,16 @@ NS_NewHTMLInputHidden(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
   return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Hidden);
+}
+
+nsresult
+NS_NewHTMLInputBrowse(nsIHTMLContent** aInstancePtrResult,
+                      nsIAtom* aTag, nsIFormManager* aManager)
+{
+  nsresult result = CreateButton(aInstancePtrResult, aTag, aManager, kButton_Browse);
+  nsAutoString label;
+  nsInputButton* button = (nsInputButton *)*aInstancePtrResult;
+  button->GetDefaultLabel(label);
+  button->SetAttribute(nsHTMLAtoms::value, label);
+  return result;
 }

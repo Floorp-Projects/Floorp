@@ -147,7 +147,7 @@ void   nsFileWidget:: Create(nsIWidget *aParent,
                                  nsIToolkit *aToolkit,
                                  void *aInitData)
 {
-  mWnd = aParent;
+  mWnd = (aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0; 
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
