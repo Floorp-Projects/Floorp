@@ -28,6 +28,8 @@
 
 #include "nsMsgMD5.h"
 
+#include "nsCRT.h"
+
 #define	MD5_BYTE	unsigned char
 #define	MD5_WORD	unsigned int
 
@@ -117,7 +119,7 @@ MD5_BYTE	padlen[8];
 	padlen[6]=e.m_bytes.m_2;
 	padlen[7]=e.m_bytes.m_3;
 
-	memcpy( &m_pad[m_msgpaddedlen - m_msglen - 8], padlen, 8);
+	nsCRT::memcpy( &m_pad[m_msgpaddedlen - m_msglen - 8], padlen, 8);
 
 MD5_WORD	A=0x67452301;
 MD5_WORD	B=0xefcdab89;
