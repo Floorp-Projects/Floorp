@@ -31,25 +31,26 @@ public:
   NS_IMETHOD  Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect);
-
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus& aEventStatus);
-
   NS_IMETHOD  GetCursorAt(nsIPresContext& aPresContext,
                           const nsPoint& aPoint,
                           nsIFrame** aFrame,
                           PRInt32& aCursor);
-
   NS_IMETHOD ContentAppended(nsIPresShell* aShell,
                              nsIPresContext* aPresContext,
                              nsIContent* aContainer);
-
   NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInParent);
+  NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
+                            nsIPresContext* aPresContext,
+                            nsIContent*     aContainer,
+                            nsIContent*     aChild,
+                            PRInt32         aIndexInParent);
 
 protected:
   virtual ~nsHTMLContainerFrame();

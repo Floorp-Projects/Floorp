@@ -156,18 +156,6 @@ NS_METHOD nsHTMLContainerFrame::ContentAppended(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-static PRBool
-HasSameMapping(nsIFrame* aFrame, nsIContent* aContent)
-{
-  nsIContent* content;
-  PRBool      result;
-
-  aFrame->GetContent(content);
-  result = content == aContent;
-  NS_RELEASE(content);
-  return result;
-}
-
 NS_IMETHODIMP
 nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
                                       nsIPresContext* aPresContext,
@@ -244,6 +232,128 @@ nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
     flow->mFirstContentOffset++;
     flow->mLastContentOffset++;
   }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
+                                     nsIPresContext* aPresContext,
+                                     nsIContent*     aContainer,
+                                     nsIContent*     aChild,
+                                     PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(!IsPseudoFrame(), "pseudos not supported here");
+
+  // Find the frame that precedes the deletion point
+  nsHTMLContainerFrame* flow;
+  nsIFrame* deadFrame;
+  nsIFrame* prevSibling;
+  if (aIndexInParent > 0) {
+    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    prevSibling = aShell->FindFrameWithContent(precedingContent);
+    NS_RELEASE(precedingContent);
+
+    // The frame may have a next-in-flow. Get the last-in-flow
+    nsIFrame* nextInFlow;
+    do {
+      prevSibling->GetNextInFlow(nextInFlow);
+      if (nsnull != nextInFlow) {
+        prevSibling = nextInFlow;
+      }
+    } while (nsnull != nextInFlow);
+
+    // Get the dead frame (maybe)
+    prevSibling->GetGeometricParent((nsIFrame*&)flow);
+    prevSibling->GetNextSibling(deadFrame);
+    if (nsnull == deadFrame) {
+      // The deadFrame must be prevSibling's parent's next-in-flows
+      // first frame. Therefore it doesn't have a prevSibling.
+      flow = (nsHTMLContainerFrame*) flow->mNextInFlow;
+      if (nsnull != flow) {
+        deadFrame = flow->mFirstChild;
+      }
+      prevSibling = nsnull;
+    }
+  }
+  else {
+    prevSibling = nsnull;
+    flow = this;
+    deadFrame = flow->mFirstChild;
+  }
+  NS_ASSERTION(nsnull != deadFrame, "yikes! couldn't find frame");
+  if (nsnull == deadFrame) {
+    return NS_OK;
+  }
+
+  // Generate a reflow command
+  nsIReflowCommand* cmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&cmd, flow,
+                                        nsIReflowCommand::FrameDeleted);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  aShell->AppendReflowCommand(cmd);
+  NS_RELEASE(cmd);
+
+  // Take the frame away; Note that we also have to take away any
+  // continuations so we loop here until deadFrame is nsnull.
+  while (nsnull != deadFrame) {
+    // If the last frame for the flow is the frame we are deleting
+    // then the flow will become complete.
+    if (!flow->mLastContentIsComplete) {
+      nsIFrame* lastFrame;
+      flow->LastChild(lastFrame);
+      if (lastFrame == deadFrame) {
+        flow->mLastContentIsComplete = PR_TRUE;
+      }
+    }
+
+    // Remove frame from sibling list
+    nsIFrame* nextSib;
+    deadFrame->GetNextSibling(nextSib);
+    if (nsnull != prevSibling) {
+      prevSibling->SetNextSibling(nextSib);
+    }
+    else {
+      flow->mFirstChild = nextSib;
+    }
+
+    // Update flows child count and last-content-offset. Note that
+    // only the last content needs updating when a deadFrame is
+    // removed from flow (because only the children that follow the
+    // deletion need renumbering).
+    flow->mChildCount--;
+    flow->mLastContentOffset--;
+
+    // Break frame out of its flow and then destroy it
+    nsIFrame* nextInFlow;
+    deadFrame->GetNextInFlow(nextInFlow);
+    deadFrame->BreakFromNextFlow();
+    deadFrame->DeleteFrame();
+    deadFrame = nextInFlow;
+
+    if (nsnull != deadFrame) {
+      // Get the parent of deadFrame's continuation
+      deadFrame->GetGeometricParent((nsIFrame*&) flow);
+
+      // When we move to a next-in-flow then the deadFrame will be the
+      // first child of the new parent. Therefore we know that
+      // prevSibling will be null.
+      prevSibling = nsnull;
+    }
+  }
+
+  // Repair any remaining next-in-flows content offsets; these are the
+  // next-in-flows the follow the last flow container that contained
+  // one of the deadFrame's. Therefore both content offsets need
+  // updating (because all the children are following the deletion).
+  flow = (nsHTMLContainerFrame*) flow->mNextInFlow;
+  while (nsnull != flow) {
+    flow->mFirstContentOffset--;
+    flow->mLastContentOffset--;
+    flow = (nsHTMLContainerFrame*) flow->mNextInFlow;
+  }
+
   return rv;
 }
 
