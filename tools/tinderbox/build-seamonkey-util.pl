@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.131 $ ';
+$::UtilsVersion = '$Revision: 1.132 $ ';
 
 package TinderUtils;
 
@@ -1125,9 +1125,8 @@ sub run_all_tests {
 		# print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
 		# print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
 		
-		my $min_startuptime_string = sprintf "%.2f", $min_startuptime/1000;
 		my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox=" 
-		  . ::hostname() . "&autoscale=1&days=7\">Ts:" . $min_startuptime_string . "s</a>\n\n";
+		  . ::hostname() . "&autoscale=1&days=7\">Ts:" . $min_startuptime . "ms</a>\n\n";
 		print_log "$print_string";
 
 		# Report data back to server
