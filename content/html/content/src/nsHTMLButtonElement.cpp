@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLButtonElement.h"
+#include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -70,6 +71,10 @@ public:
   NS_IMETHOD GetType(nsString& aType);
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
+
+  // nsIDOMHTMLButtonElement
+  NS_IMETHOD Blur();
+  NS_IMETHOD Focus();
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -215,6 +220,20 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 
+NS_IMETHODIMP
+nsHTMLButtonElement::Blur()
+{
+  // XXX write me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonElement::Focus()
+{
+  // XXX write me
+  return NS_OK;
+}
+
 static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
   { "button", NS_FORM_BUTTON_BUTTON },
   { "reset", NS_FORM_BUTTON_RESET },
@@ -296,7 +315,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->SetActiveLink(this);
+          //stateManager->SetActiveLink(this);
           NS_RELEASE(stateManager);
         }
         aEventStatus = nsEventStatus_eConsumeNoDefault; 
@@ -306,9 +325,9 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_LEFT_BUTTON_UP:
       {
         nsIEventStateManager *stateManager;
-        nsIContent *activeLink;
+        nsIContent *activeLink = nsnull;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->GetActiveLink(&activeLink);
+          //stateManager->GetActiveLink(&activeLink);
           NS_RELEASE(stateManager);
         }
 

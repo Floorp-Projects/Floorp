@@ -116,7 +116,12 @@ nsPresContext::~nsPresContext()
 
   NS_IF_RELEASE(mLinkHandler);
   NS_IF_RELEASE(mContainer);
-  NS_IF_RELEASE(mEventManager);
+
+  if (nsnull != mEventManager) {
+    mEventManager->SetPresContext(nsnull);
+    NS_RELEASE(mEventManager);
+  }
+
   NS_IF_RELEASE(mDeviceContext);
   // Unregister preference callbacks
   if (nsnull != mPrefs) {
@@ -640,6 +645,9 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
       return rv;
     }
   }
+
+  //Not refcnted, set null in destructor
+  mEventManager->SetPresContext(this);
 
   *aManager = mEventManager;
   NS_IF_ADDREF(mEventManager);

@@ -121,7 +121,7 @@ public:
   /** set this row's starting row index */
   virtual void SetRowIndex (int aRowIndex);
 
-  virtual PRBool Contains(nsPoint& aPoint);
+  virtual PRBool Contains(const nsPoint& aPoint);
 
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 

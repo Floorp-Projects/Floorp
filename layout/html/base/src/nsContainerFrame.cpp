@@ -335,60 +335,39 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// Events
-
-NS_METHOD nsContainerFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                        nsGUIEvent*     aEvent,
-                                        nsEventStatus&  aEventStatus)
+NS_IMETHODIMP
+nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                                   nsIFrame**     aFrame)
 {
-  aEventStatus = nsEventStatus_eIgnore;
-
   nsIFrame* kid;
-  FirstChild(nsnull, kid);
-  while (nsnull != kid) {
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    if (kidRect.Contains(aEvent->point)) {
-      aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
-      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
-      aEvent->point.MoveBy(kidRect.x, kidRect.y);
-      break;
-    }
-    kid->GetNextSibling(kid);
-  }
-
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                        const nsPoint&  aPoint,
-                                        nsIFrame**      aFrame,
-                                        nsIContent**    aContent,
-                                        PRInt32&        aCursor)
-{
-  const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
-  if (NS_STYLE_CURSOR_AUTO != color->mCursor) {
-    aCursor = color->mCursor;
-  }
-  *aContent = mContent;
-  *aFrame = this;
-
-  nsIFrame* kid;
-  FirstChild(nsnull, kid);
+  nsRect kidRect;
   nsPoint tmp;
+  *aFrame = nsnull;
+
+  FirstChild(nsnull, kid);
   while (nsnull != kid) {
-    nsRect kidRect;
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      kid->GetCursorAndContentAt(aPresContext, tmp, aFrame, aContent, aCursor);
-      break;
+      return kid->GetFrameForPoint(tmp, aFrame);
     }
     kid->GetNextSibling(kid);
   }
-  return NS_OK;
+
+  FirstChild(nsnull, kid);
+  while (nsnull != kid) {
+    nsFrameState state;
+    kid->GetFrameState(state);
+    if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+      if (NS_OK == kid->GetFrameForPoint(tmp, aFrame)) {
+        return NS_OK;
+      }
+    }
+    kid->GetNextSibling(kid);
+  }
+  *aFrame = this;
+  return NS_ERROR_FAILURE;
 }
 
 /////////////////////////////////////////////////////////////////////////////

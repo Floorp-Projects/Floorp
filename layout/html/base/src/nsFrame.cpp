@@ -41,6 +41,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
+#include "nsIEventStateManager.h"
 
 // Some Misc #defines
 #define SELECTION_DEBUG        0
@@ -626,10 +627,8 @@ NS_IMETHODIMP nsFrame::HandleEvent(nsIPresContext& aPresContext,
                                nsGUIEvent*     aEvent,
                                nsEventStatus&  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eIgnore;
-  
-  if (nsnull != mContent) {
-    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
   }
 
   if (DisplaySelection(aPresContext) == PR_FALSE) {
@@ -656,7 +655,7 @@ NS_IMETHODIMP nsFrame::HandleEvent(nsIPresContext& aPresContext,
     } else if (aEvent->message == NS_MOUSE_MOVE) {
       mDidDrag = PR_TRUE;
       HandleDrag(aPresContext, aEvent, aEventStatus);
-      if (SELECTION_DEBUG) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
+    if (SELECTION_DEBUG) printf("HandleEvent(Drag)::mSelectionRange %s\n", mSelectionRange->ToString());
 
     } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
       HandlePress(aPresContext, aEvent, aEventStatus);
@@ -1120,19 +1119,24 @@ void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
   //}
 }
 
-NS_IMETHODIMP nsFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                               const nsPoint&  aPoint,
-                               nsIFrame**      aFrame,
-                               nsIContent**    aContent,
-                               PRInt32&        aCursor)
+NS_IMETHODIMP
+nsFrame::GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor)
 {
-  *aContent = mContent;
-  *aFrame = this;
-  const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
-  if (NS_STYLE_CURSOR_AUTO != color->mCursor) {
-    aCursor = color->mCursor;
+  const nsStyleColor* styleColor;
+  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+  aCursor = styleColor->mCursor;
+
+  if (NS_STYLE_CURSOR_AUTO == aCursor && nsnull != mGeometricParent) {
+    mGeometricParent->GetCursor(aPresContext, aPoint, aCursor);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+{
+  *aFrame = this;
   return NS_OK;
 }
 

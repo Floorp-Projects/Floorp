@@ -78,6 +78,7 @@ EXPORTS =               \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h \
 	nsIDOMImage.h \
+	nsIDOMNSHTMLButtonElement.h \
 	nsIDOMNSHTMLDocument.h \
         $(NULL)
 

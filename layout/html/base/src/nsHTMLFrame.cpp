@@ -40,6 +40,7 @@
 
 // Interface IDs
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class RootFrame : public nsHTMLContainerFrame {
 public:
@@ -242,8 +243,8 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
                        nsGUIEvent* aEvent,
                        nsEventStatus& aEventStatus)
 {
-  if (nsnull != mContent) {
-    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
   }
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP ||
@@ -252,38 +253,6 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
     nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
-#if 0
-  if (aEventStatus != nsEventStatus_eConsumeNoDefault) {
-    switch (aEvent->message) {
-    case NS_MOUSE_MOVE:
-    case NS_MOUSE_ENTER:
-      {
-        nsIFrame* target = this;
-        PRInt32 cursor;
-       
-        GetCursorAndContentAt(aPresContext, aEvent->point, &target, &mContent, cursor);
-        nsCursor c;
-        switch (cursor) {
-        default:
-        case NS_STYLE_CURSOR_DEFAULT:
-          c = eCursor_standard;
-          break;
-        case NS_STYLE_CURSOR_POINTER:
-          c = eCursor_hyperlink;
-          break;
-        case NS_STYLE_CURSOR_TEXT:
-          c = eCursor_select;
-          break;
-        }
-        nsIWidget* window;
-        target->GetWindow(window);
-        window->SetCursor(c);
-        NS_RELEASE(window);
-      }
-      break;
-    }
-  }
-#endif
   return NS_OK;
 }
 
@@ -299,5 +268,3 @@ RootFrame::ListTag(FILE* out) const
   }
   return NS_OK;
 }
-
-

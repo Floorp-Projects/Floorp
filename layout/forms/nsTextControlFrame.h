@@ -60,6 +60,8 @@ public:
                                 nsString* aValues, nsString* aNames);
   virtual void Reset();
 
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor);
+
 protected:
 
   virtual ~nsTextControlFrame();

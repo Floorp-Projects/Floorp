@@ -42,7 +42,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 EXPORTS= nsEventListenerManager.h nsEventStateManager.h	nsDOMEvent.h nsDOMEventsIIDs.h
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-  -I$(PUBLIC)\dom -I$(PUBLIC)\js
+  -I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\..\html\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -961,7 +961,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
  
   // Only change cursor if it's changing
-  if (aCursor != mCursor) {
+
+  //XXX mCursor isn't always right.  Scrollbars and others change it, too.
+  //XXX If we want this optimization we need a better way to do it.
+  //if (aCursor != mCursor) {
     HCURSOR newCursor = NULL;
 
     switch(aCursor) {
@@ -1031,7 +1034,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       mCursor = aCursor;
       HCURSOR oldCursor = ::SetCursor(newCursor);
     }
-  }
+  //}
   return NS_OK;
 }
     

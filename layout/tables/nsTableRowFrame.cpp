@@ -1380,7 +1380,7 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
  * so the default "get the child rect, see if it contains the event point" action isn't
  * sufficient.  We have to ask the row if it has a child that contains the point.
  */
-PRBool nsTableRowFrame::Contains(nsPoint& aPoint)
+PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
 {
   if (gsDebug) printf("Row %p index %d ::Contains aPoint(%d,%d) and row rect (%d,%d,%d,%d)\n",
                          this, mRowIndex, 

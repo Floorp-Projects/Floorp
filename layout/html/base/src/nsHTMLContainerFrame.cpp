@@ -109,14 +109,6 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
-                                  nsGUIEvent* aEvent,
-                                  nsEventStatus& aEventStatus)
-{
-  return nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-}
-
 nsPlaceholderFrame*
 nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame)

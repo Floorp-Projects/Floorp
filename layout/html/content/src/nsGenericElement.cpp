@@ -951,12 +951,6 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   
   nsIDOMEvent* domEvent = nsnull;
   if (DOM_EVENT_INIT == aFlags) {
-    aEventStatus = nsEventStatus_eIgnore;
-    nsIEventStateManager *manager;
-    if (NS_OK == aPresContext.GetEventStateManager(&manager)) {
-      manager->SetEventTarget(mContent);
-      NS_RELEASE(manager);
-    }
     aDOMEvent = &domEvent;
   }
   

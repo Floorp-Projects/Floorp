@@ -10,3 +10,11 @@
    readonly attribute  DOMString            type;
             attribute  DOMString            value;
  };
+
+ interface NSHTMLButtonElement {
+ /* IID: { 0x6fd344d0, 0x7e5f, 0x11d2, \
+  { 0xbd, 0x91, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } */
+   void                      blur();
+   void                      focus();
+
+ };

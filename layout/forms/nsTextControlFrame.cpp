@@ -168,10 +168,10 @@ nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
 {
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
     nsEventStatus mStatus = nsEventStatus_eIgnore;
-    nsEvent mEvent;
-    mEvent.eventStructType = NS_EVENT;
-    mEvent.message = NS_FORM_SUBMIT;
-    mContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_FORM_SUBMIT;
+    mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus); 
 
     mFormFrame->OnSubmit(&aPresContext, this);
   }
@@ -471,5 +471,17 @@ nsTextControlFrame::Reset()
   }
 
 }  
+
+NS_IMETHODIMP
+nsTextControlFrame::GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor)
+{
+  /*const nsStyleColor* styleColor;
+  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+  aCursor = styleColor->mCursor;*/
+
+  //XXX This is wrong, should be through style.
+  aCursor = NS_STYLE_CURSOR_TEXT;
+  return NS_OK;
+}
 
 

@@ -274,17 +274,17 @@ public:
 
 
   /**
-   * Get the cursor for a given point in the frame tree. The
-   * call returns the desired cursor. In addition, aFrame is 
-   * set to the frame that wants the cursor.
+   * Get the cursor for a given frame.
    */
-  NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
-                          const nsPoint&  aPoint,
-                          nsIFrame**      aFrame,
-                          nsIContent**    aContent,
-                          PRInt32&        aCursor) = 0;
+  NS_IMETHOD  GetCursor(nsIPresContext& aPresContext,
+                        nsPoint&        aPoint,
+                        PRInt32&        aCursor) = 0;
 
-  /**
+  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
+                               nsIFrame**     aFrame) = 0;
+  
+                            
+ /**
    * Get the current frame-state value for this frame. aResult is
    * filled in with the state bits. The return value has no
    * meaning.

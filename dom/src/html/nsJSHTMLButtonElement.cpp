@@ -25,6 +25,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLButtonElement.h"
 
@@ -32,9 +33,11 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kINSHTMLButtonElementIID, NS_IDOMNSHTMLBUTTONELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
 
+NS_DEF_PTR(nsIDOMNSHTMLButtonElement);
 NS_DEF_PTR(nsIDOMHTMLFormElement);
 NS_DEF_PTR(nsIDOMHTMLButtonElement);
 
@@ -373,6 +376,84 @@ ResolveHTMLButtonElement(JSContext *cx, JSObject *obj, jsval id)
 }
 
 
+//
+// Native method Blur
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLButtonElement *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLButtonElement");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Blur()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function blur requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Focus
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)JS_GetPrivate(cx, obj);
+  nsIDOMNSHTMLButtonElement *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLButtonElement");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Focus()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function focus requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for HTMLButtonElement
@@ -412,6 +493,8 @@ static JSPropertySpec HTMLButtonElementProperties[] =
 //
 static JSFunctionSpec HTMLButtonElementMethods[] = 
 {
+  {"blur",          NSHTMLButtonElementBlur,     0},
+  {"focus",          NSHTMLButtonElementFocus,     0},
   {0}
 };
 

@@ -68,6 +68,13 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+                              nsIFrame**     aFrame);
+
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                             nsPoint&        aPoint,
+                             PRInt32&        aCursor);
+  
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -450,6 +457,24 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsIPresContext& aPresContext,
                                            nsGUIEvent* aEvent,
                                            nsEventStatus& aEventStatus)
 {
+  // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
+  switch (aEvent->message) {
+    case NS_MOUSE_MOVE:
+      MouseDrag(aPresContext, aEvent);
+	    break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      EndMouseDrag();
+	    break;
+  }
+  aEventStatus = nsEventStatus_eConsumeNoDefault;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                                            nsIFrame**     aFrame)
+{
+  //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
   nsIView* view;
   GetView(view);
   if (view) {
@@ -459,44 +484,15 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsIPresContext& aPresContext,
       nsIView* grabber;
       viewMan->GetMouseEventGrabber(grabber);
       if (grabber == view) {
-        // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN and changed the cursor to a resize
-        switch (aEvent->message) {
-          case NS_MOUSE_MOVE:
-            MouseDrag(aPresContext, aEvent);
-	          break;
-          case NS_MOUSE_LEFT_BUTTON_UP:
-            nsIWidget* window;
-            GetWindow(window);
-            if (window) {
-              window->SetCursor(eCursor_standard);
-              NS_RELEASE(window);
-            }
-            EndMouseDrag();
-	          break;
-        }
-        aEventStatus = nsEventStatus_eConsumeNoDefault;
+        // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
+        *aFrame = this;
         NS_RELEASE(viewMan);
         return NS_OK;
       }
       NS_RELEASE(viewMan);
-    }  
+    }
   }
-  // to avoid processing events after destruction of this or children, call super as follows
-//  switch (aEvent->message) {
-//    case NS_MOUSE_MOVE:
-//    case NS_MOUSE_ENTER:
-//    case NS_MOUSE_EXIT:
-//    case NS_MOUSE_LEFT_BUTTON_UP:
-//    case NS_MOUSE_LEFT_BUTTON_DOWN:
-//      aEventStatus = nsEventStatus_eIgnore;
-  if (nsnull == mFirstChild) { // XXX see corresponding hack in nsHTMLContainerFrame::DeleteFrame
-    aEventStatus = nsEventStatus_eConsumeNoDefault;
-    return NS_OK;
-  } else {
-    return nsHTMLContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-  }
-
-
+  return nsContainerFrame::GetFrameForPoint(aPoint, aFrame);
 }
 
 NS_IMETHODIMP
@@ -1587,44 +1583,47 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 
-NS_METHOD nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext, 
+NS_IMETHODIMP
+nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext, 
                                                  nsGUIEvent* aEvent,
                                                  nsEventStatus& aEventStatus)
 {
+  aEventStatus = nsEventStatus_eIgnore;
+
+  //XXX Mouse setting logic removed.  The remaining logic should also move.
   if (!mCanResize) {
-    aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
 
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
-  nsIWidget* window;
-  nsCursor cursor;
   switch (aEvent->message) {
-    case NS_MOUSE_ENTER:
-    case NS_MOUSE_MOVE:
-      GetWindow(window);
-      if (window) {
-        cursor = (mVertical) ? eCursor_sizeWE : eCursor_sizeNS;
-        window->SetCursor(eCursor_standard); // XXX why is this necessary
-        window->SetCursor(cursor);
-        NS_RELEASE(window);
-      }
-      break;
-    case NS_MOUSE_EXIT:
-      GetWindow(window);
-      if (window) {
-        cursor = (mVertical) ? eCursor_sizeWE : eCursor_sizeNS;
-        window->SetCursor(cursor); // XXX why is this necessary
-        window->SetCursor(eCursor_standard);
-        NS_RELEASE(window);
-      }
-      break;
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       nsHTMLFramesetFrame* parentFrame = nsnull;
       GetGeometricParent((nsIFrame*&)parentFrame);
       parentFrame->StartMouseDrag(aPresContext, this, aEvent);
+      aEventStatus = nsEventStatus_eConsumeNoDefault;
 	    break;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLFramesetBorderFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                                            nsIFrame**     aFrame)
+{
+  *aFrame = this;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFramesetBorderFrame::GetCursor(nsIPresContext& aPresContext,
+                             nsPoint&        aPoint,
+                             PRInt32&        aCursor)
+{
+  if (!mCanResize) {
+    aCursor = NS_STYLE_CURSOR_DEFAULT;
+    return NS_OK;
+  }    
+  aCursor = (mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
   return NS_OK;
 }
 

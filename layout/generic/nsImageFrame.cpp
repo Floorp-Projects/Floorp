@@ -835,37 +835,27 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
-                                  const nsPoint& aPoint,
-                                  nsIFrame** aFrame,
-                                  nsIContent** aContent,
-                                  PRInt32& aCursor)
+ImageFrame::GetCursor(nsIPresContext& aPresContext,
+                      nsPoint& aPoint,
+                      PRInt32& aCursor)
 {
-  *aContent = mContent;
-  const nsStyleColor* styleColor = (const nsStyleColor*)
-    mStyleContext->GetStyleData(eStyleStruct_Color);
-  *aFrame = this;
-  if (NS_STYLE_CURSOR_AUTO != styleColor->mCursor) {
-    aCursor = (PRInt32) styleColor->mCursor;
-  }
-
-  if (NS_STYLE_CURSOR_AUTO == styleColor->mCursor) {  // image map wins over local auto
-    nsIImageMap* map = GetImageMap();
-    if (nsnull != map) {
-      nsRect inner;
-      GetInnerArea(&aPresContext, inner);
-      aCursor = NS_STYLE_CURSOR_DEFAULT;
-      float t2p = aPresContext.GetTwipsToPixels();
-      PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
-      PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
-      if (NS_OK == map->IsInside(x, y)) {
-        aCursor = NS_STYLE_CURSOR_POINTER;
-      }
-      NS_RELEASE(map);
+  //XXX This will need to be rewritten once we have content for areas
+  nsIImageMap* map = GetImageMap();
+  if (nsnull != map) {
+    nsRect inner;
+    GetInnerArea(&aPresContext, inner);
+    aCursor = NS_STYLE_CURSOR_DEFAULT;
+    float t2p = aPresContext.GetTwipsToPixels();
+    PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
+    PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
+    if (NS_OK == map->IsInside(x, y)) {
+      aCursor = NS_STYLE_CURSOR_POINTER;
     }
+    NS_RELEASE(map);
+    return NS_OK;
   }
 
-  return NS_OK;
+  return nsFrame::GetCursor(aPresContext, aPoint, aCursor);
 }
 
 NS_IMETHODIMP

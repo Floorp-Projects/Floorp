@@ -20,8 +20,9 @@
 #define nsEventStateManager_h__
 
 #include "nsIEventStateManager.h"
-class nsIDOMEvent;
- 
+#include "nsGUIEvent.h"
+class nsIDocument;
+
 /*
  * Event listener manager
  */
@@ -34,19 +35,32 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetEventTarget(nsISupports **aResult);
-  NS_IMETHOD SetEventTarget(nsISupports *aSupports);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent *aEvent,
+                         nsIFrame* aTargetFrame,
+                         nsEventStatus& aStatus);
 
-  NS_IMETHOD GetLastMouseOverContent(nsIContent **aContent);
-  NS_IMETHOD SetLastMouseOverContent(nsIContent *aContent);
+  NS_IMETHOD SetPresContext(nsIPresContext* aPresContext);
+
+  NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
 
   NS_IMETHOD GetActiveLink(nsIContent **aLink);
   NS_IMETHOD SetActiveLink(nsIContent *aLink);
-protected:
 
-  nsISupports* mEventTarget;
-  nsIContent* mLastMouseOverContent;
-  nsIContent *mActiveLink;
+protected:
+  void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame);
+  void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent, nsIFrame* aTargetFrame);
+  void ShiftFocus();
+  nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop);
+
+  nsIFrame* mCurrentTarget;
+  nsIFrame* mLastMouseOverFrame;
+  nsIContent* mActiveLink;
+  nsIContent* mCurrentFocus;
+
+  //Not refcnted
+  nsIPresContext* mPresContext;
+  nsIDocument* mDocument;
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

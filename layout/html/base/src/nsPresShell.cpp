@@ -34,6 +34,8 @@
 #include "nsContainerFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
+#include "nsIEventStateManager.h"
+#include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
@@ -241,6 +243,7 @@ protected:
   PRUint32 mUpdateCount;
   nsVoidArray mReflowCommands;
   PRUint32 mReflowLockCount;
+  PRBool mIsDestroying;
 };
 
 #ifdef NS_DEBUG
@@ -290,6 +293,8 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 
 PresShell::PresShell()
 {
+  //XXX joki 11/17 - temporary event hack.
+  mIsDestroying = PR_FALSE;
 }
 
 #ifdef NS_DEBUG
@@ -350,6 +355,7 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 PresShell::~PresShell()
 {
   mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
+  mIsDestroying = PR_TRUE;
   if (nsnull != mRootFrame) {
     mRootFrame->DeleteFrame(*mPresContext);
   }
@@ -1007,11 +1013,38 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
   
   NS_ASSERTION(!(nsnull == aView), "null view");
 
+  if (mIsDestroying) {
+    return NS_OK;
+  }
+
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
 
-  if (nsnull != frame)
-    rv = frame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+  if (nsnull != frame) {
+    nsIFrame* targetFrame;
+    frame->GetFrameForPoint(aEvent->point, &targetFrame);
+    if (nsnull != frame) {
+      //Once we have the targetFrame, handle the event in this order
+      nsIEventStateManager *manager;
+      if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+        //1. Give event to event manager for state changes and generation of synthetic events.
+        manager->HandleEvent(*mPresContext, aEvent, targetFrame, aEventStatus);
+
+        //2. Give event to the DOM for third party and JS use.
+        nsIContent* targetContent;
+        if (NS_OK == targetFrame->GetContent(targetContent) && nsnull != targetContent) {
+          rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
+                                             DOM_EVENT_INIT, aEventStatus);
+          NS_RELEASE(targetContent);
+        }
+        //3. Give event to the Frames for browser default processing.
+        if (NS_OK == rv) {
+          rv = targetFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+        }
+        NS_RELEASE(manager);
+      }
+    }
+  }
   else
     rv = NS_OK;
 

@@ -62,10 +62,6 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
-
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   NS_METHOD  List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
   NS_IMETHOD ListTag(FILE* out) const;
