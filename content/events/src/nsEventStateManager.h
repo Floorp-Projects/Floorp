@@ -100,10 +100,10 @@ public:
    * DOM and frame processing.
    */
   NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext,
-                         nsEvent *aEvent,
-                         nsIFrame* aTargetFrame,
-                         nsEventStatus* aStatus,
-                         nsIView* aView);
+                             nsEvent *aEvent,
+                             nsIFrame* aTargetFrame,
+                             nsEventStatus* aStatus,
+                             nsIView* aView);
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext);
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
@@ -117,6 +117,7 @@ public:
   NS_IMETHOD GetFocusedContent(nsIContent **aContent);
   NS_IMETHOD SetFocusedContent(nsIContent* aContent);
   NS_IMETHOD ContentRemoved(nsIContent* aContent);
+  NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
 
   // This is an experiement and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
@@ -239,6 +240,8 @@ protected:
   PRUint32 mLClickCount;
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
+
+  PRPackedBool mNormalLMouseEventInProcess;
 
   //Hashtable for accesskey support
   nsSupportsHashtable *mAccessKeys;
