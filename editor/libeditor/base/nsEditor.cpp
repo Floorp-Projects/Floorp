@@ -860,7 +860,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
   mViewManager->Release(); //we want a weak link
 
-  ps->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
 
@@ -873,6 +872,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   /* Show the caret */
   aSelCon->SetCaretReadOnly(PR_FALSE);
   aSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+  
+  aSelCon->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
 
   // Set the selection to the beginning:
 
