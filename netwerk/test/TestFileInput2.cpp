@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIRunnable.h"
@@ -443,12 +444,6 @@ Test(CreateFun create, PRUint32 count,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -461,8 +456,12 @@ main(int argc, char* argv[])
     char* inDir = argv[1];
     char* outDir = argv[2];
 
-    rv = NS_AutoregisterComponents();
-    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     nsCOMPtr<nsILocalFile> inDirFile;
     rv = NS_NewLocalFile(inDir, PR_FALSE, getter_AddRefs(inDirFile));

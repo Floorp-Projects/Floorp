@@ -48,6 +48,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsNetCID.h"
 
 #include "nsIServiceManager.h"
@@ -135,51 +136,18 @@ getUILangCountry(PRUnichar** aUILang, PRUnichar** aCountry)
   return result;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// end of locale stuff
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 
-                                                 NULL /* default */);
-
-	// startup netlib:	
-	nsComponentManager::RegisterComponent(kEventQueueServiceCID, 
-                                        NULL, NULL, 
-                                        XPCOM_DLL, 
-                                        PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-  // Create the Event Queue for this thread...
-  nsIEventQueueService* pEventQService;
-  
-  pEventQService = nsnull;
-  nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                                 kIEventQueueServiceIID,
-                                                 (nsISupports **)&pEventQService);
-  if (NS_SUCCEEDED(result)) {
-    // XXX: What if this fails?
-    result = pEventQService->CreateThreadEventQueue();
-  }
-  
-  nsComponentManager::RegisterComponent(kPersistentPropertiesCID, 
-                                        NULL,
-                                        NULL, 
-                                        RAPTORBASE_DLL, 
-                                        PR_FALSE, 
-                                        PR_FALSE);
-  return rv;
-}
 
 int
 main(int argc, char *argv[])
 {
   nsresult ret;
 
-  NS_AutoregisterComponents();
-
+  nsCOMPtr<nsIServiceManager> servMan;
+  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+  registrar->AutoRegister(nsnull);
+  
   nsIStringBundleService* service = nsnull;
   ret = nsServiceManager::GetService(kStringBundleServiceCID,
                                      kIStringBundleServiceIID, (nsISupports**) &service);

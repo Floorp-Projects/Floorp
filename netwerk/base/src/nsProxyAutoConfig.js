@@ -188,12 +188,13 @@ var pacModule = new Object();
 
 pacModule.registerSelf =
     function (compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-        compMgr.registerComponentWithType(kPAC_CID,
-            "Proxy Auto Config",
-            kPAC_CONTRACTID,
-            fileSpec, location, 
-            true, true, type);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+        compMgr.registerFactoryLocation(kPAC_CID,
+                                        "Proxy Auto Config",
+                                        kPAC_CONTRACTID,
+                                        fileSpec, 
+                                        location, 
+                                        type);
     }
 
 pacModule.getClassObject =

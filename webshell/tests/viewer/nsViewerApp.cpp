@@ -56,6 +56,7 @@
 
 
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
@@ -255,13 +256,17 @@ nsresult
 nsViewerApp::SetupRegistry()
 {
   nsresult rv;
-  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                   NULL /* default */);
+
+  nsCOMPtr<nsIServiceManager> servManager;
+  NS_GetServiceManager(getter_AddRefs(servManager));
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
+  NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service. see dougt");
+  rv = registrar->AutoRegister(nsnull);
 
   // Register our browser window factory
   nsIFactory* bwf;
   NS_NewXPBaseWindowFactory(&bwf);
-  nsComponentManager::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
+  registrar->RegisterFactory(kXPBaseWindowCID, 0, 0, bwf);
   NS_RELEASE(bwf);
 
   // register the cookie manager

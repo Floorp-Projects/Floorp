@@ -282,12 +282,14 @@ function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -chat handler.\n");
     
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.registerComponentWithType(CLINE_SERVICE_CID,
-                                      "Chatzilla CommandLine Service",
-                                      CLINE_SERVICE_CONTRACTID, fileSpec,
-                                      location, true, true, type);
+    compMgr.registerFactoryLocation(CLINE_SERVICE_CID,
+                                    "Chatzilla CommandLine Service",
+                                    CLINE_SERVICE_CONTRACTID, 
+                                    fileSpec,
+                                    location, 
+                                    type);
     
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
@@ -296,16 +298,20 @@ function (compMgr, fileSpec, location, type)
                             CLINE_SERVICE_CONTRACTID, true, true);
 
     dump("*** Registering x-application-irc handler.\n");
-    compMgr.registerComponentWithType(IRCCNT_HANDLER_CID,
-                                      "IRC Content Handler",
-                                      IRCCNT_HANDLER_CONTRACTID, fileSpec,
-                                      location, true, true, type);
+    compMgr.registerFactoryLocation(IRCCNT_HANDLER_CID,
+                                    "IRC Content Handler",
+                                    IRCCNT_HANDLER_CONTRACTID, 
+                                    fileSpec,
+                                    location, 
+                                    type);
 
     dump("*** Registering irc protocol handler.\n");
-    compMgr.registerComponentWithType(IRCPROT_HANDLER_CID,
-                                      "IRC protocol handler",
-                                      IRCPROT_HANDLER_CONTRACTID, fileSpec, location,
-                                      true, true, type);
+    compMgr.registerFactoryLocation(IRCPROT_HANDLER_CID,
+                                    "IRC protocol handler",
+                                    IRCPROT_HANDLER_CONTRACTID, 
+                                    fileSpec, 
+                                    location,
+                                    type);
 
 }
 
@@ -313,9 +319,10 @@ ChatzillaModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
 
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.unregisterComponentSpec(CLINE_SERVICE_CID, fileSpec);
+    compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID, 
+                                      fileSpec);
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",

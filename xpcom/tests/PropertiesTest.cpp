@@ -43,6 +43,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
@@ -69,9 +70,12 @@ main(int argc, char* argv[])
 #ifndef XPCOM_STANDALONE
   nsresult ret;
 
-  NS_InitXPCOM2(nsnull, nsnull, nsnull);
-  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                   NULL /* default */);
+
+  nsCOMPtr<nsIServiceManager> servMan;
+  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+  registrar->AutoRegister(nsnull);
 
   // Create the Event Queue for this thread...
   nsCOMPtr<nsIEventQueueService> pEventQService =

@@ -1,6 +1,7 @@
 #include "nsNetUtil.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
@@ -124,11 +125,6 @@ MyNotifications::OnProgress(nsIRequest *req, nsISupports *ctx,
 // main, etc..
 //-----------------------------------------------------------------------------
 
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
 
 int main(int argc, char **argv)
 {
@@ -139,8 +135,11 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    rv = NS_AutoregisterComponents();
-    RETURN_IF_FAILED(rv, "NS_AutoregisterComponents");
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     // Create the Event Queue for this thread...
     nsCOMPtr<nsIEventQueueService> eqs = 

@@ -23,6 +23,7 @@
  */
 
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIEventQueueService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIStringBundle.h"
@@ -106,8 +107,15 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     // Register components
     if (!sRegistryInitializedFlag)
     {
-        rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                              NULL /* default */);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(sServiceManager, &rv);
+        if (NS_FAILED(rv))
+        {
+            NS_ASSERTION(PR_FALSE, "Could not QI to registrar");
+            return rv;
+        }
+
+        rv = registrar->AutoRegister(nsnull);
+
         if (NS_FAILED(rv))
         {
             NS_ASSERTION(PR_FALSE, "Could not AutoRegister");

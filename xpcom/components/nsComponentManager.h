@@ -43,6 +43,7 @@
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIComponentManagerObsolete.h"
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
@@ -84,6 +85,7 @@ extern const char XPCOM_LIB_PREFIX[];
 class nsComponentManagerImpl
     : public nsIComponentManager,
       public nsIServiceManager,
+      public nsIComponentRegistrar,
       public nsSupportsWeakReference,
       public nsIInterfaceRequestor,
       public nsIServiceManagerObsolete,
@@ -94,7 +96,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
 
     // Since the nsIComponentManagerObsolete and nsIComponentManager share some of the 
-    // same interface function name, we have to manually define the functions here.
+    // same interface function names, we have to manually define the functions here.
     // The only function that is in nsIComponentManagerObsolete and is in nsIComponentManager
     // is GetClassObjectContractID.  
     //
@@ -103,39 +105,27 @@ public:
                                           const nsIID &aIID,
                                           void **_retval);
 
+
     NS_DECL_NSICOMPONENTMANAGEROBSOLETE
-    NS_DECL_NSISERVICEMANAGER
+
+    // Since the nsIComponentManagerObsolete and nsIComponentRegistrar share some of the
+    // same interface function names, we have to manually define the functions here.
+    // the only fuction that is shared is UnregisterFactory
+    NS_IMETHOD AutoRegister(nsIFile *aSpec); 
+    NS_IMETHOD AutoUnregister(nsIFile *aSpec); 
+    NS_IMETHOD RegisterFactory(const nsCID & aClass, const char *aClassName, const char *aContractID, nsIFactory *aFactory); 
+    //  NS_IMETHOD UnregisterFactory(const nsCID & aClass, nsIFactory *aFactory); 
+    NS_IMETHOD RegisterFactoryLocation(const nsCID & aClass, const char *aClassName, const char *aContractID, nsIFile *aFile, const char *loaderStr, const char *aType); 
+    NS_IMETHOD UnregisterFactoryLocation(const nsCID & aClass, nsIFile *aFile); 
+    NS_IMETHOD IsCIDRegistered(const nsCID & aClass, PRBool *_retval); 
+    NS_IMETHOD IsContractIDRegistered(const char *aClass, PRBool *_retval); 
+    NS_IMETHOD EnumerateCIDs(nsISimpleEnumerator **_retval); 
+    NS_IMETHOD EnumerateContractIDs(nsISimpleEnumerator **_retval); 
+    NS_IMETHOD CIDToContractID(const nsCID & aClass, char **_retval); 
+    NS_IMETHOD ContractIDToCID(const char *aContractID, nsCID * *_retval); 
     
-    // nsIServiceManagerObsolete
-   NS_IMETHOD
-    RegisterService(const nsCID& aClass, nsISupports* aService);
-
-    NS_IMETHOD
-    UnregisterService(const nsCID& aClass);
-
-    NS_IMETHOD
-    GetService(const nsCID& aClass, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener);
-
-    NS_IMETHOD
-    ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener);
-
-    NS_IMETHOD
-    RegisterService(const char* aContractID, nsISupports* aService);
-
-    NS_IMETHOD
-    UnregisterService(const char* aContractID);
-
-    NS_IMETHOD
-    GetService(const char* aContractID, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener);
-
-    NS_IMETHOD
-    ReleaseService(const char* aContractID, nsISupports* service,
-                   nsIShutdownListener* shutdownListener);
+    NS_DECL_NSISERVICEMANAGER
+    NS_DECL_NSISERVICEMANAGEROBSOLETE
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -181,6 +171,10 @@ protected:
     nsresult HashContractID(const char *acontractID, nsFactoryEntry *fe_ptr);
     nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsFactoryEntry **fe_ptr = NULL);
     nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
+
+    void DeleteContractIDEntriesByCID(const nsCID* aClass, const char*registryName);
+    void DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFactory* factory);
+
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
     
     // The following functions are the only ones that operate on the persistent
@@ -204,7 +198,7 @@ protected:
     int AddLoaderType(const char *typeStr);
 
 private:
-    nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec);
+    nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec, PRBool fileIsCompDir=PR_TRUE);
 
 protected:
     PLDHashTable        mFactories;

@@ -34,56 +34,45 @@
 #include "nsCRT.h"
 #include "nspr.h"
 
-// this after nsISupports, to pick up IID
-// so that xpt stuff doesn't try to define it itself...
-#include "xptinfo.h"
-#include "nsIInterfaceInfoManager.h"
-
+#include "NSReg.h"
+#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
 #include "nsComponentManagerObsolete.h"
-#include "nsICategoryManager.h"
-
-#include "nsIEnumerator.h"
-#include "nsIModule.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIComponentLoader.h"
-#include "nsNativeComponentLoader.h"
-#include "nsXPIDLString.h"
-
-#include "nsIObserverService.h"
-
-#include "nsLocalFile.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-
-#include "NSReg.h"
-
+#include "nsICategoryManager.h"
+#include "nsIComponentLoader.h"
+#include "nsIEnumerator.h"
+#include "nsIInterfaceInfoManager.h"
+#include "nsIModule.h"
+#include "nsIObserverService.h"
+#include "nsISimpleEnumerator.h"
+#include "nsISupportsPrimitives.h"
+#include "nsLocalFile.h"
+#include "nsNativeComponentLoader.h"
+#include "nsRegistry.h"
+#include "nsXPIDLString.h"
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
+#include "xptinfo.h" // this after nsISupports, to pick up IID so that xpt stuff doesn't try to define it itself...
 
 #ifdef XP_BEOS
 #include <FindDirectory.h>
 #include <Path.h>
 #endif
 
-#include "nsRegistry.h"
-
 // Logging of debug output
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
 #endif
 #include "prlog.h"
+
 PRLogModuleInfo* nsComponentManagerLog = NULL;
 
 #if defined(DEBUG)
 #define SHOW_DENIED_ON_SHUTDOWN
 #endif
-
-#include "nsAutoLock.h"
-
-// Enable printing of critical errors on screen even for release builds
-#define PRINT_CRITICAL_ERROR_TO_SCREEN
 
 // Loader Types
 #define NS_LOADER_DATA_ALLOC_STEP 6
@@ -94,25 +83,25 @@ PRLogModuleInfo* nsComponentManagerLog = NULL;
 #define BIG_REGISTRY_BUFLEN   (512*1024)
 
 // Common Key Names 
-const char xpcomKeyName[]="software/mozilla/XPCOM";
-const char classesKeyName[]="contractID";
 const char classIDKeyName[]="classID";
-const char componentsKeyName[]="components";
+const char classesKeyName[]="contractID";
 const char componentLoadersKeyName[]="componentLoaders";
+const char componentsKeyName[]="components";
 const char xpcomComponentsKeyName[]="software/mozilla/XPCOM/components";
+const char xpcomKeyName[]="software/mozilla/XPCOM";
 
 // Common Value Names
 const char classIDValueName[]="ClassID";
-const char versionValueName[]="VersionString";
-const char lastModValueName[]="LastModTimeStamp";
-const char fileSizeValueName[]="FileSize";
-const char componentCountValueName[]="ComponentsCount";
-const char contractIDValueName[]="ContractID";
 const char classNameValueName[]="ClassName";
-const char inprocServerValueName[]="InprocServer";
+const char componentCountValueName[]="ComponentsCount";
 const char componentTypeValueName[]="ComponentType";
+const char contractIDValueName[]="ContractID";
+const char fileSizeValueName[]="FileSize";
+const char inprocServerValueName[]="InprocServer";
+const char lastModValueName[]="LastModTimeStamp";
 const char nativeComponentType[]="application/x-mozilla-native";
 const char staticComponentType[]="application/x-mozilla-static";
+const char versionValueName[]="VersionString";
 
 const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
 const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
@@ -121,7 +110,6 @@ const char XPCOM_LIB_PREFIX[]          = "lib:";
 // Nonexistent factory entry
 // This is used to mark non-existent contractid mappings
 static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
-
 
 
 #define NS_EMPTY_IID                                 \
@@ -298,7 +286,10 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr)
   return status;
 }
 
-/* prototypes for the Mac */
+////////////////////////////////////////////////////////////////////////////////
+// Hashtable Callbacks
+////////////////////////////////////////////////////////////////////////////////
+
 PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
@@ -382,7 +373,7 @@ contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     }
 
     nsCRT::free(entry->mContractID);
-   
+
     PL_DHashClearEntryStub(aTable, aHdr);
 }
 
@@ -402,7 +393,6 @@ static PLDHashTableOps contractID_DHashTableOps = {
 ////////////////////////////////////////////////////////////////////////////////
 
 MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
-
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, 
                                const char *aLocation,
                                int aType)
@@ -454,6 +444,272 @@ nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
     typeIndex = NS_COMPONENT_TYPE_FACTORY_ONLY;
     return NS_OK;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Hashtable Enumeration
+////////////////////////////////////////////////////////////////////////////////
+typedef NS_CALLBACK(EnumeratorConverter)(PLDHashTable *table,
+                                         const PLDHashEntryHdr *hdr,
+                                         void *data,
+                                         nsISupports **retval);
+
+class PLDHashTableEnumeratorImpl : public nsIBidirectionalEnumerator, 
+                                   public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
+    NS_DECL_NSISIMPLEENUMERATOR
+    
+    virtual ~PLDHashTableEnumeratorImpl();
+    PLDHashTableEnumeratorImpl(PLDHashTable *table,
+                               EnumeratorConverter converter,
+                               void *converterData);
+    PRInt32 Count() { return mCount; }
+private:
+    PLDHashTableEnumeratorImpl(); /* no implementation */
+    NS_IMETHODIMP ReleaseElements();
+    
+    nsVoidArray   mElements;
+    PRInt32       mCount, mCurrent;
+    PRMonitor*    mMonitor;
+
+    struct Closure {
+        PRBool                        succeeded;
+        EnumeratorConverter           converter;
+        void                          *data;
+        PLDHashTableEnumeratorImpl    *impl;
+    };
+
+    static PLDHashOperator PR_CALLBACK Enumerator(PLDHashTable *table,
+                                                  PLDHashEntryHdr *hdr, 
+                                                  PRUint32 number,
+                                                  void *data);
+};
+
+// static
+PLDHashOperator PR_CALLBACK
+PLDHashTableEnumeratorImpl::Enumerator(PLDHashTable *table,
+                                       PLDHashEntryHdr *hdr, 
+                                       PRUint32 number,
+                                       void *data)
+{
+    Closure *c = NS_REINTERPRET_CAST(Closure *, data);
+    nsISupports *converted;
+    if (NS_FAILED(c->converter(table, hdr, c->data, &converted)) ||
+        !c->impl->mElements.AppendElement(converted)) {
+        c->succeeded = PR_FALSE;
+        return PL_DHASH_STOP;
+    }
+
+    c->succeeded = PR_TRUE;
+    return PL_DHASH_NEXT;
+}
+
+PLDHashTableEnumeratorImpl::PLDHashTableEnumeratorImpl(PLDHashTable *table, 
+                                                       EnumeratorConverter converter,
+                                                       void *converterData) 
+: mCurrent(0)
+{
+    mMonitor = nsAutoMonitor::NewMonitor("PLDHashTableEnumeratorImpl");
+    NS_ASSERTION(mMonitor, "NULL Monitor");
+  
+    nsAutoMonitor mon(mMonitor);
+
+    NS_INIT_REFCNT();
+    Closure c = { PR_FALSE, converter, converterData, this };
+    mCount = PL_DHashTableEnumerate(table, Enumerator, &c);
+    if (!c.succeeded) {
+        ReleaseElements();
+        mCount = 0;
+    }
+}
+
+NS_IMPL_ISUPPORTS3(PLDHashTableEnumeratorImpl, 
+                   nsIBidirectionalEnumerator,
+                   nsIEnumerator,
+                   nsISimpleEnumerator);
+
+PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
+{
+    (void) ReleaseElements();
+
+    // Destroy the Lock
+    if (mMonitor)
+        PR_DestroyMonitor(mMonitor);
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::ReleaseElements()
+{
+    for (PRInt32 i = 0; i < mCount; i++) {
+        nsISupports *supports = NS_REINTERPRET_CAST(nsISupports *,
+                                                    mElements[i]);
+        NS_IF_RELEASE(supports);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PL_NewDHashTableEnumerator(PLDHashTable *table,
+                           EnumeratorConverter converter,
+                           void *converterData, 
+                           PLDHashTableEnumeratorImpl **retval)
+{
+    PLDHashTableEnumeratorImpl *impl =
+        new PLDHashTableEnumeratorImpl(table, converter, converterData);
+    
+    if (!impl)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (impl->Count() == -1) {
+        // conversion failed
+        delete impl;
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_ADDREF(*retval = impl);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::First()
+{
+    if (!mCount)
+        return NS_ERROR_FAILURE;
+    
+    mCurrent = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::Last()
+{
+    if (!mCount)
+        return NS_ERROR_FAILURE;
+    mCurrent = mCount - 1;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::Prev()
+{
+    if (!mCurrent)
+        return NS_ERROR_FAILURE;
+
+    mCurrent--;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::Next()
+{
+    // If empty or we're past the end, or we are at the end return error
+    if (!mCount || (mCurrent == mCount) || (++mCurrent == mCount))
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::CurrentItem(nsISupports **retval)
+{
+    if (!mCount || mCurrent == mCount)
+        return NS_ERROR_FAILURE;
+
+    *retval = NS_REINTERPRET_CAST(nsISupports *, mElements[mCurrent]);
+    if (*retval)
+        NS_ADDREF(*retval);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+PLDHashTableEnumeratorImpl::IsDone()
+{
+    if (!mCount || (mCurrent == mCount))
+        return NS_OK;
+
+    return NS_COMFALSE;
+}
+
+NS_IMETHODIMP 
+PLDHashTableEnumeratorImpl::HasMoreElements(PRBool *_retval)
+{
+    if (!mCount || (mCurrent == mCount))
+        *_retval = PR_FALSE;
+    else
+        *_retval = PR_TRUE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+PLDHashTableEnumeratorImpl::GetNext(nsISupports **_retval)
+{
+    nsresult rv = Next();
+    if (NS_FAILED(rv)) return rv;
+
+    return CurrentItem(_retval);
+}
+
+static NS_IMETHODIMP
+ConvertFactoryEntryToCID(PLDHashTable *table,
+                         const PLDHashEntryHdr *hdr,
+                         void *data, nsISupports **retval)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsID> wrapper =
+        do_CreateInstance(NS_SUPPORTS_ID_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    const nsFactoryTableEntry *entry = 
+        NS_REINTERPRET_CAST(const nsFactoryTableEntry *, hdr);
+    if(entry) {
+        nsFactoryEntry *fe = entry->mFactoryEntry;
+   
+        wrapper->SetData(&fe->cid);
+        *retval = wrapper;
+        NS_ADDREF(*retval);
+        return NS_OK;
+    }
+    else
+        *retval = nsnull;
+
+    return rv;
+
+}
+
+static NS_IMETHODIMP
+ConvertContractIDKeyToString(PLDHashTable *table,
+                             const PLDHashEntryHdr *hdr,
+                             void *data, nsISupports **retval)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsString> wrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    const nsContractIDTableEntry *entry = 
+        NS_REINTERPRET_CAST(const nsContractIDTableEntry *, hdr);
+    const char *contractID = entry->mContractID;
+    nsCAutoString converted;
+
+    converted.Append(contractID);
+
+    wrapper->SetData(converted.get());
+    *retval = wrapper;
+    NS_ADDREF(*retval);
+    return NS_OK;
+    
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl
 ////////////////////////////////////////////////////////////////////////////////
@@ -645,13 +901,30 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsComponentManagerImpl, 
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsComponentManagerImpl, 
                               nsIComponentManager, 
                               nsIServiceManager,
                               nsISupportsWeakReference, 
                               nsIInterfaceRequestor,
+                              nsIComponentRegistrar,
                               nsIServiceManagerObsolete,
                               nsIComponentManagerObsolete)
+
+
+nsresult
+nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
+{
+    if (uuid.Equals(NS_GET_IID(nsIServiceManager)))
+    {
+        *result = NS_STATIC_CAST(nsIServiceManager*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    
+    // fall through to QI as anything QIable is a superset of what canbe
+    // got via the GetInterface()
+    return  QueryInterface(uuid, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -719,10 +992,7 @@ nsComponentManagerImpl::PlatformInit(void)
 
     mComponentsOffset = strlen(componentDescriptor);
 
-    if (componentDescriptor)
-        nsMemory::Free(componentDescriptor);
-
-
+    nsMemory::Free(componentDescriptor);
 
     if (mNativeComponentLoader) {
         /* now that we have the registry, Init the native loader */
@@ -815,89 +1085,6 @@ nsComponentManagerImpl::PlatformVersionCheck(nsRegistryKey *aXPCOMRootKey)
 
     return NS_OK;
 }
-
-#if 0
-// If ever revived, this code is not fully updated to escape the dll location
-void
-nsComponentManagerImpl::PlatformSetFileInfo(nsRegistryKey key, PRUint32 lastModifiedTime, PRUint32 fileSize)
-{
-    mRegistry->SetInt(key, lastModValueName, lastModifiedTime);
-    mRegistry->SetInt(key, fileSizeValueName, fileSize);
-}
-
-/**
- * PlatformMarkNoComponents(nsDll *dll)
- *
- * Stores the dll name, last modified time, size and 0 for number of
- * components in dll in the registry at location
- *        ROOTKEY_COMMON/Software/Mozilla/XPCOM/Components/dllname
- */
-nsresult
-nsComponentManagerImpl::PlatformMarkNoComponents(nsDll *dll)
-{
-    PR_ASSERT(mRegistry!=NULL);
-    
-    nsresult rv;
-
-    nsRegistryKey dllPathKey;
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey, dll->GetPersistentDescriptorString(), &dllPathKey);    
-    if(NS_FAILED(rv))
-    {
-        return rv;
-    }
-        
-    PlatformSetFileInfo(dllPathKey, dll->GetLastModifiedTime(), dll->GetSize());
-    rv = mRegistry->SetInt(dllPathKey, componentCountValueName, 0);
-      
-    return rv;
-}
-
-nsresult
-nsComponentManagerImpl::PlatformRegister(const char *cidString,
-                                         const char *className,
-                                         const char * contractID, nsDll *dll)
-{
-    // Preconditions
-    PR_ASSERT(cidString != NULL);
-    PR_ASSERT(dll != NULL);
-    PR_ASSERT(mRegistry !=NULL);
-
-    nsresult rv;
-    
-    nsRegistryKey IDkey;
-    rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &IDkey);
-    if (NS_FAILED(rv)) return (rv);
-
-
-    rv = mRegistry->SetStringUTF8(IDkey,classNameValueName, className);
-    if (contractID)
-    {
-        rv = mRegistry->SetStringUTF8(IDkey,contractIDValueName, contractID);        
-    }
-    rv = mRegistry->SetBytesUTF8(IDkey, inprocServerValueName, 
-            strlen(dll->GetPersistentDescriptorString()) + 1, 
-            NS_REINTERPRET_CAST(char*, dll->GetPersistentDescriptorString()));
-    
-    if (contractID)
-    {
-        nsRegistryKey contractIDKey;
-        rv = mRegistry->AddSubtreeRaw(mClassesKey, contractID, &contractIDKey);
-        rv = mRegistry->SetStringUTF8(contractIDKey, classIDValueName, cidString);
-    }
-
-    nsRegistryKey dllPathKey;
-    rv = mRegistry->AddSubtreeRaw(mXPCOMKey,dll->GetPersistentDescriptorString(), &dllPathKey);
-
-    PlatformSetFileInfo(dllPathKey, dll->GetLastModifiedTime(), dll->GetSize());
-
-    PRInt32 nComponents = 0;
-    rv = mRegistry->GetInt(dllPathKey, componentCountValueName, &nComponents);
-    nComponents++;
-    rv = mRegistry->SetInt(dllPathKey,componentCountValueName, nComponents);
-
-    return rv;
-}
-#endif
 
 nsresult
 nsComponentManagerImpl::PlatformUnregister(const char *cidString,
@@ -1035,7 +1222,8 @@ nsComponentManagerImpl::PlatformContractIDToCLSID(const char *aContractID, nsCID
 
 nsresult
 nsComponentManagerImpl::PlatformCLSIDToContractID(const nsCID *aClass,
-                                              char* *aClassName, char* *aContractID)
+                                                  char* *aClassName, 
+                                                  char* *aContractID)
 {
         
     PR_ASSERT(aClass);
@@ -1049,16 +1237,19 @@ nsComponentManagerImpl::PlatformCLSIDToContractID(const nsCID *aClass,
     if(NS_FAILED(rv)) return rv;
     PR_FREEIF(cidStr);
 
-    char* classnameString;
-    rv = mRegistry->GetStringUTF8(cidKey, classNameValueName, &classnameString);
-    if(NS_FAILED(rv)) return rv;
-    *aClassName = classnameString;
+    if (aClassName) {
+        char* classnameString;
+        rv = mRegistry->GetStringUTF8(cidKey, classNameValueName, &classnameString);
+        if(NS_FAILED(rv)) return rv;
+        *aClassName = classnameString;
+    }
 
-    char* contractidString;
-    rv = mRegistry->GetStringUTF8(cidKey,contractIDValueName,&contractidString);
-    if (NS_FAILED(rv)) return rv;
-    *aContractID = contractidString;
-
+    if (aContractID) {
+        char* contractidString;
+        rv = mRegistry->GetStringUTF8(cidKey,contractIDValueName,&contractidString);
+        if (NS_FAILED(rv)) return rv;
+        *aContractID = contractidString;
+    }
     return NS_OK;
 
 }
@@ -1193,9 +1384,9 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 
 #endif /* USE_REGISTRY */
 
-//
-// HashContractID
-//
+////////////////////////////////////////////////////////////////////////////////
+// Hash Functions
+////////////////////////////////////////////////////////////////////////////////
 nsresult 
 nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass, nsFactoryEntry **pfe)
 {
@@ -1251,10 +1442,6 @@ nsComponentManagerImpl::HashContractID(const char *aContractID, nsFactoryEntry *
  
     return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsComponentManagerImpl: Public methods
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * LoadFactory()
@@ -1505,7 +1692,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
  *
  */
 nsresult
-nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aClass) 
+nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aClass)
 {
     NS_PRECONDITION(aContractID != NULL, "null ptr");
     if (! aContractID)
@@ -1547,8 +1734,8 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
  */
 nsresult
 nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
-                                      char* *aClassName,
-                                      char* *aContractID)
+                                          char* *aClassName,
+                                          char* *aContractID)
 {
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
@@ -1683,7 +1870,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 }
 
 // Service Manager Impl
-
+static
 PLDHashOperator PR_CALLBACK
 FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
                                  PLDHashEntryHdr *aHdr,
@@ -1699,7 +1886,7 @@ FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
     factoryEntry->mServiceObject = nsnull;
     return PL_DHASH_NEXT;
 }
-
+static
 PLDHashOperator PR_CALLBACK
 FreeServiceContractIDEntryEnumerate(PLDHashTable *aTable,
                                     PLDHashEntryHdr *aHdr,
@@ -1724,12 +1911,13 @@ nsComponentManagerImpl::FreeServices()
     if (!gXPCOMShuttingDown)
         return NS_ERROR_FAILURE;
 
-    if (mFactories.ops) {
-        PL_DHashTableEnumerate(&mFactories, FreeServiceFactoryEntryEnumerate, nsnull);
-    }
-
     if (mContractIDs.ops) {
         PL_DHashTableEnumerate(&mContractIDs, FreeServiceContractIDEntryEnumerate, nsnull);
+    }
+
+    
+    if (mFactories.ops) {
+        PL_DHashTableEnumerate(&mFactories, FreeServiceFactoryEntryEnumerate, nsnull);
     }
 
     return NS_OK;
@@ -2552,6 +2740,60 @@ nsComponentManagerImpl::GetLoaderForType(int aType,
     return rv;
 }
 
+
+// Convert a loader type string into an index into the component data
+// array. Empty loader types are converted to NATIVE. Returns -1 if
+// loader type cannot be determined.
+int
+nsComponentManagerImpl::GetLoaderType(const char *typeStr)
+{
+    if (!typeStr || !*typeStr) {
+        // Empty type strings are NATIVE
+        return NS_COMPONENT_TYPE_NATIVE;
+    }
+
+    for (int i=NS_COMPONENT_TYPE_NATIVE; i<mNLoaderData; i++) {
+        if (!strcmp(typeStr, mLoaderData[i].type))
+            return i;
+    }
+    // Not found
+    return NS_COMPONENT_TYPE_FACTORY_ONLY;
+}
+
+// Add a loader type if not already known. Return the typeIndex
+// if the loader type is either added or already there.
+int
+nsComponentManagerImpl::AddLoaderType(const char *typeStr)
+{
+    int typeIndex = GetLoaderType(typeStr);
+    if (typeIndex >= 0) {
+        return typeIndex;
+    }
+
+    // Add the loader type
+    if (mNLoaderData >= mMaxNLoaderData) {
+        NS_ASSERTION(mNLoaderData == mMaxNLoaderData,
+                     "Memory corruption. nsComponentManagerImpl::mLoaderData array overrun.");
+        // Need to increase our loader array
+        nsLoaderdata *new_mLoaderData = (nsLoaderdata *) PR_Realloc(mLoaderData, (mMaxNLoaderData + NS_LOADER_DATA_ALLOC_STEP) * sizeof(nsLoaderdata));
+        if (!new_mLoaderData)
+            return NS_ERROR_OUT_OF_MEMORY;
+        mLoaderData = new_mLoaderData;
+        mMaxNLoaderData += NS_LOADER_DATA_ALLOC_STEP;
+    }
+
+    typeIndex = mNLoaderData;
+    mLoaderData[typeIndex].type = PL_strdup(typeStr);
+    if (!mLoaderData[typeIndex].type) {
+        // mmh! no memory. return failure.
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mLoaderData[typeIndex].loader = nsnull;
+    mNLoaderData++;
+
+    return typeIndex;
+}
+
 nsresult
 nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
                                                const char *aClassName,
@@ -2629,6 +2871,56 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
     return rv;
 }
 
+typedef struct
+{
+    const nsCID* cid;
+    const char* regName;
+    nsIFactory* factory;
+} UnregisterConditions;
+
+static PLDHashOperator PR_CALLBACK
+DeleteFoundCIDs(PLDHashTable *aTable,
+                PLDHashEntryHdr *aHdr,
+                PRUint32 aNumber,
+                void *aData)
+{
+    nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
+
+    if (!entry->mFactoryEntry || entry->mFactoryEntry == kNonExistentContractID) 
+        return PL_DHASH_NEXT;
+    
+    UnregisterConditions* data = (UnregisterConditions*)aData;
+
+    nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
+    if (data->cid->Equals(factoryEntry->cid) && 
+        ((data->regName && !PL_strcasecmp(factoryEntry->location, data->regName)) ||
+         (data->factory && data->factory == factoryEntry->factory.get())))
+        return PL_DHASH_REMOVE;
+    
+    return PL_DHASH_NEXT;
+}
+
+void 
+nsComponentManagerImpl::DeleteContractIDEntriesByCID(const nsCID* aClass, const char*registryName)
+{
+    UnregisterConditions aData;
+    aData.cid     = aClass;
+    aData.regName = registryName;
+    aData.factory = nsnull;
+    PL_DHashTableEnumerate(&mContractIDs, DeleteFoundCIDs, (void*)&aData);
+
+}
+
+void 
+nsComponentManagerImpl::DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFactory* factory)
+{
+    UnregisterConditions aData;
+    aData.cid     = aClass;
+    aData.regName = nsnull;
+    aData.factory = factory;      
+    PL_DHashTableEnumerate(&mContractIDs, DeleteFoundCIDs, (void*)&aData);
+}
+
 nsresult
 nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
                                           nsIFactory *aFactory)
@@ -2641,21 +2933,21 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
         delete [] buf;
     }
         
+    nsFactoryEntry *old;
+    
+    // first delete all contract id entries that are registered with this cid.      
+    DeleteContractIDEntriesByCID(&aClass, aFactory);
+
+    // next check to see if there is a CID registered
     nsIDKey key(aClass);
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
-    nsFactoryEntry *old = GetFactoryEntry(aClass, key,
-                                          0 /* dont check registry */);
-    if (old != NULL)
-    {
-        if (old->factory.get() == aFactory)
-        {
-            nsAutoMonitor mon(mMon);
-
-            PL_DHashTableOperate(&mFactories, &aClass, PL_DHASH_REMOVE);
-            old = NULL;
-            res = NS_OK;
-        }
-
+    old = GetFactoryEntry(aClass, key, 0 /* dont check registry */);
+    
+    if (old && (old->factory.get() == aFactory))
+    {   
+        nsAutoMonitor mon(mMon);
+        PL_DHashTableOperate(&mFactories, &aClass, PL_DHASH_REMOVE);
+        res = NS_OK;
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
@@ -2668,20 +2960,28 @@ nsresult
 nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *registryName)
 {
-    nsresult rv = NS_OK;
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) 
+    {
+        char *buf = aClass.ToString();
+        PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+               ("nsComponentManager: UnregisterComponent(%s)", buf));
+        delete [] buf;
+    }
 
     NS_ENSURE_ARG_POINTER(registryName);
+    nsresult rv;
+    nsFactoryEntry *old;
+    
+    // first delete all contract id entries that are registered with this cid.      
+    DeleteContractIDEntriesByCID(&aClass, registryName);
 
-    nsAutoMonitor mon(mMon);
-
-    // Remove any stored factory entries
+    // next check to see if there is a CID registered
     nsIDKey key(aClass);
-    nsFactoryEntry *entry = GetFactoryEntry(aClass, key,
-                                            0 /* dont check registry */);
-    if (entry && entry->location && !PL_strcasecmp(entry->location, registryName))
-    {
+    old = GetFactoryEntry(aClass, key, 0 /* dont check registry */);
+    if (old && old->location && !PL_strcasecmp(old->location, registryName))
+    {   
+        nsAutoMonitor mon(mMon);
         PL_DHashTableOperate(&mFactories, &aClass, PL_DHASH_REMOVE);
-        entry = nsnull;
     }
 
 #ifdef USE_REGISTRY
@@ -2748,11 +3048,11 @@ nsComponentManagerImpl::UnloadLibraries(nsIServiceManager *serviceMgr, PRInt32 a
  * AutoRegister(RegistrationInstant, const char *directory)
  *
  * Given a directory in the following format, this will ensure proper registration
- * of all components. No default director is looked at.
+ * of all components. No default directory is looked at.
  *
  *    Directory and fullname are what NSPR will accept. For eg.
- *         WIN    y:/home/dp/mozilla/dist/bin
- *      UNIX    /home/dp/mozilla/dist/bin
+ *      WIN    y:/home/dp/mozilla/dist/bin
+ *      UNIX   /home/dp/mozilla/dist/bin
  *      MAC    /Hard drive/mozilla/dist/apprunner
  *
  * This will take care not loading already registered dlls, finding and
@@ -2772,7 +3072,9 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 }
 
 nsresult
-nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
+nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, 
+                                         nsIFile *inDirSpec, 
+                                         PRBool fileIsCompDir)
 {
     nsCOMPtr<nsIFile> dir;
     nsresult rv;
@@ -2786,26 +3088,32 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     {
         // Use supplied components' directory   
         dir = inDirSpec;
-    
-        // Set components' directory for AutoRegisterInterfces to query
-        nsCOMPtr<nsIProperties> directoryService = 
-                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        // Don't care if undefining fails
-        directoryService->Undefine(NS_XPCOM_COMPONENT_DIR); 
-        rv = directoryService->Define(NS_XPCOM_COMPONENT_DIR, dir);
-        if (NS_FAILED(rv)) return rv;
+        
+        if (fileIsCompDir) {
+            // Set components' directory for AutoRegisterInterfces to query
+            nsCOMPtr<nsIProperties> directoryService = 
+                do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            
+            // Don't care if undefining fails
+            directoryService->Undefine(NS_XPCOM_COMPONENT_DIR); 
+            rv = directoryService->Define(NS_XPCOM_COMPONENT_DIR, dir);
+            if (NS_FAILED(rv)) return rv;
+        }
     } 
     else 
     {
         // Do default components directory
         nsCOMPtr<nsIProperties> directoryService = 
-                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
+            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) 
+            return rv;
 
-        rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
-        if (NS_FAILED(rv)) return rv; // XXX translate error code?
+        rv = directoryService->Get(NS_XPCOM_COMPONENT_DIR, 
+                                   NS_GET_IID(nsIFile), 
+                                   getter_AddRefs(dir));
+        if (NS_FAILED(rv)) 
+            return rv; // XXX translate error code?
     }
 
     nsCOMPtr<nsIInterfaceInfoManager> iim = 
@@ -2815,7 +3123,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
         return NS_ERROR_UNEXPECTED;    
     
     // Notify observers of xpcom autoregistration start
-    NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, nsnull,
+    NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, 
+                                  nsnull,
                                   "start");
 
     /* do the native loader first, so we can find other loaders */
@@ -2892,9 +3201,9 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     }
 
     // Notify observers of xpcom autoregistration completion
-    NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, nsnull,
-                                  "end");
-    
+    NS_CreateServicesFromCategory(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID, 
+                                  nsnull,
+                                  "end");    
     return rv;
 }
 
@@ -2954,240 +3263,6 @@ nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
     return NS_OK;
 }
 
-
-typedef NS_CALLBACK(EnumeratorConverter)(PLDHashTable *table,
-                                         const PLDHashEntryHdr *hdr,
-                                         void *data,
-                                         nsISupports **retval);
-
-class PLDHashTableEnumeratorImpl : public nsIBidirectionalEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIENUMERATOR
-    NS_DECL_NSIBIDIRECTIONALENUMERATOR
-    
-    virtual ~PLDHashTableEnumeratorImpl();
-    PLDHashTableEnumeratorImpl(PLDHashTable *table,
-                               EnumeratorConverter converter,
-                               void *converterData);
-    PRInt32 Count() { return mCount; }
-private:
-    PLDHashTableEnumeratorImpl(); /* no implementation */
-    NS_IMETHODIMP ReleaseElements();
-    
-    nsVoidArray   mElements;
-    PRInt32       mCount, mCurrent;
-    PRMonitor*    mMonitor;
-
-    struct Closure {
-        PRBool                        succeeded;
-        EnumeratorConverter           converter;
-        void                          *data;
-        PLDHashTableEnumeratorImpl    *impl;
-    };
-
-    static PLDHashOperator PR_CALLBACK Enumerator(PLDHashTable *table,
-                                      PLDHashEntryHdr *hdr, PRUint32 number,
-                                      void *data);
-};
-
-// static
-PLDHashOperator PR_CALLBACK
-PLDHashTableEnumeratorImpl::Enumerator(PLDHashTable *table,
-                                       PLDHashEntryHdr *hdr, PRUint32 number,
-                                       void *data)
-{
-    Closure *c = NS_REINTERPRET_CAST(Closure *, data);
-    nsISupports *converted;
-    if (NS_FAILED(c->converter(table, hdr, c->data, &converted)) ||
-        !c->impl->mElements.AppendElement(converted)) {
-        c->succeeded = PR_FALSE;
-        return PL_DHASH_STOP;
-    }
-
-    c->succeeded = PR_TRUE;
-    return PL_DHASH_NEXT;
-}
-
-PLDHashTableEnumeratorImpl::PLDHashTableEnumeratorImpl
-(PLDHashTable *table, EnumeratorConverter converter,
- void *converterData) :
-    mCurrent(0)
-{
-    mMonitor = nsAutoMonitor::NewMonitor("PLDHashTableEnumeratorImpl");
-    
-    nsAutoMonitor mon(mMonitor);
-
-    NS_INIT_REFCNT();
-    Closure c = { PR_FALSE, converter, converterData, this };
-    mCount = PL_DHashTableEnumerate(table, Enumerator, &c);
-    if (!c.succeeded) {
-        ReleaseElements();
-        mCount = 0;
-    }
-}
-
-NS_IMPL_ISUPPORTS2(PLDHashTableEnumeratorImpl, nsIBidirectionalEnumerator,
-                   nsIEnumerator);
-
-PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
-{
-    (void) ReleaseElements();
-
-    // Destroy the Lock
-    if (mMonitor)
-        PR_DestroyMonitor(mMonitor);
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::ReleaseElements()
-{
-    for (PRInt32 i = 0; i < mCount; i++) {
-        nsISupports *supports = NS_REINTERPRET_CAST(nsISupports *,
-                                                    mElements[i]);
-        NS_IF_RELEASE(supports);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-PL_NewDHashTableEnumerator(PLDHashTable *table,
-                           EnumeratorConverter converter,
-                           void *converterData, nsIEnumerator **retval)
-{
-    PLDHashTableEnumeratorImpl *impl =
-        new PLDHashTableEnumeratorImpl(table, converter, converterData);
-    
-    if (!impl)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (impl->Count() == -1) {
-        // conversion failed
-        delete impl;
-        return NS_ERROR_FAILURE;
-    }
-
-    return impl->QueryInterface(NS_GET_IID(nsIEnumerator), (void **)retval);
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::First()
-{
-    if (!mCount)
-        return NS_ERROR_FAILURE;
-    
-    mCurrent = 0;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::Last()
-{
-    if (!mCount)
-        return NS_ERROR_FAILURE;
-    mCurrent = mCount - 1;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::Prev()
-{
-    if (!mCurrent)
-        return NS_ERROR_FAILURE;
-
-    mCurrent--;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::Next()
-{
-    // If empty or we're past the end, or we are at the end return error
-    if (!mCount || (mCurrent == mCount) || (++mCurrent == mCount))
-        return NS_ERROR_FAILURE;
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::CurrentItem(nsISupports **retval)
-{
-    if (!mCount || mCurrent == mCount)
-        return NS_ERROR_FAILURE;
-
-    *retval = NS_REINTERPRET_CAST(nsISupports *, mElements[mCurrent]);
-    if (*retval)
-        NS_ADDREF(*retval);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-PLDHashTableEnumeratorImpl::IsDone()
-{
-    if (!mCount || (mCurrent == mCount)) {
-        return NS_OK;
-    }
-
-    return NS_COMFALSE;
-}
-
-
-
-static NS_IMETHODIMP
-ConvertFactoryEntryToCID(PLDHashTable *table,
-                         const PLDHashEntryHdr *hdr,
-                         void *data, nsISupports **retval)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsISupportsID> wrapper =
-        do_CreateInstance(NS_SUPPORTS_ID_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    const nsFactoryTableEntry *entry = 
-        NS_REINTERPRET_CAST(const nsFactoryTableEntry *, hdr);
-    if(entry) {
-        nsFactoryEntry *fe = entry->mFactoryEntry;
-   
-        wrapper->SetData(&fe->cid);
-        *retval = wrapper;
-        NS_ADDREF(*retval);
-        return NS_OK;
-    }
-    else
-        *retval = nsnull;
-
-    return rv;
-
-}
-
-static NS_IMETHODIMP
-ConvertContractIDKeyToString(PLDHashTable *table,
-                             const PLDHashEntryHdr *hdr,
-                             void *data, nsISupports **retval)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsISupportsString> wrapper =
-        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    const nsContractIDTableEntry *entry = 
-        NS_REINTERPRET_CAST(const nsContractIDTableEntry *, hdr);
-    const char *contractID = entry->mContractID;
-    nsCAutoString converted;
-
-    converted.Append(contractID);
-
-    wrapper->SetData(converted.get());
-    *retval = wrapper;
-    NS_ADDREF(*retval);
-    return NS_OK;
-    
-}
-
 nsresult
 nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
 {
@@ -3206,9 +3281,16 @@ nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
             return rv;
     }
 
-    return PL_NewDHashTableEnumerator(&mFactories,
-                                      ConvertFactoryEntryToCID,
-                                      nsnull, aEnumerator);
+    PLDHashTableEnumeratorImpl *aEnum;
+    rv = PL_NewDHashTableEnumerator(&mFactories,
+                                    ConvertFactoryEntryToCID,
+                                    nsnull, 
+                                    &aEnum);
+    if (NS_FAILED(rv))
+        return rv;
+
+    *aEnumerator = NS_REINTERPRET_CAST(nsIEnumerator*, aEnum);
+    return NS_OK;
 }
 
 nsresult
@@ -3229,81 +3311,210 @@ nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEnumerator)
         if(NS_FAILED(rv))
             return rv;
     }
+    PLDHashTableEnumeratorImpl *aEnum;
+    rv = PL_NewDHashTableEnumerator(&mContractIDs,
+                                    ConvertContractIDKeyToString,
+                                    nsnull, 
+                                    &aEnum);
+    if (NS_FAILED(rv))
+        return rv;
 
-    return PL_NewDHashTableEnumerator(&mContractIDs,
-                                      ConvertContractIDKeyToString,
-                                      nsnull, aEnumerator);
+    *aEnumerator = NS_REINTERPRET_CAST(nsIEnumerator*, aEnum);
+    return NS_OK;
 }
 
+// nsIComponentRegistrar
 
-nsresult
-nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
+NS_IMETHODIMP 
+nsComponentManagerImpl::AutoRegister(nsIFile *aSpec)
 {
-    if (uuid.Equals(NS_GET_IID(nsIServiceManager)))
-    {
-        *result = NS_STATIC_CAST(nsIServiceManager*, this);
-        NS_ADDREF_THIS(); // dougt? extra addrefs??? 
-        return NS_OK;
-    }
+    if (aSpec == nsnull)
+        return AutoRegisterImpl(0, aSpec);
+
+    PRBool directory;
+    aSpec->IsDirectory(&directory);
     
-    // fall through to QI as anything QIable is a superset of what canbe
-    // got via the GetInterface()
-    return  QueryInterface(uuid, result);
+    if (directory)
+        return AutoRegisterImpl(0, aSpec, PR_FALSE);
+    
+    return AutoRegisterComponent(0, aSpec);
 }
 
-// Convert a loader type string into an index into the component data
-// array. Empty loader types are converted to NATIVE. Returns -1 if
-// loader type cannot be determined.
-int
-nsComponentManagerImpl::GetLoaderType(const char *typeStr)
+NS_IMETHODIMP 
+nsComponentManagerImpl::AutoUnregister(nsIFile *aSpec)
 {
-    if (!typeStr || !*typeStr) {
-        // Empty type strings are NATIVE
-        return NS_COMPONENT_TYPE_NATIVE;
-    }
+    // unregistering a complete directory is not implmeneted yet...FIX
+    if (aSpec == nsnull)
+        return NS_ERROR_NOT_IMPLEMENTED;
 
-    for (int i=NS_COMPONENT_TYPE_NATIVE; i<mNLoaderData; i++) {
-        if (!strcmp(typeStr, mLoaderData[i].type))
-            return i;
-    }
-    // Not found
-    return NS_COMPONENT_TYPE_FACTORY_ONLY;
+    PRBool directory;
+    aSpec->IsDirectory(&directory);
+    
+    if (directory)
+        return NS_ERROR_NOT_IMPLEMENTED;
+    
+    return AutoUnregisterComponent(0, aSpec);
 }
 
-// Add a loader type if not already known. Return the typeIndex
-// if the loader type is either added or already there.
-int
-nsComponentManagerImpl::AddLoaderType(const char *typeStr)
+NS_IMETHODIMP 
+nsComponentManagerImpl::RegisterFactory(const nsCID & aClass, 
+                                        const char *aClassName, 
+                                        const char *aContractID, 
+                                        nsIFactory *aFactory)
 {
-    int typeIndex = GetLoaderType(typeStr);
-    if (typeIndex >= 0) {
-        return typeIndex;
-    }
-
-    // Add the loader type
-    if (mNLoaderData >= mMaxNLoaderData) {
-        NS_ASSERTION(mNLoaderData == mMaxNLoaderData,
-                     "Memory corruption. nsComponentManagerImpl::mLoaderData array overrun.");
-        // Need to increase our loader array
-        nsLoaderdata *new_mLoaderData = (nsLoaderdata *) PR_Realloc(mLoaderData, (mMaxNLoaderData + NS_LOADER_DATA_ALLOC_STEP) * sizeof(nsLoaderdata));
-        if (!new_mLoaderData)
-            return NS_ERROR_OUT_OF_MEMORY;
-        mLoaderData = new_mLoaderData;
-        mMaxNLoaderData += NS_LOADER_DATA_ALLOC_STEP;
-    }
-
-    typeIndex = mNLoaderData;
-    mLoaderData[typeIndex].type = PL_strdup(typeStr);
-    if (!mLoaderData[typeIndex].type) {
-        // mmh! no memory. return failure.
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mLoaderData[typeIndex].loader = nsnull;
-    mNLoaderData++;
-
-    return typeIndex;
+    return RegisterFactory(aClass, 
+                           aClassName,
+                           aContractID,
+                           aFactory, 
+                           PR_TRUE);
 }
 
+NS_IMETHODIMP 
+nsComponentManagerImpl::RegisterFactoryLocation(const nsCID & aClass, 
+                                                const char *aClassName, 
+                                                const char *aContractID, 
+                                                nsIFile *aFile, 
+                                                const char *loaderStr, 
+                                                const char *aType)
+{
+    nsXPIDLCString registryName;
+
+    if (!loaderStr)
+    {
+        nsresult rv = RegistryLocationForSpec(aFile, getter_Copies(registryName));
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    nsresult rv;
+    rv = RegisterComponentWithType(aClass, 
+                                   aClassName, 
+                                   aContractID, 
+                                   aFile,
+                                   (loaderStr ? loaderStr : registryName),
+                                   PR_TRUE, 
+                                   PR_TRUE,
+                                   (aType ? aType : nativeComponentType) );
+    return rv;
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::UnregisterFactoryLocation(const nsCID & aClass, 
+                                                  nsIFile *aFile)
+{
+    return UnregisterComponentSpec(aClass, aFile);
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::IsCIDRegistered(const nsCID & aClass, 
+                                        PRBool *_retval)
+{
+    return IsRegistered(aClass, _retval);
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::IsContractIDRegistered(const char *aClass, 
+                                               PRBool *_retval)
+{
+    nsFactoryEntry *entry = GetFactoryEntry(aClass);
+
+    if (!entry || entry == kNonExistentContractID)
+        *_retval = PR_FALSE;
+    else
+        *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator **aEnumerator)
+{
+    NS_ASSERTION(aEnumerator != nsnull, "null ptr");
+
+    if(!aEnumerator)
+        return NS_ERROR_NULL_POINTER;
+
+    *aEnumerator = nsnull;
+
+    nsresult rv;
+    if(!mPrePopulationDone)
+    {
+        rv = PlatformPrePopulateRegistry();
+        if(NS_FAILED(rv))
+            return rv;
+    }
+    PLDHashTableEnumeratorImpl *aEnum;
+    rv = PL_NewDHashTableEnumerator(&mFactories,
+                                    ConvertFactoryEntryToCID,
+                                    nsnull, 
+                                    &aEnum);
+    if (NS_FAILED(rv))
+        return rv;
+
+    *aEnumerator = NS_REINTERPRET_CAST(nsISimpleEnumerator*, aEnum);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator **aEnumerator)
+{
+    NS_ASSERTION(aEnumerator != nsnull, "null ptr");
+    if(!aEnumerator)
+        return NS_ERROR_NULL_POINTER;
+
+    *aEnumerator = nsnull;
+
+    nsresult rv;
+    if(!mPrePopulationDone)
+    {
+        rv = PlatformPrePopulateRegistry();
+        if(NS_FAILED(rv))
+            return rv;
+    }
+
+    PLDHashTableEnumeratorImpl *aEnum;
+    rv = PL_NewDHashTableEnumerator(&mContractIDs,
+                                    ConvertContractIDKeyToString,
+                                    nsnull, 
+                                    &aEnum);
+    if (NS_FAILED(rv))
+        return rv;
+
+    *aEnumerator = NS_REINTERPRET_CAST(nsISimpleEnumerator*, aEnum);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::CIDToContractID(const nsCID & aClass, 
+                                        char **_retval)
+{
+    return CLSIDToContractID(aClass,
+                             nsnull,
+                             _retval);
+}
+
+NS_IMETHODIMP 
+nsComponentManagerImpl::ContractIDToCID(const char *aContractID, 
+                                        nsCID * *_retval)
+{
+    nsCID aCID;
+    nsresult rv = ContractIDToClassID(aContractID, &aCID);
+    if (NS_FAILED(rv))
+        return rv;
+ 
+    // not sure about this... FIX
+    *_retval = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+    *_retval = &aCID;
+        
+    return NS_OK;
+}
+
+// end nsIComponentRegistrar
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Static Access Functions
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM nsresult
@@ -3330,9 +3541,6 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
 
     return rv;
 }
-
-
-
 
 NS_COM nsresult
 NS_GetComponentManager(nsIComponentManager* *result)
@@ -3376,4 +3584,24 @@ NS_GetServiceManager(nsIServiceManager* *result)
     return NS_OK;
 }
 
+
+NS_COM nsresult
+NS_GetComponentRegistrar(nsIComponentRegistrar* *result)
+{
+    nsresult rv = NS_OK;
+
+    if (nsComponentManagerImpl::gComponentManager == NULL)
+    {
+        // XPCOM needs initialization.
+        rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    }
+
+    if (NS_FAILED(rv))
+        return rv;
+  
+    *result = NS_STATIC_CAST(nsIComponentRegistrar*, 
+                             nsComponentManagerImpl::gComponentManager);
+    NS_IF_ADDREF(*result);
+    return NS_OK;
+}
 

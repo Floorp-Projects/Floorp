@@ -2,6 +2,7 @@
 #include "nsNetUtil.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsISupportsArray.h"
 
 static nsIIOService *gIOService = nsnull;
@@ -227,8 +228,11 @@ main(int argc, char **argv)
         return -1;
     }
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL);
-    if (NS_FAILED(rv)) return -1;
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     // cache the io service
     {

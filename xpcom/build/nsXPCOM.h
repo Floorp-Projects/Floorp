@@ -41,6 +41,7 @@
 #include "nscore.h"
 
 class nsIComponentManager;
+class nsIComponentRegistrar;
 class nsIServiceManager;
 class nsIFile;
 class nsIDirectoryServiceProvider;
@@ -123,6 +124,19 @@ NS_GetServiceManager(nsIServiceManager* *result);
  */
 extern "C" NS_COM nsresult
 NS_GetComponentManager(nsIComponentManager* *result);
+
+/**
+ * Public Method to access to the component registration manager.
+ * 
+ * @status FROZEN
+ * @param result Interface pointer to the service 
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure during initialisation.
+ *
+ */
+extern "C" NS_COM nsresult
+NS_GetComponentRegistrar(nsIComponentRegistrar* *result);
 
 /**
  * Public Method to access to the memory manager.  See nsIMemory

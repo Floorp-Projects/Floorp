@@ -352,11 +352,14 @@ sidebarModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     debug("registering (all right -- a JavaScript module!)");
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.registerComponentWithType(SIDEBAR_CID, "Sidebar JS Component",
-                                      SIDEBAR_CONTRACTID, fileSpec, location,
-                                      true, true, type);
+    compMgr.registerFactoryLocation(SIDEBAR_CID, 
+                                    "Sidebar JS Component",
+                                    SIDEBAR_CONTRACTID, 
+                                    fileSpec, 
+                                    location,
+                                    type);
 }
 
 sidebarModule.getClassObject =

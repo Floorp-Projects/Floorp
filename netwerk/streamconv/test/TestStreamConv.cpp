@@ -37,6 +37,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
 #include "nsICategoryManager.h"
@@ -139,7 +140,12 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv;
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+    
     // Create the Event Queue for this thread...
     nsCOMPtr<nsIEventQueueService> eventQService = 
              do_GetService(kEventQueueServiceCID, &rv);
@@ -149,9 +155,6 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-
-    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICategoryManager> catman =
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);

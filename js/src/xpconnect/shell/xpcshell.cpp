@@ -45,6 +45,7 @@
 #include "nsIXPCScriptable.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "jsapi.h"
 #include "jsprf.h"
 #include "nscore.h"
@@ -75,13 +76,6 @@
 #include "nsSpecialSystemDirectory.h"	// For exe dir
 
 #include "nsIJSContextStack.h"
-
-/***************************************************************************/
-
-static void SetupRegistry()
-{
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
-}
 
 /***************************************************************************/
 
@@ -834,13 +828,16 @@ main(int argc, char **argv)
     gErrFile = stderr;
     gOutFile = stdout;
 
-    rv = NS_InitXPCOM2(NULL, NULL, NULL);
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
     if (NS_FAILED(rv)) {
         printf("NS_InitXPCOM failed!\n");
         return 1;
     }
-
-    SetupRegistry();
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
+    
 
     nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
     // get the JSRuntime from the runtime svc

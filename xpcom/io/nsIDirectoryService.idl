@@ -136,8 +136,8 @@ interface nsIDirectoryService: nsISupports
 };
 
 %{C++
-#define NS_DIRECTORY_SERVICE_CONTRACTID    "@mozilla.org/file/directory_service;1"
-#define NS_DIRECTORY_SERVICE_CLASSNAME "nsIFile Directory Service"
+#define NS_DIRECTORY_SERVICE_CONTRACTID "@mozilla.org/file/directory_service;1"
+#define NS_DIRECTORY_SERVICE_CLASSNAME  "nsIFile Directory Service"
 %}
 
 

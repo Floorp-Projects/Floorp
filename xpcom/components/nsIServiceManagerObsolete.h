@@ -179,6 +179,17 @@ public:
     static nsresult ShutdownGlobalServiceManager(nsIServiceManager* *result);
 };
 
+
+#define NS_DECL_NSISERVICEMANAGEROBSOLETE \
+    NS_IMETHOD RegisterService(const nsCID& aClass, nsISupports* aService); \
+    NS_IMETHOD UnregisterService(const nsCID& aClass);\
+    NS_IMETHOD GetService(const nsCID& aClass, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener);\
+    NS_IMETHOD ReleaseService(const nsCID& aClass, nsISupports* service, nsIShutdownListener* shutdownListener);\
+    NS_IMETHOD RegisterService(const char* aContractID, nsISupports* aService);\
+    NS_IMETHOD UnregisterService(const char* aContractID);\
+    NS_IMETHOD GetService(const char* aContractID, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener);\
+    NS_IMETHOD ReleaseService(const char* aContractID, nsISupports* service, nsIShutdownListener* shutdownListener);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NS_ISHUTDOWNLISTENER_IID                     \

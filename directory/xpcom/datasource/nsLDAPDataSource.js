@@ -1358,41 +1358,41 @@ var nsLDAPDataSourceModule = {
         debug("*** Registering LDAP datasource components" +
               " (all right -- a JavaScript module!)\n");
         
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponenRegistrar);
         
-        compMgr.registerComponentWithType(
+        compMgr.registerFactoryLocation(
                 NS_LDAPDATASOURCE_CID, 
                 'LDAP RDF DataSource', 
                 NS_LDAPDATASOURCE_CONTRACTID, 
-                fileSpec, location, true, true, 
+                fileSpec, location, 
                 type);
 
-        compMgr.registerComponentWithType(
+        compMgr.registerFactoryLocation(
                 NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
                 'LDAP Message RDF Delegate', 
                 NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, true, true, 
+                fileSpec, location, 
                 type);
 
-        compMgr.registerComponentWithType(
+        compMgr.registerFactoryLocation(
                 NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
                 'LDAP Flat MessageList RDF Delegate', 
                 NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, true, true, 
+                fileSpec, location, 
                 type);
 
-        compMgr.registerComponentWithType(
+        compMgr.registerFactoryLocation(
                 NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
                 'LDAP Recursive MessageList RDF Delegate', 
                 NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, true, true, 
+                fileSpec, location, 
                 type);
 
-        compMgr.registerComponentWithType(
+        compMgr.registerFactoryLocation(
                 NS_LDAPURLRDFDELEGATEFACTORY_CID, 
                 'LDAP URL RDF Delegate', 
                 NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, true, true, 
+                fileSpec, location, 
                 type);
     },
 

@@ -18,11 +18,12 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsError.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
 #include "nsMemory.h"
-
+#include "nsIComponentRegistrar.h"
 #include "nsANSIFileStreams.h"
 #include "nsDiskCacheBlockFile.h"
 
@@ -212,12 +213,11 @@ main(void)
     nsresult  rv = NS_OK;
   
     // Start up XPCOM
-    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    if (NS_FAILED(rv)) return rv;
-    
-    // Register components
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
-
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     // Get default directory
     rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 

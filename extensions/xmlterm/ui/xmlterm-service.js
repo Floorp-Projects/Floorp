@@ -324,12 +324,14 @@ function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -terminal handler.\n");
     
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.registerComponentWithType(XMLTERMCLINE_SERVICE_CID,
-                                      "XMLterm CommandLine Service",
-                                      XMLTERMCLINE_SERVICE_CONTRACTID, fileSpec,
-                                      location, true, true, type);
+    compMgr.registerFactoryLocation(XMLTERMCLINE_SERVICE_CID,
+                                    "XMLterm CommandLine Service",
+                                    XMLTERMCLINE_SERVICE_CONTRACTID, 
+                                    fileSpec,
+                                    location, 
+                                    type);
     
     catman = Components.classes["@mozilla.org/categorymanager;1"]
                .getService(nsICategoryManager);
@@ -338,24 +340,28 @@ function (compMgr, fileSpec, location, type)
                  XMLTERMCLINE_SERVICE_CONTRACTID, true, true);
 
     dump("*** Registering x-application-terminal handler.\n");
-    compMgr.registerComponentWithType(XMLTERMCNT_HANDLER_CID,
-                                      "XMLTerm Content Handler",
-                                      XMLTERMCNT_HANDLER_CONTRACTID, fileSpec,
-                                      location, true, true, type);
+    compMgr.registerFactoryLocation(XMLTERMCNT_HANDLER_CID,
+                                    "XMLTerm Content Handler",
+                                    XMLTERMCNT_HANDLER_CONTRACTID, 
+                                    fileSpec,
+                                    location, 
+                                    type);
 
     dump("*** Registering terminal protocol handler.\n");
-    compMgr.registerComponentWithType(XMLTERMPROT_HANDLER_CID,
-                                      "XMLTerm protocol handler",
-                                      XMLTERMPROT_HANDLER_CONTRACTID, fileSpec, location,
-                                      true, true, type);
+    compMgr.registerFactoryLocation(XMLTERMPROT_HANDLER_CID,
+                                    "XMLTerm protocol handler",
+                                    XMLTERMPROT_HANDLER_CONTRACTID, 
+                                    fileSpec, 
+                                    location,
+                                    type);
 
 }
 
 XMLtermModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
-    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-    compMgr.unregisterComponentSpec(XMLTERMCLINE_SERVICE_CID, fileSpec);
+    compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    compMgr.unregisterFactoryLocation(XMLTERMCLINE_SERVICE_CID, fileSpec);
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",

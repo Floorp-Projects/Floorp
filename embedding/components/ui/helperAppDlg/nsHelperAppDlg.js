@@ -591,16 +591,14 @@ var module = {
             this.firstTime = false;
             throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
         }
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-        compMgr.registerComponentWithType( this.cid,
-                                           "Mozilla Helper App Launcher Dialog",
-                                           this.contractId,
-                                           fileSpec,
-                                           location,
-                                           true,
-                                           true,
-                                           type );
+        compMgr.registerFactoryLocation( this.cid,
+                                         "Mozilla Helper App Launcher Dialog",
+                                         this.contractId,
+                                         fileSpec,
+                                         location,
+                                         type );
     },
 
     // getClassObject: Return this component's factory object.

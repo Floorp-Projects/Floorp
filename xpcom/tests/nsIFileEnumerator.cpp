@@ -1,6 +1,7 @@
 #include "nsILocalFile.h"
 
 #include <stdio.h>
+#include "nsIComponentRegistrar.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
@@ -60,14 +61,16 @@ main(int argc, char* argv[])
     nsresult rv;
     nsCOMPtr<nsILocalFile> topDir;
 
-    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsCOMPtr<nsIServiceManager> servMan;
+    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
-    
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     if (argc > 1 && argv[1] != nsnull) 
     {
-            char* pathStr = argv[1];
+        char* pathStr = argv[1];
         NS_NewLocalFile(pathStr, PR_FALSE, getter_AddRefs(topDir));
     }
     

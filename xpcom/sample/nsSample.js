@@ -65,12 +65,13 @@ var myModule = {
             throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
         }
         dump("*** Registering sample JS components\n");
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-        compMgr.registerComponentWithType(this.myCID,
-                                          "Sample JS Component",
-                                          this.myProgID, fileSpec,
-                                          location, true, true,
-                                          type);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+        compMgr.registerFactoryLocation(this.myCID,
+                                        "Sample JS Component",
+                                        this.myProgID, 
+                                        fileSpec,
+                                        location,
+                                        type);
     },
 
     /*
@@ -130,3 +131,5 @@ var myModule = {
 function NSGetModule(compMgr, fileSpec) {
     return myModule;
 }
+
+

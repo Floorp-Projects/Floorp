@@ -66,11 +66,13 @@ SMIMEModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
   dump("*** Registering smime account manager extension.\n");
-  compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-  compMgr.registerComponentWithType(SMIME_EXTENSION_SERVICE_CID,
-                                      "SMIME Account Manager Extension Service",
-                                      SMIME_EXTENSION_SERVICE_CONTRACTID, fileSpec,
-                                      location, true, true, type);
+  compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  compMgr.registerFactoryLocation(SMIME_EXTENSION_SERVICE_CID,
+                                  "SMIME Account Manager Extension Service",
+                                  SMIME_EXTENSION_SERVICE_CONTRACTID, 
+                                  fileSpec,
+                                  location, 
+                                  type);
   catman = Components.classes["@mozilla.org/categorymanager;1"].getService(nsICategoryManager);
   catman.addCategoryEntry("mailnews-accountmanager-extensions",
                             "smime account manager extension",
@@ -80,8 +82,8 @@ function (compMgr, fileSpec, location, type)
 SMIMEModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
-  compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-  compMgr.unregisterComponentSpec(SMIME_EXTENSION_SERVICE_CID, fileSpec);
+  compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+  compMgr.unregisterFactoryLocation(SMIME_EXTENSION_SERVICE_CID, fileSpec);
   catman = Components.classes["@mozilla.org/categorymanager;1"].getService(nsICategoryManager);
   catman.deleteCategoryEntry("mailnews-accountmanager-extensions",
                              SMIME_EXTENSION_SERVICE_CONTRACTID, true);

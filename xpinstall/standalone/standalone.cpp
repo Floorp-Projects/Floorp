@@ -97,10 +97,16 @@ main(int argc, char **argv)
     }
 
 
-    NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     nsnull /* default */);
-    
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    if (!registrar) {
+        NS_ASSERTION(0, "Null nsIComponentRegistrar");
+        return rv;
+    }
+    registrar->AutoRegister(nsnull);
+
 
     nsresult rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
                                                      nsnull,

@@ -27,6 +27,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsCOMPtr.h"
@@ -437,7 +438,11 @@ nsSoftwareUpdate::StartupTasks( PRBool *needAutoreg )
     // is not the actual BuildID, or if we couldn't get the BuildID
     if ( autoReg || NS_FAILED(rv) || buildID != NS_BUILD_ID )
     {
-        rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,0);
+        nsCOMPtr<nsIServiceManager> servManager;
+        NS_GetServiceManager(getter_AddRefs(servManager));
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
+        NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service. see dougt");
+        rv = registrar->AutoRegister(nsnull);
 
         if (NS_SUCCEEDED(rv))
         {

@@ -18,6 +18,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIEventQueue.h"
@@ -683,13 +684,6 @@ FillCache(nsINetDataCache *cache)
     return NS_OK;
 }
 
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                                 NULL /* default */);
-  return rv;
-}
-
 PRBool initPref ()
 {
     nsresult rv;
@@ -733,8 +727,12 @@ main(int argc, char* argv[])
 
     nsCOMPtr<nsINetDataCache> cache;
 
-    rv = NS_AutoregisterComponents();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't register XPCOM components");
+
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     if (PL_strcasecmp(argv[1], "-m") == 0) {
         rv = nsComponentManager::CreateInstance(kMemCacheCID, nsnull,

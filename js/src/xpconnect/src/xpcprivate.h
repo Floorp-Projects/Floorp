@@ -45,10 +45,12 @@
 #include <stdarg.h>
 #include <math.h>
 #include "nscore.h"
+#include "nsXPCOM.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIClassInfo.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIGenericFactory.h"
 #include "nsMemory.h"

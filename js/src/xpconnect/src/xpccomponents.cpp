@@ -363,17 +363,15 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                                       PRUint32 enum_op, jsval * statep,
                                       jsid * idp, PRBool *_retval)
 {
-    nsIEnumerator* e;
+    nsISimpleEnumerator* e;
 
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
         {
-            nsIComponentManagerObsolete* compMgr;
-            if(NS_FAILED(NS_GetGlobalComponentManager((nsIComponentManager**)&compMgr)) ||
-               !compMgr || NS_FAILED(compMgr->EnumerateContractIDs(&e)) || !e ||
-               NS_FAILED(e->First()))
-
+            nsCOMPtr<nsIComponentRegistrar> compMgr;            
+            if(NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr || 
+               NS_FAILED(compMgr->EnumerateContractIDs(&e)) || !e )
             {
                 *statep = JSVAL_NULL;
                 return NS_ERROR_UNEXPECTED;
@@ -387,12 +385,12 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         case JSENUMERATE_NEXT:
         {
             nsCOMPtr<nsISupports> isup;
-
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
-            if(NS_COMFALSE == e->IsDone() &&
-               NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup)
+            PRBool hasMore;
+            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
+ 
+            if(NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
+               NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup)
             {
-                e->Next();
                 nsCOMPtr<nsISupportsString> holder(do_QueryInterface(isup));
                 if(holder)
                 {
@@ -414,7 +412,7 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 
         case JSENUMERATE_DESTROY:
         default:
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
             NS_IF_RELEASE(e);
             *statep = JSVAL_NULL;
             return NS_OK;
@@ -523,17 +521,15 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                                           PRUint32 enum_op, jsval * statep,
                                           jsid * idp, PRBool *_retval)
 {
-    nsIEnumerator* e;
+    nsISimpleEnumerator* e;
 
     switch(enum_op)
     {
         case JSENUMERATE_INIT:
         {
-            nsIComponentManagerObsolete* compMgr;
-            if(NS_FAILED(NS_GetGlobalComponentManager((nsIComponentManager**)&compMgr)) ||
-               !compMgr || NS_FAILED(compMgr->EnumerateCLSIDs(&e)) || !e ||
-               NS_FAILED(e->First()))
-
+            nsCOMPtr<nsIComponentRegistrar> compMgr;            
+            if(NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr || 
+               NS_FAILED(compMgr->EnumerateCIDs(&e)) || !e )
             {
                 *statep = JSVAL_NULL;
                 return NS_ERROR_UNEXPECTED;
@@ -547,12 +543,12 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
         case JSENUMERATE_NEXT:
         {
             nsCOMPtr<nsISupports> isup;
+            PRBool hasMore;
+            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
 
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
-            if(NS_COMFALSE == e->IsDone() &&
-               NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup)
+            if(NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
+               NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup)
             {
-                e->Next();
                 nsCOMPtr<nsISupportsID> holder(do_QueryInterface(isup));
                 if(holder)
                 {
@@ -574,7 +570,7 @@ nsXPCComponents_ClassesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
 
         case JSENUMERATE_DESTROY:
         default:
-            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            e = (nsISimpleEnumerator*) JSVAL_TO_PRIVATE(*statep);
             NS_IF_RELEASE(e);
             *statep = JSVAL_NULL;
             return NS_OK;
@@ -590,9 +586,9 @@ IsRegisteredCLSID(const char* str)
     if(!id.Parse(str))
         return PR_FALSE;
 
-    nsIComponentManagerObsolete* compMgr;
-    if(NS_FAILED(NS_GetGlobalComponentManager((nsIComponentManager**)&compMgr)) ||
-       !compMgr || NS_FAILED(compMgr->IsRegistered(id, &registered)))
+    nsCOMPtr<nsIComponentRegistrar> compMgr;            
+    if(NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) || !compMgr || 
+       NS_FAILED(compMgr->IsCIDRegistered(id, &registered)))
         return PR_FALSE;
 
     return registered;

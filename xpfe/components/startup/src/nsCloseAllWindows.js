@@ -92,15 +92,13 @@ var module = {
             this.firstTime = false;
             throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
         }
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
-        compMgr.registerComponentWithType( this.cid,
-                                           "Close All Windows",
-                                           this.contractId,
-                                           fileSpec,
-                                           location,
-                                           true,
-                                           true,
-                                           type );
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+        compMgr.registerFactoryLocation( this.cid,
+                                         "Close All Windows",
+                                         this.contractId,
+                                         fileSpec,
+                                         location,
+                                         type );
     },
 
     // getClassObject: Return this component's factory object.

@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.20 $
+ *  Version: $Revision: 1.21 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.20 2002/01/24 22:31:28 heikki%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.21 2002/01/29 21:21:33 dougt%netscape.com Exp $
  */
 
 /*
@@ -1174,14 +1174,20 @@ PushbackInputStream.prototype = {
 /* nsXmlRpcClient Module (for XPCOM registration) */
 var nsXmlRpcClientModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-        compMgr.registerComponentWithType(XMLRPCCLIENT_CID, 
-            'XML-RPC Client JS component', XMLRPCCLIENT_CONTRACTID, fileSpec,
-            location, true, true, type);
-        compMgr.registerComponentWithType(XMLRPCFAULT_CID, 
-            'XML-RPC Fault JS component', XMLRPCFAULT_CONTRACTID, fileSpec,
-            location, true, true, type);
+        compMgr.registerFactoryLocation(XMLRPCCLIENT_CID, 
+                                        'XML-RPC Client JS component', 
+                                        XMLRPCCLIENT_CONTRACTID, 
+                                        fileSpec,
+                                        location, 
+                                        type);
+        compMgr.registerFactoryLocation(XMLRPCFAULT_CID, 
+                                        'XML-RPC Fault JS component', 
+                                        XMLRPCFAULT_CONTRACTID, 
+                                        fileSpec,
+                                        location, 
+                                        type);
     },
 
     getClassObject: function(compMgr, cid, iid) {

@@ -26,6 +26,7 @@
 #include "xpistub.h"
 
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsSpecialSystemDirectory.h" 
@@ -148,12 +149,13 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     if (NS_FAILED(rv))
         return rv;
 
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(gServiceMgr);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+
 #if defined(XP_UNIX) || defined(XP_MAC)
-    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 
-                                          compDir);
+    rv = registrar->AutoRegister(compDir);
 #else
-    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 
-                                          nsnull);
+    rv = registrar->AutoRegister(nsnull);
 #endif
     if (NS_FAILED(rv))
         return rv;

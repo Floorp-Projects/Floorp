@@ -54,6 +54,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIRequestObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIPipe.h"
@@ -579,13 +580,6 @@ void TimerCallback(nsITimer* aTimer, void* aClosure)
 
 #endif /* USE_TIMERS */
 
-nsresult NS_AutoregisterComponents();
-nsresult NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -636,8 +630,11 @@ main(int argc, char* argv[])
   //
   // -----
 
-  rv = NS_AutoregisterComponents();
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIServiceManager> servMan;
+  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+  registrar->AutoRegister(nsnull);
 
   // Create the Event Queue for this thread...
   nsCOMPtr<nsIEventQueueService> eventQService = 

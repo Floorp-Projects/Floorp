@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIComponentRegistrar.h"
 #include "nsIFileTransportService.h"
 #include "nsITransport.h"
 #include "nsIProgressEventSink.h"
@@ -339,12 +340,6 @@ NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIRequestObserver);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-  return rv;
-}
 
 int
 main(int argc, char* argv[])
@@ -361,8 +356,11 @@ main(int argc, char* argv[])
     }
     char* fileName = argv[1];
 
-    rv = NS_AutoregisterComponents();
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     nsCOMPtr<nsIEventQueueService> eventQService = 
              do_GetService(kEventQueueServiceCID, &rv);
