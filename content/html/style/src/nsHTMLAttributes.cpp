@@ -187,7 +187,7 @@ public:
                      nsMapAttributesFunc aFontMapFunc,
                      nsMapAttributesFunc aMapFunc);
   HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
-  ~HTMLAttributesImpl(void);
+  virtual ~HTMLAttributesImpl(void);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
