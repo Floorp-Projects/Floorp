@@ -166,14 +166,14 @@ NS_IMETHODIMP DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) const
   return NS_OK;
 }
 
+static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
+
 NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
 {
   nsIRenderingContext *pContext;
   nsIWidget           *win;
   aView->GetWidget(win);
   nsresult             rv;
-
-  static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
 
   aContext = nsnull;
   rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
@@ -194,8 +194,6 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
 {
   nsIRenderingContext *pContext;
   nsresult             rv;
-
-  static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
 
   aContext = nsnull;
   rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
