@@ -482,6 +482,8 @@ pref("ui.key.menuAccessKeyFocuses", false);
 // Middle-mouse handling
 pref("middlemouse.paste", false);
 pref("middlemouse.openNewWindow", true);
+pref("middlemouse.contentLoadURL", false);
+pref("middlemouse.scrollbarPosition", false);
 
 // Clipboard behavior
 pref("clipboard.autocopy", false);
@@ -499,8 +501,6 @@ pref("mousewheel.withshiftkey.sysnumlines",false);
 pref("mousewheel.withaltkey.action",2);
 pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
-
-pref("middlemouse.scrollbarPosition", false);
 
 pref("profile.confirm_automigration",true);
 

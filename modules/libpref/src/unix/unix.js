@@ -50,6 +50,7 @@ pref("editor.singleLine.pasteNewlines", 0);
 
 // Middle-mouse handling
 pref("middlemouse.paste", true);
+pref("middlemouse.contentLoadURL", true);
 pref("middlemouse.openNewWindow", true);
 pref("middlemouse.scrollbarPosition", true);
 
