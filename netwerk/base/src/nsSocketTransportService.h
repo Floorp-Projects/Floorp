@@ -28,6 +28,8 @@
 #include "nsIThread.h"
 #include "nsISocketTransportService.h"
 #include "nsIInputStream.h"
+#include "nsCOMPtr.h"
+#include "nsIStringBundle.h"
 
 #if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
 //
@@ -45,6 +47,7 @@
 #define MAX_OPEN_CONNECTIONS 50
 #define DEFAULT_POLL_TIMEOUT_IN_MS  35*1000
 
+#define NECKO_MSGS_URL  "chrome://necko/locale/necko.properties"
 
 // Forward declarations...
 class nsSocketTransport;
@@ -79,6 +82,8 @@ public:
     PRInt32   mConnectedTransports;
     PRInt32   mTotalTransports;
     
+    nsresult  GetNeckoStringByName (const char *aName, PRUnichar **aString);
+
 protected:
     nsIThread*            mThread;
     PRFileDesc*           mThreadEvent;
@@ -90,6 +95,7 @@ protected:
     PRInt32               mSelectFDSetCount;
     PRPollDesc*           mSelectFDSet;
     nsSocketTransport**   mActiveTransportList;
+	nsCOMPtr<nsIStringBundle>   m_stringBundle;
 };
 
 
