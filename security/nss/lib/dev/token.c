@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.12 $ $Date: 2001/10/19 18:10:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.13 $ $Date: 2001/11/05 17:18:48 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -241,16 +241,34 @@ nssToken_ImportObject
 )
 {
     nssSession *session;
+    PRBool createdSession = PR_FALSE;
     CK_OBJECT_HANDLE object;
     CK_RV ckrv;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    if (nssCKObject_IsTokenObjectTemplate(objectTemplate, otsize)) {
+	if (sessionOpt) {
+	    if (!nssSession_IsReadWrite(sessionOpt)) {
+		return CK_INVALID_HANDLE;
+	    } else {
+		session = sessionOpt;
+	    }
+	} else if (nssSession_IsReadWrite(tok->defaultSession)) {
+	    session = tok->defaultSession;
+	} else {
+	    session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
+	    createdSession = PR_TRUE;
+	}
+    }
     nssSession_EnterMonitor(session);
     ckrv = CKAPI(tok->slot)->C_CreateObject(session->handle, 
                                             objectTemplate, otsize,
                                             &object);
     nssSession_ExitMonitor(session);
+    if (createdSession) {
+	nssSession_Destroy(session);
+    }
     if (ckrv != CKR_OK) {
-	return CK_INVALID_KEY;
+	return CK_INVALID_HANDLE;
     }
     return object;
 }

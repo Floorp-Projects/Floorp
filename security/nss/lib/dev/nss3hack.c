@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:33:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.2 $ $Date: 2001/11/05 17:18:48 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -65,6 +65,45 @@ nssSession_ImportNSS3Session(NSSArena *arenaOpt,
     rvSession->lock = lock;
     rvSession->isRW = rw;
     return rvSession;
+}
+
+NSS_IMPLEMENT nssSession *
+nssSlot_CreateSession
+(
+  NSSSlot *slot,
+  NSSArena *arenaOpt,
+  PRBool readWrite
+)
+{
+    nssSession *rvSession;
+    rvSession = nss_ZNEW(arenaOpt, nssSession);
+    if (!rvSession) {
+	return (nssSession *)NULL;
+    }
+    if (readWrite) {
+	rvSession->handle = PK11_GetRWSession(slot->pk11slot);
+	rvSession->isRW = PR_TRUE;
+	rvSession->slot = slot;
+	return rvSession;
+    } else {
+	return NULL;
+    }
+}
+
+NSS_IMPLEMENT PRStatus
+nssSession_Destroy
+(
+  nssSession *s
+)
+{
+    CK_RV ckrv = CKR_OK;
+    if (s) {
+	if (s->isRW) {
+	    PK11_RestoreROSession(s->slot->pk11slot, s->handle);
+	}
+	nss_ZFreeIf(s);
+    }
+    return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
 }
 
 static NSSSlot *
@@ -117,6 +156,7 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     }
     rvToken->slot = nssSlot_CreateFromPK11SlotInfo(td, nss3slot);
     rvToken->slot->token = rvToken;
+    rvToken->defaultSession->slot = rvToken->slot;
     return rvToken;
 }
 
