@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMImage.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -56,11 +57,13 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // XXX nav attrs: suppress
 
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+static NS_DEFINE_IID(kIDOMImageIID, NS_IDOMIMAGE_IID);
 static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
+                           public nsIDOMImage,
                            public nsIScriptObjectOwner,
                            public nsIDOMEventReceiver,
                            public nsIHTMLContent,
@@ -110,6 +113,11 @@ public:
   NS_IMETHOD SetVspace(const nsString& aVspace);
   NS_IMETHOD GetWidth(nsString& aWidth);
   NS_IMETHOD SetWidth(const nsString& aWidth);
+
+  // nsIDOMImage
+  // XXX Casing is different for backward compatibility
+  NS_IMETHOD    GetLowsrc(nsString& aLowsrc);
+  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -200,6 +208,12 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIDOMImageIID)) {
+    nsIDOMImage* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kIJSNativeInitializerIID)) {
     nsIJSNativeInitializer* tmp = this;
     *aInstancePtr = (void*) tmp;
@@ -230,6 +244,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
 
 nsresult
 nsHTMLImageElement::GetIntrinsicImageSize(nsSize& aSize) 
