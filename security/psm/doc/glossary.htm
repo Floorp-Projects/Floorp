@@ -96,7 +96,7 @@ A list of revoked certificates that is generated and signed by a <a href="glossa
 </A>
 <A NAME="certificate store"></A><A NAME="1023462">
 <B>certificate store.</B>&nbsp;
-</A><A NAME="1023463">
+</A><A NAME="1032978">
 The collection of certificates, or electronic IDs, maintained by Personal Security Manager on your behalf. These include your own certificates stored on one or more security devices, other people's certificates, web site certificates, and <a href="glossary.htm#1020903"></a>CA certificates. See also <a href="glossary.htm#1020903">certificate authority (CA)</a>, <a href="glossary.htm#1018895">certificate</a>, <a href="glossary.htm#1028962">security device</a>.<P>
 </A>
 <A NAME="certificate verification"></A><A NAME="1025527">
@@ -199,6 +199,11 @@ A large number used by a <a href="glossary.htm#1019976">cryptographic algorithm<
 </A><A NAME="1022287">
 A protocol for accessing directory services across multiple platforms. LDAP is a simplified version of Directory Access Protocol (DAP), used to access X.500 directories. <P>
 </A>
+<A NAME="master key"></A><A NAME="1032598">
+<B>master key.</B>&nbsp;
+</A><A NAME="1032639">
+A symmetric key used by Personal Security Manager to encrypt information on behalf of other applications. For example, Netscape 6 uses Personal Security Manager and your master key to encrypt email passwords, web site passwords, and other stored identity information. See also <a href="glossary.htm#999604">symmetric encryption</a>.<P>
+</A>
 <A NAME="misrepresentation"></A><A NAME="1014057">
 <B>misrepresentation.</B>&nbsp;
 </A><A NAME="1014058">
@@ -234,10 +239,10 @@ A set of rules that Personal Security Manager follows to perform an online check
 </A><A NAME="1014124">
 Confident identification by means of a name and password. See also <a href="glossary.htm#998782">authentication</a>.<P>
 </A>
-<A NAME="personal security password"></A><A NAME="1024355">
-<B>personal security password.</B>&nbsp;
-</A><A NAME="1024372">
-A password used by Personal Security Manager to protect private keys stored on a <a href="glossary.htm#1028962">security device</a>. Personal Security Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. You can set or change the password from the Certificates tab in Personal Security Manager. You can also control when you will be asked for the password: the first time Personal Security Manager starts up, every time one of your certificates is requested, or after a specified period of inactivity while you are visiting a site that supports encryption. Each security device requires a separate personal security password.<P>
+<A NAME="Personal Security Password"></A><A NAME="1032744">
+<B>Personal Security Password.</B>&nbsp;
+</A><A NAME="1032748">
+A password used by Personal Security Manager to protect the master key and/or private keys stored on a <a href="glossary.htm#1028962">security device</a>. Personal Security Manager needs to access your private keys, for example, when you sign email messages or use one of your own certificates to identify yourself to a web site. It needs to access your master key when it encrypts or decrypts information on behalf of another application&#151;for example, when Netscape 6 needs to store or access your email password. You can set or change your personal security password from the Certificates tab in Personal Security Manager. Each security device requires a separate Personal Security Password. See also <a href="glossary.htm#1015387">private key</a>, <a href="glossary.htm#1032598">master key</a>.<P>
 </A>
 <A NAME="PKCS #11"></A><A NAME="1025194">
 <B>PKCS #11.</B>&nbsp;
@@ -262,7 +267,7 @@ One of a pair of keys used in public-key cryptography. The private key is kept s
 <A NAME="PSM Private Keys security device"></A><A NAME="1032045">
 <B>PSM Private Keys security device.</B>&nbsp;
 </A><A NAME="1032110">
-The default <a href="glossary.htm#1028962">security device</a> used by Personal Security Manager to store certificates and private keys.<P>
+The default <a href="glossary.htm#1028962">security device</a> used by Personal Security Manager to store private keys associated with your certificates. In addition to private keys, the PSM Private Keys security device stores the master key used by Netscape 6 to encrypt email passwords, web site passwords, and other identity information. See also <a href="glossary.htm#1015387">private key</a>, <a href="glossary.htm#1032598">master key</a>.<P>
 </A>
 <A NAME="public key"></A><A NAME="1019172">
 <B>public key.</B>&nbsp;
@@ -297,7 +302,7 @@ See <a href="glossary.htm#1018895">certificate</a>.<P>
 <A NAME="security device"></A><A NAME="1028962">
 <B>security device.</B>&nbsp;
 </A><A NAME="1028963">
-A hardware or software device that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a hardware security device. Personal Security Manager contains its own internal security device, called the <a href="glossary.htm#1032045">PSM Private Keys security device</a>, that is implemented in software. Each security device is protected by its own <a href="glossary.htm#1024355">personal security password</a>.<P>
+A hardware or software device that provides cryptographic services such as encryption and decryption and can store certificates and keys. A smart card is one example of a hardware security device. Personal Security Manager contains its own internal security device, called the <a href="glossary.htm#1032045">PSM Private Keys security device</a>, that is implemented in software. Each security device is protected by its own <a href="glossary.htm#1032744">Personal Security Password</a>.<P>
 </A>
 <A NAME="security module"></A><A NAME="1029083">
 <B>security module.</B>&nbsp;
