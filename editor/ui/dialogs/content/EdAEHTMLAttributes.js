@@ -50,7 +50,7 @@ function BuildHTMLAttributeNameList()
         var popup = dialog.AddHTMLAttributeNameInput.firstChild;
         if (popup)
         {
-          sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
+          var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
           if (sep)
             popup.appendChild(sep);
         }        
@@ -60,7 +60,7 @@ function BuildHTMLAttributeNameList()
         // Get information about value filtering
         forceOneChar = name.indexOf("!") >= 0;
         forceInteger = name.indexOf("#") >= 0;
-        forceIntOrPercent = name.indexOf("%") >= 0;
+        var forceIntOrPercent = name.indexOf("%") >= 0;
         //var required = name.indexOf("$") >= 0;
 
         // Strip flag characters ("_" is used when attribute name is reserved JS word)
@@ -176,14 +176,31 @@ function onInputHTMLAttributeName()
   if (attName)
   {
     // Get value list for current attribute name
-    var valueList = gHTMLAttr[gElement.localName.toLowerCase() + "_" + attName];
+    var valueListName;
 
-    // Index to which widget we were using to edit the value
-    var deckIndex = dialog.AddHTMLAttributeValueDeck.getAttribute("index");
+    // Most elements have the "dir" attribute,
+    //   so we have just one array for the allowed values instead
+    //   requiring duplicate entries for each element in EdAEAttributes.js
+    if (attName == "dir")
+      valueListName = "all_dir";
+    else
+      valueListName = gElement.localName.toLowerCase() + "_" + attName;
+
+    // Strip off leading "_" we sometimes use (when element name is reserved word)
+    if (valueListName[0] == "_")
+      valueListName = valueListName.slice(1);
+
     var newValue = "";
     var listLen = 0;
-    if (valueList)
+    var deckIndex = 0;
+
+    if (valueListName in gHTMLAttr)
     {
+      var valueList = gHTMLAttr[valueListName];
+
+      // Index to which widget we were using to edit the value
+      deckIndex = dialog.AddHTMLAttributeValueDeck.getAttribute("index");
+
       listLen = valueList.length;
       if (listLen > 0)
         newValue = valueList[0];
@@ -202,7 +219,21 @@ function onInputHTMLAttributeName()
         }
         // Rebuild the list
         for (var i = 0; i < listLen; i++)
-          AppendStringToMenulist(dialog.AddHTMLAttributeValueMenulist, valueList[i]);
+        {
+          if (valueList[i] == "-")
+          {
+            // Signal for separator
+            var popup = dialog.AddHTMLAttributeValueInput.firstChild;
+            if (popup)
+            {
+              var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
+              if (sep)
+                popup.appendChild(sep);
+            }        
+          } else {
+            AppendStringToMenulist(dialog.AddHTMLAttributeValueMenulist, valueList[i]);
+          }
+        }
       }
     }
     
