@@ -1417,8 +1417,10 @@ sub canonpath {
     my (@list);
 
     return "" if (!defined($path) || $path eq "");
+    $path =~ s@//+@/@g;
     foreach my $dir (split('/', $path)) {
         if ($dir eq '.') {
+            next;
         } elsif ($dir eq '..') {
             pop @list;
         } else {
@@ -1426,7 +1428,6 @@ sub canonpath {
         }
     }
     $path = join("/",@list);
-    $path =~ s@//+@/@g;
     return $path;
 }
 
@@ -1440,6 +1441,7 @@ sub ChrootFilename {
         unless ($cpath =~ m@^$root/@ || $cpath eq $root);
     die "\nFiles in the CVSROOT are not accessible.\n" if 
         ($cpath =~ m@$root/CVSROOT@);
+    return $cpath;
 }
 
 1;
