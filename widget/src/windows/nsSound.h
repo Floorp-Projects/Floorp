@@ -30,9 +30,12 @@ class nsSound : public nsISound {
 
   nsSound();
   virtual ~nsSound();
+  nsresult Init();
+  nsresult AllocateBuffers();
   char *mPlayBuf;
   char *mBuffer;
   PRInt32 mBufferSize;
+  PRBool mInited;
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
 };
