@@ -1734,7 +1734,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#nav-cs-help">
+<rdf:Description about="#navigator_pref_navigator">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1744,7 +1744,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#nav-cs-help">
+<rdf:Description about="#navigator_pref_navigator">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1754,7 +1754,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#nav-cs-help">
+<rdf:Description about="#navigator_pref_navigator">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1764,7 +1764,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#nav-cs-help">
+<rdf:Description about="#navigator_pref_navigator">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1774,7 +1774,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#nav-cs-help">
+<rdf:Description about="#navigator_pref_navigator">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1791,13 +1791,13 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="advanced_pref" nc:name="Advanced"
+	<rdf:Description ID="advanced_pref_advanced" nc:name="Advanced"
   		nc:link="chrome://help/locale/cs_nav_prefs_advanced.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#advanced_pref">
+<rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1807,7 +1807,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#advanced_pref">
+<rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1816,7 +1816,7 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
-<rdf:Description about="#advanced_pref">
+<rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1825,7 +1825,7 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
-<rdf:Description about="#advanced_pref">
+<rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -1834,7 +1834,7 @@
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
-<rdf:Description about="#advanced_pref">
+<rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
