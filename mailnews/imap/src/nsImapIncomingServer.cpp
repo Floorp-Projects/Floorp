@@ -265,7 +265,7 @@ nsImapIncomingServer::LoadNextQueuedUrl()
     if (cnt > 0)
     {
         nsCOMPtr<nsISupports>
-            aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
+            aSupport(do_QueryInterface(m_urlQueue->ElementAt(0)));
         nsCOMPtr<nsIImapUrl>
             aImapUrl(do_QueryInterface(aSupport, &rv));
 
