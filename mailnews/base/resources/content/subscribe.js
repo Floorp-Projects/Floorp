@@ -15,6 +15,7 @@ function Stop()
 
 function SetUpTree()
 {
+	dump("SetUpTree()\n");
 	var nntpService = Components.classes['component://netscape/messenger/nntpservice'].getService(Components.interfaces.nsINntpService);
 	nntpService = nntpService.QueryInterface(Components.interfaces.nsINntpService);
 	nntpService.buildSubscribeDatasource(gCurrentServer);
@@ -28,7 +29,7 @@ function SubscribeOnLoad()
 {
 	dump("SubscribeOnLoad()\n");
 	
-    gSubscribeTree = document.getElementById('subscribetree');
+    	gSubscribeTree = document.getElementById('subscribetree');
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
 
@@ -45,6 +46,7 @@ function SubscribeOnLoad()
 	
 	if (window.arguments[0].preselectedURI) {
 		gServerURI = window.arguments[0].preselectedURI;
+		dump("subscribe: got a uri," + gServerURI + "\n");
 		folder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
 		gCurrentServer = folder.server;
 
@@ -54,6 +56,9 @@ function SubscribeOnLoad()
 		RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 		
 		SubscribeDS = RDF.GetDataSource("rdf:subscribe");
+	}
+	else {
+		dump("subscribe: no uri\n");
 	}
 }
 

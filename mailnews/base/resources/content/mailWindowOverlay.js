@@ -124,10 +124,7 @@ function MsgHome(url)
 function MsgNewFolder()
 {
 	var windowTitle = Bundle.GetStringFromName("newFolderDialogTitle");
-	var selectedFolders = GetSelectedMsgFolders();
-	var preselectedFolder = null;
-	if(selectedFolders.len > 0)
-		preselectedFolder = selectedFolders[0];
+	var preselectedFolder = GetFirstSelectedMsgFolder();
 
 	CreateNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle, preselectedFolder);
 }
@@ -146,11 +143,7 @@ function MsgSubscribe()
 		useRealSubscribeDialog = false;
 	}
 
-	var selectedFolders = GetSelectedMsgFolders();
-	var preselectedFolder = null;
-	if(selectedFolders.len > 0)
-		preselectedFolder = selectedFolders[0];
-
+	var preselectedFolder = GetFirstSelectedMsgFolder();
 	if (useRealSubscribeDialog)  {
 			Subscribe(windowTitle, preselectedFolder);
 	}

@@ -1162,6 +1162,17 @@ function GetSelectedMsgFolders()
 	return folderArray;
 }
 
+function GetFirstSelectedMsgFolder()
+{
+	var result = null;
+	var selectedFolders = GetSelectedMsgFolders();
+	if (selectedFolders.length > 0) {
+		result = selectedFolders[0];
+	}
+
+	return result;
+}
+
 function GetSelectedMessages()
 {
 	var threadTree = GetThreadTree();
