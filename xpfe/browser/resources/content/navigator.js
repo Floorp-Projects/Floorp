@@ -251,7 +251,7 @@ function removePopupPermListener(observer)
 function loadEventHandlers(event)
 {
   // Filter out events that are not about the document load we are interested in
-  if (event.originalTarget == _content.document) {
+  if (event.originalTarget == content.document) {
     UpdateBookmarksLastVisitedDate(event);
     UpdateInternetSearchResults(event);
     checkForDirectoryListing();
@@ -308,7 +308,7 @@ function UpdateBookmarksLastVisitedDate(event)
       gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                                     .getService(Components.interfaces.nsIBookmarksService);
 
-    gBookmarksService.updateLastVisitedDate(url, _content.document.characterSet);
+    gBookmarksService.updateLastVisitedDate(url, content.document.characterSet);
   }
 }
 
@@ -625,7 +625,7 @@ function Startup()
     if ("arguments" in window && uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
       setTimeout(WindowFocusTimerCallback, 0, gURLBar);
     else
-      setTimeout(WindowFocusTimerCallback, 0, _content);
+      setTimeout(WindowFocusTimerCallback, 0, content);
 
     // Perform default browser checking (after window opens).
     setTimeout( checkForDefaultBrowser, 0 );
@@ -1552,12 +1552,12 @@ function BrowserViewSourceOfDocument(aDocument)
       var ifRequestor;
 
       // Get the DOMWindow for the requested document.  If the DOMWindow
-      // cannot be found, then just use the _content window...
+      // cannot be found, then just use the content window...
       //
       // XXX:  This is a bit of a hack...
       win = aDocument.defaultView;
       if (win == window) {
-        win = _content;
+        win = content;
       }
       ifRequestor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
 
@@ -1672,7 +1672,7 @@ function traceDocument()
 {
   // keep the chrome document out of the dump.
   leakDetector.markObject(document, true);
-  leakDetector.traceObject(_content, leakDetector.verbose);
+  leakDetector.traceObject(content, leakDetector.verbose);
   leakDetector.markObject(document, false);
 }
 
@@ -1765,9 +1765,9 @@ function postURLToNativeWidget()
 
 function checkForDirectoryListing()
 {
-  if ( "HTTPIndex" in _content &&
-       _content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
-    _content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
+  if ( "HTTPIndex" in content &&
+       content.HTTPIndex instanceof Components.interfaces.nsIHTTPIndex ) {
+    content.defaultCharacterset = getMarkupDocumentViewer().defaultCharacterSet;
   }
 }
 
@@ -1803,7 +1803,7 @@ function stylesheetFillPopup(menuPopup)
     menuPopup.removeChild(itemNoOptStyles.nextSibling);
 
   var noOptionalStyles = true;
-  var styleSheets = getAllStyleSheets(window._content);
+  var styleSheets = getAllStyleSheets(window.content);
   var currentStyleSheets = [];
 
   for (var i = 0; i < styleSheets.length; ++i) {

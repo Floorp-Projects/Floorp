@@ -61,7 +61,7 @@
     </implementation>
     <handlers>
       <handler event="mousedown">
-        window.open(this.href, this.show=="new" ? "_blank" : "_content", "");
+        window.open(this.href, this.show=="new" ? "_blank" : "content", "");
       </handler>
       <handler event="mouseover">
         window.status=this.href;

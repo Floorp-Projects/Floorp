@@ -166,12 +166,12 @@ function BrowserExitPrintPreview()
   mainWin.setAttribute("onclose", gOldCloseHandler);
 
   // exit print preview galley mode in content area
-  var ifreq = _content.QueryInterface(
+  var ifreq = content.QueryInterface(
     Components.interfaces.nsIInterfaceRequestor);
   var webBrowserPrint = ifreq.getInterface(
     Components.interfaces.nsIWebBrowserPrint);     
   webBrowserPrint.exitPrintPreview(); 
-  _content.focus();
+  content.focus();
 }
 
 // This observer is called once the progress dialog has been "opened"
@@ -195,7 +195,7 @@ function BrowserPrintPreview()
   var ifreq;
   var webBrowserPrint;  
   try {
-    ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     gPrintSettings = GetPrintSettings();
 
@@ -247,7 +247,7 @@ function FinishPrintPreview()
 
   var browser = getBrowser();
   try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings();
@@ -269,7 +269,7 @@ function FinishPrintPreview()
     // that we can initialize the toolbar with total num pages
     showPrintPreviewToolbar();
 
-    _content.focus();
+    content.focus();
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.

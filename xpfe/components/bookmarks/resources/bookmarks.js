@@ -559,7 +559,7 @@ var BookmarksCommand = {
     switch (aTargetBrowser) {
     case "current":
       browser.loadURI(url);
-      w._content.focus();
+      w.content.focus();
       break;
     case "tab":
       var tab = browser.addTab(url);

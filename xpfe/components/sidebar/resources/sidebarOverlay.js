@@ -1256,7 +1256,7 @@ function SidebarShowHide() {
   // Immediately save persistent values
   document.persist('sidebar-title-box', 'hidden');
   persist_width();
-  window._content.focus();
+  window.content.focus();
 }
 
 function SidebarBuildPickerPopup() {
@@ -1383,7 +1383,7 @@ function SidebarTogglePanel(panel_menuitem) {
 
   if (did_exclude && !sidebarObj.panels.visible_panels_exist())
     // surrender focus to main content area
-    window._content.focus();
+    window.content.focus();
   else
     // force all the sidebars to update
     refresh_all_sidebars();
