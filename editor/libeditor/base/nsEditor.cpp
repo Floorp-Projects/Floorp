@@ -4377,7 +4377,7 @@ nsresult nsEditor::EndUpdateViewBatch()
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
-        updateFlag = NS_VMREFRESH_DEFERRED;
+        updateFlag = NS_VMREFRESH_NO_SYNC;
 
       mViewManager->EndUpdateViewBatch(updateFlag);
     }
