@@ -37,4 +37,6 @@
     <spring flex="5%"/>
   </box>
 
+  <keyset id="keyset"/>
+
 </window>
