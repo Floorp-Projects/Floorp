@@ -84,16 +84,24 @@ static PRInt32 PR_CALLBACK FileWrite(PRFileDesc *fd, const void *buf, PRInt32 am
     if (_PR_PENDING_INTERRUPT(me)) {
         me->flags &= ~_PR_INTERRUPT;
         PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
-	rv = -1;
+	    rv = -1;
     }
     if (_PR_IO_PENDING(me)) {
         PR_SetError(PR_IO_PENDING_ERROR, 0);
-	rv = -1;
+	    rv = -1;
     }
     if (rv != 0)
     	return rv;
 
     count = 0;
+#if !defined(XP_UNIX)  /* BugZilla: 4090 */
+    if ( PR_TRUE == fd->secret->appendMode ) {
+        rv = PR_Seek(fd, 0, PR_SEEK_END );
+        if ( -1 == rv )  {
+            return rv;
+        }
+    } /* if (fd->secret->appendMode...) */
+#endif /* XP_UNIX */
     while (amount > 0) {
 		temp = _PR_MD_WRITE(fd, buf, amount);
 		if (temp < 0) {
@@ -349,6 +357,11 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
 {
     PRInt32 osfd;
     PRFileDesc *fd = 0;
+#if defined(XP_UNIX) /* BugZilla: 4090 */
+    PRBool  appendMode = PR_FALSE;
+#else
+    PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -360,6 +373,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
+            fd->secret->appendMode = appendMode;
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
         }
     }
@@ -371,6 +385,11 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
 {
     PRInt32 osfd;
     PRFileDesc *fd = 0;
+#if defined(XP_UNIX) /* BugZilla: 4090 */
+    PRBool  appendMode = PR_FALSE;
+#else
+    PRBool  appendMode = ( PR_APPEND & flags )? PR_TRUE : PR_FALSE;
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -382,6 +401,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         } else {
+            fd->secret->appendMode = appendMode;
             _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
         }
     }

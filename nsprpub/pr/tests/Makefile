@@ -60,6 +60,7 @@ CSRCS =             \
 	affinity.c		\
 	alarm.c			\
 	anonfm.c		\
+	append.c		\
 	atomic.c		\
 	attach.c		\
 	bigfile.c		\
