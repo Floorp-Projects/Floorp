@@ -26,6 +26,7 @@
 #include "nsIDOMPluginArray.h"
 #include "nsIDOMPlugin.h"
 #include "nsIPluginHost.h"
+#include "nsIURL.h"
 
 class NavigatorImpl;
 class nsIDocShell;
@@ -60,6 +61,7 @@ protected:
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;
   nsIDocShell* mDocShell; // weak reference
+  nsCOMPtr<nsIURI> mLastURI;
 };
 
 class PluginElementImpl : public nsIDOMPlugin
