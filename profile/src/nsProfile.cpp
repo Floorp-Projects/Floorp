@@ -85,9 +85,12 @@ static int	g_Count = 0;
 static char gProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numProfiles = 0;
 
+// we only migrate prefs on windows right now.
+#ifdef XP_PC
 static char gOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static char gOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numOldProfiles = 0;
+#endif 
 
 static PRBool renameCurrProfile = PR_FALSE;
 
