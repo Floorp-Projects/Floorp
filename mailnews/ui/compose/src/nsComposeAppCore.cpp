@@ -120,9 +120,33 @@ nsComposeAppCore::~nsComposeAppCore()
   NS_IF_RELEASE(mWindow);
 }
 
-nsresult nsComposeAppCore::SetDocumentCharset(class nsString const &) 
+nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
-	return NS_OK;
+	nsresult res = NS_OK;
+	if (nsnull != mWindow) 
+	{
+		nsIDOMDocument* domDoc;
+		res = mWindow->GetDocument(&domDoc);
+		if (NS_SUCCEEDED(res) && nsnull != domDoc) 
+		{
+			nsIDocument * doc;
+			res = domDoc->QueryInterface(kIDocumentIID,(void**)&doc);
+			if (NS_SUCCEEDED(res) && nsnull != doc) 
+			{
+				nsString *aNewCharset = new nsString(aCharset);
+				if (nsnull != aNewCharset) 
+				{
+					doc->SetDocumentCharacterSet(aNewCharset);
+				}
+				
+				NS_RELEASE(doc);
+			}
+			
+			NS_RELEASE(domDoc);
+		}
+	}
+	
+	return res;
 }
 
 nsIScriptContext *    

@@ -32,6 +32,8 @@
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 
 #include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
 
@@ -79,9 +81,32 @@ private:
   nsIWebShell        *mWebShell;
 };
 
-nsresult nsMsgAppCore::SetDocumentCharset(class nsString const &) 
+nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
-	return NS_OK;
+	nsresult res = NS_OK;
+	if (nsnull != mWindow) 
+	{
+		nsIDOMDocument* domDoc;
+		res = mWindow->GetDocument(&domDoc);
+		if (NS_SUCCEEDED(res) && nsnull != domDoc) 
+		{
+			nsIDocument * doc;
+			res = domDoc->QueryInterface(nsIDocument::GetIID(), (void**)&doc);
+			if (NS_SUCCEEDED(res) && nsnull != doc) 
+			{
+				nsString *aNewCharset = new nsString(aCharset);
+				if (nsnull != aNewCharset) 
+				{
+					doc->SetDocumentCharacterSet(aNewCharset);
+				}
+				
+				NS_RELEASE(doc);
+			}
+			
+			NS_RELEASE(domDoc);
+		}
+	}
+	return res;
 }
 
 //
@@ -92,6 +117,7 @@ nsMsgAppCore::nsMsgAppCore()
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mWebShell = nsnull; 
+  mWindow = nsnull;
 }
 
 nsMsgAppCore::~nsMsgAppCore()
