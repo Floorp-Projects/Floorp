@@ -645,140 +645,140 @@ CheckFontCallback(const nsRuleDataStruct& aData)
 #define CSS_PROP_INCLUDE_NOT_CSS
 
 static const PropertyCheckData FontCheckProperties[] = {
-#define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_FONT
 };
 
 static const PropertyCheckData DisplayCheckProperties[] = {
-#define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_DISPLAY
 };
 
 static const PropertyCheckData VisibilityCheckProperties[] = {
-#define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_VISIBILITY
 };
 
 static const PropertyCheckData MarginCheckProperties[] = {
-#define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_MARGIN
 };
 
 static const PropertyCheckData BorderCheckProperties[] = {
-#define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BORDER
 };
 
 static const PropertyCheckData PaddingCheckProperties[] = {
-#define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_PADDING
 };
 
 static const PropertyCheckData OutlineCheckProperties[] = {
-#define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_OUTLINE
 };
 
 static const PropertyCheckData ListCheckProperties[] = {
-#define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST
 };
 
 static const PropertyCheckData ColorCheckProperties[] = {
-#define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_COLOR
 };
 
 static const PropertyCheckData BackgroundCheckProperties[] = {
-#define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BACKGROUND
 };
 
 static const PropertyCheckData PositionCheckProperties[] = {
-#define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_POSITION
 };
 
 static const PropertyCheckData TableCheckProperties[] = {
-#define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLE
 };
 
 static const PropertyCheckData TableBorderCheckProperties[] = {
-#define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLEBORDER
 };
 
 static const PropertyCheckData ContentCheckProperties[] = {
-#define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_CONTENT
 };
 
 static const PropertyCheckData QuotesCheckProperties[] = {
-#define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_QUOTES
 };
 
 static const PropertyCheckData TextCheckProperties[] = {
-#define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXT
 };
 
 static const PropertyCheckData TextResetCheckProperties[] = {
-#define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXTRESET
 };
 
 static const PropertyCheckData UserInterfaceCheckProperties[] = {
-#define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_USERINTERFACE
 };
 
 static const PropertyCheckData UIResetCheckProperties[] = {
-#define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_UIRESET
 };
 
 static const PropertyCheckData XULCheckProperties[] = {
-#define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_XUL
@@ -786,14 +786,14 @@ static const PropertyCheckData XULCheckProperties[] = {
 
 #ifdef MOZ_SVG
 static const PropertyCheckData SVGCheckProperties[] = {
-#define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVG
 };
 
 static const PropertyCheckData SVGResetCheckProperties[] = {
-#define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+#define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
   { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVGRESET
