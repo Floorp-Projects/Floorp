@@ -103,7 +103,8 @@
 
 #define AUTOREG_CATEGORY  "xpcom-autoregistration"
 #define APPSTART_CATEGORY "app-startup"
-#define JSD_STARTUP_ENTRY "JSDebugger Startup Observer"
+#define JSD_AUTOREG_ENTRY "JSDebugger Startup Observer"
+#define JSD_STARTUP_ENTRY "JSDebugger Startup Observer,service"
 
 JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
@@ -2269,7 +2270,7 @@ jsdService::GetInitAtStartup (PRBool *_rval)
         nsresult autoreg_rv, appstart_rv;
         
         autoreg_rv = categoryManager->GetCategoryEntry(AUTOREG_CATEGORY, 
-                                                       JSD_STARTUP_ENTRY,
+                                                       JSD_AUTOREG_ENTRY,
                                                        getter_Copies(notused));
         appstart_rv = categoryManager->GetCategoryEntry(APPSTART_CATEGORY,
                                                         JSD_STARTUP_ENTRY,
@@ -2337,7 +2338,7 @@ jsdService::SetInitAtStartup (PRBool state)
 
     if (state) {
         rv = categoryManager->AddCategoryEntry(AUTOREG_CATEGORY,
-                                               JSD_STARTUP_ENTRY,
+                                               JSD_AUTOREG_ENTRY,
                                                jsdASObserverCtrID,
                                                PR_TRUE, PR_TRUE, nsnull);
         if (NS_FAILED(rv))
@@ -2351,7 +2352,7 @@ jsdService::SetInitAtStartup (PRBool state)
         mInitAtStartup = triYes;
     } else {
         rv = categoryManager->DeleteCategoryEntry(AUTOREG_CATEGORY,
-                                                  JSD_STARTUP_ENTRY, PR_TRUE);
+                                                  JSD_AUTOREG_ENTRY, PR_TRUE);
         if (NS_FAILED(rv))
             return rv;
         rv = categoryManager->DeleteCategoryEntry(APPSTART_CATEGORY,
