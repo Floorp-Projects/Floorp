@@ -216,6 +216,8 @@ public:
                              nsIPresContext* aPresContext,
                              nsIContent* aContainer);
 
+  NS_IMETHOD IsSplittable(SplittableType& aIsSplittable) const;
+
   NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
                                    nsIFrame* aParent,
                                    nsIFrame*& aContinuingFrame);

@@ -978,10 +978,10 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
           GetAvailableSpaceBand(aState, aState.y + aState.topMargin);
 
           // Reflow splittable children
-          PRBool  isSplittable;
+          SplittableType  isSplittable;
 
           kidFrame->IsSplittable(isSplittable);
-          if (isSplittable) {
+          if (isSplittable != frNotSplittable) {
             // Update size info now that we are on the next line. Then
             // reflow the child into the new available space.
             GetAvailSize(kidAvailSize, aState, kidMol, PR_TRUE);
@@ -1816,6 +1816,12 @@ void nsBlockFrame::JustifyLines(nsIPresContext* aCX,
     nsCSSLayout::RelativePositionChildren(aCX, this, aState.mol,
                                           lineStart, mLines[i]);
   }
+}
+
+NS_METHOD nsBlockFrame::IsSplittable(SplittableType& aIsSplittable) const
+{
+  aIsSplittable = frSplittableNonRectangular;
+  return NS_OK;
 }
 
 NS_METHOD nsBlockFrame::CreateContinuingFrame(nsIPresContext* aCX,

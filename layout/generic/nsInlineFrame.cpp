@@ -361,12 +361,13 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
-    nsSize  kidFrameSize;
-    PRBool  kidIsSplittable;
+    nsSize          kidFrameSize;
+    SplittableType  kidIsSplittable;
 
     kidFrame->GetSize(kidFrameSize);
     kidFrame->IsSplittable(kidIsSplittable);
-    if ((kidFrameSize.width > aState.availSize.width) && !kidIsSplittable) {
+    if ((kidFrameSize.width > aState.availSize.width) &&
+        (kidIsSplittable == frNotSplittable)) {
       result = PR_FALSE;
       mLastContentIsComplete = prevLastContentIsComplete;
       break;

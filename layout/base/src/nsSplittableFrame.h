@@ -28,7 +28,7 @@ public:
 
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
-  NS_IMETHOD  IsSplittable(PRBool& aIsSplittable) const;
+  NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const;
   NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
                                     nsIFrame*       aParent,
                                     nsIFrame*&      aContinuingFrame);

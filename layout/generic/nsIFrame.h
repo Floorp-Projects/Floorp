@@ -173,10 +173,13 @@ public:
                           PRInt32&        aCursor) = 0;
 
   /**
-   * Reflow status returned by the reflow methods
+   * Reflow status returned by the reflow methods. frNotComplete means you didn't
+   * map all your content, and so your parent should create a continuing frame
+   * for you.
    *
    * @see #ResizeReflow()
    * @see #IncrementalReflow()
+   * @see #CreateContinuingFrame()
    */
   enum ReflowStatus {frComplete, frNotComplete};
 
@@ -321,10 +324,29 @@ public:
                                nsReflowMetrics& aMetrics) = 0;
 
   /**
+   * Indication of how the frame can be split. This is used when doing runaround
+   * of floaters, and when pulling up child frames from a next-in-flow.
+   *
+   * The choices are splittable, not splittable at all, and splittable in
+   * a non-rectangular fashion. This last type only applies to block-level
+   * elements, and indicates whether splitting can be used when doing runaround.
+   * If you can split across page boundaries, but you expect each continuing
+   * frame to be the same width then return frSplittable and not
+   * frSplittableNonRectangular.
+   *
+   * @see #IsSplittable()
+   */
+  enum SplittableType {frNotSplittable = 0, frSplittable = 1, frSplittableNonRectangular = 3};
+
+  /**
+   * Return how your frame can be split.
+   */
+  NS_IMETHOD  IsSplittable(SplittableType& aIsSplittable) const = 0;
+
+  /**
    * Flow member functions. CreateContinuingFrame() is responsible for appending
    * the continuing frame to the flow.
    */
-  NS_IMETHOD  IsSplittable(PRBool& aIsSplittable) const = 0;
   NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
                                     nsIFrame*       aParent,
                                     nsIFrame*&      aContinuingFrame) = 0;
