@@ -55,16 +55,16 @@
 #include "TxLog.h"
 #include "txRtfHandler.h"
 #ifndef TX_EXE
+#include "nsIDocShell.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
-#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIConsoleService.h"
-#include "nsIScriptLoader.h"
 #else
 #include "txHTMLOutput.h"
 #include "txTextOutput.h"
@@ -1299,7 +1299,7 @@ void XSLTProcessor::processAction(Node* aNode,
                                            kNameSpaceID_None, templateName)) {
                     Element* xslTemplate = aPs->getNamedTemplate(templateName);
                     if (xslTemplate) {
-                        #ifdef PR_LOGGING
+#ifdef PR_LOGGING
                         char *nameBuf = 0, *uriBuf = 0;
                         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                                ("CallTemplate, Name %s, Stylesheet %s\n",
@@ -1307,7 +1307,7 @@ void XSLTProcessor::processAction(Node* aNode,
                                 (uriBuf = xslTemplate->getBaseURI().toCharArray())));
                         delete nameBuf;
                         delete uriBuf;
-                        #endif
+#endif
                         NamedMap* actualParams = processParameters(actionElement, aNode, aPs);
                         processTemplate(aNode, xslTemplate, aPs, actualParams);
                         delete actualParams;
@@ -2362,29 +2362,53 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     Document xslDocument(styleDOMDocument);
 
     // Create wrapper for the output document.
-    mDocument = do_QueryInterface(aOutputDoc);
-    NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(aOutputDoc);
+    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
     Document resultDocument(aOutputDoc);
 
     // Reset the output document.
+    // Create a temporary channel to get nsIDocument->Reset to
+    // do the right thing.
     nsCOMPtr<nsILoadGroup> loadGroup;
     nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIDocument> inputDocument = do_QueryInterface(sourceDOMDocument);
-    if (inputDocument) {
-        inputDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-        nsCOMPtr<nsIIOService> serv(do_GetService(NS_IOSERVICE_CONTRACTID));
-        if (serv) {
-            // Create a temporary channel to get nsIDocument->Reset to
-            // do the right thing. We want the output document to get
-            // much of the input document's characteristics.
-            nsCOMPtr<nsIURI> docURL;
-            inputDocument->GetDocumentURL(getter_AddRefs(docURL));
-            serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
+    nsCOMPtr<nsIURI> docURL;
+
+    document->GetDocumentURL(getter_AddRefs(docURL));
+    NS_ASSERTION(docURL, "No document URL");
+    document->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    if (!loadGroup) {
+        nsCOMPtr<nsIDocument> source = do_QueryInterface(sourceDOMDocument);
+        if (source) {
+            source->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
         }
     }
-    mDocument->Reset(channel, loadGroup);
 
+    nsresult rv = NS_NewChannel(getter_AddRefs(channel), docURL,
+                                nsnull, loadGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Start of hack for keeping the scrollbars on an existing document.
+    // Based on similar hack that jst wrote for document.open().
+    // See bugs 78070 and 55334.
     nsCOMPtr<nsIContent> root;
+    document->GetRootContent(getter_AddRefs(root));
+    if (root) {
+        document->SetRootContent(nsnull);
+    }
+
+    // Call Reset(), this will now do the full reset, except removing
+    // the root from the document, doing that confuses the scrollbar
+    // code in mozilla since the document in the root element and all
+    // the anonymous content (i.e. scrollbar elements) is set to
+    // null.
+    rv = document->Reset(channel, loadGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (root) {
+        // Tear down the frames for the root element.
+        document->ContentRemoved(nsnull, root, 0);
+    }
+    // End of hack for keeping the scrollbars on an existing document.
 
     // Start of block to ensure the destruction of the ProcessorState
     // before the destruction of the documents.
@@ -2421,21 +2445,14 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
         if (mOutputHandler) {
             mOutputHandler->setOutputDocument(aOutputDoc);
-            if (!aObserver)
-                // Don't load stylesheets, we can't notify the caller when
-                // they're loaded.
-                mOutputHandler->disableStylesheetLoad();
         }
 
         // Get the script loader of the result document.
-        nsCOMPtr<nsIScriptLoader> loader;
-        mDocument->GetScriptLoader(getter_AddRefs(loader));
-        if (loader) {
-            if (aObserver)
-                loader->AddObserver(this);
-            else
-                // Don't load scripts, we can't notify the caller when they're loaded.
-                loader->Suspend();
+        if (aObserver) {
+            document->GetScriptLoader(getter_AddRefs(mScriptLoader));
+            if (mScriptLoader) {
+                mScriptLoader->AddObserver(this);
+            }
         }
 
         // Process root of XML source document
@@ -2446,7 +2463,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     mOutputHandler->getRootContent(getter_AddRefs(root));
     if (root) {
-        mDocument->ContentInserted(nsnull, root, 0);
+        document->ContentInserted(nsnull, root, 0);
     }
 
     mObserver = aObserver;
@@ -2495,11 +2512,10 @@ XSLTProcessor::SignalTransformEnd()
     if (!mOutputHandler || !mOutputHandler->isDone())
         return;
 
-    nsCOMPtr<nsIScriptLoader> loader;
-    mDocument->GetScriptLoader(getter_AddRefs(loader));
-    if (loader)
-        loader->RemoveObserver(this);
-    mDocument = nsnull;
+    if (mScriptLoader) {
+        mScriptLoader->RemoveObserver(this);
+        mScriptLoader = nsnull;
+    }
 
     nsresult rv;
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
