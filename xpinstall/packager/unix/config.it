@@ -113,7 +113,7 @@ URL0=$URLPath$
 [Component1]
 Description Short=Navigator
 ; *** LOCALIZE ME BABY ***
-Description Long=Web browser software
+Description Long=for web browsing
 Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeArchive$:browser.xpi
@@ -123,7 +123,7 @@ URL0=$URLPath$
 [Component2]
 Description Short=Mail & News
 ; *** LOCALIZE ME BABY ***
-Description Long=Email and Newsgroup software
+Description Long=for reading email and newsgroups
 Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeArchive$:mail.xpi
@@ -133,7 +133,7 @@ URL0=$URLPath$
 [Component3]
 Description Short=Personal Security Manager
 ; *** LOCALIZE ME BABY ***
-Description Long=Personal Security Manager (PSM) for crypto operations
+Description Long=for secure browsing and email; required for SSL(https) and S/MIME
 Archive=psm.xpi
 $InstallSize$:psm
 $InstallSizeArchive$:psm.xpi
@@ -143,7 +143,7 @@ URL0=$URLPath$
 [Component4]
 Description Short=Chatzilla
 ; *** LOCALIZE ME BABY ***
-Description Long=Chatzilla IRC client
+Description Long=for chatting on Internet Relay Chat(IRC)
 Archive=chatzilla.xpi
 $InstallSize$:chatzilla
 $InstallSizeArchive$:chatzilla.xpi
@@ -153,7 +153,7 @@ URL0=$URLPath$
 [Component5]
 Description Short=Quality Feedback Agent
 ; *** LOCALIZE ME BABY ***
-Description Long=Tool for reporting software crashes to Netscape
+Description Long=for reporting Mozilla crash information
 Archive=talkback.xpi
 $InstallSize$:talkback
 $InstallSizeArchive$:talkback.xpi
@@ -193,7 +193,7 @@ URL0=$URLPath$
 [Component9]
 Description Short=Debugger
 ; *** LOCALIZE ME BABY ***
-Description Long=JavaScript Debugger
+Description Long=for debugging JavaScript
 Archive=venkman.xpi
 $InstallSize$:venkman
 $InstallSizeArchive$:venkman.xpi
