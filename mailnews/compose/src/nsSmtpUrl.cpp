@@ -27,102 +27,31 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
-extern "C" {
-	char * NET_SACopy (char **destination, const char *source);
-	char * NET_SACat (char **destination, const char *source);
-}
+static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
-nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult)
+/////////////////////////////////////////////////////////////////////////////////////
+// mailto url definition
+/////////////////////////////////////////////////////////////////////////////////////
+nsMailtoUrl::nsMailtoUrl()
 {
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (aInstancePtrResult)
-	{
-		nsSmtpUrl * smtpUrl = new nsSmtpUrl(); 
-		if (smtpUrl)
-			return smtpUrl->QueryInterface(nsCOMTypeInfo<nsISmtpUrl>::GetIID(), aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
+  NS_INIT_ISUPPORTS();
+  m_forcePlainText = PR_FALSE;
+  nsComponentManager::CreateInstance(kSimpleURICID, nsnull, 
+                                     NS_GET_IID(nsIURI), 
+                                     (void **) getter_AddRefs(m_baseURL));
 }
 
-nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl()
+nsMailtoUrl::~nsMailtoUrl()
 {
-	// nsISmtpUrl specific state...
-	m_toPart = nsnull;
-	m_ccPart = nsnull;
-	m_subjectPart = nsnull;
-	m_newsgroupPart = nsnull;
-	m_newsHostPart = nsnull;
-	m_referencePart = nsnull;
-	m_attachmentPart = nsnull;
-	m_bodyPart = nsnull;
-	m_bccPart = nsnull;
-	m_followUpToPart = nsnull;
-	m_fromPart = nsnull;
-	m_htmlPart = nsnull;
-	m_organizationPart = nsnull;
-	m_replyToPart = nsnull;
-	m_priorityPart = nsnull;
-	m_fileName = nsnull;
-	m_isPostMessage = PR_TRUE;
 }
- 
-nsSmtpUrl::~nsSmtpUrl()
-{
-	CleanupSmtpState(); 
-	PR_FREEIF(m_toPart);
-}
-  
-NS_IMPL_ISUPPORTS_INHERITED(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)  
 
-////////////////////////////////////////////////////////////////////////////////////
-// Begin nsISmtpUrl specific support
+NS_IMPL_ISUPPORTS2(nsMailtoUrl, nsIMailtoUrl, nsIURI)
 
-////////////////////////////////////////////////////////////////////////////////////
-
-
-/* parse special headers and stuff from the search data in the
-   URL address.  This data is of the form
-
-	mailto:TO_FIELD?FIELD1=VALUE1&FIELD2=VALUE2
-
-   where TO_FIELD may be empty, VALUEn may (for now) only be
-   one of "cc", "bcc", "subject", "newsgroups", "references",
-   and "attachment".
-
-   "to" is allowed as a field/value pair as well, for consistency.
- */
-nsresult nsSmtpUrl::CleanupSmtpState()
-{
-	PR_FREEIF(m_ccPart);
-	PR_FREEIF(m_subjectPart);
-	PR_FREEIF(m_newsgroupPart);
-	PR_FREEIF(m_newsHostPart);
-	PR_FREEIF(m_referencePart);
-	PR_FREEIF(m_attachmentPart);
-	PR_FREEIF(m_bodyPart);
-	PR_FREEIF(m_bccPart);
-	PR_FREEIF(m_followUpToPart);
-	PR_FREEIF(m_fromPart);
-	PR_FREEIF(m_htmlPart);
-	PR_FREEIF(m_organizationPart);
-	PR_FREEIF(m_replyToPart);
-	PR_FREEIF(m_priorityPart);
-
-	return NS_OK;
-}
-nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
-
+nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 {
 	char *rest = searchPart;
 	// okay, first, free up all of our old search part state.....
-	CleanupSmtpState();
-#ifdef UNREADY_CODE	
-	HG27293
-#endif
+	CleanupMailtoState();
 
 	if (rest && *rest == '?')
 	{
@@ -132,11 +61,11 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 
 	if (rest)
 	{
-        char *token = nsCRT::strtok(rest, "&", &rest);
+    char *token = nsCRT::strtok(rest, "&", &rest);
 		while (token && *token)
 		{
 			char *value = 0;
-			char *eq = PL_strchr(token, '=');
+      char *eq = PL_strchr(token, '=');
 			if (eq)
 			{
 				value = eq+1;
@@ -146,98 +75,92 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 			switch (nsCRT::ToUpper(*token))
 			{
 				case 'A':
-					if (!PL_strcasecmp (token, "attachment"))
-						m_attachmentPart = PL_strdup(value);
-					break;
-				  case 'B':
-					if (!PL_strcasecmp (token, "bcc"))
+          if (!nsCRT::strcasecmp (token, "attachment"))
+					  m_attachmentPart = value;
+				  break;
+				case 'B':
+				  if (!nsCRT::strcasecmp (token, "bcc"))
+				  {
+					  if (!m_bccPart.IsEmpty())
+            {
+               m_bccPart += ", ";
+               m_bccPart += value;
+            }
+            else
+					    m_bccPart = value; 
+          }
+					else if (!nsCRT::strcasecmp (token, "body"))
 					{
-						if (m_bccPart && *m_bccPart)
+            if (!m_bodyPart.IsEmpty())
+            {
+              m_bodyPart +="\n";
+              m_bodyPart += value;
+            }
+            else
+              m_bodyPart = value;
+          }
+          break;
+        case 'C': 
+					if (!nsCRT::strcasecmp  (token, "cc"))
+					{
+						if (!m_ccPart.IsEmpty())
 						{
-							NET_SACat (&m_bccPart, ", ");
-							NET_SACat (&m_bccPart, value);
+              m_ccPart += ", ";
+              m_ccPart += value;
 						}
 						else
-							m_bccPart = PL_strdup(value); 
+							m_ccPart = value;
 					}
-					else if (!PL_strcasecmp (token, "body"))
-					{
-						if (m_bodyPart && *m_bodyPart)
-						{
-							NET_SACat (&m_bodyPart, "\n");
-							NET_SACat (&m_bodyPart, value);
-						}
-						else
-							m_bodyPart = PL_strdup(value);
-					}
-					break;
-				  case 'C': 
-					if (!PL_strcasecmp (token, "cc"))
-					{
-						if (m_ccPart && *m_ccPart)
-						{
-							NET_SACat (&m_ccPart, ", ");
-							NET_SACat (&m_ccPart, value);
-						}
-						else
-							m_ccPart = PL_strdup(value);
-					}
-					break;
-#ifdef UNREADY_CODE
-				  HG68946
-#endif
-				  case 'F': 
-					if (!PL_strcasecmp (token, "followup-to"))
-						m_followUpToPart = PL_strdup(value);
-					else if (!PL_strcasecmp (token, "from"))
-						m_fromPart = PL_strdup(value);
-					else if (!PL_strcasecmp (token, "force-plain-text"))
+          break;
+        case 'F': 
+					if (!nsCRT::strcasecmp (token, "followup-to"))
+						m_followUpToPart = value;
+					else if (!nsCRT::strcasecmp (token, "from"))
+						m_fromPart = value;
+					else if (!nsCRT::strcasecmp (token, "force-plain-text"))
 						m_forcePlainText = PR_TRUE;
 					break;
-				  case 'H':
-					  if (!PL_strcasecmp(token, "html-part"))
-						  m_htmlPart = PL_strdup(value);
-				  case 'N':
-					if (!PL_strcasecmp (token, "newsgroups"))
-						m_newsgroupPart = PL_strdup(value);
-					else if (!PL_strcasecmp (token, "newshost"))
-						m_newsHostPart = PL_strdup(value);
+        case 'H':
+				  if (!nsCRT::strcasecmp(token, "html-part"))
+						  m_htmlPart = value;
+          break;
+				case 'N':
+					if (!nsCRT::strcasecmp (token, "newsgroups"))
+						m_newsgroupPart = value;
+					else if (!nsCRT::strcasecmp (token, "newshost"))
+						m_newsHostPart = value;
+				  break;
+				case 'O':
+					if (!nsCRT::strcasecmp (token, "organization"))
+						m_organizationPart = value;
 					break;
-				  case 'O':
-					if (!PL_strcasecmp (token, "organization"))
-						m_organizationPart = PL_strdup(value);
+        case 'R':
+					if (!nsCRT::strcasecmp (token, "references"))
+						m_referencePart = value;
+					else if (!nsCRT::strcasecmp (token, "reply-to"))
+						m_replyToPart = value;
 					break;
-				  case 'R':
-					if (!PL_strcasecmp (token, "references"))
-						m_referencePart = PL_strdup(value);
-					else if (!PL_strcasecmp (token, "reply-to"))
-						m_replyToPart = PL_strdup(value);
+				case 'S':
+					if(!nsCRT::strcasecmp (token, "subject"))
+						m_subjectPart = value;
 					break;
-				  case 'S':
-					if(!PL_strcasecmp (token, "subject"))
-						m_subjectPart = PL_strdup(value);
-#ifdef UNREADY_CODE
-					HG11764
-#endif
-					break;
-				  case 'P':
-					if (!PL_strcasecmp (token, "priority"))
+				case 'P':
+					if (!nsCRT::strcasecmp (token, "priority"))
 						m_priorityPart = PL_strdup(value);
 					break;
-				  case 'T':
-					if (!PL_strcasecmp (token, "to"))
-					  {
-						if (m_toPart && *m_toPart)
-						  {
-							NET_SACat (&m_toPart, ", ");
-							NET_SACat (&m_toPart, value);
-						  }
+				case 'T':
+					if (!nsCRT::strcasecmp (token, "to"))
+				  {
+						if (!m_toPart.IsEmpty())
+						{
+              m_toPart += ", ";
+              m_toPart += value;
+						}
 						else
-							m_toPart = PL_strdup(value);
-					  }
+							m_toPart = value;
+					}
 					break;
-				  
-			} // end of switch statement...
+      } // end of switch statement...
 			
 			if (eq)
 				  *eq = '='; /* put it back */
@@ -245,27 +168,232 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 		} // while we still have part of the url to parse...
 	} // if rest && *rest
 
-	// Now escape any fields that need escaped...
-	if (m_toPart)
+	// Now unescape any fields that need escaped...
+	if (!m_toPart.IsEmpty())
 		nsUnescape(m_toPart);
-	if (m_ccPart)
+	if (!m_ccPart.IsEmpty())
 		nsUnescape(m_ccPart);
-	if (m_subjectPart)
+	if (!m_subjectPart.IsEmpty())
 		nsUnescape(m_subjectPart);
-	if (m_newsgroupPart)
+	if (!m_newsgroupPart.IsEmpty())
 		nsUnescape(m_newsgroupPart);
-	if (m_referencePart)
+	if (!m_referencePart.IsEmpty())
 		nsUnescape(m_referencePart);
-	if (m_attachmentPart)
+	if (!m_attachmentPart.IsEmpty())
 		nsUnescape(m_attachmentPart);
-	if (m_bodyPart)
+	if (!m_bodyPart.IsEmpty())
 		nsUnescape(m_bodyPart);
-	if (m_newsHostPart)
+	if (!m_newsHostPart.IsEmpty())
 		nsUnescape(m_newsHostPart);
 
 	return NS_OK;
 }
 
+
+NS_IMETHODIMP nsMailtoUrl::SetSpec(const char * aSpec)
+{
+  m_baseURL->SetSpec(aSpec);
+	return ParseUrl();
+}
+
+nsresult nsMailtoUrl::CleanupMailtoState()
+{
+    m_ccPart = "";
+    m_subjectPart = "";
+    m_newsgroupPart = "";
+    m_newsHostPart = ""; 
+    m_referencePart = "";
+    m_attachmentPart = "";
+    m_bodyPart = "";
+    m_bccPart = "";
+    m_followUpToPart = "";
+    m_fromPart = "";
+    m_htmlPart = "";
+    m_organizationPart = "";
+    m_replyToPart = "";
+    m_priorityPart = "";
+	return NS_OK;
+}
+
+nsresult nsMailtoUrl::ParseUrl()
+{
+	nsresult rv = NS_OK;
+
+  // we can get the path from the simple url.....
+  nsXPIDLCString aPath;
+  m_baseURL->GetPath(getter_Copies(aPath));
+  if (aPath)
+    m_toPart = aPath;
+
+  PRInt32 startOfSearchPart = m_toPart.FindChar('?');
+  if (startOfSearchPart > 0)
+  {
+    // now parse out the search field...
+    nsCAutoString searchPart;
+    m_toPart.Mid(searchPart, startOfSearchPart, -1);
+    if (searchPart)
+    {
+		  ParseMailtoUrl(searchPart);
+      // now we need to strip off the search part from the
+      // to part....
+      m_toPart.Cut(startOfSearchPart, -1);
+    }
+	}
+  else if (!m_toPart.IsEmpty())
+  {
+    nsUnescape(m_toPart);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, char ** aBccPart, 
+		char ** aFromPart, char ** aFollowUpToPart, char ** aOrganizationPart, 
+		char ** aReplyToPart, char ** aSubjectPart, char ** aBodyPart, char ** aHtmlPart, 
+		char ** aReferencePart, char ** aAttachmentPart, char ** aPriorityPart, 
+		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aForcePlainText)
+{
+	if (aToPart)
+		*aToPart = m_toPart.ToNewCString();
+	if (aCcPart)
+		*aCcPart = m_ccPart.ToNewCString();
+	if (aBccPart)
+		*aBccPart = m_bccPart.ToNewCString();
+	if (aFromPart)
+		*aFromPart = m_fromPart.ToNewCString();
+	if (aFollowUpToPart)
+		*aFollowUpToPart = m_followUpToPart.ToNewCString();
+	if (aOrganizationPart)
+		*aOrganizationPart = m_organizationPart.ToNewCString();
+	if (aReplyToPart)
+		*aReplyToPart = m_replyToPart.ToNewCString();
+	if (aSubjectPart)
+		*aSubjectPart = m_subjectPart.ToNewCString();
+	if (aBodyPart)
+		*aBodyPart = m_bodyPart.ToNewCString();
+	if (aHtmlPart)
+		*aHtmlPart = m_htmlPart.ToNewCString();
+	if (aReferencePart)
+		*aReferencePart = m_referencePart.ToNewCString();
+	if (aAttachmentPart)
+		*aAttachmentPart = m_attachmentPart.ToNewCString();
+	if (aPriorityPart)
+		*aPriorityPart = m_priorityPart.ToNewCString();
+	if (aNewsgroupPart)
+		*aNewsgroupPart = m_newsgroupPart.ToNewCString();
+	if (aNewsHostPart)
+		*aNewsHostPart = m_newsHostPart.ToNewCString();
+	if (aForcePlainText)
+		*aForcePlainText = m_forcePlainText;
+	return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Begin nsIURI support
+////////////////////////////////////////////////////////////////////////////////////
+
+
+NS_IMETHODIMP nsMailtoUrl::GetSpec(char * *aSpec)
+{
+	return m_baseURL->GetSpec(aSpec);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetScheme(char * *aScheme)
+{
+	return m_baseURL->GetScheme(aScheme);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetScheme(const char * aScheme)
+{
+	return m_baseURL->SetScheme(aScheme);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetPreHost(char * *aPreHost)
+{
+	return m_baseURL->GetPreHost(aPreHost);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetPreHost(const char * aPreHost)
+{
+	return m_baseURL->SetPreHost(aPreHost);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetHost(char * *aHost)
+{
+	return m_baseURL->GetHost(aHost);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetHost(const char * aHost)
+{
+	return m_baseURL->SetHost(aHost);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetPort(PRInt32 *aPort)
+{
+	return m_baseURL->GetPort(aPort);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetPort(PRInt32 aPort)
+{
+	return m_baseURL->SetPort(aPort);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetPath(char * *aPath)
+{
+	return m_baseURL->GetPath(aPath);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetPath(const char * aPath)
+{
+	return m_baseURL->SetPath(aPath);
+}
+
+NS_IMETHODIMP nsMailtoUrl::Equals(nsIURI *other, PRBool *_retval)
+{
+	return m_baseURL->Equals(other, _retval);
+}
+
+
+NS_IMETHODIMP nsMailtoUrl::Clone(nsIURI **_retval)
+{
+	return m_baseURL->Clone(_retval);
+}	
+
+NS_IMETHODIMP nsMailtoUrl::SetRelativePath(const char *i_RelativePath)
+{
+	return m_baseURL->SetRelativePath(i_RelativePath);
+}
+
+NS_IMETHODIMP nsMailtoUrl::Resolve(const char *relativePath, char **result) 
+{
+	return m_baseURL->Resolve(relativePath, result);
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// smtp url definition
+/////////////////////////////////////////////////////////////////////////////////////
+
+nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl()
+{
+	// nsISmtpUrl specific state...
+
+	m_fileName = nsnull;
+	m_isPostMessage = PR_TRUE;
+}
+ 
+nsSmtpUrl::~nsSmtpUrl()
+{
+}
+  
+NS_IMPL_ISUPPORTS_INHERITED(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)  
+
+////////////////////////////////////////////////////////////////////////////////////
+// Begin nsISmtpUrl specific support
+
+////////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsSmtpUrl::SetSpec(const char * aSpec)
 {
@@ -279,8 +407,6 @@ NS_IMETHODIMP nsSmtpUrl::SetSpec(const char * aSpec)
 // moved into SetSpec or an init method....
 nsresult nsSmtpUrl::ParseUrl()
 {
-    NS_LOCK_INSTANCE();
-
 	nsresult rv = NS_OK;
 	
 	// set the username
@@ -291,65 +417,15 @@ nsresult nsSmtpUrl::ParseUrl()
 
 	// the recipients should consist of just the path part up to to the query
     // part
-	rv = GetFileName(&m_toPart);
+  nsXPIDLCString toPart;
+  rv = GetFileName(getter_Copies(toPart));
+  m_toPart = toPart;
 
-	// now parse out the search field...
-	char * searchPart = nsnull;
-	rv = GetQuery(&searchPart);
-	if (NS_SUCCEEDED(rv) && searchPart)
-	{
-		ParseMessageToPost(searchPart);
-		nsCRT::free(searchPart);
-	}
-    else if (m_toPart)
-    {
-        nsUnescape(m_toPart);
-    }
-
-    NS_UNLOCK_INSTANCE();
-    return rv;
+  if (!m_toPart.IsEmpty())
+    nsUnescape(m_toPart);
+  return rv;
 }
 
-NS_IMETHODIMP nsSmtpUrl::GetMessageContents(char ** aToPart, char ** aCcPart, char ** aBccPart, 
-		char ** aFromPart, char ** aFollowUpToPart, char ** aOrganizationPart, 
-		char ** aReplyToPart, char ** aSubjectPart, char ** aBodyPart, char ** aHtmlPart, 
-		char ** aReferencePart, char ** aAttachmentPart, char ** aPriorityPart, 
-		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aForcePlainText)
-{
-	if (aToPart)
-		*aToPart = nsCRT::strdup(m_toPart);
-	if (aCcPart)
-		*aCcPart = nsCRT::strdup(m_ccPart);
-	if (aBccPart)
-		*aBccPart = nsCRT::strdup(m_bccPart);
-	if (aFromPart)
-		*aFromPart = nsCRT::strdup(m_fromPart);
-	if (aFollowUpToPart)
-		*aFollowUpToPart = nsCRT::strdup(m_followUpToPart);
-	if (aOrganizationPart)
-		*aOrganizationPart = nsCRT::strdup(m_organizationPart);
-	if (aReplyToPart)
-		*aReplyToPart = nsCRT::strdup(m_replyToPart);
-	if (aSubjectPart)
-		*aSubjectPart = nsCRT::strdup(m_subjectPart);
-	if (aBodyPart)
-		*aBodyPart = nsCRT::strdup(m_bodyPart);
-	if (aHtmlPart)
-		*aHtmlPart = nsCRT::strdup(m_htmlPart);
-	if (aReferencePart)
-		*aReferencePart = nsCRT::strdup(m_referencePart);
-	if (aAttachmentPart)
-		*aAttachmentPart = nsCRT::strdup(m_attachmentPart);
-	if (aPriorityPart)
-		*aPriorityPart = nsCRT::strdup(m_priorityPart);
-	if (aNewsgroupPart)
-		*aNewsgroupPart = nsCRT::strdup(m_newsgroupPart);
-	if (aNewsHostPart)
-		*aNewsHostPart = nsCRT::strdup(m_newsHostPart);
-	if (aForcePlainText)
-		*aForcePlainText = m_forcePlainText;
-	return NS_OK;
-}
 
 // Caller must call PR_FREE on list when it is done with it. This list is a list of all
 // recipients to send the email to. each name is NULL terminated...
@@ -357,7 +433,7 @@ NS_IMETHODIMP
 nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
 {
 	if (aRecipientsList)
-		*aRecipientsList = m_toPart ? nsCRT::strdup(m_toPart) : nsnull;
+		*aRecipientsList = m_toPart.ToNewCString();
 	return NS_OK;
 }
 

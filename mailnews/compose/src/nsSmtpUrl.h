@@ -24,10 +24,48 @@
 #define nsSmtpUrl_h__
 
 #include "nsISmtpUrl.h"
+#include "nsIURI.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsIFileSpec.h"
 #include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
+
+class nsMailtoUrl : public nsIMailtoUrl, public nsIURI
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIURI
+    NS_DECL_NSIMAILTOURL
+
+    nsMailtoUrl();
+
+protected:
+  virtual ~nsMailtoUrl();
+  nsresult ParseUrl();
+  nsresult CleanupMailtoState();
+  nsresult ParseMailtoUrl(char * searchPart);
+
+  nsCOMPtr<nsIURI> m_baseURL;
+    
+  // data retrieved from parsing the url: (Note the url could be a post from file or it could be in the url)
+  nsCString m_toPart;
+	nsCString m_ccPart;
+	nsCString	m_subjectPart;
+	nsCString	m_newsgroupPart;
+	nsCString	m_newsHostPart;
+	nsCString	m_referencePart;
+	nsCString	m_attachmentPart;
+	nsCString	m_bodyPart;
+	nsCString	m_bccPart;
+	nsCString	m_followUpToPart;
+	nsCString	m_fromPart;
+	nsCString	m_htmlPart;
+	nsCString	m_organizationPart;
+	nsCString	m_replyToPart;
+	nsCString	m_priorityPart;
+
+  PRBool	  m_forcePlainText;
+};
 
 class nsSmtpUrl : public nsISmtpUrl, public nsMsgMailNewsUrl
 {
@@ -44,30 +82,15 @@ public:
     nsSmtpUrl();
 
 protected:
-    virtual ~nsSmtpUrl();
-	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl();
+  virtual ~nsSmtpUrl();
+	
+  // protocol specific code to parse a url...
+  virtual nsresult ParseUrl();
 	virtual const char * GetUserName() { return m_userName.GetBuffer();}
 
 	// data retrieved from parsing the url: (Note the url could be a post from file or it could be inthe url)
-    char		*m_toPart;
-	char		*m_ccPart;
-	char		*m_subjectPart;
-	char		*m_newsgroupPart;
-	char		*m_newsHostPart;
-	char		*m_referencePart;
-	char		*m_attachmentPart;
-	char	    *m_bodyPart;
-	char		*m_bccPart;
-	char		*m_followUpToPart;
-	char		*m_fromPart;
-	char		*m_htmlPart;
-	char		*m_organizationPart;
-	char		*m_replyToPart;
-	char		*m_priorityPart;
+  nsCString   m_toPart;
 
-
-	PRBool	    m_forcePlainText;
 	PRBool		m_isPostMessage;
 
 	/* Smtp specific event sinks */
@@ -79,11 +102,6 @@ protected:
 	// This function is used to decompose the search and path part into the bare
 	// message components (to, fcc, bcc, etc.)
 	nsresult ParseMessageToPost(char * searchPart);
-	// generic function to clear out our local url state...
-	nsresult CleanupSmtpState();
 };
-
-// factory method
-extern nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult);
 
 #endif // nsSmtpUrl_h__
