@@ -252,7 +252,7 @@ sub stringify {
     if (defined($self->{'message'})) {
         return "$self->{'message'} at $self->{'filename'} line $self->{'line'}\n$stacktrace";
     } else {
-        return ref($self) . " exception at $self->{'filename'} line $self->{'line'}\n$stacktrace";
+        return ref($self) . " exception raised at $self->{'filename'} line $self->{'line'}\n$stacktrace";
     }
 }
 
