@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <dirent.h> //For random splash screen.
 #include "nsNativeAppSupport.h"
 
 #define PX_IMAGE_MODULES
@@ -102,53 +101,6 @@ public:
     nsrefcnt mRefCnt;
 }; // class nsSplashScreenPh
 
-char *RandomSplash( char *gob )
-{
- int i=0;
- int value=0;
- int foundIT=0;
- char duper[80];
-
- DIR* dirp;
- struct dirent* direntp;
-
-    dirp = opendir( gob );
-    if( dirp != NULL )
-    {
-        for(;;)
-        {
-            direntp = readdir( dirp );
-            if( direntp == NULL ) break;
-                i++;// number of available splash screens
-        }
-
-    closedir( dirp );
-
-    // generate random number based on currnet time
-    srand(time(NULL));
-    for(value = 0; value < 9999; value = rand());
-
-    dirp = opendir( gob );
-    if( dirp != NULL ) {
-        for(foundIT=1;foundIT<=i;foundIT++) {
-            direntp = readdir( dirp );
-            if( direntp == NULL ) break;
-            if( foundIT == value%i ) break;
-        }
-
-        closedir( dirp );
-
-        // return the original splash.bmp if the directory entries are "." or ".."
-        if (((value%i) == 1) || ((value%i) == 2))
-            return "../splash.bmp";
-
-        return direntp->d_name;
-    }
-
-
-    }
-    return (char *)EXIT_FAILURE;
-}
 
 NS_IMETHODIMP
 nsSplashScreenPh::Show()
@@ -156,8 +108,7 @@ nsSplashScreenPh::Show()
   PhImage_t  *img = nsnull;
   char       *p = NULL;
   char       *splash = NULL;
-  //char       splash[80];
-  char       splashdir[80];
+  char       splash_path[256];
   int         inp_grp,n=0;
   PhRid_t     rid;
   PhRegion_t  region;
@@ -184,20 +135,10 @@ nsSplashScreenPh::Show()
    mDialog = nsnull;   
 	
    /* Setup proper path to the splash.bmp so it loads the splash screen at start up. */
-   /* Only try and open the splash screen bitmap if running exec'ing from mozilla shellscript*/
-   splash = getenv ("ADDON_PATH");
-   if ( splash )  {
-	  // if ADDON_PATH/splash/ exists -- randomly choose a splash screen from here...
-	  strcpy (splashdir,"/opt/Mozilla/mozilla/splash/");
-      if( lstat( splashdir, &sbuf ) == 0)
-      {
-            strcpy (splash,splashdir);
-            strcat (splash,(char *)RandomSplash(splashdir));
-      }
-      else
-     	strcat (splash,"/splash.bmp");
-
-      if ((img = PxLoadImage(splash, NULL)) !=NULL )
+   splash = getenv( "MOZILLA_FIVE_HOME" );
+   if( splash )  {
+			sprintf( splash_path, "%s/splash.bmp", splash );
+      if( ( img = PxLoadImage( splash_path, NULL ) ) != NULL )
       {
         PtArg_t     arg[6];
         PhPoint_t   pos;

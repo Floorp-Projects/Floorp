@@ -787,35 +787,32 @@ struct nsKeyConverter {
 };
 
 static struct nsKeyConverter nsKeycodes[] = {
+  { NS_VK_PAGE_UP,    Pk_Pg_Up, PR_FALSE },
+  { NS_VK_PAGE_DOWN,  Pk_Pg_Down, PR_FALSE },
+  { NS_VK_UP,         Pk_Up, PR_FALSE },
+  { NS_VK_DOWN,       Pk_Down, PR_FALSE },
+  { NS_VK_TAB,        Pk_Tab, PR_FALSE },
+  { NS_VK_HOME,       Pk_Home, PR_FALSE },
+  { NS_VK_END,        Pk_End, PR_FALSE },
+  { NS_VK_LEFT,       Pk_Left, PR_FALSE },
+  { NS_VK_RIGHT,      Pk_Right, PR_FALSE },
+  { NS_VK_DELETE,     Pk_Delete, PR_FALSE },
+  { NS_VK_SPACE,      Pk_space, PR_TRUE },
   { NS_VK_CANCEL,     Pk_Cancel, PR_FALSE },
   { NS_VK_BACK,       Pk_BackSpace, PR_FALSE },
-  { NS_VK_TAB,        Pk_Tab, PR_FALSE },
-  { NS_VK_TAB,        Pk_KP_Tab, PR_FALSE },
   { NS_VK_CLEAR,      Pk_Clear, PR_FALSE },
   { NS_VK_RETURN,     Pk_Return, PR_FALSE },
-  { NS_VK_SHIFT,      Pk_Shift_L, PR_FALSE },
-  { NS_VK_SHIFT,      Pk_Shift_R, PR_FALSE },
   { NS_VK_SHIFT,      Pk_Shift_L, PR_FALSE },
   { NS_VK_SHIFT,      Pk_Shift_R, PR_FALSE },
   { NS_VK_CONTROL,    Pk_Control_L, PR_FALSE },
   { NS_VK_CONTROL,    Pk_Control_R, PR_FALSE },
   { NS_VK_ALT,        Pk_Alt_L, PR_FALSE },
   { NS_VK_ALT,        Pk_Alt_R, PR_FALSE },
+  { NS_VK_INSERT,     Pk_Insert, PR_FALSE },
   { NS_VK_PAUSE,      Pk_Pause, PR_FALSE },
   { NS_VK_CAPS_LOCK,  Pk_Caps_Lock, PR_FALSE },
   { NS_VK_ESCAPE,     Pk_Escape, PR_FALSE },
-  { NS_VK_SPACE,      Pk_space, PR_TRUE },
-  { NS_VK_PAGE_UP,    Pk_Pg_Up, PR_FALSE },
-  { NS_VK_PAGE_DOWN,  Pk_Pg_Down, PR_FALSE },
-  { NS_VK_END,        Pk_End, PR_FALSE },
-  { NS_VK_HOME,       Pk_Home, PR_FALSE },
-  { NS_VK_LEFT,       Pk_Left, PR_FALSE },
-  { NS_VK_UP,         Pk_Up, PR_FALSE },
-  { NS_VK_RIGHT,      Pk_Right, PR_FALSE },
-  { NS_VK_DOWN,       Pk_Down, PR_FALSE },
   { NS_VK_PRINTSCREEN, Pk_Print, PR_FALSE },
-  { NS_VK_INSERT,     Pk_Insert, PR_FALSE },
-  { NS_VK_DELETE,     Pk_Delete, PR_FALSE },
   { NS_VK_COMMA,      Pk_comma, PR_TRUE },
   { NS_VK_PERIOD,     Pk_period, PR_TRUE },
   { NS_VK_SLASH,      Pk_slash, PR_TRUE },
@@ -892,9 +889,9 @@ inline void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
     PRBool IsChar;
     unsigned long vkey;
-		if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
-			vkey = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
-		else vkey = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
+		if( aPhKeyEvent->key_flags & Pk_KF_Sym_Valid )
+			vkey = nsConvertKey( aPhKeyEvent->key_sym, &IsChar );
+		else vkey = nsConvertKey( aPhKeyEvent->key_cap, &IsChar );
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
@@ -924,10 +921,10 @@ PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
   nsKeyEvent keyEvent;
   PRBool result = PR_FALSE;
 
-  if ( (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid) == 0) {
+  if( !(aPhKeyEvent->key_flags & (Pk_KF_Cap_Valid|Pk_KF_Sym_Valid) ) ) {
 		//printf("nsWidget::DispatchKeyEvent throwing away invalid key: Modifiers Valid=<%d,%d,%d> this=<%p>\n",
 		//(aPhKeyEvent->key_flags & Pk_KF_Scan_Valid), (aPhKeyEvent->key_flags & Pk_KF_Sym_Valid), (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid), this );
-		return PR_FALSE; //PR_TRUE;
+		return PR_FALSE;
 		}
 
   if ( PtIsFocused(mWidget) != 2) {

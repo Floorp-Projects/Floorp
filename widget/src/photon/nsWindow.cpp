@@ -40,7 +40,7 @@
 
 #include "nsPhWidgetLog.h"
 #include <Pt.h>
-#include <PtServer.h>
+#include <photon/PtServer.h>
 #include "PtRawDrawContainer.h"
 #include "nsCRT.h"					/* JPB - Added to get around nsCRT undeclared issues... */
 
