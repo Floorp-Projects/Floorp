@@ -22,29 +22,30 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/PrefsWindow.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="StartUp('Top')"
+  class="dialog"
+  onload="StartUp('Top'); OnLoadPref();"
   title="&window.title;"
-  >
+  align="vertical">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
+
 <html:div flex="100%">
 &categoryHeader;
-<html:br />
-<html:iframe name="preftree" id="preftree" src="chrome://pref/content/preftree.xul" scrolling="auto" resize="yes" width="72%" height="356"/>
-<html:iframe name="pref-appearance" id="pref-appearance"
-	src="chrome://pref/content/pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
-<box>
-   <spring flex="100%" />
-   <titledbutton class="dialog push" align="bottom" value="&helpButton.label;" />				
-   <titledbutton class="dialog push" align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
-   <titledbutton class="dialog push" align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
-</box>
-</html:div>
-</window>
+<html:br/>
 
+  <html:iframe name="preftree" id="preftree" src="chrome://pref/content/preftree.xul" scrolling="auto" resize="yes" width="72%" height="356"/>
+  <html:iframe name="pref-appearance" id="pref-appearance"
+	src="chrome://pref/content/pref-appearance.xul" width="72%" height="356" resize="yes" scrolling="auto"/>
+
+</html:div>
+
+<box id="okCancelButtons"/>
+
+</window>
