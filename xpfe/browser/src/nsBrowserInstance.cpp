@@ -375,7 +375,7 @@ void TimesUp(nsITimer *aTimer, void *aClosure)
 #endif //ENABLE_PAGE_CYCLER
 
 PRUint32 nsBrowserInstance::gRefCnt = 0;
-int ButtonShowHideCallback(const char* aPref, void* aClosure);
+int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure);
 static const char kShowToolbarElts[] = "browser.toolbars.showbutton";
 
 //*****************************************************************************
@@ -2413,7 +2413,7 @@ NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 // Toolbar button pref callback
 // =================================================================================
 
-int ButtonShowHideCallback(const char* aPref, void* aClosure)
+int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);

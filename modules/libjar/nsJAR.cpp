@@ -1113,7 +1113,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
   return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 DropZipReaderCache(nsHashKey *aKey, void *aData, void* closure)
 {
   nsJAR* zip = (nsJAR*)aData;
@@ -1187,7 +1187,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   return rv;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 FindOldestZip(nsHashKey *aKey, void *aData, void* closure)
 {
   nsJAR** oldestPtr = (nsJAR**)closure;
