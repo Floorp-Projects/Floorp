@@ -76,6 +76,23 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
+nss_build_all: 
+	$(MAKE) build_coreconf
+	$(MAKE) build_nspr
+	$(MAKE) build_dbm
+	$(MAKE)
+
+build_coreconf:
+	(cd $(CORE_DEPTH)/coreconf ;  $(MAKE))
+
+build_nspr:
+	(cd $(CORE_DEPTH)/../nsprpub ; $(MAKE) OBJDIR_NAME=${OBJDIR_NAME} )
+
+build_dbm:
+	(cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs)
+
+	
+
 moz_import::
 ifeq ($(OS_ARCH),WINNT)
 	cp $(DIST)/../include/* $(DIST)/include
