@@ -338,7 +338,7 @@ protected:
   {
   }
 
-  static nsresult GlobalResolve(nsISupports *aNative, JSContext *cx,
+  static nsresult GlobalResolve(nsIScriptGlobalObject *aGlobal, JSContext *cx,
                                 JSObject *obj, JSString *str, PRUint32 flags,
                                 PRBool *did_resolve);
 

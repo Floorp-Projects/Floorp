@@ -498,11 +498,10 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
                                    XPCWrappedNativeProto* aProto)
     : mMaybeProto(aProto),
       mSet(aProto->GetSet()),
-      mIdentity(aIdentity),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull)
 {
-    NS_ADDREF(mIdentity);
+    NS_ADDREF(mIdentity = aIdentity);
 
     NS_ASSERTION(mMaybeProto, "bad ctor param");
     NS_ASSERTION(mSet, "bad ctor param");
@@ -517,11 +516,10 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
 
     : mMaybeScope(TagScope(aScope)),
       mSet(aSet),
-      mIdentity(aIdentity),
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull)
 {
-    NS_ADDREF(mIdentity);
+    NS_ADDREF(mIdentity = aIdentity);
 
     NS_ASSERTION(aScope, "bad ctor param");
     NS_ASSERTION(aSet, "bad ctor param");

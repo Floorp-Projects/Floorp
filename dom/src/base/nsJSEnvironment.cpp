@@ -1465,13 +1465,7 @@ nsJSContext::GetGlobalObject()
     // The global object is a XPConnect wrapped native, the native in
     // the wrapper might be the nsIScriptGlobalObject
 
-    nsCOMPtr<nsISupports> native;
-    wrapped_native->GetNative(getter_AddRefs(native));
-
-    NS_WARN_IF_FALSE(native,
-                     "XPConnect wrapped native doesn't wrap anything.");
-
-    sgo = do_QueryInterface(native);
+    sgo = do_QueryWrappedNative(wrapped_native);
   } else {
     sgo = do_QueryInterface(priv);
   }

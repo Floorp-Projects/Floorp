@@ -1965,10 +1965,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
             if (xpcWrapper)
             {
-                nsCOMPtr<nsISupports> supports;
-                xpcWrapper->GetNative(getter_AddRefs(supports));
-
-                objPrin = do_QueryInterface(supports);
+                objPrin = do_QueryWrappedNative(xpcWrapper);
             }
             else
             {

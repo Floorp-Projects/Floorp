@@ -178,7 +178,37 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      * object it points into.
      */
     voidPtrPtr GetSecurityInfoAddress();
+
+%{C++
+    /**
+     * Faster access to the native object from C++.  Will never return null.
+     */
+    nsISupports* Native() const { return mIdentity; }
+
+protected:
+    nsISupports *mIdentity;
+public:
+%}
 };
+
+%{C++
+inline
+const nsQueryInterface
+do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative)
+{
+    return nsQueryInterface(aWrappedNative->Native());
+}
+
+inline
+const nsQueryInterfaceWithError
+do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative,
+                      nsresult *aError)
+
+{
+    return nsQueryInterfaceWithError(aWrappedNative->Native(), aError);
+}
+
+%}
 
 [uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
