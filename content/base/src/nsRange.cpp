@@ -1678,9 +1678,13 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
   if (NS_FAILED(res)) return res;
 
-  // Create a new document fragment in the context of this document
+  // Create a new document fragment in the context of this document,
+  // which might be null
   nsCOMPtr<nsIDOMDocumentFragment> clonedFrag;
-  res = document->CreateDocumentFragment(getter_AddRefs(clonedFrag));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+
+  res = NS_NewDocumentFragment(getter_AddRefs(clonedFrag), doc);
   if (NS_FAILED(res)) return res;
 
   PRUint16 commonAncestorNodeType;
@@ -1853,9 +1857,13 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
   if (NS_FAILED(res)) return res;
 
-  // Create a new document fragment in the context of this document
+  // Create a new document fragment in the context of this document,
+  // which might be null
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = document->CreateDocumentFragment(getter_AddRefs(docfrag));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+
+  res = NS_NewDocumentFragment(getter_AddRefs(docfrag), doc);
   if (NS_FAILED(res)) return res;
 
   res = this->ExtractContents(getter_AddRefs(docfrag));
@@ -2331,7 +2339,7 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
                   result = globalObj->GetContext(getter_AddRefs(scriptContext));
                 }
 
-                JSContext* cx;
+                JSContext* cx = nsnull;
                 if (NS_SUCCEEDED(result) && scriptContext) {
                   cx = (JSContext*)scriptContext->GetNativeContext();
                 }
