@@ -1695,7 +1695,7 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
         }
 
         if(len-offset)
-          mTokenizer->Append(&mTransferBuffer[offset],len);
+          mTokenizer->Append(&mTransferBuffer[offset], len - offset);
       }
   } while (len > 0);
 
