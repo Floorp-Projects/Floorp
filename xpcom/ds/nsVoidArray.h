@@ -122,4 +122,55 @@ private:
   nsStringArray(const nsStringArray& other);
 };
 
+
+class nsCString;
+
+typedef PRBool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);
+
+class NS_COM nsCStringArray: protected nsVoidArray
+{
+public:
+  nsCStringArray(void);
+  virtual ~nsCStringArray(void);
+
+  nsCStringArray& operator=(const nsCStringArray& other);
+
+  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+
+  PRInt32 Count(void) const {
+    return mCount;
+  }
+
+  void CStringAt(PRInt32 aIndex, nsCString& aCString) const;
+  nsCString* CStringAt(PRInt32 aIndex) const;
+  nsCString* operator[](PRInt32 aIndex) const { return CStringAt(aIndex); }
+
+  PRInt32 IndexOf(const nsCString& aPossibleString) const;
+  PRInt32 IndexOfIgnoreCase(const nsCString& aPossibleString) const;
+
+  PRBool InsertCStringAt(const nsCString& aCString, PRInt32 aIndex);
+
+  PRBool ReplaceCStringAt(const nsCString& aCString, PRInt32 aIndex);
+
+  PRBool AppendCString(const nsCString& aCString) {
+    return InsertCStringAt(aCString, mCount);
+  }
+
+  PRBool RemoveCString(const nsCString& aCString);
+  PRBool RemoveCStringIgnoreCase(const nsCString& aCString);
+  PRBool RemoveCStringAt(PRInt32 aIndex);
+  void   Clear(void);
+
+  void Compact(void) {
+    nsVoidArray::Compact();
+  }
+
+  PRBool EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData);
+
+private:
+  /// Copy constructors are not allowed
+  nsCStringArray(const nsCStringArray& other);
+};
+
 #endif /* nsVoidArray_h___ */

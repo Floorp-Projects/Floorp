@@ -414,3 +414,190 @@ nsStringArray::EnumerateBackwards(nsStringArrayEnumFunc aFunc, void* aData)
   return running;
 }
 
+
+
+//----------------------------------------------------------------
+// nsCStringArray
+
+nsCStringArray::nsCStringArray(void)
+  : nsVoidArray()
+{
+}
+
+nsCStringArray::~nsCStringArray(void)
+{
+  Clear();
+}
+
+nsCStringArray& 
+nsCStringArray::operator=(const nsCStringArray& other)
+{
+  if (nsnull != mArray) {
+    delete mArray;
+  }
+  PRInt32 otherCount = other.mCount;
+  mArraySize = otherCount;
+  mCount = otherCount;
+  if (0 < otherCount) {
+    mArray = new void*[otherCount];
+    while (0 <= --otherCount) {
+      nsCString* otherString = (nsCString*)(other.mArray[otherCount]);
+      mArray[otherCount] = new nsCString(*otherString);
+    }
+  } else {
+    mArray = nsnull;
+  }
+  return *this;
+}
+
+void  
+nsCStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  PRUint32 sum = 0;
+  nsVoidArray::SizeOf(aHandler, &sum);
+  PRInt32 index = mCount;
+  while (0 <= --index) {
+    nsCString* string = (nsCString*)mArray[index];
+    PRUint32 size;
+    string->SizeOf(aHandler, &size);
+    sum += size;
+  }
+}
+
+void 
+nsCStringArray::CStringAt(PRInt32 aIndex, nsCString& aCString) const
+{
+  nsCString* string = (nsCString*)nsVoidArray::ElementAt(aIndex);
+  if (nsnull != string) {
+    aCString = *string;
+  }
+  else {
+    aCString.Truncate();
+  }
+}
+
+nsCString*
+nsCStringArray::CStringAt(PRInt32 aIndex) const
+{
+  return (nsCString*)nsVoidArray::ElementAt(aIndex);
+}
+
+PRInt32 
+nsCStringArray::IndexOf(const nsCString& aPossibleString) const
+{
+  void** ap = mArray;
+  void** end = ap + mCount;
+  while (ap < end) {
+    nsCString* string = (nsCString*)*ap;
+    if (string->Equals(aPossibleString)) {
+      return ap - mArray;
+    }
+    ap++;
+  }
+  return -1;
+}
+
+PRInt32 
+nsCStringArray::IndexOfIgnoreCase(const nsCString& aPossibleString) const
+{
+  void** ap = mArray;
+  void** end = ap + mCount;
+  while (ap < end) {
+    nsCString* string = (nsCString*)*ap;
+    if (string->EqualsIgnoreCase(aPossibleString)) {
+      return ap - mArray;
+    }
+    ap++;
+  }
+  return -1;
+}
+
+PRBool 
+nsCStringArray::InsertCStringAt(const nsCString& aCString, PRInt32 aIndex)
+{
+  nsCString* string = new nsCString(aCString);
+  if (nsVoidArray::InsertElementAt(string, aIndex)) {
+    return PR_TRUE;
+  }
+  delete string;
+  return PR_FALSE;
+}
+
+PRBool
+nsCStringArray::ReplaceCStringAt(const nsCString& aCString, PRInt32 aIndex)
+{
+  nsCString* string = (nsCString*)nsVoidArray::ElementAt(aIndex);
+  if (nsnull != string) {
+    *string = aCString;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsCStringArray::RemoveCString(const nsCString& aCString)
+{
+  PRInt32 index = IndexOf(aCString);
+  if (-1 < index) {
+    return RemoveCStringAt(index);
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsCStringArray::RemoveCStringIgnoreCase(const nsCString& aCString)
+{
+  PRInt32 index = IndexOfIgnoreCase(aCString);
+  if (-1 < index) {
+    return RemoveCStringAt(index);
+  }
+  return PR_FALSE;
+}
+
+PRBool nsCStringArray::RemoveCStringAt(PRInt32 aIndex)
+{
+  nsCString* string = CStringAt(aIndex);
+  if (nsnull != string) {
+    nsVoidArray::RemoveElementAt(aIndex);
+    delete string;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+void 
+nsCStringArray::Clear(void)
+{
+  PRInt32 index = mCount;
+  while (0 <= --index) {
+    nsCString* string = (nsCString*)mArray[index];
+    delete string;
+  }
+  nsVoidArray::Clear();
+}
+
+
+
+PRBool 
+nsCStringArray::EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData)
+{
+  PRInt32 index = -1;
+  PRBool  running = PR_TRUE;
+
+  while (running && (++index < mCount)) {
+    running = (*aFunc)(*((nsCString*)mArray[index]), aData);
+  }
+  return running;
+}
+
+PRBool 
+nsCStringArray::EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData)
+{
+  PRInt32 index = mCount;
+  PRBool  running = PR_TRUE;
+
+  while (running && (0 <= --index)) {
+    running = (*aFunc)(*((nsCString*)mArray[index]), aData);
+  }
+  return running;
+}
