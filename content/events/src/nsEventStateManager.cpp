@@ -140,6 +140,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
+    mCurrentTarget = aTargetFrame;
     ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_KEY_DOWN:
