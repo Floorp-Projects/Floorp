@@ -578,15 +578,15 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                   //compare old cursor to new cursor
                   PRInt32 result2 = compareFrames(frame,aFrame);
                   if (result2 == 0)
-                    result2 = ComparePoints(mFocusNode, mFocusOffset, domNode, aOffset + aContentOffset);
+                    result2 = ComparePoints(mFocusNode, mFocusOffset, domNode, aOffset );
                   //compare anchor to new cursor
                   PRInt32 result3 = compareFrames(anchor,aFrame);
                   if (result3 == 0)
-                    result3 = ComparePoints(mAnchorNode, mAnchorOffset ,domNode , aOffset + aContentOffset);
+                    result3 = ComparePoints(mAnchorNode, mAnchorOffset ,domNode , aOffset );
 
                   if (result1 == 0 && result3 < 0)
                   {
-                    selectFrames(anchor,anchorFrameOffsetBegin, aFrame, aOffset + aContentOffset, PR_TRUE, PR_TRUE); //last true is forwards
+                    selectFrames(anchor,anchorFrameOffsetBegin, aFrame, aOffset , PR_TRUE, PR_TRUE); //last true is forwards
                   }
                   else if (result1 == 0 && result3 > 0)
                   {
@@ -728,7 +728,17 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   //we will need to check if any "side" is the anchor and send a direction order to the frames.
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
+  //reset the focus and anchor points.
+  nsCOMPtr<nsIContent> anchorContent;
+  nsCOMPtr<nsIContent> frameContent;
+  if (mAnchorNode && mFocusNode){
+    anchorContent =  mAnchorNode;
+    frameContent = mFocusNode;
+  }
   for (PRInt32 i =0; i<mRangeArray->Count(); i++){
+    //end content and start content do NOT necessarily mean anchor and focus frame respectively
+    PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
+    PRInt32 frameOffset = -1;  // where we would "like" to have the anchor pt.  actually we count on it.
     range = (nsISupports *)mRangeArray->ElementAt(i);
     DEBUG_OUT_RANGE(range);
     range->GetStartParent(getter_AddRefs(startNode));
@@ -739,17 +749,34 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
     result = findFrameFromContent(aStartFrame, startContent,PR_TRUE);
     if (result){
       nsCOMPtr<nsIContent> endContent(endNode);
-      if (endContent == startContent)
-        result->SetSelectedContentOffsets(PR_TRUE, startOffset, endOffset, PR_FALSE, &result);
+      if (endContent == startContent){
+        if (startContent == frameContent)
+          frameOffset = mFocusOffset;
+        if ( startContent == anchorContent ) 
+          anchorOffset = mAnchorOffset; 
+        result->SetSelectedContentOffsets(PR_TRUE, startOffset, endOffset, anchorOffset, frameOffset, PR_FALSE, 
+                                          aTracker, &result);
+      }
       else{
-        result->SetSelectedContentOffsets(PR_TRUE, startOffset, -1 ,PR_FALSE, &result);//select from start to end
+        if (startContent == frameContent)
+          frameOffset = mFocusOffset;
+        if ( startContent == anchorContent ) 
+          anchorOffset = mAnchorOffset; 
+        result->SetSelectedContentOffsets(PR_TRUE, startOffset, -1 , anchorOffset, frameOffset, PR_FALSE, 
+                                          aTracker, &result);//select from start to end
         //now we keep selecting until we hit the last content, or the end of the page.
+        anchorOffset = -1;
+        frameOffset = -1;
         while(result = getNextFrame(result)){
           nsCOMPtr<nsIContent> content;
           result->GetContent(*getter_AddRefs(content));
-          if (content == endContent)
-          {
-            result->SetSelectedContentOffsets(PR_TRUE, 0, endOffset, PR_FALSE, &result);//select from beginning to endOffset
+          if (content == endContent){
+            if (endContent == frameContent)
+              frameOffset = mFocusOffset;
+            if ( endContent == anchorContent ) 
+              anchorOffset = mAnchorOffset; 
+            result->SetSelectedContentOffsets(PR_TRUE, 0, endOffset, anchorOffset, frameOffset, PR_FALSE, 
+                                              aTracker, &result);//select from beginning to endOffset
             return NS_OK;
           }
           else
@@ -758,15 +785,6 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
       }
     }
 
-  }
-  //reset the focus and anchor points.
-  if (mAnchorNode && mFocusNode)
-  {
-    nsCOMPtr<nsIContent> anchorContent(mAnchorNode);
-    nsCOMPtr<nsIContent> frameContent(mFocusNode);
-    nsIFrame *anchorFrame = findFrameFromContent(aStartFrame, anchorContent,PR_FALSE);
-    nsIFrame *focusFrame = findFrameFromContent(aStartFrame, frameContent,PR_FALSE);
-    aTracker->SetFocus(focusFrame,anchorFrame);
   }
   return NS_OK;
 }
