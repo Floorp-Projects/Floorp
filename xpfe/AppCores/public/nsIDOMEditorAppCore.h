@@ -25,6 +25,8 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMBaseAppCore.h"
 
+class nsIDOMDocument;
+class nsIDOMSelection;
 class nsIDOMWindow;
 
 #define NS_IDOMEDITORAPPCORE_IID \
@@ -38,6 +40,10 @@ public:
   NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText)=0;
 
   NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML)=0;
+
+  NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument)=0;
+
+  NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection)=0;
 
   NS_IMETHOD    SetEditorType(const nsString& aEditorType)=0;
 
@@ -84,6 +90,8 @@ public:
 #define NS_DECL_IDOMEDITORAPPCORE   \
   NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);  \
   NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);  \
+  NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);  \
+  NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);  \
   NS_IMETHOD    SetEditorType(const nsString& aEditorType);  \
   NS_IMETHOD    SetTextProperty(const nsString& aAttr);  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);  \
@@ -110,6 +118,8 @@ public:
 #define NS_FORWARD_IDOMEDITORAPPCORE(_to)  \
   NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText) { return _to##GetContentsAsText(aContentsAsText); } \
   NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML) { return _to##GetContentsAsHTML(aContentsAsHTML); } \
+  NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument) { return _to##GetEditorDocument(aEditorDocument); } \
+  NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection) { return _to##GetEditorSelection(aEditorSelection); } \
   NS_IMETHOD    SetEditorType(const nsString& aEditorType) { return _to##SetEditorType(aEditorType); }  \
   NS_IMETHOD    SetTextProperty(const nsString& aAttr) { return _to##SetTextProperty(aAttr); }  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aAttr) { return _to##RemoveTextProperty(aAttr); }  \
