@@ -283,8 +283,10 @@ var gEditorDocumentObserver =
         if (editorType != "htmlmail"
             && editorType != "textmail")
         {
-          // Mail Composers start focus in address area
-          gContentWindow.focus();
+          // Set focus to content window if not a mail composer
+          // Race conditions prevent us from setting focus here
+          //   when loading a url into blank window
+          setTimeout("SetFocusOnStartup()", 0);
         }
 
         if (!("InsertCharWindow" in window))
@@ -311,10 +313,6 @@ var gEditorDocumentObserver =
               controller.SetCommandRefCon(editor.QueryInterface(Components.interfaces.nsISupports));
             } catch (e) {}
           }
-
-          // udpate menu items now that we have an editor to play with
-          window.updateCommands("create");
-
           // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
           EditorSetDefaultPrefsAndDoctype();
 
@@ -356,10 +354,6 @@ var gEditorDocumentObserver =
                   item.hidden = true;
               }
             }
-
-            // Unfortunately, we have to redo all command enabling
-            //   that were done before we changed to "text" editing
-            window.updateCommands("create");
           }
     
           // Set window title and build "Recent Files" menu  
@@ -401,6 +395,11 @@ var gEditorDocumentObserver =
         break;
     }
   }
+}
+
+function SetFocusOnStartup()
+{
+  gContentWindow.focus();
 }
 
 function EditorStartup()
@@ -3200,3 +3199,4 @@ function FillInHTMLTooltip(tooltip)
   }
   return false;
 }
+
