@@ -62,7 +62,6 @@ embedding_chrome 0
 embedding_xulprefs 0
 embedding_xulsecurity 0
 carbon          0      TARGET_CARBON
-useimg2         1      USE_IMG2
 lowmem          0      MOZ_MAC_LOWMEM
 accessible      1      ACCESSIBILITY
 bidi            1      IBMBIDI

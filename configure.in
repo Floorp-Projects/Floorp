@@ -4587,9 +4587,6 @@ dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
 
-dnl libpr0n on by default
-AC_DEFINE(USE_IMG2)
-
 if test "$SUNCTL"; then
     dnl older versions of glib do not seem to have gmodule which ctl needs
     _SAVE_CFLAGS=$CFLAGS
