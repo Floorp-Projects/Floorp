@@ -59,25 +59,29 @@ Contributor(s): ______________________________________. -->
   <stringbundleset id="stringbundleset"/>
 
   <!-- keys are appended from the overlay -->
-  <keyset id="tasksKeys"/>
-  <keyset id="navKeys">
-    <key id="showHideSidebar"/>
+  <keyset id="tasksKeys">
+    <keyset id="navKeys">
+      <key id="showHideSidebar"/>
+    </keyset>
   </keyset>
-  
+
   <!-- commands are appended from the overlay -->
-  <commandset id="tasksCommands"/>
-  <commandset id="globalEditMenuItems"/>
-  <commandset id="selectEditMenuItems"/>
-  <commandset id="undoEditMenuItems"/>
-  <commandset id="clipboardEditMenuItems"/>
-  <commandset id="commands"/>
-  
+  <commandset id="commands">
+    <commandset id="tasksCommands"/>
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
+  </commandset>
+
   <broadcasterset id="navBroadcasters"/>
 
   <!-- it's the whole navigator.xul menubar! hidden windows need to
        have a menubar for situations where they're the only window remaining
        on a platform that wants to leave the app running, like the Mac.
   -->
-  <menubar id="main-menubar"/>
+  <toolbox id="toolbox">
+    <menubar id="main-menubar" position="1"/>
+  </toolbox>
 
 </window>
