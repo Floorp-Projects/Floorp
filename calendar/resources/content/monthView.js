@@ -908,27 +908,43 @@ var monthViewEventDragAndDropObserver  = {
     //dump( evt.target.getAttribute( "id" ) );
   },
   onDrop: function (evt,dropdata,session){
-      //get the date of the current event box.
-      //dump( "\n\nDROP EVNET->\n"+gEventBeingDragged.start );
-      var newDay = gBoxBeingDroppedOn.dayNumber;
-      if( newDay == null )
-         return;
+    //get the date of the current event box.
+    //dump( "\n\nDROP EVNET->\n"+gEventBeingDragged.start );
+    var newDay = gBoxBeingDroppedOn.dayNumber;
+    if( newDay == null )
+        return;
+    
+    var OldStartDate = new Date( gEventBeingDragged.start.getTime() );
+    var newStartDate = new Date( OldStartDate.getTime() );
+    newStartDate.setDate( newDay );
 
-      var OldStartDate = new Date( gEventBeingDragged.start.getTime() );
-      var newStartDate = new Date( OldStartDate.getTime() );
-      newStartDate.setDate( newDay );
-      
-      var Difference = newStartDate.getTime() - OldStartDate.getTime();
-      var oldEndDate = new Date( gEventBeingDragged.end.getTime() );
-      var newEndDate = oldEndDate.getTime() + Difference;
+    var Difference = newStartDate.getTime() - OldStartDate.getTime();
+    var oldEndDate = new Date( gEventBeingDragged.end.getTime() );
+    var newEndDate = oldEndDate.getTime() + Difference;
 
-      gEventBeingDragged.start.setTime( newStartDate.getTime() );
-      gEventBeingDragged.end.setTime( newEndDate );
+    gEventBeingDragged.start.setTime( newStartDate.getTime() );
+    gEventBeingDragged.end.setTime( newEndDate );
+    
+    if( gEventBeingDragged.recurWeekdays > 0 )
+    {
+        //shift the days from their old days to their new days.
+        if( Difference < 0 )
+            Difference += 7;
 
-      //edit the event being dragged to change its start and end date
-      //don't change the start and end time though.
-      gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
-      
-      //refresh the view
+        gEventBeingDragged.recurWeekdays = gEventBeingDragged.recurWeekdays << Difference;
+    }
+    //edit the event being dragged to change its start and end date
+    //don't change the start and end time though.
+    if( evt.ctrlKey == true )
+    {
+        var eventToCopy = gEventBeingDragged.clone();
+        eventToCopy.id = 0; //set the id to 0 so that it generates a new one
+        
+        gICalLib.addEvent( eventToCopy, gEventBeingDragged.parent.server );  
+    }
+    else
+    {
+        gICalLib.modifyEvent( gEventBeingDragged, gEventBeingDragged.parent.server );
+      }
   }
 };
