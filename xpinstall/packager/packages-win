@@ -92,6 +92,7 @@ bin\components\chrome.dll
 bin\components\chrome.xpt
 bin\components\cookie.dll
 bin\components\cookie.xpt
+bin\components\composer.dll
 bin\components\docshell.dll
 bin\components\docshell_base.xpt
 bin\components\jsdom.dll

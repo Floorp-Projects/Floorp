@@ -106,6 +106,7 @@ bin/components/libcaps.so
 bin/components/libchardet.so
 bin/components/libchrome.so
 bin/components/libcookie.so
+bin/components/libcomposer.so
 bin/components/libdocshell.so
 bin/components/libeditor.so
 bin/components/libembedcomponents.so
