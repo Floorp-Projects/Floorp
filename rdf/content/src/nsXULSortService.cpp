@@ -881,7 +881,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 						{
 							if (loop > startIndex+1)
 							{
-								nsQuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
+								NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
 									inplaceSortCallback, (void *)sortInfo);
 								startIndex = loop+1;
 							}
@@ -890,14 +890,14 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 				}
 				if (loop > startIndex+1)
 				{
-					nsQuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
+					NS_QuickSort((void *)&flatArray[startIndex], loop-startIndex, sizeof(nsIContent *),
 						inplaceSortCallback, (void *)sortInfo);
 					startIndex = loop+1;
 				}
 			}
 			else
 			{
-				nsQuickSort((void *)flatArray, numElements, sizeof(nsIContent *),
+				NS_QuickSort((void *)flatArray, numElements, sizeof(nsIContent *),
 					inplaceSortCallback, (void *)sortInfo);
 			}
 
@@ -993,7 +993,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 			sortInfo.descendingSort = PR_TRUE;
 		else
 			sortInfo.descendingSort = PR_FALSE;
-		nsQuickSort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
+		NS_QuickSort((void *)flatArray, numElements, elementSize, openSortCallback, (void *)&sortInfo);
 	}
 	return(NS_OK);
 }
