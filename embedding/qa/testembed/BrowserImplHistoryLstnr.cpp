@@ -141,7 +141,7 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryPurge(PRInt32 theNumEntries, PRBool *notify
 {
 	QAOutput("nsIHistoryListener::OnHistoryPurge()", 2);
 
-	*notify = PR_FALSE;
+	*notify = PR_TRUE;
 	FormatAndPrintOutput("OnHistoryPurge() notification = ", *notify, 1);
 
 	FormatAndPrintOutput("OnHistoryPurge() theNumEntries = ", theNumEntries, 2);
