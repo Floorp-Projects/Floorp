@@ -666,9 +666,17 @@ nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString *pro
 	struct mdbYarn yarn;
 
 	yarn.mYarn_Grow = NULL;
-	nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, propertyStr));
-	delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
-	return err;
+	if (m_mdbRow)
+	{
+		nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, propertyStr));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+		return err;
+	}
+	else
+	{
+		NS_ASSERTION(PR_FALSE, "missing row in dbfolderinfo");
+		return NS_ERROR_NULL_POINTER;
+	}
 }
 
 nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue)
