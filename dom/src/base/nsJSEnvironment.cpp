@@ -1634,10 +1634,8 @@ NS_IMETHODIMP nsJSEnvironment::Observe(nsISupports *aSubject,
                                        const char *aTopic,
                                        const PRUnichar *someData)
 {
-#ifdef DEBUG
-  if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
-    NS_ASSERTION(0,"not shutdown");
-#endif
+  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID),
+               "not shutdown");
   NS_RELEASE_THIS(); // release ref from |GetScriptingEnvironment|
   return NS_OK;
 }
