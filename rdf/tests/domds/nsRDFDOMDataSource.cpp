@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsRDFDOMDataSource.h"
 #include "nsRDFCID.h"
 #include "rdf.h"
@@ -35,12 +36,11 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
-
+#include "nsISupportsArray.h"
 #include "nsIDOMViewerElement.h"
-
 #include "nsIDOMHTMLDocument.h"
-
 #include "nsIDOMXULDocument.h"
+
 
 #include "prprf.h"
 

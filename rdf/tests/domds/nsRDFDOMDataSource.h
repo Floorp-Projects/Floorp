@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsIDOMNode.h"
+#include "nsIDOMDocument.h"
 
 /* {c7cf77e8-245a-11d3-80f0-006008948010} */
 #define NS_RDF_DOMDATASOURCE_CID \
