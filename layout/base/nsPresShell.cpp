@@ -1507,7 +1507,6 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
     }
   }
 #endif
-  PRInt32 index = nsnull;
   nsresult rv = NS_OK;
   if (!AlreadyInQueue(aReflowCommand)) {
     NS_ADDREF(aReflowCommand);
