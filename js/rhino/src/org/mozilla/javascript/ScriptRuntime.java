@@ -1271,7 +1271,6 @@ public class ScriptRuntime {
             function = (Function) fun;
         }
         catch (ClassCastException e) {
-            // XXX fails for "a".b()
             Object[] errorArgs = { toString(fun) };
             throw NativeGlobal.constructError(
                         Context.getContext(), "TypeError",
