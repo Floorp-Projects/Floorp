@@ -152,8 +152,7 @@ struct JSArenaPool {
     JS_BEGIN_MACRO                                                            \
 	char *_m = (char *)(mark);                                            \
 	JSArena *_a = (pool)->current;                                        \
-	if (_a != &(pool)->first &&                                           \
-	    JS_UPTRDIFF(_m, _a->base) <= JS_UPTRDIFF(_a->avail, _a->base)) {  \
+	if (JS_UPTRDIFF(_m, _a->base) <= JS_UPTRDIFF(_a->avail, _a->base)) {  \
 	    _a->avail = (jsuword)JS_ARENA_ALIGN(pool, _m);                    \
 	    JS_CLEAR_UNUSED(_a);                                              \
 	    JS_ArenaCountRetract(pool, _m);                                   \
@@ -208,25 +207,10 @@ extern JS_PUBLIC_API(void)
 JS_CompactArenaPool(JSArenaPool *pool);
 
 /*
- * Finish using arenas, freeing all memory associated with them except for
- * any locks needed for thread safety.
+ * Finish using arenas, freeing all memory associated with them.
  */
 extern JS_PUBLIC_API(void)
 JS_ArenaFinish(void);
-
-/*
- * Free any locks or other memory needed for thread safety, just before
- * shutting down.  At that point, we must be called by a single thread.
- *
- * After shutting down, the next thread to call JS_InitArenaPool must not
- * race with any other thread.  Once a pool has been initialized, threads
- * may safely call jsarena.c functions on thread-local pools.  The upshot
- * is that pools are per-thread, but the underlying global freelist is
- * thread-safe, provided that both the first pool initialization and the
- * shut-down call are single-threaded.
- */
-extern JS_PUBLIC_API(void)
-JS_ArenaShutDown(void);
 
 /*
  * Friend functions used by the JS_ARENA_*() macros.
