@@ -10,6 +10,12 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+5/5/99 Added the ability to search by creation date.  To make this perform
+well, you ought to do the following:
+
+	alter table bugs change column creation_ts creation_ts datetime not null, add index (creation_ts);
+
+
 4/30/99 Added a new severity, "blocker".  To get this into your running
 Bugzilla, do the following:
 

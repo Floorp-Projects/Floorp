@@ -345,6 +345,8 @@ push @::legal_target_milestone, "---"; # Oy, what a hack.
 
 print $jscript;
 
+my @logfields = ("[Bug creation]", @::log_columns);
+
 print "
 <FORM NAME=queryForm METHOD=GET ACTION=\"buglist.cgi\">
 
@@ -403,7 +405,7 @@ Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=\"$default{'changed
 <td rowspan=2 align=right>Where the field(s)
 </td><td rowspan=2>
 <SELECT NAME=\"chfield\" MULTIPLE SIZE=4>
-@{[make_options(\@::log_columns, $default{'chfield'}, $type{'chfield'})]}
+@{[make_options(\@logfields, $default{'chfield'}, $type{'chfield'})]}
 </SELECT>
 </td><td rowspan=2>
 changed.

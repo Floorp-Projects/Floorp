@@ -359,7 +359,23 @@ sub SqlifyDate {
 }
 
 
-        
+if (defined $ref) {
+    my $which = lsearch($ref, "[Bug creation]");
+    if ($which >= 0) {
+        splice(@$ref, $which, 1);
+        $query .= "and bugs.creation_ts >= " .
+            SqlifyDate($::FORM{'chfieldfrom'}) . "\n";
+        my $to = $::FORM{'chfieldto'};
+        if (defined $to) {
+            $to = trim($to);
+            if ($to ne "" && $to !~ /^now$/i) {
+                $query .= "and bugs.creation_ts <= " .
+                    SqlifyDate($to) . "\n";
+            }
+        }
+    }
+}        
+
 
 
 if (defined $ref && 0 < @$ref) {
