@@ -36,7 +36,6 @@
 #endif
 
 static PRInt32 g_cLockCount = 0;
-static PRBool bDidInitPython = PR_FALSE;
 static PyThreadState *ptsGlobal = nsnull;
 PyInterpreterState *PyXPCOM_InterpreterState;
 static PRLock *g_lockMain = nsnull;
@@ -188,7 +187,11 @@ void PyXPCOM_DLLRelease(void)
 	PR_AtomicDecrement(&g_cLockCount);
 }
 
-extern "C" PRBool _init(void)
+static void pyxpcom_construct() __attribute__((constructor));
+static void pyxpcom_destruct() __attribute__((destructor));
+
+
+void pyxpcom_construct(void)
 {
 	PRStatus status;
 	g_lockMain = PR_NewLock();
@@ -196,12 +199,12 @@ extern "C" PRBool _init(void)
 	NS_WARN_IF_FALSE(status==0, "Could not allocate TLS storage");
 	if (NS_FAILED(status)) {
 		PR_DestroyLock(g_lockMain);
-		return PR_FALSE;
+		return; // PR_FALSE;
 	}
-	return PR_TRUE;
+	return; // PR_TRUE;
 }
 
-extern "C" void _fini(void)
+void pyxpcom_destruct(void)
 {
 	PR_DestroyLock(g_lockMain);
 	// I can't locate a way to kill this - 
