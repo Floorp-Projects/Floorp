@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.55 $ ';
+$Version = '$Revision: 1.56 $ ';
 
 
 sub PrintUsage {
@@ -142,24 +142,17 @@ sub BuildIt {
     $StartTime = time();
     $LastStartTime = $StartTime;
 
-    if ($UseCVSMirror) {
-      # Compute time of last completed update on mirror.
-      $cycle = 5 * 60; # Updates every 5 minutes.
-      $begin = 0 * 60; # Starts 0 minutes after the hour.
-      $lag = 2 * 60;   # Takes 2 minute to update.
-
-      $StartTime = int(($StartTime - $begin - $lag) / $cycle) * $cycle + $begin;
-      $UseTimeStamp = 1;
-      $ENV{MOZ_CO_USE_MIRROR} = 1;
-    }
-
     if ($UseTimeStamp) {
+      # Round tinderbox pull times to 1 minute intervals.
+      $cycle = 1 * 60; # Updates every 1 minutes.
+      $begin = 0 * 60; # Starts 0 minutes after the hour.
+      $lag = 0 * 60;   # Takes 0 minute to update.
+      $StartTime = int(($StartTime - $begin - $lag) / $cycle) * $cycle + $begin;
       $BuildStart = strftime("%m/%d/%Y %H:%M", localtime($StartTime));
       $CVSCO = "$SaveCVSCO -D '$BuildStart'";
     } else {
       $CVSCO = "$SaveCVSCO -A";
     }
-
 
     &MailStartBuildMessage if $ReportStatus;
 
@@ -855,7 +848,6 @@ $ReportFinalStatus = 1;  # Finer control over $ReportStatus.
 $BuildOnce         = 0;  # Build once, don't send results to server
 $RunTest           = 1;  # Run the smoke tests on successful build, or not
 $UseTimeStamp      = 1;  # Use the CVS 'pull-by-timestamp' option, or not
-$UseCVSMirror      = 1;  # Use the CVS mirror to pull
 $TestOnly          = 0;  # Only run tests, don't pull/build
 
 #- Set these to what makes sense for your system
