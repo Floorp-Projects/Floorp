@@ -1,3 +1,50 @@
+var panelProgressListener = {
+    onProgressChange : function (aWebProgress, aRequest,
+                                    aCurSelfProgress, aMaxSelfProgress,
+                                    aCurTotalProgress, aMaxTotalProgress) {
+    },
+    
+    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+    {
+        if (!aRequest)
+          return;
+
+        //ignore local/resource:/chrome: files
+        if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
+           return;
+
+        const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+        const nsIChannel = Components.interfaces.nsIChannel;
+        if (aStateFlags & nsIWebProgressListener.STATE_START && 
+            aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+            document.getElementById('webpanels-throbber').setAttribute("loading", "true");
+        }
+        else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+                aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+            document.getElementById('webpanels-throbber').removeAttribute("loading");
+        }
+    }
+    ,
+
+    onLocationChange : function(aWebProgress, aRequest, aLocation) {
+    },
+
+    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
+    },
+
+    onSecurityChange : function(aWebProgress, aRequest, aState) { 
+    },
+
+    QueryInterface : function(aIID)
+    {
+        if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+            aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+            aIID.equals(Components.interfaces.nsISupports))
+        return this;
+        throw Components.results.NS_NOINTERFACE;
+    }
+};
+
 var panelAreaDNDObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
@@ -33,6 +80,18 @@ function loadWebPanel(aURI) {
     try {
       document.getElementById('webpanels-browser').webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
     } catch (e) {}
+}
+
+
+function load()
+{
+  document.getElementById('webpanels-browser').webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  loadPlaceholderPage();
+}
+
+function unload()
+{
+  document.getElementById('webpanels-browser').webProgress.removeProgressListener(panelProgressListener);
 }
 
 // We do this in the onload in order to make sure that the load of this page doesn't delay the onload of
