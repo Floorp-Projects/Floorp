@@ -162,7 +162,11 @@ class NS_COM nsSharedBufferList
             }
         }
 
-      virtual ~nsSharedBufferList();
+      // No virtual destructor is required here.  |nsSharedBufferList| is
+      // used only as a member variable, and |nsSlidingSharedBufferList|s are
+      // never deleted via a base class pointer.
+
+      ~nsSharedBufferList();
 
     private:
         // pass-by-value is explicitly denied

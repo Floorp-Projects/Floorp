@@ -126,7 +126,6 @@ public:
         , mAvailable(0)
         , mCallbackFlags(0)
         { }
-    virtual ~nsPipeInputStream() { }
 
     nsresult Fill();
     void SetNonBlocking(PRBool aNonBlocking) { mBlocking = !aNonBlocking; }
@@ -184,7 +183,6 @@ public:
         , mWritable(PR_TRUE)
         , mCallbackFlags(0)
         { }
-    virtual ~nsPipeOutputStream() { }
 
     void SetNonBlocking(PRBool aNonBlocking) { mBlocking = !aNonBlocking; }
     void SetWritable(PRBool writable) { mWritable = writable; }
@@ -225,8 +223,11 @@ public:
 
     // nsPipe methods:
     nsPipe();
-    virtual ~nsPipe();
 
+private:
+    ~nsPipe();
+
+public:
     //
     // methods below may only be called while inside the pipe's monitor
     //
@@ -1261,7 +1262,8 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
                     segmentCount,
                     segmentAlloc);
     if (NS_FAILED(rv)) {
-        delete pipe;
+        NS_ADDREF(pipe);
+        NS_RELEASE(pipe);
         return rv;
     }
 

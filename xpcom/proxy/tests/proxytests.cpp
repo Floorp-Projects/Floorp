@@ -66,17 +66,11 @@ class nsTestXPCFoo : public nsITestProxy
     NS_IMETHOD Test3(nsISupports *p1, nsISupports **p2);
 
     nsTestXPCFoo();
-    virtual ~nsTestXPCFoo();
-
 };
 
 nsTestXPCFoo::nsTestXPCFoo()
 {
     NS_ADDREF_THIS();
-}
-
-nsTestXPCFoo::~nsTestXPCFoo()
-{
 }
 
 NS_IMPL_ISUPPORTS1(nsTestXPCFoo, nsITestProxy)
@@ -126,17 +120,11 @@ class nsTestXPCFoo2 : public nsITestProxy
     NS_IMETHOD Test3(nsISupports *p1, nsISupports **p2);
 
     nsTestXPCFoo2();
-    virtual ~nsTestXPCFoo2();
-
 };
 
 nsTestXPCFoo2::nsTestXPCFoo2()
 {
     NS_ADDREF_THIS();
-}
-
-nsTestXPCFoo2::~nsTestXPCFoo2()
-{
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsTestXPCFoo2, nsITestProxy)

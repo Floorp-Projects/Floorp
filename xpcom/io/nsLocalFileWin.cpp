@@ -70,7 +70,8 @@ class ShortcutResolver
 {
 public:
     ShortcutResolver();
-    virtual ~ShortcutResolver();
+    // nonvirtual since we're not subclassed
+    ~ShortcutResolver();
 
     nsresult Init();
     nsresult Resolve(const WCHAR* in, char* out);
@@ -377,7 +378,9 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
-        virtual ~nsDirEnumerator()
+        // dtor can be non-virtual since there are no subclasses, but must be
+        // public to use the class on the stack.
+        ~nsDirEnumerator()
         {
             if (mDir)
             {

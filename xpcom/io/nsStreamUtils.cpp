@@ -272,6 +272,7 @@ public:
     {
     }
 
+    // virtual since subclasses call superclass Release()
     virtual ~nsAStreamCopier()
     {
         if (mLock)

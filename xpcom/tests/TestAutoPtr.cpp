@@ -27,12 +27,14 @@
 
 class TestObjectBaseA {
     public:
+        // Virtual dtor for deleting through base class pointer
         virtual ~TestObjectBaseA() { };
         int fooA;
 };
 
 class TestObjectBaseB {
     public:
+        // Virtual dtor for deleting through base class pointer
         virtual ~TestObjectBaseB() { };
         int fooB;
 };
@@ -45,6 +47,7 @@ class TestObject : public TestObjectBaseA, public TestObjectBaseB {
                    NS_STATIC_CAST(void*, this));
         }
 
+        // Virtual dtor for deleting through base class pointer
         virtual ~TestObject()
         {
             printf("  Destroying TestObject %p.\n",
