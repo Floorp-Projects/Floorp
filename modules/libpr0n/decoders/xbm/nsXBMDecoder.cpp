@@ -258,8 +258,6 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             mPos++;
         } while (*mPos && (mState == RECV_DATA));
     }
-    else
-        return NS_ERROR_FAILURE;
     
     return NS_OK;
 }
