@@ -9,15 +9,15 @@ interface Window {
         readonly attribute  Screen screen;
         readonly attribute  History history;
         readonly attribute  Window parent;
-        readonly attribute  Window top;
+        readonly replaceable attribute  Window top;
         readonly replaceable attribute  Window _content;
         readonly replaceable attribute  xpidl nsISidebar sidebar;
         readonly replaceable attribute  xpidl nsIPrompt prompter;
 
-        readonly attribute  BarProp menubar;
-        readonly attribute  BarProp toolbar;
-        readonly attribute  BarProp locationbar;
-        readonly attribute  BarProp personalbar;
+        readonly replaceable attribute  BarProp menubar;
+        readonly replaceable attribute  BarProp toolbar;
+        readonly replaceable attribute  BarProp locationbar;
+        readonly replaceable attribute  BarProp personalbar;
         readonly attribute  BarProp statusbar;
         readonly attribute  BarProp scrollbars;
         readonly attribute  BarProp directories;
