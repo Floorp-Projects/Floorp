@@ -4174,6 +4174,7 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "createlink",    "cmd_insertLinkNoUI",  "", PR_FALSE, PR_FALSE },
   { "insertimage",   "cmd_insertImageNoUI", "", PR_FALSE, PR_FALSE },
   { "inserthtml",    "cmd_insertHTML",      "", PR_FALSE, PR_FALSE },
+  { "gethtml",       "cmd_getContents",     "", PR_FALSE, PR_FALSE },
   { "justifyleft",   "cmd_align",       "left", PR_TRUE,  PR_FALSE },
   { "justifyright",  "cmd_align",      "right", PR_TRUE,  PR_FALSE },
   { "justifycenter", "cmd_align",     "center", PR_TRUE,  PR_FALSE },
@@ -4365,6 +4366,9 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsresult rv = NS_OK;
+
+  if (commandID.Equals(NS_LITERAL_STRING("gethtml"), nsCaseInsensitiveStringComparator()))
+    return NS_ERROR_FAILURE;
 
   if (commandID.Equals(NS_LITERAL_STRING("cut"), nsCaseInsensitiveStringComparator()) ||
       (commandID.Equals(NS_LITERAL_STRING("copy"), nsCaseInsensitiveStringComparator()))) {
@@ -4604,6 +4608,20 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
                                            NS_COMMAND_PARAMS_CONTRACTID, &rv);
   if (!cmdParams)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  // this is a special command since we are calling "DoCommand rather than
+  // GetCommandState like the other commands
+  if (cmdToDispatch.Equals("cmd_getContents"))
+  {
+    rv = cmdParams->SetBooleanValue("selection_only", PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = cmdParams->SetCStringValue("format", "text/html");
+    if (NS_FAILED(rv)) return rv;
+    rv = cmdMgr->DoCommand(cmdToDispatch.get(), cmdParams, window);
+    if (NS_FAILED(rv)) return rv;
+    return cmdParams->GetStringValue("result", _retval);
+  }
+
   rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
   if (NS_FAILED(rv))
     return rv;
@@ -4612,18 +4630,16 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (NS_FAILED(rv))
     return rv;
 
-  char *cStringResult = nsnull;
-  rv = cmdParams->GetCStringValue("state_attribute", &cStringResult);
-  if (NS_SUCCEEDED(rv) && cStringResult && cStringResult[0]) {
-    _retval.Assign(NS_ConvertUTF8toUCS2(cStringResult));
-  }
-  else if (NS_FAILED(rv)) {
-    // get string value if it's not a c-string; might be a font name
+  if (cmdToDispatch.Equals("cmd_fontFace"))
     rv = cmdParams->GetStringValue("state_attribute", _retval);
-  }
+  else {
+    char *cStringResult = nsnull;
+    rv = cmdParams->GetCStringValue("state_attribute", &cStringResult);
+    if (NS_SUCCEEDED(rv) && cStringResult && cStringResult[0])
+      _retval.Assign(NS_ConvertUTF8toUCS2(cStringResult));
 
-  if (cStringResult) {
-    nsMemory::Free(cStringResult);
+    if (cStringResult)
+      nsMemory::Free(cStringResult);
   }
 
   return rv;
