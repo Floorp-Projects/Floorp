@@ -1465,9 +1465,14 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 #ifdef DEBUG_FOCUS
            printf("[%x] SetFocus (%d)\n", this, mWindowIdentifier);
 #endif
-           mInSetFocus = TRUE;
-           WinSetFocus( HWND_DESKTOP, mWnd);
-           mInSetFocus = FALSE;
+           ULONG sessionID;
+           DosQuerySysInfo(QSV_FOREGROUND_FS_SESSION, QSV_FOREGROUND_FS_SESSION, 
+                           &sessionID, sizeof(ULONG));
+           if (sessionID <= 0xFF) {
+             mInSetFocus = TRUE;
+             WinSetFocus( HWND_DESKTOP, mWnd);
+             mInSetFocus = FALSE;
+           }
         }
 
     }
