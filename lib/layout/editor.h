@@ -3246,11 +3246,6 @@ public:
     EDT_ClipboardResult TabKey(XP_Bool bForward, XP_Bool bForceTabChar);
 
     EDT_ClipboardResult InternalReturnKey(XP_Bool bUserTyped);
-    
-    // Similar to InternalReturnKey, but splits just below the
-    //   supplied common ancestor (m_pRoot if pAncestor is NULL)
-    EDT_ClipboardResult SplitBelowAncestor(CEditElement *pAncestor = NULL, XP_Bool bUserTyped = TRUE);
-    // Stuff common to InternalReturnKey and SplitBelowAncestor
     CEditElement* SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAtBeginning, CEditElement*& pRelayoutStart);
 
     void Indent();

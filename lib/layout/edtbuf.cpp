@@ -3185,11 +3185,6 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
         else {
             // Fix for bug 80092 - force dirty flag on after Enter key alone is pressed
             StartTyping(TRUE);
-#if 0
-// Activate this when work on SplitBelowAncestor is fully tested
-// This should move an empty new list element to the level above
-// Pressing Enter once creates a new item at current level, on second Enter,
-//   the item is moved to next level above
             if( m_pCurrent && m_iCurrentOffset == 0 &&
                 m_pCurrent->IsText() && m_pCurrent->GetLen() == 0 &&
                 m_pCurrent->GetNextSibling() == 0 &&
@@ -3200,12 +3195,14 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping){
                 {
                     TagType tagType = pContainer->GetType();
                     if( tagType == P_LIST_ITEM )
+                    {
                         // We are at the begining of an empty element in a list item container,
-                        //   so split back to the root (or just one level up?)
-                        return SplitBelowAncestor(pContainer->GetParent()->GetParent(), TRUE);
+                        //  so just outdent to next higher list level
+                        Outdent();
+                        return EDT_COP_OK;
+                    }
                 }
             }
-#endif
             result = InternalReturnKey(TRUE);
 //          Include this to set the end of current UNDO at the end of a paragraph (return key)
 //            so Undo will only remove the last paragraph typed.
@@ -3342,84 +3339,6 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
         m_pCurrent = pNewText;
         m_iCurrentOffset = 0;
 #endif
-        return EDT_COP_OK;
-    }
-
-    return EDT_COP_CLIPBOARD_BAD;
-}
-
-EDT_ClipboardResult CEditBuffer::SplitBelowAncestor(CEditElement *pAncestor, XP_Bool bUserTyped)
-{
-    if( !pAncestor )
-        pAncestor = m_pRoot;
-
-    if( !pAncestor )
-        return EDT_COP_CLIPBOARD_BAD;
-
-    if( IsSelected() )
-    {
-        EDT_ClipboardResult result = DeleteSelection();
-        if ( result != EDT_COP_OK ) return result;
-    }
-
-    CEditElement *pRelayoutStart;
-    // Split to create a new container, but not
-    //  if we are at beginning of the container
-    CEditElement *pContainerToMove = SplitAtContainer(bUserTyped, FALSE, pRelayoutStart);
-
-    if( pContainerToMove && pRelayoutStart)
-    {
-        // Container of element before the split,
-        //  or this = pContainerToMove if we really didn't split
-        //  because we were at beginning of the container
-        CEditElement *pContainer = pRelayoutStart;
-    
-        // Create a list container at each level until we are just below the common ancestor
-        CEditElement *pParent;
-        while( (pParent = pContainer->GetParent()) != pAncestor )
-        {
-            CEditElement *pPrev = pContainer->GetPreviousSibling();
-            if( pPrev )
-            {
-                // Copy the container at the level we need to duplicate
-                CEditElement *pClone = pContainer->Clone();
-                if( pClone )
-                {
-                    // Unlink the container to be moved
-                    pPrev->SetNextSibling(NULL);
-                    // Set it as the child of the cloned mid-level "container" 
-                    //  (usually a CListElement) and insert it 
-                    pContainerToMove->SetParent(pClone);
-                    pClone->SetChild(pContainerToMove);
-                    pClone->InsertAfter(pContainer);
-                    // If we have to insert another level,
-                    //   then we move what we just created
-                    pContainerToMove = pClone;
-                }
-                pRelayoutStart = pPrev;
-            }
-            else
-            {
-                // There is nothing before us, so we don't need to
-                //   create a new container. Just setup for next level
-                pContainerToMove = pContainer;;
-                pRelayoutStart = pContainer;
-            }
-            pContainer = pParent;
-        }
-
-        if ( bUserTyped )
-            Reduce(m_pRoot); // Or maybe just the two containers?
-
-#ifdef DEBUG
-            m_pRoot->ValidateTree();
-#endif
-	    
-	    // We currently cannot do a reflow here as the new text elements have not been
-	    // created to be reflowed...
-        Relayout(pRelayoutStart, 0, 0);
-//                 (pRelayoutStart != m_pCurrent ? m_pCurrent : 0 ));
-
         return EDT_COP_OK;
     }
 
