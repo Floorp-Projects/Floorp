@@ -43,6 +43,7 @@
 #endif
 
 #include <string.h>
+#include "nsArrayEnumerator.h"
 #include "nsCOMPtr.h"
 #include "nsIChromeRegistry.h"
 #include "nsChromeRegistry.h"
@@ -148,107 +149,6 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, disabled);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsOverlayEnumerator : public nsISimpleEnumerator
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISIMPLEENUMERATOR
-
-  nsOverlayEnumerator(nsISimpleEnumerator *aInstallArcs,
-                      nsISimpleEnumerator *aProfileArcs);
-  virtual ~nsOverlayEnumerator();
-
-private:
-  nsCOMPtr<nsISimpleEnumerator> mInstallArcs;
-  nsCOMPtr<nsISimpleEnumerator> mProfileArcs;
-  nsCOMPtr<nsISimpleEnumerator> mCurrentArcs;
-};
-
-NS_IMPL_ISUPPORTS1(nsOverlayEnumerator, nsISimpleEnumerator)
-
-nsOverlayEnumerator::nsOverlayEnumerator(nsISimpleEnumerator *aInstallArcs,
-                                         nsISimpleEnumerator *aProfileArcs)
-  : mInstallArcs(aInstallArcs),
-    mProfileArcs(aProfileArcs)
-{
-}
-
-nsOverlayEnumerator::~nsOverlayEnumerator()
-{
-}
-
-NS_IMETHODIMP nsOverlayEnumerator::HasMoreElements(PRBool *aIsTrue)
-{
-  *aIsTrue = PR_FALSE;
-  if (!mProfileArcs) {
-    if (!mInstallArcs)
-      return NS_OK;   // No arcs period. We default to false,
-    return mInstallArcs->HasMoreElements(aIsTrue); // no profile arcs. use install arcs,
-  }
-
-  nsresult rv = mProfileArcs->HasMoreElements(aIsTrue);
-  if (*aIsTrue || !mInstallArcs)
-    return rv;
-
-  return mInstallArcs->HasMoreElements(aIsTrue);
-}
-
-NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
-{
-  nsresult rv;
-  *aResult = nsnull;
-
-  if (!mCurrentArcs) {
-    // Start with the profile arcs.
-    mCurrentArcs = mProfileArcs;
-    if (!mCurrentArcs) {
-      // No profile arcs, try the install arcs.
-      mCurrentArcs = mInstallArcs;
-      if (!mCurrentArcs)
-        return NS_ERROR_FAILURE;
-    }
-  }
-  else if (mCurrentArcs == mProfileArcs) {
-    // Check if we have more profile arcs.
-    PRBool hasMore;
-    rv = mCurrentArcs->HasMoreElements(&hasMore);
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (!hasMore) {
-      // No more profile arcs, try the install arcs.
-      if (!mInstallArcs)
-        return NS_ERROR_FAILURE;
-      mCurrentArcs = mInstallArcs;
-    }
-  }
-
-  nsCOMPtr<nsISupports> supports;
-  rv = mCurrentArcs->GetNext(getter_AddRefs(supports));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  const PRUnichar* valueStr;
-  rv = value->GetValueConst(&valueStr);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIURI> url;
-  rv = NS_NewURI(getter_AddRefs(url), NS_ConvertUCS2toUTF8(valueStr));
-
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  return CallQueryInterface(url, aResult);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
                                        mRDFContainerUtils(nsnull),
                                        mUseXBLForms(PR_FALSE),
@@ -310,7 +210,12 @@ nsChromeRegistry::~nsChromeRegistry()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsChromeRegistry, nsIChromeRegistry, nsIXULChromeRegistry, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsChromeRegistry,
+                              nsIChromeRegistry,
+                              nsIXULChromeRegistry,
+                              nsIXULOverlayProvider,
+                              nsIObserver,
+                              nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
@@ -1094,7 +999,7 @@ nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL,
   nsCAutoString package, provider, remaining;
 
   rv = SplitURL(aChromeURL, package, provider, remaining);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aCreateDS) {
     // We are not supposed to create the data source, which means
@@ -1104,7 +1009,7 @@ nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL,
     nsDependentCString dataSourceStr(kChromeFileName);
     nsCOMPtr<nsIRDFDataSource> mainDataSource;
     rv = LoadDataSource(dataSourceStr, getter_AddRefs(mainDataSource), aUseProfile, nsnull);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     // Now that we have the appropriate chrome.rdf file, we
     // must check the package resource for stylesheets or overlays.
@@ -1178,9 +1083,62 @@ nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumerator **aResult)
+NS_IMETHODIMP nsChromeRegistry::GetOverlaysForURI(nsIURI *aChromeURL, nsISimpleEnumerator **aResult)
 {
   return GetDynamicInfo(aChromeURL, PR_TRUE, aResult);
+}
+
+nsresult
+nsChromeRegistry::GetURIList(nsIRDFDataSource *aSource,
+                             nsIRDFResource *aResource,
+                             nsCOMArray<nsIURI>& aArray)
+{
+  nsresult rv;
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  nsCOMPtr<nsIRDFContainer> container =
+    do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
+  if (NS_FAILED(rv)) goto end_GetURIList;
+
+  rv = container->Init(aSource, aResource);
+  if (NS_FAILED(rv)) {
+    rv = NS_OK;
+    goto end_GetURIList;
+  }
+
+  rv = container->GetElements(getter_AddRefs(arcs));
+  if (NS_FAILED(rv)) goto end_GetURIList;
+
+  {
+    nsCOMPtr<nsISupports> supports;
+    nsCOMPtr<nsIRDFLiteral> value;
+    nsCOMPtr<nsIURI> uri;
+    PRBool hasMore;
+
+    while (NS_SUCCEEDED(rv = arcs->HasMoreElements(&hasMore)) && hasMore) {
+      rv = arcs->GetNext(getter_AddRefs(supports));
+      if (NS_FAILED(rv)) break;
+
+      value = do_QueryInterface(supports, &rv);
+      if (NS_FAILED(rv)) continue;
+
+      const PRUnichar* valueStr;
+      rv = value->GetValueConst(&valueStr);
+      if (NS_FAILED(rv)) continue;
+
+      rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(valueStr));
+      if (NS_FAILED(rv)) continue;
+
+      if (IsOverlayAllowed(uri)) {
+        if (!aArray.AppendObject(uri)) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+      }
+    }
+  }
+
+end_GetURIList:
+  return rv;
 }
 
 nsresult
@@ -1195,17 +1153,20 @@ nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay,
     return NS_OK;
 
   nsCOMPtr<nsIRDFDataSource> installSource;
-  rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_FALSE, PR_FALSE, getter_AddRefs(installSource));
-  if (NS_FAILED(rv)) return rv;
+  rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_FALSE, PR_FALSE,
+                            getter_AddRefs(installSource));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIRDFDataSource> profileSource;
   if (mProfileInitialized) {
-    rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_TRUE, PR_FALSE, getter_AddRefs(profileSource));
-    if (NS_FAILED(rv)) return rv;
+    rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_TRUE, PR_FALSE,
+                              getter_AddRefs(profileSource));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCAutoString lookup;
   rv = aChromeURL->GetSpec(lookup);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
    
   // Get the chromeResource from this lookup string
   nsCOMPtr<nsIRDFResource> chromeResource;
@@ -1215,38 +1176,16 @@ nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay,
       return rv;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> installArcs;
-  nsCOMPtr<nsISimpleEnumerator> profileArcs;
+  nsCOMArray<nsIURI> overlayURIs;
 
-  if (installSource)
-  {
-    nsCOMPtr<nsIRDFContainer> container;
-    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(container->Init(installSource, chromeResource)))
-      rv = container->GetElements(getter_AddRefs(installArcs));
-    if (NS_FAILED(rv)) return rv;
+  if (installSource) {
+    GetURIList(installSource, chromeResource, overlayURIs);
+  }
+  if (profileSource) {
+    GetURIList(profileSource, chromeResource, overlayURIs);
   }
 
-  if (profileSource)
-  {
-    nsCOMPtr<nsIRDFContainer> container;
-    rv = nsComponentManager::CreateInstance("@mozilla.org/rdf/container;1",
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(container->Init(profileSource, chromeResource)))
-      rv = container->GetElements(getter_AddRefs(profileArcs));
-    if (NS_FAILED(rv)) return rv;
-  }
-
-
-  *aResult = new nsOverlayEnumerator(installArcs, profileArcs);
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
+  return NS_NewArrayEnumerator(aResult, overlayURIs);
 }
 
 nsresult
@@ -2739,38 +2678,28 @@ NS_IMETHODIMP nsChromeRegistry::SetAllowOverlaysForPackage(const PRUnichar *aPac
   return rv;
 }
 
-NS_IMETHODIMP nsChromeRegistry::OverlaysAllowedForPackage(const PRUnichar *aPackageName, PRBool *aRetval)
+PRBool nsChromeRegistry::IsOverlayAllowed(nsIURI *aChromeURL)
 {
+  nsCAutoString package, provider, file;
+  nsresult rv = SplitURL(aChromeURL, package, provider, file);
+  if (NS_FAILED(rv)) return PR_FALSE;
+
   // Get the chrome resource for the package.
-  nsCAutoString package( "urn:mozilla:package:" );
-  package.AppendWithConversion(aPackageName);
+  nsCAutoString rdfpackage( "urn:mozilla:package:" );
+  rdfpackage.Append(package);
 
   // Obtain the package resource.
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFResource> packageResource;
-  rv = GetResource(package, getter_AddRefs(packageResource));
-  if (NS_FAILED(rv)) {
+  rv = GetResource(rdfpackage, getter_AddRefs(packageResource));
+  if (NS_FAILED(rv) || !packageResource) {
     NS_ERROR("Unable to obtain the package resource.");
-    return rv;
+    return PR_FALSE;
   }
-  NS_ASSERTION(packageResource, "failed to get packageResource");
 
   // See if the disabled arc is set for the package.
   nsCAutoString disabled;
   nsChromeRegistry::FollowArc(mChromeDataSource, disabled, packageResource, mDisabled);
-  *aRetval = disabled.IsEmpty();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsChromeRegistry::IsOverlayAllowed(nsIURI *aChromeURL, PRBool *aRetval)
-{
-  nsCAutoString package, provider, file;
-  nsresult rv = SplitURL(aChromeURL, package, provider, file);
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoString packageStr; packageStr.AssignWithConversion(package.get());
-  return OverlaysAllowedForPackage(packageStr.get(), aRetval);
+  return disabled.IsEmpty();
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile, PRBool aAllowScripts)
