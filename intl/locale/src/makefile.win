@@ -39,6 +39,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS		=	nsLocale.cpp				\
 				nsLocaleFactory.cpp			\
 				nsLocaleService.cpp			\
+				nsLanguageAtomService.cpp		\
 				nsScriptableDateFormat.cpp			\
 				nsCollation.cpp
 
@@ -46,6 +47,7 @@ CPPSRCS		=	nsLocale.cpp				\
 CPP_OBJS	=	.\$(OBJDIR)\nsLocale.obj			\
 				.\$(OBJDIR)\nsLocaleFactory.obj		\
 				.\$(OBJDIR)\nsLocaleService.obj		\
+				.\$(OBJDIR)\nsLanguageAtomService.obj	\
 				.\$(OBJDIR)\nsScriptableDateFormat.obj		\
 				.\$(OBJDIR)\nsCollation.obj
 
@@ -69,8 +71,10 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+	$(MAKE_INSTALL) langGroups.properties $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\components\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\bin\res\langGroups.properties
 	
