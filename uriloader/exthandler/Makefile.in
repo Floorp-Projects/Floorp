@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  webshell \
 		  helperAppDlg \
-		  progressDlg \
 		  plugin \
 		  pref \
 		  intl \
