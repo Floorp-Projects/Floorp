@@ -39,7 +39,6 @@ EXPORTS =                  \
         nsCom.h            \
 	nsComObsolete.h  \
         nsCWeakReference.h \
-        nsDebug.h          \
         nsError.h          \
         nsID.h             \
         nsIID.h            \
@@ -50,7 +49,6 @@ EXPORTS =                  \
         nsISupportsUtils.h \
         nsIWeakReferenceUtils.h  \
         nsTraceRefcnt.h    \
-        nsWeakReference.h  \
         nsWeakPtr.h        \
         nscore.h           \
         pure.h             \
@@ -104,7 +102,6 @@ C_OBJS = $(C_OBJS) \
 
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsErrorService.obj       \
-        .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
         .\$(OBJDIR)\nsMemoryImpl.obj   \
         .\$(OBJDIR)\nsCWeakReference.obj \
@@ -113,7 +110,6 @@ CPP_OBJS =                            \
 #        .\$(OBJDIR)\nsSystemInfo.obj  \
         .\$(OBJDIR)\nsExceptionService.obj \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
-        .\$(OBJDIR)\nsWeakReference.obj \
         .\$(OBJDIR)\nsConsoleService.obj \
         .\$(OBJDIR)\nsConsoleMessage.obj \
 !ifdef GC_LEAK_DETECTOR
