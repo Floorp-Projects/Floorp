@@ -2320,7 +2320,8 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, cons
 }
 
 NS_IMETHODIMP
-nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
+nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus,
+								 nsIDocumentLoaderObserver * aObserver)
 {
    return PrepareDocumentForEditing();
 }
