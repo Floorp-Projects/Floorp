@@ -119,7 +119,7 @@
 			<html:div>&startPageHeader.label;</html:div>
 		</html:legend>
 		<html:div>
-			<html:input type="checkbox" id="pref:0:mailnews.start_page.enabled" />
+			<html:input type="checkbox" id="pref:0:bool:mailnews.start_page.enabled" />
 			<html:label for="pref:0:bool:mailnews.start_page.enabled">
 			&enableStartPage.label;
 			</html:label>
