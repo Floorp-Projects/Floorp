@@ -70,10 +70,14 @@
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetNone.label "None">
 <!ENTITY reloadCmd.label "Reload">
+<!ENTITY reloadCmd.accesskey "r">
 <!ENTITY showImagesCmd.label "Show Images">
 <!ENTITY stopCmd.label "Stop">
 <!ENTITY pageSourceCmd.label "Page Source">
+<!ENTITY pageSourceCmd.accesskey "u">
+<!ENTITY pageSourceCmd.commandkey "u">
 <!ENTITY pageInfoCmd.label "Page Info">
+<!ENTITY pageInfoCmd.accesskey "i">
 <!ENTITY translateMenu.label "Translate">
 <!ENTITY translate.commandKey "t">
 <!ENTITY webContentMenu.label "Languages and Web Content">
