@@ -41,6 +41,7 @@ EXPORTS		= \
 		nsMargin.h \
 		nsTransform2D.h \
 		nsIRenderingContext.h \
+        nsRenderingContextImpl.h \
 		nsIFontMetrics.h \
 		nsIImageManager.h \
 		nsIImageGroup.h \
