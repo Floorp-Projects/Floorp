@@ -122,7 +122,8 @@ outputToStream (XMLFile f, char* s)
   char* buff = copyString(s);
 #ifdef DEBUG
 /*  FE_Trace(s); */
-#endif  
+#endif
+  
   if (buff) (*(stream->put_block))(stream, buff, strlen(s)); 
   freeMem(buff);
 }
@@ -144,9 +145,9 @@ XML_XMLConverter(FO_Present_Types  format_out, void *data_object, URL_Struct *UR
     xmlf = (XMLFile) getMem(sizeof(XMLFileStruct));
     xmlf->urls = URL_s;
     xmlf->parser = XML_ParserCreate(NULL) ;
-    XML_SetElementHandler(xmlf->parser, XMLDOM_StartHandler, XMLDOM_EndHandler);
-    XML_SetCharacterDataHandler(xmlf->parser, XMLDOM_CharHandler);
-    XML_SetProcessingInstructionHandler(xmlf->parser, XMLDOM_PIHandler);
+    XML_SetElementHandler(xmlf->parser, (void (*)(void*, const char*, const char**))XMLDOM_StartHandler, (void (*)(void*, const char*))XMLDOM_EndHandler);
+    XML_SetCharacterDataHandler(xmlf->parser, (void (*)(void*, const char*, int))XMLDOM_CharHandler);
+    XML_SetProcessingInstructionHandler(xmlf->parser, (void (*)(void*, const char*, const char*))XMLDOM_PIHandler);
     XML_SetUserData(xmlf->parser, xmlf);
     xmlf->status = 1;
     xmlf->address = copyString(URL_s->address);
