@@ -46,6 +46,8 @@ class nsIContentViewerContainer;
 class nsIContentViewer : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_VIEWER_IID)
+
   /**
    * Initialize the content viewer. Make it a child of the
    * the given native parent widget.

@@ -31,6 +31,8 @@ class nsIContentViewerContainer;
 
 class nsIDocumentLoadInfo : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADINFO_IID)
+
   /**
    * Get the command associated with this document load
    *

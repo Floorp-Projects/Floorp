@@ -50,6 +50,8 @@ enum nsLinkVerb {
  */
 class nsILinkHandler : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINKHANDLER_IID)
+
   /**
    * Process a click on a link. aContent is the content for the frame 
    * that generated the trigger. aURLSpec is an absolute url spec that 
