@@ -102,6 +102,7 @@ static JSValue print(const JSValues &argv)
 static void genCode(World &world, Context &cx, StmtNode *p)
 {
     ICodeGenerator icg(&world);
+    icg.isScript();
     Register ret = NotARegister;
     while (p) {
         ret = icg.genStmt(p);
