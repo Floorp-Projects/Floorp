@@ -57,7 +57,7 @@ function Init()
       sideoption.appendChild(new_option);
     }
   }
-  enableUpDown();
+  enableButtons();
 }
 
 function createOption(registry, service) {
@@ -122,20 +122,19 @@ function Reload(url, pollInterval)
 }
 
 function selectChange() {
-  enableUpDown();
+  enableButtons();
 }
 
 function moveUp() {
   var list = document.getElementById('selectList'); 
   var index = list.selectedIndex;
   if (index > 0) {
-    var listOption = list.childNodes.item(index).cloneNode(true);
-    var listOptionBefore = list.childNodes.item(index-1);	
+    var optionBefore   = list.childNodes.item(index-1);	
+    var selectedOption = list.childNodes.item(index);
     list.remove(index);
-    list.insertBefore(listOption, listOptionBefore);
-    dump("\n" + listOption + "\n");
+    list.insertBefore(selectedOption, optionBefore);
     list.selectedIndex = index - 1;
-    enableUpDown();
+    enableButtons();
   }
 }
    
@@ -144,31 +143,45 @@ function moveDown() {
   var index = list.selectedIndex;
   if (index != -1 &&
       index != list.options.length - 1) {
-    var listOption = list.childNodes.item(index);
-    var listOptionAfter = list.childNodes.item(index+1).cloneNode(true);
+    var selectedOption = list.childNodes.item(index);
+    var optionAfter    = list.childNodes.item(index+1);
     list.remove(index+1);
-    list.insertBefore(listOptionAfter, listOption);
-    dump("\n" + listOption + "\n");
-    enableUpDown();
+    list.insertBefore(optionAfter, selectedOption);
+    enableButtons();
   }
 }
 
-function enableUpDown() {
-  var up   = document.getElementById('up');
-  var down = document.getElementById('down');
-  var list = document.getElementById('selectList');	
-  var isFirst = list.selectedIndex == 0;
-  var isLast  = list.selectedIndex == list.options.length - 1;
+function enableButtons() {
+  var up        = document.getElementById('up');
+  var down      = document.getElementById('down');
+  var list      = document.getElementById('selectList');
+  var customize = document.getElementById('customize-button');
+  var index = list.selectedIndex;
+  var isFirst = index == 0;
+  var isLast  = index == list.options.length - 1;
 
+  // up /\ button
   if (isFirst) {
     up.setAttribute('disabled', 'true');
   } else {
     up.setAttribute('disabled', '');
   }
+  // down \/ button
   if (isLast) {
     down.setAttribute('disabled', 'true');
   } else {
     down.setAttribute('disabled', '');
+  }
+  // "Customize..." button
+  var customizeURL = '';
+  if (index != -1) {
+    var option = list.childNodes.item(index);
+    customizeURL = option.getAttribute('customize');
+  }
+  if (customizeURL == '') {
+    customize.setAttribute('disabled','true');
+  } else {
+    customize.setAttribute('disabled','');
   }
 }
 

@@ -36,7 +36,7 @@
 
     <box align="vertical" class="button-group">
       <spring flex="50%"/>
-      <titledbutton onclick="" value="Customize" />
+      <titledbutton id="customize-button" onclick="" value="Customize..." />
       <titledbutton onclick="deleteOption()" value="Remove" />
       <spring flex="50%"/>
     </box>
@@ -88,6 +88,14 @@
     </box>
 
   </box> 
+
+  <html:a href="http://dmoz.org/Computers/Internet/WWW/Web_Portals/Netscape.com/My_Netscape_Network/">
+    Find more panels
+  </html:a>
+   |
+  <html:a href="http://my.netscape.com/publish/">
+    Create a panel
+  </html:a>
 
   <html:hr/>
 
