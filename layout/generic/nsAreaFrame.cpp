@@ -212,7 +212,25 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
 NS_IMETHODIMP
 nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
 {
-  return mAbsoluteContainer.GetPositionedInfo(aXMost, aYMost);
+  nsresult  rv = mAbsoluteContainer.GetPositionedInfo(aXMost, aYMost);
+
+  // If we have child frames that stick outside of our box, and they should
+  // be visible, then include them too so the total size is correct
+  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+
+    if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
+      if (mCombinedArea.XMost() > aXMost) {
+        aXMost = mCombinedArea.XMost();
+      }
+      if (mCombinedArea.YMost() > aYMost) {
+        aYMost = mCombinedArea.YMost();
+      }
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -251,7 +269,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // If we have one then set the space manager
+  // If we have a space manager, then set it in the reflow state
   if (nsnull != mSpaceManager) {
     // Modify the reflow state and set the space manager
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
@@ -270,9 +288,9 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     rv = mAbsoluteContainer.Reflow(aPresContext, aReflowState);
   }
 
-  // Compute our desired size taking into account floaters that stick outside
-  // our box. Note that if this frame has a height specified by CSS then we
-  // don't do this
+  // Compute our desired size taking into account floaters and child frames
+  // that stick outside our box. Note that if this frame has a height specified
+  // by CSS then we don't do this
   if ((mFlags & NS_AREA_WRAP_HEIGHT) &&
       (NS_UNCONSTRAINEDSIZE == aReflowState.computedHeight) &&
       (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
@@ -283,6 +301,12 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
       // most object.
       aDesiredSize.height = yMost;
     }
+  }
+
+  // If we have children that stick outside our box, then remember the
+  // combined area, because we'll need it later when sizing our view
+  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+    mCombinedArea = aDesiredSize.mCombinedArea;
   }
 
   // XXX This code is really temporary; the lower level frame
@@ -347,6 +371,57 @@ nsAreaFrame::GetFrameType(nsIAtom** aType) const
   *aType = nsLayoutAtoms::areaFrame; 
   NS_ADDREF(*aType);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAreaFrame::DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus)
+{
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    // If we should position our view, and we have child frames that stick
+    // outside our box, then we need to size our view large enough to include
+    // those child frames
+    if ((mState & NS_FRAME_SYNC_FRAME_AND_VIEW) &&
+        (mState & NS_FRAME_OUTSIDE_CHILDREN)) {
+      
+      nsIView*              view;
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        mStyleContext->GetStyleData(eStyleStruct_Display);
+
+      GetView(&view);
+      if (view && (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow)) {
+        // Don't let our base class position the view since we're doing it
+        mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
+  
+        // Set the view's bit that indicates that it has transparent content
+        nsIViewManager* vm;
+        
+        view->GetViewManager(vm);
+        vm->SetViewContentTransparency(view, PR_TRUE);
+      
+        // Position and size view relative to its parent, not relative to our
+        // parent frame (our parent frame may not have a view).
+        nsIView*  parentWithView;
+        nsPoint   origin;
+
+        // XXX We need to handle the case where child frames stick out on the
+        // left and top edges as well...
+        GetOffsetFromView(origin, &parentWithView);
+        vm->ResizeView(view, mCombinedArea.XMost(), mCombinedArea.YMost());
+        vm->MoveViewTo(view, origin.x, origin.y);
+        NS_RELEASE(vm);
+  
+        // Call our base class
+        nsresult  rv = nsBlockFrame::DidReflow(aPresContext, aStatus);
+  
+        // Set the flag again...
+        mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
+        return rv;
+      }
+    }
+  }
+
+  return nsBlockFrame::DidReflow(aPresContext, aStatus);
 }
 
 /////////////////////////////////////////////////////////////////////////////

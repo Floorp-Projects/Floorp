@@ -72,6 +72,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
+                        nsDidReflowStatus aStatus);
+
 #ifdef NS_DEBUG
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -98,6 +101,7 @@ protected:
 private:
   nsSpaceManager*           mSpaceManager;
   nsAbsoluteContainingBlock mAbsoluteContainer;
+  nsRect                    mCombinedArea;
 };
 
 #endif /* nsAreaFrame_h___ */
