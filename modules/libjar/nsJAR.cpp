@@ -178,7 +178,6 @@ nsrefcnt nsJAR::Release(void)
     return 0; 
   }
   else if (1 == count && mCache) {
-    mReleaseTime = PR_IntervalNow();
     nsresult rv = mCache->ReleaseZip(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to release zip file");
   }
@@ -1237,6 +1236,8 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
 {
   nsresult rv;
   nsAutoLock lock(mLock);
+
+  zip->SetReleaseTime();
 
   mFreeCount++;
   if (mZips.Count() <= mCacheSize)
