@@ -138,6 +138,11 @@ END_COM_MAP()
 		return m_szName;
 	}
 
+	virtual BOOL IsObjectValid() const
+	{
+		return (m_spObject) ? TRUE : FALSE;
+	}
+
 	virtual HWND GetParentWindow() const
 	{
 		return m_hWndParent;
