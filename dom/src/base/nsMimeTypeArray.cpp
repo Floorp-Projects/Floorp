@@ -43,6 +43,9 @@
 #include "nsIDOMPluginArray.h"
 #include "nsIDOMPlugin.h"
 #include "nsDOMClassInfo.h"
+#include "nsIMIMEService.h"
+#include "nsIMIMEInfo.h"
+#include "nsIFile.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -125,7 +128,50 @@ MimeTypeArrayImpl::NamedItem(const nsAString& aName,
 
       NS_ADDREF(*aReturn);
 
-      break;
+      return NS_OK;
+    }
+  }
+
+  // Now let's check with the MIME service.
+  nsCOMPtr<nsIMIMEService> mimeSrv = do_GetService("@mozilla.org/mime;1");
+  if (mimeSrv) {
+    nsCOMPtr<nsIMIMEInfo> mimeInfo;
+    mimeSrv->GetFromMIMEType(NS_ConvertUCS2toUTF8(aName).get(),
+                             getter_AddRefs(mimeInfo));
+    if (mimeInfo) {
+      // Now we check whether we can really claim to support this type
+      nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+      mimeInfo->GetPreferredAction(&action);
+      if (action != nsIMIMEInfo::handleInternally) {
+        nsCOMPtr<nsIFile> helper;
+        mimeInfo->GetDefaultApplicationHandler(getter_AddRefs(helper));
+        if (!helper) {
+          mimeInfo->GetPreferredApplicationHandler(getter_AddRefs(helper));
+          if (!helper) {
+            // mime info from the OS may not have a PreferredApplicaitonHandler
+            // so just check for an empty default description
+            nsXPIDLString defaultDescription;
+            mimeInfo->GetDefaultDescription(getter_Copies(defaultDescription));
+            if (defaultDescription.IsEmpty()) {
+
+              // no support; just leave
+              return NS_OK;
+            }
+          }
+        }
+      }
+
+      // If we got here, we support this type!  Say so.
+      nsCOMPtr<nsIDOMMimeType> helperImpl = new HelperMimeTypeImpl(aName);
+      if (!helperImpl) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      MimeTypeElementImpl* entry = new MimeTypeElementImpl(nsnull, helperImpl);
+      if (!entry) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      return CallQueryInterface(entry, aReturn);
     }
   }
 
@@ -206,7 +252,6 @@ MimeTypeElementImpl::MimeTypeElementImpl(nsIDOMPlugin* aPlugin,
 
 MimeTypeElementImpl::~MimeTypeElementImpl()
 {
-	NS_IF_RELEASE(mMimeType);
 }
 
 
@@ -232,7 +277,7 @@ NS_IMETHODIMP
 MimeTypeElementImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
 {	
 	*aEnabledPlugin = mPlugin;
-	NS_IF_ADDREF(mPlugin);
+	NS_IF_ADDREF(*aEnabledPlugin);
 	return NS_OK;
 }
 
@@ -247,3 +292,35 @@ MimeTypeElementImpl::GetType(nsAString& aType)
 {
 	return mMimeType->GetType(aType);
 }
+
+// QueryInterface implementation for HelperMimeTypeImpl
+NS_IMPL_ISUPPORTS1(HelperMimeTypeImpl, nsIDOMMimeType);
+
+NS_IMETHODIMP
+HelperMimeTypeImpl::GetDescription(nsAString& aDescription)
+{
+	aDescription.Truncate();
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+HelperMimeTypeImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin)
+{
+	*aEnabledPlugin = nsnull;
+	return NS_OK;
+}
+  
+NS_IMETHODIMP
+HelperMimeTypeImpl::GetSuffixes(nsAString& aSuffixes)
+{
+	aSuffixes.Truncate();
+	return NS_OK;
+}
+  
+NS_IMETHODIMP
+HelperMimeTypeImpl::GetType(nsAString& aType)
+{
+	aType = mType;
+	return NS_OK;
+}
+

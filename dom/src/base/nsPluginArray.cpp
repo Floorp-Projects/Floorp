@@ -394,13 +394,12 @@ PluginElementImpl::GetMimeTypes()
     if (mMimeTypeArray == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
     for (PRUint32 i = 0; i < mMimeTypeCount; i++) {
-      nsIDOMMimeType* mimeType = nsnull;
-      rv = mPlugin->Item(i, &mimeType);
+      nsCOMPtr<nsIDOMMimeType> mimeType;
+      rv = mPlugin->Item(i, getter_AddRefs(mimeType));
       if (rv != NS_OK)
         break;
       mimeType = new MimeTypeElementImpl(this, mimeType);
-      NS_IF_ADDREF(mimeType);
-      mMimeTypeArray[i] = mimeType;
+      NS_IF_ADDREF(mMimeTypeArray[i] = mimeType);
     }
   }
   return rv;
