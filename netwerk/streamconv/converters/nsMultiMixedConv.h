@@ -38,7 +38,7 @@ public:
 
     // nsMultiMixedConv methods
     nsMultiMixedConv();
-    ~nsMultiMixedConv();
+    virtual ~nsMultiMixedConv();
     nsresult Init();
     nsresult SendPart(const char *aBuffer, nsIChannel *aChannel, nsISupports *aCtxt);
 
