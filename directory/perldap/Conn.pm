@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.8 1998/07/30 09:51:35 leif Exp $
+# $Id: Conn.pm,v 1.9 1998/07/30 10:08:00 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -330,11 +330,11 @@ sub delete
 
   if ($dn ne "")
     {
-      $dn = normalizeDN($dn);
+      $dn = Mozilla::LDAP::Utils::normalizeDN($dn);
     }
   else
     {
-      $dn = normalizeDN($self->{dn});
+      $dn = Mozilla::LDAP::Utils::normalizeDN($self->{dn});
     }
   $ret = ldap_delete_s($self->{ld}, $dn) if ($dn ne "");
 
