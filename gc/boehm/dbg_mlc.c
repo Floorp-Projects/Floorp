@@ -135,7 +135,11 @@ register oh * ohdr;
     return(0);
 }
 
+#ifdef MACOS
 extern const char* getTypeName(void* ptr);
+#else
+#define getTypeName(ptr) ("void*")
+#endif
 
 void GC_print_obj(p)
 ptr_t p;
@@ -145,17 +149,10 @@ ptr_t p;
     
     wp = (word*)((unsigned long)ohdr + sizeof(oh));
 
-#ifdef MACOS
     GC_err_printf3("0x%08lX <%s> (%ld)\n", wp, getTypeName(wp),
                    (unsigned long)(ohdr -> oh_sz));
-#else
-    GC_err_printf1("0x%08lX (", wp);
-    GC_err_puts(ohdr->oh_string);
-    GC_err_printf2(":%ld, sz=%ld)\n", (unsigned long)(ohdr -> oh_int),
-        			      (unsigned long)(ohdr -> oh_sz));
-#endif
 
-	/* print all potential references held by this object. */
+    /* print all potential references held by this object. */
     wend = (word*)((unsigned long)wp + ohdr -> oh_sz);
     while (wp < wend) GC_err_printf1("\t0x%08lX\n", *wp++);
 
