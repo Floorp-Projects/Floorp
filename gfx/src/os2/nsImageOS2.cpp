@@ -17,6 +17,13 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 05/11/2000       IBM Corp.      Make it look more like Windows.
  */
 
 #include "nsGfxDefs.h"
@@ -34,50 +41,52 @@ nsImageOS2::nsImageOS2()
    NS_INIT_REFCNT();
     
    mInfo      = 0;
-   mStride    = 0;
+   mRowBytes    = 0;
    mImageBits = 0;
    mBitmap    = 0;
 
-   mAStride    = 0;
-   mAImageBits = 0;
+   mARowBytes    = 0;
+   mAlphaBits = 0;
    mABitmap    = 0;
    mAlphaDepth = 0;
+   mAlphaLevel = 0;
 
    mColorMap = 0;
 
-   mOptimized = PR_FALSE;
+   mIsOptimized = PR_FALSE;
+   mIsTopToBottom = PR_FALSE;   
 
    mDeviceDepth = 0;
 }
 
 nsImageOS2::~nsImageOS2()
 {
-   Cleanup();
+   CleanUp(PR_TRUE);
 }
 
 nsresult nsImageOS2::Init( PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
                            nsMaskRequirements aMaskRequirements)
 {
    // Guard against memory leak in multiple init
-   Cleanup();
+   CleanUp(PR_TRUE);
 
    // (copying windows code - what about monochrome?  Oh well.)
    NS_ASSERTION( aDepth == 24 || aDepth == 8, "Bad image depth");
 
    // Work out size of bitmap to allocate
-   mStride = RASWIDTH(aWidth,aDepth);
+   mRowBytes = RASWIDTH(aWidth,aDepth);
 
-// mStride = aWidth * aDepth;
+// mRowBytes = aWidth * aDepth;
 // if( aDepth < 8)
-//    mStride += 7;
-// mStride /= 8;
+//    mRowBytes += 7;
+// mRowBytes /= 8;
 //
 // // Make sure image width is 4byte aligned
-// mStride = (mStride + 3) & ~0x3;
+// mRowBytes = (mRowBytes + 3) & ~0x3;
 
   SetDecodedRect(0,0,0,0);  //init
 
-   mImageBits = new PRUint8 [ aHeight * mStride ];
+   mImageBits = new PRUint8 [ aHeight * mRowBytes ];
 
    // Set up bitmapinfo header
    int cols = -1;
@@ -110,33 +119,37 @@ nsresult nsImageOS2::Init( PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
    {
       if( aMaskRequirements == nsMaskRequirements_kNeeds1Bit)
       {
-         mAStride = (aWidth + 7) / 8;
+         mARowBytes = (aWidth + 7) / 8;
          mAlphaDepth = 1;
       }
       else
       {
          NS_ASSERTION( nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
                        "unexpected mask depth");
-         mAStride = aWidth;
+         mARowBytes = aWidth;
          mAlphaDepth = 8;
       }
 
       // 32-bit align each row
-      mAStride = (mAStride + 3) & ~0x3;
+      mARowBytes = (mARowBytes + 3) & ~0x3;
 
-      mAImageBits = new PRUint8 [ aHeight * mAStride];
+      mAlphaBits = new PRUint8 [ aHeight * mARowBytes];
    }
 
    return NS_OK;
 }
 
-void nsImageOS2::Cleanup()
+void nsImageOS2::CleanUp(PRBool aCleanUpAll)
 {
+   // OS2TODO to handle aCleanUpAll param
+
    if( mImageBits) {
-      delete [] mImageBits; mImageBits = 0;
+      delete [] mImageBits; 
+      mImageBits = 0;
    }
    if( mInfo) {
-      free( mInfo); mInfo = 0;
+      free( mInfo);
+      mInfo = 0;
    }
    if( mColorMap) {
       if( mColorMap->Index)
@@ -144,8 +157,9 @@ void nsImageOS2::Cleanup()
       delete mColorMap;
       mColorMap = 0;
    }
-   if( mAImageBits) {
-      delete [] mAImageBits; mAImageBits = 0;
+   if( mAlphaBits) {
+      delete [] mAlphaBits; 
+      mAlphaBits = 0;
    }
    if( mBitmap) {
       GpiDeleteBitmap( mBitmap);
@@ -219,7 +233,7 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
    //                     (b) is allegedly more efficient...
    //
 #if 0
-   if( mBitmap == 0 && mOptimized)
+   if( mBitmap == 0 && mIsOptimized)
    {
       // moz has asked us to optimize this image, but we haven't got
       // round to actually doing it yet.  So do it now.
@@ -269,7 +283,7 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
 nsresult nsImageOS2::Optimize( nsIDeviceContext* aContext)
 {
    // Defer this until we have a PS...
-   mOptimized = PR_TRUE;
+   mIsOptimized = PR_TRUE;
    return NS_OK;
 }
 
@@ -306,7 +320,7 @@ void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
    if( mBitmap == GPI_ERROR)
       PMERROR("GpiCreateBitmap");
 
-   if( mAImageBits)
+   if( mAlphaBits)
    {
       if( mAlphaDepth == 1)
       {
@@ -314,7 +328,7 @@ void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
          mABitmap = GpiCreateBitmap( surf->mPS,
                                      maskInfo,
                                      CBM_INIT,
-                                     (PBYTE) mAImageBits,
+                                     (PBYTE) mAlphaBits,
                                      maskInfo);
          if( mABitmap == GPI_ERROR)
             PMERROR( "GpiCreateBitmap (mask)");
@@ -347,7 +361,7 @@ void nsImageOS2::DrawBitmap( HPS hps, LONG lCount, PPOINTL pPoints,
          pBmp2 = *pMaskInfo;
       }
 
-      void *pBits = bIsMask ? mAImageBits : mImageBits;
+      void *pBits = bIsMask ? mAlphaBits : mImageBits;
 
       if( GPI_ERROR == GpiDrawBits( hps, pBits, pBmp2,
                                     lCount, pPoints, lRop, BBO_OR))

@@ -17,6 +17,14 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ *
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3.
+ *
+ * Date         Modified by     Description of modification
+ * 05/10/2000   IBM Corp.      Make it look more like Windows.
  */
 
 // ToDo: nowt (except get rid of unicode hack)
@@ -25,8 +33,9 @@
 #include "libprint.h"
 #include <stdio.h>
 
-#include "nsISupports.h"
+//#include "nscore.h"
 #include "nsIFactory.h"
+#include "nsISupports.h"
 #include "nsGfxCIID.h"
 #include "nsFontMetricsOS2.h"
 #include "nsRenderingContextOS2.h"
@@ -37,114 +46,236 @@
 #include "nsPaletteOS2.h"
 #include "nsDeviceContextSpecOS2.h"
 #include "nsDeviceContextSpecFactoryO.h"
-
-// nsGfxFactory.cpp - factory for creating os/2 graphics objects.
+//#include "nsScriptableRegion.h"
+#include "nsIImageManager.h"
+//#include "nsScreenManagerWin.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
+static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
+static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
-static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
+static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
+static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
+static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
+
 
 class nsGfxFactoryOS2 : public nsIFactory
 {   
  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFACTORY
 
-   NS_DECL_ISUPPORTS
-
-   // nsIFactory methods   
-   NS_IMETHOD CreateInstance( nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-   NS_IMETHOD LockFactory( PRBool aLock) { return NS_OK; }
-
-   nsGfxFactoryOS2( const nsCID &aClass);
-   virtual ~nsGfxFactoryOS2();
+    nsGfxFactoryOS2(const nsCID &aClass);   
+    ~nsGfxFactoryOS2();   
 
  private:
    nsCID     mClassID;
 };
 
-nsGfxFactoryOS2::nsGfxFactoryOS2( const nsCID &aClass)
+static int gUseAFunctions = 0;
+
+nsGfxFactoryOS2::nsGfxFactoryOS2(const nsCID &aClass)
 {
-   NS_INIT_REFCNT();
-   mClassID = aClass;
+  static int init = 0;
+  if (!init) {
+    init = 1;
+  /* OS2TODO
+    OSVERSIONINFO os;
+    os.dwOSVersionInfoSize = sizeof(os);
+    ::GetVersionEx(&os);
+    if ((os.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
+        (os.dwMajorVersion == 4) &&
+        (os.dwMinorVersion == 0) &&    // Windows 95 (not 98)
+        (::GetACP() == 932)) {         // Shift-JIS (Japanese)
+      gUseAFunctions = 1;
+    }
+  */
+  }
+
+  NS_INIT_REFCNT();
+  mClassID = aClass;
 }
 
 nsGfxFactoryOS2::~nsGfxFactoryOS2()   
 {   
 }   
 
-NS_IMPL_ISUPPORTS(nsGfxFactoryOS2,nsIFactory::GetIID())
+nsresult nsGfxFactoryOS2::QueryInterface(const nsIID &aIID,   
+                                         void **aResult)   
+{   
+  if (aResult == NULL) {   
+    return NS_ERROR_NULL_POINTER;   
+  }   
 
-nsresult nsGfxFactoryOS2::CreateInstance( nsISupports *aOuter,
+  // Always NULL result, in case of failure   
+  *aResult = NULL;   
+
+  if (aIID.Equals(kISupportsIID)) {   
+    *aResult = (void *)(nsISupports*)this;   
+  } else if (aIID.Equals(kIFactoryIID)) {   
+    *aResult = (void *)(nsIFactory*)this;   
+  }   
+
+  if (*aResult == NULL) {   
+    return NS_NOINTERFACE;   
+  }   
+
+  AddRef(); // Increase reference count for caller   
+  return NS_OK;   
+}
+
+NS_IMPL_ADDREF(nsGfxFactoryOS2);
+NS_IMPL_RELEASE(nsGfxFactoryOS2);
+ 
+nsresult nsGfxFactoryOS2::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,
                                           void **aResult)
 {  
-   if( !aResult)
-      return NS_ERROR_NULL_POINTER;  
+  nsresult res;
+  if (aResult == NULL) {  
+    return NS_ERROR_NULL_POINTER;  
+  }  
 
-   *aResult = 0;
+  *aResult = NULL;
 
-   nsISupports *inst = nsnull;
+  nsISupports *inst = nsnull;
+  PRBool already_addreffed = PR_FALSE;
 
-   if( mClassID.Equals( kCFontMetrics)) {
-      inst = new nsFontMetricsOS2;
-   }
-   else if( mClassID.Equals( kCDeviceContext)) {
-      inst = new nsDeviceContextOS2;
-   }
-   else if( mClassID.Equals( kCRenderingContext)) {
-      inst = (nsISupports *)((nsIRenderingContext*)new nsRenderingContextOS2);
-   }
-   else if( mClassID.Equals( kCImage)) {
-      inst = new nsImageOS2;
-   }
-   else if( mClassID.Equals( kCRegion)) {
-      inst = new nsRegionOS2;
-   }
-   else if( mClassID.Equals( kCBlender)) {
-      inst = new nsBlender;
-   }
-   else if( mClassID.Equals( kCDeviceContextSpec)) {
-      inst = new nsDeviceContextSpecOS2;
-   }
-   else if( mClassID.Equals( kCDeviceContextSpecFactory)) {
-      inst = new nsDeviceContextSpecFactoryOS2;
-   }
+  if (mClassID.Equals(kCFontMetrics)) {
+    nsFontMetricsOS2* fm;
+    if (gUseAFunctions) {
+     // NS_NEWXPCOM(fm, nsFontMetricsOS2A);
+    }
+    else {
+      NS_NEWXPCOM(fm, nsFontMetricsOS2);
+    }
+    inst = (nsISupports *)fm;
+  }
+  else if (mClassID.Equals(kCDeviceContext)) {
+    nsDeviceContextOS2* dc;
+    NS_NEWXPCOM(dc, nsDeviceContextOS2);
+    inst = (nsISupports *)dc;
+  }
+  else if (mClassID.Equals(kCRenderingContext)) {
+    nsRenderingContextOS2*  rc;
+    if (gUseAFunctions) {
+     // NS_NEWXPCOM(rc, nsRenderingContextOS2A);
+    }
+    else {
+      NS_NEWXPCOM(rc, nsRenderingContextOS2);
+    }
+    inst = (nsISupports *)((nsIRenderingContext*)rc);
+  }
+  else if (mClassID.Equals(kCImage)) {
+    nsImageOS2* image;
+    NS_NEWXPCOM(image, nsImageOS2);
+    inst = (nsISupports *)image;
+  }
+  else if (mClassID.Equals(kCRegion)) {
+    nsRegionOS2*  region;
+    NS_NEWXPCOM(region, nsRegionOS2);
+    inst = (nsISupports *)region;
+  }
+  else if (mClassID.Equals(kCBlender)) {
+    nsBlender* blender;
+    NS_NEWXPCOM(blender, nsBlender);
+    inst = (nsISupports *)blender;
+  }
+  // OS2TODO
+  /*else if (mClassID.Equals(kCDrawingSurface)) {
+    nsDrawingSurfaceOS2* ds;
+    NS_NEWXPCOM(ds, nsDrawingSurfaceOS2);
+    inst = (nsISupports *)((nsIDrawingSurface *)ds);
+  }*/
+  else if (mClassID.Equals(kCDeviceContextSpec)) {
+    nsDeviceContextSpecOS2* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecOS2);
+    inst = (nsISupports *)dcs;
+  }
+  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
+    nsDeviceContextSpecFactoryOS2* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryOS2);
+    inst = (nsISupports *)dcs;
+  }
+  else if (mClassID.Equals(kCScriptableRegion)) {
+    nsCOMPtr<nsIRegion> rgn;
+    NS_NEWXPCOM(rgn, nsRegionOS2);
+    /*if (rgn != nsnull) {
+      nsIScriptableRegion* scriptableRgn = new nsScriptableRegion(rgn);
+      inst = (nsISupports *)scriptableRgn;
+    }*/
+  }
+  else if (mClassID.Equals(kImageManagerImpl)) {
+    nsCOMPtr<nsIImageManager> iManager;
+    res = NS_NewImageManager(getter_AddRefs(iManager));
+    already_addreffed = PR_TRUE;
+    if (NS_SUCCEEDED(res))
+    {
+     res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
+    }
+  }
+  else if (mClassID.Equals(kCFontEnumerator)) {
+    /* OS2TODO
+    nsFontEnumeratorOS2* fe;
+    NS_NEWXPCOM(fe, nsFontEnumeratorOS2);
+    inst = (nsISupports *)fe;
+    */
+  }
+	else if (mClassID.Equals(kCScreenManager)) {
+    /* OS2TODO
+		NS_NEWXPCOM(inst, nsScreenManagerOS2);
+     */
+  } 
 
-   if( !inst)
-      return NS_ERROR_OUT_OF_MEMORY;
+
+  if( inst == NULL) {
+     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (already_addreffed == PR_FALSE)
+     NS_ADDREF(inst);  // Stabilize
+
+  res = inst->QueryInterface(aIID, aResult);
  
-   nsresult res = inst->QueryInterface(aIID, aResult);
- 
-   if( NS_FAILED(res))
-      // We didn't get the right interface, so clean up
-      delete inst;
-
-   return res;
+  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer> 
+   
+  return res;
 }  
 
-// This is a factory-factory: create a factory for the desired type.
+nsresult nsGfxFactoryOS2::LockFactory(PRBool aLock)  
+{  
+  // Not implemented in simplest case.  
+  return NS_OK;
+} 
+
+// return the proper factory to the caller
 extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
                                              const nsCID &aClass,
                                              const char *aClassName,
                                              const char *aProgID,
                                              nsIFactory **aFactory)
 {
-   if( !aFactory)
-     return NS_ERROR_NULL_POINTER;
+  if (nsnull == aFactory) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-   *aFactory = new nsGfxFactoryOS2( aClass);
+  *aFactory = new nsGfxFactoryOS2(aClass);
 
-   if( !*aFactory)
+  if (nsnull == aFactory) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  return (*aFactory)->QueryInterface( nsIFactory::GetIID(), (void**) aFactory);
+  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
 
 // Module-level data ---------------------------------------------------------

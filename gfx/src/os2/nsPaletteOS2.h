@@ -17,6 +17,12 @@
  *
  * Contributor(s): 
  *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 05/08/2000       IBM Corp.      Fix for trying to us an already freed mGammaTable.
  */
 
 // Manage picking of colours via various GPI methods.
@@ -38,7 +44,7 @@ class nsIDeviceContext;
 class nsIPaletteOS2 : public nsISupports
 {
  public:
-   virtual long     GetGPIColor( HPS hps, nscolor rgb) = 0;
+   virtual long     GetGPIColor( nsIDeviceContext *aContext, HPS hps, nscolor rgb) = 0;
    virtual nsresult Select( HPS hps, nsIDeviceContext *aContext) = 0;
    virtual nsresult Deselect( HPS hps) = 0;
    virtual nsresult GetNSPalette( nsPalette &aPalette) const = 0;

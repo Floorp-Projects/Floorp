@@ -53,6 +53,7 @@
 
 #ifdef XP_OS2_VACPP
 #include <direct.h>
+#include "dirent.h"
 #define F_OK 0
 #define X_OK 1
 #define W_OK 2
@@ -341,13 +342,13 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     if (stricmp(tail, leaf) || tail != nsnull) {
 
         // Absolute path
-        if (mPath[2] == '\\' && mPath[1] == ':') {
+        if (mPath.CharAt(2) == '\\' && mPath.CharAt(1) == ':') {
             ++tail;
             tail = strchr(tail, '\\');
         }
 
         // LAN path
-        if (mPath[0] == '\\' && mPath[1] == '\\') {
+        if (mPath.CharAt(0) == '\\' && mPath.CharAt(1) == '\\') {
             tail += 2;
             tail = strchr(tail, '\\');
         }
@@ -356,7 +357,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
             size_t idx = len - strlen(tail);
 
             while (stricmp(segment, mPath)) {
-                memcpy(segment, mPath, idx);
+                memcpy(segment, (char*)mPath, idx);
                 if (access(segment, F_OK) != 0)
                     mkdir(segment, 0);
                 
@@ -480,7 +481,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*)nsAllocator::Clone(mPath, strlen(mPath) + 1);
+    *_retval = (char*)nsAllocator::Clone((char*)mPath, strlen(mPath) + 1);
     return NS_OK;
 }
 
@@ -633,7 +634,7 @@ nsLocalFile::Delete(PRBool recursive)
                 iterator->HasMoreElements(&more);
             }
         }
-        rmdir(filePath);  // todo: save return value?
+        rmdir((char*)filePath);  // todo: save return value?
     }
     else
     {
@@ -662,9 +663,9 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
         struct utimbuf ut;
         ut.actime = mStatCache.st_atime;
         LL_L2UI(ut.modtime, aLastModificationDate);
-        result = utime((const char*)mPath, &ut);
+        result = utime((char*)mPath, &ut);
     } else {
-        result = utime((const char*)mPath, NULL);
+        result = utime((char*)mPath, NULL);
     }
     SetNoStatCache();
     return NSRESULT_FOR_RETURN(result);
@@ -769,7 +770,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     NS_ENSURE_ARG_POINTER(aDiskSpaceAvailable);
     CHECK_mPath();
 
-    ULONG ulDriveNo = toupper(mPath[0]) + 1 - 'A';
+    ULONG ulDriveNo = toupper(mPath.CharAt(0)) + 1 - 'A';
     FSALLOCATE fsAllocate = { 0 };
     APIRET rv = DosQueryFSInfo(ulDriveNo, FSIL_ALLOC,
                                &fsAllocate, sizeof(fsAllocate));
@@ -984,7 +985,7 @@ nsLocalFile::GetTarget(char **_retval)
 {   
     NS_ENSURE_ARG_POINTER(_retval);
     VALIDATE_STAT_CACHE();
-    *_retval = (char*)nsAllocator::Clone(mPath, strlen(mPath) + 1);
+    *_retval = (char*)nsAllocator::Clone((char*)mPath, strlen(mPath) + 1);
     return NS_OK;
 }
 

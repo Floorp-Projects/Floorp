@@ -17,6 +17,12 @@
  *
  * Contributor(s): 
  *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 05/08/2000       IBM Corp.      Fix for trying to us an already freed mGammaTable.
  */
 
 // ToDo: nothing
@@ -52,8 +58,12 @@ class nsPaletteOS2 : public nsIPaletteOS2
       return mContext == nsnull ? NS_ERROR_FAILURE : NS_OK;
    }
 
-   long GetGPIColor( HPS hps, nscolor rgb)
+   long GetGPIColor( nsIDeviceContext *aContext, HPS hps, nscolor rgb)
    {
+      if (mContext != aContext) {
+         mContext = aContext;
+         mContext->GetGammaTable( mGammaTable);
+      }
       long gcolor = MK_RGB( mGammaTable[NS_GET_R(rgb)],
                             mGammaTable[NS_GET_G(rgb)],
                             mGammaTable[NS_GET_B(rgb)]);

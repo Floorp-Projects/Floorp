@@ -17,6 +17,12 @@
  *
  * Contributor(s): 
  *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 05/110/2000     IBM Corp.       Make more like Windows
  */
 
 // Region object.  From os2fe\regions.cpp.
@@ -31,50 +37,49 @@ typedef void (*nsRECTLInRegionFunc)(void *closure, RECTL &rectl);
 
 class nsRegionOS2 : public nsIRegion
 {
- public:
-   nsRegionOS2();
-   virtual ~nsRegionOS2();
- 
-   NS_DECL_ISUPPORTS
- 
-   NS_IMETHOD Init();
- 
-   virtual void SetTo( const nsIRegion &aRegion);
-   virtual void SetTo( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-   virtual void Intersect( const nsIRegion &aRegion);
-   virtual void Intersect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-   virtual void Union( const nsIRegion &aRegion);
-   virtual void Union( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-   virtual void Subtract( const nsIRegion &aRegion);
-   virtual void Subtract( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-   virtual PRBool IsEmpty();
-   virtual PRBool IsEqual( const nsIRegion &aRegion);
-   virtual void GetBoundingBox( PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
-   virtual void Offset( PRInt32 aXOffset, PRInt32 aYOffset);
-   virtual PRBool ContainsRect( PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+public:
+  nsRegionOS2();
 
-   NS_IMETHOD GetRects( nsRegionRectSet **aRects);
-   NS_IMETHOD FreeRects( nsRegionRectSet *aRects);
+  NS_DECL_ISUPPORTS
 
-   NS_IMETHOD GetNumRects(PRUint32 *aRects) const { *aRects = 0; return NS_OK; }
-   
-   // Don't use this -- it returns a region defined in CRS.
-   NS_IMETHOD GetNativeRegion( void *&aRegion) const;
-   NS_IMETHOD GetRegionComplexity( nsRegionComplexity &aComplexity) const;
+  virtual nsresult Init();
+
+  virtual void SetTo(const nsIRegion &aRegion);
+  virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  virtual void Intersect(const nsIRegion &aRegion);
+  virtual void Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  virtual void Union(const nsIRegion &aRegion);
+  virtual void Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  virtual void Subtract(const nsIRegion &aRegion);
+  virtual void Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  virtual PRBool IsEmpty(void);
+  virtual PRBool IsEqual(const nsIRegion &aRegion);
+  virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
+  virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
+  virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD GetRects(nsRegionRectSet **aRects);
+  NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
+  NS_IMETHOD GetNativeRegion(void *&aRegion) const; // Don't use this -- it returns a region defined in CRS.
+  NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
+
+  NS_IMETHOD GetNumRects(PRUint32 *aRects) const { *aRects = 0; return NS_OK; }
  
-   // OS/2 specific
-   // get region in widget's coord space for given device
-   HRGN GetHRGN( PRUint32 ulHeight, HPS hps);
+  // OS/2 specific
+  // get region in widget's coord space for given device
+  HRGN GetHRGN( PRUint32 ulHeight, HPS hps);
 
-   // copy from another region defined in aWidget's space for a given device
-   nsresult Init( HRGN copy, PRUint32 ulHeight, HPS hps);
+  // copy from another region defined in aWidget's space for a given device
+  nsresult Init( HRGN copy, PRUint32 ulHeight, HPS hps);
 
- private:
-   void combine( long lOp, PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH);
-   void combine( long lOp, const nsIRegion &aRegion);
+private:
+  ~nsRegionOS2();
 
    HRGN mRegion;
    long mRegionType;
+
+  void combine( long lOp, PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH);
+  void combine( long lOp, const nsIRegion &aRegion);
+
 };
 
 #endif

@@ -16,25 +16,31 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      Make more like Windows.
  *
  */
 
-#ifndef  _nsLookAndFeel_h
-#define  _nsLookAndFeel_h
-
+#ifndef __nsLookAndFeel
+#define __nsLookAndFeel
 #include "nsILookAndFeel.h"
+
 #include "nsCOMPtr.h"
 
-class nsLookAndFeel: public nsILookAndFeel
-{
- public:
-   nsLookAndFeel();
+class nsLookAndFeel: public nsILookAndFeel {
+public:
+  nsLookAndFeel();
+  virtual ~nsLookAndFeel();
 
-   NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-   NS_IMETHOD GetColor( const nsColorID aID, nscolor &aColor);
-   NS_IMETHOD GetMetric( const nsMetricID aID, PRInt32 &aMetric);
-   NS_IMETHOD GetMetric( const nsMetricFloatID aID, float &aMetric);
+  NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
+  NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
+  NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
 
 #ifdef NS_DEBUG
   // This method returns the actual (or nearest estimate) 

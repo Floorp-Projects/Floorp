@@ -25,10 +25,10 @@
 #include "ulsitem.h"
 
 #include "nsDateTimeFormatOS2.h"
-#include "nsILocaleOS2.h"
+#include "nsIOS2Locale.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kILocaleOS2IID, NS_ILOCALEOS2_IID);
+static NS_DEFINE_IID(kILocaleOS2IID, NS_IOS2LOCALE_IID);
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 // nsISupports implementation
@@ -69,7 +69,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime( nsILocale     *aLocale,
    if( !aLocale || !aTime)
       return NS_ERROR_NULL_POINTER;
 
-   nsCOMPtr <nsILocaleOS2> os2locale;
+   nsCOMPtr <nsIOS2Locale> os2locale;
    nsresult      rc = NS_ERROR_FAILURE;
 
    // find a sane locale object
@@ -172,4 +172,51 @@ nsresult nsDateTimeFormatOS2::FormatTMTime( nsILocale     *aLocale,
    }
 
    return rc;
+}
+
+// performs a locale sensitive date formatting operation on the PRTime parameter
+nsresult nsDateTimeFormatOS2::FormatPRTime(nsILocale* locale, 
+                                           const nsDateFormatSelector  dateFormatSelector, 
+                                           const nsTimeFormatSelector timeFormatSelector, 
+                                           const PRTime  prTime, 
+                                           nsString& stringOut)
+{
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(prTime, PR_LocalTimeParameters, &explodedTime);
+
+  return FormatPRExplodedTime(locale, dateFormatSelector, timeFormatSelector, &explodedTime, stringOut);
+}
+
+// performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+nsresult nsDateTimeFormatOS2::FormatPRExplodedTime(nsILocale* locale, 
+                                                   const nsDateFormatSelector  dateFormatSelector, 
+                                                   const nsTimeFormatSelector timeFormatSelector, 
+                                                   const PRExplodedTime*  explodedTime, 
+                                                   nsString& stringOut)
+{
+  struct tm  tmTime;
+  /* be safe and set all members of struct tm to zero
+   *
+   * there are other fields in the tm struct that we aren't setting
+   * (tm_isdst, tm_gmtoff, tm_zone, should we set these?) and since
+   * tmTime is on the stack, it may be filled with garbage, but
+   * the garbage may vary.  (this may explain why some saw bug #10412, and
+   * others did not.
+   *
+   * when tmTime is passed to strftime() with garbage bad things may happen. 
+   * see bug #10412
+   */
+  nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+
+  tmTime.tm_yday = explodedTime->tm_yday;
+  tmTime.tm_wday = explodedTime->tm_wday;
+  tmTime.tm_year = explodedTime->tm_year;
+  tmTime.tm_year -= 1900;
+  tmTime.tm_mon = explodedTime->tm_month;
+  tmTime.tm_mday = explodedTime->tm_mday;
+  tmTime.tm_hour = explodedTime->tm_hour;
+  tmTime.tm_min = explodedTime->tm_min;
+  tmTime.tm_sec = explodedTime->tm_sec;
+
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, &tmTime, stringOut);
 }
