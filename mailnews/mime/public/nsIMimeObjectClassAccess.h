@@ -27,47 +27,30 @@
 
 #include "prtypes.h"
 
-//
-// This is to access the object class of libmime which is what
-// this interface is focused on. 
-//
-#include "mimei.h"
-#include "modmime.h"
-#include "mimeobj.h"	/*  MimeObject (abstract)							*/
-#include "mimecont.h"	/*   |--- MimeContainer (abstract)					*/
-#include "mimemult.h"	/*   |     |--- MimeMultipart (abstract)			*/
-#include "mimemsig.h"	/*   |     |     |--- MimeMultipartSigned (abstract)*/
-#include "mimetext.h"	/*   |     |--- MimeInlineText (abstract)			*/
-
 // {C09EDB23-B7AF-11d2-B35E-525400E2D63A}
-#define NS_ICONTENT_TYPE_PLUGIN_IID \
-      { 0xc09edb23, 0xb7af, 0x11d2, 
+#define NS_IMIME_OBJECT_CLASS_ACCESS_IID \
+      { 0xc09edb23, 0xb7af, 0x11d2,	 \
       { 0xb3, 0x5e, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
 
-typedef struct {
-  PRBool      force_inline_display;
-} contentTypeHandlerInitStruct;
-
-class nsIMimeObjectClassAccess { 
-
+class nsIMimeObjectClassAccess {
 public: 
   // These methods are all implemented by libmime to be used by 
   // content type handler plugins for processing stream data. 
 
   // This is the write call for outputting processed stream data.
-  NS_IMETHOD    MimeObjectWrite(MimeObject *obj, 
+  NS_IMETHOD    MimeObjectWrite(void *mimeObject, 
                                 char *data, 
                                 PRInt32 length, 
                                 PRBool user_visible_p) = 0;
 
   // The following group of calls expose the pointers for the object
   // system within libmime.
-  NS_IMETHOD    GetmimeInlineTextClass(MimeInlineTextClass **ptr) = 0;
-  NS_IMETHOD    GetmimeLeafClass(MimeLeafClass **ptr) = 0;
-  NS_IMETHOD    GetmimeObjectClass(MimeObjectClass **ptr) = 0;
-  NS_IMETHOD    GetmimeContainerClass(MimeContainerClass **ptr) = 0;
-  NS_IMETHOD    GetmimeMultipartClass(MimeMultipartClass **ptr) = 0;
-  NS_IMETHOD    GetmimeMultipartSignedClass(MimeMultipartSignedClass **ptr) = 0;
+  NS_IMETHOD    GetmimeInlineTextClass(void **ptr) = 0;
+  NS_IMETHOD    GetmimeLeafClass(void **ptr) = 0;
+  NS_IMETHOD    GetmimeObjectClass(void **ptr) = 0;
+  NS_IMETHOD    GetmimeContainerClass(void **ptr) = 0;
+  NS_IMETHOD    GetmimeMultipartClass(void **ptr) = 0;
+  NS_IMETHOD    GetmimeMultipartSignedClass(void **ptr) = 0;
 }; 
 
 #endif /* nsIMimeObjectClassAccess_h_ */
