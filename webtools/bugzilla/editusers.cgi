@@ -822,7 +822,7 @@ if ($action eq 'update') {
                  WHERE login_name=" . SqlQuote($userold));
         SendSQL("SELECT userid
                  FROM profiles
-                 WHERE login_name=" . SqlQuote($user));
+                 WHERE login_name=" . SqlQuote($userold));
         my $userid = FetchOneColumn();
         SendSQL("DELETE FROM logincookies
                  WHERE userid=" . $userid);
