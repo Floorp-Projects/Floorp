@@ -901,29 +901,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 
       result = shell->GetPresContext(getter_AddRefs(context));
       if (context) {
-        nsSize size;
-        nsHTMLValue val;
-        float p2t;
-
-        context->GetScaledPixelsToTwips(&p2t);
-        result = GetHTMLAttribute(nsHTMLAtoms::width, val);
-
-        if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-          size.width = NSIntPixelsToTwips(val.GetIntValue(), p2t);
-        }
-        else {
-          size.width = 0;
-        }
-
-        result = GetHTMLAttribute(nsHTMLAtoms::height, val);
-
-        if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-          size.height = NSIntPixelsToTwips(val.GetIntValue(), p2t);
-        }
-        else {
-          size.height = 0;
-        }
-
         nsAutoString url;
         if (aBaseURL) {
           result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
@@ -933,11 +910,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         }
         else {
           url.Assign(aSrc);
-        }
-
-        nsSize* specifiedSize = nsnull;
-        if ((size.width > 0) || (size.height > 0)) {
-          specifiedSize = &size;
         }
 
         nsCOMPtr<nsIURI> uri;
@@ -955,11 +927,12 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
         nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
 
         PRBool shouldLoad = PR_TRUE;
-        result = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                           uri,
-                                           NS_STATIC_CAST(nsIDOMHTMLImageElement *,
-                                                          this),
-                                           domWin, &shouldLoad);
+        result =
+          NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                    uri,
+                                    NS_STATIC_CAST(nsIDOMHTMLImageElement *,
+                                                   this),
+                                    domWin, &shouldLoad);
         if (NS_SUCCEEDED(result) && !shouldLoad) {
           return NS_OK;
         }
