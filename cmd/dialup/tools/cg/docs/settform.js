@@ -121,12 +121,14 @@ function saveData()
 		//debug("SaveData: Ext no, New yes");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceNew", "yes");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "no");
+		parent.parent.globals.document.vars.path.value = "New Path";
 	}
 	else if (modeRadioString == "no")
 	{
 		//debug("SaveData: New no, Ext yes");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceNew", "no");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "yes");	
+		parent.parent.globals.document.vars.path.value = "Existing Path";
 	}
 	else
 	{
