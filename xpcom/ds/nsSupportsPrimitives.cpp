@@ -809,7 +809,7 @@ NS_IMETHODIMP nsSupportsDoubleImpl::ToString(char **_retval)
 /***************************************************************************/
 
 
-NS_IMPL_ISUPPORTS1(nsSupportsVoidImpl, nsISupportsVoid)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSupportsVoidImpl, nsISupportsVoid)
 
 nsSupportsVoidImpl::nsSupportsVoidImpl()
     : mData(nsnull)
