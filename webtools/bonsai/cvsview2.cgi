@@ -197,8 +197,7 @@ foreach $root (@SRCROOTS) {
     }
 }
 if (!$found) {
-    print "<FONT SIZE=5><B>Error:</B> $opt_subdir not found in "
-        .join(',', @SRCROOTS), "</FONT>\n";
+    print "<FONT SIZE=5><B>Error:</B> $opt_subdir not found.";
     exit;
 }
 

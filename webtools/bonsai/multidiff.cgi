@@ -85,10 +85,15 @@ for my $k (@revs) {
     }
     open( DIFF, "$rcsdiffcommand -u -r$prevrev -r$rev $fullname 2>&1|" );
     while(<DIFF>){
-        $_ =~ s/&/&amp;/g;
-        $_ =~ s/</&lt;/g;
-        $_ =~ s/>/&gt;/g;
-        print "$who:  $_";
+		if (($_ =~ /RCS file/) || ($_ =~ /rcsdiff/)) { 
+			$_ =~ s/(^.*)(.*\/)(.*)/$1 $3/;
+        	print "$who:  $_";
+		} else {
+        	$_ =~ s/&/&amp;/g;
+        	$_ =~ s/</&lt;/g;
+        	$_ =~ s/>/&gt;/g;
+        	print "$who:  $_";
+		}
     }
     $didone = 1;
 }
