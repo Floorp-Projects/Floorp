@@ -177,6 +177,7 @@ struct nsClassList {
     : mAtom(aCopy.mAtom),
       mNext(nsnull)
   {
+    NS_ADDREF(mAtom);
     if (nsnull != aCopy.mNext) {
       mNext = new nsClassList(*(aCopy.mNext));
     }
