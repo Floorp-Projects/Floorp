@@ -43,6 +43,15 @@
 
 : ${builddir:=./build} > /dev/null
 
+# Different versions of Unix have different requirements for echo.  I
+# have no intention of becoming a portable shell expert.  Make the
+# echo command a variable and let the users figure out what works for
+# them.
+
+	# this is for statments which do not need '\n' interpolation
+: ${echo:="/bin/echo"}
+	# this is for statements which need '\n' interpolation
+: ${echoe:="/bin/echo -e"}
 
 config_script='./config.out'
 tinder_version='0.09'
@@ -52,7 +61,7 @@ tinder_version='0.09'
 #   Build Makefile
 # -------------------
 
-/bin/echo "Building Makefile"
+$echo "Building Makefile"
 
 # build a makefile to copy our executables into place and perform
 # subsitutions on them
@@ -100,6 +109,13 @@ builddir=$builddir
 config_script=$config_script
 confdir=localconf
 
+# this is for statments which do not need '\'\\\\n\'' interpolation
+echo=/bin/echo
+
+# this is for statements which need '\'\\\\n\'' interpolation
+echoe="/bin/echo -e"
+
+
 # Makefile Targets
 # ----------------
 
@@ -111,7 +127,7 @@ build: mk_build_dirs build_files set_build_permissions
 install: build mk_dest_dirs install_files
 
 clean:
-	@ /bin/echo "\\n\\n-----Cleaning Build Directory-----\\n\\n"
+	@ \$(echo) "\\n\\n-----Cleaning Build Directory-----\\n\\n"
 	rm -rf \$(builddir)
 
 
@@ -119,20 +135,20 @@ clean:
 # files so ensure the build dir copies are not writable.
 
 set_build_permissions: 
-	@ /bin/echo "\\n\\n-----Setting Build directory permissions-----\\n\\n"
+	@ \$(echo) "\\n\\n-----Setting Build directory permissions-----\\n\\n"
 	find \$(builddir) -type f | xargs chmod 444
 	find \$(builddir)/bin -type f | xargs chmod 555
 	find \$(builddir)/test -type f -name 'gen*' | xargs chmod 555
 	find \$(builddir)/clientbin -type f | xargs chmod 555
 
 compile_all_code: build
-	@ /bin/echo "\\n\\n-----Testing if perl can compile code-----\\n\\n"
+	@ \$(echo) "\\n\\n-----Testing if perl can compile code-----\\n\\n"
 	find \$(builddir) -type f | \\
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \\
 	  xargs -l perl -T -c 
 
 compile_bin_code: build
-	@ /bin/echo "\\n\\n-----Testing if perl can compile all files in the bin directory-----\\n\\n"
+	@ \$(echo) "\\n\\n-----Testing if perl can compile all files in the bin directory-----\\n\\n"
 	find \$(builddir)/bin -type f | \\
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \\
 	  xargs -l perl -T -c 
@@ -218,34 +234,34 @@ EOF3
 #   Build Config.out
 # -------------------
 
-/bin/echo "Building config.out"
+$echo "Building config.out"
 
 rm -rf $config_script
 
 pwd=`/bin/pwd`
 
-/bin/echo -e "#!perl - this script is run from makefile with -n\n" >> $config_script
-/bin/echo -e "# This script is automatically genareated by configure." >> $config_script
-/bin/echo -e "# This script configures various global variables.\n" >> $config_script
+$echoe "#!perl - this script is run from makefile with -n\n" >> $config_script
+$echoe "# This script is automatically genareated by configure." >> $config_script
+$echoe "# This script configures various global variables.\n" >> $config_script
 
-/bin/echo "while (<>) {" >> $config_script
+$echo "while (<>) {" >> $config_script
 
-/bin/echo  >> $config_script
-/bin/echo -e "  # Set the library search path with suitable interposing directories." >> $config_script
+$echo  >> $config_script
+$echoe "  # Set the library search path with suitable interposing directories." >> $config_script
 
-/bin/echo -e "  s!\#tinder_libdir\#!$prefix/local_conf',\n   '$prefix/default_conf',\n   '$prefix/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
+$echoe "  s!\#tinder_libdir\#!$prefix/local_conf',\n   '$prefix/default_conf',\n   '$prefix/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
 
-/bin/echo >> $config_script
+$echo >> $config_script
 
-/bin/echo "  s!\#prefix\#!$prefix!;" >> $config_script
-/bin/echo "  s!\#cgibin_prefix\#!$cgibin_prefix!;" >> $config_script
-/bin/echo "  s!\#htmldir\#!$htmldir!;" >> $config_script
+$echo "  s!\#prefix\#!$prefix!;" >> $config_script
+$echo "  s!\#cgibin_prefix\#!$cgibin_prefix!;" >> $config_script
+$echo "  s!\#htmldir\#!$htmldir!;" >> $config_script
 
-/bin/echo >> $config_script
+$echo >> $config_script
 
-/bin/echo "  # Use Taint Perl mode for security." >> $config_script
-/bin/echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
-/bin/echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
+$echo "  # Use Taint Perl mode for security." >> $config_script
+$echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
+$echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
 
 
 # some bash seems to not interpolate the '\n' I wish I understood what
@@ -254,23 +270,23 @@ pwd=`/bin/pwd`
 
 # /bin/echo "\n" >> $config_script
 
-/bin/echo >> $config_script
+$echo >> $config_script
 
-/bin/echo -e "  # Hard code various executable paths into the source for security reasons." >> $config_script
+$echoe "  # Hard code various executable paths into the source for security reasons." >> $config_script
 
 for cmd in perl
 do
 	full_cmd=`which $cmd 2> /dev/null `
 	if [ $? -ne 0 ]; then
-		/bin/echo "Could not find program: $cmd"
+		$echo "Could not find program: $cmd"
 		exit 9;
 	fi
-	/bin/echo "  s!\#$cmd\#!$full_cmd!;" >> $config_script
+	$echo "  s!\#$cmd\#!$full_cmd!;" >> $config_script
 done
 
-/bin/echo -e "} continue {" >> $config_script
-/bin/echo -e "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
-/bin/echo -e "}" >> $config_script
+$echoe "} continue {" >> $config_script
+$echoe "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
+$echoe "}" >> $config_script
 
 /bin/chmod +x $config_script
 
