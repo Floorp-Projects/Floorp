@@ -25,7 +25,7 @@
 class nsURLProperties {
 public:
   nsURLProperties(nsString& aUrl);
-  ~nsURLProperties();
+  virtual ~nsURLProperties();
 
   NS_IMETHOD Get( const nsString& aKey, nsString& value);
 
