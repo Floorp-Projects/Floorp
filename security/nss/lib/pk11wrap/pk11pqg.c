@@ -261,6 +261,7 @@ PK11_PQG_VerifyParams(const PQGParams *params, const PQGVerify *vfy,
     PK11_DestroyObject(slot,objectID);
     PK11_FreeSlot(slot);
 
+    *result = SECSuccess;
     if (crv == CKR_ATTRIBUTE_VALUE_INVALID) {
 	*result = SECFailure;
     } else if (crv != CKR_OK) {
