@@ -240,6 +240,26 @@ ifndef PROGOBJS
 PROGOBJS		= $(OBJS)
 endif
 
+# SUBMAKEFILES: List of Makefiles for next level down.
+#   This is used to update or create the Makefiles before invoking them.
+ifneq '$(DIRS)' ''
+SUBMAKEFILES := $(addsuffix /Makefile, \
+                           $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
+endif
+
+# MAKE_DIRS: List of directories to build while looping over directories.
+MAKE_DIRS =
+
+ifdef COMPILER_DEPEND
+ifdef OBJS
+MAKE_DIRS += $(MDDEPDIR)
+endif
+endif
+
+ifneq '$(XPIDLSRCS)' ''
+MAKE_DIRS += $(XPIDL_GEN_DIR)
+endif
+
 ################################################################################
 
 all:: export libs install
@@ -250,33 +270,10 @@ alldep:: export depend libs install
 # Do everything from scratch
 everything:: realclean alldep
 
-#
-# Rules to make MDDEPDIR (for --enable-md).
-# These rules replace the MAKE_DEPDIR macro.
-# The macros often failed with parallel builds (-jN),
-# because two processes would simultaneously try to make the same  directory.
-# Using these rules insures that 'make' will have only one process
-# create the directories.
-#
-MAKE_DIRS =
-
-ifneq ($(XPIDLSRCS),)
-MAKE_DIRS += $(XPIDL_GEN_DIR)
-endif
-
-ifdef MDDEPDIR
-$(MDDEPDIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
-
-ifdef OBJS
-MAKE_DIRS += $(MDDEPDIR)
-endif
-endif
-
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
 	@d=`$(NFSPWD)`;							\
-	if test ! -d LOGS; then rm -rf LOGS; mkdir LOGS; else true; fi;		\
+	if test ! -d LOGS; then rm -rf LOGS; mkdir LOGS; else true; fi;	\
 	for h in $(PLATFORM_HOSTS); do					\
 		echo "On $$h: $(MAKE) $(ALL_PLATFORMS) >& LOGS/$$h.log";\
 		rsh $$h -n "(chdir $$d;					\
@@ -289,12 +286,11 @@ $(NFSPWD):
 	cd $(@D); $(MAKE) $(@F)
 endif
 
-
-export:: $(MAKE_DIRS)
+export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 ifndef LIBS_NEQ_INSTALL
-libs install:: $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+libs install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 ifdef IS_COMPONENT
@@ -330,7 +326,7 @@ ifdef SIMPLE_PROGRAMS
 endif
 	+$(LOOP_OVER_DIRS)
 else
-libs:: $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(SHARED_LIBRARY_LIBS)
+libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(SHARED_LIBRARY_LIBS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 ifdef IS_COMPONENT
@@ -357,7 +353,7 @@ endif
 endif
 	+$(LOOP_OVER_DIRS)
 
-install:: $(PROGRAM) $(SIMPLE_PROGRAMS)
+install:: $(SUBMAKEFILES) $(PROGRAM) $(SIMPLE_PROGRAMS)
 ifdef MAPS
 	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
 endif
@@ -397,15 +393,15 @@ run_apprunner: $(DIST)/bin/apprunner
 	LD_LIBRARY_PATH=".:$(LIBS_PATH):$$LD_LIBRARY_PATH" \
 	apprunner
 
-clean clobber::
+clean clobber:: $(SUBMAKEFILES)
 	rm -rf $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
-realclean clobber_all::
+realclean clobber_all:: $(SUBMAKEFILES)
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
-distclean::
+distclean:: $(SUBMAKEFILES)
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH) $(wildcard *.map) \
 	Makefile config.log config.cache depend.mk .md .deps .HSancillary _xpidlgen
 	+$(LOOP_OVER_DIRS)
@@ -700,10 +696,11 @@ endif
 ###############################################################################
 # Update Makefiles
 ###############################################################################
-#
 Makefile: Makefile.in
-	@echo Updating $@
-	$(topsrcdir)/build/autoconf/update-makefile.sh
+	$(topsrcdir)/build/autoconf/make-makefile
+
+$(SUBMAKEFILES): % : %.in
+	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile $@
 
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
@@ -1206,13 +1203,13 @@ MKDEPEND_BUILTIN =
 endif
 
 ifdef OBJS
-depend::  $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
+depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
 else
-depend::
+depend:: $(SUBMAKEFILES)
 endif
 	+$(LOOP_OVER_DIRS)
 
-dependclean::
+dependclean:: $(SUBMAKEFILES)
 	rm -f $(MKDEPENDENCIES)
 	+$(LOOP_OVER_DIRS)
 
@@ -1221,9 +1218,18 @@ dependclean::
 endif # ! COMPILER_DEPEND
 
 #############################################################################
-# Yet another depend system: -MD
+# Yet another depend system: -MD (configure switch: --enable-md)
 ifdef COMPILER_DEPEND
 ifdef OBJS
+# MDDEPDIR is the subdirectory where all the dependency files are placed.
+#   This uses a make rule (instead of a macro) to support parallel
+#   builds (-jN). If this were done in the LOOP_OVER_DIRS macro, two
+#   processes could simultaneously try to create the same directory.
+#
+$(MDDEPDIR):
+	@if test ! -d $@; then \
+	  echo Creating $@; rm -rf $@; mkdir $@; \
+	else true; fi
 MDDEPEND_FILES := $(wildcard $(MDDEPDIR)/*.pp)
 ifdef MDDEPEND_FILES
 ifdef PERL
@@ -1291,7 +1297,7 @@ FORCE:
 
 tags: TAGS
 
-TAGS: $(CSRCS) $(CPPSRCS) $(wildcard *.h)
+TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	+$(LOOP_OVER_DIRS)
 
