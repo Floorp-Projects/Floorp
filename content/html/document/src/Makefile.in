@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  uconv \
 		  pref \
 		  uriloader \
+		  prefetch \
 		  rdf \
 		  chardet \
 		  nkcache \

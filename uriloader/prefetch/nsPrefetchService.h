@@ -42,8 +42,6 @@
 #include "nsIGenericFactory.h"
 #include "nsIObserver.h"
 #include "nsIWebProgressListener.h"
-#include "nsIElementObserver.h"
-#include "nsIHttpNotify.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
@@ -59,8 +57,6 @@ class nsPrefetchNode;
 //-----------------------------------------------------------------------------
 
 class nsPrefetchService : public nsIPrefetchService
-                        , public nsIHttpNotify
-                        , public nsIElementObserver
                         , public nsIWebProgressListener
                         , public nsIObserver
                         , public nsSupportsWeakReference
@@ -68,7 +64,6 @@ class nsPrefetchService : public nsIPrefetchService
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPREFETCHSERVICE
-    NS_DECL_NSIHTTPNOTIFY
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIOBSERVER
 
@@ -78,31 +73,6 @@ public:
     nsresult Init();
     void     ProcessNextURI();
 
-    // nsIElementObserver methods
-    NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag,
-                      PRUint32 numOfAttributes, const PRUnichar* nameArray[],
-                      const PRUnichar* valueArray[]);
-    NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag,
-                      PRUint32 numOfAttributes, const PRUnichar* nameArray[],
-                      const PRUnichar* valueArray[]);
-    NS_IMETHOD Notify(nsISupports* aWebShell,
-                      nsISupports* aChannel,
-                      const PRUnichar* aTag,
-                      const nsStringArray* aKeys,
-                      const nsStringArray* aValues,
-                      const PRUint32 aFlags);
-
-    // XPCOM component registration methods
-    static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
-                                  nsIFile *aPath,
-                                  const char *registryLocation,
-                                  const char *componentType,
-                                  const nsModuleComponentInfo *info);
-    static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
-                                    nsIFile *aPath,
-                                    const char *registryLocation,
-                                    const nsModuleComponentInfo *info);
-
 private:
 
     nsresult EnqueueURI(nsIURI *aURI);
@@ -110,11 +80,11 @@ private:
     void     EmptyQueue();
     void     StartPrefetching();
     void     StopPrefetching();
-    nsresult GetDocumentCharset(nsISupports *aWebshell, nsACString &);
 
     nsPrefetchNode      *mQueueHead;
     nsPrefetchNode      *mQueueTail;
     nsCOMPtr<nsIChannel> mCurrentChannel;
+    PRInt32              mStopCount;
     PRBool               mDisabled;
 };
 

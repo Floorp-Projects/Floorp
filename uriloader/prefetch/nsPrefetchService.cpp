@@ -44,14 +44,11 @@
 #include "nsIDocCharset.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
-#include "nsINetModuleMgr.h"
 #include "nsICachingChannel.h"
 #include "nsICacheVisitor.h"
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
-#include "nsIParserService.h"
-#include "nsParserCIID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -75,8 +72,6 @@ static PRLogModuleInfo *gPrefetchLog;
 #define LOG_ENABLED() PR_LOG_TEST(gPrefetchLog, 4)
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
-static NS_DEFINE_IID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREFSERVICE_CID);
 
 //-----------------------------------------------------------------------------
@@ -95,50 +90,6 @@ PRTimeToSeconds(PRTime t_usec)
 }
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
-
-//
-// parses an attribute value pair (e.g., attr=value).  allows
-// double-quotation marks surrounding value.  input must be null
-// terminated, and will be updated to point past the attribute
-// value pair on success or the next whitespace character or comma
-// on failure.
-// 
-static PRBool
-ParseAttrValue(const char *&input,
-               const char *&ab,
-               const char *&ae,
-               const char *&vb,
-               const char *&ve)
-{
-    const char *p = PL_strpbrk(input, " \t=,");
-    if (!p) {
-        input += strlen(input);
-        return PR_FALSE;
-    }
-    if (*p == ',' || *p == ' ' || *p == '\t') {
-        input = p;
-        return PR_FALSE;
-    }
-
-    // else, we located the equals sign...
-    ab = input;
-    ae = p;
-    vb = p+1;
-
-    if (*vb == '"')
-        ++vb;
-
-    ve = PL_strpbrk(p+1, " \t,");
-    if (!ve)
-        ve = input + strlen(input);
-    input = ve;
-
-    // only ignore trailing quote if there was a leading one
-    if (ve > vb && *(vb-1) == '"' && *(ve-1) == '"')
-        --ve;
-
-    return PR_TRUE;
-}
 
 //-----------------------------------------------------------------------------
 // nsPrefetchListener <public>
@@ -247,6 +198,7 @@ nsPrefetchListener::OnStopRequest(nsIRequest *aRequest,
 nsPrefetchService::nsPrefetchService()
     : mQueueHead(nsnull)
     , mQueueTail(nsnull)
+    , mStopCount(0)
     , mDisabled(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
@@ -266,12 +218,6 @@ nsPrefetchService::Init()
     if (!gPrefetchLog)
         gPrefetchLog = PR_NewLogModule("nsPrefetch");
 #endif
-
-    static const eHTMLTags watchTags[] =
-    { 
-        eHTMLTag_link,
-        eHTMLTag_unknown
-    };
 
     nsresult rv;
 
@@ -298,67 +244,12 @@ nsPrefetchService::Init()
 
     rv = observerServ->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
-
-    // Register as an observer for HTTP headers
-    nsCOMPtr<nsINetModuleMgr> netModuleMgr(do_GetService(kNetModuleMgrCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = netModuleMgr->RegisterModule(
-            NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_CONTRACTID, this);
-    if (NS_FAILED(rv)) return rv;
-
-    // Register as an observer for HTML "link" tags
-    nsCOMPtr<nsIParserService> parserServ(do_GetService(kParserServiceCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = parserServ->RegisterObserver(this, NS_LITERAL_STRING("text/html"), watchTags);
-    if (NS_FAILED(rv)) return rv;
             
     // Register as an observer for the document loader  
     nsCOMPtr<nsIWebProgress> progress(do_GetService(kDocLoaderServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     return progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
-}
-
-//
-// we register ourselves with the parser service category to ensure that
-// we'll be initialized before the first page is read.
-//
-NS_METHOD
-nsPrefetchService::RegisterProc(nsIComponentManager *aCompMgr,
-                                nsIFile *aPath,
-                                const char *registryLocation,
-                                const char *componentType,
-                                const nsModuleComponentInfo *info)
-{
-    nsCOMPtr<nsICategoryManager> catman(
-            do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
-    if (catman) {
-        nsXPIDLCString prevEntry;
-        catman->AddCategoryEntry("parser-service-category",
-                                 NS_PREFETCHSERVICE_CLASSNAME,
-                                 NS_PREFETCHSERVICE_CONTRACTID,
-                                 PR_TRUE, PR_TRUE,
-                                 getter_Copies(prevEntry));
-    }
-    return NS_OK;
-
-}
-
-NS_METHOD
-nsPrefetchService::UnregisterProc(nsIComponentManager *aCompMgr,
-                                  nsIFile *aPath,
-                                  const char *registryLocation,
-                                  const nsModuleComponentInfo *info)
-{
-    nsCOMPtr<nsICategoryManager> catman(
-            do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
-    if (catman)
-        catman->DeleteCategoryEntry("parser-service-category", 
-                                    NS_PREFETCHSERVICE_CONTRACTID,
-                                    PR_TRUE);
-    return NS_OK;
 }
 
 void
@@ -453,49 +344,45 @@ nsPrefetchService::EmptyQueue()
 void
 nsPrefetchService::StartPrefetching()
 {
-    LOG(("StartPrefetching\n"));
+    //
+    // at initialization time we might miss the first DOCUMENT START
+    // notification, so we have to be careful to avoid letting our
+    // stop count go negative.
+    //
+    if (mStopCount > 0)
+        mStopCount--;
 
-    if (!mCurrentChannel)
+    LOG(("StartPrefetching [stopcount=%d]\n", mStopCount));
+
+    // only start prefetching after we've received enough DOCUMENT
+    // STOP notifications.  we do this inorder to defer prefetching
+    // until after all sub-frames have finished loading.
+    if (mStopCount == 0 && !mCurrentChannel)
         ProcessNextURI();
 }
 
 void
 nsPrefetchService::StopPrefetching()
 {
-    LOG(("StopPrefetching\n"));
+    mStopCount++;
 
-    if (mCurrentChannel) {
-        mCurrentChannel->Cancel(NS_BINDING_ABORTED);
-        mCurrentChannel = nsnull;
-    }
+    LOG(("StopPrefetching [stopcount=%d]\n", mStopCount));
 
+    // only kill the prefetch queue if we've actually started prefetching.
+    if (!mCurrentChannel)
+        return;
+
+    mCurrentChannel->Cancel(NS_BINDING_ABORTED);
+    mCurrentChannel = nsnull;
     EmptyQueue();
-}
-
-nsresult
-nsPrefetchService::GetDocumentCharset(nsISupports *aWebshell, nsACString &aCharset)
-{
-    nsresult rv;
-    nsCOMPtr<nsIDocCharset> docCharset(do_QueryInterface(aWebshell, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLString uCharset;
-    rv = docCharset->GetCharset(getter_Copies(uCharset));
-    if (NS_FAILED(rv)) return rv;
-
-    CopyUCS2toASCII(uCharset, aCharset);
-    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS7(nsPrefetchService,
+NS_IMPL_ISUPPORTS4(nsPrefetchService,
                    nsIPrefetchService,
-                   nsIHttpNotify,
-                   nsINetNotify,
-                   nsIElementObserver,
                    nsIWebProgressListener,
                    nsIObserver,
                    nsISupportsWeakReference)
@@ -583,139 +470,6 @@ nsPrefetchService::PrefetchURI(nsIURI *aURI)
     }
 
     return EnqueueURI(aURI);
-}
-
-//-----------------------------------------------------------------------------
-// nsPrefetchService::nsIHttpNotify
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsPrefetchService::OnModifyRequest(nsIHttpChannel *aHttpChannel)
-{
-    // ignored
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchService::OnExamineResponse(nsIHttpChannel *aHttpChannel)
-{
-    // look for Link: rel=next href=http://foo.com/blah
-    
-    nsCAutoString linkVal;
-    aHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("link"), linkVal);
-    if (!linkVal.IsEmpty()) {
-        LOG(("nsPrefetchService::OnExamineResponse [Link: %s]\n", linkVal.get()));
-
-        // verify rel=next or rel="next" and extract href value
-
-        const char *it = linkVal.get();
-        const char *hrefBeg = nsnull;
-        const char *hrefEnd = nsnull;
-        PRBool haveRelNext = PR_FALSE;
-
-        for (; *it; ++it) {
-            if (*it == ',') {
-                haveRelNext = PR_FALSE;
-                hrefBeg = nsnull;
-                hrefEnd = nsnull;
-            }
-            // skip over whitespace
-            if (*it != ' ' && *it != '\t' && !(haveRelNext && hrefBeg)) {
-                // looking for attribute=value
-                const char *attrBeg, *attrEnd, *valBeg, *valEnd;
-                if (ParseAttrValue(it, attrBeg, attrEnd, valBeg, valEnd)) {
-                    if (!haveRelNext && !PL_strncasecmp(attrBeg, "rel", attrEnd - attrBeg))
-                        haveRelNext = PR_TRUE;
-                    else if (!hrefBeg && !PL_strncasecmp(attrBeg, "href", attrEnd - attrBeg)) {
-                        hrefBeg = valBeg;
-                        hrefEnd = valEnd;
-                    }
-                }
-                if (haveRelNext && hrefBeg) {
-                    // ok, we got something to prefetch...
-                    nsCOMPtr<nsIURI> uri, baseURI;
-                    aHttpChannel->GetURI(getter_AddRefs(baseURI));
-                    NS_NewURI(getter_AddRefs(uri),
-                              Substring(hrefBeg, hrefEnd),
-                              nsnull, baseURI);
-                    if (uri)
-                        PrefetchURI(uri);
-                }
-                continue; // do not increment
-            }
-        }
-    }
-
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsPrefetchService::nsIElementObserver
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsPrefetchService::Notify(PRUint32 aDocumentID, eHTMLTags aTag,
-                          PRUint32 numOfAttributes, const PRUnichar* nameArray[],
-                          const PRUnichar* valueArray[])
-{
-    // ignored
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchService::Notify(PRUint32 aDocumentID, const PRUnichar* aTag,
-                          PRUint32 numOfAttributes, const PRUnichar* nameArray[],
-                          const PRUnichar *valueArray[])
-{
-    // ignored
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchService::Notify(nsISupports *aWebShell,
-                          nsISupports *aChannel,
-                          const PRUnichar *aTag,
-                          const nsStringArray *aKeys,
-                          const nsStringArray *aValues,
-                          const PRUint32 aFlags)
-{
-    LOG(("nsPrefetchService::Notify\n"));
-
-    PRInt32 count = aKeys->Count();
-
-    nsCOMPtr<nsIURI> uri;
-    PRBool relNext = PR_FALSE;
-
-    // check for <link rel=next href="http://blah">
-    for (PRInt32 i=0; i<count; ++i) {
-        nsString *key = aKeys->StringAt(i);
-        if (!relNext && key->EqualsIgnoreCase("rel")) {
-            if (aValues->StringAt(i)->EqualsIgnoreCase("next")) {
-                relNext = PR_TRUE;
-                if (uri)
-                    break;
-            }
-        }
-        else if (!uri && key->EqualsIgnoreCase("href")) {
-            nsCOMPtr<nsIURI> baseURI;
-            nsCOMPtr<nsIChannel> channel(do_QueryInterface(aChannel));
-            if (channel) {
-                channel->GetURI(getter_AddRefs(baseURI));
-                // need to pass document charset to necko...
-                nsCAutoString docCharset;
-                GetDocumentCharset(aWebShell, docCharset);
-                NS_NewURI(getter_AddRefs(uri), *aValues->StringAt(i),
-                          docCharset.IsEmpty() ? nsnull : docCharset.get(),
-                          baseURI);
-                if (uri && relNext)
-                    break;
-            }
-        }
-    }
-
-    if (relNext && uri)
-        PrefetchURI(uri);
-    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
