@@ -103,8 +103,8 @@ static CTokenRecycler gTokenRecycler;
  ***************************************************************/
 class CTagHandlerDeallocator: public nsDequeFunctor{
 public:
-  virtual void* operator()(void* anObject) {
-    nsITagHandler* tagHandler =(nsITagHandler*)anObject;
+  virtual void* operator()(void* aObject) {
+    nsITagHandler*  tagHandler = (nsITagHandler*)aObject;
     delete tagHandler;
     return 0;
   }
@@ -115,29 +115,23 @@ public:
   check for a Tag name, and setting the current TagHandler when it is reached
  ***************************************************************/
 class CTagFinder: public nsDequeFunctor{
+
 public:
-  CTagFinder(){mTagName = nsnull;}
-  void Initialize(nsAutoString* aTagName) {mTagName = aTagName;}
+  CTagFinder(){}
+  void Initialize(const nsString &aTagName) {mTagName = aTagName;}
 
   virtual ~CTagFinder() {
   }
 
-  virtual void* operator()(void* anObject) 
-  {
-  nsITagHandler* thetaghandler;
-  nsAutoString  *thestring;
-
-    //mCurTagHandler = 0;
-    thestring = ((nsITagHandler*)anObject)->GetString();
-    if( thestring->Equals(*mTagName)){
-      //thetaghandler = (nsITagHandler*)anObject;
-      return anObject;
-      }
+  virtual void* operator()(void* aObject) {
+    nsString* theString = ((nsITagHandler*)aObject)->GetString();
+    if( theString->Equals(mTagName)){
+      return aObject;
+    }
     return(0); 
-   }
+  }
 
-  nsAutoString*  mTagName;
-  //nsITagHandler* mCurTagHandler;
+  nsAutoString  mTagName;
 };
 
 /***************************************************************
@@ -151,29 +145,32 @@ public:
   CTagHandlerRegister() : mDeallocator(), mTagHandlerDeque(mDeallocator) {
   }
 
-  ~CTagHandlerRegister() {
-  }
 
-  void RegisterTagHandler(nsAutoString *aTagName,nsITagHandler *aTagHandler){
-    aTagHandler->SetString(aTagName);
+  void RegisterTagHandler(nsITagHandler *aTagHandler){
     mTagHandlerDeque.Push(aTagHandler);
   }
   
-  nsITagHandler*  FindTagHandler(nsAutoString* aTagName){
-    nsITagHandler *foundhandler = nsnull;
+  nsITagHandler*  FindTagHandler(const nsString &aTagName){
+    nsITagHandler* foundHandler = nsnull;
+
     mTagFinder.Initialize(aTagName);
     mTagHandlerDeque.Begin();
-    foundhandler = (nsITagHandler*) mTagHandlerDeque.FirstThat(mTagFinder);
-    return foundhandler;
+    foundHandler = (nsITagHandler*) mTagHandlerDeque.FirstThat(mTagFinder);
+    return foundHandler;
   }
 
   CTagHandlerDeallocator  mDeallocator;
   nsDeque                 mTagHandlerDeque;
   CTagFinder              mTagFinder;
-
 };
 
 
+/************************************************************************
+  The CTagHandlerRegister for a CNavDTD.
+  This is where special taghanders for our tags can be managed and called from
+  Note:  This can also be attached to some object so it can be refcounted 
+  and destroyed if you want this to go away when not imbedded.
+ ************************************************************************/
 CTagHandlerRegister gTagHandlerRegister;
 
 
@@ -485,11 +482,6 @@ nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
  */
 nsresult CNavDTD::HandleToken(CToken* aToken){
   nsresult result=NS_OK;
-
-  // test and example of finding the tag handler
-  //nsAutoString* findstring = new nsAutoString(aToken->GetStringValueXXX());
-  //nsITagHandler* taghandler = gTagHandlerRegister.FindTagHandler(findstring);
-
 
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
