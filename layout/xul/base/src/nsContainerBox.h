@@ -61,10 +61,10 @@ public:
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild);
+  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
   virtual nsIBox* GetBoxAt(PRInt32 aIndex);
   virtual nsIBox* GetBox(nsIFrame* aFrame);
-  virtual PRInt32 GetIndexOf(nsIBox* aBox);
   virtual PRInt32 GetChildCount();
   virtual void ClearChildren(nsBoxLayoutState& aState);
   virtual PRInt32 CreateBoxList(nsBoxLayoutState& aState, nsIFrame* aList, nsIBox*& first, nsIBox*& last);

@@ -92,7 +92,7 @@ nsSprocketLayout::nsSprocketLayout()
 }
 
 PRBool 
-nsSprocketLayout::IsHorizontal(nsIBox* aBox) const
+nsSprocketLayout::IsHorizontal(nsIBox* aBox)
 {
    nsIFrame* frame = nsnull;
    aBox->GetFrame(&frame);

@@ -99,6 +99,7 @@ public:
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
   NS_IMETHOD DumpBox(FILE* out);
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust);
+  NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
   nsBox(nsIPresShell* aShell);
 
@@ -122,6 +123,7 @@ public:
   static nsresult CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide);
 
   static void BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize);
+  static void BoundsCheck(nscoord& aMinSize, nscoord& aPrefSize, nscoord& aMaxSize);
 
 protected:
 

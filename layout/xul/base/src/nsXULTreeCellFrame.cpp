@@ -46,7 +46,15 @@
 #include "nsIMonument.h"
 #include "nsIBoxLayout.h"
 #include "nsMonumentLayout.h"
+
+#ifdef MOZ_GRID2
+#include "nsGrid.h"
+#include "nsGridRow.h"
+#else
+#include "nsGridLayout.h"
 #include "nsTempleLayout.h"
+#endif
+
 
 
 //
@@ -126,8 +134,19 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // Now find the nth column in the other temple.
         nsCOMPtr<nsIBox> box(do_QueryInterface(mParent));
         nsCOMPtr<nsIBoxLayout> lm;
+
+#ifdef MOZ_GRID2
+        box->GetLayoutManager(getter_AddRefs(lm));
+        nsCOMPtr<nsIGridPart> part(do_QueryInterface(lm));
+
+        nsGrid* grid;
+        PRInt32 index;
+        part->GetGrid(box, &grid, &index);
+        nsIBox* splitBox = grid->GetColumnAt(i)->GetBox();
+#else
         box->GetLayoutManager(getter_AddRefs(lm));
         nsCOMPtr<nsIMonument> mon(do_QueryInterface(lm));
+
         nsTempleLayout* temple = nsnull;
         nsIBox* templeBox = nsnull;
         mon->GetOtherTemple(box, &temple, &templeBox);
@@ -139,7 +158,7 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         PRInt32 currIndex = 0;
         if (left)
           i--;
-
+ 
         do {
           if (i < 0) break;
 
@@ -156,6 +175,8 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         nsIBox* splitBox = nsnull;
         if (child) 
           child->GetNextBox(&splitBox);
+#endif
+
         nsIFrame* splitter = nsnull;
         if (splitBox)
           splitBox->QueryInterface(NS_GET_IID(nsIFrame), (void**)&splitter); 

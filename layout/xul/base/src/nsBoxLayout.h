@@ -60,6 +60,7 @@ public:
   NS_IMETHOD ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList);
   NS_IMETHOD ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   NS_IMETHOD ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
+  NS_IMETHOD ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   NS_IMETHOD ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState);
 
@@ -69,8 +70,8 @@ public:
   virtual void AddMargin(nsIBox* aChild, nsSize& aSize);
   virtual void AddMargin(nsSize& aSize, const nsMargin& aMargin);
 
-  virtual void AddLargestSize(nsSize& aSize, const nsSize& aToAdd);
-  virtual void AddSmallestSize(nsSize& aSize, const nsSize& aToAdd);
+  static void AddLargestSize(nsSize& aSize, const nsSize& aToAdd);
+  static void AddSmallestSize(nsSize& aSize, const nsSize& aToAdd);
 };
 
 #endif

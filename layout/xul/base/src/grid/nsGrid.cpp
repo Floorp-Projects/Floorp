@@ -50,7 +50,77 @@
 #include "nsGridRow.h"
 #include "nsGridCell.h"
 
-//------ nsGrid ----
+/*
+The grid control expands the idea of boxes from 1 dimension to 2 dimensions. 
+It works by allowing the XUL to define a collection of rows and columns and then 
+stacking them on top of each other. Here is and example.
+
+Example 1:
+
+<grid>
+   <columns>
+      <column/>
+      <column/>
+   </columns>
+
+   <rows>
+      <row/>
+      <row/>
+   </rows>
+</grid>
+
+example 2:
+
+<grid>
+   <columns>
+      <column flex="1"/>
+      <column flex="1"/>
+   </columns>
+
+   <rows>
+      <row>
+         <text value="hello"/>
+         <text value="there"/>
+      </row>
+   </rows>
+</grid>
+
+example 3:
+
+<grid>
+
+<rows>
+      <row>
+         <text value="hello"/>
+         <text value="there"/>
+      </row>
+   </rows>
+
+   <columns>
+      <column>
+         <text value="Hey I'm in the column and I'm on top!"/>
+      </column>
+      <column/>
+   </columns>
+
+</grid>
+
+The columns are first and the rows are second, so the rows will be drawn on top of the columns. 
+You can reverse this by defining the rows first.
+Other tags are then placed in the <row> or <column> tags causing the grid  to accommodate everyone.  
+It does this by creating 3 things: A cellmap, a row list, and a column list. The cellmap is a 2 
+dimensional array of nsGridCells. Each cell contains 2 boxes.  One cell from the column list 
+and one from the row list. When a cell is asked for its size it returns that smallest size it can 
+be to accommodate the 2 cells. Row lists and Column lists use the same data structure: nsGridRow. 
+Essentially a row and column are the same except a row goes alone the x axis and a column the y. 
+To make things easier and save code everything is written in terms of the x dimension. A flag is 
+passed in called "isRow" that can flip the calculations to the y axis.
+
+Usually the number of cells in a row match the number of columns, but not always. 
+It is possible to define 5 columns for a grid but have 10 cells in one of the rows. 
+In this case 5 extra columns will be added to the column list to handle the situation. 
+These are called extraColumns/Rows.
+*/
 
 nsGrid::nsGrid():mBox(nsnull),
                  mColumns(nsnull), 
@@ -74,6 +144,11 @@ nsGrid::~nsGrid()
     MOZ_COUNT_DTOR(nsGrid);
 }
 
+/*
+ * This is called whenever something major happens in the grid. And example 
+ * might be when many cells or row are added. It sets a flag signaling that 
+ * all the grids caches information should be recalculated.
+ */
 void
 nsGrid::NeedsRebuild(nsBoxLayoutState& aState)
 {
@@ -86,26 +161,34 @@ nsGrid::NeedsRebuild(nsBoxLayoutState& aState)
   // free the map
   FreeMap();
 
-  // tell all the rows and columns they are dirty
+  // find the new row and column box. They could have 
+  // been changed.
   FindRowsAndColumns(&mRowBox, &mColumnBox);
 
+  // tell all the rows and columns they are dirty
   DirtyRows(mRowBox, aState);
   DirtyRows(mColumnBox, aState);
 }
 
 
+/**
+ * Run through the rows in the given box and mark them dirty so they 
+ * will get recalculated and get a layout.
+ */
 void 
 nsGrid::DirtyRows(nsIBox* aRowBox, nsBoxLayoutState& aState)
 {
+  // make sure we prevent others from dirtying things.
   mMarkingDirty = PR_TRUE;
 
+  // if the box is a grid part have it recursively hand it.
   if (aRowBox) {
     nsCOMPtr<nsIBoxLayout> layout;
     aRowBox->GetLayoutManager(getter_AddRefs(layout));
     if (layout) {
-       nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
-       if (monument) 
-          monument->DirtyRows(aRowBox, aState);
+       nsCOMPtr<nsIGridPart> part( do_QueryInterface(layout) );
+       if (part) 
+          part->DirtyRows(aRowBox, aState);
     }
   }
 
@@ -129,13 +212,7 @@ nsGridRow* nsGrid::GetRows()
 nsGridRow*
 nsGrid::GetColumnAt(PRInt32 aIndex, PRBool aIsRow)
 {
-  RebuildIfNeeded();
-
-  if (aIsRow) {
-    NS_ASSERTION(aIndex < mColumnCount || aIndex >= 0, "Index out of range");
-    return &mColumns[aIndex];
-  } else
-    return GetRowAt(aIndex);
+  return GetRowAt(aIndex, !aIsRow);
 }
 
 nsGridRow*
@@ -147,7 +224,8 @@ nsGrid::GetRowAt(PRInt32 aIndex, PRBool aIsRow)
     NS_ASSERTION(aIndex < mRowCount || aIndex >= 0, "Index out of range");
     return &mRows[aIndex];
   } else {
-    return GetColumnAt(aIndex);
+    NS_ASSERTION(aIndex < mColumnCount || aIndex >= 0, "Index out of range");
+    return &mColumns[aIndex];
   }
 }
 
@@ -178,6 +256,9 @@ nsGrid::GetExtraRowCount(PRBool aIsRow)
     return mExtraColumnCount;
 }
 
+/**
+ * If we are marked for rebuild. Then build everything
+ */
 void
 nsGrid::RebuildIfNeeded()
 {
@@ -266,6 +347,9 @@ nsGrid::FreeMap()
   mColumnBox = nsnull;
 }
 
+/**
+ * finds the first <rows> and <columns> tags in the <grid> tag
+ */
 void
 nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
 {
@@ -317,6 +401,11 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
   }
 }
 
+/**
+ * Count the number of rows and columns in the given box. aRowCount well become the actual number
+ * rows defined in the xul. aComputedColumnCount will become the number of columns by counting the number
+ * of cells in each row.
+ */
 void
 nsGrid::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)
 {
@@ -333,6 +422,9 @@ nsGrid::CountRowsColumns(nsIBox* aRowBox, PRInt32& aRowCount, PRInt32& aComputed
 }
 
 
+/**
+ * Given the number of rows create nsGridRow objects for them and full them out.
+ */
 void
 nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsRow)
 {
@@ -364,6 +456,9 @@ nsGrid::BuildRows(nsIBox* aBox, PRBool aRowCount, nsGridRow** aRows, PRBool aIsR
 }
 
 
+/**
+ * Given the number of rows and columns. Build a cellmap
+ */
 void
 nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells)
 {
@@ -374,6 +469,10 @@ nsGrid::BuildCellMap(PRInt32 aRows, PRInt32 aColumns, nsGridCell** aCells)
     (*aCells) = new nsGridCell[size];
 }
 
+/** 
+ * Run through all the cells in the rows and columns and populate then with 2 cells. One from the row and one
+ * from the column
+ */
 void
 nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount, PRInt32 aColumnCount, PRBool aIsRow)
 {
@@ -423,7 +522,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, PRInt32 aRowCount
 
 /**
  * These methods return the preferred, min, max sizes for a given row index.
- * aIsRow is defaulted to PR_TRUE. If you pass PR_FALSE you will get the inverse.
+ * aIsRow if aIsRow is PR_TRUE. If you pass PR_FALSE you will get the inverse.
  * As if you called GetPrefColumnSize(aState, index, aPref)
  */
 nsresult
@@ -467,9 +566,9 @@ nsGrid::GetMaxRowSize(nsBoxLayoutState& aState, PRInt32 aRowIndex, nsSize& aSize
 }
 
 /**
- * These methods return the preferred, min, max coord for a given row index.
- * aIsRow is defaulted to PR_TRUE. If you pass PR_FALSE you will get the inverse.
- * As if you called GetPrefColumnHeight(aState, index, aPref)
+ * These methods return the preferred, min, max coord for a given row index if
+ * aIsRow is PR_TRUE. If you pass PR_FALSE you will get the inverse.
+ * As if you called GetPrefColumnHeight(aState, index, aPref).
  */
 nsresult
 nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aSize, PRBool aIsRow)
@@ -745,6 +844,10 @@ nsGrid::GetColumnCount(PRInt32 aIsRow)
   return GetRowCount(!aIsRow);
 }
 
+/**
+ * This is called if a child in a row became dirty. This happens if the child gets bigger or smaller
+ * in some way.
+ */
 void 
 nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aColumnIndex, PRBool aIsRow)
 { 
@@ -784,6 +887,10 @@ nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aCo
   mMarkingDirty = PR_FALSE;
 }
 
+/**
+ * The row became dirty. This happens if the row's borders change or children inside it
+ * force it to change size
+ */
 void 
 nsGrid::RowIsDirty(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
 {
@@ -793,6 +900,9 @@ nsGrid::RowIsDirty(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
   NeedsRebuild(aState);
 }
 
+/*
+ * a Cell in the given row or columns at the given index has had a child added or removed
+ */
 void 
 nsGrid::CellAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
 {
@@ -804,6 +914,9 @@ nsGrid::CellAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsR
   NeedsRebuild(aState);
 }
 
+/**
+ * A row or columns at the given index had been added or removed
+ */
 void 
 nsGrid::RowAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRow)
 {
@@ -814,24 +927,7 @@ nsGrid::RowAddedOrRemoved(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsRo
   NeedsRebuild(aState);
 }
 
-/*
-void
-nsGrid::PrintCellMap()
-{
-  printf("-----CellMap------\n");
-  for (int y=0; y < mRowCount; y++)
-  {
-    for (int x=0; x < mColumnCount; x++) 
-    {
-      nsGridCell* cell = GetCellAt(x,y);
-      //printf("(%d)@%p[@%p,@%p] ", y*mColumnCount+x, cell, cell->GetBoxInRow(), cell->GetBoxInColumn());
-      printf("p=%d, ", y*mColumnCount+x, cell, cell->GetBoxInRow(), cell->GetBoxInColumn());
-    }
-    printf("\n");
-  }
-}
-*/
-
+#ifdef DEBUG_grid
 void
 nsGrid::PrintCellMap()
 {
@@ -839,6 +935,7 @@ nsGrid::PrintCellMap()
   printf("-----Columns------\n");
   for (int x=0; x < mColumnCount; x++) 
   {
+   
     nsGridRow* column = GetColumnAt(x);
     printf("%d(pf=%d, mn=%d, mx=%d) ", x, column->mPref, column->mMin, column->mMax);
   }
@@ -852,18 +949,18 @@ nsGrid::PrintCellMap()
 
   printf("\n");
 
-
-
   /*
+  printf("-----CellMap------\n");
   for (int y=0; y < mRowCount; y++)
   {
     for (int x=0; x < mColumnCount; x++) 
     {
       nsGridCell* cell = GetCellAt(x,y);
+      //printf("(%d)@%p[@%p,@%p] ", y*mColumnCount+x, cell, cell->GetBoxInRow(), cell->GetBoxInColumn());
       printf("p=%d, ", y*mColumnCount+x, cell, cell->GetBoxInRow(), cell->GetBoxInColumn());
     }
     printf("\n");
   }
   */
 }
-
+#endif

@@ -232,25 +232,6 @@ nsContainerBox::GetBoxAt(PRInt32 aIndex)
     return nsnull;
 }
 
-PRInt32
-nsContainerBox::GetIndexOf(nsIBox* aBox)
-{
-   // find the frame to remove
-    nsIBox* child = mFirstChild;
-    PRInt32 count = 0;
-    while (child) 
-    {       
-      if (aBox == child) {
-          return count;
-      }
-
-      child->GetNextBox(&child);
-      count++;
-    }
-
-    return -1;
-}
-
 void
 nsContainerBox::Remove(nsBoxLayoutState& aState, nsIFrame* aFrame)
 {
@@ -411,7 +392,7 @@ nsContainerBox::InitChildren(nsBoxLayoutState& aState, nsIFrame* aList)
     CheckBoxOrder(aState);
 
     if (mLayoutManager)
-      mLayoutManager->ChildrenAppended(this, aState, mFirstChild);
+      mLayoutManager->ChildrenSet(this, aState, mFirstChild);
 
 }
 
@@ -744,4 +725,25 @@ nsContainerBox::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
     mFirstChild = oldNextSib;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContainerBox::GetIndexOf(nsIBox* aBox, PRInt32* aIndex)
+{
+    nsIBox* child = mFirstChild;
+    PRInt32 count = 0;
+    while (child) 
+    {       
+      if (aBox == child) {
+          *aIndex = count;
+          return NS_OK;
+      }
+
+      child->GetNextBox(&child);
+      count++;
+    }
+
+    *aIndex = -1;
+
+    return NS_OK;
 }

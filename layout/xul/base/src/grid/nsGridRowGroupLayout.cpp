@@ -42,6 +42,11 @@
 // See documentation in associated header file
 //
 
+
+/*
+ * The nsGridRowGroupLayout implements the <rows> or <columns> tag in a grid. 
+ */
+
 #include "nsGridRowGroupLayout.h"
 #include "nsIBox.h"
 #include "nsCOMPtr.h"
@@ -97,6 +102,14 @@ NS_IMETHODIMP
 nsGridRowGroupLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 { 
   nsresult rv = nsGridRowLayout::GetPrefSize(aBox, aState, aSize); 
+
+
+ /* It is possible that we could have some extra columns. This is when less columns in XUL were 
+  * defined that needed. And example might be a grid with 3 defined columns but a row with 4 cells in 
+  * it. We would need an extra column to make the grid work. But because that extra column does not 
+  * have a box associated with it we must add its size in manually. Remember we could have extra rows
+  * as well.
+  */
 
   nsGrid* grid = nsnull;
   PRInt32 index = 0;
@@ -183,6 +196,9 @@ nsGridRowGroupLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
   return nsGridRowLayout::Layout(aBox, aBoxLayoutState);
 }
 
+/*
+ * Scrollframes are tranparent. We should always walk down into them.
+ */
 nsIBox*
 nsGridRowGroupLayout::CheckForScrollFrame(nsIBox* aChild)
 {
@@ -199,6 +215,10 @@ nsGridRowGroupLayout::CheckForScrollFrame(nsIBox* aChild)
       return aChild;
 }
 
+
+/*
+ * Run down through our children dirtying them recursively.
+ */
 NS_IMETHODIMP
 nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
 {
@@ -271,6 +291,9 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
 }
 
 
+/**
+ * Fill out the given row structure recursively
+ */
 NS_IMETHODIMP
 nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
 { 

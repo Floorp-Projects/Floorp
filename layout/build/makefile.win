@@ -74,6 +74,9 @@ SUB_LIBRARIES=                          \
  $(DIST)\lib\layoutxulbase_s.lib        \
  $(DIST)\lib\contentshared_s.lib	\
  $(DIST)\lib\raptorxuloutliner_s.lib	\
+!ifdef MOZ_GRID2
+ $(DIST)\lib\raptorxulgrid_s.lib	\
+!endif
 !ifdef MOZ_MATHML
  $(DIST)\lib\layoutmathmlbase_s.lib     \
  $(DIST)\lib\layoutmathmlcontent_s.lib	\

@@ -67,14 +67,16 @@ nsGridLayout2::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   mGrid.SetBox(aBox);
   nsresult rv = nsStackLayout::Layout(aBox, aBoxLayoutState);
+#ifdef DEBUG_grid
   mGrid.PrintCellMap();
+#endif
   return rv;
 }
 
 NS_IMETHODIMP
 nsGridLayout2::GetGrid(nsIBox* aBox, nsGrid** aGrid, PRInt32* aIndex, nsGridRowLayout* aRequestor)
 {
-  mGrid.mBox = aBox;
+  mGrid.SetBox(aBox);
   *aGrid = &mGrid;
   return NS_OK;
 }

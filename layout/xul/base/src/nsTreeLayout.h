@@ -45,14 +45,23 @@
 #ifndef nsTreeLayout_h___
 #define nsTreeLayout_h___
 
+#ifdef MOZ_GRID2
+  #include "nsGridRowGroupLayout.h"
+#else
 #include "nsTempleLayout.h"
+#endif
+
 #include "nsXULTreeOuterGroupFrame.h"
 #include "nsXULTreeSliceFrame.h"
 
 class nsIBox;
 class nsBoxLayoutState;
 
+#ifdef MOZ_GRID2
+class nsTreeLayout : public nsGridRowGroupLayout
+#else
 class nsTreeLayout : public nsTempleLayout
+#endif
 {
 public:
   nsTreeLayout(nsIPresShell* aShell);
