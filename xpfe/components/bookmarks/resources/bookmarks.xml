@@ -1700,8 +1700,10 @@
             const kFilePicker = Components.classes[kFilePickerContractID].createInstance(kFilePickerIID);
             
             const kTitle = this._bundle.GetStringFromName("EnterExport");
+            const kRDFExportIndex = 2;
             kFilePicker.init(window, kTitle, kFilePickerIID["modeSave"]);
             kFilePicker.appendFilters(kFilePickerIID.filterHTML | kFilePickerIID.filterAll);
+            kFilePicker.appendFilter("RDF", "*.rdf");   // index 2: kRDFExportIndex
             kFilePicker.defaultString = "bookmarks.html";
             var fileName;
             if (kFilePicker.show() != kFilePickerIID.returnCancel) {
@@ -1720,7 +1722,9 @@
           catch(ex) {
             seln = this.rdf.GetResource("NC:BookmarksRoot").Value;
           }
-          var args = [{ property: this.NC_NS + "URL", literal: fileName}];
+          var args = [{ property: this.NC_NS + "URL", literal: fileName},
+            { property: this.RDF_NS + "type",
+              literal: (kFilePicker.filterIndex == kRDFExportIndex) ? "RDF" : "HTML"}];
           this.doBookmarksCommand(seln, this.NC_NS_CMD + "export", args);
         ]]></body>
       </method>

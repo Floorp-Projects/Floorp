@@ -217,6 +217,7 @@ public:
     NS_IMETHOD GetLoaded(PRBool* _result);
 	NS_IMETHOD Init(const char *uri);
 	NS_IMETHOD Flush();
+	NS_IMETHOD FlushTo(const char *aURI);
 	NS_IMETHOD Refresh(PRBool sync);
 	
 	// nsIObserver
@@ -344,6 +345,13 @@ LocalStoreImpl::Flush()
         return NS_ERROR_UNEXPECTED;
 
     return remote->Flush();
+}
+
+NS_IMETHODIMP
+LocalStoreImpl::FlushTo(const char *aURI)
+{
+  // Do not ever implement this (security)
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
