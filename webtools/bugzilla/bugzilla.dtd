@@ -5,7 +5,7 @@
 	maintainer CDATA #REQUIRED
 	exporter CDATA #IMPLIED
 >
-<!ELEMENT bug (bug_id, (exporter?, urlbase?, bug_status, product, priority, version, rep_platform, assigned_to, delta_ts, component, reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, op_sys, resolution?, bug_file_loc?, short_desc?, keywords*, status_whiteboard?, dependson*, blocks*, cc*, long_desc*, attachment*)?)>
+<!ELEMENT bug (bug_id, (bug_status, product, priority, version, rep_platform, assigned_to, delta_ts, component, reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, op_sys, resolution?, bug_file_loc?, short_desc?, keywords*, status_whiteboard?, dependson*, blocks*, cc*, long_desc*, attachment*)?)>
 <!ATTLIST bug
 	error (NotFound | NotPermitted | InvalidBugId) #IMPLIED
 >

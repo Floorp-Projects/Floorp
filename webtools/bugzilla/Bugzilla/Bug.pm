@@ -248,7 +248,7 @@ sub emitXML {
 
   $xml .= "<bug>\n";
 
-  foreach my $field ("bug_id", "urlbase", "bug_status", "product",
+  foreach my $field ("bug_id", "bug_status", "product",
       "priority", "version", "rep_platform", "assigned_to", "delta_ts", 
       "component", "reporter", "target_milestone", "bug_severity", 
       "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",

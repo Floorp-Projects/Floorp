@@ -140,6 +140,24 @@ if (exists $::FORM{'rebuildvotecache'}) {
 
 print "OK, now running sanity checks.<P>\n";
 
+# This one goes first, because if this is wrong, then the below tests
+# will probably fail too
+
+# This isn't extensible. Thats OK; we're not adding any more enum fields
+Status("Checking for invalid enumeration values");
+foreach my $field (("bug_severity", "bug_status", "op_sys",
+                    "priority", "rep_platform", "resolution")) {
+    # undefined enum values in mysql are an empty string which equals 0
+    SendSQL("SELECT bug_id FROM bugs WHERE $field=0 ORDER BY bug_id");
+    my @invalid;
+    while (MoreSQLData()) {
+        push (@invalid, FetchOneColumn());
+    }
+    if (@invalid) {
+        Alert("Bug(s) found with invalid $field value: ".join(', ',@invalid));
+    }
+}
+
 CrossCheck("keyworddefs", "id",
            ["keywords", "keywordid"]);
 
