@@ -70,6 +70,7 @@ INCLUDES	+= -I$(srcdir)/../src
 
 EXPORT_RESOURCE = \
 	$(srcdir)/strres.properties \
+	$(srcdir)/strres-test.html \
 	$(NULL)
 
 install::
