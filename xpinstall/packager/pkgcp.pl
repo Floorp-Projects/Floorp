@@ -45,6 +45,7 @@ use Getopt::Long;
 # initialize variables
 $saved_cwd        = cwd();
 $component        = "";		# current component being copied
+%components        = ();	# list of components to copy
 $PD               = "";		# file Path Delimiter ( /, \, or :)
 $altdest          = "";		# alternate file destination
 $line             = "";		# line being processed
@@ -60,10 +61,12 @@ $help             = 0;		# flag: if set, print usage
 
 
 # get command line options
-$return = GetOptions(	"source|s=s",           \$srcdir,
+$return = GetOptions(
+			"source|s=s",           \$srcdir,
 			"destination|d=s",      \$destdir,
 			"file|f=s",             \$package,
 			"os|o=s",               \$os,
+			"component|c=s",        \@components,
 			"help|h",               \$help,
 			"debug=i",              \$debug,
 			"verbose|v",            \$verbose,
@@ -114,16 +117,23 @@ LINE: while (<MANIFEST>) {
 
 	# it's a new component
 	/^\[/	&& do {
-			$component = $_;
 			($debug >= 10) && print "component.\n";
+			$component = $_;
 			do_component ();
 			next LINE;
 	};
 
 	# make sure a component is defined before doing any copies or deletes.
-	( $component eq "" ) &&
+	if (( $component eq "" ) && ($components eq "" )) {
 		die "Error: item $_ outside a component ($package, $lineno).  Exiting...\n";
+	}
 
+	# skip line if we're only copying specific components and outside
+	# those components
+	if (( $component eq "" ) && ($components ne "" )) {
+		($debug >= 10) && print "Not in specifed component.  Skipping $_\n";
+		next LINE;
+	}
 	if ($line eq "") {
 		$line = $_;				# if $line not set, set it.
 	}
@@ -416,6 +426,16 @@ sub do_component
 		die "Error: malformed component $component.  Exiting...\n";
 	$component =~ s/^\[(.*)\]/$1/;	# strip []
 
+	if ( $components ne "") {
+		if ( $components =~ /$component/ ) {
+			($debug >= 10) && print "Component $component is in $components.\n";
+		} else {
+			($debug >= 10) && print "Component $component not in $components.\n";
+			$component = "";
+			return;		# named specific components and this isn't it
+		}
+	}
+
 	if ($debug >= 1) {
 		print "[$component]\n";
 	}
@@ -488,22 +508,28 @@ sub check_arguments
 		$os = "MacOS";
 		$PD = ":";
 		fileparse_set_fstype ($os);
-		($debug >= 4) && print " OS: $os\n";
-		warn "Warning: MacOS not fully implemented/tested.\n";
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
 		$PD = "\\";
 		fileparse_set_fstype ($os);
-		($debug >= 4) && print " OS: $os\n";
-		warn "Warning: MSDOS not fully implemented/tested.\n";
 	} elsif ( $os =~ /unix/i ) {
 		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
 		$PD = "/";
 		fileparse_set_fstype ($os);
-		($debug >= 4) && print " OS: Unix\n";
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
 		$exitval += 16;
+	}
+
+	# turn components array into a string for regexp
+	if ( @components > 0 ) {
+		$components = join (",",@components);
+	} else {
+		$components = "";
+	}
+
+	if ($debug > 4) {
+		print ("source dir:\t$srcdir\ndest dir:\t$destdir\npackage:\t$package\nOS:\t$os\ncomponents:\t$components\n");
 	}
 
 	if ($exitval) {
@@ -511,6 +537,7 @@ sub check_arguments
 		print "Exiting...\n";
 		exit ($exitval);
 	}
+
 }
 
 
@@ -564,6 +591,13 @@ NOTE:	Source and destination directories must be absolute paths.
 		Specifies which type of system this is.  Used for parsing
 		file specifications from the package file.
 		Required.
+
+	-c, --component <component name>
+		Specifies a specific component in the package file to copy
+		rather than copying all the components in the package file.
+		Can be used more than once for multiple components (e.g.
+		"-c browser -c mail" to copy mail and news only).
+		Optional.
 
 	-h, --help
 		Prints this information.
