@@ -15,7 +15,6 @@
 #include "jsapi.h"
 #endif
 #include "nscore.h" // for PRUnichar
-#include "prtime.h" // for PRTime
 
 
 /* starting interface:    nsIRDFNode */
@@ -117,8 +116,8 @@ class nsIRDFDate : public nsIRDFNode {
     return iid;
   }
 
-  /* readonly attribute time Value; */
-  NS_IMETHOD GetValue(PRTime *aValue) = 0;
+  /* readonly attribute long long Value; */
+  NS_IMETHOD GetValue(PRInt64 *aValue) = 0;
 
   /* boolean EqualsDate (in nsIRDFDate aDate); */
   NS_IMETHOD EqualsDate(nsIRDFDate *aDate, PRBool *_retval) = 0;
@@ -451,8 +450,8 @@ class nsIRDFService : public nsISupports {
   /* nsIRDFLiteral GetLiteral (in wstring aValue); */
   NS_IMETHOD GetLiteral(const PRUnichar *aValue, nsIRDFLiteral **_retval) = 0;
 
-  /* nsIRDFDate GetDateLiteral (in time aValue); */
-  NS_IMETHOD GetDateLiteral(PRTime aValue, nsIRDFDate **_retval) = 0;
+  /* nsIRDFDate GetDateLiteral (in long long aValue); */
+  NS_IMETHOD GetDateLiteral(PRInt64 aValue, nsIRDFDate **_retval) = 0;
 
   /* nsIRDFInt GetIntLiteral (in long aValue); */
   NS_IMETHOD GetIntLiteral(PRInt32 aValue, nsIRDFInt **_retval) = 0;
