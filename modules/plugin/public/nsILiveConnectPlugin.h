@@ -37,6 +37,14 @@
 #include "nsIPlugin.h"
 #include "jni.h"        // standard JVM API
 
+#define NS_ILIVECONNECTPLUGIN_IID                    \
+{ /* cf134df0-a1bc-11d1-85b1-00805f0e4dfe */         \
+    0xcf134df0,                                      \
+    0xa1bc,                                          \
+    0x11d1,                                          \
+    {0x85, 0xb1, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
+}
+
 /** 
  * The nsILiveConnectPlugin interface defines additional entry points that a
  * plugin developer needs to implement in order for the plugin to support 
@@ -45,8 +53,9 @@
  * Plugin developers requiring this capability should implement this interface
  * in addition to the basic nsIPlugin interface.
  */
-class nsILiveConnectPlugin : public nsIPlugin {
+class nsILiveConnectPlugin : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILIVECONNECTPLUGIN_IID)
 
     /**
      * Returns the class of the Java instance to be associated with the
@@ -58,17 +67,8 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    GetJavaClass(jclass *resultingClass) = 0;
-
+    GetJavaClass(JNIEnv* env, jclass *resultingClass) = 0;
 };
-
-#define NS_ILIVECONNECTPLUGIN_IID                    \
-{ /* cf134df0-a1bc-11d1-85b1-00805f0e4dfe */         \
-    0xcf134df0,                                      \
-    0xa1bc,                                          \
-    0x11d1,                                          \
-    {0x85, 0xb1, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
