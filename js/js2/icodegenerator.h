@@ -235,7 +235,7 @@ namespace ICG {
         void resetTopRegister() { mTopRegister = 0; }
         void resetStatement()   { resetTopRegister(); }
 
-        TypedRegister allocateRegister(const StringAtom& name, JSType *type);
+        TypedRegister allocateRegister(JSType *type);
 
         JSType *findType(const StringAtom& typeName);
 
@@ -320,7 +320,7 @@ namespace ICG {
         
         TypedRegister allocateVariable(const StringAtom& name, JSType *type)
         { 
-            TypedRegister r = allocateRegister(name, type);
+            TypedRegister r = allocateRegister(type);
             variableList->add(name, r);
             return r;
         }
@@ -337,7 +337,7 @@ namespace ICG {
         
         TypedRegister allocateParameter(const StringAtom& name, bool isOptional, JSType *type)
         { 
-            TypedRegister r = allocateRegister(name, type);
+            TypedRegister r = allocateRegister(type);
             parameterList->add(name, r, isOptional);
             return r;
         }

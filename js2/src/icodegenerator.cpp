@@ -107,7 +107,7 @@ JSType *ICodeGenerator::findType(const StringAtom& typeName)
      variables' declarations are encountered. This wouldn't be necessary if a function
      presented a list of all variables, or a pre-pass executed to discover same.
 */
-TypedRegister ICodeGenerator::allocateRegister(const StringAtom& name, JSType *type) 
+TypedRegister ICodeGenerator::allocateRegister(JSType *type) 
 {
     Register r = mTopRegister;
     while (r < mPermanentRegister.size())
@@ -2332,7 +2332,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 while (c) {
                     // Bind the incoming exception ...
                     if (mExceptionRegister.first == NotABanana)
-                        mExceptionRegister = allocateRegister(mContext->getWorld().identifiers["__exceptionObject__"], &Any_Type);
+                        mExceptionRegister = allocateRegister(&Any_Type);
 
                     genStmt(c->stmt);
                     if (finallyLabel)
