@@ -34,6 +34,7 @@ install::
 	$(MAKE_INSTALL) NetSupportAlert.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheck.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportPassword.xul $(DISTBROWSWER)
+	$(MAKE_INSTALL) NetSupportPrompt.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) tooltip.js $(DISTBROWSWER)
 
@@ -51,5 +52,6 @@ clobber::
   rm -f $(DISTBROWSER)\NetSupportAlert.xul
   rm -f $(DISTBROWSER)\NetSupportConfirmCheck.xul
   rm -f $(DISTBROWSER)\NetSupportPassword.xul
+  rm -f $(DISTBROWSER)\NetSupportPrompt.xul
   rm -f $(DISTBROWSER)\NetSupportUserPassword.xul
   rm -f $(DISTBROWSER)\tooltip.js
