@@ -40,7 +40,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/wizardManager.properties \
 		$(srcdir)/wizardOverlay.dtd \
 		$(srcdir)/about.dtd \
-		$(srcdir)/PSMTaskMenu.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
