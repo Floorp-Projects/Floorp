@@ -236,7 +236,7 @@ nsPrefMigration* nsPrefMigration::mInstance = nsnull;
 nsPrefMigration *
 nsPrefMigration::GetInstance()
 {
-    if (mInstance == NULL) 
+    if (mInstance == nsnull) 
     {
         mInstance = new nsPrefMigration();
     }
@@ -264,6 +264,7 @@ PRBool ProfilesToMigrateCleanup(void* aElement, void *aData)
 nsPrefMigration::~nsPrefMigration()
 {
   mProfilesToMigrate.EnumerateForwards((nsVoidArrayEnumFunc)ProfilesToMigrateCleanup, nsnull);
+  mInstance = nsnull; 
 }
 
 
@@ -581,33 +582,45 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsCOMPtr<nsIFileSpec> oldMOVEMAILMailPath;
   nsCOMPtr<nsIFileSpec> newMOVEMAILMailPath;
 #endif /* HAVE_MOVEMAIL */
-  PRBool exists      = PR_FALSE, 
-         enoughSpace = PR_TRUE,
-         mailDriveDefault = PR_FALSE,
-         newsDriveDefault = PR_FALSE;
+  PRBool exists                  = PR_FALSE, 
+         enoughSpace             = PR_TRUE,
+         localMailDriveDefault   = PR_FALSE,
+         summaryMailDriveDefault = PR_FALSE,
+         newsDriveDefault        = PR_FALSE;
 
-  nsFileSpec tempMailSpec, 
-             tempNewsSpec, 
-             tempProfileSpec, tempNewProfileSpec;
+  nsFileSpec localMailSpec,
+             summaryMailSpec,
+             newsSpec, 
+             oldProfileSpec, newProfileSpec;
 
   PRInt32 serverType = POP_4X_MAIL_TYPE; 
   char *popServerName = nsnull;
 
-  PRUint32 totalMailSize = 0,
-           totalLocalMailSize = 0,
+  PRUint32 totalLocalMailSize = 0,
            totalSummaryFileSize = 0,
            totalNewsSize = 0, 
            totalProfileSize = 0,
            totalRequired = 0;
 
-  PRInt64  mailDrive = LL_Zero(),
-           newsDrive = LL_Zero(),
-           profileDrive = LL_Zero();
+
+  PRInt64  localMailDrive   = LL_Zero(),
+           summaryMailDrive = LL_Zero(),
+           newsDrive        = LL_Zero(),
+           profileDrive     = LL_Zero();
+
+  PRInt64  DriveID[MAX_DRIVES];
+  PRUint32 SpaceRequired[MAX_DRIVES];
   
 #if defined(NS_DEBUG)
   printf("*Entered Actual Migration routine*\n");
 #endif
 
+  for (int i=0; i < MAX_DRIVES; i++)
+  {
+    DriveID[i] = LL_Zero();
+    SpaceRequired[i] = 0;
+  }
+  
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
 
@@ -621,8 +634,8 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = ConvertPersistentStringToFileSpec(newProfilePathStr, newProfilePath);
   if (NS_FAILED(rv)) return rv;
 
-  oldProfilePath->GetFileSpec(&tempProfileSpec);
-  newProfilePath->GetFileSpec(&tempNewProfileSpec);
+  oldProfilePath->GetFileSpec(&oldProfileSpec);
+  newProfilePath->GetFileSpec(&newProfileSpec);
   
 
   /* initialize prefs with the old prefs.js file (which is a copy of the 4.x preferences file) */
@@ -674,13 +687,16 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   //
   // Start computing the sizes required for migration
   //
-  rv = GetSizes(tempProfileSpec, PR_TRUE, &totalProfileSize);
-  profileDrive = tempNewProfileSpec.GetDiskSpaceAvailable();
+  rv = GetSizes(oldProfileSpec, PR_TRUE, &totalProfileSize);
+  profileDrive = newProfileSpec.GetDiskSpaceAvailable();
 
   rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
   if (NS_FAILED(rv)) return rv;
            
   if (serverType == POP_4X_MAIL_TYPE) {
+    summaryMailDriveDefault = PR_TRUE; //summary files are only used in IMAP so just set it to true here.
+    summaryMailDrive = profileDrive;   //just set the drive for summary files to be the same as the new profile
+
     rv = NS_NewFileSpec(getter_AddRefs(newPOPMailPath));
     if (NS_FAILED(rv)) return rv;
 
@@ -696,11 +712,17 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       rv = oldPOPMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
 
-      mailDriveDefault = PR_TRUE;
+      rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldPOPMailPath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = newPOPMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      localMailDriveDefault = PR_TRUE;
     }
-    oldPOPMailPath->GetFileSpec(&tempMailSpec);
-    rv = GetSizes(tempMailSpec, PR_TRUE, &totalMailSize);
-    mailDrive = tempMailSpec.GetDiskSpaceAvailable();
+    oldPOPMailPath->GetFileSpec(&localMailSpec);
+    rv = GetSizes(localMailSpec, PR_TRUE, &totalLocalMailSize);
+    localMailDrive = localMailSpec.GetDiskSpaceAvailable();
   }
   else if(serverType == IMAP_4X_MAIL_TYPE) {
     rv = NS_NewFileSpec(getter_AddRefs(newIMAPLocalMailPath));
@@ -718,11 +740,19 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       
       rv = oldIMAPLocalMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
-
-      mailDriveDefault = PR_TRUE;
+    
+      rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldIMAPLocalMailPath);
+      if (NS_FAILED(rv)) return rv;
+     
+      rv = newIMAPLocalMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+      
+      localMailDriveDefault = PR_TRUE;
     }
-    oldIMAPLocalMailPath->GetFileSpec(&tempMailSpec);
-    rv = GetSizes(tempMailSpec, PR_TRUE, &totalLocalMailSize);
+
+    oldIMAPLocalMailPath->GetFileSpec(&localMailSpec);
+    rv = GetSizes(localMailSpec, PR_TRUE, &totalLocalMailSize);
+    localMailDrive = localMailSpec.GetDiskSpaceAvailable();
 
     /* Next get IMAP mail summary files location */
     rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
@@ -740,18 +770,26 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       rv = oldIMAPMailPath->AppendRelativeUnixPath(OLD_IMAPMAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
 
-      mailDriveDefault = PR_TRUE;
-    }
-    oldIMAPMailPath->GetFileSpec(&tempMailSpec);
-    rv = GetSizes(tempMailSpec, PR_TRUE, &totalSummaryFileSize);
-
-    mailDrive = tempMailSpec.GetDiskSpaceAvailable();
+      rv = SetPremigratedFilePref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPath);
+      if (NS_FAILED(rv)) return rv;   
       
-    totalMailSize = totalSummaryFileSize + totalLocalMailSize;
+      rv = newIMAPMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      summaryMailDriveDefault = PR_TRUE;
+    }
+
+    oldIMAPMailPath->GetFileSpec(&summaryMailSpec);
+    rv = GetSizes(summaryMailSpec, PR_TRUE, &totalSummaryFileSize);
+    summaryMailDrive = summaryMailSpec.GetDiskSpaceAvailable();
   }   
+
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
     printf("sorry, movemail not supported yet.\n");
+    
+    summaryMailDriveDefault = PR_TRUE;
+    summaryMailDrive = profileDrive;
 
     rv = NS_NewFileSpec(getter_AddRefs(newMOVEMAILMailPath));
     if (NS_FAILED(rv)) return rv;
@@ -767,13 +805,19 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
       rv = oldMOVEMAILMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
+      
+      rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldMOVEMAILMailPath);
+      if (NS_FAILED(rv)) return rv;
 
-      mailDriveDefault = PR_TRUE;
+      rv = newMOVEMAILMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      localMailDriveDefault = PR_TRUE;
     }
-    oldMOVEMAILMailPath->GetFileSpec(&tempMailSpec);
-    rv = GetSizes(tempMailSpec, PR_TRUE, &totalMailSize);
+    oldMOVEMAILMailPath->GetFileSpec(&localMailSpec);
+    rv = GetSizes(localMailSpec, PR_TRUE, &totalLocalMailSize);
 
-    mailDrive = tempMailSpec.GetDiskSpaceAvailable();
+    localMailDrive = localMailSpec.GetDiskSpaceAvailable();
    
   }    
 #endif //HAVE_MOVEMAIL
@@ -803,103 +847,39 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
       newsDriveDefault = PR_TRUE;
     }
-    oldNewsPath->GetFileSpec(&tempNewsSpec);
-    rv = GetSizes(tempNewsSpec, PR_TRUE, &totalNewsSize);
-    newsDrive = tempNewsSpec.GetDiskSpaceAvailable();
+    oldNewsPath->GetFileSpec(&newsSpec);
+    rv = GetSizes(newsSpec, PR_TRUE, &totalNewsSize);
+    newsDrive = newsSpec.GetDiskSpaceAvailable();
 
-    // Need to determine if the profile directory, mail directories and News
-    // directories are on the defaults or if they were reset by the user.
-    
-    if(newsDriveDefault && mailDriveDefault) // DEFAULT: All on the same drive
+    // 
+    // Compute the space needed to migrate the profile
+    //
+    if(newsDriveDefault && localMailDriveDefault && summaryMailDriveDefault) // DEFAULT: All on the same drive
     {
-      totalRequired = totalNewsSize + totalMailSize + totalProfileSize;
-      if(NS_FAILED(CheckForSpace(tempNewProfileSpec, totalRequired)))
-      {
+      totalRequired = totalNewsSize + totalLocalMailSize + totalSummaryFileSize + totalProfileSize;
+      rv = ComputeSpaceRequirements(DriveID, SpaceRequired, profileDrive, totalRequired);
+      if (NS_FAILED(rv))
         enoughSpace = PR_FALSE;
-      }
     }
     else
     {
-      if(mailDriveDefault) //news dir was reset by user
-      {
-        if(LL_EQ(newsDrive, profileDrive)) //custom news dir but on same drive as new profile
-        {
-          totalRequired = totalNewsSize + totalMailSize + totalProfileSize;
-          if (NS_FAILED(CheckForSpace(tempMailSpec,totalRequired)))
-            enoughSpace = PR_FALSE;
-        }
-        else
-        {
-          totalRequired = totalProfileSize + totalMailSize;
-          if (NS_FAILED(CheckForSpace(tempNewProfileSpec,totalRequired)))
-            enoughSpace = PR_FALSE;
-          if (NS_FAILED(CheckForSpace(tempNewsSpec,totalNewsSize)))
-            enoughSpace = PR_FALSE;
-        }
-      }
-      else if(newsDriveDefault) //mail dir was reset by user
-      {
-        if (LL_EQ(mailDrive, profileDrive)) //custom mail dir but on same drive as new profile
-        {
-          totalRequired = totalProfileSize + totalNewsSize + totalProfileSize;
-          if (NS_FAILED(CheckForSpace(tempNewProfileSpec,totalRequired)))
-            enoughSpace = PR_FALSE;
-        }
-        else
-        {
-          totalRequired = totalProfileSize + totalNewsSize;
-          if (NS_FAILED(CheckForSpace(tempNewProfileSpec, totalRequired)))
-            enoughSpace = PR_FALSE;
-          if (NS_FAILED(CheckForSpace(tempMailSpec,totalMailSize)))
-            enoughSpace = PR_FALSE;
-        }
-      }
-      else //mail and news dirs are both custom
-      {
-        if (LL_EQ(newsDrive, profileDrive) && LL_EQ(profileDrive, mailDrive))
-        {
-          totalRequired = totalProfileSize + totalNewsSize + totalMailSize;
-          if (NS_FAILED(CheckForSpace(tempNewProfileSpec, totalRequired)))
-            enoughSpace = PR_FALSE;
-        }
-        else if (LL_EQ(newsDrive, profileDrive)) //news dir is custom but is on same drive as new profile
-        {
-          totalRequired = totalNewsSize + totalProfileSize;
-          if(NS_FAILED(CheckForSpace(tempNewProfileSpec,totalRequired)))
-            enoughSpace = PR_FALSE;
-          if(NS_FAILED(CheckForSpace(tempMailSpec,totalMailSize)))
-            enoughSpace = PR_FALSE;
-        }
-        else if (LL_EQ(mailDrive, profileDrive)) //mail dir is custom but on same drive as new profile
-        {
-          totalRequired = totalNewsSize + totalProfileSize;
-          if(NS_FAILED(CheckForSpace(tempNewProfileSpec,totalRequired)))
-            enoughSpace = PR_FALSE;
-          if(NS_FAILED(CheckForSpace(tempNewsSpec,totalNewsSize)))
-            enoughSpace = PR_FALSE;
-        }
-        else if (LL_EQ(mailDrive, newsDrive)) //mail and news dirs are custom and together on a different drive from the profile
-        {
-          totalRequired = totalNewsSize + totalMailSize;
-          if(NS_FAILED(CheckForSpace(tempMailSpec,totalRequired)))
-            enoughSpace = PR_FALSE;
-          if(NS_FAILED(CheckForSpace(tempNewProfileSpec,totalProfileSize)))
-            enoughSpace = PR_FALSE;
-        }
-        else //mail and news dirs are custom all three dirs are on different drives
-        {
-          if(NS_FAILED(CheckForSpace(tempMailSpec,totalMailSize)))
-            enoughSpace = PR_FALSE;
-          if(NS_FAILED(CheckForSpace(tempNewsSpec,totalNewsSize)))
-            enoughSpace = PR_FALSE;
-          if(NS_FAILED(CheckForSpace(tempNewProfileSpec,totalProfileSize)))
-            enoughSpace = PR_FALSE;
-        }
-      }
+      rv = ComputeSpaceRequirements(DriveID, SpaceRequired, profileDrive, totalProfileSize);
+      if (NS_FAILED(rv))
+        enoughSpace = PR_FALSE;
+      rv = ComputeSpaceRequirements(DriveID, SpaceRequired, localMailDrive, totalLocalMailSize);
+      if (NS_FAILED(rv))
+        enoughSpace = PR_FALSE;
+      rv = ComputeSpaceRequirements(DriveID, SpaceRequired, summaryMailDrive, totalSummaryFileSize);
+      if (NS_FAILED(rv))
+        enoughSpace = PR_FALSE;
+      rv = ComputeSpaceRequirements(DriveID, SpaceRequired, newsDrive, totalNewsSize);
+      if (NS_FAILED(rv))
+        enoughSpace = PR_FALSE;
     }
+
     if (!enoughSpace)
     {
-      mErrorCode = 1; 
+      mErrorCode = RETRY; 
       return NS_OK;
     }
 
@@ -914,11 +894,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
   
   if (serverType == POP_4X_MAIL_TYPE) {
-    rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldPOPMailPath);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = newPOPMailPath->FromFileSpec(newProfilePath);
-    if (NS_FAILED(rv)) return rv;
 
     rv = newPOPMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
@@ -954,12 +929,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   }
   else if (serverType == IMAP_4X_MAIL_TYPE) {
       
-    rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldIMAPLocalMailPath);
-    if (NS_FAILED(rv)) return rv;
-     
-    rv = newIMAPLocalMailPath->FromFileSpec(newProfilePath);
-    if (NS_FAILED(rv)) return rv;
-      
+
     rv = newIMAPLocalMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
@@ -989,12 +959,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     }
 
     /* Now deal with the IMAP mail summary file location */
-    rv = SetPremigratedFilePref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPath);
-    if (NS_FAILED(rv)) return rv;   
-      
-    rv = newIMAPMailPath->FromFileSpec(newProfilePath);
-    if (NS_FAILED(rv)) return rv;
-
     rv = newIMAPMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
@@ -1019,13 +983,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
     printf("sorry, movemail not supported yet.\n");
-
-      
-    rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldMOVEMAILMailPath);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = newMOVEMAILMailPath->FromFileSpec(newProfilePath);
-    if (NS_FAILED(rv)) return rv;
 
     rv = newMOVEMAILMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
@@ -1445,28 +1402,36 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
         }
 }                       
 
-
-/*--------------------------------------------------------------------------
- * CheckForSpace checks the target drive for enough space
+/*---------------------------------------------------------------------------*
+ * ComputeSpaceRequirments
  *
- * INPUT: newProfilePath - The path to the new profile
- *        requiredSpace - The space needed on the new profile drive
- *
- * RETURNS: NS_OK if enough space is available
- *          NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE if there is not enough space
- *
- * Todo: you may want to change this proto from a float to a int64.
- *--------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------*/
 nsresult
-nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpace)
+nsPrefMigration::ComputeSpaceRequirements(PRInt64 DriveArray[MAX_DRIVES], 
+                                          PRUint32 SpaceReqArray[MAX_DRIVES], 
+                                          PRInt64 Drive, 
+                                          PRUint32 SpaceNeeded)
 {
-  nsFileSpec drive(newProfilePath);
-  PRInt64 availSpace = newProfilePath.GetDiskSpaceAvailable();
-  PRInt64 require64;
-  
-  LL_F2L(require64, requiredSpace);
-  if (LL_CMP(availSpace, <, require64))
+  int i=0;
+  PRFloat64 temp;
+
+  while(LL_NE(DriveArray[i],LL_Zero()) && LL_NE(DriveArray[i], Drive) && i < MAX_DRIVES)
+    i++;
+
+  if (LL_EQ(DriveArray[i], LL_Zero()))
+  {
+    DriveArray[i] = Drive;
+    SpaceReqArray[i] += SpaceNeeded;
+  }
+  else if (LL_EQ(DriveArray[i], Drive))
+    SpaceReqArray[i] += SpaceNeeded;
+  else
     return NS_ERROR_FAILURE;
+  
+  LL_L2F(temp, DriveArray[i]);
+  if (SpaceReqArray[i] > temp)
+    return NS_ERROR_FAILURE;
+  
   return NS_OK;
 }
 
