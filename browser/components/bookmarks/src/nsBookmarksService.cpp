@@ -100,7 +100,6 @@ nsIRDFResource      *kNC_BookmarksRoot;
 nsIRDFResource      *kNC_Description;
 nsIRDFResource      *kNC_Folder;
 nsIRDFResource      *kNC_FolderType;
-nsIRDFResource      *kNC_FolderGroup;
 nsIRDFResource      *kNC_IEFavorite;
 nsIRDFResource      *kNC_IEFavoriteFolder;
 nsIRDFResource      *kNC_Name;
@@ -236,8 +235,6 @@ bm_AddRefGlobals()
                           &kNC_Folder);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FolderType"),
                           &kNC_FolderType);
-        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FolderGroup"),
-                          &kNC_FolderGroup);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavorite"),
                           &kNC_IEFavorite);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
@@ -342,7 +339,6 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_Description);
         NS_IF_RELEASE(kNC_Folder);
         NS_IF_RELEASE(kNC_FolderType);
-        NS_IF_RELEASE(kNC_FolderGroup);
         NS_IF_RELEASE(kNC_IEFavorite);
         NS_IF_RELEASE(kNC_IEFavoriteFolder);
         NS_IF_RELEASE(kNC_IEFavoritesRoot);
@@ -583,7 +579,6 @@ static const char kNameEquals[]            = "NAME=\"";
 static const char kHREFEquals[]            = "HREF=\"";
 static const char kTargetEquals[]          = "TARGET=\"";
 static const char kAddDateEquals[]         = "ADD_DATE=\"";
-static const char kFolderGroupEquals[]     = "FOLDER_GROUP=\"";
 static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
 static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
 static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
@@ -1107,8 +1102,7 @@ BookmarkParser::gBookmarkHeaderFieldTable[] =
   { kIDEquals,                    NC_NAMESPACE_URI  "ID",                nsnull,  BookmarkParser::ParseResource,  nsnull },
   { kAddDateEquals,               NC_NAMESPACE_URI  "BookmarkAddDate",   nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kLastModifiedEquals,          WEB_NAMESPACE_URI "LastModifiedDate",  nsnull,  BookmarkParser::ParseDate,      nsnull },
-  { kFolderGroupEquals,           NC_NAMESPACE_URI  "FolderGroup",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
-  // Note: these last three are specially handled
+  // Note: these last two are specially handled
   { kNewBookmarkFolderEquals,     kURINC_NewBookmarkFolder,              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kNewSearchFolderEquals,       kURINC_NewSearchFolder,                nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kPersonalToolbarFolderEquals, kURINC_PersonalToolbarFolder,          nsnull,  BookmarkParser::ParseLiteral,   nsnull },
@@ -2650,28 +2644,6 @@ nsBookmarksService::CreateFolderInContainer(const PRUnichar* aName,
                                             nsIRDFResource** aResult)
 {
     nsresult rv = CreateFolder(aName, aResult);
-    if (NS_SUCCEEDED(rv))
-        rv = InsertResource(*aResult, aParentFolder, aIndex);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsBookmarksService::CreateGroup(const PRUnichar* aName, 
-                                nsIRDFResource** aResult)
-{
-    nsresult rv;
-    rv = CreateFolderInContainer(aName, nsnull, nsnull, aResult);
-    if (NS_SUCCEEDED(rv))
-        rv = mInner->Assert(*aResult, kNC_FolderGroup, kTrueLiteral, PR_TRUE);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsBookmarksService::CreateGroupInContainer(const PRUnichar* aName, 
-                                           nsIRDFResource* aParentFolder, PRInt32 aIndex,
-                                           nsIRDFResource** aResult)
-{
-    nsresult rv = CreateGroup(aName, aResult);
     if (NS_SUCCEEDED(rv))
         rv = InsertResource(*aResult, aParentFolder, aIndex);
     return rv;
@@ -5165,15 +5137,6 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     {
                         rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
                         rv |= strm->Write(kWebPanelsFolderEquals, sizeof(kWebPanelsFolderEquals)-1, &dummy);
-                        rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
-                        if (NS_FAILED(rv)) break;
-                    }
-
-                    if (NS_SUCCEEDED(rv = mInner->HasArcOut(child, kNC_FolderGroup, &hasType)) && 
-                        (hasType == PR_TRUE))
-                    {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
-                        rv |= strm->Write(kFolderGroupEquals, sizeof(kFolderGroupEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
                     }

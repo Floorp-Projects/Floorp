@@ -278,10 +278,6 @@ treechildren:-moz-tree-image(Name, open) {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
-treechildren:-moz-tree-twisty(group, hidetwisty) {
-  list-style-image: none;
-}
-
 treechildren:-moz-tree-image(Name, separator) {
   list-style-image: none;
   width: 0px !important;

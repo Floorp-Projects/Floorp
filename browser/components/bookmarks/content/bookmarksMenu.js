@@ -51,7 +51,6 @@ var BookmarksMenu = {
     element = document.createElementNS(XUL_NS, "menuitem");
     element.setAttribute("id", "openintabs-menuitem")
     element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
-    //element.setAttribute("class", "groupmark-item menuitem-iconic bookmark-item");
     element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
     element.setAttribute("oncommand", "BookmarksMenu.loadBookmark(event,event.target.parentNode.parentNode,this.database)");
     aTarget.appendChild(element);
@@ -77,8 +76,7 @@ var BookmarksMenu = {
   {
     var rParent = RDF.GetResource(aTarget.parentNode.id)
     var type = BookmarksUtils.resolveType(rParent);
-    if (type != "Folder" && type != "FolderGroup" &&
-        type != "PersonalToolbarFolder")
+    if (type != "Folder" && type != "PersonalToolbarFolder")
       return false;
     var count = 0;
     if (!aTarget.hasChildNodes())
@@ -222,7 +220,6 @@ var BookmarksMenu = {
     return (type == "BookmarkSeparator"     ||
             type == "Bookmark"              ||
             type == "Folder"                ||
-            type == "FolderGroup"           ||
             type == "PersonalToolbarFolder" ||
             aURI == "bookmarks-ptf")
   },
@@ -232,7 +229,7 @@ var BookmarksMenu = {
   isBTContainer: function (aTarget)
   {
     return  aTarget.localName == "menu" || (aTarget.localName == "toolbarbutton" &&
-           (aTarget.getAttribute("container") == "true" || aTarget.getAttribute("group") == "true"));
+           (aTarget.getAttribute("container") == "true"));
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -419,8 +416,7 @@ var BookmarksMenuDNDObserver = {
 
     // a drag start is fired when leaving an open toolbarbutton(type=menu) 
     // (see bug 143031)
-    if (this.isContainer(target) && 
-        target.getAttribute("group") != "true") {
+    if (this.isContainer(target)) {
       if (this.isPlatformNotSupported) 
         return;
       if (!aEvent.shiftKey && !aEvent.altKey && !aEvent.ctrlKey)
@@ -616,8 +612,7 @@ var BookmarksMenuDNDObserver = {
       return;
     // Load the current menu
     if (this.mCurrentDropPosition == BookmarksUtils.DROP_ON && 
-        this.isContainer(aTarget)             && 
-        aTarget.getAttribute("group") != "true")
+        this.isContainer(aTarget))
       aTarget.lastChild.showPopup(aTarget);
   },
 
