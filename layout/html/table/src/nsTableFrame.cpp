@@ -6853,7 +6853,8 @@ nsTableFrame::PaintBCBorders(nsPresContext*      aPresContext,
   }
 
   nscoord x = 0;
-  for (PRInt32 colX = leftCol; colX != rightCol; colX += colInc) {
+  PRInt32 colX;
+  for (colX = leftCol; colX != rightCol; colX += colInc) {
     nsTableColFrame* colFrame = firstInFlow->GetColFrame(colX);
     if (!colFrame) ABORT0();
     // conservatively estimate the half border widths outside the col
