@@ -356,7 +356,7 @@ nsCacheEntryDescriptor::GetSecurityInfo(nsISupports ** result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetProgressEventSink(nsIProgressEventSink ** result)
+nsCacheEntryDescriptor::GetNotificationCallbacks(nsIInterfaceRequestor **result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -366,10 +366,10 @@ nsCacheEntryDescriptor::GetProgressEventSink(nsIProgressEventSink ** result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetProgressEventSink(nsIProgressEventSink * progressEventSink)
+nsCacheEntryDescriptor::SetNotificationCallbacks(nsIInterfaceRequestor *requestor,
+                                                 PRBool isBackground)
 {
     if (!mCacheEntry)       return NS_ERROR_NOT_AVAILABLE;
-    if (!progressEventSink) return NS_ERROR_NULL_POINTER;
 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
