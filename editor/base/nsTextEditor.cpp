@@ -2137,6 +2137,8 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   PRUint32 count;
   if (!aRange || !aStartNode || !aEndNode || !aParent || !aPropName)
     return NS_ERROR_NULL_POINTER;
+
+  PRInt32 startOffset, endOffset;
   // create a style node for the text in the start parent
   nsCOMPtr<nsIDOMNode>parent;
 
@@ -2210,7 +2212,6 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
               nsCOMPtr<nsIContent>parentContent;
               parentContent = do_QueryInterface(parent);
               nsCOMPtr<nsIDOMNode>parentNode = do_QueryInterface(parent);
-              PRInt32 startOffset, endOffset;
               if (PR_TRUE==IsTextNode(node))
               {
                 startOffset = 0;
@@ -2249,12 +2250,15 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
       {   
         nodeAsChar->GetLength(&count);
         result = SetTextPropertiesForNode(startNode, parent, aStartOffset, count, aPropName, aAttribute, aValue);
+        startOffset = 0;
       }
       else 
       {
         nsCOMPtr<nsIDOMNode>grandParent;
         result = parent->GetParentNode(getter_AddRefs(grandParent));        
         result = SetTextPropertiesForNode(parent, grandParent, aStartOffset, aStartOffset+1, aPropName, aAttribute, aValue);
+        startNode = do_QueryInterface(parent);
+        startOffset = aStartOffset;
       }
 
 
@@ -2271,6 +2275,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
         {
           nodeAsChar->GetLength(&count);
           result = SetTextPropertiesForNode(endNode, parent, 0, aEndOffset, aPropName, aAttribute, aValue);
+          endOffset = aEndOffset;
         }
         else 
         {
@@ -2279,6 +2284,8 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
           nsCOMPtr<nsIDOMNode>grandParent;
           result = parent->GetParentNode(getter_AddRefs(grandParent));
           result = SetTextPropertiesForNode(parent, grandParent, aEndOffset-1, aEndOffset, aPropName, aAttribute, aValue);
+          endNode = do_QueryInterface(parent);
+          endOffset = 0;
         }
         if (NS_SUCCEEDED(result))
         {
@@ -2286,8 +2293,8 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
           result = nsEditor::GetSelection(getter_AddRefs(selection));
           if (NS_SUCCEEDED(result)) 
           {
-            selection->Collapse(aStartNode, aStartOffset);
-            selection->Extend(aEndNode, aEndOffset);
+            selection->Collapse(startNode, startOffset);
+            selection->Extend(endNode, aEndOffset);
           }
         }
       }
@@ -2916,7 +2923,7 @@ nsTextEditor::GetDocumentLength(PRInt32 *aCount)
   *aCount = 0;
   
   nsCOMPtr<nsIDOMSelection> sel;
-  GetSelection(getter_AddRefs(sel));
+  result = GetSelection(getter_AddRefs(sel));
   if ((NS_SUCCEEDED(result)) && sel)
   {
     nsAutoSelectionReset selectionResetter(sel);
