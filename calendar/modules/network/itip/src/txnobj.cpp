@@ -324,6 +324,15 @@ TransactionObject::executeIMIP(JulianPtrArray * out,
     }
     createContentTypeHeader(sMethod, sCharSet, sComponentType, sContentTypeHeader);
 
+     // added content-disposition to work with Lotus
+    if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VEVENT)
+    {
+      sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"event.ics\"";
+    }
+    else if (((ICalComponent *)m_ICalComponentVctr->GetAt(0))->GetType() == ICalComponent::ICAL_COMPONENT_VFREEBUSY)
+    {
+      sContentTypeHeader += "\r\nContent-Dispostion: inline; filename=\"freebusy.ifb\"";
+    }
 //#ifdef DEBUG_ITIP
     m_DebugITIPMessage = itipMessage;
 //#endif /* DEBUG_ITIP */
