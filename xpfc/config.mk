@@ -25,6 +25,8 @@ LD_LIBS += \
 	$(NATIVE_RAPTOR_WIDGET) \
 	xpcom$(MOZ_BITS) \
 	netlib \
+	$(NATIVE_MSG_COMM_LIB) \
+	$(NATIVE_SMTP_LIB) \
 	$(XP_REG_LIB)
 
 AR_LIBS += \
