@@ -146,7 +146,8 @@ NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
                       *out++ = 0xDC00 | (0x000003FF & mUcs4);
                     }
                  } else {
-                    *out++ = mUcs4;
+                    if( 0xfeff != mUcs4 ) // ignore BOM
+                      *out++ = mUcs4;
                  }
                  
 				 //initialize UTF8 cache
