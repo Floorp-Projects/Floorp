@@ -18,11 +18,13 @@
 
 #include "nsTextEditor.h"
 #include "nsHTMLEditor.h"
+#include "nsHTMLEditRules.h"
 #include "nsEditorEventListeners.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMSelection.h"
 #include "nsEditorCID.h"
 
 #include "nsIComponentManager.h"
@@ -96,6 +98,14 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   return result;
 }
 
+void  nsHTMLEditor::InitRules()
+{
+// instantiate the rules for this text editor
+// XXX: we should be told which set of rules to instantiate
+  mRules =  new nsHTMLEditRules();
+  mRules->Init(this);
+}
+
 NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty)
 {
   return nsTextEditor::SetTextProperty(aProperty);
@@ -123,7 +133,80 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 {
-  return nsTextEditor::InsertBreak();
+  nsresult result;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  result = nsEditor::BeginTransaction();
+  if (NS_FAILED(result)) { return result; }
+
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  result = mRules->WillInsertBreak(selection, &cancel);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    // create the new BR node
+    nsCOMPtr<nsIDOMNode> newNode;
+    nsAutoString tag("BR");
+    result = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    if (NS_SUCCEEDED(result) && newNode)
+    {
+      // set the selection to the new node
+      nsCOMPtr<nsIDOMNode>parent;
+      result = newNode->GetParentNode(getter_AddRefs(parent));
+      if (NS_SUCCEEDED(result) && parent)
+      {
+        PRInt32 offsetInParent=-1;  // we use the -1 as a marker to see if we need to compute this or not
+        nsCOMPtr<nsIDOMNode>nextNode;
+        newNode->GetNextSibling(getter_AddRefs(nextNode));
+        if (nextNode)
+        {
+          nsCOMPtr<nsIDOMCharacterData>nextTextNode;
+          nextTextNode = do_QueryInterface(nextNode);
+          if (!nextTextNode) {
+            nextNode = do_QueryInterface(newNode);
+          }
+          else { 
+            offsetInParent=0; 
+          }
+        }
+        else {
+          nextNode = do_QueryInterface(newNode);
+        }
+        result = nsEditor::GetSelection(getter_AddRefs(selection));
+        if (NS_SUCCEEDED(result))
+        {
+          if (-1==offsetInParent) 
+          {
+            nextNode->GetParentNode(getter_AddRefs(parent));
+            result = nsIEditorSupport::GetChildOffset(nextNode, parent, offsetInParent);
+            if (NS_SUCCEEDED(result)) {
+              selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
+            }
+          }
+          else
+          {
+            selection->Collapse(nextNode, offsetInParent);
+          }
+        }
+      }
+    }
+    // post-process, always called if WillInsertBreak didn't return cancel==PR_TRUE
+    result = mRules->DidInsertBreak(selection, result);
+  }
+  nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
+  NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
+
+// XXXX: Horrible hack! We are doing this because
+// of an error in Gecko which is not rendering the
+// document after a change via the DOM - gpk 2/13/99
+  // BEGIN HACK!!!
+  HACKForceRedraw();
+  // END HACK
+
+  return result;
 }
 
 // Methods shared with the base editor.

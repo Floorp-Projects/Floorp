@@ -110,7 +110,13 @@ public:
   NS_IMETHOD JoinTableCells(PRBool aCellToRight);
 
 // Data members
+
 protected:
+
+// rules initialization
+
+  virtual void  InitRules();
+  
 
 // EVENT LISTENERS AND COMMAND ROUTING NEEDS WORK
 // For now, the listners are tied to the nsTextEditor class

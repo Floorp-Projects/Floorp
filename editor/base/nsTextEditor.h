@@ -89,6 +89,11 @@ public:
   NS_IMETHOD OutputHTML(nsString& aOutputString);
 
 protected:
+
+// rules initialization
+
+  virtual void  InitRules();
+  
 // Utility Methods
 
   virtual void IsTextStyleSet(nsIStyleContext *aSC, 
