@@ -2202,7 +2202,7 @@ sub BuildExtensionsProjects()
     # LDAP Client
     if ($main::options{ldap})
     {
-        BuildOneProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp", "LDAPClient$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp", "LDAPClient$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
         BuildOneProject(":mozilla:directory:xpcom:macbuild:mozldap.mcp", "mozldap$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
