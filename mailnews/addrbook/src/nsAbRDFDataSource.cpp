@@ -140,10 +140,9 @@ nsAbRDFDataSource::nsAbRDFDataSource():
 
 nsAbRDFDataSource::~nsAbRDFDataSource (void)
 {
-	mRDFService->UnregisterDataSource(this);
-
 	if (mRDFService)
 	{
+		mRDFService->UnregisterDataSource(this);
 		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
 		mRDFService = nsnull;
 	}

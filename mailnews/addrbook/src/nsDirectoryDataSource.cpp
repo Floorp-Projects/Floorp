@@ -79,8 +79,14 @@ nsAbDirectoryDataSource::nsAbDirectoryDataSource():
 
 nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 {
-	mRDFService->UnregisterDataSource(this);
 
+	if (mRDFService)
+	{
+		mRDFService->UnregisterDataSource(this);
+		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
+		mRDFService = nsnull;
+	}
+	
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))
@@ -94,12 +100,7 @@ nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 
 	NS_RELEASE2(kNC_Delete, refcnt);
 	NS_RELEASE2(kNC_NewDirectory, refcnt);
-	if (mRDFService)
-	{
-		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
-		mRDFService = nsnull;
-	}
-	
+
 	/* free all directories */
 	DIR_ShutDown();
 }

@@ -66,7 +66,12 @@ nsAbCardDataSource::nsAbCardDataSource():
 
 nsAbCardDataSource::~nsAbCardDataSource (void)
 {
-	mRDFService->UnregisterDataSource(this);
+	if (mRDFService)
+	{
+		mRDFService->UnregisterDataSource(this);
+		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
+		mRDFService = nsnull;
+	}
 
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
@@ -82,11 +87,6 @@ nsAbCardDataSource::~nsAbCardDataSource (void)
 	NS_RELEASE2(kNC_Delete, refcnt);
 	NS_RELEASE2(kNC_NewCard, refcnt);
 
-	if (mRDFService)
-	{
-		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
-		mRDFService = nsnull;
-	}
 }
 
 nsresult nsAbCardDataSource::Init()

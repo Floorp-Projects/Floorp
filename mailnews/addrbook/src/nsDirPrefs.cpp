@@ -1909,8 +1909,19 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 	
 	if (dbPath)
 	{
+		nsCOMPtr<nsIAddrDatabase> database;
+
 		nsFileSpec prefFile = (*dbPath);
 		prefFile += server->fileName;
+
+		// close file before delete it
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
+		if (database)
+			database->ForceClosed();
+
 		prefFile.Delete(PR_FALSE);
 
 		nsVoidArray *dirList = DIR_GetDirectories();
