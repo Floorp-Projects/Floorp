@@ -35,7 +35,7 @@
 //#include "nsTextAreaWidget.h"
 //#include "nsListBox.h"
 //#include "nsComboBox.h"
-//#include "nsLookAndFeel.h"
+#include "nsLookAndFeel.h"
 
 #define MACSTATIC
 
@@ -188,6 +188,17 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCHorzScrollbarCID)) {
         inst = new nsScrollbar(PR_FALSE);
     }
+    else if (mClassID.Equals(kCLookAndFeelCID)) {
+        nsLookAndFeel *laf = new nsLookAndFeel();
+        if (laf == NULL) {  
+            return NS_ERROR_OUT_OF_MEMORY;  
+        }  
+        nsresult res = laf->QueryInterface(aIID, aResult);
+        if (res != NS_OK) {
+            delete laf;
+        }
+        return res;
+    }
    
     
     
@@ -210,17 +221,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCComboBoxCID)) {
         inst = new nsComboBox();
-    }
-    else if (mClassID.Equals(kCLookAndFeelCID)) {
-        nsLookAndFeel *laf = new nsLookAndFeel();
-        if (laf == NULL) {  
-            return NS_ERROR_OUT_OF_MEMORY;  
-        }  
-        nsresult res = laf->QueryInterface(aIID, aResult);
-        if (res != NS_OK) {
-            delete laf;
-        }
-        return res;
     }
     else if (mClassID.Equals(kCAppShellCID)) {
         nsAppShell *appInst = new nsAppShell();
