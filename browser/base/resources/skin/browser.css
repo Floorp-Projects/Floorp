@@ -44,89 +44,81 @@
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
-  list-style-image: url("chrome://navigator/skin/icons/btn1.gif");
+  list-style-image: url("chrome://browser/skin/buttons.gif");
 }
 
 #back-button {
-  -moz-image-region: rect(0px 19px 20px 0px);
-}
-
-#back-button[buttonover="true"] {
-  -moz-image-region: rect(0px 38px 20px 19px);
-}
-
-#back-button[buttondown="true"] {
-  -moz-image-region: rect(0px 57px 20px 38px);
+  -moz-image-region: rect(0px 23px 21px 0px) !important;
 }
 
 #back-button[disabled="true"] {
-  -moz-image-region: rect(0px 76px 20px 57px) !important;
+  -moz-image-region: rect(21px 23px 42px 0px) !important;
+}
+
+#back-button[buttonover="true"]:not([disabled]) {
+  -moz-image-region: rect(42px 23px 63px 0px) !important;
+}
+
+#back-button[buttondown="true"] {
+  -moz-image-region: rect(63px 23px 84px 0px) !important;
 }
 
 #forward-button {
-  -moz-image-region: rect(20px 19px 40px 0px);
-}
-
-#forward-button[buttonover="true"] {
-  -moz-image-region: rect(20px 38px 40px 19px);
-}
-
-#forward-button[buttondown="true"] {
-  -moz-image-region: rect(20px 57px 40px 38px);
+  -moz-image-region: rect(0px 46px 21px 23px) !important;
 }
 
 #forward-button[disabled="true"] {
-  -moz-image-region: rect(20px 76px 40px 57px) !important;
+  -moz-image-region: rect(21px 46px 42px 23px) !important;
 }
 
-#reload-button {
-  -moz-image-region: rect(40px 22px 60px 0px);
+#forward-button[buttonover="true"]:not([disabled]) {
+  -moz-image-region: rect(42px 46px 63px 23px) !important;
 }
-  
+
+#forward-button[buttondown="true"] {
+  -moz-image-region: rect(63px 46px 84px 23px) !important;
+}
+
+
+#reload-button {
+  -moz-image-region: rect(0px 92px 21px 69px) !important;
+}
+
 #reload-button:hover {
-  -moz-image-region: rect(40px 44px 60px 22px);
+  -moz-image-region: rect(42px 92px 63px 69px) !important;
 }
 
 #reload-button:hover:active {
-  -moz-image-region: rect(40px 66px 60px 44px);
-}
-
-#reload-button[disabled="true"] {
-  -moz-image-region: rect(40px 88px 60px 66px) !important;
+  -moz-image-region: rect(63px 92px 84px 69px) !important;
 }
 
 #stop-button {
-  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(21px 22px 41px 0px);
+  -moz-image-region: rect(0px 69px 21px 46px) !important;
 }
-
-#stop-button:hover {
-  -moz-image-region: rect(21px 44px 41px 22px);
-} 
-
-#stop-button:hover:active {
-  -moz-image-region: rect(21px 66px 41px 44px);
-}
-
+  
 #stop-button[disabled="true"] {
-  -moz-image-region: rect(21px 88px 41px 66px) !important;
+  -moz-image-region: rect(21px 69px 42px 46px) !important;
 }
+
+#stop-button:hover:not([disabled]) {
+  -moz-image-region: rect(42px 69px 63px 46px) !important;
+}
+
+#stop-button:hover:active:not([disabled]) {
+  -moz-image-region: rect(63px 69px 84px 46px) !important;
+}
+
 
 #print-button {
-  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(0px 23px 21px 0px);
+  -moz-image-region: rect(0px 115px 21px 92px) !important;
 }
 
-#print-button[buttonover="true"] {
-  -moz-image-region: rect(0px 46px 21px 23px);
+#print-button:hover {
+  -moz-image-region: rect(42px 115px 63px 92px) !important;
 }
 
-#print-button[buttondown="true"] {
-  -moz-image-region: rect(0px 69px 21px 46px);
-}
-
-#print-button[disabled="true"] {
-  -moz-image-region: rect(0px 92px 21px 69px) !important;
+#print-button:hover:active {
+  -moz-image-region: rect(63px 115px 84px 92px) !important;
 }
 
 #fullscreen-exit-button {
