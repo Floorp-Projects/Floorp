@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsJavaHTMLObjectFactory.cpp,v 1.2 2001/07/12 20:32:08 edburns%acm.org Exp $
+ * $Id: nsJavaHTMLObjectFactory.cpp,v 1.3 2001/08/03 00:43:47 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -60,7 +60,6 @@ static NS_DEFINE_IID(kIJVMConsoleIID,     NS_IJVMCONSOLE_IID);
 
 static NS_DEFINE_CID(kCLiveConnectCID,       NS_CLIVECONNECT_CID);
 static NS_DEFINE_CID(kPluginManagerCID,      NS_PLUGINMANAGER_CID);
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kCJVMManagerCID,        NS_JVMMANAGER_CID);
 
 
@@ -383,8 +382,9 @@ nsJavaHTMLObjectFactory::GetProxyForURL(const char *url, char **proxy)
     new nsJavaPluginProxy();
   inst->Init(this);
   nsCOMPtr<nsIJavaPluginProxy> instProxy;
-  NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjectManager,
-		  kProxyObjectManagerCID, &rv);
+  nsCOMPtr<nsIProxyObjectManager> proxyObjectManager =
+      do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
   rv = proxyObjectManager->
     GetProxyForObject(NS_UI_THREAD_EVENTQ,
 		      NS_GET_IID(nsIJavaPluginProxy),
@@ -409,8 +409,9 @@ nsJavaHTMLObjectFactory::JSCall(jint jstid, struct JSObject_CallInfo** call)
   nsCOMPtr<nsJavaPluginProxy> inst = new nsJavaPluginProxy();
   inst->Init(this);
   nsCOMPtr<nsIJavaPluginProxy> instProxy;
-  NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjectManager,
-		  kProxyObjectManagerCID, &rv);
+  nsCOMPtr<nsIProxyObjectManager> proxyObjectManager =
+      do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;  
   rv = proxyObjectManager->
     GetProxyForObject(NS_UI_THREAD_EVENTQ,
 		      NS_GET_IID(nsIJavaPluginProxy),
@@ -448,8 +449,8 @@ nsJavaHTMLObjectFactory::doJSCall(jint jstid, struct JSObject_CallInfo** call)
     {
       OJI_LOG("JSObject dead before JS call can be performed.");
       return NS_ERROR_FAILURE;
-    }
-  NS_WITH_SERVICE(nsIJVMManager, pJVMManager, kCJVMManagerCID, &rv);
+    }  
+  nsCOMPtr<nsIJVMManager> pJVMManager = do_GetService(kCJVMManagerCID, &rv);
   if (NS_FAILED(rv))
     {
       OJI_LOG2("cannot get JVMManager service: %x", rv);
@@ -708,9 +709,8 @@ NS_IMETHODIMP
 nsJavaHTMLObjectFactory::initLiveConnect()
 {
   nsresult res;
-  res = nsServiceManager::GetService(kCLiveConnectCID,
-				     kILiveConnectIID,
-				     getter_AddRefs(m_liveConnect));
+  
+  m_liveConnect = do_GetService(kCLiveConnectCID, &res);
   if (NS_FAILED(res))
   {
     OJI_LOG2("cannot get LiveConnect service from browser: %x", res);

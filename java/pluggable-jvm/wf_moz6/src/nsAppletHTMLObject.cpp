@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  *
- * $Id: nsAppletHTMLObject.cpp,v 1.2 2001/07/12 20:32:07 edburns%acm.org Exp $
+ * $Id: nsAppletHTMLObject.cpp,v 1.3 2001/08/03 00:43:47 edburns%acm.org Exp $
  *
  * 
  * Contributor(s): 
@@ -347,8 +347,9 @@ nsAppletHTMLObject::ShowStatus(const char* status)
     new nsJavaPluginInstanceProxy();
   inst->Init(this);
   nsCOMPtr<nsIJavaPluginInstanceProxy> instProxy;
-  NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjectManager,
-		  kProxyObjectManagerCID, &rv);
+  nsCOMPtr<nsIProxyObjectManager> proxyObjectManager = 
+      do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
   rv = proxyObjectManager->
     GetProxyForObject(NS_UI_THREAD_EVENTQ,
 		      NS_GET_IID(nsIJavaPluginInstanceProxy),
@@ -375,8 +376,8 @@ nsAppletHTMLObject::ShowDocument(const char* url,
     new nsJavaPluginInstanceProxy();
   inst->Init(this);
   nsCOMPtr<nsIJavaPluginInstanceProxy> instProxy;
-  NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjectManager,
-		  kProxyObjectManagerCID, &rv);
+  nsCOMPtr<nsIProxyObjectManager> proxyObjectManager = 
+      do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);  
   rv = proxyObjectManager->
     GetProxyForObject(NS_UI_THREAD_EVENTQ,
 		      NS_GET_IID(nsIJavaPluginInstanceProxy),
