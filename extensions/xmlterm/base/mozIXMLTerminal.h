@@ -131,6 +131,16 @@ public:
    */
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell) = 0;
 
+  /** Gets DOM document associated with XMLterm
+   * @param aDOMDocumentl (output) DOM document
+   */
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument) = 0;
+
+  /** Gets selection controller associated with XMLterm
+   * @param aSelectionControllerl (output) DOM document
+   */
+  NS_IMETHOD GetSelectionController(nsISelectionController** aSelectionController) = 0;
+
   /** Gets flag denoting whether terminal is in full screen mode
    * @param aFlag (output) screen mode flag
    */
