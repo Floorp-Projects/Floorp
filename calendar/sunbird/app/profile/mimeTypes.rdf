@@ -1,0 +1,67 @@
+<?xml version="1.0"?>  
+
+<!--
+ This file is used as a persistent data store for helper application
+ information.
+
+ The root of the data is the <RDF:Seq about="urn:mimetypes:root"/>. This
+ contains one <RDF:li/> entry per MIME type.  Each <RDF:li/> entry corresponds
+ to the "urn:mimetype:major/minor" resource, where "major/minor" is the MIME
+ type.  For example, for HTML we would have "urn:mimetype:text/html".
+ Typically, this resource will be in the <RDF:Description/> node which has the
+ corresponding "about" attribute.
+
+ Each "urn:mimetype:major/minor" resource can have the following properties:
+
+   NC:Value - the MIME type string
+   NC:editable - a "true" or "false" depending on whether this entry is
+                 editable
+   NC:description - a description of the type ("HTML Document" for text/html)
+   NC:fileExtensions - there will be one of these properties per extension that
+                       corresponds to this MIME type, each one having a single
+                       extension as its value.
+   NC:handlerProp - the way the type should be handled.  This corresponds to a
+                    "urn:mimetype:handler:major/minor" resource.  Eg, the way
+                    HTML is handled would be stored in the
+                    "urn:mimetype:handler:text/html" resource
+
+ Each "urn:mimetype:handler:major/minor" resource can have the following
+ properties:
+
+   NC:useSystemDefault - "true" if we should handle per default OS setting,
+                          "false" or not set otherwise
+   NC:saveToDisk - "true" if the data should be saved to disk, "false" or not
+                   set otherwise.
+     (Note - if both of these are false, that means "open in helper app")
+   NC:alwaysAsk - "true" if the user should always be prompted before handling
+                  data of this type, false otherwise.
+   NC:externalApplication - the helper application to use for this type.  This
+                            corresponds to a
+                            "urn:mimetype:externalApplication:major/minor"
+			    resource
+
+ Each "urn:mimetype:externalApplication:major/minor" resource can have the
+ following properties:
+
+   NC:path - the path to the application
+   NC:prettyName - the "pretty name" of the application ("Acrobat Reader" for
+                   /usr/bin/acroread, eg).
+-->
+			
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Description about="urn:mimetypes"> 
+    <NC:MIME-types> 
+      <RDF:Seq about="urn:mimetypes:root">
+        <RDF:li resource="urn:mimetype:text/calendar"/>
+      </RDF:Seq>
+    </NC:MIME-types> 
+  </RDF:Description>
+  <RDF:Description about="urn:mimetype:text/calendar"
+                   NC:fileExtensions="ics"
+                   NC:description="iCalendar data file"
+                   NC:value="text/calendar"
+                   NC:editable="true">
+  </RDF:Description> 
+</RDF:RDF>

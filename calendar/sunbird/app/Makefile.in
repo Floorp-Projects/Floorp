@@ -44,7 +44,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= profile/extensions
+DIRS		= profile/extensions profile
 
 PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
 
