@@ -55,7 +55,11 @@ nsGridLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSi
   nsIBox* templeBox = nsnull;
   GetOtherTemple(aBox, &temple, &templeBox, aRequestor);
   if (temple)
-    return temple->GetMonumentsAt(templeBox, aIndexOfObelisk, aList);
+  {
+    nsresult rv = temple->GetMonumentsAt(templeBox, aIndexOfObelisk, aList);
+    NS_RELEASE(temple);
+    return rv;
+  }
   else
     *aList = nsnull;
 

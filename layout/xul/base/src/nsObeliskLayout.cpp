@@ -140,6 +140,7 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
    nsTempleLayout* temple = nsnull;
    nsIBox* aTempleBox = nsnull;
    GetOtherTemple(aBox, &temple, &aTempleBox);
+   NS_IF_RELEASE(temple);
 
    nsMonumentIterator it(aTempleBox);
    
@@ -305,6 +306,7 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
   }
 
   nsSprocketLayout::PopulateBoxSizes(aBox, aState, aBoxSizes, aComputedBoxSizes, aMinSize, aMaxSize, aFlexes);
+  NS_IF_RELEASE(temple);
 }
 
 void
