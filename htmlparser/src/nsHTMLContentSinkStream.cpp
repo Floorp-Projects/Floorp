@@ -242,7 +242,7 @@ void CloseTag(const char* theTag,int tab,ostream& aStream) {
  */
 void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,false);
+  OpenTag(titleStr,tab,aStream,PR_FALSE);
   theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
   aStream << gBuffer;
   CloseTag(titleStr,0,aStream);
@@ -258,7 +258,7 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
  */
 void WriteSingleton(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,true);
+  OpenTag(titleStr,tab,aStream,PR_TRUE);
 
   if(theContent.Length()) {
     theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
