@@ -178,7 +178,9 @@ private:
 	PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
     void ParseHeaderForCancel(char *buf);
-    
+
+    static PRBool CheckIfAuthor(nsISupports *aElement, void *data);
+        
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempArticleStream;

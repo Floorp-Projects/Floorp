@@ -67,6 +67,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 #include "nsINetSupportDialogService.h"
+#include "nsIMsgAccountManager.h"
 
 #define PREF_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
@@ -104,6 +105,12 @@ static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+
+typedef struct _cancelInfoEntry {
+    char *from;
+    char *old_from;
+} cancelInfoEntry;
 
 // quiet compiler warnings by defining these function prototypes
 char *NET_ExplainErrorDetails (int code, ...);
@@ -3698,12 +3705,93 @@ PRInt32 nsNNTPProtocol::StartCancel()
   return (status);
 }
 
+PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
+{
+    nsresult rv;
+
+    cancelInfoEntry *cancelInfo = (cancelInfoEntry*) data;
+
+    if (cancelInfo->from) {
+#ifdef DEBUG_NEWS
+        printf("already found a match, no need to go any further\n");
+#endif
+        // keep going
+        return PR_TRUE;
+    }
+    
+    nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(aElement, &rv);
+    if (NS_FAILED(rv)) {
+        // keep going
+        return PR_TRUE;
+    }
+    
+    if (identity) {
+        identity->GetEmail(&cancelInfo->from);
+#ifdef DEBUG_NEWS
+        printf("from = %s\n", cancelInfo->from);
+#endif
+    }
+    
+    nsCOMPtr<nsIMsgHeaderParser> parser;                  
+    rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
+                                            nsnull,
+                                            nsIMsgHeaderParser::GetIID(),
+                                            getter_AddRefs(parser));
+
+    if (NS_FAILED(rv)) {
+        PR_FREEIF(cancelInfo->from);
+        cancelInfo->from = nsnull;
+
+        // keep going
+        return PR_TRUE;
+    }
+
+#ifdef DEBUG_NEWS
+    printf("got a header parser...\n");
+#endif
+    
+    char *us = nsnull;
+    char *them = nsnull;
+    nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, cancelInfo->from, &us);
+    nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, cancelInfo->old_from, &them);
+    
+#ifdef DEBUG_NEWS
+    printf("us = %s, them = %s\n", us, them);
+#endif
+    if ((NS_FAILED(rv1) || NS_FAILED(rv2) || PL_strcasecmp(us, them))) {
+#ifdef DEBUG_NEWS
+        printf("no match.  don't set cancel email\n");
+#endif
+        PR_FREEIF(cancelInfo->from);
+        cancelInfo->from = nsnull;
+
+        PR_FREEIF(us);
+        PR_FREEIF(them);
+
+        // keep going
+        return PR_TRUE;
+    }
+    else {
+#ifdef DEBUG_NEWS
+        printf("got a match!\n");
+#endif
+        // we have a match, stop.
+        return PR_FALSE;
+    }          
+}
+
 PRInt32 nsNNTPProtocol::Cancel()
 {
-	int status = 0;
+    int status = 0;
     nsresult rv = NS_OK;
-	char *id, *subject, *newsgroups, *distribution, *other_random_headers, *body;
-	char *from, *old_from;
+    char *id = nsnull;
+    char *subject = nsnull;
+    char *newsgroups = nsnull;
+    char *distribution = nsnull;
+    char *other_random_headers = nsnull;
+    char *body = nsnull;
+    cancelInfoEntry cancelInfo;
+	
 	int L;
 #ifdef USE_LIBMSG
 	MSG_CompositionFields *fields = NULL;
@@ -3725,8 +3813,9 @@ PRInt32 nsNNTPProtocol::Cancel()
 
   newsgroups = m_cancelNewsgroups;
   distribution = m_cancelDistribution;
-  old_from = m_cancelFromHdr;
   id = m_cancelID;
+  cancelInfo.old_from = m_cancelFromHdr;
+  cancelInfo.from = nsnull;
 
 #ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
@@ -3742,26 +3831,9 @@ PRInt32 nsNNTPProtocol::Cancel()
   m_cancelDistribution = nsnull;
   m_cancelFromHdr = nsnull;
   m_cancelID = nsnull;
-
+  
   L = PL_strlen (id);
   
-#ifdef UNREADY_CODE
-  from = MIME_MakeFromField ();
-#else
-  // get the current identity from the news session....
-  NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
-  if (NS_SUCCEEDED(rv) && newsSession) {
-        nsCOMPtr<nsIMsgIdentity> identity; 
-	rv = newsSession->GetCurrentIdentity(getter_AddRefs(identity));
-        if (NS_SUCCEEDED(rv) && identity) {
-        	identity->GetEmail(&from);
-	}
-   }
-#ifdef DEBUG_NEWS
-   printf("post the cancel message as %s\n",from);
-#endif /* DEBUG_NEWS */
-#endif /* UNREADY_CODE */
-
   subject = (char *) PR_Malloc (L + 20);
   other_random_headers = (char *) PR_Malloc (L + 20);
   body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
@@ -3786,31 +3858,19 @@ PRInt32 nsNNTPProtocol::Cancel()
 #ifdef DEBUG_NEWS
       printf("CANCELCHK not supported\n");
 #endif
-      nsCOMPtr<nsIMsgHeaderParser> parser;
-      PRBool ok = PR_FALSE;
-                  
-      rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
-                                              nsnull,
-                                              nsIMsgHeaderParser::GetIID(),
-                                              getter_AddRefs(parser));
       
-      if (NS_SUCCEEDED(rv))  {
-#ifdef DEBUG_NEWS
-          printf("got a header parser...\n");
-#endif
-          char *us = nsnull;
-          char *them = nsnull;
-          nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, from, &us);
-          nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, old_from, &them);
-#ifdef DEBUG_sspitzer
-          printf("us = %s, them = %s\n", us, them);
-#endif
-          ok = (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && !PL_strcasecmp(us, them));
-          
-          if (NS_SUCCEEDED(rv1)) PR_Free(us);
-          if (NS_SUCCEEDED(rv2)) PR_Free(them);
+      // get the current identity from the news session....
+      NS_WITH_SERVICE(nsIMsgAccountManager,accountManager,kCMsgAccountManagerCID,&rv);
+      if (NS_SUCCEEDED(rv) && accountManager) {
+          nsCOMPtr<nsISupportsArray> identities;
+          rv = accountManager->GetAllIdentities(getter_AddRefs(identities));
+          if (NS_FAILED(rv)) return rv;
+
+          // CheckIfAuthor will set cancelInfo.from if a match is found
+          identities->EnumerateForwards(CheckIfAuthor, (void *)&cancelInfo);
       }
-      if (!ok) {
+  
+      if (!cancelInfo.from) {
           alertText = UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED;
           if (dialog) {
               // until #7770 is fixed, we can't do dialogs on Linux from here
@@ -3828,6 +3888,11 @@ PRInt32 nsNNTPProtocol::Cancel()
           m_nextState = NEWS_ERROR; /* even though it worked */
           ClearFlag(NNTP_PAUSE_FOR_READ);
           goto FAIL;
+      }
+      else {
+#ifdef DEBUG_NEWS
+          printf("CANCELCHK not supported, so post the cancel message as %s\n",cancelInfo.from);
+#endif /* DEBUG_NEWS */
       }
   }
   else {
@@ -3854,7 +3919,7 @@ PRInt32 nsNNTPProtocol::Cancel()
       goto FAIL;
   }  
   
-  if (!from || !subject || !other_random_headers || !body) {
+  if (!subject || !other_random_headers || !body) {
 	  status = MK_OUT_OF_MEMORY;
 	  goto FAIL;
   }
@@ -3876,7 +3941,7 @@ PRInt32 nsNNTPProtocol::Cancel()
   PL_strcat (body, "." CRLF);
   
 #ifdef USE_LIBMSG
-  fields = MSG_CreateCompositionFields(from, 0, 0, 0, 0, 0, newsgroups,
+  fields = MSG_CreateCompositionFields(cancelInfo.from, 0, 0, 0, 0, 0, newsgroups,
 									   0, 0, subject, id, other_random_headers,
 									   0, 0, news_url);
 #endif 
@@ -3894,7 +3959,7 @@ PRInt32 nsNNTPProtocol::Cancel()
                        "%s" CRLF /* other_random_headers */
                        "%s"     /* body */
                        CRLF "." CRLF CRLF, /* trailing SMTP "." */
-                       from, newsgroups, subject, id,
+                       cancelInfo.from, newsgroups, subject, id,
                        other_random_headers, body);
     
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
@@ -3937,15 +4002,16 @@ PRInt32 nsNNTPProtocol::Cancel()
     
 FAIL:
   PR_FREEIF (id);
-  PR_FREEIF (from);
-  PR_FREEIF (old_from);
+  PR_FREEIF (cancelInfo.old_from);
+  PR_FREEIF (cancelInfo.from);
   PR_FREEIF (subject);
   PR_FREEIF (newsgroups);
   PR_FREEIF (distribution);
   PR_FREEIF (other_random_headers);
   PR_FREEIF (body);
   PR_FREEIF (m_cancelMessageFile);
-  
+  m_cancelMessageFile = nsnull;
+
 #ifdef USE_LIBMSG
   if (fields)
 	  MSG_DestroyCompositionFields(fields);
@@ -4947,11 +5013,15 @@ nsresult nsNNTPProtocol::CloseSocket()
     PR_FREEIF(m_responseText);
     PR_FREEIF(m_dataBuf);
 
-	PR_FREEIF (m_cancelID);
-	PR_FREEIF (m_cancelFromHdr);
-	PR_FREEIF (m_cancelNewsgroups); 
-	PR_FREEIF (m_cancelDistribution);
-
+    PR_FREEIF(m_cancelNewsgroups);
+    m_cancelNewsgroups = nsnull;
+    PR_FREEIF(m_cancelDistribution);
+    m_cancelDistribution = nsnull;
+    PR_FREEIF(m_cancelFromHdr);
+    m_cancelFromHdr = nsnull;
+    PR_FREEIF(m_cancelID);  
+    m_cancelID = nsnull;
+    
 	m_runningURL = null_nsCOMPtr();
 
 	return nsMsgProtocol::CloseSocket();
