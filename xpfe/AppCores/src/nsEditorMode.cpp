@@ -41,7 +41,7 @@ static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID); // Still needed to regi
 #ifdef XP_MAC
 #define EDITOR_DLL "ENDER_DLL"
 #else // XP_UNIX
-#define EDITOR_DLL "libender.so"
+#define EDITOR_DLL "libender"MOZ_DLL_SUFFIX
 #endif
 #endif
 
