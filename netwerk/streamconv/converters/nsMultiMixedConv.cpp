@@ -240,7 +240,8 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
 
     nsCAutoString boundaryString(bndry);
     if (attrib) *attrib = ';';
-    boundaryString.StripWhitespace();
+
+    boundaryString.Trim(" \"");
 
     mToken = boundaryString.ToNewCString();
     if (!mToken) return NS_ERROR_OUT_OF_MEMORY;
