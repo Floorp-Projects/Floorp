@@ -70,13 +70,20 @@ struct nsStyleSpacing: public nsStyleStruct {
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
   nsStyleSides  mBorder;          // [reset] length, percent, See nsStyleConsts.h for enum
-  PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
-  nscolor       mBorderColor[4];  // [reset] 
+
 
   PRBool GetMargin(nsMargin& aMargin) const;
   PRBool GetPadding(nsMargin& aPadding) const;
   PRBool GetBorder(nsMargin& aBorder) const;
   PRBool GetBorderPadding(nsMargin& aBorderPadding) const;
+
+  PRUint8 GetBorderStyle(PRUint8 aSide) const; 
+  void    SetBorderStyle(PRUint8 aSide, PRUint8 aStyle); 
+  nscolor GetBorderColor(PRUint8 aSide) const; 
+  void    SetBorderColor(PRUint8 aSide, nscolor aColor); 
+
+  void ClearBorderStyleHighBit(PRUint8 aSide);
+
 
 // XXX these are deprecated methods
   void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
@@ -94,6 +101,9 @@ protected:
   nsMargin  mCachedPadding;
   nsMargin  mCachedBorder;
   nsMargin  mCachedBorderPadding;
+
+  PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
+  nscolor       mBorderColor[4];  // [reset] 
 };
 
 struct nsStyleList : public nsStyleStruct {
