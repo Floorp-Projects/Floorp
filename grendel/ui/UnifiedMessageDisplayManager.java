@@ -244,15 +244,17 @@ class UnifiedMessageFrame extends GeneralFrame {
   }
 
   void layoutPanels(String layout) {
+    boolean touch = true;
+
     if (fLayout != null) {
       if (fLayout.equals(layout)) {
         return; // nothing to do
       }
       if (fLayout.equals(UnifiedMessageDisplayManager.STACKED)) {
-        splitter1.removeAll();
+	remove(splitter1);
       } else {
-        splitter1.removeAll();
-        splitter2.removeAll();
+	remove(splitter1);
+	remove(splitter2);
       }
       fPanel.remove(splitter1);
     }
@@ -298,6 +300,7 @@ class UnifiedMessageFrame extends GeneralFrame {
 
       //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
+      System.out.println("Foo");
       splitter1.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
       
@@ -476,16 +479,17 @@ class UnifiedMessageFrame extends GeneralFrame {
 
   class LayoutAction extends UIAction {
     ImageIcon fIcon;
+    String action;
     public LayoutAction(String aAction) {
       super(aAction);
       setEnabled(true);
-
+      action = aAction;
       fIcon = new ImageIcon(getClass().getResource("images/" +
                                                    aAction + ".gif"));
     }
 
     public void actionPerformed(ActionEvent aEvent) {
-      layoutPanels(aEvent.getActionCommand());
+      layoutPanels(action);
     }
 
     public ImageIcon getEnabledIcon() {
