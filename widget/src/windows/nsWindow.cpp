@@ -177,9 +177,11 @@ nsWindow::~nsWindow()
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
   if (PR_TRUE == aCapture) { 
-    SetCapture(mWnd);
+    MouseTrailer::SetCaptureWindow(this);
+    ::SetCapture(mWnd);
   } else {
-    ReleaseCapture();
+    MouseTrailer::SetCaptureWindow(NULL);
+    ::ReleaseCapture();
   }
   mIsInMouseCapture = aCapture;
   return NS_OK;
@@ -3166,9 +3168,32 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
       } else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
-        mp.x = LOWORD(pos);
-        mp.y = HIWORD(pos);
-        nsWindow * someWindow = (nsWindow*)::GetWindowLong(::WindowFromPoint(mp), GWL_USERDATA);
+        mp.x      = LOWORD(pos);
+        mp.y      = HIWORD(pos);
+
+        // OK, now find out if we are still inside
+        // the captured native window
+        POINT cpos;
+        cpos.x = LOWORD(pos);
+        cpos.y = HIWORD(pos);
+
+        nsWindow * someWindow = NULL;
+        HWND hWnd = ::WindowFromPoint(mp);
+        if (hWnd != NULL) {
+          ::ScreenToClient(hWnd, &cpos);
+          RECT r;
+          VERIFY(::GetWindowRect(hWnd, &r));
+          if (cpos.x >= r.left && cpos.x <= r.right &&
+              cpos.y >= r.top && cpos.y <= r.bottom) {
+            // yes we are so we should be able to get a valid window
+            // although, strangley enough when we are on the frame part of the
+            // window we get right here when in capture mode
+            // but this window won't match the capture mode window so
+            // we are ok
+            someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+          } 
+        }
+        // only set the window into the mouse trailer if we have a good window
         if (nsnull != someWindow)  {
           MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
           MouseTrailer::SetMouseTrailerWindow(someWindow);
