@@ -116,12 +116,7 @@ public:
    */
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
 
-  /**
-   * Get the view that clips the contents of the scrolling view
-   * @param aClipView out param to hold view pointer
-   * @return error status
-   */
-  NS_IMETHOD GetClipView(nsIView ** aClipView) = 0;
+  NS_IMETHOD GetClipSize(nscoord *aX, nscoord *aY) = 0;
 };
 
 #endif

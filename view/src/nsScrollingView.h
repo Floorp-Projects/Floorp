@@ -69,7 +69,7 @@ public:
   virtual void SetScrollPreference(nsScrollPreference aPref);
   virtual nsScrollPreference GetScrollPreference(void);
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
-  NS_IMETHOD GetClipView(nsIView ** aClipView);
+  NS_IMETHOD GetClipSize(nscoord *aX, nscoord *aY);
 
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
@@ -84,7 +84,7 @@ protected:
   nsIView             *mHScrollBarView;
   nsIView             *mCornerView;
   nsScrollPreference  mScrollPref;
-  nsIView             *mClipView;
+  nscoord             mClipX, mClipY;
 };
 
 #endif

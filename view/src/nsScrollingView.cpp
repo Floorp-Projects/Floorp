@@ -30,6 +30,7 @@
 
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 class ScrollBarView : public nsView
 {
@@ -312,7 +313,7 @@ nsScrollingView :: nsScrollingView()
   mHScrollBarView = nsnull;
   mCornerView = nsnull;
   mScrollPref = nsScrollPreference_kAuto;
-  mClipView = nsnull;
+  mClipX = mClipY = 0;
 }
 
 nsScrollingView :: ~nsScrollingView()
@@ -335,12 +336,6 @@ nsScrollingView :: ~nsScrollingView()
   {
     NS_RELEASE(mCornerView);
     mCornerView = nsnull;
-  }
-
-  if (nsnull != mClipView)
-  {
-    NS_RELEASE(mClipView);
-    mClipView = nsnull;
   }
 }
 
@@ -383,6 +378,9 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 					nsViewVisibility aVisibilityFlag)
 {
   nsresult rv;
+
+  mClipX = aBounds.width;
+  mClipY = aBounds.height;
   
   rv = nsView :: Init(aManager, aBounds, aParent, aWindowIID, aWidgetInitData, aNative, aZIndex, aClip, aOpacity, aVisibilityFlag);
 
@@ -411,28 +409,6 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       mViewManager->InsertChild(this, mCornerView, -1);
     }
 
-#if 0
-    // Create a view for clipping
-
-    mClipView = new ClipView();
-
-    if (nsnull != mClipView)
-    {
-      NS_ADDREF(mClipView);
-
-      nsRect trect;
-
-      trect.width = aBounds.XMost() - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
-      trect.x = 0;
-      trect.height = aBounds.YMost() - NS_TO_INT_ROUND(dx->GetScrollBarHeight());
-      trect.y = 0;
-
-      rv = mClipView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull, -1);
-
-      mViewManager->InsertChild(this, mCornerView, -1);
-    }
-#endif
-
     // Create a view for a vertical scrollbar
 
     mVScrollBarView = new ScrollBarView(this);
@@ -449,7 +425,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
-      rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID, nsnull, nsnull, -2);
+      rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID, nsnull, aNative, -3);
 
       mViewManager->InsertChild(this, mVScrollBarView, -3);
     }
@@ -470,7 +446,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
-      rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID, nsnull, nsnull, -2);
+      rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID, nsnull, aNative, -3);
 
       mViewManager->InsertChild(this, mHScrollBarView, -3);
     }
@@ -487,18 +463,46 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   nsRect            trect;
   nsIPresContext    *cx = mViewManager->GetPresContext();
   nsIDeviceContext  *dx = cx->GetDeviceContext();
+  nscoord           showHorz = 0, showVert = 0;
+  nscoord           scrollWidth = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+  nscoord           scrollHeight = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
 
   if (nsnull != mCornerView)
   {
     mCornerView->GetDimensions(&trect.width, &trect.height);
 
-    trect.y = height - NS_TO_INT_ROUND(dx->GetScrollBarHeight());
-    trect.x = width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+    trect.y = height - scrollHeight;
+    trect.x = width - scrollWidth;
 
     mCornerView->SetBounds(trect);
   }
 
-  nsView :: SetDimensions(width, height);
+  if (mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+    showHorz = scrollHeight;
+
+  if (mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+    showVert = scrollWidth;
+
+//  nsView :: SetDimensions(width, height);
+
+  mBounds.SizeTo(width, height);
+
+  if (nsnull != mWindow)
+  {
+    float t2p = cx->GetTwipsToPixels();
+
+    mClipX = width - showVert;
+    mClipY = height - showHorz;
+  
+    mWindow->Resize(NS_TO_INT_ROUND(t2p * (width - showVert)),
+                    NS_TO_INT_ROUND(t2p * (height - showHorz)),
+                    PR_TRUE);
+  }
+  else
+  {
+    mClipX = width;
+    mClipY = height;
+  }
 
   if (nsnull != mVScrollBarView)
   {
@@ -506,11 +510,10 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 
     trect.height = height;
 
-    if ((mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow)) ||
-        (mCornerView && (mCornerView->GetVisibility() == nsViewVisibility_kShow)))
-      trect.height -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+    if (showHorz || (mCornerView && (mCornerView->GetVisibility() == nsViewVisibility_kShow)))
+      trect.height -= scrollHeight;
 
-    trect.x = width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+    trect.x = width - scrollWidth;
     trect.y = 0;
 
     mVScrollBarView->SetBounds(trect);
@@ -522,11 +525,10 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 
     trect.width = width;
 
-    if ((mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow)) ||
-        (mCornerView && (mCornerView->GetVisibility() == nsViewVisibility_kShow)))
-      trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+    if (showVert || (mCornerView && (mCornerView->GetVisibility() == nsViewVisibility_kShow)))
+      trect.width -= scrollWidth;
 
-    trect.y = height - NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+    trect.y = height - scrollHeight;
     trect.x = 0;
 
     mHScrollBarView->SetBounds(trect);
@@ -656,10 +658,11 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
 
       if (dy != 0)
       {
-        AdjustChildWidgets(this, this, 0, 0, px->GetTwipsToPixels());
+//        AdjustChildWidgets(this, this, 0, 0, px->GetTwipsToPixels());
 
         if (nsnull != mWindow)
-          mWindow->Scroll(0, dy, &clip);
+//          mWindow->Scroll(0, dy, &clip);
+          mWindow->Scroll(0, dy, nsnull);
         else
           mViewManager->UpdateView(this, nsnull, 0);
       }
@@ -724,10 +727,11 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
 
       if (dx != 0)
       {
-        AdjustChildWidgets(this, this, 0, 0, px->GetTwipsToPixels());
+//        AdjustChildWidgets(this, this, 0, 0, px->GetTwipsToPixels());
 
         if (nsnull != mWindow)
-          mWindow->Scroll(dx, 0, &clip);
+//          mWindow->Scroll(dx, 0, &clip);
+          mWindow->Scroll(dx, 0, nsnull);
         else
           mViewManager->UpdateView(this, nsnull, 0);
       }
@@ -1073,10 +1077,10 @@ nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollingView :: GetClipView(nsIView ** aClipView)
+NS_IMETHODIMP nsScrollingView :: GetClipSize(nscoord *aX, nscoord *aY)
 {
-  NS_IF_ADDREF(mClipView);
-  *aClipView = mClipView;
+  *aX = mClipX;
+  *aY = mClipY;
 
   return NS_OK;
 }
