@@ -164,9 +164,31 @@ nsStreamXferOp::Start( void ) {
                 mOutputSpec->GetFileSpec( &target );
                 nsCOMPtr<nsILocalFile> file;
                 rv = NS_NewLocalFile(target, getter_AddRefs(file));
-                if (NS_SUCCEEDED(rv))
+                if (NS_SUCCEEDED(rv)) {
+                    // create the file on the file system.
+
+                    rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644); // XXX what permissions???
+                    if (NS_ERROR_FILE_ALREADY_EXISTS == rv) {
+                        rv = file->Delete(PR_FALSE); // the user has already confirmed they
+                                                     // want to overwrite the file.
+                        if (NS_FAILED(rv)) {
+                            this->OnError(kOpCreateFile, rv);
+                            return rv;
+                        }
+
+                        rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644); // XXX what permissions???
+                        if (NS_FAILED(rv)) {
+                            this->OnError(kOpCreateFile, rv);
+                            return rv;
+                        }
+                    } else if (NS_FAILED(rv)) {
+                        this->OnError(kOpCreateFile, rv);
+                        return rv;
+                    }
+
                     rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0,
                                               getter_AddRefs( mOutputChannel));
+                }
     
                 if ( NS_SUCCEEDED( rv ) ) {
                     // reset the channel's interface requestor so we receive status
