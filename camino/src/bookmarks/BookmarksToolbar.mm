@@ -533,8 +533,7 @@
     
   NSArray	*draggedTypes = [[sender draggingPasteboard] types];
 
-  nsCOMPtr<nsIContent> beforeContent;
-  [parent contentNode]->ChildAt(index, getter_AddRefs(beforeContent));
+  nsIContent* beforeContent = [parent contentNode]->GetChildAt(index);
   BookmarkItem* beforeItem = BookmarksService::GetWrapperFor(beforeContent);		// can handle nil content
 
   if ( [draggedTypes containsObject:@"MozBookmarkType"] )
@@ -590,8 +589,7 @@
   if (container == toolbarRootContent.get())
   {
     // We only care about changes that occur to the personal toolbar's immediate children.
-    PRInt32 index = -1;
-    container->IndexOf(bookmark, index);
+    PRInt32 index = container->IndexOf(bookmark);
     BookmarkItem* item = BookmarksService::GetWrapperFor(bookmark);
     [self addButton:item atIndex:index];
   }
