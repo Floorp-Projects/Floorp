@@ -2884,8 +2884,12 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
   rv = registry->AddSubtree(nsIRegistry::Common, path.get(), &pluginKey);
   if (NS_FAILED(rv)) return rv;
 
-  registry->SetStringUTF8(pluginKey, kPluginsNameKey, aPluginName);
-  registry->SetStringUTF8(pluginKey, kPluginsDescKey, aDescription);
+  // we use SetBytes instead of SetString to address special character issue, see Mozilla bug 108246
+  if(aPluginName)
+    registry->SetBytesUTF8(pluginKey, kPluginsNameKey, nsCRT::strlen(aPluginName) + 1, (PRUint8 *)aPluginName);
+
+  if(aDescription)
+    registry->SetBytesUTF8(pluginKey, kPluginsDescKey, nsCRT::strlen(aDescription) + 1, (PRUint8 *)aDescription);
 
   for (PRInt32 i = 0; i < aCount; ++i) {
     nsCAutoString mimepath;
@@ -2894,9 +2898,14 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
     nsRegistryKey key;
     registry->AddSubtree(pluginKey, mimepath.get(), &key);
 
-    registry->SetStringUTF8(key, kPluginsMimeTypeKey,    aMimeTypes[i]);
-    registry->SetStringUTF8(key, kPluginsMimeDescKey, aMimeDescriptions[i]);
-    registry->SetStringUTF8(key, kPluginsMimeExtKey,   aFileExtensions[i]);
+    registry->SetStringUTF8(key, kPluginsMimeTypeKey, aMimeTypes[i]);
+
+    if(aMimeDescriptions[i])
+      registry->SetBytesUTF8(key, kPluginsMimeDescKey, 
+                             nsCRT::strlen(aMimeDescriptions[i]) + 1, 
+                             (PRUint8 *)aMimeDescriptions[i]);
+
+    registry->SetStringUTF8(key, kPluginsMimeExtKey, aFileExtensions[i]);
   }
 
   return NS_OK;
@@ -4725,11 +4734,12 @@ LoadXPCOMPlugin(nsIRegistry* aRegistry,
   // The name, description, MIME types, MIME descriptions, and
   // supported file extensions will all hang off of the plugin's key
   // in the registry. Pull these out now.
-  nsXPIDLCString name;
-  aRegistry->GetStringUTF8(aPluginKey, kPluginsNameKey, getter_Copies(name));
+  PRUint8 * name;
+  PRUint32 length;
+  aRegistry->GetBytesUTF8(aPluginKey, kPluginsNameKey, &length, &name);
 
-  nsXPIDLCString description;
-  aRegistry->GetStringUTF8(aPluginKey, kPluginsDescKey, getter_Copies(description));
+  PRUint8 * description;
+  aRegistry->GetBytesUTF8(aPluginKey, kPluginsDescKey, &length, &description);
 
   nsXPIDLCString filename;
   nsXPIDLCString fullpath;
@@ -4807,17 +4817,21 @@ LoadXPCOMPlugin(nsIRegistry* aRegistry,
       extensions       = newextensions;
     }
 
-    aRegistry->GetStringUTF8(key, kPluginsMimeTypeKey,    &mimetypes[count]);
-    aRegistry->GetStringUTF8(key, kPluginsMimeDescKey, &mimedescriptions[count]);
-    aRegistry->GetStringUTF8(key, kPluginsMimeExtKey,   &extensions[count]);
+    aRegistry->GetStringUTF8(key, kPluginsMimeTypeKey, &mimetypes[count]);
+
+    PRUint8 * md;
+    aRegistry->GetBytesUTF8(key, kPluginsMimeDescKey, &length, &md);
+    mimedescriptions[count] = NS_REINTERPRET_CAST(char *, md);
+
+    aRegistry->GetStringUTF8(key, kPluginsMimeExtKey, &extensions[count]);
     ++count;
   }
 
   if (NS_SUCCEEDED(rv)) {
     // All done! Create the new nsPluginTag info and send it back.
     nsPluginTag* tag
-      = new nsPluginTag(name.get(),
-                        description.get(),
+      = new nsPluginTag(NS_REINTERPRET_CAST(const char *, name),
+                        NS_REINTERPRET_CAST(const char *, description),
                         aFilename ? aFilename : filename.get(),
                         fullpath.get(),
                         (const char* const*)mimetypes,
@@ -4849,36 +4863,47 @@ static nsresult
 AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
                         nsPluginTag *tag, const char *keyname)
 {
-    nsRegistryKey pluginKey;
-    nsresult rv = registry->AddSubtree(top, keyname, &pluginKey);
-    if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_ARG_POINTER(tag);
+  nsRegistryKey pluginKey;
+  nsresult rv = registry->AddSubtree(top, keyname, &pluginKey);
+  if (NS_FAILED(rv)) return rv;
 
-    // Add filename, name and description
-    registry->SetStringUTF8(pluginKey, kPluginsFilenameKey, tag->mFileName);
-    if (tag->mFullPath) {
-      registry->SetStringUTF8(pluginKey, kPluginsFullpathKey, tag->mFullPath);
-    }
-    registry->SetStringUTF8(pluginKey, kPluginsNameKey, tag->mName);
-    registry->SetStringUTF8(pluginKey, kPluginsDescKey, tag->mDescription);
-    registry->SetLongLong(pluginKey, kPluginsModTimeKey, &(tag->mLastModifiedTime));
-    registry->SetInt(pluginKey, kPluginsCanUnload, tag->mCanUnloadLibrary);
+  // Add filename, name and description
+  registry->SetStringUTF8(pluginKey, kPluginsFilenameKey, tag->mFileName);
+  if (tag->mFullPath)
+    registry->SetStringUTF8(pluginKey, kPluginsFullpathKey, tag->mFullPath);
 
-    // Add in each mimetype this plugin supports
-    for (int i=0; i<tag->mVariants; i++) {
-      char mimetypeKeyName[16];
-      nsRegistryKey mimetypeKey;
-      PR_snprintf(mimetypeKeyName, sizeof (mimetypeKeyName), "mimetype-%d", i);
-      rv = registry->AddSubtree(pluginKey, mimetypeKeyName, &mimetypeKey);
-      if (NS_FAILED(rv))
-        break;
-      registry->SetStringUTF8(mimetypeKey, kPluginsMimeTypeKey, tag->mMimeTypeArray[i]);
-      registry->SetStringUTF8(mimetypeKey, kPluginsMimeDescKey, tag->mMimeDescriptionArray[i]);
-      registry->SetStringUTF8(mimetypeKey, kPluginsMimeExtKey, tag->mExtensionsArray[i]);
-    }
-    if (NS_FAILED(rv)) {
-      rv = registry->RemoveSubtree(top, keyname);
-    }
-    return rv;
+  // we use SetBytes instead of SetString to address special character issue, see Mozilla bug 108246
+  if(tag->mName)
+    registry->SetBytesUTF8(pluginKey, kPluginsNameKey, nsCRT::strlen(tag->mName) + 1, (PRUint8 *)tag->mName);
+  
+  if(tag->mDescription)
+    registry->SetBytesUTF8(pluginKey, kPluginsDescKey, nsCRT::strlen(tag->mDescription) + 1, (PRUint8 *)tag->mDescription);
+
+  registry->SetLongLong(pluginKey, kPluginsModTimeKey, &(tag->mLastModifiedTime));
+  registry->SetInt(pluginKey, kPluginsCanUnload, tag->mCanUnloadLibrary);
+
+  // Add in each mimetype this plugin supports
+  for (int i=0; i<tag->mVariants; i++) {
+    char mimetypeKeyName[16];
+    nsRegistryKey mimetypeKey;
+    PR_snprintf(mimetypeKeyName, sizeof (mimetypeKeyName), "mimetype-%d", i);
+    rv = registry->AddSubtree(pluginKey, mimetypeKeyName, &mimetypeKey);
+    if (NS_FAILED(rv))
+      break;
+    registry->SetStringUTF8(mimetypeKey, kPluginsMimeTypeKey, tag->mMimeTypeArray[i]);
+
+    if(tag->mMimeDescriptionArray[i])
+      registry->SetBytesUTF8(mimetypeKey, kPluginsMimeDescKey, 
+                             nsCRT::strlen(tag->mMimeDescriptionArray[i]) + 1, 
+                             (PRUint8 *)tag->mMimeDescriptionArray[i]);
+
+    registry->SetStringUTF8(mimetypeKey, kPluginsMimeExtKey, tag->mExtensionsArray[i]);
+  }
+  if (NS_FAILED(rv))
+    rv = registry->RemoveSubtree(top, keyname);
+
+  return rv;
 }
 
 
