@@ -27,6 +27,7 @@ XPIDLSRCS =	\
 			.\nsIDBChangeListener.idl		\
 			.\nsIDBChangeAnnouncer.idl		\
 			.\nsIMsgDatabase.idl		\
+      .\nsIMsgOfflineImapOperation.idl \
 			.\nsINewsDatabase.idl		\
 			$(NULL)
 
