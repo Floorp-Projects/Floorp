@@ -2293,13 +2293,11 @@ VR_INTERFACE(REGERR) NR_RegGetUniqueName(HREG hReg, char* outbuf, uint32 buflen)
 
     PR_snprintf(outbuf,buflen,"%llx",reg->uniqkey);
 
-#ifndef XP_MAC
-    /* XXX must fix for Mac, the Mac is the main motivator for this feature */
-    one = LL_INIT(0,1);
-    tmp = reg->uniqkey;
+    /* increment counter for next time */
+    LL_I2L(one,1);
+    LL_ADD(tmp, reg->uniqkey, one);
+    reg->uniqkey = tmp;
 
-    LL_ADD(reg->uniqkey, tmp, one);
-#endif
     return REGERR_OK;
 }
 #endif
