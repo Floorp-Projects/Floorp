@@ -2667,13 +2667,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
   
             break;
         }
-        // Let ths fall through if it isn't a key pad
         case WM_SYSKEYUP:
-            // if it's a keypad key don't process a WM_CHAR will come or...oh well...
-            if (IsKeypadKey(wParam, lParam & 0x01000000)) {
-                result = PR_TRUE;
-                break;
-            }
         case WM_KEYUP: 
 #ifdef KE_DEBUG
             printf("%s\t\twp=%x\tlp=%x\n",  
@@ -2712,11 +2706,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         // Let ths fall through if it isn't a key pad
         case WM_SYSKEYDOWN:
-            // if it's a keypad key don't process a WM_CHAR will come or...oh well...
-            if (IsKeypadKey(wParam, lParam & 0x01000000)) {
-				      result = PR_TRUE;
-              break;
-            }
         case WM_KEYDOWN: {
 #ifdef KE_DEBUG
             printf("%s\t\twp=%4x\tlp=%8x\n",  

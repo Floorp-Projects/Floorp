@@ -1137,6 +1137,15 @@ nsRangeList::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
         default:
            return NS_ERROR_FAILURE;
     }
+
+//XXX Need xp way get platfrom specific behavior into key navigation.
+//XXX This really shouldn't have to use an ifdef
+#ifdef _WIN32
+    if (keyEvent->isAlt) {
+      return NS_ERROR_FAILURE;
+    }
+#endif
+
     nsCOMPtr<nsIDOMNode> weakNodeUsed;
     PRInt32 offsetused = 0;
     nsSelectionAmount amount = eSelectCharacter;
