@@ -40,6 +40,10 @@ MODULE = rdf
 
 REQUIRES = dom js netlib rdf raptor xpcom
 
+# XXX This is a dependency on rdfutil.h: it'll go away once that becomes
+# a first-class XPCOM interface.
+INCLUDES += -I$(srcdir)/../../base/src
+
 MKSHLIB :=
 
 # we don't want the shared lib
