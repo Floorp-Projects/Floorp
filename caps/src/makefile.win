@@ -94,7 +94,6 @@ LINCS= $(LINCS) \
 LLIBS = \
 	$(LIBNSPR)                    \
 	$(DIST)\lib\xpcom.lib         \
-	$(DIST)\lib\xplib.lib         \
 	$(DIST)\lib\js3250.lib	      \
 	$(DIST)\lib\oji.lib	      \
 	$(DIST)\lib\zlib.lib          \
