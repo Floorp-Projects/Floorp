@@ -248,7 +248,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::PushState()
   // Duplicate mState and put right before end; reset mState; make mState the new end of the stack
   WalkState* nextToLastState= new WalkState();
   if (!nextToLastState)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   *nextToLastState = mState;  // Deep copy - copy contents of struct to new state that will be added to end of our stack
   ClearState();
   mState.prevState = nextToLastState;   // Link to previous state
@@ -361,7 +361,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetChildBefore(nsIDOMNode* aParent, nsIDOM
   nsCOMPtr<nsIDOMNode> prevDOMNode(mState.domNode);
   nsCOMPtr<nsIAccessible> prevAccessible(mState.accessible);
 
-  while (mState.domNode && NS_SUCCEEDED(GetNextSibling()) && mState.domNode == aChild) {
+  while (mState.domNode && NS_SUCCEEDED(GetNextSibling()) && mState.domNode != aChild) {
     prevDOMNode = mState.domNode;
     prevAccessible = mState.accessible;
   }
