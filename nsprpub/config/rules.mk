@@ -151,7 +151,7 @@ endif
 endif
 
 ALL_TRASH		= $(TARGETS) $(OBJS) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAGE) \
-			  $(DIST_GARBAGE) $(NOSUCHFILE) \
+			  $(NOSUCHFILE) \
 			  so_locations
 
 ifdef DIRS
@@ -189,8 +189,12 @@ clobber::
 	rm -rf $(OBJS) $(TARGETS) $(filter-out . ..,$(OBJDIR)) $(GARBAGE) so_locations $(NOSUCHFILE)
 	+$(LOOP_OVER_DIRS)
 
-distclean realclean clobber_all::
-	rm -rf $(wildcard *.OBJ *.OBJD) $(ALL_TRASH)
+realclean clobber_all::
+	rm -rf $(wildcard *.OBJ *.OBJD) dist $(ALL_TRASH)
+	+$(LOOP_OVER_DIRS)
+
+distclean::
+	rm -rf $(wildcard *.OBJ *.OBJD) dist $(ALL_TRASH) $(DIST_GARBAGE)
 	+$(LOOP_OVER_DIRS)
 
 release:: export
