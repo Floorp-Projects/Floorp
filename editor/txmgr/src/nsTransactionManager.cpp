@@ -96,9 +96,22 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   mDoStack.Pop(&tx);
 
+  // Check if the transaction is transient. If it is, there's nothing
+  // more to do, just return.
+
+  PRBool isTransient = PR_FALSE;
+
+  result = aTransaction->GetIsTransient(&isTransient);
+
+  if (! NS_SUCCEEDED(result) || isTransient) {
+    delete tx;
+    UNLOCK_TX_MANAGER(this);
+    return result;
+  }
+
   nsTransactionItem *top = 0;
 
-  // Check if there is a command on the do stack. If there is,
+  // Check if there is a transaction on the do stack. If there is,
   // the current transaction is a "sub" transaction, and should
   // be added to the transaction at the top of the do stack.
 
@@ -123,7 +136,7 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
   result = mUndoStack.Peek(&top);
 
   if (top) {
-    PRBool didMerge = 0;
+    PRBool didMerge = PR_FALSE;
     nsITransaction *topTransaction = 0;
 
     result = top->GetTransaction(&topTransaction);

@@ -160,10 +160,18 @@ public:
     return NS_OK;
   }
 
+  virtual nsresult GetIsTransient(PRBool *aIsTransient)
+  {
+    if (aIsTransient)
+      *aIsTransient = PR_FALSE;
+
+    return NS_OK;
+  }
+
   virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   {
     if (aDidMerge)
-      *aDidMerge = 0;
+      *aDidMerge = PR_FALSE;
 
     return NS_OK;
   }
