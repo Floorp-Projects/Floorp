@@ -90,6 +90,6 @@ nsMenuPopupEntryListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsMenuPopupEntryListener::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  //mMenuPopupFrame->CaptureMouseEvents(PR_TRUE);
+  mMenuPopupFrame->CaptureMouseEvents(PR_TRUE);
   return NS_OK;
 }

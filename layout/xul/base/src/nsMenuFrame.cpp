@@ -45,6 +45,8 @@
 
 static PRInt32 gEatMouseMove = PR_FALSE;
 
+nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
+
 //
 // NS_NewMenuFrame
 //
@@ -84,7 +86,12 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                  
   *aInstancePtr = NULL;
-  if (aIID.Equals(nsIAnonymousContentCreator::GetIID())) {                           
+  if (aIID.Equals(nsIMenuFrame::GetIID())) {
+    *aInstancePtr = (void*)(nsIMenuFrame*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(nsIAnonymousContentCreator::GetIID())) {                           
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -287,7 +294,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::ToggleMenuState()
 {  
   if (mMenuOpen) {
@@ -296,9 +303,11 @@ nsMenuFrame::ToggleMenuState()
   else {
     OpenMenu(PR_TRUE);
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 {
   if (aActivateFlag) {
@@ -309,6 +318,8 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
     // Unhighlight the menu.
     mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
   }
+
+  return NS_OK;
 }
 
 PRBool nsMenuFrame::IsGenerated()
@@ -329,7 +340,8 @@ PRBool nsMenuFrame::IsGenerated()
   return PR_TRUE;
 }
 
-void nsMenuFrame::MarkAsGenerated()
+NS_IMETHODIMP
+nsMenuFrame::MarkAsGenerated()
 {
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
@@ -343,9 +355,11 @@ void nsMenuFrame::MarkAsGenerated()
     if (genVal == "")
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true", PR_TRUE);
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 {
   // Activate the menu without opening it.
@@ -358,6 +372,8 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
     else child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
   }
+
+  return NS_OK;
 }  
 
 NS_IMETHODIMP
@@ -392,7 +408,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::OpenMenu(PRBool aActivateFlag)
 {
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
@@ -404,6 +420,8 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     domElement->SetAttribute("open", "true");
   }
   else domElement->RemoveAttribute("open");
+
+  return NS_OK;
 }
 
 void 
@@ -425,6 +443,9 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
+    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
+    UpdateDismissalListener(childPopup);
+
     ActivateMenu(PR_TRUE);
     if (menuPopup) {
       // Tell the menu bar we're active.
@@ -446,6 +467,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     // Execute the ondestroy handler
     if (!OnDestroy())
       return;
+
+    UpdateDismissalListener(mMenuParent);
 
     nsIFrame* frame = mPopupFrames.FirstChild();
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
@@ -586,7 +609,7 @@ nsMenuFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incremental
   return rv;
 }
 
-void 
+NS_IMETHODIMP
 nsMenuFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
   nsIFrame* frame = mPopupFrames.FirstChild();
@@ -594,9 +617,11 @@ nsMenuFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
     popup->ShortcutNavigation(aLetter, aHandledFlag);
   } 
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {
   nsIFrame* frame = mPopupFrames.FirstChild();
@@ -604,9 +629,11 @@ nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
     popup->KeyboardNavigation(aDirection, aHandledFlag);
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::Escape(PRBool& aHandledFlag)
 {
   nsIFrame* frame = mPopupFrames.FirstChild();
@@ -614,9 +641,11 @@ nsMenuFrame::Escape(PRBool& aHandledFlag)
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
     popup->Escape(aHandledFlag);
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::Enter()
 {
   if (!mMenuOpen) {
@@ -630,7 +659,7 @@ nsMenuFrame::Enter()
       SelectFirstItem();
     }
 
-    return;
+    return NS_OK;
   }
 
   nsIFrame* frame = mPopupFrames.FirstChild();
@@ -638,18 +667,22 @@ nsMenuFrame::Enter()
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
     popup->Enter();
   }
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuFrame::SelectFirstItem()
 {
   nsIFrame* frame = mPopupFrames.FirstChild();
   if (frame) {
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
-    nsIFrame* result;
+    nsIMenuFrame* result;
     popup->GetNextMenuItem(nsnull, &result);
     popup->SetCurrentMenuItem(result);
   }
+
+  return NS_OK;
 }
 
 PRBool
@@ -744,6 +777,11 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
                         onMenuBar ? "menubar-left" : "menu-left" , PR_FALSE);
   aAnonymousChildren.AppendElement(content);
   
+  nsAutoString beforeString;
+  nsAutoString accessString;
+  nsAutoString afterString;
+  SplitOnShortcut(beforeString, accessString, afterString);
+
   /*
    * Create the .menu-text titledbutton, and propagate crop, accesskey and
    * value attributes.  If we're a menubar, make the class menubar-text
@@ -801,27 +839,6 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
     content->SetAttribute(kNameSpaceID_None, classAtom, "menu-right", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   }
-
-  // Make this insertion explicit.
-  /*PRUint32 count = 0;
-  aAnonymousChildren.Count(&count);
-
-  PRUint32 i;
-  for (i=0; i < count; i++)
-  {
-    // get our child's content and set its parent to our content
-    nsCOMPtr<nsISupports> node;
-    aAnonymousChildren.GetElementAt(i,getter_AddRefs(node));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-    mContent->AppendChildTo(content, PR_TRUE);
-  }
-
-  // Empty the array.
-  for (i=0; i < count; i++)
-  {
-    aAnonymousChildren.RemoveElementAt(0);
-  }
-*/
 
   return NS_OK;
 }
@@ -1079,4 +1096,17 @@ nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
   }
 
   return rv;
+}
+
+void
+nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
+{
+  if (!nsMenuFrame::mDismissalListener) {
+    // Create the listener and attach it to the outermost window.
+    aMenuParent->CreateDismissalListener();
+  }
+  
+  // Make sure the menu dismissal listener knows what the current
+  // innermost menu popup frame is.
+  nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
 }

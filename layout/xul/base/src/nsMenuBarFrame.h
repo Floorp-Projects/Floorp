@@ -31,6 +31,7 @@
 #include "nsIMenuParent.h"
 
 class nsIContent;
+class nsIMenuFrame;
 
 nsresult NS_NewMenuBarFrame(nsIFrame** aResult) ;
 
@@ -43,9 +44,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMenuParentInterface
-  NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
-  NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
-  NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
+  NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
+  NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
+  NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
   NS_IMETHOD SetActive(PRBool aActiveFlag); 
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = IsActive(); return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_TRUE; return NS_OK; };
@@ -57,6 +58,9 @@ public:
 
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
+
+  // The dismissal listener gets created and attached to the window.
+  NS_IMETHOD CreateDismissalListener();
 
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
@@ -76,7 +80,7 @@ public:
   
   // Used to handle ALT+key combos
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  nsIFrame* FindMenuWithShortcut(PRUint32 aLetter);
+  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
   // Called when the ESC key is held down to close levels of menus.
   void Escape();
@@ -90,7 +94,7 @@ public:
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
   PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
-  nsIFrame* mCurrentMenu; // The current menu that is active.
+  nsIMenuFrame* mCurrentMenu; // The current menu that is active.
 
   nsIDOMEventReceiver* mTarget;
 

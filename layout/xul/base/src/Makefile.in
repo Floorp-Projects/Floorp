@@ -56,7 +56,7 @@ CPPSRCS		= \
 		nsMenuFrame.cpp \
 		nsMenuBarFrame.cpp \
 		nsMenuBarListener.cpp \
-		nsMenuPopupEntryListener.cpp \
+		nsMenuDismissalListener.cpp \
 		nsPopupSetFrame.cpp \
 		nsRepeatService.cpp \
 		$(NULL)

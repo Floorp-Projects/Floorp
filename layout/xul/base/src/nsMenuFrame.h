@@ -31,6 +31,8 @@
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
+#include "nsIMenuFrame.h"
+#include "nsMenuDismissalListener.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsISupportsArray.h"
@@ -42,7 +44,10 @@ nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
 
-class nsMenuFrame : public nsBoxFrame, public nsITimerCallback, public nsIAnonymousContentCreator
+class nsMenuFrame : public nsBoxFrame, 
+                    public nsIMenuFrame,
+                    public nsITimerCallback, 
+                    public nsIAnonymousContentCreator
 {
 public:
   nsMenuFrame();
@@ -109,33 +114,39 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
-  void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  void Escape(PRBool& aHandledFlag);
-  void Enter();
+  // nsIMenuFrame Interface
+  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
+  NS_IMETHOD Escape(PRBool& aHandledFlag);
+  NS_IMETHOD Enter();
 
-  void ToggleMenuState();
-  void SelectMenu(PRBool aActivateFlag);
+  NS_IMETHOD ToggleMenuState();
+  NS_IMETHOD SelectMenu(PRBool aActivateFlag);
   
-  void OpenMenu(PRBool aActivateFlag);
+  NS_IMETHOD OpenMenu(PRBool aActivateFlag);
   
-  void ActivateMenu(PRBool aActivateFlag);
+  NS_IMETHOD ActivateMenu(PRBool aActivateFlag);
 
+  NS_IMETHOD MenuIsContainer(PRBool& aResult) { aResult = IsMenu(); return NS_OK; };
   PRBool IsMenu();
   
-  void SelectFirstItem();
+  NS_IMETHOD SelectFirstItem();
 
+  NS_IMETHOD MenuIsOpen(PRBool& aResult) { aResult = IsOpen(); return NS_OK; };
   PRBool IsOpen() { return mMenuOpen; };
-  void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
-
-  void GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; };
+  
+  NS_IMETHOD GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; return NS_OK; };
  
   PRBool IsDisabled();
 
-  void MarkAsGenerated();
+  NS_IMETHOD MarkAsGenerated();
   PRBool IsGenerated();
+  
+  void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
 protected:
+  static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
+
   void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);
 
@@ -169,6 +180,8 @@ protected:
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.
+
+  static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
 }; // class nsMenuFrame
 
 #endif

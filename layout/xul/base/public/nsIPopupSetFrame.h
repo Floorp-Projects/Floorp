@@ -38,6 +38,9 @@ public:
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment) = 0;
+
+  NS_IMETHOD HidePopup() = 0;
+  NS_IMETHOD DestroyPopup() = 0;
 };
 
 #endif

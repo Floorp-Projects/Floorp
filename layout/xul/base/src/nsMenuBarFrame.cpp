@@ -34,6 +34,8 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
 //
 // NS_NewMenuBarFrame
 //
@@ -137,9 +139,8 @@ nsMenuBarFrame::ToggleMenuActiveState()
     mIsActive = PR_FALSE;
     if (mCurrentMenu) {
       // Deactivate the menu.
-      nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-      menuFrame->OpenMenu(PR_FALSE);
-      menuFrame->SelectMenu(PR_FALSE);
+      mCurrentMenu->OpenMenu(PR_FALSE);
+      mCurrentMenu->SelectMenu(PR_FALSE);
       mCurrentMenu = nsnull;
     }
   }
@@ -150,11 +151,10 @@ nsMenuBarFrame::ToggleMenuActiveState()
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "active" to track the current active menu.
     nsCOMPtr<nsIContent> firstMenuItem;
-    nsIFrame* firstFrame;
+    nsIMenuFrame* firstFrame;
     GetNextMenuItem(nsnull, &firstFrame);
     if (firstFrame) {
-      nsMenuFrame* menuFrame = (nsMenuFrame*)firstFrame;
-      menuFrame->SelectMenu(PR_TRUE);
+      firstFrame->SelectMenu(PR_TRUE);
       
       // Track this item for keyboard navigation.
       mCurrentMenu = firstFrame;
@@ -162,7 +162,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
 }
 
-nsIFrame*
+nsIMenuFrame*
 nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
 {
   // Enumerate over our list of frames.
@@ -182,7 +182,10 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
         PRUnichar shortcutChar = shortcutKey.CharAt(0);
         if (shortcutChar == aLetter) {
           // We match!
-          return currFrame;
+          nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+          if (menuFrame)
+            return menuFrame.get();
+          return nsnull;
         }
       }
     }
@@ -195,24 +198,24 @@ void
 nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
   if (mCurrentMenu) {
-    nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-    if (menuFrame->IsOpen()) {
+    PRBool isOpen = PR_FALSE;
+    mCurrentMenu->MenuIsOpen(isOpen);
+    if (isOpen) {
       // No way this applies to us. Give it to our child.
-      menuFrame->ShortcutNavigation(aLetter, aHandledFlag);
+      mCurrentMenu->ShortcutNavigation(aLetter, aHandledFlag);
       return;
     }
   }
 
   // This applies to us. Let's see if one of the shortcuts applies
-  nsIFrame* result = FindMenuWithShortcut(aLetter);
+  nsIMenuFrame* result = FindMenuWithShortcut(aLetter);
   if (result) {
     // We got one!
     aHandledFlag = PR_TRUE;
     mIsActive = PR_TRUE;
-    nsMenuFrame* menuFrame = (nsMenuFrame*)result;
     SetCurrentMenuItem(result);
-    menuFrame->OpenMenu(PR_TRUE);
-    menuFrame->SelectFirstItem();
+    result->OpenMenu(PR_TRUE);
+    result->SelectFirstItem();
   }
 }
 
@@ -221,13 +224,17 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
 {
   if (!mCurrentMenu)
     return;
+  
+  PRBool isContainer = PR_FALSE;
+  PRBool isOpen = PR_FALSE;
+  mCurrentMenu->MenuIsContainer(isContainer);
+  mCurrentMenu->MenuIsOpen(isOpen);
 
-  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-   
   PRBool handled = PR_FALSE;
-  if (menuFrame->IsOpen()) {
+  
+  if (isOpen) {
     // Let the child menu try to handle it.
-    menuFrame->KeyboardNavigation(aDirection, handled);
+    mCurrentMenu->KeyboardNavigation(aDirection, handled);
   }
 
   if (handled)
@@ -235,7 +242,7 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
 
   if (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT) {
     
-    nsIFrame* nextItem;
+    nsIMenuFrame* nextItem;
     
     if (aDirection == NS_VK_RIGHT)
       GetNextMenuItem(mCurrentMenu, &nextItem);
@@ -243,28 +250,32 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
 
     SetCurrentMenuItem(nextItem);
     if (nextItem) {
-      nsMenuFrame* menu = (nsMenuFrame*)nextItem;
-      if (menu->IsOpen()) {
+      PRBool nextIsOpen;
+      nextItem->MenuIsOpen(nextIsOpen);
+      if (nextIsOpen) {
         // Select the first item.
-        menu->SelectFirstItem();
+        nextItem->SelectFirstItem();
       }
     }
   }
   else if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
     // Open the menu and select its first item.
-    menuFrame->OpenMenu(PR_TRUE);
-    menuFrame->SelectFirstItem();
+    mCurrentMenu->OpenMenu(PR_TRUE);
+    mCurrentMenu->SelectFirstItem();
   }
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
+nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
-  nsIFrame* currFrame;
+  nsIFrame* currFrame = nsnull;
+  nsIFrame* startFrame = nsnull;
   if (aStart) {
-    currFrame = aStart;
-    if (currFrame)
+    aStart->QueryInterface(kIFrameIID, (void**)&currFrame); 
+    if (currFrame) {
+      startFrame = currFrame;
       currFrame->GetNextSibling(&currFrame);
+    }
   }
   else currFrame = mFrames.FirstChild();
 
@@ -274,7 +285,9 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 
     // See if it's a menu item.
     if (IsValidItem(current)) {
-      *aResult = currFrame;
+      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+      *aResult = menuFrame.get();
+      NS_IF_ADDREF(*aResult);
       return NS_OK;
     }
     currFrame->GetNextSibling(&currFrame);
@@ -283,13 +296,15 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
   currFrame = mFrames.FirstChild();
 
   // Still don't have anything. Try cycling from the beginning.
-  while (currFrame && currFrame != aStart) {
+  while (currFrame && currFrame != startFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
     if (IsValidItem(current)) {
-      *aResult = currFrame;
+      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+      *aResult = menuFrame.get();
+      NS_IF_ADDREF(*aResult);
       return NS_OK;
     }
 
@@ -302,13 +317,16 @@ nsMenuBarFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
+nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
 {
-  nsIFrame* currFrame;
+  nsIFrame* currFrame = nsnull;
+  nsIFrame* startFrame = nsnull;
   if (aStart) {
-    currFrame = aStart;
-    if (currFrame)
+    aStart->QueryInterface(kIFrameIID, (void**)&currFrame);
+    if (currFrame) {
+      startFrame = currFrame;
       currFrame = mFrames.GetPrevSiblingFor(currFrame);
+    }
   }
   else currFrame = mFrames.LastChild();
 
@@ -318,7 +336,9 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 
     // See if it's a menu item.
     if (IsValidItem(current)) {
-      *aResult = currFrame;
+      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+      *aResult = menuFrame.get();
+      NS_IF_ADDREF(*aResult);
       return NS_OK;
     }
     currFrame = mFrames.GetPrevSiblingFor(currFrame);
@@ -327,13 +347,15 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
   currFrame = mFrames.LastChild();
 
   // Still don't have anything. Try cycling from the end.
-  while (currFrame && currFrame != aStart) {
+  while (currFrame && currFrame != startFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
     if (IsValidItem(current)) {
-      *aResult = currFrame;
+      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+      *aResult = menuFrame.get();
+      NS_IF_ADDREF(*aResult);
       return NS_OK;
     }
 
@@ -345,31 +367,28 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
+NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)
     return NS_OK;
 
-  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
   PRBool wasOpen = PR_FALSE;
   
   // Unset the current child.
   if (mCurrentMenu) {
-    wasOpen = menuFrame->IsOpen();
+    mCurrentMenu->MenuIsOpen(wasOpen);
     if (wasOpen)
-      menuFrame->OpenMenu(PR_FALSE);
-    menuFrame->SelectMenu(PR_FALSE);
+      mCurrentMenu->OpenMenu(PR_FALSE);
+    mCurrentMenu->SelectMenu(PR_FALSE);
   }
 
   // Set the new child.
   if (aMenuItem) {
-    nsMenuFrame* newFrame = (nsMenuFrame*)aMenuItem;
-    newFrame->SelectMenu(PR_TRUE);
-    
-    newFrame->MarkAsGenerated(); // Have the menu building. Get it ready to be shown.
+    aMenuItem->SelectMenu(PR_TRUE);
+    aMenuItem->MarkAsGenerated(); // Have the menu building. Get it ready to be shown.
 
     if (wasOpen)
-      newFrame->OpenMenu(PR_TRUE);
+      aMenuItem->OpenMenu(PR_TRUE);
   }
 
   mCurrentMenu = aMenuItem;
@@ -384,15 +403,16 @@ nsMenuBarFrame::Escape()
     return;
 
   // See if our menu is open.
-  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-  if (menuFrame->IsOpen()) {
+  PRBool isOpen = PR_FALSE;
+  mCurrentMenu->MenuIsOpen(isOpen);
+  if (isOpen) {
     // Let the child menu handle this.
     PRBool handled = PR_FALSE;
-    menuFrame->Escape(handled);
+    mCurrentMenu->Escape(handled);
     if (!handled) {
       // Close up this menu but keep our current menu item
       // designation.
-      menuFrame->OpenMenu(PR_FALSE);
+      mCurrentMenu->OpenMenu(PR_FALSE);
     }
     return;
   }
@@ -411,25 +431,25 @@ nsMenuBarFrame::Enter()
     return;
 
   // See if our menu is open.
-  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-  if (menuFrame->IsOpen()) {
+  PRBool isOpen = PR_FALSE;
+  mCurrentMenu->MenuIsOpen(isOpen);
+  if (isOpen) {
     // Let the child menu handle this.
-    menuFrame->Enter();
+    mCurrentMenu->Enter();
     return;
   }
 
   // It's us. Open the current menu.
-  menuFrame->OpenMenu(PR_TRUE);
-  menuFrame->SelectFirstItem();
+  mCurrentMenu->OpenMenu(PR_TRUE);
+  mCurrentMenu->SelectFirstItem();
 }
 
 NS_IMETHODIMP
 nsMenuBarFrame::HideChain()
 {
   if (mCurrentMenu) {
-    nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
-    menuFrame->ActivateMenu(PR_FALSE);
-    menuFrame->SelectMenu(PR_FALSE);
+    mCurrentMenu->ActivateMenu(PR_FALSE);
+    mCurrentMenu->SelectMenu(PR_FALSE);
   }
   return NS_OK;
 }
@@ -442,6 +462,31 @@ nsMenuBarFrame::DismissChain()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMenuBarFrame::CreateDismissalListener()
+{
+  // Create the listener.
+  nsMenuFrame::mMenuDismissalListener = new nsMenuDismissalListener();
+  
+  // Get the global object for the content node and convert it to a DOM
+  // window.
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return NS_OK;
+
+  doc->GetScriptContextOwner(...);
+
+  owner->GetScriptGlobalObject(...);
+
+  // qi global object to an nsidomwindow
+
+  // Walk up the parent chain until we reach the outermost window.
+
+  // Attach ourselves as a mousedown listener.
+
+  return NS_OK;
+}
 
 PRBool 
 nsMenuBarFrame::IsValidItem(nsIContent* aContent)
@@ -478,4 +523,3 @@ nsMenuBarFrame::Destroy(nsIPresContext& aPresContext)
 
   return nsToolbarFrame::Destroy(aPresContext);
 }
-
