@@ -303,6 +303,11 @@ public:
   PRBool HasBreak() const {
     return NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
   }
+  PRBool HasFloatBreak() const {
+    return NS_STYLE_CLEAR_LEFT == mFlags.mBreakType ||
+      NS_STYLE_CLEAR_RIGHT == mFlags.mBreakType ||
+      NS_STYLE_CLEAR_LEFT_AND_RIGHT == mFlags.mBreakType;
+  }
   void SetBreakType(PRUint8 aBreakType) {
     NS_WARN_IF_FALSE(aBreakType <= LINE_MAX_BREAK_TYPE, "bad break type");
     mFlags.mBreakType = aBreakType;
