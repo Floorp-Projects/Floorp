@@ -2138,11 +2138,11 @@ sub AddFDef ($$$) {
         $dbh->do("INSERT INTO fielddefs " .
              "(fieldid, name, description, mailhead, sortkey) VALUES " .
              "($fieldid, $name, $description, $mailhead, $headernum)");
-        $headernum++;
     } else {
         $dbh->do("UPDATE fielddefs SET name = $name, description = $description, " .
-                 "mailhead = $mailhead WHERE fieldid = $fieldid");
+                 "mailhead = $mailhead, sortkey = $headernum WHERE fieldid = $fieldid");
     }
+    $headernum++;
 }
 
 
