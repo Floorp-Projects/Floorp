@@ -56,7 +56,9 @@ CPPSRCS		= \
 LOCAL_INCLUDES	= -I$(srcdir)/../unix
 DEFINES		+= -DMOZ_USE_STDCALL -DMOZ_NEED_LEADING_UNDERSCORE
 else
+
 CPPSRCS		= xptcinvoke.cpp xptcstubs.cpp
+
 endif
 
 
@@ -70,6 +72,15 @@ CPPSRCS 	:= xptcinvoke_alpha.cpp xptcstubs_alpha.cpp
 ASFILES		:= xptcinvoke_asm_alpha.s xptcstubs_asm_alpha.s
 AS		:= asaxp
 ASFLAGS		+= /I../../..public
+endif
+
+ifeq ($(OS_ARCH),WINCE)
+ifeq ($(CPU),ARM)
+CPPSRCS 	:= xptcinvokece.cpp xptcstubsce.cpp
+ASFILES		:= 
+AS		    := 
+ASFLAGS		+= /I../../..public
+endif
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
