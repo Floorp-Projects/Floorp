@@ -28,6 +28,7 @@ use Moz;
 # configuration variables
 $DEBUG = 0;
 $ALIAS_SYM_FILES = $DEBUG;
+$CLOBBER_LIBS = 0;
 
 $pull{all} = 0;
 $pull{lizard} = 0;
