@@ -61,7 +61,6 @@
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
-#include "nsComponentManagerObsolete.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCategoryManager.h"
@@ -3711,31 +3710,6 @@ nsComponentManagerImpl::FlushPersistentStore(PRBool now)
 ////////////////////////////////////////////////////////////////////////////////
 // Static Access Functions
 ////////////////////////////////////////////////////////////////////////////////
-
-NS_COM nsresult
-NS_GetGlobalComponentManager(nsIComponentManager* *result)
-{
-#ifdef DEBUG_dougt
-    //    NS_WARNING("DEPRECATED FUNCTION: Use NS_GetComponentManager");
-#endif
-    nsresult rv = NS_OK;
-
-    if (nsComponentManagerImpl::gComponentManager == nsnull)
-    {
-        // XPCOM needs initialization.
-        rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    }
-
-    if (NS_SUCCEEDED(rv))
-    {
-        // NO ADDREF since this is never intended to be released.
-        // See nsComponentManagerObsolete.h for the reason for such
-        // casting uglyness
-        *result = (nsIComponentManager*)(void*)(nsIComponentManagerObsolete*) nsComponentManagerImpl::gComponentManager;
-    }
-
-    return rv;
-}
 
 NS_COM nsresult
 NS_GetComponentManager(nsIComponentManager* *result)
