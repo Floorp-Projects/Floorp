@@ -137,6 +137,7 @@ IMGLIB_LIBS =	     \
 	-limg	     \
 	$(NULL)
 
+ifndef NECKO
 NETLIB_LIBS =	      \
 	-labouturl    \
 	-lfileurl     \
@@ -144,7 +145,6 @@ NETLIB_LIBS =	      \
 	-lgophurl     \
 	-lhttpurl     \
 	-lremoturl    \
-ifndef NECKO
 	-lsockstuburl \
 	-lmimetype    \
 	-lnetcache    \
@@ -156,13 +156,6 @@ ifndef NECKO
 	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	-lpwcac	      \
 	$(NULL)
-
-LIBS =		       \
-	$(GECKO_LIBS)  \
-	$(NETLIB_LIBS) \
-	$(IMGLIB_LIBS) \
-	$(BASE_LIBS)   \
-	$(JSJ_LIB)     \
 else
 NETLIB_LIBS =	      \
 	-lneckoutil_s \
@@ -171,6 +164,13 @@ NETLIB_LIBS =	      \
 	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	$(NULL)
 endif
+
+LIBS =		       \
+	$(GECKO_LIBS)  \
+	$(NETLIB_LIBS) \
+	$(IMGLIB_LIBS) \
+	$(BASE_LIBS)   \
+	$(JSJ_LIB)     \
 	$(NSPR_LIBS)   \
 	$(TK_LIBS)     \
 	$(NULL)
