@@ -143,6 +143,12 @@ window.dialog {
   width:32px;height:32px;
 }
 
+.security-icon {
+  list-style-image: url("chrome://global/skin/icons/alert-security.gif");
+  width: 32px;
+  height: 32px;
+}
+
 /* ::::: iframe ::::: */
 
 iframe {
