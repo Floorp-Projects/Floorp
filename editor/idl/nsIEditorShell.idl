@@ -334,6 +334,18 @@ interface nsIEditorShell : nsISupports
   void DeleteTableCellContents();
   void DeleteTableRow(in PRInt32 number);
   void DeleteTableColumn(in PRInt32 number);
+
+
+  /** Create a new TD or TH element, the opposite type of the supplied aSourceCell
+    *   1. Copy all attributes from sourceCell to the new cell
+    *   2. Move all contents of sourceCell to the new cell
+    *   3. Replace sourceCell in the table with the new cell
+    *
+    *  sourceCell   The cell to be replaced
+    *  returns      The new cell that replaces sourceCell
+    */
+  nsIDOMElement SwitchTableCellHeaderType(in nsIDOMElement sourceCell);
+
   /** Merges contents of all selected cells
     * for selected cells that are adjacent,
     * this will result in a larger cell with appropriate 
@@ -392,34 +404,36 @@ interface nsIEditorShell : nsISupports
     */
   PRInt32 GetTableRowCount(in nsIDOMElement tableElement);
 
-  /* Get the number of columns in a table from the layout's cellmap
+  /** Get the number of columns in a table from the layout's cellmap
     * If tableElement is null, it will try to find enclosing table of selection anchor
     */
   PRInt32 GetTableColumnCount(in nsIDOMElement tableElement);
 
-  /* Get cell at a location in the layout's cellmap
-     returns null when past last cell in a row or column */
-  /* Get a cell and associated data from the layout frame  based on cell map coordinates (0 index) */
+  /** Get cell at a location in the layout's cellmap
+    * returns null when past last cell in a row or column
+    * Get a cell and associated data from the layout frame  based on cell map coordinates (0 index)
+    */
   nsIDOMElement GetCellAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex);
-  /* Get cell at a location in the layout's cellmap with associated data 
-     returns null when past last cell in a row or column 
-     Note that rowSpan and/or colSpan may be 0 (for extending across entire table),
-     so actualRowSpan and actualColSpan are the real number of cells spanned
-  */
+
+  /** Get cell at a location in the layout's cellmap with associated data 
+    * returns null when past last cell in a row or column 
+    * Note that rowSpan and/or colSpan may be 0 (for extending across entire table),
+    * so actualRowSpan and actualColSpan are the real number of cells spanned
+    */
   nsIDOMElement GetCellDataAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex,
                               out PRInt32 startRowIndex, out PRInt32 startColIndex,
                               out PRInt32 rowSpan, out PRInt32 colSpan, 
                               out PRInt32 actualRowSpan, out PRInt32 actualColSpan, 
                               out boolean isSelected);
   
-  /* Get the first row element in a table 
-     tableElement may be a table or any child element a table
-   */
+  /** Get the first row element in a table 
+    * tableElement may be a table or any child element a table
+    */
   nsIDOMElement GetFirstRow(in nsIDOMElement tableElement);
 
-  /* Get the next row element in a table after currentRow 
-   * currentRow may be a row or any child element of a row
-  */
+  /** Get the next row element in a table after currentRow 
+    * currentRow may be a row or any child element of a row
+    */
   nsIDOMElement GetNextRow(in nsIDOMElement currentRow);
 
   /** Examine the current selection and find
