@@ -1172,7 +1172,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   return result;
 }
 
-void PushMisplacedAttributes(nsIParserNode& aNode,nsDeque& aDeque,PRInt32& aCount) {
+static void PushMisplacedAttributes(nsIParserNode& aNode,nsDeque& aDeque,PRInt32& aCount) {
   if(aCount > 0) {
     CToken* theAttrToken=nsnull;
     nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
@@ -1598,7 +1598,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
  * @update  gess 10/11/99
  * @return  nada
  */
-void StripWSFollowingTag(eHTMLTags aChildTag,nsITokenizer* aTokenizer,nsITokenRecycler* aRecycler, PRInt32& aNewlineCount){ 
+static void StripWSFollowingTag(eHTMLTags aChildTag,nsITokenizer* aTokenizer,nsITokenRecycler* aRecycler, PRInt32& aNewlineCount){ 
   CToken* theToken= (aTokenizer)? aTokenizer->PeekToken():nsnull; 
 
   if(aRecycler) { 
