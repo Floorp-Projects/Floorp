@@ -43,13 +43,17 @@ public:
   HRuleFrame(nsIContent* aContent,
              nsIFrame* aParentFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+                    nsReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+                    nsReflowStatus& aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
+  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute);
 
 protected:
   virtual ~HRuleFrame();
@@ -84,6 +88,19 @@ HRuleFrame::HRuleFrame(nsIContent* aContent,
 
 HRuleFrame::~HRuleFrame()
 {
+}
+
+NS_IMETHODIMP
+HRuleFrame::AttributeChanged(nsIPresShell* aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent* aChild,
+                             nsIAtom* aAttribute)
+{
+  if (nsHTMLAtoms::noshade == aAttribute) {
+    // Trigger an immediate rendering
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
+  }
+  return NS_OK;
 }
 
 NS_METHOD
