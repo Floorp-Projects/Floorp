@@ -1405,20 +1405,20 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 /* The following namespace if for use with viewsource */
 
 viewsource|key   {font-weight:bold;} 
-viewsource|key:before {content: " "; color: black;} 
+viewsource|key:before {color: black;} 
 
 viewsource|val  {color: blue; font-weight:normal;} 
 viewsource|val:before {content: "="; color: black;} 
 
-viewsource|entity  {color: maroon; font-weight:normal;} 
-viewsource|entity:before {content: "&"; color: maroon;} 
+viewsource|entity  {color:#FF4500; font-weight:normal;} 
+viewsource|entity:before {content: "&"; color:#FF4500;} 
 
 viewsource|comment {color: green; font-style:italic; } 
 viewsource|cdata   {color: #CC0066;} 
 
-viewsource|doctype {color: green; font-style:italic;} 
+viewsource|doctype {color:steelblue; font-style:italic;} 
 
-viewsource|pi  {color: #D74702; font-style:italic;} 
+viewsource|pi  {color:orchid; font-style:italic;} 
 
 viewsource|start {color: purple;  font-weight:bold;} 
 viewsource|start:before {content: "<"; color: black;} 
@@ -1428,6 +1428,6 @@ viewsource|end {color: purple;  font-weight:bold;}
 viewsource|end:before {content: "</"; color: black;} 
 viewsource|end:after {content: ">"; color: black;} 
 
-viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:10pt;} 
+viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:10pt; padding-top:8px; margin-left:8px;} 
 
 viewsource|txt {font-weight: normal; }
