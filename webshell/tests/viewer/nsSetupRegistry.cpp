@@ -400,7 +400,7 @@ NS_SetupRegistry()
 
   nsComponentManager::RegisterComponent(kCharsetConverterManagerCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCharsetAliasCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kLatin1ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kISO88591ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kISO88597ToUnicodeCID,    NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCP1253ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kSJIS2UnicodeCID,         NULL, NULL, UCVJA_DLL, PR_FALSE, PR_FALSE);
