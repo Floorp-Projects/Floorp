@@ -25,29 +25,206 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
  
+#include "nsIFileSpec.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
+
+#include "nsSpecialSystemDirectory.h"
 
 NS_IMPL_ADDREF(nsTransferable)
 NS_IMPL_RELEASE(nsTransferable)
 
+// million bytes
+#define LARGE_DATASET_SIZE 1000000 
 
 struct DataStruct {
-  DataStruct ( const nsString & aString )
-    : mFlavor(aString), mData(nsnull), mDataLen(0) { }
-  ~DataStruct ( ) { if ( mData ) delete [] mData; }
+  DataStruct (const nsString & aString)
+    : mFlavor(aString), mData(nsnull), mDataLen(0), mCacheFileName(nsnull) { }
+  ~DataStruct();
   
-  void SetData ( char* aData, size_t aDataLen )
-  {
-    if ( mData )
-      delete [] mData;
-    mData = aData;
-    mDataLen = aDataLen;
-  }
-  
+  void SetData( char* aData, size_t aDataLen );
+  void GetData( char** aData, size_t *aDataLen );
+  nsIFileSpec * GetFileSpec(const char * aFileName);
+  PRBool IsDataAvilable() { return (nsnull != mData && mDataLen > 0) || (nsnull == mData && nsnull != mCacheFileName); }
   nsString   mFlavor;
-  char *     mData;
-  PRUint32   mDataLen;
+
+protected:
+  nsresult WriteCache(char* aData, PRUint32 aDataLen );
+  nsresult ReadCache(char** aData, PRUint32* aDataLen );
+
+  
+  char *   mData;
+  PRUint32 mDataLen;
+  char *   mCacheFileName;
 
 };
+
+//-------------------------------------------------------------------------
+DataStruct::~DataStruct() 
+{ 
+  if (mData) 
+    delete [] mData; 
+
+  if (mCacheFileName) {
+    delete [] mCacheFileName; 
+    //nsIFileSpec * cacheFile = GetFileSpec(mCacheFileName);
+    //cacheFile->remove();
+  }
+}
+
+//-------------------------------------------------------------------------
+void DataStruct::SetData ( char* aData, size_t aDataLen )
+{
+  // check to see if we already have data and then delete it
+  if ( mData ) {
+    delete [] mData;
+    mData = nsnull;
+  }
+
+  // Now, check to see if we consider the data to be "too large"
+  if (aDataLen > LARGE_DATASET_SIZE) {
+    // if so, cache it to disk instead of memory
+    if (NS_OK == WriteCache(aData, aDataLen)) {
+      printf("->>>>>>>>>>>>>> Wrote Clipboard to cache file\n");
+      return;
+    }
+  } else {
+    printf("->>>>>>>>>>>>>> Write Clipboard to memory\n");
+  }
+  mData    = aData;
+  mDataLen = aDataLen;
+  
+}
+
+//-------------------------------------------------------------------------
+void DataStruct::GetData ( char** aData, size_t *aDataLen )
+{
+  // check here to see if the data is cached on disk
+  if (nsnull == mData && nsnull != mCacheFileName) {
+    // if so, read it in and pass it back
+    if (NS_OK == ReadCache(aData, aDataLen)) {
+      printf("->>>>>>>>>>>>>> Read Clipboard from cache file\n");
+      return;
+    }
+  } else {
+    printf("->>>>>>>>>>>>>> Read Clipboard from memory\n");
+  }
+  // this either passes back the right about
+  // or zeros it out
+  *aData    = mData;
+  *aDataLen = mDataLen;
+}
+
+//-------------------------------------------------------------------------
+nsIFileSpec * DataStruct::GetFileSpec(const char * aFileName)
+{
+  nsIFileSpec* cacheFile = nsnull;
+  nsresult rv;
+	// There is no locator component. Or perhaps there is a locator, but the
+	// locator couldn't find where to put it. So put it in the cwd (NB, viewer comes here.)
+  // #include nsIComponentManager.h
+  rv = nsComponentManager::CreateInstance(
+      (const char*)NS_FILESPEC_PROGID,
+      (nsISupports*)nsnull,
+      (const nsID&)nsCOMTypeInfo<nsIFileSpec>::GetIID(),
+      (void**)&cacheFile);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a Clipboard Cache file spec.");
+
+  // Get the system temp directory path
+  nsSpecialSystemDirectory *sysCacheFile =  
+    new nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+
+  // if the param aFileName contains a name we should use that
+  // because the file probably already exists
+  // otherwise create a unique name
+  if (nsnull == aFileName) {
+    *sysCacheFile += "clipboardcache";
+    sysCacheFile->MakeUnique();
+  } else {
+    *sysCacheFile += aFileName;
+  }
+
+  // now set the entire path for the nsIFileSpec
+  cacheFile->setFromFileSpec(*sysCacheFile);
+
+  // delete the temp for getting the system info
+  delete sysCacheFile;
+
+  // return the nsIFileSpec
+  return cacheFile;
+}
+
+//-------------------------------------------------------------------------
+nsresult DataStruct::WriteCache(char* aData, PRUint32 aDataLen)
+{
+  // Get a new path and file to the temp directory
+  nsIFileSpec * cacheFile = GetFileSpec(mCacheFileName);
+  if (nsnull != cacheFile) {
+    // remember the file name
+    if (nsnull == mCacheFileName) {
+      cacheFile->GetLeafName(&mCacheFileName);
+    }
+    // write out the contents of the clipboard
+    // to the file
+    PRUint32 bytes;
+    nsIOutputStream * outStr;
+    cacheFile->GetOutputStream(&outStr);
+    outStr->Write(aData, aDataLen, &bytes);
+
+    // clean up
+    NS_RELEASE(outStr);
+    NS_RELEASE(cacheFile);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------------------------------
+nsresult DataStruct::ReadCache(char** aData, PRUint32* aDataLen)
+{
+  // if we don't have a cache filename we are out of luck
+  if (nsnull == mCacheFileName) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // get the path and file name
+  nsIFileSpec * cacheFile = GetFileSpec(mCacheFileName);
+  if (nsnull != cacheFile && Exists(cacheFile)) {
+    // get the size of the file
+    PRUint32 fileSize;
+    cacheFile->GetFileSize(&fileSize);
+
+    // create new memory for the large clipboard data
+    char * data = new char[fileSize];
+
+    // now read it all in
+    nsIInputStream * inStr;
+    cacheFile->GetInputStream(&inStr);
+    nsresult rv = inStr->Read(data, fileSize, aDataLen);
+    // clean up file & stream
+    NS_RELEASE(inStr);
+    NS_RELEASE(cacheFile);
+
+    // make sure we got all the data ok
+    if (NS_OK == rv && *aDataLen == (PRInt32)fileSize) {
+      *aDataLen = fileSize;
+      *aData    = data;
+      return NS_OK;
+    }
+
+    // delete the buffer because we got an error
+    // and zero the return params
+    delete[] data;
+    *aData    = nsnull;
+    *aDataLen = 0;
+    return NS_ERROR_FAILURE;
+  }
+  // this is necessary because we may have created
+  // a proper cacheFile but it might not exist
+  NS_IF_RELEASE(cacheFile);
+
+  return NS_ERROR_FAILURE;
+}
 
 
 //-------------------------------------------------------------------------
@@ -92,7 +269,7 @@ nsresult nsTransferable::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsITransferable::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsITransferable>::GetIID())) {
     *aInstancePtr = (void*) ((nsITransferable*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -140,9 +317,8 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aD
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
     if (aDataFlavor->Equals(data->mFlavor)) {
-      *aData    = data->mData;
-      *aDataLen = data->mDataLen;
-      if (nsnull != data->mData && data->mDataLen > 0) {
+      data->GetData((char **)aData, aDataLen);
+      if (nsnull != *aData && *aDataLen > 0) {
         return NS_OK;
       }
     }
@@ -152,7 +328,10 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsString * aDataFlavor, void ** aD
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       if (NS_OK == mFormatConv->CanConvert(&data->mFlavor, aDataFlavor)) {
-        mFormatConv->Convert(&data->mFlavor, data->mData, data->mDataLen, aDataFlavor, aData, aDataLen);
+        char * dataBytes;
+        PRUint32 len;
+        data->GetData(&dataBytes, &len);
+        mFormatConv->Convert(&data->mFlavor, dataBytes, len, aDataFlavor, aData, aDataLen);
         return NS_OK;
       }
     }
@@ -173,10 +352,9 @@ NS_IMETHODIMP nsTransferable::GetAnyTransferData(nsString * aDataFlavor, void **
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    if (nsnull != data->mData && data->mDataLen > 0) {
+    if (data->IsDataAvilable()) {
       *aDataFlavor = data->mFlavor;
-      *aData      = data->mData;
-      *aDataLen  = data->mDataLen;
+      data->GetData((char **)aData, aDataLen);
       return NS_OK;
     }
   }
