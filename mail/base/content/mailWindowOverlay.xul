@@ -1707,17 +1707,6 @@
         </deck>
       </toolbaritem>
 
-
-      <toolbarbutton class="toolbarbutton-1"
-               id="button-junk" label="&junkButton.label;"
-               tooltiptext="&junkButton.tooltip;" 
-               observes="button_junk"
-               oncommand="goDoCommand('button_junk')"
-               junk_label="&junkButton.label;"
-               junk_tooltiptext="&junkButton.tooltip;"
-               notjunk_label="&notJunkButton.label;"
-               notjunk_tooltiptext="&notJunkButton.tooltip;"/>
-
       <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/> 
 
       <toolbarbutton id="button-print" type="menu-button" class="toolbarbutton-1" label="&printButton.label;"
