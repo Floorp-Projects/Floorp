@@ -259,7 +259,7 @@ function srGetStrBundle(path)
     }
   }
 
-  strBundle = strBundleService.CreateBundle(path); 
+  strBundle = strBundleService.createBundle(path); 
   if (!strBundle) {
 	dump("\n--** strBundle createInstance failed **--\n");
   }
