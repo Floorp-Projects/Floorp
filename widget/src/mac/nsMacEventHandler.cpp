@@ -29,7 +29,7 @@
 #include <UnicodeConverter.h>
 #include <Script.h>
 #include "nsIRollupListener.h"
-
+#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
@@ -201,7 +201,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	err = ::NewTSMDocument(1,supportedServices,&mTSMDocument,(long)this);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
 
-#if 0
+#ifdef DEBUG_TSM
 	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
 #endif
 	
@@ -861,9 +861,12 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		//
 		if (mTSMDocument)
 			err = ::ActivateTSMDocument(mTSMDocument);
+#ifdef DEBUG_TSM
 #if 0
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
-		printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p]\n",mTSMDocument);
+#endif
+		printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p] %s return %d\n",mTSMDocument,
+		(err==noErr)?"":"ERROR", err);
 #endif
 		
 		//¥TODO: we should restore the focus to the the widget
@@ -900,9 +903,12 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		//
 		if (mTSMDocument)
 			err = ::DeactivateTSMDocument(mTSMDocument);
+#ifdef DEBUG_TSM
 #if 0
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
-		printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p]\n",mTSMDocument);
+#endif
+		printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p] %s return %d\n",mTSMDocument,
+		(err==noErr)?"":"ERROR", err);
 #endif
 		
 		//¥TODO: save the focused widget for that window
