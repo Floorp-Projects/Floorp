@@ -1,6 +1,0 @@
-HomePageDefault = "http://www.mozilla.org";
-/* SearchPageDefault = "http://www.dmoz.org"; Leave commented out to get search engine from IC */
-StartPageDefault = "about:blank";
-ThrobberPageDefault = "http://www.mozilla.org";
-FeedbackPageDefault = "http://chimera.mozdev.org";
-InfoPageDefault = "http://chimera.mozdev.org/installation.html";
