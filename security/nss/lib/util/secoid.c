@@ -1336,12 +1336,16 @@ secoid_HashNumber(const void *key)
 }
 
 
-static SECStatus
-InitOIDHash(void)
+SECStatus
+secoid_Init(void)
 {
     PLHashEntry *entry;
     const SECOidData *oid;
     int i;
+
+    if (oidhash) {
+	return PR_SUCCESS;
+    }
     
     oidhash = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
 			PL_CompareValues, NULL, NULL);
@@ -1388,13 +1392,8 @@ SECOID_FindOIDByMechanism(unsigned long mechanism)
     SECOidData *ret;
     int rv;
 
-    if ( !oidhash ) {
-        rv = InitOIDHash();
-	if ( rv != SECSuccess ) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    return NULL;
-	}
-    }
+    PR_ASSERT(oidhash != NULL);
+
     ret = PL_HashTableLookupConst ( oidmechhash, (void *)mechanism);
     if ( ret == NULL ) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -1409,13 +1408,7 @@ SECOID_FindOID(SECItem *oid)
     SECOidData *ret;
     int rv;
     
-    if ( !oidhash ) {
-	rv = InitOIDHash();
-	if ( rv != SECSuccess ) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    return NULL;
-	}
-    }
+    PR_ASSERT(oidhash != NULL);
     
     ret = PL_HashTableLookupConst ( oidhash, oid );
     if ( ret == NULL ) {

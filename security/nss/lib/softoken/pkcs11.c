@@ -2674,6 +2674,7 @@ pk11_closePeer(PRBool isFIPS)
 }
 
 static PRBool nsc_init = PR_FALSE;
+extern SECStatus secoid_Init(void);
 
 /* NSC_Initialize initializes the Cryptoki library. */
 CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
@@ -2692,6 +2693,12 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	    crv = CKR_DEVICE_ERROR; /* better error code? checksum error? */
 	    return crv;
 	}
+    }
+
+    rv = secoid_Init();
+    if (rv != SECSuccess) {
+	crv = CKR_DEVICE_ERROR;
+	return crv;
     }
 
     rv = RNG_RNGInit();         /* initialize random number generator */
@@ -2758,6 +2765,8 @@ CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
     return crv;
 }
 
+extern SECStatus SECOID_Shutdown(void);
+
 /* NSC_Finalize indicates that an application is done with the 
  * Cryptoki library.*/
 CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
@@ -2792,6 +2801,8 @@ CK_RV nsc_CommonFinalize (CK_VOID_PTR pReserved, PRBool isFIPS)
     pk11_CleanupFreeLists();
     /* tell freeBL to clean up after itself */
     BL_Cleanup();
+    /* clean up the default OID table */
+    SECOID_Shutdown();
     nsc_init = PR_FALSE;
 
     return CKR_OK;
