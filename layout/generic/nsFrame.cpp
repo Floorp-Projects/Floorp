@@ -67,6 +67,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLHRElement.h"
 #include "nsIDeviceContext.h"
 #include "nsIEventStateManager.h"
 #include "nsISelection.h"
@@ -1267,6 +1268,89 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   return NS_OK;
 }
 
+PRBool
+ContentContainsPoint(nsIPresContext *aPresContext,
+                     nsIContent *aContent,
+                     nsPoint *aPoint,
+                     nsIView *aRelativeView)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (NS_FAILED(rv) || !presShell) return PR_FALSE;
+
+  nsIFrame *frame = nsnull;
+
+  rv = presShell->GetPrimaryFrameFor(aContent, &frame);
+
+  if (NS_FAILED(rv) || !frame) return PR_FALSE;
+
+  nsIView *frameView = nsnull;
+  nsRect frameRect;
+  nsPoint offsetPoint;
+
+  // Get the view that contains the content's frame.
+
+  rv = frame->GetOffsetFromView(aPresContext, offsetPoint, &frameView);
+
+  if (NS_FAILED(rv) || !frameView) return PR_FALSE;
+
+  // aPoint is relative to aRelativeView's upper left corner! Make sure
+  // that our point is in the same view space our content frame's
+  // rects are in.
+
+  nsPoint point(*aPoint);
+
+  if (frameView != aRelativeView) {
+    // Views are different, just assume frameView is an ancestor
+    // of aRelativeView and walk up the view hierarchy calculating what
+    // the actual point is, relative to frameView.
+
+    nsPoint viewOffset(0, 0);
+
+    while (aRelativeView && aRelativeView != frameView) {
+      aRelativeView->GetPosition(&viewOffset.x, &viewOffset.y);
+
+      point.x += viewOffset.x;
+      point.y += viewOffset.y;
+
+      rv = aRelativeView->GetParent(aRelativeView);
+      if (NS_FAILED(rv)) return PR_FALSE;
+    }
+
+    // At this point the point should be in the correct
+    // view coordinate space. If not, just bail!
+
+    if (aRelativeView != frameView) return PR_FALSE;
+  }
+
+  // Now check to see if the point is within the bounds of the
+  // content's primary frame, or any of it's continuation frames.
+
+  while (frame) {
+    // Get the frame's rect and make it relative to the
+    // upper left corner of it's parent view.
+
+    frame->GetRect(frameRect);
+    frameRect.x = offsetPoint.x;
+    frameRect.y = offsetPoint.y;
+
+    if (frameRect.x <= point.x &&
+        frameRect.XMost() >= point.x &&
+        frameRect.y <= point.y &&
+        frameRect.YMost() >= point.y) {
+      // point is within this frame's rect!
+      return PR_TRUE;
+    }
+
+    rv = frame->GetNextInFlow(&frame);
+
+    if (NS_FAILED(rv)) return PR_FALSE;
+  }
+
+  return PR_FALSE;
+}
 
 /**
   * Handles the Mouse Press Event for the frame
@@ -1432,8 +1516,8 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
   rv = GetContentAndOffsetsFromPoint(aPresContext, aEvent->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
   // do we have CSS that changes selection behaviour?
+  PRBool changeSelection = PR_FALSE;
   {
-    PRBool    changeSelection;
     nsCOMPtr<nsIContent>  selectContent;
     PRInt32   newStart, newEnd;
     if (NS_SUCCEEDED(frameselection->AdjustOffsetsFromStyle(this, &changeSelection, getter_AddRefs(selectContent), &newStart, &newEnd))
@@ -1525,7 +1609,87 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  return frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+  rv = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (isEditor && !me->isShift && (endOffset - startOffset) == 1)
+  {
+    // A single node is selected and we aren't extending an existing
+    // selection, which means the user clicked directly on an object.
+    // Check if the user clicked in a -moz-user-select:all subtree,
+    // image, or hr. If so, we want to give the drag and drop
+    // code a chance to execute so we need to turn off selection extension
+    // when processing mouse move/drag events that follow this mouse
+    // down event.
+
+    PRBool disableDragSelect = PR_FALSE;
+
+    if (changeSelection)
+    {
+      // The click hilited a -moz-user-select:all subtree.
+      //
+      // XXX: We really should be able to just do a:
+      //
+      //        disableDragSelect = PR_TRUE;
+      //
+      //      but we are working around the fact that in some cases,
+      //      selection selects a -moz-user-select:all subtree even
+      //      when the click was outside of the subtree. An example of
+      //      this case would be when the subtree is at the end of a
+      //      line and the user clicks to the right of it. In this case
+      //      I would expect the caret to be placed next to the root of
+      //      the subtree, but right now the whole subtree gets selected.
+      //      This means that we have to do geometric frame containment
+      //      checks on the point to see if the user truly clicked
+      //      inside the subtree.
+      
+      nsIView *view = nsnull;
+      nsPoint dummyPoint;
+
+      // aEvent->point is relative to the upper left corner of the
+      // frame's parent view. Unfortunately, the only way to get
+      // the parent view is to call GetOffsetFromView().
+
+      GetOffsetFromView(aPresContext, dummyPoint, &view);
+
+      // Now check to see if the point is truly within the bounds
+      // of any of the frames that make up the -moz-user-select:all subtree:
+
+      if (view)
+        disableDragSelect = ContentContainsPoint(aPresContext, content,
+                                                 &aEvent->point, view);
+    }
+    else
+    {
+      // Check if click was in an image.
+
+      nsCOMPtr<nsIContent> frameContent;
+      GetContent(getter_AddRefs(frameContent));
+      nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(frameContent));
+
+      disableDragSelect = img != nsnull;
+
+      if (!img)
+      {
+        // Check if click was in an hr.
+
+        nsCOMPtr<nsIDOMHTMLHRElement> hr(do_QueryInterface(frameContent));
+        disableDragSelect = hr != nsnull;
+      }
+    }
+
+    if (disableDragSelect)
+    {
+      // Click was in one of our draggable objects, so disable
+      // selection extension during mouse moves.
+
+      rv = frameselection->SetMouseDownState( PR_FALSE );
+    }
+  }
+
+  return rv;
 }
  
 /**
