@@ -47,6 +47,7 @@
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMCompositionListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMLoadListener.h"
@@ -62,6 +63,7 @@ class nsFormFillController : public nsIFormFillController,
                              public nsIAutoCompleteSearch,
                              public nsIDOMFocusListener,
                              public nsIDOMKeyListener,
+                             public nsIDOMCompositionListener,
                              public nsIDOMFormListener,
                              public nsIDOMMouseListener,
                              public nsIDOMLoadListener
@@ -81,6 +83,13 @@ public:
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+
+  // nsIDOMCompositionListener
+  NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent);
+  NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aCompositionEvent);
 
   // nsIDOMFormListener
   NS_IMETHOD Submit(nsIDOMEvent* aEvent);

@@ -40,7 +40,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(75866768-ED00-4ff4-B950-485449A67A88)]
+[scriptable, uuid(CF2ACA0C-4FB1-42e4-8A54-23E832CB2A98)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -103,6 +103,16 @@ interface nsIAutoCompleteController : nsISupports
    * @return True if the controller wishes to prevent event propagation and default event
    */
   boolean handleEscape();
+
+  /*
+   * Notify the controller that the user wishes to start composition
+   */
+  void handleStartComposition();
+
+  /*
+   * Notify the controller that the user wishes to end composition
+   */
+  void handleEndComposition();
 
   /* 
    * Handle tab. Just closes up.

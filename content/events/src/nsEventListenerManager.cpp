@@ -1001,6 +1001,14 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
     *aArrayType = eEventArrayType_DOMUI;
     *aFlags = NS_EVENT_BITS_UI_FOCUSOUT;
   }
+  else if (aType == nsLayoutAtoms::oncompositionstart) {
+    *aArrayType = eEventArrayType_Composition;
+    *aFlags = NS_EVENT_BITS_COMPOSITION_START;
+  }
+  else if (aType == nsLayoutAtoms::oncompositionend) {
+    *aArrayType = eEventArrayType_Composition;
+    *aFlags = NS_EVENT_BITS_COMPOSITION_END;
+  }
   else {
     return NS_ERROR_FAILURE;
   }
