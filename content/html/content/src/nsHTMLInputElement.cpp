@@ -927,7 +927,15 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kInputTypeTable, aResult);
+      // The DOM spec says that input types should be capitalized but
+      // AFAIK all existing browsers return the type in lower case,
+      // http://bugzilla.mozilla.org/show_bug.cgi?id=32369 is the bug
+      // about this problem, we pass PR_FALSE as the last argument
+      // here to avoid capitalizing the input type (this is required for
+      // backwards compatibility). -- jst@netscape.com
+
+      nsGenericHTMLElement::EnumValueToString(aValue, kInputTypeTable,
+                                              aResult, PR_FALSE);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
