@@ -123,7 +123,7 @@ MFILE:
 	
 	if ($current_module) {
 	  #
-	  # now keep a list of all dependancies of the module
+	  # now keep a list of all dependencies of the module
 	  #
 	  my @require_list = split(/\s+/,$current_requires);
 	  my $req;
@@ -164,9 +164,12 @@ sub build_deps_matrix_from_file {
 	  chomp;
 	  s/\;//;  # Strip off ';'
 
+	  # Pick off module, and dependency from -> line.
 	  @line = split(' -> ', $_);
-	  #print "$line[0], $line[1]\n";
 	  $deps{$line[0]}{$line[1]}++;
+
+	  # Add the module to the list of modules.
+	  $toplevel_modules{$line[0]}++;
 	}
   }
   close DEPS_FILE;
@@ -216,6 +219,7 @@ sub print_internal_nodes() {
 }
 
 # Run over dependency array to generate raw component list.
+# This is the "a -> b" lines.
 sub print_dependency_list() {
   my @raw_list;
   my @unique_list;
@@ -333,7 +337,6 @@ sub print_module_digraph {
 	my $visited = $visited_nodes{$depmod};
 
 	if(!$visited) {    	# test recursion: if($level < 5)
-	#if($level < 5) {
 	  print_module_digraph($depmod, $level + 1);
 	}
   }
@@ -378,7 +381,7 @@ sub print_module_deps {
   # --list-only and --start-module together mean to
   # print out the module deps, not the matrix.
   if (not ($list_only_mode and $opt_start_module)) {
-	print_deps_matrix();
+    print_deps_matrix();
   }
 
   # If we specified a --start-module option, print out
