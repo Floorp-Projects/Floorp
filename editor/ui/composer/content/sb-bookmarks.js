@@ -195,7 +195,7 @@ function OpenEditNode()
     dump("gEditNode removed.\n");
 
     // create the html:input node
-    htmlInput = document.createElementNS("http://www.w3.org/TR/REC-html40", "html:input");
+    htmlInput = document.createElementNS("http://www.w3.org/1999/xhtml", "html:input");
     htmlInput.setAttribute("value", name);
     htmlInput.setAttribute("onkeypress", "return EditNodeKeyPress(event)");
 

@@ -3750,7 +3750,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   nsString qualifiedTag;
   qualifiedTag.AssignWithConversion("html:");
   qualifiedTag+=realTagName;
-  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/TR/REC-html40"), qualifiedTag, getter_AddRefs(newElement));
+  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(newElement));
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;
 

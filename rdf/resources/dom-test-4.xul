@@ -7,7 +7,7 @@ This test exercises some of the Level 1 Core DOM APIs.
 
 <?xml-stylesheet type="text/css" href="dom-test-4.css"?>
 
-<foo:foo xmlns:foo="http://foo.bar.com/xml#" xmlns:html="http://www.w3.org/TR/REC-html40"
+<foo:foo xmlns:foo="http://foo.bar.com/xml#" xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:script>

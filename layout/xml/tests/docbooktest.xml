@@ -4,7 +4,7 @@
 <Book xmlns:xlink="http://www.w3.org/1999/xlink"> 
 <Title>SoftQuad
 Inc.</Title>
-<p xmlns="http://www.w3.org/TR/REC-html40" xmlns:h="http://www.w3.org/TR/REC-html40">
+<p xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://www.w3.org/1999/xhtml">
 <h:img src="flamer.gif"/>
 <img src="flamer.gif"/>
 <button><b>some text</b></button>

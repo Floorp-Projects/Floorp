@@ -107,7 +107,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
     nsString qualifiedTag;
     qualifiedTag.AssignWithConversion("html:");
     qualifiedTag+=mTag;
-    result = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/TR/REC-html40"), qualifiedTag, getter_AddRefs(newElement));
+    result = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(newElement));
     if (NS_FAILED(result)) return result;
     if (!newElement) return NS_ERROR_NULL_POINTER;
     mNewNode = do_QueryInterface(newElement);

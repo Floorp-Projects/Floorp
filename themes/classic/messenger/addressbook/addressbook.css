@@ -21,7 +21,7 @@ Rights Reserved.
 @import url(chrome://communicator/skin/);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
-@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
  
 /* CardView styles - used in the Card View Pane*/
 

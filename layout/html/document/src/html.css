@@ -19,7 +19,7 @@
  * Contributor(s): 
  */
 
-@namespace url(http://www.w3.org/TR/REC-html40); /* set default namespace to HTML */
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 @namespace viewsource url(http://www.mozilla.org/viewsource); 
 
 html {

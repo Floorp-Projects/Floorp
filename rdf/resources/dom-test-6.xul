@@ -8,7 +8,7 @@ specifically, using the zombie pool.
 
 <?xml-stylesheet type="text/css" href="resource:/res/samples/xul.css"?>
 
-<foo:foo xmlns:html="http://www.w3.org/TR/REC-html40"
+<foo:foo xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:script>

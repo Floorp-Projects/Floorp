@@ -28,7 +28,7 @@ Contributor(s): ______________________________________. -->
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/console.dtd" >
 
-<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&console.title;"
         onload="onLoadJSConsole()"

@@ -75,7 +75,7 @@ function mng_munge (text, containerTag, eventDetails)
     
     if (!containerTag)
         containerTag =
-            document.createElementNS ("http://www.w3.org/TR/REC-html40",
+            document.createElementNS ("http://www.w3.org/1999/xhtml",
                                       this.tagName);
 
     if (this.enabled)
@@ -120,7 +120,7 @@ function mng_munge (text, containerTag, eventDetails)
                                 eventDetails);
                     
                     var subTag = document.createElementNS
-                        ("http://www.w3.org/TR/REC-html40",
+                        ("http://www.w3.org/1999/xhtml",
                          this.entries[entry].tagName);
 
                     subTag.setAttribute ("class", this.entries[entry].className);

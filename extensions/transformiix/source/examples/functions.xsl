@@ -34,7 +34,7 @@
 
 <xsl:stylesheet
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-        result-ns="http://www.w3.org/TR/REC-html40"
+        result-ns="http://www.w3.org/1999/xhtml"
         default-space="strip">
 
 <!-- root rule -->

@@ -254,7 +254,7 @@ function insertLink (matchText, containerTag)
     else
         href = matchText;
     
-    var anchor = document.createElementNS ("http://www.w3.org/TR/REC-html40",
+    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
     anchor.setAttribute ("href", href);
     anchor.setAttribute ("target", "_content");
@@ -290,7 +290,7 @@ function insertSmiley (emoticon, containerTag)
 
     if (src)
     {
-        var img = document.createElementNS ("http://www.w3.org/TR/REC-html40",
+        var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                             "html:img");
         img.setAttribute ("src", client.IMAGEDIR + src);
         containerTag.appendChild (img);
@@ -818,7 +818,7 @@ function newInlineText (data, className, tagName)
     if (typeof tagName == "undefined")
         tagName = "html:span";
     
-    var a = document.createElementNS ("http://www.w3.org/TR/REC-html40",
+    var a = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                       tagName);
     a.setAttribute ("class", className);
 
@@ -909,7 +909,7 @@ function addHistory (source, obj)
     if (!source.messages)
     {
         source.messages =
-            document.createElementNS ("http://www.w3.org/TR/REC-html40",
+            document.createElementNS ("http://www.w3.org/1999/xhtml",
                                       "html:table");
         source.messages.setAttribute ("class", "chat-view");
         source.messages.setAttribute ("cellpadding", "0");
@@ -1200,7 +1200,7 @@ function cli_display (message, msgtype)
     {
         msgData.appendChild(newInlineText (ary[l]));
         msgData.appendChild
-            (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+            (document.createElementNS ("http://www.w3.org/1999/xhtml",
                                        "html:br"));
     }
 
@@ -1244,7 +1244,7 @@ function net_display (message, msgtype)
     {
         msgData.appendChild(newInlineText(ary[l]));
         msgData.appendChild
-            (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+            (document.createElementNS ("http://www.w3.org/1999/xhtml",
                                        "html:br"));
     }
 
@@ -1340,7 +1340,7 @@ function user_display(message, msgtype, sourceNick)
             else
                 msgData.appendChild(newInlineText (ary[l]));
             msgData.appendChild
-                (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                (document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:br"));
         }
 
@@ -1502,7 +1502,7 @@ function chan_display (message, msgtype, nick)
         else
             msgData.appendChild(newInlineText (ary[l]));
         msgData.appendChild
-            (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+            (document.createElementNS ("http://www.w3.org/1999/xhtml",
                                        "html:br"));
     }
 

@@ -3,7 +3,7 @@
 <!-- DO NOT LOCALIZE: this file is source documentation; not part of the build -->
 <!-- Sample interface for bringing up and passing parameters to a dialog -->
 <xul:window
-    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title = "Chrome Features Test">
 

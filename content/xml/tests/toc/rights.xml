@@ -7,7 +7,7 @@
 <!ATTLIST chapter id ID #IMPLIED>
 <!ATTLIST section id ID #IMPLIED>
 ]>
-<book id="book" xmlns:html="http://www.w3.org/TR/REC-html40"
+<book id="book" xmlns:html="http://www.w3.org/1999/xhtml"
                 xmlns:xlink="http://www.w3.org/1999/xlink">
  <html:a name="book"/>                
  <html:script src="toc.js"/>

@@ -19,7 +19,7 @@
 
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
-@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 #offline-status[offline="true"]
   {

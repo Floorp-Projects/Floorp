@@ -260,7 +260,7 @@ nsMimeXULEmitter::WriteXULHeader()
 
   // Now, the XUL window!
   UtilityWriteCRLF("<window ");
-  UtilityWriteCRLF("xmlns:html=\"http://www.w3.org/TR/REC-html40\" ");
+  UtilityWriteCRLF("xmlns:html=\"http://www.w3.org/1999/xhtml\" ");
   UtilityWriteCRLF("xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ");
   UtilityWriteCRLF("xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" ");
   DoWindowStatusProcessing();

@@ -32,7 +32,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/1999/xhtml"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		id="addressbookWindow"

@@ -26,7 +26,7 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountWizard.dtd" >
 
-<window id="account-wizard-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="account-wizard-dialog" xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&windowTitle.label;"
     height="400" width="500" class="dialog"

@@ -28,7 +28,7 @@
 <xsl:stylesheet
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         indent-result="yes"
-        result-ns="http://www.w3.org/TR/REC-html40">
+        result-ns="http://www.w3.org/1999/xhtml">
 
 <xsl:include href="include-helper.xsl"/>
 
