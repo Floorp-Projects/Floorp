@@ -65,7 +65,7 @@ unshift(@ARGV, '-') unless @ARGV;
 unshift(@ARGV, @includes);
 
 # do the work
-include($stack, $_) foreach (@ARGV);
+foreach (@ARGV) { include($stack, $_); }
 exit(0);
 
 ########################################################################
@@ -387,7 +387,9 @@ package filter;
 
 sub spaces {
     my($stack, $text) = @_;
-    $text =~ s/ +/ /gos;
+    $text =~ s/ +/ /gos; # middle spaces
+    $text =~ s/^ //gos; # start spaces
+    $text =~ s/ \n?$//gos; # end spaces
     return $text;
 }
 
