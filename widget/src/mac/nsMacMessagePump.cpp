@@ -30,8 +30,12 @@ nsWindow* nsMacMessagePump::gGrabWindow = nsnull;			// need this for grabmouse
 static NS_DEFINE_IID(kITEXTWIDGETIID, NS_TEXTFIELD_CID);
 
 
-//==============================================================
-
+//=================================================================
+/*  Constructor
+ *  @update  dc 08/31/98
+ *  @param   aToolkit -- The toolkit created by the application
+ *  @return  NONE
+ */
 nsMacMessagePump::nsMacMessagePump(nsToolkit	*aToolkit)
 {
 
@@ -40,16 +44,23 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit	*aToolkit)
 
 }
 
-
-//==============================================================
-
+//=================================================================
+/*  Destructor
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 nsMacMessagePump::~nsMacMessagePump()
 {
 
 }
 
-//==============================================================
-
+//=================================================================
+/*  Runs the message pump for the macintosh.  Turns them into Raptor events
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  A boolean which states how the pump terminated
+ */
 PRBool 
 nsMacMessagePump::DoMessagePump()
 {
@@ -163,8 +174,12 @@ unsigned char	evtype;
   return NS_OK;
 }
 
-//==============================================================
-
+//=================================================================
+/*  Turns an update event into a raptor paint event
+ *  @update  dc 08/31/98
+ *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
+ *  @return  NONE
+ */
 void 
 nsMacMessagePump::DoPaintEvent(EventRecord *aTheEvent)
 {
@@ -173,7 +188,6 @@ WindowPtr			whichwindow;
 nsWindow			*thewindow;
 nsRect 				rect;
 RgnHandle			updateregion;
-Rect				bounds;
 nsPaintEvent 		pevent;
  
  	::GetPort(&curport);
@@ -205,7 +219,7 @@ nsPaintEvent 		pevent;
 			pevent.rect = &rect;
 			pevent.time = 0; 
 			thewindow->OnPaint(pevent);*/
-	    	}
+	    }
 		EndUpdate(whichwindow);
 		}
 	
@@ -213,8 +227,12 @@ nsPaintEvent 		pevent;
 
 }
 
-//==============================================================
-
+//=================================================================
+/*  Idles Raptor
+ *  @update  dc 08/31/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 void 
 nsMacMessagePump::DoIdleWidgets()
 {
@@ -232,11 +250,16 @@ nsWindow			*thewindow;
 
 }
 
-//==============================================================
-
+//=================================================================
+/*  Turns a mousedown event into a raptor mousedown event
+ *  @update  dc 08/31/98
+ *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
+ *  @return  NONE
+ */
 void 
 nsMacMessagePump::DoMouseDown(EventRecord *aTheEvent)
 {
+PRBool				result;
 Rect					therect;
 Point					windowcoord;
 long					newsize;			// window's new size
@@ -278,8 +301,10 @@ nsMouseEvent	mouseevent;
 					mouseevent.isAlt = FALSE;
 					mouseevent.clickCount = 1;
 					mouseevent.eventStructType = NS_MOUSE_EVENT;
-					thewindow->DispatchMouseEvent(mouseevent);
-					gGrabWindow = (nsWindow*)thewindow;		// grab is in effect
+					// dispatch the event, if returns false, the widget does not want to grab the mouseup
+					result = thewindow->DispatchMouseEvent(mouseevent);
+					if(result == PR_TRUE)
+						gGrabWindow = (nsWindow*)thewindow;		// grab is in effect
 					this->SetCurrentWindow(thewindow);
 					mToolkit->SetFocus(thewindow);
 					}
@@ -348,8 +373,12 @@ nsMouseEvent	mouseevent;
 		}
 }
 
-//==============================================================
-
+//=================================================================
+/*  Turns a mouseup event into a raptor mouseup event
+ *  @update  dc 08/31/98
+ *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
+ *  @return  NONE
+ */
 void 
 nsMacMessagePump::DoMouseUp(EventRecord *aTheEvent)
 {
@@ -416,8 +445,12 @@ nsMouseEvent	mouseevent;
 	gGrabWindow = nsnull;		// mouse grab no longer in effect
 }
 
-//==============================================================
-
+//=================================================================
+/*  Turns a null event into a raptor mousemove event
+ *  @update  dc 08/31/98
+ *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
+ *  @return  NONE
+ */
 void 
 nsMacMessagePump::DoMouseMove(EventRecord *aTheEvent)
 {
@@ -503,15 +536,6 @@ nsMouseEvent	mouseevent;
 	switch(partcode)
 		{
 		case inContent:
-			//thewindow = nsnull;
-			//if(whichwindow!=nsnull)
-				//{
-				//SetPort(whichwindow);
-				//thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
-				//}
-			//if( (thewindow != nsnull))
-				//thewindow = thewindow->FindWidgetHit(aTheEvent->where);
-				
 			if(thewindow)
 				{
 				if(lastwindow == nsnull || thewindow != lastwindow)
@@ -569,8 +593,12 @@ nsMouseEvent	mouseevent;
 
 }
 
-//==============================================================
-
+//=================================================================
+/*  Turns a keydown event into a raptor key event
+ *  @update  dc 08/31/98
+ *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
+ *  @return  NONE
+ */
 void 
 nsMacMessagePump::DoKey(EventRecord *aTheEvent)
 {
@@ -608,8 +636,9 @@ nsTextWidget	*widget;
 			  if (!thewidget->DispatchEvent(&keyEvent))
 			  	{
 			  	// if this is a nsTextWidget
-			  	if (NS_OK == thewidget->QueryInterface(kITEXTWIDGETIID, (void**) &widget) )
-			  		widget->PrimitiveKeyDown(thechar,0);
+			  	//if (NS_OK == thewidget->QueryInterface(kITEXTWIDGETIID, (void**) &widget) )
+			  	widget = (nsTextWidget*)thewidget;
+			  	widget->PrimitiveKeyDown(thechar,0);
 			  	}
 			  
 			  //((nsWindow*)thewidget)->OnKey(NS_KEY_DOWN, 1, &keyEvent);
