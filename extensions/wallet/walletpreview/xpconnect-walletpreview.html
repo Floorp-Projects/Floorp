@@ -125,7 +125,10 @@
     }
 
     function Cancel(){
-      var result = "|list||fillins||url||skip|"+skip.checked+"|";
+      selname = top.frames[list_frame].document.fSelectFillin;
+      var list = top.frames[button_frame].document.buttons.list;
+      list.value = prefillList[prefillList.length-2];
+      var result = "|list|"+list.value+"|fillins||url||skip|false|";
       DoSave(result);
     }
 
