@@ -160,10 +160,6 @@ nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
         if (NS_FAILED(rv)) 
             NS_WARNING("Error writing failover.jsc file");
 
-        // Clean up the previous read. 
-        // If there is a timer, these methods will be called again.
-        mBuf.Truncate(0);
-
         // Releasing the lock to allow the main thread to start execution
         mLoaded = PR_TRUE;  
 
@@ -171,10 +167,6 @@ nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
     }
     // there is an error in parsing of the autoconfig file.
     NS_WARNING("Error reading autoconfig.jsc from the network, reading the offline version");
-
-    // Clean up the previous read so it will be ready for 
-    // the next updated read.
-    mBuf.Truncate(0); 
     return readOfflineFile();
 }
 
@@ -246,6 +238,18 @@ nsresult nsAutoConfig::downloadAutoConfig()
         return NS_OK;
     }
     
+    // If there is an email address appended as an argument to the ConfigURL
+    // in the previous read, we need to remove it when timer kicks in and 
+    // downloads the autoconfig file again. 
+    // If necessary, the email address will be added again as an argument.
+    PRInt32 index = mConfigURL.RFindChar((PRUnichar)'?');
+    if (index != -1)
+        mConfigURL.Truncate(index);
+
+    // Clean up the previous read, the new read is going to use the same buffer
+    if (!mBuf.IsEmpty())
+        mBuf.Truncate(0);
+
     // Check to see if the network is online/offline 
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) 
