@@ -71,7 +71,7 @@ private:
 
 static void PR_CALLBACK detach_JVMContext(void* storage)
 {
-	JVMContext* context = (JVMContext*)storage;
+	JVMContext* context = NS_REINTERPRET_CAST(JVMContext*, storage);
 	
 	JNIEnv* proxyEnv = context->proxyEnv;
 	if (proxyEnv != NULL) {
@@ -132,7 +132,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 	// it lives in to make any sense of all this.
 	JSContext* context = NULL;
 	if (java_applet_obj != NULL) {
-		nsIPluginInstance* pluginInstance = (nsIPluginInstance*) java_applet_obj;
+		nsIPluginInstance* pluginInstance = NS_REINTERPRET_CAST(nsIPluginInstance*, java_applet_obj);
 		nsIPluginInstancePeer* pluginPeer = NULL;
 		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 			nsIPluginInstancePeer2* pluginPeer2 = NULL;
@@ -149,7 +149,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, void* java_applet_
 
 static void PR_CALLBACK detach_jsjava_thread_state(void* env)
 {
-    JSJavaThreadState *jsj_env = (JSJavaThreadState*)env;
+    JSJavaThreadState *jsj_env = NS_REINTERPRET_CAST(JSJavaThreadState*, env);
     JSJ_DetachCurrentThreadFromJava(jsj_env);
 }
 
@@ -226,7 +226,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 	/*
 	 * Check for the mayscript tag.
 	 */
-	nsIPluginInstance* pluginInstance = (nsIPluginInstance*)pluginInstancePtr;
+	nsIPluginInstance* pluginInstance = NS_REINTERPRET_CAST(nsIPluginInstance*, pluginInstancePtr);
 	nsIPluginInstancePeer* pluginPeer;
 	if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
 		nsIJVMPluginTagInfo* tagInfo;
@@ -262,7 +262,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 void* 
 ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
 {
-    nsIPrincipal  **ppNSIPrincipalArray = (nsIPrincipal  **)ppNSIPrincipalArrayIN;
+    nsIPrincipal  **ppNSIPrincipalArray = NS_REINTERPRET_CAST(nsIPrincipal**, ppNSIPrincipalArrayIN);
     PRInt32        length = numPrincipals;
     nsresult       err    = NS_OK;
     nsJVMManager* pJVMMgr = JVM_GetJVMMgr();
@@ -319,7 +319,7 @@ ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  *
 static JSPrincipals* PR_CALLBACK
 get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
 {
-    nsISupports* credentials = (nsISupports*) pNSISecurityContext;
+    nsISupports* credentials = NS_REINTERPRET_CAST(nsISupports*, pNSISecurityContext);
     nsCOMPtr<nsISecurityContext> securityContext = do_QueryInterface(credentials);
     if (securityContext) {
         nsresult rv;
@@ -419,9 +419,11 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
     JSContext *pJSCX    = map_jsj_thread_to_js_context_impl(nsnull,java_applet_obj,jEnv,errp);
     nsCOMPtr<nsIPrincipal> principal;
 
-    if (pNSISecurityContext != nsnull) {
+    nsISupports* credentials = NS_REINTERPRET_CAST(nsISupports*, pNSISecurityContext);
+    nsCOMPtr<nsISecurityContext> javaSecurityContext = do_QueryInterface(credentials);
+    if (javaSecurityContext) {
         if (pJSCX) {
-            nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(pJSCX);
+            nsCOMPtr<nsIScriptContext> scriptContext = NS_REINTERPRET_CAST(nsIScriptContext*, JS_GetContextPrivate(pJSCX));
             if (scriptContext) {
                 nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(scriptContext->GetGlobalObject()));
                 NS_ASSERTION(global, "script context has no global object");
@@ -438,15 +440,9 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 
         // What if !pJSCX? 
 
-        nsCOMPtr<nsISecurityContext> jscontext = new nsCSecurityContext(principal);
-        nsISecurityContext* jvcontext = NS_STATIC_CAST(nsISecurityContext*,pNSISecurityContext);
-                                        // Should be NS_DYNAMIC_CAST, but no such define exists.
-                                        // So for the sake of portability, we'll live 
-                                        // dangerously and use brute force.
-
-        if (!jscontext || !jvcontext) {
+        nsCOMPtr<nsISecurityContext> jsSecurityContext = new nsCSecurityContext(principal);
+        if (!jsSecurityContext)
             return PR_FALSE;
-        }
 
         // Check that the origin + certificate are the same.
         // If not, then return false.
@@ -457,14 +453,15 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
         *jsorigin = nsnull;
         *jvorigin = nsnull;
         
-        jscontext->GetOrigin(jsorigin,buflen);
-        jvcontext->GetOrigin(jvorigin,buflen);
+        jsSecurityContext->GetOrigin(jsorigin,buflen);
+        javaSecurityContext->GetOrigin(jvorigin,buflen);
 
         if (nsCRT::strcasecmp(jsorigin,jvorigin)) {
             return PR_FALSE;
         }
 
-#if 0 // ISSUE: Needs security review. We don't compare certificates. 
+#if 0
+      // ISSUE: Needs security review. We don't compare certificates. 
       // because currently there is no basis for making a postive comparision.
       // If one or the other context is signed, the comparision will fail.
 
@@ -473,13 +470,12 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
         *jscertid = nsnull;
         *jvcertid = nsnull;
 
-        jscontext->GetCertificateID(jscertid,buflen);
-        jvcontext->GetCertificateID(jvcertid,buflen);
+        jsSecurityContext->GetCertificateID(jscertid,buflen);
+        javaSecurityContext->GetCertificateID(jvcertid,buflen);
 
         if (nsCRT::strcasecmp(jscertid,jvcertid)) {
             return PR_FALSE;
         }
-
 #endif
 
     }
@@ -523,7 +519,7 @@ static PRBool PR_CALLBACK
 create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
     // const char* classpath = (const char*)initargs;
-    *jvm = (SystemJavaVM*)JVM_GetJVMMgr();              // unused in the browser
+    *jvm = NS_REINTERPRET_CAST(SystemJavaVM*, JVM_GetJVMMgr());              // unused in the browser
     *initialEnv = JVM_GetJNIEnv();
     return (*jvm != NULL && *initialEnv != NULL);
 }
@@ -553,7 +549,7 @@ static SystemJavaVM* PR_CALLBACK
 get_java_vm_impl(JNIEnv* env)
 {
     // only one SystemJavaVM for the whole browser, so it doesn't depend on env
-    return (SystemJavaVM*)JVM_GetJVMMgr();
+    return NS_REINTERPRET_CAST(SystemJavaVM*, JVM_GetJVMMgr());
 }
 
 PR_END_EXTERN_C
