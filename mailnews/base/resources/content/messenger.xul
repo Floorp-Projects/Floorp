@@ -335,7 +335,7 @@ Rights Reserved.
                 </menupopup>
               </menu>
 
-              <menuitem value="&openAttachmentCmd.label;" oncommand="MsgOpenAttachment();"/>
+              <menuitem value="&openAttachmentCmd.label;" disabled="true" oncommand="MsgOpenAttachment();"/>
               <menuseparator/>
               <menuitem id="menu_close"/>
               <menu value="&saveAsMenu.label;" accessKey="&saveAsMenu.accesskey;">
@@ -363,19 +363,19 @@ Rights Reserved.
               <menuitem value="&renameFolder.label;" oncommand="MsgRenameFolder();"/>
               <menuitem value="&compactFolder.label;" oncommand="MsgCompactFolder();"/>
               <menuseparator/>
-              <menuitem value="&importCmd.label;" oncommand="MsgImport();"/>
+              <menuitem value="&importCmd.label;" disabled="true" oncommand="MsgImport();"/>
               <menuseparator/>
-              <menu value="&offlineMenu.label;">
+              <menu value="&offlineMenu.label;" disabled="true">
                 <menupopup>
-                  <menuitem value="&workOfflineCmd.label;" oncommand="MsgWorkOffline();"/>
-                  <menuitem value="&syncCmd.label;" oncommand="MsgSynchronize();"/>
-                  <menuitem value="&getSelectedCmd.label;" oncommand="MsgGetSelectedMsg();"/>
-                  <menuitem value="&getFlaggedCmd.label;" oncommand="MsgGetFlaggedMsg();"/>
+                  <menuitem value="&workOfflineCmd.label;" disabled="true" oncommand="MsgWorkOffline();"/>
+                  <menuitem value="&syncCmd.label;" disabled="true" oncommand="MsgSynchronize();"/>
+                  <menuitem value="&getSelectedCmd.label;" disabled="true" oncommand="MsgGetSelectedMsg();"/>
+                  <menuitem value="&getFlaggedCmd.label;" disabled="true" oncommand="MsgGetFlaggedMsg();"/>
                 </menupopup>
               </menu>
               <menuseparator/>
               <menuitem id="menu_pageSetup"/>
-              <menuitem value="&printPreviewCmd.label;" oncommand="PrintPreview();"/>
+              <menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="PrintPreview();"/>
               <menuitem value="&printCmd.label;" oncommand="Print();"/>
               <menuseparator/>
             </menupopup>
@@ -397,12 +397,12 @@ Rights Reserved.
 			<menuitem id="menu_delete"/>
 			 <menuseparator/>
 			<menuitem id="menu_selectAll"/>
-	        <menuitem value="&selectThreadCmd.label;" oncommand="MsgSelectThread();"/>
-	        <menuitem value="&selectFlaggedCmd.label;" oncommand="MsgSelectFlaggedMsg();"/>
+	        <menuitem value="&selectThreadCmd.label;" disabled="true" oncommand="MsgSelectThread();"/>
+	        <menuitem value="&selectFlaggedCmd.label;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
       		 <menuseparator/>
-			<menuitem value="&spamFiltersCmd.label;"/>
+			<menuitem value="&spamFiltersCmd.label;" disabled="true"/>
 			<menuitem value="&filtersCmd.label;" disabled="true" oncommand="MsgFilters();"/>
-			<menuitem value="&folderPropsCmd.label;" oncommand="MsgFolderProperties();"/>
+			<menuitem value="&folderPropsCmd.label;" disabled="true" oncommand="MsgFolderProperties();"/>
 			 <menuseparator/>
 			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul')"/>
@@ -434,22 +434,22 @@ Rights Reserved.
             <menuitem value="&sortByStatusCmd.label;" oncommand="MsgSortByStatus();"/>
             <menuitem value="&sortBySubjectCmd.label;" oncommand="MsgSortBySubject();"/>
             <menuitem value="&sortByThreadCmd.label;" oncommand="MsgSortByThread();"/>
-            <menuitem value="&sortByUnreadCmd.label;" oncommand="MsgSortByUnread();"/>
-            <menuitem value="&sortByOrderReceivedCmd.label;" oncommand="MsgSortByOrderReceived();"/>
+            <menuitem value="&sortByUnreadCmd.label;" disabled="true" oncommand="MsgSortByUnread();"/>
+            <menuitem value="&sortByOrderReceivedCmd.label;" disabled="true" oncommand="MsgSortByOrderReceived();"/>
             <menuseparator/>
-            <menuitem value="&sortAscendCmd.label;" oncommand="MsgSortAscending();"/>
-            <menuitem value="&sortDescendCmd.label;" oncommand="MsgSortDescending();"/>
+            <menuitem value="&sortAscendCmd.label;" disabled="true" oncommand="MsgSortAscending();"/>
+            <menuitem value="&sortDescendCmd.label;" disabled="true" oncommand="MsgSortDescending();"/>
 		  </menupopup>
         </menu>
       <menu value="&msgsMenu.label;">
 	    <menupopup>
-	    <menuitem value="&threadsMsgsCmd.label;" oncommand="MsgViewAllThreadMsgs();"/>
+	    <menuitem value="&threadsMsgsCmd.label;" disabled="true" oncommand="MsgViewAllThreadMsgs();"/>
         <menuitem value="&allMsgsCmd.label;" oncommand="MsgViewAllMsgs();"/>
         <menuitem value="&unreadMsgsCmd.label;" oncommand="MsgViewUnreadMsg();"/>
-        <menuitem value="&threadsWithUnreadMsgsCmd.label;" oncommand="MsgViewThreadsUnread();"/>
-        <menuitem value="&watchedThreadsMsgsCmd.label;" oncommand="MsgViewWatchedThreadsUnread();"/>
+        <menuitem value="&threadsWithUnreadMsgsCmd.label;" disabled="true" oncommand="MsgViewThreadsUnread();"/>
+        <menuitem value="&watchedThreadsMsgsCmd.label;" disabled="true" oncommand="MsgViewWatchedThreadsUnread();"/>
         <menuseparator/>
-        <menuitem value="&ignoreThreadMsgsCmd.label;" oncommand="MsgViewIgnoreThread();"/>
+        <menuitem value="&ignoreThreadMsgsCmd.label;" disabled="true" oncommand="MsgViewIgnoreThread();"/>
 		</menupopup>
       </menu>
       <menu id="viewheadersmenu" value="&headersMenu.label;">
@@ -460,18 +460,18 @@ Rights Reserved.
 		</menupopup>
       </menu>
       <menuseparator/>
-      <menuitem value="&viewAttachmentsInlineCmd.label;" oncommand="MsgViewAttachInline();"/>
-      <menuitem value="&wrapLongLinesCmd.label;" oncommand="MsgWrapLongLines();"/>
+      <menuitem value="&viewAttachmentsInlineCmd.label;" disabled="true" oncommand="MsgViewAttachInline();"/>
+      <menuitem value="&wrapLongLinesCmd.label;" disabled="true" oncommand="MsgWrapLongLines();"/>
       <menuseparator/>
-      <menuitem value="&increaseFontCmd.label;" oncommand="MsgIncreaseFont();"/>
-      <menuitem value="&decreaseFontCmd.label;" oncommand="MsgDecreaseFont();"/>
+      <menuitem value="&increaseFontCmd.label;" disabled="true" oncommand="MsgIncreaseFont();"/>
+      <menuitem value="&decreaseFontCmd.label;" disabled="true" oncommand="MsgDecreaseFont();"/>
       <menuseparator/>
-      <menuitem value="&reloadCmd.label;" oncommand="MsgReload();"/>
-      <menuitem value="&showImagesCmd.label;" oncommand="MsgShowImages();"/>
-      <menuitem value="&stopCmd.label;" oncommand="MsgStop();"/>
+      <menuitem value="&reloadCmd.label;" disabled="true" oncommand="MsgReload();"/>
+      <menuitem value="&showImagesCmd.label;" disabled="true" oncommand="MsgShowImages();"/>
+      <menuitem value="&stopCmd.label;" disabled="true" oncommand="MsgStop();"/>
       <menuseparator/>
-      <menuitem value="&pageSourceCmd.label;" oncommand="MsgViewPageSource();"/>
-      <menuitem value="&pageInfoCmd.label;" oncommand="MsgViewPageInfo();"/>
+      <menuitem value="&pageSourceCmd.label;" disabled="true" oncommand="MsgViewPageSource();"/>
+      <menuitem value="&pageInfoCmd.label;" disabled="true" oncommand="MsgViewPageInfo();"/>
       <menuseparator/>
                 <menu value="&dcharMenu.label;">
                      <menupopup>
@@ -557,8 +557,8 @@ Rights Reserved.
     </menu>
     <menu value="&searchMenu.label;">
         <menupopup>
-		<menuitem value="&findCmd.label;" oncommand="MsgFind();"/>
-        <menuitem value="&findAgainCmd.label;" oncommand="MsgFindAgain();"/>
+		<menuitem value="&findCmd.label;" disabled="true" oncommand="MsgFind();"/>
+        <menuitem value="&findAgainCmd.label;" disabled="true" oncommand="MsgFindAgain();"/>
         <menuseparator/>
 <!--
         <menuitem value="&searchCurrentCmd.label;" disabled="true" oncommand="MsgSearchCurrent();"/>
@@ -577,8 +577,8 @@ Rights Reserved.
     </menu>
     <menu value="&goMenu.label;">
       <menupopup>
-	  <menuitem value="&firstUnreadMsgCmd.label;" oncommand="MsgFirstUnreadMessage();"/>
-      <menuitem value="&firstFlaggedMsgCmd.label;" oncommand="MsgFirstFlaggedMessage();"/>
+	  <menuitem value="&firstUnreadMsgCmd.label;" disabled="true" oncommand="MsgFirstUnreadMessage();"/>
+      <menuitem value="&firstFlaggedMsgCmd.label;" disabled="true" oncommand="MsgFirstFlaggedMessage();"/>
       <menuseparator/>
       <menu value="&nextMenu.label;">
         <menupopup>
@@ -597,8 +597,8 @@ Rights Reserved.
 		</menupopup>
       </menu>
       <menuseparator/>
-      <menuitem value="&backCmd.label;" oncommand="MsgGoBack();"/>
-      <menuitem value="&forwardCmd.label;" oncommand="MsgGoForward();"/>
+      <menuitem value="&backCmd.label;" disabled="true" oncommand="MsgGoBack();"/>
+      <menuitem value="&forwardCmd.label;" disabled="true" oncommand="MsgGoForward();"/>
       <menuitem value="5000 message folder test" oncommand="FolderTest5000();"/>
 	  </menupopup>
     </menu>
@@ -614,7 +614,7 @@ Rights Reserved.
         <menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment();"/>
 		</menupopup>
       </menu>
-      <menuitem value="&editMsgAsNewCmd.label;" oncommand="MsgEditMessageAsNew();"/>
+      <menuitem value="&editMsgAsNewCmd.label;" disabled="true" oncommand="MsgEditMessageAsNew();"/>
       <menuseparator/>
       <menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <menupopup/>
@@ -714,15 +714,15 @@ Rights Reserved.
         </template>
       </menu>
       <menuseparator/>
-      <menuitem value="&addSenderToAddressBookCmd.label;" oncommand="MsgAddSenderToAddressBook();"/>
-      <menuitem value="&addAllToAddressBookCmd.label;" oncommand="MsgAddAllToAddressBook();"/>
+      <menuitem value="&addSenderToAddressBookCmd.label;" disabled="true" oncommand="MsgAddSenderToAddressBook();"/>
+      <menuitem value="&addAllToAddressBookCmd.label;" disabled="true" oncommand="MsgAddAllToAddressBook();"/>
       <menuseparator/>
       <menu value="&markMenu.label;">
 	    <menupopup>
         <menuitem value="&markAsReadCmd.label;" oncommand="MsgMarkMsgAsRead(true);"/>
         <menuitem value="&markAsUnreadCmd.label;" oncommand="MsgMarkMsgAsRead(false);"/>
-        <menuitem value="&markThreadAsReadCmd.label;" oncommand="MsgMarkThreadAsRead();"/>
-        <menuitem value="&markByDateCmd.label;" oncommand="MsgMarkByDate();"/>
+        <menuitem value="&markThreadAsReadCmd.label;" disabled="true" oncommand="MsgMarkThreadAsRead();"/>
+        <menuitem value="&markByDateCmd.label;" disabled="true" oncommand="MsgMarkByDate();"/>
         <menuitem value="&markAllReadCmd.label;" oncommand="MsgMarkAllRead();"/>
         <menuseparator/>
         <menuitem value="&markFlaggedCmd.label;" oncommand="MsgMarkAsFlagged(true);"/>
@@ -730,8 +730,8 @@ Rights Reserved.
 		</menupopup>
       </menu>
       <menuseparator/>
-      <menuitem value="&ignoreThreadCmd.label;" oncommand="MsgIgnoreThread();"/>
-      <menuitem value="&watchThreadCmd.label;" oncommand="MsgWatchThread();"/>
+      <menuitem value="&ignoreThreadCmd.label;" disabled="true" oncommand="MsgIgnoreThread();"/>
+      <menuitem value="&watchThreadCmd.label;" disabled="true" oncommand="MsgWatchThread();"/>
 	  </menupopup>
     </menu>
     

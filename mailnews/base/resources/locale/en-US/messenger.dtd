@@ -73,7 +73,7 @@ Rights Reserved.
 <!ENTITY selectThreadCmd.label ".Thread">  
 <!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
-<!ENTITY filtersCmd.label "Message Filters...">  
+<!ENTITY filtersCmd.label ".Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY accountManagerCmd.label "Account Setup...">
 <!ENTITY accountWizardCmd.label "New Account Wizard...">
@@ -188,7 +188,7 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (searchParentParentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
 <!ENTITY searchInternetCmd.label ".Search the Internet...">
-<!ENTITY searchMailCmd.label "Search all Mail">
+<!ENTITY searchMailCmd.label ".Search all Mail">
 <!ENTITY searchBookmarksCmd.label ".Search Bookmarks...">
 <!ENTITY searchPeopleCmd.label ".Search People...">
 <!ENTITY searchLocalCmd.label ".Search on this Computer...">
