@@ -7,6 +7,8 @@
  * This program was written and copyrighted by:
  *   Alexander Larsson <alla@lysator.liu.se>
  *
+ *
+ *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -16,9 +18,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific language governing rights and limitations
  * under the License.
- *
- * Contributors:
- *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
 
@@ -171,7 +170,7 @@ vma_to_offset(Elf32_Addr addr)
     section = (Elf32_Shdr *)((char *)section + sectionsize);
   }
 
-  printf("Warning, unable to convert address %d (0x%x) to file offset\n",
+  fprintf(stderr, "Warning, unable to convert address %d (0x%x) to file offset\n",
 	 addr, addr);
   return 0;
 }
@@ -200,7 +199,7 @@ find_segment_addr_min_max(Elf32_Word file_offset,
 
     segment = (Elf32_Phdr *)((char *)segment + segmentsize);
   }
-  printf("Error: Couldn't find segment in find_segment_addr_min_max()\n");
+  fprintf(stderr, "Error: Couldn't find segment in find_segment_addr_min_max()\n");
 }
 
 void *
@@ -294,7 +293,7 @@ possibly_add_string(int name_idx, const char *name)
       dynamic_symbol->string = g_strdup(name);
       
       g_hash_table_insert(used_dynamic_symbols, (gpointer)name_idx, dynamic_symbol);
-      printf("added dynamic string: %s (%d)\n", dynamic_symbol->string, name_idx);
+      /*printf("added dynamic string: %s (%d)\n", dynamic_symbol->string, name_idx);*/
     }
   }
 }
@@ -310,7 +309,7 @@ fixup_string(Elf32_Word old_idx)
   dynamic_symbol = g_hash_table_lookup(used_dynamic_symbols, (gpointer) old_idx);
 
   if (dynamic_symbol == NULL) {
-    printf("AAAAAAAAAAAARGH!? Unknown string found in fixup (index: %d)!\n", old_idx);
+    fprintf(stderr, "AAAAAAAAAAAARGH!? Unknown string found in fixup (index: %d)!\n", old_idx);
     return 0;
   }
   
@@ -386,11 +385,11 @@ add_strings_from_dynamic(Elf32_Shdr *dynamic, char *strtab)
     case DT_SONAME:
     case DT_RPATH:
       name_idx = element->d_un.d_val;
-      //if (name_idx) printf("d_tag: %d\n", element->d_tag);
+      /*if (name_idx) printf("d_tag: %d\n", element->d_tag);*/
       possibly_add_string(name_idx, &strtab[name_idx]);
       break;
     default:
-      //printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);
+      /*printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);*/
     }
 
     element = (Elf32_Dyn *)((char *)element + entry_size);
@@ -418,7 +417,7 @@ fixup_strings_in_dynamic(Elf32_Shdr *dynamic)
       element->d_un.d_val = fixup_string(element->d_un.d_val);
       break;
     default:
-      //printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);
+      /*printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);*/
     }
 
     element = (Elf32_Dyn *)((char *)element + entry_size);
@@ -437,8 +436,6 @@ add_strings_from_ver_d(Elf32_Shdr *ver_d, char *strtab)
   int i;
   int cont;
 
-  printf("Version defines:\n");
-  
   verdef = (Elf32_Verdef *)FILE_OFFSET(ver_d->sh_offset);
 
   do {
@@ -520,8 +517,6 @@ fixup_strings_in_ver_r(Elf32_Shdr *ver_r)
   int i;
   int cont;
 
-  printf("Version needed:\n");
-  
   verneed = (Elf32_Verneed *)FILE_OFFSET(ver_r->sh_offset);
 
   do {
@@ -661,16 +656,81 @@ remap_symtab(Elf32_Shdr *symtab)
   }
 }
 
+
+/* Ugly global variables: */
+Elf32_Addr got_data_start = 0;
+Elf32_Addr got_data_end = 0;
+
+
+void
+remap_rel_section(Elf32_Rel *rel, Elf32_Word size, Elf32_Word entry_size)
+{
+  Elf32_Rel *rel_end;
+  Elf32_Word offset;
+  Elf32_Addr *addr;
+
+  rel_end = (Elf32_Rel *)((char *)rel + size);
+
+  while (rel < rel_end) {
+    if (ELF32_R_TYPE(rel->r_info) == R_386_RELATIVE) {
+	  /* We need to relocate the data this is pointing to too. */
+	  offset = vma_to_offset(rel->r_offset);
+
+	  if ( (offset >= got_data_start) &&
+	       (offset < got_data_end) ) {
+	    /*printf("RELATIVE REL in .rel.got, skipping\n");*/
+	  } else {
+	    addr =  (Elf32_Addr *)FILE_OFFSET(offset);
+	    *addr = fixup_addr(*addr);
+	  }
+    }
+
+    rel->r_offset = fixup_addr(rel->r_offset);
+    
+    rel = (Elf32_Rel *)((char *)rel + entry_size);
+  }
+}
+
+void
+remap_rela_section(Elf32_Rela *rela, Elf32_Word size, Elf32_Word entry_size)
+{
+  Elf32_Rela *rela_end;
+  Elf32_Addr *addr;
+  Elf32_Word offset;
+
+  rela_end = (Elf32_Rela *)((char *)rela + size);
+
+  while (rela < rela_end) {
+    if (ELF32_R_TYPE(rela->r_info) == R_386_RELATIVE) {
+	  /* We need to relocate the data this is pointing to too. */
+	  offset = vma_to_offset(rela->r_offset);
+
+	  if ( (offset >= got_data_start) &&
+	       (offset < got_data_end) ) {
+	    /*printf("RELATIVE RELA in .rel.got, skipping\n");*/
+	  } else {
+	    addr =  (Elf32_Addr *)FILE_OFFSET(offset);
+	    *addr = fixup_addr(*addr);
+	  }
+    }
+
+    rela->r_offset = fixup_addr(rela->r_offset);
+    
+    rela = (Elf32_Rela *)((char *)rela + entry_size);
+  }
+}
+
+
 void
 remap_reloc(void)
 {
   Elf32_Shdr *section;
   Elf32_Word sectionsize;
-  Elf32_Addr *addr;
   Elf32_Word offset;
   int numsections;
   int i = 0;
 
+  /* This is old code. relocations are now handled from remap_dynamic() */
   section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
   sectionsize = elf_header->e_shentsize;
   numsections = elf_header->e_shnum;
@@ -678,50 +738,15 @@ remap_reloc(void)
   for (i=0;i<numsections;i++) {
     if (section->sh_type == SHT_REL) {
       Elf32_Rel *rel;
-      Elf32_Rel *rel_end;
-      Elf32_Word entry_size;
 
       rel = (Elf32_Rel *)FILE_OFFSET(section->sh_offset);
-      rel_end = (Elf32_Rel *)FILE_OFFSET(section->sh_offset + section->sh_size);
-      entry_size = section->sh_entsize;
-
-      while (rel < rel_end) {
-	if (ELF32_R_TYPE(rel->r_info) == R_386_RELATIVE) {
-	  /* We need to relocate the data this is pointing to too. */
-	  offset = vma_to_offset(rel->r_offset);
-
-	  {
-	  Elf32_Shdr *strtab_section;
-	  char *strtab;
-	  strtab_section = elf_find_section_num(elf_header->e_shstrndx);
-	  strtab = (char *)FILE_OFFSET(strtab_section->sh_offset);
-	  if (strcmp(".rel.got", &strtab[section->sh_name])==0)
-	    printf("RELATIVE REL in .rel.got, skipping\n");
-	  else
-	    addr =  (Elf32_Addr *)FILE_OFFSET(offset);
-
-	  }
-	  
-	  *addr = fixup_addr(*addr);
-	}
-
-	rel->r_offset = fixup_addr(rel->r_offset);
-	
-	rel = (Elf32_Rel *)((char *)rel + entry_size);
-      }
+      remap_rel_section(rel, section->sh_size, section->sh_entsize);
+      
     } else if (section->sh_type == SHT_RELA) {
       Elf32_Rela *rel;
-      Elf32_Rela *rel_end;
-      Elf32_Word entry_size;
 
       rel = (Elf32_Rela *)FILE_OFFSET(section->sh_offset);
-      rel_end = (Elf32_Rela *)FILE_OFFSET(section->sh_offset + section->sh_size);
-      entry_size = section->sh_entsize;
-
-      while (rel < rel_end) {
-	rel->r_offset = fixup_addr(rel->r_offset);
-	rel = (Elf32_Rela *)((char *)rel + entry_size);
-      }
+      remap_rela_section(rel, section->sh_size, section->sh_entsize);
     }
     
     section = (Elf32_Shdr *)((char *)section + sectionsize);
@@ -739,11 +764,13 @@ remap_i386_got(void)
 
   got_section = elf_find_section_named(".got");
   if (got_section == NULL) {
-    printf("Warning, no .got section\n");
+    fprintf(stderr, "Warning, no .got section\n");
     return;
   }
 
-
+  got_data_start = got_section->sh_offset;
+  got_data_end = got_section->sh_offset + got_section->sh_size;
+  
   got = (Elf32_Addr *)FILE_OFFSET(got_section->sh_offset);
   got_end = (Elf32_Addr *)FILE_OFFSET(got_section->sh_offset + got_section->sh_size);
   entry_size = got_section->sh_entsize;
@@ -758,14 +785,10 @@ remap_i386_got(void)
     
     got = (Elf32_Addr *)((char *)got + entry_size);
   }
-
-  
-  
-  
 }
 
-void
-remap_dynamic(Elf32_Shdr *dynamic, Elf32_Word new_dynstr_size)
+Elf32_Word
+get_dynamic_val(Elf32_Shdr *dynamic, Elf32_Sword tag)
 {
   Elf32_Dyn *element;
   Elf32_Word entry_size;
@@ -774,25 +797,74 @@ remap_dynamic(Elf32_Shdr *dynamic, Elf32_Word new_dynstr_size)
 
   element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
   while (element->d_tag != DT_NULL) {
+    if (element->d_tag == tag) {
+      return element->d_un.d_val;
+    }
+    element = (Elf32_Dyn *)((char *)element + entry_size);
+  }
+  return 0;
+}
+
+void
+remap_dynamic(Elf32_Shdr *dynamic, Elf32_Word new_dynstr_size)
+{
+  Elf32_Dyn *element;
+  Elf32_Word entry_size;
+  Elf32_Word rel_size;
+  Elf32_Word rel_entry_size;
+  Elf32_Rel *rel;
+  Elf32_Rela *rela;
+
+  entry_size = dynamic->sh_entsize;
+
+  element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
+  while (element->d_tag != DT_NULL) {
     switch(element->d_tag) {
     case DT_STRSZ:
-      element->d_un.d_val= new_dynstr_size;
+      element->d_un.d_val = new_dynstr_size;
       break;
     case DT_PLTGOT:
     case DT_HASH:
     case DT_STRTAB:
-    case DT_RELA:
-    case DT_REL:
     case DT_INIT:
     case DT_FINI:
-    case DT_JMPREL:
     case DT_VERDEF:
     case DT_VERNEED:
     case DT_VERSYM:
-      element->d_un.d_ptr= fixup_addr(element->d_un.d_ptr);
+      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+      break;
+    case DT_JMPREL:
+      rel_size = get_dynamic_val(dynamic, DT_PLTRELSZ);
+      if (get_dynamic_val(dynamic, DT_PLTREL) == DT_REL) {
+	rel_entry_size = get_dynamic_val(dynamic, DT_RELENT);
+	rel = (Elf32_Rel *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
+	remap_rel_section(rel, rel_size, rel_entry_size);
+      } else {
+	rel_entry_size = get_dynamic_val(dynamic, DT_RELAENT);
+	rela = (Elf32_Rela *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
+	remap_rela_section(rela, rel_size, rel_entry_size);
+      }
+
+      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+      break;
+    case DT_REL:
+      rel_size = get_dynamic_val(dynamic, DT_RELSZ);
+      rel_entry_size = get_dynamic_val(dynamic, DT_RELENT);
+      rel = (Elf32_Rel *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
+      remap_rel_section(rel, rel_size, rel_entry_size);
+      
+      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+      break;
+    case DT_RELA:
+      rel_size = get_dynamic_val(dynamic, DT_RELASZ);
+      rel_entry_size = get_dynamic_val(dynamic, DT_RELAENT);
+      rela = (Elf32_Rela *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
+      remap_rela_section(rela, rel_size, rel_entry_size);
+
+      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
       break;
     default:
-      //printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);
+      /*printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);*/
     }
 
     element = (Elf32_Dyn *)((char *)element + entry_size);
@@ -858,20 +930,19 @@ main(int argc, char *argv[])
   Elf32_Word new_dynstr_size;
   
   if (argc != 2) {
-    printf("Usage: %s <filename>\n", argv[0]);
-    exit(1);
+    fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+    return 1;
   }
 
   fd = open(argv[1], O_RDWR);
   if (fd == -1) {
-    printf("Cannot open file %s\n", argv[1]);
-    exit(1);
+    fprintf(stderr, "Cannot open file %s\n", argv[1]);
+    return 1;
   }
-  printf("*** start opened file %s\n", argv[1]);
   
   if (fstat(fd, &statbuf) == -1) {
-    printf("Cannot stat file %s\n", argv[1]);
-    exit(1);
+    fprintf(stderr, "Cannot stat file %s\n", argv[1]);
+    return 1;
   }
   
   size = statbuf.st_size;
@@ -879,14 +950,40 @@ main(int argc, char *argv[])
   mapping = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
   if (mapping == (unsigned char *)-1) {
-    printf("Cannot mmap file %s\n", argv[1]);
-    exit(1);
+    fprintf(stderr, "Cannot mmap file %s\n", argv[1]);
+    return 1;
   }
 
   used_dynamic_symbols = g_hash_table_new(g_direct_hash, g_direct_equal);
 
   elf_header = (Elf32_Ehdr *)mapping;
 
+  if (strncmp((void *)elf_header, ELFMAG, SELFMAG)!=0) {
+    fprintf(stderr, "Not an ELF file\n");
+    return 1;
+  }
+
+  if (elf_header->e_ident[EI_VERSION] != EV_CURRENT) {
+    fprintf(stderr, "Wrong ELF file version\n");
+    return 1;
+  }
+
+  if (elf_header->e_ident[EI_CLASS] != ELFCLASS32) {
+    fprintf(stderr, "Only 32bit ELF files supported\n");
+    return 1;
+  }
+
+  if ( (elf_header->e_ident[EI_DATA] != ELFDATA2LSB) ||
+       ((elf_header->e_machine !=  EM_386 && elf_header->e_machine != EM_486)) ) {
+    fprintf(stderr, "Only intel LSB binaries are supported right now\n");
+    return 1;
+  }
+
+  if (elf_header->e_type != ET_DYN) {
+    fprintf(stderr, "Not an ELF shared object\n");
+    return 1;
+  }
+  
   dynamic = elf_find_section(SHT_DYNAMIC);
   dynsym = elf_find_section(SHT_DYNSYM);
   symtab = elf_find_section(SHT_SYMTAB);
@@ -910,11 +1007,13 @@ main(int argc, char *argv[])
   /* Generate new dynstr section from the used strings hashtable: */
   
   new_dynstr = generate_new_dynstr(&new_dynstr_size);
+  /*
   printf("New dynstr size: %d\n", new_dynstr_size);
   printf("Old dynstr size: %d\n", old_dynstr_size);
-
+  */
+  
   if (new_dynstr_size >= old_dynstr_size) {
-    printf("Couldn't GC any strings, exiting.\n");
+    fprintf(stderr, "Couldn't GC any strings, exiting.\n");
     return 1;
   }
 
@@ -946,21 +1045,24 @@ main(int argc, char *argv[])
 
   find_segment_addr_min_max(dynstr->sh_offset,
 			    &hole_addr_remap_start, &hole_addr_remap_end);
+  
+  /*
   printf("Hole remap: 0x%lx - 0x%lx\n", hole_addr_remap_start, hole_addr_remap_end);
 
   printf("hole: %lu - %lu (%lu bytes)\n", hole_index, hole_end, hole_len);
   printf("hole: 0x%lx - 0x%lx (0x%lx bytes)\n", hole_index, hole_end, hole_len);
-
+  */
+  
   /* 2. Change all section and segment sizes and offsets: */
   
   remap_symtab(dynsym);
   if (symtab)
     remap_symtab(symtab);
+  
   remap_i386_got();
-  remap_reloc();
   remap_dynamic(dynamic, new_dynstr_size);
   
-  remap_sections();
+  remap_sections(); /* After this line the section headers are wrong */
   remap_segments();
   remap_elf_header();
     
@@ -975,3 +1077,6 @@ main(int argc, char *argv[])
   ftruncate(fd, size - hole_len);
   close(fd);
 }
+
+
+
