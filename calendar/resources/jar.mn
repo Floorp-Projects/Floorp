@@ -97,6 +97,7 @@ calendar.jar:
     content/calendar/pref/viewPrefs.xul (content/pref/viewPrefs.xul)
     content/calendar/pref/timezonePrefs.xul (content/pref/timezonePrefs.xul)
     content/calendar/pref/wsm.js (content/pref/wsm.js)
+*   content/calendar/pref/nsPrefWindow.js (content/pref/nsPrefWindow.js)
     locale/en-US/calendar/calendar.dtd (locale/en-US/calendar.dtd)
     locale/en-US/calendar/calendar.properties (locale/en-US/calendar.properties)
     locale/en-US/calendar/categories.properties  (locale/en-US/categories.properties) 
