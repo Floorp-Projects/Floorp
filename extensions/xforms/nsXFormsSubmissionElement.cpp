@@ -378,6 +378,8 @@ nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 NS_IMETHODIMP
 nsXFormsSubmissionElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
+  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_HANDLE_DEFAULT);
+
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
 

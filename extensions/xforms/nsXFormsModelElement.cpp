@@ -423,7 +423,8 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
                                 nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
-                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN |
+                                nsIXTFElement::NOTIFY_HANDLE_DEFAULT);
 
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
