@@ -2171,12 +2171,9 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
           // in an auto width table, the column cannot be wider than its max width
           if (PR_TRUE==aTableIsAutoWidth)
           { // since the table shrinks to the content width, don't be wider than the content max width
-            nscoord newColWidth = PR_MIN(colWidth, colFrame->GetMaxColWidth());
-            aComputedTableWidth += newColWidth-colWidth;
-            colWidth = newColWidth;
+            colWidth = PR_MIN(colWidth, colFrame->GetMaxColWidth());
           }
-          else
-            aComputedTableWidth += colWidth - startingColWidth;
+          aComputedTableWidth += colWidth - startingColWidth;
           if (gsDebug==PR_TRUE) 
             printf("  distribute width to auto columns:  column %d was %d, now set to %d\n", 
                    colIndex, colFrame->GetEffectiveMaxColWidth(), colWidth);
