@@ -19,6 +19,7 @@
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
+#include "nsString.h"
 #include "nsIPresContext.h"
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
@@ -50,4 +51,5 @@ void XXXNeverCalled()
   NS_NewSimplePageSequenceFrame(f);
   nsINameSpaceManager* nsm;
   NS_NewNameSpaceManager(&nsm);
+  NS_CreateHTMLElement(nsnull, "");
 }
