@@ -1,4 +1,5 @@
 content,install,url,jar:resource:/chrome/embed.jar!/content/global/
+content,install,url,jar:resource:/chrome/embed.jar!/content/communicator/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/global/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/global/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/necko/
