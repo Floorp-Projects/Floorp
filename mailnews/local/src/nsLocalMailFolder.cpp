@@ -562,7 +562,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 			|| name->CompareWithConversion("Outbox", PR_TRUE) == 0)
 			flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
-		//These should probably be read in from a preference.  Hacking in here for the moment.
+		// the logic for this has been moved into 
+		// SetFlagsOnDefaultMailboxes()
 		else if(name->Compare("Sent", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
 		else if(name->Compare("Drafts", PR_TRUE) == 0)
@@ -672,13 +673,16 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
       SetFlag(newFlags);
 
+      PRBool createdDefaultMailboxes = PR_FALSE;
+      nsCOMPtr<nsILocalMailIncomingServer> localMailServer;
+
       if (isServer) {
           nsCOMPtr<nsIMsgIncomingServer> server;
           rv = GetServer(getter_AddRefs(server));
 	  if (NS_FAILED(rv)) return rv;
 	  if (!server) return NS_ERROR_FAILURE;
 
-          nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
+	  localMailServer = do_QueryInterface(server, &rv);
 	  if (NS_FAILED(rv)) return rv;
 	  if (!localMailServer) return NS_ERROR_FAILURE;
 
@@ -686,12 +690,22 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
           rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
           if (NS_FAILED(rv)) return rv;
 
+	  // first create the folders on disk (as empty files)
           rv = localMailServer->CreateDefaultMailboxes(spec);
           if (NS_FAILED(rv)) return rv;
+	  createdDefaultMailboxes = PR_TRUE;
       }
 
+      // now, discover those folders
       rv = CreateSubFolders(path);
+      if (NS_FAILED(rv)) return rv;
 
+      // must happen after CreateSubFolders, or the folders won't exist.
+      if (createdDefaultMailboxes && localMailServer) {
+		rv = localMailServer->SetFlagsOnDefaultMailboxes();
+        if (NS_FAILED(rv)) return rv;
+      }
+	
     }
     UpdateSummaryTotals(PR_FALSE);
     

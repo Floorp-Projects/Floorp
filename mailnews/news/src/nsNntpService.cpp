@@ -49,6 +49,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIMessengerMigrator.h"
 #include "nsINntpIncomingServer.h"
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
@@ -69,6 +70,7 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
                     
 nsNntpService::nsNntpService()
@@ -807,9 +809,7 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
   nsCOMPtr <nsIMsgMessageUrl> msgUrl = do_QueryInterface(nntpUrl);
   msgUrl->SetUri(urlString);
-  // don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
-  // a "const char *" in paramemter for uri SetSpec...
-  mailnewsurl->SetSpec((char *) urlString);
+  mailnewsurl->SetSpec(urlString);
 
   if (newsgroupName != "") {
     nsCOMPtr <nsINNTPNewsgroup> newsgroup;
@@ -851,9 +851,6 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	if (NS_FAILED(rv)) return rv;
 	if (!accountManager) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_sspitzer
-	printf("todo, for bug #36661, are there any accounts?  if not, see if you can migrate.  if not, popup the wizard for this server?\n");
-#endif
 
 	nsCOMPtr <nsIMsgAccount> account;
 	rv = accountManager->CreateAccount(getter_AddRefs(account));
@@ -870,18 +867,8 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	if (NS_FAILED(rv)) return rv;
 	if (!identity) return NS_ERROR_FAILURE;
 
-	// todo:  eventually, copy the identity from the default news account
-	nsCOMPtr <nsIMsgAccount> defaultAccount;
-	rv = accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
-	if (NS_FAILED(rv)) return rv;
-	if (!defaultAccount) return NS_ERROR_FAILURE;
-
-	nsCOMPtr <nsIMsgIdentity> defaultIdentity;
-	rv = defaultAccount->GetDefaultIdentity(getter_AddRefs(defaultIdentity));
-	if (NS_FAILED(rv)) return rv;
-	if (!defaultIdentity) return NS_ERROR_FAILURE;
-	
-	rv = identity->Copy(defaultIdentity);
+	// the identity isn't filled in, so it is not valid.
+	rv = (*server)->SetValid(PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
 	// hook them together
@@ -909,9 +896,32 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   if (NS_FAILED(rv)) return rv;
   if (!accountManager) return NS_ERROR_FAILURE;
 
-  // find the incoming server
+  // find the incoming server, it if exists.
+  // migrate if necessary, before searching for it.
+  // if it doesn't exist, create it.
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
+
+#ifdef DEBUG_sspitzer
+  printf("for bug, #36661, see if there are any accounts, if not, try migrating.  should this be pushed into FindServer()?\n");
+#endif
+  nsCOMPtr <nsISupportsArray> accounts;
+  rv = accountManager->GetAccounts(getter_AddRefs(accounts));
+  if (NS_FAILED(rv)) return rv;
+
+  PRUint32 accountCount;
+  rv = accounts->Count(&accountCount);
+  if (NS_FAILED(rv)) return rv;
+
+  if (accountCount == 0) {
+	nsCOMPtr <nsIMessengerMigrator> messengerMigrator = do_GetService(kMessengerMigratorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+	if (!messengerMigrator) return NS_ERROR_FAILURE;
+
+	// migration can fail;
+ 	messengerMigrator->UpgradePrefs(); 
+  }
+
   rv = accountManager->FindServer((const char *)userName,
                                 (const char *)hostName,
                                 "nntp",
@@ -1147,9 +1157,7 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 
 	nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
 
-	// don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
-	// a "cont char *" in paramemter for uri SetSpec...
-	(*_retval)->SetSpec((char *) aSpec);
+	(*_retval)->SetSpec(aSpec);
 	return rv;
 }
 

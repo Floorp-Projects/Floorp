@@ -158,6 +158,69 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 }
 
 
+NS_IMETHODIMP nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIFolder> rootFolder;
+	rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if (NS_FAILED(rv)) return rv;
+	if (!rootFolder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr <nsIFolder> folder;
+	nsCOMPtr<nsIMsgFolder> msgFolder;
+
+	rv = rootFolder->FindSubFolder("Inbox", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_INBOX);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Sent", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Drafts", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = rootFolder->FindSubFolder("Templates", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Trash", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Unsent Messages", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
+	if (NS_FAILED(rv)) return rv;
+	
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
 	nsresult rv;

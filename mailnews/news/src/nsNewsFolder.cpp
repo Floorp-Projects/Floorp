@@ -159,16 +159,10 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
 
-    //Are we assured this is the server for this folder?
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = GetServer(getter_AddRefs(server));
+    nsCOMPtr<nsINntpIncomingServer> nntpServer;
+    rv = GetNntpServer(getter_AddRefs(nntpServer));
     if (NS_FAILED(rv)) return rv;
   
-    nsCOMPtr<nsINntpIncomingServer> nntpServer;
-    rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
-                                getter_AddRefs(nntpServer));
-    if (NS_FAILED(rv)) return rv;
-    
     rv = nntpServer->GetNewsrcFilePath(getter_AddRefs(mNewsrcFilePath));
     if (NS_FAILED(rv)) return rv;
       
@@ -199,17 +193,26 @@ nsMsgNewsFolder::GetReadSetStr(char **setStr)
 NS_IMETHODIMP
 nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder **child)
 {
+	nsresult rv = NS_OK;
+
 	if (!child) return NS_ERROR_NULL_POINTER;
     if (!setStr) return NS_ERROR_NULL_POINTER;
     if (!name) return NS_ERROR_NULL_POINTER;
   
 #ifdef DEBUG_NEWS
-  printf("AddNewsgroup(%s,??,%s)\n",name,setStr);
+    printf("AddNewsgroup(%s,??,%s)\n",name,setStr);
 #endif
   
-	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-	if(NS_FAILED(rv)) return rv;
+	nsCOMPtr <nsINntpIncomingServer> nntpServer;
+	rv = GetNntpServer(getter_AddRefs(nntpServer));
+	if (NS_FAILED(rv)) return rv;
+
+	rv = nntpServer->AddNewsgroup(name);
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr <nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv); 
+	if (NS_FAILED(rv)) return rv;
+	if (!rdf) return NS_ERROR_FAILURE;
 
 	nsCString uri(mURI);
 	uri.Append('/');
@@ -492,12 +495,8 @@ NS_IMETHODIMP nsMsgNewsFolder::SetNewsrcHasChanged(PRBool newsrcHasChanged)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsINntpIncomingServer> nntpServer;
-    rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer), getter_AddRefs(nntpServer));
+    rv = GetNntpServer(getter_AddRefs(nntpServer));
     if (NS_FAILED(rv)) return rv;
 
     return nntpServer->SetNewsrcHasChanged(newsrcHasChanged);
@@ -582,6 +581,15 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
 	nsNewsSummarySpec summarySpec(path);
 	summarySpec.Delete(PR_FALSE);
 	
+	nsCOMPtr <nsINntpIncomingServer> nntpServer;
+	rv = GetNntpServer(getter_AddRefs(nntpServer));
+	if (NS_FAILED(rv)) return rv;
+
+	nsXPIDLCString name;
+	rv = GetAsciiName(getter_Copies(name));
+	rv = nntpServer->RemoveNewsgroup((const char *)name);
+	if (NS_FAILED(rv)) return rv;
+	
 	return NS_OK;
 }
 
@@ -613,15 +621,10 @@ NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
   if (NS_FAILED(rv)) return rv;
   
   if (!isNewsServer) {  
-	nsCOMPtr<nsIMsgIncomingServer> server;
-	rv = GetServer(getter_AddRefs(server));
+	nsCOMPtr<nsINntpIncomingServer> nntpServer;
+	rv = GetNntpServer(getter_AddRefs(nntpServer));
 	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsINntpIncomingServer> nntpServer;
-	rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
-				      getter_AddRefs(nntpServer));
-
-	if (NS_FAILED(rv)) return rv; 
 	PRBool abbreviate = PR_TRUE;
 	rv = nntpServer->GetAbbreviate(&abbreviate);
 	if (NS_FAILED(rv)) return rv;
@@ -878,33 +881,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetExpungedBytesCount(PRUint32 *count)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetDeletable(PRBool *deletable)
 {
-#if 0
-  if(!deletable)
-    return NS_ERROR_NULL_POINTER;
-
-  // These are specified in the "Mail/News Windows" UI spec
-
-  if (mFlags & MSG_FOLDER_FLAG_TRASH)
-  {
-    PRBool moveToTrash;
-    GetDeleteIsMoveToTrash(&moveToTrash);
-    if(moveToTrash)
-      *deletable = PR_TRUE;  // allow delete of trash if we don't use trash
-  }
-  else if (mDepth == 1)
-    *deletable = PR_FALSE;
-  else if (mFlags & MSG_FOLDER_FLAG_INBOX || 
-    mFlags & MSG_FOLDER_FLAG_DRAFTS || 
-    mFlags & MSG_FOLDER_FLAG_TRASH ||
-    mFlags & MSG_FOLDER_FLAG_TEMPLATES)
-    *deletable = PR_FALSE;
-  else *deletable =  PR_TRUE;
-
-  return NS_OK;
-#else
   NS_ASSERTION(0,"GetDeletable() not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
  
 NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
@@ -937,15 +915,12 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
     nsXPIDLCString hostname;
     rv = GetHostname(getter_Copies(hostname));
     if (NS_FAILED(rv)) return rv;
-    nsXPIDLString newsgroupname;
-    rv = GetName(getter_Copies(newsgroupname));
-	nsCAutoString asciiName; asciiName.AssignWithConversion(newsgroupname);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
-    rv = nntpService->CancelMessages((const char *)hostname, (const char *)asciiName, messages, nsnull /* consumer */, nsnull, aMsgWindow, nsnull);
 
+    nsXPIDLCString newsgroupname;
+    rv = GetAsciiName(getter_Copies(newsgroupname));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = nntpService->CancelMessages((const char *)hostname, (const char *)newsgroupname, messages, nsnull /* consumer */, nsnull, aMsgWindow, nsnull);
   }
   
   return rv;
@@ -971,13 +946,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
-  
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
-  rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
-                              getter_AddRefs(nntpServer));
+  rv = GetNntpServer(getter_AddRefs(nntpServer));
   if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_NEWS
@@ -1558,11 +1528,12 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
 
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 
-    nsXPIDLString newsgroupname;
-    rv = GetName(getter_Copies(newsgroupname));
+    nsXPIDLCString newsgroupname;
+    rv = GetAsciiName(getter_Copies(newsgroupname));
     if (NS_FAILED(rv)) return rv;
 
-	nsCAutoString newsrcLineStr; newsrcLineStr.AssignWithConversion(newsgroupname);
+	nsCAutoString newsrcLineStr;
+	newsrcLineStr = (const char *)newsgroupname;
     newsrcLineStr += ":";
 
     char *setStr = nsnull;
@@ -1651,3 +1622,73 @@ nsMsgNewsFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
     return SetNewsrcHasChanged(PR_TRUE);
 }
 
+
+NS_IMETHODIMP
+nsMsgNewsFolder::GetAsciiName(char **asciiName)
+{
+	nsresult rv;
+
+	if (!asciiName) return NS_ERROR_NULL_POINTER;
+
+	nsXPIDLString name;
+	rv = GetName(getter_Copies(name));
+	if (NS_FAILED(rv)) return rv;
+
+	nsCAutoString tmpStr;
+	tmpStr.AssignWithConversion(name);
+	*asciiName = nsCRT::strdup((const char *)tmpStr);
+	if (!*asciiName) return NS_ERROR_OUT_OF_MEMORY;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgNewsFolder::GetNntpServer(nsINntpIncomingServer **result)
+{
+	nsresult rv;
+	if (!result) return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+  
+    nsCOMPtr<nsINntpIncomingServer> nntpServer;
+    rv = server->QueryInterface(NS_GET_IID(nsINntpIncomingServer),
+                                getter_AddRefs(nntpServer));
+    if (NS_FAILED(rv)) return rv;
+
+	*result = nntpServer;
+	NS_IF_ADDREF(*result);
+
+	return NS_OK;
+}
+
+// this gets called after the message actually gets cancelled
+// it removes the cancelled message from the db
+NS_IMETHODIMP nsMsgNewsFolder::RemoveMessage(nsMsgKey key)
+{
+  nsresult rv;
+
+  nsCAutoString msgURI;
+  rv = nsBuildNewsMessageURI(mBaseMessageURI, key, msgURI);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr <nsIRDFService> rdfService = do_GetService(kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr <nsIRDFResource> res;
+  rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(res));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDBMessage> dbMessage = do_QueryInterface(res);
+  if (!dbMessage) return NS_ERROR_FAILURE;
+
+  nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
+  rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  return NS_OK;
+}

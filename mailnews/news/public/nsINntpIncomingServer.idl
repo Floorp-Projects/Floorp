@@ -48,6 +48,10 @@ interface nsINntpIncomingServer : nsISupports {
 	/* abbreviate the newsgroup names in the folder pane? */
 	attribute boolean abbreviate;
 
+	/* the server keeps track of all the newsgroups we are subscribed to */
+	void addNewsgroup(in string name);
+	void removeNewsgroup(in string name);
+
     void writeNewsrcFile();
 
     attribute boolean newsrcHasChanged;
@@ -70,4 +74,5 @@ interface nsINntpIncomingServer : nsISupports {
 
 	/* used for the subscribe dialog */
 	void addNewsgroupToSubscribeDS(in string name);
+
 };

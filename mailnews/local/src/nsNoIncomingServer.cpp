@@ -57,6 +57,64 @@ nsNoIncomingServer::GetLocalStoreType(char **type)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIFolder> rootFolder;
+	rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if (NS_FAILED(rv)) return rv;
+	if (!rootFolder) return NS_ERROR_FAILURE;
+
+	nsCOMPtr <nsIFolder> folder;
+	nsCOMPtr <nsIMsgFolder> msgFolder;
+
+	// notice, no Inbox
+
+	rv = rootFolder->FindSubFolder("Sent", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Drafts", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = rootFolder->FindSubFolder("Templates", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Trash", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = rootFolder->FindSubFolder("Unsent Messages", getter_AddRefs(folder));
+	if (NS_FAILED(rv)) return rv;
+	if (!folder) return NS_ERROR_FAILURE;
+ 	msgFolder = do_QueryInterface(folder);
+	if (!msgFolder) return NS_ERROR_FAILURE;
+	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_QUEUE);
+	if (NS_FAILED(rv)) return rv;
+	
+	return NS_OK;
+}	
+
 NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
         nsresult rv;
@@ -65,8 +123,8 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 
         // todo, use a string bundle for these
 
-	// notice, no Inbox
 
+		// notice, no Inbox
         rv = path->AppendRelativeUnixPath("Trash");
         if (NS_FAILED(rv)) return rv;
         rv = path->Exists(&exists);

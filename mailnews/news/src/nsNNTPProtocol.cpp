@@ -1110,9 +1110,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 	 Either way, there may be search data at the end.
     */
 
-	s = PL_strchr (group, '@');
-    if (s)
-	{
+	if (PL_strchr (group, '@') || PL_strstr(group,"%40")) {
       message_id = nsUnescape(group);
 	  group = 0;
 	}
@@ -1133,16 +1131,10 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
    if (message_id || group)
    {
 	  char *start;
-	  if (message_id)
-	  {
-#ifdef DEBUG_sspitzer
-		  /* Move past the @. */
-		  NS_ASSERTION (s && *s == '@', "move past the @");
-#endif /* DEBUG_sspitzer */
-		  start = s;
+	  if (message_id) {
+		  start = PL_strchr(message_id,'@');
 	  }
-	  else
-	  {
+	  else {
 		  start = group; /*  ? group : hostAndPort; */ // mscott -- fix me...necko sloppiness on my part
 	  }
 
@@ -3975,21 +3967,30 @@ PRInt32 nsNNTPProtocol::DoCancel()
 		// XXX:  todo, check rv?
 	}
 
-#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
-    // just me for now...
-    // start of work for bug #8216
-    //
+	
+    if (!m_runningURL) return NS_ERROR_FAILURE;
+
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetMessageKey failed");
-    char *newsgroupname = nsnull;
-    rv = m_runningURL->GetNewsgroupName(&newsgroupname);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && newsgroupname && (key != nsMsgKey_None), "need more to remove this message from the db");
-    if ((key != nsMsgKey_None) && (newsgroupname)) {
-	printf("delete %u from %s",key,newsgroupname);
+
+	if (!m_newsFolder) {
+        nsCAutoString folderURI = "news://";
+        folderURI += (const char *)m_hostName;
+        folderURI += "/";
+        
+        nsXPIDLCString newsgroupName;
+        rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
+        if (NS_SUCCEEDED(rv) && ((const char *)newsgroupName)) {
+            folderURI += (const char *)newsgroupName;
+            rv = InitializeNewsFolderFromUri((const char *)folderURI);
+        }
     }
-#endif
+
+    NS_ASSERTION(NS_SUCCEEDED(rv) && m_newsFolder && (key != nsMsgKey_None), "need more to remove this message from the db");
+    if ((key != nsMsgKey_None) && (m_newsFolder)) {
+		rv = m_newsFolder->RemoveMessage(key);
+    }
   }
     
 FAIL:
@@ -5030,11 +5031,20 @@ nsNNTPProtocol::SetProgressStatus(char *message)
 
 NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 {	
+	if (!aContentType) return NS_ERROR_NULL_POINTER;
+
 	if ((const char *)m_currentGroup && nsCRT::strlen((const char *)m_currentGroup)) {
-		*aContentType = nsCRT::strdup("x-application-newsgroup");
+		// if it is an article url, it has a @ or %40 in it.
+		if (PL_strchr((const char *)m_currentGroup,'@') || PL_strstr((const char *)m_currentGroup,"%40")) {
+			*aContentType = nsCRT::strdup("message/rfc822");
+		}
+		else {
+			*aContentType = nsCRT::strdup("x-application-newsgroup");
+		}
 	}
 	else {
 		*aContentType = nsCRT::strdup("message/rfc822");
 	}
+	if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
 	return NS_OK;
 }

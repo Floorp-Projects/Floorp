@@ -380,8 +380,10 @@ NS_IMETHODIMP nsNntpUrl::GetNewsgroupName(char ** aNewsgroupName)
 {
     if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(m_newsgroupName, "null ptr");
-    if (!m_newsgroupName) return NS_ERROR_FAILURE;
+    if (!m_newsgroupName) {
+		*aNewsgroupName = nsnull;
+		return NS_OK;
+	}
 
     *aNewsgroupName = PL_strdup(m_newsgroupName);
     if (!aNewsgroupName) {

@@ -77,6 +77,8 @@ protected:
 
 private:
 	nsCStringArray mGroupsOnServer;
+	nsCStringArray mSubscribedNewsgroups;
+
 	PRBool   mHasSeenBeginGroups;
 	nsresult WriteHostInfoFile();
 	nsresult LoadHostInfoFile();

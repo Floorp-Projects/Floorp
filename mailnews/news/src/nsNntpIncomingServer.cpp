@@ -234,7 +234,6 @@ nsNntpIncomingServer::WriteNewsrcFile()
 
         nsCOMPtr<nsIEnumerator> subFolders;
         nsCOMPtr<nsIFolder> rootFolder;
- 
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_FAILED(rv)) return rv;
 
@@ -687,7 +686,7 @@ writeGroupToHostInfo(nsCString &aElement, void *aData)
 }
 
 PRBool
-addGroup(nsCString &aElement, void *aData)
+addGroupFunction(nsCString &aElement, void *aData)
 {
 	nsresult rv;
 	nsNntpIncomingServer *server;
@@ -804,7 +803,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
 #endif
 
-	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)addGroup, (void *)this);
+	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)addGroupFunction, (void *)this);
 
 	rv = UpdateSubscribedInSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
@@ -889,12 +888,42 @@ nsNntpIncomingServer::SetAsSubscribedInSubscribeDS(const char *aURI)
 	return mInner->SetAsSubscribedInSubscribeDS(aURI);
 }
 
+PRBool
+setAsSubscribedFunction(nsCString &aElement, void *aData)
+{
+	nsresult rv;
+	nsNntpIncomingServer *server;
+	server = (nsNntpIncomingServer *)aData;
+	
+	nsXPIDLCString serverURI;
+
+	nsCOMPtr<nsIFolder> rootFolder;
+    rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+    if (NS_FAILED(rv)) return rv;
+	if (!rootFolder) return NS_ERROR_FAILURE;
+
+	rv = rootFolder->GetURI(getter_Copies(serverURI));
+    if (NS_FAILED(rv)) return rv;
+
+	nsCAutoString uriStr;
+	uriStr = (const char*)serverURI;
+	uriStr += '/';
+	uriStr += (const char *)aElement;
+
+	rv = server->SetAsSubscribedInSubscribeDS((const char *)uriStr);
+
+	NS_ASSERTION(NS_SUCCEEDED(rv),"SetAsSubscribedInSubscribeDS failed");
+	return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsNntpIncomingServer::UpdateSubscribedInSubscribeDS()
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->UpdateSubscribedInSubscribeDS();
+
+	mSubscribedNewsgroups.EnumerateForwards((nsCStringArrayEnumFunc)setAsSubscribedFunction, (void *)this);
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1061,4 +1090,21 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 	}
 
 	return 0;
+}
+
+
+NS_IMETHODIMP
+nsNntpIncomingServer::AddNewsgroup(const char *name)
+{
+	// handle duplicates?
+	mSubscribedNewsgroups.AppendCString(name);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::RemoveNewsgroup(const char *name)
+{
+	// handle duplicates?
+	mSubscribedNewsgroups.RemoveCString(name);
+	return NS_OK;
 }

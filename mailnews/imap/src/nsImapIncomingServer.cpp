@@ -1860,6 +1860,7 @@ NS_IMETHODIMP
 nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
     nsresult rv;
+
 	rv = UpdateSubscribedInSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
@@ -1898,9 +1899,10 @@ nsImapIncomingServer::SetAsSubscribedInSubscribeDS(const char *aURI)
 NS_IMETHODIMP
 nsImapIncomingServer::UpdateSubscribedInSubscribeDS()
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->UpdateSubscribedInSubscribeDS();
+#ifdef DEBUG_sspitzer
+	printf("for imap, do this when we populate\n");
+#endif
+	return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -24,12 +24,16 @@
 #include "nsIMsgFolder.idl"
 
 interface nsIMsgWindow;
+interface nsINntpIncomingServer;
 
 [scriptable, uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
 interface nsIMsgNewsFolder : nsISupports {
   attribute string groupUsername;
   attribute string groupPassword;
-    
+
+  readonly attribute string asciiName;
+  readonly attribute nsINntpIncomingServer nntpServer;
+   
   string getGroupPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
   string getGroupUsernameWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
 
@@ -46,5 +50,5 @@ interface nsIMsgNewsFolder : nsISupports {
   readonly attribute string unsubscribedNewsgroupLines;
   void SetNewsrcHasChanged(in boolean newsrcHasChanged);
   void updateSummaryFromNNTPInfo(in long oldest, in long youngest, in long total);
-  
+  void removeMessage(in nsMsgKey key); 
 };

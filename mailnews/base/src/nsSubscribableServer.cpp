@@ -98,43 +98,8 @@ nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aURI)
 NS_IMETHODIMP
 nsSubscribableServer::UpdateSubscribedInSubscribeDS()
 {
-#ifdef DEBUG_SUBSCRIBE
-	printf("UpdateSubscribedInSubscribeDS()");
-#endif
-
-	nsresult rv;
-    nsCOMPtr<nsIEnumerator> subFolders;
-    nsCOMPtr<nsIFolder> rootFolder;
-    nsCOMPtr<nsIFolder> currFolder;
- 
-    rv = mIncomingServer->GetRootFolder(getter_AddRefs(rootFolder));
-    if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
-    if (NS_FAILED(rv)) return rv;
-
-    nsAdapterEnumerator *simpleEnumerator = new nsAdapterEnumerator(subFolders);
-    if (simpleEnumerator == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-
-    PRBool moreFolders;
-        
-    while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders) {
-        nsCOMPtr<nsISupports> child;
-        rv = simpleEnumerator->GetNext(getter_AddRefs(child));
-        if (NS_SUCCEEDED(rv) && child) {
-            currFolder = do_QueryInterface(child, &rv);
-            if (NS_SUCCEEDED(rv) && currFolder) {
-				nsXPIDLCString uri;
-				rv = currFolder->GetURI(getter_Copies(uri));
-				if (NS_SUCCEEDED(rv)) {
-					rv = SetAsSubscribedInSubscribeDS((const char *)uri);
-				}
-            }
-        }
-    }
-
-    delete simpleEnumerator;
-	return NS_OK;
+	NS_ASSERTION(PR_FALSE,"override this.");
+	return NS_ERROR_FAILURE;
 }
 
 

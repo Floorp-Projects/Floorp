@@ -263,7 +263,7 @@ function createAccount(accountData)
     var identity = am.createIdentity();
     
     /* new nntp identities should use plain text by default
-     * we wan't that GNKSA (The Good Net-Keeping Seal of Approval) */
+     * we want that GNKSA (The Good Net-Keeping Seal of Approval) */
     if (server.type == "nntp") {
 			identity.composeHtml = false;
     }
