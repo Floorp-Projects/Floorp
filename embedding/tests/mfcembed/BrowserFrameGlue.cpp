@@ -324,7 +324,7 @@ void CBrowserFrame::BrowserFrameGlueObj::DestroyBrowserFrame()
 
 #define GOTO_BUILD_CTX_MENU { bContentHasFrames = FALSE; goto BUILD_CTX_MENU; }
 
-void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode)
+void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aInfo)
 {
     METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
 
@@ -341,11 +341,11 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         GOTO_BUILD_CTX_MENU;
     }
 
-    if(aContextFlags & nsIContextMenuListener::CONTEXT_DOCUMENT)
+    if(aContextFlags & nsIContextMenuListener2::CONTEXT_DOCUMENT)
         nIDResource = IDR_CTXMENU_DOCUMENT;
-    else if(aContextFlags & nsIContextMenuListener::CONTEXT_TEXT)        
+    else if(aContextFlags & nsIContextMenuListener2::CONTEXT_TEXT)        
         nIDResource = IDR_CTXMENU_TEXT;
-    else if(aContextFlags & nsIContextMenuListener::CONTEXT_LINK)
+    else if(aContextFlags & nsIContextMenuListener2::CONTEXT_LINK)
     {
         nIDResource = IDR_CTXMENU_LINK;
 
@@ -362,28 +362,7 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         nsAutoString strUrlUcs2;
         pThis->m_wndBrowserView.SetCtxMenuLinkUrl(strUrlUcs2);
 
-        // Get the URL from the link. This is two step process
-        // 1. We first get the nsIDOMHTMLAnchorElement
-        // 2. We then get the URL associated with the link
-        nsresult rv = NS_OK;
-
-        // Search for an anchor element
-        nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement;
-        nsCOMPtr<nsIDOMNode> node = aNode;
-        while (node)
-        {
-            linkElement = do_QueryInterface(node);
-            if (linkElement)
-                break;
-
-            nsCOMPtr<nsIDOMNode> parentNode;
-            node->GetParentNode(getter_AddRefs(parentNode));
-            node = parentNode;
-        }
-        if (!linkElement)
-            return;
-
-        rv = linkElement->GetHref(strUrlUcs2);
+        nsresult rv = aInfo->GetAssociatedLink(strUrlUcs2);
         if(NS_FAILED(rv))
             return;
 
@@ -391,7 +370,7 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         // Note that this string is in UCS2 format
         pThis->m_wndBrowserView.SetCtxMenuLinkUrl(strUrlUcs2);
     }
-    else if(aContextFlags & nsIContextMenuListener::CONTEXT_IMAGE)
+    else if(aContextFlags & nsIContextMenuListener2::CONTEXT_IMAGE)
     {
         nIDResource = IDR_CTXMENU_IMAGE;
 
@@ -399,16 +378,34 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         pThis->m_wndBrowserView.SetCtxMenuImageSrc(strImgSrcUcs2); // Clear it
 
         // Get the IMG SRC
-        nsresult rv = NS_OK;
-        nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(aNode, &rv));
-        if(NS_FAILED(rv))
+        nsCOMPtr<nsIURI> imgURI;
+        aInfo->GetImageSrc(getter_AddRefs(imgURI));
+        if(!imgURI)
+            return;
+        nsCAutoString strImgSrcUtf8;
+        imgURI->GetSpec(strImgSrcUtf8);
+        if(strImgSrcUtf8.IsEmpty())
             return;
 
-        rv = imgElement->GetSrc(strImgSrcUcs2);
-        if(NS_FAILED(rv))
-            return;
-
+        strImgSrcUcs2 = NS_ConvertUTF8toUCS2(strImgSrcUtf8);
         pThis->m_wndBrowserView.SetCtxMenuImageSrc(strImgSrcUcs2); // Set the new Img Src
+    }
+    else if(aContextFlags & nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE)
+    {
+        nIDResource = IDR_CTXMENU_IMAGE;
+
+        nsAutoString strImgSrcUcs2;
+        pThis->m_wndBrowserView.SetCtxMenuImageSrc(strImgSrcUcs2); // Clear it
+
+        // Get the IMG SRC
+        nsCOMPtr<nsIURI> imgURI;
+        aInfo->GetBackgroundImageSrc(getter_AddRefs(imgURI));
+        if (!imgURI)
+            return;
+        nsCAutoString uri;
+        imgURI->GetSpec(uri);
+
+        pThis->m_wndBrowserView.SetCtxMenuImageSrc(NS_ConvertUTF8toUCS2(uri)); // Set the new Img Src
     }
 
     // Determine if we need to add the Frame related context menu items
@@ -424,8 +421,13 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         //Determine the current Frame URL
         //
         nsresult rv = NS_OK;
+        nsCOMPtr<nsIDOMNode> node;
+        aInfo->GetTargetNode(getter_AddRefs(node));
+        if(!node)
+            GOTO_BUILD_CTX_MENU;
+
         nsCOMPtr<nsIDOMDocument> domDoc;
-        rv = aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+        rv = node->GetOwnerDocument(getter_AddRefs(domDoc));
         if(NS_FAILED(rv))
             GOTO_BUILD_CTX_MENU;
 

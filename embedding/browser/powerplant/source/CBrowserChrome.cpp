@@ -115,7 +115,7 @@ NS_IMPL_ISUPPORTS8(CBrowserChrome,
                    nsIWebBrowserChromeFocus,
                    nsIEmbeddingSiteWindow,
                    nsIEmbeddingSiteWindow2,
-                   nsIContextMenuListener,
+                   nsIContextMenuListener2,
                    nsITooltipListener,
                    nsISupportsWeakReference);
                    
@@ -438,16 +438,16 @@ NS_IMETHODIMP CBrowserChrome::Blur(void)
 }
 
 //*****************************************************************************
-// CBrowserChrome::nsIContextMenuListener
+// CBrowserChrome::nsIContextMenuListener2
 //*****************************************************************************   
 
-NS_IMETHODIMP CBrowserChrome::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+NS_IMETHODIMP CBrowserChrome::OnShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aInfo)
 {
     nsresult rv;
     
     try
     {
-        rv = mBrowserShell->OnShowContextMenu(aContextFlags, aEvent, aNode);
+        rv = mBrowserShell->OnShowContextMenu(aContextFlags, aInfo);
     }
     catch (...)
     {
@@ -455,7 +455,6 @@ NS_IMETHODIMP CBrowserChrome::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEv
     }
     return rv;
 }
-
 
 //*****************************************************************************
 // CBrowserChrome::nsITooltipListener

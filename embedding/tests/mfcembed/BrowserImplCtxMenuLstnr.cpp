@@ -36,13 +36,13 @@
 #include "IBrowserFrameGlue.h"
 
 //*****************************************************************************
-// CBrowserImpl::nsIContextMenuListener
+// CBrowserImpl::nsIContextMenuListener2
 //*****************************************************************************   
 
-NS_IMETHODIMP CBrowserImpl::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+NS_IMETHODIMP CBrowserImpl::OnShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *aInfo)
 {
 	if(m_pBrowserFrameGlue)
-		m_pBrowserFrameGlue->ShowContextMenu(aContextFlags, aNode);
+		m_pBrowserFrameGlue->ShowContextMenu(aContextFlags, aInfo);
 
 	return NS_OK;
 }

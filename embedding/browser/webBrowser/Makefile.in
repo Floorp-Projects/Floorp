@@ -43,6 +43,9 @@ REQUIRES	= xpcom \
 		  appcomps \
 		  webbrowserpersist \
 		  unicharutil \
+		  imglib2 \
+		  gfx2 \
+		  locale \
 		  $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -67,6 +70,7 @@ XPIDLSRCS	= \
 		nsIWebBrowserChromeFocus.idl		\
 		nsICommandHandler.idl			\
 		nsIEmbeddingSiteWindow2.idl \
+		nsIContextMenuListener2.idl \
 		nsIWebBrowserFocus.idl		\
 		nsIPrintingPrompt.idl       \
 		nsIPrintingPromptService.idl       \
@@ -77,6 +81,7 @@ CPPSRCS		= \
 		nsWebBrowser.cpp		\
 		nsCommandHandler.cpp		\
                 nsWebBrowserContentPolicy.cpp   \
+		nsContextMenuInfo.cpp		\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

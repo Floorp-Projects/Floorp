@@ -116,7 +116,7 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow2)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
+   NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener2)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
