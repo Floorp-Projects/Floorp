@@ -315,6 +315,7 @@ extern PRBool Wallet_KeySet();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern PRInt32 Wallet_KeySize();
 extern char * Wallet_Localize(char * genericString);
+extern PRBool Wallet_CancelKey();
 
 char* signonFileName = nsnull;
 
@@ -1696,7 +1697,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     si_RestartKey();
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     while (!si_SetKey()) {
-      if ((Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
+      if ((Wallet_CancelKey() || Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
         return 1;
       }
     }
@@ -1853,7 +1854,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
     si_RestartKey();
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     while (!si_SetKey()) {
-      if ((Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
+      if (Wallet_CancelKey() || (Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
         return 1;
       }
     }
