@@ -16,10 +16,10 @@
  * Reserved.
  */
 
-#ifndef __NS_JSWINREG_H__
-#define __NS_JSWINREG_H__
+#ifndef __NS_JSWINPROTOTYPE_H__
+#define __NS_JSWINPROTOTYPE_H__
 
 PRInt32
-InitWinRegPrototype(JSContext *jscontext, JSObject *global, JSObject **winRegPrototype);
+InitWinProfilePrototype(JSContext *jscontext, JSObject *global, JSObject **winRegPrototype);
 
 #endif

@@ -28,7 +28,10 @@
 
 #include "stdio.h"
 
-#ifdef XP_WIN
+#ifdef _WINDOWS
+#include "nsJSWinReg.h"
+#include "nsJSWinProfile.h"
+
 extern JSClass WinRegClass;
 extern JSClass WinProfileClass;
 #endif
@@ -988,11 +991,13 @@ PR_STATIC_CALLBACK(JSBool)
 InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  JSBool    rBool       = JS_FALSE;
+  JSBool       rBool = JS_FALSE;
+  nsAutoString b0;
+  nsAutoString b1;
 
   *rval = JSVAL_NULL;
 
-#ifdef XP_WIN
+#ifdef _WINDOWS
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
   {
@@ -1003,7 +1008,11 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   {
     //  public int GetWinProfile (Object folder,
     //                            String file);
-    if(NS_OK != nativeThis->GetWinProfile(cx, &WinProfileClass, rval))
+
+    nsCvrtJSValToStr(b0, cx, argv[0]);
+    nsCvrtJSValToStr(b1, cx, argv[1]);
+
+    if(NS_OK != nativeThis->GetWinProfile(b0, b1, cx, &WinProfileClass, rval))
     {
       return JS_FALSE;
     }
@@ -1030,7 +1039,7 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   *rval = JSVAL_NULL;
 
-#ifdef XP_WIN
+#ifdef _WINDOWS
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
   {
@@ -1536,14 +1545,14 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);
  
-#ifdef XP_WIN
+#ifdef _WINDOWS
   if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
   {
       return NS_ERROR_FAILURE;
   }
   nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
 
-  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype)
+  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype))
   {
       return NS_ERROR_FAILURE;
   }
@@ -1590,14 +1599,14 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char*
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);
  
-#ifdef XP_WIN
+#ifdef _WINDOWS
   if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
   {
       return NS_ERROR_FAILURE;
   }
   nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
 
-  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype)
+  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype))
   {
       return NS_ERROR_FAILURE;
   }

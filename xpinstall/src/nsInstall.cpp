@@ -57,7 +57,7 @@
 #include "nsInstallPatch.h"
 #include "nsInstallUninstall.h"
 
-#ifdef XP_WIN
+#ifdef _WINDOWS
 #include "nsWinReg.h"
 #include "nsWinProfile.h"
 #endif
@@ -2279,9 +2279,9 @@ nsInstall::GetLastError(PRInt32* aReturn)
 }
 
 PRInt32    
-nsInstall::GetWinProfile(JSContext* jscontext, JSClass* WinProfileClass, const nsString& aFolder, const nsString& aFile, jsval* aReturn)
+nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, JSContext* jscontext, JSClass* WinProfileClass, jsval* aReturn)
 {
-#ifdef XP_WIN
+#ifdef _WINDOWS
     JSObject*     winProfileObject;
     nsWinProfile* nativeWinProfileObject = new nsWinProfile(this, aFolder, aFile);
     JSObject*     winProfilePrototype    = this->RetrieveWinProfilePrototype();
@@ -2297,7 +2297,7 @@ nsInstall::GetWinProfile(JSContext* jscontext, JSClass* WinProfileClass, const n
     *aReturn = OBJECT_TO_JSVAL(winProfileObject);
 #else
     *aReturn = JSVAL_NULL;
-#endif /* XP_WIN */
+#endif /* _WINDOWS */
 
     return NS_OK;
 }
@@ -2305,7 +2305,7 @@ nsInstall::GetWinProfile(JSContext* jscontext, JSClass* WinProfileClass, const n
 PRInt32    
 nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn)
 {
-#ifdef XP_WIN
+#ifdef _WINDOWS
     JSObject* winRegObject;
     nsWinReg* nativeWinRegObject = new nsWinReg(this);
     JSObject* winRegPrototype    = this->RetrieveWinRegPrototype();
@@ -2321,7 +2321,7 @@ nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aRe
     *aReturn = OBJECT_TO_JSVAL(winRegObject);
 #else
     *aReturn = JSVAL_NULL;
-#endif /* XP_WIN */
+#endif /* _WINDOWS */
 
     return NS_OK;
 }
