@@ -268,6 +268,18 @@ nsFormControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
 }
 
+void
+nsFormControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  }
+}
+
 const nsIID&
 nsFormControlFrame::GetIID()
 {
@@ -387,7 +399,8 @@ nsFormControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
 }
 
-NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+NS_METHOD
+nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext, 
                                           nsGUIEvent* aEvent,
                                           nsEventStatus& aEventStatus)
 {
@@ -463,7 +476,8 @@ nsFormControlFrame::GetFont(nsIPresContext*        aPresContext,
   return NS_OK;
 }
 
-nsresult nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
+nsresult
+nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
 {	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
   if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
@@ -473,7 +487,8 @@ nsresult nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
 	return res;
 }
 
-nsresult nsFormControlFrame::SetDefaultCheckState(PRBool aState)
+nsresult
+nsFormControlFrame::SetDefaultCheckState(PRBool aState)
 {
 	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
@@ -484,7 +499,8 @@ nsresult nsFormControlFrame::SetDefaultCheckState(PRBool aState)
 	return res;
 }
 
-nsresult nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
+nsresult
+nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
 	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
@@ -495,7 +511,8 @@ nsresult nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 	return res;
 }
 
-nsresult nsFormControlFrame::SetCurrentCheckState(PRBool aState)
+nsresult
+nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 {
 	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
@@ -506,27 +523,30 @@ nsresult nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 	return res;
 }
 
-NS_IMETHODIMP nsFormControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP
+nsFormControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFormControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP
+nsFormControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
   return NS_OK;
 }
 
-nsresult nsFormControlFrame::RequiresWidget(PRBool & aRequiresWidget)
+nsresult
+nsFormControlFrame::RequiresWidget(PRBool & aRequiresWidget)
 {
   aRequiresWidget = PR_TRUE;
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP
+nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {
   mSuggestedWidth = aWidth;
   mSuggestedHeight = aHeight;
   return NS_OK;
 }
-

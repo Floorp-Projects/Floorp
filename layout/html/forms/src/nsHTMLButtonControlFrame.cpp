@@ -271,6 +271,18 @@ nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
+nsHTMLButtonControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  }
+}
+
+void
 nsHTMLButtonControlFrame::GetTranslatedRect(nsRect& aRect)
 {
   nsIView* view;

@@ -43,7 +43,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
 #include "nsIDOMMouseListener.h"
-
+#include "nsIPresShell.h"
 
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
@@ -185,6 +185,18 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (mTextFrame) {
     mTextFrame->SetFocus(aOn, aRepaint);
+  }
+}
+
+void
+nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
   }
 }
 

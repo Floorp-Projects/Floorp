@@ -114,6 +114,7 @@ public:
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
+  void ScrollIntoView(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);

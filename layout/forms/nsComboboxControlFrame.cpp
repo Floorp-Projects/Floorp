@@ -302,6 +302,18 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   //XXX: TODO Implement focus for combobox. 
 }
 
+void
+nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  }
+}
+
 // Toggle dropdown list.
 
 void 

@@ -77,6 +77,7 @@ public:
   virtual void   Reset();
   NS_IMETHOD     GetType(PRInt32* aType) const;
   void           SetFocus(PRBool aOn, PRBool aRepaint);
+  void           ScrollIntoView(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
