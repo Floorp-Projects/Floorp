@@ -548,8 +548,8 @@ mozSanitizingHTMLSerializer::DoAddLeaf(PRInt32 aTag,
   {
     Write(NS_LITERAL_STRING("&"));
     Write(aText); // sure to be safe?
-    Write(NS_LITERAL_STRING(";"));
     // using + operator here might give an infinitive loop, see above.
+    // not adding ";", because Gecko delivers that as part of |aText| (freaky)
   }
   else
   {
