@@ -74,14 +74,13 @@
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 
 // Turn this on if you want to debug slider frames.
 #undef DEBUG_SLIDER
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -119,13 +118,12 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  nsresult  rv2;
-  mMiddlePref=PR_FALSE;
+  mMiddlePref = PR_FALSE;
   mSnapMultiplier = 6;
-  nsCOMPtr<nsIPref> pref = do_GetService(kPrefCID, &rv2);
-  if(NS_SUCCEEDED(rv2)) {
-    pref->GetBoolPref("middlemouse.scrollbarPosition", &mMiddlePref);
-    pref->GetIntPref("slider.snapMultiplier", &mSnapMultiplier);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    prefBranch->GetBoolPref("middlemouse.scrollbarPosition", &mMiddlePref);
+    prefBranch->GetIntPref("slider.snapMultiplier", &mSnapMultiplier);
   }
 
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);

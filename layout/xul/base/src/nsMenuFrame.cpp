@@ -76,7 +76,8 @@
 #include "nsIXBLService.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIScrollableView.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -1555,10 +1556,9 @@ nsMenuFrame::BuildAcceleratorText()
 #endif
 
     // Get the accelerator key value from prefs, overriding the default:
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && prefs)
-      rv = prefs->GetIntPref("ui.key.accelKey", &accelKey);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch)
+      prefBranch->GetIntPref("ui.key.accelKey", &accelKey);
   }
 
   nsAutoString modifiers;

@@ -80,7 +80,8 @@
 #include "nsIPresShell.h"
 #include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsBoxToBlockAdaptor.h"
 #include "nsIBoxLayout.h"
@@ -1440,9 +1441,9 @@ void
 nsBoxFrame::GetDebugPref(nsIPresContext* aPresContext)
 {
     gDebug = PR_FALSE;
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if (pref) {
-	    pref->GetBoolPref("xul.debug.box", &gDebug);
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+	    prefBranch->GetBoolPref("xul.debug.box", &gDebug);
     }
 }
 
