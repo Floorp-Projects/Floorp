@@ -59,6 +59,64 @@ nsMimeURLUtils::~nsMimeURLUtils()
 {
 }
 
+char *
+FindAmbitiousMailToTag(const char *line)
+{
+  char  *atLoc;
+  char  *workLine;
+
+  // Sanity...
+  if ( (!line) || (!*line) )
+    return NULL;
+
+  // Should I bother at all...
+  if ( !(atLoc = PL_strchr(line, '@')) )
+    return NULL;
+
+  // create a working copy...
+  workLine = PL_strdup(line);
+  if (!workLine)
+    return NULL;
+
+  char *ptr = PL_strchr(workLine, '@');
+  if (!ptr)
+    return NULL;
+
+  *(ptr+1) = '\0';
+  --ptr;
+  while (ptr >= workLine)
+  {
+    if (IS_SPACE(*ptr) ||
+				  *ptr == '<' || *ptr == '>' ||
+          *ptr == '`' || *ptr == ')' ||
+          *ptr == '\'' || *ptr == '"' ||
+          *ptr == ']' || *ptr == '}'
+          )
+          break;
+    --ptr;
+  }
+
+  ++ptr;
+
+  if ( (*ptr == '@') || (!PL_strncasecmp(ptr, "mailto:", 7)) )
+    return NULL;
+  else
+    return (PL_strdup(ptr));
+}
+
+nsresult
+AmbitiousURLType(const char *URL, PRInt32  *retType, const char *newURLTag)
+{
+  *retType = 0;
+
+  if (!PL_strncasecmp(URL,newURLTag, PL_strlen(newURLTag))) 
+  {
+    *retType = MAILTO_TYPE_URL;
+  }
+
+  return NS_OK;
+}
+
 /* from libnet/mkutils.c */
 nsresult 
 nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
@@ -82,7 +140,8 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'f':
   case 'F':
-    if(!PL_strncasecmp(URL,"ftp:",4))
+    if ( (!PL_strncasecmp(URL,"ftp:",4)) ||
+         (!PL_strncasecmp(URL,"ftp.",4)) )
     {
 		    *retType = FTP_TYPE_URL;
         return NS_OK;
@@ -251,6 +310,11 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
 		    *retType = WAIS_TYPE_URL;
         return NS_OK;
     }
+    else if(!PL_strncasecmp(URL,"www.",4))
+    {
+		    *retType = HTTP_TYPE_URL;
+        return NS_OK;
+    }
     break;
   case 'u':
   case 'U':
@@ -268,6 +332,31 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     return NS_OK;
 }
 
+PRBool
+IsThisAnAmbitiousLinkType(char *link, char *mailToTag, char **linkPrefix)
+{
+  if (!PL_strncasecmp(link, "www.", 4))
+  {
+    *linkPrefix = PL_strdup("http://");
+    return PR_TRUE;
+  }  
+  else if (!PL_strncasecmp(link, "ftp.", 4))
+  {
+    *linkPrefix = PL_strdup("ftp://");
+    return PR_TRUE;
+  }
+  else if (mailToTag && *mailToTag)
+  {
+    if (!PL_strncasecmp(link, mailToTag, PL_strlen(mailToTag)))
+    {
+      *linkPrefix = PL_strdup("mailto:");
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
                             char *output, int output_size, PRBool urls_only)
@@ -281,6 +370,8 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
   const char *cite_open1, *cite_close1;
   const char *cite_open2, *cite_close2;
   const char* color = NULL;
+
+  char *mailToTag = NULL;
 
   if (urls_only)
 	{
@@ -382,6 +473,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 		}
 	}
 
+  mailToTag = FindAmbitiousMailToTag(input);
   /* Normal lines are scanned for buried references to URL's
      Unfortunately, it may screw up once in a while (nobody's perfect)
    */
@@ -393,8 +485,17 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 		 this lets us match inside "---HTTP://XXX" but not inside of
 		 things like "NotHTTP://xxx"
 	   */
-	  int type = 0;
-    URLType(cp, &type);
+	  int    type = 0;
+    PRBool ambitiousHit;
+
+    ambitiousHit = PR_FALSE;
+    if (mailToTag)
+      AmbitiousURLType(cp, &type, mailToTag);
+    if (!type)
+      URLType(cp, &type);
+    else
+      ambitiousHit = PR_TRUE;
+
 	  if(!IS_SPACE(*cp) &&
 		 (cp == input || (!IS_ALPHA(cp[-1]) && !IS_DIGIT(cp[-1]))) &&
 		 (type) != 0)
@@ -410,7 +511,6 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 				  *cp2 == ']' || *cp2 == '}'
 				  )
 				break;
-
 			}
 
 		  /* Check for certain punctuation characters on the end, and strip
@@ -419,7 +519,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 				 (cp2[-1] == '.' || cp2[-1] == ',' || cp2[-1] == '!' ||
 				  cp2[-1] == ';' || cp2[-1] == '-' || cp2[-1] == '?' ||
 				  cp2[-1] == '#'))
-			cp2--;
+  			cp2--;
 
 		  col += (cp2 - cp);
 
@@ -433,9 +533,21 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 		   * And also exclude the builtin icons, whose URLs look
 		   * like "internal-gopher-binary".
 		   */
-		  if (cp2-cp < 7 ||
-			  (cp2 > cp && cp2[-1] == ':') ||
-			  !PL_strncmp(cp, "internal-", 9))
+      PRBool invalidHit = PR_FALSE;
+
+      if ( (cp2 > cp && cp2[-1] == ':') ||
+			      !PL_strncmp(cp, "internal-", 9) )
+        invalidHit = PR_TRUE;
+
+      if (!invalidHit)
+      {
+        if ((ambitiousHit) && ((cp2-cp) < PL_strlen(mailToTag)))
+          invalidHit = PR_TRUE;
+        if ( (!ambitiousHit) && (cp2-cp < 7) )
+          invalidHit = PR_TRUE;
+      }
+
+      if (invalidHit)
 			{
         nsCRT::memcpy(output_ptr, cp, cp2-cp);
 			  output_ptr += (cp2-cp);
@@ -443,22 +555,36 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 			}
 		  else
 			{
-			  char *quoted_url;
-			  PRInt32 size_left = output_size - (output_ptr-output);
+			  char      *quoted_url;
+        PRBool    rawLink = PR_FALSE;
+			  PRInt32   size_left = output_size - (output_ptr-output);
+        char      *linkPrefix = NULL;
 
 			  if(cp2-cp > size_left)
 				return NS_ERROR_OUT_OF_MEMORY;
 
 			  nsCRT::memcpy(output_ptr, cp, cp2-cp);
 			  output_ptr[cp2-cp] = 0;
+
+        rawLink = IsThisAnAmbitiousLinkType(output_ptr, mailToTag, &linkPrefix);
 			  quoted_url = nsEscapeHTML(output_ptr);
 			  if (!quoted_url) return NS_ERROR_OUT_OF_MEMORY;
-			  PR_snprintf(output_ptr, size_left,
-						  "<A HREF=\"%s\">%s</A>",
-						  quoted_url,
-						  quoted_url);
+
+        if (rawLink)
+			    PR_snprintf(output_ptr, size_left,
+						    "<A HREF=\"%s%s\">%s</A>",
+                linkPrefix,
+						    quoted_url,
+						    quoted_url);
+        else
+			    PR_snprintf(output_ptr, size_left,
+						    "<A HREF=\"%s\">%s</A>",
+						    quoted_url,
+						    quoted_url);
+
 			  output_ptr += PL_strlen(output_ptr);
 			  PR_Free(quoted_url);
+        PR_FREEIF(linkPrefix);
 			  output_ptr += PL_strlen(output_ptr);
 			}
 
@@ -491,6 +617,9 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 			  *output_ptr++ = *cp;
 			  col++;
 			}
+
+      PR_FREEIF(mailToTag);
+      mailToTag = FindAmbitiousMailToTag(cp);
 		}
 	}
 
@@ -509,6 +638,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 	  output_ptr += PL_strlen (cite_close1);
 	}
 
+  PR_FREEIF(mailToTag);
   return NS_OK;
 }
 
