@@ -375,7 +375,7 @@ pref("wallet.miscPanel.hide",               false);
 pref("imageblocker.enabled",                true);
 pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.collationOption",                "chrome://navigator/locale/navigator.properties");
+pref("intl.collationOption",                "chrome://navigator-platform/locale/navigator.properties");
 pref("intl.menuitems.alwaysappendacceskeys","chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.more1",      "chrome://navigator/locale/navigator.properties");
