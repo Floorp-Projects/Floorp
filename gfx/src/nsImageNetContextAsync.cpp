@@ -158,8 +158,8 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mUserContext = nsnull;
 }
 
-NS_IMPL_ADDREF(ImageConsumer)
-NS_IMPL_RELEASE(ImageConsumer)
+NS_IMPL_THREADSAFE_ADDREF(ImageConsumer)
+NS_IMPL_THREADSAFE_RELEASE(ImageConsumer)
 
 NS_INTERFACE_MAP_BEGIN(ImageConsumer)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
@@ -531,7 +531,7 @@ ImageNetContextImpl::~ImageNetContextImpl()
   }
 }
 
-NS_IMPL_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
+NS_IMPL_THREADSAFE_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
 
 ilINetContext* 
 ImageNetContextImpl::Clone()
