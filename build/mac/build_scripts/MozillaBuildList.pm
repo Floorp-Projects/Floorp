@@ -879,7 +879,9 @@ sub BuildClientDist()
     }
     if ($main::options{soap})
     {
+        InstallFromManifest(":mozilla:extensions:xmlextras:schema:public:MANIFEST_IDL", "$distdirectory:idl:");
         InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
     #DOCUMENT INSPECTOR
@@ -1194,7 +1196,9 @@ sub BuildIDLProjects()
     }
     if ($main::options{soap})
     {
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlschemaIDL.mcp", "xmlschema");
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.mcp", "xmlsoap");
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.mcp", "xmlwsdl");
     }
 
     if ($main::options{inspector})
