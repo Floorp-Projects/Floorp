@@ -44,6 +44,7 @@
 interface nsIURI;
 interface calIItemBase;
 interface nsIVariant;
+interface nsISimpleEnumerator;
 
 // forward decls for this file
 interface calIObserver;
@@ -171,6 +172,18 @@ interface calICompositeCalendar : calICalendar
   void addCalendar( in nsIURI aServer, in string aType );
   void removeCalendar( in nsIURI aServer );
   calICalendar getCalendar( in nsIURI aServer );
+
+  /**
+   * An enumerator of all calICalendars that make up this composite.
+   */
+  readonly attribute nsISimpleEnumerator calendars;
+
+  /**
+   * In order for addItem() to be called on this object, it is first necessary
+   * to set this attribute to specify which underlying calendar the item is
+   * to be added to.
+   */
+  attribute nsIURI defaultCalendar;
 };
 
 /**
