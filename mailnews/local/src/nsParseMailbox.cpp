@@ -1392,8 +1392,7 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 				PRUint32 newFlags;
 				m_newMsgHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
 
-//				m_mailDB->AddHdrToDB (m_newMsgHdr, NULL,
-//									  m_updateAsWeGo);
+				m_mailDB->AddNewHdrToDB (m_newMsgHdr, m_updateAsWeGo);
 			}
 #ifdef HAVE_FOLDERINFO
 			if (m_folder)
