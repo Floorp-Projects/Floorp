@@ -40,7 +40,7 @@
 #include "nscore.h"
   // for |PRUnichar|, |NS_REINTERPRET_CAST|
 
-#ifdef XP_WIN
+#ifdef _MSC_VER
   // VC++ erroneously warns about incompatible linkage in these templates
   //  It's a lie, and it's bothersome.  This |#pragma| quiets the warning.
 #pragma warning( disable: 4251 )

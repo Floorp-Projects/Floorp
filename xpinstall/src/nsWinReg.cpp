@@ -184,7 +184,7 @@ nsWinReg::EnumValueNames(const nsString& aSubkey, PRInt32 aIndex, nsString &aRet
     LONG           result;
     DWORD          namesize         = sizeof(namebuf);
     char           subkeyCString[MAX_BUF];
-    unsigned short returnBuf[MAX_BUF];
+    WCHAR          returnBuf[MAX_BUF];
     PRInt32         rv = NS_ERROR_FAILURE;
 
     subkeyCString[0] = 0;
@@ -223,7 +223,7 @@ nsWinReg::EnumKeys(const nsString& aSubkey, PRInt32 aIndex, nsString &aReturn)
     LONG            result;
     DWORD           type            = REG_SZ;
     char            subkeyCString[MAX_BUF];
-    unsigned short  returnBuf[MAX_BUF];
+    WCHAR           returnBuf[MAX_BUF];
     PRInt32         rv = NS_ERROR_FAILURE;
 
     subkeyCString[0] = 0;

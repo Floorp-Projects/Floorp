@@ -39,20 +39,10 @@
 #ifndef __NS_SVGVALUE_H__
 #define __NS_SVGVALUE_H__
 
+#include "nscore.h"
 #include "nsISVGValue.h"
 #include "nsGenericElement.h" // for CheapVoidArray
 #include "nsISVGValueObserver.h"
-
-// XXX this should be somewhere else
-#if defined(XP_PC) && !defined(XP_OS2)
-#define STDCALL __stdcall
-#else
-#define STDCALL
-#endif
-
-typedef nsresult
-(STDCALL nsISVGValueObserver::*SVGObserverNotifyFunction)(nsISVGValue*);
-
 
 class nsSVGValue : public nsISVGValue
 {
@@ -69,6 +59,10 @@ public:
   // Partial Implementation of nsISVGValue interface:
   NS_IMETHOD AddObserver(nsISVGValueObserver* observer);
   NS_IMETHOD RemoveObserver(nsISVGValueObserver* observer);
+
+  typedef nsresult 
+  NS_STDCALL_FUNCPROTO(nsISVGValueObserver::*SVGObserverNotifyFunction,(nsISVGValue*));
+
   
 protected:
   // implementation helpers

@@ -39,6 +39,7 @@
 #ifndef nswindowshooks_h____
 #define nswindowshooks_h____
 
+#include "nscore.h"
 #include "nsIWindowsHooks.h"
 
 #ifndef MAX_BUF
@@ -60,8 +61,8 @@ public:
     NS_DECL_NSIWINDOWSHOOKSSETTINGS
 
     // Typedef for nsIWindowsHooksSettings getter/setter member functions.
-    typedef nsresult (__stdcall nsIWindowsHooksSettings::*getter)( PRBool* );
-    typedef nsresult (__stdcall nsIWindowsHooksSettings::*setter)( PRBool );
+    typedef nsresult NS_STDCALL_FUNCPROTO(nsIWindowsHooksSettings::*getter,( PRBool* ));
+    typedef nsresult NS_STDCALL_FUNCPROTO(nsIWindowsHooksSettings::*setter, ( PRBool ));
 
 protected:
     // General purpose getter.
@@ -71,15 +72,12 @@ protected:
 
 private:
     // Internet shortcut protocols.
-    struct {
         PRBool mHandleHTTP;
         PRBool mHandleHTTPS;
         PRBool mHandleFTP;
         PRBool mHandleCHROME;
         PRBool mHandleGOPHER;
-    };
     // File types.
-    struct {
         PRBool mHandleHTML;
         PRBool mHandleJPEG;
         PRBool mHandleGIF;
@@ -91,10 +89,9 @@ private:
         PRBool mHandleXML;
         PRBool mHandleXHTML;
         PRBool mHandleXUL;
-    };
-    struct {
+    // Dialog
         PRBool mShowDialog;
-    };
+
     // Special member to handle initialization.
     PRBool mHaveBeenSet;
     NS_IMETHOD GetHaveBeenSet( PRBool * );

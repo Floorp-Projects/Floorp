@@ -116,8 +116,10 @@ public: // other search row cursor methods
   virtual mork_bool CanHaveDupRowMembers(morkEnv* ev);
   virtual mork_count GetMemberCount(morkEnv* ev);
 
+#if 0
   virtual orkinTableRowCursor* AcquireUniqueRowCursorHandle(morkEnv* ev);
-  
+#endif
+
   // virtual mdb_pos NextRowOid(morkEnv* ev, mdbOid* outOid);
   virtual morkRow* NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos);
 

@@ -38,7 +38,7 @@
 
 // For older version (<6.0) of the VC Compiler
 #if (_MSC_VER == 1100)
-#include "objbase.h"
+#include <objbase.h>
 DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 #endif
 

@@ -294,7 +294,7 @@ nsInstall::GetInstallPlatform(nsCString& aPlatform)
 
     // Gather OS/CPU.
 #if defined(XP_WIN)
-    OSVERSIONINFO info = { sizeof OSVERSIONINFO };
+    OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
         if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
             if (info.dwMajorVersion      == 3) {
