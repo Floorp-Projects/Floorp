@@ -196,7 +196,7 @@ protected:
     PLDHashTable        mFactories;
     PLDHashTable        mContractIDs;
     PRMonitor*          mMon;
-    nsRegistry*         mRegistry;
+    nsIRegistry*        mRegistry;
     nsRegistryKey       mXPCOMKey;
     nsRegistryKey       mClassesKey;
     nsRegistryKey       mCLSIDKey;

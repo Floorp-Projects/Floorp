@@ -357,7 +357,7 @@ static void reginfo2Length( const REGINFO &in, PRUint32 &out ) {
 | This code generates the implementation of the nsISupports member functions   |
 | for each class implemented in this file.                                     |
 ------------------------------------------------------------------------------*/
-NS_IMPL_THREADSAFE_ISUPPORTS1( nsRegistry,  nsIRegistry      )
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsRegistry,  nsIRegistry, nsIRegistryGetter)
 NS_IMPL_ISUPPORTS2( nsRegSubtreeEnumerator, nsIEnumerator,
                     nsIRegistryEnumerator)
 NS_IMPL_ISUPPORTS1( nsRegistryNode,         nsIRegistryNode  )
@@ -733,7 +733,8 @@ NS_IMETHODIMP nsRegistry::GetStringUTF8( nsRegistryKey baseKey, const char *path
 
     // Attempt to get string into our fixed buffer
     PR_Lock(mregLock);
-    err = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, regStr, sizeof regStr );
+    err = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, regStr,
+                                sizeof(regStr) );
     PR_Unlock(mregLock);
 
     if ( err == REGERR_OK )
@@ -781,6 +782,30 @@ NS_IMETHODIMP nsRegistry::GetStringUTF8( nsRegistryKey baseKey, const char *path
     }
 
    return rv;
+}
+
+NS_IMETHODIMP
+nsRegistry::GetStringUTF8IntoBuffer( nsRegistryKey baseKey, const char *path,
+                                     char *buf, PRUint32 *length )
+{
+    REGERR   err = REGERR_OK;
+
+    // Attempt to get string into our fixed buffer
+    PR_Lock(mregLock);
+    err = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, buf, *length );
+    PR_Unlock(mregLock);
+
+    // Convert status.
+    nsresult rv = regerr2nsresult( err );
+
+    if (rv == NS_ERROR_REG_BUFFER_TOO_SMALL) {
+      // fill length with the actual length
+      nsresult rv1 = GetValueLength( baseKey, path, length );
+      if(NS_FAILED(rv1))
+        return rv1;
+    }
+
+    return rv;
 }
 
 /*--------------------------- nsRegistry::SetString ----------------------------
@@ -881,6 +906,41 @@ NS_IMETHODIMP nsRegistry::GetBytesUTF8( nsRegistryKey baseKey, const char *path,
             rv = NS_ERROR_REG_BADTYPE;
         }
     }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsRegistry::GetBytesUTF8IntoBuffer( nsRegistryKey baseKey, const char *path,
+                                    PRUint8 *buf, PRUint32* length )
+{
+    REGERR err = REGERR_OK;
+
+    // Get info about the requested entry.
+    PRUint32 type;
+    nsresult rv = GetValueType( baseKey, path, &type );
+    // See if that worked.
+    if(NS_FAILED(rv)) 
+      return rv;
+    // Make sure we are dealing with bytes
+    if (type != Bytes)
+      return NS_ERROR_REG_BADTYPE;
+
+    // Attempt to get bytes into our fixed buffer
+    PR_Lock(mregLock);
+    err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path),
+                          buf, (unsigned long *)length );
+    PR_Unlock(mregLock);
+
+    rv = regerr2nsresult(rv);
+
+    if (rv == NS_ERROR_REG_BUFFER_TOO_SMALL) {
+      // fill length with the actual length
+      nsresult rv1 = GetValueLength( baseKey, path, length );
+      if(NS_FAILED(rv1))
+        return rv1;
+    }
+
+
     return rv;
 }
 
