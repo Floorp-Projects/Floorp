@@ -684,7 +684,6 @@ JS_DestroyRuntime(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
-    JS_ArenaShutDown();
     js_FreeStringGlobals();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
