@@ -12208,16 +12208,12 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
       // Now that the old frame is gone (and has stopped depending on obsolete style
       // data), we need to blow away our style information if this reframe happened as
       // a result of an inline style attribute changing.
-      // XXXldb Why does this look different from the code in
-      // |AttributeChanged|?
       if (aInlineStyle) {
-        if (aStyleContext)
-          aStyleContext->ClearCachedDataForRule(aInlineStyleRule);
-        else {
-          nsCOMPtr<nsIStyleSet> set;
-          shell->GetStyleSet(getter_AddRefs(set));
-          set->ClearCachedDataInRuleTree(aInlineStyleRule);
-        }
+        nsCOMPtr<nsIStyleSet> set;
+        shell->GetStyleSet(getter_AddRefs(set));
+        // XXXldb If |aStyleContext| is null, wouldn't it be faster to pass
+        // in something to tell it that this change is for inline style?
+        set->ClearStyleData(aPresContext, aInlineStyleRule, aStyleContext);
       }
     
       if (NS_SUCCEEDED(rv)) {
