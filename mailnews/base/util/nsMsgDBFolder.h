@@ -103,6 +103,7 @@ public:
 
   NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 
+  nsresult CreateDirectoryForFolder(nsFileSpec &path);
 protected:
   
 	// this is a little helper function that is not part of the public interface. 
@@ -139,7 +140,6 @@ protected:
   nsresult AddDirectorySeparator(nsFileSpec &path);
   nsresult CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow);
 
-  nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
   nsresult PromptForCachePassword(nsIMsgIncomingServer *server, nsIMsgWindow *aWindow, PRBool &passwordCorrect);
   // offline support methods.

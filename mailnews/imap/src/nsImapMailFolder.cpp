@@ -354,7 +354,12 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(const nsAString& aName,
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
   if (NS_FAILED(rv))
     return rv;
-  
+
+  nsFileSpec path;
+  nsMsgDBFolder *dbFolder = NS_STATIC_CAST(nsMsgDBFolder *, NS_STATIC_CAST(nsIMsgFolder *, folder.get()));
+  rv = dbFolder->CreateDirectoryForFolder(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   folder->GetFlags((PRUint32 *)&flags);
   
   flags |= MSG_FOLDER_FLAG_MAIL;
@@ -872,19 +877,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   nsresult rv = NS_OK;
     
   //Get a directory based on our current path.
-  nsCOMPtr<nsIFileSpec> pathSpec;
-  rv = GetPath(getter_AddRefs(pathSpec));
-  if (NS_FAILED(rv)) return rv;
-
   nsFileSpec path;
-  rv = pathSpec->GetFileSpec(&path);
-  if (NS_FAILED(rv)) return rv;
-
-//  if (!path.Exists())
-//  {
-//    path.CreateDir();
-//  }
-
   rv = CreateDirectoryForFolder(path);
   if(NS_FAILED(rv))
     return rv;
@@ -904,16 +897,17 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         parentName.Truncate(folderStart);
 
 	// the parentName might be too long or have some illegal chars
-    // so we make it safe.
-    // XXX Here it's assumed that IMAP folder names are stored locally 
-    // in modified UTF-7 (ASCII-only) as is stored remotely.  If we ever change
-    // this, we have to work with nsString instead of nsCString 
-    // (ref. bug 264071)
+        // so we make it safe.
+        // XXX Here it's assumed that IMAP folder names are stored locally 
+        // in modified UTF-7 (ASCII-only) as is stored remotely.  If we ever change
+        // this, we have to work with nsString instead of nsCString 
+        // (ref. bug 264071)
         nsCAutoString safeParentName;
         safeParentName.AssignWithConversion(parentName);
         NS_MsgHashIfNecessary(safeParentName);
         path += safeParentName.get();
-
+        // path is an out parameter to CreateDirectoryForFolder - I'm not
+        // sure why we're munging it above.
         rv = CreateDirectoryForFolder(path);
         if (NS_FAILED(rv)) return rv;
         uri.Append('/');
@@ -1628,10 +1622,8 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
     if (mSubFolders)
         mSubFolders->Count(&cnt);
     if (cnt > 0)
-    {
-        oldPathSpec->GetFileSpec(&dirSpec);
         rv = CreateDirectoryForFolder(dirSpec);
-    }
+
     nsFileSpec fileSpec;
     oldPathSpec->GetFileSpec(&fileSpec);
     nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
@@ -2712,7 +2704,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         if (NS_SUCCEEDED(GetServer(getter_AddRefs(server))) && server)
           server->SetPerformingBiff(PR_TRUE);
         
-        SetNumNewMessages(keysToFetch.GetSize());
+         SetNumNewMessages(keysToFetch.GetSize());
       }
     }
     SyncFlags(flagState);
@@ -7356,9 +7348,9 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
     PRInt32 folderStart = newLeafName.RFindChar('/');  //internal use of hierarchyDelimiter is always '/'
     if (folderStart > 0)
     {
-        newNameString.Right(newLeafName, newLeafName.Length() - folderStart - 1);
-		CreateDirectoryForFolder(path);    //needed when we move a folder to a folder with no subfolders.
-	}	
+      newNameString.Right(newLeafName, newLeafName.Length() - folderStart - 1);
+      CreateDirectoryForFolder(path);    //needed when we move a folder to a folder with no subfolders.
+    }	
 
     // if we get here, it's really a leaf, and "this" is the parent.
     folderNameStr = newLeafName;

@@ -3083,7 +3083,12 @@ NS_IMETHODIMP nsMsgDBFolder::AddSubfolder(const nsAString& name,
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
   if (NS_FAILED(rv))
     return rv;
-  
+
+  nsFileSpec path;
+  nsMsgDBFolder *dbFolder = NS_STATIC_CAST(nsMsgDBFolder *, NS_STATIC_CAST(nsIMsgFolder *, folder.get()));
+  rv = dbFolder->CreateDirectoryForFolder(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   folder->GetFlags((PRUint32 *)&flags);
   
   flags |= MSG_FOLDER_FLAG_MAIL;
@@ -3200,7 +3205,7 @@ nsMsgDBFolder::AddDirectorySeparator(nsFileSpec &path)
 
 /* Finds the directory associated with this folder.  That is if the path is
    c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
-   currently exist then it will create it
+   currently exist then it will create it. Path is strictly an out parameter.
   */
 nsresult nsMsgDBFolder::CreateDirectoryForFolder(nsFileSpec &path)
 {
