@@ -27,9 +27,12 @@
 #include "nsIStreamListener.h"
 #include "nsFileSpec.h"
 #include "nsIProtocolHandler.h"
+#include "nsIMsgProtocolInfo.h"
 
 
-class nsPop3Service : public nsIPop3Service, nsIProtocolHandler
+class nsPop3Service : public nsIPop3Service,
+                      public nsIProtocolHandler,
+                      public nsIMsgProtocolInfo
 {
 public:
 
@@ -39,6 +42,7 @@ public:
 	NS_DECL_ISUPPORTS
     NS_DECL_NSIPOP3SERVICE
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIMSGPROTOCOLINFO
 
 protected:
 	// convience function to make constructing of the pop3 url easier...

@@ -22,6 +22,10 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsIMsgMailSession.h"
+
+#include "nsIProfile.h"
+#include "nsIPref.h"
+
 #include "nsPop3URL.h"
 #include "nsPop3Sink.h"
 #include "nsPop3Protocol.h"
@@ -32,7 +36,8 @@
 
 #define POP3_PORT 110 // The IANA port for Pop3
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
@@ -46,25 +51,10 @@ nsPop3Service::~nsPop3Service()
 
 NS_IMPL_THREADSAFE_ADDREF(nsPop3Service);
 NS_IMPL_THREADSAFE_RELEASE(nsPop3Service);
-
-nsresult nsPop3Service::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(NS_GET_IID(nsIPop3Service)) || aIID.Equals(NS_GET_IID(nsISupports)))
-	{
-        *aInstancePtr = (void*) ((nsIPop3Service*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
-	{
-		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-    return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE3(nsPop3Service,
+                         nsIPop3Service,
+                         nsIProtocolHandler,
+                         nsIMsgProtocolInfo)
 
 NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 							   nsIMsgFolder *inbox, 
@@ -278,3 +268,28 @@ NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 	// the necko team in more detail later on.
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->GetFilePref("mail.root.pop3", aResult);
+    if (NS_SUCCEEDED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsFileSpec dir;
+    rv = profile->GetCurrentProfileDir(&dir);
+    if (NS_FAILED(rv)) return rv;
+    
+    dir += "Mail";
+
+    rv = NS_NewFileSpecWithSpec(dir, aResult);
+
+    return rv;
+}
+    
