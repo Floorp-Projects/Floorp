@@ -1091,19 +1091,19 @@ nsICSSLoader = { /* a6cf9101-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9102-15b3-11d2-932e-00805f8add32 */
+nsIHTMLFragmentContentSink = { /* a6cf9102-15b3-11d2-932e-00805f8add32 */
     0xa6cf9102,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9103-15b3-11d2-932e-00805f8add32 */
+nsIDocumentEncoder = { /* a6cf9103-15b3-11d2-932e-00805f8add32 */
     0xa6cf9103,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9104-15b3-11d2-932e-00805f8add32 */
+nsHTMLEncoder = { /* a6cf9104-15b3-11d2-932e-00805f8add32 */
     0xa6cf9104,
     0x15b3,
     0x11d2,
