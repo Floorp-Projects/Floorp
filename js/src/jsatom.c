@@ -565,30 +565,36 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     table = state->table;
     hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
-        if (flags & ATOM_TMPSTR) {
 #ifdef JS_THREADSAFE
-            uint32 gen = state->tablegen;
+        uint32 gen = state->tablegen;
+        JS_UNLOCK(&state->lock, cx);
 #endif
-            JS_UNLOCK(&state->lock, cx);
+
+        if (flags & ATOM_TMPSTR) {
             str = (flags & ATOM_NOCOPY)
                   ? js_NewString(cx, str->chars, str->length, 0)
                   : js_NewStringCopyN(cx, str->chars, str->length, 0);
             if (!str)
                 return NULL;
             key = STRING_TO_JSVAL(str);
-            JS_LOCK(&state->lock, cx);
-#ifdef JS_THREADSAFE
-            if (state->tablegen != gen) {
-                hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
-                if ((he = *hep) != NULL) {
-                    atom = (JSAtom *)he;
-                    if (flags & ATOM_NOCOPY)
-                        str->chars = NULL;
-                    goto out;
-                }
-            }
-#endif
+        } else {
+            if (!JS_MakeStringImmutable(cx, str))
+                return NULL;
         }
+
+#ifdef JS_THREADSAFE
+        JS_LOCK(&state->lock, cx);
+        if (state->tablegen != gen) {
+            hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
+            if ((he = *hep) != NULL) {
+                atom = (JSAtom *)he;
+                if (flags & ATOM_NOCOPY)
+                    str->chars = NULL;
+                goto out;
+            }
+        }
+#endif
+
         he = JS_HashTableRawAdd(table, hep, keyHash, (void *)key, NULL);
         if (!he) {
             JS_ReportOutOfMemory(cx);
