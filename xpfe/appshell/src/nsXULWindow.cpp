@@ -1362,7 +1362,7 @@ nsEventQueueStack::nsEventQueueStack() : mQueue(nsnull)
    mService = do_GetService(kEventQueueServiceCID);
 
    if(mService)
-      mService->PushThreadEventQueue(&mQueue);
+      mService->PushThreadEventQueue(getter_AddRefs(mQueue));
 }
 nsEventQueueStack::~nsEventQueueStack()
 {

@@ -2622,7 +2622,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       treeOwner->FindItemWithName(name.GetUnicode(), nsnull, 
                                     getter_AddRefs(newDocShellItem));
 
-   nsIEventQueue* modalEventQueue; // This has an odd ownership model
+   nsCOMPtr<nsIEventQueue> modalEventQueue; // This has an odd ownership model
    nsCOMPtr<nsIEventQueueService> eventQService;
 
    PRBool windowIsNew = PR_FALSE;
@@ -2635,8 +2635,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
          {
          eventQService = do_GetService(kEventQueueServiceCID);
          if(eventQService && 
-            NS_SUCCEEDED(eventQService->PushThreadEventQueue(
-                                             &modalEventQueue)))
+            NS_SUCCEEDED(eventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue))))
             windowIsModal = PR_TRUE;
          }
       treeOwner->GetNewWindow(chromeFlags, getter_AddRefs(newDocShellItem));

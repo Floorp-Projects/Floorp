@@ -68,7 +68,10 @@ public:
     NS_IMETHOD GetYoungestActive(nsIEventQueue **aQueue) = 0;
 
     NS_IMETHOD SetYounger(nsPIEventQueueChain *aQueue) = 0;
+    NS_IMETHOD GetYounger(nsIEventQueue **aQueue) = 0;
+
     NS_IMETHOD SetElder(nsPIEventQueueChain *aQueue) = 0;
+    NS_IMETHOD GetElder(nsIEventQueue **aQueue) = 0;
 };
 
 #endif /* nsPIEventQueueChain_h___ */

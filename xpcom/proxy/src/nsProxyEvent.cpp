@@ -206,7 +206,7 @@ nsProxyObjectCallInfo::PostCompleted()
 nsIEventQueue*      
 nsProxyObjectCallInfo::GetCallersQueue() 
 { 
-    return mCallersEventQ; 
+    return mCallersEventQ;
 }   
 void
 nsProxyObjectCallInfo::SetCallersQueue(nsIEventQueue* queue)
@@ -227,7 +227,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
 {
     NS_INIT_REFCNT();
     
-    nsServiceManager::GetService(kEventQueueServiceCID, NS_GET_IID(nsIEventQueueService), getter_AddRefs(mEventQService));
+    mEventQService = do_GetService(kEventQueueServiceCID);
 
     mRealObject      = realObject;
     mDestQueue       = do_QueryInterface(destQueue);
@@ -239,7 +239,7 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 {
     NS_INIT_REFCNT();
 
-    nsServiceManager::GetService(kEventQueueServiceCID, NS_GET_IID(nsIEventQueueService), getter_AddRefs(mEventQService));
+    mEventQService = do_GetService(kEventQueueServiceCID);
 
     nsComponentManager::CreateInstance(aClass, 
                                        aDelegate,
@@ -616,7 +616,7 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                     else
                     {
 
-                        nsIEventQueue *eventQ = nsnull;
+                        nsCOMPtr<nsIEventQueue> eventQ;
                         /* 
                            if the parameter is coming |in|, it should only be called on the callers thread.
                            else, if the parameter is an |out| thread, it should only be called on the proxy
@@ -659,7 +659,6 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                         {
                             nsMemory::Free((void*)iid);
                             NS_RELEASE(manager);
-                            NS_RELEASE(eventQ);
                             continue;
                         }
                 
@@ -673,7 +672,6 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                                                              (void**) &aProxyObject);
                         }
                         
-                        NS_RELEASE(eventQ);
                     }
 
                     nsMemory::Free((void*)iid);

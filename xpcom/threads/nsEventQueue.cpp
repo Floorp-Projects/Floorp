@@ -49,37 +49,73 @@ static char *gDestroyedNotification = "nsIEventQueueDestroyed";
 nsEventQueueImpl::nsEventQueueImpl()
 {
   NS_INIT_REFCNT();
-  AddRef(); 
+  NS_ADDREF_THIS();
   /* The slightly weird ownership model for eventqueues goes like this:
-     there's an addref from the factory generally held by whoever asked for
+   
+     General:
+       There's an addref from the factory generally held by whoever asked for
      the queue. The queue addrefs itself (right here) and releases itself
-     when it goes dark and empty. Chained queues also hold references to
-     their immediate elder link, because we have code that assumes the random
-     release of a queue can't break a chain earlier than our current pointer.
-     A queue releases itself immediately upon being chained, dropping
-     the addref given it by the factory. Only the references held to it by
-     a younger chained queue (and from the outside), and this one here in the
-     constructor, keep it alive. The release when it goes dark and empty
-     will queue it, as it were, for destruction.
-     (A dark queue no longer accepts events, an empty one has none.)
+     after someone calls StopAcceptingEvents() on the queue and when it is
+     dark and empty (in CheckForDeactivation()).
+
+     Chained queues:
+
+       Eldest queue:
+         The eldest queue in a chain is held on to by the EventQueueService
+       in a hash table, so it is possible that the eldest queue may not be
+       released until the EventQueueService is shutdown.
+         You may not call StopAcceptingEvents() on this queue until you have
+       done so on all younger queues.
+
+       General:
+         Each queue holds a reference to their immediate elder link and a weak
+       reference to their immediate younger link.  Because you must shut down
+       queues from youngest to eldest, all the references will be removed.
+
+       It happens something like:
+         queue->StopAcceptingEvents()
+         {
+           CheckForDeactivation()
+           {
+             -- hopefully we are able to shutdown now --
+             Unlink()
+             {
+               -- remove the reference we hold to our elder queue  --
+               -- NULL out our elder queues weak reference to us --
+             }
+             RELEASE ourself (to balance the ADDREF here in the constructor)
+             -- and we should go away. --
+           }
+         }
+
+
+     Notes:
+       A dark queue no longer accepts events.  An empty queue simply has no events.
   */
 
-  mEventQueue = NULL;
-  mYoungerQueue = NULL;
-  mElderQueue = NULL;
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+  PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+         ("EventQueue: Created [queue=%lx]",(long)mEventQueue));
+  ++gEventQueueLogCount;
+#endif
+
+  mYoungerQueue = nsnull;
+  mEventQueue = nsnull;
   mAcceptingEvents = PR_TRUE;
   mCouldHaveEvents = PR_TRUE;
 }
 
 nsEventQueueImpl::~nsEventQueueImpl()
 {
+  Unlink();
+
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
   PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
          ("EventQueue: Destroyed [queue=%lx]",(long)mEventQueue));
   ++gEventQueueLogCount;
 #endif
-  Unlink();
-  if (mEventQueue != NULL) {
+
+  if (mEventQueue) {
     NotifyObservers(gDestroyedNotification);
     PL_DestroyEventQueue(mEventQueue);
   }
@@ -143,7 +179,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsEventQueueImpl,
 NS_IMETHODIMP
 nsEventQueueImpl::StopAcceptingEvents()
 {
-  NS_ASSERTION(mElderQueue, "attempted to disable eldest queue in chain");
+  // this assertion is bogus.  I should be able to shut down the eldest queue,
+  //    as long as there are no younger children
+
+
+  NS_ASSERTION(mElderQueue || !mYoungerQueue, "attempted to disable eldest queue in chain");
   mAcceptingEvents = PR_FALSE;
   CheckForDeactivation();
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
@@ -160,22 +200,23 @@ void
 nsEventQueueImpl::NotifyObservers(const char *aTopic)
 {
   nsresult rv;
-  nsAutoString topic;
-  topic.AssignWithConversion(aTopic);
 
-  nsISupports *us = NS_STATIC_CAST(nsISupports *,(NS_STATIC_CAST(nsIEventQueue *,this)));
-
-  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_PROGID, &rv);
-  if (NS_SUCCEEDED(rv))
+  nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString topic;
+    topic.AssignWithConversion(aTopic);
+    nsCOMPtr<nsIEventQueue> kungFuDeathGrip(this);
+    nsCOMPtr<nsISupports> us(do_QueryInterface(kungFuDeathGrip));
     os->Notify(us, topic.GetUnicode(), NULL);
+  }
 }
 
 
 NS_IMETHODIMP
 nsEventQueueImpl::InitEvent(PLEvent* aEvent,
-							void* owner, 
-							PLHandleEventProc handler,
-							PLDestroyEventProc destructor)
+                            void* owner, 
+                            PLHandleEventProc handler,
+                            PLDestroyEventProc destructor)
 {
 	PL_InitEvent(aEvent, owner, handler, destructor);
 	return NS_OK;
@@ -246,35 +287,34 @@ nsEventQueueImpl::PostSynchronousEvent(PLEvent* aEvent, void** aResult)
 NS_IMETHODIMP
 nsEventQueueImpl::EnterMonitor()
 {
-    PL_ENTER_EVENT_QUEUE_MONITOR(mEventQueue);
-    return NS_OK;
+  PL_ENTER_EVENT_QUEUE_MONITOR(mEventQueue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventQueueImpl::ExitMonitor()
 {
-    PL_EXIT_EVENT_QUEUE_MONITOR(mEventQueue);
-    return NS_OK;
+  PL_EXIT_EVENT_QUEUE_MONITOR(mEventQueue);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsEventQueueImpl::RevokeEvents(void* owner)
 {
-    PL_RevokeEvents(mEventQueue, owner);
-    return NS_OK;
+  PL_RevokeEvents(mEventQueue, owner);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsEventQueueImpl::GetPLEventQueue(PLEventQueue** aEventQueue)
 {
-    *aEventQueue = mEventQueue;
-    
-    if (mEventQueue == NULL)
-        return NS_ERROR_NULL_POINTER;
+  if (!mEventQueue)
+    return NS_ERROR_NULL_POINTER;
 
-    return NS_OK;
+  *aEventQueue = mEventQueue;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -288,8 +328,8 @@ nsEventQueueImpl::IsQueueOnCurrentThread(PRBool *aResult)
 NS_IMETHODIMP
 nsEventQueueImpl::IsQueueNative(PRBool *aResult)
 {
-    *aResult = PL_IsQueueNative(mEventQueue);
-    return NS_OK;
+  *aResult = PL_IsQueueNative(mEventQueue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -401,8 +441,8 @@ nsEventQueueImpl::GetEventQueueSelectFD()
 
 NS_METHOD
 nsEventQueueImpl::Create(nsISupports *aOuter,
-                            REFNSIID aIID,
-                            void **aResult)
+                         REFNSIID aIID,
+                         void **aResult)
 {
   nsEventQueueImpl* evt = new nsEventQueueImpl();
   if (evt == NULL)
@@ -420,7 +460,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
 {
   nsresult      rv;
-  nsIEventQueue *end;
+  nsCOMPtr<nsIEventQueue> end;
   nsCOMPtr<nsPIEventQueueChain> queueChain(do_QueryInterface(aQueue));
 
   if (!aQueue)
@@ -434,12 +474,11 @@ nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
 
   // (be careful doing this outside nsEventQueueService's mEventQMonitor)
 
-  GetYoungest(&end); // addrefs. released by Unlink.
+  GetYoungest(getter_AddRefs(end));
   nsCOMPtr<nsPIEventQueueChain> endChain(do_QueryInterface(end));
   if (endChain) {
     endChain->SetYounger(queueChain);
     queueChain->SetElder(endChain);
-    NS_RELEASE(aQueue); // the addref from the constructor
     rv = NS_OK;
   }
   return rv;
@@ -448,22 +487,27 @@ nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
 NS_IMETHODIMP
 nsEventQueueImpl::Unlink()
 {
-  nsPIEventQueueChain *young = mYoungerQueue,
-                      *old = mElderQueue;
+  nsCOMPtr<nsPIEventQueueChain> young = mYoungerQueue,
+                                old = mElderQueue;
+
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+  PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+         ("EventQueue: unlink [queue=%lx, younger=%lx, elder=%lx]",
+         (long)mEventQueue,(long)mYoungerQueue, (long)mElderQueue.get()));
+  ++gEventQueueLogCount;
+#endif
 
   // this is probably OK, but shouldn't happen by design, so tell me if it does
   NS_ASSERTION(!mYoungerQueue, "event queue chain broken in middle");
 
   // break links early in case the Release cascades back onto us
-  mYoungerQueue = 0;
-  mElderQueue = 0;
+  mYoungerQueue = nsnull;
+  mElderQueue = nsnull;
 
   if (young)
     young->SetElder(old);
   if (old) {
     old->SetYounger(young);
-    if (!young)
-      NS_RELEASE(old); // release addref from AppendQueue
   }
   return NS_OK;
 }
@@ -483,17 +527,18 @@ nsEventQueueImpl::GetYoungest(nsIEventQueue **aQueue)
 NS_IMETHODIMP
 nsEventQueueImpl::GetYoungestActive(nsIEventQueue **aQueue)
 {
-  nsIEventQueue *answer = NULL;
+  nsCOMPtr<nsIEventQueue> answer;
 
   if (mYoungerQueue)
-    mYoungerQueue->GetYoungestActive(&answer);
-  if (answer == NULL)
-    if (mAcceptingEvents && mCouldHaveEvents) {
+    mYoungerQueue->GetYoungestActive(getter_AddRefs(answer));
+  if (!answer) {
+    if (mAcceptingEvents && mCouldHaveEvents)
       answer = NS_STATIC_CAST(nsIEventQueue *, this);
-      NS_ADDREF(answer);
-    } else
+    else
       CheckForDeactivation();
+  }
   *aQueue = answer;
+  NS_IF_ADDREF(*aQueue);
   return NS_OK;
 }
 
@@ -509,5 +554,25 @@ nsEventQueueImpl::SetElder(nsPIEventQueueChain *aQueue)
 {
   mElderQueue = aQueue;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::GetYounger(nsIEventQueue **aQueue)
+{
+  if (!mYoungerQueue) {
+    *aQueue = nsnull;
+    return NS_OK;
+  }
+  return mYoungerQueue->QueryInterface(NS_GET_IID(nsIEventQueue), (void**)&aQueue);
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::GetElder(nsIEventQueue **aQueue)
+{
+  if (!mElderQueue) {
+    *aQueue = nsnull;
+    return NS_OK;
+  }
+  return mElderQueue->QueryInterface(NS_GET_IID(nsIEventQueue), (void**)&aQueue);
 }
 

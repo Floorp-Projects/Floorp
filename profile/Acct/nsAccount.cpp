@@ -44,7 +44,6 @@
 //#include "nsFileLocations.h"
 //#include "nsEscape.h"
 
-#include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
@@ -55,18 +54,12 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsSpecialSystemDirectory.h"
 
-#include "plevent.h"
-
-
 #define TEST_URL "resource:/res/test.properties"
 
 #define NETLIB_DLL "netlib.dll"
 #define RAPTORBASE_DLL "raptorbase.dll"
 #define XPCOM_DLL "xpcom32.dll"
 
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 
 //#ifdef XP_PC
@@ -347,10 +340,6 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
   if (NS_FAILED(ret)) return ret;
 
 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &ret);
-  if (NS_FAILED(ret)) return ret;
-
-
   nsCOMPtr<nsIURI> uri;
   ret = NS_NewURI(getter_AddRefs(uri), Trial, nsnull, service);
   if (NS_FAILED(ret)) return ret;
@@ -358,12 +347,6 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
   nsIChannel *channel = nsnull;
   ret = NS_OpenURI(&channel, uri, service);
   if (NS_FAILED(ret)) return ret;
-
-
-  nsIEventQueue *eventQ = nsnull;
-  ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
-  if (NS_FAILED(ret)) return ret;
-
 
   ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
@@ -439,10 +422,6 @@ int nsAccount::GetConfigValues(nsString fileName)
   if (NS_FAILED(ret)) return ret;
 
 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &ret);
-  if (NS_FAILED(ret)) return ret;
-
-
   nsCOMPtr<nsIURI> uri;
   ret = NS_NewURI(getter_AddRefs(uri), Trial, nsnull, service);
   if (NS_FAILED(ret)) return ret;
@@ -450,12 +429,6 @@ int nsAccount::GetConfigValues(nsString fileName)
   nsIChannel *channel = nsnull;
   ret = NS_OpenURI(&channel, uri, service);
   if (NS_FAILED(ret)) return ret;
-
-
-  nsIEventQueue *eventQ = nsnull;
-  ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
-  if (NS_FAILED(ret)) return ret;
-
 
   ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
