@@ -269,7 +269,7 @@ void Area::ParseCoords(const nsString& aSpec)
 {
   char* cp = aSpec.ToNewCString();
   mCoords = lo_parse_coord_list(cp, &mNumCoords);
-  delete cp;
+  delete[] cp;
 }
 
 void Area::ToHTML(nsString& aResult)
