@@ -61,11 +61,31 @@
 #include "nsIEventStateManager.h"
 
 #ifdef DEBUG_evaughan
-#define DEBUG_rods
+//#define DEBUG_rods
 #endif
 
-#ifdef DEBUG_rods
 #define FCF_NOISY
+#ifdef FCF_NOISY
+#define REFLOW_DEBUG_MSG(_msg1) printf((_msg1))
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
+
+#define IF_REFLOW_DEBUG_MSG(_bool, _msg1) if ((_bool)) printf((_msg1))
+#define IF_REFLOW_DEBUG_MSG2(_bool, _msg1, _msg2) if ((_bool)) printf((_msg1), (_msg2))
+#define IF_REFLOW_DEBUG_MSG3(_bool, _msg1, _msg2, _msg3) if ((_bool)) printf((_msg1), (_msg2), (_msg3))
+#define IF_REFLOW_DEBUG_MSG4(_bool, _msg1, _msg2, _msg3, _msg4) if ((_bool)) printf((_msg1), (_msg2), (_msg3), (_msg4))
+
+#else //-------------
+#define REFLOW_DEBUG_MSG(_msg) 
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) 
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) 
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) 
+
+#define IF_REFLOW_DEBUG_MSG(_bool, _msg) 
+#define IF_REFLOW_DEBUG_MSG2(_bool, _msg1, _msg2) 
+#define IF_REFLOW_DEBUG_MSG3(_bool, _msg1, _msg2, _msg3) 
+#define IF_REFLOW_DEBUG_MSG4(_bool, _msg1, _msg2, _msg3, _msg4) 
 #endif
 
 const PRInt32 kSizeNotSet = -1;
@@ -132,6 +152,97 @@ void nsFormControlFrame::SetupCachedSizes(nsSize& aCacheSize,
   }
 }
 
+#if 0 // Testing out changes
+//------------------------------------------------------------
+void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
+                                          nsSize& aCachedMaxElementSize,
+                                          nsSize& aCachedAvailableSize,
+                                          nsHTMLReflowMetrics& aDesiredSize,
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsReflowStatus& aStatus,
+                                          PRBool& aBailOnWidth,
+                                          PRBool& aBailOnHeight)
+{
+
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    aBailOnHeight = PR_FALSE;
+    aBailOnWidth  = PR_FALSE;
+
+  } else if (eReflowReason_Initial == aReflowState.reason) {
+    aBailOnHeight = PR_FALSE;
+    aBailOnWidth  = PR_FALSE;
+
+  } else {
+
+    nscoord width;
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
+      if (aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE) {
+        width = NS_UNCONSTRAINEDSIZE;
+        aBailOnWidth = aCacheSize.width != kSizeNotSet;
+        IF_REFLOW_DEBUG_MSG2(aBailOnWidth, "-------------- #1 Bailing on aCachedAvailableSize.width %d != kSizeNotSet\n", aCachedAvailableSize.width);
+      } else {
+        //width = aReflowState.availableWidth - aReflowState.mComputedBorderPadding.left -
+        //        aReflowState.mComputedBorderPadding.right;
+        aBailOnWidth = aCacheSize.width <= aReflowState.availableWidth && aCacheSize.width != kSizeNotSet;
+
+        if (aBailOnWidth) {
+          REFLOW_DEBUG_MSG3("-------------- #2 Bailing on aCachedSize.width %d <= (AW - BP) %d\n", aCachedAvailableSize.width, width );
+        } else {
+          //aBailOnWidth = width <= (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
+          //               aCachedAvailableSize.width == kSizeNotSet;
+          //if (aBailOnWidth) {
+          //  REFLOW_DEBUG_MSG3("-------------- #2.2 Bailing on width %d <= aCachedSize.width %d\n", width, (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right));
+          //}        
+        }
+      }
+    } else {
+      width = aReflowState.mComputedWidth;
+      aBailOnWidth = width == (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right);
+      IF_REFLOW_DEBUG_MSG3(aBailOnWidth, "-------------- #3 Bailing on aCachedAvailableSize.width %d == aReflowState.mComputedWidth %d\n", aCachedAvailableSize.width, width );
+    }
+    
+    nscoord height;
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
+      if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
+        height = NS_UNCONSTRAINEDSIZE;
+        aBailOnHeight = aCacheSize.height != kSizeNotSet;
+        if (aBailOnHeight) {
+          IF_REFLOW_DEBUG_MSG2(aBailOnHeight, "-------------- #1 Bailing on aCachedAvailableSize.height %d != kSizeNotSet\n", aCachedAvailableSize.height);
+        }
+      } else {
+        height = aReflowState.availableHeight - aReflowState.mComputedBorderPadding.left -
+                aReflowState.mComputedBorderPadding.right;
+        aBailOnHeight = aCachedAvailableSize.height <= height && aCachedAvailableSize.height != kSizeNotSet;
+        if (aBailOnHeight) {
+          REFLOW_DEBUG_MSG3("-------------- #2 Bailing on aCachedAvailableSize.height %d <= height %d\n", aCachedAvailableSize.height, height );
+        } else {
+          aBailOnHeight = height <= (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
+                         aCachedAvailableSize.height == kSizeNotSet;
+          if (aBailOnHeight) {
+            REFLOW_DEBUG_MSG3("-------------- #2.2 Bailing on height %d <= aCachedSize.height %d\n", height, (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right));
+          }        
+        }
+      }
+    } else {
+      height = aReflowState.mComputedHeight;
+        aBailOnHeight = height == (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right);
+        IF_REFLOW_DEBUG_MSG3(aBailOnHeight, "-------------- #3 Bailing on aCachedAvailableSize.height %d == aReflowState.mComputedHeight %d\n", aCachedAvailableSize.height, height );
+    }
+
+    if (aBailOnWidth || aBailOnHeight) {
+      aDesiredSize.width  = aCacheSize.width;
+      aDesiredSize.height = aCacheSize.height;
+
+      if (aDesiredSize.maxElementSize != nsnull) {
+        aDesiredSize.maxElementSize->width  = aCachedMaxElementSize.width;
+        aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
+      }
+      aDesiredSize.ascent = aDesiredSize.height;
+      aDesiredSize.descent = 0;
+    }
+  }
+}
+#else
 //------------------------------------------------------------
 void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
                                           nsSize& aCachedMaxElementSize,
@@ -170,6 +281,12 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
 #ifdef FCF_NOISY
         if (aBailOnWidth) {
           printf("-------------- #2 Bailing on aCachedAvailableSize.width %d <= width %d\n", aCachedAvailableSize.width, width );
+        } else {
+          aBailOnWidth = width <= (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
+                         aCachedAvailableSize.width == kSizeNotSet;
+          if (aBailOnWidth) {
+            printf("-------------- #2.2 Bailing on width %d <= aCachedAvailableSize.width %d\n",(aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), width );
+          }        
         }
 #endif
       }
@@ -192,15 +309,41 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
       if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
         height = NS_UNCONSTRAINEDSIZE;
-        aBailOnHeight = aCachedAvailableSize.height != kSizeNotSet;
+        aBailOnHeight = aCacheSize.height != kSizeNotSet;
+#ifdef FCF_NOISY
+        if (aBailOnHeight) {
+          printf("-------------- #1 Bailing on aCachedAvailableSize.height %d != kSizeNotSet\n", aCachedAvailableSize.height);
+        }
+#endif
       } else {
-        height = aReflowState.availableHeight - aReflowState.mComputedBorderPadding.top -
-                 aReflowState.mComputedBorderPadding.bottom;
-        aBailOnHeight = aCachedAvailableSize.height <= height;
+        height = aReflowState.availableHeight - aReflowState.mComputedBorderPadding.left -
+                aReflowState.mComputedBorderPadding.right;
+        aBailOnHeight = aCachedAvailableSize.height <= height && aCachedAvailableSize.height != kSizeNotSet;
+#ifdef FCF_NOISY
+        if (aBailOnHeight) {
+          printf("-------------- #2 Bailing on aCachedAvailableSize.height %d <= height %d\n", aCachedAvailableSize.height, height );
+        } else {
+          aBailOnHeight = height <= (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right) &&
+                         aCachedAvailableSize.height == kSizeNotSet;
+          if (aBailOnHeight) {
+            printf("-------------- #2.2 Bailing on height %d <= aCachedAvailableSize.height %d\n",(aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right), height );
+          }        
+        }
+#endif
       }
     } else {
-      height = aReflowState.mComputedWidth;
-      aBailOnHeight = aCachedAvailableSize.height == height;
+      height = aReflowState.mComputedHeight;
+      //if (aCachedAvailableSize.height == kSizeNotSet) {
+      //  //aBailOnHeight = aCachedAvailableSize.height == aCacheSize.height;
+        aBailOnHeight = PR_FALSE;
+      //} else {
+        aBailOnHeight = height == (aCacheSize.height - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right);
+      //}
+#ifdef FCF_NOISY
+      if (aBailOnHeight) {
+        printf("-------------- #3 Bailing on aCachedAvailableSize.height %d == aReflowState.mComputedHeight %d\n", aCachedAvailableSize.height, height );
+      }
+#endif
     }
 
     if (aBailOnWidth || aBailOnHeight) {
@@ -216,6 +359,7 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
     }
   }
 }
+#endif
 
 nscoord 
 nsFormControlFrame::GetScrollbarWidth(float aPixToTwip)
@@ -803,4 +947,24 @@ nsresult nsFormControlFrame::PaintSpecialBorder(nsIPresContext* aPresContext,
   }
 #endif
   return rv;
+}
+
+nsresult 
+nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight)
+{
+  aHeight = 0;
+  nsIDeviceContext* context;
+  aPresContext->GetDeviceContext( &context );
+	if ( nsnull != context ) {
+		PRInt32 height;
+    PRInt32 width;
+		context->GetDeviceSurfaceDimensions(width, height);
+		float devUnits;
+ 		context->GetDevUnitsToAppUnits(devUnits);
+		aHeight = NSToIntRound(float( height) / devUnits );
+		NS_RELEASE( context );
+		return NS_OK;
+	}
+
+  return NS_ERROR_FAILURE;
 }
