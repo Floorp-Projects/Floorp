@@ -709,8 +709,13 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
 
     // we copy the parent here so 'newParent' remains immutable
     nsCOMPtr <nsIFile> workParent;
-    if (NS_FAILED(rv = newParent->Clone(getter_AddRefs(workParent))))
-        return rv;
+    if (newParent) {
+        if (NS_FAILED(rv = newParent->Clone(getter_AddRefs(workParent))))
+            return rv;
+    } else {
+        if (NS_FAILED(rv = GetParent(getter_AddRefs(workParent))))
+            return rv;
+    }
     
     // check to see if we are a directory or if we are a file
     PRBool isDirectory;
