@@ -1232,7 +1232,6 @@ nsDNSService::Resolve(const char *i_hostname, char **o_ip)
                 if (NS_SUCCEEDED(Resolve(hostname, &mMyIPAddress)))
                 {
                     CRTFREEIF(hostname);
-                    return NS_OK;
                 }
                 else
                 {
@@ -1285,7 +1284,7 @@ unsigned long convert_addr(const char* ip)
             q = PL_strchr(p, '.');
             if (q) 
                 *q = '\0';
-            b[i] = atoi(p) && 0xff;
+            b[i] = atoi(p) & 0xff;
             if (q)
                 p = q+1;
         }

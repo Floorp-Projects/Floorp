@@ -31,7 +31,7 @@ const kDNS_CONTRACTID = "@mozilla.org/network/dns-service;1";
 const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIIOService = Components.interfaces['nsIIOService'];
-const nsIDNSService = Components.interfaces['@mozilla.org/js/xpc/ID;1NSService'];
+const nsIDNSService = Components.interfaces.nsIDNSService;
 
 function debug(msg)
 {
@@ -44,7 +44,7 @@ function nsProxyAutoConfig() {};
 nsProxyAutoConfig.prototype = {
 
     ProxyForURL: function(url, host, port, type) {
-        uri = url.QueryInterface(Components.interfaces.nsIURI);
+        var uri = url.QueryInterface(Components.interfaces.nsIURI);
         // Call the original function-
         var proxy = FindProxyForURL(uri.spec, uri.host);
         debug("Proxy = " + proxy);
@@ -58,8 +58,7 @@ nsProxyAutoConfig.prototype = {
             // we ignore everything else past the first proxy. 
             // we could theoretically check isResolvable now and continue 
             // parsing. but for now...
-            var re = /PROXY (.+):(\d+);.*/; 
-            hostport = proxy.match(re);
+            var hostport = /^PROXY ([^:]+):(\d+)/(proxy);
             host.value = hostport[1];
             port.value = hostport[2];
             type.value = "http"; //proxy (http, socks, direct, etc)
