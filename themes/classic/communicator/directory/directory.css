@@ -98,3 +98,16 @@ treerow
   width: 100px;
 }
 
+div.server     { 
+  color:    blue;
+  display:  block; 
+  font-size: 10pt;
+  font-family: sans-serif;
+}
+
+div.client     { 
+  color:    red;
+  display:  block; 
+  font-size: 10pt;
+  font-family: sans-serif;
+}
