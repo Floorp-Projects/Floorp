@@ -2596,7 +2596,6 @@ protected:
     static nsIRDFResource* kNC_child;
     static nsIRDFResource* kNC_Column;
     static nsIRDFResource* kNC_Folder;
-    static nsIRDFResource* kRDF_child;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kXUL_element;
 
@@ -2708,7 +2707,6 @@ nsIRDFResource* nsXULTemplateBuilder::kNC_Title;
 nsIRDFResource* nsXULTemplateBuilder::kNC_child;
 nsIRDFResource* nsXULTemplateBuilder::kNC_Column;
 nsIRDFResource* nsXULTemplateBuilder::kNC_Folder;
-nsIRDFResource* nsXULTemplateBuilder::kRDF_child;
 nsIRDFResource* nsXULTemplateBuilder::kRDF_instanceOf;
 nsIRDFResource* nsXULTemplateBuilder::kXUL_element;
 
@@ -3883,7 +3881,6 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
         NS_IF_RELEASE(kNC_child);
         NS_IF_RELEASE(kNC_Column);
         NS_IF_RELEASE(kNC_Folder);
-        NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kXUL_element);
 
@@ -3963,7 +3960,6 @@ nsXULTemplateBuilder::Init()
         gRDFService->GetResource(NC_NAMESPACE_URI "child",   &kNC_child);
         gRDFService->GetResource(NC_NAMESPACE_URI "Column",  &kNC_Column);
         gRDFService->GetResource(NC_NAMESPACE_URI "Folder",  &kNC_Folder);
-        gRDFService->GetResource(RDF_NAMESPACE_URI "child",  &kRDF_child);
         gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
         gRDFService->GetResource(XUL_NAMESPACE_URI "element",    &kXUL_element);
 
@@ -6516,7 +6512,6 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
         // Some ever-present membership tests.
         mContainmentProperties.Add(kNC_child);
         mContainmentProperties.Add(kNC_Folder);
-        mContainmentProperties.Add(kRDF_child);
     }
 #endif
 
