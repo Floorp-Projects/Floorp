@@ -25,6 +25,8 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
+interface nsIDocShell;
+
 [scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
 interface nsIBrowserInstance : nsISupports {
 
@@ -54,6 +56,7 @@ interface nsIBrowserInstance : nsISupports {
     // Infrastructure.
     void init();
     void setContentWindow( in nsIDOMWindow aWindow );
+	 void getContentDocShell(out nsIDocShell aDocShell);
     void setWebShellWindow( in nsIDOMWindow aWindow );
     void setTextZoom( in float aTextZoom );
     void SetDocumentCharset(in wstring charset);
