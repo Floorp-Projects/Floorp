@@ -28,45 +28,84 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="return StartUp('offline');"  title="&title.label;">
+        onload="return StartUp('offline');"  
+		align="vertical" title="&title.label;"
+		debug="false">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-<html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&header;</html:SPAN>
-</html:DIV>
+<box class="header" align="horizontal">  
+      <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+</box>
 
-
-
-&header1;	
-<html:table>	
-      <html:tr><html:td>&descipt1;
-			</html:td></html:tr>
-			<html:tr><html:td><html:label>
-				<html:input name="state" type="radio" id="pref:0:int:offline.startup_state" />&prevRadio.label;
-				<html:br />&communRemember;
-			</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label>
-				<html:input name="state" type="radio" id="pref:1:int:offline.startup_state" />&askOfflineRadio.label;
-				<html:br />&offlineStartAskEach;
-			</html:label></html:td></html:tr>
-
-</html:table>
-&heaeder2;
-<html:table>	
+<box align="vertical" style="width: 100%;">
+   	<html:fieldset style="width: 100%;">
+	<html:legend align="left"> 
+	<html:div>&header1;</html:div>
+	</html:legend>
 	
-            
-			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:0:int:offline.send.unsent_messages" />&unsentAskRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:1:int:offline.send.unsent_messages" />&unsentAutoRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:2:int:offline.send.unsent_messages" />&unsentDoNotRadio.label;</html:label></html:td></html:tr>
-</html:table>
-&header3;
-<html:table>		
-            
-			<html:tr><html:td><html:label>
-				<html:input type="checkbox" id="pref:0:bool:offline.prompt_synch_on_exit" />&promptSynchCheck.label;
-			</html:label></html:td></html:tr>
+	<html:div>
+		<html:label>
+			<html:input name="state" type="radio" id="pref:0:int:offline.startup_state" />&prevRadio.label;
+			<html:br />&communRemember;
+		</html:label>
+	</html:div>
 
-</html:table>
-</html:div>
+	<html:div>
+		<html:label>
+			<html:input name="state" type="radio" id="pref:1:int:offline.startup_state" />&askOfflineRadio.label;
+			<html:br />&offlineStartAskEach;
+		</html:label>
+	</html:div>
+
+	</html:fieldset>
+</box>
+
+
+<box align="vertical" style="width: 100%;">
+   	<html:fieldset style="width: 100%;">
+	<html:legend align="left"> 
+	<html:div>&header2;</html:div>
+	</html:legend>
+
+
+	<html:div>
+		<html:label>
+			<html:input name="offmail" type="radio" id="pref:0:int:offline.send.unsent_messages" />&unsentAskRadio.label;
+		</html:label>
+	</html:div>
+
+	<html:div>
+		<html:label>
+			<html:input name="offmail" type="radio" id="pref:1:int:offline.send.unsent_messages" />&unsentAutoRadio.label;
+		</html:label>
+	</html:div>
+
+	<html:div>
+		<html:label>
+			<html:input name="offmail" type="radio" id="pref:2:int:offline.send.unsent_messages" />&unsentDoNotRadio.label;
+		</html:label>
+	</html:div>
+
+	</html:fieldset>
+</box>
+
+
+
+<box align="vertical" style="width: 100%;">
+   	<html:fieldset style="width: 100%;">
+	<html:legend align="left"> 
+	<html:div>&header3;</html:div>
+	</html:legend>
+
+	<html:div>
+		<html:label>
+			<html:input type="checkbox" id="pref:0:bool:offline.prompt_synch_on_exit" />&promptSynchCheck.label;
+		</html:label>
+	</html:div>
+
+	</html:fieldset>
+</box>
+
 </window>

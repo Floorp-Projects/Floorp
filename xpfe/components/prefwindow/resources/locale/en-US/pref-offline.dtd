@@ -2,7 +2,8 @@
 
 <!--LOCALIZATION NOTE : FILE The 'Offline' preferences dialog -->
 <!ENTITY title.label "Offline">
-<!ENTITY header "Offline">
+<!ENTITY lHeader "Offline">
+<!ENTITY rHeader "Offline">
 <!ENTITY header1 "Startup State">
 <!--LOCALIZATION NOTE (descipt1): Never translate the term 'Communicator' -->
 <!ENTITY descipt1 "Commucator can start in either online or offline modes. When online you have full 
@@ -13,7 +14,7 @@ access to your network.  When offline you can only read messages that you have p
 <!ENTITY askOfflineRadio.label "Ask Me">
 <!--LOCALIZATION NOTE (offlineStartAskEach): Never translate the term 'Communicator' -->
 <!ENTITY offlineStartAskEach "Communicator will ask you each time you start the program.">
-<!ENTITY heaeder2 "When Going Online">
+<!ENTITY header2 "When Going Online">
 <!ENTITY unsentAskRadio.label "Ask me if I want to send my unsent messages">
 <!ENTITY unsentAutoRadio.label "Automatically send my unsent messages">
 <!ENTITY unsentDoNotRadio.label "Do not send my unsent messages">
