@@ -45,6 +45,8 @@
 #define STATFS statfs
 #endif
 
+#include <wait.h>
+
 
 static GtkWidget        *sBrowseBtn;
 static gint             sBrowseBtnID;
@@ -979,14 +981,15 @@ nsSetupTypeDlg::DeleteInstDelete(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("DeleteInstDelete");
 
-    char cwd[MAXPATHLEN];
-
     sDelInstUp = FALSE;
 
-    getcwd(cwd, MAXPATHLEN);
-    chdir(gCtx->opt->mDestination);
-    system("rm -rf *");
-    chdir(cwd);
+    if (!fork())
+    {
+        execlp("rm", "rm", "-rf", gCtx->opt->mDestination, NULL);
+        /* execlp shouldn't return, we need to exit in case it does */
+        _exit(0);
+    }
+    wait(NULL);
 
     // hide this notebook page
     gCtx->sdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
