@@ -2378,7 +2378,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
           CSS_ENSURE_IMPORTANT(Margin) {
             mImportant->mMargin->EnsureBorderColors();
             CSS_IF_DELETE(mImportant->mMargin->mBorderColors[2]);
-            mImportant->mMargin->mBorderColors[0] = mMargin->mBorderColors[2];
+            mImportant->mMargin->mBorderColors[2] = mMargin->mBorderColors[2];
             mMargin->mBorderColors[2] = nsnull;
           }
         }
@@ -2389,7 +2389,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
           CSS_ENSURE_IMPORTANT(Margin) {
             mImportant->mMargin->EnsureBorderColors();
             CSS_IF_DELETE(mImportant->mMargin->mBorderColors[3]);
-            mImportant->mMargin->mBorderColors[0] = mMargin->mBorderColors[3];
+            mImportant->mMargin->mBorderColors[3] = mMargin->mBorderColors[3];
             mMargin->mBorderColors[3] = nsnull;
           }
         }
@@ -2544,7 +2544,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       case eCSSProperty_image_region_left:
         if (mList) {
           if (mList->mImageRegion) {
-            CSS_ENSURE_IMPORTANT(Position) {
+            CSS_ENSURE_IMPORTANT(List) {
               CSS_ENSURE_RECT(mImportant->mList->mImageRegion) {
                 switch (aProperty) {
                   CSS_CASE_IMPORTANT(eCSSProperty_image_region_top,    mList->mImageRegion->mTop);
