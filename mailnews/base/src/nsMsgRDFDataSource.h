@@ -25,6 +25,7 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsITransactionManager.h"
 
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIShutdownListener
@@ -165,6 +166,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 	static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 								nsIRDFNode *object, PRBool assert);
+	nsresult GetTransactionManager(nsISupportsArray *sources, nsITransactionManager **aTransactionManager);
 
  private:
   nsIRDFService *mRDFService;

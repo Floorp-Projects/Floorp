@@ -415,24 +415,6 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
 	nsresult rv = NS_OK;
-	PRUint32 cnt;
-
-	rv = aSources->Count(&cnt);
-	if (NS_FAILED(rv)) return rv;
-
-	nsCOMPtr<nsITransactionManager> transactionManager;
-	if (cnt > 1)
-	{
-		nsCOMPtr<nsISupports> supports;
-
-		supports = getter_AddRefs(aSources->ElementAt(0));
-		transactionManager = do_QueryInterface(supports, &rv);
-		if (NS_SUCCEEDED(rv) && transactionManager)
-		{
-			aSources->RemoveElementAt(0);
-			cnt--;
-		}
-	}
 
 	if((aCommand == kNC_MarkRead))
 		rv = DoMarkMessagesRead(aSources, PR_TRUE);
@@ -620,6 +602,11 @@ nsMsgMessageDataSource::DoMarkMessagesRead(nsISupportsArray *messages, PRBool ma
 {
 	PRUint32 count;
 	nsresult rv;
+
+	nsCOMPtr<nsITransactionManager> transactionManager;
+	rv = GetTransactionManager(messages, getter_AddRefs(transactionManager));
+	if(NS_FAILED(rv))
+		return rv;
 
 	rv = messages->Count(&count);
 	if(NS_FAILED(rv))

@@ -334,3 +334,35 @@ nsMsgRDFDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
   return PR_TRUE;
 }
 
+nsresult 
+nsMsgRDFDataSource::GetTransactionManager(nsISupportsArray *aSources, nsITransactionManager **aTransactionManager)
+{
+	if(!aTransactionManager)
+		return NS_ERROR_NULL_POINTER;
+
+	*aTransactionManager = nsnull;
+	nsresult rv = NS_OK;
+
+	nsCOMPtr<nsITransactionManager> transactionManager;
+
+	PRUint32 cnt;
+
+	rv = aSources->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+
+	if (cnt > 0)
+	{
+		nsCOMPtr<nsISupports> supports;
+
+		supports = getter_AddRefs(aSources->ElementAt(0));
+		transactionManager = do_QueryInterface(supports, &rv);
+		if (NS_SUCCEEDED(rv) && transactionManager)
+		{
+			aSources->RemoveElementAt(0);
+			*aTransactionManager = transactionManager;
+			NS_IF_ADDREF(*aTransactionManager);
+		}
+	}
+
+	return NS_OK;	
+}
