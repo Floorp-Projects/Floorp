@@ -83,6 +83,8 @@ CPPSRCS		= \
                   nsUnicodeToCP1257.cpp \
                   nsUnicodeToCP1258.cpp           \
                   nsUnicodeToCP874.cpp            \
+                  nsUnicodeToKOI8R.cpp           \
+                  nsUnicodeToKOI8U.cpp            \
                   nsUnicodeToMacRoman.cpp \
                   nsUnicodeToMacCE.cpp \
                   nsUnicodeToMacGreek.cpp \
