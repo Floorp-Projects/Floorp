@@ -119,8 +119,8 @@ interface oeIICalEvent : nsISupports
     attribute eventStatusProperty status;
     boolean getNextRecurrence( in PRTime begin, out PRTime result);
     boolean getPreviousOccurrence( in PRTime beforethis, out PRTime result);
-    string getIcalString();
-    boolean parseIcalString(in string icalstr);
+    AUTF8String getIcalString();
+    boolean parseIcalString(in AUTF8String icalstr);
     void addException( in PRTime exdate );
 	nsISimpleEnumerator getExceptions();
 	void removeAllExceptions();

@@ -118,6 +118,70 @@ PRTime ConvertToPrtime ( icaltimetype indate ) {
     return result;
 }
 
+//////////////////////////////////////////////////
+//   UTF-8 functions
+//////////////////////////////////////////////////
+
+// IsValidUTF scans a string and checks if it is UTF-compliant
+// Most problems seem to come from 8-bit characters that are not ASCII with a value  > 0x80
+PRBool
+IsValidUTF8(const char* aBuffer)
+{
+    const char *c = aBuffer;
+    const char *end = aBuffer + strlen(aBuffer);
+    const char *lastchar = c;     // pre-initialize in case of 0-length buffer
+    PRUint32 ucs2bytes = 0;
+    PRUint32 utf8bytes = 0;
+    while (c < end && *c) {
+        lastchar = c;
+        ucs2bytes++;
+
+        if  ( (*c & 0x80) == 0x00 )     // ASCII
+            c++;
+        else if ( (*c & 0xE0) == 0xC0 ) // 2 byte
+            c += 2;
+        else if ( (*c & 0xF0) == 0xE0 ) // 3 byte
+            c += 3;
+        else if ( (*c & 0xF8) == 0xF0 ) // 4 byte
+            c += 4;
+        else if ( (*c & 0xFC) == 0xF8 ) // 5 byte
+            c += 5;
+        else if ( (*c & 0xFE) == 0xFC ) // 6 byte
+            c += 6;
+        else {
+            break; // Otherwise we go into an infinite loop.  But what happens now?
+        }
+    }
+    if (c != end) {
+        #ifdef ICAL_DEBUG_ALL
+            printf( "IsValidUTF8 Invalid UTF-8 string \"%s\"\n", aBuffer );
+        #endif
+        utf8bytes = 0;
+         return false;
+    }
+
+    utf8bytes = c - aBuffer;
+    return true;
+}
+
+// strForceUTF8 checks if a string is UTF-8 encoded, and if not assumes it made from  8-bit characters.
+// If not UTF-8, all non-ASCII characters are replaced with '?'
+// TODO: write or hook  a converter to convert non-ASCII to UTF-8
+const char* strForceUTF8(const char * str)
+{
+#define CHAR_INVALID '?'
+    const char* result = str;
+    if (!IsValidUTF8( result ) ) {
+        // make sure there are only ASCII chars in the string
+        char *p = (char *)result;
+        for( int i=0; '\0' != p[i]; i++ )
+        if(!( (p[i] & 0x80) == 0x00) )
+            p[i] = CHAR_INVALID;
+    }
+    return result;
+}
+
+
 int gEventCount = 0;
 int gEventDisplayCount = 0;
 
@@ -171,7 +235,7 @@ oeICalEventImpl::oeICalEventImpl()
         m_stamp->m_datetime = ConvertFromPrtime( nowinms );
     }
     m_id = nsnull;
-    // XXX m_title: should a nsACString be initialized???
+    m_title.SetIsVoid(true);
     m_description = nsnull;
     m_location = nsnull;
     m_category = nsnull;
@@ -289,8 +353,7 @@ NS_IMETHODIMP oeICalEventImpl::GetTitle(nsACString& aRetVal)
     aRetVal =  m_title ;
 
 #ifdef ICAL_DEBUG_ALL
-//    printf( "\"%s\"\n", aRetVal);
-    printf( "\"??\"\n" )
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get()  );
 #endif
     return NS_OK;
 }
@@ -298,10 +361,11 @@ NS_IMETHODIMP oeICalEventImpl::GetTitle(nsACString& aRetVal)
 NS_IMETHODIMP oeICalEventImpl::SetTitle(const nsACString& aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-//    printf( "SetTitle( %s )\n", aNewVal );
-      printf( "SetTitle( ?? )\n" );
+    printf( "SetTitle( %s )\n", PromiseFlatCString( aNewVal ).get()  );
 #endif
+
     m_title = aNewVal;
+
     return NS_OK;
 }
 
@@ -1090,13 +1154,12 @@ NS_IMETHODIMP oeICalEventImpl::SetRecurWeekNumber(PRInt16 aNewVal)
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::GetIcalString(char **aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetIcalString(nsACString& aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetIcalString() = " );
 #endif
     
-    *aRetVal = nsnull;
     icalcomponent *vcalendar = AsIcalComponent();
     if ( !vcalendar ) {
         #ifdef ICAL_DEBUG
@@ -1107,27 +1170,26 @@ NS_IMETHODIMP oeICalEventImpl::GetIcalString(char **aRetVal)
 
     char *str = icalcomponent_as_ical_string( vcalendar );
     if( str ) {
-        *aRetVal= (char*) nsMemory::Clone( str, strlen(str)+1);
-        if( *aRetVal == nsnull )
-            return  NS_ERROR_OUT_OF_MEMORY;
+		aRetVal = str;
+//        *aRetVal= (char*) nsMemory::Clone( str, strlen(str)+1);
     } else
-        *aRetVal= EmptyReturn();
+        aRetVal.Truncate();
     icalcomponent_free( vcalendar );
 
 #ifdef ICAL_DEBUG_ALL
-    printf( "\"%s\"\n", *aRetVal );
+    printf( "\"%s\"\n", PromiseFlatCString( aRetVal ).get() );
 #endif
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::ParseIcalString(const char *aNewVal, PRBool *aRetVal)
+NS_IMETHODIMP oeICalEventImpl::ParseIcalString(const nsACString& aNewVal, PRBool *aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "ParseIcalString( %s )\n", aNewVal );
+    printf( "ParseIcalString( %s )\n", PromiseFlatCString( aNewVal ).get() );
 #endif
     
     *aRetVal = false;
-    icalcomponent *comp = icalparser_parse_string( aNewVal );
+    icalcomponent *comp = icalparser_parse_string( PromiseFlatCString( aNewVal ).get() );
     if( comp ) {
         if( ParseIcalComponent( comp ) )
             *aRetVal = true;
@@ -1497,12 +1559,9 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_summary( prop );
-	    nsCString tmpCString;
-        tmpCString = tmpstr;
-        SetTitle(  tmpCString );
+        SetTitle( nsDependentCString( strForceUTF8( tmpstr ) ) );
     } else if( !m_title.IsEmpty() ) {
 	    m_title.Truncate();
-	    //m_title.SetIsVoid(PR_TRUE);
     }
 
 //description
@@ -1935,7 +1994,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //title
     if( !m_title.IsEmpty() ) {
-        prop = icalproperty_new_summary( m_title.get() );
+        prop = icalproperty_new_summary( PromiseFlatCString( m_title ).get() );
         icalcomponent_add_property( vevent, prop );
     }
     //description

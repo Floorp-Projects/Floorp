@@ -2460,12 +2460,12 @@ NS_IMETHODIMP oeICalFilter::SetRecurWeekNumber(PRInt16 aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetIcalString(char **aRetVal)
+NS_IMETHODIMP oeICalFilter::GetIcalString(nsACString& aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::ParseIcalString(const char *aNewVal, PRBool *aRetVal)
+	NS_IMETHODIMP oeICalFilter::ParseIcalString(const nsACString& aNewVal, PRBool *aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
