@@ -61,6 +61,7 @@ var gMarkFlaggedCheckbox;
 var gDeleteCheckbox;
 var gKillCheckbox;
 var gWatchCheckbox;
+var gDeleteFromServerCheckbox;
 var gFilterActionList;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
@@ -281,6 +282,7 @@ function initializeFilterWidgets()
     gDeleteCheckbox = document.getElementById("delete");
     gKillCheckbox = document.getElementById("kill");
     gWatchCheckbox = document.getElementById("watch");
+    gDeleteFromServerCheckbox = document.getElementById("deleteFromServer");
     gFilterActionList = document.getElementById("filterActionList");
 }
 
@@ -334,6 +336,8 @@ function initializeDialog(filter)
         gWatchCheckbox.checked = true;
       else if (filterAction.type == nsMsgFilterAction.KillThread)
         gKillCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.DeleteFromPop3Server)
+        gDeleteFromServerCheckbox.checked = true;
 
       SetUpFilterActionList(getScope(filter));
     }
@@ -488,6 +492,13 @@ function saveFilter()
     gFilter.appendAction(filterAction);
   }
 
+  if (gDeleteFromServerCheckbox.checked)
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.DeleteFromPop3Server;
+    gFilter.appendAction(filterAction);
+  }
+
   if (gFilter.actionList.Count() <= 0)
   {
     str = gFilterBundle.getString("mustSelectAction");
@@ -544,6 +555,17 @@ function SetUpFilterActionList(aScope)
     element = elements[i];
 
     if (aScope != Components.interfaces.nsMsgSearchScope.newsFilter)
+      element.removeAttribute("disabled");
+    else
+      element.setAttribute("disabled", "true");
+  }
+
+  elements = gFilterActionList.getElementsByAttribute("enableforpop3","true");
+  for (i=0;i<elements.length;i++) 
+  {
+    element = elements[i];
+
+    if (aScope == Components.interfaces.nsMsgSearchScope.offlineMailFilter)
       element.removeAttribute("disabled");
     else
       element.setAttribute("disabled", "true");

@@ -310,3 +310,35 @@ nsPop3IncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPop3IncomingServer::SetRunningProtocol(nsIPop3Protocol *aProtocol)
+{
+  NS_ASSERTION(!aProtocol || !m_runningProtocol, "overriding running protocol");
+  m_runningProtocol = aProtocol;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPop3IncomingServer::GetRunningProtocol(nsIPop3Protocol **aProtocol)
+{
+  NS_ENSURE_ARG_POINTER(aProtocol);
+  NS_IF_ADDREF(*aProtocol = m_runningProtocol);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPop3IncomingServer::MarkMessagesDeleted(const char **aUIDLArray, PRUint32 aCount, PRBool aDeleteMsgs)
+{
+  if (m_runningProtocol)
+    return m_runningProtocol->MarkMessagesDeleted(aUIDLArray, aCount, aDeleteMsgs);
+
+  nsXPIDLCString hostName;
+  nsXPIDLCString userName;
+  nsCOMPtr<nsIFileSpec> localPath;
+
+  GetLocalPath(getter_AddRefs(localPath));
+  
+  GetHostName(getter_Copies(hostName));
+  GetUsername(getter_Copies(userName));
+  
+  // do it all in one fell swoop
+  return nsPop3Protocol::MarkMsgDeletedForHost(hostName, userName, localPath, aUIDLArray, aCount, aDeleteMsgs);
+}

@@ -23,6 +23,7 @@
 <!ENTITY label.label "Label the message:">
 <!ENTITY killThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
+<!ENTITY deleteFromServer.label "Delete from Pop3 server">
 <!ENTITY filterName.label "Filter name:">
 <!ENTITY filterName.accesskey "i">
 

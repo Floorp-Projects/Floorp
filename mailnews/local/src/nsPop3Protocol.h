@@ -45,6 +45,7 @@
 #include "nsIPop3Sink.h"
 #include "nsMsgLineBuffer.h"
 #include "nsMsgProtocol.h"
+#include "nsIPop3Protocol.h"
 #include "MailNewsTypes.h"
 #include "nsLocalStringBundle.h"
 #include "nsIMsgStatusFeedback.h"
@@ -271,12 +272,15 @@ typedef struct _Pop3ConData {
 #define POP3_AUTH_FAILURE           0x00000008  /* extended code said authentication failed */
 
 
-class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer
+class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer, public nsIPop3Protocol
 {
 public:
   nsPop3Protocol(nsIURI* aURL);  
   virtual ~nsPop3Protocol();
   
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPOP3PROTOCOL
+
   nsresult Initialize(nsIURI * aURL);
   virtual nsresult LoadUrl(nsIURI *aURL, nsISupports * aConsumer = nsnull);
 
@@ -290,6 +294,13 @@ public:
   // for nsMsgLineBuffer
   virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
+  static void MarkMsgDeletedInHashTable(PLHashTable *hashTable, const char *uidl, 
+                                  PRBool deleteChar, PRBool *changed);
+
+  static nsresult MarkMsgDeletedForHost(const char *hostName, const char *userName,
+                                      nsIFileSpec *mailDirectory, 
+                                      const char **UIDLArray, PRUint32 count, 
+                                      PRBool deleteMsgs);
 private:
   nsCString m_ApopTimestamp;
   nsCOMPtr<nsIMsgStringService> mStringService;

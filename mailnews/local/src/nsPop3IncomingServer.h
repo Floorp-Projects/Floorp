@@ -42,6 +42,7 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
+#include "nsIPop3Protocol.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsPop3IncomingServer : public nsMsgIncomingServer,
@@ -65,6 +66,7 @@ public:
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
 private:    
     PRUint32 m_capabilityFlags;
+    nsCOMPtr <nsIPop3Protocol> m_runningProtocol;
 };
 
 #endif

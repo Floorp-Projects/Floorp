@@ -22,7 +22,7 @@
  * Contributor(s):
  *   jefft@netscape.com
  *   putterman@netscape.com
- *   bienvenu@netscape.com
+ *   bienvenu@nventure.com
  *   warren@netscape.com
  *   alecf@netscape.com
  *   sspitzer@netscape.com
@@ -102,11 +102,6 @@
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-
-extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* mailDirectory);
-extern void SavePopData(char *data, nsIFileSpec* maildirectory);
-extern void net_pop3_mark_if_in_server(char *data, char *uidl, PRBool deleteChar, PRBool *changed);
-extern void KillPopData(char* data);
 
 //////////////////////////////////////////////////////////////////////////////
 // nsLocal
@@ -2954,16 +2949,15 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message,
 // The next time we look at mail the message will be deleted from the server.
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool deleteMsgs)
+nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool aDeleteMsgs)
 {
   char      *uidl;
   char      *header = NULL;
-  PRUint32  size = 0, len = 0, i = 0;
+  PRUint32  size = 0, len = 0;
   nsCOMPtr <nsIMsgDBHdr> hdr;
   PRBool leaveOnServer = PR_FALSE;
   PRBool deleteMailLeftOnServer = PR_FALSE;
   PRBool changed = PR_FALSE;
-  char *popData = nsnull;
   nsCOMPtr<nsIPop3IncomingServer> pop3MailServer;
   nsCOMPtr<nsIFileSpec> localPath;
   nsCOMPtr<nsIFileSpec> mailboxSpec;
@@ -2996,7 +2990,7 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
   NS_ENSURE_SUCCESS(rv,rv);
   
   PRUint32 srcCount;
-  messages->Count(&srcCount);
+  aMessages->Count(&srcCount);
 
   nsXPIDLCString hostName;
   nsXPIDLCString userName;
@@ -3004,12 +2998,16 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
   server->GetHostName(getter_Copies(hostName));
   server->GetUsername(getter_Copies(userName));
   
+  char ** messageUIDLs = (char **) PR_MALLOC(sizeof(const char *) * srcCount);
+  if (!messageUIDLs)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   header = (char*) PR_MALLOC(512);
-  for (i = 0; header && (i < srcCount); i++)
+  for (PRInt32 uidlIndex = 0, i = 0; header && (i < srcCount); i++)
   {
     /* get uidl for this message */
     uidl = nsnull;
-    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(messages, i, &rv));
+    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(aMessages, i, &rv));
     
     PRUint32 flags = 0;
     
@@ -3043,8 +3041,6 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
       }
       if (uidl)
       {
-        if (!popData)
-          popData = ReadPopData(hostName, userName, localPath);
         uidl += X_UIDL_LEN + 2; // skip UIDL: header
         len = strlen(uidl);
         
@@ -3055,19 +3051,17 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
           *lastChar = '\0';
           lastChar --;
         }
-              
-        net_pop3_mark_if_in_server(popData, uidl, deleteMsgs, &changed);
+        messageUIDLs[uidlIndex++] = strdup(uidl);
       }
     }
   }
   PR_Free(header);
-  if (popData)
-  {
-    if (changed)
-      SavePopData(popData, localPath);
-    KillPopData(popData);
-    popData = nsnull;
-  }
+
+  pop3MailServer->MarkMessagesDeleted((const char **) messageUIDLs, uidlIndex, aDeleteMsgs); 
+  for ( PRUint32 freeIndex=0 ; freeIndex < uidlIndex ; ++freeIndex ) 
+    PR_Free(messageUIDLs[freeIndex]);
+  PR_Free(messageUIDLs);
+
   mailboxSpec->CloseStream();
   return rv;
 }

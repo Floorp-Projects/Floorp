@@ -153,6 +153,12 @@ Contributor(s):
 
           <listitem allowevents="true">
             <listcell>
+              <checkbox id="deleteFromServer" enableforpop3="true" label="&deleteFromServer.label;"/>
+            </listcell>
+          </listitem>
+
+          <listitem allowevents="true">
+            <listcell>
               <checkbox id="kill" enablefornews="true" label="&killThread.label;"/>
             </listcell>
           </listitem>
@@ -162,6 +168,7 @@ Contributor(s):
               <checkbox id="watch" enablefornews="true" label="&watchThread.label;"/>
             </listcell>
           </listitem>
+
 
         </listbox>
       </vbox>

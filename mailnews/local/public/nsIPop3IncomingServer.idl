@@ -37,6 +37,9 @@
 
 #include "nsISupports.idl"
 
+interface nsIPop3Protocol;
+interface nsISupportsArray;
+
 [scriptable, uuid(758a8970-e628-11d2-b7fc-00805f05ffa5)]
 interface nsIPop3IncomingServer : nsISupports {
   attribute boolean leaveMessagesOnServer;
@@ -46,6 +49,9 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute unsigned long pop3CapabilityFlags;
   attribute boolean deleteByAgeFromServer;
   attribute long numDaysToLeaveOnServer;
+  attribute nsIPop3Protocol runningProtocol;
+  void markMessagesDeleted([array, size_is(count)] in string aUidlStrings, in unsigned long count,
+                            in boolean aDeleteMsgs);
 };
 
 

@@ -356,7 +356,7 @@ nsPop3Sink::AbortMailDelivery()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsPop3Sink::IncorporateBegin(const char* uidlString,
                              nsIURI* aURL,
                              PRUint32 flags,
@@ -518,8 +518,8 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
   return NS_OK;
 }
 
-nsresult
-nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
+NS_IMETHODIMP
+nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow)
 {
   if (m_buildMessageUri && m_baseMessageUri)
   {
@@ -535,7 +535,7 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
   if (NS_FAILED(rv)) return rv;
   NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
   if (m_newMailParser)
-    m_newMailParser->PublishMsgHeader(msgWindow); 
+    m_newMailParser->PublishMsgHeader(aMsgWindow); 
 
 #ifdef DEBUG
   printf("Incorporate message complete.\n");
@@ -543,7 +543,7 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsPop3Sink::IncorporateAbort(PRBool uidlDownload)
 {
   nsresult rv;
@@ -582,10 +582,17 @@ nsPop3Sink::BiffGetNewMail()
 }
 
 nsresult
-nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
+nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages, PRBool notify)
 {
   m_biffState = aBiffState;
+  if (notify && m_folder && numNewMessages > 0 && numNewMessages != m_numNewMessages 
+      && aBiffState == nsIMsgFolder::nsMsgBiffState_NewMail)
+  {
+    m_folder->SetNumNewMessages(numNewMessages);
+    m_folder->SetBiffState(aBiffState);
+  }
   m_numNewMessages = numNewMessages;
+
   return NS_OK;
 }
 

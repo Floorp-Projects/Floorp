@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,12 +14,8 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
- *
  * Contributor(s):
+ * bienvenu@nventure.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,41 +32,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIPop3IncomingServer.idl"
-#include "nsIMsgFolder.idl"
 
-interface nsIURI;
+interface nsISupportsArray;
 
-[scriptable, uuid(EC54D490-BB00-11D2-AB5E-00805F8AC968)]
-interface nsIPop3Sink : nsISupports {
-
-  attribute boolean userAuthenticated;
-  attribute string mailAccountURL;
-  attribute boolean buildMessageUri;
-  attribute string messageUri;
-  attribute string baseMessageUri;
-
-  boolean BeginMailDelivery(in boolean uidlDownload, in nsIMsgWindow msgWindow);
-  void endMailDelivery();
-  void AbortMailDelivery();
-
-  /* returns a closure ? */
-  [noscript] voidPtr IncorporateBegin(in string uidlString, in nsIURI aURL,
-                                      in unsigned long flags);
-
-  [noscript] void IncorporateWrite(in string block,
-                                   in long length);
-
-  [noscript] void IncorporateComplete(in nsIMsgWindow aMsgWindow);
-  [noscript] void IncorporateAbort(in boolean uidlDownload);
-
-  void BiffGetNewMail();
-
-  void SetBiffStateAndUpdateFE(in unsigned long biffState, in long numNewMessages, in boolean notify);
-
-  [noscript] void SetSenderAuthedFlag(in voidPtr closure, in boolean authed);
-
-  attribute nsIPop3IncomingServer popServer;
-  attribute nsIMsgFolder folder;
-
+[scriptable, uuid(853daefb-411a-41f5-97e0-2f93e79b7302)]
+interface nsIPop3Protocol : nsISupports {
+  void markMessagesDeleted([array, size_is(count)] in string aUidlStrings, 
+                            in unsigned long count, in boolean aDeleteMsgs);
 };
+
+

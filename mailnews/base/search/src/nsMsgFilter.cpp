@@ -78,8 +78,8 @@ NS_IMPL_GETSET(nsMsgRuleAction, Type, nsMsgRuleActionType, m_type)
 
 NS_IMETHODIMP nsMsgRuleAction::SetPriority(nsMsgPriorityValue aPriority)
 {
-  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::ChangePriority,
-                 NS_ERROR_ILLEGAL_VALUE);
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::ChangePriority, 
+                NS_ERROR_ILLEGAL_VALUE);
   m_priority = aPriority;
   return NS_OK;
 }
@@ -107,8 +107,7 @@ NS_IMETHODIMP
 nsMsgRuleAction::GetLabel(nsMsgLabelValue *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::Label,
-                 NS_ERROR_ILLEGAL_VALUE);
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::Label, NS_ERROR_ILLEGAL_VALUE);
   *aResult = m_label;
   return NS_OK;
 }
@@ -159,51 +158,51 @@ NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
 {
   NS_ENSURE_ARG_POINTER(name);  
   *name = ToNewUnicode(m_filterName);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetFilterName(const PRUnichar *name)
 {
   m_filterName.Assign(name);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetFilterDesc(char **description)
 {
   NS_ENSURE_ARG_POINTER(description);
   *description = ToNewCString(m_description);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetFilterDesc(const char *description)
 {
   m_description.Assign(description);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetUnparsedBuffer(char **unparsedBuffer)
 {
   NS_ENSURE_ARG_POINTER(unparsedBuffer);
   *unparsedBuffer = ToNewCString(m_unparsedBuffer);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetUnparsedBuffer(const char *unparsedBuffer)
 {
   m_unparsedBuffer.Assign(unparsedBuffer);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::AddTerm(     
-	nsMsgSearchAttribValue attrib,    /* attribute for this term          */
-	nsMsgSearchOpValue op,         /* operator e.g. opContains           */
-	nsIMsgSearchValue *value,        /* value e.g. "Dogbert"               */
-	PRBool BooleanAND, 	       /* PR_TRUE if AND is the boolean operator.
-                                  PR_FALSE if OR is the boolean operators */
-	const char * arbitraryHeader)  /* arbitrary header specified by user.
-                                      ignored unless attrib = attribOtherHeader */
+                                   nsMsgSearchAttribValue attrib,    /* attribute for this term          */
+                                   nsMsgSearchOpValue op,         /* operator e.g. opContains           */
+                                   nsIMsgSearchValue *value,        /* value e.g. "Dogbert"               */
+                                  PRBool BooleanAND, 	    /* PR_TRUE if AND is the boolean operator.
+                                                            PR_FALSE if OR is the boolean operators */
+                                  const char * arbitraryHeader)  /* arbitrary header specified by user.
+                                  ignored unless attrib = attribOtherHeader */
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::AppendTerm(nsIMsgSearchTerm * aTerm)
@@ -299,8 +298,8 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
   nsCOMPtr<nsIMsgSearchTerm> term;
   rv = m_termList->QueryElementAt(termIndex, NS_GET_IID(nsIMsgSearchTerm),
                                     (void **)getter_AddRefs(term));
-	if (NS_SUCCEEDED(rv) && term)
-	{
+  if (NS_SUCCEEDED(rv) && term)
+  {
     if(attrib)
       term->GetAttrib(attrib);
     if(op)
@@ -309,10 +308,10 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
       term->GetValue(value);
     if(booleanAnd)
       term->GetBooleanAnd(booleanAnd);
-    if (attrib && arbitraryHeader) {
-		  if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
-        term->GetArbitraryHeader(arbitraryHeader);
-    }
+    if (attrib && arbitraryHeader 
+        && *attrib > nsMsgSearchAttrib::OtherHeader 
+        && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+      term->GetArbitraryHeader(arbitraryHeader);
   }
   return NS_OK;
 }
@@ -332,8 +331,8 @@ NS_IMETHODIMP nsMsgFilter::SetSearchTerms(nsISupportsArray *aSearchList)
 
 NS_IMETHODIMP nsMsgFilter::SetScope(nsIMsgSearchScopeTerm *aResult)
 {
-	m_scope = aResult;
-	return NS_OK;
+    m_scope = aResult;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
@@ -435,28 +434,23 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
 									const char *headers, PRUint32 headersSize, PRBool *pResult)
 {
   NS_ENSURE_ARG_POINTER(folder);
-    // use offlineMail because
-    nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::offlineMail, folder);
-    if (!scope) return NS_ERROR_OUT_OF_MEMORY;
-
-    nsXPIDLCString folderCharset;
-    folder->GetCharset(getter_Copies(folderCharset));
-    nsresult rv = nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
-                                                           folderCharset.get(),
-                                                           scope,
-                                                           db, 
-                                                           headers,
-                                                           headersSize,
-														   pResult);
-	delete scope;
-	return rv;
+  // use offlineMail because
+  nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::offlineMail, folder);
+  if (!scope) return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsXPIDLCString folderCharset;
+  folder->GetCharset(getter_Copies(folderCharset));
+  nsresult rv = nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
+                  folderCharset.get(),  scope,  db,  headers,  headersSize, pResult);
+  delete scope;
+  return rv;
 }
 
 void
 nsMsgFilter::SetFilterList(nsIMsgFilterList *filterList)
 {
-    // hold weak ref
-	m_filterList = filterList;
+  // hold weak ref
+  m_filterList = filterList;
 }
 
 nsresult
@@ -469,7 +463,7 @@ nsMsgFilter::GetFilterList(nsIMsgFilterList **aResult)
 
 void nsMsgFilter::SetFilterScript(nsCString *fileName) 
 {
-	m_scriptFileName = *fileName;
+  m_scriptFileName = *fileName;
 }
 
 nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &moveValue)
@@ -714,21 +708,21 @@ struct RuleActionsTableEntry
 	const char			*actionFilingStr;	/* used for filing out filters, don't translate! */
 };
 
-// Because HP_UX native C++ compiler can't initialize static objects with ints,
-//  we can't initialize this structure directly, so we have to do it in two phases.
 static struct RuleActionsTableEntry ruleActionsTable[] =
 {
-  { nsMsgFilterAction::MoveToFolder,    nsMsgFilterType::Inbox, 0, /*XP_FILTER_MOVE_TO_FOLDER*/   "Move to folder"},
-  { nsMsgFilterAction::ChangePriority,  nsMsgFilterType::Inbox, 0, /*XP_FILTER_CHANGE_PRIORITY*/  "Change priority"},
-  { nsMsgFilterAction::Delete,          nsMsgFilterType::All,   0, /*XP_FILTER_DELETE */          "Delete"},
-  { nsMsgFilterAction::MarkRead,        nsMsgFilterType::All,   0, /*XP_FILTER_MARK_READ */       "Mark read"},
-  { nsMsgFilterAction::KillThread,      nsMsgFilterType::All,   0, /*XP_FILTER_KILL_THREAD */     "Ignore thread"},
-  { nsMsgFilterAction::WatchThread,     nsMsgFilterType::All,   0, /*XP_FILTER_WATCH_THREAD */    "Watch thread"},
-  { nsMsgFilterAction::MarkFlagged,     nsMsgFilterType::All,   0, /*XP_FILTER_MARK_FLAGGED */    "Mark flagged"},
-  { nsMsgFilterAction::Label,           nsMsgFilterType::All,   0, /*XP_FILTER_LABEL */           "Label"},
-  { nsMsgFilterAction::Reply,           nsMsgFilterType::All,   0, /*XP_FILTER_REPLY */           "Reply"},
-  { nsMsgFilterAction::Forward,         nsMsgFilterType::All,   0, /*XP_FILTER_FORWARD */         "Forward"},
-  { nsMsgFilterAction::StopExecution,   nsMsgFilterType::All,   0, /*XP_FILTER_STOP_EXECUTION */   "Stop execution"}
+  { nsMsgFilterAction::MoveToFolder,    nsMsgFilterType::Inbox, 0,  "Move to folder"},
+  { nsMsgFilterAction::ChangePriority,  nsMsgFilterType::Inbox, 0,  "Change priority"},
+  { nsMsgFilterAction::Delete,          nsMsgFilterType::All,   0,  "Delete"},
+  { nsMsgFilterAction::MarkRead,        nsMsgFilterType::All,   0,  "Mark read"},
+  { nsMsgFilterAction::KillThread,      nsMsgFilterType::All,   0,  "Ignore thread"},
+  { nsMsgFilterAction::WatchThread,     nsMsgFilterType::All,   0,  "Watch thread"},
+  { nsMsgFilterAction::MarkFlagged,     nsMsgFilterType::All,   0,  "Mark flagged"},
+  { nsMsgFilterAction::Label,           nsMsgFilterType::All,   0,  "Label"},
+  { nsMsgFilterAction::Reply,           nsMsgFilterType::All,   0,  "Reply"},
+  { nsMsgFilterAction::Forward,         nsMsgFilterType::All,   0,  "Forward"},
+  { nsMsgFilterAction::StopExecution,   nsMsgFilterType::All,   0,  "Stop execution"},
+  { nsMsgFilterAction::DeleteFromPop3Server, nsMsgFilterType::All,   0, "Delete from Pop3 server"},
+  { nsMsgFilterAction::LeaveOnPop3Server, nsMsgFilterType::All,   0, "Leave on Pop3 server"},
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
@@ -738,7 +732,7 @@ const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
   for (int i = 0; i < numActions; i++)
   {
     if (action == ruleActionsTable[i].action)
-      return ruleActionsTable[i].actionFilingStr; // XP_GetString(ruleActionsTable[i].xp_strIndex);
+      return ruleActionsTable[i].actionFilingStr; 
   }
   return "";
 }
@@ -760,14 +754,14 @@ const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
 
 nsMsgRuleActionType nsMsgFilter::GetActionForFilingStr(nsCString &actionStr)
 {
-	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
-
-	for (int i = 0; i < numActions; i++)
-	{
-		if (actionStr.Equals(ruleActionsTable[i].actionFilingStr))
-			return ruleActionsTable[i].action;
-	}
-	return nsMsgFilterAction::None;
+  int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
+  
+  for (int i = 0; i < numActions; i++)
+  {
+    if (actionStr.Equals(ruleActionsTable[i].actionFilingStr))
+      return ruleActionsTable[i].action;
+  }
+  return nsMsgFilterAction::None;
 }
 
 PRInt16
@@ -782,9 +776,9 @@ nsMsgFilter::GetVersion()
 #ifdef DEBUG
 void nsMsgFilter::Dump()
 {
-	nsCString s;
-	CopyUCS2toASCII(m_filterName, s);
-	printf("filter %s type = %c desc = %s\n", s.get(), m_type + '0', m_description.get());
+  nsCAutoString s;
+  CopyUCS2toASCII(m_filterName, s);
+  printf("filter %s type = %c desc = %s\n", s.get(), m_type + '0', m_description.get());
 }
 #endif
 

@@ -468,18 +468,18 @@ NS_IMPL_ISUPPORTS1(nsParseMailMessageState, nsIMsgParseMailMsgState)
 
 nsParseMailMessageState::nsParseMailMessageState()
 {
-	m_position = 0;
-	m_IgnoreXMozillaStatus = PR_FALSE;
-	m_state = nsIMsgParseMailMsgState::ParseBodyState;
-	Clear();
+  m_position = 0;
+  m_IgnoreXMozillaStatus = PR_FALSE;
+  m_state = nsIMsgParseMailMsgState::ParseBodyState;
+  Clear();
 
   m_HeaderAddressParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()
 {
-	ClearAggregateHeader (m_toList);
-	ClearAggregateHeader (m_ccList);
+  ClearAggregateHeader (m_toList);
+  ClearAggregateHeader (m_ccList);
 }
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
@@ -732,11 +732,11 @@ NS_IMETHODIMP nsParseMailMessageState::FinishHeader()
 
 NS_IMETHODIMP nsParseMailMessageState::GetAllHeaders(char ** pHeaders, PRInt32 *pHeadersSize)
 {
-	if (!pHeaders || !pHeadersSize)
-		return NS_ERROR_NULL_POINTER;
-	*pHeaders = m_headers.GetBuffer();
-	*pHeadersSize = m_headers.GetBufferPos();
-	return NS_OK;
+  if (!pHeaders || !pHeadersSize)
+    return NS_ERROR_NULL_POINTER;
+  *pHeaders = m_headers.GetBuffer();
+  *pHeadersSize = m_headers.GetBufferPos();
+  return NS_OK;
 }
 
 // generate headers as a string, with CRLF between the headers
@@ -759,347 +759,347 @@ NS_IMETHODIMP nsParseMailMessageState::GetHeaders(char ** pHeaders)
 
 struct message_header *nsParseMailMessageState::GetNextHeaderInAggregate (nsVoidArray &list)
 {
-	// When parsing a message with multiple To or CC header lines, we're storing each line in a 
-	// list, where the list represents the "aggregate" total of all the header. Here we get a new
-	// line for the list
-
-	struct message_header *header = (struct message_header*) PR_Calloc (1, sizeof(struct message_header));
-	list.AppendElement (header);
-	return header;
+  // When parsing a message with multiple To or CC header lines, we're storing each line in a 
+  // list, where the list represents the "aggregate" total of all the header. Here we get a new
+  // line for the list
+  
+  struct message_header *header = (struct message_header*) PR_Calloc (1, sizeof(struct message_header));
+  list.AppendElement (header);
+  return header;
 }
 
 void nsParseMailMessageState::GetAggregateHeader (nsVoidArray &list, struct message_header *outHeader)
 {
-	// When parsing a message with multiple To or CC header lines, we're storing each line in a 
-	// list, where the list represents the "aggregate" total of all the header. Here we combine
-	// all the lines together, as though they were really all found on the same line
-
-	struct message_header *header = nsnull;
-	int length = 0;
-	int i;
-
-	// Count up the bytes required to allocate the aggregated header
-	for (i = 0; i < list.Count(); i++)
-	{
-		header = (struct message_header*) list.ElementAt(i);
-		length += (header->length + 1); //+ for ","
-		NS_ASSERTION(header->length == (PRInt32)strlen(header->value), "header corrupted");
-	}
-
-	if (length > 0)
-	{
-		char *value = (char*) PR_MALLOC (length + 1); //+1 for null term
-		if (value)
-		{
-			// Catenate all the To lines together, separated by commas
-			value[0] = '\0';
-			int size = list.Count();
-			for (i = 0; i < size; i++)
-			{
-				header = (struct message_header*) list.ElementAt(i);
-				PL_strcat (value, header->value);
-				if (i + 1 < size)
-					PL_strcat (value, ",");
-			}
-			outHeader->length = length;
-			outHeader->value = value;
-		}
-	}
-	else
-	{
-		outHeader->length = 0;
-		outHeader->value = nsnull;
-	}
+  // When parsing a message with multiple To or CC header lines, we're storing each line in a 
+  // list, where the list represents the "aggregate" total of all the header. Here we combine
+  // all the lines together, as though they were really all found on the same line
+  
+  struct message_header *header = nsnull;
+  int length = 0;
+  int i;
+  
+  // Count up the bytes required to allocate the aggregated header
+  for (i = 0; i < list.Count(); i++)
+  {
+    header = (struct message_header*) list.ElementAt(i);
+    length += (header->length + 1); //+ for ","
+    NS_ASSERTION(header->length == (PRInt32)strlen(header->value), "header corrupted");
+  }
+  
+  if (length > 0)
+  {
+    char *value = (char*) PR_MALLOC (length + 1); //+1 for null term
+    if (value)
+    {
+      // Catenate all the To lines together, separated by commas
+      value[0] = '\0';
+      int size = list.Count();
+      for (i = 0; i < size; i++)
+      {
+        header = (struct message_header*) list.ElementAt(i);
+        PL_strcat (value, header->value);
+        if (i + 1 < size)
+          PL_strcat (value, ",");
+      }
+      outHeader->length = length;
+      outHeader->value = value;
+    }
+  }
+  else
+  {
+    outHeader->length = 0;
+    outHeader->value = nsnull;
+  }
 }
 
 void nsParseMailMessageState::ClearAggregateHeader (nsVoidArray &list)
 {
-	// Reset the aggregate headers. Free only the message_header struct since 
-	// we don't own the value pointer
-
-	for (int i = 0; i < list.Count(); i++)
-		PR_Free ((struct message_header*) list.ElementAt(i));
-	list.Clear();
+  // Reset the aggregate headers. Free only the message_header struct since 
+  // we don't own the value pointer
+  
+  for (int i = 0; i < list.Count(); i++)
+    PR_Free ((struct message_header*) list.ElementAt(i));
+  list.Clear();
 }
 
 // We've found a new envelope to parse.
 int nsParseMailMessageState::StartNewEnvelope(const char *line, PRUint32 lineLength)
 {
-	m_envelope_pos = m_position;
-	m_state = nsIMsgParseMailMsgState::ParseHeadersState;
-	m_position += lineLength;
-	m_headerstartpos = m_position;
-	return ParseEnvelope (line, lineLength);
+  m_envelope_pos = m_position;
+  m_state = nsIMsgParseMailMsgState::ParseHeadersState;
+  m_position += lineLength;
+  m_headerstartpos = m_position;
+  return ParseEnvelope (line, lineLength);
 }
 
 /* largely lifted from mimehtml.c, which does similar parsing, sigh...
- */
+*/
 int nsParseMailMessageState::ParseHeaders ()
 {
   char *buf = m_headers.GetBuffer();
   char *buf_end = buf + m_headers.GetBufferPos();
   while (buf < buf_end)
-	{
-	  char *colon = PL_strchr (buf, ':');
-	  char *end;
-	  char *value = 0;
-	  struct message_header *header = 0;
-
-	  if (! colon)
-		break;
-
-	  end = colon;
-	  while (end > buf && (*end == ' ' || *end == '\t'))
-		end--;
-
-	  switch (buf [0])
-		{
-		case 'C': case 'c':
-		  if (!nsCRT::strncasecmp ("CC", buf, end - buf))
-			header = GetNextHeaderInAggregate(m_ccList);
-		  else if (!nsCRT::strncasecmp ("Content-Type", buf, end - buf))
-		  header = &m_content_type;
-		  break;
-		case 'D': case 'd':
-		  if (!nsCRT::strncasecmp ("Date", buf, end - buf))
-			header = &m_date;
-		  else if (!nsCRT::strncasecmp("Disposition-Notification-To", buf, end - buf))
-			header = &m_mdn_dnt;
-		  break;
-		case 'F': case 'f':
-		  if (!nsCRT::strncasecmp ("From", buf, end - buf))
-			header = &m_from;
-		  break;
+  {
+    char *colon = PL_strchr (buf, ':');
+    char *end;
+    char *value = 0;
+    struct message_header *header = 0;
+    
+    if (! colon)
+      break;
+    
+    end = colon;
+    while (end > buf && (*end == ' ' || *end == '\t'))
+      end--;
+    
+    switch (buf [0])
+    {
+    case 'C': case 'c':
+      if (!nsCRT::strncasecmp ("CC", buf, end - buf))
+        header = GetNextHeaderInAggregate(m_ccList);
+      else if (!nsCRT::strncasecmp ("Content-Type", buf, end - buf))
+        header = &m_content_type;
+      break;
+    case 'D': case 'd':
+      if (!nsCRT::strncasecmp ("Date", buf, end - buf))
+        header = &m_date;
+      else if (!nsCRT::strncasecmp("Disposition-Notification-To", buf, end - buf))
+        header = &m_mdn_dnt;
+      break;
+    case 'F': case 'f':
+      if (!nsCRT::strncasecmp ("From", buf, end - buf))
+        header = &m_from;
+      break;
     case 'I' : case 'i':
       if (!nsCRT::strncasecmp ("In-Reply-To", buf, end - buf))
         header = &m_in_reply_to;
       break;
-		case 'M': case 'm':
-		  if (!nsCRT::strncasecmp ("Message-ID", buf, end - buf))
-			header = &m_message_id;
-		  break;
-		case 'N': case 'n':
-		  if (!nsCRT::strncasecmp ("Newsgroups", buf, end - buf))
-			header = &m_newsgroups;
-		  break;
-		case 'O': case 'o':
-			if (!nsCRT::strncasecmp ("Original-Recipient", buf, end - buf))
-				header = &m_mdn_original_recipient;
-			break;
-		case 'R': case 'r':
-		  if (!nsCRT::strncasecmp ("References", buf, end - buf))
-			header = &m_references;
-		  else if (!nsCRT::strncasecmp ("Return-Path", buf, end - buf))
-			  header = &m_return_path;
-		   // treat conventional Return-Receipt-To as MDN
-		   // Disposition-Notification-To
-		  else if (!nsCRT::strncasecmp ("Return-Receipt-To", buf, end - buf))
-			  header = &m_mdn_dnt;
-		  break;
-		case 'S': case 's':
-		  if (!nsCRT::strncasecmp ("Subject", buf, end - buf))
-			header = &m_subject;
-		  else if (!nsCRT::strncasecmp ("Sender", buf, end - buf))
-			header = &m_sender;
-		  else if (!nsCRT::strncasecmp ("Status", buf, end - buf))
-			header = &m_status;
-		  break;
-		case 'T': case 't':
-		  if (!nsCRT::strncasecmp ("To", buf, end - buf))
-			header = GetNextHeaderInAggregate(m_toList);
-		  break;
-		case 'X':
-		  if (X_MOZILLA_STATUS2_LEN == end - buf &&
-			  !nsCRT::strncasecmp(X_MOZILLA_STATUS2, buf, end - buf) &&
-			  !m_IgnoreXMozillaStatus)
-			  header = &m_mozstatus2;
-		  else if ( X_MOZILLA_STATUS_LEN == end - buf &&
-			  !nsCRT::strncasecmp(X_MOZILLA_STATUS, buf, end - buf) && !m_IgnoreXMozillaStatus)
-			header = &m_mozstatus;
-		  // we could very well care what the priority header was when we 
-		  // remember its value. If so, need to remember it here. Also, 
-		  // different priority headers can appear in the same message, 
-		  // but we only rememeber the last one that we see.
-		  else if (!nsCRT::strncasecmp("X-Priority", buf, end - buf)
-			  || !nsCRT::strncasecmp("Priority", buf, end - buf))
-			  header = &m_priority;
-		  break;
-		}
-
-	  buf = colon + 1;
-	  while (*buf == ' ' || *buf == '\t')
-		buf++;
-
-	  value = buf;
-	  if (header)
-        header->value = value;
-
-  SEARCH_NEWLINE:
-	  while (*buf != 0 && *buf != nsCRT::CR && *buf != nsCRT::LF)
-		buf++;
-
-	  if (buf+1 >= buf_end)
-		;
-	  /* If "\r\n " or "\r\n\t" is next, that doesn't terminate the header. */
-	  else if (buf+2 < buf_end &&
+    case 'M': case 'm':
+      if (!nsCRT::strncasecmp ("Message-ID", buf, end - buf))
+        header = &m_message_id;
+      break;
+    case 'N': case 'n':
+      if (!nsCRT::strncasecmp ("Newsgroups", buf, end - buf))
+        header = &m_newsgroups;
+      break;
+    case 'O': case 'o':
+      if (!nsCRT::strncasecmp ("Original-Recipient", buf, end - buf))
+        header = &m_mdn_original_recipient;
+      break;
+    case 'R': case 'r':
+      if (!nsCRT::strncasecmp ("References", buf, end - buf))
+        header = &m_references;
+      else if (!nsCRT::strncasecmp ("Return-Path", buf, end - buf))
+        header = &m_return_path;
+      // treat conventional Return-Receipt-To as MDN
+      // Disposition-Notification-To
+      else if (!nsCRT::strncasecmp ("Return-Receipt-To", buf, end - buf))
+        header = &m_mdn_dnt;
+      break;
+    case 'S': case 's':
+      if (!nsCRT::strncasecmp ("Subject", buf, end - buf))
+        header = &m_subject;
+      else if (!nsCRT::strncasecmp ("Sender", buf, end - buf))
+        header = &m_sender;
+      else if (!nsCRT::strncasecmp ("Status", buf, end - buf))
+        header = &m_status;
+      break;
+    case 'T': case 't':
+      if (!nsCRT::strncasecmp ("To", buf, end - buf))
+        header = GetNextHeaderInAggregate(m_toList);
+      break;
+    case 'X':
+      if (X_MOZILLA_STATUS2_LEN == end - buf &&
+        !nsCRT::strncasecmp(X_MOZILLA_STATUS2, buf, end - buf) &&
+        !m_IgnoreXMozillaStatus)
+        header = &m_mozstatus2;
+      else if ( X_MOZILLA_STATUS_LEN == end - buf &&
+        !nsCRT::strncasecmp(X_MOZILLA_STATUS, buf, end - buf) && !m_IgnoreXMozillaStatus)
+        header = &m_mozstatus;
+      // we could very well care what the priority header was when we 
+      // remember its value. If so, need to remember it here. Also, 
+      // different priority headers can appear in the same message, 
+      // but we only rememeber the last one that we see.
+      else if (!nsCRT::strncasecmp("X-Priority", buf, end - buf)
+        || !nsCRT::strncasecmp("Priority", buf, end - buf))
+        header = &m_priority;
+      break;
+    }
+    
+    buf = colon + 1;
+    while (*buf == ' ' || *buf == '\t')
+      buf++;
+    
+    value = buf;
+    if (header)
+      header->value = value;
+    
+SEARCH_NEWLINE:
+    while (*buf != 0 && *buf != nsCRT::CR && *buf != nsCRT::LF)
+      buf++;
+    
+    if (buf+1 >= buf_end)
+      ;
+    /* If "\r\n " or "\r\n\t" is next, that doesn't terminate the header. */
+    else if (buf+2 < buf_end &&
 			   (buf[0] == nsCRT::CR  && buf[1] == nsCRT::LF) &&
-			   (buf[2] == ' ' || buf[2] == '\t'))
-		{
-		  buf += 3;
-		  goto SEARCH_NEWLINE;
-		}
-	  /* If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
-		 the header either. */
-	  else if ((buf[0] == nsCRT::CR  || buf[0] == nsCRT::LF) &&
+                           (buf[2] == ' ' || buf[2] == '\t'))
+    {
+      buf += 3;
+      goto SEARCH_NEWLINE;
+    }
+    /* If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
+    the header either. */
+    else if ((buf[0] == nsCRT::CR  || buf[0] == nsCRT::LF) &&
 			   (buf[1] == ' ' || buf[1] == '\t'))
-		{
-		  buf += 2;
-		  goto SEARCH_NEWLINE;
-		}
-
-	  if (header)
-		header->length = buf - header->value;
-
-	  if (*buf == nsCRT::CR || *buf == nsCRT::LF)
-		{
-		  char *last = buf;
-		  if (*buf == nsCRT::CR && buf[1] == nsCRT::LF)
-			buf++;
-		  buf++;
-		  *last = 0;	/* short-circuit const, and null-terminate header. */
-		}
-
-	  if (header)
-		{
-		  /* More const short-circuitry... */
-		  /* strip leading whitespace */
-		  while (IS_SPACE (*header->value))
-			header->value++, header->length--;
-		  /* strip trailing whitespace */
-		  while (header->length > 0 &&
-				 IS_SPACE (header->value [header->length - 1]))
-			((char *) header->value) [--header->length] = 0;
-		}
-	}
-  return 0;
+    {
+      buf += 2;
+      goto SEARCH_NEWLINE;
+    }
+    
+    if (header)
+      header->length = buf - header->value;
+    
+    if (*buf == nsCRT::CR || *buf == nsCRT::LF)
+    {
+      char *last = buf;
+      if (*buf == nsCRT::CR && buf[1] == nsCRT::LF)
+        buf++;
+      buf++;
+      *last = 0;	/* short-circuit const, and null-terminate header. */
+    }
+    
+    if (header)
+    {
+      /* More const short-circuitry... */
+      /* strip leading whitespace */
+      while (IS_SPACE (*header->value))
+        header->value++, header->length--;
+      /* strip trailing whitespace */
+      while (header->length > 0 &&
+        IS_SPACE (header->value [header->length - 1]))
+        ((char *) header->value) [--header->length] = 0;
+    }
+        }
+        return 0;
 }
 
 int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size)
 {
-	const char *end;
-	char *s;
-
-	m_envelope.AppendBuffer(line, line_size);
-	end = m_envelope.GetBuffer() + line_size;
-	s = m_envelope.GetBuffer() + 5;
-
-	while (s < end && IS_SPACE (*s))
-		s++;
-	m_envelope_from.value = s;
-	while (s < end && !IS_SPACE (*s))
-		s++;
-	m_envelope_from.length = s - m_envelope_from.value;
-
-	while (s < end && IS_SPACE (*s))
-		s++;
-	m_envelope_date.value = s;
-	m_envelope_date.length = (PRUint16) (line_size - (s - m_envelope.GetBuffer()));
-	while (IS_SPACE (m_envelope_date.value [m_envelope_date.length - 1]))
-		m_envelope_date.length--;
-
-	/* #### short-circuit const */
-	((char *) m_envelope_from.value) [m_envelope_from.length] = 0;
-	((char *) m_envelope_date.value) [m_envelope_date.length] = 0;
-
-	return 0;
+  const char *end;
+  char *s;
+  
+  m_envelope.AppendBuffer(line, line_size);
+  end = m_envelope.GetBuffer() + line_size;
+  s = m_envelope.GetBuffer() + 5;
+  
+  while (s < end && IS_SPACE (*s))
+    s++;
+  m_envelope_from.value = s;
+  while (s < end && !IS_SPACE (*s))
+    s++;
+  m_envelope_from.length = s - m_envelope_from.value;
+  
+  while (s < end && IS_SPACE (*s))
+    s++;
+  m_envelope_date.value = s;
+  m_envelope_date.length = (PRUint16) (line_size - (s - m_envelope.GetBuffer()));
+  while (IS_SPACE (m_envelope_date.value [m_envelope_date.length - 1]))
+    m_envelope_date.length--;
+  
+  /* #### short-circuit const */
+  ((char *) m_envelope_from.value) [m_envelope_from.length] = 0;
+  ((char *) m_envelope_date.value) [m_envelope_date.length] = 0;
+  
+  return 0;
 }
 
 #ifdef WE_CONDENSE_MIME_STRINGS
 static char *
 msg_condense_mime2_string(char *sourceStr)
 {
-	char *returnVal = nsCRT::strdup(sourceStr);
-	if (!returnVal) 
-		return nsnull;
-	
-	MIME_StripContinuations(returnVal);
-	
-	return returnVal;
+  char *returnVal = nsCRT::strdup(sourceStr);
+  if (!returnVal) 
+    return nsnull;
+  
+  MIME_StripContinuations(returnVal);
+  
+  return returnVal;
 }
 #endif // WE_CONDENSE_MIME_STRINGS
 
 int nsParseMailMessageState::InternSubject (struct message_header *header)
 {
-	char *key;
-	PRUint32 L;
-
-	if (!header || header->length == 0)
-	{
-		m_newMsgHdr->SetSubject("");
-		return 0;
-	}
-
-	NS_ASSERTION (header->length == (short) strlen(header->value), "subject corrupt while parsing message");
-
-	key = (char *) header->value;  /* #### const evilness */
-
-	L = header->length;
-
-
+  char *key;
+  PRUint32 L;
+  
+  if (!header || header->length == 0)
+  {
+    m_newMsgHdr->SetSubject("");
+    return 0;
+  }
+  
+  NS_ASSERTION (header->length == (short) strlen(header->value), "subject corrupt while parsing message");
+  
+  key = (char *) header->value;  /* #### const evilness */
+  
+  L = header->length;
+  
+  
   PRUint32 flags;
   (void)m_newMsgHdr->GetFlags(&flags);
-	/* strip "Re: " */
-	/* We trust the X-Mozilla-Status line to be the smartest in almost
+  /* strip "Re: " */
+  /* We trust the X-Mozilla-Status line to be the smartest in almost
 	 all things.  One exception, however, is the HAS_RE flag.  Since
-	 we just parsed the subject header anyway, we expect that parsing
-	 to be smartest.  (After all, what if someone just went in and
+         we just parsed the subject header anyway, we expect that parsing
+         to be smartest.  (After all, what if someone just went in and
 	 edited the subject line by hand?) */
   nsXPIDLCString modifiedSubject;
-	if (NS_MsgStripRE((const char **) &key, &L, getter_Copies(modifiedSubject)))
+  if (NS_MsgStripRE((const char **) &key, &L, getter_Copies(modifiedSubject)))
     flags |= MSG_FLAG_HAS_RE;
-	else
+  else
     flags &= ~MSG_FLAG_HAS_RE;
-	m_newMsgHdr->SetFlags(flags); // this *does not* update the mozilla-status header in the local folder
-
-//  if (!*key) return 0; /* To catch a subject of "Re:" */
-
-	// Condense the subject text into as few MIME-2 encoded words as possible.
+  m_newMsgHdr->SetFlags(flags); // this *does not* update the mozilla-status header in the local folder
+  
+  //  if (!*key) return 0; /* To catch a subject of "Re:" */
+  
+  // Condense the subject text into as few MIME-2 encoded words as possible.
 #ifdef WE_CONDENSE_MIME_STRINGS
   char *condensedKey = msg_condense_mime2_string(modifiedSubject.IsEmpty() ? key : modifiedSubject.get());
 #else
-	char *condensedKey = nsnull;
+  char *condensedKey = nsnull;
 #endif
   m_newMsgHdr->SetSubject(condensedKey ? condensedKey : 
-                          (modifiedSubject.IsEmpty() ? key : modifiedSubject.get()));
-	PR_FREEIF(condensedKey);
-
-	return 0;
+  (modifiedSubject.IsEmpty() ? key : modifiedSubject.get()));
+  PR_FREEIF(condensedKey);
+  
+  return 0;
 }
 
 /* Like mbox_intern() but for headers which contain email addresses:
-   we extract the "name" component of the first address, and discard
-   the rest. */
+we extract the "name" component of the first address, and discard
+the rest. */
 nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header, 
-									 char **ret_name)
+                                                char **ret_name)
 {
-	char	*s;
-	nsresult ret=NS_OK;
-
-	if (!header || header->length == 0)
-		return NS_OK;
-
-	NS_ASSERTION (header->length == (short) strlen (header->value), "invalid message_header");
-	NS_ASSERTION (ret_name != nsnull, "null ret_name");
-
-	if (m_HeaderAddressParser)
-	{
-		ret = m_HeaderAddressParser->ExtractHeaderAddressName (nsnull, header->value, &s);
-		if (! s)
-			return NS_ERROR_OUT_OF_MEMORY;
-
-		*ret_name = s;
-	}
-	return ret;
+  char	*s;
+  nsresult ret=NS_OK;
+  
+  if (!header || header->length == 0)
+    return NS_OK;
+  
+  NS_ASSERTION (header->length == (short) strlen (header->value), "invalid message_header");
+  NS_ASSERTION (ret_name != nsnull, "null ret_name");
+  
+  if (m_HeaderAddressParser)
+  {
+    ret = m_HeaderAddressParser->ExtractHeaderAddressName (nsnull, header->value, &s);
+    if (! s)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    *ret_name = s;
+  }
+  return ret;
 }
 
 // we've reached the end of the envelope, and need to turn all our accumulated message_headers
@@ -1416,51 +1416,50 @@ int nsParseMailMessageState::FinalizeHeaders()
 nsParseNewMailState::nsParseNewMailState()
     : m_disableFilters(PR_FALSE)
 {
-	m_inboxFileStream = nsnull;
-	m_ibuffer = nsnull;
-	m_ibuffer_size = 0;
-	m_ibuffer_fp = 0;
-}
+  m_inboxFileStream = nsnull;
+  m_ibuffer = nsnull;
+  m_ibuffer_size = 0;
+  m_ibuffer_fp = 0;
+ }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
 
 nsresult
 nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream, nsIMsgWindow *aMsgWindow)
 {
-    nsresult rv;
-	m_position = folder.GetFileSize();
-	m_rootFolder = rootFolder;
-	m_inboxFileSpec = folder;
-	m_inboxFileStream = inboxFileStream;
+  nsresult rv;
+  m_position = folder.GetFileSize();
+  m_rootFolder = rootFolder;
+  m_inboxFileSpec = folder;
+  m_inboxFileStream = inboxFileStream;
   m_msgWindow = aMsgWindow;
-	// the new mail parser isn't going to get the stream input, it seems, so we can't use
-	// the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
-	nsCOMPtr<nsIMsgDatabase> mailDB;
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
-	if (NS_SUCCEEDED(rv) && mailDB)
-	{
-		nsCOMPtr <nsIFileSpec> dbFileSpec;
-		NS_NewFileSpecWithSpec(folder, getter_AddRefs(dbFileSpec));
-		rv = mailDB->OpenFolderDB(downloadFolder, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
-	}
-//	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
-    if (NS_FAILED(rv)) 
-		return rv;
-
-	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = rootMsgFolder->GetServer(getter_AddRefs(server));
-    if (NS_SUCCEEDED(rv))
-      rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
-   
-	if (m_filterList)
-      rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
-
-	m_disableFilters = PR_FALSE;
-
-    return NS_OK; 
+  // the new mail parser isn't going to get the stream input, it seems, so we can't use
+  // the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
+  nsCOMPtr<nsIMsgDatabase> mailDB;
+  rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
+  if (NS_SUCCEEDED(rv) && mailDB)
+  {
+    nsCOMPtr <nsIFileSpec> dbFileSpec;
+    NS_NewFileSpecWithSpec(folder, getter_AddRefs(dbFileSpec));
+    rv = mailDB->OpenFolderDB(downloadFolder, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+  }
+  //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = rootMsgFolder->GetServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv))
+    rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
+  
+  if (m_filterList)
+    rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+  
+  m_disableFilters = PR_FALSE;
+  return NS_OK; 
 }
 
 nsParseNewMailState::~nsParseNewMailState()
@@ -1484,29 +1483,28 @@ void nsParseNewMailState::GetMsgWindow(nsIMsgWindow **aMsgWindow)
 // IncorporateWrite (once or more), and IncorporateComplete for every message.
 void nsParseNewMailState::DoneParsingFolder(nsresult status)
 {
-	PRBool moved = PR_FALSE;
-/* End of file.  Flush out any partial line remaining in the buffer. */
-	if (m_ibuffer_fp > 0) 
-	{
-		ParseFolderLine(m_ibuffer, m_ibuffer_fp);
-		m_ibuffer_fp = 0;
-	}
-	PublishMsgHeader(nsnull);
-	if (!moved && m_mailDB)	// finished parsing, so flush db folder info 
-		UpdateDBFolderInfo();
-
-	/* We're done reading the folder - we don't need these things
+  PRBool moved = PR_FALSE;
+  /* End of file.  Flush out any partial line remaining in the buffer. */
+  if (m_ibuffer_fp > 0) 
+  {
+    ParseFolderLine(m_ibuffer, m_ibuffer_fp);
+    m_ibuffer_fp = 0;
+  }
+  PublishMsgHeader(nsnull);
+  if (!moved && m_mailDB)	// finished parsing, so flush db folder info 
+    UpdateDBFolderInfo();
+  
+    /* We're done reading the folder - we don't need these things
 	 any more. */
-	PR_FREEIF (m_ibuffer);
-	m_ibuffer_size = 0;
-	PR_FREEIF (m_obuffer);
-	m_obuffer_size = 0;
+  PR_FREEIF (m_ibuffer);
+  m_ibuffer_size = 0;
+  PR_FREEIF (m_obuffer);
+  m_obuffer_size = 0;
 }
 
 PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
   PRBool moved = PR_FALSE;
-  
   FinishHeader();
   
   if (m_newMsgHdr)
@@ -1537,22 +1535,22 @@ PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 
 nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 {
-	nsresult rv=NS_ERROR_UNEXPECTED;
-	if (!pTrashFolder)
-		return NS_ERROR_NULL_POINTER;
-
-	if(m_rootFolder)
-	{
-		nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
-		if (rootMsgFolder)
-		{
-			PRUint32 numFolders;
-			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, pTrashFolder);
-			if (*pTrashFolder)
-				NS_ADDREF(*pTrashFolder);
-		}
-	}
-	return rv;
+  nsresult rv=NS_ERROR_UNEXPECTED;
+  if (!pTrashFolder)
+    return NS_ERROR_NULL_POINTER;
+  
+  if(m_rootFolder)
+  {
+    nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
+    if (rootMsgFolder)
+    {
+      PRUint32 numFolders;
+      rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, pTrashFolder);
+      if (*pTrashFolder)
+        NS_ADDREF(*pTrashFolder);
+    }
+  }
+  return rv;
 }
 
 void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
@@ -1598,11 +1596,6 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
   NS_ENSURE_SUCCESS(rv, rv);
   rv = filter->GetSortedActionList(filterActionList);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  // look at action - currently handle move
-#ifdef DEBUG_bienvenu
-  printf("got a rule hit!\n");
-#endif
   
   PRUint32 numActions;
   rv = filterActionList->Count(&numActions);
@@ -1684,6 +1677,22 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         nsMsgKey msgKey;
         msgHdr->GetMessageKey(&msgKey);
         m_mailDB->SetLabel(msgKey, filterLabel);
+        break;
+      case nsMsgFilterAction::DeleteFromPop3Server:
+        {
+          nsCOMPtr <nsIMsgFolder> downloadFolder;
+          msgHdr->GetFolder(getter_AddRefs(downloadFolder));
+          nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(downloadFolder);
+          if (localFolder)
+          {
+            nsCOMPtr<nsISupportsArray> messages;
+            rv = NS_NewISupportsArray(getter_AddRefs(messages));
+            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr<nsISupports> iSupports = do_QueryInterface(msgHdr);
+            messages->AppendElement(iSupports);
+            localFolder->MarkMsgsOnPop3Server(messages, PR_TRUE);
+          }
+        }
         break;
       default:
         break;
@@ -1874,7 +1883,9 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   // How are we going to do this with a stream?
   nsresult truncRet = m_inboxFileSpec.Truncate(messageOffset);
   NS_ASSERTION(NS_SUCCEEDED(truncRet), "unable to truncate file");
-  
+  if (NS_FAILED(truncRet))
+   destIFolder->ThrowAlertMsg("filterFolderTruncateFailed", msgWindow);
+
   //  need to re-open the inbox file stream.
   m_inboxFileStream->Open(m_inboxFileSpec, (PR_RDWR | PR_CREATE_FILE));
   if (m_inboxFileStream)
