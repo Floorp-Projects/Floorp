@@ -1887,8 +1887,8 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   PRBool optionIsDisabled;
   if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
     if (optionIsDisabled) {
-      mSelectedIndex = mSelectedIndexWhenPoppedDown;
       if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
+        mSelectedIndex = mSelectedIndexWhenPoppedDown;
         mComboboxFrame->ListWasSelected(mPresContext); 
       } 
       return NS_OK;
@@ -1969,8 +1969,12 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   // NS_ERROR_FAILURE is returned is it isn't over an option
   PRBool optionIsDisabled;
   if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-    mSelectedIndex = mSelectedIndexWhenPoppedDown;
-    return NS_OK;
+    if (optionIsDisabled) {
+      if (IsInDropDownMode() == PR_TRUE) {
+        mSelectedIndex = mSelectedIndexWhenPoppedDown;
+      }
+      return NS_OK;
+    }
   }
 
   PRInt32 oldIndex;
