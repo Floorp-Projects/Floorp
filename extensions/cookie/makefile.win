@@ -20,12 +20,12 @@
 # Contributor(s): 
 
 DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_COOKIE -DWIN32_LEAN_AND_MEAN
 MODULE=cookie 
 LIBRARY_NAME=cookie
 MODULE_NAME=nsCookieModule
+REQUIRES	= xpcom string necko dom widget layout pref intl uriloader windowwatcher content
 
 EXPORTS = nsCookieHTTPNotify.h
 

@@ -22,7 +22,6 @@
 #    -- original author.
 
 DEPTH=..\..\..
-include <$(DEPTH)/config/config.mak>
 
 XPIDLSRCS = .\nsIXPathNodeSelector.idl  \
             .\nsISyncLoader.idl         \

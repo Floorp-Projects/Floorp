@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+REQUIRES = string xpcom
+
 include <$(DEPTH)/config/config.mak>
 
 !if defined(TX_EXE)

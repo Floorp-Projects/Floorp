@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+REQUIRES = string xpcom necko
 include <$(DEPTH)/config/config.mak>
 
 !if defined(TX_EXE)

@@ -20,9 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE=transformiix
+REQUIRES	= xpcom string dom layout widget xsl_doc necko content
 include <$(DEPTH)/config/config.mak>
 
-MODULE=transformiix
 LIBRARY_NAME=transformiix
 MODULE_NAME=TransformiixModule
 
