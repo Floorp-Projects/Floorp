@@ -1060,13 +1060,15 @@ nsGenericHTMLElement::GetScrollHeight(PRInt32* aScrollHeight)
 
   GetScrollInfo(&scrollView, &p2t, &t2p);
 
-  if (scrollView) {
-    // xMax and yMax is the total length of our container
-    nscoord xMax, yMax;
-    rv = scrollView->GetContainerSize(&xMax, &yMax);
-
-    *aScrollHeight = NSTwipsToIntPixels(yMax, t2p);
+  if (!scrollView) {
+    return GetOffsetHeight(aScrollHeight);
   }
+
+  // xMax and yMax is the total length of our container
+  nscoord xMax, yMax;
+  rv = scrollView->GetContainerSize(&xMax, &yMax);
+
+  *aScrollHeight = NSTwipsToIntPixels(yMax, t2p);
 
   return rv;
 }
@@ -1083,12 +1085,14 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
 
   GetScrollInfo(&scrollView, &p2t, &t2p);
 
-  if (scrollView) {
-    nscoord xMax, yMax;
-    rv = scrollView->GetContainerSize(&xMax, &yMax);
-
-    *aScrollWidth = NSTwipsToIntPixels(xMax, t2p);
+  if (!scrollView) {
+    return GetOffsetWidth(aScrollWidth);
   }
+
+  nscoord xMax, yMax;
+  rv = scrollView->GetContainerSize(&xMax, &yMax);
+
+  *aScrollWidth = NSTwipsToIntPixels(xMax, t2p);
 
   return rv;
 }
