@@ -215,12 +215,40 @@
 #endif
 #define getcwd      mozce_getcwd
 
-
 #ifdef printf
 #undef printf
 #endif
 #define printf mozce_printf
 
+#ifdef open
+#undef open
+#endif
+#define open mozce_open
+
+#ifdef close
+#undef close
+#endif
+#define close mozce_close
+
+#ifdef read
+#undef read
+#endif
+#define read mozce_read
+
+#ifdef write
+#undef write
+#endif
+#define write mozce_write
+
+#ifdef unlink
+#undef unlink
+#endif
+#define unlink mozce_unlink
+
+#ifdef lseek
+#undef lseek
+#endif
+#define lseek mozce_lseek
 
 // From stdlib.cpp
 #ifdef _fullpath
@@ -1155,6 +1183,13 @@ extern "C" {
   MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size);
   
   MOZCE_SHUNT_API int mozce_printf(const char *, ...);
+
+  MOZCE_SHUNT_API int mozce_open(const char *pathname, int flags, int mode);
+  MOZCE_SHUNT_API int mozce_close(int fp);
+  MOZCE_SHUNT_API size_t mozce_read(int fp, void* buffer, size_t count);
+  MOZCE_SHUNT_API size_t mozce_write(int fp, const void* buffer, size_t count);
+  MOZCE_SHUNT_API int mozce_unlink(const char *pathname);
+  MOZCE_SHUNT_API int mozce_lseek(int fildes, int offset, int whence);
 
 
   // From stdlib.cpp

@@ -50,6 +50,8 @@ extern "C" {
 
 MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_rewind called\n");
 #endif
@@ -60,6 +62,8 @@ MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 
 MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_fdopen called\n");
 #endif
@@ -83,6 +87,8 @@ MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
 
 MOZCE_SHUNT_API void mozce_perror(const char* inString)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_perror called\n");
 #endif
@@ -93,6 +99,8 @@ MOZCE_SHUNT_API void mozce_perror(const char* inString)
 
 MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_remove called on %s\n", inPath);
 #endif
@@ -118,6 +126,8 @@ MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 
 MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_getcwd called.  NOT IMPLEMENTED!!\n");
 #endif
@@ -126,15 +136,13 @@ MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 
 MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 {
-    int result;
-    char buffer[1024];
-    unsigned short wBuffer[1024];
-    
+    // DONT CALL IN PRINTF    MOZCE_PRECHECK
+
     va_list argp;
     va_start(argp, format);
-    
 
-    result = _snprintf(buffer, 1023, format, argp);
+    char buffer[1024];
+    int result = _snprintf(buffer, 1023, format, argp);
     
     if (result<=0)
         return result;
@@ -142,6 +150,8 @@ MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 #ifdef USE_NC_LOGGING
 	nclograw(buffer, strlen(buffer));
 #endif
+
+    unsigned short wBuffer[1024];
 
     if(0 != a2w_buffer(buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(unsigned short)))
     {
@@ -151,6 +161,109 @@ MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
     va_end(argp);
     
     return result;
+}
+
+
+MOZCE_SHUNT_API int mozce_open(const char *pathname, int flags, int mode)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_open called\n");
+#endif
+    if (mode | O_RDONLY)
+    {
+        return (int) fopen(pathname, "r");
+    }
+
+    if (mode | O_RDWR && mode | O_CREAT)
+    {
+        return (int) fopen(pathname, "w+");
+    }
+
+    if (mode | O_RDWR && mode | O_APPEND)
+    {
+        return (int) fopen(pathname, "a+");
+    }
+
+    if (mode | O_RDWR)
+    {
+        return (int) fopen(pathname, "r+");
+    }
+
+    if (mode | O_WRONLY && mode | O_CREAT)
+    {
+        return (int) fopen(pathname, "w+");
+    }
+
+    if (mode | O_WRONLY && mode | O_APPEND)
+    {
+        return (int) fopen(pathname, "a");
+    }
+
+    if (mode | O_WRONLY)
+    {
+        return (int) fopen(pathname, "w");
+    }
+
+#ifdef DEBUG
+    mozce_printf("-- Unsupported mode!\n");
+#endif
+    return 0;
+}
+
+MOZCE_SHUNT_API int mozce_close(int fp)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_close called\n");
+#endif
+    return fclose((FILE*) fp);
+}
+
+MOZCE_SHUNT_API size_t mozce_read(int fp, void* buffer, size_t count)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_read called\n");
+#endif
+    return fread(buffer, count, 1, (void*)fp);
+}
+
+
+MOZCE_SHUNT_API size_t mozce_write(int fp, const void* buffer, size_t count)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_write called\n");
+#endif
+    return fwrite(buffer, count, 1, (void*)fp);
+}
+
+
+MOZCE_SHUNT_API int mozce_unlink(const char *pathname)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_unlink called\n");
+#endif
+    return mozce_remove(pathname);
+}
+
+
+MOZCE_SHUNT_API int mozce_lseek(int fildes, int offset, int whence)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_lseek called\n");
+#endif
+
+    return fseek((FILE*) fildes, offset, whence);
 }
 
 #if 0

@@ -54,6 +54,8 @@ static struct tm tmStorage;
 
 MOZCE_SHUNT_API size_t mozce_strftime(char *, size_t, const char *, const struct tm *)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_strftime called\n");
 #endif
@@ -64,6 +66,8 @@ MOZCE_SHUNT_API size_t mozce_strftime(char *, size_t, const char *, const struct
 
 MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("tm* mozce_localtime_r called\n");
 #endif
@@ -113,6 +117,8 @@ MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* ou
 
 MOZCE_SHUNT_API struct tm* mozce_localtime(const time_t* inTimeT)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("tm* mozce_localtime called\n");
 #endif
@@ -123,6 +129,8 @@ MOZCE_SHUNT_API struct tm* mozce_localtime(const time_t* inTimeT)
 
 MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("tm* mozce_gmtime_r called\n");
 #endif
@@ -172,6 +180,8 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outR
 
 MOZCE_SHUNT_API struct tm* mozce_gmtime(const time_t* inTimeT)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("tm* mozce_gmtime called\n");
 #endif
@@ -182,6 +192,8 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime(const time_t* inTimeT)
 
 MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_mktime called\n");
 #endif
@@ -223,6 +235,8 @@ MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM)
 
 MOZCE_SHUNT_API time_t mozce_time(time_t* inStorage)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_time called\n");
 #endif
@@ -242,6 +256,8 @@ MOZCE_SHUNT_API time_t mozce_time(time_t* inStorage)
 
 MOZCE_SHUNT_API char* mozce_ctime(const time_t* timer)
 {
+    MOZCE_PRECHECK
+
 #ifdef DEBUG
     mozce_printf("mozce_ctime called\n");
 #endif
