@@ -205,6 +205,14 @@ public:
   NS_IMETHOD ScrollByPages(PRInt32 aNumPages) = 0;
 
   /**
+   * Scroll the view to the top or bottom of the document depending
+   * on the value of aTop.
+   * @param aForward indicates whether to scroll to top or bottom
+   * @return error status
+   */
+  NS_IMETHOD ScrollByWhole(PRBool aTop) = 0;
+
+  /**
    * Returns the clip view
    */
   NS_IMETHOD GetClipView(const nsIView** aClipView) const = 0;

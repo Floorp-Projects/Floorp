@@ -1578,6 +1578,24 @@ NS_IMETHODIMP nsScrollingView::ScrollByPages(PRInt32 aNumPages)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsScrollingView::ScrollByWhole(PRBool aTop)
+{
+	nscoord   newPos = 0;
+
+  if (aTop) {
+		newPos = 0;
+  }
+  else {
+  	nsSize    clipSize;
+	  mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+		newPos = mSizeY - clipSize.height;
+  }
+
+	ScrollTo(0, newPos, 0);
+
+	return NS_OK;
+}
+
 PRBool nsScrollingView::CannotBitBlt(nsIView* aScrolledView)
 {
   PRBool    trans;
