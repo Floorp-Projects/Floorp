@@ -314,7 +314,7 @@ nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest
 
 /* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
-nsPrintingPromptService::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+nsPrintingPromptService::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
   return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
 }
