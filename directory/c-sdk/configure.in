@@ -1206,14 +1206,20 @@ case "$target" in
         # Use temp file for windres (bug 213281)
         RC="$WINDRES -O coff --use-temp-file"
     else
-        CC=cl
-        CXX=cl
-        LD=link
+        CYGWIN_WRAPPER='sh $(topsrcdir)/config/cygwin-wrapper'
+        CC='$(CYGWIN_WRAPPER) cl'
+        CXX='$(CYGWIN_WRAPPER) cl'
+        LD='$(CYGWIN_WRAPPER) link'
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        RC=rc.exe
+        NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
+        RC='$(CYGWIN_WRAPPER) rc.exe'
+        PERL=perl
+        if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
+            PERL='$(CYGWIN_WRAPPER) perl'
+        fi
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
 	    LIB_SUFFIX=lib
@@ -2316,6 +2322,7 @@ AC_SUBST(RC)
 AC_SUBST(DLLFLAGS)
 AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)
+AC_SUBST(CYGWIN_WRAPPER)
 
 dnl ========================================================
 dnl Generate output files.
