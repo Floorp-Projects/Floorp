@@ -1386,8 +1386,20 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
                                              getter_AddRefs(subject));
     //-- If subject is null, get a principal from the function object's scope.
     if (NS_SUCCEEDED(rv) && !subject)
+    {
+#ifdef DEBUG
+        {
+            JSFunction *fun =
+                (JSFunction *)JS_GetPrivate(aCx, (JSObject *)aFunObj);
+            JSScript *script = JS_GetFunctionScript(aCx, fun);
+
+            NS_ASSERTION(!script, "Null principal for non-native function!");
+        }
+#endif
+
         rv = doGetObjectPrincipal(aCx, (JSObject*)aFunObj,
                                   getter_AddRefs(subject));
+    }
 
     if (NS_FAILED(rv)) return rv;
     if (!subject) return NS_ERROR_FAILURE;
@@ -1811,16 +1823,20 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
 
     nsCOMPtr<nsIPrincipal> scriptPrincipal;
     if (script)
-        if (NS_FAILED(GetScriptPrincipal(cx, script, getter_AddRefs(scriptPrincipal))))
+    {
+        if (JS_GetFunctionObject(fun) != obj)
+        {
+            // Function is a clone, its prototype was precompiled from
+            // brutally shared chrome. For this case only, get the
+            // principals from the clone's scope since there's no
+            // reliable principals compiled into the function.
+            return doGetObjectPrincipal(cx, obj, result);
+        }
+
+        if (NS_FAILED(GetScriptPrincipal(cx, script,
+                                         getter_AddRefs(scriptPrincipal))))
             return NS_ERROR_FAILURE;
 
-    if (script && (JS_GetFunctionObject(fun) != obj) &&
-        (scriptPrincipal.get() == mSystemPrincipal))
-    {
-        // Function is brutally-shared chrome. For this case only,
-        // get a principal from the object's scope instead of the
-        // principal compiled into the function.
-        return doGetObjectPrincipal(cx, obj, result);
     }
 
     *result = scriptPrincipal.get();
@@ -1840,7 +1856,20 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
         JSScript *script = JS_GetFrameScript(cx, fp);
         return GetScriptPrincipal(cx, script, result);
     }
-    return GetFunctionObjectPrincipal(cx, obj, result);
+
+    nsresult rv = GetFunctionObjectPrincipal(cx, obj, result);
+
+#ifdef DEBUG
+    if (NS_SUCCEEDED(rv) && !*result)
+    {
+        JSFunction *fun = (JSFunction *)JS_GetPrivate(cx, obj);
+        JSScript *script = JS_GetFunctionScript(cx, fun);
+
+        NS_ASSERTION(!script, "Null principal for non-native function!");
+    }
+#endif
+
+    return rv;
 }
 
 nsresult
