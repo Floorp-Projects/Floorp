@@ -338,6 +338,7 @@ nsAppShell::DispatchXEvent(XEvent *event)
 
   case ButtonPress:
   case ButtonRelease:
+    HandleFocusInEvent(event, widget);
     HandleButtonEvent(event, widget);
     break;
 
