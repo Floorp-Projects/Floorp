@@ -3185,17 +3185,8 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   nsCOMPtr<nsIPresShell> shell;
   GetPresShell(getter_AddRefs(shell));
   if (!shell)  return PR_FALSE;
-  nsCOMPtr<nsIDOMElement>element;
-  element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString att(kMOZEditorBogusNodeAttr);
-    nsAutoString val;
-    (void)element->GetAttribute(att, val);
-    if (val.Equals(kMOZEditorBogusNodeValue)) {
-      return PR_FALSE;
-    }
-  }
+
+  if (IsMozEditorBogusNode(aNode)) return PR_FALSE;
 
   // it's not the bogus node, so see if it is an irrelevant text node
   if (PR_TRUE==IsTextNode(aNode))
@@ -3242,6 +3233,30 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     }
   }
   return PR_FALSE;  // it's not a content object (???) so it's not editable
+}
+
+PRBool
+nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
+{
+  if (!aNode)
+  {
+    NS_NOTREACHED("null node passed to IsTextNode()");
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString att(kMOZEditorBogusNodeAttr);
+    nsAutoString val;
+    (void)element->GetAttribute(att, val);
+    if (val.Equals(kMOZEditorBogusNodeValue)) {
+      return PR_TRUE;
+    }
+  }
+    
+  return PR_FALSE;
 }
 
 PRBool

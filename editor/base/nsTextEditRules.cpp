@@ -1189,20 +1189,10 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
         
         if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
         nsCOMPtr<nsIDOMNode>node;
-        nsCOMPtr<nsIDOMElement>element;
         nodeList->Item(0, getter_AddRefs(node));
         if (!node) return NS_ERROR_NULL_POINTER;
-        element = do_QueryInterface(node);
-        if (element)
-        {
-          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-          nsAutoString val;
-          (void)element->GetAttribute(att, val);
-          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) 
-          {
-            mBogusNode = do_QueryInterface(element);
-          }
-        }
+        if (mEditor->IsMozEditorBogusNode(node))
+          mBogusNode = do_QueryInterface(node);
       }
     }
   }
@@ -1248,20 +1238,10 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
         
         if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
         nsCOMPtr<nsIDOMNode>node;
-        nsCOMPtr<nsIDOMElement>element;
         nodeList->Item(0, getter_AddRefs(node));
         if (!node) return NS_ERROR_NULL_POINTER;
-        element = do_QueryInterface(node);
-        if (element)
-        {
-          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-          nsAutoString val;
-          (void)element->GetAttribute(att, val);
-          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) 
-          {
-            mBogusNode = do_QueryInterface(element);
-          }
-        }
+        if (mEditor->IsMozEditorBogusNode(node))
+          mBogusNode = do_QueryInterface(node);
       }
     }
   }
@@ -1426,7 +1406,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   res = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
   while ((NS_SUCCEEDED(res)) && bodyChild)
   { 
-    if (PR_TRUE==mEditor->IsEditable(bodyChild))
+    if (mEditor->IsMozEditorBogusNode(bodyChild) || mEditor->IsEditable(bodyChild))
     {
       needsBogusContent = PR_FALSE;
       break;
@@ -1435,7 +1415,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
     bodyChild->GetNextSibling(getter_AddRefs(temp));
     bodyChild = do_QueryInterface(temp);
   }
-  if (PR_TRUE==needsBogusContent)
+  if (needsBogusContent)
   {
     // set mBogusNode to be the newly created <br>
     res = mEditor->CreateNode(nsAutoString("br"), bodyNode, 0, 
