@@ -463,9 +463,8 @@ Contributor(s):
             <menuseparator/>
             <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
             <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
-            <menuseparator id="menu_PrefsSeparator"/> 
-            <menuitem id="menu_preferences"
-                      label="&preferencesCmd.label;"
+            <menuseparator/> 
+            <menuitem label="&preferencesCmd.label;"
                       accesskey="&preferencesCmd.accesskey;"
                       oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
           </menupopup>
@@ -481,9 +480,9 @@ Contributor(s):
                 <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
               </menupopup>
             </menu>   
-            <menuitem id="menuitem_fullScreen" accesskey="&fullScreenCmd.accesskey;"
+            <menuitem accesskey="&fullScreenCmd.accesskey;"
                       label="&fullScreenCmd.label;" key="key_fullScreen"
-                      command="View:FullScreen" hidden="true"/>
+                      command="View:FullScreen"/>
             <menuseparator />
             <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
