@@ -854,7 +854,7 @@ var BookmarksUtils = {
       RDFC.Init(BMDS, aParentFolder);
     }
     catch (e) {
-      return;
+      return null;
     }
     var ix = kRDFC.IndexOf(aRelativeItem);
 
