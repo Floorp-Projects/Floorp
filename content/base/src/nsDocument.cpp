@@ -4377,7 +4377,10 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     }
   }
 
-  if (mLastModified.IsEmpty()) {
+  if (mLastModified.IsEmpty() && LL_IS_ZERO(modDate)) {
+    // We got nothing from our attempt to ask nsIFileChannel and
+    // nsIHttpChannel for the last modified time. Return the current
+    // time.
     modDate = PR_Now();
   }
 
