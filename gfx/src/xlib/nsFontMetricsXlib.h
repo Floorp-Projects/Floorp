@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -52,7 +53,7 @@ typedef struct nsFontCharSetInfo nsFontCharSetInfo;
 
 typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
              XFontStruct* aFont, const PRUnichar* aSrcBuf, PRInt32 aSrcLen, 
-	           char* aDestBuf, PRInt32 aDestLen);
+             char* aDestBuf, PRInt32 aDestLen);
 
 struct nsFontCharSet;
 struct nsFontFamily;
@@ -77,9 +78,9 @@ public:
 
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual int DrawString(nsRenderingContextXlib* aContext,
-                         nsDrawingSurfaceXlib*   aSurface,
-			                   nscoord aX, nscoord aY,
-					               const PRUnichar* aString, PRUint32 aLength) = 0;
+                         nsDrawingSurfaceXlib* aSurface,
+                         nscoord aX, nscoord aY,
+                         const PRUnichar* aString, PRUint32 aLength) = 0;
 
 #ifdef MOZ_MATHML
   // bounding metrics for a string 
@@ -90,7 +91,7 @@ public:
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
 #endif
-        
+
   XFontStruct           *mFont;
   PRUint32              *mMap;
   nsFontCharSetInfo     *mCharSetInfo;
@@ -99,8 +100,6 @@ public:
   PRUint16               mSize;
   PRInt16                mBaselineAdjust;
 };
-
-//typedef struct nsFontSearch nsFontSearch;
 
 class nsFontMetricsXlib : public nsIFontMetrics
 {
@@ -140,15 +139,19 @@ public:
 
   nsFontXlib* FindFont(PRUnichar aChar);
   nsFontXlib* FindUserDefinedFont(PRUnichar aChar);
-  nsFontXlib* FindLocalFont(PRUnichar aChar);
-  nsFontXlib* FindGenericFont(PRUnichar aChar);
-  nsFontXlib* FindGlobalFont(PRUnichar aChar);
+  nsFontXlib* FindStyleSheetSpecificFont(PRUnichar aChar);
+  nsFontXlib* FindStyleSheetGenericFont(PRUnichar aChar);
+  nsFontXlib* FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar);
+  nsFontXlib* FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCString* aName);
+  nsFontXlib* FindAnyFont(PRUnichar aChar);
   nsFontXlib* FindSubstituteFont(PRUnichar aChar);
 
   nsFontXlib* SearchNode(nsFontNode* aNode, PRUnichar aChar);
-  nsFontXlib* TryAliases(nsCString* aName, PRUnichar aChar); 
+  nsFontXlib* TryAliases(nsCString* aName, PRUnichar aChar);
   nsFontXlib* TryFamily(nsCString* aName, PRUnichar aChar);
   nsFontXlib* TryNode(nsCString* aName, PRUnichar aChar);
+  nsFontXlib* TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
+  nsFontXlib* TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
   nsFontXlib* PickASizeAndLoad(nsFontStretch* aStretch,
                                nsFontCharSetInfo* aCharSet,
@@ -157,16 +160,16 @@ public:
   static nsresult FamilyExists(const nsString& aFontName);
 
   nsCAutoString      mDefaultFont;
+  nsCString          *mGeneric;
+  PRUint8            mIsUserDefined;
+  nsCOMPtr<nsIAtom>  mLangGroup;
+  nsCAutoString      mUserDefined;
 
   nsCStringArray     mFonts;
   PRUint16           mFontsAlloc;
   PRUint16           mFontsCount;
   PRUint16           mFontsIndex;
   nsVoidArray        mFontIsGeneric;
-
-  nsCString          *mGeneric;
-  PRUint8            mIsUserDefined;
-  nsCOMPtr<nsIAtom>  mLangGroup;
 
   nsFontXlib         **mLoadedFonts;
   PRUint16           mLoadedFontsAlloc;
@@ -175,7 +178,6 @@ public:
   PRUint8            mTriedAllGenerics;
   nsFontXlib         *mSubstituteFont;
 
-  nsCAutoString      mUserDefined;
    
 protected:
   void RealizeFont();
