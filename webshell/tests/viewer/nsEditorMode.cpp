@@ -85,7 +85,7 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   }
   nsCOMPtr<nsISelectionController> selCon;
   selCon = do_QueryInterface(aPresShell);
-  result = gEditor->Init(aDOMDocument, aPresShell, selCon, 0);
+  result = gEditor->Init(aDOMDocument, aPresShell, nsnull, selCon, 0);
   if (NS_SUCCEEDED(result))
     result = gEditor->PostCreate();
   return result;
