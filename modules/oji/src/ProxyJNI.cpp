@@ -261,6 +261,8 @@ private:
         nsISecureEnv* secureEnv = GetSecureEnv(env);
         nsresult result;
         result = secureEnv->FindClass(name, &outClass);
+	if (NS_FAILED(result) || !outClass)
+            outClass = ProxyFindClass(env, name);
         return outClass;
     }
 
@@ -1160,7 +1162,21 @@ public:
     ~ProxyJNIEnv();
     
     nsISecureEnv* getSecureEnv() { return mSecureEnv; }
-    void SetSecurityContext(nsISecurityContext *context) { mContext = context;}
+    void SetSecurityContext(nsISecurityContext *context) { 
+        if (mContext)
+            mContext->Release();
+        mContext = context;
+        mContext->AddRef();
+    }
+    
+    nsresult GetSecurityContext(nsISecurityContext **context)
+    {
+        if (!context)
+            return NS_ERROR_FAILURE;
+
+        *context = getContext();
+        return NS_OK;
+    }
 };
 
 JNINativeInterface_ ProxyJNIEnv::theFuncs = {
@@ -1589,4 +1605,9 @@ nsISecureEnv* GetSecureEnv(JNIEnv* env)
 PR_IMPLEMENT(void) SetSecurityContext(JNIEnv* env, nsISecurityContext *context) {
     ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
     proxyEnv->SetSecurityContext(context);
+}
+
+PR_IMPLEMENT(nsresult) GetSecurityContext(JNIEnv* env, nsISecurityContext **context) {
+    ProxyJNIEnv* proxyEnv = (ProxyJNIEnv*)env;
+    return proxyEnv->GetSecurityContext(context);
 }
