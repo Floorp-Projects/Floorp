@@ -1771,11 +1771,6 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
       dirProvider.DoStartup();
 
-#ifdef XP_MACOSX
-      rv = InitializeMacCommandLine(gArgc, gArgv);
-      NS_ENSURE_SUCCESS(rv, 1);
-#endif
-
       nsCOMPtr<nsICommandLineRunner> cmdLine
         (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
       NS_ENSURE_TRUE(cmdLine, 1);
@@ -1838,10 +1833,22 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         PR_SetEnv("XRE_IMPORT_PROFILES=");
         
 
+#ifdef XP_MACOSX
+        // we re-initialize the command-line service and do appleevents munging
+        // after we are sure that we're not restarting
+        cmdLine = do_CreateInstance("@mozilla.org/toolkit/command-line;1");
+        NS_ENSURE_TRUE(cmdLine, 1);
+
+        rv = InitializeMacCommandLine(gArgc, gArgv);
+        NS_ENSURE_SUCCESS(rv, 1);
+
+        rv = cmdLine->Init(gArgc, gArgv,
+                           workingDir, nsICommandLine::STATE_INITIAL_LAUNCH);
+        NS_ENSURE_SUCCESS(rv, 1);
+
         // Kick off the prebinding update now that we know we won't be
         // relaunching.
 
-#ifdef XP_MACOSX
         UpdatePrebinding();
 #endif
 
