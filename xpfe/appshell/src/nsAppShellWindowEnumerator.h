@@ -54,6 +54,7 @@ struct nsWindowInfo
 
   nsCOMPtr<nsIXULWindow>    mWindow;
   PRInt32                   mTimeStamp;
+  PRUint32                  mZLevel;
 
   // each struct is in two, independent, circular, doubly-linked lists
   nsWindowInfo              *mYounger, // next younger in sequence
