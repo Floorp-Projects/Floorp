@@ -1,0 +1,44 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIURI.idl"
+#include "nsIEnumerator.idl"
+
+// JAR URLs have the following syntax
+//
+// jar:<url>!/(entry)
+//
+// EXAMPLE: jar:http://www.big.com/blue.jar!/ocean.html
+
+[scriptable, uuid(35cef9b0-6d18-11d3-a17f-0050041caf44)]
+interface nsIJARURI : nsIURI {
+
+    // Enumerates all the entries in the JAR (the root URI).
+    // ARGUMENTS:
+    //  aRoot - a string representing the root dir to enumerate from
+    //    or null to enumerate the whole thing.
+    nsISimpleEnumerator EnumerateEntries(in string aRoot);
+
+    // Returns the root URI (the one for the actual JAR file) for this JAR.
+    // eg http://www.big.com/blue.jar
+    nsIURI GetRootURI();
+
+    // Returns the entry specified for this JAR URI.
+    // eg ocean.html
+    string GetEntry();
+};
