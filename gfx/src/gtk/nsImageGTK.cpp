@@ -26,13 +26,14 @@
 
 #define IsFlagSet(a,b) (a & b)
 
-#undef CHEAP_PERFORMANCE_MEASURMENT
-
+// this is just a little bit faster than the GDK code
+#define USE_XLIB_ALPHA_MASKING
 
 // Defining this will trace the allocation of images.  This includes
 // ctor, dtor and update.
 #undef TRACE_IMAGE_ALLOCATION
 
+#undef CHEAP_PERFORMANCE_MEASURMENT
 
 
 NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
@@ -303,7 +304,7 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 }
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
-static PRTime gConvertTime, gStartTime, gPixmapTime, gEndTime;
+static PRTime gConvertTime, gAlphaTime, gAlphaEnd, gStartTime, gPixmapTime, gEndTime;
 #endif
 
 // Draw the bitmap, this method has a source and destination coordinates
@@ -360,16 +361,20 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   copyGC = gdk_gc_new(drawing->GetDrawable());
   gdk_gc_copy(copyGC, drawing->GetGC());
 
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+  gStartTime = gPixmapTime = PR_Now();
+  gAlphaTime = PR_Now();
+#endif
+
+
+  // this code is a little bit faster than the GTK code below
+#ifdef USE_XLIB_ALPHA_MASKING
   XImage *x_image = nsnull;
   Pixmap pixmap = 0;
   Display *dpy = nsnull;
   Visual *visual = nsnull;
   GC      gc;
   XGCValues gcv;
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-  gStartTime = gPixmapTime = PR_Now();
-#endif
 
   // Create gc clip-mask on demand
   if ((mAlphaBits != nsnull) && (nsnull == mAlphaPixmap))
@@ -419,6 +424,21 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     memset(&gcv, 0, sizeof(XGCValues));
     gcv.function = GXcopy;
     gc = XCreateGC(dpy, pixmap, GCFunction, &gcv);
+
+
+    // does this code do anything other than cause a few problems?
+#if 0
+    nsIRegion *clipRegion = nsnull;
+    if (NS_SUCCEEDED(aContext.GetClipRegion(&clipRegion)))
+    {
+      GdkRegion *region;
+      clipRegion->GetNativeRegion((void*)region);
+      XSetRegion(GDK_DISPLAY(), gc, ((GdkRegionPrivate*)region)->xregion);
+      XSetClipOrigin(GDK_DISPLAY(), gc, -aX, -aY);
+    }
+    NS_RELEASE(clipRegion);
+#endif
+
     XPutImage(dpy, pixmap, gc, x_image, 0, 0, 0, 0,
               aWidth, aHeight);
     XFreeGC(dpy, gc);
@@ -426,27 +446,47 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     // Now we are done with the temporary image
     x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
-
-#ifdef CHEAP_PERFORMANCE_MEASURMENT
-    gPixmapTime = PR_Now();
-#endif
   }
 
-#if 0
-  // this code doesn't work right.  leaving here for future reference.
+
+
+#else /* USE_XLIB_ALPHA_MASKING */
+
   if ((mAlphaBits != nsnull) && (nsnull == mAlphaPixmap))
   {
+    nsIRegion *clipRegion = nsnull;
     GdkImage *img;
     GdkGC *gc;
     mAlphaPixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, 1);
     gc = gdk_gc_new(mAlphaPixmap);
-    gdk_gc_set_function(gc, GDK_COPY);
+    gdk_gc_set_function(gc, GDK_COPY_INVERT);
+#if 0
+    if (NS_SUCCEEDED(aContext.GetClipRegion(&clipRegion)))
+    {
+      GdkRegion *region;
+      clipRegion->GetNativeRegion((void*&)region);
+      gdk_gc_set_clip_region(gc, region);
+    }
+#endif
     img = gdk_image_new_bitmap(gdk_rgb_get_visual(), mAlphaBits, aWidth, aHeight);
+    GDK_IMAGE_XIMAGE(img)->bits_per_pixel = 1;
+    GDK_IMAGE_XIMAGE(img)->bytes_per_line = mAlphaRowBytes;
+    GDK_IMAGE_XIMAGE(img)->bitmap_pad = 32;
+    GDK_IMAGE_XIMAGE(img)->bitmap_bit_order = MSBFirst;
+    GDK_IMAGE_XIMAGE(img)->byte_order = MSBFirst;
     gdk_draw_image(mAlphaPixmap,gc,img,0,0,0,0,aWidth,aHeight);
+    GDK_IMAGE_XIMAGE(img)->data = 0;
     gdk_image_destroy(img);
     gdk_gc_unref(gc);
   }
 #endif
+
+
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+    gAlphaEnd = PR_Now();
+    gPixmapTime = PR_Now();
+#endif
+
   // Render unique image bits onto an off screen pixmap only once
   // The image bits can change as a result of ImageUpdated() - for
   // example: animated GIFs.
@@ -465,18 +505,20 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
                                   aWidth, aHeight,
                                   gdk_rgb_get_visual()->depth);
 
-    // Make sure the clip region is clear, since we are rendering the 
-    // image bits to an off screen pixmap and this always happens at the
-    // origin.
-    gdk_gc_set_clip_origin(drawing->GetGC(), 0, 0);
-    gdk_gc_set_clip_mask(drawing->GetGC(), nsnull);
 
+    GdkGC *ggc;
+    ggc = gdk_gc_new(mImagePixmap);
+#if 0
+    gdk_rgb_gc_set_foreground(ggc, 0);
+    gdk_draw_rectangle(mImagePixmap, ggc, PR_TRUE, 0, 0, aWidth, aHeight);
+#endif
     // Render the image bits into an off screen pixmap
     gdk_draw_rgb_image (mImagePixmap,
-                        drawing->GetGC(),
+                        ggc,
                         0, 0, aWidth, aHeight,
                         GDK_RGB_DITHER_MAX,
                         mImageBits, mRowBytes);
+    gdk_gc_destroy(ggc);
   }
 
   if (mAlphaPixmap)
@@ -495,8 +537,32 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
          aHeight);
 #endif
 
-  // copy our off screen pixmap onto the window.
+#if 0
+  // code to apply the clip region to the alpha mask
+  nsIRegion *clipRegion = nsnull;
+  if (NS_SUCCEEDED(aContext.GetClipRegion(&clipRegion)) && mImagePixmap && mAlphaPixmap)
+  {
+    GdkDrawable = gdk_pixmap_new(nsnull, mAlphaWidth, mAlphaHeight, )
+    PRInt32 x, y, w, h;
+    clipRegion->GetBoundingBox(&x, &y, &w, &h);
 
+    aContext.SetColor(NS_RGB(255, 255, 255));
+    gdk_gc_set_function(drawing->GetGC(), GDK_XOR);
+    // flip the current contents
+    gdk_draw_rectangle(mAlphaPixmap, drawing->GetGC(), TRUE, 0, 0, mAlphaWidth, mAlphaHeight);
+
+    gint dw, dh;
+    gdk_window_get_size(drawing->GetDrawable(), &dw, &dh);
+
+    //  gdk_draw_rectangle(mAlphaPixmap, drawing->GetGC(), TRUE, 0 - aX, y, w, h);
+
+    gdk_gc_set_function(drawing->GetGC(), GDK_COPY);
+
+    NS_RELEASE(clipRegion);
+  }
+#endif
+
+  // copy our off screen pixmap onto the window.
   gdk_window_copy_area(drawing->GetDrawable(),      // dest window
                        drawing->GetGC(),            // gc
                        aX,                          // xsrc
@@ -515,12 +581,12 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
   gEndTime = PR_Now();
-  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, cvt=%lld\n",
+  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, alpha=%lld\n",
          this,
          aWidth, aHeight,
          gEndTime - gStartTime,
          gPixmapTime - gStartTime,
-         gConvertTime - gPixmapTime);
+         gAlphaEnd - gAlphaTime);
 #endif
 
   return NS_OK;

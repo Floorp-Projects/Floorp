@@ -276,6 +276,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 // this is definatly going to be on the screen, as it will be the window of a
 // widget or something.
   mIsOffscreen = PR_FALSE;
+
   return NS_OK;
 }
 
