@@ -49,7 +49,6 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIThreadPool.h"
 #include "nsFtpConnectionThread.h"
 #include "netCore.h"
 #include "nsXPIDLString.h"
