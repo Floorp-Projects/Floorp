@@ -100,6 +100,43 @@ foreach my $field ("estimated_time", "work_time", "remaining_time") {
     }
 }
 
+if (UserInGroup(Param('timetrackinggroup'))) {
+    my $wk_time = $::FORM{'work_time'};
+    if ($::FORM{'comment'} =~ /^\s*$/ && $wk_time && $wk_time != 0) {
+        ThrowUserError('comment_required', undef, "abort");
+    }
+}
+
+ValidateComment($::FORM{'comment'});
+
+# If the bug(s) being modified have dependencies, validate them
+# and rebuild the list with the validated values.  This is important
+# because there are situations where validation changes the value
+# instead of throwing an error, f.e. when one or more of the values
+# is a bug alias that gets converted to its corresponding bug ID
+# during validation.
+foreach my $field ("dependson", "blocked") {
+    if (defined($::FORM{$field}) && $::FORM{$field} ne "") {
+        my @validvalues;
+        foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
+            next unless $id;
+            ValidateBugID($id, 1);
+            push(@validvalues, $id);
+        }
+        $::FORM{$field} = join(",", @validvalues);
+    }
+}
+
+# If we are duping bugs, let's also make sure that we can change 
+# the original.  This takes care of issue A on bug 96085.
+if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
+    ValidateBugID($::FORM{'dup_id'});
+
+    # Also, let's see if the reporter has authorization to see the bug
+    # to which we are duping.  If not we need to prompt.
+    DuplicateUserConfirm();
+}
+
 # do a match on the fields if applicable
 
 # The order of these function calls is important, as both Flag::validate
@@ -119,37 +156,7 @@ if (defined $::FORM{'id'}) {
     Bugzilla::FlagType::validate(\%::FORM, $::FORM{'id'});
 }
 
-# If we are duping bugs, let's also make sure that we can change 
-# the original.  This takes care of issue A on bug 96085.
-if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
-    ValidateBugID($::FORM{'dup_id'});
-
-    # Also, let's see if the reporter has authorization to see the bug
-    # to which we are duping.  If not we need to prompt.
-    DuplicateUserConfirm();
-}
-
-ValidateComment($::FORM{'comment'});
-
 $::FORM{'dontchange'} = '' unless exists $::FORM{'dontchange'};
-
-# If the bug(s) being modified have dependencies, validate them
-# and rebuild the list with the validated values.  This is important
-# because there are situations where validation changes the value
-# instead of throwing an error, f.e. when one or more of the values
-# is a bug alias that gets converted to its corresponding bug ID
-# during validation.
-foreach my $field ("dependson", "blocked") {
-    if (defined($::FORM{$field}) && $::FORM{$field} ne "") {
-        my @validvalues;
-        foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
-            next unless $id;
-            ValidateBugID($id, 1);
-            push(@validvalues, $id);
-        }
-        $::FORM{$field} = join(",", @validvalues);
-    }
-}
 
 ######################################################################
 # End Data/Security Validation
@@ -1290,9 +1297,6 @@ foreach my $id (@idlist) {
     if (UserInGroup(Param('timetrackinggroup'))) {
         $work_time = $::FORM{'work_time'};
         if ($work_time) {
-            if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-                ThrowUserError('comment_required', undef, "abort");
-            }
             # AppendComment (called below) can in theory raise an error,
             # but because we've already validated work_time here it's
             # safe to log the entry before adding the comment.
