@@ -292,6 +292,11 @@ extern Bool LO_Click( MWContext *context, int32 x, int32 y, Bool requireCaret );
 extern void LO_Hit(MWContext *context, int32 x, int32 y,
 	Bool requireCaret, LO_HitResult *result);
 #endif /* LAYERS */
+/* Similar to lo_Click, but doesn't process click
+   Returns TRUE if line would be selected if user clicked here
+   We only use this in Editor, so we can assume "layer" is NULL
+*/
+Bool LO_CanSelectLine(MWContext *context, int32 x, int32 y);
 
 extern int32 LO_TextElementWidth(MWContext *context, LO_TextStruct *text_ele, int charOffset);
 
