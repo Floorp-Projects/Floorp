@@ -101,6 +101,7 @@
         <spring flex="5%"/>
         <box align="horizontal">
           <titledbutton id="removeCookies" class="dialog push" disabled="true" value="&button.removecookie.label;" onclick="DeleteCookieSelected();"/>
+          <!--  todo: <titledbutton id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
         </box>
       </box>
       
@@ -113,7 +114,7 @@
                 onclick="ViewPermissionSelected();">
             <treehead>
               <treerow>
-                <treecell value="&treehead.sitename.label;" />
+                <treecell value="&treehead.sitename.label;"/>
                 <treecell value="&treehead.status.label;"/>
               </treerow>          
             </treehead>
@@ -124,7 +125,7 @@
         <box align="horizontal">
           <titledbutton id="removePermissions" class="dialog push" disabled="true" 
                         value="&removepermission.label;" 
-                        onclick="gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"/>
+                        onclick="DeletePermissionSelected();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
