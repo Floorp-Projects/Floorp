@@ -22,16 +22,6 @@
 # directories. We want this name to be relatively short, and to be different
 # from what NSPR uses (so that we can wipe out Mozilla objects without
 # wiping NSPR objects.
-ifndef NSBUILDROOT
-#OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(OBJDIR_TAG).OBJ  # NSPR
-OBJDIR_NAME	= $(subst _,,$(CPU_ARCH_TAG)$(OBJDIR_TAG))
-endif
-#
-ifdef BUILD_OPT
-OBJDIR_TAG	= _OPT
-else
-OBJDIR_TAG	= _DBG
-endif
 
 # We don't want -KPIC as it forces the compiler to generate a .i file.
 DSO_PIC_CFLAGS	=
