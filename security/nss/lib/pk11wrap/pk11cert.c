@@ -1408,6 +1408,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	{ CKA_NETSCAPE_TRUST,  NULL, 0},
     };
     int certCount = sizeof(certAttrs)/sizeof(certAttrs[0]), keyCount = 2;
+    int realCount = 0;
     CK_ATTRIBUTE *attrs;
     CK_RV crv;
     SECCertUsage *certUsage = NULL;
@@ -1421,7 +1422,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     
     attrs = certAttrs;
     PK11_SETATTRS(attrs,CKA_ID, keyID->data, keyID->len); attrs++;
-    if(nickname) {
+    if (nickname) {
 	PK11_SETATTRS(attrs,CKA_LABEL, nickname, len ); attrs++;
     }
     PK11_SETATTRS(attrs,CKA_CLASS, &certc, sizeof(certc) ); attrs++;
@@ -1434,9 +1435,9 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 					 cert->derIssuer.len ); attrs++;
     PK11_SETATTRS(attrs,CKA_SERIAL_NUMBER, cert->serialNumber.data,
 					 cert->serialNumber.len); attrs++;
-    PK11_SETATTRS(attrs,CKA_VALUE, cert->derCert.data, cert->derCert.len);
-    if(includeTrust && PK11_IsInternal(slot)) {
-	attrs++;
+    PK11_SETATTRS(attrs,CKA_VALUE, cert->derCert.data, 
+						cert->derCert.len); attrs++;
+    if (includeTrust && PK11_IsInternal(slot)) {
 	certUsage = (SECCertUsage*)PORT_Alloc(sizeof(SECCertUsage));
 	if(!certUsage) {
 	    SECITEM_FreeItem(keyID,PR_TRUE);
@@ -1444,10 +1445,12 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	    return rv;
 	}
 	*certUsage = certUsageUserCertImport;
-	PK11_SETATTRS(attrs,CKA_NETSCAPE_TRUST, certUsage, sizeof(SECCertUsage));
-    } else {
-	certCount--;
+	PK11_SETATTRS(attrs,CKA_NETSCAPE_TRUST, certUsage,
+							 sizeof(SECCertUsage));
+	attrs++;
     }
+    realCount = attrs - certAttrs;
+    PORT_Assert(realCount <= certCount);
 
     attrs = keyAttrs;
     if(nickname) {
@@ -1472,7 +1475,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     }
 
     crv = PK11_GETTAB(slot)->
-			C_CreateObject(rwsession,certAttrs,certCount,&certID);
+			C_CreateObject(rwsession,certAttrs,realCount,&certID);
     if (crv == CKR_OK) {
 	rv = SECSuccess;
     } else {
@@ -3305,6 +3308,7 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     };
     /* if you change the array, change the variable below as well */
     int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
+    int realSize = 0;
     CK_OBJECT_HANDLE smimeh = CK_INVALID_HANDLE;
     CK_ATTRIBUTE *attrs = theTemplate;
     CK_SESSION_HANDLE rwsession;
@@ -3320,9 +3324,9 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 	                                            profileTime->len); attrs++;
 	PK11_SETATTRS(attrs, CKA_VALUE,emailProfile->data,
 	                                            emailProfile->len); attrs++;
-    } else {
-	tsize -= 2;
     }
+    realSize = attrs - theTemplate;
+    PORT_Assert (realSize <= tsize);
 
     if (slot == NULL) {
 	slot = PK11_GetInternalKeySlot();
@@ -3336,7 +3340,7 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
     }
 
     crv = PK11_GETTAB(slot)->
-                        C_CreateObject(rwsession,theTemplate,tsize,&smimeh);
+                        C_CreateObject(rwsession,theTemplate,realSize,&smimeh);
     if (crv != CKR_OK) {
         PORT_SetError( PK11_MapError(crv) );
     }
