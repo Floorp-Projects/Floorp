@@ -57,7 +57,7 @@ nsCertificateManager::GetCertNicknames(PRUint32 type,
   NS_WITH_SERVICE(nsIX509CertDB, certdb, kCertDBCID, &rv);
   if (NS_FAILED(rv)) return rv;
   PR_LOG(gPIPPKILog, PR_LOG_ERROR, ("getting cert names\n"));
-  rv = certdb->GetCertificateNames(nsnull, nsIX509Cert::CA_CERT, nameList);
+  rv = certdb->GetCertificateNames(nsnull, type, nameList);
   if (NS_SUCCEEDED(rv)) {
   PR_LOG(gPIPPKILog, PR_LOG_ERROR, ("converting unicode\n"));
     *_rNameList = nameList.ToNewUnicode();
@@ -65,21 +65,3 @@ nsCertificateManager::GetCertNicknames(PRUint32 type,
   return rv;
 }
 
-//  wstring getCertCN(in string nickname);
-NS_IMETHODIMP
-nsCertificateManager::GetCertCN(const char *nickname,
-                                PRUnichar **_rvCN)
-{
-  nsresult rv;
-  nsIX509Cert *cert;
-  PR_LOG(gPIPPKILog, PR_LOG_ERROR, ("getting certdb service\n"));
-  NS_WITH_SERVICE(nsIX509CertDB, certdb, kCertDBCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  PR_LOG(gPIPPKILog, PR_LOG_ERROR, ("getting cert %s\n", nickname));
-  rv = certdb->GetCertByName(nsnull, nickname, &cert);
-  if (NS_SUCCEEDED(rv)) {
-    PR_LOG(gPIPPKILog, PR_LOG_ERROR, ("converting unicode\n"));
-    rv = cert->GetCommonName(_rvCN);
-  }
-  return rv;
-}

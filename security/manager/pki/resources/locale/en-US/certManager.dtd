@@ -22,9 +22,17 @@
 
 <!ENTITY certmgr.title "Certificate Manager">
 
-<!ENTITY certmgr.catab "CA Certificates">
-<!ENTITY certmgr.builtinstab "Built-in CAs">
-<!ENTITY certmgr.mycastab "CAs Managed By You">
+<!ENTITY certmgr.tab.mine "My Certificates">
+<!ENTITY certmgr.tab.others "Other People's Certificates">
+<!ENTITY certmgr.tab.websites "Web Site Certificates">
+<!ENTITY certmgr.tab.ca "CA Certificates">
+
+<!ENTITY certmgr.ca.builtins "Built-in CAs">
+<!ENTITY certmgr.ca.mycas "CAs Managed By You">
+
+<!ENTITY certmgr.websites "You have certificates on file for these web sites:">
+
+<!ENTITY certmgr.mine "These are your certificates:">
 
 <!ENTITY certmgr.certdetail.title "Certificate Detail">
 <!ENTITY certmgr.certdetail.cn "Common Name (CN)">
