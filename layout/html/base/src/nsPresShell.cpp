@@ -7875,7 +7875,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
         color  = aColor;
         color2 = NS_RGB(0,0,0);
       } else {
-        PRUint8 rc,gc,bc = 0;
+        PRUint8 rc = 0, gc = 0, bc = 0;
         if (counter->mCount < 5) {
           rc = 255;
           gc = 255;
