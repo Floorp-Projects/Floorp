@@ -1316,14 +1316,14 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REF
 
         nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(global);
             
-        rv = manager->AddScriptEventListener(context, owner, aName, aValue, aIID);
+        rv = manager->AddScriptEventListener(context, owner, aName, aValue, aIID, PR_FALSE);
     }
     else {
         nsCOMPtr<nsIEventListenerManager> manager;
         rv = GetListenerManager(getter_AddRefs(manager));
         if (NS_FAILED(rv)) return rv;
 
-        rv = manager->AddScriptEventListener(context, this, aName, aValue, aIID);
+        rv = manager->AddScriptEventListener(context, this, aName, aValue, aIID, PR_TRUE);
     }
 
     return rv;
