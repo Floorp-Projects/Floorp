@@ -479,16 +479,22 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-
     // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+
+    // hold on to the window for the life of this method, in case it gets
+    // deleted during processing. yes, it's a double hack, since someWindow
+    // is not really an interface.
+    nsCOMPtr<nsISupports> kungFuDeathGrip;
+    if (!someWindow->mIsDestroying) // not if we're in the destructor!
+      kungFuDeathGrip = do_QueryInterface(someWindow);
 
     // Re-direct a tab change message destined for its parent window to the
     // the actual window which generated the event.
     if (msg == WM_NOTIFY) {
       LPNMHDR pnmh = (LPNMHDR) lParam;
-      if (pnmh->code == TCN_SELCHANGE) {             
-        someWindow = (nsWindow*)::GetWindowLong(pnmh->hwndFrom, GWL_USERDATA); 
+      if (pnmh->code == TCN_SELCHANGE) {
+        someWindow = (nsWindow*)::GetWindowLong(pnmh->hwndFrom, GWL_USERDATA);
       }
     }
 
@@ -794,7 +800,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
    // When moving a borderless top-level window the window
-   // must be placed relative to it's parent. WIN32 want's to
+   // must be placed relative to its parent. WIN32 want's to
    // place it relative to the screen, so we used the cached parent
    // to calculate the parent's location then add the x,y passed to
    // the move to get the screen coordinate for the borderless top-level
@@ -1537,8 +1543,9 @@ nsresult nsWindow::MenuHasBeenSelected(
 
   PRBool isMenuItem = !(aFlags & MF_POPUP);
   if(isMenuItem) {
-	  //printf("WM_MENUSELECT for menu item\n"); 
-	  //return NS_OK;
+    //printf("WM_MENUSELECT for menu item\n"); 
+    //NS_RELEASE(event.widget);
+    //return NS_OK;
   }
   else
   {
@@ -1603,6 +1610,7 @@ nsresult nsWindow::MenuHasBeenSelected(
       NS_RELEASE(menu);
       mHitSubMenus->RemoveElementAt(inx);
     }
+    NS_RELEASE(event.widget);
     return NS_OK;
   } else { // The menu is being selected
     //printf("... for selection\n");
@@ -1665,6 +1673,7 @@ nsresult nsWindow::MenuHasBeenSelected(
         // So it its depth is great then the current hit list count it already gone.
         if (fndDepth > mHitSubMenus->Count()) {
           NS_RELEASE(parentMenu);
+          NS_RELEASE(event.widget);
           return NS_OK;
         }
 
@@ -1677,6 +1686,7 @@ nsresult nsWindow::MenuHasBeenSelected(
           parentMenu->GetItemAt((PRUint32)aItemNum, item);
           if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
             //printf("Item was not a menu! What are we doing here? Return early....\n");
+            NS_RELEASE(event.widget);
             return NS_ERROR_FAILURE;
           }
         }
@@ -1761,6 +1771,7 @@ nsresult nsWindow::MenuHasBeenSelected(
  
         // At this point we bail if we are a menu item
         if (isMenuItem) {
+          NS_RELEASE(event.widget);
           return NS_OK;
         }
 
@@ -1801,6 +1812,7 @@ nsresult nsWindow::MenuHasBeenSelected(
       }
     }
   }  
+  NS_RELEASE(event.widget);
   return NS_OK;
 }
 //---------------------------------------------------------
@@ -3190,9 +3202,10 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
     // call the event callback 
     if (mEventCallback) {
-      //XXX Commenting this out becaus its blocking all focus events and 
+      //XXX Commenting this out because it's blocking all focus events and 
       //    I don't think it still works.  If I'm wrong we might start getting
       //    crashes due to focus events during window destruction again.
+      //YYY You get all my window crash bugs from now on, joki.
       //if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
         return(DispatchStandardEvent(aEventType));
       //}
