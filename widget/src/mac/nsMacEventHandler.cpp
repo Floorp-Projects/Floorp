@@ -357,14 +357,26 @@ void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
       }
     }
       
-	// let the old one know it lost activation
-	if (mActiveWidget)
-	{	
-	    //printf("   nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
-		mActiveWidget->RemoveDeleteObserver(this);
-		mActiveWidget = nsnull;
-	}
-	DispatchGuiEvent(aDeactivatedWidget, NS_DEACTIVATE);	
+    // If the deactivated toplevel window contains mActiveWidget, then
+    // clear out mActiveWidget.
+
+    if (mActiveWidget) {
+      nsCOMPtr<nsIWidget> curWin = do_QueryInterface(NS_STATIC_CAST(nsIWidget*, mActiveWidget));
+      for (;;) {
+        nsCOMPtr<nsIWidget> parent = dont_AddRef(curWin->GetParent());
+        if (!parent)
+          break;
+        curWin = parent;
+      }
+
+      if (NS_STATIC_CAST(nsWindow*, NS_STATIC_CAST(nsIWidget*, curWin)) == aDeactivatedWidget) {
+        //printf("   nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
+        mActiveWidget->RemoveDeleteObserver(this);
+        mActiveWidget = nsnull;
+      }
+    }
+
+    DispatchGuiEvent(aDeactivatedWidget, NS_DEACTIVATE);	
 }
 
 //-------------------------------------------------------------------------
