@@ -407,17 +407,16 @@ NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
   // By always returning the bit depth of the primary screen, QD
   // can do the proper color mappings.
    
-  static nsCOMPtr<nsIScreen> sPrimaryScreen;
-  if ( !sPrimaryScreen && mScreenManager )
-    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+  if ( !mPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(mPrimaryScreen) );  
     
-  if(!sPrimaryScreen) {
+  if(!mPrimaryScreen) {
     aDepth = 1;
     return NS_OK;
   }
    
   PRInt32 depth;
-  sPrimaryScreen->GetPixelDepth ( &depth );
+  mPrimaryScreen->GetPixelDepth ( &depth );
   aDepth = NS_STATIC_CAST ( PRUint32, depth );
     
   return NS_OK;
@@ -500,11 +499,10 @@ void
 nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
 {
   // optimize for the case where we only have one monitor.
-  static nsCOMPtr<nsIScreen> sPrimaryScreen;
-  if ( !sPrimaryScreen && mScreenManager )
-    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+  if ( !mPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(mPrimaryScreen) );  
   if ( sNumberOfScreens == 1 ) {
-    NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+    NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());
     return;
   }
   
@@ -515,7 +513,7 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
   nsIWidget* widget = reinterpret_cast<nsIWidget*>(mWidget);      // PRAY!
   NS_ASSERTION ( widget, "No Widget --> No Window" );
   if ( !widget ) {
-    NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());              // bail out with the main screen just to be safe.
+    NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());              // bail out with the main screen just to be safe.
     return;
   }  
  	WindowRef window = reinterpret_cast<WindowRef>(widget->GetNativeData(NS_NATIVE_DISPLAY));
@@ -526,7 +524,7 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
   if ( mScreenManager ) {
     if ( !(bounds.top || bounds.left || bounds.bottom || bounds.right) ) {
       NS_WARNING ( "trying to find screen for sizeless window" );
-      NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+      NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());
     }
     else {
     	::SetPortWindowPort( window );
@@ -540,8 +538,6 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
         
       // subtract out the height of title bar from the size
       StRegionFromPool structRgn;
-      // GetWindowRegion is available in 8.0 and beyond. Use it.
-      // ::GetWindowStructureRgn(window, structRgn);
       ::GetWindowRegion(window, kWindowStructureRgn, structRgn);
       Rect structBox;
       ::GetRegionBounds ( structRgn, &structBox );
