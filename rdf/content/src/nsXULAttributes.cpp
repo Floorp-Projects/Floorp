@@ -137,6 +137,70 @@ nsClassList::ParseClasses(nsClassList** aList, const nsString& aClassString)
 // nsXULAttribute
 //
 
+PRInt32 nsXULAttribute::gRefCnt;
+nsIAtom* nsXULAttribute::kIdAtom;
+
+const PRInt32 nsXULAttribute::kBlockSize = 512;
+
+nsXULAttribute* nsXULAttribute::gFreeList;
+
+void*
+nsXULAttribute::operator new(size_t aSize)
+{
+    // Simple fixed size allocator for nsXULAttribute objects. Look
+    // for an object on the |gFreeList|, if there isn't one, create a
+    // new block of 'em.
+    if (aSize != sizeof(nsXULAttribute))
+        return ::operator new(aSize);
+
+    nsXULAttribute* result = gFreeList;
+
+    if (result) {
+        gFreeList = gFreeList->mNext;
+    }
+    else {
+        // Create a chunk o' memory for the freelist.
+        nsXULAttribute* block =
+            NS_STATIC_CAST(nsXULAttribute*, ::operator new(kBlockSize * sizeof(nsXULAttribute)));
+
+        if (! block)
+            return nsnull;
+
+        // Thread it.
+        for (PRInt32 i = 1; i < kBlockSize - 1; ++i)
+            block[i].mNext = &block[i + 1];
+
+        block[kBlockSize - 1].mNext = nsnull;
+
+        result = block;
+        gFreeList = &block[1];
+    }
+
+    return result;
+}
+
+
+void
+nsXULAttribute::operator delete(void* aObject, size_t aSize)
+{
+    // Return |aObject| to |gFreeList|, if we can.
+    if (! aObject)
+        return;
+
+    if (aSize != sizeof(nsXULAttribute)) {
+        ::operator delete(aObject);
+        return;
+    }
+
+#ifdef DEBUG
+   nsCRT::memset(aObject, 0xdd, aSize);
+#endif
+
+    nsXULAttribute* doomed = NS_STATIC_CAST(nsXULAttribute*, aObject);
+
+    doomed->mNext = gFreeList;
+    gFreeList = doomed;
+}
 
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                PRInt32 aNameSpaceID,
@@ -149,6 +213,11 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
       mValue(nsnull)
 {
     NS_INIT_REFCNT();
+
+    if (gRefCnt++ == 0) {
+        kIdAtom = NS_NewAtom("id");
+    }
+
     NS_IF_ADDREF(aName);
     SetValueInternal(aValue);
 }
@@ -157,6 +226,10 @@ nsXULAttribute::~nsXULAttribute()
 {
     NS_IF_RELEASE(mName);
     ReleaseValue();
+
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(kIdAtom);
+    }
 }
 
 nsresult
@@ -444,7 +517,13 @@ nsresult
 nsXULAttribute::SetValueInternal(const nsString& aValue)
 {
     nsCOMPtr<nsIAtom> newAtom;
-    if (aValue.Length() <= kMaxAtomValueLength) {
+
+    // Atomize the value if it is short, or if it is the 'id'
+    // attribute. We atomize the 'id' attribute to "prime" the global
+    // atom table: the style system frequently asks for it, and if the
+    // table is "unprimed" we see quite a bit of thrashing as the 'id'
+    // value is repeatedly added and then removed from the atom table.
+    if ((aValue.Length() <= kMaxAtomValueLength) || (mName == kIdAtom)) {
         newAtom = getter_AddRefs( NS_NewAtom(aValue.GetUnicode()) );
     }
 
@@ -469,6 +548,22 @@ nsXULAttribute::SetValueInternal(const nsString& aValue)
         mValue = str;
     }
 
+    return NS_OK;
+}
+
+nsresult
+nsXULAttribute::GetValueAsAtom(nsIAtom** aResult)
+{
+    if (! mValue) {
+        *aResult = nsnull;
+    }
+    else if (IsStringValue()) {
+        *aResult = NS_NewAtom((const PRUnichar*) mValue);
+    }
+    else {
+        *aResult = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
+        NS_ADDREF(*aResult);
+    }
     return NS_OK;
 }
 

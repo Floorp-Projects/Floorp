@@ -3327,17 +3327,36 @@ nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
 NS_IMETHODIMP
 nsXULElement::GetID(nsIAtom*& aResult) const
 {
-  nsAutoString value;
-  GetAttribute(kNameSpaceID_None, kIdAtom, value);
+    aResult = nsnull;
 
-  if (value.Length() > 0)
-      aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
-  else
-  {
-      aResult = kNullAtom;
-      NS_ADDREF(kNullAtom);
-  }
-  return NS_OK;
+    if (mSlots && mSlots->mAttributes) {
+        // Take advantage of the fact that the 'id' attribute will
+        // already be atomized.
+        PRInt32 count = mSlots->mAttributes->Count();
+        for (PRInt32 i = 0; i < count; ++i) {
+            nsXULAttribute* attr =
+                NS_REINTERPRET_CAST(nsXULAttribute*, mSlots->mAttributes->ElementAt(i));
+
+            if ((attr->GetNameSpaceID() == kNameSpaceID_None) && (attr->GetName() == kIdAtom)) {
+                nsIAtom* result;
+                attr->GetValueAsAtom(&result);
+                aResult = result; // transfer refcnt
+                break;
+            }
+        }
+    }
+    else if (mPrototype) {
+        PRInt32 count = mPrototype->mNumAttributes;
+        for (PRInt32 i = 0; i < count; i++) {
+            nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
+            if ((attr->mNameSpaceID == kNameSpaceID_None) && (attr->mName.get() == kIdAtom)) {
+                aResult = NS_NewAtom(attr->mValue);
+                break;
+            }
+        }
+    }
+
+    return NS_OK;
 }
     
 NS_IMETHODIMP
