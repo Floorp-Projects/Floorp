@@ -732,6 +732,14 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
       } else if (PERCENT == ch) {
         aSpecs[i].mUnit = eFramesetUnit_Percent;
         numberEnd--;
+        // check for "*%"
+        if (numberEnd > start) {
+          ch = aSpec.CharAt(numberEnd - 1);
+          if (ASTER == ch) {
+            aSpecs[i].mUnit = eFramesetUnit_Relative;
+            numberEnd--;
+          }
+        }
       }
 
       // Translate value to an integer
