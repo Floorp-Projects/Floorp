@@ -184,6 +184,24 @@ class nsOutlinerContentView : public nsIOutlinerView,
     nsresult ParseProperties(nsIContent* aContent, Property** aProperty);
 
     void GetSelectElement();
+
+    inline nsresult SetOptionsSelected(PRInt32 aStart, PRInt32 aEnd,
+                                       PRBool aSelect, PRBool aClear)
+    {
+      nsresult rv = NS_OK;
+
+      if (!mHasCheckedSelect)
+        GetSelectElement();
+
+      if (mSelectElement) {
+        mIgnoreOptionSelected = PR_TRUE;
+        rv = mSelectElement->SetOptionsSelectedByIndex(aStart, aEnd, aSelect,
+                                                       aClear, PR_FALSE, nsnull);
+      }
+
+      return rv;
+    }
+
   private:
     nsCOMPtr<nsIOutlinerBoxObject>      mBoxObject;
     nsCOMPtr<nsIOutlinerSelection>      mSelection;
