@@ -101,7 +101,7 @@ HRESULT CIEHtmlElement::GetHtmlDomNode(CIEHtmlDomNode **ppHtmlDomNode)
     *ppHtmlDomNode = NULL;
     IHTMLDOMNode* pHtmlNode = NULL;
     // This causes an AddRef on outer unknown:
-    HRESULT hr = m_pNodeAgg->QueryInterface(IID_IHTMLDOMNode, (void**)&pHtmlNode);
+    HRESULT hr = m_pNodeAgg->QueryInterface(__uuidof(IHTMLDOMNode), (void**)&pHtmlNode);
     *ppHtmlDomNode = (CIEHtmlDomNode*)pHtmlNode;
     return hr;
 }

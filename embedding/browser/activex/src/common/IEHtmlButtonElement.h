@@ -114,7 +114,7 @@ BEGIN_COM_MAP(CIEHtmlButtonElement)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IHTMLButtonElement)
     COM_INTERFACE_ENTRY_AGGREGATE(IID_IHTMLElement, m_pHtmlElementAgg.p)
-    COM_INTERFACE_ENTRY_AGGREGATE(IID_IHTMLDOMNode, m_pHtmlElementAgg.p)
+    COM_INTERFACE_ENTRY_AGGREGATE(__uuidof(IHTMLDOMNode), m_pHtmlElementAgg.p)
 END_COM_MAP()
 
     // IHTMLButtonElement Implementation:
