@@ -438,18 +438,19 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   else
     infoFlags |= SHGFI_SMALLICON;
 
-  if ( (filePath.IsEmpty()) && (contentType.get() && *contentType.get()) ) // if we have a content type without a file extension...then use it!
+  // if we have a content type... then use it! but for existing files, we want
+  // to show their real icon.
+  if (!fileExists && !contentType.IsEmpty())
   {
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString fileExt;
-    rv = mimeService->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExt));
-    if (NS_SUCCEEDED(rv))
-    {
-      // we need to insert a '.' before the extension...
-      filePath = NS_LITERAL_CSTRING(".") + fileExt;
-    }
+    mimeService->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExt));
+    // If the mime service does not know about this mime type, we show
+    // the generic icon.
+    // In any case, we need to insert a '.' before the extension.
+    filePath = NS_LITERAL_CSTRING(".") + fileExt;
   }
 
   // (1) get an hIcon for the file
