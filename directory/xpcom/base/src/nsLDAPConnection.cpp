@@ -576,6 +576,9 @@ nsLDAPConnectionLoop::nsLDAPConnectionLoop()
 //
 nsLDAPConnectionLoop::~nsLDAPConnectionLoop()
 {
+    // Delete the lock object
+    if (mLock)
+        PR_DestroyLock(mLock);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPConnectionLoop, nsIRunnable);

@@ -57,6 +57,8 @@ nsLDAPURL::nsLDAPURL()
 
 nsLDAPURL::~nsLDAPURL()
 {
+    // Delete the array of attributes
+    delete mAttributes;
 }
 
 nsresult
