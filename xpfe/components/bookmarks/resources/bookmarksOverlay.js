@@ -547,10 +547,12 @@ BookmarksUIElement.prototype = {
       kSuppString.data = flavours[i];
       flavourArray.AppendElement(kSuppString);
     }
-    var hasFlavors = clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
-    return hasFlavors;
+    var hasFlavours = clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
+    return hasFlavours;
   },
   
+  /////////////////////////////////////////////////////////////////////////////
+  // aSelection is a mutable array, not a NodeList. 
   deleteSelection: function (aSelection)
   {
     const kRDFCContractID = "@mozilla.org/rdf/container;1";

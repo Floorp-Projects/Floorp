@@ -68,8 +68,8 @@
         <vbox class="box-padded">    
           <grid>
             <columns>
+              <column />
               <column flex="1"/>
-              <column flex="3"/>
             </columns>
             <rows>
               <row>
