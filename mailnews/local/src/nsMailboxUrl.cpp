@@ -350,8 +350,8 @@ nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
 		delete m_filePath;
 	GetFilePath(getter_Copies(m_file));
 	ParseSearchPart();
-	m_filePath = new nsFileSpec(nsFilePath(m_file));
-    return NS_OK;
+	m_filePath = new nsFileSpec(nsFilePath(nsUnescape((char *) (const char *)m_file)));
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
