@@ -24,6 +24,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-composer.dtd" >
 
@@ -43,6 +44,8 @@
   ]]>
   </script>        
         
+  <popupset id="aTooltipSet" />
+
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical" autostretch="never">
@@ -52,6 +55,7 @@
         value     = "&maintainTableStructure.label;"
         id        = "maintainTableStructure" 
         accesskey = "&maintainStructure.accesskey;"
+        tooltip   = "aTooltip" tooltiptext="&maintainTableStructure.tooltip;"
         pref      = "true"
         preftype  = "bool"
         prefstring= "editor.table.maintain_structure"
@@ -63,6 +67,7 @@
     <box autostretch="never" valign="top">
       <text class="label"
         value="&pressingTheDeleteKey.label;" 
+        tooltip = "aTooltip" tooltiptext="&pressingTheDeleteKey.tooltip;"
         for="tableDeleteKey" 
       />
       <radiogroup orient="vertical" autostretch="never"
@@ -132,6 +137,7 @@
       <checkbox 
         value      = "&preserveExistingFormatting;"
         id         = "preserveFormatting" 
+        tooltip    = "aTooltip" tooltiptext="&preserveExistingFormatting.tooltip;"
         pref       = "true" 
         preftype   = "bool" 
         prefstring = "editor.prettyprint"
