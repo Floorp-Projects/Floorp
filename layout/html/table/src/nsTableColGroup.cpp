@@ -25,6 +25,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -146,48 +147,6 @@ int nsTableColGroup::GetColumnCount ()
       mColCount = GetSpan ();
   }
   return mColCount;
-}
-
-PRBool nsTableColGroup::SetInternalAttribute (nsString *aName, nsString *aValue)
-{
-// Assert aName
-  PRBool result = PR_FALSE;
-  return result;
-}
-
-nsString * nsTableColGroup::GetInternalAttribute (nsString *aName)
-{
-// Assert aName
-  nsString * result = nsnull;
-  return result;
-}
-
-PRBool nsTableColGroup::UnsetInternalAttribute (nsString *aName)
-{
-// Assert aName
-  PRBool result = PR_FALSE;
-  return result;
-}
-
-int nsTableColGroup::GetInternalAttributeState (nsString *aName)
-{
-// Assert aName
-  int result = 0;
-  return result;
-}
-
-PRBool nsTableColGroup::IsInternalAttribute (nsString *aName)
-{
-// Assert aName
-  PRBool result = PR_FALSE;
-  return result;
-}
-
-nsString * nsTableColGroup::GetAllInternalAttributeNames ()
-{
-// Assert aName
-  nsString * result = nsnull;
-  return result;
 }
 
 PRBool nsTableColGroup::AppendChild (nsIContent *aContent)
@@ -329,6 +288,80 @@ PRBool nsTableColGroup::IsCol(nsIContent * aContent) const
       result = PR_TRUE;
   }
   return result;
+}
+
+void nsTableColGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+{
+  nsHTMLValue val;
+
+  if (aAttribute == nsHTMLAtoms::width) 
+  {
+    ParseValueOrPercentOrProportional(aValue, val, eHTMLUnit_Pixel);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if ( aAttribute == nsHTMLAtoms::span)
+  {
+    ParseValue(aValue, 0, val, eHTMLUnit_Integer);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    nsHTMLValue val;
+    if (ParseTableAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
+    return;
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    nsHTMLValue val;
+    if (ParseTableAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
+    return;
+  }
+}
+
+void nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
+                                        nsIPresContext* aPresContext)
+{
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
+  float p2t;
+  nsHTMLValue value;
+
+  // width
+  GetAttribute(nsHTMLAtoms::width, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    nsStylePosition* position = (nsStylePosition*)
+      aContext->GetData(eStyleStruct_Position);
+    switch (value.GetUnit()) {
+    case eHTMLUnit_Percent:
+      position->mWidth.SetPercentValue(value.GetPercentValue());
+      break;
+
+    case eHTMLUnit_Pixel:
+      p2t = aPresContext->GetPixelsToTwips();
+      position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
+      break;
+    }
+  }
+
+  // align
+  GetAttribute(nsHTMLAtoms::align, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
+    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetData(eStyleStruct_Display);
+
+    switch (value.GetIntValue()) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      display->mFloats = NS_STYLE_FLOAT_LEFT;
+      break;
+
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      display->mFloats = NS_STYLE_FLOAT_RIGHT;
+      break;
+    }
+  }
 }
 
 nsresult

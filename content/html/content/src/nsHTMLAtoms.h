@@ -145,6 +145,7 @@ public:
   static nsIAtom* selected;
   static nsIAtom* shape;
   static nsIAtom* size;
+  static nsIAtom* span;
   static nsIAtom* src;
   static nsIAtom* start;
   static nsIAtom* style;

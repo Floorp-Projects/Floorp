@@ -114,6 +114,7 @@ nsIAtom* nsHTMLAtoms::scrolling;
 nsIAtom* nsHTMLAtoms::selected;
 nsIAtom* nsHTMLAtoms::shape;
 nsIAtom* nsHTMLAtoms::size;
+nsIAtom* nsHTMLAtoms::span;
 nsIAtom* nsHTMLAtoms::src;
 nsIAtom* nsHTMLAtoms::start;
 nsIAtom* nsHTMLAtoms::style;
@@ -241,6 +242,7 @@ void nsHTMLAtoms::AddrefAtoms()
     selected = NS_NewAtom("SELECTED");
     shape = NS_NewAtom("SHAPE");
     size = NS_NewAtom("SIZE");
+    span = NS_NewAtom("SPAN");
     src = NS_NewAtom("SRC");
     start = NS_NewAtom("START");
     style = NS_NewAtom("STYLE");
@@ -369,6 +371,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(selected);
     NS_RELEASE(shape);
     NS_RELEASE(size);
+    NS_RELEASE(span);
     NS_RELEASE(src);
     NS_RELEASE(start);
     NS_RELEASE(style);

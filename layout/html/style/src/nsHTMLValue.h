@@ -25,14 +25,15 @@
 
 
 enum nsHTMLUnit {
-  eHTMLUnit_Null       = 0,      // (n/a) null unit, value is not specified
-  eHTMLUnit_Empty      = 1,      // (n/a) empty unit, value is not specified
-  eHTMLUnit_String     = 10,     // (nsString) a string value
-  eHTMLUnit_ISupports  = 20,     // (nsISupports*) a ref counted interface
-  eHTMLUnit_Integer    = 50,     // (int) simple value
-  eHTMLUnit_Enumerated = 51,     // (int) value has enumerated meaning
-  eHTMLUnit_Color      = 80,     // (color) an RGBA value
-  eHTMLUnit_Percent    = 90,     // (float) 1.0 == 100%) value is percentage of something
+  eHTMLUnit_Null          = 0,      // (n/a) null unit, value is not specified
+  eHTMLUnit_Empty         = 1,      // (n/a) empty unit, value is not specified
+  eHTMLUnit_String        = 10,     // (nsString) a string value
+  eHTMLUnit_ISupports     = 20,     // (nsISupports*) a ref counted interface
+  eHTMLUnit_Integer       = 50,     // (int) simple value
+  eHTMLUnit_Enumerated    = 51,     // (int) value has enumerated meaning
+  eHTMLUnit_Proportional  = 52,     // (int) value is a relative proportion of some whole
+  eHTMLUnit_Color         = 80,     // (color) an RGBA value
+  eHTMLUnit_Percent       = 90,     // (float) 1.0 == 100%) value is percentage of something
 
   // Screen relative measure
   eHTMLUnit_Pixel      = 600    // (int) screen pixels

@@ -106,26 +106,6 @@ public:
   virtual void ResetColumns ();
 
 
-  /* ----------- nsITableContent overrides ----------- */
-
-protected:
-
-  /** obsolete */
-  PRBool SetInternalAttribute (nsString *aName, nsString *aValue);  
-  /** obsolete */
-  nsString *GetInternalAttribute (nsString *aName);
-  /** obsolete */
-  PRBool UnsetInternalAttribute (nsString *aName);
-  /** obsolete */
-  int GetInternalAttributeState (nsString *aName);
-  /** obsolete */
-  PRBool IsInternalAttribute (nsString *aName);
-  /** obsolete */
-  static nsString * kInternalAttributeNames;
-  /** obsolete */
-  nsString * GetAllInternalAttributeNames ();
-
-
 };
 
 #endif

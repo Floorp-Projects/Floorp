@@ -485,8 +485,7 @@ PRBool nsTableFrame::NeedsReflow(const nsSize& aMaxSize)
     shrinkWrap Cells in each row to tallest, realigning contents within the cell
 */
 
-/** Layout the entire inner table.
-  */
+/* Layout the entire inner table. */
 NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
                                nsReflowMetrics& aDesiredSize,
                                const nsReflowState& aReflowState,
@@ -578,9 +577,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   mChildCount = 0;
   mFirstContentOffset = mLastContentOffset = 0;
 
-  nsIContent* c = mContent;
-  NS_ASSERTION(nsnull != c, "null content");
-  nsTablePart* table = (nsTablePart*)c;
+  NS_ASSERTION(nsnull != mContent, "null content");
+  nsTablePart* table = (nsTablePart*)mContent;
 
   // Ensure the cell map
   table->EnsureCellMap();
@@ -594,7 +592,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord maxAscent = 0;
   nscoord maxDescent = 0;
   PRInt32 kidIndex = 0;
-  PRInt32 lastIndex = c->ChildCount();
+  PRInt32 lastIndex = table->ChildCount();
   PRInt32 contentOffset=0;
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
@@ -616,7 +614,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
    *  TBody, in order
    */
   for (;;) {
-    nsIContentPtr kid = c->ChildAt(kidIndex);   // kid: REFCNT++
+    nsIContentPtr kid = table->ChildAt(kidIndex);   // kid: REFCNT++
     if (kid.IsNull()) {
       result = NS_FRAME_COMPLETE;
       break;
@@ -625,7 +623,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
     mLastContentIsComplete = PR_TRUE;
 
     const PRInt32 contentType = ((nsTableContent *)(nsIContent*)kid)->GetType();
-    if (contentType==nsITableContent::kTableRowGroupType)
+    /*
+    if (contentType==nsITableContent::kTableColGroupType)
     {
       // Resolve style
       nsIStyleContextPtr kidStyleContext =
@@ -641,7 +640,40 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       else
         ChildAt(0, kidFrame);
 
-      // if this is the first time, allocate the caption frame
+      // if this is the first time, allocate the frame
+      if (nsnull==kidFrame)
+      {
+        nsIContentDelegate* kidDel;
+        kidDel = kid->GetDelegate(aPresContext);
+        nsresult rv = kidDel->CreateFrame(aPresContext, kid,
+                                          this, kidStyleContext, kidFrame);
+        NS_RELEASE(kidDel);
+      }
+
+      // reflow the column group
+      nsReflowState kidReflowState(eReflowReason_Resize, availSize);
+      result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+      kidFrame->SetRect(0,0,0,0);
+    }
+    else */
+    //if (contentType==nsITableContent::kTableRowGroupType)
+    if (contentType!=nsITableContent::kTableCaptionType)
+    {
+      // Resolve style
+      nsIStyleContextPtr kidStyleContext =
+        aPresContext->ResolveStyleContextFor(kid, this);
+      NS_ASSERTION(kidStyleContext.IsNotNull(), "null style context for kid");
+
+      // SEC: TODO:  when content is appended or deleted, be sure to clear out the frame hierarchy!!!!
+
+      // get next frame, creating one if needed
+      nsIFrame* kidFrame=nsnull;
+      if (nsnull!=prevKidFrame)
+        prevKidFrame->GetNextSibling(kidFrame);  // no need to check for an error, just see if it returned null...
+      else
+        ChildAt(0, kidFrame);
+
+      // if this is the first time, allocate the frame
       if (nsnull==kidFrame)
       {
         nsIContentDelegate* kidDel;
@@ -1003,8 +1035,9 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
     nsIContentPtr kid;
 
     kidFrame->GetContent(kid.AssignRef());
-    if (((nsTableContent *)(nsIContent*)kid)->GetType() == nsITableContent::kTableRowGroupType)
-    { // skip children that are not row groups
+    const int contentType = ((nsTableContent *)(nsIContent*)kid)->GetType();
+    if (contentType != nsITableContent::kTableCaptionType)
+    { // for all colgroups and rowgroups...
       nsIStyleContextPtr kidSC;
 
       kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
@@ -1051,13 +1084,16 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       aState.y += topMargin;
       nsRect kidRect (0, 0, desiredSize.width, desiredSize.height);
       kidRect.x += aState.leftInset + kidMargin.left;
-      kidRect.y += aState.topInset + aState.y ;
-      PlaceChild(aPresContext, aState, kidFrame, kidRect,
-                 aMaxElementSize, kidMaxElementSize);
-      if (bottomMargin < 0) {
-        aState.prevMaxNegBottomMargin = -bottomMargin;
-      } else {
-        aState.prevMaxPosBottomMargin = bottomMargin;
+      kidRect.y += aState.topInset + aState.y;
+      if (contentType == nsITableContent::kTableRowGroupType)
+      {
+        PlaceChild(aPresContext, aState, kidFrame, kidRect,
+                   aMaxElementSize, kidMaxElementSize);
+        if (bottomMargin < 0) {
+          aState.prevMaxNegBottomMargin = -bottomMargin;
+        } else {
+          aState.prevMaxPosBottomMargin = bottomMargin;
+        }
       }
       childCount++;
 
@@ -1266,7 +1302,15 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
     //kidRect.x += kidMol->margin.left;
     kidRect.y += aState.y;
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    nsIContent* content=nsnull;
+    kidFrame->GetContent(content);
+    NS_ASSERTION(nsnull!=content, "bad kid");
+    const int contentType = ((nsITableContent*)content)->GetType();
+    NS_RELEASE(content);
+    if (contentType == nsITableContent::kTableRowGroupType)
+    {
+      PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    }
 
     // Remove the frame from its current parent
     kidFrame->GetNextSibling(nextInFlow->mFirstChild);
@@ -1473,7 +1517,15 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     //aState.y += topMargin;
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
     kidRect.y += aState.y;
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    nsIContent* content=nsnull;
+    kidFrame->GetContent(content);
+    NS_ASSERTION(nsnull!=content, "bad kid");
+    const int contentType = ((nsITableContent*)content)->GetType();
+    NS_RELEASE(content);
+    if (contentType == nsITableContent::kTableRowGroupType)
+    {
+      PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    }
 
     // Link child frame into the list of children
     if (nsnull != prevKidFrame) {
