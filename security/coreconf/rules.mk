@@ -316,7 +316,7 @@ endif
 ifeq ($(OS_TARGET),OS2)
 $(IMPORT_LIBRARY): $(MAPFILE)
 	rm -f $@
-	$(IMPLIB) $@ $(MAPFILE)
+	$(IMPLIB) $@ $<
 	$(RANLIB) $@
 endif
 
@@ -496,25 +496,25 @@ endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 %.i: %.cpp
-	$(CCC) -C -E $(CFLAGS) $< > $*.i
+	$(CCC) -C -E $(CFLAGS) $< > $@
 
 %.i: %.c
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(CC) -C /P $(CFLAGS) $< 
 else
-	$(CC) -C -E $(CFLAGS) $< > $*.i
+	$(CC) -C -E $(CFLAGS) $< > $@
 endif
 
 ifneq (,$(filter-out WIN%,$(OS_TARGET)))
 %.i: %.s
-	$(CC) -C -E $(CFLAGS) $< > $*.i
+	$(CC) -C -E $(CFLAGS) $< > $@
 endif
 
 %: %.pl
-	rm -f $@; cp $*.pl $@; chmod +x $@
+	rm -f $@; cp $< $@; chmod +x $@
 
 %: %.sh
-	rm -f $@; cp $*.sh $@; chmod +x $@
+	rm -f $@; cp $< $@; chmod +x $@
 
 ifdef DIRS
 $(DIRS)::
@@ -780,9 +780,9 @@ $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 $(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
 
-$(OBJDIR)/M%$(OBJ_SUFFIX): $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
+$(OBJDIR)/M%$(OBJ_SUFFIX): $(JMC_GEN_DIR)/M%.c $(JMC_GEN_DIR)/M%.h
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 
 export:: $(JMC_HEADERS) $(JMC_STUBS)
 endif
