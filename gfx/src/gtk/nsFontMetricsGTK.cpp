@@ -110,7 +110,17 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
   //slant (r = normal, i = italic, o = oblique)
   //size in nscoords >> 1
 
-  PRBool allowFontScaling = PR_FALSE;
+  // XXX oddly enough, enabling font scaling *here* breaks the
+  // text-field widgets...
+  static PRBool allowFontScaling = PR_FALSE;
+#ifdef DEBUG
+  static PRBool firstTime = 1;
+  if (firstTime) {
+    if (getenv("GECKO_SCALE_FONTS")) {
+      allowFontScaling = PR_TRUE;
+    }
+  }
+#endif
   if (allowFontScaling)
   {
     // Try 0,0 dpi first in case we have a scalable font
@@ -238,53 +248,60 @@ NS_IMETHODIMP  nsFontMetricsGTK::Destroy()
   return NS_OK;
 }
 
-char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
+char *
+nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts,
+                                      int cnt, nscoord desired)
 {
   int         idx;
   float       app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-//  XXX FIX ME
-  PRInt32     desiredpix = NSToIntRound(app2dev * desired);
+  PRInt32     desiredPix = NSToIntRound(app2dev * desired);
   XFontStruct *curfont;
-  PRInt32     closestmin = -1, minidx = 0;
+  PRInt32     closestMin = -1, minIndex = 0;
+  PRInt32     closestMax = 1<<30, maxIndex = 0;
 
-  //first try an exact or closest smaller match...
-  
+  // Find exact match, closest smallest and closest largest. If the
+  // largest is too much larger always pick the smallest.
   for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
   {
-    PRInt32 height = NSToIntRound(0.75 * (curfont->ascent + curfont->descent));
-
-    if (height == desiredpix)
-      break;
-
-    if ((height < desiredpix) && (height > closestmin))
-    {
-      closestmin = height;
-      minidx = idx;
+    PRInt32 height = curfont->ascent + curfont->descent;
+    if (height == desiredPix) {
+      // Winner. Found an *exact* match
+      return names[idx];
     }
-  }
 
-  if (idx < cnt)
-    return names[idx];
-  else if (closestmin >= 0)
-    return names[minidx];
-  else
-  {
-    closestmin = 2000000;
-
-    for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
-    {
-      PRInt32 height = NSToIntRound(0.75 * (curfont->ascent + curfont->descent));
-
-      if ((height > desiredpix) && (height < closestmin))
-      {
-        closestmin = height;
-        minidx = idx;
+    if (height < desiredPix) {
+      // If the height is closer to the desired height, remember this font
+      if (height > closestMin) {
+        closestMin = height;
+        minIndex = idx;
       }
     }
-
-    return names[minidx];
+    else {
+      if (height < closestMax) {
+        closestMax = height;
+        maxIndex = idx;
+      }
+    }
   }
+
+  // If the closest smaller font is closer than the closest larger
+  // font, use it.
+#ifdef NOISY_FONTS
+  printf(" *** desiredPix=%d(%d) min=%d max=%d *** ",
+         desiredPix, desired, closestMin, closestMax);
+#endif
+  if (desiredPix - closestMin <= closestMax - desiredPix) {
+    return names[minIndex];
+  }
+
+  // If the closest larger font is more than 2 pixels too big, use the
+  // closest smaller font. This is done to prevent things from being
+  // way too large.
+  if (closestMax - desiredPix > 2) {
+    return names[minIndex];
+  }
+  return names[maxIndex];
 }
 
 void nsFontMetricsGTK::RealizeFont()
