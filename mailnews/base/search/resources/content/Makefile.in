@@ -32,6 +32,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/SearchDialog.xul	\
 	$(srcdir)/SearchDialog.js	\
 	$(srcdir)/FilterListDialog.xul	\
+	$(srcdir)/FilterListDialog.js	\
 	$(srcdir)/FilterEditor.xul		\
 	$(srcdir)/FilterEditor.js		\
 	$(NULL)
