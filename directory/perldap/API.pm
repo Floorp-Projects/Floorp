@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.13 1999/01/21 23:52:41 leif%netscape.com Exp $
+# $Id: API.pm,v 1.14 1999/03/22 04:13:22 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -247,7 +247,7 @@ require AutoLoader;
 # Add Everything in %EXPORT_TAGS to @EXPORT_OK
 Exporter::export_ok_tags(keys %EXPORT_TAGS);
 
-$VERSION = '1.1';
+$VERSION = '1.2.1';
 
 # The XS 'constant' routine returns an integer.  There are all constants
 # we want to return something else.
@@ -2837,4 +2837,3 @@ Possible memory leak in ldap_search* is being investigated.
 L<Mozilla::LDAP::Conn>, L<Mozilla::LDAP::Entry>, and L<Perl>
 
 =cut
-

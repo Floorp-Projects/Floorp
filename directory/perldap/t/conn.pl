@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: conn.pl,v 1.2 1999/01/21 23:52:50 leif%netscape.com Exp $
+# $Id: conn.pl,v 1.3 1999/03/22 04:13:25 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -21,7 +21,8 @@
 # Contributor(s):
 #
 # DESCRIPTION
-#    Test most (all?) of the LDAP::Mozilla::Conn methods.
+#    Test most (all?) of the LDAP::Mozilla::Conn methods. This code
+#    needs to be rewritten to use the standard test harness in Perl...
 #
 #############################################################################
 
@@ -34,11 +35,14 @@ use strict;
 no strict "vars";
 
 
+# Uncomment for somewhat more verbose messages from core modules
+#$LDAP_DEBUG = 1;
+
+
 #################################################################################
 # Configurations, modify these as needed.
 #
-$BIND	= "uid=ldapadmin";
-$BASE	= "o=Netscape Communications Corp.,c=US";
+$BASE	= "dc=netscape,dc=com";
 $PEOPLE	= "ou=people";
 $GROUPS	= "ou=groups";
 $UID	= "leif-test";
@@ -60,7 +64,9 @@ if (!getopts('b:h:D:p:s:w:P:'))
    print "usage: $APPNAM $USAGE\n";
    exit;
 }
-%ld = Mozilla::LDAP::Utils::ldapArgs($BIND, $BASE);
+%ld = Mozilla::LDAP::Utils::ldapArgs(undef, $BASE);
+$BASE = $ld{"base"};
+Mozilla::LDAP::Utils::userCredentials(\%ld) unless $opt_n;
 
 
 #################################################################################
@@ -126,7 +132,20 @@ sub attributeEQ
 #
 $filter = "(uid=$UID)";
 $conn = getConn();
-$nentry = $conn->newEntry();
+$nentry = Mozilla::LDAP::Conn->newEntry();
+
+$hash = { "dn"		=> "uid=$UID, $PEOPLE, $BASE",
+	  "objectclass"	=> [ "top", "person", "inetOrgPerson", "mailRecipient" ],
+	  "uid"		=> $UID,
+	  "sn"		=> "Hedstrom",
+	  "givenName"	=> "Leif",
+	  "mail"	=> [ "leif\@ogre.com" ],
+	  "cn"		=> [ "Leif Hedstrom", "Leif P. Hedstrom" ],
+	  "description"	=> [ "Hockey Goon", "LDAP dolt" ]
+	  };
+
+$ent = $conn->search($ld{root}, $ld{scope}, $filter);
+$conn->delete($ent->getDN()) if $ent;
 
 $nentry->setDN("uid=$UID, $PEOPLE, $BASE");
 $nentry->{objectclass} = [ "top", "person", "inetOrgPerson", "mailRecipient" ];
@@ -137,9 +156,7 @@ $nentry->addValue("cn", "Leif Hedstrom");
 $nentry->addValue("cn", "Leif P. Hedstrom");
 $nentry->addValue("cn", "The Swede");
 $nentry->addValue("mail", "leif\@ogre.com");
-
-$ent = $conn->search($ld{root}, $ld{scope}, $filter);
-$conn->delete($ent->getDN()) if $ent;
+$nentry->setValue("description", "Hockey Goon", "LDAP dolt");
 
 dotPrint("Conn/newEntry");
 $conn->add($nentry) || print "not ";
@@ -151,6 +168,20 @@ print "ok\n";
 
 dotPrint("Conn/add");
 $conn->add($nentry) || print "not ";
+print "ok\n";
+
+dotPrint("Conn/delete-2");
+$conn->delete($nentry) || print "not ";
+print "ok\n";
+
+dotPrint("Conn/add-with-hash");
+$conn->add($hash) || print "not ";
+print "ok\n";
+
+$nentry->addValue("description", "Solaris rules");
+$nentry->addValue("description", "LDAP weenie");
+dotPrint("Conn/add+update");
+$conn->update($nentry) || print "not ";
 print "ok\n";
 
 dotPrint("Conn/delete(DN)");

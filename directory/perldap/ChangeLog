@@ -1,3 +1,80 @@
+1999-03-21  Leif Hedstrom  <leif@netscape.com>
+
+	* Checked in v1.2.1(beta).
+
+1999-03-19  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (add): Fixed the code so that it will handle hash array,
+	as the documentation indicates. (Pointed out by Kevin Burns).
+	(add): Code cleanup in the add() method.
+
+1999-03-18  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm: Changed back some of the "my" definitions, to make
+	sure arrays are properly reset.
+	(setValue): Added the _modified_ flag, from Stephen P. Schaefer
+	<stephen@networks.com>.
+	(addValue): Bug fix, when calling delete, and then
+	addValue(). From Stephen P. Schaefer as well.
+
+	* Conn.pm: Dito. This fixes the bug where qsearch/printLDIF()
+	would print multiple values.
+
+1999-03-12  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm: Changed docs for modifyRDN(), it was wrong...
+
+1999-03-11  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (new): Added this method, so that "new ...::Entry" will
+	work as expected.
+
+1999-03-09  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm: Tons of changes to handling the save/modified/deleted
+	attribute values.
+	(DESTROY): Added this destructor again, this time it does seem to
+	help quite a lot! Whoohoo...
+
+	* Conn.pm (update): Bug fix for bug #2530, keeping sort order for
+	attribute values.
+
+1999-03-08  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (unRemove): Bug fix, this was terribly horked, please
+	let's try it to make sure it works...
+
+	* Conn.pm (newEntry): Bug fix, forgot to give it the self_obj
+	member value... Sigh.
+
+1999-03-05  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (DELETE): We now handle the event that someone tries to
+	delete an internal attribute.
+
+	* Conn.pm (update): Bug: We forgot to test for existance of
+	"_save_" before trying to loop over it.
+
+	* Entry.pm (attrClean): Added this method, to make it easier to
+	reset the internal state of en Entry. This is used primarily by
+	the Conn.pm package.
+	(unRemove): Bug Fix: $selfl changed to $self...
+
+1999-02-28  Leif Hedstrom  <leif@netscape.com>
+
+	* Entry.pm (matchValue): Added support for the normalization,
+	which should have been done before... Bug #2854.
+
+	* Conn.pm (printError): Changed to use ldap_err2string instead of
+	ldap_perror.
+
+	* Utils.pm (ldapArgs): Changed "root" to "base" in the LD
+	structure.
+	(userCredentials): Dito.
+
+	* Conn.pm: Changed documentation to reflect the "base/root"
+	change.
+
 1999-01-06  Leif Hedstrom  <leif@netscape.com>
 
 	* Conn.pm (nextEntry): Fixed (tried to fix...) the bug with

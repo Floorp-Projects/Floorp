@@ -1,3 +1,7 @@
+1999-03-19  Leif Hedstrom  <leif@netscape.com>
+
+	* conn.pl (attributeEQ): Added test for add() with a hash array.
+
 1999-01-05  Leif Hedstrom  <leif@netscape.com>
 
 	* entry.pl: New script, to test all Entry:: methods.
