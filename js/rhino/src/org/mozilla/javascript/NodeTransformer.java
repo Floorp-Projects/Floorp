@@ -101,12 +101,18 @@ public class NodeTransformer {
                     }
 
                 } else {
-                    if (inFunction) {
-                        // Nested functions require activation  objects.
-                        ((FunctionNode) tree).setRequiresActivation(true);
-                    }
                     FunctionNode fnNode = (FunctionNode)
                                           node.getProp(Node.FUNCTION_PROP);
+                    if (inFunction) {
+                        // Functions containing other functions require 
+                        //  activation objects 
+                        ((FunctionNode) tree).setRequiresActivation(true);
+
+                        // Nested functions must check their 'this' value to
+                        //  insure it is not an activation object:
+                        //  see 10.1.6 Activation Object
+                        fnNode.setCheckThis(true);
+                    }
                     addParameters(fnNode);
                     NodeTransformer inner = newInstance();
                     fnNode = (FunctionNode) 

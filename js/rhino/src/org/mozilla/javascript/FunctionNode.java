@@ -61,6 +61,14 @@ public class FunctionNode extends Node {
         return itsNeedsActivation = b;
     }
     
+    public boolean getCheckThis() {
+        return itsCheckThis;
+    }
+
+    public void setCheckThis(boolean b) {
+        itsCheckThis = b;
+    }
+    
     /**
      * There are three types of functions that can be defined. The first
      * is a function statement. This is a function appearing as a top-level
@@ -90,5 +98,6 @@ public class FunctionNode extends Node {
 
     protected VariableTable itsVariableTable;
     protected boolean itsNeedsActivation;
+    protected boolean itsCheckThis;
     protected byte itsFunctionType;
 }

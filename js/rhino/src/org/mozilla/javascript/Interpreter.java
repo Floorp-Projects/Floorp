@@ -66,7 +66,7 @@ public class Interpreter extends LabelTable {
     {
         version = cx.getLanguageVersion();
         itsData = new InterpreterData(0, 0, 0, securityDomain, 
-                    cx.hasCompileFunctionsWithDynamicScope());
+                    cx.hasCompileFunctionsWithDynamicScope(), false);
         if (tree instanceof FunctionNode) {
             FunctionNode f = (FunctionNode) tree;
             InterpretedFunction result = 
@@ -153,7 +153,8 @@ public class Interpreter extends LabelTable {
             Interpreter jsi = new Interpreter();
             jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(0, 0, 0, securityDomain,
-                            cx.hasCompileFunctionsWithDynamicScope());
+                            cx.hasCompileFunctionsWithDynamicScope(),
+                            def.getCheckThis());
             jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;

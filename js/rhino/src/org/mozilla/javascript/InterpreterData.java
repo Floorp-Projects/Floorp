@@ -46,7 +46,7 @@ class InterpreterData {
     
     InterpreterData(int lastICodeTop, int lastStringTableIndex, 
                     int lastNumberTableIndex, Object securityDomain,
-                    boolean useDynamicScope)
+                    boolean useDynamicScope, boolean checkThis)
     {
         itsICodeTop = lastICodeTop == 0 
                       ? INITIAL_MAX_ICODE_LENGTH
@@ -62,6 +62,7 @@ class InterpreterData {
                                     : lastNumberTableIndex * 2];
         
         itsUseDynamicScope = useDynamicScope;
+        itsCheckThis = checkThis;
         if (securityDomain == null)
             Context.checkSecurityDomainRequired();
         this.securityDomain = securityDomain;
@@ -108,6 +109,7 @@ class InterpreterData {
     boolean itsNeedsActivation;
     boolean itsFromEvalCode;
     boolean itsUseDynamicScope;
+    boolean itsCheckThis;
     byte itsFunctionType;
 
     String[] itsStringTable;

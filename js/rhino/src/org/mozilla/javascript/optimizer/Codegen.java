@@ -1430,6 +1430,17 @@ public class Codegen extends Interpreter {
             }
         }
 
+        if (inFunction && ((OptFunctionNode)tree).getCheckThis()) {
+            // Nested functions must check their 'this' value to
+            //  insure it is not an activation object:
+            //  see 10.1.6 Activation Object
+            aload(thisObjLocal);
+            addScriptRuntimeInvoke("getThis",
+                      "(Lorg/mozilla/javascript/Scriptable;)",
+                      "Lorg/mozilla/javascript/Scriptable;");
+            astore(thisObjLocal);
+        }
+
         hasVarsInRegs = inFunction && 
                         !((OptFunctionNode)tree).requiresActivation();
         if (hasVarsInRegs) {
