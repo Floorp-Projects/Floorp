@@ -516,7 +516,7 @@ void nsTreeView::PaintControlStrip(nsIRenderingContext* drawCtx,
 				nsString itemText;
 				pItem->GetText(itemText);
 
-				drawCtx->DrawString(itemText, xOffset, controlStripRect.y + 2, 1); // Indent slightly
+				drawCtx->DrawString(itemText, xOffset, controlStripRect.y + 2); // Indent slightly
 
 				// Offset by the width of the text + 10.
 				int strWidth = 0;
@@ -537,7 +537,7 @@ void nsTreeView::PaintControlStrip(nsIRenderingContext* drawCtx,
 			int strWidth = 0;
 			drawCtx->GetWidth(nsCloseText, strWidth);
 			drawCtx->DrawString(nsCloseText, controlStripRect.width - strWidth - 2, 
-								controlStripRect.y + 2, 1);
+								controlStripRect.y + 2);
 			nsRect closeRect = nsRect(controlStripRect.width - strWidth - 4, 
 								controlStripRect.y, 
 								strWidth + 4, 
@@ -1238,7 +1238,7 @@ nsRect nsTreeView::DrawCroppedString(nsIRenderingContext* drawCtx, nsString text
 	if (drawText)
 	{
 		// Draw the cropString.
-		drawCtx->DrawString(cropString, rect.x + 2, rect.y + 2, 1); 
+		drawCtx->DrawString(cropString, rect.x + 2, rect.y + 2); 
 	}
 
 	int width = strWidth + 4;

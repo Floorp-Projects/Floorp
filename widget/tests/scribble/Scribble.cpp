@@ -184,17 +184,17 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
             int y = COLOR_FIELDS_Y + TEXT_HEIGHT/2 - font.size/2;
             nsString red("Red");
             drawCtx->SetColor(NS_RGB(255, 0, 0));
-            drawCtx->DrawString(red, 50, y, 200);
+            drawCtx->DrawString(red, 50, y);
             y += TEXT_HEIGHT+2;
 
             nsString green("Green");
             drawCtx->SetColor(NS_RGB(0, 255, 0));
-            drawCtx->DrawString(green, 50, y, 100);
+            drawCtx->DrawString(green, 50, y);
             y += TEXT_HEIGHT+2;
 
             nsString blue("Blue");
             drawCtx->SetColor(NS_RGB(0, 0, 255));
-            drawCtx->DrawString(blue, 50, y, 100);
+            drawCtx->DrawString(blue, 50, y);
             y += TEXT_HEIGHT+2;
 
             return nsEventStatus_eConsumeNoDefault;

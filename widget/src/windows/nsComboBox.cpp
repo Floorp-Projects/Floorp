@@ -350,7 +350,7 @@ NS_METHOD nsComboBox::Paint(nsIRenderingContext& aRenderingContext,
 
   nscoord x = (twoPixels * 2)  + rect.x;
   nscoord y = ((rect.height - textHeight) / 2) + rect.y;
-  //aRenderingContext.DrawString(text, x, y, 0);
+  //aRenderingContext.DrawString(text, x, y);
   */
   return NS_OK;
 }
