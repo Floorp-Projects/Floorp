@@ -69,6 +69,7 @@
     <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
 
     <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="accel, shift"/>
+    <key id="removestyleskb2"       key=" "   observes="cmd_removeStyles"  modifiers="accel"/>
     <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="accel, shift"/>
     <key id="removenamedanchorskb" key="&formatremovenamedanchors.keybinding;"    observes="cmd_removeNamedAnchors"  modifiers="accel, shift"/>
     <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="accel"/>
@@ -311,8 +312,8 @@
       </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" label="&openFileCmd.label;"/>
-      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;" onpopupshowing="BuildRecentMenu(false)">
-        <menupopup id="menupopup_RecentFiles"/>
+      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;" onpopupshowing="BuildRecentMenu()">
+        <menupopup id="menupopup_RecentFiles" oncommand="editPage(event.target.getAttribute('value'), window, false);"/>
           <!-- menuitems appended at runtime -->
       </menu>
       <menuitem accesskey="&fileclose.accesskey;" key="closekb" observes="cmd_close"/>
@@ -385,10 +386,10 @@
     </menupopup>
   </menu>
 
-  <menuitem id="viewNormalMode"   type="radio" name="1" accesskey="&NormalMode.accesskey;"     observes="cmd_NormalMode"/>
-  <menuitem id="viewAllTagsMode"  type="radio" name="1" accesskey="&AllTagsMode.accesskey;"    observes="cmd_AllTagsMode"/>
-  <menuitem id="viewSourceMode"   type="radio" name="1" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" label="&HTMLSourceMode.label;"/>
-  <menuitem id="viewPreviewMode"  type="radio" name="1" accesskey="&PreviewMode.accesskey;"    observes="cmd_PreviewMode"/>
+  <menuitem id="viewNormalMode"   type="radio" group="mode" accesskey="&NormalMode.accesskey;"     observes="cmd_NormalMode"/>
+  <menuitem id="viewAllTagsMode"  type="radio" group="mode" accesskey="&AllTagsMode.accesskey;"    observes="cmd_AllTagsMode"/>
+  <menuitem id="viewSourceMode"   type="radio" group="mode" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" label="&HTMLSourceMode.label;"/>
+  <menuitem id="viewPreviewMode"  type="radio" group="mode" accesskey="&PreviewMode.accesskey;"    observes="cmd_PreviewMode"/>
 
   <menupopup id = "composerCharsetMenuPopup"  onpopupshowing="updateCharsetPopupMenu(this)" />
 

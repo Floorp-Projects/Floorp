@@ -48,11 +48,12 @@ var gComposerWindowControllerID = -1;
 var documentModified;
 var prefAuthorString = "";
 
-// These must match enums in nsIEditorShell.idl:
-const kDisplayModePreview = 0;
-const kDisplayModeNormal = 1;
-const kDisplayModeAllTags = 2;
-const kDisplayModeSource = 3;
+const kDisplayModeNormal = 0;
+const kDisplayModeAllTags = 1;
+const kDisplayModeSource = 2;
+const kDisplayModePreview = 3;
+const kDisplayModeMenuIDs = ["viewNormalMode", "viewAllTagsMode", "viewSourceMode", "viewPreviewMode"];
+const kDisplayModeTabIDS = ["NormalModeButton", "TagModeButton", "SourceModeButton", "PreviewModeButton"];
 const kBaseEditorStyleSheet = "chrome://editor/content/EditorOverride.css";
 const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
@@ -70,12 +71,7 @@ var gHTMLSourceChanged = false;
 var gContentWindowDeck;
 var gFormatToolbar;
 var gFormatToolbarHidden = false;
-var gFormatToolbarCollapsed;
-var gEditModeBar;
-var gNormalModeButton;
-var gTagModeButton;
-var gSourceModeButton;
-var gPreviewModeButton;
+var gViewFormatToolbar;
 var gColorObj = { LastTextColor:"", LastBackgroundColor:"", LastHighlightColor:"",
                   Type:"", SelectedType:"", NoDefault:false, Cancel:false,
                   HighlightColor:"", BackgroundColor:"", PageColor:"",
@@ -327,7 +323,11 @@ var DocumentStateListener =
     // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
     EditorSetDefaultPrefsAndDoctype();
     EditorInitToolbars();
-    BuildRecentMenu(true);      // Build the recent files menu and save to prefs
+    
+    // Set window title and build "Recent Files" menu  
+    // (to detect empty menu and disable it)
+    UpdateWindowTitle();
+    BuildRecentMenu();
 
     // Just for convenience
     gContentWindow = window._content;
@@ -385,18 +385,10 @@ function EditorStartup(editorType, editorElement)
   {
     gSourceContentWindow = document.getElementById("content-source");
 
-    gEditModeBar       = document.getElementById("EditModeToolbar");
-    gNormalModeButton  = document.getElementById("NormalModeButton");
-    gTagModeButton     = document.getElementById("TagModeButton");
-    gSourceModeButton  = document.getElementById("SourceModeButton");
-    gPreviewModeButton = document.getElementById("PreviewModeButton");
-
-    // mark first tab as selected
-    document.getElementById("EditModeTabs").selectedTab = gNormalModeButton;
-
     // XUL elements we use when switching from normal editor to edit source
     gContentWindowDeck = document.getElementById("ContentWindowDeck");
     gFormatToolbar = document.getElementById("FormatToolbar");
+    gViewFormatToolbar = document.getElementById("viewFormatToolbar");
   }
 
   // store the editor shell in the window, so that child windows can get to it.
@@ -1599,10 +1591,7 @@ function SetEditMode(mode)
             title = titleNode.firstChild.data;
         }
         if (gEditor.document.title != title)
-        {
-          gEditor.document.title = title;
-          ResetWindowTitleWithFilename();
-        }
+          SetDocumentTitle(title);
 
         // reset selection to top of doc (wish we could preserve it!)
         if (bodyNode)
@@ -1640,14 +1629,6 @@ function oninputHTMLSource()
 
   // We don't need to call this again, so remove handler
   gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
-}
-
-function ResetWindowTitleWithFilename()
-{
-  // Calling this resets the "Title [filename]" that we show on window caption.
-  // The editorShell method calls the editor method,
-  // then calls UpdateWindowTitleAndRecentMenu().
-  editorShell.SetDocumentTitle(gEditor.document.title);
 }
 
 function CancelHTMLSource()
@@ -1713,70 +1694,57 @@ function SetDisplayMode(mode)
   if (mode == gEditorDisplayMode)
     return false;
 
+  var previousMode = gEditorDisplayMode;
   gEditorDisplayMode = mode;
-
-  // Load/unload appropriate override style sheet
-  try {
-    var editor = GetCurrentEditor();
-
-    if (mode == kDisplayModePreview)
-    {
-      // Disable all extra "edit mode" style sheets 
-      editor.enableStyleSheet(kNormalStyleSheet, false);
-      editor.enableStyleSheet(kAllTagsStyleSheet, false);
-    }
-    else if (mode == kDisplayModeNormal)
-    {
-      editor.addOverrideStyleSheet(kNormalStyleSheet);
-
-      // Disable ShowAllTags mode if that was the previous mode
-      if (gPreviousNonSourceDisplayMode == kDisplayModeAllTags)
-        editor.enableStyleSheet(kAllTagsStyleSheet, false);
-    }
-    else if (mode == kDisplayModeAllTags)
-    {
-      editor.addOverrideStyleSheet(kNormalStyleSheet);
-      editor.addOverrideStyleSheet(kAllTagsStyleSheet);
-    }
-  } catch(e) {}
-
-  // Save the last non-source mode so we can cancel source editing easily
-  if (mode != kDisplayModeSource)
-    gPreviousNonSourceDisplayMode = mode;
-
-  // Set the UI states
-  var selectedTab = null;
-  if (mode == kDisplayModePreview) selectedTab = gPreviewModeButton;
-  if (mode == kDisplayModeNormal) selectedTab = gNormalModeButton;
-  if (mode == kDisplayModeAllTags) selectedTab = gTagModeButton;
-  if (mode == kDisplayModeSource) selectedTab = gSourceModeButton;
-  if (selectedTab)
-    document.getElementById("EditModeTabs").selectedItem = selectedTab;
 
   if (mode == kDisplayModeSource)
   {
     // Switch to the sourceWindow (second in the deck)
-    gContentWindowDeck.setAttribute("selectedIndex","1");
+    gContentWindowDeck.selectedIndex = 1;
 
     //Hide the formatting toolbar if not already hidden
-    gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
-    if (gFormatToolbarHidden != "true")
-    {
-      gFormatToolbar.setAttribute("hidden", "true");
-    }
+    gFormatToolbarHidden = gFormatToolbar.hidden;
+    gFormatToolbar.hidden = true;
+    gViewFormatToolbar.hidden = true;
 
     gSourceContentWindow.focus();
   }
   else
   {
+    // Save the last non-source mode so we can cancel source editing easily
+    gPreviousNonSourceDisplayMode = mode;
+
+    // Load/unload appropriate override style sheet
+    try {
+      var editor = GetCurrentEditor();
+
+      switch (mode)
+      {
+        case kDisplayModePreview:
+          // Disable all extra "edit mode" style sheets 
+          editor.enableStyleSheet(kNormalStyleSheet, false);
+          editor.enableStyleSheet(kAllTagsStyleSheet, false);
+          break;
+
+        case kDisplayModeNormal:
+          editor.addOverrideStyleSheet(kNormalStyleSheet);
+          // Disable ShowAllTags mode
+          editor.enableStyleSheet(kAllTagsStyleSheet, false);
+          break;
+
+        case kDisplayModeAllTags:
+          editor.addOverrideStyleSheet(kNormalStyleSheet);
+          editor.addOverrideStyleSheet(kAllTagsStyleSheet);
+          break;
+      }
+    } catch(e) {}
+
     // Switch to the normal editor (first in the deck)
-    gContentWindowDeck.setAttribute("selectedIndex","0");
+    gContentWindowDeck.selectedIndex = 0;
 
     // Restore menus and toolbars
-    if (gFormatToolbarHidden != "true")
-    {
-      gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
-    }
+    gFormatToolbar.hidden = gFormatToolbarHidden;
+    gViewFormatToolbar.hidden = false;
 
     gContentWindow.focus();
   }
@@ -1784,30 +1752,15 @@ function SetDisplayMode(mode)
   // update commands to disable or re-enable stuff
   window.updateCommands("mode_switch");
 
-  // We must set check on menu item since toolbar may have been used
-  document.getElementById("viewPreviewMode").setAttribute("checked","false");
-  document.getElementById("viewNormalMode").setAttribute("checked","false");
-  document.getElementById("viewAllTagsMode").setAttribute("checked","false");
-  document.getElementById("viewSourceMode").setAttribute("checked","false");
+  // Set the selected tab at bottom of window:
+  // (Note: Setting "selectedIndex = mode" won't redraw tabs when menu is used.)
+  document.getElementById("EditModeTabs").selectedItem = document.getElementById(kDisplayModeTabIDS[mode]);
 
-  var menuID;
-  switch(mode)
-  {
-    case kDisplayModePreview:
-      menuID = "viewPreviewMode";
-      break;
-    case kDisplayModeNormal:
-      menuID = "viewNormalMode";
-      break;
-    case kDisplayModeAllTags:
-      menuID = "viewAllTagsMode";
-      break;
-    case kDisplayModeSource:
-      menuID = "viewSourceMode";
-      break;
-  }
-  if (menuID)
-    document.getElementById(menuID).setAttribute("checked","true");
+  // Uncheck previous menuitem and set new check since toolbar may have been used
+  if (previousMode >= 0)
+    document.getElementById(kDisplayModeMenuIDs[previousMode]).setAttribute("checked","false");
+  document.getElementById(kDisplayModeMenuIDs[mode]).setAttribute("checked","true");
+  
 
   return true;
 }
@@ -1843,7 +1796,32 @@ function InitPasteAsMenu()
   // TODO: Do enabling based on what is in the clipboard
 }
 
-function BuildRecentMenu(savePrefs)
+function UpdateWindowTitle()
+{
+  try {
+    var windowTitle = GetDocumentTitle();
+    if (!windowTitle)
+      windowTitle = GetString("untitled");
+
+    // Append just the 'leaf' filename to the Doc. Title for the window caption
+    var docUrl = GetDocumentUrl();
+    if (!IsUrlAboutBlank(docUrl))
+    {
+      var scheme = GetScheme(docUrl);
+      var filename = GetFilename(docUrl);
+      if (filename)
+        windowTitle += " [" + scheme + ":/.../" + filename + "]";
+    }
+    // Set window title with " - Composer" appended
+    var xulWin = document.getElementById("editorWindow");
+    window.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + xulWin.getAttribute("titlemodifier");
+
+    // Save changed title in the recent pages data in prefs
+    SaveRecentFilesPrefs();
+  } catch (e) {}
+}
+
+function BuildRecentMenu()
 {
   // Can't do anything if no prefs
   if (!gPrefs) return;
@@ -1862,20 +1840,10 @@ function BuildRecentMenu(savePrefs)
   var curUrl = StripPassword(GetDocumentUrl());
   var historyCount = 10;
   try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
-  var titleArray = new Array(historyCount);
-  var urlArray   = new Array(historyCount);
   var menuIndex = 1;
-  var arrayIndex = 0;
   var i;
   var disableMenu = true;
 
-  if(!IsUrlAboutBlank(curUrl))
-  {
-    // Always put latest-opened URL at start of array
-    titleArray[0] = curTitle;
-    urlArray[0] = curUrl;
-    arrayIndex = 1;
-  }
   for (i = 0; i < historyCount; i++)
   {
     var title = GetUnicharPref("editor.history_title_"+i);
@@ -1887,9 +1855,6 @@ function BuildRecentMenu(savePrefs)
     if (!url || GetScheme(url) == "data")
       continue;
 
-    // Never show password in menu!
-    url = StripPassword(url);
-
     // Skip over current URL
     if (url != curUrl)
     {
@@ -1899,8 +1864,53 @@ function BuildRecentMenu(savePrefs)
       menuIndex++;
       disableMenu = false;
 
+    }
+  }
+
+  // Disable menu item if no entries
+  SetElementEnabledById("menu_RecentFiles", !disableMenu);
+}
+
+function SaveRecentFilesPrefs()
+{
+  // Can't do anything if no prefs
+  if (!gPrefs) return;
+
+  // Nothing will change, so don't bother doing the work
+  if(IsUrlAboutBlank(curUrl))
+    return;
+
+  var curTitle = gEditor.document.title;
+  var curUrl = StripPassword(GetDocumentUrl());
+  var historyCount = 10;
+  try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
+  var titleArray = new Array(historyCount);
+  var urlArray   = new Array(historyCount);
+  var arrayIndex = 0;
+  var i;
+
+
+  // Always put latest-opened URL at start of array
+  titleArray[arrayIndex] = curTitle;
+  urlArray[arrayIndex] = curUrl;
+  arrayIndex++;
+
+  for (i = 0; i < historyCount; i++)
+  {
+    var title = GetUnicharPref("editor.history_title_"+i);
+    var url = GetUnicharPref("editor.history_url_"+i);
+
+    // Continue if URL pref is missing because 
+    //  a URL not found during loading may have been removed
+    // Also skip "data:" URL
+    if (!url || GetScheme(url) == "data")
+      continue;
+
+    // Skip over current URL
+    if (url != curUrl)
+    {
       // Save in array for prefs
-      if (savePrefs && arrayIndex < historyCount)
+      if (arrayIndex < historyCount)
       {
         titleArray[arrayIndex] = title;
         urlArray[arrayIndex] = url;
@@ -1909,28 +1919,20 @@ function BuildRecentMenu(savePrefs)
     }
   }
 
-  // Now resave the list back to prefs in the new order
-  if (savePrefs)
+  // Resave the list back to prefs in the new order
+  for (i = 0; i < historyCount; i++)
   {
-    savePrefs = false;
-    for (i = 0; i < historyCount; i++)
-    {
-      if (!urlArray[i])
-        break;
-      SetUnicharPref("editor.history_title_"+i, titleArray[i]);
-      SetUnicharPref("editor.history_url_"+i, urlArray[i]);
-      savePrefs = true;
-    }
+    if (!urlArray[i])
+      break;
+    SetUnicharPref("editor.history_title_"+i, titleArray[i]);
+    SetUnicharPref("editor.history_url_"+i, urlArray[i]);
   }
+/*
   // Force saving to file so next file opened finds these values
-  if (savePrefs) {
-    var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefService);
-    prefsService.savePrefFile(null);
-  }
-
-  // Disable menu item if no entries
-  SetElementEnabledById("menu_RecentFiles", !disableMenu);
+  var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService);
+  prefsService.savePrefFile(null);
+*/
 }
 
 function AppendRecentMenuitem(menupopup, title, url, menuIndex)
@@ -1964,7 +1966,6 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
       menuItem.setAttribute("value", url);
       if (accessKey != " ")
         menuItem.setAttribute("accesskey", accessKey);
-      menuItem.setAttribute("oncommand", "editPage(getAttribute('value'), window, false)");
       menupopup.appendChild(menuItem);
     }
   }
