@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: fipstest.c,v 1.3 2001/11/08 00:15:31 relyea%netscape.com Exp $
+ * $Id: fipstest.c,v 1.4 2002/11/16 01:00:44 nelsonb%netscape.com Exp $
  */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
@@ -107,19 +107,19 @@ static CK_RV
 pk11_fips_RC2_PowerUpSelfTest( void )
 {
     /* RC2 Known Key (40-bits). */
-    static PRUint8 rc2_known_key[] = { "RSARC" };
+    static const PRUint8 rc2_known_key[] = { "RSARC" };
 
     /* RC2-CBC Known Initialization Vector (64-bits). */
-    static PRUint8 rc2_cbc_known_initialization_vector[] = {"Security"};
+    static const PRUint8 rc2_cbc_known_initialization_vector[] = {"Security"};
 
     /* RC2 Known Plaintext (64-bits). */
-    static PRUint8 rc2_ecb_known_plaintext[] = {"Netscape"};
-    static PRUint8 rc2_cbc_known_plaintext[] = {"Netscape"};
+    static const PRUint8 rc2_ecb_known_plaintext[] = {"Netscape"};
+    static const PRUint8 rc2_cbc_known_plaintext[] = {"Netscape"};
 
     /* RC2 Known Ciphertext (64-bits). */
-    static PRUint8 rc2_ecb_known_ciphertext[] = {
+    static const PRUint8 rc2_ecb_known_ciphertext[] = {
 				  0x1a,0x71,0x33,0x54,0x8d,0x5c,0xd2,0x30};
-    static PRUint8 rc2_cbc_known_ciphertext[] = {
+    static const PRUint8 rc2_cbc_known_ciphertext[] = {
 				  0xff,0x41,0xdb,0x94,0x8a,0x4c,0x33,0xb3};
 
     /* RC2 variables. */
@@ -238,13 +238,13 @@ static CK_RV
 pk11_fips_RC4_PowerUpSelfTest( void )
 {
     /* RC4 Known Key (40-bits). */
-    static PRUint8 rc4_known_key[] = { "RSARC" };
+    static const PRUint8 rc4_known_key[] = { "RSARC" };
 
     /* RC4 Known Plaintext (64-bits). */
-    static PRUint8 rc4_known_plaintext[] = { "Netscape" };
+    static const PRUint8 rc4_known_plaintext[] = { "Netscape" };
 
     /* RC4 Known Ciphertext (64-bits). */
-    static PRUint8 rc4_known_ciphertext[] = {
+    static const PRUint8 rc4_known_ciphertext[] = {
 				0x29,0x33,0xc7,0x9a,0x9d,0x6c,0x09,0xdd};
 
     /* RC4 variables. */
@@ -307,19 +307,19 @@ static CK_RV
 pk11_fips_DES_PowerUpSelfTest( void )
 {
     /* DES Known Key (56-bits). */
-    static PRUint8 des_known_key[] = { "ANSI DES" };
+    static const PRUint8 des_known_key[] = { "ANSI DES" };
 
     /* DES-CBC Known Initialization Vector (64-bits). */
-    static PRUint8 des_cbc_known_initialization_vector[] = { "Security" };
+    static const PRUint8 des_cbc_known_initialization_vector[] = { "Security" };
 
     /* DES Known Plaintext (64-bits). */
-    static PRUint8 des_ecb_known_plaintext[] = { "Netscape" };
-    static PRUint8 des_cbc_known_plaintext[] = { "Netscape" };
+    static const PRUint8 des_ecb_known_plaintext[] = { "Netscape" };
+    static const PRUint8 des_cbc_known_plaintext[] = { "Netscape" };
 
     /* DES Known Ciphertext (64-bits). */
-    static PRUint8 des_ecb_known_ciphertext[] = {
+    static const PRUint8 des_ecb_known_ciphertext[] = {
 			       0x26,0x14,0xe9,0xc3,0x28,0x80,0x50,0xb0};
-    static PRUint8 des_cbc_known_ciphertext[]  = {
+    static const PRUint8 des_cbc_known_ciphertext[]  = {
 			       0x5e,0x95,0x94,0x5d,0x76,0xa2,0xd3,0x7d};
 
     /* DES variables. */
@@ -434,19 +434,19 @@ static CK_RV
 pk11_fips_DES3_PowerUpSelfTest( void )
 {
     /* DES3 Known Key (56-bits). */
-    static PRUint8 des3_known_key[] = { "ANSI Triple-DES Key Data" };
+    static const PRUint8 des3_known_key[] = { "ANSI Triple-DES Key Data" };
 
     /* DES3-CBC Known Initialization Vector (64-bits). */
-    static PRUint8 des3_cbc_known_initialization_vector[] = { "Security" };
+    static const PRUint8 des3_cbc_known_initialization_vector[] = { "Security" };
 
     /* DES3 Known Plaintext (64-bits). */
-    static PRUint8 des3_ecb_known_plaintext[] = { "Netscape" };
-    static PRUint8 des3_cbc_known_plaintext[] = { "Netscape" };
+    static const PRUint8 des3_ecb_known_plaintext[] = { "Netscape" };
+    static const PRUint8 des3_cbc_known_plaintext[] = { "Netscape" };
 
     /* DES3 Known Ciphertext (64-bits). */
-    static PRUint8 des3_ecb_known_ciphertext[] = {
+    static const PRUint8 des3_ecb_known_ciphertext[] = {
 			   0x55,0x8e,0xad,0x3c,0xee,0x49,0x69,0xbe};
-    static PRUint8 des3_cbc_known_ciphertext[] = {
+    static const PRUint8 des3_cbc_known_ciphertext[] = {
 			   0x43,0xdc,0x6a,0xc1,0xaf,0xa6,0x32,0xf5};
 
     /* DES3 variables. */
@@ -563,11 +563,11 @@ static CK_RV
 pk11_fips_MD2_PowerUpSelfTest( void )
 {
     /* MD2 Known Hash Message (512-bits). */
-    static PRUint8 md2_known_hash_message[] = {
+    static const PRUint8 md2_known_hash_message[] = {
 	"The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
 
     /* MD2 Known Digest Message (128-bits). */
-    static PRUint8 md2_known_digest[]  = {
+    static const PRUint8 md2_known_digest[]  = {
 				   0x41,0x5a,0x12,0xb2,0x3f,0x28,0x97,0x17,
 				   0x0c,0x71,0x4e,0xcc,0x40,0xc8,0x1d,0x1b};
 
@@ -608,11 +608,11 @@ static CK_RV
 pk11_fips_MD5_PowerUpSelfTest( void )
 {
     /* MD5 Known Hash Message (512-bits). */
-    static PRUint8 md5_known_hash_message[] = {
+    static const PRUint8 md5_known_hash_message[] = {
 	"The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
 
     /* MD5 Known Digest Message (128-bits). */
-    static PRUint8 md5_known_digest[]  = {
+    static const PRUint8 md5_known_digest[]  = {
 				   0x25,0xc8,0xc0,0x10,0xc5,0x6e,0x68,0x28,
 				   0x28,0xa4,0xa5,0xd2,0x98,0x9a,0xea,0x2d};
 
@@ -641,11 +641,11 @@ static CK_RV
 pk11_fips_SHA1_PowerUpSelfTest( void )
 {
     /* SHA-1 Known Hash Message (512-bits). */
-    static PRUint8 sha1_known_hash_message[] = {
+    static const PRUint8 sha1_known_hash_message[] = {
 	 "The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
 
     /* SHA-1 Known Digest Message (160-bits). */
-    static PRUint8 sha1_known_digest[] = {
+    static const PRUint8 sha1_known_digest[] = {
 			       0x0a,0x6d,0x07,0xba,0x1e,0xbd,0x8a,0x1b,
 			       0x72,0xf6,0xc7,0x22,0xf1,0x27,0x9f,0xf0,
 			       0xe0,0x68,0x47,0x7a};
@@ -675,7 +675,7 @@ static CK_RV
 pk11_fips_RSA_PowerUpSelfTest( void )
 {
     /* RSA Known Modulus used in both Public/Private Key Values (520-bits). */
-    static PRUint8 rsa_modulus[FIPS_RSA_MODULUS_LENGTH] = {
+    static const PRUint8 rsa_modulus[FIPS_RSA_MODULUS_LENGTH] = {
                                  0x00,0xa1,0xe9,0x5e,0x66,0x88,0xe2,0xf2,
                                  0x2b,0xe7,0x70,0x36,0x33,0xbc,0xeb,0x55,
                                  0x55,0xf1,0x60,0x18,0x3c,0xfb,0xd2,0x79,
@@ -687,7 +687,7 @@ pk11_fips_RSA_PowerUpSelfTest( void )
                                  0x6b};
 
     /* RSA Known Public Key Values (8-bits). */
-    static PRUint8 rsa_public_exponent[] = { 0x03 };
+    static const PRUint8 rsa_public_exponent[] = { 0x03 };
 
     /* RSA Known Private Key Values (version                 is   8-bits), */
     /*                              (private exponent        is 512-bits), */
@@ -696,8 +696,8 @@ pk11_fips_RSA_PowerUpSelfTest( void )
     /*                              (private prime exponent0 is 264-bits), */
     /*                              (private prime exponent1 is 264-bits), */
     /*                          and (private coefficient     is 256-bits). */
-    static PRUint8 rsa_version[] = { 0x00 };
-    static PRUint8 rsa_private_exponent[FIPS_RSA_PRIVATE_EXPONENT_LENGTH] = {
+    static const PRUint8 rsa_version[] = { 0x00 };
+    static const PRUint8 rsa_private_exponent[FIPS_RSA_PRIVATE_EXPONENT_LENGTH] = {
 				  0x6b,0xf0,0xe9,0x99,0xb0,0x97,0x4c,0x1d,
 				  0x44,0xf5,0x79,0x77,0xd3,0x47,0x8e,0x39,
 				  0x4b,0x95,0x65,0x7d,0xfd,0x36,0xfb,0xf9,
@@ -706,33 +706,33 @@ pk11_fips_RSA_PowerUpSelfTest( void )
 				  0x95,0xd6,0x41,0xe3,0xd6,0x73,0xad,0xdb,
 				  0x3b,0x89,0x00,0x8a,0xcd,0x1d,0xb9,0x06,
 				  0xac,0xac,0x0e,0x02,0x72,0x1c,0xf8,0xab };
-    static PRUint8 rsa_prime0[FIPS_RSA_PRIME0_LENGTH]   = {
+    static const PRUint8 rsa_prime0[FIPS_RSA_PRIME0_LENGTH]   = {
 				      0x00,0xd2,0x2c,0x9d,0xef,0x7c,0x8f,0x58,
 				      0x93,0x19,0xa1,0x77,0x0e,0x38,0x3e,0x85,
 				      0xb4,0xaf,0xcc,0x99,0xa5,0x43,0xbf,0x97,
 				      0xdc,0x46,0xb8,0x3f,0x6e,0x85,0x18,0x00,
 				      0x81};
-    static PRUint8 rsa_prime1[FIPS_RSA_PRIME1_LENGTH]   = {
+    static const PRUint8 rsa_prime1[FIPS_RSA_PRIME1_LENGTH]   = {
 				      0x00,0xc5,0x36,0xda,0x94,0x85,0x0c,0x1a,
 				      0xed,0x03,0xc7,0x67,0x90,0x34,0x0b,0xb9,
 				      0xec,0x1e,0x22,0xa2,0x15,0x50,0xc4,0xfd,
 				      0xe9,0x17,0x36,0x9d,0x7a,0x29,0xe6,0x76,
 				      0xeb};
-    static PRUint8 rsa_exponent0[FIPS_RSA_EXPONENT0_LENGTH] = {
+    static const PRUint8 rsa_exponent0[FIPS_RSA_EXPONENT0_LENGTH] = {
 					 0x00,0x8c,0x1d,0xbe,0x9f,0xa8,
 					 0x5f,0x90,0x62,0x11,0x16,0x4f,
 					 0x5e,0xd0,0x29,0xae,0x78,0x75,
 					 0x33,0x11,0x18,0xd7,0xd5,0x0f,
 					 0xe8,0x2f,0x25,0x7f,0x9f,0x03,
 					 0x65,0x55,0xab};
-    static PRUint8 rsa_exponent1[FIPS_RSA_EXPONENT1_LENGTH] = {
+    static const PRUint8 rsa_exponent1[FIPS_RSA_EXPONENT1_LENGTH] = {
 					 0x00,0x83,0x79,0xe7,0x0d,0xae,
 					 0x08,0x11,0xf3,0x57,0xda,0x45,
 					 0x0a,0xcd,0x5d,0x26,0x9d,0x69,
 					 0x6c,0x6c,0x0e,0x35,0xd8,0xa9,
 					 0x46,0x0f,0x79,0xbe,0x51,0x71,
 					 0x44,0x4f,0x47};
-    static PRUint8 rsa_coefficient[FIPS_RSA_COEFFICIENT_LENGTH] = {
+    static const PRUint8 rsa_coefficient[FIPS_RSA_COEFFICIENT_LENGTH] = {
 					 0x54,0x8d,0xb8,0xdc,0x8b,0xde,0xbb,
 					 0x08,0xc9,0x67,0xb7,0xa9,0x5f,0xa5,
 					 0xc4,0x5e,0x67,0xaa,0xfe,0x1a,0x08,
@@ -741,12 +741,12 @@ pk11_fips_RSA_PowerUpSelfTest( void )
 
 
     /* RSA Known Plaintext (512-bits). */
-    static PRUint8 rsa_known_plaintext[] = {
+    static const PRUint8 rsa_known_plaintext[] = {
                                          "Known plaintext utilized for RSA"
                                          " Encryption and Decryption test." };
 
     /* RSA Known Ciphertext (512-bits). */
-    static PRUint8 rsa_known_ciphertext[] = {
+    static const PRUint8 rsa_known_ciphertext[] = {
 				      0x12,0x80,0x3a,0x53,0xee,0x93,0x81,0xa5,
 				      0xf7,0x40,0xc5,0xb1,0xef,0xd9,0x27,0xaf,
 				      0xef,0x4b,0x87,0x44,0x00,0xd0,0xda,0xcf,
@@ -757,10 +757,10 @@ pk11_fips_RSA_PowerUpSelfTest( void )
 				      0xd8,0xc6,0xdb,0x8a,0xfe,0x06,0xf3,0xb1};
 
     /* RSA Known Message (128-bits). */
-    static PRUint8 rsa_known_message[]  = { "Netscape Forever" };
+    static const PRUint8 rsa_known_message[]  = { "Netscape Forever" };
 
     /* RSA Known Signed Hash (512-bits). */
-    static PRUint8 rsa_known_signature[] = {
+    static const PRUint8 rsa_known_signature[] = {
 				     0x27,0x23,0xa6,0x71,0x57,0xc8,0x70,0x5f,
 				     0x70,0x0e,0x06,0x7b,0x96,0x6a,0xaa,0x41,
 				     0x6e,0xab,0x67,0x4b,0x5f,0x76,0xc4,0x53,
@@ -771,11 +771,11 @@ pk11_fips_RSA_PowerUpSelfTest( void )
 				     0x45,0x11,0xb8,0x1a,0xfc,0xbc,0x79,0x3b};
 
 
-    static RSAPublicKey    bl_public_key = { NULL, 
+    static const RSAPublicKey    bl_public_key = { NULL, 
       { FIPS_RSA_TYPE, rsa_modulus,         FIPS_RSA_MODULUS_LENGTH },
       { FIPS_RSA_TYPE, rsa_public_exponent, FIPS_RSA_PUBLIC_EXPONENT_LENGTH }
     };
-    static RSAPrivateKey   bl_private_key = { NULL,
+    static const RSAPrivateKey   bl_private_key = { NULL,
       { FIPS_RSA_TYPE, rsa_version,          FIPS_RSA_PRIVATE_VERSION_LENGTH },
       { FIPS_RSA_TYPE, rsa_modulus,          FIPS_RSA_MODULUS_LENGTH },
       { FIPS_RSA_TYPE, rsa_public_exponent,  FIPS_RSA_PUBLIC_EXPONENT_LENGTH },
@@ -913,7 +913,7 @@ static CK_RV
 pk11_fips_DSA_PowerUpSelfTest( void )
 {
     /* DSA Known P (512-bits), Q (160-bits), and G (512-bits) Values. */
-    static PRUint8 dsa_P[] = {
+    static const PRUint8 dsa_P[] = {
                            0x8d,0xf2,0xa4,0x94,0x49,0x22,0x76,0xaa,
                            0x3d,0x25,0x75,0x9b,0xb0,0x68,0x69,0xcb,
                            0xea,0xc0,0xd8,0x3a,0xfb,0x8d,0x0c,0xf7,
@@ -922,11 +922,11 @@ pk11_fips_DSA_PowerUpSelfTest( void )
                            0xc2,0xe9,0xad,0xac,0x32,0xab,0x7a,0xac,
                            0x49,0x69,0x3d,0xfb,0xf8,0x37,0x24,0xc2,
                            0xec,0x07,0x36,0xee,0x31,0xc8,0x02,0x91};
-    static PRUint8 dsa_Q[] = {
+    static const PRUint8 dsa_Q[] = {
                            0xc7,0x73,0x21,0x8c,0x73,0x7e,0xc8,0xee,
                            0x99,0x3b,0x4f,0x2d,0xed,0x30,0xf4,0x8e,
                            0xda,0xce,0x91,0x5f};
-    static PRUint8 dsa_G[] = {
+    static const PRUint8 dsa_G[] = {
                            0x62,0x6d,0x02,0x78,0x39,0xea,0x0a,0x13,
                            0x41,0x31,0x63,0xa5,0x5b,0x4c,0xb5,0x00,
                            0x29,0x9d,0x55,0x22,0x95,0x6c,0xef,0xcb,
@@ -938,16 +938,16 @@ pk11_fips_DSA_PowerUpSelfTest( void )
 
     /* DSA Known Random Values (known random key block       is 160-bits)  */
     /*                     and (known random signature block is 160-bits). */
-    static PRUint8 dsa_known_random_key_block[] = {
+    static const PRUint8 dsa_known_random_key_block[] = {
                                                       "Mozilla Rules World!"};
-    static PRUint8 dsa_known_random_signature_block[] = {
+    static const PRUint8 dsa_known_random_signature_block[] = {
                                                       "Random DSA Signature"};
 
     /* DSA Known Digest (160-bits) */
-    static PRUint8 dsa_known_digest[] = { "DSA Signature Digest" };
+    static const PRUint8 dsa_known_digest[] = { "DSA Signature Digest" };
 
     /* DSA Known Signature (320-bits). */
-    static PRUint8 dsa_known_signature[] = {
+    static const PRUint8 dsa_known_signature[] = {
 			     0x39,0x0d,0x84,0xb1,0xf7,0x52,0x89,0xba,
 			     0xec,0x1e,0xa8,0xe2,0x00,0x8e,0x37,0x8f,
 			     0xc2,0xf5,0xf8,0x70,0x11,0xa8,0xc7,0x02,
@@ -961,7 +961,7 @@ pk11_fips_DSA_PowerUpSelfTest( void )
     SECItem                dsa_digest_item;
     DSAPublicKey           dsa_public_key;
     PRUint8                dsa_computed_signature[FIPS_DSA_SIGNATURE_LENGTH];
-    static PQGParams       dsa_pqg = { NULL,
+    static const PQGParams dsa_pqg = { NULL,
 			    { FIPS_DSA_TYPE, dsa_P, FIPS_DSA_PRIME_LENGTH },
 			    { FIPS_DSA_TYPE, dsa_Q, FIPS_DSA_SUBPRIME_LENGTH },
 			    { FIPS_DSA_TYPE, dsa_G, FIPS_DSA_BASE_LENGTH }};
