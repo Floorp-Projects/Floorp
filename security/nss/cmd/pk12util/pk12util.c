@@ -695,7 +695,7 @@ p12u_WriteToExportFile(void *arg, const char *buf, unsigned long len)
 }
 
 void
-P12U_ExportPKCS12Object(char *nn, char *outfile,
+P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 			secuPWData *slotPw, secuPWData *p12FilePw)
 {
     SEC_PKCS12ExportContext *p12ecx = NULL;
@@ -705,6 +705,12 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
     p12uContext *p12cxt = NULL;
     CERTCertificate *cert;
 
+    if (P12U_InitSlot(inSlot, slotPw) != SECSuccess) {
+	SECU_PrintError(progName,"Failed to authenticate to \"%s\"",
+			  PK11_GetSlotName(inSlot));
+	pk12uErrno = PK12UERR_PK11GETSLOT;
+	goto loser;
+    }
     cert = PK11_FindCertFromNickname(nn, NULL);
     if(!cert) {
 	SECU_PrintError(progName,"find cert by nickname failed");
@@ -715,12 +721,6 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
     if (!cert->slot) {
 	SECU_PrintError(progName,"cert does not have a slot");
 	pk12uErrno = PK12UERR_FINDCERTBYNN;
-	goto loser;
-    }
-    if (P12U_InitSlot(cert->slot, slotPw) != SECSuccess) {
-	SECU_PrintError(progName,"Failed to authenticate to \"%s\"",
-			  PK11_GetSlotName(cert->slot));
-	pk12uErrno = PK12UERR_PK11GETSLOT;
 	goto loser;
     }
 
@@ -737,7 +737,8 @@ P12U_ExportPKCS12Object(char *nn, char *outfile,
 	goto loser;
     }
 
-    if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, SEC_OID_SHA1)
+    if(SEC_PKCS12AddPasswordIntegrity(p12ecx, pwitem, 
+                     SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC)
        != SECSuccess) {
 	SECU_PrintError(progName,"PKCS12 add password integrity failed");
 	pk12uErrno = PK12UERR_PK12ADDPWDINTEG;
@@ -952,26 +953,25 @@ main(int argc, char **argv)
     }
     P12U_Init(SECU_ConfigDirectory(NULL),dbprefix);
 
+    if (!slotname || PL_strcmp(slotname, "internal") == 0)
+	slot = PK11_GetInternalKeySlot();
+    else
+	slot = PK11_FindSlotByName(slotname);
+
+    if (!slot) {
+	SECU_PrintError(progName,"Invalid slot \"%s\"", slotname);
+	goto done;
+    }
+
     if (pk12util.options[opt_Import].activated) {
-
-	if (!slotname || PL_strcmp(slotname, "internal") == 0)
-	    slot = PK11_GetInternalKeySlot();
-	else
-	    slot = PK11_FindSlotByName(slotname);
-
-	if (!slot) {
-	    SECU_PrintError(progName,"Invalid slot \"%s\"", slotname);
-	    goto done;
-	}
 
 	if ((ret = P12U_ImportPKCS12Object(import_file, slot, &slotPw,
 					   &p12FilePw)) != 0)
 	    goto done;
 
     } else if (pk12util.options[opt_Export].activated) {
-
 	P12U_ExportPKCS12Object(pk12util.options[opt_Nickname].arg,
-				export_file, &slotPw, &p12FilePw);
+				export_file, slot, &slotPw, &p12FilePw);
     } else {
 	Usage(progName);
 	pk12uErrno = PK12UERR_USAGE;
