@@ -55,6 +55,13 @@ public:
   NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
 
   /**
+   * Destroy this font metrics. This breaks the association between
+   * the font metrics and the device context (which means that calls
+   * to GetWidth following this call will fail).
+   */
+  NS_IMETHOD  Destroy() = 0;
+
+  /**
    * Returns the width (in app units) of an 8-bit character
    */
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
@@ -72,17 +79,19 @@ public:
   /**
    * Returns the width (in app units) of an 8-bit character string
    */
-  NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth) = 0;
+  NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth) = 0;
+
+  /**
+   * Returns the width (in app units) of an 8-bit character string
+   */
+  NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength,
+                       nscoord& aWidth) = 0;
 
   /**
    * Returns the width (in app units) of a Unicode character string
    */
-  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth) = 0;
-
-  /**
-   * Returns the width (in app units) of an 8-bit character
-   */
-  NS_IMETHOD  GetWidth(nsIDeviceContext *aContext, const nsString& aString, nscoord &aWidth) = 0;
+  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength,
+                       nscoord &aWidth) = 0;
 
   /**
    * Returns the height (in app units) of the font. This is ascent plus descent
@@ -112,11 +121,6 @@ public:
    * Returns, in app units, the maximum character advance for the font
    */
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance) = 0;
-
-  /**
-   * Get the widths (in app units) of the first 256 characters of the font
-   */
-  NS_IMETHOD  GetWidths(const nscoord *&aWidths) = 0;
 
   /**
    * Returns the font associated with these metrics
