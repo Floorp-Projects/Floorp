@@ -2068,7 +2068,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
   if (NS_OK == rv)
   {
     if (*result != 0)
-      *result = (PRUint32)atol(width);
+    {
+      PRUint32 attr = (PRUint32)atol(width);
+
+      if(nsnull == strchr(width, '%'))
+        *result = attr;
+      else
+      {
+        attr = (attr > 100) ? 100 : attr;
+        attr = (attr < 0) ? 0 : attr;
+
+        float t2p;
+        mContext->GetTwipsToPixels(&t2p);
+        nsRect rect;
+        mContext->GetVisibleArea(rect);
+        *result = NSTwipsToIntPixels(attr*rect.width/100, t2p);
+      }
+    }
     else
       *result = 0;
   }
@@ -2088,7 +2104,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
   if (NS_OK == rv)
   {
     if (*result != 0)
-      *result = (PRUint32)atol(height);
+    {
+      PRUint32 attr = (PRUint32)atol(height);
+
+      if(nsnull == strchr(height, '%'))
+        *result = attr;
+      else
+      {
+        attr = (attr > 100) ? 100 : attr;
+        attr = (attr < 0) ? 0 : attr;
+
+        float t2p;
+        mContext->GetTwipsToPixels(&t2p);
+        nsRect rect;
+        mContext->GetVisibleArea(rect);
+        *result = NSTwipsToIntPixels(attr*rect.height/100, t2p);
+      }
+    }
     else
       *result = 0;
   }
