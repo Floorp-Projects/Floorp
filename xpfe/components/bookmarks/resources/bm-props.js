@@ -166,8 +166,8 @@ function Init()
     document.getElementById("shortcutrow").setAttribute("hidden", "true");
   }
 
-  if (gBookmarkURL.indexOf("http://") != 0 &&
-      gBookmarkURL.indexOf("https://") != 0) {
+  if (gBookmarkURL.substr(0, 7).toLowerCase() != "http://" &&
+      gBookmarkURL.substr(0, 8).toLowerCase() != "https://") {
     // only allow scheduling of http/https URLs
     document.getElementById("ScheduleTab").setAttribute("hidden", "true");
     document.getElementById("NotifyTab").setAttribute("hidden", "true");
