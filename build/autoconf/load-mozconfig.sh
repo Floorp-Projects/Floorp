@@ -16,15 +16,15 @@
 # Reserved.
 #
 
-# load-mozconfig.sh - Loads options from mozconfig.sh onto configure's
+# load-mozconfig.sh - Loads options from .mozconfig onto configure's
 #    command-line. See find-mozconfig.sh for how the config file is
 #    found
 #
-#    The options from mozconfig.sh are inserted into the command-line
+#    The options from .mozconfig are inserted into the command-line
 #    before the real command-line options. This way the real options
-#    will override any mozconfig.sh options.
+#    will override any .mozconfig options.
 #
-# mozconfig.sh is a shell script. To add an option to configure's
+# .mozconfig is a shell script. To add an option to configure's
 #    command-line use the pre-defined function, ac_add_options,
 #
 #       ac_add_options  <configure-option> [<configure-option> ... ]
@@ -33,7 +33,7 @@
 #
 #       ac_add_options --with-pthreads --enable-debug
 #
-# ac_add_options can be called multiple times in mozconfig.sh.
+# ac_add_options can be called multiple times in .mozconfig.
 #    Each call adds more options to configure's command-line.
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).

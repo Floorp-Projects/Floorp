@@ -94,7 +94,7 @@ define(MOZ_ARG_HEADER, [# $1])
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN(MOZ_READ_MOZCONFIG,
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-# Read in 'mozconfig.sh' script to set the initial options.
+# Read in '.mozconfig' script to set the initial options.
 # See the load-mozconfig.sh script for more details.
 TOPSRCDIR=`dirname [$]0`
 PATH="$TOPSRCDIR/build/autoconf:$PATH"
