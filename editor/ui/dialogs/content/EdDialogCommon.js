@@ -1109,3 +1109,15 @@ function GetDefaultBrowserColors()
 
   return colors;
 }
+
+function TextIsURI(selectedText)
+{
+  if (selectedText)
+  {
+    var text = selectedText.toLowerCase();
+    return text.match(/^http:\/\/|^https:\/\/|^file:\/\/|^ftp:\/\/|\
+                      ^about:|^mailto:|^news:|^snews:|^telnet:|\
+                      ^ldap:|^ldaps:|^gopher:|^finger:|^javascript:/);
+  }
+  return false;
+}

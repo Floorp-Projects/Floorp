@@ -52,6 +52,7 @@ function Startup()
   {
     dump("Failed to create dialog object!!!\n");
     window.close();
+    return;
   }
 
   // Message was wrapped in a <label> or <div>, so actual text is a child text node
@@ -139,11 +140,13 @@ function Startup()
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
+    return;
   } 
 
   // We insert at caret only when nothing is selected
   insertLinkAtCaret = selection.isCollapsed;
   
+  var selectedText;
   if (insertLinkAtCaret)
   {
     // Titledbox caption:
@@ -157,8 +160,8 @@ function Startup()
     {
       // We get here if selection is exactly around a link node
       // Check if selection has some text - use that first
-      var selectedText = GetSelectionAsText();
-      if (selectedText.length == 0) 
+      selectedText = GetSelectionAsText();
+      if (selectedText) 
       {
         // No text, look for first image in the selection
         var children = anchorElement.childNodes;
@@ -185,9 +188,11 @@ function Startup()
       dialog.linkTextMessage.setAttribute("value",imageElement.src);
     } else {
       dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
-      if (selectedText.length > 0) {
+      if (selectedText) 
+      {
         // Use just the first 40 characters and add "..."
         dialog.linkTextMessage.setAttribute("value",TruncateStringAtWordEnd(selectedText, 40, true));
+dump("**** Truncated string? selectedText = "+selectedText+"\n");
       } else {
         dialog.linkTextMessage.setAttribute("value",GetString("MixedSelection"));
       }
@@ -202,6 +207,12 @@ function Startup()
 
   // Set data for the dialog controls
   InitDialog();
+  
+  // Search for a URI pattern in the selected text
+  //  as candidate href
+  selectedText = TrimString(selectedText); 
+  if (!dialog.hrefInput.value && TextIsURI(selectedText))
+      dialog.hrefInput.value = selectedText;
 
   // Set initial focus
   if (insertLinkAtCaret) {
