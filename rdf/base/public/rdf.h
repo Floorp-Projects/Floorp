@@ -67,8 +67,19 @@ static const char* kTag##prefix##_##name = #name
 /* Returned from nsIRDFCursor::Advance() if the cursor has no more
    elements to enuemrate */
 #define NS_RDF_CURSOR_EMPTY       NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 1)
+
+/* Returned from nsIRDFDataSource::GetSource() and GetTarget() if the source/target
+   has no value */
 #define NS_RDF_NO_VALUE           NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 2)
 
+/* Returned from nsIRDFDataSource::Assert() and Unassert() if the assertion (or
+   unassertion was accepted by the datasource*/
+#define NS_RDF_ASSERTION_ACCEPTED NS_OK
+
+/* Returned from nsIRDFDataSource::Assert() and Unassert() if the assertion (or
+   unassertion) was rejected by the datasource; i.e., the datasource was not
+   willing to record the statement. */
+#define NS_RDF_ASSERTION_REJECTED NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_RDF, 3)
 
 
 
