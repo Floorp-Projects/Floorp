@@ -39,12 +39,6 @@ package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
 
-import java.io.PrintWriter;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.File;
-import java.io.IOException;
-
 import java.util.Hashtable;
 
 class Optimizer
@@ -74,6 +68,8 @@ class Optimizer
     {
         if (theFunction.fnode.requiresActivation()) return;
 
+        theFunction.establishVarsIndices();
+
         inDirectCallFunction = theFunction.isTargetOfDirectCall();
 
         ObjArray statementsArray = new ObjArray();
@@ -81,219 +77,28 @@ class Optimizer
         Node[] theStatementNodes = new Node[statementsArray.size()];
         statementsArray.toArray(theStatementNodes);
 
-        Block[] theBlocks = Block.buildBlocks(theStatementNodes);
-        PrintWriter pw = null;
-        try {
-            if (DEBUG_OPTIMIZER) {
-                String fileName = "blocks"+debug_blockCount+".txt";
-                ++debug_blockCount;
-                pw = new PrintWriter(
-                            new DataOutputStream(
-                                new FileOutputStream(new File(fileName))));
-                pw.println(Block.toString(theBlocks, theStatementNodes));
-            }
+        for (int i = 0; i < theStatementNodes.length; i++)
+            replaceVariableAccess(theStatementNodes[i], theFunction);
 
-            theFunction.establishVarsIndices();
-            for (int i = 0; i < theStatementNodes.length; i++)
-                replaceVariableAccess(theStatementNodes[i], theFunction);
+        Block.runFlowAnalyzes(theFunction, theStatementNodes);
 
-            reachingDefDataFlow(theFunction, theBlocks);
-            typeFlow(theFunction, theBlocks);
-            findSinglyTypedVars(theFunction, theBlocks);
-            localCSE(theBlocks, theFunction);
-            if (!theFunction.fnode.requiresActivation()) {
-                /*
-                 * Now that we know which local vars are in fact always
-                 * Numbers, we re-write the tree to take advantage of
-                 * that. Any arithmetic or assignment op involving just
-                 * Number typed vars is marked so that the codegen will
-                 * generate non-object code.
-                 */
-                parameterUsedInNumberContext = false;
-                for (int i = 0; i < theStatementNodes.length; i++) {
-                    rewriteForNumberVariables(theStatementNodes[i]);
-                }
-                theFunction.setParameterNumberContext(parameterUsedInNumberContext);
-                //System.out.println("Function " + theFunction.getFunctionName() + " has parameters in number contexts  : " + parameterUsedInNumberContext);
-            }
-            if (DEBUG_OPTIMIZER) {
-                for (int i = 0; i < theBlocks.length; i++) {
-                    pw.println("For block " + theBlocks[i].getBlockID());
-                    theBlocks[i].printLiveOnEntrySet(pw, theFunction);
-                }
-                int N = theFunction.getVarCount();
-                System.out.println("Variable Table, size = " + N);
-                for (int i = 0; i != N; i++) {
-                    OptLocalVariable lVar = theFunction.getVar(i);
-                    pw.println(lVar.toString());
-                }
-            }
-            if (DEBUG_OPTIMIZER) pw.close();
-        }
-        catch (IOException x)   // for the DEBUG_OPTIMIZER i/o
-        {
-        }
-        finally {
-            if (DEBUG_OPTIMIZER) pw.close();
-        }
-    }
-
-    private static void
-    findSinglyTypedVars(OptFunctionNode fn, Block theBlocks[])
-    {
-/*
-    discover the type events for each non-volatile variable (not live
-    across function calls). A type event is a def, which sets the target
-    type to the source type.
-*/
-        if (false) {
+        if (!theFunction.fnode.requiresActivation()) {
             /*
-                it's enough to prove that every def point for a local variable
-                confers the same type on that variable. If that is the case (and
-                that type is 'Number') then we can assign that local variable to
-                a Double jReg for the life of the function.
-            */
-            for (int i = 0; i < theBlocks.length; i++) {
-                theBlocks[i].findDefs();
+             * Now that we know which local vars are in fact always
+             * Numbers, we re-write the tree to take advantage of
+             * that. Any arithmetic or assignment op involving just
+             * Number typed vars is marked so that the codegen will
+             * generate non-object code.
+             */
+            parameterUsedInNumberContext = false;
+            for (int i = 0; i < theStatementNodes.length; i++) {
+                rewriteForNumberVariables(theStatementNodes[i]);
             }
+            theFunction.setParameterNumberContext(parameterUsedInNumberContext);
         }
-        for (int i = 0; i < fn.getVarCount(); i++) {
-            OptLocalVariable lVar = fn.getVar(i);
-            if (!lVar.isParameter()) {
-                int theType = lVar.getTypeUnion();
-                if (theType == NumberType) {
-                    lVar.setIsNumber();
-                }
-            }
-        }
+
     }
 
-    private static void
-    doBlockLocalCSE(Block theBlocks[], Block b, Hashtable theCSETable,
-                    boolean beenThere[], OptFunctionNode theFunction)
-    {
-        if (!beenThere[b.getBlockID()]) {
-            beenThere[b.getBlockID()] = true;
-            theCSETable = b.localCSE(theCSETable, theFunction);
-            Block succ[] = theBlocks[b.getBlockID()].getSuccessorList();
-            if (succ != null) {
-                for (int i = 0; i < succ.length; i++) {
-                    int index = succ[i].getBlockID();
-                    Block pred[] = theBlocks[index].getPredecessorList();
-                    if (pred.length == 1)
-                        doBlockLocalCSE(theBlocks, succ[i],
-                                   (Hashtable)(theCSETable.clone()),
-                                                beenThere, theFunction);
-                }
-            }
-        }
-    }
-
-    private static void
-    localCSE(Block theBlocks[], OptFunctionNode theFunction)
-    {
-        boolean beenThere[] = new boolean[theBlocks.length];
-        doBlockLocalCSE(theBlocks, theBlocks[0], null, beenThere, theFunction);
-        for (int i = 0; i < theBlocks.length; i++) {
-            if (!beenThere[i]) theBlocks[i].localCSE(null, theFunction);
-        }
-    }
-
-    private static void
-    typeFlow(OptFunctionNode fn, Block theBlocks[])
-    {
-        boolean visit[] = new boolean[theBlocks.length];
-        boolean doneOnce[] = new boolean[theBlocks.length];
-        int vIndex = 0;
-        boolean needRescan = false;
-        visit[vIndex] = true;
-        while (true) {
-            if (visit[vIndex] || !doneOnce[vIndex]) {
-                doneOnce[vIndex] = true;
-                visit[vIndex] = false;
-                if (theBlocks[vIndex].doTypeFlow()) {
-                    Block succ[] = theBlocks[vIndex].getSuccessorList();
-                    if (succ != null) {
-                        for (int i = 0; i < succ.length; i++) {
-                            int index = succ[i].getBlockID();
-                            visit[index] = true;
-                            needRescan |= (index < vIndex);
-                        }
-                    }
-                }
-            }
-            if (vIndex == (theBlocks.length - 1)) {
-                if (needRescan) {
-                    vIndex = 0;
-                    needRescan = false;
-                }
-                else
-                    break;
-            }
-            else
-                vIndex++;
-        }
-    }
-
-    private static void
-    reachingDefDataFlow(OptFunctionNode fn, Block theBlocks[])
-    {
-/*
-    initialize the liveOnEntry and liveOnExit sets, then discover the variables
-    that are def'd by each function, and those that are used before being def'd
-    (hence liveOnEntry)
-*/
-        for (int i = 0; i < theBlocks.length; i++) {
-            theBlocks[i].initLiveOnEntrySets(fn);
-        }
-/*
-    this visits every block starting at the last, re-adding the predecessors of
-    any block whose inputs change as a result of the dataflow.
-    REMIND, better would be to visit in CFG postorder
-*/
-        boolean visit[] = new boolean[theBlocks.length];
-        boolean doneOnce[] = new boolean[theBlocks.length];
-        int vIndex = theBlocks.length - 1;
-        boolean needRescan = false;
-        visit[vIndex] = true;
-        while (true) {
-            if (visit[vIndex] || !doneOnce[vIndex]) {
-                doneOnce[vIndex] = true;
-                visit[vIndex] = false;
-                if (theBlocks[vIndex].doReachedUseDataFlow()) {
-                    Block pred[] = theBlocks[vIndex].getPredecessorList();
-                    if (pred != null) {
-                        for (int i = 0; i < pred.length; i++) {
-                            int index = pred[i].getBlockID();
-                            visit[index] = true;
-                            needRescan |= (index > vIndex);
-                        }
-                    }
-                }
-            }
-            if (vIndex == 0) {
-                if (needRescan) {
-                    vIndex = theBlocks.length - 1;
-                    needRescan = false;
-                }
-                else
-                    break;
-            }
-            else
-                vIndex--;
-        }
-/*
-    The liveOnEntry, liveOnExit sets are now complete. Discover the variables
-    that are live across function calls.
-*/
-/*
-        if any variable is live on entry to block 0, we have to mark it as
-        not jRegable - since it means that someone is trying to access the
-        'undefined'-ness of that variable.
-*/
-
-        theBlocks[0].markAnyTypeVariables(fn);
-    }
 
 /*
         Each directCall parameter is passed as a pair of values - an object
@@ -661,22 +466,6 @@ class Optimizer
         }
     }
 
-    private static void replaceVariableAccess(Node n, OptFunctionNode fn)
-    {
-        Node child = n.getFirstChild();
-        while (child != null) {
-            replaceVariableAccess(child, fn);
-            child = child.getNext();
-        }
-        int type = n.getType();
-        if (type == Token.SETVAR) {
-            String name = n.getFirstChild().getString();
-            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
-        } else if (type == Token.GETVAR) {
-            String name = n.getString();
-            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
-        }
-    }
     private static void buildStatementList_r(Node node, ObjArray statements)
     {
         int type = node.getType();
@@ -695,9 +484,22 @@ class Optimizer
         }
     }
 
-
-    static final boolean DEBUG_OPTIMIZER = false;
-    private static int debug_blockCount;
+    private static void replaceVariableAccess(Node n, OptFunctionNode fn)
+    {
+        Node child = n.getFirstChild();
+        while (child != null) {
+            replaceVariableAccess(child, fn);
+            child = child.getNext();
+        }
+        int type = n.getType();
+        if (type == Token.SETVAR) {
+            String name = n.getFirstChild().getString();
+            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
+        } else if (type == Token.GETVAR) {
+            String name = n.getString();
+            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
+        }
+    }
 
     private int itsOptLevel;
     private boolean inDirectCallFunction;

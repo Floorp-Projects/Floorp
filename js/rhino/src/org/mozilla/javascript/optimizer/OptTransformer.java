@@ -198,7 +198,7 @@ class OptTransformer extends NodeTransformer {
         }
     }
 
-    static Node createNewTemp(Node n) {
+    private static Node createNewTemp(Node n) {
         int type = n.getType();
         if (type == Token.STRING || type == Token.NUMBER) {
             // Optimization: clone these values rather than storing
@@ -208,7 +208,7 @@ class OptTransformer extends NodeTransformer {
         return new Node(Token.NEWTEMP, n);
     }
 
-    static Node createUseTemp(Node newTemp)
+    private static Node createUseTemp(Node newTemp)
     {
         switch (newTemp.getType()) {
           case Token.NEWTEMP: {
