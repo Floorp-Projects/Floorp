@@ -75,7 +75,7 @@
                 <label value="&bookmarks.shortcut.label;" control="shortcut"/>
     		      	<textbox id="shortcut" />
               </row>
-              <row>
+              <row id="descriptionrow">
                 <label value="&bookmarks.description.label;" control="description"/>
                 <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
               </row>

@@ -184,7 +184,7 @@ function historyAddBookmarks()
   var currentIndex = gHistoryTree.currentIndex;
   var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
   var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
-  BookmarksUtils.addBookmark(url, title, undefined, true);
+  BookmarksUtils.addBookmark(url, title, undefined);
 }
 
 

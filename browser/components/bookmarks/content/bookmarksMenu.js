@@ -159,11 +159,10 @@ var BookmarksMenu = {
     case "bookmarks-menu":
       parent = "NC:BookmarksRoot";
       break;
+    case "bookmarks-chevron":
+      parent = "NC:PersonalToolbarFolder";
+      break;
     default:
-      if (aNode.id == "bookmarks-chevron") {
-        parent = "NC:PersonalToolbarFolder";
-        break;
-      }
       if (aOrientation == BookmarksUtils.DROP_ON)
         parent = aNode.id
       else {
@@ -310,11 +309,23 @@ var BookmarksMenu = {
     var selection = this._selection;
     var target    = this._target;
     BookmarksController.onCommandUpdate(selection, target);
-    if (document.popupNode.id == "NC:PersonalToolbarFolder") {
-      // disabling 'copy' on the empty area of the personal toolbar
-      var commandNode = document.getElementById("cmd_bm_copy");
+    if (document.popupNode.id == "bookmarks-ptf") {
+      // disabling 'cut' and 'copy' on the empty area of the personal toolbar
+      var commandNode = document.getElementById("cmd_bm_cut");
+      commandNode.setAttribute("disabled", "true");
+      commandNode = document.getElementById("cmd_bm_copy");
       commandNode.setAttribute("disabled", "true");
     }
+  },
+
+  loadBookmark: function (aTarget, aDS)
+  {
+    // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
+    if (!this.isBTBookmark(aTarget.id))
+      return;
+    var rSource   = RDF.GetResource(aTarget.id);
+    var selection = BookmarksUtils.getSelectionFromResource(rSource);
+    BookmarksCommand.openBookmark(selection, "current", aDS)
   }
 }
 
@@ -449,14 +460,8 @@ var BookmarksMenuDNDObserver = {
 
     var selection = BookmarksUtils.getSelectionFromXferData(aDragSession);
 
-    // if the personal toolbar does not exist, recreate it
-    if (target == "bookmarks-toolbar") {
-      //BookmarksUtils.recreatePersonalToolbarFolder(transactionSet);
-      //target = { parent: "NC:PersonalToolbarFolder", index: 1 };
-    } else {
-      var orientation = BookmarksMenu.getBTOrientation(aEvent);
-      var selTarget   = BookmarksMenu.getBTTarget(target, orientation);
-    }
+    var orientation = BookmarksMenu.getBTOrientation(aEvent);
+    var selTarget   = BookmarksMenu.getBTTarget(target, orientation);
 
     const kDSIID      = Components.interfaces.nsIDragService;
     const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
@@ -473,8 +478,10 @@ var BookmarksMenuDNDObserver = {
       menuTarget.removeChild(menuTarget.lastChild.previousSibling);
     }
 
+    // disabling ctrl-DND for now bookmarks are not cloned
     if (aDragSession.dragAction & kCopyAction)
-      BookmarksUtils.insertSelection("drag", selection, selTarget, true);
+      SOUND.beep();
+    //BookmarksUtils.insertSelection("drag", selection, selTarget, true);
     else
       BookmarksUtils.moveSelection("drag", selection, selTarget);
 
@@ -614,9 +621,8 @@ var BookmarksMenuDNDObserver = {
       clearTimeout(this.loadTimer);
       if (aTarget == aDragSession.sourceNode)
         return;
-      //XXX Hack: see bug 139645
-      var thisHack = this;
-      this.loadTimer=setTimeout(function () {thisHack.onDragLoadTarget(targetToBeLoaded)}, this.springLoadedMenuDelay);
+      var This = this;
+      this.loadTimer=setTimeout(function () {This.onDragLoadTarget(targetToBeLoaded)}, This.springLoadedMenuDelay);
     } else {
       var now = new Date().getTime();
       this.loadTimer  = now;
@@ -628,10 +634,10 @@ var BookmarksMenuDNDObserver = {
   {
     if (this.isPlatformNotSupported)
       return;
-    var thisHack = this;
+    var This = this;
     if (this.isTimerSupported) {
       clearTimeout(this.closeTimer)
-      this.closeTimer=setTimeout(function () {thisHack.onDragCloseTarget()}, this.springLoadedMenuDelay);
+      this.closeTimer=setTimeout(function () {This.onDragCloseTarget()}, This.springLoadedMenuDelay);
     } else {
       var now = new Date().getTime();
       this.closeTimer  = now;
@@ -646,7 +652,7 @@ var BookmarksMenuDNDObserver = {
       // The if statement in the function has been introduced to deal with rare but reproducible
       // missing Exit events.
       if (aDragSession.sourceNode.localName != "menuitem" && aDragSession.sourceNode.localName != "menu")
-        setTimeout(function () { if (thisHack.mCurrentDragOverTarget) {thisHack.onDragRemoveFeedBack(thisHack.mCurrentDragOverTarget); thisHack.mCurrentDragOverTarget=null} thisHack.loadTimer=null; thisHack.onDragCloseTarget() }, 0);
+        setTimeout(function () { if (This.mCurrentDragOverTarget) {This.onDragRemoveFeedBack(This.mCurrentDragOverTarget); This.mCurrentDragOverTarget=null} This.loadTimer=null; This.onDragCloseTarget() }, 0);
     }
   },
 

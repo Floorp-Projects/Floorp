@@ -36,18 +36,14 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var gSearchBox;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Get the two bookmarks utility libraries running, attach controllers, focus
 // tree widget, etc. 
 function Startup() 
 {
-  initServices();
-  initBMService();
   var bookmarksView = document.getElementById("bookmarks-view");  
   bookmarksView.treeBoxObject.selection.select(0);
-  gSearchBox = document.getElementById("search-box");
 }
 
 function manageBookmarks() {

@@ -30,7 +30,8 @@ function Startup()
 {
   const windowNode = document.getElementById("bookmark-window");
   const bookmarksView = document.getElementById("bookmarks-view");
-  gSearchBox = document.getElementById("search-box");
+
+  var rowIndex = 0;
   var titleString;
 
   // If we've been opened with a parameter, root the tree on it.
@@ -49,41 +50,33 @@ function Startup()
       title = BookmarksUtils.getProperty(window.arguments[0], NC_NS+"Name");
     
     titleString = BookmarksUtils.getLocaleString("window_title", title);
-    windowNode.setAttribute("title", titleString);
   }
   else {
-    const kProfileContractID = "@mozilla.org/profile/manager;1";
-    const kProfileIID = Components.interfaces.nsIProfile;
-    const kProfile = Components.classes[kProfileContractID].getService(kProfileIID);
-    var length = {value:0};
-    var profileList = kProfile.getProfileList(length);
-    // unset the default BM title if the user has more than one profile
-    // or if he/she has changed the name of the default one.
-    // the profile "default" is not localizable.
-    if (length.value > 1 || kProfile.currentProfile.toLowerCase() != "default") {
-      titleString = BookmarksUtils.getLocaleString("bookmarks_root", kProfile.currentProfile);
-      windowNode.setAttribute("title", titleString);
-    }
+    titleString = BookmarksUtils.getLocaleString("bookmarks_title", title);
+    // always open the bookmark top root folder
+    if (!bookmarksView.treeBoxObject.view.isContainerOpen(0))
+      bookmarksView.treeBoxObject.view.toggleOpenState(0);
+    if (!bookmarksView.treeBoxObject.view.isContainerEmpty(0))
+      rowIndex = 1;
   }
-  gBMtxmgr = BookmarksUtils.getTransactionManager();
-  gBMtxmgr.AddListener(BookmarkMenuTransactionListener);
-  BookmarkMenuTransactionListener.updateMenuItem(gBMtxmgr);
- 
-  bookmarksView.treeBoxObject.selection.select(0);
+
+  bookmarksView.treeBoxObject.scrollToRow(rowIndex);
+  bookmarksView.treeBoxObject.selection.select(rowIndex);
+
+  windowNode.setAttribute("title", titleString);
+
+  document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
   bookmarksView.tree.focus();
+
 }
 
 function Shutdown ()
 {
 
-  // Remove the transaction listeneer
-  gBMtxmgr.RemoveListener(BookmarkMenuTransactionListener);
-
   // Store current window position and size in window attributes (for persistence).
   var win = document.getElementById("bookmark-window");
   win.setAttribute("x", screenX);
   win.setAttribute("y", screenY);
-  dump('outerh'+outerHeight+"\n")
   win.setAttribute("height", outerHeight);
   win.setAttribute("width", outerWidth);
 }
