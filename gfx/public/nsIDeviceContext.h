@@ -82,13 +82,25 @@ struct nsPaletteInfo {
     eSystemAttr_Size_ScrollbarHeight,
     eSystemAttr_Size_ScrollbarWidth,
     // Fonts
-    eSystemAttr_Font_Caption,
+    eSystemAttr_Font_Caption,					// css2
     eSystemAttr_Font_Icon,
     eSystemAttr_Font_Menu,
     eSystemAttr_Font_MessageBox,
     eSystemAttr_Font_SmallCaption,
     eSystemAttr_Font_StatusBar,
-    eSystemAttr_Font_Tooltips,
+
+		eSystemAttr_Font_Window,					// css3
+		eSystemAttr_Font_Document,
+		eSystemAttr_Font_Workspace,
+		eSystemAttr_Font_Desktop,
+		eSystemAttr_Font_Info,
+		eSystemAttr_Font_Dialog,
+		eSystemAttr_Font_Button,
+		eSystemAttr_Font_PullDownMenu,
+		eSystemAttr_Font_List,
+		eSystemAttr_Font_Field,
+
+    eSystemAttr_Font_Tooltips,				// moz
     eSystemAttr_Font_Widget
   } nsSystemAttrID;
 

@@ -326,12 +326,22 @@
 #define NS_STYLE_FONT_USE_FIXED                 0x04
 
 // See nsStyleFont - system fonts
-#define NS_STYLE_FONT_CAPTION                   1
+#define NS_STYLE_FONT_CAPTION                   1		// css2
 #define NS_STYLE_FONT_ICON                      2
 #define NS_STYLE_FONT_MENU                      3
 #define NS_STYLE_FONT_MESSAGE_BOX               4
 #define NS_STYLE_FONT_SMALL_CAPTION             5
 #define NS_STYLE_FONT_STATUS_BAR                6
+#define NS_STYLE_FONT_WINDOW										7		// css3
+#define NS_STYLE_FONT_DOCUMENT									8
+#define NS_STYLE_FONT_WORKSPACE									9
+#define NS_STYLE_FONT_DESKTOP										10
+#define NS_STYLE_FONT_INFO											11
+#define NS_STYLE_FONT_DIALOG										12
+#define NS_STYLE_FONT_BUTTON										13
+#define NS_STYLE_FONT_PULL_DOWN_MENU						14
+#define NS_STYLE_FONT_LIST											15
+#define NS_STYLE_FONT_FIELD											16
 
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_NORMAL                0

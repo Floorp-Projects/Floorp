@@ -364,12 +364,22 @@ const PRInt32 nsCSSProps::kFloatEdgeKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFontKTable[] = {
-  eCSSKeyword_caption, NS_STYLE_FONT_CAPTION,
+  eCSSKeyword_caption, NS_STYLE_FONT_CAPTION,			// css2
   eCSSKeyword_icon, NS_STYLE_FONT_ICON,
   eCSSKeyword_menu, NS_STYLE_FONT_MENU,
   eCSSKeyword_message_box, NS_STYLE_FONT_MESSAGE_BOX,
   eCSSKeyword_small_caption, NS_STYLE_FONT_SMALL_CAPTION,
   eCSSKeyword_status_bar, NS_STYLE_FONT_STATUS_BAR,
+  eCSSKeyword_window, NS_STYLE_FONT_WINDOW,				// css3
+  eCSSKeyword_document, NS_STYLE_FONT_DOCUMENT,
+  eCSSKeyword_workspace, NS_STYLE_FONT_WORKSPACE,
+  eCSSKeyword_desktop, NS_STYLE_FONT_DESKTOP,
+  eCSSKeyword_info, NS_STYLE_FONT_INFO,
+  eCSSKeyword_dialog, NS_STYLE_FONT_DIALOG,
+  eCSSKeyword_button, NS_STYLE_FONT_BUTTON,
+  eCSSKeyword_pull_down_menu, NS_STYLE_FONT_PULL_DOWN_MENU,
+  eCSSKeyword_list, NS_STYLE_FONT_LIST,
+  eCSSKeyword_field, NS_STYLE_FONT_FIELD,
   -1,-1
 };
 
