@@ -67,8 +67,6 @@
 static PRLogModuleInfo* gLog = nsnull;
 #endif
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 // This struct is used as the slot value in the forward and reverse
 // arcs hash tables.
 class Assertion 
@@ -171,7 +169,7 @@ protected:
 
     static const PRInt32 kInitialTableSize;
 
-    static PRIntn DeleteForwardArcsEntry(PLHashEntry* he, PRIntn index, void* arg);
+    static PRIntn DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg);
 
     friend class InMemoryResourceEnumeratorImpl; // b/c it needs to enumerate mForwardArcs
 
@@ -271,7 +269,7 @@ public:
     NS_IMETHOD Sweep();
 
 protected:
-    static PRIntn SweepForwardArcsEntries(PLHashEntry* he, PRIntn index, void* arg);
+    static PRIntn SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg);
 
 public:
     // Implemenatation methods
@@ -346,10 +344,10 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
       mSource(aSource),
       mProperty(aProperty),
       mTarget(aTarget),
-      mTruthValue(aTruthValue),
+      mValue(nsnull),
       mCount(0),
-      mNextAssertion(nsnull),
-      mValue(nsnull)
+      mTruthValue(aTruthValue),
+      mNextAssertion(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -583,6 +581,8 @@ InMemoryDataSource::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
     if (iid.Equals(kISupportsIID) ||
         iid.Equals(nsIRDFDataSource::GetIID())) {
         *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
@@ -657,7 +657,7 @@ InMemoryDataSource::~InMemoryDataSource(void)
 }
 
 PRIntn
-InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn index, void* arg)
+InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn i, void* arg)
 {
     Assertion* as = (Assertion*) he->value;
     while (as) {
@@ -1231,7 +1231,7 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* aSource, nsISimpleEnumerator** 
 }
 
 static PRIntn
-rdf_ResourceEnumerator(PLHashEntry* he, PRIntn index, void* closure)
+rdf_ResourceEnumerator(PLHashEntry* he, PRIntn i, void* closure)
 {
     nsISupportsArray* resources = NS_STATIC_CAST(nsISupportsArray*, closure);
 
@@ -1401,7 +1401,7 @@ InMemoryDataSource::Sweep()
 
 
 PRIntn
-InMemoryDataSource::SweepForwardArcsEntries(PLHashEntry* he, PRIntn index, void* arg)
+InMemoryDataSource::SweepForwardArcsEntries(PLHashEntry* he, PRIntn i, void* arg)
 {
     SweepInfo* info = (SweepInfo*) arg;
 
