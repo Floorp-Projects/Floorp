@@ -184,24 +184,24 @@ NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
-  nsCOMPtr<nsIURI> url;
-
 #if XP_MAC
-  rv = NS_NewURI(getter_AddRefs(url), 
-                 "chrome://global/content/hiddenWindow.xul");
-  if (NS_SUCCEEDED(rv)) {
+  const char* hiddenWindowURL = "chrome://global/content/hiddenWindow.xul";
+  PRUint32    chromeMask = 0;
+  PRInt32     initialHeight = 0, initialWidth = 0;
+#else
+  const char* hiddenWindowURL = "about:blank";
+  PRUint32    chromeMask =  nsIWebBrowserChrome::allChrome;
+  PRInt32     initialHeight = 100, initialWidth = 100;
+#endif
+
+  nsCOMPtr<nsIURI> url;
+  rv = NS_NewURI(getter_AddRefs(url), hiddenWindowURL);
+  if (NS_SUCCEEDED(rv))
+  {
     nsCOMPtr<nsIXULWindow> newWindow;
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
-                        0, 0, 0,
+                        chromeMask, initialWidth, initialHeight,
                         getter_AddRefs(newWindow));
-#else
-  rv = NS_NewURI(getter_AddRefs(url), "about:blank");
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIXULWindow> newWindow;
-    	 rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
-                        nsIWebBrowserChrome::allChrome, 100, 100,
-                        getter_AddRefs(newWindow));
-#endif
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
       // RegisterTopLevelWindow(newWindow); -- Mac only
