@@ -17,10 +17,8 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
  */
 
 #ifndef nsCharTraits_h___
@@ -466,6 +464,8 @@ struct nsCharTraits<wchar_t>
 template <class InputIterator>
 struct nsCharSourceTraits
   {
+    typedef typename InputIterator::difference_type difference_type;
+
 #if 0
     static
     PRUint32
@@ -495,6 +495,13 @@ struct nsCharSourceTraits
       {
         return iter.get();
       }
+
+    static
+    void
+    advance( InputIterator& s, difference_type n )
+      {
+        s.advance(n);
+      }
   };
 
 #ifdef HAVE_CPP_PARTIAL_SPECIALIZATION
@@ -502,6 +509,8 @@ struct nsCharSourceTraits
 template <class CharT>
 struct nsCharSourceTraits<CharT*>
   {
+    typedef ptrdiff_t difference_type;
+
 #if 0
     static
     PRUint32
@@ -532,6 +541,13 @@ struct nsCharSourceTraits<CharT*>
       {
         return s;
       }
+
+    static
+    void
+    advance( CharT*& s, difference_type n )
+      {
+        s += n;
+      }
   };
 
 #else
@@ -539,6 +555,8 @@ struct nsCharSourceTraits<CharT*>
 NS_SPECIALIZE_TEMPLATE
 struct nsCharSourceTraits<const char*>
   {
+    typedef ptrdiff_t difference_type;
+
 #if 0
     static
     PRUint32
@@ -568,6 +586,13 @@ struct nsCharSourceTraits<const char*>
     read( const char* s )
       {
         return s;
+      }
+
+    static
+    void
+    advance( CharT*& s, difference_type n )
+      {
+        s += n;
       }
  };
 

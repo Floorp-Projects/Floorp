@@ -17,10 +17,8 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
  */
 
 #include "nsReadableUtils.h"
@@ -72,7 +70,10 @@ CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest )
   {
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
-    copy_string(aSource.BeginReading(), aSource.EndReading(), LossyConvertEncoding<PRUnichar, char>(aDest.BeginWriting().get()));
+
+    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    nsWritingIterator<char> toBegin;
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), LossyConvertEncoding<PRUnichar, char>(aDest.BeginWriting(toBegin).get()));
   }
 
 NS_COM
@@ -81,7 +82,10 @@ CopyASCIItoUCS2( const nsAReadableCString& aSource, nsAWritableString& aDest )
   {
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
-    copy_string(aSource.BeginReading(), aSource.EndReading(), LossyConvertEncoding<char, PRUnichar>(aDest.BeginWriting().get()));
+
+    nsReadingIterator<char> fromBegin, fromEnd;
+    nsWritingIterator<PRUnichar> toBegin;
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), LossyConvertEncoding<char, PRUnichar>(aDest.BeginWriting(toBegin).get()));
   }
 
 
@@ -106,7 +110,10 @@ char*
 ToNewCString( const nsAReadableString& aSource )
   {
     char* result = AllocateStringCopy(aSource, (char*)0);
-    copy_string(aSource.BeginReading(), aSource.EndReading(), LossyConvertEncoding<PRUnichar, char>(result)).write_terminator();
+
+    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    LossyConvertEncoding<PRUnichar, char> converter(result);
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
     return result;
   }
 
@@ -141,7 +148,10 @@ ToNewCString( const nsAReadableCString& aSource )
     // no conversion needed, just allocate a buffer of the correct length and copy into it
 
     char* result = AllocateStringCopy(aSource, (char*)0);
-    *copy_string(aSource.BeginReading(), aSource.EndReading(), result) = char(0);
+
+    nsReadingIterator<char> fromBegin, fromEnd;
+    char* toBegin = result;
+    *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), toBegin) = char(0);
     return result;
   }
 
@@ -152,7 +162,10 @@ ToNewUnicode( const nsAReadableString& aSource )
     // no conversion needed, just allocate a buffer of the correct length and copy into it
 
     PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
-    *copy_string(aSource.BeginReading(), aSource.EndReading(), result) = PRUnichar(0);
+
+    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    PRUnichar* toBegin = result;
+    *copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), toBegin) = PRUnichar(0);
     return result;
   }
 
@@ -161,22 +174,20 @@ PRUnichar*
 ToNewUnicode( const nsAReadableCString& aSource )
   {
     PRUnichar* result = AllocateStringCopy(aSource, (PRUnichar*)0);
-    copy_string(aSource.BeginReading(), aSource.EndReading(), LossyConvertEncoding<char, PRUnichar>(result)).write_terminator();
+
+    nsReadingIterator<char> fromBegin, fromEnd;
+    LossyConvertEncoding<char, PRUnichar> converter(result);
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
     return result;
   }
 
 NS_COM
 PRUnichar*
-CopyUnicodeTo( const nsAReadableString& aSource,
-               PRUnichar* aDest,
-               PRUint32 aLength )
+CopyUnicodeTo( const nsAReadableString& aSource, PRUnichar* aDest, PRUint32 aLength )
   {
-    typedef nsAReadableString::const_iterator iterator;
-
-    iterator done_reading = aSource.BeginReading();
-    done_reading += aLength;
-
-    copy_string(aSource.BeginReading(), done_reading, aDest);
+    nsReadingIterator<PRUnichar> fromBegin, fromEnd;
+    PRUnichar* toBegin = aDest;
+    copy_string(aSource.BeginReading(fromBegin), aSource.BeginReading(fromEnd).advance( PRInt32(aLength) ), toBegin);
     return aDest;
   }
 
@@ -189,23 +200,22 @@ IsASCII( const nsAReadableString& aString )
 
     // Don't want to use |copy_string| for this task, since we can stop at the first non-ASCII character
 
-    typedef nsAReadableString::const_iterator iterator;
-    iterator iter = aString.BeginReading();
-    iterator done_reading = aString.EndReading();
+    nsReadingIterator<PRUnichar> done_reading;
+    aString.EndReading(done_reading);
 
       // for each chunk of |aString|...
-    while ( iter != done_reading )
+    PRUint32 fragmentLength = 0;
+    nsReadingIterator<PRUnichar> iter;
+    for ( aString.BeginReading(iter); iter != done_reading; iter.advance( PRInt32(fragmentLength) ) )
       {
-        iterator::difference_type chunk_size = iter.size_forward();
+        fragmentLength = iter.size_forward();
         const PRUnichar* c = iter.get();
-        const PRUnichar* chunk_end = c + chunk_size;
+        const PRUnichar* fragmentEnd = c + fragmentLength;
 
           // for each character in this chunk...
-        while ( c < chunk_end )
+        while ( c < fragmentEnd )
           if ( *c++ & NOT_ASCII )
             return PR_FALSE;
-
-        iter += chunk_size;
       }
 
     return PR_TRUE;

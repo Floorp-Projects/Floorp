@@ -17,10 +17,8 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
  */
 
 #ifndef nsAReadableString_h___
@@ -117,6 +115,7 @@ class nsReadingIterator
         }
 
     public:
+      nsReadingIterator() { }
       // nsReadingIterator( const nsReadingIterator<CharT>& );                    // auto-generated copy-constructor OK
       // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
@@ -197,42 +196,57 @@ class nsReadingIterator
           return mPosition - mFragment.mStart;
         }
 
+      nsReadingIterator<CharT>& advance( difference_type );
+
+        /**
+         * Really don't want to call these two operations |+=| and |-=|.
+         * Would prefer a single function, e.g., |advance|, which doesn't imply a constant time operation.
+         *
+         * We'll get rid of these as soon as we can.
+         */
       nsReadingIterator<CharT>&
-      operator+=( difference_type n )
+      operator+=( difference_type n ) // deprecated
         {
-          if ( n < 0 )
-            return operator-=(-n);
-
-          while ( n )
-            {
-              difference_type one_hop = NS_MIN(n, size_forward());
-              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a readable iterator beyond the end of a string");
-              mPosition += one_hop;
-              normalize_forward();
-              n -= one_hop;
-            }
-
-          return *this;
+          return advance(n);
         }
 
       nsReadingIterator<CharT>&
-      operator-=( difference_type n )
+      operator-=( difference_type n ) // deprecated
         {
-          if ( n < 0 )
-            return operator+=(-n);
-
-          while ( n )
-            {
-              normalize_backward();
-              difference_type one_hop = NS_MIN(n, size_backward());
-              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance (backward) a readable iterator beyond the end of a string");
-              mPosition -= one_hop;
-              n -= one_hop;
-            }
-
-          return *this;
+          return advance(-n);
         }
   };
+
+template <class CharT>
+nsReadingIterator<CharT>&
+nsReadingIterator<CharT>::advance( difference_type n )
+  {
+    while ( n > 0 )
+            {
+              difference_type one_hop = NS_MIN(n, size_forward());
+
+        NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a reading iterator beyond the end of a string");
+          // perhaps I should |break| if |!one_hop|?
+
+        mPosition += one_hop;
+        normalize_forward();
+        n -= one_hop;
+      }
+
+    while ( n < 0 )
+      {
+        normalize_backward();
+        difference_type one_hop = NS_MAX(n, -size_backward());
+
+        NS_ASSERTION(one_hop<0, "Infinite loop: can't advance (backward) a reading iterator beyond the end of a string");
+          // perhaps I should |break| if |!one_hop|?
+
+        mPosition += one_hop;
+        n -= one_hop;
+      }
+
+    return *this;
+  }
 
 template <class Iterator>
 inline
@@ -271,8 +285,11 @@ class basic_nsAReadableString
       virtual ~basic_nsAReadableString() { }
         // ...yes, I expect to be sub-classed.
 
-      nsReadingIterator<CharT>  BeginReading() const;
-      nsReadingIterator<CharT>  EndReading() const;
+      nsReadingIterator<CharT>& BeginReading( nsReadingIterator<CharT>& ) const;
+      nsReadingIterator<CharT>  BeginReading() const; // deprecated
+
+      nsReadingIterator<CharT>& EndReading( nsReadingIterator<CharT>& ) const;
+      nsReadingIterator<CharT>  EndReading() const;   // deprecated
 
       virtual PRUint32  Length() const = 0;
       PRBool  IsEmpty() const;
@@ -408,8 +425,8 @@ inline
 void
 nsReadingIterator<CharT>::normalize_forward()
   {
-    if ( mPosition == mFragment.mEnd )
-      if ( mOwningString->GetReadableFragment(mFragment, kNextFragment) )
+    while ( mPosition == mFragment.mEnd
+         && mOwningString->GetReadableFragment(mFragment, kNextFragment) )
         mPosition = mFragment.mStart;
   }
 
@@ -418,29 +435,56 @@ inline
 void
 nsReadingIterator<CharT>::normalize_backward()
   {
-    if ( mPosition == mFragment.mStart )
-      if ( mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
+    while ( mPosition == mFragment.mStart
+         && mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
         mPosition = mFragment.mEnd;
   }
 
+  /**
+   * Note: measure -- should the |BeginReading| and |EndReading| be |inline|?
+   */
+template <class CharT>
+inline
+nsReadingIterator<CharT>&
+basic_nsAReadableString<CharT>::BeginReading( nsReadingIterator<CharT>& aResult ) const
+  {
+    aResult.mOwningString = this;
+    GetReadableFragment(aResult.mFragment, kFirstFragment);
+    aResult.normalize_forward();
+    aResult.mPosition = aResult.mFragment.mStart;
+    return aResult;
+  }
+
+  // deprecated
 template <class CharT>
 inline
 nsReadingIterator<CharT>
 basic_nsAReadableString<CharT>::BeginReading() const
   {
-    nsReadableFragment<CharT> fragment;
-    const CharT* startPos = GetReadableFragment(fragment, kFirstFragment);
-    return nsReadingIterator<CharT>(fragment, startPos, *this);
+    nsReadingIterator<CharT> result;
+    return BeginReading(result); // copies (since I return a value, not a reference)
   }
 
+template <class CharT>
+inline
+nsReadingIterator<CharT>&
+basic_nsAReadableString<CharT>::EndReading( nsReadingIterator<CharT>& aResult ) const
+  {
+    aResult.mOwningString = this;
+    GetReadableFragment(aResult.mFragment, kLastFragment);
+    aResult.mPosition = aResult.mFragment.mEnd;
+    // must not |normalize_backward| as that would likely invalidate tests like |while ( first != last )|
+    return aResult;
+  }
+
+  // deprecated
 template <class CharT>
 inline
 nsReadingIterator<CharT>
 basic_nsAReadableString<CharT>::EndReading() const
   {
-    nsReadableFragment<CharT> fragment;
-    GetReadableFragment(fragment, kLastFragment);
-    return nsReadingIterator<CharT>(fragment, fragment.mEnd, *this);
+    nsReadingIterator<CharT> result;
+    return EndReading(result); // copies (since I return a value, not a reference) 
   }
 
 template <class CharT>
@@ -545,7 +589,8 @@ basic_nsAReadableString<CharT>::CharAt( PRUint32 aIndex ) const
   {
     NS_ASSERTION(aIndex<Length(), "|CharAt| out-of-range");
 
-    return *(BeginReading()+=aIndex);
+    nsReadingIterator<CharT> iter;
+    return *(BeginReading(iter).advance(PRInt32(aIndex)));
   }
 
 template <class CharT>
@@ -562,7 +607,8 @@ basic_nsAReadableString<CharT>::First() const
   {
     NS_ASSERTION(Length()>0, "|First()| on an empty string");
 
-    return *BeginReading();
+    nsReadingIterator<CharT> iter;
+    return *BeginReading(iter);
   }
 
 template <class CharT>
@@ -571,10 +617,11 @@ basic_nsAReadableString<CharT>::Last() const
   {
     NS_ASSERTION(Length()>0, "|Last()| on an empty string");
 
-    // nsReadingIterator<CharT> iter; EndReading(iter);
-    nsReadingIterator<CharT> iter( EndReading() );
+    nsReadingIterator<CharT> iter;
+    EndReading(iter);
+
     if ( !IsEmpty() )
-      iter -= 1;
+      iter.advance(-1);
 
     return *iter; // Note: this has undefined results if |IsEmpty()|
   }
@@ -584,19 +631,21 @@ PRUint32
 basic_nsAReadableString<CharT>::CountChar( CharT c ) const
   {
 #if 0
-    return PRUint32(NS_COUNT(BeginReading(), EndReading(), c));
+    nsReadingIterator<CharT> countBegin, countEnd;
+    return PRUint32(NS_COUNT(BeginReading(countBegin), EndReading(countEnd), c));
 #else
     PRUint32 result = 0;
     PRUint32 lengthToExamine = Length();
 
-    nsReadingIterator<CharT> iter( BeginReading() );
-    for (;;)
+    nsReadingIterator<CharT> iter;
+    for ( BeginReading(iter); ; )
       {
         PRInt32 lengthToExamineInThisFragment = iter.size_forward();
-        result += PRUint32(NS_COUNT(iter.get(), iter.get()+lengthToExamineInThisFragment, c));
+        const CharT* fromBegin = iter.get();
+        result += PRUint32(NS_COUNT(fromBegin, fromBegin+lengthToExamineInThisFragment, c));
         if ( !(lengthToExamine -= lengthToExamineInThisFragment) )
           return result;
-        iter += lengthToExamineInThisFragment;
+        iter.advance(lengthToExamineInThisFragment);
       }
       // never reached; quiets warnings
     return 0;
@@ -638,21 +687,22 @@ template <class CharT>
 PRInt32
 basic_nsAReadableString<CharT>::FindChar( CharT aChar, PRUint32 aOffset ) const
   {
-    nsReadingIterator<CharT> start( BeginReading() );
-    nsReadingIterator<CharT> end( EndReading() );
+    nsReadingIterator<CharT> iter, done_searching;
+    BeginReading(iter).advance( PRInt32(aOffset) );
+    EndReading(done_searching);
 
-    start += aOffset;
+    PRUint32 lengthSearched = 0;
+    while ( iter != done_searching )
+      {
+        PRInt32 fragmentLength = iter.size_forward();
+        const CharT* charFoundAt = nsCharTraits<CharT>::find(iter.get(), fragmentLength, aChar);
+        if ( charFoundAt )
+          return lengthSearched + (charFoundAt-iter.get());
 
-    PRUint32 pos = 0;
-    while (start != end) {
-      PRUint32 fraglen = start.size_forward();
-      const CharT* findPtr = nsCharTraits<CharT>::find(start.get(), fraglen, aChar);
-      if (findPtr) {
-        return pos + (findPtr-start.get());
+        lengthSearched += fragmentLength;
+        iter.advance(fragmentLength);
       }
-      pos += fraglen;
-      start += fraglen;
-    }
+
     return -1;
   }
 
@@ -1205,8 +1255,9 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
     PRUint32 rLength = rhs.Length();
     PRUint32 lengthToCompare = NS_MIN(lLength, rLength);
 
-    nsReadingIterator<CharT> leftIter( lhs.BeginReading() );
-    nsReadingIterator<CharT> rightIter( rhs.BeginReading() );
+    nsReadingIterator<CharT> leftIter, rightIter;
+    lhs.BeginReading(leftIter);
+    rhs.BeginReading(rightIter);
 
     int result;
 
@@ -1224,8 +1275,8 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
         if ( !(lengthToCompare -= lengthAvailable) )
           break;
 
-        leftIter += PRInt32(lengthAvailable);
-        rightIter += PRInt32(lengthAvailable);
+        leftIter.advance( PRInt32(lengthAvailable) );
+        rightIter.advance( PRInt32(lengthAvailable) );
       }
 
     if ( lLength < rLength )
@@ -1370,7 +1421,8 @@ basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsARead
   else if ( mLength > kDefaultFlatStringSize-1 ) {
     CharT* result = NS_STATIC_CAST(CharT*, 
 				   nsMemory::Alloc((mLength+1) * sizeof(CharT)));
-    *copy_string(start, end, result) = CharT(0);
+		CharT* toBegin = result;
+    *copy_string(start, end, toBegin) = CharT(0);
 
     mBuffer = result;
     mOwnsBuffer = PR_TRUE;
@@ -1378,7 +1430,8 @@ basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsARead
   // Otherwise copy into our internal buffer
   else {
     mBuffer = mInlineBuffer;
-    copy_string( start, end, NS_STATIC_CAST(CharT *, &mInlineBuffer[0]));
+    CharT* toBegin = &mInlineBuffer[0];
+    copy_string( start, end, toBegin);
     mInlineBuffer[mLength] = 0;
   }
 }
@@ -1405,26 +1458,26 @@ basic_nsPromiseFlatString<CharT>::GetReadableFragment( nsReadableFragment<CharT>
 }
 
 
-typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
-typedef basic_nsAReadableString<char>       nsAReadableCString;
+typedef basic_nsAReadableString<PRUnichar>    nsAReadableString;
+typedef basic_nsAReadableString<char>         nsAReadableCString;
 
-typedef basic_nsLiteralString<PRUnichar>    nsLiteralString;
-typedef basic_nsLiteralString<char>         nsLiteralCString;
+typedef basic_nsLiteralString<PRUnichar>      nsLiteralString;
+typedef basic_nsLiteralString<char>           nsLiteralCString;
 
-typedef basic_nsPromiseFlatString<PRUnichar> nsPromiseFlatString;
-typedef basic_nsPromiseFlatString<char>      nsPromiseFlatCString;
+typedef basic_nsPromiseFlatString<PRUnichar>  nsPromiseFlatString;
+typedef basic_nsPromiseFlatString<char>       nsPromiseFlatCString;
 
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T
-  #define NS_LITERAL_STRING(s)  nsLiteralString(L##s, (sizeof(L##s)/sizeof(wchar_t))-1)
+  #define NS_LITERAL_STRING(s)          nsLiteralString(L##s, (sizeof(L##s)/sizeof(wchar_t))-1)
   #define NS_NAMED_LITERAL_STRING(n,s)  nsLiteralString n(L##s, (sizeof(L##s)/sizeof(wchar_t))-1)
 #else
-  #define NS_LITERAL_STRING(s)  NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
+  #define NS_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
   #define NS_NAMED_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, sizeof(s)-1)
 #endif
 
-#define NS_LITERAL_CSTRING(s) nsLiteralCString(s, sizeof(s)-1)
-#define NS_NAMED_LITERAL_CSTRING(n,s) nsLiteralCString n(s, sizeof(s)-1)
+#define NS_LITERAL_CSTRING(s)           nsLiteralCString(s, sizeof(s)-1)
+#define NS_NAMED_LITERAL_CSTRING(n,s)   nsLiteralCString n(s, sizeof(s)-1)
 
 typedef basic_nsLiteralChar<char>       nsLiteralChar;
 typedef basic_nsLiteralChar<PRUnichar>  nsLiteralPRUnichar;

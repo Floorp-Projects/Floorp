@@ -17,10 +17,9 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *   Scott Collins <scc@mozilla.org>
- *
  * Contributor(s):
+ *   Scott Collins <scc@mozilla.org> (original author)
+ *
  */
 
 #ifndef nsFragmentedString_h___
@@ -89,7 +88,10 @@ nsChunkList<CharT>::NewChunk( const CharT* aData, PRUint32 aDataLength, PRUint32
         typedef CharT* CharT_ptr;
         CharT* buffer_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
         if ( aDataLength )
-          copy_string(aData, aData+aDataLength, buffer_ptr);
+          {
+            CharT* toBegin = buffer_ptr;
+            copy_string(aData, aData+aDataLength, toBegin);
+          }
         return new (object_ptr) Chunk(buffer_ptr, buffer_length, aDataLength);
       }
 
