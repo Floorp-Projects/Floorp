@@ -15,8 +15,37 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..\..
 
-DIRS = base content document forms style table tests
+LIBRARY_NAME = nglhtmlcon_s
+MODULE=raptor 
+REQUIRES=xpcom raptor js
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+
+CPPSRCS=				\
+	nsHTMLHead.cpp			\
+	nsHTMLMeta.cpp			\
+	$(NULL)
+
+CPP_OBJS=					\
+	.\$(OBJDIR)\nsHTMLHead.obj		\
+	.\$(OBJDIR)\nsHTMLMeta.obj		\
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
+ -I$(PUBLIC)\dom -I$(PUBLIC)\netlib				\
+ -I..\..\style\src -I..\..\..\css\layout\src			\
+ -I..\..\..\base\src -I..\..\base\src
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\layout\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,8 +15,10 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH = ../../..
 
-DIRS = base content document forms style table tests
+DIRS = src
 
-include <$(DEPTH)\layout\config\rules.mak>
+include $(DEPTH)/config/config.mk
+
+include $(DEPTH)/config/rules.mk

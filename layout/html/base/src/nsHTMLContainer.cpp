@@ -504,6 +504,21 @@ nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
       }
     }
   }
+  else if (aValue.GetUnit() == eHTMLUnit_Integer) {
+    if (mTag == nsHTMLAtoms::font) {
+      if ((aAttribute == nsHTMLAtoms::size) ||
+          (aAttribute == nsHTMLAtoms::pointSize) ||
+          (aAttribute == nsHTMLAtoms::fontWeight)) {
+        aResult.Truncate();
+        PRInt32 value = aValue.GetIntValue();
+        if (value >= 0) {
+          aResult.Append('+');
+        }
+        aResult.Append(value, 10);
+        ca = eContentAttr_HasValue;
+      }
+    }
+  }
   return ca;
 }
 
@@ -603,7 +618,8 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
                 if (parentFont->mFont.size < (nscoord)((float)normal.size * kFontScale[index]))
                   break;
               size = ((index - 1) + size);
-              if (7 < size) size = 7;
+              if (size < 0) size = 0;
+              if (size > 6) size = 6;
               font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
             }
             else if ((-7 <= size) && (size < 0)) {
@@ -613,6 +629,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
                   break;
               size = ((index + 1) + size);
               if (size < 0) size = 0;
+              if (size > 6) size = 6;
               font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
             }
             else if (0 == size) {

@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,8 +15,25 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=../../../..
 
-DIRS = base content document forms style table tests
+LIBRARY_NAME = nglhtmlcon_s
 
-include <$(DEPTH)\layout\config\rules.mak>
+# Note the sophisticated alphabetical ordering :-|
+CPPSRCS =				\
+	nsHTMLHead.cpp			\
+	nsHTMLMeta.cpp			\
+	$(NULL)
+
+MODULE = raptor
+
+REQUIRES = xpcom raptor dom js
+
+include $(DEPTH)/config/config.mk
+
+LCFLAGS += -D_IMPL_NS_HTML
+
+INCLUDES += -I../../style/src -I../../../base/src -I../../../css/layout/src \
+ -I../../base/src
+
+include $(DEPTH)/config/rules.mk
