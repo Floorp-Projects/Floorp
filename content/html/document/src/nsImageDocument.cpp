@@ -276,6 +276,18 @@ nsImageDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    // The misspelled key 'referer' is as per the HTTP spec
+    nsCAutoString referrerHeader;
+    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
+                                       referrerHeader);
+    
+    if (NS_SUCCEEDED(rv)) {
+      SetReferrer(NS_ConvertASCIItoUCS2(referrerHeader));
+    }
+  }
+
   // Create synthetic document
   rv = CreateSyntheticDocument();
   if (NS_OK != rv) {
