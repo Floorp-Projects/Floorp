@@ -17,11 +17,11 @@
 # Copyright (C) 1999, Mozilla.  All Rights Reserved.
 # 
 # Contributor(s):
-#   Travis Bogard <travis@netscape.com>
+#
 
 DEPTH=..\..
 
 DIRS= \
-     $(NULL)
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
