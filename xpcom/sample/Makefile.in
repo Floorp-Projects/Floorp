@@ -73,7 +73,6 @@ LIBS            = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
-		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
