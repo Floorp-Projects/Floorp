@@ -284,8 +284,8 @@ nsDOMDataSource::GetURI(char** aURI)
   NS_PRECONDITION(aURI != nsnull, "null ptr");
   if (!aURI) return NS_ERROR_NULL_POINTER;
 
-  *aURI = nsXPIDLCString::Copy("rdf:ins_domds");
-	if (!*aURI) return NS_ERROR_OUT_OF_MEMORY;
+  *aURI = nsCRT::strdup("rdf:ins_domds");
+  if (!*aURI) return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
