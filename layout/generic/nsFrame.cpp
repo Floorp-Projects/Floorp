@@ -1513,8 +1513,20 @@ nsFrame::SetSelected(nsSelectionStruct *aSelStruct)
     
     nsRect    rect;
     GetRect(rect);
-    ForceDrawFrame(this);//invalidate does not work in all cases.
-    //Invalidate(rect,PR_TRUE); //false is for not immediate
+    nsIFrame *frame = this;
+    nsIFrame *firstframe = nsnull;
+    while (NS_SUCCEEDED(frame->GetPrevInFlow(&frame)) && frame){
+      firstframe =  frame;
+    }
+    
+    if (firstframe){
+      nsRect    rect2;
+      firstframe->GetRect(rect2);
+      rect.y-= rect.y-rect2.y;
+    }
+
+    //ForceDrawFrame(this);//invalidate does not work in all cases.
+    Invalidate(rect,PR_FALSE); //false is for not immediate
   }
   return NS_OK;
 }
