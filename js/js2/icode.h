@@ -153,18 +153,18 @@
         /* print() and printOperands() inherited from GenericBranch */
     };
 
-    class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList> {
+    class Call : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList*> {
     public:
         /* result, target, this, args */
-        Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, ArgumentList aOp4) :
-            Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList>
+        Call (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, ArgumentList* aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, TypedRegister, ArgumentList*>
             (CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first) << ", " << ArgList(mOp4, registers);
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
             return f;
         }
     };
@@ -328,18 +328,18 @@
         }
     };
 
-    class DirectCall : public Instruction_3<TypedRegister, JSFunction*, ArgumentList> {
+    class DirectCall : public Instruction_3<TypedRegister, JSFunction*, ArgumentList*> {
     public:
         /* result, target, args */
-        DirectCall (TypedRegister aOp1, JSFunction* aOp2, ArgumentList aOp3) :
-            Instruction_3<TypedRegister, JSFunction*, ArgumentList>
+        DirectCall (TypedRegister aOp1, JSFunction* aOp2, ArgumentList* aOp3) :
+            Instruction_3<TypedRegister, JSFunction*, ArgumentList*>
             (DIRECT_CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[DIRECT_CALL] << "\t" << mOp1 << ", " << "JSFunction" << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << getRegisterValue(registers, mOp1.first) << ", " << ArgList(mOp3, registers);
+            f << getRegisterValue(registers, mOp1.first);
             return f;
         }
     };
