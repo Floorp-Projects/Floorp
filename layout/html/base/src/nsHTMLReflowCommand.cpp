@@ -52,6 +52,42 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
   return cmd->QueryInterface(NS_GET_IID(nsIReflowCommand), (void**)aInstancePtrResult);
 }
 
+#ifdef DEBUG_jesup
+PRInt32 gReflows;
+PRInt32 gReflowsInUse;
+PRInt32 gReflowsInUseMax;
+PRInt32 gReflowsZero;
+PRInt32 gReflowsAuto;
+PRInt32 gReflowsLarger;
+PRInt32 gReflowsMaxZero;
+PRInt32 gReflowsMaxAuto;
+PRInt32 gReflowsMaxLarger;
+class mPathStats {
+public:
+  mPathStats();
+  ~mPathStats();
+};
+mPathStats::mPathStats()
+{
+}
+mPathStats::~mPathStats()
+{
+  printf("nsHTMLReflowCommand->mPath stats:\n");
+  printf("\tNumber created:   %d\n",gReflows);
+  printf("\tNumber in-use:    %d\n",gReflowsInUseMax);
+
+  printf("\tNumber size == 0: %d\n",gReflowsZero);
+  printf("\tNumber size <= 8: %d\n",gReflowsAuto);
+  printf("\tNumber size  > 8: %d\n",gReflowsLarger);
+  printf("\tNum max size == 0: %d\n",gReflowsMaxZero);
+  printf("\tNum max size <= 8: %d\n",gReflowsMaxAuto);
+  printf("\tNum max size  > 8: %d\n",gReflowsMaxLarger);
+}
+
+// Just so constructor/destructor's get called
+mPathStats gmPathStats;
+#endif
+
 // Construct a reflow command given a target frame, reflow command type,
 // and optional child frame
 nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
@@ -68,10 +104,26 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
   if (nsnull!=mAttribute)
     NS_ADDREF(mAttribute);
   NS_INIT_REFCNT();
+#ifdef DEBUG_jesup
+  gReflows++;
+  gReflowsInUse++;
+  if (gReflowsInUse > gReflowsInUseMax)
+    gReflowsInUseMax = gReflowsInUse;
+#endif
 }
 
 nsHTMLReflowCommand::~nsHTMLReflowCommand()
 {
+#ifdef DEBUG_jesup
+  if (mPath.GetArraySize() == 0)
+    gReflowsMaxZero++;
+  else if (mPath.GetArraySize() <= 8)
+    gReflowsMaxAuto++;
+  else
+    gReflowsMaxLarger++;
+  gReflowsInUse--;
+#endif
+
   NS_IF_RELEASE(mAttribute);
   NS_IF_RELEASE(mListName);
 }
@@ -87,6 +139,15 @@ nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater) const
 
 void nsHTMLReflowCommand::BuildPath()
 {
+#ifdef DEBUG_jesup
+  if (mPath.Count() == 0)
+    gReflowsZero++;
+  else if (mPath.Count() <= 8)
+    gReflowsAuto++;
+  else
+    gReflowsLarger++;
+#endif
+
   mPath.Clear();
 
   // Floating frames are handled differently. The path goes from the target

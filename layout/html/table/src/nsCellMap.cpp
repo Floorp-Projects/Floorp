@@ -54,7 +54,7 @@ nsTableCellMap::nsTableCellMap(nsIPresContext* aPresContext, nsTableFrame& aTabl
 {
   MOZ_COUNT_CTOR(nsTableCellMap);
 
-  nsVoidArray orderedRowGroups;
+  nsAutoVoidArray orderedRowGroups;
   PRUint32 numRowGroups;
   aTableFrame.OrderRowGroups(orderedRowGroups, numRowGroups);
 
@@ -243,6 +243,10 @@ nsTableCellMap::GetCellAt(PRInt32 aRowIndex,
 void 
 nsTableCellMap::AddColsAtEnd(PRUint32 aNumCols)
 {
+  // XXX We really should have a way to say "make this voidarray at least
+  // N entries long" to avoid reallocating N times.  On the other hand, the
+  // number of likely allocations here isn't TOO gigantic, and we may not
+  // know about many of them at a time.
   for (PRUint32 numX = 1; numX <= aNumCols; numX++) {
     nsColInfo* colInfo = new nsColInfo();
     if (colInfo) {
@@ -573,9 +577,13 @@ PRBool nsCellMap::Grow(nsTableCellMap& aMap,
   PRInt32 numCols = aMap.GetColCount();
   PRInt32 startRowIndex = (aRowIndex >= 0) ? aRowIndex : mRows.Count();
   PRInt32 endRowIndex = startRowIndex + aNumRows - 1;
+  // XXX We really should have a way to say "make this voidarray at least
+  // N entries long" to avoid reallocating N times.  On the other hand, the
+  // number of likely allocations here isn't TOO gigantic, and we may not
+  // know about many of them at a time.
   for (PRInt32 rowX = startRowIndex; rowX <= endRowIndex; rowX++) {
     nsVoidArray* row;
-    row = (0 == numCols) ? new nsVoidArray() : new nsVoidArray(numCols);
+    row = (0 == numCols) ? new nsVoidArray(4) : new nsVoidArray(numCols);
     if (row) {
       mRows.InsertElementAt(row, rowX);
     }
@@ -699,7 +707,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   // if the new cell could potentially span into other rows and collide with 
   // originating cells there, we will play it safe and just rebuild the map
   if (aRebuildIfNecessary && (aRowIndex < mRowCount - 1) && (rowSpan > 1)) {
-    nsVoidArray newCellArray;
+    nsAutoVoidArray newCellArray;
     newCellArray.AppendElement(&aCellFrame);
     RebuildConsideringCells(aMap, &newCellArray, aRowIndex, startColIndex, PR_TRUE);
     return startColIndex;

@@ -492,7 +492,7 @@ void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext,
         cellFrame->GetRowIndex(rowIndex);
         cellFrame->GetColIndex(colIndex);
         RemoveCell(*aPresContext, cellFrame, rowIndex);
-        nsVoidArray cells;
+        nsAutoVoidArray cells;
         cells.AppendElement(cellFrame);
         InsertCells(*aPresContext, cells, rowIndex, colIndex - 1);
 
@@ -706,7 +706,7 @@ void nsTableFrame::AdjustRowIndices(nsIPresContext* aPresContext,
 {
   // Iterate over the row groups and adjust the row indices of all rows 
   // whose index is >= aRowIndex.
-  nsVoidArray rowGroups;
+  nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
 
@@ -1143,7 +1143,7 @@ void nsTableFrame::RemoveCell(nsIPresContext&   aPresContext,
 PRInt32
 nsTableFrame::GetStartRowIndex(nsTableRowGroupFrame& aRowGroupFrame)
 {
-  nsVoidArray orderedRowGroups;
+  nsAutoVoidArray orderedRowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(orderedRowGroups, numRowGroups);
 
@@ -1179,7 +1179,7 @@ nsTableFrame::InsertRow(nsIPresContext&       aPresContext,
                         PRInt32               aRowIndex,
                         PRBool                aConsiderSpans)
 {
-  nsVoidArray rows;
+  nsAutoVoidArray rows;
   rows.AppendElement(&aRowFrame);
   return InsertRows(aPresContext, aRowGroupFrame, rows, aRowIndex, aConsiderSpans);
 }
@@ -1356,11 +1356,11 @@ nsTableFrame::InsertRowGroups(nsIPresContext&  aPresContext,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    nsVoidArray orderedRowGroups;
+    nsAutoVoidArray orderedRowGroups;
     PRUint32 numRowGroups;
     OrderRowGroups(orderedRowGroups, numRowGroups);
 
-    nsVoidArray rows;
+    nsAutoVoidArray rows;
     for (nsIFrame* kidFrame = aFirstRowGroupFrame; kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
       nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
       if (rgFrame) {
@@ -1613,7 +1613,7 @@ nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*     aPresContext,
   nscoord yInvalid = NS_UNCONSTRAINEDSIZE;
 
   // Get the ordered children and find aKidFrame in the list
-  nsVoidArray rowGroups;
+  nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
   PRUint32 changeIndex;
@@ -1744,7 +1744,7 @@ ProcessRowInserted(nsIPresContext* aPresContext,
                    nscoord         aNewHeight)
 {
   aTableFrame.SetRowInserted(PR_FALSE); // reset the bit that got us here
-  nsVoidArray rowGroups;
+  nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   aTableFrame.OrderRowGroups(rowGroups, numRowGroups);
   // find the row group containing the inserted row
@@ -2683,7 +2683,7 @@ nsTableFrame::RecoverState(nsTableReflowState& aReflowState,
 
   nscoord cellSpacingY = GetCellSpacingY();
   // Get the ordered children and find aKidFrame in the list
-  nsVoidArray rowGroups;
+  nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, &aReflowState.firstBodySection);
   
@@ -2887,7 +2887,7 @@ nsTableFrame::OrderRowGroups(nsVoidArray&           aChildren,
   if (aFoot)      *aFoot      = nsnull;
   
   nsIFrame* kidFrame = mFrames.FirstChild();
-  nsVoidArray nonRowGroups;
+  nsAutoVoidArray nonRowGroups;
   // put the tbodies first, and the non row groups last
   while (kidFrame) {
     const nsStyleDisplay* kidDisplay;
@@ -2976,7 +2976,7 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
 
-  nsVoidArray rowGroups;
+  nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   nsTableRowGroupFrame *thead, *tfoot;
   OrderRowGroups(rowGroups, numRowGroups, &aReflowState.firstBodySection, &thead, &tfoot);
@@ -3447,7 +3447,7 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
   nsMargin borderPadding = GetBorderPadding(aReflowState);
 
   // get the natural height based on the last child's (row group or scroll frame) rect
-  nsVoidArray rowGroups;
+  nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
   if (numRowGroups <= 0) return 0;
@@ -3479,7 +3479,7 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
         nscoord sumOfRowHeights = 0;
         nscoord rowGroupYPos = aReflowState.mComputedBorderPadding.top + cellSpacingY;
 
-        nsVoidArray rowGroups;
+        nsAutoVoidArray rowGroups;
         PRUint32 numRowGroups;
         OrderRowGroups(rowGroups, numRowGroups, nsnull);
 
@@ -4045,7 +4045,6 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
     }
   }
   else if (width != NS_UNCONSTRAINEDSIZE) {
-    nsMargin border(0,0,0,0);
     nsMargin borderPadding = aState.mComputedBorderPadding;
     width += borderPadding.left + borderPadding.right;
   }
