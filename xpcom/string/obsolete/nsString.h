@@ -500,6 +500,15 @@ nsString& Cut(PRInt32 anOffset,PRInt32 aCount);
 nsString& StripChars(const char* aSet);
 
 /**
+ *  This method is used to replace all occurances of the
+ *  given source char with the given dest char
+ *  
+ *  @param  
+ *  @return *this 
+ */
+nsString& ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar);
+
+/**
  *  This method strips whitespace throughout the string
  *  
  *  @return  this

@@ -1401,6 +1401,28 @@ nsString& nsString::StripWhitespace()
 }
 
 /**
+ *  This method is used to replace all occurances of the
+ *  given source char with the given dest char
+ *  
+ *  @param  
+ *  @return *this 
+ */
+nsString& nsString::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
+  PRUnichar* from = mStr;
+  PRUnichar* end = mStr + mLength;
+
+  while (from < end) {
+    PRUnichar ch = *from;
+    if(ch==aSourceChar) {
+      *from = aDestChar;
+    }
+    from++;
+  }
+
+  return *this;
+}
+
+/**
  *  Search for given character within this string.
  *  This method does so by using a binary search,
  *  so your string HAD BETTER BE ORDERED!
