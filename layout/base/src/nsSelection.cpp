@@ -69,6 +69,7 @@
 
 //static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCGenContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
+static NS_DEFINE_IID(kCGenSubtreeIteratorCID, NS_GENERATEDSUBTREEITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 //PROTOTYPES
@@ -2968,7 +2969,7 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext,
   nsCOMPtr<nsIGeneratedContentIterator> genericiter = do_QueryInterface(aInnerIter);
   if (genericiter && aPresShell)
   {
-    genericiter->Init(aPresShell,aContent);
+    result = genericiter->Init(aPresShell,aContent);
   }
   else
     result = aInnerIter->Init(aContent);
@@ -3016,7 +3017,7 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsIContentIterator> inneriter;
-  nsresult result = nsComponentManager::CreateInstance(kCSubtreeIteratorCID, nsnull,
+  nsresult result = nsComponentManager::CreateInstance(kCGenSubtreeIteratorCID, nsnull,
                                               NS_GET_IID(nsIContentIterator), 
                                               getter_AddRefs(iter));
   if (NS_FAILED(result))
@@ -3027,11 +3028,16 @@ nsDOMSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange, 
 
   if ((NS_SUCCEEDED(result)) && iter && inneriter)
   {
-    iter->Init(aRange);
     nsCOMPtr<nsIPresShell> presShell;
     result = aPresContext->GetShell(getter_AddRefs(presShell));
     if (NS_FAILED(result) && presShell)
       presShell = 0;
+    nsCOMPtr<nsIGeneratedContentIterator> genericiter = do_QueryInterface(iter);
+    if (genericiter && presShell)
+      result = genericiter->Init(presShell,aRange);
+    else
+      result = iter->Init(aRange);
+
     // loop through the content iterator for each content node
     // for each text node:
     // get the frame for the content, and from it the style context
