@@ -38,7 +38,6 @@ AC_INIT(config/libc_r.h)
 
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-AC_PREFIX_DEFAULT(\${MOD_DEPTH}/dist)
 
 dnl Set this define to make fixes w/o breaking anything else.
 AC_DEFINE(USE_AUTOCONF)
@@ -46,7 +45,9 @@ AC_DEFINE(USE_AUTOCONF)
 dnl ========================================================
 dnl = Defaults
 dnl ========================================================
-NSPR_VERSION=4
+MOD_MAJOR_VERSION=4
+MOD_MINOR_VERSION=0
+MOD_REVISION_VERSION=1
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -65,6 +66,8 @@ OBJDIR=.
 OBJDIR_NAME=.
 NSINSTALL='$(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall'
 NOSUCHFILE=/no-such-file
+LIBNSPR='-L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)'
+LIBPLC='-L$(dist_libdir) -lplc$(MOD_MAJOR_VERSION)'
 
 dnl Link in libraries necessary to resolve all symbols for shared libs
 RESOLVE_LINK_SYMBOLS=
@@ -118,6 +121,34 @@ dnl =
 dnl = Check options that may affect the compiler
 dnl =
 dnl ========================================================
+dist_prefix='${MOD_DEPTH}/dist'
+dist_bindir='${dist_prefix}/bin'
+dist_includedir='${dist_prefix}/include'
+dist_libdir='${dist_prefix}/lib'
+
+AC_ARG_WITH(dist-prefix,
+    [  --with-dist-prefix=DIST_PREFIX
+                          place build files in DIST_PREFIX [dist]],
+    dist_prefix=$withval)
+
+AC_ARG_WITH(dist-bindir,
+    [  --with-dist-bindir=DIR  build execuatables in DIR [DIST_PREFIX/bin]],
+    dist_bindir=$withval)
+
+AC_ARG_WITH(dist-includedir,
+    [  --with-dist-includedir=DIR
+                          build include files in DIR [DIST_PREFIX/include]],
+    dist_includedir=$withval)
+
+AC_ARG_WITH(dist-libdir,
+    [  --with-dist-libdir=DIR  build library files in DIR [DIST_PREFIX/lib]],
+    dist_libdir=$withval)
+
+AC_SUBST(dist_prefix)
+AC_SUBST(dist_bindir)
+AC_SUBST(dist_includedir)
+AC_SUBST(dist_libdir)
+
 dnl Check if NSPR is being compiled for Mozilla
 dnl Let --with-arg override environment setting
 dnl
@@ -134,7 +165,7 @@ AC_ARG_WITH(mozilla,
 	    fi])
 
 AC_ARG_ENABLE(optimize,
-    [  --enable-optimize(=flag) Enable code optimizations (flag, ie. -O2) ],
+    [  --enable-optimize(=val) Enable code optimizations (val, ie. -O2) ],
     [ if test "$enableval" != "no"; then
         MOZ_OPTIMIZE=1
         if test -n "$enableval" && test "$enableval" != "yes"; then
@@ -149,12 +180,9 @@ AC_ARG_ENABLE(debug,
     	    MOZ_DEBUG=
 	    fi])
 
-AC_ARG_ENABLE(shared,
-    [  --disable-shared        Do not compile into shared libraries])
-
 AC_ARG_ENABLE(win32-target,
     [  --enable-win32-target=\$t
-                               Specify win32 flavor. (WIN95 or WINNT)],
+                          Specify win32 flavor. (WIN95 or WINNT)],
     MOZ_WIN32_TARGET=`echo $enableval | tr a-z A-Z`,
     MOZ_WIN32_TARGET=)
 
@@ -494,7 +522,6 @@ case "$target" in
     AC_DEFINE(AIX)
     AC_DEFINE(SYSV)
     DSO_LDOPTS='-brtl -bM:SRE -bnoentry -bexpall'
-    OS_LIBS="-lc_r $OS_LIBS"
     case "${target_os}" in
     aix3.2*)
         USE_NSPR_THREADS=1
@@ -514,6 +541,7 @@ case "$target" in
         DSO_LDOPTS=
         USE_PTHREADS=1
         AIX_LINK_OPTS='-bnso -berok'
+        LIBNSPR='-L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)_shr'
         ;;
     aix4.3*)
         AC_DEFINE(AIX_HAVE_ATOMIC_OP_H)
@@ -684,6 +712,7 @@ case "$target" in
     DLL_SUFFIX=sl
     DSO_LDOPTS='-b +h $(notdir $@)'
     PR_MD_CSRCS=hpux.c
+    PR_MD_ASFILES=os_HPUX.s
     if test -n "$USE_64"; then
         MDCPUCFG_H=_hpux64.cfg
     else
@@ -809,7 +838,12 @@ case "$target" in
         MDCPUCFG_H=_irix32.cfg
     fi
     case "${target_os}" in
+    irix6*)
+           AC_DEFINE(IRIX6)
+	   USE_PTHREADS=1
+           ;;
     irix5*)
+           AC_DEFINE(IRIX5)
 	   USE_NSPR_THREADS=1
 	   ;;
     *)
@@ -931,6 +965,7 @@ case "$target" in
     AC_DEFINE(XP_PC)
     AC_DEFINE(WIN32)
     PR_MD_ARCH_DIR=windows
+    RESOLVE_LINK_SYMBOLS=1
 
     if test -n "$GNU_CC"; then
         AC_DEFINE(NONAMELESSUNION)
@@ -963,7 +998,7 @@ case "$target" in
                 OPTIMIZER="$OPTIMIZER -Z7"
                 DLLFLAGS="$DLLFLAGS -DEBUG -DEBUGTYPE:CV"
                 LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
-    fi
+            fi
         else
             if test -n "$USE_DEBUG_RTL"; then
                 CFLAGS="$CFLAGS -MDd"
@@ -974,6 +1009,7 @@ case "$target" in
             DLLFLAGS='-DEBUG -DEBUGTYPE:CV -OUT:"$@"'
             if test -n "$GLOWCODE"; then
                 DLLFLAGS='-DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"'
+                DLL_LIBS='$(GLOWDIR)/glowcode.lib'
             fi
             OBJDIR_TAG=_DBG
             LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
@@ -982,16 +1018,22 @@ case "$target" in
                 DLLFLAGS="$DLLFLAGS -PROFILE -MAP"
             fi
         fi
-    fi
+        
+        if test "$OS_TARGET" = "WINNT"; then
+            CFLAGS="$CFLAGS -GT"
+            LIBNSPR='$(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+            LIBPLC='$(dist_libdir)/libplc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+        else
+            LIBNSPR='$(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+            LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+        fi
+    fi # GNU_CC
 
     if test -n "$USE_STATIC_TLS"; then
         AC_DEFINE(_PR_USE_STATIC_TLS)
     fi
 
     if test "$OS_TARGET" = "WINNT"; then
-        if test -z "$GNU_CC"; then
-            CFLAGS="$CFLAGS -GT"
-        fi
         if test "$CPU_ARCH" = "x86"; then
             CFLAGS="$CFLAGS -G5"
         fi
@@ -1070,6 +1112,8 @@ case "$target" in
         CXXFLAGS="$CXXFLAGS -fPIC -Wall -pipe"
         DSO_LDOPTS=-G
     fi
+    MDCPUCFG_H=_ncr.cfg
+    PR_MD_CSRCS=ncr.c
     ;;
 
 mips-nec-sysv*)
@@ -1085,6 +1129,8 @@ mips-nec-sysv*)
     fi
     OS_LIBS="$OS_LIBS -lsocket -lnsl -ldl"
     DSO_LDOPTS=-G
+    MDCPUCFG_H=_nec.cfg
+    PR_MD_CSRCS=nec.c
     ;;
 
 *-netbsd*)
@@ -1110,6 +1156,8 @@ mips-nec-sysv*)
     if test "$LIBRUNPATH"; then
         DSO_LDOPTS="$DSO_LDOPTS -R$(LIBRUNPATH)"
     fi
+    MDCPUCFG_H=_netbsd.cfg
+    PR_MD_CSRCS=netbsd.c
     ;;
 
 mips-sony-newsos*)
@@ -1124,6 +1172,8 @@ mips-sony-newsos*)
     CFLAGS="$CFLAGS -Xa -fullwarn"
     CXXFLAGS="$CXXFLAGS -Xa -fullwarn"
     DSO_LDOPTS=-G
+    MDCPUCFG_H=_sony.cfg
+    PR_MD_CSRCS=sony.c
     ;;
 
 *-nextstep*|*-openstep*)
@@ -1135,6 +1185,8 @@ mips-sony-newsos*)
     CXXFLAGS="$CXXFLAGS -Wall -fno-common -pipe -traditional-cpp -posix"
     USE_NSPR_THREADS=1
     DLL_SUFFIX=dylib
+    MDCPUCFG_H=_nextstep.cfg
+    PR_MD_CSRCS=nextstep.c
     ;;
 
 
@@ -1168,6 +1220,7 @@ mips-sony-newsos*)
     DSO_CFLAGS=-fPIC
     MDCPUCFG_H=_openbsd.cfg
     PR_MD_CSRCS=openbsd.c
+    USE_NSPR_THREADS=1
     case "$OS_TEST" in
     alpha|mips|pmax)
         DSO_LDOPTS=-shared ;;
@@ -1220,6 +1273,8 @@ mips-sony-newsos*)
         AC_DEFINE(OSF1_HAVE_MACHINE_BUILTINS_H)
     fi
     DSO_LDOPTS='-shared -all -expect_unresolved "*" -soname $(notdir $@)'
+    MDCPUCFG_H=_osf1.cfg
+    PR_MD_CSRCS=osf1.c
     ;;
 
 *-qnx*)
@@ -1227,6 +1282,8 @@ mips-sony-newsos*)
     AC_DEFINE(QNX)
     AC_DEFINE(_PR_NEED_H_ERRNO)
     USE_NSPR_THREADS=1
+    MDCPUCFG_H=_qnx.cfg
+    PR_MD_CSRCS=qnx.c
     ;;
 
 *-rhapsody*)
@@ -1246,6 +1303,8 @@ mips-sony-newsos*)
     MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
     DLL_SUFFIX=dylib
     USE_PTHREADS=1
+    MDCPUCFG_H=_rhapsody.cfg
+    PR_MD_CSRCS=rhapsody.c
     ;;
 
 *-*-sco*)
@@ -1260,6 +1319,8 @@ mips-sony-newsos*)
     USE_NSPR_THREADS=1
     CPU_ARCH=x86
     DSO_LDOPTS='-b elf -G'
+    MDCPUCFG_H=_scoos.cfg
+    PR_MD_SRCS=scoos.c
     ;;
 
 *-sinix*)
@@ -1296,6 +1357,11 @@ mips-sony-newsos*)
 
     OS_LIBS="$OS_LIBS -lsocket -lnsl -lresolv -ldl -lc"
     USE_NSPR_THREADS=1
+    MDCPUCFG_H=_reliantunix.cfg
+    PR_MD_CSRCS=reliantunix.c
+    if test "${OS_ARCH}" = "mips"; then
+        PR_MD_ASFILES=os_ReliantUNIX.s
+    fi
     ;;
 
 *-sunos*)
@@ -1310,6 +1376,12 @@ mips-sony-newsos*)
     DSO_LDOPTS=
     DSO_CFLAGS=-fPIC
     USE_NSPR_THREADS=1
+    if test "$OS_RELEASE" = "4.1.3_U1"; then
+        _OPTIMIZE_FLAGS=
+        OS_LIBS="$OS_LIBS -lm"
+    fi
+    MDCPUCFG_H=_sunos4.cfg
+    PR_MD_CSRCS=sunos4.c
     ;;
 
 *-solaris*)
@@ -1395,11 +1467,14 @@ mips-sony-newsos*)
         AC_DEFINE(_PR_NO_LARGE_FILES)
         CC='$(NSDEPTH)/build/hcc cc'
         CXX='$(NSDEPTH)/build/hcpp CC'
+        MDCPUCFG_H=_unixware.cfg
     else
         AC_DEFINE(_LARGEFILE64_SOURCE)
         AC_DEFINE(_PR_HAVE_OFF64_T)
         AC_DEFINE(_PR_HAVE_SOCKADDR_LEN)
+        MDCPUCFG_H=_unixware7.cfg
     fi
+    PR_MD_CSRCS=unixware.c
     DSO_LDOPTS=-G
     CPU_ARCH=x86
     ;;
@@ -1473,6 +1548,8 @@ mips-sony-newsos*)
           DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /nologo'
           EXEFLAGS='/OUT:$@ /PMTYPE:VIO /MAP:$(@:.exe=.map) /nologo'
         fi
+        LIBNSPR='$(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
+        LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
         ;;
     esac
 
@@ -1673,7 +1750,7 @@ esac
 fi # SKIP_LIBRARY_CHECKS
 
 AC_ARG_ENABLE(cplus,
-    [  --enable-cplus          Use cplus for whatever reason],
+    [  --enable-cplus          Enable some c++ api routines],
     [ if test "$enableval" = "yes"; then
 	    USE_CPLUS=1
       fi]) 
@@ -1764,15 +1841,24 @@ fi
 dnl Special thread exceptions
 
 case "$target" in
-*-aix4.1*)
-    if test -z "$USE_PTHREADS"; then
-        AC_DEFINE(AIX_RENAME_SELECT)
+*-aix*)
+    if test -n "$USE_NSPR_THREADS"; then
+        OS_LIBS="$OS_LIBS -lc"
+    else
+        OS_LIBS="$OS_LIBS -lc_r"
     fi
-    ;;
-*-aix4.[23]*)
-    if test -z "$USE_NSPR_THREADS"; then
-        AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
-    fi
+    case "$target_os" in
+    aix4.1*)
+        if test -z "$USE_PTHREADS"; then
+            AC_DEFINE(AIX_RENAME_SELECT)
+        fi
+        ;;
+    aix4.[23]*)
+        if test -z "$USE_NSPR_THREADS"; then
+            AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
+        fi
+        ;;
+    esac
     ;;
 *-bsdi*)
     if test -n "$USE_PTHREADS"; then
@@ -1873,7 +1959,12 @@ AC_SUBST(USE_USER_PTHREADS)
 AC_SUBST(USE_NATIVE_THREADS)
 AC_SUBST(USE_NSPR_THREADS)
 
-AC_SUBST(NSPR_VERSION)
+AC_SUBST(LIBNSPR)
+AC_SUBST(LIBPLC)
+
+AC_SUBST(MOD_MAJOR_VERSION)
+AC_SUBST(MOD_MINOR_VERSION)
+AC_SUBST(MOD_REVISION_VERSION)
 AC_SUBST(NSPR_MODNAME)
 AC_SUBST(MDCPUCFG_H)
 AC_SUBST(MOZ_WIN32_TARGET)
@@ -1936,6 +2027,7 @@ config/Makefile
 config/autoconf.mk
 config/nsprincl.mk
 config/nsprincl.sh
+config/nspr-config
 lib/Makefile 
 lib/ds/Makefile 
 lib/libc/Makefile 
@@ -1975,4 +2067,4 @@ if test -n "$USE_CPLUS"; then
     MAKEFILES="$MAKEFILES pr/src/cplus/Makefile pr/src/cplus/tests/Makefile"
 fi
 
-AC_OUTPUT([$MAKEFILES])
+AC_OUTPUT([$MAKEFILES], [chmod +x config/nspr-config])
