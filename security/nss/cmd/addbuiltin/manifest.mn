@@ -47,4 +47,3 @@ REQUIRES = dbm seccmd
 PROGRAM = addbuiltin
 
 USE_STATIC_LIBS = 1
-
