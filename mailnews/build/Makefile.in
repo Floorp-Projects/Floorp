@@ -45,8 +45,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mail
 LIBRARY_NAME = mail
 
+
+ifndef BUILD_STATIC_LIBS
 ifeq ($(OS_ARCH),WINNT)
 RESFILE		= mail.res
+endif
 endif
 
 META_COMPONENT = mail
