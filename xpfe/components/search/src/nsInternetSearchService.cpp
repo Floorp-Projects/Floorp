@@ -709,6 +709,7 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		// fake out the generic builder (i.e. return anything in this case)
 		// so that search containers never appear to be empty
 		*target = source;
+		NS_ADDREF(source);
 		return(NS_OK);
 	}
 
