@@ -4846,25 +4846,19 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     if (!aBookmarksFile || !aDataSource || !aRoot)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
-    nsCOMArray<nsIRDFResource> parentArray;
-
     nsCOMPtr<nsIFile> tempFile;
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = tempFile->Append(NS_LITERAL_STRING("bookmarks.html"));
+    nsresult rv = aBookmarksFile->Clone(getter_AddRefs(tempFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, /*octal*/ 0600);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIFileOutputStream> strm =
-        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID);
-    if (!strm)
+        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
     {
         tempFile->Remove(PR_FALSE);
-        return NS_ERROR_UNEXPECTED;
+        return rv;
     }
 
     rv = strm->Init(tempFile, PR_WRONLY, /*octal*/ 0600, 0);
@@ -4877,28 +4871,10 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     PRUint32 dummy;
     rv = strm->Write(kFileIntro, sizeof(kFileIntro)-1, &dummy);
 
+    nsCOMArray<nsIRDFResource> parentArray;
     rv |= WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
-    if (NS_FAILED(rv))
-    {
-        strm->Close();
-        tempFile->Remove(PR_FALSE);
-        return NS_ERROR_UNEXPECTED;
-    }
 
-    // If we wrote to the file successfully (i.e. if the disk wasn't full) 
-    // then copy the temp file over the bookmarks file. 
-    nsCOMPtr<nsIFile> bookmarkParentDir;
-    nsAutoString bookmarkLeafName;
-
-    rv = aBookmarksFile->GetParent(getter_AddRefs(bookmarkParentDir));
-    rv |= aBookmarksFile->GetLeafName(bookmarkLeafName);
-    if (NS_FAILED(rv))
-    {
-        tempFile->Remove(PR_FALSE);
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    rv = tempFile->CopyToFollowingLinks(bookmarkParentDir, bookmarkLeafName);
+    strm->Close();
 
     if (NS_FAILED(rv))
     {
@@ -4906,12 +4882,39 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
         return rv;
     }
 
-    rv = tempFile->Remove(PR_FALSE);
+    // If we wrote to the file successfully (i.e. if the disk wasn't full) 
+    // then move the temp file to the bookmarks file so it takes its place. 
+    PRBool equals;
+    rv = tempFile->Equals(aBookmarksFile, &equals);
+    if (NS_FAILED(rv)) {
+        tempFile->Remove(PR_FALSE);
+        return rv;
+    }
+    if (!equals) {
+        nsCOMPtr<nsIFile> bookmarkParentDir;
+        rv = aBookmarksFile->GetParent(getter_AddRefs(bookmarkParentDir));
+        if (NS_FAILED(rv)) {
+            tempFile->Remove(PR_FALSE);
+            return rv;
+        }
 
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Failed to delete temporary bookmarks file.");
+        nsAutoString bookmarkLeafName;
+        rv = aBookmarksFile->GetLeafName(bookmarkLeafName);
+        if (NS_FAILED(rv)) {
+            tempFile->Remove(PR_FALSE);
+            return rv;
+        }
+
+        rv = tempFile->MoveTo(bookmarkParentDir, bookmarkLeafName);
+        if (NS_FAILED(rv))
+        {
+            tempFile->Remove(PR_FALSE);
+            return rv;
+        }
+    }
 
     mDirty = PR_FALSE;
+
     return NS_OK;
 }
 
