@@ -121,9 +121,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   return Inherited::InsertText(aStringToInsert);
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertBreak(PRBool aCtrlKey)
+NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 {
-  return Inherited::InsertBreak(aCtrlKey);
+  return Inherited::InsertBreak();
 }
 
 // Methods shared with the base editor.
