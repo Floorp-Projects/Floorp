@@ -2299,8 +2299,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                           aParentFrame,
                           contentFrame,
                           styleContext);
-
-     aNewFrame = scrollFrame;
+    // primary is set above (to the contentFrame)
+    
+    aNewFrame = scrollFrame;
   } else {
      // if not scrollable the new frame is the content frame.
      aNewFrame = contentFrame;
@@ -2605,6 +2606,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                               parentFrame,
                               rootFrame,
                               rootPseudoStyle);
+
+    // set the primary frame to the root frame
+    state.mFrameManager->SetPrimaryFrameFor(aDocElement, rootFrame);
   }
 
   if (isPaginated) {
@@ -3307,7 +3311,9 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   nsIFrame * newFrame;
   PRUint32 flags = aIsAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0;
   nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, flags);
-
+  if (!NS_SUCCEEDED(rv) {
+    return rv;
+  }
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -4500,9 +4506,6 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIPresContext*      aPresConte
   // the the scroll frames child list
   aScrollFrame->SetInitialChildList(aPresContext, nsnull, aScrolledFrame);
 
-  if (aContent != nsnull)
-     aState.mFrameManager->SetPrimaryFrameFor(aContent, aScrolledFrame);
-
   return NS_OK;
 }
  
@@ -4598,6 +4601,9 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                           scrolledContentStyle);
 
     aScrolledContentStyle = scrolledContentStyle;
+
+    // now set the primary frame to the ScrollFrame
+    aState.mFrameManager->SetPrimaryFrameFor( aContent, aNewFrame );
 
     return NS_OK;
 
