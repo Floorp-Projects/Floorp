@@ -148,7 +148,11 @@ NS_IMETHODIMP
 nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   nsString& aOldValue)
 {
+  // XXX The ToNewCString() calls allocate memory using "new" so this code
+  // causes a memory leak...
+#if 0
   cout << "will add " << aKey.ToNewCString() << "=" << aNewValue.ToNewCString() << endl;
+#endif
   if (!mTable) {
     mTable = PL_NewHashTable(8, (PLHashFunction) HashKey,
       (PLHashComparator) CompareKeys,
@@ -166,8 +170,7 @@ nsProperties::SetProperty(const nsString& aKey, nsString& aNewValue,
   if (he && aOldValue) {
     // XXX fix me
   }
-  PL_HashTableRawAdd(mTable, hep, hashValue, key,
-    new nsString(aNewValue.ToNewUnicode()));
+  PL_HashTableRawAdd(mTable, hep, hashValue, key, aNewValue.ToNewString());
 
   return NS_OK;
 }
