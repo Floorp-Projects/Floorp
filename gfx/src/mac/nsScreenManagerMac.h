@@ -24,9 +24,12 @@
 #define nsScreenManagerMac_h___
 
 #include "nsIScreenManager.h"
-#include <QuickDraw.h>
+#include <Quickdraw.h>
+
+#include "nsVoidArray.h"
 
 class nsIScreen;
+
 
 //------------------------------------------------------------------------
 
@@ -42,7 +45,10 @@ public:
 private:
 
   nsIScreen* CreateNewScreenObject ( GDHandle inDevice ) ;
+  
+  nsAutoVoidArray mScreenList;
 
 };
+
 
 #endif  // nsScreenManagerMac_h___ 
