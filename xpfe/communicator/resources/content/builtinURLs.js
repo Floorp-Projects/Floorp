@@ -152,9 +152,13 @@ function xlateURL(key)
 
 function loadXURL(key)
 {
-    debug_dump("loadXURL call with " + key + "\n");
+  debug_dump("loadXURL call with " + key + "\n");
     
-	window._content.location.href = xlateURL(key);
+  var url = xlateURL(key);
+  if (window._content)
+    window._content.location.href = url;
+  else
+    window.open(url); // on mac, there maybe no open windows: see bug 83329
 }
 
 loadDS();
