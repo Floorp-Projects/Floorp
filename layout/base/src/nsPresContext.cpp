@@ -161,6 +161,9 @@ nsPresContext::nsPresContext()
   mStopChrome = PR_TRUE;
 
   mShell = nsnull;
+  mLinkHandler = nsnull;
+  mContainer = nsnull;
+
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
