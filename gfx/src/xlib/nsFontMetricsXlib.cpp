@@ -282,8 +282,8 @@ static nsFontCharSetXlibInfo KSC5601 =
   { "ks_c_5601-1987", DoubleByteConvert, 1 };
 static nsFontCharSetXlibInfo X11Johab =
   { "x-x11johab", DoubleByteConvert, 1 };
-static nsFontCharSetXlibInfo Johab =
-  { "x-johab", DoubleByteConvert, 1 };
+static nsFontCharSetXlibInfo JohabNoAscii =
+  { "x-johab-noascii", DoubleByteConvert, 1 };
 
 static nsFontCharSetXlibInfo ISO106461 =
   { nsnull, ISO10646Convert, 1 };
@@ -453,7 +453,7 @@ static nsFontCharSetMapXlib gCharSetMap[] =
   { "johabs-1",           &FLG_KO,      &X11Johab      },
   { "johabsh-1",          &FLG_KO,      &X11Johab      },
   { "ksc5601.1987-0",     &FLG_KO,      &KSC5601       },
-  { "ksc5601.1992-3",     &FLG_KO,      &Johab         },
+  { "ksc5601.1992-3",     &FLG_KO,      &JohabNoAscii  },
   { "microsoft-cp1251",   &FLG_NONE,    &CP1251        },
   { "misc-fontspecific",  &FLG_NONE,    &Unknown       },
   { "sgi-fontspecific",   &FLG_NONE,    &Unknown       },
@@ -1691,7 +1691,7 @@ SetUpFontCharSetInfo(nsFontCharSetXlibInfo* aSelf)
 #undef DEBUG_DUMP_TREE
 #ifdef DEBUG_DUMP_TREE
 
-static char* gDumpStyles[3] = { "normal", "italic", "oblique" };
+static const char* gDumpStyles[3] = { "normal", "italic", "oblique" };
 
 static PRIntn
 DumpCharSet(PLHashEntry* he, PRIntn i, void* arg)
@@ -2971,11 +2971,6 @@ nsFontNodeXlib::FillStyleHoles(void)
 static void
 SetCharsetLangGroup(nsFontCharSetXlibInfo* aCharSetInfo)
 {
-/* gisburn: enabling this code causes
- * ###!!! ASSERTION: failed to get converter type: 'mDocConverterType!=nsnull', 
- * file ../../../../../../src/2001-07-16-08-trunk/mozilla/gfx/src/xprint/../xlib/nsFontMetricsXlib.cpp, line 3815
- */
-#ifdef XLIB_DISABLED_FOR_NOW
   if (!aCharSetInfo->mCharSet || aCharSetInfo->mLangGroup)
     return;
 
@@ -2998,7 +2993,6 @@ SetCharsetLangGroup(nsFontCharSetXlibInfo* aCharSetInfo)
 #endif
     }
   }
-#endif /* XLIB_DISABLED_FOR_NOW */
 }
 
 #define WEIGHT_INDEX(weight) (((weight) / 100) - 1)
@@ -3114,12 +3108,13 @@ SetFontLangGroupInfo(nsFontCharSetMapXlib* aCharSetMap)
   // get the atom for mFontLangGroup->mFontLangGroupName so we can
   // apply fontLangGroup operations to it
   // eg: search for related groups, check for scaling prefs
-  if (!fontLangGroup->mFontLangGroupAtom) {
     const char *langGroup = fontLangGroup->mFontLangGroupName;
     if (!langGroup)
       langGroup = "";
-    fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
-
+    if (!fontLangGroup->mFontLangGroupAtom) {
+      fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
+    }
+  
     // get the font scaling controls
     nsFontCharSetXlibInfo *charSetInfo = aCharSetMap->mInfo;
     if (!charSetInfo->mInitedSizeInfo) {
@@ -3156,7 +3151,6 @@ SetFontLangGroupInfo(nsFontCharSetMapXlib* aCharSetMap)
       else
         charSetInfo->mBitmapUndersize = gBitmapUndersize;
     }
-  }
 }
 
 static void
@@ -3362,12 +3356,6 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
     }
 
     nsCStringKey weightKey(weightName);
-/* 64bit ptr --> int conversion, see bug 20860. 
- * Can be removed after that has been fixed... 
- */
-#ifndef NS_PTR_TO_INT32
-#define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
-#endif
     int weightNumber = NS_PTR_TO_INT32(gWeights->Get(&weightKey));
 
     if (!weightNumber) {
@@ -3862,23 +3850,33 @@ nsFontMetricsXlib::FindStyleSheetGenericFont(PRUnichar aChar)
       }
       if (mDocConverterType == SingleByteConvert) {
         // before we put in the transliterator to disable double byte special chars
-        // make sure we search x-western to get the EURO sign
+        // add the x-western font before the early transliterator
+        // to get the EURO sign (hack)
         nsFontXlib* western_font = nsnull;
         if (mLangGroup != gWesternLocale)
           western_font = FindLangGroupPrefFont(gWesternLocale, aChar);
+        // add the symbol font before the early transliterator
+        // to get the bullet (hack)
+        nsCAutoString ffre("*-symbol-adobe-fontspecific");
+        nsFontXlib* symbol_font = TryNodes(ffre, 0x0030);
+
+        // add the early transliterator
+        // to avoid getting Japanese "special chars" such as smart
+        // since they are very oversized compared to western fonts
         nsFontXlib* sub_font = FindSubstituteFont(aChar);
         NS_ASSERTION(sub_font, "failed to get a special chars substitute font");
         if (sub_font) {
           sub_font->mMap = gDoubleByteSpecialCharsMap;
           AddToLoadedFontsList(sub_font);
         }
-        if (western_font) {
-          NS_ASSERTION(western_font->SupportsChar(aChar), "font supposed to support this char");
+        if (western_font && FONT_HAS_GLYPH(western_font->mMap, aChar)) {
           return western_font;
         }
-        else if (sub_font) {
-          if (FONT_HAS_GLYPH(sub_font->mMap, aChar))
-            return sub_font;
+        else if (symbol_font && FONT_HAS_GLYPH(symbol_font->mMap, aChar)) {
+          return symbol_font;
+        }
+        else if (sub_font && FONT_HAS_GLYPH(sub_font->mMap, aChar)) {
+          return sub_font;
         }
       }
     }
