@@ -28,6 +28,10 @@ CPPSRCS=					\
 	nsGenericXMLElement.cpp			\
 	nsXMLCDATASection.cpp			\
 	nsXMLProcessingInstruction.cpp		\
+	nsXMLEntity.cpp \
+	nsXMLNotation.cpp \
+	nsXMLDocumentType.cpp \
+	nsXMLNamedNodeMap.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -35,6 +39,10 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsGenericXMLElement.obj	\
 	.\$(OBJDIR)\nsXMLCDATASection.obj	\
 	.\$(OBJDIR)\nsXMLProcessingInstruction.obj \
+	.\$(OBJDIR)\nsXMLEntity.obj \
+	.\$(OBJDIR)\nsXMLNotation.obj \
+	.\$(OBJDIR)\nsXMLDocumentType.obj \
+	.\$(OBJDIR)\nsXMLNamedNodeMap.obj \
 	$(NULL)
 
 EXPORTS =					\
