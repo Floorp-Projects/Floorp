@@ -459,8 +459,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
 nsresult 
 nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURL **_retval)
 {
-#ifdef DEBUG_NEWS
-  printf("nsNntpService::RunNewsUrl(%s,...)\n", (const char *)nsAutoCString(urlString));
+#ifdef DEBUG_sspitzer
+  printf("nsNntpService::RunNewsUrl(%s,%s,%lu,...)\n", (const char *)nsAutoCString(urlString), (const char *)nsAutoCString(newsgroupName), key);
 #endif
   
   nsCOMPtr <nsINntpUrl> nntpUrl;
@@ -470,9 +470,6 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
   if (NS_FAILED(rv) || !nntpUrl) return rv;
   
   nntpUrl->SetSpec(nsAutoCString(urlString));
-
-  // I should only be creating this if I have a newsgroup, ie, if my url looks like this:
-  // news://host/group
 
   if (newsgroupName != "") {
     nsCOMPtr <nsINNTPNewsgroup> newsgroup;
@@ -570,7 +567,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, nsISupportsArray *messages, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *newsgroupname, nsISupportsArray *messages, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
   nsresult rv = NS_OK;
   PRUint32 count = 0;
@@ -631,8 +628,8 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, nsISupportsArr
   printf("attempt to cancel the message (key,ID,cancel url): (%d,%s,%s)\n", key, messageId.GetBuffer(),urlStr.GetBuffer());
 #endif  
 
-  nsString blankNewsgroupName("",eOneByte);
-  rv = RunNewsUrl(urlStr, blankNewsgroupName, nsMsgKey_None, aConsumer, aUrlListener, aURL);
+  nsString newsgroupNameStr(newsgroupname,eOneByte);
+  rv = RunNewsUrl(urlStr, newsgroupNameStr, key, aConsumer, aUrlListener, aURL);
 
   return rv; 
 }

@@ -1869,8 +1869,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED);
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
             
-			nsMsgKey key = nsMsgKey_None;
-			rv = m_runningURL->GetMessageKey(&key);
+	    nsMsgKey key = nsMsgKey_None;
+	    rv = m_runningURL->GetMessageKey(&key);
             PR_ASSERT(m_messageID && (key != nsMsgKey_None));
 			if (m_messageID && (key != nsMsgKey_None)) {
 				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
@@ -2093,6 +2093,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		}
 
 		// now mark the message as read
+		printf("should we be marking later, after the message has finished loading?\n");
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
 		nsresult rv = NS_OK;
 
@@ -3832,6 +3833,18 @@ PRInt32 nsNNTPProtocol::Cancel()
         printf("%s\n", alertText.GetBuffer());
 #endif /* BUG_7770_FIXED */
     }
+
+    // just me for now...
+#ifdef DEBUG_sspitzer
+    // delete the message from the db here.
+    nsMsgKey key = nsMsgKey_None;
+    rv = m_runningURL->GetMessageKey(&key);
+    PR_ASSERT(NS_SUCCEEDED(rv));
+    char *newsgroupname = nsnull;
+    rv = m_runningURL->GetNewsgroupName(&newsgroupname);
+    PR_ASSERT(NS_SUCCEEDED(rv) && newsgroupname);
+    printf("delete %lu from %s\n",key,newsgroupname);
+#endif
   }
     
 FAIL:

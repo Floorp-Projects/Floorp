@@ -123,7 +123,6 @@ protected:
 protected:
 	nsNativeFileSpec *mPath;
 	PRUint32  mExpungedBytes;
-	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;

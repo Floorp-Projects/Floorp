@@ -84,9 +84,13 @@ public:
     
     NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
     
+    // this should be an IDL attribute
     NS_IMETHOD SetMessageKey(nsMsgKey aKey);
-	NS_IMETHOD GetMessageKey(nsMsgKey * aKey);
-    NS_IMETHOD SetNewsgroupName(char *aNewsgroupName);
+    NS_IMETHOD GetMessageKey(nsMsgKey * aKey);
+
+    // this should be an IDL attribute
+    NS_IMETHOD SetNewsgroupName(char * aNewsgroupName);
+    NS_IMETHOD GetNewsgroupName(char ** aNewsgroupName);
      
 	// from nsIMsgMailNewsUrl:
 	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);

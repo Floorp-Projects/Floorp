@@ -1092,6 +1092,22 @@ NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(char * aNewsgroupName)
     }    
 }
 
+NS_IMETHODIMP nsNntpUrl::GetNewsgroupName(char ** aNewsgroupName)
+{
+    if (!*aNewsgroupName) return NS_ERROR_NULL_POINTER;
+
+    PR_ASSERT(m_newsgroupName);
+    if (!m_newsgroupName) return NS_ERROR_FAILURE;
+
+    *aNewsgroupName = PL_strdup(m_newsgroupName);
+    if (!aNewsgroupName) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+        return NS_OK;
+    }
+}     
+
 NS_IMETHODIMP nsNntpUrl::SetMessageKey(nsMsgKey aKey)
 {
     m_messageKey = aKey;
@@ -1103,3 +1119,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageKey(nsMsgKey * aKey)
     *aKey = m_messageKey;
     return NS_OK;
 }
+
+
+
+

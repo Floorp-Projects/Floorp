@@ -68,8 +68,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgNewsFolder::nsMsgNewsFolder(void)
-  : mPath(nsnull), mExpungedBytes(0), 
-    mHaveReadNameFromDB(PR_FALSE), mGettingNews(PR_FALSE),
+  : mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
@@ -825,20 +824,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetName(char **name)
   if(!name)
     return NS_ERROR_NULL_POINTER;
 
-  if (!mHaveReadNameFromDB)
-  {
-    if (mDepth == 1) 
-    {
-      SetName("News.Foo.Bar");
-      mHaveReadNameFromDB = TRUE;
-      *name = mName.ToNewCString();
-      return NS_OK;
-    }
-    else
-    {
-      //Need to read the name from the database
-    }
-  }
 	nsAutoString folderName;
 	nsNewsURI2Name(kNewsRootURI, mURI, folderName);
 	*name = folderName.ToNewCString();
@@ -848,21 +833,19 @@ NS_IMETHODIMP nsMsgNewsFolder::GetName(char **name)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(char ** prettyName)
 {
-  if (mDepth == 1) {
-    // Depth == 1 means we are on the news server level
-    // override the name here to say "News.Foo.Bar"
-    *prettyName = PL_strdup("News.Foo.Bar");
+  if (!prettyName)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsresult rv = NS_OK;;
+  char *pName = PL_strdup(*prettyName);
+  if (pName) {
+    rv = nsMsgFolder::GetPrettyName(&pName); 
+    delete[] pName;
   }
   else {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    char *pName = PL_strdup(*prettyName);
-    if (pName)
-      rv = nsMsgFolder::GetPrettyName(&pName);
-    delete[] pName;
-    return rv;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
@@ -935,6 +918,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetExpungedBytesCount(PRUint32 *count)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetDeletable(PRBool *deletable)
 {
+#if 0
   if(!deletable)
     return NS_ERROR_NULL_POINTER;
 
@@ -957,6 +941,10 @@ NS_IMETHODIMP nsMsgNewsFolder::GetDeletable(PRBool *deletable)
   else *deletable =  PR_TRUE;
 
   return NS_OK;
+#else
+  NS_ASSERTION(0,"GetDeletable() not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
  
 NS_IMETHODIMP nsMsgNewsFolder::GetCanCreateChildren(PRBool *canCreateChildren)
@@ -970,6 +958,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetCanCreateChildren(PRBool *canCreateChildren)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetCanBeRenamed(PRBool *canBeRenamed)
 {
+#if 0
   if(!canBeRenamed)
     return NS_ERROR_NULL_POINTER;
 
@@ -990,6 +979,10 @@ NS_IMETHODIMP nsMsgNewsFolder::GetCanBeRenamed(PRBool *canBeRenamed)
     *canBeRenamed = PR_TRUE;
 
   return NS_OK;
+#else
+  NS_ASSERTION(0,"GetCanBeRenamed() not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
@@ -1087,31 +1080,17 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
     char *hostname;
     rv = GetHostName(&hostname);
     if (NS_FAILED(rv)) return rv;
-    rv = nntpService->CancelMessages(hostname, messages, nsnull, nsnull, nsnull);
-    PR_FREEIF(hostname);
-  }
-
-  // if we were able to CANCEL those messages, remove the from the database
-  if (NS_SUCCEEDED(rv)) {
-    if (mDatabase) {
-      PRUint32 count = 0;
-      PRUint32 i;
-      for (i = 0; i < count; i++) {
-        nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
-        nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
-        if (message) {
-          nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-          nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
-          
-          if(NS_SUCCEEDED(rv)) {
-            rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-            if(NS_SUCCEEDED(rv)) {
-              rv = mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
-            }
-          }
-        }
-      }
+    char *newsgroupname;
+    rv = GetName(&newsgroupname);
+    if (NS_FAILED(rv)) {
+      PR_FREEIF(hostname);
+      return rv;
     }
+    
+    rv = nntpService->CancelMessages(hostname, newsgroupname, messages, nsnull, nsnull, nsnull);
+    
+    PR_FREEIF(hostname);
+    PR_FREEIF(newsgroupname);
   }
   
   return rv;

@@ -44,6 +44,6 @@ interface nsINntpService : nsISupports {
 
   nsIURL GetNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener);
 
-  nsIURL CancelMessages (in string hostname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
+  nsIURL CancelMessages (in string hostname, in string newsgroupname, in nsISupportsArray messages, in nsISupports aConsumer, in nsIUrlListener aUrlListener);
 };
 

@@ -84,6 +84,7 @@ public:
 	NS_IMETHOD GetMessageKey(nsMsgKey * aKey) = 0;
 
     NS_IMETHOD SetNewsgroupName(char *aNewsgroupName) = 0;
+    NS_IMETHOD GetNewsgroupName(char ** aNewsgroupName) = 0;
 };
 
 #endif /* nsIHttpURL_h___ */
