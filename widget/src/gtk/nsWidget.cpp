@@ -22,6 +22,7 @@
 #include "nsGfxCIID.h"
 #include "nsRepository.h"
 #include "nsGtkEventHandler.h"
+#include "nsIFontMetrics.h"
 #include <gdk/gdkx.h>
 
 // BGR, not RGB
@@ -323,7 +324,26 @@ nsIFontMetrics *nsWidget::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 {
-  // NS_NOTYETIMPLEMENTED("nsWidget::SetFont");
+
+  nsIFontMetrics* mFontMetrics;
+  mContext->GetMetricsFor(aFont, mFontMetrics);
+
+  if (mFontMetrics) {
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+
+    GtkStyle* style;
+    style= gtk_widget_get_style(mWidget);
+    gdk_font_unref (style->font);
+
+    style->font = (GdkFont *)fontHandle;
+    gdk_font_ref(style->font);
+
+
+    gtk_widget_set_style(mWidget, style);
+
+  }
+  NS_RELEASE(mFontMetrics);
   return NS_OK;
 }
 
@@ -563,6 +583,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   gtk_widget_push_visual(gdk_rgb_get_visual());
+  gtk_widget_push_style(gtk_style_new());
 
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
@@ -587,6 +608,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
+  gtk_widget_pop_style ();
 
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
