@@ -32,7 +32,7 @@
 class nsIEnumerator : public nsISupports {
 public:
 
-  static const nsIID& IID(void) { static nsIID iid = NS_IENUMERATOR_IID; return iid; }
+  static const nsIID& GetIID(void) { static nsIID iid = NS_IENUMERATOR_IID; return iid; }
 
   /** First will reset the list. will return NS_FAILED if no items
    */
@@ -66,7 +66,7 @@ public:
 class nsIBidirectionalEnumerator : public nsIEnumerator {
 public:
 
-  static const nsIID& IID(void) { static nsIID iid = NS_IBIDIRECTIONALENUMERATOR_IID; return iid; }
+  static const nsIID& GetIID(void) { static nsIID iid = NS_IBIDIRECTIONALENUMERATOR_IID; return iid; }
 
   /** Last will reset the list to the end. will return NS_FAILED if no items
    */
