@@ -888,7 +888,7 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 }
 #endif
 
-#define DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
+//#define DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
 
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
