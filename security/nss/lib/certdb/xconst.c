@@ -217,7 +217,7 @@ cert_DecodeAuthInfoAccessExtension(PRArenaPool *arena,
     }
 
     for (i = 0; info[i] != NULL; i++) {
-	info[i]->location = cert_DecodeGeneralName(arena,
+	info[i]->location = CERT_DecodeGeneralName(arena,
 						   &(info[i]->derLocation),
 						   NULL);
     }
