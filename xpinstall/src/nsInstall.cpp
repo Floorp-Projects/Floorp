@@ -102,13 +102,13 @@ nsInstallInfo::~nsInstallInfo()
 {
 }
 
-void 
-nsInstallInfo::GetLocalFile(char **aPath)
+nsresult
+nsInstallInfo::GetLocalFile(nsFileSpec& aSpec)
 {
-    if (mFile)
-        mFile->GetNSPRPath(aPath);
-    else
-        *aPath = 0;
+    if (!mFile)
+       return NS_ERROR_NULL_POINTER;
+       
+    return mFile->GetFileSpec(&aSpec);
 }
 
 
@@ -134,13 +134,6 @@ nsInstall::nsInstall()
     mStartInstallCompleted  = PR_FALSE;
     mJarFileLocation        = "";
     mInstallArguments       = "";
-
-    mUninstallPackage = PR_FALSE;
-    mRegisterPackage  = PR_FALSE;
-    mStatusSent       = PR_FALSE;
-
-    mJarFileLocation    = "";
-    mInstallArguments   = "";
 
     // mJarFileData is an opaque handle to the jarfile.
     nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID, 
@@ -2087,11 +2080,11 @@ nsInstall::CleanUp(void)
 void       
 nsInstall::GetJarFileLocation(nsString& aFile)
 {
-    aFile = mJarFileLocation;
+    aFile = mJarFileLocation.GetCString();
 }
 
 void       
-nsInstall::SetJarFileLocation(const nsString& aFile)
+nsInstall::SetJarFileLocation(const nsFileSpec& aFile)
 {
     mJarFileLocation = aFile;
 }
@@ -2143,8 +2136,7 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 PRInt32 
 nsInstall::OpenJARFile(void)
 {    
-    nsFileSpec loc(mJarFileLocation);
-    nsresult rv = mJarFileData->Init(loc);
+    nsresult rv = mJarFileData->Init(mJarFileLocation);
     if (NS_FAILED(rv))
         return UNEXPECTED_ERROR;
 
@@ -2169,7 +2161,7 @@ nsInstall::CloseJARFile(void)
 PRInt32    
 nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName)
 {
-    PRInt32 result;
+    PRInt32 extpos = 0;
     nsFileSpec *extractHereSpec;
 
     if (aSuggestedName == nsnull)
@@ -2178,12 +2170,12 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
         nsString tempFileName = "xpinstall";
 
         // Get the extension of the file in the JAR
-        result = aJarfile.RFindChar('.');
-        if (result != -1)
+        extpos = aJarfile.RFindChar('.');
+        if (extpos != -1)
         {
             // We found the extension; add it to the tempFileName string
             nsString extension;
-            aJarfile.Right(extension, (aJarfile.Length() - result) );
+            aJarfile.Right(extension, (aJarfile.Length() - extpos) );
             tempFileName += extension;
         }
 
@@ -2217,51 +2209,43 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
             delete extractHereSpec;
         return EXTRACTION_FAILED;
     }
-
-    if (result == 0)
-    {
     
 #ifdef XP_MAC
-		FSSpec finalSpec, extractedSpec = extractHereSpec->GetFSSpec();
-		
-		if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
-		{
-			nsAppleSingleDecoder *asd = new nsAppleSingleDecoder(&extractedSpec, &finalSpec);
-            OSErr decodeErr = fnfErr;
+	FSSpec finalSpec, extractedSpec = extractHereSpec->GetFSSpec();
+	
+	if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
+	{
+		nsAppleSingleDecoder *asd = new nsAppleSingleDecoder(&extractedSpec, &finalSpec);
+        OSErr decodeErr = fnfErr;
 
-            if (asd)
-                decodeErr = asd->Decode();
-		
-			if (decodeErr != noErr)
-			{			
-				if (extractHereSpec)
-					delete extractHereSpec;
-				if (asd)
-					delete asd;
-				return EXTRACTION_FAILED;
-			}
-		
-			if ( !(extractedSpec.vRefNum == finalSpec.vRefNum) ||
-				 !(extractedSpec.parID   == finalSpec.parID)   ||
-				 !(nsAppleSingleDecoder::PLstrcmp(extractedSpec.name, finalSpec.name)) )
-			{
-				// delete the unique extracted file that got renamed in AS decoding
-				FSpDelete(&extractedSpec);
-				
-				// "real name" in AppleSingle entry may cause file rename
-				*extractHereSpec = finalSpec;
-			}
-		}		
+        if (asd)
+            decodeErr = asd->Decode();
+	
+		if (decodeErr != noErr)
+		{			
+			if (extractHereSpec)
+				delete extractHereSpec;
+			if (asd)
+				delete asd;
+			return EXTRACTION_FAILED;
+		}
+	
+		if ( !(extractedSpec.vRefNum == finalSpec.vRefNum) ||
+			 !(extractedSpec.parID   == finalSpec.parID)   ||
+			 !(nsAppleSingleDecoder::PLstrcmp(extractedSpec.name, finalSpec.name)) )
+		{
+			// delete the unique extracted file that got renamed in AS decoding
+			FSpDelete(&extractedSpec);
+			
+			// "real name" in AppleSingle entry may cause file rename
+			*extractHereSpec = finalSpec;
+		}
+	}		
 #endif
 
-        *aRealName = extractHereSpec;
-    }
-    else
-    {
-        if (extractHereSpec != nsnull)
-            delete extractHereSpec;
-    }
-    return result;
+    *aRealName = extractHereSpec;
+
+    return nsInstall::SUCCESS;
 }
 
 /**

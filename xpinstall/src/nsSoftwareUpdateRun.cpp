@@ -48,14 +48,14 @@ static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
 
 
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const PRUnichar* url, const PRUnichar* args);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, const nsFileSpec& jarfile, const PRUnichar* url, const PRUnichar* args);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-static PRInt32  GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(const char* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
+static PRInt32  GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength);
+static nsresult SetupInstallContext(const nsFileSpec* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -118,7 +118,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static PRInt32
-GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength)
+GetInstallScriptFromJarfile(nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength)
 {
     nsCOMPtr<nsIZipReader> hZip;
     PRInt32 result = NS_OK;
@@ -132,9 +132,8 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
                                                      getter_AddRefs(hZip));
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
-
-    nsFileSpec fs(jarFile);
-    rv = hZip->Init(fs);
+    
+    rv = hZip->Init(jarFile);
     if (NS_FAILED(rv))
         return nsInstall::CANT_READ_ARCHIVE;
 
@@ -205,7 +204,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
 // Argument         : JSContext **jsCX   - Must be deleted via JS_DestroyContext
 // Argument         : JSObject **jsGlob
 ///////////////////////////////////////////////////////////////////////////////////////////////
-static nsresult SetupInstallContext(const char* jarFile,
+static nsresult SetupInstallContext(const nsFileSpec& jarFile,
                                     const PRUnichar* url,
                                     const PRUnichar* args, 
                                     JSRuntime **jsRT, 
@@ -328,10 +327,10 @@ extern "C" void RunInstallOnThread(void *data)
     nsString args;
     installInfo->GetArguments(args);
 
-    char *jarpath; // XXX this should be an nsIFileSpec or moral equivalent
-    installInfo->GetLocalFile(&jarpath);
-    if (jarpath)
-    {
+    nsFileSpec jarpath;
+    rv = installInfo->GetLocalFile(jarpath);
+    if (NS_SUCCEEDED(rv))
+	{
         finalStatus = GetInstallScriptFromJarfile( jarpath, 
                                                    &scriptBuffer, 
                                                    &scriptLength);
@@ -414,15 +413,11 @@ extern "C" void RunInstallOnThread(void *data)
     }
 
     if (scriptBuffer) delete [] scriptBuffer;
-    if (jarpath) 
-    {
-        if ( !url.Equals("file:/",PR_FALSE,6) )
-        {
-            // delete the jarfile only if we've downloaded it
-            PR_Delete(jarpath);
-        }
 
-        nsCRT::free(jarpath);
+    if ( !url.Equals("file:/",PR_FALSE,6) )
+    {
+        // delete the jarfile only if we've downloaded it
+        jarpath.Delete(PR_FALSE);
     }
 
     softwareUpdate->SetActiveNotifier(0);
