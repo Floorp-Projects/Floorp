@@ -2127,11 +2127,14 @@ nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     nsFileSpec dir;
     rv = profile->GetCurrentProfileDir(&dir);
     if (NS_FAILED(rv)) return rv;
-    
+
+    // we want <profile>/ImapMail not <profile>
     dir += "ImapMail";
 
     rv = NS_NewFileSpecWithSpec(dir, aResult);
+    if (NS_FAILED(rv)) return rv;
 
+    rv = SetDefaultLocalPath(*aResult);
     return rv;
 }
     

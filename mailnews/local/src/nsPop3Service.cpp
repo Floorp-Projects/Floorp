@@ -300,10 +300,13 @@ nsPop3Service::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = profile->GetCurrentProfileDir(&dir);
     if (NS_FAILED(rv)) return rv;
     
+    // we want <profile>/Mail, not <profile>
     dir += "Mail";
 
-    rv = NS_NewFileSpecWithSpec(dir, aResult);
+    rv = SetDefaultLocalPath(*aResult);
+    if (NS_FAILED(rv)) return rv;    
 
+    rv = NS_NewFileSpecWithSpec(dir, aResult);
     return rv;
 }
     

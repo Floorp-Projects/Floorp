@@ -996,10 +996,13 @@ nsNntpService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     rv = profile->GetCurrentProfileDir(&dir);
     if (NS_FAILED(rv)) return rv;
     
+    // we want <profile>/News, not <profile>
     dir += "News";
 
     rv = NS_NewFileSpecWithSpec(dir, aResult);
+    if (NS_FAILED(rv)) return rv; 
 
+    rv = SetDefaultLocalPath(*aResult);
     return rv;
 }
     
