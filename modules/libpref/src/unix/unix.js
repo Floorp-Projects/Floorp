@@ -89,7 +89,6 @@ pref("browser.prefWindowModal", false);
 pref("slider.snapMultiplier", 0);
 
 // Unix only
-pref("mail.use_movemail", true);
 pref("mail.use_builtin_movemail", true);
 pref("mail.movemail_program", "");
 pref("mail.movemail_warn", false);
