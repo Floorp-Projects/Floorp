@@ -462,6 +462,12 @@ function altNumberTabSelection(event)
   if (!event.altKey)
     return;
 
+  if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
+    // Don't let winxp beep on ALT+ENTER, since the URL bar uses it.
+    event.preventDefault();
+    return true;
+  } 
+
   var index = event.charCode - 49;
   if (index == -1)
     index = 9;
@@ -798,15 +804,30 @@ function BrowserLoadURL(aTriggeringEvent)
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
     if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+        aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
+        aTriggeringEvent.shiftKey)
+      // Tack www. and .org on.
+      url = gURLBar.value = "www." + url + ".org/";
+    else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey)
       // Tack www. and .com on.
-      url = gURLBar.value = "www." + url + ".com";
+      url = gURLBar.value = "www." + url + ".com/";
+    else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
+        aTriggeringEvent.shiftKey)
+      // Tack www. and .org on.
+      url = gURLBar.value = "www." + url + ".net/";
 
     if (getBrowser().localName == "tabbrowser" &&
-        aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
-        aTriggeringEvent.shiftKey) {
+        aTriggeringEvent && 'altKey' in aTriggeringEvent &&
+        aTriggeringEvent.altKey) {
+      _content.focus();
       var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
       getBrowser().selectedTab = t;
+      gURLBar.value = url;
+      event.preventDefault();
+      event.preventBubble();
+      event.preventCapture();
+      event.stopPropagation();
     }
     else  
       loadURI(getShortcutOrURI(url));
