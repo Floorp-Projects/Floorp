@@ -712,6 +712,7 @@ NS_IMETHODIMP nsRegistry::GetStringUTF8( nsRegistryKey baseKey, const char *path
     {
         // Convert status.
         rv = regerr2nsresult( err );
+        NS_ASSERTION(NS_FAILED(rv), "returning success code on failure");
     }
 
    return rv;
