@@ -85,6 +85,10 @@ public:
 
 protected:
 
+  // Utility methods to get and set current widget state
+  void GetTextControlFrameState(nsString& aValue);
+  void SetTextControlFrameState(const nsString& aValue);  
+
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,

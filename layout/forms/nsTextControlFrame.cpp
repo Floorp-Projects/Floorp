@@ -721,12 +721,55 @@ nsTextControlFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+void nsTextControlFrame::GetTextControlFrameState(nsString& aValue)
+{
+  if (nsnull != mWidget) {
+    nsITextWidget* text = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+      PRUint32 size;
+      text->GetText(aValue,0,size);
+      NS_RELEASE(text);
+    }
+  }
+  else {
+   //XXX: this should return the a local field for GFX-rendered widgets             aValue = "";
+  }
+}     
+
+void nsTextControlFrame::SetTextControlFrameState(const nsString& aValue)
+{
+  if (nsnull != mWidget) {
+    nsITextWidget* text = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+      PRUint32 size;
+      text->SetText(aValue,size);
+      NS_RELEASE(text);
+    }
+  }
+}    
+
 NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
+  if (nsHTMLAtoms::value == aName) {
+    SetTextControlFrameState(aValue);                                         }
+  else {
+    return nsFormControlFrame::SetProperty(aName, aValue);
+  }
+
   return NS_OK;
-}
+}      
 
 NS_IMETHODIMP nsTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
+  // Return the value of the property from the widget it is not null.
+  // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
+
+  if (nsHTMLAtoms::value == aName) {
+    GetTextControlFrameState(aValue);
+  }
+  else {
+    return nsFormControlFrame::GetProperty(aName, aValue);
+  }
+
   return NS_OK;
-}
+}  

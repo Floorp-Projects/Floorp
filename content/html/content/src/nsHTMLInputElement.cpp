@@ -323,18 +323,14 @@ nsHTMLInputElement::GetValue(nsString& aValue)
   PRInt32 type;
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
-    if (nsnull != mWidget) {
-      nsITextWidget* text = nsnull;
-      if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
-        PRUint32 size;
-        text->GetText(aValue,0,size); 
-        NS_RELEASE(text);
-        return NS_OK;
-      }
+    nsIFormControlFrame* formControlFrame = nsnull;
+    if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+      formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
+      NS_RELEASE(formControlFrame);
+      return NS_OK;
     }
-  } 
-
-  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue);
+  }
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue); 
 }
 
 
@@ -344,17 +340,12 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
   PRInt32 type;
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type) {
-    if (nsnull != mWidget) {
-      nsITextWidget* text = nsnull;
-      if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
-        PRUint32 size;
-        text->SetText(aValue,size); 
-        NS_RELEASE(text);
-      }
+    nsIFormControlFrame* formControlFrame = nsnull;
+    if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+      formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
+      NS_RELEASE(formControlFrame);
     }
-  }
-
-  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE); 
+  }        
 }
 
 NS_IMETHODIMP 
