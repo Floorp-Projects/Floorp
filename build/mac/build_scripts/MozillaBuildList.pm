@@ -743,7 +743,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST_IDL",                     "$distdirectory:idl:");
 
     #HTMLPARSER
-    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",                        "$distdirectory:htmlparser:");
+    InstallFromManifest(":mozilla:htmlparser:public:MANIFEST",                     "$distdirectory:htmlparser:");
 
     #EXPAT
     InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",                        "$distdirectory:expat:");
