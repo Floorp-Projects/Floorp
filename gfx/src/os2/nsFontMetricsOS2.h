@@ -88,18 +88,15 @@ public:
 //                          const PRUnichar* aString, PRUint32 aLength) = 0;
 #ifdef MOZ_MATHML
   virtual nsresult
-  GetBoundingMetrics(HDC                aDC, 
+  GetBoundingMetrics(HDC                aDC,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
-#ifdef NS_DEBUG
-//  virtual void DumpFontInfo() = 0;
-#endif // NS_DEBUG
 #endif
 
   char      mName[FACESIZE];
+  char      mFamilyName[FACESIZE];
   nsFontHandleOS2* mFont;
-//  PRUint32* mMap;
 #ifdef MOZ_MATHML
   nsCharacterMap* mCMAP;
 #endif
@@ -110,9 +107,12 @@ typedef struct nsGlobalFont
 {
   nsString*     name;
   FONTMETRICS   fontMetrics;
+#ifdef OLDCODE
   PRUint32*     map;
   PRUint8       skip;
+#endif
   USHORT        signature;
+  int           nextFamily;
 } nsGlobalFont;
 
 class nsFontMetricsOS2 : public nsIFontMetrics
@@ -151,23 +151,28 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
 
   virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
-  virtual nsFontOS2* FindGlobalFont(HPS aPS, PRUnichar aChar);
-  virtual nsFontOS2* FindGenericFont(HPS aPS, PRUnichar aChar);
-  virtual nsFontOS2* FindLocalFont(HPS aPS, PRUnichar aChar);
-  virtual nsFontOS2* FindUserDefinedFont(HPS aPS, PRUnichar aChar);
-  nsFontOS2*         FindFont(HPS aPS, PRUnichar aChar);
-  virtual nsFontOS2* LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName);
-  virtual nsFontOS2* LoadFont(HPS aPS, nsString* aName);
+
+  NS_IMETHODIMP SetUnicodeFont( HPS aPS, LONG lcid );
+
+  virtual FATTRS* FindGlobalFont(HPS aPS, BOOL bBold, BOOL bItalic);
+  virtual FATTRS* FindGenericFont(HPS aPS, BOOL bBold, BOOL bItalic);
+  virtual FATTRS* FindLocalFont(HPS aPS, BOOL bBold, BOOL bItalic);
+  virtual FATTRS* FindUserDefinedFont(HPS aPS, BOOL bBold, BOOL bItalic);
+  FATTRS*         FindFont(HPS aPS, BOOL bBold, BOOL bItalic);
+  virtual FATTRS* LoadGenericFont(HPS aPS, BOOL bBold, BOOL bItalic, char** aName);
+  virtual FATTRS* LoadFont(HPS aPS, nsString* aName, BOOL bBold, BOOL bItalic);
 
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
 
-  static nsGlobalFont* InitializeGlobalFonts(HPS aPS);
-   int mCodePage;
- 
+  static nsGlobalFont* InitializeGlobalFonts();
+  int mCodePage;
+
  protected:
-   nsresult RealizeFont();
- 
+  nsresult RealizeFont();
+  PRBool GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
+                             PRBool aIsItalic, char* alias );
+
    nsFont  *mFont;
    nscoord  mSuperscriptYOffset;
    nscoord  mSubscriptYOffset;
@@ -191,6 +196,8 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    nsFontHandleOS2    *mFontHandle;
    nsDeviceContextOS2 *mDeviceContext;
 
+  static PRBool       gSubstituteVectorFonts;
+
 public:
   nsStringArray       mFonts;
   PRUint16            mFontsIndex;
@@ -203,6 +210,7 @@ public:
 
   PRUint8 mTriedAllGenerics;
   PRUint8 mIsUserDefined;
+  static nscoord      gDPI;
 protected:
   static PLHashTable* InitializeFamilyNames(void);
   static PLHashTable* gFamilyNames;
@@ -216,8 +224,6 @@ public:
   NS_DECL_NSIFONTENUMERATOR
 
 protected:
-  static PLHashTable* InitializeFontHashes(void);
-  static PLHashTable* gFontTypes;
 };
 
 #endif
