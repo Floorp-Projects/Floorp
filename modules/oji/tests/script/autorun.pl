@@ -47,12 +47,22 @@ use File::Copy;
 #                      #
 ########################
 
-#Mozilla's executable
-
-$MOZILLA_EXECUTABLE="mozilla.exe";
 
 #sometimes we need to specify additional parameters for mozilla
 $ADDITIONAL_PARAMETERS="-P mozProfile";
+
+# time in seconds after which the apprunner has to be killed.
+# by default the apprunner will be up for so much time regardless of
+# whether over or not. User can either decrease it or increase it.
+#
+$DELAY_FACTOR = 30;
+
+
+#Mozilla's executable
+$MOZILLA_EXECUTABLE="mozilla-bin";
+if ($^O =~ /Win32/i) {
+  $MOZILLA_EXECUTABLE="mozilla.exe";
+}
 
 $FULL_TEST_LIST="OJITestsList.lst";
 
@@ -63,11 +73,6 @@ $TARGET_WINDOW="Test Descriptions";
 
 $DEFAULT_TEST_URL="http://shiva:10001/oji";
 
-# time in seconds after which the apprunner has to be killed.
-# by default the apprunner will be up for so much time regardless of
-# whether over or not. User can either decrease it or increase it.
-#
-$DELAY_FACTOR = 30;
 # time period in seconds of periodically checking: is the apprunner still alive
 $DELAY_OF_CYCLE = 1;
 
@@ -424,6 +429,7 @@ sub RunTestCaseUnix {
 title;
 
 $curdir = cwd();           
+$ret=`mkdir -p $curdir/log`;
 
 # Prepare file names
 $LOGFILE = "$curdir/log/BWTestRun.log";
