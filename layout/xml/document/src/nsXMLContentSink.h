@@ -76,11 +76,18 @@ public:
   NS_IMETHOD AddNotation(const nsIParserNode& aNode);
   NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
+  NS_IMETHOD ResumeParsing();
+  NS_IMETHOD LoadStyleSheet(nsIURL* aURL,
+                            nsIUnicharInputStream* aUIN,
+                            PRBool aActive,
+                            const nsString& aTitle,
+                            const nsString& aMedia,
+                            nsIContent* aOwner);
+  NS_IMETHOD EvaluateScript(nsString& aScript, PRUint32 aLineNo);
+
 protected:
   void StartLayout();
 
-  nsresult LoadStyleSheet(nsIURL* aURL,
-                          nsIUnicharInputStream* aUIN);
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
 
@@ -95,7 +102,6 @@ protected:
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
 
-  nsresult EvaluateScript(nsString& aScript, PRUint32 aLineNo);
   nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
 

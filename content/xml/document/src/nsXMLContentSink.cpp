@@ -20,11 +20,13 @@
 #include "nsXMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
+#include "nsIUnicharStreamLoader.h"
 #include "nsIDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsIWebShell.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
@@ -59,6 +61,7 @@ static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 #define XML_PSEUDO_ELEMENT  0
 
@@ -733,9 +736,13 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
 }
 
 // XXX Borrowed from HTMLContentSink. Should be shared.
-nsresult
+NS_IMETHODIMP
 nsXMLContentSink::LoadStyleSheet(nsIURL* aURL,
-                                 nsIUnicharInputStream* aUIN)
+                                 nsIUnicharInputStream* aUIN,
+                                 PRBool aActive,
+                                 const nsString& aTitle,
+                                 const nsString& aMedia,
+                                 nsIContent* aOwner)
 {
   /* XXX use repository */
   nsICSSParser* parser;
@@ -747,7 +754,16 @@ nsXMLContentSink::LoadStyleSheet(nsIURL* aURL,
     parser->SetCaseSensative(PR_TRUE);
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
+      sheet->SetTitle(aTitle);
+      sheet->SetEnabled(aActive);
       mDocument->AddStyleSheet(sheet);
+      if (nsnull != aOwner) {
+        nsIDOMNode* domNode = nsnull;
+        if (NS_SUCCEEDED(aOwner->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
+          sheet->SetOwningNode(domNode);
+          NS_RELEASE(domNode);
+        }
+      }
       NS_RELEASE(sheet);
       rv = NS_OK;
     } else {
@@ -794,6 +810,48 @@ GetQuotedAttributeValue(nsString& aSource,
   return result;
 }
 
+typedef struct {
+  nsString mTitle;
+  nsString mMedia;
+  PRBool mIsActive;
+  nsIURL* mURL;
+  nsIContent* mElement;
+  nsXMLContentSink* mSink;
+} nsAsyncStyleProcessingDataXML;
+
+static void
+nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
+                   nsString& aData,
+                   void* aRef,
+                   nsresult aStatus)
+{
+  nsresult rv = NS_OK;
+  nsAsyncStyleProcessingDataXML* d = (nsAsyncStyleProcessingDataXML*)aRef;
+  nsIUnicharInputStream* uin = nsnull;
+
+  if ((NS_OK == aStatus) && (0 < aData.Length())) {
+    // wrap the string with the CSS data up in a unicode
+    // input stream.
+    rv = NS_NewStringUnicharInputStream(&uin, new nsString(aData));
+    if (NS_OK == rv) {
+      // XXX We have no way of indicating failure. Silently fail?
+      rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
+                                    d->mTitle, d->mMedia, d->mElement);
+    }
+  }
+    
+  d->mSink->ResumeParsing();
+
+  NS_RELEASE(d->mURL);
+  NS_IF_RELEASE(d->mElement);
+  NS_RELEASE(d->mSink);
+  delete d;
+
+  // We added a reference when the loader was created. This
+  // release should destroy it.
+  NS_RELEASE(aLoader);
+}
+
 NS_IMETHODIMP 
 nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
@@ -801,7 +859,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
   // XXX For now, we don't add the PI to the content model.
   // We just check for a style sheet PI
-  nsAutoString text, type, href;
+  nsAutoString text, type, href, title, media;
   PRInt32 offset;
   nsresult result = NS_OK;
 
@@ -821,39 +879,61 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
     if (NS_OK != result) {
       return result;
     }
-    
+    result = GetQuotedAttributeValue(text, "title", title);
+    if (NS_OK != result) {
+      return result;
+    }
+    title.CompressWhitespace();
+    result = GetQuotedAttributeValue(text, "media", media);
+    if (NS_OK != result) {
+      return result;
+    }
+    media.ToUpperCase();
+
     if (type.Equals(kCSSType)) {
+      // Use the SRC attribute value to load the URL
       nsIURL* url = nsnull;
-      nsIUnicharInputStream* uin = nsnull;
       nsAutoString absURL;
       nsIURL* docURL = mDocument->GetDocumentURL();
-      nsAutoString emptyURL;
-      emptyURL.Truncate();
-      result = NS_MakeAbsoluteURL(docURL, emptyURL, href, absURL);
-      if (NS_OK != result) {
-        return result;
+      nsIURLGroup* urlGroup; 
+      
+      result = docURL->GetURLGroup(&urlGroup);
+
+      if ((NS_OK == result) && urlGroup) {
+        result = urlGroup->CreateURL(&url, docURL, href, nsnull);
+        NS_RELEASE(urlGroup);
+      }
+      else {
+        result = NS_NewURL(&url, absURL);
       }
       NS_RELEASE(docURL);
-      result = NS_NewURL(&url, absURL);
       if (NS_OK != result) {
         return result;
       }
-      nsIInputStream* iin;
-      result = NS_OpenURL(url, &iin);
-      if (NS_OK != result) {
-        NS_RELEASE(url);
-        return result;
+
+      nsAsyncStyleProcessingDataXML* d = new nsAsyncStyleProcessingDataXML;
+      if (nsnull == d) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
-      result = NS_NewConverterStream(&uin, nsnull, iin);
-      NS_RELEASE(iin);
-      if (NS_OK != result) {
-        NS_RELEASE(url);
-        return result;
-      }
-      
-      result = LoadStyleSheet(url, uin);
-      NS_RELEASE(uin);
+      d->mTitle.SetString(title);
+      d->mMedia.SetString(media);
+      d->mIsActive = PR_TRUE;
+      d->mURL = url;
+      NS_ADDREF(url);
+      // XXX Need to create PI node
+      d->mElement = nsnull;
+      d->mSink = this;
+      NS_ADDREF(this);
+
+      nsIUnicharStreamLoader* loader;
+      result = NS_NewUnicharStreamLoader(&loader,
+                                         url, 
+                                         (nsStreamCompleteFunc)nsDoneLoadingStyle, 
+                                         (void *)d);
       NS_RELEASE(url);
+      if (NS_OK == result) {
+        result = NS_ERROR_HTMLPARSER_BLOCK;
+      }
     }
   }
 
@@ -901,6 +981,8 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   return rv;
 }
 
+#define NS_ACCUMULATION_BUFFER_SIZE 4096
+
 NS_IMETHODIMP 
 nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
 {
@@ -913,11 +995,11 @@ nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
 
   // Create buffer when we first need it
   if (0 == mTextSize) {
-    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * 4096);
+    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * NS_ACCUMULATION_BUFFER_SIZE);
     if (nsnull == mText) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mTextSize = 4096;
+    mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
   }
 
   // Copy data from string into our buffer; flush buffer when it fills up
@@ -1110,7 +1192,17 @@ nsXMLContentSink::StartLayout()
   }
 }
 
-nsresult
+NS_IMETHODIMP
+nsXMLContentSink::ResumeParsing()
+{
+  if (nsnull != mParser) {
+    mParser->EnableParser(PR_TRUE);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
 {
   nsresult rv = NS_OK;
@@ -1194,6 +1286,29 @@ IsJavaScriptLanguage(const nsString& aName)
   } 
 }
 
+static void
+nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
+                    nsString& aData,
+                    void* aRef,
+                    nsresult aStatus)
+{
+  nsXMLContentSink* sink = (nsXMLContentSink*)aRef;
+
+  if (NS_OK == aStatus) {
+    // XXX We have no way of indicating failure. Silently fail?
+    sink->EvaluateScript(aData, 0);
+  }
+
+  sink->ResumeParsing();
+
+  // The url loader held a reference to the sink
+  NS_RELEASE(sink);
+
+  // We added a reference when the loader was created. This
+  // release should destroy it.
+  NS_RELEASE(aLoader);
+}
+
 nsresult
 nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
 {
@@ -1206,8 +1321,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      src = aNode.GetValueAt(i);
-      src.Trim("\"", PR_TRUE, PR_TRUE); 
+      GetAttributeValueAt(aNode, i, src);
     }
     else if (key.EqualsIgnoreCase("type")) {
       nsAutoString  type;
@@ -1226,53 +1340,42 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
   // Don't process scripts that aren't JavaScript
   if (isJavaScript) {
     nsAutoString script;
-    
-    // If there is a SRC attribute, (for now) read from the
-    // stream synchronously and hold the data in a string.
-    if (src != "") {
-      // Use the SRC attribute value to open a blocking stream
+
+    // If there is a SRC attribute...
+    if (src.Length() > 0) {
+      // Use the SRC attribute value to load the URL
       nsIURL* url = nsnull;
       nsAutoString absURL;
       nsIURL* docURL = mDocument->GetDocumentURL();
-      nsAutoString emptyURL;
-      emptyURL.Truncate();
-      rv = NS_MakeAbsoluteURL(docURL, emptyURL, src, absURL);
-      if (NS_OK != rv) {
-        return rv;
+      nsIURLGroup* urlGroup;
+
+      rv = docURL->GetURLGroup(&urlGroup);
+      
+      if ((NS_OK == rv) && urlGroup) {
+        rv = urlGroup->CreateURL(&url, docURL, src, nsnull);
+        NS_RELEASE(urlGroup);
+      }
+      else {
+        rv = NS_NewURL(&url, absURL);
       }
       NS_RELEASE(docURL);
-      rv = NS_NewURL(&url, absURL);
       if (NS_OK != rv) {
         return rv;
       }
-      nsIInputStream* iin;
-      rv = NS_OpenURL(url, &iin);
-      if (NS_OK != rv) {
-        NS_RELEASE(url);
-        return rv;
-      }
-      
-      // Drain the stream by reading from it a chunk at a time
-      PRUint32 nb;
-      nsresult err;
-      do {
-        char buf[SCRIPT_BUF_SIZE];
-        
-        err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
-        if (NS_OK == err) {
-          script.Append((const char *)buf, nb);
-        }
-      } while (err == NS_OK);
-      
-      if (NS_BASE_STREAM_EOF != err) {
-          rv = NS_ERROR_FAILURE;
-      }
-      
-      NS_RELEASE(iin);
+
+      // Add a reference to this since the url loader is holding
+      // onto it as opaque data.
+      NS_ADDREF(this);
+
+      nsIUnicharStreamLoader* loader;
+      rv = NS_NewUnicharStreamLoader(&loader,
+                                     url, 
+                                     (nsStreamCompleteFunc)nsDoneLoadingScript, 
+                                     (void *)this);
       NS_RELEASE(url);
-      
-      rv = EvaluateScript(script, (PRUint32)aNode.GetSourceLineNumber());
-      
+      if (NS_OK == rv) {
+        rv = NS_ERROR_HTMLPARSER_BLOCK;
+      }
     }
     else {
       // Wait until we get the script content
