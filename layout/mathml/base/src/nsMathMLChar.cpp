@@ -787,7 +787,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   nsAutoString* familyList = (nsAutoString*)aData;
   // XXX unreliable if aFamily is a substring of another family already in the list
   if (familyList->Find(aFamily, PR_TRUE) == kNotFound) {
-    familyList->Append(',');
+    familyList->Append(PRUnichar(','));
     // XXX could enclose in quotes if weird font problems develop
     familyList->Append(aFamily);
   }
