@@ -385,7 +385,7 @@ static nsUnicodeBlock gU0xxxMap[32]=
 
 static nsUnicodeBlock GetBlockU0XXX(PRUnichar aChar)
 {
- nsUnicodeBlock res = gU0xxxMap[ (aChar >> 8) & 0x0F];
+ nsUnicodeBlock res = gU0xxxMap[ (aChar >> 7) & 0x1F];
  if(res == kOthers) {
    if((0x0200 <= aChar) && ( aChar <= 0x024F ))           res =  kLatin;
    else if((0x0370 <= aChar) && ( aChar <= 0x037F ))      res =  kGreek;
