@@ -76,7 +76,12 @@
        <data id="data-event-title-edit"            value="&calendar.server.dialog.title.edit;" />
    </dataset>
 
-   <keyset id="dialogKeys"/>
+   <!-- STRING BUNDLE for calendar properties -->
+    <stringbundleset id="stringbundleset">
+      <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
+    </stringbundleset>
+ 
+    <keyset id="dialogKeys"/>
 
    <!-- The dialog -->
     
