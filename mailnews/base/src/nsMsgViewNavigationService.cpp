@@ -1132,22 +1132,23 @@ nsresult nsMsgViewNavigationService::GetNextMessageByThread(nsIDOMXULElement *st
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsCOMPtr<nsIDOMXULElement> nextMessageElement;
-
-	rv = FindNextInThread(info->type, info->tree, nextTopMessage, info->rdfService,
-						 info->document, getter_AddRefs(nextMessageElement));
-	if(NS_FAILED(rv))
-		return rv;
-
-	if(nextMessageElement)
+	if(nextTopMessage)
 	{
-		rv = nextMessageElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)nextMessage);
-		return rv;
+		nsCOMPtr<nsIDOMXULElement> nextMessageElement;
+
+		rv = FindNextInThread(info->type, info->tree, nextTopMessage, info->rdfService,
+							 info->document, getter_AddRefs(nextMessageElement));
+		if(NS_FAILED(rv))
+			return rv;
+
+		if(nextMessageElement)
+		{
+			rv = nextMessageElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)nextMessage);
+			return rv;
+		}
 	}
-	else
-	{
-		return NS_OK;
-	}
+
+	return NS_OK;
 
 }
 
