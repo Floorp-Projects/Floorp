@@ -28,17 +28,7 @@ class nsIImageGroup;
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext {
 public:
-  void* operator new(size_t size) {
-    void* rv = ::operator new(size);
-    if (rv) {
-      nsCRT::zero(rv, size);
-    }
-    return rv;
-  }
-
-  void operator delete(void* ptr) {
-    ::operator delete(ptr);
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // nsISupports methods
   NS_DECL_ISUPPORTS

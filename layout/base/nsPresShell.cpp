@@ -190,17 +190,7 @@ class PresShell : public nsIPresShell, public nsIViewObserver,
 public:
   PresShell();
 
-  void* operator new(size_t size) {
-    void* result = ::operator new(size);
-    if (result) {
-      nsCRT::zero(result, size);
-    }
-    return result;
-  }
-
-  void operator delete(void* ptr) {
-    ::operator delete(ptr);
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // nsISupports
   NS_DECL_ISUPPORTS

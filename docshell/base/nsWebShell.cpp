@@ -130,11 +130,7 @@ public:
   nsWebShell();
   virtual ~nsWebShell();
 
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
-  }
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   // nsISupports
   NS_DECL_ISUPPORTS

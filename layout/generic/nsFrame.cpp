@@ -159,19 +159,7 @@ NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
   return NS_OK;
 }
 
-void* nsFrame::operator new(size_t size)
-{
-  void* result = ::operator new(size);
-  if (result) {
-    nsCRT::zero(result, size);
-  }
-  return result;
-}
-
-void nsFrame::operator delete(void* ptr)
-{
-  ::operator delete(ptr);
-}
+NS_IMPL_ZEROING_OPERATOR_NEW(nsFrame)
 
 nsFrame::nsFrame()
 {

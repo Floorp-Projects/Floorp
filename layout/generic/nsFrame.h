@@ -104,9 +104,7 @@ public:
   friend nsresult NS_NewEmptyFrame(nsIFrame** aInstancePtrResult);
 
   // Overloaded new operator. Initializes the memory to 0
-  void* operator new(size_t size);
-
-  void operator delete(void* ptr);
+  NS_DECL_ZEROING_OPERATOR_NEW
 
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
