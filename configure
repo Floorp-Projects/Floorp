@@ -11990,7 +11990,7 @@ EOF
 
 macbrowser) 
   MOZ_APP_NAME=mozilla
-  MOZ_APP_DISPLAYNAME=Camino
+  MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie xmlextras universalchardet typeaheadfind transformiix"
   cat >> confdefs.h <<\EOF
