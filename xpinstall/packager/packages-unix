@@ -41,6 +41,7 @@ bin/libmozjs.so
 bin/libnspr4.so
 bin/libplc4.so
 bin/libplds4.so
+bin/cpu/sparcv8plus/libnspr_flt4.so
 bin/libxpcom.so
 bin/libxpistub.so
 bin/libmozz.so
