@@ -33,7 +33,9 @@ Rights Reserved.
 		  ref="abdirectory://"
 		  datasources="rdf:addressdirectory"
 		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-		  onblur="goOnEvent(this,'blur')">
+		  onblur="goOnEvent(this,'blur')"
+		  allownegativeassertions="false"
+          coalesceduplicatearcs="false">
 		
 		<template>
 			<rule>
