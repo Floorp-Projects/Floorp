@@ -396,7 +396,8 @@ protected:
                         PRUint8         aCaptionSide,
                         nsSize&         aOuterSize,
                         PRBool          aInnerChanged,
-                        PRBool          aCaptionChanged);
+                        PRBool          aCaptionChanged,
+                        nsRect*         aOldOverflowArea);
   
   // Get the margin and padding, aMarginNoAuto is aMargin, but with auto 
   // margins set to 0
