@@ -121,7 +121,9 @@ static PRInt32 g_LockCount = 0;
  * Constructor/Destructor
  */
 
-nsProfile::nsProfile() {
+nsProfile::nsProfile()
+: m_reg(nsnull)
+{
   PR_AtomicIncrement(&g_InstanceCount);
   NS_INIT_REFCNT();
 }
