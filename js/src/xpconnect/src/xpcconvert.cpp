@@ -43,6 +43,7 @@
 /* Data conversion between native and JavaScript types. */
 
 #include "xpcprivate.h"
+#include "nsString.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -1401,16 +1402,13 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
 
     if(data)
     {
-        char* formattedMsg;
-        if(NS_FAILED(data->ToString(&formattedMsg)))
-            formattedMsg = nsnull;
+        nsCAutoString formattedMsg;
+        data->ToString(formattedMsg);
 
         rv = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,
-                                formattedMsg, ifaceName, methodName, data,
+                                formattedMsg.get(), ifaceName, methodName, data,
                                 exceptn);
 
-        if(formattedMsg)
-            nsMemory::Free(formattedMsg);
         NS_RELEASE(data);
     }
     else

@@ -62,20 +62,36 @@ nsScriptError::~nsScriptError() {}
 // nsIConsoleMessage methods
 NS_IMETHODIMP
 nsScriptError::GetMessage(PRUnichar **result) {
-    *result = ToNewUnicode(mMessage);
+    nsresult rv;
+
+    nsCAutoString message;
+    rv = ToString(message);
+    if (NS_FAILED(rv))
+        return rv;
+
+    *result = UTF8ToNewUnicode(message);
+    if (!*result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     return NS_OK;
 }
 
 // nsIScriptError methods
 NS_IMETHODIMP
-nsScriptError::GetSourceName(PRUnichar **result) {
-    *result = ToNewUnicode(mSourceName);
+nsScriptError::GetErrorMessage(nsAString& aResult) {
+    aResult.Assign(mMessage);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptError::GetSourceLine(PRUnichar **result) {
-    *result = ToNewUnicode(mSourceLine);
+nsScriptError::GetSourceName(nsAString& aResult) {
+    aResult.Assign(mSourceName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptError::GetSourceLine(nsAString& aResult) {
+    aResult.Assign(mSourceLine);
     return NS_OK;
 }
 
@@ -124,7 +140,7 @@ nsScriptError::Init(const PRUnichar *message,
 }
 
 NS_IMETHODIMP
-nsScriptError::ToString(char **_retval)
+nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
 {
     static const char format0[] =
         "[%s: \"%s\" {file: \"%s\" line: %d column: %d source: \"%s\"}]";
@@ -144,11 +160,11 @@ nsScriptError::ToString(char **_retval)
     char* tempSourceLine = nsnull;
 
     if(!mMessage.IsEmpty())
-        tempMessage = ToNewCString(mMessage);
+        tempMessage = ToNewUTF8String(mMessage);
     if(!mSourceName.IsEmpty())
-        tempSourceName = ToNewCString(mSourceName);
+        tempSourceName = ToNewUTF8String(mSourceName);
     if(!mSourceLine.IsEmpty())
-        tempSourceLine = ToNewCString(mSourceLine);
+        tempSourceLine = ToNewUTF8String(mSourceLine);
 
     if(nsnull != tempSourceName && nsnull != tempSourceLine)
         temp = JS_smprintf(format0,
@@ -176,14 +192,10 @@ nsScriptError::ToString(char **_retval)
     if(nsnull != tempSourceLine)
         nsMemory::Free(tempSourceLine);
 
-    char* final = nsnull;
-    if(temp)
-    {
-        final = (char*) nsMemory::Clone(temp,
-                                        sizeof(char)*(strlen(temp)+1));
-        JS_smprintf_free(temp);
-    }
+    if (!temp)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    *_retval = final;
-    return final ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aResult.Assign(temp);
+    JS_smprintf_free(temp);
+    return NS_OK;
 }

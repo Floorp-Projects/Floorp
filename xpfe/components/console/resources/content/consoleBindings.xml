@@ -148,7 +148,7 @@
           var typetext = warning ? "typeWarning" : "typeError";
           row.setAttribute("typetext", this.mStrBundle.getString(typetext));
           row.setAttribute("type", warning ? "warning" : "error");
-          row.setAttribute("msg", aObject.message);
+          row.setAttribute("msg", aObject.errorMessage);
           if (aObject.lineNumber || aObject.sourceName) {
             row.setAttribute("url", aObject.sourceName);
             row.setAttribute("line", aObject.lineNumber);
