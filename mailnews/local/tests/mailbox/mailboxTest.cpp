@@ -75,11 +75,13 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
+#include "nsRDFCID.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define LOCAL_DLL  "msglocal.dll"
+#define RDF_DLL  "rdf.dll"
 #define MAILNEWS_DLL "mailnews.dll"
 #else
 #ifdef XP_MAC
@@ -106,13 +108,15 @@ static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
+
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
 /////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_URL_TYPE  "mailbox://"	
 #ifdef DEBUG_bienvenu
-#define	DEFAULT_MAILBOX_PATH "/c|/raptor/mozilla/bugsplat"
+#define	DEFAULT_MAILBOX_PATH "/e|/raptor/mozilla/bugsplat"
 #else
 #define DEFAULT_MAILBOX_PATH "/f|mozilla/mozilla/mailnews/public/makefile.win"
 #endif
@@ -415,6 +419,7 @@ int main()
 	nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterComponent(kCMailboxServiceCID, NULL, NULL, LOCAL_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterComponent(kCUrlListenerManagerCID, nsnull, nsnull, MAILNEWS_DLL, PR_TRUE, PR_TRUE);
+	nsRepository::RegisterComponent(kRDFServiceCID, nsnull, nsnull, RDF_DLL, PR_TRUE, PR_TRUE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService *pEventQService = nsnull;
