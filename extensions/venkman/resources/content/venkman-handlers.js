@@ -81,7 +81,7 @@ function isWindowFiltered (window)
     var rv = ((href.search (/^chrome:\/\/venkman\//) != -1 &&
               href.search (/test/) == -1) ||
               (console.prefs["enableChromeFilter"] &&
-               href.search (/navigator.xul($|\?)/) == -1));
+               href.search (/(navigator|browser).xul($|\?)/) == -1));
     //dd ("isWindowFiltered " + window.location.href + ", returning " + rv);
     return rv;
 }

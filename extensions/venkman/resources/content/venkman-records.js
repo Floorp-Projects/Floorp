@@ -211,7 +211,8 @@ function WindowRecord (win, baseURL)
     
     this.reserveChildren(true);
     this.shortName = getFileFromPath (this.url);
-    if (console.prefs["enableChromeFilter"] && this.shortName == "navigator.xul")
+    if (console.prefs["enableChromeFilter"] && 
+        (this.shortName == "navigator.xul" || this.shortName == "browser.xul"))
     {
         this.displayName = MSG_NAVIGATOR_XUL;
     }
