@@ -823,13 +823,10 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 // interface implementation.
 ////////////////////////////////////////////////////////////////////////////////
 
-#define NS_ENSURE(x, ret)							\
-PR_BEGIN_MACRO											\
-	if(!(x))												\
-		{													\
-		NS_ERROR("NS_ENSURE(" #x ") failed");	\
-		return ret;										\
-		}													\
+#define NS_ENSURE(x, ret)							            \
+PR_BEGIN_MACRO											            \
+   if(NS_WARN_IF_FALSE(x, "NS_ENSURE(" #x ") failed"))   \
+      return ret;                                        \
 PR_END_MACRO
 
 #define NS_ENSURE_NOT(x, ret) \
