@@ -1,3 +1,7 @@
+//{{NO_DEPENDENCIES}}
+// Microsoft Developer Studio generated include file.
+// Used by nsinstall.rc
+//
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -19,13 +23,10 @@
  * Reserved.
  *
  * Contributors:
+ *     Troy Chevalier <troy@netscape.com>
  *     Sean Su <ssu@netscape.com>
  */
 
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by nsinstall.rc
-//
 #define IDS_PROMPT                      1
 #define IDS_STATUS_EXTRACTING           2
 #define IDS_STATUS_LAUNCHING_SETUP      3
@@ -39,7 +40,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        102
+#define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
