@@ -26,7 +26,7 @@
 #include "nsIHTTPConnection.h"
 #include "nsIProtocolConnection.h"
 #include "nsHTTPEnums.h"
-#include "nsIURL.h"
+#include "nsIUrl.h"
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
 #include "nsIHTTPEventSink.h"
