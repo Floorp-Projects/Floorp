@@ -12,7 +12,7 @@ function BuildJSEAttributeTable()
         continue; // attribute isn't an event handler.
       var name  = nodeMap[i].nodeName.toLowerCase();
       var value = element.getAttribute(nodeMap[i].nodeName);
-      AddTreeItem( name, value, "JSEATree", JSEAttrs ); // add item to tree
+      AddTreeItem( name, value, "JSEAList", JSEAttrs ); // add item to tree
     }
   }
 }
@@ -31,7 +31,7 @@ function IsEventHandler( which )
 // add an attribute to the tree widget
 function onAddJSEAttribute()
 {
-  var which = document.getElementById("AddJSAttribute");
+  var which = document.getElementById("AddJSEAttribute");
   if(!which || which.getAttribute ( "disabled" ) )
     return;
 
@@ -58,8 +58,8 @@ function doJSEEnabling()
 
   if ( name.substring(0,2) != "on" )
     name = "on" + name;   // user has entered event without "on" prefix, add it
-    
-  if( name == "" || !CheckAttributeNameSimilarity(name, JSEAttrs))
+
+  if( name == "on" || !CheckAttributeNameSimilarity(name, JSEAttrs))
     dialog.AddJSEAttribute.setAttribute("disabled","true");
   else
     dialog.AddJSEAttribute.removeAttribute("disabled");
@@ -85,6 +85,7 @@ function UpdateJSEAttributes()
     var item = JSEAList.childNodes[i];
     name = TrimString(item.firstChild.firstChild.getAttribute("value"));
     value = TrimString(item.firstChild.lastChild.firstChild.value);
+
     // set the event handler
     element.setAttribute(name,value);
   }

@@ -56,7 +56,7 @@ function onAddCSSAttribute()
 function doCSSEnabling()
 {
   var name = TrimString(dialog.AddCSSAttributeNameInput.value).toLowerCase();
-  if( name == "" || !CheckAttributeNameSimilarity(name,CSSAttrs))
+  if( !name || !CheckAttributeNameSimilarity(name,CSSAttrs))
     dialog.AddCSSAttribute.setAttribute("disabled","true");
   else
     dialog.AddCSSAttribute.removeAttribute("disabled");
