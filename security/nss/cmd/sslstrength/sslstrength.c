@@ -130,7 +130,7 @@ void PrintErrString(char *progName,char *msg) {
     
   PR_fprintf(PR_STDOUT,"%s: ",progName);
   if (s) {
-    if (strlen(s) > 0) 
+    if (*s) 
       PR_fprintf(PR_STDOUT, "%s\n", s);
     else
       PR_fprintf(PR_STDOUT, "\n");
