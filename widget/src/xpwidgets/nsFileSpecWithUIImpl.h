@@ -144,6 +144,10 @@ class nsFileSpecWithUIImpl
 	NS_IMETHOD createDir()
 		{ return mBaseFileSpec ? mBaseFileSpec->createDir() : NS_ERROR_NOT_INITIALIZED; }
 
+	/* void touch (); */
+	NS_IMETHOD touch ()
+		{ return mBaseFileSpec ? mBaseFileSpec->touch() : NS_ERROR_NOT_INITIALIZED; }
+       
 	/* void rename ([const] in string newLeafName); */
 	NS_IMETHOD rename(const char *newLeafName)
 		{ return mBaseFileSpec ? mBaseFileSpec->rename(newLeafName) : NS_ERROR_NOT_INITIALIZED; }

@@ -89,6 +89,7 @@ interface nsIFileSpec : nsISupports
 	void AppendRelativeUnixPath(in string relativePath);
 
 	void createDir();
+	void touch();
 	void rename([const] in string newLeafName);
 	void copyToDir([const] in nsIFileSpec newParentDir);
 	void moveToDir([const] in nsIFileSpec newParentDir);
