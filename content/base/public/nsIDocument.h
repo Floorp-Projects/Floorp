@@ -66,6 +66,8 @@ class nsIWordBreaker;
 
 class nsIPostData : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IPOSTDATA_IID; return iid; }
+
   virtual PRBool       IsFile()  = 0;    // is the data a file (or raw data)
   virtual const char*  GetData() = 0;    // get the file name or raw data
   virtual PRInt32      GetDataLength() = 0;
@@ -76,6 +78,8 @@ public:
 // Document interface
 class nsIDocument : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_IID; return iid; }
+
   // All documents have a memory arena associated with them which is
   // used for memory allocation during document creation. This call
   // returns the arena associated with this document.
