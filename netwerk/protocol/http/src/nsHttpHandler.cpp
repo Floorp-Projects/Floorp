@@ -237,7 +237,7 @@ nsHttpHandler::Init()
     nsCOMPtr<nsIObserverService> observerSvc =
         do_GetService("@mozilla.org/observer-service;1", &rv);
     if (observerSvc) {
-        observerSvc->AddObserver(this, "profile-before-change", PR_TRUE);
+        observerSvc->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
         observerSvc->AddObserver(this, "session-logout", PR_TRUE);
         observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
@@ -2090,7 +2090,7 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
     }
-    else if (!nsCRT::strcmp(topic, "profile-before-change") ||
+    else if (!nsCRT::strcmp(topic, "profile-change-net-teardown") ||
              !nsCRT::strcmp(topic, "session-logout")) {
         // clear cache of all authentication credentials.
         if (mAuthCache)
