@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=appcomps
 LIBRARY_NAME=appcompintl_s
-REQUIRES= xpcom \
+REQUIRES	= xpcom \
 		  string \
 		  uconv \
 		  locale \
@@ -49,5 +49,9 @@ CPPSRCS= \
 	nsCharsetMenu.cpp \
 	nsFontPackageHandler.cpp \
 	$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
