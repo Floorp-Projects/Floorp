@@ -74,6 +74,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPipe.h"
 #include "nsIMsgFolder.h"
+#include "nsMsgMessageFlags.h"
 #include "nsImapStringBundle.h"
 #include "nsICopyMsgStreamListener.h"
 #include "nsTextFormatter.h"
@@ -1597,7 +1598,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   if (isBusy)
   {
     nsImapState curUrlImapState;
-    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
+//    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
     if (m_runningUrl)
     {
       m_runningUrl->GetRequiredImapState(&curUrlImapState);
@@ -2401,7 +2402,9 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
     {
       // create a pipe to pump the message into...the output will go to whoever
       // is consuming the message display
-      rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
+      // we create an "infinite" pipe in case we get extremely long lines from the imap server,
+      // and the consumer is waiting for a whole line
+      rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream), 4096, PR_UINT32_MAX);
       NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
     }
     // else, if we are saving the message to disk!
@@ -4898,6 +4901,9 @@ void nsImapProtocol::OnAppendMsgFromFile()
         flagsToSet &= ~kImapMsgSeenFlag;
       if (msgFlags & MSG_FLAG_MDN_REPORT_SENT)
         flagsToSet |= kImapMsgMDNSentFlag;
+      // convert msg flag label (0xE000000) to imap flag label (0x0E00)
+      if (msgFlags & MSG_FLAG_LABELS)
+        flagsToSet |= (msgFlags & MSG_FLAG_LABELS) >> 16;
       UploadMessageFromFile(fileSpec, mailboxName, flagsToSet);
       PR_Free( mailboxName );
     }

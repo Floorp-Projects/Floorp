@@ -1149,7 +1149,17 @@ NS_IMETHODIMP nsImapMailFolder::UpdateStatus(nsIUrlListener *aListener, nsIMsgWi
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  return imapService->UpdateFolderStatus(m_eventQueue, this, aListener, nsnull);
+  nsCOMPtr <nsIURI> uri;
+
+  rv = imapService->UpdateFolderStatus(m_eventQueue, this, aListener, getter_AddRefs(uri));
+  if (uri)
+  {
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(uri);
+    // if no msg window, we won't put up error messages (this is almost certainly a biff-inspired status)
+    if (!aMsgWindow)
+      mailNewsUrl->SetSuppressErrorMsgs(PR_TRUE);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
@@ -4232,7 +4242,13 @@ NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageFlags(nsIImapUrl *runningUr
   {
     nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState);
     if (mailCopyState && mailCopyState->m_message)
+    {
+      nsMsgLabelValue label;
       mailCopyState->m_message->GetFlags(aResult);
+      mailCopyState->m_message->GetLabel(&label);
+      if (label != 0)
+        *aResult |= label << 25;
+    }
   }
   return NS_OK;
 }
@@ -4477,6 +4493,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               {
                 ChangeNumPendingTotalMessages(-mNumPendingTotalMessages);
                 ChangeNumPendingUnread(-mNumPendingUnreadMessages);
+                m_numStatusUnseenMessages = 0;
               }
 
             }
