@@ -797,6 +797,10 @@ BOOL ModifyHomepageURL(CString xpifile, CString entity, CString newvalue)
     // Write the pref element to prefs file.
     ExtractXPIFile(gstrInstallFile, gstrCFGPrefFile);
     ModifyHashedPref(gstrCFGPrefFile, strPref, strURL, "string", TRUE); 
+
+    // Lock out the buttons in the pref dialog to change the homepage.
+    ModifyHashedPref(gstrCFGPrefFile, "pref.browser.homepage.disable_button.current_page", "true", "bool", TRUE);
+    ModifyHashedPref(gstrCFGPrefFile, "pref.browser.homepage.disable_button.select_file", "true", "bool", TRUE);
   }
    
   // If remote admin, write to the .jsc file.
@@ -811,10 +815,14 @@ BOOL ModifyHomepageURL(CString xpifile, CString entity, CString newvalue)
     }
 
     ModifyJS(remoteAdminFile, strPref, strURL, TRUE);
+
+    // Lock out the buttons in the pref dialog to change the homepage.
+    ModifyJS2(remoteAdminFile, "pref.browser.homepage.disable_button.current_page", "true", TRUE);
+    ModifyJS2(remoteAdminFile, "pref.browser.homepage.disable_button.select_file", "true", TRUE);
+
   }
 
   // not locked, or remote, just modify the property
-  
   else
     ModifyProperties(xpifile, entity, newvalue);
 
