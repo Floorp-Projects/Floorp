@@ -23,14 +23,14 @@ import netscape.ldap.*;
 
 /**
  * Creates an SSL socket connection to an LDAP Server.  This class
- * implements the <CODE>LDAPSocketFactory</CODE> interface.
+ * implements the <CODE>LDAPSSLSocketFactoryExt</CODE> interface.
  * <P>
  *
  * To construct an object of this class, you need to specify the
  * name of a class that implements the <CODE>javax.net.ssl.SSLSocket</CODE>
  * interface.  If you do not specify a class name, the class
  * <CODE>netscape.net.SSLSocket</CODE> is used by default.  This
- * class is included with Netscape Communicator 4.05.
+ * class is included with Netscape Communicator 4.05 and up.
  * <P>
  *
  * If you are using a Java VM that provides certificate database
@@ -39,31 +39,50 @@ import netscape.ldap.*;
  * <P>
  *
  * @version 1.0
- * @see LDAPSocketFactory
- * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
+ * @see LDAPSSLSocketFactoryExt
+ * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSSLSocketFactoryExt)
  */
-public class LDAPSSLSocketFactory implements LDAPSocketFactory {
+public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
 
     /**
      * Indicates if client authentication is on.
      */
-    private boolean m_isClientAuth = false;
+    private boolean m_clientAuth = false;
     /**
      * Name of class implementing SSLSocket.
      */
     private String m_packageName = "netscape.net.SSLSocket";
+
     /**
      * The cipher suites
      */
     private Object m_cipherSuites = null;
 
     /**
+     * The Ldap connection
+     */
+    private LDAPConnection m_connection = null;
+
+    /**
      * Constructs an <CODE>LDAPSSLSocketFactory</CODE> object using
      * the default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>. (This class is provided
-     * with Netscape Communicator 4.05.)
+     * with Netscape Communicator 4.05 and higher.)
      */
     public LDAPSSLSocketFactory() {
+    }
+
+    /**
+     * Constructs an <CODE>LDAPSSLSocketFactory</CODE> object using
+     * the default SSL socket implementation,
+     * <CODE>netscape.net.SSLSocket</CODE>. (This class is provided
+     * with Netscape Communicator 4.05 and up.)
+     * @param clientAuth <CODE>true</CODE> if certificate-based client
+     * authentication is desired. By default, client authentication is
+     * not used.
+     */
+    public LDAPSSLSocketFactory(boolean clientAuth) {
+        m_clientAuth = clientAuth;
     }
 
     /**
@@ -75,10 +94,45 @@ public class LDAPSSLSocketFactory implements LDAPSocketFactory {
      * Pass <code>null</code> for this parameter to use the
      * default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>, which is included with
-     * Netscape Communicator 4.05.
+     * Netscape Communicator 4.05 and up.
      */
     public LDAPSSLSocketFactory(String className) {
         m_packageName = new String(className);
+    }
+
+    /**
+     * Constructs an <CODE>LDAPSSLSocketFactory</CODE> object using
+     * the specified class. The class must implement the interface
+     * <CODE>javax.net.ssl.SSLSocket</CODE>.
+     * @param className The name of a class implementing
+     * the <CODE>javax.net.ssl.SSLSocket</CODE> interface.
+     * Pass <code>null</code> for this parameter to use the
+     * default SSL socket implementation,
+     * <CODE>netscape.net.SSLSocket</CODE>, which is included with
+     * Netscape Communicator 4.05 and up.
+     * @param clientAuth <CODE>true</CODE> if certificate-based client
+     * authentication is desired. By default, client authentication is
+     * not used.
+     */
+    public LDAPSSLSocketFactory(String className, boolean clientAuth) {
+        m_packageName = new String(className);
+        m_clientAuth = clientAuth;
+    }
+
+    /**
+     * The constructor with the specified package for security and the specified
+     * cipher suites.
+     * @param className The name of a class implementing the interface
+     * <CODE>javax.net.ssl.SSLSocket</CODE>
+     * Pass <code>null</code> for this parameter to use the
+     * default SSL socket implementation,
+     * <CODE>netscape.net.SSLSocket</CODE>, which is included with
+     * Netscape Communicator 4.05 and up.
+     * @param cipherSuites The cipher suites to use for SSL connections.
+     */
+    public LDAPSSLSocketFactory(String className, Object cipherSuites) {
+        m_packageName = new String(className);
+        m_cipherSuites = cipherSuites;
     }
 
     /**
@@ -91,10 +145,15 @@ public class LDAPSSLSocketFactory implements LDAPSocketFactory {
      * <CODE>netscape.net.SSLSocket</CODE>, which is included with
      * Netscape Communicator 4.05.
      * @param cipherSuites The cipher suites to use for SSL connections.
+     * @param clientAuth <CODE>true</CODE> if certificate-based client
+     * authentication is desired. By default, client authentication is
+     * not used.
      */
-    public LDAPSSLSocketFactory(String className, Object cipherSuites) {
+    public LDAPSSLSocketFactory(String className, Object cipherSuites,
+      boolean clientAuth) {
         m_packageName = new String(className);
         m_cipherSuites = cipherSuites;
+        m_clientAuth = clientAuth;
     }
 
     /**
@@ -105,9 +164,15 @@ public class LDAPSSLSocketFactory implements LDAPSocketFactory {
      * Call this method before you call <CODE>makeSocket</CODE>.
      * @see netscape.ldap.LDAPSSLSocketFactory#isClientAuth
      * @see netscape.ldap.LDAPSSLSocketFactory#makeSocket
+     * Note: enableClientAuth() is deprecated. This method is replaced
+     * by any one of the following constructors:
+     * <p>
+     * <CODE>LDAPSSLSocketFactory(boolean)</CODE>
+     * <CODE>LDAPSSLSocketFactory(java.lang.String, boolean)</CODE>
+     * <CODE>LDAPSSLSocketFactory(java.lang.String, java.lang.Object, boolean)</CODE>
      */
     public void enableClientAuth() {
-        m_isClientAuth = true;
+        m_clientAuth = true;
     }
 
 
@@ -125,6 +190,12 @@ public class LDAPSSLSocketFactory implements LDAPSocketFactory {
      * @see netscape.ldap.LDAPSSLSocketFactory#makeSocket
      * @exception LDAPException Since this method is not yet implemented,
      * calling this method throws an exception.
+     * Note: <CODE>enableClientAuth(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)</CODE> is deprecated. 
+     * This method is replaced by any one of the following constructors:
+     * <p>
+     * <CODE>LDAPSSLSocketFactory(boolean)</CODE>
+     * <CODE>LDAPSSLSocketFactory(java.lang.String, boolean)</CODE>
+     * <CODE>LDAPSSLSocketFactory(java.lang.String, java.lang.Object, boolean)</CODE>
      */
     public void enableClientAuth(String certdb, String keydb, String keypwd,
       String certnickname, String keynickname) throws LDAPException {
@@ -133,10 +204,10 @@ public class LDAPSSLSocketFactory implements LDAPSocketFactory {
 
     /**
      * Returns <code>true</code> if client authentication is enabled.
-     * @see netscape.ldap.LDAPSSLSocketFactory#enableClientAuth
+     * @see netscape.ldap.LDAPSSLSocketFactory
      */
     public boolean isClientAuth() {
-        return m_isClientAuth;
+        return m_clientAuth;
     }
 
     /**
@@ -160,21 +231,20 @@ public class LDAPSSLSocketFactory implements LDAPSocketFactory {
 
     /**
      * Returns a socket to the LDAP server with the specified
-     * host name and port number. Before calling this method,
-     * call <CODE>enableClientAuth</CODE>.
+     * host name and port number.
      * @param host The host to connect to
      * @param port The port number
      * @return The socket to the host name and port number.
      * @exception LDAPException A socket to the specified host and port
      * could not be created.
-     * @see netscape.ldap.LDAPSSLSocketFactory#enableClientAuth
+     * @see netscape.ldap.LDAPSSLSocketFactory
      */
     public Socket makeSocket(String host, int port)
       throws LDAPException {
 
         Socket s = null;
 
-        if (m_isClientAuth) {
+        if (m_clientAuth) {
             try {
                 /* Check if running in Communicator; if so, enable client auth */
                 java.lang.reflect.Method m = LDAPCheckComm.getMethod(

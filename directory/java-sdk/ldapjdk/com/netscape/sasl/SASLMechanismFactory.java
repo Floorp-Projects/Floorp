@@ -59,7 +59,11 @@ public class SASLMechanismFactory {
             for (int i = 0; i < m.length; i++) {
                 /* Check if the signature is right: String */
                 Class[] params = m[i].getParameterTypes();
-                if ((params.length == 1) &&
+                if (params.length == 0) {
+                    driver = 
+                      (SASLClientMechanismDriver)(m[i].newInstance(null));
+                    return driver;
+                } else if ((params.length == 1) &&
                   (params[0].getName().equals("java.lang.String"))) {
                     Object[] args = new Object[1];
                     args[0] = mechanism;

@@ -37,7 +37,7 @@ import netscape.ldap.*;
  * @see LDAPSocketFactory
  * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
  */
-public class LDAPSSLSocketWrapFactory implements LDAPSocketFactory {
+public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
 
     /**
      * The constructor with the specified package for security
@@ -92,7 +92,7 @@ public class LDAPSSLSocketWrapFactory implements LDAPSocketFactory {
      * client authentication is disabled.
      */
     public boolean isClientAuth() {
-        return m_isClientAuth;
+        return m_clientAuth;
     }
 
     /**
@@ -109,9 +109,28 @@ public class LDAPSSLSocketWrapFactory implements LDAPSocketFactory {
     }
 
     /**
+     * Returns the name of the class that implements SSL sockets for this factory.
+     *
+     * @return The name of the class that implements SSL sockets for this factory.
+     */
+    public String getSSLSocketImpl() {
+        return m_packageName;
+    }
+
+    /**
+     * Returns the suite of ciphers used for SSL connections made through
+     * sockets created by this factory.
+     *
+     * @return The suite of ciphers used.
+     */
+    public Object getCipherSuites() {
+        return m_cipherSuites;
+    }
+
+    /**
      * Indicates if client authentication is on.
      */
-    private boolean m_isClientAuth = false;
+    private boolean m_clientAuth = false;
 
     /**
      * Name of class implementing SSLSocket.
