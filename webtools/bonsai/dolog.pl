@@ -28,12 +28,14 @@
 #
 #      ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
 #
+# or if you do not want to use SMTP at all, add:
+#
+#      ALL      ( $CVSROOT/CVSROOT/dolog.pl -r /cvsroot -n | /bonsai/handleCheckinMail.pl )
+#
 # Replace "/cvsroot" with the name of the CVS root directory, and
 # "my.bonsai.machine" with the name of the machine Bonsai runs on.
 # Now, on my.bonsai.machine, add a mail alias so that mail sent to
-# "bonsai-checkin-daemon" will get piped to handleCheckinMail.tcl.
-# The first argument to handleCheckinMail.tcl is the directory that
-# bonsai is installed in.
+# "bonsai-checkin-daemon" will get piped to handleCheckinMail.pl.
 
 use Socket;
 
@@ -46,6 +48,7 @@ $repository = '';
 $repository_tag = '';
 $mailhost = 'localhost';
 $rlogcommand = '/usr/bin/rlog';
+$output2mail = 1;
 
 @mailto = ();
 @changed_files = ();
@@ -87,7 +90,11 @@ if ($flag_debug) {
     print STDERR "----------------------------------------------\n";
 }
 
-&mail_notification;
+if ($output2mail) {
+    &mail_notification;
+} else {
+    &stdout_notification;
+}
 
 0;
 
@@ -105,6 +112,8 @@ sub process_args {
             last;              # Keep the rest in ARGV; they're handled later.
         } elsif ($arg eq '-h') {
             $mailhost = shift @ARGV;
+        } elsif ($arg eq '-n') {
+            $output2mail = 0;
         } else {
             push(@mailto, $arg);
         }
@@ -303,6 +312,22 @@ sub mail_notification {
     print S @outlist, "\n";
     print S ".\n";
     get_response_code(250);
+}
+
+sub stdout_notification { 
+    chop(my $hostname = `hostname`);
+
+    print  "MAIL FROM: bonsai-daemon\@$hostname\n";
+    print  "RCPT TO: root\@localhost\n";
+    print  "DATA\n";
+    if ($flag_tagcmd) {
+        print  "Subject:  cvs tag in $repository\n";
+    } else {
+        print  "Subject:  cvs commit to $repository\n";
+    }
+    print  "\n";
+    print  @outlist, "\n";
+    print  ".\n";
     print S "QUIT\n";
     close(S);
 }
