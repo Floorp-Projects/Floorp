@@ -92,6 +92,7 @@
   .button-toolbar-4[disabled="true"]:hover:active
     {
       border              : 1px solid transparent;
+      color               : graytext;
     }
     
   .button-toolbar[disabled="true"],
