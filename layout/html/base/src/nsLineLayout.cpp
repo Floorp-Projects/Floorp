@@ -94,7 +94,7 @@
 #define HACK_MEW
 //#undef HACK_MEW
 #ifdef HACK_MEW
-static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFrame, PRBool& inChild)
+static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFrame)
 {
   nscoord sizes = 0;
 
@@ -111,10 +111,8 @@ static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFra
     // XXX: process alternate child lists?
     aFrame.FirstChild(&aPresContext,nsnull,&child);
     while(child) {
-      PRBool dummy;
-      inChild = PR_TRUE;
       // recurse: note that we already know we are in a child frame, so no need to track further
-      sizes += AccumulateImageSizes(aPresContext, *child, dummy);
+      sizes += AccumulateImageSizes(aPresContext, *child);
       // now next sibling
       child->GetNextSibling(&child);
     }
@@ -1928,27 +1926,31 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
       else {
 
 #ifdef HACK_MEW
+
+#ifdef NOISY_MAX_ELEMENT_SIZE
+        frameCount++;
+#endif
         // if in Quirks mode and in a table cell with an unconstrained width, then emulate an IE
         // quirk to keep consecutive images from breaking the line
-        // NOTE: we check for the maxElementWidth == the CombinedAreaWidth to detect when
-        //       a textframe has whitespace in it and thus should not be used as the basis
-        //       for accumulating the image width
-        // - this is to handle images in a text run
         // - see bugs 54565, 32191, and their many dups
         // XXX - reconsider how textFrame text measurement happens and have it take into account
         //       image frames as well, thus eliminating the need for this code
-        if (!strictMode && 
-            inUnconstrainedTable && 
-            pfd->mMaxElementSize.width == pfd->mCombinedArea.width) {
+        if (!strictMode && inUnconstrainedTable ) {
 
           PRBool inChild = PR_FALSE;
-          nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame, inChild);
-          PRBool curFrameAccumulates = (imgSizes > 0);
+          nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame);
+          PRBool curFrameAccumulates = (imgSizes > 0) || 
+                                       (pfd->mMaxElementSize.width == pfd->mCombinedArea.width &&
+                                        pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME));
+            // NOTE: we check for the maxElementWidth == the CombinedAreaWidth to detect when
+            //       a textframe has whitespace in it and thus should not be used as the basis
+            //       for accumulating the image width
+            // - this is to handle images in a text run
 
-          if(!prevFrameAccumulates && !curFrameAccumulates) {
-            accumulatedWidth = mw;
-          } else if (curFrameAccumulates || prevFrameAccumulates) {
+          if(prevFrameAccumulates && curFrameAccumulates) {
             accumulatedWidth += mw;
+          } else {
+            accumulatedWidth = mw;
           } 
           // now update the prevFrame
           prevFrameAccumulates = curFrameAccumulates;
