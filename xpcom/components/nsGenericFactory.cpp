@@ -207,7 +207,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
 #endif
 
     nsModuleComponentInfo* cp = mComponents;
-    while (cp->mConstructor != nsnull) {
+    for (PRUint32 i = 0; i < mComponentCount; i++) {
         rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
                                              cp->mProgID, aPath, PR_TRUE,
                                              PR_TRUE);
@@ -233,7 +233,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
     printf("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
 #endif
     nsModuleComponentInfo* cp = mComponents;
-    while (cp->mConstructor != nsnull) {
+    for (PRUint32 i = 0; i < mComponentCount; i++) {
         nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
