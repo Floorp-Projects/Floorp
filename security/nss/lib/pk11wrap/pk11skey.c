@@ -974,14 +974,12 @@ PK11_GetKeyLength(PK11SymKey *key)
    if (key->data.data == NULL) {
 	PK11_ExtractKeyValue(key);
    }
-   /* key is probably secret. Look up it's type and length */
+   /* key is probably secret. Look up its length */
    /*  this is new PKCS #11 version 2.0 functionality. */
    if (key->size == 0) {
 	CK_ULONG keyLength;
 
 	keyLength = PK11_ReadULongAttribute(key->slot,key->objectID,CKA_VALUE_LEN);
-	/* doesn't have a length field, check the known PKCS #11 key types,
-	 * which don't have this field */
 	if (keyLength != CK_UNAVAILABLE_INFORMATION) {
 	    key->size = (unsigned int)keyLength;
 	}
