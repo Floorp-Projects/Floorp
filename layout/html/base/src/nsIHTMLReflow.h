@@ -322,6 +322,9 @@ protected:
                                nscoord containingBlockWidth,
                                nscoord containingBlockHeight);
 
+  void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
+                              const nsStylePosition* aPosition);
+
   void CalculateLeftRightMargin(const nsHTMLReflowState* aContainingBlockRS,
                                 const nsStyleSpacing*    aSpacing,
                                 nscoord                  aComputedWidth,

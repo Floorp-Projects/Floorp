@@ -214,6 +214,81 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* aContaining
 }
 
 void
+nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
+                                          const nsStylePosition* aPosition)
+{
+  nsStyleCoord              coord;
+  const nsHTMLReflowState*  pcbrs = nsnull;
+
+  // If any of the offsets are 'inherit' we need to find the positioned
+  // containing block 
+  if ((eStyleUnit_Inherit == aPosition->mOffset.GetLeftUnit()) ||
+      (eStyleUnit_Inherit == aPosition->mOffset.GetTopUnit()) ||
+      (eStyleUnit_Inherit == aPosition->mOffset.GetRightUnit()) ||
+      (eStyleUnit_Inherit == aPosition->mOffset.GetBottomUnit())) {
+
+    pcbrs = cbrs;
+
+    while (nsnull != pcbrs) {
+      const nsStylePosition* position;
+      pcbrs->frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+      if ((NS_STYLE_POSITION_ABSOLUTE == position->mPosition) ||
+          (NS_STYLE_POSITION_RELATIVE == position->mPosition)) {
+        break;
+      }
+
+      pcbrs = (const nsHTMLReflowState*)pcbrs->parentReflowState;  // XXX cast
+    }
+  }
+
+  // For relatively positioned elements 'auto' becomes 0
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetLeftUnit()) {
+    computedOffsets.left = pcbrs ? pcbrs->computedOffsets.left : 0;
+  } else if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
+    computedOffsets.left = 0;
+  } else {
+    ComputeHorizontalValue(cbrs->computedWidth, aPosition->mOffset.GetLeftUnit(),
+                           aPosition->mOffset.GetLeft(coord),
+                           computedOffsets.left);
+  }
+
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetTopUnit()) {
+    computedOffsets.top = pcbrs ? pcbrs->computedOffsets.top : 0;
+  } else if ((eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) ||
+      ((NS_AUTOHEIGHT == cbrs->computedHeight) &&
+       (eStyleUnit_Percent == aPosition->mOffset.GetTopUnit()))) {
+    computedOffsets.top = 0;
+  } else {
+    ComputeVerticalValue(cbrs->computedHeight, aPosition->mOffset.GetTopUnit(),
+                         aPosition->mOffset.GetTop(coord),
+                         computedOffsets.top);
+  }
+
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetRightUnit()) {
+    computedOffsets.right = pcbrs ? pcbrs->computedOffsets.right : 0;
+  } else if (eStyleUnit_Auto == aPosition->mOffset.GetRightUnit()) {
+    computedOffsets.right = 0;
+  } else {
+    ComputeHorizontalValue(cbrs->computedWidth, aPosition->mOffset.GetRightUnit(),
+                           aPosition->mOffset.GetRight(coord),
+                           computedOffsets.right);
+  }
+
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetBottomUnit()) {
+    computedOffsets.bottom = pcbrs ? pcbrs->computedOffsets.bottom : 0;
+  } else if ((eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) ||
+      ((NS_AUTOHEIGHT == cbrs->computedHeight) &&
+      (eStyleUnit_Percent == aPosition->mOffset.GetBottomUnit()))) {
+    computedOffsets.bottom = 0;
+  } else {
+    ComputeVerticalValue(cbrs->computedHeight, aPosition->mOffset.GetBottomUnit(),
+                         aPosition->mOffset.GetBottom(coord),
+                         computedOffsets.bottom);
+  }
+}
+
+void
 nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
                                            const nsHTMLReflowState* cbrs,
                                            const nsStylePosition* aPosition,
@@ -265,7 +340,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   // Initialize the 'left' and 'right' computed offsets
   PRBool        leftIsAuto = PR_FALSE, rightIsAuto = PR_FALSE;
   nsStyleCoord  coord;
-  if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetLeftUnit()) {
+    computedOffsets.left = cbrs->computedOffsets.left;
+  } else if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
     if (NS_STYLE_DIRECTION_LTR == display->mDirection) {
       computedOffsets.left = placeholderOffset.x;
     } else {
@@ -277,7 +354,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
                            aPosition->mOffset.GetLeft(coord),
                            computedOffsets.left);
   }
-  if (eStyleUnit_Auto == aPosition->mOffset.GetRightUnit()) {
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetRightUnit()) {
+    computedOffsets.right = cbrs->computedOffsets.right;
+  } else if (eStyleUnit_Auto == aPosition->mOffset.GetRightUnit()) {
     if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
       computedOffsets.right = placeholderOffset.x;
     } else {
@@ -347,7 +426,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
 
   // Initialize the 'top' and 'bottom' computed offsets
   PRBool  bottomIsAuto = PR_FALSE;
-  if ((eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) ||
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetTopUnit()) {
+    computedOffsets.top = cbrs->computedOffsets.top;
+  } else if ((eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) ||
       ((NS_AUTOHEIGHT == containingBlockHeight) &&
        (eStyleUnit_Percent == aPosition->mOffset.GetTopUnit()))) {
     // Use the placeholder position
@@ -357,7 +438,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     ComputeVerticalValue(containingBlockHeight, aPosition->mOffset.GetTopUnit(),
                          aPosition->mOffset.GetTop(coord), computedOffsets.top);
   }
-  if ((eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) ||
+  if (eStyleUnit_Inherit == aPosition->mOffset.GetBottomUnit()) {
+    computedOffsets.bottom = cbrs->computedOffsets.bottom;
+  } else if ((eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) ||
       ((NS_AUTOHEIGHT == containingBlockHeight) &&
        (eStyleUnit_Percent == aPosition->mOffset.GetBottomUnit()))) {
     if (eStyleUnit_Auto == heightUnit) {
@@ -447,42 +530,51 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   nsresult result = frame->GetStyleData(eStyleStruct_Position,
                                         (const nsStyleStruct*&)pos);
 
-  // Compute margins from the specified margin style information
-  nsMargin  margin;
-  ComputeMarginFor(frame, parentReflowState, margin);
-
-  // These become the default computed values, and may be adjusted below
-  computedLeftMargin = margin.left;
-  computedRightMargin = margin.right;
-  computedTopMargin = margin.top;
-  computedBottomMargin = margin.bottom;
-
-  // Calculate the line height.
-  // XXX Do we need to do this for all elements or just inline non-replaced
-  // elements?
-  mLineHeight = CalcLineHeight(aPresContext, frame);
-
-  // See if it's an inline non-replaced element
-  if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
-    // 'width' property doesn't apply to inline non-replaced elements. The
-    // 'height' is given by the element's 'line-height' value
-    if (mLineHeight >= 0) {
-      computedHeight = mLineHeight;
-    }
-    return;  // nothing else to compute
-  }
-
   // If this is the root frame then set the computed width and
   // height equal to the available space
   if (nsnull == parentReflowState) {
     computedWidth = availableWidth;
     computedHeight = availableHeight;
+    computedLeftMargin = computedRightMargin = computedTopMargin = computedBottomMargin = 0;
 
   } else {
     // Get the containing block reflow state
     const nsHTMLReflowState* cbrs =
       GetContainingBlockReflowState(parentReflowState);
     NS_ASSERTION(nsnull != cbrs, "no containing block");
+
+    // See if the element is relatively positioned
+    if (NS_STYLE_POSITION_RELATIVE == pos->mPosition) {
+      ComputeRelativeOffsets(cbrs, pos);
+    } else {
+      // Initialize offsets to 0
+      computedOffsets.SizeTo(0, 0, 0, 0);
+    }
+
+    // Compute margins from the specified margin style information
+    nsMargin  margin;
+    ComputeMarginFor(frame, parentReflowState, margin);
+  
+    // These become the default computed values, and may be adjusted below
+    computedLeftMargin = margin.left;
+    computedRightMargin = margin.right;
+    computedTopMargin = margin.top;
+    computedBottomMargin = margin.bottom;
+  
+    // Calculate the line height.
+    // XXX Do we need to do this for all elements or just inline non-replaced
+    // elements?
+    mLineHeight = CalcLineHeight(aPresContext, frame);
+  
+    // See if it's an inline non-replaced element
+    if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
+      // 'width' property doesn't apply to inline non-replaced elements. The
+      // 'height' is given by the element's 'line-height' value
+      if (mLineHeight >= 0) {
+        computedHeight = mLineHeight;
+      }
+      return;  // nothing else to compute
+    }
 
     // Get the containing block width and height. We'll need them when
     // calculating the computed width and height. For all elements other
@@ -729,6 +821,7 @@ nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                           const nsStyleCoord& aCoord,
                                           nscoord& aResult)
 {
+  NS_PRECONDITION(eStyleUnit_Inherit != aUnit, "unexpected unit");
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
     float pct = aCoord.GetPercentValue();
@@ -745,6 +838,7 @@ nsHTMLReflowState::ComputeVerticalValue(nscoord aContainingBlockHeight,
                                         const nsStyleCoord& aCoord,
                                         nscoord& aResult)
 {
+  NS_PRECONDITION(eStyleUnit_Inherit != aUnit, "unexpected unit");
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
     // Verify no one is trying to calculate a percentage based height against

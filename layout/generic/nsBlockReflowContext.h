@@ -50,10 +50,12 @@ public:
   nsresult ReflowBlock(nsIFrame* aFrame,
                        const nsRect& aSpace,
                        PRBool aIsAdjacentWithTop,
+                       nsMargin& aComputedOffsets,
                        nsReflowStatus& aReflowStatus);
 
   PRBool PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
                     nscoord aPrevBottomMargin,
+                    const nsMargin& aComputedOffsets,
                     nsRect& aInFlowBounds,
                     nsRect& aCombinedRect);
 
@@ -105,10 +107,6 @@ public:
     if (a > b) return a;
     return b;
   }
-
-  static void ComputeRelativePosition(nsIFrame* aFrame,
-                                      const nsStylePosition* aStylePos,
-                                      nscoord& aX, nscoord& aY);
 
 protected:
   nsIPresContext& mPresContext;

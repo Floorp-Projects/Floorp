@@ -2121,8 +2121,9 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsRect availSpace(availX, aState.mY, availWidth, availHeight);
   WillReflowFrame(aState, aLine, frame);
   nsReflowStatus frameReflowStatus;
+  nsMargin computedOffsets;
   rv = brc.ReflowBlock(frame, availSpace, aState.IsAdjacentWithTop(),
-                       frameReflowStatus);
+                       computedOffsets, frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2147,7 +2148,7 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
     PRBool applyTopMargin = aState.ShouldApplyTopMargin();
     aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop, applyTopMargin,
-                                      aState.mPrevBottomMargin,
+                                      aState.mPrevBottomMargin, computedOffsets,
                                       aLine->mBounds, aLine->mCombinedArea);
     if (aKeepReflowGoing) {
       // Some of the child block fit
