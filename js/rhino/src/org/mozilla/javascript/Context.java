@@ -1436,6 +1436,17 @@ public final class Context {
     }
     
     /**
+     * Remove values from thread-local storage.
+     * @param key the key for the entry to remove.
+     * @since 1.5 release 2
+     */
+    public void removeThreadLocal(Object key) {
+        if (hashtable == null)
+            return;
+        hashtable.remove(key);
+    }    
+    
+    /**
      * Return whether functions are compiled by this context using
      * dynamic scope.
      * <p>
