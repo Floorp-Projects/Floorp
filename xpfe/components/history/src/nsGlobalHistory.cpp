@@ -395,10 +395,8 @@ protected:
   nsIMdbStore* mStore;     // OWNER
   nsIMdbTable* mTable;     // OWNER
 
-  nsresult SaveLastPageVisited();
-  nsresult RestoreLastPageVisited();
+  nsresult SaveLastPageVisited(const char *);
   nsresult URLShouldBeInHistory(const char *url, PRBool *result);
-  nsCAutoString mLastPageVisited;
 
   nsresult NotifyAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
@@ -542,9 +540,6 @@ NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
   }
 
-  if (NS_FAILED(rv)) return rv;
-
-  rv = result->RestoreLastPageVisited();
   return rv;
 }
 
@@ -600,8 +595,8 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
     return NS_OK;
   }
 
-  // save this, for later.
-  mLastPageVisited = aURL;
+  rv = SaveLastPageVisited(aURL);
+  if (NS_FAILED(rv)) return rv;
 
   // Okay, it's good. See if we've already got it in the database.
   mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
@@ -707,12 +702,6 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   // commit for now.
   err = mStore->SmallCommit(mEnv);
   if (err != 0) return NS_ERROR_FAILURE;
-
-#if 0
-  // don't save here, it is too often
-  rv = SaveLastPageVisited();
-  if (NS_FAILED(rv)) return rv;
-#endif /* 0 */
 
 #ifdef LEAKING_GLOBAL_HISTORY
   {
@@ -856,40 +845,22 @@ nsGlobalHistory::GetURLCompletion(const char *aURL, char **_retval)
 }
 
 nsresult
-nsGlobalHistory::SaveLastPageVisited()
+nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 {
   nsresult rv;
+
+  if (!aURL) return NS_ERROR_FAILURE;
   
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = prefs->SetCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, (const char *)mLastPageVisited);
+  rv = prefs->SetCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, aURL);
 
 #ifdef DEBUG_LAST_PAGE_VISITED
-  printf("XXX saving last page visited as: %s\n", (const char *)mLastPageVisited);
+  printf("XXX saving last page visited as: %s\n", aURL);
 #endif /* DEBUG_LAST_PAGE_VISITED */
 
   return rv;
-}
-
-nsresult
-nsGlobalHistory::RestoreLastPageVisited()
-{
-  nsresult rv;
-  
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsXPIDLCString lastPageVisited;
-  rv = prefs->CopyCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, getter_Copies(lastPageVisited));
-  if (NS_FAILED(rv)) return rv;
-
-  mLastPageVisited = (const char *)lastPageVisited;
-
-#ifdef DEBUG_LAST_PAGE_VISITED
-  printf("XXX restoring last page visited to: %s\n", (const char *)lastPageVisited);
-#endif /* DEBUG_LAST_PAGE_VISITED */
-  return NS_OK;
 }
 
 #define HTTP_COLON "http:"
@@ -916,12 +887,21 @@ nsGlobalHistory::URLShouldBeInHistory(const char *url, PRBool *result)
 NS_IMETHODIMP
 nsGlobalHistory::GetLastPageVisted(char **_retval)
 { 
+  nsresult rv;
+
   if (!_retval) return NS_ERROR_NULL_POINTER;
 
-  *_retval = nsCRT::strdup((const char *)mLastPageVisited);
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString lastPageVisited;
+  rv = prefs->CopyCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, getter_Copies(lastPageVisited));
+  if (NS_FAILED(rv)) return rv;
+
+  *_retval = nsCRT::strdup((const char *)lastPageVisited);
 
 #ifdef DEBUG_LAST_PAGE_VISITED
-  printf("XXX getting last page visited as: %s\n", (const char *)mLastPageVisited);
+  printf("XXX getting last page visited as: %s\n", (const char *)lastPageVisited);
 #endif /* DEBUG_LAST_PAGE_VISITED */
 
   return NS_OK;
@@ -1567,8 +1547,6 @@ nsGlobalHistory::Refresh(PRBool aBlocking)
 NS_IMETHODIMP
 nsGlobalHistory::Flush()
 {
-    nsresult rv;
-
 	nsMdbPtr<nsIMdbThumb> thumb(mEnv);
 	mdb_err err;
 
@@ -1587,8 +1565,7 @@ nsGlobalHistory::Flush()
 
 	if ((err != 0) || !done) return NS_ERROR_FAILURE;
 
-    rv = SaveLastPageVisited();
-	return(rv);
+	return NS_OK;
 }
 
 
@@ -1765,8 +1742,7 @@ nsGlobalHistory::OpenDB()
 
   }
 
-  rv = SaveLastPageVisited();
-  return rv;
+  return NS_OK;
 }
 
 
@@ -1804,8 +1780,6 @@ nsGlobalHistory::CreateTokens()
 nsresult
 nsGlobalHistory::CloseDB()
 {
-  nsresult rv;
-
   mdb_err err;
 
   if (mTable)
@@ -1832,8 +1806,7 @@ nsGlobalHistory::CloseDB()
   if (mEnv)
     mEnv->CloseMdbObject(mEnv /* XXX */);
 
-  rv = SaveLastPageVisited();
-  return rv;
+  return NS_OK;
 }
 
 
