@@ -373,6 +373,14 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                     {
                         if (CMT_GetStringAttribute(control, socketStatus, SSM_FID_SSS_CA_NAME, &caName) == CMTSuccess)
                         {
+							// If the CA name is RSA Data Security, then change the name to the real
+							// name of the company i.e. VeriSign, Inc.
+							if (PL_strcmp((const char*)caName.data, "RSA Data Security, Inc.") == 0) {
+								free(caName.data);
+								caName.data = (unsigned char*)PL_strdup("VeriSign, Inc.");
+								caName.len = PL_strlen((const char*)caName.data);
+							}
+
                             // Create space for "Signed by %s" display string
                             char *str = NS_REINTERPRET_POINTER_CAST(char*, nsMemory::Alloc(CERT_PREFIX_STR_LENGTH + 1 + caName.len));
                             if (str)
