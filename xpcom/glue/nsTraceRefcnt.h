@@ -39,7 +39,6 @@
 #define nsTraceRefcnt_h___
 
 #include "nscore.h"
-#include <stdio.h> // XXXldb We should remove this and add it where needed.
 
 class nsISupports;
 

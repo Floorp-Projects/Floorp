@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdio.h>
 #include "prmem.h"
 #include "nsCRT.h"
 #include "nsICharRepresentable.h"
