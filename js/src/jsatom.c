@@ -545,14 +545,32 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     JSAtom *atom;
     char buf[2 * ALIGNMENT(JSString)];
 
+    /*
+     * Avoiding the malloc in js_InflateString on shorter strings saves us
+     * over 20,000 malloc calls on mozilla browser startup. This compares to
+     * only 131 calls where the string is longer than a 32 char buffer.
+     * The vast majority of atomized strings are already in the hashtable. So
+     * js_AtomizeString rarely has to copy the temp string we make.
+     */
+#define ATOMIZE_BUF_MAX 32
+    jschar inflated[ATOMIZE_BUF_MAX];
+
+    if (length < ATOMIZE_BUF_MAX) {
+        js_InflateStringToBuffer(inflated, bytes, length);
+        chars = inflated;
+    } else {
+        chars = js_InflateString(cx, bytes, length);
+        if (!chars)
+	    return NULL;
+        flags |= ATOM_NOCOPY;
+    }
+
     str = ALIGN(buf, JSString);
-    chars = js_InflateString(cx, bytes, length);
-    if (!chars)
-	return NULL;
+
     str->chars = chars;
     str->length = length;
-    atom = js_AtomizeString(cx, str, ATOM_TMPSTR | ATOM_NOCOPY | flags);
-    if (!atom || ATOM_TO_STRING(atom)->chars != chars)
+    atom = js_AtomizeString(cx, str, ATOM_TMPSTR | flags);
+    if (chars != inflated && (!atom || ATOM_TO_STRING(atom)->chars != chars))
 	JS_free(cx, chars);
     return atom;
 }

@@ -281,6 +281,13 @@ extern char *
 js_DeflateString(JSContext *cx, const jschar *chars, size_t length);
 
 /*
+ * Inflate bytes to JS chars into a buffer.
+ * 'chars' must be large enough for 'length'+1 jschars.
+ */
+extern void
+js_InflateStringToBuffer(jschar *chars, const char *bytes, size_t length);
+
+/*
  * Associate bytes with str in the deflated string cache, returning true on
  * successful association, false on out of memory.
  */
