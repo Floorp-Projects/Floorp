@@ -114,8 +114,6 @@ countcheckins.cgi	TCL.  Draws a graph of checkins for the various
 
 createlegaldirs.tcl	???
 
-crontab			???
-
 cvsblame.cgi		Runs through a CVS file and tells you who changed what.
 			Calls:
 				rview.cgi dir= cvsroot= rev= 
