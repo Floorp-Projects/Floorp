@@ -805,12 +805,11 @@ namespace MetaData {
     }
 
     // XXX Default construction of an instance of the class
-    // that is the value at the top of the execution stack
-    js2val JS2Engine::defaultConstructor(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
+    // that is the value of the passed in 'this'
+    js2val JS2Engine::defaultConstructor(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
-        js2val v = meta->engine->top();
-        ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
-        JS2Object *obj = JS2VAL_TO_OBJECT(v);
+        ASSERT(JS2VAL_IS_OBJECT(thisValue) && !JS2VAL_IS_NULL(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
         if (c->prototype)

@@ -38,11 +38,13 @@
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
             a = top(argCount + 1);
-            ASSERT(JS2VAL_IS_OBJECT(a) && !JS2VAL_IS_NULL(a));
+            if (!JS2VAL_IS_OBJECT(a) || JS2VAL_IS_NULL(a)) {
+                meta->reportError(Exception::badValueError, "object is not a constructor", errorPos());
+            }
             JS2Object *obj = JS2VAL_TO_OBJECT(a);
             if (obj->kind == ClassKind) {
                 JS2Class *c = checked_cast<JS2Class *>(obj);
-                a = c->construct(meta, JS2VAL_NULL, base(argCount), argCount);
+                a = c->construct(meta, a, base(argCount), argCount);
                 pop(argCount + 1);
                 push(a);
             }

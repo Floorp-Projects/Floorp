@@ -459,8 +459,23 @@ namespace MetaData {
             return (JS2VAL_TO_BOOLEAN(x)) ? 1.0 : 0.0;
         if (JS2VAL_IS_STRING(x)) {
             String *str = JS2VAL_TO_STRING(x);
+            uint32 length = str->length();
+            if (length == 0)
+                return 0.0;
             const char16 *numEnd;
-            return stringToDouble(str->data(), str->data() + str->length(), numEnd);
+            // if the string begins with '0X' or '0x' (after white space), then
+            // read it as a hex integer.
+            const char16 *strStart = str->data();
+            const char16 *strEnd = strStart + length;
+            const char16 *str1 = skipWhiteSpace(strStart, strEnd);
+            if ((*str1 == '0') && ((str1[1] == 'x') || (str1[1] == 'X')))
+                return stringToInteger(str1, strEnd, numEnd, 16);
+            else {
+                float64 d = stringToDouble(str1, strEnd, numEnd);
+                if (numEnd == str1)
+                    return nan;
+                return d;
+            }
         }
         if (JS2VAL_IS_INACCESSIBLE(x))
             reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
