@@ -1160,37 +1160,37 @@ NS_IMETHODIMP nsMsgDBFolder::MarkThreadRead(nsIMsgThread *thread)
 NS_IMETHODIMP
 nsMsgDBFolder::OnStartRunningUrl(nsIURI *aUrl)
 {
-	NS_PRECONDITION(aUrl, "just a sanity check");
-    return NS_OK;
+  NS_PRECONDITION(aUrl, "just a sanity check");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 {
-	NS_PRECONDITION(aUrl, "just a sanity check");
-	nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
-	if (mailUrl)
-	{
-		PRBool updatingFolder = PR_FALSE;
-		if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
-		{
+  NS_PRECONDITION(aUrl, "just a sanity check");
+  nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
+  if (mailUrl)
+  {
+    PRBool updatingFolder = PR_FALSE;
+    if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
+    {
       NotifyFolderEvent(mFolderLoadedAtom);
-
-//GGGG			 check for new mail here and call SetNewMessages...?? -- ONE OF THE 2 PLACES
-			if(mDatabase)
-			{
-				nsresult rv;
-				PRBool hasNewMessages;
-
-				rv = mDatabase->HasNew(&hasNewMessages);
-				SetHasNewMessages(hasNewMessages);
-			}
-		}
-
+      
+      //GGGG			 check for new mail here and call SetNewMessages...?? -- ONE OF THE 2 PLACES
+      if(mDatabase)
+      {
+        nsresult rv;
+        PRBool hasNewMessages;
+        
+        rv = mDatabase->HasNew(&hasNewMessages);
+        SetHasNewMessages(hasNewMessages);
+      }
+    }
+    
     // be sure to remove ourselves as a url listener
     mailUrl->UnRegisterListener(this);
-	}
-    return NS_OK;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **settings)
