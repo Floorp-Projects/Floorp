@@ -805,8 +805,6 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
 {
     NS_ENSURE_ARG_POINTER(card);
 
-    memset(card, 0, sizeof(nsABCOMCardStruct));
-
     card->dwRecordId = mRecordId;
     card->dwCategoryId = mCategoryId;
     card->dwStatus = mStatus;
@@ -852,7 +850,18 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     card->preferMailFormat = m_PreferMailFormat;
 
     card->isMailList = m_IsMailList;
-    card->mailListURI = ToNewCString(m_MailListURI);
+    // Can't use ToNewCString() call here becasue MSCOM will complaint about
+    // memory deallocation (ie, NdrPointerFree()) use CoTaskMemAlloc() instead.
+    if (m_MailListURI.IsEmpty())
+      card->mailListURI = NULL;
+    else
+    {
+      PRInt32 length = m_MailListURI.Length()+1;
+      char * str = (char *) CoTaskMemAlloc(sizeof(char) * length);
+      strncpy(str, m_MailListURI.get(), length-1);
+      str[length-1] = '\0';
+      card->mailListURI = str;
+    }
 
     return NS_OK;
 }
@@ -862,6 +871,7 @@ void nsAbIPCCard::JoinHomeAddresses(PRBool isUnicode, nsABCOMCardStruct * card)
   // If the two address lines in a moz card are not empty
   // then join the lines into a single line separated by
   // '\x0A'. This is the format expected by Palm.
+  card->homeAddress = NULL;
   PRUint32 strLength= m_HomeAddress.Length() + m_HomeAddress2.Length();
   if(!strLength)
     return;

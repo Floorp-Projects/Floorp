@@ -247,7 +247,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
         return retval;
     
     DWORD mozABCount=0;
-    DWORD * mozCatIDList = NULL; // freed by MSCOM/Mozilla
+    LONG * mozCatIndexList = NULL; // freed by MSCOM/Mozilla
     CPString ** mozABNameList = NULL; // freed by MSCOM/Mozilla
     CPString ** mozABUrlList = NULL; // freed by MSCOM/Mozilla
     BOOL * mozIsFirstSyncList = NULL; // freed by MSCOM/Mozilla
@@ -258,13 +258,13 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
     if (!retval)
         retval = sync->m_dbHH->LoadCategories();
 
-    CONDUIT_LOG0(gFD, "Getting AB List ... ");
+    CONDUIT_LOG0(gFD, "Getting moz AB List ... ");
     if(!retval)
-        retval = sync->m_dbPC->GetPCABList(&mozABCount, &mozCatIDList, &mozABNameList, &mozABUrlList, &mozIsFirstSyncList);
+        retval = sync->m_dbPC->GetPCABList(&mozABCount, &mozCatIndexList, &mozABNameList, &mozABUrlList, &mozIsFirstSyncList);
 
     if (retval)
       return retval;
-    CONDUIT_LOG0(gFD, "Done getting AB List. \n");
+    CONDUIT_LOG0(gFD, "Done getting moz AB List. \n");
     
     // Create an array to help us identify addrbooks that have been deleted on Palm.
     DWORD *mozABSeen = (DWORD *) CoTaskMemAlloc(sizeof(DWORD) * mozABCount);
@@ -284,8 +284,8 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
     // Log moz addrbooks.
     for (mozABIndex=0; mozABIndex<mozABCount; mozABIndex++)
     {
-      CONDUIT_LOG4(gFD, "Moz AB[%d] category id=%d, name= '%s', url= '%s'\n",
-              mozABIndex, mozCatIDList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0), mozABUrlList[mozABIndex]->GetBuffer(0));
+      CONDUIT_LOG4(gFD, "Moz AB[%d] category index=%d, name= '%s', url= '%s'\n",
+              mozABIndex, mozCatIndexList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0), mozABUrlList[mozABIndex]->GetBuffer(0));
     }
 
     // For each category, try to find the corresponding AB in the moz AB list
@@ -301,7 +301,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
         DWORD catFlags = pCategory->GetFlags();
         CPString catName(pCategory->GetName());
 
-        CONDUIT_LOG1(gFD, "\nProcessing Palm AB '%s' ... \n", catName.GetBuffer(0));
+        CONDUIT_LOG3(gFD, "\nProcessing Palm AB '%s' (catIndex/catId) = (%d/%d)... \n", catName.GetBuffer(0), catIndex, catID);
         BOOL abRenamed = FALSE;
         BOOL foundInABList=FALSE;
         for(mozABIndex=0; mozABIndex<mozABCount; mozABIndex++)
@@ -314,9 +314,9 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
                 cutOffName = *mozABNameList[mozABIndex];
 
             // if this category has been synchronized before
-            if(catID == mozCatIDList[mozABIndex]) {
+            if(catIndex == mozCatIndexList[mozABIndex]) {
                 retval = sync->m_dbHH->LoadUpdatedRecordsInCategory(catIndex, &recordListHH, &recordCountHH);
-                CONDUIT_LOG2(gFD, "Category id = %d, name = '%s' has been synced before\n", catID, catName.GetBuffer(0));
+                CONDUIT_LOG2(gFD, "Category index = %d, name = '%s' has been synced before\n", catID, catName.GetBuffer(0));
                 foundInABList = TRUE;
                 mozABSeen[mozABIndex] = TRUE; // mark it seen
                 // See if the name has been changed on Palm side. Note that if both
@@ -325,7 +325,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
                 if (catName.CompareNoCase(cutOffName.GetBuffer(0)))
                 {
                   abRenamed = TRUE;
-                  CONDUIT_LOG3(gFD, "Category id = %d, name = '%s' was renamed (from '%s') on Palm so do the same on moz\n", 
+                  CONDUIT_LOG3(gFD, "Category index = %d, name = '%s' was renamed (from '%s') on Palm so do the same on moz\n", 
                     catID, catName.GetBuffer(0), mozABNameList[mozABIndex]->GetBuffer(0));
                 }
                 break;
@@ -334,7 +334,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
             // if corresponding category exists but not synchronized before
             if(!catName.CompareNoCase(cutOffName.GetBuffer(0))){
                 retval = sync->m_dbHH->LoadAllRecordsInCategory(catIndex, &recordListHH, &recordCountHH);
-                CONDUIT_LOG2(gFD, "Category id = %d, name = '%s' has not been synced before\n", catID, catName.GetBuffer(0));
+                CONDUIT_LOG2(gFD, "Category index = %d, name = '%s' has not been synced before\n", catID, catName.GetBuffer(0));
                 foundInABList = TRUE;
                 mozABSeen[mozABIndex] = TRUE; // mark it seen
                 break;
@@ -348,7 +348,7 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
           DWORD newRecAddedCount = 0;
           DWORD * newRecIDList=NULL;
           CONDUIT_LOG1(gFD, "  Syncing with moz AB with %d modified Palm record(s) ... ", recordCountHH);
-          retval = sync->m_dbPC->SynchronizePCAB(catID, catName,
+          retval = sync->m_dbPC->SynchronizePCAB(catIndex, catID, catName,
                                                  recordCountHH, recordListHH,
                                                  &recordCountPC, &recordListPC);
           CONDUIT_LOG1(gFD, "Done syncing AB. retval=%d.\n", retval);
@@ -394,13 +394,12 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
           if(recordListPC)
               free(recordListPC);  
           // notify Mozilla that sync is done so that memory can be freed 
-          if(!retval)
-              success = TRUE;
+          success = retval ? FALSE : TRUE;
 
           if(newRecAddedCount) {
               if(newRecAddedCount != recordCountPC)
                   newRecIDList = (DWORD *) realloc(newRecIDList, newRecAddedCount);
-              retval = sync->m_dbPC->NotifySyncDone(success, catID, newRecAddedCount, newRecIDList);
+              retval = sync->m_dbPC->NotifySyncDone(success, catIndex, newRecAddedCount, newRecIDList);
           }
           else 
               retval = sync->m_dbPC->NotifySyncDone(success);
@@ -411,12 +410,12 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
           // See if it was renamed on palm.
           if (abRenamed)
           {
-            // We should not reanme personal and collected address books here.
+            // We should not rename personal and collected address books here.
             if (mozABUrlList[mozABIndex]->CompareNoCase(PERSONAL_ADDRBOOK_URL) &&
               mozABUrlList[mozABIndex]->CompareNoCase(COLLECTED_ADDRBOOK_URL))
             {
               CONDUIT_LOG0(gFD, "  Renaming AB ... ");
-              retval = sync->m_dbPC->RenamePCAB(catID, catName, *mozABUrlList[mozABIndex]);
+              retval = sync->m_dbPC->RenamePCAB(catIndex, catName, *mozABUrlList[mozABIndex]);
               CONDUIT_LOG1(gFD, "Done renaming AB. retval=%d.\n", retval);
             }
           }
@@ -431,19 +430,19 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
         if(!retval && !foundInABList) {
             if (catFlags != CAT_DIRTY && !neverDidPalmSyncBefore)
             {
-              CONDUIT_LOG2(gFD, "Category id = %d, name = '%s' is removed from moz and needs to be removed from palm\n", catID, catName.GetBuffer(0));
+              CONDUIT_LOG2(gFD, "Category index = %d, name = '%s' is removed from moz and needs to be removed from palm\n", catID, catName.GetBuffer(0));
               CONDUIT_LOG0(gFD, "  Deleting AB from Palm ... ");
               retval = sync->m_dbHH->DeleteCategory(catIndex, FALSE);
               CONDUIT_LOG1(gFD, "Done deleting AB from Palm. retval=%d.\n", retval);
             }
             else
             {
-              CONDUIT_LOG2(gFD, "Category id = %d, name = '%s' is new on palm and needs to be added to moz\n", catID, catName.GetBuffer(0));
+              CONDUIT_LOG2(gFD, "Category index = %d, name = '%s' is new on palm and needs to be added to moz\n", catID, catName.GetBuffer(0));
               retval = sync->m_dbHH->LoadAllRecordsInCategory(catIndex, &recordListHH, &recordCountHH);
               CONDUIT_LOG1(gFD, "  Creating new moz AB with %d Palm record(s) ... ", recordCountHH);
               if(!retval)
-                retval = sync->m_dbPC->AddRecords(catID, catName, recordCountHH, recordListHH);
-              CONDUIT_LOG1(gFD, "Done creating new AB. retval=%d.\n", retval);
+                retval = sync->m_dbPC->AddRecords(catIndex, catName, recordCountHH, recordListHH);
+              CONDUIT_LOG1(gFD, "Done creating new moz AB. retval=%d.\n", retval);
             }
         }
 
@@ -468,8 +467,8 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
     {
         if(mozIsFirstSyncList[mozABIndex])
         {
-            CONDUIT_LOG3(gFD, "Moz AB[%d] category id = %d, name = '%s' doesn't exist on Palm so needs to be added to palm\n",
-                    mozABIndex, mozCatIDList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
+            CONDUIT_LOG3(gFD, "\nMoz AB[%d] category index = %d, name = '%s' doesn't exist on Palm so needs to be added to palm\n",
+                    mozABIndex, mozCatIndexList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
             CPalmRecord ** recordListPC=NULL;
             DWORD recordCountPC=0;
             DWORD * newRecIDList=NULL;
@@ -478,25 +477,30 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
 						                      &recordCountPC, &recordListPC);
             if(!retval) {
                 cat.SetName(mozABNameList[mozABIndex]->GetBuffer(0));
-                CONDUIT_LOG1(gFD, "  Creating new AB in Palm with %d record(s) ... ", recordCountPC);
+                CONDUIT_LOG1(gFD, "  Creating new Palm AB with %d record(s) ... ", recordCountPC);
                 retval = sync->m_dbHH->AddCategory(cat);
-                CONDUIT_LOG1(gFD, "Done creating new AB in Palm. retval=%d.\n", retval);
-            }
-
-            if(!retval) {
-                CONDUIT_LOG0(gFD, "  Adding %d record(s) to new AB in Palm ... ", recordCountPC);
-                newRecIDList = (DWORD *) calloc(recordCountPC, sizeof(DWORD));
-                for (unsigned long i=0; i < recordCountPC; i++) {
-                    if(!recordListPC[i])
-                        continue;
-                    CPalmRecord palmRec = *recordListPC[i];
-                    palmRec.SetCategory(cat.GetIndex());
-                    retval = sync->m_dbHH->AddARecord(palmRec); // should we check existing recs?
-                    newRecIDList[i] = palmRec.GetID();
-                    delete recordListPC[i]; // delete the record now that it is used
+                CONDUIT_LOG2(gFD, "Done creating new Palm AB, new category index=%d. retval=%d.\n", cat.GetIndex(), retval);
+                if(!retval) {
+                    CONDUIT_LOG1(gFD, "  Adding %d record(s) to new Palm AB ... ", recordCountPC);
+                    newRecIDList = (DWORD *) calloc(recordCountPC, sizeof(DWORD));
+                    for (unsigned long i=0; i < recordCountPC; i++) {
+                        if(!recordListPC[i])
+                            continue;
+                        CPalmRecord palmRec = *recordListPC[i];
+                        palmRec.SetCategory(cat.GetIndex());
+                        retval = sync->m_dbHH->AddARecord(palmRec); // should we check existing recs?
+                        newRecIDList[i] = palmRec.GetID();
+                        delete recordListPC[i]; // delete the record now that it is used
+                    }
+                    CONDUIT_LOG0(gFD, "Done adding new records to new Palm AB.\n");
                 }
-                CONDUIT_LOG0(gFD, "Done adding new records to new AB in Palm.\n");
+                else
+                  CONDUIT_LOG1(gFD, "Creating new Palm AB failed. retval=%d.\n", retval);
             }
+            else
+              CONDUIT_LOG1(gFD, "  Loading moz AB records failed so can't create new Palm AB. retval=%d.\n", retval);
+
+
             // the MozAB is now synchronized
             if(!retval)
               mozIsFirstSyncList[mozABIndex] = FALSE;
@@ -507,35 +511,41 @@ DWORD WINAPI DoFastSync(LPVOID lpParameter)
             if(!retval)
                 success = TRUE;
             else
+            {
+                success = FALSE;
                 recordCountPC=0;
-            retval = sync->m_dbPC->NotifySyncDone(success, cat.GetID(), recordCountPC, newRecIDList);
+            }
+            retval = sync->m_dbPC->NotifySyncDone(success, cat.GetIndex(), recordCountPC, newRecIDList);
             if(newRecIDList)
                 free(newRecIDList);
 
-            // Lastly, update the AB with new category id and mod time.
-            retval = sync->m_dbPC->UpdatePCABSyncInfo(cat.GetID(), *mozABNameList[mozABIndex]);
+            // Lastly, update the AB with new category index and mod time.
+            retval = sync->m_dbPC->UpdatePCABSyncInfo(success ? cat.GetIndex() : -1, *mozABNameList[mozABIndex]);
         }
         else if (!mozABSeen[mozABIndex] && !neverDidPalmSyncBefore)
         {
           // We should not delete personal and collected address books here. Rather,
           // reset the mod time so next time we can sync them back to Palm again.
-          if (mozABUrlList[mozABIndex]->CompareNoCase(PERSONAL_ADDRBOOK_URL) &&
+          // Note: make sure the moz addrbook has been synced before to avoid the case
+          // where early sync failed and we delete this un-synced addrbook by mistake.
+          if (mozCatIndexList[mozABIndex] > -1 &&
+              mozABUrlList[mozABIndex]->CompareNoCase(PERSONAL_ADDRBOOK_URL) &&
               mozABUrlList[mozABIndex]->CompareNoCase(COLLECTED_ADDRBOOK_URL))
           {
-              CONDUIT_LOG3(gFD, "Moz AB[%d] category id = %d, name = '%s' is removed on Palm and needs to be removed from moz\n", 
-                    mozABIndex, mozCatIDList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
+            CONDUIT_LOG3(gFD, "\nMoz AB[%d] category index = %d, name = '%s' is removed on Palm and needs to be removed from moz\n", 
+                    mozABIndex, mozCatIndexList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
             CONDUIT_LOG0(gFD, "  Deleting AB from moz ... ");
-            retval = sync->m_dbPC->DeletePCAB(mozCatIDList[mozABIndex], *mozABNameList[mozABIndex], *mozABUrlList[mozABIndex]);
+            retval = sync->m_dbPC->DeletePCAB(mozCatIndexList[mozABIndex], *mozABNameList[mozABIndex], *mozABUrlList[mozABIndex]);
             CONDUIT_LOG1(gFD, "Done deleting AB from moz. retval=%d.\n", retval);
           }
           else
           {
-              CONDUIT_LOG3(gFD, "Moz AB[%d] category id = %d, name = '%s', is removed on Palm but only need to update sync info on moz\n", 
-                    mozABIndex, mozCatIDList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
-            // Reset category id and mod time.
-            CONDUIT_LOG0(gFD, "  Updating AB info on moz ... ");
+            CONDUIT_LOG3(gFD, "\nMoz AB[%d] category index = %d, name = '%s', is removed on Palm but only need to reset sync info on moz\n", 
+                    mozABIndex, mozCatIndexList[mozABIndex], mozABNameList[mozABIndex]->GetBuffer(0));
+            // Reset category index and mod time.
+            CONDUIT_LOG0(gFD, "  Resetting AB info on moz ... ");
             retval = sync->m_dbPC->UpdatePCABSyncInfo(-1, *mozABNameList[mozABIndex]);
-            CONDUIT_LOG1(gFD, "  Done updating AB info on moz. retval=%d.\n", retval);
+            CONDUIT_LOG1(gFD, "  Done resetting AB info on moz. retval=%d.\n", retval);
           }
         }
     } // end of mozAB not existing in Palm for loop

@@ -125,33 +125,33 @@ interface IPalmSync : IUnknown
     // Get the list of Address Books for the currently logged in user profile
     HRESULT nsGetABList([in] BOOL aIsUnicode, [out] short * aABListCount,
 						[out, size_is(, *aABListCount)] lpnsMozABDesc * aABList,
-						[out, size_is(, *aABListCount)] long ** aABCatIDList,
+						[out, size_is(, *aABListCount)] long ** aABCatIndexList,
 						[out, size_is(, *aABListCount)] BOOL ** aFirstTimeSyncList);
 
-    // Synchronize the Address Book represented by the aCategoryId and the corresponding aABName in Mozilla
+    // Synchronize the Address Book represented by the aCategoryIndex and the corresponding aABName in Mozilla
     // this will take care of ABs existing on both ends.
-    HRESULT nsSynchronizeAB([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName,
+    HRESULT nsSynchronizeAB([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] long aCategoryId, [in] LPTSTR aABName,
                         [in] int aModRemoteRecCount, [in, size_is(aModRemoteRecCount)] lpnsABCOMCardStruct aModRemoteRecList,
                         [out] int * aModMozRecCount, [out, size_is(, *aModMozRecCount)] lpnsABCOMCardStruct * aModMozRecList);
 
-    // All records from a AB represented by aCategoryId and aABName into a new Mozilla AB
-    HRESULT nsAddAllABRecords([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName,
+    // All records from a AB represented by aCategoryIndex and aABName into a new Mozilla AB
+    HRESULT nsAddAllABRecords([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] LPTSTR aABName,
 							[in] int aRemoteRecCount, [in, size_is(aRemoteRecCount)] lpnsABCOMCardStruct aRemoteRecList);
 
     // Get All records from a Mozilla AB
-    HRESULT nsGetAllABCards([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName,
+    HRESULT nsGetAllABCards([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] LPTSTR aABName,
                         [out] int * aMozRecCount, [out, size_is(, *aMozRecCount)] lpnsABCOMCardStruct * aMozRecList);
 
     // Send an ack for done and update the palm rec id for new records added
-    HRESULT nsAckSyncDone([in] BOOL aIsSuccess, [in] int aCatID, [in] int aNewRecCount, [in, size_is(aNewRecCount)] unsigned long * aNewPalmRecIDList);
+    HRESULT nsAckSyncDone([in] BOOL aIsSuccess, [in] long aCatIndex, [in] int aNewRecCount, [in, size_is(aNewRecCount)] unsigned long * aNewPalmRecIDList);
 
     // Update the Address Book's category id and mod time.
-    HRESULT nsUpdateABSyncInfo([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName);
+    HRESULT nsUpdateABSyncInfo([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] LPTSTR aABName);
 
     // Delete an addressbook
-    HRESULT nsDeleteAB([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
+    HRESULT nsDeleteAB([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
 
     // Rename an addressbook
-    HRESULT nsRenameAB([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
+    HRESULT nsRenameAB([in] BOOL aIsUnicode, [in] long aCategoryIndex, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
 };
 

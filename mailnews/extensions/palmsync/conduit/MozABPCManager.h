@@ -51,30 +51,30 @@ public:
     ~MozABPCManager() { }
 
 	// this will return the list of ABs in Mozilla and if they were synced before
-    long GetPCABList(DWORD * pCategoryCount, DWORD ** pCategoryIdList, 
+    long GetPCABList(DWORD * pCategoryCount, LONG ** pCategoryIndexList, 
                         CPString *** pCategoryNameList, CPString *** pCategoryURLList, BOOL ** pIsFirstTimeSyncList);
 	// this will update a Mozilla AB with updated Palm records and 
 	// return updated records in a Mozilla AB after the last sync
     // this will take care of first time sync also in which case 
     // updatedPalmRecList is the list of all palm records and 
     // updatedPCRecList is the list of unique Moz AB cards / records.
-	long SynchronizePCAB(DWORD categoryId, CPString & categoryName,
+	long SynchronizePCAB(LONG categoryIndex, LONG categoryId, CPString & categoryName,
 						DWORD updatedPalmRecCount, CPalmRecord ** updatedPalmRecList,
 						DWORD * pUpdatedPCRecList, CPalmRecord *** updatedPCRecList);
 	// this will add all records in a Palm category into a new Mozilla AB 
-	long AddRecords(DWORD categoryId, CPString & categoryName,
+	long AddRecords(LONG categoryIndex, CPString & categoryName,
 						DWORD updatedPalmRecCount, CPalmRecord ** updatedPalmRecList);
     // this load all records in an Moz AB
 	long LoadAllRecords(CPString & ABName, DWORD * pPCRecListCount, CPalmRecord *** pPCRecList);
 
-  long NotifySyncDone(BOOL success, DWORD catID=-1, DWORD newRecCount=0, DWORD * newRecIDList=NULL);
+  long NotifySyncDone(BOOL success, LONG catIndex=-1, DWORD newRecCount=0, DWORD * newRecIDList=NULL);
 
   // Update/Reset category id and mod time in an Moz AB
-  long UpdatePCABSyncInfo(DWORD categoryId, CPString & categoryName);
+  long UpdatePCABSyncInfo(LONG categoryIndex, CPString & categoryName);
   // Delete an Moz AB
-  long DeletePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl);
+  long DeletePCAB(LONG categoryIndex, CPString & categoryName, CPString & categoryUrl);
   // Rename an Moz AB
-  long RenamePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl);
+  long RenamePCAB(LONG categoryIndex, CPString & categoryName, CPString & categoryUrl);
 
 private:
   	// this will initiate the communication with Mozilla

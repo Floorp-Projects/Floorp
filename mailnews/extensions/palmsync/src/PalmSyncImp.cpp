@@ -110,9 +110,9 @@ STDMETHODIMP CPalmSyncImp::IsValid()
 
 // Get the list of Address Books for the currently logged in user profile
 STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
-                        lpnsMozABDesc * aABList, long ** aABCatIDList, BOOL ** aFirstTimeSyncList)
+                        lpnsMozABDesc * aABList, long ** aABCatIndexList, BOOL ** aFirstTimeSyncList)
 {
-  if (!aABListCount || !aABList || !aABCatIDList ||!aFirstTimeSyncList)
+  if (!aABListCount || !aABList || !aABCatIndexList ||!aFirstTimeSyncList)
         return E_FAIL;
   *aABListCount = 0;
 
@@ -144,12 +144,12 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
 
     lpnsMozABDesc serverDescList = (lpnsMozABDesc) CoTaskMemAlloc(sizeof(nsMozABDesc) * count);
     BOOL *firstTimeSyncList = (BOOL *) CoTaskMemAlloc(sizeof(BOOL) * count);
-    long *catIDList = (long *) CoTaskMemAlloc(sizeof(long) * count);
+    long *catIndexList = (long *) CoTaskMemAlloc(sizeof(long) * count);
 
     *aABListCount = count;
     *aABList = serverDescList;
     *aFirstTimeSyncList = firstTimeSyncList;
-    *aABCatIDList = catIDList;
+    *aABCatIndexList = catIndexList;
 
     // For each valid addrbook collect info.
     nsCOMPtr<nsISupports> item;
@@ -170,7 +170,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             nsXPIDLCString fileName, uri;
             nsAutoString description;
             PRUint32 dirType, palmSyncTimeStamp;
-            PRInt32 palmCategoryId;
+            PRInt32 palmCategoryIndex;
 
             rv = properties->GetDescription(description);
             if(NS_FAILED(rv)) return E_FAIL;
@@ -182,7 +182,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             if(NS_FAILED(rv)) return E_FAIL;
             rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
             if(NS_FAILED(rv)) return E_FAIL;
-            rv = properties->GetCategoryId(&palmCategoryId);
+            rv = properties->GetCategoryId(&palmCategoryIndex);
             if(NS_FAILED(rv)) return E_FAIL;
 
             // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
@@ -219,8 +219,8 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             *firstTimeSyncList = (palmSyncTimeStamp <= 0);
             firstTimeSyncList++;
 
-            *catIDList = palmCategoryId;
-            catIDList++;
+            *catIndexList = palmCategoryIndex;
+            catIndexList++;
           }
         }
       } while (NS_SUCCEEDED(subDirectories->Next()));
@@ -228,7 +228,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
       // assign member variables to the beginning of the list
       serverDescList = *aABList;
       firstTimeSyncList = *aFirstTimeSyncList;
-      catIDList = *aABCatIDList;
+      catIndexList = *aABCatIndexList;
 
       if(NS_FAILED(rv))
         return E_FAIL;
@@ -237,8 +237,9 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
     return S_OK;
 }
 
-// Synchronize the Address Book represented by the aCategoryId and/or corresponding aABName in Mozilla
-STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
+// Synchronize the Address Book represented by the aCategoryIndex and/or corresponding aABName in Mozilla
+STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, long aCategoryIndex,
+                    long aCategoryId, LPTSTR aABName,
                     int aModRemoteRecCount, lpnsABCOMCardStruct aModRemoteRecList,
                     int * aModMozRecCount, lpnsABCOMCardStruct * aModMozRecList)
 {
@@ -246,7 +247,7 @@ STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, unsigned long aCateg
     if(m_PalmHotSync)
         return E_FAIL;
 
-    m_PalmHotSync = (nsAbPalmHotSync *) new nsAbPalmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+    m_PalmHotSync = (nsAbPalmHotSync *) new nsAbPalmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryIndex, aCategoryId);
     if(!m_PalmHotSync)
         return E_FAIL;
 
@@ -260,13 +261,13 @@ STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, unsigned long aCateg
     return S_OK;
 }
 
-// All records from a AB represented by aCategoryId and aABName into a new Mozilla AB
-STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
+// All records from a AB represented by aCategoryIndex and aABName into a new Mozilla AB
+STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
                             int aRemoteRecCount, lpnsABCOMCardStruct aRemoteRecList)
 {
     // since we are not returning any data we donot need to keep the nsAbPalmHotSync reference
     // in order to free the returned data in its destructor. Just create a local nsAbPalmHotSync var.
-    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
+    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryIndex, -1);
 
     nsresult rv = palmHotSync.AddAllRecordsInNewAB(aRemoteRecCount, aRemoteRecList);
 
@@ -277,14 +278,14 @@ STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, unsigned long aCat
 }
 
 // Get All records from a Mozilla AB
-STDMETHODIMP CPalmSyncImp::nsGetAllABCards(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
+STDMETHODIMP CPalmSyncImp::nsGetAllABCards(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
                             int * aMozRecCount, lpnsABCOMCardStruct * aMozRecList)
 {
     // if sync is already going on wait for AckSyncDone to be called
     if(m_PalmHotSync)
         return E_FAIL;
 
-    m_PalmHotSync = (nsAbPalmHotSync *) new nsAbPalmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+    m_PalmHotSync = (nsAbPalmHotSync *) new nsAbPalmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryIndex, -1);
     if(!m_PalmHotSync)
         return E_FAIL;
 
@@ -300,12 +301,12 @@ STDMETHODIMP CPalmSyncImp::nsGetAllABCards(BOOL aIsUnicode, unsigned long aCateg
 
 // Send an ack for sync done on the remote AB to Mozilla, 
 // now we delete the data returned to the calling app.
-STDMETHODIMP CPalmSyncImp::nsAckSyncDone(BOOL aIsSuccess, int aCatID, int aNewRecCount, unsigned long * aNewPalmRecIDList)
+STDMETHODIMP CPalmSyncImp::nsAckSyncDone(BOOL aIsSuccess, long aCatIndex, int aNewRecCount, unsigned long * aNewPalmRecIDList)
 {
     nsAbPalmHotSync * tempPalmHotSync = (nsAbPalmHotSync *) m_PalmHotSync;
     if(tempPalmHotSync) {
-        if(aNewRecCount && (aCatID > -1))
-            tempPalmHotSync->Done(aIsSuccess, aCatID, aNewRecCount, aNewPalmRecIDList);
+        if(aNewRecCount && (aCatIndex > -1))
+            tempPalmHotSync->Done(aIsSuccess, aCatIndex, aNewRecCount, aNewPalmRecIDList);
         delete tempPalmHotSync;
     }
     m_PalmHotSync = nsnull;
@@ -314,18 +315,18 @@ STDMETHODIMP CPalmSyncImp::nsAckSyncDone(BOOL aIsSuccess, int aCatID, int aNewRe
 }
 
 // Update the category id and mod tiem for the Address Book in Mozilla
-STDMETHODIMP CPalmSyncImp::nsUpdateABSyncInfo(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName)
+STDMETHODIMP CPalmSyncImp::nsUpdateABSyncInfo(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName)
 {
   nsresult rv;
   if(m_PalmHotSync)
-    rv = ((nsAbPalmHotSync *)m_PalmHotSync)->UpdateSyncInfo(aCategoryId);
+    rv = ((nsAbPalmHotSync *)m_PalmHotSync)->UpdateSyncInfo(aCategoryIndex);
   else
   {
     // Launch another ABpalmHotSync session.
-    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
+    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryIndex, -1);
     rv = palmHotSync.Initialize();
     if (NS_SUCCEEDED(rv))
-      rv = palmHotSync.UpdateSyncInfo(aCategoryId);
+      rv = palmHotSync.UpdateSyncInfo(aCategoryIndex);
   }
 
   if (NS_FAILED(rv))
@@ -335,13 +336,13 @@ STDMETHODIMP CPalmSyncImp::nsUpdateABSyncInfo(BOOL aIsUnicode, unsigned long aCa
 }
 
 // Delete an Address Book in Mozilla
-STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl)
+STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl)
 {
   // This is an independent operation so use a local nsAbPalmHotSync var
   // (ie the callers don't need to call AckSyncdone after this is done).
-  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
+  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryIndex, -1);
 
-  nsresult rv = palmHotSync.DeleteAB(aCategoryId, (const char*)aABUrl);
+  nsresult rv = palmHotSync.DeleteAB(aCategoryIndex, (const char*)aABUrl);
 
   if (NS_FAILED(rv))
       return E_FAIL;
@@ -350,13 +351,13 @@ STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId
 }
 
 // Rename an Address Book in Mozilla
-STDMETHODIMP CPalmSyncImp::nsRenameAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl)
+STDMETHODIMP CPalmSyncImp::nsRenameAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl)
 {
   // This is an independent operation so use a local nsAbPalmHotSync var
   // (ie the callers don't need to call AckSyncdone after this is done).
-  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryId);
+  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryIndex, -1);
 
-  nsresult rv = palmHotSync.RenameAB(aCategoryId, (const char*)aABUrl);
+  nsresult rv = palmHotSync.RenameAB(aCategoryIndex, (const char*)aABUrl);
 
   if (NS_FAILED(rv))
     return E_FAIL;

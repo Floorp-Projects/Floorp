@@ -51,7 +51,7 @@ class nsAbPalmHotSync
 public:
 
     // this class will do HotSync for a specific AB
-    nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, const char * aAbDesc, PRInt32 aPalmCatID);
+    nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, const char * aAbDesc, PRInt32 aPalmCatIndex, PRInt32 aPalmCatId);
     ~nsAbPalmHotSync();
 
     // initialize the object, info for AB for the object, etc
@@ -73,16 +73,16 @@ public:
     nsresult AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStruct aPalmRecords);
 
     // this will be called when an AckSyncDone is recieved from the Conduit
-    nsresult Done(PRBool aSuccess, PRInt32 aPalmCatID, PRUint32 aPalmRecIDListCount = 0, unsigned long * aPalmRecordIDList = nsnull);
+    nsresult Done(PRBool aSuccess, PRInt32 aPalmCatIndex, PRUint32 aPalmRecIDListCount = 0, unsigned long * aPalmRecordIDList = nsnull);
 
     // this will upate AB with new category id and mod time.
-    nsresult UpdateSyncInfo(unsigned long aCategoryId);
+    nsresult UpdateSyncInfo(long aCategoryIndex);
 
     // this will delete an AB
-    nsresult DeleteAB(unsigned long aCategoryId, const char * aABUrl);
+    nsresult DeleteAB(long aCategoryIndex, const char * aABUrl);
 
     // this will rename an AB
-    nsresult RenameAB(unsigned long aCategoryId, const char * aABUrl);
+    nsresult RenameAB(long aCategoryIndex, const char * aABUrl);
 
 protected:
 
@@ -96,6 +96,7 @@ protected:
     // pref for the AB DB
     nsString     mAbName;
     PRInt32      mPalmCategoryId;
+    PRInt32      mPalmCategoryIndex;
     nsCString    mFileName;
     nsCString    mUri;
     nsString     mDescription;

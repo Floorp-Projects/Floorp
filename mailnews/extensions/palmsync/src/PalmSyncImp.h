@@ -67,27 +67,27 @@ public :
 
     // Get the list of Address Books for the currently logged in user profile
     STDMETHODIMP nsGetABList(BOOL aIsUnicode, short * aABListCount,
-                            lpnsMozABDesc * aABList, long ** aABCatIDList, BOOL ** aFirstTimeSyncList);
+                            lpnsMozABDesc * aABList, long ** aABCatIndexList, BOOL ** aFirstTimeSyncList);
 
-    // Synchronize the Address Book represented by the aCategoryId and/or corresponding aABName in Mozilla
-    STDMETHODIMP nsSynchronizeAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
+    // Synchronize the Address Book represented by the aCategoryIndex and/or corresponding aABName in Mozilla
+    STDMETHODIMP nsSynchronizeAB(BOOL aIsUnicode, long aCategoryIndex, long aCategoryId, LPTSTR aABName,
                         int aModRemoteRecCount, lpnsABCOMCardStruct aModRemoteRecList,
                         int * aModMozRecCount, lpnsABCOMCardStruct * aModMozRecList);
 
-    STDMETHODIMP nsAddAllABRecords(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
+    STDMETHODIMP nsAddAllABRecords(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
                             int aRemoteRecCount, lpnsABCOMCardStruct aRemoteRecList);
 
 
-    STDMETHODIMP nsGetAllABCards(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName,
+    STDMETHODIMP nsGetAllABCards(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
                             int * aMozRecCount, lpnsABCOMCardStruct * aMozRecList);
 
-    STDMETHODIMP nsAckSyncDone(BOOL aIsSuccess, int aCatID, int aNewRecCount, unsigned long * aNewPalmRecIDList);
+    STDMETHODIMP nsAckSyncDone(BOOL aIsSuccess, long aCatIndex, int aNewRecCount, unsigned long * aNewPalmRecIDList);
 
-    STDMETHODIMP nsUpdateABSyncInfo(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName);
+    STDMETHODIMP nsUpdateABSyncInfo(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName);
 
-    STDMETHODIMP nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl);
+    STDMETHODIMP nsDeleteAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl);
  
-    STDMETHODIMP nsRenameAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl);
+    STDMETHODIMP nsRenameAB(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName, LPTSTR aABUrl);
  
 private :
     PRInt32 m_cRef;

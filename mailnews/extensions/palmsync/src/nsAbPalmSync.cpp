@@ -115,7 +115,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
    }
 #endif
 
-nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, const char * aAbDesc, PRInt32 aPalmCatID)
+nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, const char * aAbDesc, PRInt32 aPalmCatIndex, PRInt32 aPalmCatId)
 {
     mTotalCardCount=0;
 
@@ -131,7 +131,8 @@ nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, 
         mAbName = NS_ConvertASCIItoUCS2(aAbDesc);
     mAbName.Trim(" ");
 
-    mPalmCategoryId = aPalmCatID;
+    mPalmCategoryIndex = aPalmCatIndex;
+    mPalmCategoryId    = aPalmCatId;
 
     mIsPalmDataUnicode = aIsUnicode;
 
@@ -180,7 +181,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
   nsXPIDLCString fileName, uri;
   nsAutoString description;
   PRUint32 dirType, palmSyncTimeStamp;
-  PRInt32 palmCategoryId;
+  PRInt32 palmCategoryIndex;
   nsCOMPtr<nsIEnumerator> subDirectories;
   if (NS_FAILED(directory->GetChildNodes(getter_AddRefs(subDirectories))) || !subDirectories)
     return E_FAIL;
@@ -219,7 +220,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
           if(NS_FAILED(rv)) return E_FAIL;
           rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
           if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetCategoryId(&palmCategoryId);
+          rv = properties->GetCategoryId(&palmCategoryIndex);
           if(NS_FAILED(rv)) return E_FAIL;
 
           // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
@@ -229,7 +230,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
             continue;
 
           // if Palm category is already assigned to AB then just check that
-          if((palmCategoryId > -1) && (mPalmCategoryId == palmCategoryId))
+          if((palmCategoryIndex > -1) && (mPalmCategoryIndex == palmCategoryIndex))
             break;
 
           // if Palm category is not already assigned check the AB name
@@ -295,7 +296,7 @@ nsresult nsAbPalmHotSync::AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStru
         mDBOpen = PR_FALSE;
         PRUint32 modTimeInSec;
         nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
-        rv = UpdateABInfo(modTimeInSec, mPalmCategoryId);
+        rv = UpdateABInfo(modTimeInSec, mPalmCategoryIndex);
     }
     else { // get back the previous file
         rv = mABDB->ForceClosed();
@@ -449,7 +450,7 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
             mDBOpen = PR_FALSE;
             PRUint32 modTimeInSec;
             nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
-            rv = UpdateABInfo(modTimeInSec, mPalmCategoryId);
+            rv = UpdateABInfo(modTimeInSec, mPalmCategoryIndex);
         }
         else { // get back the previous file
             rv = mABDB->ForceClosed();
@@ -841,7 +842,7 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
 }
 
 
-nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatID, PRUint32 aPalmRecIDListCount, unsigned long * aPalmRecordIDList)
+nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatIndex, PRUint32 aPalmRecIDListCount, unsigned long * aPalmRecordIDList)
 {
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
@@ -869,7 +870,7 @@ nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatID, PRUint32 aPa
                 mDBOpen = PR_FALSE;
                 PRUint32 modTimeInSec;
                 nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
-                rv = UpdateABInfo(modTimeInSec, aPalmCatID);
+                rv = UpdateABInfo(modTimeInSec, aPalmCatIndex);
             }
         }
         if(NS_FAILED(rv) || !aSuccess) { // get back the previous file
@@ -895,19 +896,19 @@ nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatID, PRUint32 aPa
     return rv;
 }
 
-nsresult nsAbPalmHotSync::UpdateSyncInfo(unsigned long aCategoryId)
+nsresult nsAbPalmHotSync::UpdateSyncInfo(long aCategoryIndex)
 {
-  // aCategoryId = -1 means that callers want to reset the mod time as well. 
+  // aCategoryIndex = -1 means that callers want to reset the mod time as well. 
   mDBOpen = PR_FALSE;
   PRUint32 modTimeInSec;
   nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
-  if (aCategoryId >= 0)
-    return(UpdateABInfo(modTimeInSec, aCategoryId));
+  if (aCategoryIndex >= 0)
+    return(UpdateABInfo(modTimeInSec, aCategoryIndex));
   else
-    return(UpdateABInfo(0, aCategoryId)); // Reset mod time.
+    return(UpdateABInfo(0, aCategoryIndex)); // Reset mod time.
 }
 
-nsresult nsAbPalmHotSync::DeleteAB(unsigned long aCategoryId, const char * aABUrl)
+nsresult nsAbPalmHotSync::DeleteAB(long aCategoryIndex, const char * aABUrl)
 {
   nsresult rv;
   nsCOMPtr<nsISupportsArray> parentArray(do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
@@ -948,7 +949,7 @@ nsresult nsAbPalmHotSync::DeleteAB(unsigned long aCategoryId, const char * aABUr
   return(ab->DeleteAddressBooks(ds, parentArray, selectedArray));
 }
 
-nsresult nsAbPalmHotSync::RenameAB(unsigned long aCategoryId, const char * aABUrl)
+nsresult nsAbPalmHotSync::RenameAB(long aCategoryIndex, const char * aABUrl)
 {
   // Fill in property info and call ModifyAB().
   nsresult rv;
@@ -962,7 +963,7 @@ nsresult nsAbPalmHotSync::RenameAB(unsigned long aCategoryId, const char * aABUr
   NS_ENSURE_SUCCESS(rv,rv);
   rv = properties->SetDirType(kMAPIDirectory); // MAPI dir type for PalmSync
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = properties->SetCategoryId(aCategoryId);
+  rv = properties->SetCategoryId(aCategoryIndex);
   NS_ENSURE_SUCCESS(rv,rv);
   PRUint32 modTimeInSec;
   nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
@@ -986,7 +987,7 @@ nsresult nsAbPalmHotSync::NewAB(const nsString& aAbName)
   return(ab->NewAddressBook(properties));
 }
 
-nsresult nsAbPalmHotSync::UpdateABInfo(PRUint32 aModTime, PRInt32 aCategoryId)
+nsresult nsAbPalmHotSync::UpdateABInfo(PRUint32 aModTime, PRInt32 aCategoryIndex)
 {
   // Fill in perperty info and call ModifyAB().
   nsresult rv;
@@ -1001,7 +1002,7 @@ nsresult nsAbPalmHotSync::UpdateABInfo(PRUint32 aModTime, PRInt32 aCategoryId)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = properties->SetDirType(mDirType);
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = properties->SetCategoryId(aCategoryId);
+  rv = properties->SetCategoryId(aCategoryIndex);
   NS_ENSURE_SUCCESS(rv,rv);
   rv = properties->SetSyncTimeStamp(aModTime);
   NS_ENSURE_SUCCESS(rv,rv);
