@@ -1315,7 +1315,7 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: Display(void)
+NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
@@ -1337,14 +1337,23 @@ NS_IMETHODIMP nsViewManager :: Display(void)
     return NS_ERROR_FAILURE;
   }
 
-  mRootView->GetBounds(trect);
+  aView->GetBounds(trect);
+  nscoord x = trect.x, y = trect.y;
+
+  // XXX Temporarily reset the position to (0, 0), that way when we paint
+  // we won't end up translating incorrectly
+  aView->SetPosition(0, 0);
 
   PRBool  result;
 
+  trect.x = trect.y = 0;
   localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
   // Paint the view. The clipping rect was set above set don't clip again.
-  mRootView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+  aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+
+  // XXX Reset the view's origin
+  aView->SetPosition(x, y);
 
   NS_RELEASE(localcx);
 
