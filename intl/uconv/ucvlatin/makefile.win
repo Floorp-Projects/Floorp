@@ -36,16 +36,31 @@ CPPSRCS =				\
 	nsISO88597ToUnicode.cpp		\
 	nsISO88598ToUnicode.cpp		\
 	nsISO88599ToUnicode.cpp		\
+	nsISO885914ToUnicode.cpp	\
+	nsISO885915ToUnicode.cpp	\
 	nsCP1250ToUnicode.cpp		\
 	nsCP1251ToUnicode.cpp		\
 	nsCP1252ToUnicode.cpp		\
 	nsCP1253ToUnicode.cpp		\
 	nsCP1254ToUnicode.cpp		\
 	nsCP1257ToUnicode.cpp		\
+	nsCP1258ToUnicode.cpp		\
+	nsCP874ToUnicode.cpp		\
+	nsKOI8UToUnicode.cpp		\
+	nsKOI8RToUnicode.cpp		\
 	nsMacRomanToUnicode.cpp		\
 	nsMacCEToUnicode.cpp		\
 	nsMacGreekToUnicode.cpp		\
 	nsMacTurkishToUnicode.cpp	\
+	nsMacCroatianToUnicode.cpp	\
+	nsMacRomanianToUnicode.cpp	\
+	nsMacCyrillicToUnicode.cpp	\
+	nsMacUkrainianToUnicode.cpp	\
+	nsMacIcelandicToUnicode.cpp	\
+	nsARMSCII8ToUnicode.cpp		\
+	nsTCVN5712ToUnicode.cpp		\
+	nsVISCIIToUnicode.cpp		\
+	nsVPSToUnicode.cpp		\
 	nsUTF8ToUnicode.cpp		\
 	nsUnicodeToISO88591.cpp		\
 	nsUnicodeToISO88592.cpp		\
@@ -56,17 +71,30 @@ CPPSRCS =				\
 	nsUnicodeToISO88597.cpp		\
 	nsUnicodeToISO88598.cpp		\
 	nsUnicodeToISO88599.cpp		\
+	nsUnicodeToISO885914.cpp	\
+	nsUnicodeToISO885915.cpp	\
 	nsUnicodeToCP1250.cpp		\
 	nsUnicodeToCP1251.cpp		\
 	nsUnicodeToCP1252.cpp		\
 	nsUnicodeToCP1253.cpp		\
 	nsUnicodeToCP1254.cpp		\
 	nsUnicodeToCP1257.cpp		\
+	nsUnicodeToCP1258.cpp		\
+	nsUnicodeToCP874.cpp		\
 	nsUnicodeToMacRoman.cpp		\
 	nsUnicodeToMacCE.cpp		\
 	nsUnicodeToMacGreek.cpp		\
 	nsUnicodeToMacTurkish.cpp	\
+	nsUnicodeToMacCroatian.cpp	\
+	nsUnicodeToMacRomanian.cpp	\
+	nsUnicodeToMacCyrillic.cpp	\
+	nsUnicodeToMacUkrainian.cpp	\
+	nsUnicodeToMacIcelandic.cpp	\
 	nsUnicodeToUTF8.cpp		\
+	nsUnicodeToARMSCII8.cpp		\
+	nsUnicodeToTCVN5712.cpp		\
+	nsUnicodeToVISCII.cpp		\
+	nsUnicodeToVPS.cpp		\
 	ns1ByteToUnicodeBase.cpp	\
 	nsUCvLatinSupport.cpp		\
 	nsUCvLatinDll.cpp		\
@@ -82,17 +110,30 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsISO88597ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88598ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88599ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO885914ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO885915ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1250ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1251ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1252ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1253ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1254ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1257ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP1258ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP874ToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacRomanToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacCEToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacGreekToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacTurkishToUnicode.obj 		\
 	.\$(OBJDIR)\nsUTF8ToUnicode.obj 		\
+	.\$(OBJDIR)\nsMacCroatianToUnicode.obj		\
+	.\$(OBJDIR)\nsMacRomanianToUnicode.obj		\
+	.\$(OBJDIR)\nsMacCyrillicToUnicode.obj		\
+	.\$(OBJDIR)\nsMacUkrainianToUnicode.obj		\
+	.\$(OBJDIR)\nsMacIcelandicToUnicode.obj		\
+	.\$(OBJDIR)\nsARMSCII8ToUnicode.obj		\
+	.\$(OBJDIR)\nsTCVN5712ToUnicode.obj		\
+	.\$(OBJDIR)\nsVISCIIToUnicode.obj		\
+	.\$(OBJDIR)\nsVPSToUnicode.obj			\
 	.\$(OBJDIR)\nsUnicodeToISO88591.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88592.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88593.obj		\
@@ -102,17 +143,30 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToISO88597.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88598.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88599.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO885914.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO885915.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1250.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1251.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1252.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1253.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1254.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1257.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP1258.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP874.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacRoman.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacCE.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacGreek.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacTurkish.obj		\
 	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
+	.\$(OBJDIR)\nsUnicodeToMacCroatian.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacRomanian.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacCyrillic.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacUkrainian.obj		\
+	.\$(OBJDIR)\nsUnicodeToMacIcelandic.obj		\
+	.\$(OBJDIR)\nsUnicodeToARMSCII8.obj		\
+	.\$(OBJDIR)\nsUnicodeToTCVN5712.obj		\
+	.\$(OBJDIR)\nsUnicodeToVISCII.obj		\
+	.\$(OBJDIR)\nsUnicodeToVPS.obj			\
 	.\$(OBJDIR)\ns1ByteToUnicodeBase.obj 		\
 	.\$(OBJDIR)\nsUCvLatinSupport.obj		\
 	.\$(OBJDIR)\nsUCvLatinDll.obj 			\
