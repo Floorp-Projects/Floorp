@@ -147,7 +147,7 @@ Rights Reserved.
 			  accesskey="&contextReplyNewsgroup.accesskey;"
 			  oncommand="MsgReplyMessage(event);"/>
 		<menuitem id="messagePaneContext-replyAll"
-			  value="?&contextReplyAll.label;"
+			  value="&contextReplyAll.label;"
 			  accesskey="&contextReplyAll.accesskey;"
 			  oncommand="MsgReplyToAllMessage(event);"/>
 		<menuitem id="messagePaneContext-forward"
