@@ -23,10 +23,12 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="pref-navigator"
       onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');"
       headertitle="&lHeader;">
 
@@ -81,7 +83,7 @@
   <!-- toolbar buttons customization -->
   <groupbox flex="1" id="prefShowButtons" orient="horizontal">
     <caption label="&toolbarIntro.label;"/>
-    <vbox>
+    <vbox id="prefShowButtonsBox1">
 
               <checkbox id="bookmarksButton"
                         label="&bookmarksButton.label;"
