@@ -74,22 +74,27 @@ class nsACString;
  *
  *   NS_METHOD GetBlah(nsAString &aBlah);
  *
- *   void MyCode()
+ *   nsresult MyCode()
  *   {
+ *     nsresult rv;
+ *
  *     nsStringContainer sc;
- *     if (NS_StringContainerInit(sc))
+ *     rv = NS_StringContainerInit(sc);
+ *     if (NS_FAILED(rv))
+ *       return rv;
+ *
+ *     rv = GetBlah(sc);
+ *     if (NS_SUCCEEDED(rv))
  *     {
- *       nsresult rv = GetBlah(sc);
- *       if (NS_SUCCEEDED(rv))
- *       {
- *         const PRUnichar *data;
- *         NS_StringGetData(sc, &data);
- *         //
- *         // |data| now points to the result of the GetBlah function
- *         //
- *       }
- *       NS_StringContainerFinish(sc);
+ *       const PRUnichar *data;
+ *       NS_StringGetData(sc, &data);
+ *       //
+ *       // |data| now points to the result of the GetBlah function
+ *       //
  *     }
+ *
+ *     NS_StringContainerFinish(sc);
+ *     return rv;
  *   }
  *
  * The following example show how to use a string container to pass a string
@@ -97,18 +102,22 @@ class nsACString;
  *
  *   NS_METHOD SetBlah(const nsAString &aBlah);
  *
- *   void MyCode()
+ *   nsresult MyCode()
  *   {
+ *     nsresult rv;
+ *
  *     nsStringContainer sc;
- *     if (NS_StringContainerInit(sc))
- *     {
- *       const PRUnichar kData[] = {'x','y','z','\0'};
- *       NS_StringSetData(sc, kData, sizeof(kData)/2 - 1);
+ *     rv = NS_StringContainerInit(sc);
+ *     if (NS_FAILED(rv))
+ *       return rv;
  *
- *       SetBlah(sc);
+ *     const PRUnichar kData[] = {'x','y','z','\0'};
+ *     rv = NS_StringSetData(sc, kData, sizeof(kData)/2 - 1);
+ *     if (NS_SUCCEEDED(rv))
+ *       rv = SetBlah(sc);
  *
- *       NS_StringContainerFinish(sc);
- *     }
+ *     NS_StringContainerFinish(sc);
+ *     return rv;
  *   }
  */
 class nsStringContainer;
@@ -117,12 +126,14 @@ class nsStringContainer;
  * NS_StringContainerInit
  *
  * @param aContainer    string container reference
- * @return              true if string container successfully initialized
+ * @return              NS_OK if string container successfully initialized
  *
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_StringContainerFinish should be called.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(PRBool)
+NS_STRINGAPI(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer);
 
 /**
@@ -131,6 +142,8 @@ NS_StringContainerInit(nsStringContainer &aContainer);
  * @param aContainer    string container reference
  *
  * This function frees any memory owned by aContainer.
+ * 
+ * @status FROZEN
  */
 NS_STRINGAPI(void)
 NS_StringContainerFinish(nsStringContainer &aContainer);
@@ -151,6 +164,8 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
  *                      whether or not aStr's internal buffer is null-
  *                      terminated
  * @return              length of aStr's internal buffer
+ * 
+ * @status FROZEN
  */
 NS_STRINGAPI(PRUint32)
 NS_StringGetData
@@ -167,13 +182,16 @@ NS_StringGetData
  * @param aDataLength   number of characters to copy from source string (pass
  *                      PR_UINT32_MAX to copy until end of aData, designated by
  *                      a null character)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
  * from aData.  The behavior depends on the implementation of the abstract 
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_StringSetData
   (nsAString &aStr, const PRUnichar *aData,
    PRUint32 aDataLength = PR_UINT32_MAX);
@@ -197,13 +215,16 @@ NS_StringSetData
  * @param aDataLength   number of characters to copy from source string (pass
  *                      PR_UINT32_MAX to copy until end of aData, designated by
  *                      a null character)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
  * from aData.  The behavior depends on the implementation of the abstract 
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_StringSetDataRange
   (nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength,
    const PRUnichar *aData, PRUint32 aDataLength = PR_UINT32_MAX);
@@ -216,13 +237,16 @@ NS_StringSetDataRange
  *
  * @param aDestStr      abstract string reference to be modified
  * @param aSrcStr       abstract string reference containing source string
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aDestStr after copying
  * data from aSrcStr.  The behavior depends on the implementation of the
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_StringCopy
   (nsAString &aDestStr, const nsAString &aSrcStr);
 
@@ -235,17 +259,18 @@ NS_StringCopy
  * @param aData         character buffer
  * @param aDataLength   number of characters to append (pass PR_UINT32_MAX to
  *                      append until a null-character is encountered)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr upon completion.
  * The behavior depends on the implementation of the abstract string, aStr.
  * If aStr is a reference to a nsStringContainer, then its data will be null-
  * terminated by this function.
  */
-inline void
+inline NS_HIDDEN_(nsresult)
 NS_StringAppendData(nsAString &aStr, const PRUnichar *aData,
                     PRUint32 aDataLength = PR_UINT32_MAX)
 {
-  NS_StringSetDataRange(aStr, PR_UINT32_MAX, 0, aData, aDataLength);
+  return NS_StringSetDataRange(aStr, PR_UINT32_MAX, 0, aData, aDataLength);
 }
 
 /**
@@ -259,17 +284,18 @@ NS_StringAppendData(nsAString &aStr, const PRUnichar *aData,
  * @param aData         character buffer
  * @param aDataLength   number of characters to append (pass PR_UINT32_MAX to
  *                      append until a null-character is encountered)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr upon completion.
  * The behavior depends on the implementation of the abstract string, aStr.
  * If aStr is a reference to a nsStringContainer, then its data will be null-
  * terminated by this function.
  */
-inline void
+inline NS_HIDDEN_(nsresult)
 NS_StringInsertData(nsAString &aStr, PRUint32 aOffset, const PRUnichar *aData,
                     PRUint32 aDataLength = PR_UINT32_MAX)
 {
-  NS_StringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
+  return NS_StringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
 }
       
 /**
@@ -281,11 +307,12 @@ NS_StringInsertData(nsAString &aStr, PRUint32 aOffset, const PRUnichar *aData,
  * @param aStr          abstract string reference to be modified
  * @param aCutOffset    specifies where in the string to insert aData
  * @param aCutLength    number of characters to remove
+ * @return              NS_OK if function succeeded
  */
-inline void
+inline NS_HIDDEN_(nsresult)
 NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 {
-  NS_StringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
+  return NS_StringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -308,12 +335,14 @@ class nsCStringContainer;
  * NS_CStringContainerInit
  *
  * @param aContainer    string container reference
- * @return              true if string container successfully initialized
+ * @return              NS_OK if string container successfully initialized
  *
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_CStringContainerFinish should be called.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(PRBool)
+NS_STRINGAPI(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer);
 
 /**
@@ -322,6 +351,8 @@ NS_CStringContainerInit(nsCStringContainer &aContainer);
  * @param aContainer    string container reference
  *
  * This function frees any memory owned by aContainer.
+ * 
+ * @status FROZEN
  */
 NS_STRINGAPI(void)
 NS_CStringContainerFinish(nsCStringContainer &aContainer);
@@ -342,6 +373,8 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
  *                      whether or not aStr's internal buffer is null-
  *                      terminated
  * @return              length of aStr's internal buffer
+ * 
+ * @status FROZEN
  */
 NS_STRINGAPI(PRUint32)
 NS_CStringGetData
@@ -358,13 +391,16 @@ NS_CStringGetData
  * @param aDataLength   number of characters to copy from source string (pass
  *                      PR_UINT32_MAX to copy until end of aData, designated by
  *                      a null character)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
  * from aData.  The behavior depends on the implementation of the abstract 
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_CStringSetData
   (nsACString &aStr, const char *aData,
    PRUint32 aDataLength = PR_UINT32_MAX);
@@ -388,13 +424,16 @@ NS_CStringSetData
  * @param aDataLength   number of characters to copy from source string (pass
  *                      PR_UINT32_MAX to copy until end of aData, designated by
  *                      a null character)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
  * from aData.  The behavior depends on the implementation of the abstract 
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_CStringSetDataRange
   (nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength,
    const char *aData, PRUint32 aDataLength = PR_UINT32_MAX);
@@ -407,13 +446,16 @@ NS_CStringSetDataRange
  *
  * @param aDestStr      abstract string reference to be modified
  * @param aSrcStr       abstract string reference containing source string
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aDestStr after copying
  * data from aSrcStr.  The behavior depends on the implementation of the
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
+ * 
+ * @status FROZEN
  */
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_CStringCopy
   (nsACString &aDestStr, const nsACString &aSrcStr);
 
@@ -426,17 +468,18 @@ NS_CStringCopy
  * @param aData         character buffer
  * @param aDataLength   number of characters to append (pass PR_UINT32_MAX to
  *                      append until a null-character is encountered)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr upon completion.
  * The behavior depends on the implementation of the abstract string, aStr.
  * If aStr is a reference to a nsStringContainer, then its data will be null-
  * terminated by this function.
  */
-inline void
+inline NS_HIDDEN_(nsresult)
 NS_CStringAppendData(nsACString &aStr, const char *aData,
                     PRUint32 aDataLength = PR_UINT32_MAX)
 {
-  NS_CStringSetDataRange(aStr, PR_UINT32_MAX, 0, aData, aDataLength);
+  return NS_CStringSetDataRange(aStr, PR_UINT32_MAX, 0, aData, aDataLength);
 }
 
 /**
@@ -450,17 +493,18 @@ NS_CStringAppendData(nsACString &aStr, const char *aData,
  * @param aData         character buffer
  * @param aDataLength   number of characters to append (pass PR_UINT32_MAX to
  *                      append until a null-character is encountered)
+ * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr upon completion.
  * The behavior depends on the implementation of the abstract string, aStr.
  * If aStr is a reference to a nsStringContainer, then its data will be null-
  * terminated by this function.
  */
-inline void
+inline NS_HIDDEN_(nsresult)
 NS_CStringInsertData(nsACString &aStr, PRUint32 aOffset, const char *aData,
                     PRUint32 aDataLength = PR_UINT32_MAX)
 {
-  NS_CStringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
+  return NS_CStringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
 }
       
 /**
@@ -472,11 +516,12 @@ NS_CStringInsertData(nsACString &aStr, PRUint32 aOffset, const char *aData,
  * @param aStr          abstract string reference to be modified
  * @param aCutOffset    specifies where in the string to insert aData
  * @param aCutLength    number of characters to remove
+ * @return              NS_OK if function succeeded
  */
-inline void
+inline NS_HIDDEN_(nsresult)
 NS_CStringCutData(nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 {
-  NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
+  return NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -484,22 +529,22 @@ NS_CStringCutData(nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 /**
  * Encodings that can be used with the following conversion routines.
  */
-enum {
+enum nsCStringEncoding {
   /* Conversion between ASCII and UTF-16 assumes that all bytes in the source
    * string are 7-bit ASCII and can be inflated to UTF-16 by inserting null
    * bytes.  Reverse conversion is done by truncating every other byte.  The
    * conversion may result in loss and/or corruption of information if the
    * strings do not strictly contain ASCII data. */
-  NS_ENCODING_ASCII = 0,
+  NS_CSTRING_ENCODING_ASCII = 0,
 
   /* Conversion between UTF-8 and UTF-16 is non-lossy. */
-  NS_ENCODING_UTF8 = 1,
+  NS_CSTRING_ENCODING_UTF8 = 1,
 
   /* Conversion from UTF-16 to the native filesystem charset may result in a
    * loss of information.  No attempt is made to protect against data loss in
    * this case.  The native filesystem charset applies to strings passed to
    * the "Native" method variants on nsIFile and nsILocalFile. */
-  NS_ENCODING_NATIVE_FILESYSTEM = 2
+  NS_CSTRING_ENCODING_NATIVE_FILESYSTEM = 2
 };
 
 /**
@@ -512,9 +557,11 @@ enum {
  * @param aSource       abstract string reference containing source string
  * @param aSrcEncoding  character encoding of the source string
  * @param aDest         abstract string reference to hold the result
+ * 
+ * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
-NS_CStringToUTF16(const nsACString &aSource, PRUint32 aSrcEncoding,
+NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
                   nsAString &aDest);
 
 /**
@@ -529,9 +576,11 @@ NS_CStringToUTF16(const nsACString &aSource, PRUint32 aSrcEncoding,
  * @param aSource       abstract string reference containing source string
  * @param aDestEncoding character encoding of the resulting string
  * @param aDest         abstract string reference to hold the result
+ * 
+ * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
-NS_UTF16ToCString(const nsAString &aSource, PRUint32 aDestEncoding,
+NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
                   nsACString &aDest);
 
 /* ------------------------------------------------------------------------- */
@@ -565,57 +614,71 @@ public:
   typedef PRUint32              size_type;
   typedef PRUint32              index_type;
 
-  size_type Length() const
+  NS_HIDDEN_(const char_type*) BeginReading() const
+  {
+    const char_type *data;
+    NS_StringGetData(*this, &data);
+    return data;
+  }
+
+  NS_HIDDEN_(const char_type*) EndReading() const
+  {
+    const char_type *data;
+    PRUint32 len = NS_StringGetData(*this, &data);
+    return data + len;
+  }
+
+  NS_HIDDEN_(size_type) Length() const
   {
     const char_type* data;
     return NS_StringGetData(*this, &data);
   }
 
-  void Assign(const self_type& aString)
+  NS_HIDDEN_(void) Assign(const self_type& aString)
   {
     NS_StringCopy(*this, aString);
   }
-  void Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  NS_HIDDEN_(void) Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
   {
     NS_StringSetData(*this, aData, aLength);
   }
-  void Assign(char_type aChar)
+  NS_HIDDEN_(void) Assign(char_type aChar)
   {
     NS_StringSetData(*this, &aChar, 1);
   }
   
-  self_type& operator=(const self_type& aString) { Assign(aString);   return *this; }
-  self_type& operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
-  self_type& operator=(char_type aChar)          { Assign(aChar);     return *this; }
+  NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
+  NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
+  NS_HIDDEN_(self_type&) operator=(char_type aChar)          { Assign(aChar);     return *this; }
 
-  void Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
+  NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
   {
     NS_StringSetDataRange(*this, cutStart, cutLength, data, length);
   }
-  void Replace( index_type cutStart, size_type cutLength, char_type c )
+  NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, char_type c )
   {
     Replace(cutStart, cutLength, &c, 1);
   }
-  void Replace( index_type cutStart, size_type cutLength, const self_type& readable )
+  NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, const self_type& readable )
   {
     const char_type* data;
     PRUint32 dataLen = NS_StringGetData(readable, &data);
     NS_StringSetDataRange(*this, cutStart, cutLength, data, dataLen);
   }
 
-  void Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
-  void Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
-  void Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
+  NS_HIDDEN_(void) Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
+  NS_HIDDEN_(void) Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
+  NS_HIDDEN_(void) Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
 
-  self_type& operator+=( char_type c )                                                    { Append(c);        return *this; }
-  self_type& operator+=( const char_type* data )                                          { Append(data);     return *this; }
-  self_type& operator+=( const self_type& readable )                                      { Append(readable); return *this; }
+  NS_HIDDEN_(self_type&) operator+=( char_type c )                                                    { Append(c);        return *this; }
+  NS_HIDDEN_(self_type&) operator+=( const char_type* data )                                          { Append(data);     return *this; }
+  NS_HIDDEN_(self_type&) operator+=( const self_type& readable )                                      { Append(readable); return *this; }
 
-  void Insert( char_type c, index_type pos )                                              { Replace(pos, 0, c); }
-  void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
-  void Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
+  NS_HIDDEN_(void) Insert( char_type c, index_type pos )                                              { Replace(pos, 0, c); }
+  NS_HIDDEN_(void) Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
+  NS_HIDDEN_(void) Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
 
-  void Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+  NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
 #endif // NS_STRINGAPI_IMPL
 
@@ -633,57 +696,71 @@ public:
   typedef PRUint32              size_type;
   typedef PRUint32              index_type;
 
-  size_type Length() const
+  NS_HIDDEN_(const char_type*) BeginReading() const
+  {
+    const char_type *data;
+    NS_CStringGetData(*this, &data);
+    return data;
+  }
+
+  NS_HIDDEN_(const char_type*) EndReading() const
+  {
+    const char_type *data;
+    PRUint32 len = NS_CStringGetData(*this, &data);
+    return data + len;
+  }
+
+  NS_HIDDEN_(size_type) Length() const
   {
     const char_type* data;
     return NS_CStringGetData(*this, &data);
   }
 
-  void Assign(const self_type& aString)
+  NS_HIDDEN_(void) Assign(const self_type& aString)
   {
     NS_CStringCopy(*this, aString);
   }
-  void Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
+  NS_HIDDEN_(void) Assign(const char_type* aData, size_type aLength = PR_UINT32_MAX)
   {
     NS_CStringSetData(*this, aData, aLength);
   }
-  void Assign(char_type aChar)
+  NS_HIDDEN_(void) Assign(char_type aChar)
   {
     NS_CStringSetData(*this, &aChar, 1);
   }
   
-  self_type& operator=(const self_type& aString) { Assign(aString);   return *this; }
-  self_type& operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
-  self_type& operator=(char_type aChar)          { Assign(aChar);     return *this; }
+  NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
+  NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
+  NS_HIDDEN_(self_type&) operator=(char_type aChar)          { Assign(aChar);     return *this; }
 
-  void Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
+  NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
   {
     NS_CStringSetDataRange(*this, cutStart, cutLength, data, length);
   }
-  void Replace( index_type cutStart, size_type cutLength, char_type c )
+  NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, char_type c )
   {
     Replace(cutStart, cutLength, &c, 1);
   }
-  void Replace( index_type cutStart, size_type cutLength, const self_type& readable )
+  NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, const self_type& readable )
   {
     const char_type* data;
     PRUint32 dataLen = NS_CStringGetData(readable, &data);
     NS_CStringSetDataRange(*this, cutStart, cutLength, data, dataLen);
   }
 
-  void Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
-  void Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
-  void Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
+  NS_HIDDEN_(void) Append( char_type c )                                                              { Replace(size_type(-1), 0, c); }
+  NS_HIDDEN_(void) Append( const char_type* data, size_type length = size_type(-1) )                  { Replace(size_type(-1), 0, data, length); }
+  NS_HIDDEN_(void) Append( const self_type& readable )                                                { Replace(size_type(-1), 0, readable); }
 
-  self_type& operator+=( char_type c )                                                    { Append(c);        return *this; }
-  self_type& operator+=( const char_type* data )                                          { Append(data);     return *this; }
-  self_type& operator+=( const self_type& readable )                                      { Append(readable); return *this; }
+  NS_HIDDEN_(self_type&) operator+=( char_type c )                                                    { Append(c);        return *this; }
+  NS_HIDDEN_(self_type&) operator+=( const char_type* data )                                          { Append(data);     return *this; }
+  NS_HIDDEN_(self_type&) operator+=( const self_type& readable )                                      { Append(readable); return *this; }
 
-  void Insert( char_type c, index_type pos )                                              { Replace(pos, 0, c); }
-  void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
-  void Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
+  NS_HIDDEN_(void) Insert( char_type c, index_type pos )                                              { Replace(pos, 0, c); }
+  NS_HIDDEN_(void) Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )  { Replace(pos, 0, data, length); }
+  NS_HIDDEN_(void) Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
 
-  void Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+  NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
 #endif // NS_STRINGAPI_IMPL
 

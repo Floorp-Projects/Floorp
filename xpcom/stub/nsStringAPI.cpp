@@ -44,7 +44,7 @@
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(PRBool)
+NS_STRINGAPI(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer)
 {
   NS_ASSERTION(sizeof(nsStringContainer) >= sizeof(nsString),
@@ -53,7 +53,7 @@ NS_StringContainerInit(nsStringContainer &aContainer)
   // use placement new to avoid heap allocating nsString object
   new (&aContainer) nsString();
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 NS_STRINGAPI(void)
@@ -78,13 +78,14 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
   return begin.size_forward();
 }
 
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_StringSetData(nsAString &aStr, const PRUnichar *aData, PRUint32 aDataLength)
 {
   aStr.Assign(aData, aDataLength);
+  return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_StringSetDataRange(nsAString &aStr,
                       PRUint32 aCutOffset, PRUint32 aCutLength,
                       const PRUnichar *aData, PRUint32 aDataLength)
@@ -94,7 +95,7 @@ NS_StringSetDataRange(nsAString &aStr,
     // append case
     if (aData)
       aStr.Append(aData, aDataLength);
-    return;
+    return NS_OK; // XXX report errors
   }
 
   if (aCutLength == PR_UINT32_MAX)
@@ -109,17 +110,20 @@ NS_StringSetDataRange(nsAString &aStr,
   }
   else
     aStr.Cut(aCutOffset, aCutLength);
+
+  return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 {
   aDest.Assign(aSrc);
+  return NS_OK; // XXX report errors
 }
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(PRBool)
+NS_STRINGAPI(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer)
 {
   NS_ASSERTION(sizeof(nsCStringContainer) >= sizeof(nsCString),
@@ -128,7 +132,7 @@ NS_CStringContainerInit(nsCStringContainer &aContainer)
   // use placement new to avoid heap allocating nsCString object
   new (&aContainer) nsCString();
 
-  return PR_TRUE;
+  return NS_OK;
 }
 
 NS_STRINGAPI(void)
@@ -153,13 +157,14 @@ NS_CStringGetData(const nsACString &aStr, const char **aData,
   return begin.size_forward();
 }
 
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_CStringSetData(nsACString &aStr, const char *aData, PRUint32 aDataLength)
 {
   aStr.Assign(aData, aDataLength);
+  return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_CStringSetDataRange(nsACString &aStr,
                        PRUint32 aCutOffset, PRUint32 aCutLength,
                        const char *aData, PRUint32 aDataLength)
@@ -169,7 +174,7 @@ NS_CStringSetDataRange(nsACString &aStr,
     // append case
     if (aData)
       aStr.Append(aData, aDataLength);
-    return;
+    return NS_OK; // XXX report errors
   }
 
   if (aCutLength == PR_UINT32_MAX)
@@ -184,58 +189,61 @@ NS_CStringSetDataRange(nsACString &aStr,
   }
   else
     aStr.Cut(aCutOffset, aCutLength);
+
+  return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(void)
+NS_STRINGAPI(nsresult)
 NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 {
   aDest.Assign(aSrc);
+  return NS_OK; // XXX report errors
 }
 
 /* ------------------------------------------------------------------------- */
 
 NS_STRINGAPI(nsresult)
-NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDest)
+NS_CStringToUTF16(const nsACString &aSrc,
+                  nsCStringEncoding aSrcEncoding,
+                  nsAString &aDest)
 {
-  // XXX handle errors
-
   switch (aSrcEncoding)
   {
-    case NS_ENCODING_ASCII:
+    case NS_CSTRING_ENCODING_ASCII:
       CopyASCIItoUTF16(aSrc, aDest);
       break;
-    case NS_ENCODING_UTF8:
+    case NS_CSTRING_ENCODING_UTF8:
       CopyUTF8toUTF16(aSrc, aDest);
       break;
-    case NS_ENCODING_NATIVE_FILESYSTEM:
+    case NS_CSTRING_ENCODING_NATIVE_FILESYSTEM:
       NS_CopyNativeToUnicode(aSrc, aDest);
       break;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return NS_OK;
+  return NS_OK; // XXX report errors
 }
 
 NS_STRINGAPI(nsresult)
-NS_UTF16ToCString(const nsAString &aSrc, PRUint32 aDestEncoding, nsACString &aDest)
+NS_UTF16ToCString(const nsAString &aSrc,
+                  nsCStringEncoding aDestEncoding,
+                  nsACString &aDest)
 {
-  // XXX handle errors
-
   switch (aDestEncoding)
   {
-    case NS_ENCODING_ASCII:
+    case NS_CSTRING_ENCODING_ASCII:
       LossyCopyUTF16toASCII(aSrc, aDest);
       break;
-    case NS_ENCODING_UTF8:
+    case NS_CSTRING_ENCODING_UTF8:
       CopyUTF16toUTF8(aSrc, aDest);
       break;
-    case NS_ENCODING_NATIVE_FILESYSTEM:
+    case NS_CSTRING_ENCODING_NATIVE_FILESYSTEM:
       NS_CopyUnicodeToNative(aSrc, aDest);
       break;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return NS_OK;
+  return NS_OK; // XXX report errors
 }

@@ -156,12 +156,12 @@ static PRBool test_convert()
 
     const char *data;
 
-    NS_UTF16ToCString(s, NS_ENCODING_ASCII, temp);
+    NS_UTF16ToCString(s, NS_CSTRING_ENCODING_ASCII, temp);
     NS_CStringGetData(temp, &data);
     if (strcmp(data, kAsciiData) != 0)
       return PR_FALSE;
 
-    NS_UTF16ToCString(s, NS_ENCODING_UTF8, temp);
+    NS_UTF16ToCString(s, NS_CSTRING_ENCODING_UTF8, temp);
     NS_CStringGetData(temp, &data);
     if (strcmp(data, kAsciiData) != 0)
       return PR_FALSE;
@@ -169,6 +169,18 @@ static PRBool test_convert()
     NS_CStringContainerFinish(temp);
 
     NS_StringContainerFinish(s);
+    return PR_TRUE;
+  }
+
+static PRBool test_append()
+  {
+    nsCStringContainer s;
+    NS_CStringContainerInit(s);
+
+    NS_CStringSetData(s, "foo");
+    NS_CStringAppendData(s, "bar");
+
+    NS_CStringContainerFinish(s);
     return PR_TRUE;
   }
 
@@ -186,6 +198,7 @@ tests[] =
     { "test_basic_1", test_basic_1 },
     { "test_basic_2", test_basic_2 },
     { "test_convert", test_convert },
+    { "test_append", test_append },
     { nsnull, nsnull }
   };
 

@@ -58,7 +58,6 @@ void GlueShutdownDebug();
 
 static PRLibrary *xpcomLib;
 static XPCOMFunctions xpcomFunctions;
-static PRBool xpcomGlueInit;
 
 extern "C"
 nsresult XPCOMGlueStartup(const char* xpcomFile)
@@ -120,8 +119,6 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     if (NS_FAILED(rv))
         goto bail;
 
-    xpcomGlueInit = PR_TRUE;
-
     rv = GlueStartupDebug();
     if (NS_FAILED(rv))
         goto bail;
@@ -139,7 +136,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
 bail:
     PR_UnloadLibrary(xpcomLib);
     xpcomLib = nsnull;
-    xpcomGlueInit = PR_FALSE;
+    memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
     return NS_ERROR_FAILURE;
 #endif
 }
@@ -160,7 +157,7 @@ nsresult XPCOMGlueShutdown()
         xpcomLib = nsnull;
     }
     
-    xpcomGlueInit = PR_FALSE;
+    memset(&xpcomFunctions, 0, sizeof(xpcomFunctions));
     return NS_OK;
 #endif
 }
@@ -171,7 +168,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.init)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.init(result, binDirectory, appFileLocationProvider);
 }
@@ -179,7 +176,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 extern "C" NS_COM nsresult
 NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.shutdown)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.shutdown(servMgr);
 }
@@ -187,7 +184,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 extern "C" NS_COM nsresult
 NS_GetServiceManager(nsIServiceManager* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.getServiceManager)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.getServiceManager(result);
 }
@@ -195,7 +192,7 @@ NS_GetServiceManager(nsIServiceManager* *result)
 extern "C" NS_COM nsresult
 NS_GetComponentManager(nsIComponentManager* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.getComponentManager)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.getComponentManager(result);
 }
@@ -203,7 +200,7 @@ NS_GetComponentManager(nsIComponentManager* *result)
 extern "C" NS_COM nsresult
 NS_GetComponentRegistrar(nsIComponentRegistrar* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.getComponentRegistrar)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.getComponentRegistrar(result);
 }
@@ -211,7 +208,7 @@ NS_GetComponentRegistrar(nsIComponentRegistrar* *result)
 extern "C" NS_COM nsresult
 NS_GetMemoryManager(nsIMemory* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.getMemoryManager)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.getMemoryManager(result);
 }
@@ -219,7 +216,7 @@ NS_GetMemoryManager(nsIMemory* *result)
 extern "C" NS_COM nsresult
 NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.newLocalFile)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.newLocalFile(path, followLinks, result);
 }
@@ -227,7 +224,7 @@ NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result
 extern "C" NS_COM nsresult
 NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.newNativeLocalFile)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.newNativeLocalFile(path, followLinks, result);
 }
@@ -235,15 +232,15 @@ NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* 
 extern "C" NS_COM nsresult
 NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
 {
-  if (!xpcomGlueInit)
-      return NS_ERROR_NOT_INITIALIZED;
-  return xpcomFunctions.registerExitRoutine(exitRoutine, priority);
+    if (!xpcomFunctions.registerExitRoutine)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.registerExitRoutine(exitRoutine, priority);
 }
 
 extern "C" NS_COM nsresult
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.unregisterExitRoutine)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.unregisterExitRoutine(exitRoutine);
 }
@@ -251,7 +248,7 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 extern "C" NS_COM nsresult
 NS_GetDebug(nsIDebug* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.getDebug)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.getDebug(result);
 }
@@ -260,107 +257,118 @@ NS_GetDebug(nsIDebug* *result)
 extern "C" NS_COM nsresult
 NS_GetTraceRefcnt(nsITraceRefcnt* *result)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.getTraceRefcnt)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.getTraceRefcnt(result);
 }
 
 
-extern "C" NS_COM PRBool
+extern "C" NS_COM nsresult
 NS_StringContainerInit(nsStringContainer &aStr)
 {
-    if (!xpcomGlueInit)
-        return PR_FALSE;
+    if (!xpcomFunctions.stringContainerInit)
+        return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.stringContainerInit(aStr);
 }
 
 extern "C" NS_COM void
 NS_StringContainerFinish(nsStringContainer &aStr)
 {
-    if (xpcomGlueInit)
+    if (xpcomFunctions.stringContainerFinish)
         xpcomFunctions.stringContainerFinish(aStr);
 }
 
 extern "C" NS_COM PRUint32
 NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.stringGetData) {
+        *aBuf = nsnull;
         return 0;
+    }
     return xpcomFunctions.stringGetData(aStr, aBuf, aTerm);
 }
 
-extern "C" NS_COM void
+extern "C" NS_COM nsresult
 NS_StringSetData(nsAString &aStr, const PRUnichar *aBuf, PRUint32 aCount)
 {
-    if (xpcomGlueInit)
-        xpcomFunctions.stringSetData(aStr, aBuf, aCount);
+    if (!xpcomFunctions.stringSetData)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return xpcomFunctions.stringSetData(aStr, aBuf, aCount);
 }
 
-extern "C" NS_COM void
+extern "C" NS_COM nsresult
 NS_StringSetDataRange(nsAString &aStr, PRUint32 aCutStart, PRUint32 aCutLength,
                       const PRUnichar *aBuf, PRUint32 aCount)
 {
-    if (xpcomGlueInit)
-        xpcomFunctions.stringSetDataRange(aStr, aCutStart, aCutLength, aBuf, aCount);
+    if (!xpcomFunctions.stringSetDataRange)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.stringSetDataRange(aStr, aCutStart, aCutLength, aBuf, aCount);
 }
 
-extern "C" NS_COM void
+extern "C" NS_COM nsresult
 NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 {
-    if (xpcomGlueInit)
-        xpcomFunctions.stringCopy(aDest, aSrc);
+    if (!xpcomFunctions.stringCopy)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.stringCopy(aDest, aSrc);
 }
 
 
-extern "C" NS_COM PRBool
+extern "C" NS_COM nsresult
 NS_CStringContainerInit(nsCStringContainer &aStr)
 {
-    if (!xpcomGlueInit)
-        return PR_FALSE;
+    if (!xpcomFunctions.cstringContainerInit)
+        return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.cstringContainerInit(aStr);
 }
 
 extern "C" NS_COM void
 NS_CStringContainerFinish(nsCStringContainer &aStr)
 {
-    if (xpcomGlueInit)
+    if (xpcomFunctions.cstringContainerFinish)
         xpcomFunctions.cstringContainerFinish(aStr);
 }
 
 extern "C" NS_COM PRUint32
 NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.cstringGetData) {
+        *aBuf = nsnull;
         return 0;
+    }
     return xpcomFunctions.cstringGetData(aStr, aBuf, aTerm);
 }
 
-extern "C" NS_COM void
+extern "C" NS_COM nsresult
 NS_CStringSetData(nsACString &aStr, const char *aBuf, PRUint32 aCount)
 {
-    if (xpcomGlueInit)
-        xpcomFunctions.cstringSetData(aStr, aBuf, aCount);
+    if (!xpcomFunctions.cstringSetData)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.cstringSetData(aStr, aBuf, aCount);
 }
 
-extern "C" NS_COM void
+extern "C" NS_COM nsresult
 NS_CStringSetDataRange(nsACString &aStr, PRUint32 aCutStart, PRUint32 aCutLength,
                        const char *aBuf, PRUint32 aCount)
 {
-    if (xpcomGlueInit)
-        xpcomFunctions.cstringSetDataRange(aStr, aCutStart, aCutLength, aBuf, aCount);
+    if (!xpcomFunctions.cstringSetDataRange)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.cstringSetDataRange(aStr, aCutStart, aCutLength, aBuf, aCount);
 }
 
-extern "C" NS_COM void
+extern "C" NS_COM nsresult
 NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 {
-    if (xpcomGlueInit)
-        xpcomFunctions.cstringCopy(aDest, aSrc);
+    if (!xpcomFunctions.cstringCopy)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.cstringCopy(aDest, aSrc);
 }
 
 extern "C" NS_COM nsresult
 NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDest)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.cstringToUTF16)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.cstringToUTF16(aSrc, aSrcEncoding, aDest);
 }
@@ -368,7 +376,7 @@ NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDes
 extern "C" NS_COM nsresult
 NS_UTF16ToCString(const nsAString &aSrc, PRUint32 aDestEncoding, nsACString &aDest)
 {
-    if (!xpcomGlueInit)
+    if (!xpcomFunctions.utf16ToCString)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.utf16ToCString(aSrc, aDestEncoding, aDest);
 }
