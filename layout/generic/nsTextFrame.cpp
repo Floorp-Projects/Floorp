@@ -1068,7 +1068,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
       }
       if (!mInit && mTypes) //we have details but none that we care about.
       {
-        delete mTypes;
+        delete [] mTypes;
         mTypes = nsnull;
         mDone = PR_TRUE;//we are finished
       }
@@ -1089,7 +1089,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
 DrawSelectionIterator::~DrawSelectionIterator()
 {
   if (mTypes)
-    delete mTypes;
+    delete [] mTypes;
 }
 
 void
