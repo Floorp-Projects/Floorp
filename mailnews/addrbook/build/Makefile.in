@@ -56,7 +56,9 @@ CPPSRCS		= nsAbFactory.cpp
 EXPORTS		= nsAbBaseCID.h
 
 ifdef MOZ_LDAP_XPCOM
-REQUIRES	+= mozldap
+REQUIRES	+= mozldap \
+                   uriloader \
+                   $(NULL)
 DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
 

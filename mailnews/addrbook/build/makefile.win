@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  locale \
+                  uriloader \
 		  mork \
 		  appcomps \
 		  mozldap \

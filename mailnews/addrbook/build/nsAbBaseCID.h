@@ -379,6 +379,41 @@
 #define NS_ABLDAPAUTOCOMPFORMATTER_CONTRACTID \
  "@mozilla.org/ldap-autocomplete-formatter;1?type=addrbook"
 
+
+// nsAbLDAPReplicationService
+//
+// {ece81280-2639-11d6-b791-00b0d06e5f27}
+//
+#define NS_ABLDAP_REPLICATIONSERVICE_CID \
+  {0xece81280, 0x2639, 0x11d6, \
+    { 0xb7, 0x91, 0x00, 0xb0, 0xd0, 0x6e, 0x5f, 0x27 }}
+
+#define NS_ABLDAP_REPLICATIONSERVICE_CONTRACTID \
+ "@mozilla.org/addressbook/ldap-replication-service;1"
+
+// nsAbLDAPReplicationQuery
+//
+// {5414fff0-263b-11d6-b791-00b0d06e5f27}
+//
+#define NS_ABLDAP_REPLICATIONQUERY_CID \
+  {0x5414fff0, 0x263b, 0x11d6, \
+    { 0xb7, 0x91, 0x00, 0xb0, 0xd0, 0x6e, 0x5f, 0x27 }}
+
+#define NS_ABLDAP_REPLICATIONQUERY_CONTRACTID \
+ "@mozilla.org/addressbook/ldap-replication-query;1"
+
+// nsAbLDAPProcessReplicationData
+//
+// {5414fff1-263b-11d6-b791-00b0d06e5f27}
+//
+#define NS_ABLDAP_PROCESSREPLICATIONDATA_CID \
+  {0x5414fff1, 0x263b, 0x11d6, \
+    { 0xb7, 0x91, 0x00, 0xb0, 0xd0, 0x6e, 0x5f, 0x27 }}
+
+#define NS_ABLDAP_PROCESSREPLICATIONDATA_CONTRACTID \
+ "@mozilla.org/addressbook/ldap-process-replication-data;1"
+
+
 // nsABView
 
 #define NS_ABVIEW_CID \
