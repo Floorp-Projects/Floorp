@@ -433,7 +433,7 @@ public:
 
   XP_Bool match(void *id, const char *url_str)
   {
-    if (m_pID != id || (m_pData != url_str && (!url_str || !m_pData)))
+    if (m_pID != id || (m_pData != (void *)url_str && (!url_str || !m_pData)))
       return(FALSE);
 
     return(!XP_STRCMP((char *)m_pData, url_str));
