@@ -869,7 +869,7 @@ nsresult nsMsgAsyncWriteProtocol::SuspendPostFileRead()
 #ifdef DEBUG_mscott
   printf("suspending post read during send\n");
 #endif
-  if (mFilePostHelper)
+  if (mFilePostHelper && !mFilePostHelper->mSuspendedPostFileRead)
   {
     // uhoh we need to pause reading in the file until we get unblocked...
     mFilePostHelper->mPostFileRequest->Suspend();
@@ -981,8 +981,8 @@ nsresult nsMsgAsyncWriteProtocol::ProcessIncomingPostData(nsIInputStream *inStr,
           // after the '.' so we can perform processing on that once we become unblocked.
           UpdateSuspendedReadBytes(count, mInsertPeriodRequired);
           SuspendPostFileRead();
+          break;
         }
-
       }
     } // while count > 0
   }
@@ -997,7 +997,15 @@ nsresult nsMsgAsyncWriteProtocol::UnblockPostReader()
     // (1) attempt to write out any remaining read bytes we need in order to unblock the reader
     if (mSuspendedReadBytes > 0 && mPostDataStream)
     {
-      m_outputStream->WriteFrom(mPostDataStream, mSuspendedReadBytes, &amountWritten);
+      PRUint32 avail = 0;
+      mPostDataStream->Available(&avail);
+
+      m_outputStream->WriteFrom(mPostDataStream, PR_MIN(avail, mSuspendedReadBytes), &amountWritten);
+      // hmm sometimes my mSuspendedReadBytes is getting out of whack...so for now, reset it
+      // if necessary.
+      if (mSuspendedReadBytes > avail)
+        mSuspendedReadBytes = avail;
+
       if (mSuspendedReadBytes > amountWritten)
         mSuspendedReadBytes -= amountWritten;
       else
