@@ -306,33 +306,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   return NS_NOINTERFACE;                                                 \
 }
 
-#define NS_IMPL_QUERY_INTERFACE2(_class, _c1, _c2)                       \
-NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
-{                                                                        \
-  if (NULL == aInstancePtr) {                                            \
-    return NS_ERROR_NULL_POINTER;                                        \
-  }                                                                      \
-                                                                         \
-  *aInstancePtr = NULL;                                                  \
-                                                                         \
-  if (aIID.Equals(nsCOMTypeInfo<_c1>::GetIID())) {                       \
-    *aInstancePtr = (void*) ((_c1*)this);                                \
-    NS_ADDREF_THIS();                                                    \
-    return NS_OK;                                                        \
-  }                                                                      \
-  if (aIID.Equals(nsCOMTypeInfo<_c2>::GetIID())) {                       \
-    *aInstancePtr = (void*) ((_c2*)this);                                \
-    NS_ADDREF_THIS();                                                    \
-    return NS_OK;                                                        \
-  }                                                                      \
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {               \
-    *aInstancePtr = (void*) ((_c1*)this);                                \
-    NS_ADDREF_THIS();                                                    \
-    return NS_OK;                                                        \
-  }                                                                      \
-  return NS_NOINTERFACE;                                                 \
-}
-
 /**
  * Convenience macro for implementing all nsISupports methods for
  * a simple class.
