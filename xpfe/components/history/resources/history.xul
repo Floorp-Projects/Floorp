@@ -41,7 +41,6 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   width="500" height="400" x="20" y="20" persist="width height x y" 
   orient="vertical"
-  ondraggesture="return TopLevelDrag(event);"
   windowtype="history:manager">
 
   <script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
@@ -49,6 +48,10 @@
   <script src="chrome://global/content/treePopups.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/nsJSComponentManager.js"/>
+  <script src="chrome://global/content/nsDragAndDrop.js"/>
+  <script src="chrome://global/content/nsTransferable.js"/>
+  <script src="chrome://global/content/nsJSSupportsUtils.js"/>
 
 <commands id="commands">
   <commandset id="selectEditMenuItems"/>
@@ -84,7 +87,8 @@
   <key id="key_selectAll"/>
 </keyset>
 
-<menubar>
+<toolbox id="history-toolbox">
+<menubar id="history-menu">
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
       <menu id="menu_New">
@@ -143,6 +147,7 @@
   <menu id="tasksMenu" accesskey="t" />
   <menu id="menu_Help" accesskey="h" />
 </menubar>
+</toolbox>
 
 <popupset>
   <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
@@ -154,9 +159,7 @@
        datasources="rdf:history rdf:localsearch"
        flex="1"
        multiple="true"
-       ondragover="return DragOverTree(event);"
-       ondraggesture="return BeginDragTree(event);"
-       ondragdrop="return DropOnTree(event);">
+       ondraggesture="dump('*** starting drag\n'); nsDragAndDrop.startDrag(event, historyDNDObserver);">
 
   <template>
      <rule>
@@ -230,8 +233,9 @@
                             'bookmarksTree');"/>
 </tree>
 
-<box id="status-bar" style="max-height:1em;">
-  <text class="status-bar" value=""/>
-</box>
+  <statusbar id="status-bar">
+    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+    <statusbarpanel id="statusbar-display" crop="right" flex="1"/>
+  </statusbar>
 
 </window>
