@@ -40,6 +40,7 @@
 
 <dialog id="searchFolderWindow"
         xmlns:NC="http://home.netscape.com/NC-rdf#" 
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&virtualFolderListTitle.title;"
         style="width: 27em; height: 25em;"
@@ -55,13 +56,15 @@
   <hbox pack="end" align="center">
     <label value="&server.label;" accesskey="&server.accesskey;" control="serverMenu"/>
     <menulist oncommand="onServerClick(event);" id="serverMenu" 
-              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              datasources="rdf:msgaccountmanager"
               sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
               sortDirection="ascending" ref="msgaccounts:/" flex="1">
       <template>
-        <rule NC:CanSearchMessages="true">
+        <rule>
           <menupopup>
-            <menuitem class="menuitem-iconic" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"/>
+            <menuitem uri="..." value="..." 
+              class="menuitem-iconic"
+              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
         </rule>
       </template>
@@ -76,9 +79,8 @@
           hidecolumnpicker="true"
           seltype="multiple"
           disableKeyNavigation="true"
-          datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+          datasources="rdf:mailnewsfolders"
           flags="dont-build-content"
-          ref="msgaccounts:/"
           onkeypress="onSelectFolderTreeKeyPress(event);"
           onclick="selectFolderTreeOnClick(event);"> 
       <template>
@@ -123,7 +125,7 @@
       </template>
 
       <treecols>
-        <treecol id="folderNameCol" sort="?folderTreeNameSort" sortactive="true" 
+        <treecol id="folderNameCol"  sort="?folderTreeNameSort" sortActive="true" sortDirection="ascending"
                  flex="10" primary="true" hideheader="true" crop="center"/>
         <splitter class="tree-splitter"/>
         <treecol id="selectedColumn" hideheader="true" flex="1"/>
