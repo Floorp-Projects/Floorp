@@ -84,6 +84,7 @@
 		08FB7794FE84155DC02AAC07 = {
 			children = (
 				08FB7795FE84155DC02AAC07,
+				F5F2439901C19AC60100017F,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
 			);
@@ -154,6 +155,28 @@
 		08FB77A0FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
+				F5F2439B01C19B390100017F,
+				F5F2439D01C19B920100017F,
+				F5F2439F01C19D6C0100017F,
+				F5F243A101C19D970100017F,
+				F5F243A301C19DBF0100017F,
+				F5F243A501C19E020100017F,
+				F5F243A701C19E2D0100017F,
+				F5F243B701C19ED30100017F,
+				F5F243B801C19ED30100017F,
+				F5F243B901C19ED30100017F,
+				F5F243BA01C19ED30100017F,
+				F5F243BB01C19ED30100017F,
+				F5F243BC01C19ED30100017F,
+				F5F243BD01C19ED30100017F,
+				F5F243BE01C19ED30100017F,
+				F5F243BF01C19ED30100017F,
+				F5F243C001C19ED30100017F,
+				F5F243C101C19ED30100017F,
+				F5F243C201C19ED30100017F,
+				F5F243C301C19ED30100017F,
+				F5F243C401C19ED30100017F,
+				F5F243C501C19ED30100017F,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -503,6 +526,300 @@
 		};
 		F5C5020601C025B80100017F = {
 			fileRef = F5C5020201C025B80100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F2439901C19AC60100017F = {
+			children = (
+				F5F2439C01C19B920100017F,
+				F5F2439A01C19B390100017F,
+				F5F2439E01C19D6C0100017F,
+				F5F243A001C19D970100017F,
+				F5F243A201C19DBF0100017F,
+				F5F243A401C19E020100017F,
+				F5F243A601C19E2D0100017F,
+				F5F243A801C19ED30100017F,
+				F5F243A901C19ED30100017F,
+				F5F243AA01C19ED30100017F,
+				F5F243AB01C19ED30100017F,
+				F5F243AC01C19ED30100017F,
+				F5F243AD01C19ED30100017F,
+				F5F243AE01C19ED30100017F,
+				F5F243AF01C19ED30100017F,
+				F5F243B001C19ED30100017F,
+				F5F243B101C19ED30100017F,
+				F5F243B201C19ED30100017F,
+				F5F243B301C19ED30100017F,
+				F5F243B401C19ED30100017F,
+				F5F243B501C19ED30100017F,
+				F5F243B601C19ED30100017F,
+			);
+			isa = PBXGroup;
+			name = Headers;
+			path = "";
+			refType = 4;
+		};
+		F5F2439A01C19B390100017F = {
+			isa = PBXFileReference;
+			name = collector.h;
+			path = ../../../src/collector.h;
+			refType = 2;
+		};
+		F5F2439B01C19B390100017F = {
+			fileRef = F5F2439A01C19B390100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F2439C01C19B920100017F = {
+			isa = PBXFileReference;
+			name = bytecodegen.h;
+			path = ../../../src/bytecodegen.h;
+			refType = 2;
+		};
+		F5F2439D01C19B920100017F = {
+			fileRef = F5F2439C01C19B920100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F2439E01C19D6C0100017F = {
+			isa = PBXFileReference;
+			name = exception.h;
+			path = ../../../src/exception.h;
+			refType = 2;
+		};
+		F5F2439F01C19D6C0100017F = {
+			fileRef = F5F2439E01C19D6C0100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243A001C19D970100017F = {
+			isa = PBXFileReference;
+			name = formatter.h;
+			path = ../../../src/formatter.h;
+			refType = 2;
+		};
+		F5F243A101C19D970100017F = {
+			fileRef = F5F243A001C19D970100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243A201C19DBF0100017F = {
+			isa = PBXFileReference;
+			name = hash.h;
+			path = ../../../src/hash.h;
+			refType = 2;
+		};
+		F5F243A301C19DBF0100017F = {
+			fileRef = F5F243A201C19DBF0100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243A401C19E020100017F = {
+			isa = PBXFileReference;
+			name = js2runtime.h;
+			path = ../../../src/js2runtime.h;
+			refType = 2;
+		};
+		F5F243A501C19E020100017F = {
+			fileRef = F5F243A401C19E020100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243A601C19E2D0100017F = {
+			isa = PBXFileReference;
+			name = jsarray.h;
+			path = ../../../src/jsarray.h;
+			refType = 2;
+		};
+		F5F243A701C19E2D0100017F = {
+			fileRef = F5F243A601C19E2D0100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243A801C19ED30100017F = {
+			isa = PBXFileReference;
+			name = jsdate.h;
+			path = ../../../src/jsdate.h;
+			refType = 2;
+		};
+		F5F243A901C19ED30100017F = {
+			isa = PBXFileReference;
+			name = jsmath.h;
+			path = ../../../src/jsmath.h;
+			refType = 2;
+		};
+		F5F243AA01C19ED30100017F = {
+			isa = PBXFileReference;
+			name = jsstring.h;
+			path = ../../../src/jsstring.h;
+			refType = 2;
+		};
+		F5F243AB01C19ED30100017F = {
+			isa = PBXFileReference;
+			name = lexer.h;
+			path = ../../../src/lexer.h;
+			refType = 2;
+		};
+		F5F243AC01C19ED30100017F = {
+			isa = PBXFileReference;
+			name = mem.h;
+			path = ../../../src/mem.h;
+			refType = 2;
+		};
+		F5F243AD01C19ED30100017F = {
+			isa = PBXFileReference;
+			name = numerics.h;
+			path = ../../../src/numerics.h;
+			refType = 2;
+		};
+		F5F243AE01C19ED30100017F = {
+			isa = PBXFileReference;
+			name = parser.h;
+			path = ../../../src/parser.h;
+			refType = 2;
+		};
+		F5F243AF01C19ED30100017F = {
+			isa = PBXFileReference;
+			name = prmjtime.h;
+			path = ../../../src/prmjtime.h;
+			refType = 2;
+		};
+		F5F243B001C19ED30100017F = {
+			isa = PBXFileReference;
+			name = reader.h;
+			path = ../../../src/reader.h;
+			refType = 2;
+		};
+		F5F243B101C19ED30100017F = {
+			isa = PBXFileReference;
+			name = strings.h;
+			path = ../../../src/strings.h;
+			refType = 2;
+		};
+		F5F243B201C19ED30100017F = {
+			isa = PBXFileReference;
+			name = systemtypes.h;
+			path = ../../../src/systemtypes.h;
+			refType = 2;
+		};
+		F5F243B301C19ED30100017F = {
+			isa = PBXFileReference;
+			name = token.h;
+			path = ../../../src/token.h;
+			refType = 2;
+		};
+		F5F243B401C19ED30100017F = {
+			isa = PBXFileReference;
+			name = tracer.h;
+			path = ../../../src/tracer.h;
+			refType = 2;
+		};
+		F5F243B501C19ED30100017F = {
+			isa = PBXFileReference;
+			name = utilities.h;
+			path = ../../../src/utilities.h;
+			refType = 2;
+		};
+		F5F243B601C19ED30100017F = {
+			isa = PBXFileReference;
+			name = world.h;
+			path = ../../../src/world.h;
+			refType = 2;
+		};
+		F5F243B701C19ED30100017F = {
+			fileRef = F5F243A801C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243B801C19ED30100017F = {
+			fileRef = F5F243A901C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243B901C19ED30100017F = {
+			fileRef = F5F243AA01C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243BA01C19ED30100017F = {
+			fileRef = F5F243AB01C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243BB01C19ED30100017F = {
+			fileRef = F5F243AC01C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243BC01C19ED30100017F = {
+			fileRef = F5F243AD01C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243BD01C19ED30100017F = {
+			fileRef = F5F243AE01C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243BE01C19ED30100017F = {
+			fileRef = F5F243AF01C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243BF01C19ED30100017F = {
+			fileRef = F5F243B001C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243C001C19ED30100017F = {
+			fileRef = F5F243B101C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243C101C19ED30100017F = {
+			fileRef = F5F243B201C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243C201C19ED30100017F = {
+			fileRef = F5F243B301C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243C301C19ED30100017F = {
+			fileRef = F5F243B401C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243C401C19ED30100017F = {
+			fileRef = F5F243B501C19ED30100017F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F243C501C19ED30100017F = {
+			fileRef = F5F243B601C19ED30100017F;
 			isa = PBXBuildFile;
 			settings = {
 			};
