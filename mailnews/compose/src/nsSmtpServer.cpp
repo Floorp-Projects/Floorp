@@ -22,6 +22,17 @@
 
 NS_IMPL_ISUPPORTS1(nsSmtpServer, nsISmtpServer)
 
+nsSmtpServer::nsSmtpServer()
+{
+    
+}
+
+nsSmtpServer::~nsSmtpServer()
+{
+
+
+}
+
 NS_IMETHODIMP
 nsSmtpServer::GetKey(char * *aKey)
 {
