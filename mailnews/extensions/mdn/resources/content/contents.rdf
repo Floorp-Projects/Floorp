@@ -14,7 +14,7 @@
         chrome:author="mozilla.org"
         chrome:name="messenger-mdn"
         chrome:localeVersion="1.5a"
-        chrome:skinVersion="1.2">
+        chrome:skinVersion="1.5">
   </RDF:Description>
 
 </RDF:RDF>

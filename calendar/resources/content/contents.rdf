@@ -46,7 +46,7 @@
         chrome:displayName="Calendar"
         chrome:author="OEone Corp."
         chrome:name="calendar"
-        chrome:skinVersion="1.2">
+        chrome:skinVersion="1.5">
 </RDF:Description>
 
   <!-- overlay information -->

@@ -13,6 +13,6 @@
         chrome:author="mozilla.org"
         chrome:name="global"
         chrome:localeVersion="1.5a"
-        chrome:skinVersion="1.2">
+        chrome:skinVersion="1.5">
   </RDF:Description>
 </RDF:RDF>

@@ -13,7 +13,7 @@
         chrome:author="mozilla.org"
         chrome:name="xslt-qa"
         chrome:localeVersion="1.5a"
-        chrome:skinVersion="1.2">
+        chrome:skinVersion="1.5">
   </RDF:Description>
 
   <!-- overlay information -->

@@ -54,6 +54,6 @@
   </RDF:Description>
   
    <RDF:Description about="urn:mozilla:skin:modern/1.0:calendar"
-      chrome:skinVersion="1.2"/>
+      chrome:skinVersion="1.5"/>
 </RDF:RDF>
 
