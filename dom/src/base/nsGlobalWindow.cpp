@@ -84,6 +84,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
@@ -5489,25 +5490,35 @@ NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, GlobalWindowImpl)
 
 // nsGlobalChromeWindow implementation
 
+static void TitleConsoleWarning()
+{
+  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
+  if (console)
+    console->LogStringMessage(NS_LITERAL_STRING("Deprecated property window.title used.  Please use document.title instead.").get());
+}
+
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetTitle(nsAString& aTitle)
 {
-  aTitle = mTitle;
-  return NS_OK;
+  NS_ERROR("nsIDOMChromeWindow::GetTitle is deprecated, use nsIDOMNSDocument instead");
+  TitleConsoleWarning();
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return nsdoc->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP
 nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
 {
-  mTitle = aTitle;
-  if(mDocShell) {
-    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-    if(docShellAsWin) {
-      docShellAsWin->SetTitle(PromiseFlatString(mTitle).get());
-    }
-  }
+  NS_ERROR("nsIDOMChromeWindow::SetTitle is deprecated, use nsIDOMNSDocument instead");
+  TitleConsoleWarning();
 
-  return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return nsdoc->SetTitle(aTitle);
 }
 
 NS_IMETHODIMP
