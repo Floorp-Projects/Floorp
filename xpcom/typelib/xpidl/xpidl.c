@@ -79,6 +79,18 @@ xpidl_malloc(size_t nbytes)
     return p;
 }
 
+#ifdef XP_MAC
+static char *strdup(const char *c)
+{
+	char	*newStr = malloc(strlen(c) + 1);
+	if (newStr)
+	{
+		strcpy(newStr, c);
+	}
+	return newStr;
+}
+#endif
+
 char *
 xpidl_strdup(const char *s)
 {
@@ -90,8 +102,12 @@ xpidl_strdup(const char *s)
     return ns;
 }
 
-int
-main(int argc, char *argv[])
+#ifdef XP_MAC
+#define main xpidl_main
+int xpidl_main(int argc, char *argv[]);
+#endif
+
+int main(int argc, char *argv[])
 {
     int i, idlfiles;
     IncludePathEntry *inc, *inc_head, **inc_tail;
@@ -99,7 +115,11 @@ main(int argc, char *argv[])
     ModeData *mode = NULL;
 
     inc_head = xpidl_malloc(sizeof *inc);
+#ifndef XP_MAC
     inc_head->directory = ".";
+#else
+    inc_head->directory = "";
+#endif
     inc_head->next = NULL;
     inc_tail = &inc_head->next;
 
