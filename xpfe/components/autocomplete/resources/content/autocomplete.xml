@@ -135,18 +135,18 @@
 				if (me.displayMenu == "false")
 					return;
 
-                popupset = document.getAnonymousNodes(me)[0].childNodes[1];
-                popupElement = popupset.firstChild;
+                var popupset = document.getAnonymousNodes(me)[0].childNodes[1];
+                var popupElement = popupset.firstChild;
                 
                 //First, remove all the current menu items
                 for (i = popupElement.childNodes.length - 1; i >= 0 ; i --)
                   popupElement.removeChild(popupElement.childNodes[i]);
 
                 //Then build the new menu items
-                for (i = 0; i < result.items.Count(); i ++)
+                for (var i = 0; i < result.items.Count(); i ++)
                 {
                     item = result.items.QueryElementAt(i, Components.interfaces.nsIAutoCompleteItem);
-                    menuitem = document.createElement("menuitem");
+                    var menuitem = document.createElement("menuitem");
                     menuitem.setAttribute('data', i);
                     menuitem.setAttribute('value', item.value);
                     popupElement.appendChild(menuitem);
@@ -249,7 +249,7 @@
 			},
 
 			closePopupMenu: function(me) {
-				popup = document.getAnonymousNodes(me)[0].childNodes[1].firstChild;
+				var popup = document.getAnonymousNodes(me)[0].childNodes[1].firstChild;
 				if (popup && me.menuOpen == "true")
 					popup.closePopup();
 			},
@@ -304,7 +304,7 @@
 					if (popup)
 					{
             if (me.privatefunc.selectedItemIndex >= 0)
-              popup.activeChild = popupElement.childNodes[me.privatefunc.selectedItemIndex];
+              popup.activeChild = popup.childNodes[me.privatefunc.selectedItemIndex];
             else
               popup.activeChild = null;
 					}
