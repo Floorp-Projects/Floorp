@@ -5383,9 +5383,18 @@ nsXULDocument::AddPrototypeSheets()
         rv = gXULCache->GetStyleSheet(uri, getter_AddRefs(sheet));
         if (NS_FAILED(rv)) return rv;
 
-        NS_ASSERTION(sheet != nsnull, "uh oh, sheet wasn't in the cache. go reload it");
+        // If we don't get a style sheet from the cache, then the
+        // really rigorous thing to do here would be to go out and try
+        // to load it again. (This would allow us to do partial
+        // invalidation of the cache, which would be cool, but would
+        // also require some more thinking.)
+        //
+        // Reality is, we end up in this situation if, when parsing
+        // the original XUL document, there -was- no style sheet at
+        // the specified URL, or the stylesheet was empty. So, just
+        // skip it.
         if (! sheet)
-            return NS_ERROR_UNEXPECTED;
+            continue;
 
         nsCOMPtr<nsICSSStyleSheet> newsheet;
         rv = sheet->Clone(*getter_AddRefs(newsheet));
