@@ -21,27 +21,31 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsIImage2.h"
+#include "nsIImageFrame.h"
 
-#include "nsSize2.h"
+#include "nsRect2.h"
 
-#define NS_IMAGE_CID \
-  {0x73c72e6c, 0x1dd2, 0x11b2, \
-    { 0x98, 0xb7, 0xae, 0x59, 0x35, 0xee, 0x63, 0xf5 }}
+#define NS_IMAGEFRAME_CID \
+{ /* 99b219ea-1dd1-11b2-aa87-cd48e7d50227 */         \
+     0x99b219ea,                                     \
+     0x1dd1,                                         \
+     0x11b2,                                         \
+    {0xaa, 0x87, 0xcd, 0x48, 0xe7, 0xd5, 0x02, 0x27} \
+}
 
-class nsImage : public nsIImage2
+class nsImageFrame : public nsIImageFrame
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGE2
+  NS_DECL_NSIIMAGEFRAME
 
-  nsImage();
-  virtual ~nsImage();
+  nsImageFrame();
+  virtual ~nsImageFrame();
 
 private:
   /* additional members */
   PRUint32 mBytesPerRow;
-  nsSize2 mSize;
+  nsRect2 mRect;
   gfx_format mFormat;
 
   PRUint32 mBitsLength;

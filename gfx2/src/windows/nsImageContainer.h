@@ -14,35 +14,36 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
+#include "nsIImageContainer.h"
 
-#include "nsImageContainer.h"
-#include "nsImageFrame.h"
+#include "nsSize2.h"
 
-// objects that just require generic constructors
+#define NS_IMAGECONTAINER_CID \
+{ /* aa699204-1dd1-11b2-84a9-a280c268e4fb */         \
+     0xaa699204,                                     \
+     0x1dd1,                                         \
+     0x11b2,                                         \
+    {0x84, 0xa9, 0xa2, 0x80, 0xc2, 0x68, 0xe4, 0xfb} \
+}
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageContainer)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageFrame)
-
-static nsModuleComponentInfo components[] =
+class nsImageContainer : public nsIImageContainer
 {
-  { "windows image container",
-    NS_IMAGECONTAINER_CID,
-    "@mozilla.org/gfx/image;2",
-    nsImageContainerConstructor, },
-  { "windows image frame",
-    NS_IMAGEFRAME_CID,
-    "@mozilla.org/gfx/image/frame;2",
-    nsImageFrameConstructor, },
-};
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIMAGECONTAINER
 
-NS_IMPL_NSGETMODULE("nsGfx2Module", components)
+  nsImageContainer();
+  virtual ~nsImageContainer();
+
+private:
+  /* additional members */
+  nsSize2 mSize;
+};
 
