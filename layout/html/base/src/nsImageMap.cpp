@@ -26,16 +26,20 @@
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDocument.h"
+#include "nsINameSpaceManager.h"
+#include "nsHTMLAtoms.h"
 
 class Area {
 public:
   Area(const nsString& aBaseURL, const nsString& aHREF,
        const nsString& aTarget, const nsString& aAltText,
-       PRBool aSuppress);
+       PRBool aSuppress, PRBool aHasURL);
   virtual ~Area();
 
   void ParseCoords(const nsString& aSpec);
@@ -73,14 +77,15 @@ public:
   nsString mAltText;
   nscoord* mCoords;
   PRInt32 mNumCoords;
+  PRBool mHasURL;
   PRBool mSuppressFeedback;
 };
 
 Area::Area(const nsString& aBaseURL, const nsString& aHREF,
            const nsString& aTarget, const nsString& aAltText,
-           PRBool aSuppress)
+           PRBool aSuppress, PRBool aHasURL)
   : mBase(aBaseURL), mHREF(aHREF), mTarget(aTarget), mAltText(aAltText),
-    mSuppressFeedback(aSuppress)
+    mSuppressFeedback(aSuppress), mHasURL(aHasURL)
 {
   mCoords = nsnull;
   mNumCoords = 0;
@@ -372,7 +377,7 @@ class DefaultArea : public Area {
 public:
   DefaultArea(const nsString& aBaseURL, const nsString& aHREF,
               const nsString& aTarget, const nsString& aAltText,
-              PRBool aSuppress);
+              PRBool aSuppress, PRBool aHasURL);
   ~DefaultArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -383,8 +388,8 @@ public:
 
 DefaultArea::DefaultArea(const nsString& aBaseURL, const nsString& aHREF,
                          const nsString& aTarget, const nsString& aAltText,
-                         PRBool aSuppress)
-  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress)
+                         PRBool aSuppress, PRBool aHasURL)
+  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress, aHasURL)
 {
 }
 
@@ -412,7 +417,7 @@ class RectArea : public Area {
 public:
   RectArea(const nsString& aBaseURL, const nsString& aHREF,
            const nsString& aTarget, const nsString& aAltText,
-           PRBool aSuppress);
+           PRBool aSuppress, PRBool aHasURL);
   ~RectArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -423,8 +428,8 @@ public:
 
 RectArea::RectArea(const nsString& aBaseURL, const nsString& aHREF,
                    const nsString& aTarget, const nsString& aAltText,
-                   PRBool aSuppress)
-  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress)
+                   PRBool aSuppress, PRBool aHasURL)
+  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress, aHasURL)
 {
 }
 
@@ -477,7 +482,7 @@ class PolyArea : public Area {
 public:
   PolyArea(const nsString& aBaseURL, const nsString& aHREF,
            const nsString& aTarget, const nsString& aAltText,
-           PRBool aSuppress);
+           PRBool aSuppress, PRBool aHasURL);
   ~PolyArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -488,8 +493,8 @@ public:
 
 PolyArea::PolyArea(const nsString& aBaseURL, const nsString& aHREF,
                    const nsString& aTarget, const nsString& aAltText,
-                   PRBool aSuppress)
-  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress)
+                   PRBool aSuppress, PRBool aHasURL)
+  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress, aHasURL)
 {
 }
 
@@ -588,7 +593,7 @@ class CircleArea : public Area {
 public:
   CircleArea(const nsString& aBaseURL, const nsString& aHREF,
              const nsString& aTarget, const nsString& aAltText,
-             PRBool aSuppress);
+             PRBool aSuppress, PRBool aHasURL);
   ~CircleArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -599,8 +604,8 @@ public:
 
 CircleArea::CircleArea(const nsString& aBaseURL, const nsString& aHREF,
                        const nsString& aTarget, const nsString& aAltText,
-                       PRBool aSuppress)
-  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress)
+                       PRBool aSuppress, PRBool aHasURL)
+  : Area(aBaseURL, aHREF, aTarget, aAltText, aSuppress, aHasURL)
 {
 }
 
@@ -639,8 +644,8 @@ void CircleArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
     if (radius < 0) {
       return;
     }
-    nscoord x = x1 - radius / 2;
-    nscoord y = y1 - radius / 2;
+    nscoord x = x1 - radius;
+    nscoord y = y1 - radius;
     nscoord w = 2 * radius;
     aRC.DrawEllipse(x, y, w, w);
   }
@@ -654,7 +659,9 @@ void CircleArea::GetShapeName(nsString& aResult) const
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 nsImageMap::nsImageMap()
@@ -663,6 +670,7 @@ nsImageMap::nsImageMap()
   mDomMap = nsnull;
   mRefCnt = 1;
   mDocument = nsnull;
+  mContainsBlockContents = PR_FALSE;
 }
 
 nsImageMap::~nsImageMap()
@@ -712,63 +720,111 @@ nsImageMap::Init(nsIDOMHTMLMapElement* aMap)
   return rv;
 }
 
+
+nsresult
+nsImageMap::UpdateAreasForBlock(nsIContent* aParent)
+{
+  nsresult rv = NS_OK;
+  nsIContent* child;
+  PRInt32 i, n;
+  aParent->ChildCount(n);
+  for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
+    rv = aParent->ChildAt(i, child);
+    if (NS_SUCCEEDED(rv)) {
+      nsIDOMHTMLAnchorElement* area;
+      rv = child->QueryInterface(kIDOMHTMLAnchorElementIID, (void**) &area);
+      if (NS_SUCCEEDED(rv)) {
+        rv = AddArea(child);
+        NS_RELEASE(area);
+      }
+      else {
+        rv = UpdateAreasForBlock(child);
+      }
+      NS_RELEASE(child);
+    }
+  }
+  
+  return rv;
+}
+
 nsresult
 nsImageMap::UpdateAreas()
 {
   // Get rid of old area data
   FreeAreas();
 
-  nsIDOMHTMLCollection* col = nsnull;
-  nsresult rv = mDomMap->GetAreas(&col);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (nsnull != col) {
-    PRUint32 i, n;
-    col->GetLength(&n);
-    for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
-      nsIDOMNode* node = nsnull;
-      rv = col->Item(i, &node);
-      if (NS_SUCCEEDED(rv) && (nsnull != node)) {
+  nsresult rv;
+  nsIContent* child;
+  PRInt32 i, n;
+  PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;
+
+  mMap->ChildCount(n);
+  for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
+    rv = mMap->ChildAt(i, child);
+    if (NS_SUCCEEDED(rv)) {
+      // Only look at elements and not text, comments, etc.
+      nsIDOMHTMLElement* element;
+      rv = child->QueryInterface(kIDOMHTMLElementIID, (void**)&element);
+      if (NS_FAILED(rv)) {
+        rv = NS_OK;
+        continue;
+      }
+      NS_RELEASE(element);
+
+      // First check if this map element contains an AREA element.
+      // If so, we only look for AREA elements
+      if (!containsBlock) {
         nsIDOMHTMLAreaElement* area;
-        rv = node->QueryInterface(kIDOMHTMLAreaElementIID, (void**) &area);
+        rv = child->QueryInterface(kIDOMHTMLAreaElementIID, (void**) &area);
         if (NS_SUCCEEDED(rv)) {
-          rv = AddArea(area);
+          containsArea = PR_TRUE;
+          rv = AddArea(child);
           NS_RELEASE(area);
         }
         else {
+          containsBlock = PR_TRUE;
+          mContainsBlockContents = PR_TRUE;
           rv = NS_OK;
         }
-        NS_RELEASE(node);
       }
+      
+      // If the map element doesn't contain an AREA element as its
+      // first element, we make the assumption that it contains
+      // block elements and we look for children that are anchors.
+      if (!containsArea) {
+        rv = UpdateAreasForBlock(child);
+      }
+      
+      NS_RELEASE(child);
     }
-    NS_RELEASE(col);
   }
+
   return rv;
 }
 
 nsresult
-nsImageMap::AddArea(nsIDOMHTMLAreaElement* aArea)
+nsImageMap::AddArea(nsIContent* aArea)
 {
-  nsAutoString shape, coords, baseURL, href, target, altText;
-  aArea->GetShape(shape);
-  aArea->GetCoords(coords);
-  aArea->GetHref(href);
-  aArea->GetTarget(target);
-  aArea->GetAlt(altText);
+  nsAutoString shape, coords, baseURL, href, target, altText, noHref;
+  aArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::shape, shape);
+  aArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::coords, coords);
+  aArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+  aArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+  aArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText);
+  PRBool hasURL = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE != aArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::nohref, noHref));
   PRBool suppress = PR_FALSE;/* XXX */
 
   Area* area;
   if ((0 == shape.Length()) || shape.EqualsIgnoreCase("rect")) {
-    area = new RectArea(baseURL, href, target, altText, suppress);
+    area = new RectArea(baseURL, href, target, altText, suppress, hasURL);
   } else if (shape.EqualsIgnoreCase("poly") ||
              shape.EqualsIgnoreCase("polygon")) {
-    area = new PolyArea(baseURL, href, target, altText, suppress);
+    area = new PolyArea(baseURL, href, target, altText, suppress, hasURL);
   } else if (shape.EqualsIgnoreCase("circle")) {
-    area = new CircleArea(baseURL, href, target, altText, suppress);
+    area = new CircleArea(baseURL, href, target, altText, suppress, hasURL);
   }
   else {
-    area = new DefaultArea(baseURL, href, target, altText, suppress);
+    area = new DefaultArea(baseURL, href, target, altText, suppress, hasURL);
   }
   area->ParseCoords(coords);
   mAreas.AppendElement(area);
@@ -786,7 +842,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
-    if (area->IsInside(aX, aY)) {
+    if (area->IsInside(aX, aY) && area->mHasURL) {
       NS_MakeAbsoluteURL(aDocURL, area->mBase, area->mHREF, aAbsURL);
       aTarget = area->mTarget;
       aAltText = area->mAltText;
@@ -883,6 +939,27 @@ nsImageMap::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
   return NS_OK;
 }
 
+PRBool
+nsImageMap::IsAncestorOf(nsIContent* aContent,
+                         nsIContent* aAncestorContent)
+{
+  nsIContent* parent;
+  nsresult rv = aContent->GetParent(parent);
+  if (NS_SUCCEEDED(rv) && (nsnull != parent)) {
+    PRBool rBool;
+    if (parent == aAncestorContent) {
+      rBool = PR_TRUE;
+    }
+    else {
+      rBool = IsAncestorOf(parent, aAncestorContent);
+    }
+    NS_RELEASE(parent);
+    return rBool;
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsImageMap::ContentChanged(nsIDocument *aDocument,
                            nsIContent* aContent,
@@ -893,7 +970,8 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
   nsIContent* parent;
   nsresult rv = aContent->GetParent(parent);
   if (NS_SUCCEEDED(rv) && (nsnull != parent)) {
-    if (parent == mMap) {
+    if ((parent == mMap) || 
+        (mContainsBlockContents && IsAncestorOf(parent, mMap))) {
       UpdateAreas();
     }
     NS_RELEASE(parent);
@@ -920,7 +998,8 @@ nsImageMap::AttributeChanged(nsIDocument *aDocument,
   nsIContent* parent;
   nsresult rv = aContent->GetParent(parent);
   if (NS_SUCCEEDED(rv) && (nsnull != parent)) {
-    if (parent == mMap) {
+    if ((parent == mMap) || 
+        (mContainsBlockContents && IsAncestorOf(parent, mMap))) {
       UpdateAreas();
     }
     NS_RELEASE(parent);
@@ -933,7 +1012,8 @@ nsImageMap::ContentAppended(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             PRInt32     aNewIndexInContainer)
 {
-  if (mMap == aContainer) {
+  if ((mMap == aContainer) || 
+      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
     UpdateAreas();
   }
   return NS_OK;
@@ -945,7 +1025,8 @@ nsImageMap::ContentInserted(nsIDocument *aDocument,
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer)
 {
-  if (mMap == aContainer) {
+  if ((mMap == aContainer) ||
+      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
     UpdateAreas();
   }
   return NS_OK;
@@ -958,7 +1039,8 @@ nsImageMap::ContentReplaced(nsIDocument *aDocument,
                             nsIContent* aNewChild,
                             PRInt32 aIndexInContainer)
 {
-  if (mMap == aContainer) {
+  if ((mMap == aContainer) ||
+      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
     UpdateAreas();
   }
   return NS_OK;
@@ -970,7 +1052,8 @@ nsImageMap::ContentRemoved(nsIDocument *aDocument,
                            nsIContent* aChild,
                            PRInt32 aIndexInContainer)
 {
-  if (mMap == aContainer) {
+  if ((mMap == aContainer) ||
+      (mContainsBlockContents && IsAncestorOf(aContainer, mMap))) {
     UpdateAreas();
   }
   return NS_OK;

@@ -249,6 +249,7 @@ public:
   nsresult ProcessAREATag(const nsIParserNode& aNode);
   nsresult ProcessBASETag(const nsIParserNode& aNode);
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
+  nsresult ProcessMAPTag(const nsIParserNode& aNode, nsIHTMLContent* aContent);
   nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
@@ -979,6 +980,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     break;
   case eHTMLTag_table:
     mSink->mInMonolithicContainer++;
+    break;
+  case eHTMLTag_map:
+    mSink->ProcessMAPTag(aNode, content);
     break;
   default:
     break;
@@ -1798,53 +1802,13 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 {
-  NS_IF_RELEASE(mCurrentMap);
-  NS_IF_RELEASE(mCurrentDOMMap);
-
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-  nsIHTMLContent* map;
-  nsresult rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &map);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Set the content's document and attributes
-  map->SetDocument(mDocument, PR_FALSE);
-  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-  rv = AddAttributes(aNode, map, sco);
-  NS_IF_RELEASE(sco);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(map);
-    return rv;
-  }
-
-  nsIDOMHTMLMapElement* domMap;
-  rv = map->QueryInterface(kIDOMHTMLMapElementIID, (void**)&domMap);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(map);
-    return rv;
-  }
-
-  // Strip out whitespace in the name for navigator compatability
-  // XXX NAV QUIRK
-  nsHTMLValue name;
-  map->GetHTMLAttribute(nsHTMLAtoms::name, name);
-  if (eHTMLUnit_String == name.GetUnit()) {
-    nsAutoString tmp;
-    name.GetStringValue(tmp);
-    tmp.StripWhitespace();
-    name.SetStringValue(tmp);
-    map->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
-  }
-
-  // Add the map to the document
-  mHTMLDocument->AddImageMap(domMap);
-  mCurrentMap = map;  // holds a reference
-  mCurrentDOMMap = domMap;  // holds a reference
-
-  // Add the map content object to the document
-  rv = mCurrentContext->AddLeaf(map);
-  return rv;
+  SINK_TRACE_NODE(SINK_TRACE_CALLS,
+                  "HTMLContentSink::OpenMap", aNode);
+  // We used to treat MAP elements specially (i.e. they were
+  // only parent elements for AREAs), but we don't anymore.
+  // HTML 4.0 says that MAP elements can have block content
+  // as children.
+  return mCurrentContext->OpenContainer(aNode);
 }
 
 NS_IMETHODIMP
@@ -1854,7 +1818,8 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
                   "HTMLContentSink::CloseMap", aNode);
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mCurrentDOMMap);
-  return NS_OK;
+
+  return mCurrentContext->CloseContainer(aNode);
 }
 
 NS_IMETHODIMP
@@ -2534,6 +2499,42 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
   NS_RELEASE(element);
   return result;
+}
+
+nsresult
+HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
+                               nsIHTMLContent* aContent)
+{
+  nsresult rv;
+
+  NS_IF_RELEASE(mCurrentMap);
+  NS_IF_RELEASE(mCurrentDOMMap);
+
+  nsIDOMHTMLMapElement* domMap;
+  rv = aContent->QueryInterface(kIDOMHTMLMapElementIID, (void**)&domMap);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Strip out whitespace in the name for navigator compatability
+  // XXX NAV QUIRK
+  nsHTMLValue name;
+  aContent->GetHTMLAttribute(nsHTMLAtoms::name, name);
+  if (eHTMLUnit_String == name.GetUnit()) {
+    nsAutoString tmp;
+    name.GetStringValue(tmp);
+    tmp.StripWhitespace();
+    name.SetStringValue(tmp);
+    aContent->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
+  }
+
+  // Don't need to add the map to the document here anymore.
+  // The map adds itself
+  mCurrentMap = aContent;  
+  NS_ADDREF(aContent);
+  mCurrentDOMMap = domMap;  // holds a reference
+
+  return rv;
 }
 
 nsresult

@@ -34,8 +34,31 @@ for (var i = 0; i < a.length-1; i++) {
 }
 </SCRIPT>
 </SELECT>
+element's
+</P>
+<P>
+shape attribute to
+<SELECT SIZE="1" NAME="shape">
+<OPTION SELECTED VALUE="rect">rect</OPTION>
+<OPTION VALUE="circle">circle</OPTION>
+<OPTION VALUE="poly">poly</OPTION>
+<OPTION VALUE="default">default</OPTION>
+</SELECT>
+<INPUT TYPE="button" VALUE="Change Shape" onClick="changeElementShape(); return true;">
+(turn on visual debugging in the viewer to see the area boundaries)
 </P>
 </FORM>
+<SCRIPT>
+var nth = new Array("upper_left", "middle_middle", "lower_middle",
+                    "upper_middle", "middle_left", "lower_right",
+                    "lower_left", "middle_right", "upper_right",
+		    "left_brown", "top_brown", "right_brown");
+var shapes = new Array("rect", "circle", "poly", "default");
+function changeElementShape() {
+   var area = document.getElementById(nth[document.forms[0].nth.selectedIndex]);
+   area.shape = shapes[document.forms[0].shape.selectedIndex];
+}
+</SCRIPT>
 </BODY>
 </HTML>
 

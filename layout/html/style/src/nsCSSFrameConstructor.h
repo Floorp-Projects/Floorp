@@ -50,10 +50,7 @@ public:
                                 nsIContent*     aDocElement,
                                 nsIFrame*&      aNewFrame);
 
-  NS_IMETHODIMP ReconstructFrames(nsIPresContext* aPresContext,
-                                  nsIContent*     aContent,
-                                  nsIFrame*       aParentFrame,
-                                  nsIFrame*       aFrameSubTree);
+  NS_IMETHOD  ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
 
   NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
                              nsIContent*     aContainer,

@@ -27,8 +27,12 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "GenericElementCollection.h"
+#include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsHTMLMapElement : public nsIDOMHTMLMapElement,
                          public nsIScriptObjectOwner,
@@ -63,7 +67,106 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
+    return mInner.GetDocument(aResult);                                        
+  }                                                                        
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);            
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {                       
+    return mInner.GetParent(aResult);                                          
+  }                                                                        
+  NS_IMETHOD SetParent(nsIContent* aParent) {                              
+    return mInner.SetParent(aParent);                                          
+  }                                                                        
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {                   
+    return mInner.CanContainChildren(aResult);                                 
+  }                                                                        
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {                          
+    return mInner.ChildCount(aResult);                                         
+  }                                                                        
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {         
+    return mInner.ChildAt(aIndex, aResult);                                    
+  }                                                                        
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const { 
+    return mInner.IndexOf(aPossibleChild, aResult);                            
+  }                                                                        
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,               
+                           PRBool aNotify) {                               
+    return mInner.InsertChildAt(aKid, aIndex, aNotify);                        
+  }                                                                        
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,              
+                            PRBool aNotify) {                              
+    return mInner.ReplaceChildAt(aKid, aIndex, aNotify);                       
+  }                                                                        
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {             
+    return mInner.AppendChildTo(aKid, aNotify);                                
+  }                                                                        
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               
+    return mInner.RemoveChildAt(aIndex, aNotify);                              
+  }                                                                        
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                
+    return mInner.IsSynthetic(aResult);                                        
+  }                                                                        
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      
+    return mInner.GetNameSpaceID(aResult);                                     
+  }                                                                        
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             
+    return mInner.GetTag(aResult);                                             
+  }                                                                        
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    
+                                  nsIAtom*& aName,                         
+                                  PRInt32& aNameSpaceID) {                 
+    return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);             
+  }                                                                        
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,                      
+                                nsIAtom*& aPrefix) {                       
+    return mInner.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   
+  }                                                                        
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
+                          const nsString& aValue, PRBool aNotify) {        
+    return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          
+  }                                                                        
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
+                          nsString& aResult) const {                       
+    return mInner.GetAttribute(aNameSpaceID, aName, aResult);                  
+  }                                                                        
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     
+                            PRBool aNotify) {                              
+    return mInner.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           
+  }                                                                        
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            
+                                PRInt32& aNameSpaceID,                     
+                                nsIAtom*& aName) const {                   
+    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             
+  }                                                                        
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   
+    return mInner.GetAttributeCount(aResult);                                  
+  }                                                                        
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      
+    return mInner.List(out, aIndent);                                          
+  }                                                                        
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         
+    return mInner.BeginConvertToXIF(aConverter);                               
+  }                                                                        
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       
+    return mInner.ConvertContentToXIF(aConverter);                             
+  }                                                                        
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        
+    return mInner.FinishConvertToXIF(aConverter);                              
+  }                                                                        
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  
+                            nsEvent* aEvent,                               
+                            nsIDOMEvent** aDOMEvent,                       
+                            PRUint32 aFlags,                               
+                            nsEventStatus& aEventStatus);                  
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               
+    return mInner.RangeAdd(aRange);                                            
+  }                                                                        
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {                            
+    return mInner.RangeRemove(aRange);                                         
+  }                                                                        
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   
+    return mInner.GetRangeList(aResult);                                       
+  }                                                                        
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -119,7 +222,37 @@ nsHTMLMapElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsresult
+NS_IMETHODIMP 
+nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+{
+  nsresult rv;
+  
+  if (nsnull != mInner.mDocument) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc;
+    
+    rv = mInner.mDocument->QueryInterface(kIHTMLDocumentIID, 
+                                          getter_AddRefs(htmlDoc));
+    if (NS_OK == rv) {
+      htmlDoc->RemoveImageMap(this);
+    }
+  }
+
+  rv = mInner.SetDocument(aDocument, aDeep);
+
+  if (NS_SUCCEEDED(rv) && (nsnull != aDocument)) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc;
+    
+    rv = aDocument->QueryInterface(kIHTMLDocumentIID, 
+                                   getter_AddRefs(htmlDoc));
+    if (NS_OK == rv) {
+      htmlDoc->AddImageMap(this);
+    }
+  }
+  
+  return rv;
+}
+
+NS_IMETHODIMP
 nsHTMLMapElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsHTMLMapElement* it = new nsHTMLMapElement(mInner.mTag);
@@ -197,10 +330,14 @@ nsHTMLMapElement::HandleDOMEvent(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLMapElement::GetStyleHintForAttributeChange(
-  const nsIAtom* aAttribute,
-  PRInt32 *aHint) const
+nsHTMLMapElement::GetStyleHintForAttributeChange(const nsIAtom* aAttribute,
+                                                 PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if (aAttribute == nsHTMLAtoms::name) {
+    *aHint = NS_STYLE_HINT_RECONSTRUCT_ALL;
+  }
+  else {
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }

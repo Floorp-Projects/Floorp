@@ -24,6 +24,7 @@
 #include "nsVoidArray.h"
 #include "nsIDocumentObserver.h"
 
+class nsIContent;
 class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
 class nsIPresContext;
@@ -121,13 +122,18 @@ protected:
   void FreeAreas();
 
   nsresult UpdateAreas();
+  nsresult UpdateAreasForBlock(nsIContent* aParent);
 
-  nsresult AddArea(nsIDOMHTMLAreaElement* aArea);
+  static PRBool IsAncestorOf(nsIContent* aContent,
+                             nsIContent* aAncestorContent);
+
+  nsresult AddArea(nsIContent* aArea);
 
   nsIDocument* mDocument;
   nsIDOMHTMLMapElement* mDomMap;
   nsIContent* mMap;
   nsVoidArray mAreas;
+  PRBool mContainsBlockContents;
 };
 
 #endif /* nsImageMap_h___ */
