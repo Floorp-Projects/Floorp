@@ -259,6 +259,11 @@ public class FunctionObject extends BaseFunction
         return getArity();
     }
 
+    public String getFunctionName()
+    {
+        return (functionName == null) ? "" : functionName;
+    }
+
     /**
      * Get Java method or constructor this function represent.
      */
@@ -550,6 +555,7 @@ public class FunctionObject extends BaseFunction
     public static final int JAVA_OBJECT_TYPE      = 6;
 
     MemberBox member;
+    private String functionName;
     private transient byte[] typeTags;
     private int parmsLength;
     private transient boolean hasVoidReturn;

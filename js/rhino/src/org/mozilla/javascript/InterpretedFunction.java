@@ -84,7 +84,6 @@ final class InterpretedFunction extends NativeFunction implements Script
     {
         InterpretedFunction f;
         f = new InterpretedFunction(idata, staticSecurityDomain);
-        f.initScriptObject();
         return f;
     }
 
@@ -128,10 +127,15 @@ final class InterpretedFunction extends NativeFunction implements Script
 
     private void initInterpretedFunction(Context cx, Scriptable scope)
     {
-        initScriptFunction(cx, scope, idata.itsName);
+        initScriptFunction(cx, scope);
         if (idata.itsRegExpLiterals != null) {
             functionRegExps = createRegExpWraps(cx, scope);
         }
+    }
+
+    public String getFunctionName()
+    {
+        return (idata.itsName == null) ? "" : idata.itsName;
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,

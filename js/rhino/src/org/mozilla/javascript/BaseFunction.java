@@ -51,7 +51,6 @@ public class BaseFunction extends IdScriptableObject implements Function
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
         BaseFunction obj = new BaseFunction();
-        obj.functionName = "";
         obj.isPrototypePropertyImmune = true;
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
@@ -91,7 +90,7 @@ public class BaseFunction extends IdScriptableObject implements Function
             return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
         }
         throw ScriptRuntime.typeError1("msg.instanceof.bad.prototype",
-                                       functionName);
+                                       getFunctionName());
     }
 
 // #string_id_map#
@@ -263,7 +262,8 @@ public class BaseFunction extends IdScriptableObject implements Function
         if (x instanceof BaseFunction) {
             return (BaseFunction)x;
         }
-        throw ScriptRuntime.typeError1("msg.incompat.call", f.functionName);
+        throw ScriptRuntime.typeError1("msg.incompat.call",
+                                       f.getFunctionName());
     }
 
     /**
@@ -312,7 +312,7 @@ public class BaseFunction extends IdScriptableObject implements Function
                 // the call method if createObject returns null.
                 throw new IllegalStateException(
                     "Bad implementaion of call as constructor, name="
-                    +functionName+" in "+getClass().getName());
+                    +getFunctionName()+" in "+getClass().getName());
             }
             result = (Scriptable)val;
             if (result.getPrototype() == null) {
@@ -385,10 +385,9 @@ public class BaseFunction extends IdScriptableObject implements Function
 
     public int getLength() { return 0; }
 
-    public String getFunctionName() {
-        if (functionName == null)
-            return "";
-        return functionName;
+    public String getFunctionName()
+    {
+        return "";
     }
 
     final Object getPrototypeProperty() {
@@ -531,8 +530,6 @@ public class BaseFunction extends IdScriptableObject implements Function
         MAX_PROTOTYPE_ID  = 5;
 
 // #/string_id_map#
-
-    protected String functionName;
 
     private Object prototypeProperty;
     private boolean isPrototypePropertyImmune;

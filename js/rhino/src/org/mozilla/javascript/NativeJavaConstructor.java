@@ -56,11 +56,11 @@ import java.io.*;
 
 public class NativeJavaConstructor extends BaseFunction
 {
+    MemberBox ctor;
+
     public NativeJavaConstructor(MemberBox ctor)
     {
         this.ctor = ctor;
-        String sig = JavaMembers.liveConnectSignature(ctor.argTypes);
-        this.functionName = "<init>".concat(sig);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -69,11 +69,15 @@ public class NativeJavaConstructor extends BaseFunction
         return NativeJavaClass.constructSpecific(cx, scope, args, ctor);
     }
 
+    public String getFunctionName()
+    {
+        String sig = JavaMembers.liveConnectSignature(ctor.argTypes);
+        return "<init>".concat(sig);
+    }
+
     public String toString()
     {
         return "[JavaConstructor " + ctor.getName() + "]";
     }
-
-    MemberBox ctor;
 }
 

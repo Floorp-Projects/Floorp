@@ -57,7 +57,11 @@ class NativeRegExpCtor extends BaseFunction {
 
     NativeRegExpCtor()
     {
-        functionName = "RegExp";
+    }
+
+    public String getFunctionName()
+    {
+        return "RegExp";
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,

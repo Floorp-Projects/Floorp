@@ -553,13 +553,6 @@ public class Codegen extends Interpreter
         cfw.addPush(0);
         cfw.add(ByteCode.PUTFIELD, cfw.getClassName(), ID_FIELD_NAME, "I");
 
-        // Call
-        // NativeFunction.initScriptObject(version, varNamesArray)
-        cfw.addLoadThis();
-        cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
-                      "org/mozilla/javascript/NativeFunction",
-                      "initScriptObject", "()V");
-
         cfw.add(ByteCode.RETURN);
         // 1 parameter = this
         cfw.stopMethod((short)1);
@@ -635,13 +628,11 @@ public class Codegen extends Interpreter
         cfw.addLoadThis();
         cfw.addALoad(CONTEXT_ARG);
         cfw.addALoad(SCOPE_ARG);
-        cfw.addPush(ofn.fnode.getFunctionName());
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                       "org/mozilla/javascript/NativeFunction",
                       "initScriptFunction",
                       "(Lorg/mozilla/javascript/Context;"
                       +"Lorg/mozilla/javascript/Scriptable;"
-                      +"Ljava/lang/String;"
                       +")V");
 
         // precompile all regexp literals
@@ -676,11 +667,12 @@ public class Codegen extends Interpreter
         // The rest of NativeFunction overrides require specific code for each
         // script/function id
 
-        final int Do_getParamCount        = 0;
-        final int Do_getParamAndVarCount  = 1;
-        final int Do_getParamOrVarName    = 2;
-        final int Do_getEncodedSource     = 3;
-        final int SWITCH_COUNT            = 4;
+        final int Do_getFunctionName      = 0;
+        final int Do_getParamCount        = 1;
+        final int Do_getParamAndVarCount  = 2;
+        final int Do_getParamOrVarName    = 3;
+        final int Do_getEncodedSource     = 4;
+        final int SWITCH_COUNT            = 5;
 
         for (int methodIndex = 0; methodIndex != SWITCH_COUNT; ++methodIndex) {
             if (methodIndex == Do_getEncodedSource && encodedSource == null) {
@@ -694,6 +686,11 @@ public class Codegen extends Interpreter
 
             short metodLocals;
             switch (methodIndex) {
+              case Do_getFunctionName:
+                metodLocals = 1; // Only this
+                cfw.startMethod("getFunctionName", "()Ljava/lang/String;",
+                                ClassFileWriter.ACC_PUBLIC);
+                break;
               case Do_getParamCount:
                 metodLocals = 1; // Only this
                 cfw.startMethod("getParamCount", "()I",
@@ -748,6 +745,17 @@ public class Codegen extends Interpreter
 
                 // Impelemnet method-specific switch code
                 switch (methodIndex) {
+                  case Do_getFunctionName:
+                    // Push function name
+                    if (n.getType() == Token.SCRIPT) {
+                        cfw.addPush("");
+                    } else {
+                        String name = ((FunctionNode)n).getFunctionName();
+                        cfw.addPush(name);
+                    }
+                    cfw.add(ByteCode.ARETURN);
+                    break;
+
                   case Do_getParamCount:
                     // Push number of defined parameters
                     cfw.addPush(n.getParamCount());

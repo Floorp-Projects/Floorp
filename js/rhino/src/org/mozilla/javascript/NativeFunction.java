@@ -48,17 +48,9 @@ import org.mozilla.javascript.debug.DebuggableScript;
 public abstract class NativeFunction extends BaseFunction
 {
 
-    public final void initScriptFunction(Context cx, Scriptable scope,
-                                         String functionName)
+    public final void initScriptFunction(Context cx, Scriptable scope)
     {
-        this.functionName = functionName;
-
         ScriptRuntime.setFunctionProtoAndParent(this, scope);
-    }
-
-    public final void initScriptObject()
-    {
-        this.functionName = "";
     }
 
     /**

@@ -3034,7 +3034,7 @@ public class ScriptRuntime {
                                     boolean fromEvalCode)
     {
         if (type == FunctionNode.FUNCTION_STATEMENT) {
-            String name = function.functionName;
+            String name = function.getFunctionName();
             if (name != null && name.length() != 0) {
                 if (!fromEvalCode) {
                     // ECMA specifies that functions defined in global and
@@ -3046,7 +3046,7 @@ public class ScriptRuntime {
                 }
             }
         } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-            String name = function.functionName;
+            String name = function.getFunctionName();
             if (name != null && name.length() != 0) {
                 // Always put function expression statements into initial
                 // activation object ignoring the with statement to follow

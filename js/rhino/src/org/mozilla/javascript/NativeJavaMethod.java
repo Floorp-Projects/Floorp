@@ -70,6 +70,11 @@ public class NativeJavaMethod extends BaseFunction
         this(new MemberBox(method, null), name);
     }
 
+    public String getFunctionName()
+    {
+        return functionName;
+    }
+
     static String scriptSignature(Object[] values)
     {
         StringBuffer sig = new StringBuffer();
@@ -148,7 +153,7 @@ public class NativeJavaMethod extends BaseFunction
         int index = findFunction(cx, methods, args);
         if (index < 0) {
             Class c = methods[0].method().getDeclaringClass();
-            String sig = c.getName() + '.' + functionName + '(' +
+            String sig = c.getName() + '.' + getFunctionName() + '(' +
                          scriptSignature(args) + ')';
             throw Context.reportRuntimeError1("msg.java.no_such_method", sig);
         }
@@ -177,7 +182,7 @@ public class NativeJavaMethod extends BaseFunction
             for (;;) {
                 if (o == null) {
                     throw Context.reportRuntimeError3(
-                        "msg.nonjava.method", functionName,
+                        "msg.nonjava.method", getFunctionName(),
                         ScriptRuntime.toString(thisObj), c.getName());
                 }
                 if (o instanceof Wrapper) {
@@ -467,5 +472,6 @@ public class NativeJavaMethod extends BaseFunction
     }
 
     MemberBox[] methods;
+    private String functionName;
 }
 
