@@ -139,7 +139,7 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 
     if ( NS_SUCCEEDED(rv) )
     {
-        rv = prefs->GetBoolPref( (const char*) AUTOUPDATE_ENABLE_PREF, aReturn);
+        rv = prefs->GetBoolPref( (const char*) XPINSTALL_ENABLE_PREF, aReturn);
 
         if (NS_FAILED(rv))
         {
@@ -152,9 +152,7 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
     {
         *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
     }
-    
-    //FIX!!!!!!!!!!  
-    *aReturn = PR_TRUE; 
+ 
     return NS_OK;
 }
 
