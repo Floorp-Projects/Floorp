@@ -29,9 +29,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsrefcnt gRefCnt = 0;
-nsIRDFService* gRDF;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRDFResource::nsRDFResource(void)
@@ -42,20 +39,21 @@ nsRDFResource::nsRDFResource(void)
 
 nsRDFResource::~nsRDFResource(void)
 {
-    nsresult rv;
-    rv = gRDF->UnregisterResource(this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unregister resource");
+    nsIRDFService* rdfService = nsnull;
+    nsresult rv = NS_OK;
+    rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   nsIRDFService::GetIID(),
+                                                   (nsISupports**) &rdfService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+
+    if (NS_SUCCEEDED(rv) && rdfService != nsnull) {
+        rdfService->UnregisterResource(this);
+        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+    }
 
     // N.B. that we need to free the URI *after* we un-cache the resource,
     // due to the way that the resource manager is implemented.
     delete[] mURI;
-
-    if (--gRefCnt == 0) {
-        if (gRDF) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
-            gRDF = nsnull;
-        }
-    }
 }
 
 NS_IMPL_ADDREF(nsRDFResource)
@@ -122,19 +120,23 @@ nsRDFResource::Init(const char* aURI)
 
     PL_strcpy(mURI, aURI);
 
-    nsresult rv;
+    nsIRDFService* rdfService = nsnull;
+    nsresult rv = NS_OK;
+    rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                   nsIRDFService::GetIID(),
+                                                   (nsISupports**) &rdfService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 
-    if (gRefCnt++ == 0) {
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
-                                          (nsISupports**) &gRDF);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_FAILED(rv)) return rv;
+    if (!NS_SUCCEEDED(rv)) {
+	return rv;
+    }
+    if (rdfService == nsnull) {
+        return NS_ERROR_NULL_POINTER;
     }
 
     // don't replace an existing resource with the same URI automatically
-    rv = gRDF->RegisterResource(this, PR_TRUE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register resource");
+    rv = rdfService->RegisterResource(this, PR_TRUE);
+    nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
     return rv;
 }
 
