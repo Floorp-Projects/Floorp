@@ -33,6 +33,9 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsDebug.h"
 
+#include "nsIChromeRegistry.h" // chromeReg
+#include "nsXPIDLString.h"     // nsXPIDLString
+
 #ifdef XP_MAC
 #include <Folders.h>
 #include <Files.h>
@@ -58,6 +61,7 @@
 
 // for profile manager
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
+static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 
 // Global variable for gProfileDir
 static nsFileSpec* gProfileDir = nsnull;
@@ -97,6 +101,7 @@ struct DirectoryTable DirectoryTable[] =
     {"app.profile.defaults.directory.3",    nsSpecialFileSpec::App_ProfileDefaultsFolder30 },
     {"app.profile.defaults.directory.4",    nsSpecialFileSpec::App_ProfileDefaultsFolder40 },
     {"app.profile.defaults.directory.5",    nsSpecialFileSpec::App_ProfileDefaultsFolder50 },
+    {"app.profile.defaults.directory.5.nloc",    nsSpecialFileSpec::App_ProfileDefaultsFolder50_nloc },
 
 
 // Application Directories: 
@@ -147,6 +152,22 @@ struct DirectoryTable DirectoryTable[] =
 //========================================================================================
 // Static functions that ain't nobody else's business.
 //========================================================================================
+
+//----------------------------------------------------------------------------------------
+static nsresult GetChromeLocale(PRUnichar** lc_name)
+// Inquire the current chrome UI locale 
+//----------------------------------------------------------------------------------------
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  *lc_name = nsnull;
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+      nsString tmpstr; tmpstr.AssignWithConversion("navigator");
+      rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), lc_name);
+  }
+  return rv;
+}
 
 //----------------------------------------------------------------------------------------
 static PRBool GetProfileDirectory(nsFileSpec& outSpec)
@@ -316,6 +337,23 @@ static void GetDefaultsFolder(nsFileSpec& outSpec)
 } // GetDefaultsFolder
 
 //----------------------------------------------------------------------------------------
+static void GetProfileDefaultsFolder_nloc(nsFileSpec& outSpec)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpec cwd;
+    GetDefaultsFolder(cwd);
+
+#if defined(XP_MAC)
+    cwd += "Profile";
+#else
+    cwd += "profile";
+#endif
+
+    outSpec = cwd;
+    
+} // GetProfileDefaultsFolder_nloc
+
+//----------------------------------------------------------------------------------------
 static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
 //----------------------------------------------------------------------------------------
 {
@@ -328,6 +366,16 @@ static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
     cwd += "profile";
 #endif
 
+    nsXPIDLString lc_name;
+    nsresult rv = GetChromeLocale(getter_Copies(lc_name));
+    if (NS_SUCCEEDED(rv)) {
+        nsFileSpec tmpdir; 
+        tmpdir = cwd;
+        tmpdir += (const PRUnichar*) lc_name;
+
+        if (tmpdir.Exists())
+            cwd = tmpdir;
+    }
     outSpec = cwd;
     
 } // GetProfileDefaultsFolder
@@ -466,6 +514,9 @@ void nsSpecialFileSpec::operator = (Type aType)
             break;    
         case App_ProfileDefaultsFolder50:
             GetProfileDefaultsFolder(*this);
+            break; 
+        case App_ProfileDefaultsFolder50_nloc:
+            GetProfileDefaultsFolder_nloc(*this);
             break; 
         case App_PrefDefaultsFolder50:
             GetPrefDefaultsFolder(*this);
