@@ -284,6 +284,15 @@ bin\chrome\toolkit\*
 bin\chrome\modern\*
 bin\chrome\classic\*
 bin\chrome\chromelist.txt
+bin\chrome\icons\default\bmPropsWindow.ico
+bin\chrome\icons\default\bookmark-window.ico
+bin\chrome\icons\default\downloadManager.ico
+bin\chrome\icons\default\editorWindow.ico
+bin\chrome\icons\default\findBookmarkWindow.ico
+bin\chrome\icons\default\findHistoryWindow.ico
+bin\chrome\icons\default\history-window.ico
+bin\chrome\icons\default\jsconsoleWindow.ico
+bin\chrome\icons\default\main-window.ico
 ;-bin\chrome\comm\content\editor\EditorInitPage.html
 ;-bin\chrome\comm\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -375,6 +384,10 @@ bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
+bin\chrome\icons\default\abcardWindow.ico
+bin\chrome\icons\default\addressbookWindow.ico
+bin\chrome\icons\default\messengerWindow.ico
+bin\chrome\icons\default\msgcomposeWindow.ico
 bin\components\msgsmime.dll
 bin\components\msgsmime.xpt
 bin\components\smime-service.js
@@ -390,10 +403,12 @@ bin\components\mdn-service.js
 bin\components\chatzilla-service.js
 bin\chrome\chatzilla.jar
 bin\chrome\chatzilla\*
+bin\chrome\icons\default\chatzilla-window.ico
 
 [venkman]
 bin\components\venkman-service.js
 bin\chrome\venkman.jar
+bin\chrome\icons\default\venkman-window.ico
 
 [psm]
 bin\nssckbi.dll
@@ -414,6 +429,7 @@ bin\chrome\pippki.jar
 bin\components\inspector.dll
 bin\components\inspector.xpt
 bin\chrome\inspector.jar
+bin\chrome\icons\default\winInspectorMain.ico
 bin\defaults\pref\inspector.js
 bin\res\inspector\viewer-registry.rdf
 bin\res\inspector\search-registry.rdf
