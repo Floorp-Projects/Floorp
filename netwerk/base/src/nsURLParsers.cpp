@@ -391,18 +391,21 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
         break;
     case 2:
         {
-            // looks like there is an authority section
-            const char *p = (const char *) memchr(spec + 2, '/', specLen - 2);
+            const char *p = nsnull;
+            if (specLen > 2) {
+                // looks like there is an authority section
+                p = (const char *) memchr(spec + 2, '/', specLen - 2);
 #if defined(XP_PC)
-            // if the authority looks like a drive number then we
-            // really want to treat it as part of the path
-            if (((p && (p - (spec + 2) == 2)) || (specLen == 4)) &&
-                (spec[3] == ':' || spec[3] == '|') &&
-                (nsCRT::IsAsciiAlpha(spec[2]))) {
-                pos = 1;
-                break;
-            }
+                // if the authority looks like a drive number then we
+                // really want to treat it as part of the path
+                if (((p && (p - (spec + 2) == 2)) || (specLen == 4)) &&
+                    (spec[3] == ':' || spec[3] == '|') &&
+                    (nsCRT::IsAsciiAlpha(spec[2]))) {
+                    pos = 1;
+                    break;
+                }
 #endif
+            }
             if (p) {
                 SET_RESULT(auth, 2, p - (spec + 2));
                 SET_RESULT(path, p - spec, specLen - (p - spec));
