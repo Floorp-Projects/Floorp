@@ -367,7 +367,7 @@ static char* getJavaConsolePath(char* path, UInt32 maxPathSize)
     OSErr err = FSFindFolder(kUserDomain, kDomainLibraryFolderType, true, &ref);
     if (err == noErr) {
         err = FSRefMakePath(&ref, (UInt8*) path, maxPathSize);
-        const char kJavaConsoleLog[] = { "/Logs/JavaConsole.log" };
+        const char kJavaConsoleLog[] = { "/Logs/Java Console.log" };
         int len = strlen(path);
         if (err == noErr && (len + sizeof(kJavaConsoleLog)) <= maxPathSize) {
             strcat(path + len, kJavaConsoleLog);
@@ -436,13 +436,20 @@ NS_METHOD MRJPlugin::GetJavaWrapper(JNIEnv* env, jint jsobj, jobject *jobj)
     return NS_OK;
 }
 
+NS_METHOD MRJPlugin::UnwrapJavaWrapper(JNIEnv* env, jobject jobj, jint* jsobj)
+{
+    *jsobj = Unwrap_JSObject(env, jobj);
+    return NS_OK;
+}
+
 NS_METHOD MRJPlugin::CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv)
 {
     *outSecureEnv = NULL;
     nsresult rv = StartupJVM();
     if (rv == NS_OK) {
         // Need to spawn a new JVM communication thread here.
-        NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
+        // rv = CSecureEnv::Create(this, proxyEnv, NS_GET_IID(nsISecureEnv), (void**)outSecureEnv);
+        static NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
         rv = CSecureEnv::Create(this, proxyEnv, kISecureEnvIID, (void**)outSecureEnv);
     }
     return rv;
@@ -459,11 +466,6 @@ NS_METHOD MRJPlugin::SpendTime(PRUint32 timeMillis)
             mSession->idle(timeMillis);
     }
     return result;
-}
-
-NS_METHOD MRJPlugin::UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /**
