@@ -20,7 +20,7 @@
 #include "nsString.h"
 #include "nsXPComFactory.h"
 
-class nsDialogParamBlock: public nsISupports
+class nsDialogParamBlock: public nsIDialogParamBlock
 {
  	enum {kNumInts = 8, kNumStrings =12 };
 public: 	
