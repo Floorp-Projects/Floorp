@@ -24,6 +24,7 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsDOMEvent.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIFrame.h"
@@ -113,6 +114,8 @@ public:
                                   const nsRect& aDirtyRect);
 
   ///XXX: End o the temporary methods
+
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
 protected:
   PRUint32 mNumRows;
@@ -623,10 +626,11 @@ nsSelectControlFrame::Reset()
       if (option) {
         PRBool selected = PR_FALSE;
         option->GetSelected(&selected);
+        option->SetDefaultSelected(selected); // Hmmm, the meaning seems reversed here...
         if (selected) {
           listWidget->SelectItem(i);
-          selectedIndex = i;
-          if (!multiple) {
+          if (selectedIndex < 0) selectedIndex = i; // First selected index in multiple
+          if (!multiple) { // Optimization
             break;  
           }
         }
@@ -637,11 +641,19 @@ nsSelectControlFrame::Reset()
 
   // if none were selected, select 1st one if we are a combo box
   if (mIsComboBox && (numOptions > 0) && (selectedIndex < 0)) {
-    listWidget->SelectItem(0);
+    selectedIndex = 0;
+    listWidget->SelectItem(selectedIndex);
   }
   NS_RELEASE(listWidget);
   NS_RELEASE(options);
-}  
+
+  // reflect the selectedIndex into the content model
+  if (selectedIndex >= 0) {
+    nsIDOMHTMLSelectElement* selectElement = GetSelect();
+    selectElement->SetSelectedIndex(selectedIndex);
+    NS_RELEASE(selectElement);
+  }
+}
 
 
 
@@ -785,7 +797,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
     y = inside.y;
   }
 
-  PRUint32 selectedIndex = -1;
+  PRInt32 selectedIndex = -1;
   // XXX Get Selected index out of Content model
   selectedIndex = 1;
 
@@ -845,13 +857,13 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
       const nsStyleColor*   arrowColor   = (const nsStyleColor*)arrowStyle->GetStyleData(eStyleStruct_Color);
 
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
-	    PaintArrow(eArrowDirection_Down, aRenderingContext,aPresContext, 
-			          aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
+        PaintArrow(eArrowDirection_Down, aRenderingContext,aPresContext, 
+                      aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
     } else {
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
 
       PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
-																    scrollbarStyle, arrowStyle, this, mRect);   
+                                                                    scrollbarStyle, arrowStyle, this, mRect);   
     }
   }
 
@@ -876,4 +888,121 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
     PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
   }
   return NS_OK;
+}
+
+void
+nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
+{
+  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
+
+    PRBool changed = PR_FALSE;
+    PRBool multiple;
+    GetMultiple(&multiple);
+    if (!multiple) {
+      nsIListWidget* listWidget;
+      nsresult result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+      if ((NS_OK == result) && listWidget) {
+        PRInt32 contentIndex;
+        PRInt32 viewIndex = listWidget->GetSelectedIndex();
+        NS_RELEASE(listWidget);
+
+        nsIDOMHTMLSelectElement* selectElement = GetSelect();
+    if (selectElement) {
+      selectElement->GetSelectedIndex(&contentIndex);
+
+          if (contentIndex != viewIndex) {
+        changed = PR_TRUE;
+        selectElement->SetSelectedIndex(viewIndex); // Keep content up to date w/ view
+      }
+      NS_RELEASE(selectElement);
+
+        }
+      }
+    } else {
+      // Get content model options
+      nsIDOMHTMLCollection* options = GetOptions();
+      if (!options) {
+        return;
+      }
+      PRUint32 numOptions;
+      options->GetLength(&numOptions);
+
+      // Get the selected option from the view
+      nsIListBox* listBox;
+      nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
+      if (!(NS_OK == result) || !listBox) {
+        return;
+      }
+      PRUint32 numSelected = listBox->GetSelectedCount();
+      PRInt32* selOptions;
+      if (numSelected >= 0) {
+        selOptions = new PRInt32[numSelected];
+        listBox->GetSelectedIndices(selOptions, numSelected);
+      }
+      NS_RELEASE(listBox);
+
+      // Assume options are sorted in selOptions XXX sort them:pollmann
+
+      // Walk through the content option list and synchronize it with the view
+      PRUint32 selIndex = 0;
+      PRUint32 nextSel = 0;
+      if (numSelected > 0) {
+        nextSel = selOptions[selIndex];
+      }
+
+      PRInt32 selectedIndex = -1;
+
+      // Step through each option in content model
+      for (PRUint32 i=0; i < numOptions; i++) {
+        PRBool selected = PR_FALSE;
+        nsIDOMHTMLOptionElement* option = GetOption(*options, i);
+        if (option) {
+          option->GetDefaultSelected(&selected);
+          if (i == nextSel) { // If this option is selected in view
+            if (!selected) { // If not selected in content model
+              changed = 1;
+              option->SetDefaultSelected(PR_TRUE); // Meaning reversed: Update contend model
+            }
+
+            // Update selectedIndex to point at first selected option in content model
+            if (selectedIndex < 0) {
+              selectedIndex = i;
+            }
+
+            // Get the next selected option in the view
+            selIndex++; 
+            if (selIndex < numSelected) {
+              nextSel = selOptions[selIndex];
+            }
+          } else { //not selected in view
+            if (selected) {
+              changed = 1;
+              option->SetDefaultSelected(PR_FALSE); //Meaning reversed: Update content model
+            }
+          }
+        }
+        NS_RELEASE(option);
+      }
+      delete[] selOptions;
+      NS_RELEASE(options);
+
+      // reflect the selectedIndex into the content model
+      if (selectedIndex >= 0) {
+        nsIDOMHTMLSelectElement* selectElement = GetSelect();
+        selectElement->SetSelectedIndex(selectedIndex);
+        NS_RELEASE(selectElement);
+      }
+    }
+
+    if (changed) {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+
+      event.message = NS_FORM_CHANGE;
+      if (nsnull != mContent) {
+        mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+      }
+    }
+  }
 }
