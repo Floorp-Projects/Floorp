@@ -2958,6 +2958,7 @@ SECU_PKCS11Init(PRBool readOnly) {
 		    * no keyDB? You got it Get Random Data... just one more
 		    * reason to want to move this call into pkcs11.c
 		    */
+    RNG_SystemInfoForRNG();
 
     kdb_handle = SECU_OpenKeyDB(readOnly);
     
