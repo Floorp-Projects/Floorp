@@ -38,41 +38,20 @@
   } 
 
 #button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"]:hover,
-#button-getmsg[disabled="true"]:hover:active
+#button-getmsg[disabled="true"][buttonover="true"],
+#button-getmsg[disabled="true"][buttondown="true"]
   {
     list-style-image      : url("chrome://messenger/skin/getmsg-disabled.gif");
   } 
 
-#button-getmsg:hover
+#button-getmsg[buttonover="true"]
   {
     list-style-image      : url("chrome://messenger/skin/getmsg-hover.gif");
   } 
 
-#button-getmsg:hover:active
+#button-getmsg[buttondown="true"]
   {
     list-style-image      : url("chrome://messenger/skin/getmsg-hover-active.gif");
-  } 
-
-#button-mark {
-	list-style-image	: url("chrome://messenger/skin/mark.gif");
-}
-
-#button-mark[disabled="true"],
-#button-mark[disabled="true"]:hover,
-#button-mark[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
-  } 
-
-#button-mark:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
-  } 
-
-#button-mark:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
   } 
 
 #button-newmsg 
@@ -228,6 +207,27 @@
   {
     list-style-image      : url("chrome://messenger/skin/trash-hover-active.gif");
   } 
+ 
+#button-mark {
+	list-style-image	: url("chrome://messenger/skin/mark.gif");
+}
+
+#button-mark[disabled="true"],
+#button-mark[disabled="true"][buttonover="true"],
+#button-mark[disabled="true"][buttondown="true"]
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
+  } 
+
+#button-mark[buttonover="true"]
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
+  } 
+
+#button-mark[buttondown="true"]
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
+  } 
 
 #button-print {
 	list-style-image:url("chrome://global/skin/print.gif");
@@ -348,6 +348,33 @@
     list-style-image      : url("chrome://messenger/skin/server-news.gif");
   }
 
+menu.push {
+  border: 1px outset ThreeDFace;
+  padding: 2px;
+  margin: 2px;
+  text-align: center;
+  background-color: inherit;
+  background-image: inherit;
+}
+
+menu.push:hover:active,
+menu.push[open],
+menu.push[toggled="1"] {
+  border-style: inset;
+  padding: 3px 1px 1px 3px;
+}
+
+menu.push[toggled="2"] {
+   background-color: lightgray;
+   border: 1px solid gray;
+}
+
+menu.push[disabled="true"],
+menu.push[disabled="true"]:hover,
+menu.push[disabled="true"]:hover:active {
+  color: GrayText;
+}
+  
 /**
  * this belongs in the mail filter window
  */

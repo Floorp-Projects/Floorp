@@ -38,18 +38,18 @@
   } 
 
 #button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"]:hover,
-#button-getmsg[disabled="true"]:hover:active
+#button-getmsg[disabled="true"][buttonover="true"],
+#button-getmsg[disabled="true"][buttondown="true"]
   {
     list-style-image      : url("chrome://messenger/skin/getmsg-disabled.gif");
   } 
 
-#button-getmsg:hover
+#button-getmsg[buttonover="true"]
   {
     list-style-image      : url("chrome://messenger/skin/getmsg-hover.gif");
   } 
 
-#button-getmsg:hover:active
+#button-getmsg[buttondown="true"]
   {
     list-style-image      : url("chrome://messenger/skin/getmsg-hover-active.gif");
   } 
@@ -77,22 +77,22 @@
   } 
 
 #button-mark {
-	list-style-image	: url("chrome://messenger/skin/mark.gif");
+       list-style-image        : url("chrome://messenger/skin/mark.gif");
 }
 
 #button-mark[disabled="true"],
-#button-mark[disabled="true"]:hover,
-#button-mark[disabled="true"]:hover:active
+#button-mark[disabled="true"][buttonover="true"],
+#button-mark[disabled="true"][buttondown="true"]
   {
     list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
   } 
 
-#button-mark:hover
+#button-mark[buttonover="true"]
   {
     list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
   } 
 
-#button-mark:hover:active
+#button-mark[buttondown="true"]
   {
     list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
   } 

@@ -80,62 +80,39 @@ iframe {
 }
 
 #button-getmsg {
-	margin-left			: 0px;
-	list-style-image	: url("chrome://messenger/skin/getmsg.gif");
+  -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+  margin                : 3px 3px 1px 3px;
+  text-align            : center;
+  list-style-image      : url("chrome://messenger/skin/getmsg.gif");
 }
 
-#button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"]:hover,
-#button-getmsg[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/getmsg-disabled.gif");
-  } 
-
-#button-getmsg:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/getmsg-hover.gif");
-  } 
-
-#button-getmsg:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/getmsg-clicked.gif");
-  } 
-
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left           : 27px;
-    margin-top            : 15px;
-  }
-
-#button-mark
-  {
-    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-    list-style-image      : url("chrome://messenger/skin/mark.gif");
-    margin                : 3px 3px 1px 3px;
-    text-align            : center;
-  }
-
-#button-mark > .menubutton-dual-stack > .menubutton-dual-button
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button
   {
     margin                : 0px;
     padding               : 0px;
   }
 
-#button-mark[disabled="true"],
-#button-mark[disabled="true"]:hover,
-#button-mark[disabled="true"]:hover:active
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
   {
-    list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
+    margin-left           : 25px;
+    margin-top            : 21px;
+  }
+
+#button-getmsg[disabled="true"],
+#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/getmsg-disabled.gif");
   } 
 
-#button-mark:hover
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover
   {
-    list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
+    list-style-image      : url("chrome://messenger/skin/getmsg-hover.gif");
   } 
 
-#button-mark:hover:active
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
-    list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
+    list-style-image      : url("chrome://messenger/skin/getmsg-clicked.gif");
   } 
 
 #button-newmsg {
@@ -286,18 +263,61 @@ iframe {
     list-style-image      : url("chrome://messenger/skin/trash-clicked.gif");
   }
 
+#button-mark
+  {
+    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+    margin                : 3px 3px 1px 3px;
+    text-align            : center;
+    list-style-image      : url("chrome://messenger/skin/mark.gif");
+  }
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button
+  {
+    margin                : 0px;
+    padding               : 0px;
+  }
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
+  {
+    margin-left       : 22px;
+    margin-top				: 21px;
+  }
+    
+#button-mark[disabled="true"],
+#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
+  } 
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
+  } 
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
+  } 
+
 #button-print 
   {
     -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-	list-style-image      : url("chrome://global/skin/print.gif");
     margin                : 3px 3px 1px 3px;
-    text-align			  : center;
+    text-align            : center;
+    list-style-image      : url("chrome://global/skin/print.gif");
   }
 
 #button-print > .menubutton-dual-stack > .menubutton-dual-button
   {
   	margin				  : 0px;
   	padding				  : 0px;
+  }
+
+#button-print > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
+  {
+    margin-left       : 22px;
+    margin-top				: 21px;
   }
 
 #button-print[disabled="true"],
@@ -318,12 +338,6 @@ iframe {
 #button-print > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
     list-style-image      : url("chrome://global/skin/print-clicked.gif");
-  }
-
-#button-print > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left             : 19px;
-    margin-top				: 21px;
   }
 
 #button-stop {
@@ -429,7 +443,7 @@ iframe {
 }
 
 menu.push {
-  border: 1px outset white;
+  border: 1px outset #B4C3D4;
   padding: 2px;
   margin: 2px;
   text-align: center;
@@ -437,67 +451,23 @@ menu.push {
   background-image: inherit;
 }
 
-menu.push:hover {
-        border: 1px outset white;
-        color:#003366;
-        text-decoration:underline;
-        padding: 2px;
-}
-
-menu.push:hover:-moz-outline {
-   border : 1px solid black;
-   color:#003366;
-   padding: 2px;
-}
-
-menu.push:active {
-  text-decoration:none;
-  border: 1px inset;
-  padding-left: 3px;
-  padding-right: 1px;
-  padding-top: 3px;
-  padding-bottom: 1px;
-}
-
+menu.push:hover:active,
+menu.push[open],
 menu.push[toggled="1"] {
-  border: 1px white inset;
-  padding-left: 3px;
-  padding-right: 1px;
-  padding-top: 3px;
-  padding-bottom: 1px;
+  border-style: inset;
+  padding: 3px 1px 1px 3px;
 }
 
 menu.push[toggled="2"] {
-   background-color: lightgray;
-   border: 1px solid gray;
+  background-color: lightgray;
+  border: 1px solid gray;
 }
 
-menu.push:active:-moz-outline {
-   border : 1px solid black;
-}
-
-menu.push[disabled="true"] {
-        background-color:inherit;
-        background-image: inherit;
-        border : 1px solid #999999;
-        color: #999999;
-        text-decoration: none;
-}
-
-menu.push[disabled="true"]:hover {
-        background-color:inherit;
-        background-image: inherit;
-        border : 1px solid #999999;
-        color: #999999;
-        text-decoration: none;
-}
-
-menu.push[disabled="true"]:active {
-        background-color:inherit;
-        background-image: inherit;
-        border : 1px solid #999999;
-        color: #999999;
-        text-decoration: none;
+menu.push[disabled="true"],
+menu.push[disabled="true"]:hover,
+menu.push[disabled="true"]:hover:active {
+  border: 1px solid #999999;
+  color: #999999;
 }
 
 /**
