@@ -141,7 +141,7 @@ HelperApps.prototype = {
       while (extEnumerator.hasMore()) {
           entry.addExtension(extEnumerator.getNext());
       }
-      entry.description = aMIMEInfo.Description;
+      entry.description = aMIMEInfo.description;
       entry.appDisplayName = "";
     }
     
@@ -233,7 +233,7 @@ HelperApps.prototype = {
           }
         }
         else if (aProperty.EqualsNode(this._fileTypeArc)) {
-          if (typeInfo.Description == "") {
+          if (typeInfo.description == "") {
             try {
               var literal = bundle.getFormattedString("fileEnding", [typeInfo.primaryExtension.toUpperCase()]);
               return gRDF.GetLiteral(literal);
@@ -244,7 +244,7 @@ HelperApps.prototype = {
               return gRDF.GetLiteral(typeInfo.MIMEType);
             }
           }
-          return gRDF.GetLiteral(typeInfo.Description);
+          return gRDF.GetLiteral(typeInfo.description);
         }
         else if (aProperty.EqualsNode(this._fileHandlerArc)) {
           var handler = this.GetTarget(aSource, this._handlerPropArc, true);
