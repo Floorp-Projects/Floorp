@@ -270,8 +270,15 @@
         <body>
         <![CDATA[
           document.documentElement._hasLoaded = true;
-          if (!document.commandDispatcher.focusedElement)
-            document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+          var focusInit = 
+            function() {
+              // give focus to the first focusable element in the dialog
+              if (!document.commandDispatcher.focusedElement)
+                document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+            };
+
+          // Give focus after onload completes, see bug 103197.
+          setTimeout(focusInit, 0);
         ]]>
         </body>
       </method>                
