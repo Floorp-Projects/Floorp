@@ -847,7 +847,7 @@ GetMap(const char* aName, PRUint32* aMap)
   // linear search to see if we know something about the converter of this font 
   nsFontHasConverter* f = gFontsHaveConverters;
   while (f->mName) {
-    if (!strcmp(f->mName, aName)) {
+    if (!strcmpi(f->mName, aName)) {
       encoding.AssignWithConversion(f->mEncoding);
       break;
     }
@@ -890,7 +890,7 @@ GetConverter(const char* aName)
   // linear search to see if we know something about the converter of this font 
   nsFontHasConverter* f = gFontsHaveConverters;
   while (f->mName) {
-    if (!strcmp(f->mName, aName)) {
+    if (!strcmpi(f->mName, aName)) {
       encoding.AssignWithConversion(f->mEncoding);
       break;
     }
@@ -1029,7 +1029,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         // a non-unicode font !!
         nsFontHasConverter* f = gFontsHaveConverters;
         while (f->mName) {
-          if (!strcmp(f->mName, aShortName)) 
+          if (!strcmpi(f->mName, aShortName)) 
           {
             if (aCharset) {
               *aCharset = DEFAULT_CHARSET;
