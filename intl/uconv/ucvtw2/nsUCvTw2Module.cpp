@@ -127,14 +127,14 @@ static FactoryData g_FactoryData[] =
   {
     &kEUCTWToUnicodeCID,
     nsEUCTWToUnicode::CreateInstance,
-    "X-EUC-TW",
+    "x-euc-tw",
     "Unicode"
   },
   {
     &kUnicodeToEUCTWCID,
     nsUnicodeToEUCTW::CreateInstance,
     "Unicode",
-    "X-EUC-TW"
+    "x-euc-tw"
   },
   {
     &kUnicodeToCNS11643p1CID,
