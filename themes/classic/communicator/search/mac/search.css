@@ -100,13 +100,7 @@ titledbutton.panelbtn {
 	margin-right: 1em; 
 }
 
-#searchengines
-  {
-    margin-left           : 0px;
-    margin-right          : 0px;
-  }
-
-#stopButton
+#searchButton[stop="true"]
   {
     list-style-image      : url("resource:/res/rdf/loading.gif");
   }

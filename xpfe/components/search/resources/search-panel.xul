@@ -40,33 +40,30 @@
   <script type="text/javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <stringbundle id="searchBundle" src="chrome://communicator/locale/search/search-panel.properties"/>
-
+  <stringbundle id="regionalBundle" src="chrome://navigator-region/locale/region.properties"/>
+  
   <popupset>
     <popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
     	<menu />
     </popup>
   </popupset>
  
-  <box flex="1" orient="vertical" context="">
-    <box class="color-window groove-bottom box-padded outset-right" orient="vertical">
+  <vbox flex="1" context="">
+    <vbox class="box-padded">
       <box autostretch="never">
         <textfield id="sidebar-search-text" flex="1"
                    onkeypress="if (event.keyCode == 13) doSearch();"
                    oninput="doEnabling();" />
-        <box autostretch="never">
-          <button class="button-toolbar-3" id="searchButton" value="&search.button.label;"
-                  disabled="true" oncommand="doSearch();"/>
-          <button class="button-toolbar-3" id="stopButton" align="left"
-                  value="&stop.button.label;" oncommand="doStop();" hidden="true"/>
-        </box>
+        <button id="searchButton" value="&search.button.label;"
+                disabled="true" oncommand="doSearch();"/>
       </box>
-      <box autostretch="never" orient="vertical">
-        <box id="categoryBox" autostretch="never" orient="vertical">
-          <box orient="horizontal">	  
+      <vbox autostretch="never">
+        <vbox id="categoryBox" autostretch="never">
+          <box>	  
             <text class="label" value="&within.label;" />
             <menulist id="categoryList" ref="NC:SearchCategoryRoot"
                       datasources="rdf:null" oncommand="switchTab(1);" >
-	      <template>
+              <template>
                 <menupopup>
                   <menuitem id="chooseCat" uri="rdf:*" oncommand="chooseCategory(this);" 
                             data="rdf:http://home.netscape.com/NC-rdf#category"
@@ -84,15 +81,15 @@
               </menupopup>
             </menulist>
           </box>
+          <separator class="thin"/>
           <html flex="1">&choose.label;</html>
-        </box>
-      </box>
-    </box>
-  
+        </vbox>
+      </vbox>
+    </vbox>
     <deck class="outset-right" id="advancedDeck" flex="1">
-      <box align="vertical" class="searchpanel-outerbox" flex="1">
+      <vbox class="searchpanel-outerbox" flex="1">
 
-        <tree id="Tree" class="inset" ref="NC:LastSearchRoot"
+        <tree id="Tree" ref="NC:LastSearchRoot"
               resource="http://home.netscape.com/NC-rdf#PageRank"
               resource2="http://home.netscape.com/NC-rdf#Name"
               sortDirection="ascending" sortActive="true"
@@ -134,7 +131,7 @@
 
           <treehead>
             <treerow>
-              <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator outset" 
+              <treecell class="treecell-header sortDirectionIndicator" 
                         observes="SortNameColumn" value="&results.label;" 
                         resource="http://home.netscape.com/NC-rdf#Name" 
                         onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" 
@@ -143,25 +140,23 @@
           </treehead>
       
           <treecolgroup>
-            <treecol flex="1" resource="http://home.netscape.com/NC-rdf#PageRank"
-                     resource2="http://home.netscape.com/NC-rdf#Name"/>
-            <treecol width="0" id="SortNameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
+            <treecol flex="1" id="SortNameColumn" resource="http://home.netscape.com/NC-rdf#Name"
+                     resource2="http://home.netscape.com/NC-rdf#PageRank"/>
           </treecolgroup>
 
         </tree>
       
         <box>
           <spring flex="1" />
-          <button class="button-toolbar-3 button-slimline" id="saveQueryButton"
+          <button class="button-slimline" id="saveQueryButton"
                   value="&savesearch.button.label;" oncommand="return saveSearch();"/>
           <spring flex="1" />
         </box>
-      </box>
+      </vbox>
     
-      <box align="vertical" class="searchpanel-outerbox" flex="1">
+      <vbox class="searchpanel-outerbox" flex="1">
 
-        <tree id="searchengines" datasources="rdf:internetsearch"
-              flex="1" class="inset">
+        <tree id="searchengines" datasources="rdf:internetsearch" flex="1">
 
           <template>
 
@@ -188,7 +183,7 @@
         
           <treehead>
             <treerow>
-              <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator outset" 
+              <treecell class="treecell-header sortDirectionIndicator" 
                         observes="EngineColumn" value="&engine.column.label;"
                         resource="http://home.netscape.com/NC-rdf#Name"
                         sortActive="true" sortDirection="ascending"
@@ -199,7 +194,7 @@
           <treechildren flex="1" id="engineKids"/>
 
         </tree>             
-      </box>
+      </vbox>
     </deck>
-  </box>
+  </vbox>
 </window>

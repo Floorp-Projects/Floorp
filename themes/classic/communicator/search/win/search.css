@@ -27,23 +27,7 @@
     background-color      : transparent;
     color                 : windowtext;
   }
-
-#Tree, #searchengines
-  {
-    margin                : 0px;
-    border-left           : none;
-    border-top            : none;
-    border-right          : none;
-  }  
-  
-#Tree > .tree-container-treerows,
-#searchengines > .tree-container-treerows
-  {
-    border-left           : none;
-    border-top            : none;
-    border-right          : none;
-  } 
-  
+ 
 .groove-bottom
   {
     border-bottom         : 1px solid ThreeDShadow;
@@ -55,7 +39,7 @@
     border-left           : 1px solid ThreeDHighlight;
   }
 
-#stopButton
+#searchButton[stop="true"]
   {
     list-style-image      : url("resource:/res/rdf/loading.gif");
   }

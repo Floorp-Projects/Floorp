@@ -38,13 +38,14 @@ const nsIRDFLiteral            = Components.interfaces.nsIRDFLiteral;
 const nsIRDFDataSource         = Components.interfaces.nsIRDFDataSource;
 const nsIRDFRemoteDataSource   = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
-const STRINGBUNDLE_REGIONAL_URL = "chrome://navigator-region/locale/region.properties";
 
 var rootNode;
 var textArc;
 var modeArc;
 var searchBundle;
 var regionalBundle;
+var gSearchButtonText = null;
+var gStopButtonText = null;
 
 var sidebarInitiatedSearch = false;
 
@@ -321,7 +322,6 @@ function focusTextField()
 	textField.focus();
 }
 
-
 function SearchPanelShutdown()
 {
   var tree = document.getElementById("Tree");
@@ -330,11 +330,12 @@ function SearchPanelShutdown()
 
 function doStop()
 {
-  var stopButtonNode = document.getElementById("stopButton");
-  stopButtonNode.setAttribute("hidden", "true");
-
+  if (!gSearchButtonText)
+    gSearchButtonText = searchBundle.getString("searchButtonText");
+    
   var searchButtonNode = document.getElementById("searchButton");
-  searchButtonNode.removeAttribute("hidden");
+  searchButtonNode.removeAttribute("stop");
+  searchButtonNode.setAttribute("value", gSearchButtonText);
 
   // should stop button press also stop the load of the page in the browser? I think so.
   var progressNode = parent.document.getElementById("statusbar-icon");
@@ -493,14 +494,12 @@ function doSearch()
       }
     }
   }
-
-  // hide search button
+  if (!gStopButtonText)
+    gStopButtonText = searchBundle.getString("stopButtonText");
+  
   var searchButtonNode = document.getElementById("searchButton");
-  searchButtonNode.setAttribute("hidden", "true");
-
-  // show stop button
-  var stopButtonNode = document.getElementById("stopButton");
-  stopButtonNode.removeAttribute("hidden");
+  searchButtonNode.setAttribute("stop", "true");
+  searchButtonNode.setAttribute("value", gStopButtonText);
 
   var progressNode = top.document.getElementById("statusbar-icon");
   if (progressNode)
@@ -583,8 +582,8 @@ function OpenSearch(aSearchStr, engineURIs)
   var defaultSearchURL = nsPreferences.getLocalizedUnicharPref("browser.search.defaulturl", null);
 
   if (!defaultSearchURL) {
-    regionalBundle = srGetStrBundle( STRINGBUNDLE_REGIONAL_URL );
-    defaultSearchURL = regionalBundle.GetStringFromName("defaultSearchURL");
+    regionalBundle = document.getElementById("regionalBundle");
+    defaultSearchURL = regionalBundle.getString("defaultSearchURL");
   }
 
   var searchDS = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
@@ -604,7 +603,7 @@ function OpenSearch(aSearchStr, engineURIs)
       }
 
       if (!searchEngineURI)
-        searchEngineURI = regionalBundle.GetStringFromName("defaultSearchURL");
+        searchEngineURI = regionalBundle.getString("defaultSearchURL");
 
       // look up the correct search URL format for the given engine
       try {

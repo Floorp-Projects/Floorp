@@ -99,18 +99,12 @@ titledbutton.panelbtn {
 	margin-right: 1em; 
 }
 
-#searchengines
-  {
-    margin-left           : 0px;
-    margin-right          : 0px;
-  }
-  
 #saveQueryButton > stack > box > .button-text-mid
   {
     font-weight         : normal;
   }
 
-#stopButton
+#searchButton[stop="true"]
   {
     list-style-image      : url("resource:/res/rdf/loading.gif");
   }
