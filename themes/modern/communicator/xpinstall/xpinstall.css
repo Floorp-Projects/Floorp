@@ -18,6 +18,7 @@
  * 
  * Contributor(s): 
  *   Don Bragg (dbragg@netscape.com) 12/08/1999
+ *   Blake Ross (BlakeR1234@aol.com)  6/12/2000
  */
 
 @import url(chrome://global/skin);
@@ -36,7 +37,7 @@ box#mainBox{
 }
 
 box#okcancelBox{
-  margin-left               : 19em;
+  margin-left               : 22em;
   margin-top                : 3px;
   margin-bottom             : 3px;
 }
@@ -44,20 +45,16 @@ box#okcancelBox{
 
 box#treeBox{
   height                    : 18ex;
+  margin                    : 0em;
 }
 
 box#statusMessages{
   width                     : 36em;
 }
 
-div#interiorTitle {
-  font-size                 : 24px;
-  font-weight               : bold;
-}
-
 
 /*
-#table-housing {
+div#table-housing {
   height                    : 100%;
 }
 */
@@ -89,10 +86,6 @@ tree#modulesTree > treehead > treerow > treecell {
   color                     : windowtext;
 }
 
-titledbutton.graphic{
-  list-style-image: url("chrome://global/skin/animthrob_single.gif");
-}
-
 spring#verticalSmallSpacer {
   height                    : 1ex;
 }
@@ -113,3 +106,8 @@ spring#horizontalLargeSpacer {
   width                     : 10em;
 }
 
+.headline {
+  font-size                 : 2em;
+  margin                    : 4px;
+  font-weight               : bold;
+}

@@ -1,8 +1,8 @@
 <!-- extracted from institems.xul -->
 
 <!ENTITY dialogCancel.label "Cancel">
-<!ENTITY dialogOk.label "Ok">
-<!ENTITY items.label "Items to install">
+<!ENTITY dialogOk.label "Install">
+<!ENTITY items.label "Items to Install">
 <!ENTITY dialog.title "Software Installation">
 <!ENTITY componentList.label "The following packages will be installed:">
 <!ENTITY moduleName.label "Module name">

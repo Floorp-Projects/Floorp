@@ -23,7 +23,7 @@
  -->
 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/xpistatus.dtd" >
 
@@ -35,25 +35,28 @@
         title="&progress.label;"
         align = "vertical"
         class = "dialog"
-        > 
+> 
 
-    <html:script language="javascript" src="chrome://communicator/content/xpinstall/xpistatus.js"/>
+    <script src="chrome://communicator/content/xpinstall/xpistatus.js"></script>
+    <keyset id="keyset"/>
 
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">
-            <html:div id="interiorTitle"> &progress.label; </html:div>
+            <text class="headline" id="interiorTitle" value="&progress.label;"/>
             <spring flex="100%"/>
-            <titledbutton class="graphic" />
+            <image src="chrome://global/skin/animthrob_single.gif" />
         </box>
 
-        <html:div>
-            <html:hr/>
-        </html:div>
+        <spring id ="verticalSmallSpacer"/>
+        <separator align="center" class="groove" flex="100%"/>            
+        <spring id="verticalSmallSpacer"/>
 
-        <spring id="verticalSmallSpacer"/>  
+        <text class="label" id="componentList" value="&downloadBeforeUpdate.text;"/>
+        <spring id="verticalSmallSpacer"/>
+        <spring id="verticalSmallSpacer"/>            
 
-        <box align="vertical" id="treeBox">  
-            <html:div id="table-housing">
+        <box align="vertical" id="treebox">  
+            <html>
                 <tree id="modulesTree">
                     <treecol />
                     <treecol />
@@ -68,30 +71,26 @@
                     <treechildren id="theTreeBody">
                     </treechildren>
                 </tree>
-            </html:div>
+            </html>
         </box>
-
+    
         <spring id="verticalLargeSpacer"/>
 
         <box align="vertical" id="statusMessages">
-        <html:input id="dialog.uiPackageName" readonly="" />
-        <html:input id="dialog.currentAction" readonly="" />
+            <html:input id="dialog.uiPackageName" readonly="" />
+            <html:input id="dialog.currentAction" readonly="" />
         </box>
 
-        <spring style="height:1ex"/>
-
         <box align="horizontal">
-
             <box align="vertical">
                 <spring style="height:6px"/>
                 <progressmeter id="dialog.progress" mode="normal" value="0" style="width:200px;height:10px">
                 </progressmeter>
             </box>
 
-            <spring flex="80%"/>
-
-            <titledbutton class="dialog push" id="dialog.cancel" disabled="false" onclick="cancel()" value="&dialogCancel.label;"/>
+            <button class="dialog push" id="cancel" onclick="cancel()" value="&dialogCancel.label;"/>
         </box>
+
     </box>
 
 </window>
