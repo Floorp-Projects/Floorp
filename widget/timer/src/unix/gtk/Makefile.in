@@ -24,24 +24,32 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = $(TIMER_LIB_NAME)
-### XXX ### IS_COMPONENT=1
+ifdef TOOLKIT_EXORCISM
 
+LIBRARY_NAME = timer_gtk
+IS_COMPONENT=1
 REQUIRES=xpcom
-
-DEFINES += -D_IMPL_NS_TIMER
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 
 CPPSRCS = \
 	nsTimerGtk.cpp \
-### XXX ### 	nsTimerGtkFactory.cpp \
+	nsTimerGtkFactory.cpp \
 	$(NULL)
 
-### XXX ### EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
+else
+
+LIBRARY_NAME = $(TIMER_LIB_NAME)
+REQUIRES = xpcom
+CXXFLAGS += $(TK_CFLAGS)
+INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
+CPPSRCS = nsTimerGtk.cpp
 MKSHLIB =
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
+
+endif # TOOLKIT_EXORCISM
 
 include $(topsrcdir)/config/rules.mk

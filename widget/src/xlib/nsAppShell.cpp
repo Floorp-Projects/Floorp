@@ -29,6 +29,10 @@
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 
+#ifdef TOOLKIT_EXORCISM
+#include "nsIXlibWindowService.h"
+#endif /* TOOLKIT_EXORCISM */
+
 #include "xlibrgb.h"
 
 #define CHAR_BUF_SIZE 40
@@ -36,11 +40,18 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
-// this is so that we can get the timers in the base.  most widget
-// toolkits do this through some set of globals.  not here though.  we
-// don't have that luxury
+#ifdef TOOLKIT_EXORCISM
+static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
+static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
+#endif /* TOOLKIT_EXORCISM */
+
+#ifndef TOOLKIT_EXORCISM
+// // this is so that we can get the timers in the base.  most widget
+// // toolkits do this through some set of globals.  not here though.  we
+// // don't have that luxury
 extern "C" int NS_TimeToNextTimeout(struct timeval *);
 extern "C" void NS_ProcessTimeouts(void);
+#endif /* TOOLKIT_EXORCISM */
 
 PRBool nsAppShell::DieAppShellDie = PR_FALSE;
 
@@ -82,6 +93,110 @@ static char *event_names[] = {
   "ClientMessage",
   "MappingNotify"
 };
+
+#ifdef TOOLKIT_EXORCISM
+static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
+{
+  static nsXlibTimeToNextTimeoutFunc sFunc = nsnull;
+
+  if (!sFunc)
+  {
+    nsIXlibWindowService * xlibWindowService = nsnull;
+    
+    nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
+                                               kWindowServiceIID,
+                                               (nsISupports **)&xlibWindowService);
+    
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
+    
+    if (NS_OK == rv && nsnull != xlibWindowService)
+    {
+      xlibWindowService->GetTimeToNextTimeoutFunc(&sFunc);
+    
+      NS_ASSERTION(nsnull != sFunc,"Time to next timeout func is null.");
+
+      static int once = 1;
+
+      if (once && sFunc)
+      {
+        once = 0;
+
+        printf("YES! Time to next timeout func is good.\n");
+      }
+      
+      NS_RELEASE(xlibWindowService);
+    }
+  }
+
+  return sFunc;
+}
+
+static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
+{
+  static nsXlibProcessTimeoutsProc sProc = nsnull;
+
+  if (!sProc)
+  {
+    nsIXlibWindowService * xlibWindowService = nsnull;
+    
+    nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
+                                               kWindowServiceIID,
+                                               (nsISupports **)&xlibWindowService);
+    
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
+    
+    if (NS_OK == rv && nsnull != xlibWindowService)
+    {
+      xlibWindowService->GetProcessTimeoutsProc(&sProc);
+    
+      NS_ASSERTION(nsnull != sProc,"process timeout proc is null.");
+
+      static int once = 1;
+
+      if (once && sProc)
+      {
+        once = 0;
+
+        printf("YES! Process timeout proc is good.\n");
+      }
+
+      NS_RELEASE(xlibWindowService);
+    }
+  }
+
+  return sProc;
+}
+#endif
+
+static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
+{
+#ifndef TOOLKIT_EXORCISM
+  return NS_TimeToNextTimeout(aTimeval);
+#else
+  nsXlibTimeToNextTimeoutFunc func = GetTimeToNextTimeoutFunc();
+
+  if (func)
+  {
+    return (*func)(aTimeval);
+  }
+
+  return 0;
+#endif /* TOOLKIT_EXORCISM */
+}
+
+static void CallProcessTimeoutsProc(void)
+{
+#ifndef TOOLKIT_EXORCISM
+  NS_ProcessTimeouts();
+#else
+  nsXlibProcessTimeoutsProc proc = GetProcessTimeoutsProc();
+
+  if (proc)
+  {
+    (*proc)();
+  }
+#endif /* TOOLKIT_EXORCISM */
+}
 
 #define ALL_EVENTS ( KeyPressMask | KeyReleaseMask | ButtonPressMask | \
                      ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | \
@@ -208,7 +323,8 @@ nsresult nsAppShell::Run()
     // add the queue and the xlib connection to the select set
     FD_SET(queue_fd, &select_set);
     FD_SET(xlib_fd, &select_set);
-    if (NS_TimeToNextTimeout(&cur_time) == 0) {
+
+    if (CallTimeToNextTimeoutFunc(&cur_time) == 0) {
       cur_time_ptr = NULL;
     }
     else {
@@ -246,7 +362,7 @@ nsresult nsAppShell::Run()
     }
     if (please_run_timer_queue) {
       //printf("Running timer queue...\n");
-      NS_ProcessTimeouts();
+      CallProcessTimeoutsProc();
     }
     // make sure that any pending X requests are flushed.
     XFlush(mDisplay);

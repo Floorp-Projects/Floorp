@@ -27,6 +27,29 @@ class nsXlibWindowService : public nsIXlibWindowService
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD SetCreateCallback(nsXlibWindowCallback *aFunc);
-  NS_IMETHOD DispatchNativeXlibEvent(void *aNativeEvent);
+//   NS_IMETHOD SetCreateCallback(nsXlibWindowCallback *aFunc);
+//   NS_IMETHOD DispatchNativeXlibEvent(void *aNativeEvent);
+
+  NS_IMETHOD SetWindowCreateCallback(nsXlibWindowCallback aCallback);
+  NS_IMETHOD SetWindowDestroyCallback(nsXlibWindowCallback aCallback);
+  NS_IMETHOD GetWindowCreateCallback(nsXlibWindowCallback * aCallbackOut);
+  NS_IMETHOD GetWindowDestroyCallback(nsXlibWindowCallback * aCallbackOut);
+
+
+  NS_IMETHOD SetEventDispatcher(nsXlibEventDispatcher aDispatcher);
+  NS_IMETHOD GetEventDispatcher(nsXlibEventDispatcher * aDispatcherOut);
+
+  NS_IMETHOD SetTimeToNextTimeoutFunc(nsXlibTimeToNextTimeoutFunc aFunc);
+  NS_IMETHOD GetTimeToNextTimeoutFunc(nsXlibTimeToNextTimeoutFunc * aFuncOut);
+
+  NS_IMETHOD SetProcessTimeoutsProc(nsXlibProcessTimeoutsProc aProc);
+  NS_IMETHOD GetProcessTimeoutsProc(nsXlibProcessTimeoutsProc * aProcOut);
+
+private:
+
+  static nsXlibWindowCallback         gsWindowCreateCallback;
+  static nsXlibWindowCallback         gsWindowDestroyCallback;
+  static nsXlibEventDispatcher        gsEventDispatcher;
+  static nsXlibTimeToNextTimeoutFunc  gsTimeToNextTimeoutFunc;
+  static nsXlibProcessTimeoutsProc    gsProcessTimeoutsProc;
 };

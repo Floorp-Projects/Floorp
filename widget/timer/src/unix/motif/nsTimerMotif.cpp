@@ -75,7 +75,7 @@ nsTimerMotif::Init(nsTimerCallbackFunc aFunc,
     mClosure = aClosure;
     // mRepeat = aRepeat;
 
-    InitAppContext();
+    EnsureAppContext();
 
     mTimerId = XtAppAddTimeOut(mAppContext, 
                                aDelay,
@@ -92,7 +92,7 @@ nsTimerMotif::Init(nsITimerCallback *aCallback,
     mCallback = aCallback;
     // mRepeat = aRepeat;
 
-    InitAppContext();
+    EnsureAppContext();
 
     mTimerId = XtAppAddTimeOut(mAppContext, 
                                aDelay, 
@@ -105,7 +105,7 @@ nsTimerMotif::Init(nsITimerCallback *aCallback,
 nsresult
 nsTimerMotif::Init(PRUint32 aDelay)
 {
-  InitAppContext();
+  EnsureAppContext();
   
   mDelay = aDelay;
   NS_ADDREF(this);
@@ -129,7 +129,7 @@ void nsTimerExpired(XtPointer aCallData)
 }
 
 nsresult 
-nsTimerMotif::InitAppContext()
+nsTimerMotif::EnsureAppContext()
 {
   static XtAppContext gsAppContext = nsnull;
 
@@ -149,7 +149,7 @@ nsTimerMotif::InitAppContext()
 
     if (ac_service)
     {
-      printf("nsTimerMotif::InitAppContext() ac_service = %p\n",ac_service);
+      printf("nsTimerMotif::EnsureAppContext() ac_service = %p\n",ac_service);
 
       nsresult rv2 = ac_service->GetAppContext(&gsAppContext);
 
@@ -159,7 +159,7 @@ nsTimerMotif::InitAppContext()
 
       NS_RELEASE(ac_service);
 
-      printf("nsTimerMotif::InitAppContext() gsAppContext = %p\n",gsAppContext);
+      printf("nsTimerMotif::EnsureAppContext() gsAppContext = %p\n",gsAppContext);
     }
   }
 
@@ -168,6 +168,7 @@ nsTimerMotif::InitAppContext()
   return NS_OK;
 }
 
+#ifndef TOOLKIT_EXORCISM
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -182,3 +183,4 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
+#endif /* TOOLKIT_EXORCISM */

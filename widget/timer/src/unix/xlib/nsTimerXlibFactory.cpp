@@ -19,7 +19,7 @@
 
 #include "nsTimerXlib.h"
 
-#include "nsTimerCIID.h"
+#include "nsUnixTimerCIID.h"
 
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"

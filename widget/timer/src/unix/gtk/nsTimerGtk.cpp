@@ -20,8 +20,8 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
-extern "C" void NS_ProcessTimeouts(void);
+// extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
+// extern "C" void NS_ProcessTimeouts(void);
 
 extern "C" gint nsTimerExpired(gpointer aCallData);
 
@@ -146,6 +146,7 @@ gint nsTimerExpired(gpointer aCallData)
   return 0;
 }
 
+#ifndef TOOLKIT_EXORCISM
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -161,8 +162,12 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
 
-int NS_TimeToNextTimeout(struct timeval *aTimer) {
+int NS_TimeToNextTimeout(struct timeval *aTimer) 
+{
   return 0;
 }
-void NS_ProcessTimeouts(void) {
+
+void NS_ProcessTimeouts(void) 
+{
 }
+#endif /* TOOLKIT_EXORCISM */

@@ -26,9 +26,21 @@ include $(topsrcdir)/config/config.mk
 
 ifneq (,$(filter gtk xlib motif,$(MOZ_WIDGET_TOOLKIT)))
 XLIB_RGB_DIRS = xlibrgb
+else
+
+ifdef TOOLKIT_EXORCISM
+XLIB_RGB_DIRS = xlibrgb
+endif
+
 endif
 
 DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
+
+ifdef TOOLKIT_EXORCISM
+DIRS = ps $(XLIB_RGB_DIRS) xlib gtk motif
+else
+DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
+endif
 
 LIBRARY_NAME = raptorgfx
 

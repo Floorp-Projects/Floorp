@@ -33,7 +33,8 @@ REQUIRES=util img xpcom raptor netlib ps
 DEFINES += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
+
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb -L/usr/X11R6/lib -lXext -lX11
 
 CPPSRCS =\
 	nsDeviceContextSpecFactoryX.cpp \

@@ -18,6 +18,8 @@
 #include "nsITimer.h"
 #include "nsUnixTimerCIID.h"
 #include "nsIComponentManager.h"
+#include "nsIUnixToolkitService.h"
+
 #include "nsCRT.h"
 #include "prenv.h"
 
@@ -51,7 +53,7 @@ static nsresult NewTimer(const nsCID & aClass,nsITimer ** aInstancePtrResult)
 
   rv = nsComponentManager::CreateInstance(aClass,
                                           nsnull,
-                                          nsITimer::GetIID(),
+                                          kITimerIID,
                                           (void **)& timer);
 
 
@@ -72,126 +74,48 @@ static nsresult NewTimer(const nsCID & aClass,nsITimer ** aInstancePtrResult)
   NS_ASSERTION(NS_SUCCEEDED(rv), (const char *) nsAutoCString(message));
 #endif
 
+
   if (nsnull == timer) 
     return NS_ERROR_OUT_OF_MEMORY;
   
   return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
 //////////////////////////////////////////////////////////////////////////
-static nsAutoString GetToolkitName()
+static const nsCID *
+GetTimerCID()
 {
-  static const char *   sMozillaToolkit = nsnull;
-  static PRBool         sFirstTime = PR_TRUE;
+  static const nsCID * sgTimerCID = nsnull;
 
-  // Execute the following code only once.
-  if ((nsnull == sMozillaToolkit) && !sFirstTime)
+  static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
+
+  // For obvious efficiency reasons, do this only once
+  if (nsnull == sgTimerCID)
   {
-    sFirstTime = PR_FALSE;
+    nsIUnixToolkitService * unixToolkitService = nsnull;
 
-    // Look in the invironment for MOZ_TOOLKIT.  A variable
-    // that controls the toolkit the user wants to use.
-    sMozillaToolkit = PR_GetEnv("MOZ_TOOLKIT");
+    nsresult rv = 
+      nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
+                                         nsnull,
+                                         nsIUnixToolkitService::GetIID(),
+                                         (void **) &unixToolkitService);
+    
+    NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");
+    
+    if (NS_OK == rv && nsnull != unixToolkitService)
+    {
+      nsresult rv2;
 
-    // If MOZ_TOOLKIT is not set, assume gtk
-    if (!sMozillaToolkit)
-	  return nsAutoString("gtk");
-
-	// Gtk
-	if (nsCRT::strcasecmp(sMozillaToolkit,"gtk") == 0)
-	  return nsAutoString("gtk");
-
-	// Motif
-	if (nsCRT::strcasecmp(sMozillaToolkit,"motif") == 0)
-	  return nsAutoString("motif");
-
-	// Xlib
-	if (nsCRT::strcasecmp(sMozillaToolkit,"xlib") == 0)
-	  return nsAutoString("xlib");
+      rv2 = unixToolkitService->GetTimerCID((nsCID **) &sgTimerCID);
+      
+      NS_ASSERTION(rv2 == NS_OK,"Cannot get timer cid.");
+      
+      NS_RELEASE(unixToolkitService);
+    }
   }
 
-#ifdef NS_DEBUG
-	printf("Toolkit '%s' is unknown.  Assumming Gtk.\n",sMozillaToolkit);
-#endif
-	
-	return nsAutoString("gtk");
+  return sgTimerCID;
 }
 //////////////////////////////////////////////////////////////////////////
-static const nsCID * GetTimerCID()
-{
-  static const char *   sMozillaToolkit = nsnull;
-  static const nsCID *  sTimerClassID = 0;
-  static PRBool         sDone = PR_FALSE;
-
-  // The following code should execute only once.  If the environment
-  // variable is not set, then 'sMozillaToolkit' will still be null 
-  // in the second iteration.  So, we use the sDone flag to make
-  // sure it executes only once.
-  if ((nsnull == sMozillaToolkit) && !sDone)
-  {
-    sDone = PR_TRUE;
-
-    // Look in the invironment for MOZ_TOOLKIT.  A variable
-    // that controls the toolkit the user wants to use.
-    sMozillaToolkit = PR_GetEnv("MOZ_TOOLKIT");
-
-    // If MOZ_TOOLKIT is not set, assume gtk
-    if (!sMozillaToolkit)
-    {
-      sTimerClassID = &kCTimerGtk;
-#ifdef DEBUG_ramiro
-      sToolkitName = "gtk";
-#endif
-    }
-    // Otherwise check MOZ_TOOLKIT for the toolkit name
-    else
-    {
-      // Gtk
-      if (nsCRT::strcasecmp(sMozillaToolkit,"gtk") == 0)
-      {
-        sTimerClassID = &kCTimerGtk;
-#ifdef DEBUG_ramiro
-        sToolkitName = "gtk";
-#endif
-      }
-      // Motif
-      else if (nsCRT::strcasecmp(sMozillaToolkit,"motif") == 0)
-      {
-        sTimerClassID = &kCTimerMotif;
-#ifdef DEBUG_ramiro
-        sToolkitName = "motif";
-#endif
-      }
-      // Xlib
-      else if (nsCRT::strcasecmp(sMozillaToolkit,"xlib") == 0)
-      {
-        sTimerClassID = &kCTimerXlib;
-#ifdef DEBUG_ramiro
-        sToolkitName = "xlib";
-#endif
-      }
-      // Default to Gtk
-      else
-      {
-#ifdef NS_DEBUG
-        printf("Toolkit '%s' is unknown.  Assumming Gtk.\n",
-               sMozillaToolkit);
-#endif
-
-        sTimerClassID = &kCTimerGtk;
-#ifdef DEBUG_ramiro
-        sToolkitName = "gtk";
-#endif
-      }
-    }
-
-#ifdef DEBUG_ramiro
-    printf("NS_NewTimer() - Using '%s' for the X toolkit.\n",
-           sMozillaToolkit);
-#endif
-  }
-
-  return sTimerClassID;
-}
 
 static PRTime sStartTime = 0;
 static PRTime sEndTime = 0;
@@ -203,8 +127,6 @@ nsresult NS_NewTimer(nsITimer ** aInstancePtrResult)
   const nsCID * cid = GetTimerCID();
 
   NS_ASSERTION(nsnull != cid,"Dude! Trying to make a timer with a null CID.");
-
-//  printf("NS_NewTimer(%s)\n",(const char *) nsAutoCString(GetToolkitName()));
 
   nsresult rv = NewTimer(*cid,aInstancePtrResult);
 
