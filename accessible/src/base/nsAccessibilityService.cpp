@@ -1413,9 +1413,6 @@ NS_IMETHODIMP nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
   nsAccessNode::GetDocAccessibleFor(aWeakShell, getter_AddRefs(accessibleDoc));
 
   if (!accessibleDoc) {
-#ifdef DEBUG_aaronl
-    printf("\nWARNING: No accessible document for weak shell %x\n", aWeakShell);
-#endif
     *aAccessNode = nsnull;
     return NS_ERROR_FAILURE;
   }

@@ -40,7 +40,6 @@
 #define _nsDocAccessible_H_
 
 #include "nsBaseWidgetAccessible.h"
-#include "nsHashtable.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIDocument.h"
@@ -118,11 +117,7 @@ class nsDocAccessible : public nsBlockAccessible,
                                nsIAccessibleDocument **aAccessibleDoc);
     void CheckForEditor();
 
-#ifdef OLD_HASH
-    nsSupportsHashtable *mAccessNodeCache;
-#else
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *mAccessNodeCache;
-#endif
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
