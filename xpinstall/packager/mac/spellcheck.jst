@@ -3,12 +3,17 @@ var srDest = $SpaceRequired$;
 var err = initInstall("Mozilla Myspell Spellchecker", "Spellchecker", "$Version$"); 
 logComment("initInstall: " + err);
 
-if (verifyDiskSpace(getFolder("Components"), srDest))
+fProgram  = getFolder("Program");
+logComment("fProgram: " + fProgram)
+
+if (verifyDiskSpace(fProgram, srDest))
 {
+    setPackageFolder(fProgram);
+
     addDirectory("Spellchecker",
             "$Version$",
-            "components",
-            getFolder("Components"),
+            "bin",
+            fProgram,
             "");
 
     if (err==SUCCESS)
