@@ -1,5 +1,0 @@
-- only store attributes, not __dict__, in the db
-- report unrun tests
-- "run this test only" mode
-- better errors when config missing (404?)
-- accept proxy stuff

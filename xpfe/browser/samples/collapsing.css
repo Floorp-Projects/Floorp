@@ -1,9 +1,0 @@
-window[sitemode="hideSiteOne"] box#SiteOneBox
-{
-visibility:collapse;
-}
-
-window[sitemode="hideSiteTwo"] box#SiteTwoBox
-{
-visibility:collapse;
-}

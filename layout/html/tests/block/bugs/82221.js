@@ -1,2 +1,0 @@
-/* This script does nothing. */
-

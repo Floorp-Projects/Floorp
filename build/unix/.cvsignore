@@ -1,9 +1,0 @@
-Makefile
-nspr_my_config.mk
-nspr_my_overrides.mk
-mozilla-config
-mozilla-gtkmozembed.pc
-mozilla-js.pc
-mozilla-nspr.pc
-mozilla-nss.pc
-mozilla-xpcom.pc

@@ -1,7 +1,0 @@
-pipnss.jar:
-*   content/pipnss/contents.rdf             (content/contents.rdf)
-
-en-US.jar:
-*   locale/en-US/pipnss/contents.rdf        (locale/en-US/contents.rdf)
-    locale/en-US/pipnss/pipnss.properties   (locale/en-US/pipnss.properties)
-    locale/en-US/pipnss/security.properties (locale/en-US/security.properties)

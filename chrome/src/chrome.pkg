@@ -1,9 +1,0 @@
-# since the chrome service has been forked, it is
-# part of the new toolkit, it is not part of the gecko core
-[toolkit]
-#if SHARED_LIBRARY
-dist/bin/components/@SHARED_LIBRARY@
-#else
-!staticcomp @LIBRARY@ @MODULE_NAME@
-#endif
-!xpt dist/bin/components/chrome.xpt

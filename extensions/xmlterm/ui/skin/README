@@ -1,7 +1,0 @@
-ui/skin --- CSS stylesheets and images for user interface
-
-xmlterm.css         Stylesheet for XUL file xmlterm.xul
-
-xmltpage.css        Stylesheet for XMLterm startup file xmlterm.html
-
-wheel.gif           Wheel icon used for prompt

@@ -1,5 +1,0 @@
-- Currently, we do a fairly conservative (--disable a lot) build; find
-  out what works already.
-
-- More libraries could be put in separate packages, like mailnews and
-  editor are.

@@ -1,6 +1,0 @@
-// StringTestProfileOld.Prefix
-
-#include "StringTest.Prefix"
-
-#define OLD_STRING_APIS
-#undef HAVE_CPP_2BYTE_WCHAR_T

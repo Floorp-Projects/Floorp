@@ -1,6 +1,0 @@
-# A list of preferences which are not shared between profile sharing clients.
-# An entry may be either a complete preference name, or the name of a branch,
-# in which case, none if its children will be shared.
-
-signon.SignonFileName
-

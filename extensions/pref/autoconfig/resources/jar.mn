@@ -1,6 +1,0 @@
-comm.jar:
-*   content/autoconfig/contents.rdf           (content/contents.rdf)
-
-en-US.jar:
-*   locale/en-US/autoconfig/contents.rdf           (locale/en-US/contents.rdf)
-    locale/en-US/autoconfig/autoconfig.properties  (locale/en-US/autoconfig.properties)

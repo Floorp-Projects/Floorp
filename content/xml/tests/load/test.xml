@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE doc [
-<!ATTLIST p id ID #IMPLIED>
-]>
-<doc>
-  <p id="id1">Text from sample XML document.</p>
-</doc>

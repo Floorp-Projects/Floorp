@@ -1,9 +1,0 @@
-#file:///s|/mozilla/layout/html/tests/frameset/bugs/0003943_noscript.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0004849.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0005437.html	
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0016346_noscroll.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0016346_overflow_hidden.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0031482_extra_comma.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0020459_zero_size.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0021268_zero_percent_size.html
-file:///s|/mozilla/layout/html/tests/frameset/bugs/0033699_whitespace_size.html

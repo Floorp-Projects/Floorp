@@ -1,6 +1,0 @@
-These are just simple test programs in which stripped down versions of the
-XPConnect invoke and stubs code can be built and tested as the code is brought
-up on various platforms. These probrams do not test the param sizing and copying
-functionality of the routines. However, they do supply a place where the lowest
-level assembly language code can be developed and debugged in the simplest of
-contexts before it is moved into the real routines.

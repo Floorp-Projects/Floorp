@@ -1,8 +1,0 @@
-test_com_exceptions
-** Unhandled exception calling 'int8 do_short(in int16, inout int16, out int16, out retval int16);'
-** Returning nsresult of NS_ERROR_FAILURE
-** Unhandled exception calling 'int8 do_unsigned_short(in uint16, inout uint16, out uint16, out retval uint16);'
-** Returning nsresult of NS_ERROR_FAILURE
-** Unhandled exception calling 'int8 do_unsigned_long_long(in uint64, inout uint64, out uint64, out retval uint64);'
-** Returning nsresult of NS_ERROR_FAILURE
-The xpcom exception tests passed

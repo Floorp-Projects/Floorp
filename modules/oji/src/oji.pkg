@@ -1,8 +1,0 @@
-# this is part of the GRE, but *not* part of embedding packages
-[gre]
-#if SHARED_LIBRARY
-dist/bin/components/@SHARED_LIBRARY@
-#else
-!staticcomp @LIBRARY@ @MODULE_NAME@
-#endif
-!xpt dist/bin/components/oji.xpt

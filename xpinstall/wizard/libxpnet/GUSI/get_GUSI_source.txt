@@ -1,5 +1,0 @@
-The GUSI project homepage hosted on SourceForge is:
-<http://sourceforge.net/projects/gusi/>
-
-The mac port of libxpnet currently uses GUSI version 2.1.5 libraries and headers.  The GUSI source code can be obtained from the above listed GUSI project homepage.  As of this writing the GUSI package version 2.1.5 can be obtained from the following URL:
-<http://ftp1.sourceforge.net/gusi/GUSI_215.sit.bin>

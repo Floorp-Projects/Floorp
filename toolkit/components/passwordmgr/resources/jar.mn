@@ -1,4 +1,0 @@
-toolkit.jar:
-    content/passwordmgr/contents.rdf        (content/contents.rdf)
-*   content/passwordmgr/passwordManager.xul (content/passwordManager.xul)
-*   content/passwordmgr/passwordManager.js  (content/passwordManager.js)

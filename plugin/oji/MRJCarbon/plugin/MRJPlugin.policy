@@ -1,4 +1,0 @@
-// MRJPlugin.policy
-grant codeBase "file:${netscape.oji.plugin.home}/MRJPlugin.jar" {
-  permission java.security.AllPermission;
-};

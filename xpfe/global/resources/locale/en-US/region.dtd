@@ -1,5 +1,0 @@
-<!-- brand.dtd -->
-<!ENTITY  vendorURL             "http://www.mozilla.org/">
-#expand <!ENTITY  releaseURL            "http://www.mozilla.org/releases/mozilla__MOZILLA_VERSION__">
-<!ENTITY  getNewThemesURL       "http://mozilla.org/themes/download/">
-#expand <!ENTITY  content.version       "__MOZILLA_REGION_VERSION__">

@@ -1,9 +1,0 @@
-<html><head><title>Test case for bug 56102</title>
-<script language="JavaScript">
-function insert()
-{
-  var b = document.getElementById("b");
-  var br = document.getElementById("br");
-  b.insertBefore(document.createTextNode("ghi"), br);
-}
-</script></head><body onload="insert();">abc<b id="b">def<br><br id="br"></b></body></html>

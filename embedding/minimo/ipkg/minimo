@@ -1,8 +1,0 @@
-#!/bin/sh
-#
-# This is a very simple wrapper script for minimo
-
-cd /usr/lib/mozilla-minimo
-export LD_LIBRARY_PATH=/usr/lib/mozilla-minimo
-exec ./Minimo file:///usr/lib/mozilla-minimo/startpage/start.html 
-
