@@ -9,12 +9,24 @@
 (defparameter *jw-source* 
   '((line-grammar code-grammar :lr-1 :program)
     
+    (%subsection :semantics "Errors")
+    (deftype semantic-exception (oneof syntax-error
+                                       reference-error
+                                       type-error
+                                       method-not-found
+                                       (break value-and-label)
+                                       (continue value-and-label)
+                                       (return value)))
+    
+    (deftype value-and-label (tuple (value value) (label string)))
+    
+    
     (%subsection :semantics "Values")
     (deftype value (oneof
                     undefined
                     null
                     (boolean boolean)
-                    (double double)
+                    (number float64)
                     (string string)
                     (namespace namespace)
                     (class class)
@@ -26,16 +38,53 @@
         (undefined undefined-class)
         (null null-class)
         (boolean boolean-class)
-        (double number-class)
+        (number number-class)
         (string string-class)
         (namespace namespace-class)
         (class class-class)
         ((object o object) (& type o))))
     
+    (define (to-boolean (v value)) boolean
+      (case v
+        (undefined false)
+        (null false)
+        ((boolean b boolean) b)
+        ((number n float64) (not (or (float64-is-zero n) (float64-is-na-n n))))
+        ((string s string) (not (string-equal s "")))
+        (namespace true)
+        (class true)
+        (object (todo))))
     
-    (%subsection :semantics "Errors")
-    (deftype semantic-exception (oneof syntax-error method-not-found))
-       
+    (define (to-number (v value)) float64
+      (case v
+        (undefined nan)
+        (null 0.0)
+        ((boolean b boolean) (if b 1.0 0.0))
+        ((number n float64) n)
+        ((string s string :unused) (todo))
+        (namespace (throw (oneof type-error)))
+        (class (throw (oneof type-error)))
+        (object (todo))))
+    
+    ;(define (to-uint32 (n float64)) integer
+    ;  (
+    
+    (%subsection :semantics "References")
+    (deftype reference (oneof (rval value) ref))
+    
+    (%text :comment "Read the " (:type reference) ".")
+    (define (get-value (r reference)) value
+      (case r
+        ((rval v value) v)
+        (ref (todo))))
+    
+    (%text :comment "Write " (:local v) " into the " (:type reference) ". Return " (:local v) ".")
+    (define (put-value (r reference) (v value)) value
+      (case r
+        ((rval v value) (throw (oneof reference-error)))
+        (ref (todo))))
+    
+    
     (%subsection :semantics "Namespaces")
     (deftype namespace (tuple
                          (id id)))
@@ -72,6 +121,12 @@
         (case (& superclass c)
           (no-cls false)
           ((cls c-super class) (is-subclass c-super d)))))
+    
+    (%text :comment "Return " (:global true) " if " (:local c) " is a subclass of " (:local d) " other than " (:local d) " itself.")
+    (define (is-proper-subclass (c class) (d class)) boolean
+      (case (& superclass c)
+        (no-cls false)
+        ((cls c-super class) (is-subclass c-super d))))
     
     (%text :comment "Return " (:global true) " if " (:local v) " is an instance of class " (:local c) ". Consider "
            (:character-literal "null") " to be an instance of the classes " (:character-literal "Null") " and "
@@ -146,7 +201,7 @@
                             (alias qualified-name)))
     
     
-    (%subsection :semantics "Operators")
+    (%subsection :semantics "Binary Operators")
     (deftype binary-operator (tuple
                                (left-type class)
                                (right-type class)
@@ -158,35 +213,126 @@
                                    (built-in (-> (value value) value))
                                    (user value)))
     
-    (define (add-numbers (a value) (b value)) value
-      (oneof double (double-add (select double a) (select double b))))
-    (define (add-strings (a value) (b value)) value
+    
+    (define (add-number-number (a value) (b value)) value
+      (oneof number (float64-add (select number a) (select number b))))
+    (define (add-string-string (a value) (b value)) value
       (oneof string (append (select string a) (select string b))))
-
+    
     (define binary-add (address (vector binary-operator))
       (new (vector
-            (tuple binary-operator number-class number-class true true (typed-oneof binary-operator-data built-in add-numbers))
-            (tuple binary-operator string-class string-class true true (typed-oneof binary-operator-data built-in add-strings)))))
+            (tuple binary-operator number-class number-class true true (typed-oneof binary-operator-data built-in add-number-number))
+            (tuple binary-operator string-class string-class true true (typed-oneof binary-operator-data built-in add-string-string)))))
+    
+    (define (subtract-object-object (a value) (b value)) value
+      (oneof number (float64-subtract (to-number a) (to-number b))))
+    
+    (define binary-subtract (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in subtract-object-object)))))
+    
+    (define (multiply-object-object (a value) (b value)) value
+      (oneof number (float64-multiply (to-number a) (to-number b))))
+    
+    (define binary-multiply (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in multiply-object-object)))))
+    
+    (define (divide-object-object (a value) (b value)) value
+      (oneof number (float64-divide (to-number a) (to-number b))))
+    
+    (define binary-divide (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in divide-object-object)))))
+    
+    (define (remainder-object-object (a value) (b value)) value
+      (oneof number (float64-remainder (to-number a) (to-number b))))
+    
+    (define binary-remainder (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in remainder-object-object)))))
+    
+    (define (shift-left-object-object (a value) (b value)) value
+      (todo))
+    
+    (define binary-shift-left (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in shift-left-object-object)))))
+    
+    (define (shift-right-object-object (a value) (b value)) value
+      (todo))
+    
+    (define binary-shift-right (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in shift-right-object-object)))))
+    
+    (define (shift-right-unsigned-object-object (a value) (b value)) value
+      (todo))
+    
+    (define binary-shift-right-unsigned (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in shift-right-unsigned-object-object)))))
+    
+    (define (bitwise-and-object-object (a value) (b value)) value
+      (todo))
+    
+    (define binary-bitwise-and (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in bitwise-and-object-object)))))
+    
+    (define (bitwise-xor-object-object (a value) (b value)) value
+      (todo))
+    
+    (define binary-bitwise-xor (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in bitwise-xor-object-object)))))
+    
+    (define (bitwise-or-object-object (a value) (b value)) value
+      (todo))
+    
+    (define binary-bitwise-or (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator object-class object-class true true (typed-oneof binary-operator-data built-in bitwise-or-object-object)))))
+    
     
     (%text :comment "Return " (:global true) " if " (:local op1) " is at least as specific as " (:local op2) ".")
     (define (is-bin-op-subclass (op1 binary-operator) (op2 binary-operator)) boolean
       (and (is-subclass (& left-type op1) (& left-type op2))
            (is-subclass (& right-type op1) (& right-type op2))))
-
-    (define (eval-binary-operator (op-table (vector binary-operator)) (left value) (right value)) value
-      (let ((applicable-ops (vector binary-operator)
-                            (map op-table op op (and (instance-of left (& left-type op)) (instance-of right (& right-type op))))))
-        (let ((best-ops (vector binary-operator)
-                        (map applicable-ops op op
-                             (empty (map applicable-ops op2 op2 (not (is-bin-op-subclass op op2)))))))
-          (if (empty best-ops)
-            (throw (oneof method-not-found))
-            (let ((op binary-operator (nth best-ops 0)))
-              (case (& data op)
-                ((built-in f (-> (value value) value)) (f left right))
-                (user (todo))))))))
+    
+    (define (limited-instance-of (v value) (c class) (limit class-opt)) boolean
+      (and (instance-of v c)
+           (case limit
+             (no-cls true)
+             ((cls l class) (is-proper-subclass l c)))))
+    
+    (%text :comment "Return a function that takes two " (:type value) " arguments " (:local left) " and " (:local right)
+           " and returns the operator given by " (:local op-table) " applied to " (:local left) " and " (:local right)
+           ". If " (:local left-limit) " is a " (:field cls class-opt) " " (:type class)
+           ", restrict the lookup to operator definitions with a superclass of " (:local left-limit)
+           " for the left operand. Similarly, if " (:local right-limit) " is a " (:field cls class-opt) " " (:type class)
+           ", restrict the lookup to operator definitions with a superclass of " (:local right-limit) " for the right operand.")
+    (define (binary-operator-eval (op-table (vector binary-operator)) (left-limit class-opt) (right-limit class-opt)) (-> (value value) value)
+      (function ((left value) (right value))
+        (let ((applicable-ops (vector binary-operator)
+                              (map op-table op op (and (limited-instance-of left (& left-type op) left-limit)
+                                                       (limited-instance-of right (& right-type op) right-limit)))))
+          (let ((best-ops (vector binary-operator)
+                          (map applicable-ops op op
+                               (empty (map applicable-ops op2 op2 (not (is-bin-op-subclass op op2)))))))
+            (if (empty best-ops)
+              (throw (oneof method-not-found))
+              (let ((op binary-operator (nth best-ops 0)))
+                (case (& data op)
+                  ((built-in f (-> (value value) value)) (f left right))
+                  (user (todo)))))))))
+    
+    (define (eval-binary-op (op-table (address (vector binary-operator))) (left-limit (-> (dynamic-env) class-opt)) (right-limit (-> (dynamic-env) class-opt))
+                            (left-eval (-> (dynamic-env) reference)) (right-eval (-> (dynamic-env) reference)) (e dynamic-env)) reference
+      (oneof rval ((binary-operator-eval (@ op-table) (left-limit e) (right-limit e)) (get-value (left-eval e)) (get-value (right-eval e)))))
     
     
+    (%subsection :semantics "Unary Operators")
     (deftype unary-operator (tuple
                               (operand-type class)
                               (final boolean)
@@ -199,29 +345,60 @@
     
     (%subsection :semantics "Environments")
     (deftype static-env (tuple
+                          (enclosing-class class-opt)
                           (labels (vector string))
                           (can-return boolean)
                           (constants (vector definition))))
+    
+    (define initial-static-env static-env (tuple static-env (oneof no-cls) (vector-of string) false (vector-of definition)))
+    
+    (%text :comment "Return a " (:type static-env) " with label " (:local l) " prepended to " (:local s) ".")
+    (define (add-label (s static-env) (l string)) static-env
+      (tuple static-env (& enclosing-class s) (append (vector l) (& labels s)) (& can-return s) (& constants s)))
+    
+    (%text :comment "Return " (:global true) " if " (:character-literal "super") " is permitted here.")
+    (define (allows-super (s static-env)) boolean
+      (is cls (& enclosing-class s)))
     
     (deftype dynamic-env (tuple
                            (parent dynamic-env-opt)
                            (definitions (vector definition))))
     (deftype dynamic-env-opt (oneof no-frame (frame dynamic-env)))
     
+    (%text :comment "If the " (:type dynamic-env) " is from within a class's body, return that class; otherwise, return " (:field no-cls class-opt) ".")
+    (define (lexical-class (e dynamic-env)) class-opt
+      (todo))
+    
+    (define initial-dynamic-env dynamic-env (tuple dynamic-env (oneof no-frame) (vector-of definition)))
+    
     (deftype definition (tuple
                           (name qualified-name)
                           (getter accessor)
                           (setter accessor)))
     
+    
+    (%section "Terminal Actions")
+    
+    (declare-action name $identifier string)
+    (declare-action eval $number float64)
+    (declare-action eval $string string)
+    
+    (terminal-action name $identifier identity)
+    (terminal-action eval $number identity)
+    (terminal-action eval $string identity)
+    (%print-actions)
+    
+    
     (%section "Expressions")
     (grammar-argument :beta allow-in no-in)
     
     (%subsection "Identifiers")
-    (production :identifier ($identifier) identifier-identifier)
-    (production :identifier (get) identifier-get)
-    (production :identifier (set) identifier-set)
-    (production :identifier (exclude) identifier-exclude)
-    (production :identifier (include) identifier-include)
+    (rule :identifier ((name string))
+      (production :identifier ($identifier) identifier-identifier (name (name $identifier)))
+      (production :identifier (get) identifier-get (name "get"))
+      (production :identifier (set) identifier-set (name "set"))
+      (production :identifier (exclude) identifier-exclude (name "exclude"))
+      (production :identifier (include) identifier-include (name "include")))
     
     (production :qualifier (:identifier) qualifier-identifier)
     (production :qualifier (public) qualifier-public)
@@ -255,11 +432,18 @@
     (production :primary-expression (:array-literal) primary-expression-array-literal)
     (production :primary-expression (:object-literal) primary-expression-object-literal)
     (production :primary-expression (:function-expression) primary-expression-function-expression)
+    (%print-actions)
     
     (production :parenthesized-expression (\( (:assignment-expression allow-in) \)) parenthesized-expression-assignment-expression)
     
-    (production :parenthesized-list-expression (:parenthesized-expression) parenthesized-list-expression-parenthesized-expression)
-    (production :parenthesized-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) parenthesized-list-expression-list-expression)
+    (rule :parenthesized-list-expression ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production :parenthesized-list-expression (:parenthesized-expression) parenthesized-list-expression-parenthesized-expression
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo)))
+      (production :parenthesized-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) parenthesized-list-expression-list-expression
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo))))
+    (%print-actions)
     
     
     (%subsection "Function Expressions")
@@ -293,19 +477,43 @@
     
     
     (%subsection "Super Operator")
-    (production :super-expression (super) super-expression-super)
-    (production :super-expression (:full-super-expression) super-expression-full-super-expression)
+    (rule :super-expression ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+      (production :super-expression (super) super-expression-super
+        ((verify (s static-env)) (allows-super s))
+        ((eval (e dynamic-env :unused)) (todo))
+        ((super (e dynamic-env)) (lexical-class e)))
+      (production :super-expression (:full-super-expression) super-expression-full-super-expression
+        ((verify (s static-env)) (and (allows-super s) (todo)))
+        ((eval (e dynamic-env :unused)) (todo))
+        ((super (e dynamic-env)) (lexical-class e))))
     
     (production :full-super-expression (super :parenthesized-expression) full-super-expression-super-parenthesized-expression)
+    (%print-actions)
     
     
     (%subsection "Postfix Operators")
-    (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression)
-    (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression)
-    (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression)
+    (rule :postfix-expression ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo)))
+      (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo)))
+      (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo))))
+    (%print-actions)
     
-    (production :postfix-expression-or-super (:postfix-expression) postfix-expression-or-super-postfix-expression)
-    (production :postfix-expression-or-super (:super-expression) postfix-expression-or-super-super)
+    (rule :postfix-expression-or-super ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+      (production :postfix-expression-or-super (:postfix-expression) postfix-expression-or-super-postfix-expression
+        (verify (verify :postfix-expression))
+        (eval (eval :postfix-expression))
+        ((super (e dynamic-env :unused)) (oneof no-cls)))
+      (production :postfix-expression-or-super (:super-expression) postfix-expression-or-super-super
+        (verify (verify :super-expression))
+        (eval (eval :super-expression))
+        (super (super :super-expression))))
+    (%print-actions)
     
     (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier)
     (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator)
@@ -431,78 +639,179 @@
     
     
     (%subsection "Binary Bitwise Operators")
-    (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality)
-    (production (:bitwise-and-expression :beta) ((:bitwise-and-expression-or-super :beta) & (:equality-expression-or-super :beta)) bitwise-and-expression-and)
+    (rule (:bitwise-and-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo)))
+      (production (:bitwise-and-expression :beta) ((:bitwise-and-expression-or-super :beta) & (:equality-expression-or-super :beta)) bitwise-and-expression-and
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused)) (todo))))
     
-    (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and)
-    (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression-or-super :beta) ^ (:bitwise-and-expression-or-super :beta)) bitwise-xor-expression-xor)
+    (rule (:bitwise-xor-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
+        (verify (verify :bitwise-and-expression))
+        (eval (eval :bitwise-and-expression)))
+      (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression-or-super :beta) ^ (:bitwise-and-expression-or-super :beta)) bitwise-xor-expression-xor
+        ((verify (s static-env)) (and ((verify :bitwise-xor-expression-or-super) s) ((verify :bitwise-and-expression-or-super) s)))
+        ((eval (e dynamic-env)) (oneof rval ((binary-operator-eval (@ binary-bitwise-xor) ((super :bitwise-xor-expression-or-super) e) ((super :bitwise-and-expression-or-super) e))
+                                             (get-value ((eval :bitwise-xor-expression-or-super) e)) (get-value ((eval :bitwise-and-expression-or-super) e)))))))
     
-    (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor)
-    (production (:bitwise-or-expression :beta) ((:bitwise-or-expression-or-super :beta) \| (:bitwise-xor-expression-or-super :beta)) bitwise-or-expression-or)
+    (rule (:bitwise-or-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
+        (verify (verify :bitwise-xor-expression))
+        (eval (eval :bitwise-xor-expression)))
+      (production (:bitwise-or-expression :beta) ((:bitwise-or-expression-or-super :beta) \| (:bitwise-xor-expression-or-super :beta)) bitwise-or-expression-or
+        ((verify (s static-env)) (and ((verify :bitwise-or-expression-or-super) s) ((verify :bitwise-xor-expression-or-super) s)))
+        ((eval (e dynamic-env)) (oneof rval ((binary-operator-eval (@ binary-bitwise-or) ((super :bitwise-or-expression-or-super) e) ((super :bitwise-xor-expression-or-super) e))
+                                             (get-value ((eval :bitwise-or-expression-or-super) e)) (get-value ((eval :bitwise-xor-expression-or-super) e)))))))
+    (%print-actions)
     
-    (production (:bitwise-and-expression-or-super :beta) ((:bitwise-and-expression :beta)) bitwise-and-expression-or-super-bitwise-and-expression)
-    (production (:bitwise-and-expression-or-super :beta) (:super-expression) bitwise-and-expression-or-super-super)
     
-    (production (:bitwise-xor-expression-or-super :beta) ((:bitwise-xor-expression :beta)) bitwise-xor-expression-or-super-bitwise-xor-expression)
-    (production (:bitwise-xor-expression-or-super :beta) (:super-expression) bitwise-xor-expression-or-super-super)
+    (rule (:bitwise-and-expression-or-super :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+      (production (:bitwise-and-expression-or-super :beta) ((:bitwise-and-expression :beta)) bitwise-and-expression-or-super-bitwise-and-expression
+        (verify (verify :bitwise-and-expression))
+        (eval (eval :bitwise-and-expression))
+        ((super (e dynamic-env :unused)) (oneof no-cls)))
+      (production (:bitwise-and-expression-or-super :beta) (:super-expression) bitwise-and-expression-or-super-super
+        (verify (verify :super-expression))
+        (eval (eval :super-expression))
+        (super (super :super-expression))))
     
-    (production (:bitwise-or-expression-or-super :beta) ((:bitwise-or-expression :beta)) bitwise-or-expression-or-super-bitwise-or-expression)
-    (production (:bitwise-or-expression-or-super :beta) (:super-expression) bitwise-or-expression-or-super-super)
+    (rule (:bitwise-xor-expression-or-super :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+      (production (:bitwise-xor-expression-or-super :beta) ((:bitwise-xor-expression :beta)) bitwise-xor-expression-or-super-bitwise-xor-expression
+        (verify (verify :bitwise-xor-expression))
+        (eval (eval :bitwise-xor-expression))
+        ((super (e dynamic-env :unused)) (oneof no-cls)))
+      (production (:bitwise-xor-expression-or-super :beta) (:super-expression) bitwise-xor-expression-or-super-super
+        (verify (verify :super-expression))
+        (eval (eval :super-expression))
+        (super (super :super-expression))))
+    
+    (rule (:bitwise-or-expression-or-super :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+      (production (:bitwise-or-expression-or-super :beta) ((:bitwise-or-expression :beta)) bitwise-or-expression-or-super-bitwise-or-expression
+        (verify (verify :bitwise-or-expression))
+        (eval (eval :bitwise-or-expression))
+        ((super (e dynamic-env :unused)) (oneof no-cls)))
+      (production (:bitwise-or-expression-or-super :beta) (:super-expression) bitwise-or-expression-or-super-super
+        (verify (verify :super-expression))
+        (eval (eval :super-expression))
+        (super (super :super-expression))))
+    (%print-actions)
     
     
     (%subsection "Binary Logical Operators")
-    (production (:logical-and-expression :beta) ((:bitwise-or-expression :beta)) logical-and-expression-bitwise-or)
-    (production (:logical-and-expression :beta) ((:logical-and-expression :beta) && (:bitwise-or-expression :beta)) logical-and-expression-and)
+    (rule (:logical-and-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:logical-and-expression :beta) ((:bitwise-or-expression :beta)) logical-and-expression-bitwise-or
+        (verify (verify :bitwise-or-expression))
+        (eval (eval :bitwise-or-expression)))
+      (production (:logical-and-expression :beta) ((:logical-and-expression :beta) && (:bitwise-or-expression :beta)) logical-and-expression-and
+        ((verify (s static-env)) (and ((verify :logical-and-expression) s) ((verify :bitwise-or-expression) s)))
+        ((eval (e dynamic-env)) (let ((v value (get-value ((eval :logical-and-expression) e))))
+                                  (oneof rval (if (to-boolean v) (get-value ((eval :bitwise-or-expression) e)) v))))))
+    (%print-actions)
     
-    (production (:logical-xor-expression :beta) ((:logical-and-expression :beta)) logical-xor-expression-logical-and)
-    (production (:logical-xor-expression :beta) ((:logical-xor-expression :beta) ^^ (:logical-and-expression :beta)) logical-xor-expression-xor)
+    (rule (:logical-xor-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:logical-xor-expression :beta) ((:logical-and-expression :beta)) logical-xor-expression-logical-and
+        (verify (verify :logical-and-expression))
+        (eval (eval :logical-and-expression)))
+      (production (:logical-xor-expression :beta) ((:logical-xor-expression :beta) ^^ (:logical-and-expression :beta)) logical-xor-expression-xor
+        ((verify (s static-env)) (and ((verify :logical-xor-expression) s) ((verify :logical-and-expression) s)))
+        ((eval (e dynamic-env)) (let ((v1 value (get-value ((eval :logical-xor-expression) e)))
+                                      (v2 value (get-value ((eval :logical-and-expression) e))))
+                                  (oneof rval (oneof boolean (xor (to-boolean v1) (to-boolean v2))))))))
+    (%print-actions)
     
-    (production (:logical-or-expression :beta) ((:logical-xor-expression :beta)) logical-or-expression-logical-xor)
-    (production (:logical-or-expression :beta) ((:logical-or-expression :beta) \|\| (:logical-xor-expression :beta)) logical-or-expression-or)
+    (rule (:logical-or-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:logical-or-expression :beta) ((:logical-xor-expression :beta)) logical-or-expression-logical-xor
+        (verify (verify :logical-xor-expression))
+        (eval (eval :logical-xor-expression)))
+      (production (:logical-or-expression :beta) ((:logical-or-expression :beta) \|\| (:logical-xor-expression :beta)) logical-or-expression-or
+        ((verify (s static-env)) (and ((verify :logical-or-expression) s) ((verify :logical-xor-expression) s)))
+        ((eval (e dynamic-env)) (let ((v value (get-value ((eval :logical-or-expression) e))))
+                                  (oneof rval (if (to-boolean v) v (get-value ((eval :logical-xor-expression) e))))))))
+    (%print-actions)
     
     
     (%subsection "Conditional Operator")
-    (production (:conditional-expression :beta) ((:logical-or-expression :beta)) conditional-expression-logical-or)
-    (production (:conditional-expression :beta) ((:logical-or-expression :beta) ? (:assignment-expression :beta) \: (:assignment-expression :beta)) conditional-expression-conditional)
+    (rule (:conditional-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:conditional-expression :beta) ((:logical-or-expression :beta)) conditional-expression-logical-or
+        (verify (verify :logical-or-expression))
+        (eval (eval :logical-or-expression)))
+      (production (:conditional-expression :beta) ((:logical-or-expression :beta) ? (:assignment-expression :beta) \: (:assignment-expression :beta)) conditional-expression-conditional
+        ((verify (s static-env)) (and (and ((verify :logical-or-expression) s) ((verify :assignment-expression 1) s)) ((verify :assignment-expression 2) s)))
+        ((eval (e dynamic-env)) (if (to-boolean (get-value ((eval :logical-or-expression) e))) ((eval :assignment-expression 1) e) ((eval :assignment-expression 2) e)))))
+    (%print-actions)
     
     (production (:non-assignment-expression :beta) ((:logical-or-expression :beta)) non-assignment-expression-logical-or)
     (production (:non-assignment-expression :beta) ((:logical-or-expression :beta) ? (:non-assignment-expression :beta) \: (:non-assignment-expression :beta)) non-assignment-expression-conditional)
+    (%print-actions)
     
     
     (%subsection "Assignment Operators")
-    (production (:assignment-expression :beta) ((:conditional-expression :beta)) assignment-expression-conditional)
-    (production (:assignment-expression :beta) (:postfix-expression = (:assignment-expression :beta)) assignment-expression-assignment)
-    (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment (:assignment-expression :beta)) assignment-expression-compound)
-    (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super)
-    (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound)
+    (rule (:assignment-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:assignment-expression :beta) ((:conditional-expression :beta)) assignment-expression-conditional
+        (verify (verify :conditional-expression))
+        (eval (eval :conditional-expression)))
+      (production (:assignment-expression :beta) (:postfix-expression = (:assignment-expression :beta)) assignment-expression-assignment
+        ((verify (s static-env)) (and ((verify :postfix-expression) s) ((verify :assignment-expression) s)))
+        ((eval (e dynamic-env)) (oneof rval (put-value ((eval :postfix-expression) e) (get-value ((eval :assignment-expression) e))))))
+      (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment (:assignment-expression :beta)) assignment-expression-compound
+        ((verify (s static-env)) (and ((verify :postfix-expression-or-super) s) ((verify :assignment-expression) s)))
+        ((eval (e dynamic-env)) (eval-assignment-op (binary-operator-eval (@ (assignment-op-table :compound-assignment)) ((super :postfix-expression-or-super) e) (oneof no-cls))
+                                                    (eval :postfix-expression-or-super) (eval :assignment-expression) e)))
+      (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super
+        ((verify (s static-env)) (and ((verify :postfix-expression-or-super) s) ((verify :super-expression) s)))
+        ((eval (e dynamic-env)) (eval-assignment-op (binary-operator-eval (@ (assignment-op-table :compound-assignment)) ((super :postfix-expression-or-super) e) ((super :super-expression) e))
+                                                    (eval :postfix-expression-or-super) (eval :super-expression) e)))
+      (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound
+        ((verify (s static-env)) (and ((verify :postfix-expression) s) ((verify :assignment-expression) s)))
+        ((eval (e dynamic-env :unused)) (todo))))
     
-    (production :compound-assignment (*=) compound-assignment-multiply)
-    (production :compound-assignment (/=) compound-assignment-divide)
-    (production :compound-assignment (%=) compound-assignment-remainder)
-    (production :compound-assignment (+=) compound-assignment-add)
-    (production :compound-assignment (-=) compound-assignment-subtract)
-    (production :compound-assignment (<<=) compound-assignment-shift-left)
-    (production :compound-assignment (>>=) compound-assignment-shift-right)
-    (production :compound-assignment (>>>=) compound-assignment-shift-right-unsigned)
-    (production :compound-assignment (&=) compound-assignment-bitwise-and)
-    (production :compound-assignment (^=) compound-assignment-bitwise-xor)
-    (production :compound-assignment (\|=) compound-assignment-bitwise-or)
+    (define (eval-assignment-op (f (-> (value value) value)) (left-eval (-> (dynamic-env) reference)) (right-eval (-> (dynamic-env) reference)) (e dynamic-env)) reference
+      (let ((r-left reference (left-eval e)))
+        (let ((v-left value (get-value r-left))
+              (v-right value (get-value (right-eval e))))
+          (oneof rval (put-value r-left (f v-left v-right))))))
+    (%print-actions)
+    
+    (rule :compound-assignment ((assignment-op-table (address (vector binary-operator))))
+      (production :compound-assignment (*=) compound-assignment-multiply (assignment-op-table binary-multiply))
+      (production :compound-assignment (/=) compound-assignment-divide (assignment-op-table binary-divide))
+      (production :compound-assignment (%=) compound-assignment-remainder (assignment-op-table binary-remainder))
+      (production :compound-assignment (+=) compound-assignment-add (assignment-op-table binary-add))
+      (production :compound-assignment (-=) compound-assignment-subtract (assignment-op-table binary-subtract))
+      (production :compound-assignment (<<=) compound-assignment-shift-left (assignment-op-table binary-shift-left))
+      (production :compound-assignment (>>=) compound-assignment-shift-right (assignment-op-table binary-shift-right))
+      (production :compound-assignment (>>>=) compound-assignment-shift-right-unsigned (assignment-op-table binary-shift-right-unsigned))
+      (production :compound-assignment (&=) compound-assignment-bitwise-and (assignment-op-table binary-bitwise-and))
+      (production :compound-assignment (^=) compound-assignment-bitwise-xor (assignment-op-table binary-bitwise-xor))
+      (production :compound-assignment (\|=) compound-assignment-bitwise-or (assignment-op-table binary-bitwise-or)))
+    (%print-actions)
     
     (production :logical-assignment (&&=) logical-assignment-logical-and)
     (production :logical-assignment (^^=) logical-assignment-logical-xor)
     (production :logical-assignment (\|\|=) logical-assignment-logical-or)
+    (%print-actions)
     
     
     (%subsection "Comma Expressions")
-    (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment)
-    (production (:list-expression :beta) ((:list-expression :beta) \, (:assignment-expression :beta)) list-expression-comma)
+    (rule (:list-expression :beta) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) reference)))
+      (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment
+        (verify (verify :assignment-expression))
+        (eval (eval :assignment-expression)))
+      (production (:list-expression :beta) ((:list-expression :beta) \, (:assignment-expression :beta)) list-expression-comma
+        ((verify (s static-env)) (and ((verify :list-expression) s) ((verify :assignment-expression) s)))
+        ((eval (e dynamic-env)) (let ((v1 value (get-value ((eval :list-expression) e)) :unused))
+                                  ((eval :assignment-expression) e)))))
     
     (production :optional-expression ((:list-expression allow-in)) optional-expression-expression)
     (production :optional-expression () optional-expression-empty)
+    (%print-actions)
     
     
     (%subsection "Type Expressions")
     (production (:type-expression :beta) ((:non-assignment-expression :beta)) type-expression-non-assignment-expression)
+    (%print-actions)
     
     
     (%section "Statements")
@@ -513,22 +822,56 @@
                       full)               ;semicolon required at the end
     (grammar-argument :omega_2 abbrev full)
     
-    (production (:statement :omega) (:empty-statement) statement-empty-statement)
-    (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement)
-    (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement)
-    (production (:statement :omega) (:block-statement) statement-block-statement)
-    (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement)
-    (production (:statement :omega) ((:if-statement :omega)) statement-if-statement)
-    (production (:statement :omega) (:switch-statement) statement-switch-statement)
-    (production (:statement :omega) (:do-statement (:semicolon :omega)) statement-do-statement)
-    (production (:statement :omega) ((:while-statement :omega)) statement-while-statement)
-    (production (:statement :omega) ((:for-statement :omega)) statement-for-statement)
-    (production (:statement :omega) ((:with-statement :omega)) statement-with-statement)
-    (production (:statement :omega) (:continue-statement (:semicolon :omega)) statement-continue-statement)
-    (production (:statement :omega) (:break-statement (:semicolon :omega)) statement-break-statement)
-    (production (:statement :omega) (:return-statement (:semicolon :omega)) statement-return-statement)
-    (production (:statement :omega) (:throw-statement (:semicolon :omega)) statement-throw-statement)
-    (production (:statement :omega) (:try-statement) statement-try-statement)
+    (rule (:statement :omega) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production (:statement :omega) (:empty-statement) statement-empty-statement
+        ((verify (s static-env :unused)) true)
+        ((eval (e dynamic-env :unused) (d value)) d))
+      (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement
+        (verify (verify :expression-statement))
+        ((eval (e dynamic-env) (d value :unused)) ((eval :expression-statement) e)))
+      (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) (:block-statement) statement-block-statement
+        (verify (verify :block-statement))
+        (eval (eval :block-statement)))
+      (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement
+        (verify (verify :labeled-statement))
+        (eval (eval :labeled-statement)))
+      (production (:statement :omega) ((:if-statement :omega)) statement-if-statement
+        (verify (verify :if-statement))
+        (eval (eval :if-statement)))
+      (production (:statement :omega) (:switch-statement) statement-switch-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) (:do-statement (:semicolon :omega)) statement-do-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) ((:while-statement :omega)) statement-while-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) ((:for-statement :omega)) statement-for-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) ((:with-statement :omega)) statement-with-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) (:continue-statement (:semicolon :omega)) statement-continue-statement
+        (verify (verify :continue-statement))
+        (eval (eval :continue-statement)))
+      (production (:statement :omega) (:break-statement (:semicolon :omega)) statement-break-statement
+        (verify (verify :break-statement))
+        (eval (eval :break-statement)))
+      (production (:statement :omega) (:return-statement (:semicolon :omega)) statement-return-statement
+        (verify (verify :return-statement))
+        ((eval (e dynamic-env) (d value :unused)) ((eval :return-statement) e)))
+      (production (:statement :omega) (:throw-statement (:semicolon :omega)) statement-throw-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:statement :omega) (:try-statement) statement-try-statement
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo))))
+    (%print-actions)
     
     (production (:semicolon :omega) (\;) semicolon-semicolon)
     (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon)
@@ -544,34 +887,75 @@
     
     
     (%subsection "Expression Statement")
-    (production :expression-statement ((:- function { const) (:list-expression allow-in)) expression-statement-list-expression)
+    (rule :expression-statement ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) value)))
+      (production :expression-statement ((:- function { const) (:list-expression allow-in)) expression-statement-list-expression
+        (verify (verify :list-expression))
+        ((eval (e dynamic-env)) (get-value ((eval :list-expression) e)))))
+    (%print-actions)
     
     
     (%subsection "Super Statement")
     (production :super-statement (super :arguments) super-statement-super-arguments)
+    (%print-actions)
     
     
     (%subsection "Block Statement")
-    (production :block-statement (:block) block-statement-block)
+    (rule :block-statement ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production :block-statement (:block) block-statement-block
+        (verify (verify :block))
+        (eval (eval :block))))
     
-    (production :block ({ :directives }) block-directives)
+    (rule :block ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production :block ({ :directives }) block-directives
+        (verify (verify :directives))
+        (eval (eval :directives))))
     
-    (production :directives () directives-none)
-    (production :directives (:directives-prefix (:directive abbrev)) directives-more)
+    (rule :directives ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production :directives () directives-none
+        ((verify (s static-env :unused)) true)
+        ((eval (e dynamic-env :unused) (d value)) d))
+      (production :directives (:directives-prefix (:directive abbrev)) directives-more
+        ((verify (s static-env)) (and ((verify :directives-prefix) s) ((verify :directive) s)))
+        ((eval (e dynamic-env) (d value)) ((eval :directives-prefix) e ((eval :directive) e d)))))
     
-    (production :directives-prefix () directives-prefix-none)
-    (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more)
+    (rule :directives-prefix ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production :directives-prefix () directives-prefix-none
+        ((verify (s static-env :unused)) true)
+        ((eval (e dynamic-env :unused) (d value)) d))
+      (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more
+        ((verify (s static-env)) (and ((verify :directives-prefix) s) ((verify :directive) s)))
+        ((eval (e dynamic-env) (d value)) ((eval :directives-prefix) e ((eval :directive) e d)))))
+    (%print-actions)
     
     
     (%subsection "Labeled Statements")
-    (production (:labeled-statement :omega) (:identifier \: (:substatement :omega)) labeled-statement-label)
+    (rule (:labeled-statement :omega) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production (:labeled-statement :omega) (:identifier \: (:substatement :omega)) labeled-statement-label
+        ((verify (s static-env)) ((verify :substatement) (add-label s (name :identifier))))
+        ((eval (e dynamic-env) (d value))
+         (catch ((eval :substatement) e d)
+           (x) (if (is break x)
+                 (if (string-equal (& label (select break x)) (name :identifier))
+                   (& value (select break x))
+                   (throw x))
+                 (throw x))))))
+    (%print-actions)
     
     
     (%subsection "If Statement")
-    (production (:if-statement abbrev) (if :parenthesized-list-expression (:substatement abbrev)) if-statement-if-then-abbrev)
-    (production (:if-statement full) (if :parenthesized-list-expression (:substatement full)) if-statement-if-then-full)
-    (production (:if-statement :omega) (if :parenthesized-list-expression (:substatement abbrev-no-short-if)
-                                           else (:substatement :omega)) if-statement-if-then-else)
+    (rule (:if-statement :omega) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production (:if-statement abbrev) (if :parenthesized-list-expression (:substatement abbrev)) if-statement-if-then-abbrev
+        ((verify (s static-env)) (and ((verify :parenthesized-list-expression) s) ((verify :substatement) s)))
+        ((eval (e dynamic-env) (d value)) (if (to-boolean (get-value ((eval :parenthesized-list-expression) e))) ((eval :substatement) e d) d)))
+      (production (:if-statement full) (if :parenthesized-list-expression (:substatement full)) if-statement-if-then-full
+        ((verify (s static-env)) (and ((verify :parenthesized-list-expression) s) ((verify :substatement) s)))
+        ((eval (e dynamic-env) (d value)) (if (to-boolean (get-value ((eval :parenthesized-list-expression) e))) ((eval :substatement) e d) d)))
+      (production (:if-statement :omega) (if :parenthesized-list-expression (:substatement abbrev-no-short-if)
+                                             else (:substatement :omega)) if-statement-if-then-else
+        ((verify (s static-env)) (and (and ((verify :parenthesized-list-expression) s) ((verify :substatement 1) s)) ((verify :substatement 2) s)))
+        ((eval (e dynamic-env) (d value))
+         (if (to-boolean (get-value ((eval :parenthesized-list-expression) e))) ((eval :substatement 1) e d) ((eval :substatement 2) e d)))))
+    (%print-actions)
     
     
     (%subsection "Switch Statement")
@@ -589,14 +973,17 @@
     
     (production :case-label (case (:list-expression allow-in) \:) case-label-case)
     (production :case-label (default \:) case-label-default)
+    (%print-actions)
     
     
     (%subsection "Do-While Statement")
     (production :do-statement (do (:substatement abbrev) while :parenthesized-list-expression) do-statement-do-while)
+    (%print-actions)
     
     
     (%subsection "While Statement")
     (production (:while-statement :omega) (while :parenthesized-list-expression (:substatement :omega)) while-statement-while)
+    (%print-actions)
     
     
     (%subsection "For Statements")
@@ -610,27 +997,47 @@
     
     (production :for-in-binding ((:- const) :postfix-expression) for-in-binding-expression)
     (production :for-in-binding (:attributes :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
+    (%print-actions)
     
     
     (%subsection "With Statement")
     (production (:with-statement :omega) (with :parenthesized-list-expression (:substatement :omega)) with-statement-with)
+    (%print-actions)
     
     
     (%subsection "Continue and Break Statements")
-    (production :continue-statement (continue) continue-statement-unlabeled)
-    (production :continue-statement (continue :no-line-break :identifier) continue-statement-labeled)
+    (rule :continue-statement ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production :continue-statement (continue) continue-statement-unlabeled
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value)) (throw (oneof continue (tuple value-and-label d "")))))
+      (production :continue-statement (continue :no-line-break :identifier) continue-statement-labeled
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value)) (throw (oneof continue (tuple value-and-label d (name :identifier)))))))
     
-    (production :break-statement (break) break-statement-unlabeled)
-    (production :break-statement (break :no-line-break :identifier) break-statement-labeled)
+    (rule :break-statement ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production :break-statement (break) break-statement-unlabeled
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value)) (throw (oneof break (tuple value-and-label d "")))))
+      (production :break-statement (break :no-line-break :identifier) break-statement-labeled
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value)) (throw (oneof break (tuple value-and-label d (name :identifier)))))))
+    (%print-actions)
     
     
     (%subsection "Return Statement")
-    (production :return-statement (return) return-statement-default)
-    (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression)
+    (rule :return-statement ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env) value)))
+      (production :return-statement (return) return-statement-default
+        ((verify (s static-env)) (& can-return s))
+        ((eval (e dynamic-env :unused)) (throw (oneof return (oneof undefined)))))
+      (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression
+        ((verify (s static-env)) (and (& can-return s) ((verify :list-expression) s)))
+        ((eval (e dynamic-env)) (throw (oneof return (get-value ((eval :list-expression) e)))))))
+    (%print-actions)
     
     
     (%subsection "Throw Statement")
     (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw)
+    (%print-actions)
     
     
     (%subsection "Try Statement")
@@ -644,20 +1051,42 @@
     (production :catch-clause (catch \( :parameter \) :block) catch-clause-block)
     
     (production :finally-clause (finally :block-statement) finally-clause-block-statement)
+    (%print-actions)
     
     
     (%section "Directives")
-    (production (:directive :omega_2) ((:statement :omega_2)) directive-statement)
-    (production (:directive :omega_2) ((:definition :omega_2)) directive-definition)
-    (production (:directive :omega_2) (:annotated-block) directive-annotated-block)
-    (production (:directive :omega_2) (:use-directive (:semicolon :omega_2)) directive-use-directive)
-    (? js2
-      (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive))
-    (production (:directive :omega_2) (:language-directive (:noninsertable-semicolon :omega_2)) directive-language-directive)
+    (rule (:directive :omega_2) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
+        (verify (verify :statement))
+        (eval (eval :statement)))
+      (production (:directive :omega_2) ((:definition :omega_2)) directive-definition
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:directive :omega_2) (:annotated-block) directive-annotated-block
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:directive :omega_2) (:use-directive (:semicolon :omega_2)) directive-use-directive
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (? js2
+        (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
+          ((verify (s static-env :unused)) (todo))
+          ((eval (e dynamic-env :unused) (d value :unused)) (todo))))
+      (production (:directive :omega_2) (:language-directive (:noninsertable-semicolon :omega_2)) directive-language-directive
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo))))
     
-    (production (:substatement :omega) ((:statement :omega)) substatement-statement)
-    (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition)
-    (production (:substatement :omega) (:simple-annotated-block) substatement-simple-annotated-block)
+    (rule (:substatement :omega) ((verify (-> (static-env) boolean)) (eval (-> (dynamic-env value) value)))
+      (production (:substatement :omega) ((:statement :omega)) substatement-statement
+        (verify (verify :statement))
+        (eval (eval :statement)))
+      (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo)))
+      (production (:substatement :omega) (:simple-annotated-block) substatement-simple-annotated-block
+        ((verify (s static-env :unused)) (todo))
+        ((eval (e dynamic-env :unused) (d value :unused)) (todo))))
+    (%print-actions)
     
     
     (%subsection "Annotated Blocks")
@@ -901,9 +1330,11 @@
     
     
     (%section "Programs")
-    (rule :program ((eval value))
+    (rule :program ((eval-program value))
       (production :program (:directives) program-directives
-        (eval (eval-binary-operator (@ binary-add) (oneof string "abc") (oneof string "xyz")))))))
+        (eval-program (if ((verify :directives) initial-static-env)
+                        ((eval :directives) initial-dynamic-env (oneof undefined))
+                        (throw (oneof syntax-error))))))))
 
 
 (defparameter *jw* (generate-world "J" *jw-source* '((js2 . :js2) (es4 . :es4))))
@@ -1014,7 +1445,8 @@
             (setf (svref bins 4) (delete terminal (svref bins 4)))
             (push terminal (svref bins (terminal-bin terminal))))))
       (depict-paragraph (markup-stream ':section-heading)
-        (depict markup-stream "Terminals"))
+        (depict-link (markup-stream :definition "terminals" "" nil)
+          (depict markup-stream "Terminals")))
       (mapc #'depict-terminal-bin '("General tokens: " "Punctuation tokens: " "Future punctuation tokens: "
                                     "Reserved words: " "Future reserved words: " "Non-reserved words: ")
             (coerce bins 'list)))))
