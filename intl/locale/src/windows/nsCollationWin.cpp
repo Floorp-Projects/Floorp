@@ -130,7 +130,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   }
 
   return NS_OK;
-};
+}
 
 
 nsresult nsCollationWin::CompareString(const nsCollationStrength strength,
