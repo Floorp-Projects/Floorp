@@ -123,8 +123,8 @@ NS_IMPL_ISUPPORTS1(nsXMLContentBuilder, nsIXMLContentBuilder)
 /* void clear (in nsIDOMElement root); */
 NS_IMETHODIMP nsXMLContentBuilder::Clear(nsIDOMElement *root)
 {
-  mCurrent = root;
-  mTop = root;
+  mCurrent = do_QueryInterface(root);
+  mTop = do_QueryInterface(root);
   if (mNamespaceId != kNameSpaceID_None) {
     mNamespaceId = kNameSpaceID_None;
   }
