@@ -31,6 +31,7 @@
 #include "nsINntpIncomingServer.h" // need this for the IID
 #include "nsNewsUtils.h"
 #include "nsMsgLineBuffer.h"
+#include "nsMsgKeySet.h"
 
 class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder, public nsMsgLineBuffer
 {
@@ -104,7 +105,7 @@ protected:
 
 	//Creates a subfolder with the name 'name' and adds it to the list of children.
 	//Returns the child as well.
-	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
+	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, nsMsgKeySet **set);
 
   PRBool isNewsHost(void);
   nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
@@ -129,6 +130,7 @@ protected:
 	nsISupportsArray *mMessages;
   char      *mOptionLines;
   char      *mHostname;
+  nsMsgKeySet *mSet;
 };
 
 #endif // nsMsgNewsFolder_h__

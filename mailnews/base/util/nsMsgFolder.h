@@ -323,7 +323,6 @@ protected:
   PRInt32	mNumNewBiffMessages;
 
   PRBool mIsCachable;
-
 };
 
 #endif

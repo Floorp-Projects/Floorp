@@ -67,7 +67,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
-    mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
+    mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull), mSet(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
 }
@@ -85,6 +85,11 @@ nsMsgNewsFolder::~nsMsgNewsFolder(void)
     mHostname = nsnull;
   }
 
+  if (mSet) {
+    delete mSet;
+    mSet = nsnull;
+  }
+  
   PR_FREEIF(mOptionLines);
   mOptionLines = nsnull;
 }
@@ -331,11 +336,15 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
   return rv;
 }
 
-nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
+nsresult
+nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, nsMsgKeySet **set)
 {
-	if(!child)
+	if (!child)
 		return NS_ERROR_NULL_POINTER;
 
+  if (!set || !*set)
+    return NS_ERROR_NULL_POINTER;
+  
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
 
@@ -352,13 +361,25 @@ nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 	rv = rdf->GetResource(uri.GetBuffer(), &res);
 	if (NS_FAILED(rv))
 		return rv;
-
-	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+  
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 		return rv;        
 
 	folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
-
+  
+  /* folder->SetMsgKeySet(set); */
+  if (set && *set) {
+    char *setstr = nsnull;
+    setstr = (*set)->Output();
+    if (setstr) {
+#ifdef DEBUG_seth
+      printf("one more time = %s\n", setstr);
+#endif
+      delete [] setstr;
+    }
+  }
+  
 	mSubFolders->AppendElement(folder);
 	*child = folder;
 	NS_ADDREF(*child);
@@ -464,9 +485,9 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		if (NS_FAILED(rv)) return rv;
 
 		nsresult folderOpen = NS_OK;
-		nsIMsgDatabase * newsDBFactory = nsnull;
+		nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 
-		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
+		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
 			folderOpen = newsDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
@@ -479,7 +500,6 @@ nsresult nsMsgNewsFolder::GetDatabase()
         return rv;
       }
 #endif
-			NS_RELEASE(newsDBFactory);
 		}
 
 		if(mDatabase) {
@@ -677,9 +697,9 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 	nsOutputFileStream outputStream(path);	
    
 	// Create an empty database for this news folder, set its name from the user  
-	nsIMsgDatabase * newsDBFactory = nsnull;
+	nsCOMPtr<nsIMsgDatabase> newsDBFactory;
 
-	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
+	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory)
 	{
         nsIMsgDatabase *unusedDB = nsnull;
@@ -688,12 +708,11 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
 			//need to set the folder name
-			nsIDBFolderInfo *folderInfo;
-			rv = unusedDB->GetDBFolderInfo(&folderInfo);
+			nsCOMPtr <nsIDBFolderInfo> folderInfo;
+			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 			if(NS_SUCCEEDED(rv))
 			{
 				//folderInfo->SetNewsgroupName(leafNameFromUser);
-				NS_IF_RELEASE(folderInfo);
 			}
 
 			//Now let's create the actual new folder
@@ -707,17 +726,15 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *folderName)
 			path.Delete(PR_FALSE);
             rv = NS_MSG_CANT_CREATE_FOLDER;
         }
-		NS_IF_RELEASE(newsDBFactory);
 	}
 	if(NS_SUCCEEDED(rv) && child)
 	{
-		nsISupports *folderSupports;
+		nsCOMPtr <nsISupports> folderSupports;
 
-		rv = child->QueryInterface(kISupportsIID, (void**)&folderSupports);
+		rv = child->QueryInterface(kISupportsIID, getter_AddRefs(folderSupports));
 		if(NS_SUCCEEDED(rv))
 		{
 			NotifyItemAdded(folderSupports);
-			NS_IF_RELEASE(folderSupports);
 		}
 	}
 	return rv;
@@ -762,33 +779,30 @@ nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
   // will return nsnull if we can't find it
   *aChild = nsnull;
 
-  nsIMsgFolder *folder = nsnull;
+  nsCOMPtr <nsIMsgFolder> folder;
 
   PRUint32 cnt;
   nsresult rv = mSubFolders->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   PRUint32 count = cnt;
 
-  for (PRUint32 i = 0; i < count; i++)
-  {
-    nsISupports *supports;
+  for (PRUint32 i = 0; i < count; i++) {
+    nsCOMPtr <nsISupports> supports;
     supports = mSubFolders->ElementAt(i);
-    if(folder)
-      NS_RELEASE(folder);
-    if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, (void**)&folder))) {
-      char *folderName;
 
+    if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, getter_AddRefs(folder)))) {
+      char *folderName;
+      
       folder->GetName(&folderName);
       
-	  // case-insensitive compare is probably LCD across OS filesystems
-	  if (folderName && PL_strcasecmp(name, folderName)!=0) {
+      // case-insensitive compare is probably LCD across OS filesystems
+      if (folderName && PL_strcasecmp(name, folderName)!=0) {
         *aChild = folder;
         PR_FREEIF(folderName);
         return NS_OK;
       }
       PR_FREEIF(folderName);
     }
-    NS_RELEASE(supports);
   }
   return NS_OK;
 }
@@ -824,27 +838,28 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(char ** prettyName)
 
 nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-    nsresult openErr=NS_ERROR_UNEXPECTED;
-    if(!db || !folderInfo)
+  nsresult openErr=NS_ERROR_UNEXPECTED;
+  if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 		
 	if (!mPath)
 		return NS_ERROR_NULL_POINTER;
 
-	nsIMsgDatabase *newsDBFactory = nsnull;
+	nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 	nsIMsgDatabase *newsDB;
 
-	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
-	if (NS_SUCCEEDED(rv) && newsDBFactory)
-	{
+	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
+	if (NS_SUCCEEDED(rv) && newsDBFactory) {
 		openErr = newsDBFactory->Open(*mPath, PR_FALSE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
-		newsDBFactory->Release();
 	}
+  else {
+    return rv;
+  }
 
-    *db = newsDB;
-    if (NS_SUCCEEDED(openErr)&& *db)
-        openErr = (*db)->GetDBFolderInfo(folderInfo);
-    return openErr;
+  *db = newsDB;
+  if (NS_SUCCEEDED(openErr)&& *db)
+    openErr = (*db)->GetDBFolderInfo(folderInfo);
+  return openErr;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
@@ -1116,7 +1131,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	char* msgURI = nsnull;
 	nsFileSpec path;
 	nsMsgKey key;
-	nsIRDFResource* res;
+	nsCOMPtr <nsIRDFResource> res;
 
 	rv = msgDBHdr->GetMessageKey(&key);
 
@@ -1125,27 +1140,23 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
   
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = rdfService->GetResource(msgURI, &res);
+		rv = rdfService->GetResource(msgURI, getter_AddRefs(res));
   }
 	if(msgURI) {
 		PR_FREEIF(msgURI);
     msgURI = nsnull;
   }
   
-	if(NS_SUCCEEDED(rv))
-    {
-      nsIMessage *messageResource;
-      rv = res->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
-      if(NS_SUCCEEDED(rv))
-        {
-          //We know from our factory that news message resources are going to be
-          //nsNewsMessages.
-          nsNewsMessage *newsMessage = NS_STATIC_CAST(nsNewsMessage*, messageResource);
-          newsMessage->SetMsgDBHdr(msgDBHdr);
-          *message = messageResource;
-        }
-      NS_IF_RELEASE(res);
-    }
+  if(NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDBMessage> messageResource = do_QueryInterface(res);
+    if(messageResource)
+      {
+        messageResource->SetMsgDBHdr(msgDBHdr);
+        *message = messageResource;
+        NS_IF_ADDREF(*message);
+      }
+  }
+  
 	return rv;
 }
 
@@ -1203,9 +1214,6 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 
 	char *s;
 	char *end = line + line_size;
-#ifdef HAVE_PORT
-	static msg_NewsArtSet *set;
-#endif
 
 	for (s = line; s < end; s++)
 		if (*s == ':' || *s == '!')
@@ -1216,19 +1224,19 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 		return RememberLine(line);
 	}
 
-#ifdef HAVE_PORT
-	set = msg_NewsArtSet::Create(s + 1, this);
-	if (!set) return NS_OUT_OF_MEMORY;
-#endif
-
+  nsMsgKeySet *set = nsnull;
+  set = nsMsgKeySet::Create(s+1 /* , this */);
+  if (!set) return -1;
+    
 	PRBool subscribed = (*s == ':');
 	*s = '\0';
 
 	if (PL_strlen(line) == 0)
 	{
-#ifdef HAVE_PORT
-		delete set;
-#endif
+    if (set) {
+      delete set;
+      set = nsnull;
+    }
 		return 0;
 	}
  
@@ -1263,12 +1271,29 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
     printf("subscribed: %s\n", line);
 #endif
 
-    // were subscribed, so add it
-    nsIMsgFolder *child = nsnull;
+#ifdef DEBUG_seth
+    if (set) {
+      char *setstr = nsnull;
+      setstr = set->Output();
+      if (setstr) {
+        printf("set string for %s = %s\n", line, setstr);
+        delete [] setstr;
+      }
+    }
+#endif /* DEBUG_seth */
+    
+    // we're subscribed, so add it
+    nsCOMPtr <nsIMsgFolder> child;
     nsAutoString currentFolderNameStr(line);
-    AddSubfolder(currentFolderNameStr,&child);
-    NS_IF_RELEASE(child);
-    child = nsnull;
+    
+    nsresult rv = AddSubfolder(currentFolderNameStr,getter_AddRefs(child), &set);
+    
+    if (set) {
+      delete set;
+      set = nsnull;
+    }
+
+    if (NS_FAILED(rv)) return -1;
   }
   else {
 #ifdef DEBUG_NEWS
@@ -1327,7 +1352,7 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 	// Except this might disable the update of new counts - check it out...
 	m_master->InitFolderFromCache (info);
 #endif /* HAVE_PORT */
-
+  
   return 0;
 }
 
