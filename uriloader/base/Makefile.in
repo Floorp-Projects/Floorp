@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  webshell \
 		  xpconnect \
-		  mimetype \
 		  $(NULL)
 
 CPPSRCS = 							\
