@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mike Shaver <shaver@zeroknowledge.com>
+ *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
 
@@ -1793,9 +1795,16 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 #ifdef DEBUG_shaver
     fprintf(stderr, "Auth type: \"%s\"\n", authType.GetBuffer());
 #endif
-
+    // normalize to lowercase
+    char *authLower = nsCRT::strdup(authType.GetBuffer());
+    for (int i = 0; authLower[i]; i++)
+        authLower[i] = tolower(authLower[i]);
+    
     nsCOMPtr<nsIAuthenticator> auth =
-      do_GetServiceFromCategory("http-auth", authType, &rv);
+      do_GetServiceFromCategory("http-auth", authLower, &rv);
+
+    nsMemory::Free(authLower); // free before checking rv
+    
     if (NS_FAILED(rv))
       // XXX report "Authentication-type not supported: %s"
       return NS_ERROR_FAILURE;

@@ -100,7 +100,7 @@ RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString previous;
-    return catman->AddCategoryEntry("http-auth", "Basic", NS_BASICAUTH_PROGID,
+    return catman->AddCategoryEntry("http-auth", "basic", NS_BASICAUTH_PROGID,
                                     PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
@@ -113,13 +113,13 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString basicAuth;
-    rv = catman->GetCategoryEntry("http-auth", "Basic",
+    rv = catman->GetCategoryEntry("http-auth", "basic",
                                   getter_Copies(basicAuth));
     if (NS_FAILED(rv)) return rv;
 
     // only unregister if we're the current Basic-auth handler
     if (!strcmp(basicAuth, NS_BASICAUTH_PROGID))
-        return catman->DeleteCategoryEntry("http-auth", "Basic", PR_TRUE,
+        return catman->DeleteCategoryEntry("http-auth", "basic", PR_TRUE,
                                            getter_Copies(basicAuth));
     return NS_OK;
 }
