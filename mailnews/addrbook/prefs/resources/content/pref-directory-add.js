@@ -50,7 +50,7 @@ function fillSettings()
   {
     document.getElementById("description").value = prefValue;
     try{
-      prefValue = gPrefInt.CopyUnicharPref(gCurrentDirectoryString +".uri");
+      prefValue = gPrefInt.CopyCharPref(gCurrentDirectoryString +".uri");
     }
     catch(ex){
       prefValue="";
@@ -259,7 +259,7 @@ function onOK()
       ldapUrl.scope = 2;
   }
   pref_string_title = gPref_string_desc + ".uri";
-  gPrefInt.SetUnicharPref(pref_string_title, ldapUrl.spec);
+  gPrefInt.SetCharPref(pref_string_title, ldapUrl.spec);
   pref_string_content = results;
   pref_string_title = gPref_string_desc + ".maxHits";
   if (pref_string_content != gMaxHits) {

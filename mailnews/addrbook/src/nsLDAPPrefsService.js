@@ -178,7 +178,7 @@ function () {
       }
       ldapUrl.port = port;
       ldapUrl.scope = 2;
-      gPrefInt.SetUnicharPref(pref_string + ".uri", ldapUrl.spec);
+      gPrefInt.SetCharPref(pref_string + ".uri", ldapUrl.spec);
       /* is this server selected for autocompletion? 
          if yes, convert the preference to mozilla format.
          Atmost one server is selected for autocompletion. 
