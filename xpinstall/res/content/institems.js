@@ -40,7 +40,7 @@ function addTreeItem(num, modName, url)
   elem.setAttribute("value", modName);
   newrow.appendChild(elem);
 
-  var elem = document.createElement('treecell');
+  elem = document.createElement('treecell');
   elem.setAttribute("value", url);
   newrow.appendChild(elem);
 
