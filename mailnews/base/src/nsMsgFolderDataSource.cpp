@@ -872,27 +872,35 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
                                                  nsIAtom *property,
                                                  PRUint32 oldFlag,
                                                  PRUint32 newFlag)
-{
-	nsresult rv;
-	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
-	if(folder)
-	{
-		nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item));
-		if(resource)
-		{
-			if (kBiffStateAtom == property)
-			{
-				nsCAutoString newBiffStateStr;
+  {
+    nsresult rv;
+    //Suresh: for Incoming biff(to turn it on) the item is of type nsIFolder (see nsMsgFolder::SetBiffState)
+    //For clearing the biff the item is of type nsIMsgDBHdr (see nsMsgDBFolder::OnKeyChange)
+    //so check for both of these here!!
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
+   	if(!folder)
+    {
+      nsCOMPtr<nsIMsgDBHdr> msgHdr  = do_QueryInterface(item);
+      if (msgHdr)
+        rv = msgHdr->GetFolder(getter_AddRefs(folder));
+      if(NS_FAILED(rv))
+        return rv;
+    }
 
-				rv = GetBiffStateString(newFlag, newBiffStateStr);
-				if(NS_FAILED(rv))
-					return rv;
-				NotifyPropertyChanged(resource, kNC_BiffState, newBiffStateStr);
-			}
-		}
+    nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(folder));
+    if(resource)
+    {
+      if (kBiffStateAtom == property)
+      {
+        nsCAutoString newBiffStateStr;
+        rv = GetBiffStateString(newFlag, newBiffStateStr);
+        if(NS_FAILED(rv))
+          return rv;
+        NotifyPropertyChanged(resource, kNC_BiffState, newBiffStateStr);
+      }
+    }
 
-	}
-	return NS_OK;
+    return NS_OK;
 
 }
 
