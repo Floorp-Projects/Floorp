@@ -611,6 +611,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // will cause servicemanager to become inaccessible.
     gShuttingDown = PR_TRUE;
 
+    // Release memory pressure observers now so that things get
+    // released earlier.
+    nsMemoryImpl::ReleaseObservers();
+
     // Release our own singletons...
     XPTI_FreeInterfaceInfoManager();
 

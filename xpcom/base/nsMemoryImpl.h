@@ -40,6 +40,7 @@ public:
 
     // called from xpcom initialization/finalization:
     static nsresult Startup();
+    static nsresult ReleaseObservers();
     static nsresult Shutdown();
 
     static NS_METHOD
