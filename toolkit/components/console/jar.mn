@@ -4,12 +4,6 @@ toolkit.jar:
 +   content/global/console.css                           (content/console.css)
 +   content/global/consoleBindings.xml                   (content/consoleBindings.xml)
 
-classic.jar:
-+  skin/classic/global/console/console.css              (skin/console.css)
-   skin/classic/global/console/console-error-caret.gif  (skin/console-error-caret.gif)
-   skin/classic/global/console/console-error-dash.gif   (skin/console-error-dash.gif)
-   skin/classic/global/console/Console-toolbar.png      (skin/Console-toolbar.png)
-
 en-US.jar:
 *+ locale/en-US/global/console.dtd                      (locale/console.dtd)
 +  locale/en-US/global/console.properties               (locale/console.properties)

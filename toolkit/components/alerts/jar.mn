@@ -2,6 +2,3 @@ toolkit.jar:
 * content/global/alerts/alert.xul (resources/content/alert.xul)
 * content/global/alerts/alert.js  (resources/content/alert.js)
 
-classic.jar:
-  skin/classic/global/alerts/alert.css (resources/skin/alert.css)
-

@@ -2,9 +2,6 @@ toolkit.jar:
 *+ content/global/config.xul              (content/config.xul) 
 *+ content/global/config.js               (content/config.js) 
 
-classic.jar:
-*+ skin/classic/global/config.css         (skin/config.css)
-
 en-US.jar:
 *+ locale/en-US/global/config.properties  (locale/config.properties) 
 *+ locale/en-US/global/config.dtd         (locale/config.dtd) 

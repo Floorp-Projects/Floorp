@@ -45,13 +45,5 @@ DIRS += helpOnHelp
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# Use Pinstripe on MacOS X
-DIRS	+= skin/mac
-else
-# Use Qute on Windows and Linux
-DIRS    += skin 
-endif
-
 include $(topsrcdir)/config/rules.mk
 

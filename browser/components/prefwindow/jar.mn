@@ -41,7 +41,3 @@ en-US.jar:
     locale/en-US/browser/pref/prefutilities.properties     (locale/prefutilities.properties)
     locale/en-US/browser/pref/plugins.dtd                  (locale/plugins.dtd)
 
-classic.jar:
-    skin/classic/browser/pref/pref.css                     (skin/pref.css)
-    skin/classic/browser/pref/Options.png                  (skin/Options.png)
-    

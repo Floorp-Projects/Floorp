@@ -35,11 +35,6 @@ browser.jar:
 *  content/browser/bookmarks/bookmarksPanel.xul               (content/bookmarksPanel.xul)
 *  content/browser/bookmarks/bookmarksPanel.js                (content/bookmarksPanel.js)
 
-classic.jar:
-   skin/classic/browser/bookmarks/bookmarksManager.css        (skin/bookmarksManager.css)
-   skin/classic/browser/bookmarks/addBookmark.css             (skin/addBookmark.css)
-   skin/classic/browser/bookmarks/Bookmarks-toolbar.png       (skin/Bookmarks-toolbar.png)
-  
 en-US.jar:
 *  locale/en-US/browser/bookmarks/addBookmark.dtd         (locale/addBookmark.dtd)
 *  locale/en-US/browser/bookmarks/bookmarksProperties.dtd (locale/bookmarksProperties.dtd)
