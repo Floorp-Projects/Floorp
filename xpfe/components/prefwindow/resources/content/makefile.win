@@ -28,7 +28,6 @@ CHROME_CONTENT_DIR = communicator\content\pref
 
 CHROME_CONTENT = \
 	.\pref-advanced.xul \
-	.\pref-imageblocking.xul \
 	.\pref-appearance.xul \
 	.\pref-applications.xul \
 	.\pref-applications.js \

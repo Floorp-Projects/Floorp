@@ -35,7 +35,6 @@ CHROME_CONTENT = \
 		nsPrefWindow.js \
 		pref.xul \
 		pref-advanced.xul \
-		pref-imageblocking.xul \
 		pref-appearance.xul \
 		pref-applications.xul \
 		pref-applications.js \
