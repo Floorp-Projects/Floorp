@@ -251,6 +251,7 @@ il_BACat (char **destination,
 
   return *destination;
 }
+#undef BlockAllocCat
 #define BlockAllocCat(dest, dest_length, src, src_length)  il_BACat(&(dest), dest_length, src, src_length)
 
 /* Send the data to the display front-end. */
