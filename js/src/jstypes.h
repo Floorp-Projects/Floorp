@@ -111,7 +111,7 @@
 #define JS_DLL_CALLBACK
 #define JS_STATIC_DLL_CALLBACK(__x) static __x
 
-#elif defined(XP_OS2) 
+#elif defined(XP_OS2_VACPP) 
 #define JS_EXTERN_API(__type) extern __type
 #define JS_EXPORT_API(__type) __type
 #define JS_EXTERN_DATA(__type) extern __type
@@ -216,9 +216,9 @@
 #define JS_MIN(x,y)     ((x)<(y)?(x):(y))
 #define JS_MAX(x,y)     ((x)>(y)?(x):(y))
 
-#if (defined(XP_MAC) || defined(XP_PC)) && !defined(CROSS_COMPILE)
+#if (defined(XP_MAC) || (defined(XP_PC) && !defined(XP_OS2))) && !defined(CROSS_COMPILE)
 #    include "jscpucfg.h"        /* Use standard Mac or Windows configuration */
-#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(CROSS_COMPILE)
+#elif defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2) || defined(CROSS_COMPILE)
 #    include "jsautocfg.h"       /* Use auto-detected configuration */
 #    include "jsosdep.h"         /* ...and platform-specific flags */
 #else
