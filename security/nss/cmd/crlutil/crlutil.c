@@ -195,7 +195,7 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 	const char *errString;
 
 	errString = SECU_Strerror(PORT_GetError());
-	if (PORT_Strlen (errString) == 0)
+	if ( errString && PORT_Strlen (errString) == 0)
 	    SECU_PrintError
 		    (progName, "CRL is not import (error: input CRL is not up to date.)");
 	else    
