@@ -84,6 +84,7 @@ const gButtonPrefListener =
       button.setAttribute("hidden","false");
     else
       button.setAttribute("hidden", "true");
+  }
 };
 
 const gTabStripPrefListener =

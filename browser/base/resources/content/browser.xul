@@ -92,8 +92,9 @@ Contributor(s): ______________________________________. -->
   <stringbundle id="bundle_navigator" src="chrome://browser/locale/navigator.properties"/>
   <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+  <stringbundle id="bookmarksbundle"/>
 
-  <commandset id="commands">    
+  <commands id="bookmarksItems">    
     <commandset commandupdater="true"
                 events="focus"
                 oncommandupdate="goUpdateGlobalEditMenuItems()"/>
@@ -169,7 +170,7 @@ Contributor(s): ______________________________________. -->
     <command id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
     <command id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
     <command id="cmd_viewlocationbar" oncommand="goToggleToolbar('LocationToolbar','cmd_viewlocationbar');" checked="true"/>
-  </commandset>
+  </commands>
 
   <broadcaster id="canGoBack"    disabled="true"/>
   <broadcaster id="canGoForward" disabled="true"/>
@@ -244,166 +245,165 @@ Contributor(s): ______________________________________. -->
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-  <popupset id="bookmarksPopupset">
-    <popup id="contentAreaContextMenu"
-           onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="gContextMenu = null;">
-      <menuitem id="context-openlinkintab"
-                label="&openLinkCmdInTab.label;"
-                accesskey="&openLinkCmdInTab.accesskey;"
-                oncommand="gContextMenu.openLinkInTab();"/>
-      <menuitem id="context-openlink"
-                label="&openLinkCmd.label;"
-                accesskey="&openLinkCmd.accesskey;"
-                oncommand="gContextMenu.openLink();"/>
-      <menuseparator id="context-sep-open"/>
-      <menuitem id="context-bookmarklink"
-                label="&bookmarkLinkCmd.label;"
-                accesskey="&bookmarkLinkCmd.accesskey;"
-                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
-                                                      gContextMenu.linkText(), 
-                                                      undefined, false);"/>
-      <menuitem id="context-savelink"
-                label="&saveLinkCmd.label;"
-                accesskey="&saveLinkCmd.accesskey;"
-                oncommand="gContextMenu.saveLink();"/>
-      <menuitem id="context-copyemail"
-                label="&copyEmailCmd.label;"
-                accesskey="&copyEmailCmd.accesskey;"
-                oncommand="gContextMenu.copyEmail();"/>
-      <menuitem id="context-copylink"
-                label="&copyLinkCmd.label;"
-                accesskey="&copyLinkCmd.accesskey;"
-                oncommand="goDoCommand('cmd_copyLink');"/>
-      <menuseparator id="context-sep-copylink"/>
-      <menuitem id="context-viewimage"
-                label="&viewImageCmd.label;"
-                accesskey="&viewImageCmd.accesskey;"
-                oncommand="gContextMenu.viewImage();"/>
-      <menuitem id="context-copyimage"
-                label="&copyImageCmd.label;"
-                accesskey="&copyImageCmd.accesskey;"
-                oncommand="goDoCommand('cmd_copyImageLocation');"/>
-      <menuseparator id="context-sep-copyimage"/>
-      <menuitem id="context-saveimage"
-                label="&saveImageCmd.label;"
-                accesskey="&saveImageCmd.accesskey;"
-                oncommand="gContextMenu.saveImage();"/>
-      <menuitem id="context-setWallpaper"
-                label="&setWallpaperCmd.label;"
-                accesskey="&setWallpaperCmd.accesskey;"
-                oncommand="gContextMenu.setWallpaper();"/>
-      <menuseparator id="context-sep-setWallpaper"/>
-      <menuitem id="context-back"
-                label="&goBackCmd.label;"
-                accesskey="&goBackCmd.accesskey;"
-                oncommand="BrowserBack()"/>
-      <menuitem id="context-forward"
-                label="&goForwardCmd.label;"
-                accesskey="&goForwardCmd.accesskey;"
-                oncommand="BrowserForward()"/>
-      <menuitem id="context-reload"
-                label="&reloadCmd.label;"
-                accesskey="&reloadCmd.accesskey;"
-                oncommand="BrowserReload();"/>
-      <menuitem id="context-stop"
-                label="&stopCmd.label;"
-                accesskey="&stopCmd.accesskey;"
-                disabled="true"
-                cmd="cmd_stop"/>
-      <menuseparator id="context-sep-stop"/>
-      <menuitem id="context-bookmarkpage"
-                label="&bookmarkPageCmd.label;"
-                accesskey="&bookmarkPageCmd.accesskey;"
-                oncommand="gContextMenu.addBookmark();"/>
-      <menuitem id="context-savepage"
-                label="&savePageCmd.label;"
-                accesskey="&savePageCmd.accesskey;"
-                oncommand="saveDocument(window._content.document);"/>
-      <menuseparator id="context-sep-viewbgimage"/>
-      <menuitem id="context-viewbgimage"
-                label="&viewBGImageCmd.label;"
-                accesskey="&viewBGImageCmd.accesskey;"
-                oncommand="gContextMenu.viewBGImage();"/>
-      <menuitem id="context-undo"
-                label="&undoCmd.label;"
-                accesskey="&undoCmd.accesskey;"
-                command="cmd_undo"/>
-      <menuseparator id="context-sep-undo"/>
-      <menuitem id="context-cut"
-                label="&cutCmd.label;"
-                accesskey="&cutCmd.accesskey;"
-                command="cmd_cut"/>
-      <menuitem id="context-copy"
-                label="&copyCmd.label;"
-                accesskey="&copyCmd.accesskey;"
-                command="cmd_copy"/>
-      <menuitem id="context-paste"
-                label="&pasteCmd.label;"
-                accesskey="&pasteCmd.accesskey;"
-                command="cmd_paste"/>
-      <menuitem id="context-delete"
-                label="&deleteCmd.label;"
-                accesskey="&deleteCmd.accesskey;"
-                command="cmd_delete"/>
-      <menuseparator id="context-sep-paste"/>
-      <menuitem id="context-selectall"
-                label="&selectAllCmd.label;"
-                accesskey="&selectAllCmd.accesskey;"
-                command="cmd_selectAll"/>      
-      <menuseparator id="context-sep-selectall"/>
-      <menuitem id="context-searchselect"
-                accesskey="&search.accesskey;"
-                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
-      <menuseparator id="frame-sep"/>
-      <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
-        <menupopup id="frame_popup">
-          <menuitem label="&showOnlyThisFrameCmd.label;"
-                    accesskey="&showOnlyThisFrameCmd.accesskey;"
-                    oncommand="gContextMenu.showOnlyThisFrame();"/>
-          <menuitem label="&openFrameCmdInTab.label;"
-                    accesskey="&openFrameCmdInTab.accesskey;"
-                    oncommand="gContextMenu.openFrameInTab();"/>
-          <menuitem label="&openFrameCmd.label;"
-                    accesskey="&openFrameCmd.accesskey;"
-                    oncommand="gContextMenu.openFrame();"/>
-          <menuseparator/>
-          <menuitem id="context-reload-frame"
-                    label="&reloadFrameCmd.label;"
-                    accesskey="&reloadFrameCmd.accesskey;"
-                    oncommand="gContextMenu.reloadFrame();"/>
-          <menuseparator/>
-          <menuitem label="&bookmarkFrameCmd.label;"
-                    accesskey="&bookmarkFrameCmd.accesskey;"
-                    oncommand="gContextMenu.addBookmarkForFrame();"/>
-          <menuitem id="saveframeas"
-                    label="&saveFrameCmd.label;"
-                    accesskey="&saveFrameCmd.accesskey;"
-                    oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
-          <menuseparator/>
-          <menuitem label="&viewFrameSourceCmd.label;"
-                    accesskey="&viewFrameSourceCmd.accesskey;"
-                    oncommand="gContextMenu.viewFrameSource();"/>
-          <menuitem label="&viewFrameInfoCmd.label;"
-                    accesskey="&viewFrameInfoCmd.accesskey;"
-                    oncommand="gContextMenu.viewFrameInfo();"/>        
-        </menupopup>
-      </menu>
-      <menuseparator id="context-sep-properties"/>
-      <menuitem id="context-viewsource"
-                label="&viewPageSourceCmd.label;"
-                accesskey="&viewPageSourceCmd.accesskey;"
-                oncommand="BrowserViewSourceOfDocument(_content.document);"/>
-      <menuitem id="context-viewinfo"
-                label="&viewPageInfoCmd.label;"
-                accesskey="&viewPageInfoCmd.accesskey;"
-                oncommand="gContextMenu.viewInfo();"/>
-      <menuitem id="context-metadata"
-                label="&metadataCmd.label;"
-                accesskey="&metadataCmd.accesskey;"
-                oncommand="gContextMenu.showMetadata();"/>
-    </popup>
-  </popupset>
+  <popup id="contentAreaContextMenu"
+         onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
+         onpopuphiding="gContextMenu = null;">
+    <menuitem id="context-openlinkintab"
+              label="&openLinkCmdInTab.label;"
+              accesskey="&openLinkCmdInTab.accesskey;"
+              oncommand="gContextMenu.openLinkInTab();"/>
+    <menuitem id="context-openlink"
+              label="&openLinkCmd.label;"
+              accesskey="&openLinkCmd.accesskey;"
+              oncommand="gContextMenu.openLink();"/>
+    <menuseparator id="context-sep-open"/>
+    <menuitem id="context-bookmarklink"
+              label="&bookmarkLinkCmd.label;"
+              accesskey="&bookmarkLinkCmd.accesskey;"
+              oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                                                    gContextMenu.linkText(), 
+                                                    undefined, false);"/>
+    <menuitem id="context-savelink"
+              label="&saveLinkCmd.label;"
+              accesskey="&saveLinkCmd.accesskey;"
+              oncommand="gContextMenu.saveLink();"/>
+    <menuitem id="context-copyemail"
+              label="&copyEmailCmd.label;"
+              accesskey="&copyEmailCmd.accesskey;"
+              oncommand="gContextMenu.copyEmail();"/>
+    <menuitem id="context-copylink"
+              label="&copyLinkCmd.label;"
+              accesskey="&copyLinkCmd.accesskey;"
+              oncommand="goDoCommand('cmd_copyLink');"/>
+    <menuseparator id="context-sep-copylink"/>
+    <menuitem id="context-viewimage"
+              label="&viewImageCmd.label;"
+              accesskey="&viewImageCmd.accesskey;"
+              oncommand="gContextMenu.viewImage();"/>
+    <menuitem id="context-copyimage"
+              label="&copyImageCmd.label;"
+              accesskey="&copyImageCmd.accesskey;"
+              oncommand="goDoCommand('cmd_copyImageLocation');"/>
+    <menuseparator id="context-sep-copyimage"/>
+    <menuitem id="context-saveimage"
+              label="&saveImageCmd.label;"
+              accesskey="&saveImageCmd.accesskey;"
+              oncommand="gContextMenu.saveImage();"/>
+    <menuitem id="context-setWallpaper"
+              label="&setWallpaperCmd.label;"
+              accesskey="&setWallpaperCmd.accesskey;"
+              oncommand="gContextMenu.setWallpaper();"/>
+    <menuseparator id="context-sep-setWallpaper"/>
+    <menuitem id="context-back"
+              label="&goBackCmd.label;"
+              accesskey="&goBackCmd.accesskey;"
+              oncommand="BrowserBack()"/>
+    <menuitem id="context-forward"
+              label="&goForwardCmd.label;"
+              accesskey="&goForwardCmd.accesskey;"
+              oncommand="BrowserForward()"/>
+    <menuitem id="context-reload"
+              label="&reloadCmd.label;"
+              accesskey="&reloadCmd.accesskey;"
+              oncommand="BrowserReload();"/>
+    <menuitem id="context-stop"
+              label="&stopCmd.label;"
+              accesskey="&stopCmd.accesskey;"
+              disabled="true"
+              cmd="cmd_stop"/>
+    <menuseparator id="context-sep-stop"/>
+    <menuitem id="context-bookmarkpage"
+              label="&bookmarkPageCmd.label;"
+              accesskey="&bookmarkPageCmd.accesskey;"
+              oncommand="gContextMenu.addBookmark();"/>
+    <menuitem id="context-savepage"
+              label="&savePageCmd.label;"
+              accesskey="&savePageCmd.accesskey;"
+              oncommand="saveDocument(window._content.document);"/>
+    <menuseparator id="context-sep-viewbgimage"/>
+    <menuitem id="context-viewbgimage"
+              label="&viewBGImageCmd.label;"
+              accesskey="&viewBGImageCmd.accesskey;"
+              oncommand="gContextMenu.viewBGImage();"/>
+    <menuitem id="context-undo"
+              label="&undoCmd.label;"
+              accesskey="&undoCmd.accesskey;"
+              command="cmd_undo"/>
+    <menuseparator id="context-sep-undo"/>
+    <menuitem id="context-cut"
+              label="&cutCmd.label;"
+              accesskey="&cutCmd.accesskey;"
+              command="cmd_cut"/>
+    <menuitem id="context-copy"
+              label="&copyCmd.label;"
+              accesskey="&copyCmd.accesskey;"
+              command="cmd_copy"/>
+    <menuitem id="context-paste"
+              label="&pasteCmd.label;"
+              accesskey="&pasteCmd.accesskey;"
+              command="cmd_paste"/>
+    <menuitem id="context-delete"
+              label="&deleteCmd.label;"
+              accesskey="&deleteCmd.accesskey;"
+              command="cmd_delete"/>
+    <menuseparator id="context-sep-paste"/>
+    <menuitem id="context-selectall"
+              label="&selectAllCmd.label;"
+              accesskey="&selectAllCmd.accesskey;"
+              command="cmd_selectAll"/>      
+    <menuseparator id="context-sep-selectall"/>
+    <menuitem id="context-searchselect"
+              accesskey="&search.accesskey;"
+              oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
+    <menuseparator id="frame-sep"/>
+    <menu id="frame" label="&thisFrameMenu.label;" accesskey="&thisFrameMenu.accesskey;">
+      <menupopup id="frame_popup">
+        <menuitem label="&showOnlyThisFrameCmd.label;"
+                  accesskey="&showOnlyThisFrameCmd.accesskey;"
+                  oncommand="gContextMenu.showOnlyThisFrame();"/>
+        <menuitem label="&openFrameCmdInTab.label;"
+                  accesskey="&openFrameCmdInTab.accesskey;"
+                  oncommand="gContextMenu.openFrameInTab();"/>
+        <menuitem label="&openFrameCmd.label;"
+                  accesskey="&openFrameCmd.accesskey;"
+                  oncommand="gContextMenu.openFrame();"/>
+        <menuseparator/>
+        <menuitem id="context-reload-frame"
+                  label="&reloadFrameCmd.label;"
+                  accesskey="&reloadFrameCmd.accesskey;"
+                  oncommand="gContextMenu.reloadFrame();"/>
+        <menuseparator/>
+        <menuitem label="&bookmarkFrameCmd.label;"
+                  accesskey="&bookmarkFrameCmd.accesskey;"
+                  oncommand="gContextMenu.addBookmarkForFrame();"/>
+        <menuitem id="saveframeas"
+                  label="&saveFrameCmd.label;"
+                  accesskey="&saveFrameCmd.accesskey;"
+                  oncommand="saveDocument(gContextMenu.target.ownerDocument);"/>
+        <menuseparator/>
+        <menuitem label="&viewFrameSourceCmd.label;"
+                  accesskey="&viewFrameSourceCmd.accesskey;"
+                  oncommand="gContextMenu.viewFrameSource();"/>
+        <menuitem label="&viewFrameInfoCmd.label;"
+                  accesskey="&viewFrameInfoCmd.accesskey;"
+                  oncommand="gContextMenu.viewFrameInfo();"/>        
+      </menupopup>
+    </menu>
+    <menuseparator id="context-sep-properties"/>
+    <menuitem id="context-viewsource"
+              label="&viewPageSourceCmd.label;"
+              accesskey="&viewPageSourceCmd.accesskey;"
+              oncommand="BrowserViewSourceOfDocument(_content.document);"/>
+    <menuitem id="context-viewinfo"
+              label="&viewPageInfoCmd.label;"
+              accesskey="&viewPageInfoCmd.accesskey;"
+              oncommand="gContextMenu.viewInfo();"/>
+    <menuitem id="context-metadata"
+              label="&metadataCmd.label;"
+              accesskey="&metadataCmd.accesskey;"
+              oncommand="gContextMenu.showMetadata();"/>
+  </popup>
+  <popup id="bmContext"/>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
       <menubar id="main-menubar" class="chromeclass-menubar" grippytooltiptext="&menuBar.tooltip;">
