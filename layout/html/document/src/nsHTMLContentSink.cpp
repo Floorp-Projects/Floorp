@@ -293,6 +293,7 @@ public:
   nsIHTMLDocument* mHTMLDocument;
   nsIURI* mDocumentURI;
   nsIURI* mDocumentBaseURL;
+  nsCOMPtr<nsIURI> mScriptURI;
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 
@@ -368,6 +369,7 @@ public:
   PRBool   PreEvaluateScript();
   void     PostEvaluateScript(PRBool aBodyPresent);
   nsresult EvaluateScript(nsString& aScript,
+                          nsIURI *aScriptURI,
                           PRInt32 aLineNo,
                           const char* aVersion);
   const char* mScriptLanguageVersion;
@@ -4115,6 +4117,7 @@ HTMLContentSink::IsInScript()
 
 nsresult
 HTMLContentSink::EvaluateScript(nsString& aScript,
+                                nsIURI *aScriptURI,
                                 PRInt32 aLineNo,
                                 const char* aVersion)
 {
@@ -4135,19 +4138,17 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
     if (NS_FAILED(rv)) return rv;
     
     nsAutoString ret;
-    nsIURI* docURL = mDocument->GetDocumentURL();
     char* url = nsnull;
 
-    if (docURL) {
-      (void)docURL->GetSpec(&url);
+    if (aScriptURI) {
+      (void)aScriptURI->GetSpec(&url);
     }
   
     PRBool isUndefined;
     context->EvaluateString(aScript, nsnull, principal, url, 
                             aLineNo, aVersion, ret, &isUndefined);
     
-    if (docURL) {
-      NS_RELEASE(docURL);
+    if (url) {
       nsCRT::free(url);
     }
   }
@@ -4168,7 +4169,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_OK == aStatus) {
     PRBool bodyPresent = PreEvaluateScript();
 
-    rv = EvaluateScript(aData, 0, mScriptLanguageVersion);
+    rv = EvaluateScript(aData, mScriptURI, 1, mScriptLanguageVersion);
     if (NS_FAILED(rv)) return rv;
 
     PostEvaluateScript(bodyPresent);
@@ -4304,9 +4305,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     // If there is a SRC attribute...
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
-      nsIURI* url = nsnull;
       {
-        rv = NS_NewURI(&url, src, mDocumentBaseURL);
+        rv = NS_NewURI(getter_AddRefs(mScriptURI), src, mDocumentBaseURL);
       }
       if (NS_OK != rv) {
         return rv;
@@ -4317,7 +4317,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
                       NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, PR_FALSE);
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, mScriptURI, PR_FALSE);
       if (NS_FAILED(rv)) 
           return rv;
 
@@ -4325,8 +4325,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsIStreamLoader* loader;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewStreamLoader(&loader, url, this, nsnull, loadGroup);
-      NS_RELEASE(url);
+      rv = NS_NewStreamLoader(&loader, mScriptURI, this, nsnull, loadGroup);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
       }
@@ -4335,8 +4334,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       PRBool bodyPresent = PreEvaluateScript();
 
       PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
+      nsIURI *docURI = mDocument->GetDocumentURL();
 
-      EvaluateScript(script, lineNo, jsVersionString);
+      EvaluateScript(script, docURI, lineNo, jsVersionString);
+      if (docURI)
+        NS_RELEASE(docURI);
 
       PostEvaluateScript(bodyPresent);
 
