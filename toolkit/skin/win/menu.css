@@ -69,12 +69,8 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   color: inherit;
 }
 
-.menu-iconic-icon {
-  width: 9px;
-  height: 9px;
-  margin-left: 3.5px;
-  margin-right: 3.5px;
-  list-style-image: inherit;
+.menu-iconic-left {
+  width: 16px;
 }
 
 /* ..... menu arrow box ..... */
