@@ -4,8 +4,8 @@
 # have installed perforce with P4DB to let your webserver render html
 # pages of your VC repository.
 
-# $Revision: 1.4 $ 
-# $Date: 2003/08/17 01:29:26 $ 
+# $Revision: 1.5 $ 
+# $Date: 2004/06/08 00:00:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Perforce_P4DB.pm,v $ 
 # $Name:  $ 
@@ -87,22 +87,46 @@ $GUESS = $P4DB_URL."/fileSearch.cgi";
 
 sub time2p4db {
   my ($time) = @_;
-  my ($weeks, $hours, $seconds);
+  my ($weeks, $days, $hours, $seconds);
 
   {
       use integer;
       
       $time = $main::TIME - $time; 
 
-      # fudge time a bit so that this rounding error does not happen:
+      # here is some output from a debugging session to help with unit
+      # testing.
 
-      # x time2p4db( time() - $main::SECONDS_PER_WEEK )
-      #     0  'WEEKS=0'
-      #     1  'DAYS=6'
-      #     2  'HOURS=23'
-      #     3  'ignore=GO%21'
+      # x time2p4db( time() - $main::SECONDS_PER_WEEK)
+      #   'WEEKS=1'
+      #   'DAYS=0'
+      #   'HOURS=0'
+      #   'ignore=GO!'
+      # 
+      # x time2p4db( time() - $main::SECONDS_PER_DAY)
+      #  'WEEKS=0'
+      #  'DAYS=1'
+      #  'HOURS=0'
+      #  'ignore=GO!'
+      # 
+      # x time2p4db( time() - $main::SECONDS_PER_HOUR)
+      #  'WEEKS=0'
+      #  'DAYS=0'
+      #  'HOURS=1'
+      #  'ignore=GO!'
+      # 
+      # x time2p4db( time() - 35*60)
+      #  'WEEKS=0'
+      #  'DAYS=0'
+      #  'HOURS=1'
+      #  'ignore=GO!'
+      #
+      # x time2p4db( time() - $main::SECONDS_PER_DAY - $main::SECONDS_PER_HOUR)
+      #  'WEEKS=0'
+      #  'DAYS=1'
+      #  'HOURS=1'
+      #  'ignore=GO!'
 
-      $time -= 100;
 
       $weeks = $time / $main::SECONDS_PER_WEEK;
       $time = $time - ($weeks * $main::SECONDS_PER_WEEK);
@@ -113,7 +137,12 @@ sub time2p4db {
       $hours = $time / $main::SECONDS_PER_HOUR;
       $time = $time - ($hours * $main::SECONDS_PER_HOUR);
 
-      $seconds = $time;      
+      $seconds = $time;
+
+      # the p4db interface does not accept seconds.
+      if ($seconds > 0) {
+          $hours++;
+      }
   }
 
   my @out;
