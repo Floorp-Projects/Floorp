@@ -77,6 +77,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 {
   mMHTMLPart = PR_FALSE;
   mPartUserOmissionOverride = PR_FALSE;
+  mMainBody = PR_FALSE;
 
   m_charset = NULL;
 	m_override_type = NULL;
@@ -222,7 +223,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
   if (NS_SUCCEEDED(rv) && prefs) 
     prefs->GetBoolPref ("mail.file_attach_binary", &forceB64);
   
-  if (forceB64 || mime_type_requires_b64_p (m_type))
+  if (!mMainBody && (forceB64 || mime_type_requires_b64_p (m_type)))
   {
   /* If the content-type is "image/" or something else known to be binary,
   always use base64 (so that we don't get confused by newline
@@ -281,7 +282,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
         (PL_strcasecmp(m_type, MESSAGE_NEWS) == 0)))
       {
         PR_FREEIF(m_encoding);
-        m_encoding = PL_strdup (ENCODING_7BIT);
+        m_encoding = PL_strdup (mMainBody ? ENCODING_7BIT : ENCODING_8BIT);
       }
       else if (encode_p &&
         m_size > 500 &&

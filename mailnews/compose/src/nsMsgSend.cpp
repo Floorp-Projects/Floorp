@@ -695,6 +695,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		if (status < 0)
 			goto FAIL;
 
+    m_plaintext->mMainBody = PR_TRUE;
+
     m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
 		m_plaintext->PickEncoding(mCompFields->GetCharacterSet());
 		hdrs = mime_generate_attachment_headers(m_plaintext->m_type,

@@ -124,6 +124,7 @@ public:
 
   PRBool                mMHTMLPart;           // This is true if its an MHTML part, otherwise, PR_FALSE
   PRBool                mPartUserOmissionOverride;  // This is true if the user send send the email without this part
+  PRBool                mMainBody;            // True if this is a main body.
 
   //
   // Vars for analyzing file data...
