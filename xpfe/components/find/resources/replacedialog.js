@@ -26,23 +26,10 @@ var gFindComponent;   // Find component.
 var gFindReplaceData; // Search context (passed as argument).
 var gReplaceDialog;      // Quick access to document/form elements.
 
-function string2Bool( value )
-{
-  return value != "false";
-}
-
-function bool2String( value )
-{
-  if ( value )
-    return "true";
-  else
-    return "false";
-}
-
-function initDialog()
+function initDialogObject()
 {
   // Create gReplaceDialog object and initialize.
-  gReplaceDialog = new Object;
+  gReplaceDialog = new Object();
   gReplaceDialog.findKey         = document.getElementById("dialog.findKey");
   gReplaceDialog.replaceKey      = document.getElementById("dialog.replaceKey");
   gReplaceDialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
@@ -51,46 +38,20 @@ function initDialog()
   gReplaceDialog.findNext        = document.getElementById("findNext");
   gReplaceDialog.replace         = document.getElementById("replace");
   gReplaceDialog.replaceAll      = document.getElementById("replaceAll");
-  gReplaceDialog.close           = document.getElementById("close");
-  gReplaceDialog.enabled         = false;
+  gReplaceDialog.bundle         = null;
 }
 
 function loadDialog()
 {
   // Set initial dialog field contents.
-  gReplaceDialog.findKey.setAttribute( "value", gFindReplaceData.searchString );
-  gReplaceDialog.replaceKey.setAttribute( "value", gFindReplaceData.replaceString );
+  gReplaceDialog.findKey.value = gFindReplaceData.searchString;
+  gReplaceDialog.replaceKey.value = gFindReplaceData.replaceString;
 
-  if ( gFindReplaceData.caseSensitive ) {
-    gReplaceDialog.caseSensitive.setAttribute( "checked", "" );
-  } else {
-    gReplaceDialog.caseSensitive.removeAttribute( "checked" );
-  }
+  gReplaceDialog.caseSensitive.checked = gFindReplaceData.caseSensitive;
+  gReplaceDialog.wrap.checked = gFindReplaceData.wrapSearch;
+  gReplaceDialog.searchBackwards.checked = gFindReplaceData.searchBackwards;
 
-  if ( gFindReplaceData.wrapSearch ) {
-    gReplaceDialog.wrap.setAttribute( "checked", "" );
-  } else {
-    gReplaceDialog.wrap.removeAttribute( "checked" );
-  }
-
-  if ( gFindReplaceData.searchBackwards ) {
-    gReplaceDialog.searchBackwards.setAttribute( "checked", "" );
-  } else {
-    gReplaceDialog.searchBackwards.removeAttribute( "checked" );
-  }
-            
-  // disable the findNext button if no text
-  if (gReplaceDialog.findKey.getAttribute("value") == "") {
-    gReplaceDialog.findNext.setAttribute("disabled", "true");
-  }
-
-  // disable the replace and replaceAll buttons if no
-  // find or replace text
-  if (gReplaceDialog.findKey.getAttribute("value") == "") {
-    gReplaceDialog.replace.setAttribute("disabled", "true");
-    gReplaceDialog.replaceAll.setAttribute("disabled", "true");
-  }
-  gReplaceDialog.findKey.focus();
+  doEnabling();
 }
 
 function loadData()
@@ -106,16 +67,11 @@ function loadData()
 function onLoad()
 {
   // Init gReplaceDialog.
-  initDialog();
+  initDialogObject();
 
   // Get find component.
   gFindComponent = Components.classes[ "@mozilla.org/appshell/component/find;1" ].getService();
   gFindComponent = gFindComponent.QueryInterface( Components.interfaces.nsIFindComponent );
-  if ( !gFindComponent ) {
-    alert( "Error accessing find component\n" );
-    window.close();
-    return;
-  }
 
   // Save search context.
   gFindReplaceData = window.arguments[0];
@@ -126,8 +82,10 @@ function onLoad()
   // Fill dialog.
   loadDialog();
 
-  // Give focus to search text field.
-  gReplaceDialog.findKey.focus();
+  if (gReplaceDialog.findKey.value)
+    gReplaceDialog.findKey.select();
+  else
+    gReplaceDialog.findKey.focus();
 }
 
 function onUnload() {
@@ -141,9 +99,12 @@ function onFindNext()
   loadData();
 
   // Search.
-  gFindComponent.findNext( gFindReplaceData );
-
-  return true;
+  var result = gFindComponent.findNext(gFindReplaceData);
+  if (!result) {
+    if (!gReplaceDialog.bundle)
+      gReplaceDialog.bundle = document.getElementById("replaceBundle");
+    alert(gReplaceDialog.bundle.getString("notFoundWarning"));
+  }
 }
 
 function onReplace()
@@ -152,9 +113,7 @@ function onReplace()
   loadData();
 
   // Replace.
-  gFindComponent.replaceNext( gFindReplaceData, false );
-
-  return true;
+  gFindComponent.replaceNext(gFindReplaceData, false);
 }
 
 function onReplaceAll()
@@ -163,38 +122,13 @@ function onReplaceAll()
   loadData();
 
   // Replace.
-  gFindComponent.replaceNext( gFindReplaceData, true );
-
-  return true;
+  gFindComponent.replaceNext(gFindReplaceData, true);
 }
 
-function onClose()
+function doEnabling()
 {
-  window.close();
-  return true;
-}
-
-function onTyping()
-{
-  if ( gReplaceDialog.enabled ) {
-    // Disable findNext, replace, and replaceAll if they delete all the text.
-    if ( gReplaceDialog.findKey.value == "" ) {
-      gReplaceDialog.enabled = false;
-      gReplaceDialog.findNext.setAttribute("disabled", "true");
-    }
-  } else {
-    // Enable OK once the user types something.
-    if ( gReplaceDialog.findKey.value != "" ) {
-      gReplaceDialog.enabled = true;
-      gReplaceDialog.findNext.removeAttribute("disabled");
-    }
-  }
-
-  if ( gReplaceDialog.enabled ) {
-    gReplaceDialog.replace.removeAttribute("disabled");
-    gReplaceDialog.replaceAll.removeAttribute("disabled");
-  } else {
-    gReplaceDialog.replace.setAttribute("disabled", "true");
-    gReplaceDialog.replaceAll.setAttribute("disabled", "true");
-  }
+  gReplaceDialog.enabled = gReplaceDialog.findKey.value;
+  gReplaceDialog.findNext.disabled = !gReplaceDialog.findKey.value;
+  gReplaceDialog.replace.disabled = !gReplaceDialog.enabled;
+  gReplaceDialog.replaceAll.disabled = !gReplaceDialog.enabled;
 }
