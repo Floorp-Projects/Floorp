@@ -55,11 +55,13 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 
   nsIFactory *factory = nsnull;
   if (aClass.Equals(kJANativeDetectorCID)) {
-    factory = NEW_JA_NATIVEDETECTOR_FACTORY();
+    ;
+    //bug#13844 disable this until find out the reason of the freeze
+    //factory = NEW_JA_NATIVEDETECTOR_FACTORY();
   } else if (aClass.Equals(kJANativeStringDetectorCID)) {
     factory = NEW_JA_STRING_NATIVEDETECTOR_FACTORY();
   } else if (aClass.Equals(kKONativeDetectorCID)) {
-    factory = NEW_KO_NATIVEDETECTOR_FACTORY();
+    ;factory = NEW_KO_NATIVEDETECTOR_FACTORY();
   } else if (aClass.Equals(kKONativeStringDetectorCID)) {
     factory = NEW_KO_STRING_NATIVEDETECTOR_FACTORY();
   }
