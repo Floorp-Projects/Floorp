@@ -336,6 +336,7 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
 
     if (!PostMessage(ipcHwnd, IPC_WM_SEND_MESSAGE, 0, (LPARAM) msg)) {
         LOG(("  PostMessage failed w/ error = %u\n", GetLastError()));
+        delete msg;
         return NS_ERROR_FAILURE;
     }
     return NS_OK;

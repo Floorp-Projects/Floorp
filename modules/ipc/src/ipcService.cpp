@@ -137,7 +137,8 @@ ipcService::Init()
         prefserv->GetBranch(nsnull, getter_AddRefs(prefbranch));
         if (prefbranch) {
             nsXPIDLCString val;
-            prefbranch->GetCharPref("ipc.client-name", getter_Copies(val));
+            prefbranch->GetCharPref(IPC_SERVICE_PREF_PRIMARY_CLIENT_NAME,
+                                    getter_Copies(val));
             if (!val.IsEmpty())
                 appName = val;
         }
@@ -161,6 +162,7 @@ ipcService::HandleQueryResult(const ipcMessage *rawMsg, PRBool succeeded)
     }
 
     PRUint32 cStatus;
+    PRUint32 cID;
     ipcClientInfo *info;
 
     if (succeeded) {
@@ -172,13 +174,18 @@ ipcService::HandleQueryResult(const ipcMessage *rawMsg, PRBool succeeded)
             NS_ADDREF(info);
             info->Init(msg->ClientID(), query->mName);
         }
+        cID = msg->ClientID();
     }
     else {
         cStatus = ipcIClientObserver::CLIENT_DOWN;
+        cID = 0;
         info = nsnull;
     }
 
-    query->mObserver->OnClientStatus(query->mReqToken, cStatus, info);
+    query->mObserver->OnClientStatus(query->mReqToken,
+                                     cStatus,
+                                     cID,
+                                     info);
 
     NS_IF_RELEASE(info);
     mQueryQ.DeleteFirst();
@@ -201,11 +208,18 @@ ipcService::GetClientID(PRUint32 *clientID)
 }
 
 NS_IMETHODIMP
-ipcService::AddClientAlias(const nsACString &alias)
+ipcService::GetPrimaryClientName(nsACString &primaryName)
+{
+    primaryName.Truncate(); // XXX implement me
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ipcService::AddClientName(const nsACString &name)
 {
     NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
 
-    ipcMessage *msg = new ipcmMessageClientAddName(PromiseFlatCString(alias).get());
+    ipcMessage *msg = new ipcmMessageClientAddName(PromiseFlatCString(name).get());
     if (!msg)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -213,11 +227,11 @@ ipcService::AddClientAlias(const nsACString &alias)
 }
 
 NS_IMETHODIMP
-ipcService::RemoveClientAlias(const nsACString &alias)
+ipcService::RemoveClientName(const nsACString &name)
 {
     NS_ENSURE_TRUE(mTransport, NS_ERROR_NOT_INITIALIZED);
 
-    ipcMessage *msg = new ipcmMessageClientDelName(PromiseFlatCString(alias).get());
+    ipcMessage *msg = new ipcmMessageClientDelName(PromiseFlatCString(name).get());
     if (!msg)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -357,7 +371,7 @@ ipcService::OnConnectionLost()
         ipcClientQuery *query = mQueryQ.First();
         query->mObserver->OnClientStatus(query->mReqToken,
                                          ipcIClientObserver::CLIENT_DOWN,
-                                         nsnull);
+                                         query->mID, nsnull);
         mQueryQ.DeleteFirst();
     }
 

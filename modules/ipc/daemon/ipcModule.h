@@ -87,17 +87,20 @@ struct ipcModuleMethods
     //
     // params:
     //
-    //   client - an opaque "handle" to an object representing the client that
-    //            sent the message.  modules should not store the value of this
-    //            beyond the duration fo this function call.  (e.g., the handle
-    //            may be invalid after this function call returns.)  modules
-    //            wishing to hold onto a reference to a "client" should store
-    //            the client's ID (see IPC_GetClientID).
+    //   client  - an opaque "handle" to an object representing the client that
+    //             sent the message.  modules should not store the value of this
+    //             beyond the duration fo this function call.  (e.g., the handle
+    //             may be invalid after this function call returns.)  modules
+    //             wishing to hold onto a reference to a "client" should store
+    //             the client's ID (see IPC_GetClientID).
+    //   target  - message target
+    //   data    - message data
+    //   dataLen - message data length
     //
-    //   msg    - the message sent from the client.  the target of this message
-    //            matches the ID of this module.
-    //
-    void (* handleMsg) (ipcClientHandle client, const ipcMessage *msg);
+    void (* handleMsg) (ipcClientHandle client,
+                        const nsID     &target,
+                        const void     *data,
+                        PRUint32        dataLen);
 };
 
 //-----------------------------------------------------------------------------
@@ -124,15 +127,20 @@ struct ipcDaemonMethods
     // called to send a message to another module.
     //
     // params:
-    //   client - identifies the client from which this message originated.
-    //   msg    - the message to dispatch.
+    //   client  - identifies the client from which this message originated.
+    //   target  - message target
+    //   data    - message data
+    //   dataLen - message data length
     //
     // returns:
     //   PR_SUCCESS if message was dispatched.
     //   PR_FAILURE if message could not be dispatched (possibly because
     //              no module is registered for the given message target).
     //
-    PRStatus (* dispatchMsg) (ipcClientHandle client, const ipcMessage *msg);
+    PRStatus (* dispatchMsg) (ipcClientHandle client, 
+                              const nsID     &target,
+                              const void     *data,
+                              PRUint32        dataLen);
 
     //
     // called to send a message to a particular client or to broadcast a
@@ -141,6 +149,7 @@ struct ipcDaemonMethods
     // params:
     //   client - if null, then broadcast message to all clients.  otherwise,
     //            send message to the client specified.
+    // XXX:FIXME
     //   msg    - the message to send.
     //
     // returns:
@@ -148,7 +157,10 @@ struct ipcDaemonMethods
     //   PR_FAILURE if message could not be sent (possibly because the client
     //              does not have a registered observer for the msg's target).
     //
-    PRStatus (* sendMsg) (ipcClientHandle client, const ipcMessage *msg);
+    PRStatus (* sendMsg) (ipcClientHandle client,
+                          const nsID     &target,
+                          const void     *data,
+                          PRUint32        dataLen);
 
     //
     // called to lookup a client handle given its client ID.  each client has

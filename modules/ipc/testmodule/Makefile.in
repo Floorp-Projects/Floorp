@@ -52,10 +52,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= TestModule.cpp
 
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)ipccom_s.$(LIB_SUFFIX) \
-		$(NULL)
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../common \
 		$(NULL)

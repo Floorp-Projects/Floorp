@@ -16,8 +16,8 @@ extern ipcClient *ipcClients;
 extern int        ipcClientCount;
 
 //
-// platform specific send message function.
+// platform specific send message function, takes ownership of |msg|.
 //
-PRStatus IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg);
+PRStatus IPC_PlatformSendMsg(ipcClient  *client, ipcMessage *msg);
 
 #endif // !ipcdPrivate_h__

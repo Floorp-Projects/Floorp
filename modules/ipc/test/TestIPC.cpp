@@ -103,22 +103,22 @@ public:
 NS_IMPL_ISUPPORTS1(myIpcClientObserver, ipcIClientObserver)
 
 NS_IMETHODIMP
-myIpcClientObserver::OnClientStatus(PRUint32 aReqToken, PRUint32 aStatus, ipcIClientInfo *aClientInfo)
+myIpcClientObserver::OnClientStatus(PRUint32 aReqToken,
+                                    PRUint32 aStatus,
+                                    PRUint32 aClientID,
+                                    ipcIClientInfo *aClientInfo)
 {
     printf("*** got client status [token=%u status=%u info=%p]\n",
             aReqToken, aStatus, (void *) aClientInfo);
 
-    if (aClientInfo) {
-        PRUint32 cID;
-        if (NS_SUCCEEDED(aClientInfo->GetID(&cID))) {
+    if (aClientID != 0) {
+        if (aClientInfo) {
             nsCAutoString cName;
-            if (NS_SUCCEEDED(aClientInfo->GetName(cName))) {
-                printf("***   name:%s --> ID:%u\n", cName.get(), cID);
-
-                const char hello[] = "hello friend!";
-                gIpcServ->SendMessage(cID, kTestTargetID, hello, sizeof(hello));
-            }
+            if (NS_SUCCEEDED(aClientInfo->GetName(cName)))
+                printf("***   name:%s --> ID:%u\n", cName.get(), aClientID);
         }
+        const char hello[] = "hello friend!";
+        gIpcServ->SendMessage(aClientID, kTestTargetID, hello, sizeof(hello));
     }
 
     return NS_OK;
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
                 nsCOMPtr<nsIPrefBranch> prefbranch;
                 prefserv->GetBranch(nsnull, getter_AddRefs(prefbranch));
                 if (prefbranch)
-                    prefbranch->SetCharPref("ipc.client-name", argv[1]);
+                    prefbranch->SetCharPref(IPC_SERVICE_PREF_PRIMARY_CLIENT_NAME, argv[1]);
             }
         }
 

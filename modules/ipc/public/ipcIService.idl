@@ -41,12 +41,6 @@ interface nsISimpleEnumerator;
 interface ipcIMessageObserver;
 interface ipcIClientObserver;
 
-%{C++
-#define IPC_SERVICE_STARTUP_CATEGORY "ipc-startup-category"
-#define IPC_SERVICE_STARTUP_TOPIC    "ipc-startup"
-#define IPC_SERVICE_SHUTDOWN_TOPIC   "ipc-shutdown"
-%}
-
 /**
  * the IPC service provides the means to communicate with an external IPC
  * daemon and/or other mozilla-based applications on the same physical system.
@@ -78,23 +72,32 @@ interface ipcIClientObserver;
 interface ipcIService : nsISupports
 {
     /**
-     * returns the "client ID" assigned to this application by the IPC daemon.
-     * this number is the name given to our application for the current
-     * session.  after a profile change, our client ID will change.
+     * returns the "client ID" assigned to this process by the IPC daemon.
      *
      * @throws NS_ERROR_NOT_AVAILABLE if no connection to the IPC daemon.
      */
     readonly attribute unsigned long clientID;
 
     /**
-     * client aliases give the client a way to register itself under multiple
-     * names.  for example, the mozilla browser might register itself under
-     * the name "mozilla", but it could also register itself under the aliases
-     * "browser", "mail", "news", "addrbook", and so on.  aliases provide a
-     * simple mechanism for clients to discover other clients.
+     * returns the "primary client name" of this process.  this value is taken
+     * from the pref "ipc.primary-client-name" at IPC service initialization
+     * time.
      */
-    void addClientAlias(in ACString aAlias);
-    void removeClientAlias(in ACString aAlias);
+    readonly attribute ACString primaryClientName;
+
+    /**
+     * this process can appear under several client names.  use the following
+     * methods to add or remove names for this process.
+     *
+     * for example, the mozilla browser might have the primary name "mozilla",
+     * but it could also register itself under the names "browser", "mail",
+     * "news", "addrbook", etc.  other IPC clients can then query the IPC
+     * daemon for the client named "mail" in order to talk with a mail program.
+     *
+     * An IPC client name resembles a XPCOM contract ID.
+     */
+    void addClientName(in ACString aName);
+    void removeClientName(in ACString aName);
 
     /**
      * query info about a particular client given its client name.
@@ -198,8 +201,17 @@ interface ipcIClientObserver : nsISupports
      */
     void onClientStatus(in unsigned long  aRequestToken,
                         in unsigned long  aStatus,
+                        in unsigned long  aClientID,
                         in ipcIClientInfo aClientInfo);
 
     // XXX do we care about changes to the aliases and targets supported
     //     by a client?  if so, how should we pass this information up?
 };
+
+%{C++
+#define IPC_SERVICE_STARTUP_CATEGORY "ipc-startup-category"
+#define IPC_SERVICE_STARTUP_TOPIC    "ipc-startup"
+#define IPC_SERVICE_SHUTDOWN_TOPIC   "ipc-shutdown"
+
+#define IPC_SERVICE_PREF_PRIMARY_CLIENT_NAME "ipc.primary-client-name"
+%}

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "ipcModuleUtil.h"
-#include "ipcMessage.h"
 
 #define TEST_MODULE_ID                                \
 { /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */          \
@@ -23,13 +22,15 @@ struct TestModule
         printf("*** TestModule::Shutdown\n");
     }
 
-    static void HandleMsg(ipcClientHandle client, const ipcMessage *msg)
+    static void HandleMsg(ipcClientHandle client,
+                          const nsID     &target,
+                          const void     *data,
+                          PRUint32        dataLen)
     {
-        printf("*** TestModule::HandleMsg [%s]\n", msg->Data());
-        ipcMessage outMsg;
+        printf("*** TestModule::HandleMsg [%s]\n", (const char *) data);
+
         static const char buf[] = "pong";
-        outMsg.Init(kTestModuleID, buf, sizeof(buf));
-        IPC_SendMsg(client, &outMsg);
+        IPC_SendMsg(client, kTestModuleID, buf, sizeof(buf));
     }
 };
 

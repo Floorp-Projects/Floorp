@@ -48,17 +48,17 @@ extern ipcDaemonMethods *gIPCDaemonMethods;
 //-----------------------------------------------------------------------------
 
 inline PRStatus
-IPC_DispatchMsg(ipcClientHandle client, const ipcMessage *msg)
+IPC_DispatchMsg(ipcClientHandle client, const nsID &target, const void *data, PRUint32 dataLen)
 {
     PR_ASSERT(gIPCDaemonMethods);
-    return gIPCDaemonMethods->dispatchMsg(client, msg);
+    return gIPCDaemonMethods->dispatchMsg(client, target, data, dataLen);
 }
 
 inline PRStatus
-IPC_SendMsg(ipcClientHandle client, const ipcMessage *msg)
+IPC_SendMsg(ipcClientHandle client, const nsID &target, const void *data, PRUint32 dataLen)
 {
     PR_ASSERT(gIPCDaemonMethods);
-    return gIPCDaemonMethods->sendMsg(client, msg);
+    return gIPCDaemonMethods->sendMsg(client, target, data, dataLen);
 }
 
 inline ipcClientHandle
@@ -129,12 +129,12 @@ IPC_EnumClientTargets(ipcClientHandle client, ipcClientTargetEnumFunc func, void
 //-----------------------------------------------------------------------------
 
 inline PRStatus
-IPC_SendMsg(PRUint32 clientID, ipcMessage *msg)
+IPC_SendMsg(PRUint32 clientID, const nsID &target, const void *data, PRUint32 dataLen)
 {
     ipcClient *client = IPC_GetClientByID(clientID);
     if (!client)
         return PR_FAILURE;
-    return IPC_SendMsg(client, msg);
+    return IPC_SendMsg(client, target, data, dataLen);
 }
 
 //-----------------------------------------------------------------------------

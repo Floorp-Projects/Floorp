@@ -40,6 +40,9 @@
 
 #include "ipcm.h" // for IPCM_TARGET
 
-struct ipcModuleMethods *IPC_GetCommandModuleMethods();
+class ipcClient;
+class ipcMessage;
+
+void IPCM_HandleMsg(ipcClient *, const ipcMessage *);
 
 #endif // !ipcCommandModule_h__

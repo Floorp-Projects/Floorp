@@ -340,14 +340,14 @@ static void PollLoop(PRFileDesc *listenFD)
 //-----------------------------------------------------------------------------
 
 PRStatus
-IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
+IPC_PlatformSendMsg(ipcClient  *client, ipcMessage *msg)
 {
     LOG(("IPC_PlatformSendMsg\n"));
 
     //
     // must copy message onto send queue.
     //
-    client->EnqueueOutboundMsg(msg->Clone());
+    client->EnqueueOutboundMsg(msg);
 
     //
     // since our Process method may have already been called, we must ensure
