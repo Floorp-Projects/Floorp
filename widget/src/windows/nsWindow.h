@@ -120,6 +120,7 @@ public:
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+    NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
     NS_IMETHOD              Update();
     virtual void*           GetNativeData(PRUint32 aDataType);
     virtual void            FreeNativeData(void * data, PRUint32 aDataType);//~~~

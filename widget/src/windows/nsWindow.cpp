@@ -55,6 +55,7 @@
 
 #include "nsNativeDragTarget.h"
 #include "nsIRollupListener.h"
+#include "nsIRegion.h"
 
 // we define the following because there are some MS sample code say
 // we should do it. We are not sure we really need it.
@@ -1504,6 +1505,29 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+
+{
+  nsresult rv = NS_OK;
+  if (mWnd) {
+    HRGN nativeRegion;
+    rv = aRegion->GetNativeRegion((void *&)nativeRegion);
+    if (nativeRegion) {
+      if (NS_SUCCEEDED(rv)) {
+        VERIFY(::InvalidateRgn(mWnd, nativeRegion, TRUE));
+
+        if (aIsSynchronous) {
+          VERIFY(::UpdateWindow(mWnd));
+        }
+      }
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  return rv;  
 }
 
 //-------------------------------------------------------------------------
