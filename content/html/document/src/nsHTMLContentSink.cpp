@@ -68,7 +68,8 @@
 
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
-#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMHTMLScriptElement.h"
@@ -337,9 +338,6 @@ protected:
   nsIHTMLContent* mBody;
   nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
-
-  // This will be void until a <title> is found
-  nsXPIDLString mTitle;
 
   nsString mSkippedContent;
 
@@ -2275,10 +2273,9 @@ HTMLContentSink::DidBuildModel(void)
     mNotificationTimer = 0;
   }
 
-  if (mTitle.IsVoid()) {
-    nsCOMPtr<nsIDOMHTMLDocument> domDoc(do_QueryInterface(mHTMLDocument));
-    if (domDoc)
-      domDoc->SetTitle(mTitle);
+  if (mDocument->GetDocumentTitle().IsVoid()) {
+    nsCOMPtr<nsIDOMNSDocument> domDoc(do_QueryInterface(mDocument));
+    domDoc->SetTitle(EmptyString());
   }
 
   // Reflow the last batch of content
@@ -3140,23 +3137,20 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
   MOZ_TIMER_START(mWatch);
   NS_ASSERTION(mCurrentContext == mHeadContext, "title not in head");
 
-  if (!mTitle.IsVoid()) {
+  if (!mDocument->GetDocumentTitle().IsVoid()) {
     // If the title was already set then don't try to overwrite it
     // when a new title is encountered - For backwards compatiblity
-    //*mTitle = aValue;
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetDocumentTitle()\n"));
     MOZ_TIMER_STOP(mWatch);
 
     return NS_OK;
   }
 
-  mTitle.Assign(aTitle);
-  mTitle.CompressWhitespace(PR_TRUE, PR_TRUE);
+  nsAutoString title(aTitle);
+  title.CompressWhitespace(PR_TRUE, PR_TRUE);
 
-  nsCOMPtr<nsIDOMHTMLDocument> domDoc(do_QueryInterface(mHTMLDocument));
-  if (domDoc) {
-    domDoc->SetTitle(mTitle);
-  }
+  nsCOMPtr<nsIDOMNSDocument> domDoc(do_QueryInterface(mDocument));
+  domDoc->SetTitle(title);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
@@ -3173,7 +3167,7 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
   rv = NS_NewTextNode(getter_AddRefs(text));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  text->SetText(mTitle, PR_TRUE);
+  text->SetText(title, PR_TRUE);
 
   it->AppendChildTo(text, PR_FALSE, PR_FALSE);
   text->SetDocument(mDocument, PR_FALSE, PR_TRUE);

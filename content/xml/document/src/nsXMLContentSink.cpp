@@ -233,11 +233,9 @@ nsXMLContentSink::MaybePrettyPrint()
 NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel()
 {
-  if (mTitleText.IsEmpty()) {
+  if (mDocument->GetDocumentTitle().IsVoid()) {
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
-    if (dom_doc) {
-      dom_doc->SetTitle(EmptyString());
-    }
+    dom_doc->SetTitle(EmptyString());
   }
 
   if (mXSLTProcessor) {
@@ -446,7 +444,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   }
 
   if (aNodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)) {
-    if (mTitleText.IsEmpty()) {
+    if (mDocument->GetDocumentTitle().IsVoid()) {
       mInTitle = PR_TRUE; // The first title wins
     }
   }
@@ -530,10 +528,8 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
            mInTitle) {
     // The first title wins
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
-    if (dom_doc) {
-      mTitleText.CompressWhitespace();
-      dom_doc->SetTitle(mTitleText);
-    }
+    mTitleText.CompressWhitespace();
+    dom_doc->SetTitle(mTitleText);
     mInTitle = PR_FALSE;
   }
   else if (nodeInfo->Equals(nsHTMLAtoms::base, kNameSpaceID_XHTML) &&
