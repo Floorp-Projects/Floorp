@@ -304,9 +304,6 @@ public:
                         const PRUnichar* aTargetSpec);
   NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
 
-  // nsIScriptGlobalObjectOwner
-  NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
-
   NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
 
   // nsIRefreshURL interface methods...
@@ -373,8 +370,6 @@ protected:
   nsresult InitDialogVars(void);
 
   nsIEventQueue* mThreadEventQueue;
-  nsIScriptGlobalObject *mScriptGlobal;
-  nsIScriptContext* mScriptContext;
 
   nsIWebShellContainer* mContainer;
   nsIDeviceContext* mDeviceContext;
@@ -415,7 +410,6 @@ protected:
 
   void ReleaseChildren();
   NS_IMETHOD DestroyChildren();
-  nsresult CreateScriptEnvironment();
   nsresult DoLoadURL(nsIURI * aUri, 
                      const char* aCommand,
                      nsIInputStream* aPostDataStream,
@@ -578,8 +572,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   NS_INIT_REFCNT();
   mHistoryIndex = -1;
   mScrollPref = nsScrollPreference_kAuto;
-  mScriptGlobal = nsnull;
-  mScriptContext = nsnull;
   mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
   mItemType = typeContent;
@@ -622,13 +614,13 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
 
-  if (nsnull != mScriptGlobal) {
+  if (mScriptGlobal) {
     mScriptGlobal->SetDocShell(nsnull);
-    NS_RELEASE(mScriptGlobal);
+    mScriptGlobal = nsnull;
   }
-  if (nsnull != mScriptContext) {
+  if (mScriptContext) {
     mScriptContext->SetOwner(nsnull);
-    NS_RELEASE(mScriptContext);
+    mScriptContext = nsnull;
   }
 
   InitFrameData(PR_TRUE);
@@ -726,6 +718,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
+   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -754,14 +747,14 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
    }
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)))
       {
-      NS_ENSURE_SUCCESS(CreateScriptEnvironment(), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
       *aInstancePtr = mScriptGlobal;
       NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
       }
    else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)))
       {
-      NS_ENSURE_SUCCESS(CreateScriptEnvironment(), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindow),
          aInstancePtr), NS_ERROR_FAILURE);
       return NS_OK;
@@ -855,7 +848,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   // End copying block (Don't hold content/document viewer ref beyond here!!)
 
   mContentViewer = nsnull;
-  if (nsnull != mScriptContext) {
+  if (mScriptContext) {
     mScriptContext->GC();
   }
   mContentViewer = aContentViewer;
@@ -935,6 +928,11 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                  PRBool aIsSunkenBorder)
 {
   nsresult rv = NS_OK;
+  if(w < 0)
+   w=0;
+  if(h < 0)
+   h=0;
+   
 
   // Cache the PL_EventQueue of the current UI thread...
   //
@@ -983,35 +981,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
 
-  /* this is the old code, commented out for the new code below while I figure this out -- dwc0001
-  // Create device context
-  rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
-                                    kIDeviceContextIID,
-                                    (void **)&mDeviceContext);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-  mDeviceContext->Init(aNativeParent);
-  float dev2twip;
-  mDeviceContext->GetDevUnitsToTwips(dev2twip);
-  mDeviceContext->SetDevUnitsToAppUnits(dev2twip);
-  float twip2dev;
-  mDeviceContext->GetTwipsToDevUnits(twip2dev);
-  mDeviceContext->SetAppUnitsToDevUnits(twip2dev);
-//  mDeviceContext->SetGamma(1.7f);
-  mDeviceContext->SetGamma(1.0f);
-
-  // Create a Native window for the shell container...
-  rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
-  if (NS_FAILED(rv)) return rv;
-
-  widgetInit.clipChildren = PR_FALSE;
-  widgetInit.mWindowType = eWindowType_child;
-  //widgetInit.mBorderStyle = aIsSunkenBorder ? eBorderStyle_3DChildWindow : eBorderStyle_none;
-  mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
-                  mDeviceContext, nsnull, nsnull, &widgetInit);
-*/
-
   // Create device context
   if (nsnull != aNativeParent) {
     rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
@@ -1055,7 +1024,9 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     widgetInit.mWindowType = eWindowType_child;
   }
 
-  return rv;
+   NS_ENSURE_SUCCESS(InitWindow(nsnull, mWindow, x, y, w, h), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(Create(), NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
 
@@ -2834,28 +2805,6 @@ nsIBrowserWindow* nsWebShell::GetBrowserWindow()
   return browserWindow;
 }
 
-nsresult
-nsWebShell::CreateScriptEnvironment()
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptGlobal) {
-    res = NS_NewScriptGlobalObject(&mScriptGlobal);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    mScriptGlobal->SetDocShell(this);
-    mScriptGlobal->SetGlobalObjectOwner(
-      NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
-  }
-
-  if (nsnull == mScriptContext) {
-    res = NS_CreateScriptContext(mScriptGlobal, &mScriptContext);
-  }
-
-  return res;
-}
-
 NS_IMETHODIMP
 nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
                                 nsIURI* aURL,
@@ -2864,7 +2813,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
 
-  if ((nsnull != mScriptGlobal) &&
+  if ((mScriptGlobal) &&
       (loader == mDocLoader)) {
     if (nsnull != mContentViewer &&
         NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
@@ -2949,7 +2898,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (loader == mDocLoader) {
     mProcessedEndDocumentLoad = PR_TRUE;
 
-    if (nsnull != mScriptGlobal) {
+    if (mScriptGlobal) {
       nsIDocumentViewer* docViewer;
       if (nsnull != mContentViewer &&
           NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
@@ -3647,14 +3596,13 @@ nsresult nsWebShell::InitDialogVars(void)
 NS_IMETHODIMP nsWebShell::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::InitWindow(parentNativeWindow, parentWidget,
+      x, y, cx, cy);
 }
 
 NS_IMETHODIMP nsWebShell::Create()
 {
-   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::Create();
 }
 
 NS_IMETHODIMP nsWebShell::Destroy()
@@ -3662,7 +3610,7 @@ NS_IMETHODIMP nsWebShell::Destroy()
   nsresult rv = NS_OK;
 
   //Fire unload event before we blow anything away.
-  if (nsnull != mScriptGlobal) {
+  if (mScriptGlobal) {
     nsIDocumentViewer* docViewer;
     if (nsnull != mContentViewer &&
         NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
@@ -3818,10 +3766,9 @@ NS_IMETHODIMP nsWebShell::GetParentWidget(nsIWidget** parentWidget)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebShell::SetParentWidget(nsIWidget* parentWidget)
+NS_IMETHODIMP nsWebShell::SetParentWidget(nsIWidget* aParentWidget)
 {
-   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::SetParentWidget(aParentWidget);
 }
 
 NS_IMETHODIMP nsWebShell::GetParentNativeWindow(nativeWindow* parentNativeWindow)
@@ -3838,8 +3785,7 @@ NS_IMETHODIMP nsWebShell::SetParentNativeWindow(nativeWindow parentNativeWindow)
 
 NS_IMETHODIMP nsWebShell::GetVisibility(PRBool* aVisibility)
 {
-   NS_WARN_IF_FALSE(PR_FALSE, "NOT IMPLEMENTED");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsWebShell::SetVisibility(PRBool aVisibility)
@@ -3847,17 +3793,7 @@ NS_IMETHODIMP nsWebShell::SetVisibility(PRBool aVisibility)
    if(mWindow)
       mWindow->Show(aVisibility);
 
-   if(aVisibility)
-      {
-      if(mContentViewer)
-         mContentViewer->Show();
-      }
-   else
-      {
-      if(mContentViewer)
-         mContentViewer->Hide();
-      }
-   return NS_OK;
+   return nsDocShell::SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsWebShell::GetMainWidget(nsIWidget** mainWidget)
@@ -3918,11 +3854,6 @@ NS_IMETHODIMP nsWebShell::LoadURIVia(nsIURI* aUri,
    nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
    return nsDocShell::LoadURIVia(aUri, aPresContext, aAdapterBinding);
-}
-
-NS_IMETHODIMP nsWebShell::GetDocument(nsIDOMDocument** aDocument)
-{
-   return nsDocShell::GetDocument(aDocument);
 }
 
 NS_IMETHODIMP nsWebShell::GetCurrentURI(nsIURI** aURI)
@@ -4195,36 +4126,6 @@ NS_IMETHODIMP
 nsWebShell::SetMarginHeight(PRInt32 aHeight)
 {
    return nsDocShell::SetMarginHeight(aHeight);
-}
-
-//*****************************************************************************
-// nsWebShell::nsIScriptGlobalObjectOwner
-//*****************************************************************************   
-
-NS_IMETHODIMP
-nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
-{
-  NS_PRECONDITION(nsnull != aGlobal, "null arg");
-  nsresult res = NS_OK;
-
-  res = CreateScriptEnvironment();
-
-  if (NS_SUCCEEDED(res)) {
-    *aGlobal = mScriptGlobal;
-    NS_IF_ADDREF(mScriptGlobal);
-  }
-
-  return res;
-}
-
-NS_IMETHODIMP 
-nsWebShell::ReportScriptError(const char* aErrorString,
-                              const char* aFileName,
-                              PRInt32     aLineNo,
-                              const char* aLineBuf)
-{
-   return nsDocShell::ReportScriptError(aErrorString, aFileName, aLineNo, 
-      aLineBuf);
 }
 
 //----------------------------------------------------------------------
