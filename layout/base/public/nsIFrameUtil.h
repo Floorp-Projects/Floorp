@@ -38,7 +38,7 @@
 #define nsIFrameUtil_h___
 
 #include <stdio.h>
-#include "nsISupports.h";
+#include "nsISupports.h"
 
 /* a6cf90d4-15b3-11d2-932e-00805f8add32 */
 #define NS_IFRAME_UTIL_IID \
