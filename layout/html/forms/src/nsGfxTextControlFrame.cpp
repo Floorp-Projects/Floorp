@@ -1032,7 +1032,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 // This code below will soon be changed over for NSPR logging
 // It is used to figure out what font and font size the textarea or text field
 // are and compares it to the know NavQuirks size
-#ifdef DEBUG_rods
+//#ifdef DEBUG_rodsXX
+#ifdef NS_DEBUG
   {
     nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
     GetFont(&aPresContext, font);
@@ -1454,7 +1455,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     else
     { // if WRAP="OFF", turn wrapping off in the editor
       nsFormControlHelper::nsHTMLTextWrap wrapProp;
-      nsresult result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+      result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
       if (NS_CONTENT_ATTR_NOT_THERE != result) 
       {
         if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off)
