@@ -34,6 +34,9 @@ require "CGI.pl";
 
 use vars qw($buffer);
 
+use Bugzilla::Search;
+use Bugzilla::CGI;
+
 # Go directly to the XUL version of the duplicates report (duplicates.xul)
 # if the user specified ctype=xul.  Adds params if they exist, and directs
 # the user to a signed copy of the script in duplicates.jar if it exists.
@@ -152,37 +155,70 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
     $dobefore = 1;
 }
 
+detaint_natural($maxrows)
+  || ThrowUserError("invalid_maxrows", { maxrows => $maxrows});
+
 my @bugs;
 my @bug_ids; 
 
 if (scalar(%count)) {
-    # Don't add CLOSED, and don't add VERIFIED unless they are INVALID or 
-    # WONTFIX. We want to see VERIFIED INVALID and WONTFIX because common 
-    # "bugs" which aren't bugs end up in this state.
-    my $query = "
-      SELECT bugs.bug_id, components.name, bug_severity, op_sys,
-             target_milestone, short_desc, bug_status, resolution
-      FROM bugs, components
-      WHERE (bugs.component_id = components.id)
-      AND   (bug_status != 'CLOSED') 
-      AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX'))
-             OR (bug_status != 'VERIFIED'))
-      AND bugs.bug_id IN (" . join(", ", keys %count) . ")";
+    # use Bugzilla::Search so that we get the security checking
+    my $params = new Bugzilla::CGI({ 'bug_id' => [keys %count] });
 
-    # Limit to a single product if requested
-    $query .= (" AND bugs.product_id = " . $product_id) if $product_id;
+    if ($openonly) {
+        $params->param('resolution', '---');
+    } else {
+        # We want to show bugs which:
+        # a) Aren't CLOSED; and
+        # b)  i) Aren't VERIFIED; OR
+        #    ii) Were resolved INVALID/WONTFIX
 
-    SendSQL($query);
+        # The rationale behind this is that people will eventually stop
+        # reporting fixed bugs when they get newer versions of the software,
+        # but if the bug is determined to be erroneous, people will still
+        # keep reporting it, so we do need to show it here.
+
+        # a)
+        $params->param('field0-0-0', 'bug_status');
+        $params->param('type0-0-0', 'notequals');
+        $params->param('value0-0-0', 'CLOSED');
+
+        # b) i)
+        $params->param('field0-1-0', 'bug_status');
+        $params->param('type0-1-0', 'notequals');
+        $params->param('value0-1-0', 'VERIFIED');
+
+        # b) ii)
+        $params->param('field0-1-1', 'resolution');
+        $params->param('type0-1-1', 'anyexact');
+        $params->param('value0-1-1', 'INVALID,WONTFIX');
+    }
+
+    # Restrict to product if requested
+    if ($::FORM{'product'}) {
+        $params->param('product', $::FORM{'product'});
+    }
+
+    my $query = new Bugzilla::Search('fields' => [qw(bugs.bug_id
+                                                     map_components.name
+                                                     bugs.bug_severity
+                                                     bugs.op_sys
+                                                     bugs.target_milestone
+                                                     bugs.short_desc
+                                                     bugs.bug_status
+                                                     bugs.resolution
+                                                    )
+                                                 ],
+                                     'params' => $params,
+                                    );
+
+    SendSQL($query->getSQL());
 
     while (MoreSQLData()) {
         # Note: maximum row count is dealt with in the template.
 
         my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
             $short_desc, $bug_status, $resolution) = FetchSQLData();
-
-        next if (!CanSeeBug($id, $::userid));
-        # Limit to open bugs only if requested
-        next if $openonly && ($resolution ne "");
 
         push (@bugs, { id => $id,
                        count => $count{$id},

@@ -80,8 +80,8 @@
       <td rowspan="4" valign="top">
         <select name="product" size="5" multiple="multiple">
           [% FOREACH p = products %]
-            <option name="[% p %]"
-            [% " selected" IF product == p %]>[% p %]</option>
+            <option name="[% p FILTER html %]"
+            [% " selected" IF product == p %]>[% p FILTER html %]</option>
           [% END %]
         </select>
       </td>

@@ -276,6 +276,11 @@
     is either <em>application, audio, image, message, model, multipart, 
     text,</em> or <em>video</em>.
     
+  [% ELSIF error == "invalid_maxrow" %]
+    [% title = "Invalid Max Rows" %]
+    The maximum number of rows, '[% maxrows FILTER html %]', must be a positive
+    integer.
+
   [% ELSIF error == "invalid_product_name" %]
     [% title = "Invalid Product Name" %]
     The product name '[% product FILTER html %]' is invalid or does not exist.
