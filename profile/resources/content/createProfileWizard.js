@@ -95,7 +95,8 @@ function chooseProfileFolder()
     var dirChooser = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
     dirChooser.init(window, gProfileManagerBundle.getString("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
     dirChooser.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
-    dirChooser.show();
+    if (dirChooser.show() == dirChooser.returnCancel)
+      return;
     newProfileRoot = dirChooser.file;
   }
   catch(e) {
@@ -120,7 +121,6 @@ function checkCurrentInput(currentInput)
   var canAdvance;
 
   var errorMessage = checkProfileName(currentInput);
-
   if (!errorMessage) {
     finishText.className = "";
     finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishText");
@@ -186,7 +186,6 @@ function onFinish()
   var regionCode = document.getElementById("profileRegion").getAttribute("data");
 
   var proceed = processCreateProfileData(profileName, gProfileRoot, languageCode, regionCode);
-
   // Error on profile creation. Don't leave the wizard so the user can correct his input.
   if (!proceed)
     return false;
@@ -222,4 +221,3 @@ function processCreateProfileData(profileName, profileRoot, languageCode, region
     return false;
   }
 }
-
