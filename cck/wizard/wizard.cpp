@@ -98,7 +98,7 @@ BOOL CopyConfig(CString configname, WIDGET* curWidget)
 extern "C" __declspec(dllexport)
 BOOL CreateJSFile(void)
 {
-	CString JSFile = rootpath + "Configs\\" + Clist +"\\Workspace\\Isetup\\prefs.js";
+	CString JSFile = rootpath + "Configs\\" + Clist +"\\Temp\\prefs.jsc";
 
 	ofstream myout(JSFile);
 
@@ -106,19 +106,18 @@ BOOL CreateJSFile(void)
 	{
 		cout << "cannot open the file \n";
 	}
-		char* attribArray[MAX_SIZE];
-		int k =GetAttrib("Pref", attribArray);
-	//	CString prefValue;
-		int g= 0;
-		while(g<k)
-		{
-	//		AfxMessageBox(bg,MB_OK);
-			myout<< "defaultPref(\"" << attribArray[g] << "\", " <<GetGlobal(attribArray[g])<<");\n";
-			g++;
-		}
+	
+	myout<< "with (PrefConfig) { \n";
+	char* attribArray[MAX_SIZE];
+	int k =GetAttrib("Pref", attribArray);
+	int g= 0;
+	while(g<k)
+	{
+		myout<< "defaultPref(\"" << attribArray[g] << "\", " <<GetGlobal(attribArray[g])<<");\n";
+		g++;
+	}
 
-	//	myout<< "defaultPref(\"" << prefname << "\", " <<GetGlobal(prefname) <<");\n";
-	//	cout << prefname << " is not found \n";
-		myout.close();
-		return TRUE;
+	myout<<"}";
+	myout.close();
+	return TRUE;
 }
