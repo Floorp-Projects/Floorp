@@ -1161,28 +1161,34 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
           nsCOMPtr<nsIURI> baseURL;
           GetBaseURI(getter_AddRefs(baseURL));
           
-          // Server side image maps use the href in a containing anchor
-          // element to provide the basis for the destination url.
-          nsAutoString src;
-          if (GetAnchorHREFAndTarget(src, target)) {
-            NS_MakeAbsoluteURI(absURL, src, baseURL);
+          if (baseURL) {
+            // Server side image maps use the href in a containing anchor
+            // element to provide the basis for the destination url.
+            nsAutoString src;
+            if (GetAnchorHREFAndTarget(src, target)) {
+              NS_MakeAbsoluteURI(absURL, src, baseURL);
             
-            // XXX if the mouse is over/clicked in the border/padding area
-            // we should probably just pretend nothing happened. Nav4
-            // keeps the x,y coordinates positive as we do; IE doesn't
-            // bother. Both of them send the click through even when the
-            // mouse is over the border.
-            if (p.x < 0) p.x = 0;
-            if (p.y < 0) p.y = 0;
-            char cbuf[50];
-            PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
-            absURL.AppendWithConversion(cbuf);
-            PRBool clicked = PR_FALSE;
-            if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-              *aEventStatus = nsEventStatus_eConsumeDoDefault; 
-              clicked = PR_TRUE;
+              // XXX if the mouse is over/clicked in the border/padding area
+              // we should probably just pretend nothing happened. Nav4
+              // keeps the x,y coordinates positive as we do; IE doesn't
+              // bother. Both of them send the click through even when the
+              // mouse is over the border.
+              if (p.x < 0) p.x = 0;
+              if (p.y < 0) p.y = 0;
+              char cbuf[50];
+              PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
+              absURL.AppendWithConversion(cbuf);
+              PRBool clicked = PR_FALSE;
+              if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+                *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+                clicked = PR_TRUE;
+              }
+              TriggerLink(aPresContext, absURL, target, clicked);
             }
-            TriggerLink(aPresContext, absURL, target, clicked);
+          } 
+          else 
+          {
+            NS_WARNING("baseURL is null for imageFrame - ignoring mouse event");
           }
         }
       }
