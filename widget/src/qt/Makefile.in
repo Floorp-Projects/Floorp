@@ -43,7 +43,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  pref \
 		  uconv \
-          necko \
+		  necko \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -60,16 +60,18 @@ CPPSRCS		= \
 		nsSound.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
-        nsScrollbar.cpp \
-        nsWindow.cpp \
-        nsFilePicker.cpp \
+		nsScrollbar.cpp \
+		nsWindow.cpp \
+		nsFilePicker.cpp \
+		mozqwidget.cpp \
 		$(NULL)
 
 MOCSRCS		= \
 		moc_nsMime.cpp \
 		moc_nsEventQueueWatcher.cpp \
-        moc_nsQtEventDispatcher.cpp \
-        moc_nsScrollbar.cpp \
+		moc_nsQtEventDispatcher.cpp \
+		moc_nsScrollbar.cpp \
+		moc_mozqwidget.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
@@ -98,7 +100,7 @@ DEFINES		+= -D_IMPL_NS_WIDGET
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif
-ifeq ($(OS_ARCH), SunOS)
+ifeq ($(OS_ARCH), SunOS) 
 ifndef GNU_CC
 # When using Sun's WorkShop compiler, including
 # /wherever/workshop-5.0/SC5.0/include/CC/std/time.h
