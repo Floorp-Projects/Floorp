@@ -278,8 +278,12 @@ nsIOService::SetOffline(PRBool offline)
     mOffline = offline;
     if (offline) {
         // be sure to try and shutdown both (even if the first fails)
-        nsresult rv1 = mSocketTransportService->Shutdown();
-        nsresult rv2 = mDNSService->Shutdown();
+        nsresult rv1 = NS_OK;
+        nsresult rv2 = NS_OK;
+        if (mSocketTransportService)
+            rv1 = mSocketTransportService->Shutdown();
+        if (mDNSService)
+            rv2 = mDNSService->Shutdown();
         if (NS_FAILED(rv1)) return rv1;
         if (NS_FAILED(rv2)) return rv2;
     }
