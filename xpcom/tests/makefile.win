@@ -23,7 +23,6 @@ DEPTH=..\..
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  unicharutil \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
@@ -88,7 +87,6 @@ LINCS=                     \
         $(NULL)
 
 LLIBS=                         \
-        $(DIST)\lib\unicharutil_s.lib  \
         $(DIST)\lib\xpcom.lib  \
         $(LIBNSPR)
 
