@@ -2036,8 +2036,9 @@ ReloadAllWindows()
 }
 
 static BOOL
-CreateAppearancesCategory(int nCharsetId, LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
+CreateAppearancesCategory(CGenericFrame *pFrame, LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
 {
+    int                 nCharsetId = pFrame ? theApp.m_pIntlFont->DocCSIDtoID(pFrame->m_iCSID) : theApp.m_iCSID;
 	CAppearancePrefs   *pAppearance = new CAppearancePrefs(nCharsetId);
 	BOOL		   		bResult = FALSE;
 	
@@ -2081,7 +2082,7 @@ CreateBrowserCategory(MWContext *pContext, LPSPECIFYPROPERTYPAGEOBJECTS *pCatego
 	BOOL		   bResult = FALSE;
 
 	// If this is the browser then use the URL for the current page
-	pEntry = pContext->type == MWContextBrowser ? pContext->hist.cur_doc_ptr : NULL;
+	pEntry = pContext ? ( pContext->type == MWContextBrowser ? pContext->hist.cur_doc_ptr : NULL ) : NULL;
 	pBrowser = new CBrowserPrefs(pEntry ? pEntry->address : NULL);
 	pBrowser->AddRef();
 	
@@ -2256,7 +2257,8 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 	PFNPREFS					 	pfnCreatePropertyFrame;
 	ULONG						 	nCategories = 0;
 	ULONG						 	nInitialCategory;
-	MWContext	  				   *pContext = pFrame->GetMainContext()->GetContext();
+    ULONG                           nDesktopCategory = -1;
+	MWContext	  				   *pContext = pFrame ? pFrame->GetMainContext()->GetContext() : NULL;
 	static CGenericFrame		   *pCurrentFrame = NULL;
 
 	// We only allow one pref UI window up at a time
@@ -2284,8 +2286,12 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 		pfnCreatePropertyFrame = (PFNPREFS)GetProcAddress(hPrefDll, "NS_CreatePropertyFrame");
 		if (!pfnCreatePropertyFrame) {
 #ifdef _DEBUG
-			pFrame->MessageBox("Unable to get proc address for NS_CreatePropertyFrame",
-				NULL, MB_OK | MB_ICONEXCLAMATION);
+            const char * const pText = "Unable to get proc address for NS_CreatePropertyFrame";
+            if ( pFrame ) {
+    			pFrame->MessageBox( pText, NULL, MB_OK | MB_ICONEXCLAMATION);
+            } else {
+                AfxMessageBox( pText, MB_OK | MB_ICONEXCLAMATION );
+            }
 #endif
 			FreeLibrary(hPrefDll);
 			return;
@@ -2295,7 +2301,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 		pCurrentFrame = pFrame;
 
 		// Appearances category
-		if (CreateAppearancesCategory(theApp.m_pIntlFont->DocCSIDtoID(pFrame->m_iCSID), &categories[nCategories]))
+		if (CreateAppearancesCategory(pFrame, &categories[nCategories]))
 			nCategories++;
 
 		// Browser category
@@ -2304,8 +2310,17 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 
 #ifdef MOZ_MAIL_NEWS
 		// Mail and News category
-		if (CreateMailNewsCategory(pContext, &categories[nCategories]))
+        CStubsCX *pStubCX = NULL; // Stub to use if we don't have a context.
+        // Get stub CX if we need it.
+        if ( !pContext ) {
+            pStubCX = new CStubsCX();
+        }
+		if (CreateMailNewsCategory(pContext ? pContext : pStubCX->GetContext(), &categories[nCategories]))
 			nCategories++;
+        // Free stub CX if we created one.
+        if ( pStubCX ) {
+            delete pStubCX;
+        }
 #endif // MOZ_MAIL_NEWS
 
 #ifdef MOZ_LOC_INDEP
@@ -2342,7 +2357,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
                                            CLSCTX_INPROC_SERVER,
                                            IID_ISpecifyPropertyPageObjects,
                                            (LPVOID *)&categories[nCategories]))) {
-            nCategories++;
+            nDesktopCategory = nCategories++;
         } else {
             // Register DLL and try again.
             RegisterCLSIDForDll( "winpref.dll" );
@@ -2351,13 +2366,17 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
                                                CLSCTX_INPROC_SERVER,
                                                IID_ISpecifyPropertyPageObjects,
                                                (LPVOID *)&categories[nCategories]))) {
-                nCategories++;
+                nDesktopCategory = nCategories++;
             }
         }
              
         // Make sure we have at least one category
 		if (nCategories == 0) {
-            pFrame->MessageBox(szLoadString(IDS_CANT_LOAD_PREFS), NULL, MB_OK | MB_ICONEXCLAMATION);
+            if ( pFrame ) {
+                pFrame->MessageBox(szLoadString(IDS_CANT_LOAD_PREFS), NULL, MB_OK | MB_ICONEXCLAMATION);
+            } else {
+                AfxMessageBox(szLoadString(IDS_CANT_LOAD_PREFS), MB_OK | MB_ICONEXCLAMATION);
+            }
 			FreeLibrary(hPrefDll);
 			return;
 		}
@@ -2371,13 +2390,16 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 		g_bReloadAllWindows = FALSE;
 
 		// Figure out what the initial category we display should be
-		if (pFrame->IsEditFrame()) {
+		if (pFrame && pFrame->IsEditFrame()) {
 			nInitialCategory = 3;
 
-		} else if (pContext->type == MWContextMail ||
+        } else if ( !pContext && !theApp.m_bShowPrefsOnStartup && nDesktopCategory!=-1 ) {
+            nInitialCategory = nDesktopCategory;
+
+		} else if (pContext && (pContext->type == MWContextMail ||
 				 pContext->type == MWContextMailMsg ||
 				 pContext->type == MWContextMessageComposition ||
-				 pContext->type == MWContextAddressBook) {
+				 pContext->type == MWContextAddressBook)) {
 			nInitialCategory = 2;
 
 		} else {
@@ -2385,7 +2407,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 		}
 		
 		// Display the preferences
-		pfnCreatePropertyFrame(pFrame->m_hWnd, -1, -1, "Preferences", nCategories, categories,
+		pfnCreatePropertyFrame(pFrame ? pFrame->m_hWnd : NULL, -1, -1, "Preferences", nCategories, categories,
             nInitialCategory, NetHelpWrapper);
 		pCurrentFrame = NULL;
 
