@@ -80,16 +80,6 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 	m_runningUrl = aRunningUrl;
 	nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
 
-	if (NS_SUCCEEDED(GetStatusFeedback(getter_AddRefs(statusFeedback))) && statusFeedback)
-	{
-		if (m_runningUrl)
-			statusFeedback->StartMeteors();
-		else
-		{
-			statusFeedback->ShowProgress(0);
-			statusFeedback->StopMeteors();
-		}
-	}
 	if (m_urlListeners)
 	{
 		if (m_runningUrl)
