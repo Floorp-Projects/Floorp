@@ -170,7 +170,8 @@ nsresult TestMCTransport(const char *filename)
 #endif
 
     nsCOMPtr<nsIOutputStream> os;
-    transport->OpenOutputStream(0, (PRUint32) -1, 0, getter_AddRefs(os));
+    rv = transport->OpenOutputStream(0, (PRUint32) -1, 0, getter_AddRefs(os));
+    if (NS_FAILED(rv)) return rv;
 
     char *out = PR_smprintf("%s.out", filename);
     nsCOMPtr<nsIStreamListener> listener = new TestListener(out);
@@ -178,7 +179,8 @@ nsresult TestMCTransport(const char *filename)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIRequest> req;
-    transport->AsyncRead(listener, nsnull, 0, (PRUint32) -1, 0, getter_AddRefs(req));
+    rv = transport->AsyncRead(listener, nsnull, 0, (PRUint32) -1, 0, getter_AddRefs(req));
+    if (NS_FAILED(rv)) return rv;
 
     FILE *file = fopen(filename, "r");
     if (!file)
