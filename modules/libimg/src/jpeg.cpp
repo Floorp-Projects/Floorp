@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 3.2 1998/08/11 20:45:59 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 3.3 1998/12/14 22:42:06 pnunn%netscape.com Exp $
  */
 
 
@@ -738,7 +738,7 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
     }
     
 	/* Return here if there is a fatal error. */
-	if ((error_code = setjmp(js->jerr.setjmp_buffer))) {
+	if ((error_code = setjmp(js->jerr.setjmp_buffer)) != 0) {
         /* Free up all the data structures */
         il_jpeg_abort(ic);
 		return error_code;
@@ -762,7 +762,7 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
 #endif /* M12N */
                 ic->src_header->width = jd->image_width;
                 ic->src_header->height = jd->image_height;
-				if ((status = il_size(ic))) {
+				if ((status = il_size(ic)) != 0) {
 					ILTRACE(1,("il:jpeg: MEM il_size"));
 					return status;
 				}
