@@ -129,6 +129,7 @@ nsNodeInfo::GetLocalName(nsString& aLocalName)
 {
   NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
 
+#ifdef STRICT_DOM_LEVEL2_LOCALNAME
   if (mInner.mNamespaceID > 0) {
     return mInner.mName->ToString(aLocalName);
   }
@@ -136,6 +137,9 @@ nsNodeInfo::GetLocalName(nsString& aLocalName)
   aLocalName.Truncate();
 
   return NS_OK;
+#else
+  return mInner.mName->ToString(aLocalName);
+#endif
 }
 
 
