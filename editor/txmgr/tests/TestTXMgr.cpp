@@ -34,25 +34,37 @@ static PRInt32 *sRedoOrderArr        = 0;
 
 // #define ENABLE_DEBUG_PRINTFS 1
 
-static PRInt32 sSimpleTestDestructorOrderArr[] = {
-         2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
-        17, 18, 19, 20, 21,  1, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-        31, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
-        56, 57, 58, 59, 60, 61, 41, 40, 62, 39, 38, 37, 36, 35, 34,
-        33, 32, 68, 71, 70, 69, 67, 66, 65, 64, 63 };
+PRInt32 sSimpleTestDestructorOrderArr[] = {
+          2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,
+         16,  17,  18,  19,  20,  21,   1,  22,  23,  24,  25,  26,  27,  28,
+         29,  30,  31,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,
+         53,  54,  55,  56,  57,  58,  59,  60,  61,  41,  40,  62,  39,  38,
+         37,  36,  35,  34,  33,  32,  68,  63,  64,  65,  66,  67,  69,  71,
+         70,  72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,
+         85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,
+         99, 100, 101, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 131,
+        130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117,
+        116, 115, 114, 113, 112 };
 
-static PRInt32 sSimpleTestDoOrderArr[] = {
-         1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
-        16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-        31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45,
-        46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
-        61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71 };
+PRInt32 sSimpleTestDoOrderArr[] = {
+          1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
+         15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,
+         29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,
+         43,  44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,
+         57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,
+         71,  72,  73,  74,  75,  76,  77,  78,  79,  80,  81,  82,  83,  84,
+         85,  86,  87,  88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,
+         99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
+        113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126,
+        127, 128, 129, 130, 131 };
 
-static PRInt32 sSimpleTestUndoOrderArr[] = {
-        41, 40, 39, 38, 62, 39, 38, 37, 69, 71, 70 };
+PRInt32 sSimpleTestUndoOrderArr[] = {
+         41,  40,  39,  38,  62,  39,  38,  37,  69,  71,  70, 111, 110, 109,
+        108, 107, 106, 105, 104, 103, 102, 131, 130, 129, 128, 127, 126, 125,
+        124, 123, 122 };
 
 static PRInt32 sSimpleTestRedoOrderArr[] = {
-        38, 39, 70 };
+         38,  39,  70 };
 
 PRInt32 sAggregateTestDestructorOrderArr[] = {
          14,  13,  12,  11,  10,   9,   8,  21,  20,  19,  18,  17,  16,  15,
@@ -86,11 +98,41 @@ PRInt32 sAggregateTestDestructorOrderArr[] = {
         259, 258, 257, 256, 255, 254, 253, 252, 251, 250, 249, 248, 247, 246,
         245, 244, 243, 242, 241, 240, 239, 238, 237, 236, 235, 234, 233, 232,
         231, 230, 229, 228, 227, 226, 225, 224, 223, 222, 221, 220, 219, 218,
-        472, 471, 470, 493, 492, 491, 490, 489, 488, 487, 486, 485, 484, 483,
-        482, 481, 480, 479, 478, 477, 476, 475, 474, 473, 469, 468, 467, 466,
-        465, 464, 463, 462, 461, 460, 459, 458, 457, 456, 455, 454, 453, 452,
-        451, 450, 449, 448, 447, 446, 445, 444, 443, 442, 441, 440, 439, 438,
-        437, 436, 435 };
+        472, 471, 470, 441, 440, 439, 438, 437, 436, 435, 448, 447, 446, 445,
+        444, 443, 442, 455, 454, 453, 452, 451, 450, 449, 462, 461, 460, 459,
+        458, 457, 456, 469, 468, 467, 466, 465, 464, 463, 479, 478, 477, 476,
+        475, 474, 473, 493, 492, 491, 490, 489, 488, 487, 486, 485, 484, 483,
+        482, 481, 480, 496, 497, 495, 499, 500, 498, 494, 503, 504, 502, 506,
+        507, 505, 501, 510, 511, 509, 513, 514, 512, 508, 517, 518, 516, 520,
+        521, 519, 515, 524, 525, 523, 527, 528, 526, 522, 531, 532, 530, 534,
+        535, 533, 529, 538, 539, 537, 541, 542, 540, 536, 545, 546, 544, 548,
+        549, 547, 543, 552, 553, 551, 555, 556, 554, 550, 559, 560, 558, 562,
+        563, 561, 557, 566, 567, 565, 569, 570, 568, 564, 573, 574, 572, 576,
+        577, 575, 571, 580, 581, 579, 583, 584, 582, 578, 587, 588, 586, 590,
+        591, 589, 585, 594, 595, 593, 597, 598, 596, 592, 601, 602, 600, 604,
+        605, 603, 599, 608, 609, 607, 611, 612, 610, 606, 615, 616, 614, 618,
+        619, 617, 613, 622, 623, 621, 625, 626, 624, 620, 629, 630, 628, 632,
+        633, 631, 627, 640, 639, 638, 637, 636, 635, 634, 647, 646, 645, 644,
+        643, 642, 641, 654, 653, 652, 651, 650, 649, 648, 661, 660, 659, 658,
+        657, 656, 655, 668, 667, 666, 665, 664, 663, 662, 675, 674, 673, 672,
+        671, 670, 669, 682, 681, 680, 679, 678, 677, 676, 689, 688, 687, 686,
+        685, 684, 683, 696, 695, 694, 693, 692, 691, 690, 703, 702, 701, 700,
+        699, 698, 697, 773, 772, 771, 770, 769, 768, 767, 766, 765, 764, 763,
+        762, 761, 760, 759, 758, 757, 756, 755, 754, 753, 752, 751, 750, 749,
+        748, 747, 746, 745, 744, 743, 742, 741, 740, 739, 738, 737, 736, 735,
+        734, 733, 732, 731, 730, 729, 728, 727, 726, 725, 724, 723, 722, 721,
+        720, 719, 718, 717, 716, 715, 714, 713, 712, 711, 710, 709, 708, 707,
+        706, 705, 704, 913, 912, 911, 910, 909, 908, 907, 906, 905, 904, 903,
+        902, 901, 900, 899, 898, 897, 896, 895, 894, 893, 892, 891, 890, 889,
+        888, 887, 886, 885, 884, 883, 882, 881, 880, 879, 878, 877, 876, 875,
+        874, 873, 872, 871, 870, 869, 868, 867, 866, 865, 864, 863, 862, 861,
+        860, 859, 858, 857, 856, 855, 854, 853, 852, 851, 850, 849, 848, 847,
+        846, 845, 844, 843, 842, 841, 840, 839, 838, 837, 836, 835, 834, 833,
+        832, 831, 830, 829, 828, 827, 826, 825, 824, 823, 822, 821, 820, 819,
+        818, 817, 816, 815, 814, 813, 812, 811, 810, 809, 808, 807, 806, 805,
+        804, 803, 802, 801, 800, 799, 798, 797, 796, 795, 794, 793, 792, 791,
+        790, 789, 788, 787, 786, 785, 784, 783, 782, 781, 780, 779, 778, 777,
+        776, 775, 774 };
 
 PRInt32 sAggregateTestDoOrderArr[] = {
           1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
@@ -128,7 +170,37 @@ PRInt32 sAggregateTestDoOrderArr[] = {
         449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462,
         463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476,
         477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490,
-        491, 492, 493 };
+        491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504,
+        505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 516, 517, 518,
+        519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531, 532,
+        533, 534, 535, 536, 537, 538, 539, 540, 541, 542, 543, 544, 545, 546,
+        547, 548, 549, 550, 551, 552, 553, 554, 555, 556, 557, 558, 559, 560,
+        561, 562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573, 574,
+        575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 588,
+        589, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602,
+        603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616,
+        617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630,
+        631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642, 643, 644,
+        645, 646, 647, 648, 649, 650, 651, 652, 653, 654, 655, 656, 657, 658,
+        659, 660, 661, 662, 663, 664, 665, 666, 667, 668, 669, 670, 671, 672,
+        673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684, 685, 686,
+        687, 688, 689, 690, 691, 692, 693, 694, 695, 696, 697, 698, 699, 700,
+        701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 714,
+        715, 716, 717, 718, 719, 720, 721, 722, 723, 724, 725, 726, 727, 728,
+        729, 730, 731, 732, 733, 734, 735, 736, 737, 738, 739, 740, 741, 742,
+        743, 744, 745, 746, 747, 748, 749, 750, 751, 752, 753, 754, 755, 756,
+        757, 758, 759, 760, 761, 762, 763, 764, 765, 766, 767, 768, 769, 770,
+        771, 772, 773, 774, 775, 776, 777, 778, 779, 780, 781, 782, 783, 784,
+        785, 786, 787, 788, 789, 790, 791, 792, 793, 794, 795, 796, 797, 798,
+        799, 800, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812,
+        813, 814, 815, 816, 817, 818, 819, 820, 821, 822, 823, 824, 825, 826,
+        827, 828, 829, 830, 831, 832, 833, 834, 835, 836, 837, 838, 839, 840,
+        841, 842, 843, 844, 845, 846, 847, 848, 849, 850, 851, 852, 853, 854,
+        855, 856, 857, 858, 859, 860, 861, 862, 863, 864, 865, 866, 867, 868,
+        869, 870, 871, 872, 873, 874, 875, 876, 877, 878, 879, 880, 881, 882,
+        883, 884, 885, 886, 887, 888, 889, 890, 891, 892, 893, 894, 895, 896,
+        897, 898, 899, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910,
+        911, 912, 913 };
 
 PRInt32 sAggregateTestUndoOrderArr[] = {
         287, 286, 285, 284, 283, 282, 281, 280, 279, 278, 277, 276, 275, 274,
@@ -136,12 +208,21 @@ PRInt32 sAggregateTestUndoOrderArr[] = {
         434, 433, 432, 431, 430, 429, 428, 273, 272, 271, 270, 269, 268, 267,
         266, 265, 264, 263, 262, 261, 260, 259, 258, 257, 256, 255, 254, 253,
         479, 478, 477, 476, 475, 493, 492, 491, 490, 489, 488, 487, 486, 485,
-        484, 483, 482, 481, 480, 485, 484, 483, 482, 481, 480 };
+        484, 483, 482, 481, 480, 485, 484, 483, 482, 481, 480, 773, 772, 771,
+        770, 769, 768, 767, 766, 765, 764, 763, 762, 761, 760, 759, 758, 757,
+        756, 755, 754, 753, 752, 751, 750, 749, 748, 747, 746, 745, 744, 743,
+        742, 741, 740, 739, 738, 737, 736, 735, 734, 733, 732, 731, 730, 729,
+        728, 727, 726, 725, 724, 723, 722, 721, 720, 719, 718, 717, 716, 715,
+        714, 713, 712, 711, 710, 709, 708, 707, 706, 705, 704, 913, 912, 911,
+        910, 909, 908, 907, 906, 905, 904, 903, 902, 901, 900, 899, 898, 897,
+        896, 895, 894, 893, 892, 891, 890, 889, 888, 887, 886, 885, 884, 883,
+        882, 881, 880, 879, 878, 877, 876, 875, 874, 873, 872, 871, 870, 869,
+        868, 867, 866, 865, 864, 863, 862, 861, 860, 859, 858, 857, 856, 855,
+        854, 853, 852, 851, 850, 849, 848, 847, 846, 845, 844 };
 
 PRInt32 sAggregateTestRedoOrderArr[] = {
         260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273,
         476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486 };
-
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
@@ -602,13 +683,6 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_NULL_POINTER;
   }
 
-  result = mgr->SetMaxTransactionCount(10);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: SetMaxTransactionCount(10) failed. (%d)\n", result);
-    return result;
-  }
-
   printf("passed\n");
 
   /*******************************************************************
@@ -655,6 +729,54 @@ quick_test(TestTransactionFactory *factory)
 
   if (NS_FAILED(result)) {
     printf("ERROR: Redo on empty redo stack failed. (%d)\n", result);
+    return result;
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
+   * Call SetMaxTransactionCount(-1) with empty undo and redo stacks:
+   *
+   *******************************************************************/
+
+  printf("Call SetMaxTransactionCount(-1) with empty undo and redo stacks ... ");
+  result = mgr->SetMaxTransactionCount(-1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(-1) failed. (%d)\n", result);
+    return result;
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
+   * Call SetMaxTransactionCount(0) with empty undo and redo stacks:
+   *
+   *******************************************************************/
+
+  printf("Call SetMaxTransactionCount(0) with empty undo and redo stacks ... ");
+  result = mgr->SetMaxTransactionCount(0);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(0) failed. (%d)\n", result);
+    return result;
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
+   * Call SetMaxTransactionCount(10) with empty undo and redo stacks:
+   *
+   *******************************************************************/
+
+  printf("Call SetMaxTransactionCount(10) with empty undo and redo stacks ... ");
+  result = mgr->SetMaxTransactionCount(10);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(10) failed. (%d)\n", result);
     return result;
   }
 
@@ -834,6 +956,14 @@ quick_test(TestTransactionFactory *factory)
    *******************************************************************/
 
   printf("Test coalescing of transactions ... ");
+
+  result = mgr->SetMaxTransactionCount(10);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(0) failed. (%d)\n", result);
+    return result;
+  }
+
 
   tximpl = factory->create(mgr, MERGE_FLAG);
   tx = 0;
@@ -1752,14 +1882,554 @@ quick_test(TestTransactionFactory *factory)
 
   /*******************************************************************
    *
+   * Make sure that setting the transaction manager's max transaction
+   * count to zero, clears both the undo and redo stacks, and executes
+   * all new commands without pushing them on the undo stack!
+   *
+   *******************************************************************/
+
+  printf("Test max transaction count of zero ... ");
+
+  result = mgr->SetMaxTransactionCount(0);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(0) failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->GetNumberOfUndoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfUndoItems() on empty undo stack failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 0) {
+    printf("ERROR: GetNumberOfUndoItems() expected 1 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfRedoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 0) {
+    printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  for (i = 1; i <= 20; i++) {
+    tximpl = factory->create(mgr, NONE_FLAG);
+
+    tx = 0;
+    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    if (NS_FAILED(result)) {
+      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
+             i, result);
+      return result;
+    }
+
+    result = mgr->Do(tx);
+    if (NS_FAILED(result)) {
+      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
+      return result;
+    }
+
+    tx->Release();
+
+    result = mgr->GetNumberOfUndoItems(&numitems);
+
+    if (NS_FAILED(result)) {
+      printf("ERROR: GetNumberOfUndoItems() on empty undo stack failed. (%d)\n",
+             result);
+      return result;
+    }
+
+    if (numitems != 0) {
+      printf("ERROR: GetNumberOfUndoItems() expected 1 got %d. (%d)\n",
+             numitems, result);
+      return NS_ERROR_FAILURE;
+    }
+
+    result = mgr->GetNumberOfRedoItems(&numitems);
+
+    if (NS_FAILED(result)) {
+      printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
+             result);
+      return result;
+    }
+
+    if (numitems != 0) {
+      printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
+             numitems, result);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
+   * Make sure that setting the transaction manager's max transaction
+   * count to something greater than the number of transactions on
+   * both the undo and redo stacks causes no pruning of the stacks:
+   *
+   *******************************************************************/
+
+  printf("Test SetMaxTransactionCount() greater than num stack items ... ");
+
+  result = mgr->SetMaxTransactionCount(-1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(0) failed. (%d)\n", result);
+    return result;
+  }
+
+  // Push 20 transactions on the undo stack:
+
+  for (i = 1; i <= 20; i++) {
+    tximpl = factory->create(mgr, NONE_FLAG);
+
+    tx = 0;
+    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    if (NS_FAILED(result)) {
+      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
+             i, result);
+      return result;
+    }
+
+    result = mgr->Do(tx);
+    if (NS_FAILED(result)) {
+      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
+      return result;
+    }
+
+    tx->Release();
+
+    result = mgr->GetNumberOfUndoItems(&numitems);
+
+    if (NS_FAILED(result)) {
+      printf("ERROR: GetNumberOfUndoItems() on empty undo stack failed. (%d)\n",
+             result);
+      return result;
+    }
+
+    if (numitems != i) {
+      printf("ERROR: GetNumberOfUndoItems() expected 1 got %d. (%d)\n",
+             numitems, result);
+      return NS_ERROR_FAILURE;
+    }
+
+    result = mgr->GetNumberOfRedoItems(&numitems);
+
+    if (NS_FAILED(result)) {
+      printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
+             result);
+      return result;
+    }
+
+    if (numitems != 0) {
+      printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
+             numitems, result);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  for (i = 1; i <= 10; i++) {
+
+    result = mgr->Undo();
+    if (NS_FAILED(result)) {
+      printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
+      return result;
+    }
+  }
+  result = mgr->GetNumberOfUndoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfUndoItems() on empty undo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfRedoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfRedoItems() on redo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfRedoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  u1 = u2 = r1 = r2 = 0;
+
+  result = mgr->PeekUndoStack(&u1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->PeekRedoStack(&r1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->SetMaxTransactionCount(25);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransacitonCount(25) failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->PeekUndoStack(&u2);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  if (u1 != u2) {
+    printf("ERROR: Top of undo stack changed. (%d)\n", result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->PeekRedoStack(&r2);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  if (r1 != r2) {
+    printf("ERROR: Top of redo stack changed. (%d)\n", result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfUndoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfUndoItems() on undo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfRedoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfRedoItems() on redo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfRedoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
+   * Test undo stack pruning by setting the transaction
+   * manager's max transaction count to a number lower than the
+   * number of transactions on both the undo and redo stacks:
+   *
+   *******************************************************************/
+
+  printf("Test SetMaxTransactionCount() pruning undo stack ... ");
+
+  u1 = u2 = r1 = r2 = 0;
+
+  result = mgr->PeekUndoStack(&u1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->PeekRedoStack(&r1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->SetMaxTransactionCount(15);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransacitonCount(25) failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->PeekUndoStack(&u2);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  if (u1 != u2) {
+    printf("ERROR: Top of undo stack changed. (%d)\n", result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->PeekRedoStack(&r2);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  if (r1 != r2) {
+    printf("ERROR: Top of redo stack changed. (%d)\n", result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfUndoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfUndoItems() on undo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 5) {
+    printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfRedoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfRedoItems() on redo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfRedoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
+   * Test redo stack pruning by setting the transaction
+   * manager's max transaction count to a number lower than the
+   * number of transactions on both the undo and redo stacks:
+   *
+   *******************************************************************/
+
+  printf("Test SetMaxTransactionCount() pruning redo stack ... ");
+
+  u1 = u2 = r1 = r2 = 0;
+
+  result = mgr->PeekUndoStack(&u1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Initial PeekUndoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->PeekRedoStack(&r1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Initial PeekRedoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->SetMaxTransactionCount(5);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransacitonCount(25) failed. (%d)\n", result);
+    return result;
+  }
+
+  result = mgr->PeekUndoStack(&u2);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Second PeekUndoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  if (u1 == u2 || u2) {
+    printf("ERROR: Unexpected item at top of undo stack. (%d)\n", result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->PeekRedoStack(&r2);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: Second PeekRedoStack() failed. (%d)\n", result);
+    return result;
+  }
+
+  if (r1 != r2) {
+    printf("ERROR: Top of redo stack changed. (%d)\n", result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfUndoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfUndoItems() on empty undo stack failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 0) {
+    printf("ERROR: GetNumberOfUndoItems() expected 0 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfRedoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfRedoItems() on redo stack with 5 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 5) {
+    printf("ERROR: GetNumberOfRedoItems() expected 5 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  printf("passed\n");
+
+  /*******************************************************************
+   *
    * Release the transaction manager. Any transactions on the undo
    * and redo stack should automatically be released:
    *
    *******************************************************************/
 
-  // mgr->Write(&console);
-
   printf("Release the transaction manager ... ");
+
+  result = mgr->SetMaxTransactionCount(-1);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: SetMaxTransactionCount(0) failed. (%d)\n", result);
+    return result;
+  }
+
+  // Push 20 transactions on the undo stack:
+
+  for (i = 1; i <= 20; i++) {
+    tximpl = factory->create(mgr, NONE_FLAG);
+
+    tx = 0;
+    result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
+    if (NS_FAILED(result)) {
+      printf("ERROR: QueryInterface() failed for transaction %d. (%d)\n",
+             i, result);
+      return result;
+    }
+
+    result = mgr->Do(tx);
+    if (NS_FAILED(result)) {
+      printf("ERROR: Failed to execute transaction %d. (%d)\n", i, result);
+      return result;
+    }
+
+    tx->Release();
+
+    result = mgr->GetNumberOfUndoItems(&numitems);
+
+    if (NS_FAILED(result)) {
+      printf("ERROR: GetNumberOfUndoItems() on empty undo stack failed. (%d)\n",
+             result);
+      return result;
+    }
+
+    if (numitems != i) {
+      printf("ERROR: GetNumberOfUndoItems() expected 1 got %d. (%d)\n",
+             numitems, result);
+      return NS_ERROR_FAILURE;
+    }
+
+    result = mgr->GetNumberOfRedoItems(&numitems);
+
+    if (NS_FAILED(result)) {
+      printf("ERROR: GetNumberOfRedoItems() on empty redo stack failed. (%d)\n",
+             result);
+      return result;
+    }
+
+    if (numitems != 0) {
+      printf("ERROR: GetNumberOfRedoItems() expected 0 got %d. (%d)\n",
+             numitems, result);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  for (i = 1; i <= 10; i++) {
+
+    result = mgr->Undo();
+    if (NS_FAILED(result)) {
+      printf("ERROR: Failed to undo transaction %d. (%d)\n", i, result);
+      return result;
+    }
+  }
+  result = mgr->GetNumberOfUndoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfUndoItems() on empty undo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfUndoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
+
+  result = mgr->GetNumberOfRedoItems(&numitems);
+
+  if (NS_FAILED(result)) {
+    printf("ERROR: GetNumberOfRedoItems() on redo stack with 10 items failed. (%d)\n",
+           result);
+    return result;
+  }
+
+  if (numitems != 10) {
+    printf("ERROR: GetNumberOfRedoItems() expected 10 got %d. (%d)\n",
+           numitems, result);
+    return NS_ERROR_FAILURE;
+  }
 
   result = mgr->Release();
 
@@ -1799,6 +2469,7 @@ quick_test(TestTransactionFactory *factory)
   }
 
   printf("passed\n");
+  printf("%d transactions processed during quick test.\n", sConstructorCount);
 
   return NS_OK;
 }
@@ -1811,7 +2482,6 @@ simple_test()
    * Initialize globals for test.
    *
    *******************************************************************/
-
   reset_globals();
   sDestructorOrderArr = sSimpleTestDestructorOrderArr;
   sDoOrderArr         = sSimpleTestDoOrderArr;
@@ -1843,7 +2513,6 @@ aggregation_test()
    *******************************************************************/
 
   reset_globals();
-
   sDestructorOrderArr = sAggregateTestDestructorOrderArr;
   sDoOrderArr         = sAggregateTestDoOrderArr;
   sUndoOrderArr       = sAggregateTestUndoOrderArr;
@@ -2075,7 +2744,6 @@ main (int argc, char *argv[])
 
   if (NS_FAILED(result))
     return result;
-
   result = aggregation_test();
 
   if (NS_FAILED(result))
