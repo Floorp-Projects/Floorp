@@ -55,7 +55,7 @@
 
 NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
 
-nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mRow(nsnull)
+nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mRow(nsnull), mAlphaRow(nsnull)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -67,6 +67,9 @@ nsXBMDecoder::~nsXBMDecoder()
 
     if (mRow)
         delete[] mRow;
+
+    if (mAlphaRow)
+        delete[] mAlphaRow;
 }
 
 NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
@@ -101,6 +104,10 @@ NS_IMETHODIMP nsXBMDecoder::Close()
     if (mRow) {
         delete[] mRow;
         mRow = nsnull;
+    }
+    if (mAlphaRow) {
+        delete[] mAlphaRow;
+        mAlphaRow = nsnull;
     }
 
     return NS_OK;
@@ -157,8 +164,12 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
 
         PRUint32 bpr;
         mFrame->GetImageBytesPerRow(&bpr);
+        PRUint32 abpr;
+        mFrame->GetAlphaBytesPerRow(&abpr);
 
         mRow = new PRUint8[bpr];
+        memset(mRow, 0, bpr);
+        mAlphaRow = new PRUint8[abpr];
 
         mState = RECV_SEEK;
 
@@ -184,6 +195,8 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
 #endif
         PRUint32 bpr;
         mFrame->GetImageBytesPerRow(&bpr);
+        PRUint32 abpr;
+        mFrame->GetAlphaBytesPerRow(&abpr);
 
         do {
             PRUint32 pixel = strtoul(mPos, &endPtr, 0);
@@ -201,24 +214,16 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             }
             mPos = endPtr;
 
-            for (int i = 1; i <= 128; i <<= 1) {
-                // if bit is set, use black, else white
-                PRUint8 val = (pixel & i) ? 0 : 255;
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define DATA_OFFSET 1
-                mRow[mCurCol * bpp] = 0; // padding byte
-#else
-#define DATA_OFFSET 0
-#endif
-                for (int j = DATA_OFFSET; j < (DATA_OFFSET + 3); j++)
-                    mRow[mCurCol * bpp + j] = val;
-
-                mCurCol++;
-                if (mCurCol == mWidth)
-                    break;
+            mAlphaRow[mCurCol/8] = 0;
+            for (int i = 0; i < 8; i++) {
+                PRUint8 val = (pixel & (1 << i)) >> i;
+                mAlphaRow[mCurCol/8] |= val << (7 - i);
             }
+
+            mCurCol = PR_MIN(mCurCol + 8, mWidth);
             if (mCurCol == mWidth || mState == RECV_DONE) {
                     // Row finished. Set Data.
+                    mFrame->SetAlphaData(mAlphaRow, abpr, mCurRow * abpr);
                     mFrame->SetImageData(mRow, bpr, mCurRow * bpr);
                     nsRect r(0, (mCurRow + 1), mWidth, 1);
                     mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
