@@ -29,7 +29,6 @@
   align="vertical">
 
   <html:div style="width:100px;height:100px" flex="1">
-    <html:script src="bookmarks.js"/>
 
     <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
       <menu />
@@ -38,7 +37,7 @@
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
           style="height: 100%; width:100%;"
           datasources="rdf:bookmarks rdf:files rdf:ftp rdf:localsearch rdf:internetsearch" 
-          ondblclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
+          onclick="if (event.clickCount == 2) return top.OpenBookmarkURL(event.target.parentNode.parentNode, 'bookmarksTree');">
 
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">

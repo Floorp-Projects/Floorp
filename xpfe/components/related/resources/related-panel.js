@@ -104,10 +104,8 @@ function Init()
 
 
 
-function OnDblClick(treeitem, root)
+function openURL(treeitem, root)
 {
-    // Deal with a double-click
-
     // First, see if they're opening the related links node. If so,
     // we'll need to go out and fetch related links _now_.
     if (treeitem.getAttribute('id') == 'NC:RelatedLinks' &&
