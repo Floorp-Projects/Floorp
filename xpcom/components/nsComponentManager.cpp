@@ -217,6 +217,9 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
 {
     nsresult rv;
     nsXPIDLCString value;
+    nsCOMPtr<nsIServiceManager> serviceManager =
+        do_QueryInterface(mServiceManager);
+    // XXX Should we use the provided service manager?
     nsCOMPtr<nsICategoryManager> catman =
         do_GetService(kCategoryManagerCID, &rv);
     if (NS_FAILED(rv)) goto error;
@@ -233,8 +236,8 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
         rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
         goto error;
     }
-    if (mServiceManager) {
-        rv = mServiceManager->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
+    if (serviceManager) {
+        rv = serviceManager->GetServiceByContractID(value, aIID, (void**)aInstancePtr);
     } else {
         nsCOMPtr<nsIServiceManager> mgr;
         NS_GetServiceManager(getter_AddRefs(mgr));

@@ -150,8 +150,10 @@ nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsresult status = NS_ERROR_FAILURE;
-    if ( mServiceManager ) {
-        status = mServiceManager->GetService(mCID, aIID, (void**)aInstancePtr);
+    nsCOMPtr<nsIServiceManager> serviceManager =
+        do_QueryInterface(mServiceManager);
+    if ( serviceManager ) {
+        status = serviceManager->GetService(mCID, aIID, (void**)aInstancePtr);
     } else {
         nsCOMPtr<nsIServiceManager> mgr;
         NS_GetServiceManager(getter_AddRefs(mgr));
@@ -170,8 +172,10 @@ nsresult
 nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) const
 {
     nsresult status = NS_ERROR_FAILURE;
-    if ( mServiceManager ) {
-        status = mServiceManager->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
+    nsCOMPtr<nsIServiceManager> serviceManager =
+        do_QueryInterface(mServiceManager);
+    if ( serviceManager ) {
+        status = serviceManager->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
     } else {
         nsCOMPtr<nsIServiceManager> mgr;
         NS_GetServiceManager(getter_AddRefs(mgr));
