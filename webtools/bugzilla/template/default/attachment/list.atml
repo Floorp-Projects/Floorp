@@ -61,7 +61,11 @@
       </td>
 
       <td valign="top">
-        <a href="attachment.cgi?id=[% attachment.attachid %]&action=edit">Edit</a> 
+        [% IF attachment.canedit %]
+          <a href="attachment.cgi?id=[% attachment.attachid %]&action=edit">Edit</a>
+        [% ELSE %]
+          None
+        [% END %]
       </td>
     </tr>
   [% END %]

@@ -87,16 +87,16 @@ elsif ($action eq "insert")
 }
 elsif ($action eq "edit") 
 { 
+  quietly_check_login();
   validateID();
+  validateCanEdit($::FORM{'id'});
   edit(); 
 }
 elsif ($action eq "update") 
 { 
   confirm_login();
-  UserInGroup("editbugs")
-    || DisplayError("You are not authorized to edit attachments.")
-    && exit;
   validateID();
+  validateCanEdit($::FORM{'id'});
   validateDescription();
   validateIsPatch();
   validateContentType() unless $::FORM{'ispatch'};
@@ -133,6 +133,28 @@ sub validateID
   # Make sure the user is authorized to access this attachment's bug.
   my ($bugid) = FetchSQLData();
   ValidateBugID($bugid);
+}
+
+sub validateCanEdit
+{
+    my ($attach_id) = (@_);
+
+    # If the user is not logged in, claim that they can edit. This allows
+    # the edit scrren to be displayed to people who aren't logged in.
+    # People not logged in can't actually commit changes, because that code
+    # calls confirm_login, not quietly_check_login, before calling this sub
+    return if $::userid == 0;
+
+    # People in editbugs can edit all attachments
+    return if UserInGroup("editbugs");
+
+    # Bug 97729 - the submitter can edit their attachments
+    SendSQL("SELECT attach_id FROM attachments WHERE " .
+            "attach_id = $attach_id AND submitter_id = $::userid");
+
+    FetchSQLData()
+      || DisplayError("You are not authorised to edit attachment #$attach_id")
+      && exit;
 }
 
 sub validateDescription
@@ -278,15 +300,6 @@ sub validateFilename
 
 sub validateObsolete
 {
-  # When a user creates an attachment, they can request that one or more
-  # existing attachments be made obsolete.  This function makes sure they
-  # are authorized to make changes to attachments and that the IDs of the
-  # attachments they selected for obsoletion are all valid.
-  UserInGroup("editbugs")
-    || DisplayError("You must be authorized to make changes to attachments 
-         to make attachments obsolete when creating a new attachment.")
-      && exit;
-
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
@@ -305,9 +318,6 @@ sub validateObsolete
 
     my ($bugid, $isobsolete, $description) = FetchSQLData();
 
-    # Make sure the user is authorized to access this attachment's bug.
-    ValidateBugID($bugid);
-
     if ($bugid != $::FORM{'bugid'})
     {
       $description = html_quote($description);
@@ -323,6 +333,9 @@ sub validateObsolete
       DisplayError("Attachment #$attachid ($description) is already obsolete.");
       exit;
     }
+
+    # Check that the user can modify this attachment
+    validateCanEdit($attachid);
   }
 
 }
@@ -411,12 +424,16 @@ sub enter
 {
   # Display a form for entering a new attachment.
 
-  # Retrieve the attachments from the database and write them into an array
-  # of hashes where each hash represents one attachment.
+  # Retrieve the attachments the user can edit from the database and write
+  # them into an array of hashes where each hash represents one attachment.
+  my $canEdit = "";
+  if (!UserInGroup("editbugs")) {
+      $canEdit = "AND submitter_id = $::userid";
+  }
   SendSQL("SELECT attach_id, description 
            FROM attachments
            WHERE bug_id = $::FORM{'bugid'}
-           AND isobsolete = 0
+           AND isobsolete = 0 $canEdit
            ORDER BY attach_id");
   my @attachments; # the attachments array
   while ( MoreSQLData() ) {
@@ -516,9 +533,10 @@ sub insert
 
 sub edit
 {
-  # Edit an attachment record.  Users with "editbugs" privileges can edit the 
-  # attachment's description, content type, ispatch and isobsolete flags, and 
-  # statuses, and they can also submit a comment that appears in the bug.  
+  # Edit an attachment record.  Users with "editbugs" privileges, (or the 
+  # original attachment's submitter) can edit the attachment's description,
+  # content type, ispatch and isobsolete flags, and statuses, and they can
+  # also submit a comment that appears in the bug.
   # Users cannot edit the content of the attachment itself.
 
   # Retrieve the attachment from the database.

@@ -51,17 +51,21 @@ sub list
 
   my ($bugid) = @_;
 
+  my $in_editbugs = &::UserInGroup("editbugs");
 
   # Retrieve a list of attachments for this bug and write them into an array
   # of hashes in which each hash represents a single attachment.
   &::SendSQL("
-              SELECT attach_id, creation_ts, mimetype, description, ispatch, isobsolete 
+              SELECT attach_id, creation_ts, mimetype, description, ispatch, 
+               isobsolete, submitter_id 
               FROM attachments WHERE bug_id = $bugid ORDER BY attach_id
             ");
   my @attachments = ();
   while (&::MoreSQLData()) {
     my %a;
-    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}) = &::FetchSQLData();
+    my $submitter_id;
+    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'},
+     $a{'ispatch'}, $a{'isobsolete'}, $submitter_id) = &::FetchSQLData();
 
     # Format the attachment's creation/modification date into a standard
     # format (YYYY-MM-DD HH:MM)
@@ -86,6 +90,12 @@ sub list
     $a{'statuses'} = \@statuses;
     &::PopGlobalSQLState();
 
+    # We will display the edit link if the user can edit the attachment;
+    # ie the are the submitter, or they have canedit.
+    # Also show the link if the user is not logged in - in that cae,
+    # They'll be prompted later
+    $a{'canedit'} = ($::userid == 0 || $submitter_id == $::userid ||
+                     $in_editbugs);
     push @attachments, \%a;
   }
 
