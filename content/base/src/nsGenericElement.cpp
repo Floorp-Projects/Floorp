@@ -1397,7 +1397,15 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Find out if we're anonymous.
   nsCOMPtr<nsIContent> bindingParent;
-  GetBindingParent(getter_AddRefs(bindingParent));
+  if (*aDOMEvent) {
+    (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
+    if (content)
+      content->GetBindingParent(getter_AddRefs(bindingParent));
+  }
+  else
+    GetBindingParent(getter_AddRefs(bindingParent));
+
   if (bindingParent) {
     // We're anonymous.  We may potentially need to retarget
     // our event if our parent is in a different scope.
@@ -1409,7 +1417,26 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  if (retarget) {
+  // determine the parent:
+  nsCOMPtr<nsIContent> parent;
+  if (mDocument) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    if (bindingManager) {
+      // we have a binding manager -- do we have an anonymous parent?
+      bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
+    }
+  }
+  if (parent) {
+    retarget = PR_FALSE;
+  }
+  else {
+    // if we didn't find an anonymous parent, use the explicit one,
+    // whether it's null or not...
+    parent = mParent;
+  }
+
+  if (retarget || (parent.get() != mParent)) {
     if (!*aDOMEvent) {
       // We haven't made a DOMEvent yet.  Force making one now.
       nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -1434,20 +1461,21 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     PRBool hasOriginal;
     privateEvent->HasOriginalTarget(&hasOriginal);
 
-    if (!hasOriginal) {
+    if (!hasOriginal)
       privateEvent->SetOriginalTarget(oldTarget);
-    }
 
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mParent);
-    privateEvent->SetTarget(target);
+    if (retarget) {
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mParent);
+      privateEvent->SetTarget(target);
+    }
   }
 
   PRBool intermediateCapture = PR_FALSE;
   //Capturing stage evaluation
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
     //Initiate capturing phase.  Special case first call to document
-    if (mParent) {
-      mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    if (parent) {
+      parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
     else if (mDocument != nsnull) {
         ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
@@ -1483,12 +1511,12 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   //Bubbling stage
   if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument) {
-    if (mParent) {
+    if (parent) {
       /*
        * If there's a parent we pass the event to the parent...
        */
-      ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                    NS_EVENT_FLAG_BUBBLE, aEventStatus);
+      ret = parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                   NS_EVENT_FLAG_BUBBLE, aEventStatus);
     } else {
       /*
        * If there's no parent but there is a document (i.e. this is the
