@@ -24,9 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src
 
-ifdef BUILD_XPIDL
-DIRS += idl
-endif
+# Bug 4773. Removed for M4
+#ifdef BUILD_XPIDL
+#DIRS += idl
+#endif
 
 include $(topsrcdir)/config/config.mk
 
