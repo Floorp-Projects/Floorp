@@ -1,0 +1,37 @@
+#!/bin/sh
+# Script to invoke XMLterm from mozilla/dist/bin
+# (or from anywhere in the mozilla source tree)
+
+XMLTERM_CHROME="xmlterm.xul"
+MOZILLA_BIN="./mozilla-bin"
+
+MOZILLA_DIR=""
+
+if [ -d components -a -d res ]
+then
+        # Running from dist/bin
+	MOZILLA_DIR="./"
+else
+	# Running from source dir
+	if [ -f Makefile.in ]
+	then
+	     MOZILLA_DIR=`grep -w DEPTH Makefile.in  | grep -e "\.\." | tail -1 | awk -F"=" '{ print $2; }'`/dist/bin
+        else
+        # Running from elsewhere
+           MOZILLA_DIR="${MOZILLA_FIVE_HOME:?}"
+	fi
+fi
+
+echo cd $MOZILLA_DIR
+cd $MOZILLA_DIR
+
+if [ -f chrome/xmlterm/content/default/$XMLTERM_CHROME ]
+then
+    dummy=0
+else
+    echo "chrome://xmlterm/content/$XMLTERM_CHROME not found; error in installing XMLterm?"
+    exit 1
+fi
+
+echo ./run-mozilla.sh $MOZILLA_BIN -chrome "chrome://xmlterm/content/$XMLTERM_CHROME"
+./run-mozilla.sh $MOZILLA_BIN -chrome "chrome://xmlterm/content/$XMLTERM_CHROME"

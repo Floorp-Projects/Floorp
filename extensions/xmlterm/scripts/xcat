@@ -1,0 +1,168 @@
+#!/usr/bin/perl
+# xcat: an XMLterm wrapper for the UNIX "cat" command
+# Usage: xcat  [-h|help]
+
+use Cwd;
+use Getopt::Long;
+
+Getopt::Long::config('bundling');
+
+$options = "@ARGV";
+
+&GetOptions("help|h!");
+
+if ($opt_help) {
+    print STDERR "Usage: xcat <URL1> <URL2> ...\n";
+    exit;
+}
+
+my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
+
+my $dir = cwd();
+
+foreach my $url (@ARGV) {                 # for each argument
+    my ($protocol, $slashpair, $username, $host, $port, $pathname);
+
+    if ( $url =~ m%\b                             # initiator
+                 ([a-zA-Z]\w*)?:                  # protocol
+                 (//)?                            # slashpair
+                 (?:([\w.]+)@)?                   # username
+                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
+                 (?::(\d+))?                      # port
+                 (/\S*?)?                         # pathname
+                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
+                 %x ) {
+
+        ($protocol, $slashpair, $username, $host, $port, $pathname) =
+          ($1, $2, $3, $4, $5, $6);
+##        print STDERR "URL: protocol=$protocol, slashpair=$slashpair, username=$username, host=$host, port=$port, pathname=$pathname\n";
+
+    } else {
+        # Not an URL; assume it is a local file
+
+        # Prepend current working directory, if need be, to make full pathname
+        $url = $dir . "/" . $url if ($url and !($url =~ m%\A/%));
+
+##        print STDERR "Not an URL; assume local file $url\n";
+
+        ($protocol, $slashpair, $username, $host, $port, $pathname) =
+          ("file", "//", "", "", "", $url);
+
+    }
+
+    if (($protocol ne "http") && ($protocol ne "file")) {
+        print STDERR "xcat: Cannot handle URI protocol $protocol:\n";
+        next;
+    }
+
+    if ($protocol eq "file") {    # Local filename
+
+        if (!(-e $pathname)) {
+            print STDERR "xcat: File $pathname not found\n";
+            next;
+        }
+
+        if (!(-r $pathname)) {
+            print STDERR "xcat: Unable to read file $pathname\n";
+            next;
+        }
+
+        if (-d $pathname) {
+            print STDERR "xcat: Use the 'xls' command to list contents of directory $pathname\n";
+            next;
+        }
+    }
+
+    $pathname =~ m%\A(.*?) (\.[^/.]*)?\Z%x # Deconstruct pathname
+        or die "xcat: Internal error; unable to deconstruct pathname\n";
+
+    ($filename, $extension) = ($1, $2);
+
+##    print STDERR "Filename=$filename, extension=$extension\n";
+
+    if (($extension eq ".gif") || ($extension eq ".png")) {
+##        print STDERR "Image file\n";
+            
+        print "\e{S$cookie\a";             # HTML stream escape sequence
+        print "<IMG SRC='$protocol://${host}$pathname'>";
+        print "\000";                      # Terminate HTML stream
+
+    } elsif (($protocol eq "http") || ($extension eq ".htm")
+                                   || ($extension eq ".html")) {
+        print STDERR "Web/HTML file (unable to display due to IFRAME bug)\n";
+
+    } elsif (($protocol eq "file") && ($extension eq ".url")) {
+        # URL
+        open INFILE, $pathname or next;
+        $_ = <INFILE>;
+        close INFILE;
+
+        my @urlvals;
+        my $nurl = 0;
+        while ( m%\b                              # initiator
+                 (http|file|mailto):              # protocol
+                 (//)?                            # slashpair
+                 (?:([\w.]+)@)?                   # username
+                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
+                 (?::(\d+))?                      # port
+                 (/\S*?)?                         # pathname
+                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
+                 %x ) {
+            $urlvals[$nurl] = $&;
+            s%$&%%;
+            $nurl++;
+        }
+        s%\A\s*(\S.*?)?\s*\Z%$1%;
+
+        if ($nurl >= 1) {
+            my $urldesc = $_;
+            my $urlstr = $urlvals[0];
+            $urldesc = $urlstr if !$urldesc;
+
+            my $clickcmd =
+                 qq%onclick="return clickXMLTerm('textlink',-#,'$urlstr')"%;
+
+            print "\e{S$cookie\a";             # HTML stream escape sequence
+            if ($nurl >= 2) {
+                print "<img src='$urlvals[1]' $clickcmd><br>";
+            }
+            print "<div class='textlink' $clickcmd')\">$urldesc</div>";
+            print "\000";                      # Terminate HTML stream
+        }
+
+    } elsif ((-T $pathname) || ($extension eq "txt")) {  # plain text file
+##        print STDERR "Text file\n";
+
+        open INFILE, $pathname or next;
+        print "\e{S$cookie\a";             # HTML stream escape sequence
+        print "<pre>";
+
+        while (<INFILE>) {
+            s/&/&amp;/g;
+            s/</&lt;/g;
+            s/>/"&gt;"/g;
+                s%\b                              # initiator
+                 ([a-zA-Z]\w*)?:                  # protocol
+                 (//)?                            # slashpair
+                 (?:([\w.]+)@)?                   # username
+                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
+                 (?::(\d+))?                      # port
+                 (/\S*?)?                         # pathname
+                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
+                 %<span class="textlink" onClick="return clickXMLTerm('textlink',-1,'$&')">$&</span>%xg;
+                s/"&gt;"/&gt;/g;
+
+            print $_;
+        }
+
+        print "</pre>";
+        print "\000";                      # Terminate HTML stream
+        close INFILE;
+
+    } else {                            # unknown file type
+        print STDERR "xcat: File type unknown for $pathname\n";
+        next;
+    }
+}
+
+

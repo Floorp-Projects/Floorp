@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+# xls: an XMLterm wrapper for the UNIX "ls" command
+# Usage: xls  [-c|--cols] [-h|help] [-i||--iconic] [-w|--window]
+
+use Cwd;
+use Getopt::Long;
+
+Getopt::Long::config('bundling');
+
+my $options = "@ARGV";
+
+&GetOptions("cols|c=i", "help|h!", "iconic|i!", "window|w!");
+
+if ($opt_help) {
+    print "Usage: xls [-c|--cols] [-i|--iconic] [-w|--window]\n";
+    exit;
+}
+
+# Icon details
+#my $imgdir="chrome://xmlterm/skin/default/images"
+my $imgdir = "file:/usr/share/pixmaps/mc";
+
+my %img;
+($img{'directory'}, $img{'executable'}, $img{'plainfile'}) =
+    ('i-directory.png', 'i-executable.png', 'i-regular.png');
+
+my $ncols = 5;
+$ncols = $opt_cols if ($opt_cols);
+
+my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
+print "\e{S$cookie\a";                     # HTML stream escape sequence
+print "<TABLE FRAME=none BORDER=0>";
+print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
+
+my $dir = cwd();
+my $rowimg = "";
+my $rowtxt = "";
+my $nfile = 0;
+foreach $file (glob("*")) {        # for each file in current directory
+    $file =~ m%\A(.*?) (\.[^/.]*)?\Z%x # Deconstruct file name
+        or die "xls: Internal error; unable to deconstruct file name\n";
+
+    my ($filename, $extension) = ($1, $2);
+
+    my $sendcmd;
+    if ($opt_window) {
+        $sendcmd = "createln";
+    } else {
+        $sendcmd = "sendln";
+    }
+
+    my ($filetype, $fileimg, $sendtxt1, $sendtxt2);
+
+    if (-d $file) {                     # directory
+        $filetype = "directory";
+        $fileimg  = "$imgdir/$img{$filetype}";
+        $sendtxt1  = "cd $dir/$file; xls $options";
+        $sendtxt2  = "cd $file; xls $options";
+
+    } elsif (-x $file) {                # executable
+        $filetype = "executable";
+        $fileimg  = "$imgdir/$img{$filetype}";
+        $sendtxt1 = "$dir/$file";
+        $sendtxt2 = "./$file";
+
+    } elsif (($extension eq ".gif") || ($extension eq ".png")) {  # image
+        $filetype = "imagefile";
+        $fileimg  = $file;
+        $sendtxt1 = "xcat $dir/$file";
+        $sendtxt2 = "xcat $file";
+
+    } elsif ($extension eq ".url") {  # URL
+        open INFILE, $file or next;
+        $_ = <INFILE>;
+        close INFILE;
+
+        my @urlvals;
+        my $nurl = 0;
+        while ( m%\b                              # initiator
+                 (http|file|mailto):              # scheme
+                 (//)?                            # slashpair
+                 (?:([\w.]+)@)?                   # username
+                 ([\w\-]+(?:\.[\w\-]+)*)?         # host
+                 (?::(\d+))?                      # port
+                 (/\S*?)?                         # pathname
+                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # terminator (look ahead)
+                 %x ) {
+            $urlvals[$nurl] = $&;
+            s%$&%%;
+            $nurl++;
+        }
+        s%\A\s*(\S.*?)?\s*\Z%$1%;
+
+        if ($nurl >= 1) {
+            my $urldesc = $_;
+            my $urlstr = $urlvals[0];
+            $urldesc = $urlstr if !$urldesc;
+
+            $sendcmd = "textlink";               # override send command
+            
+            $filetype = "urlfile";
+            if ($nurl >= 2) {
+                $fileimg  = "$urlvals[1]";
+            } else {
+                $fileimg  = "$imgdir/$img{$filetype}";
+            }
+            $sendtxt1 = "$urlstr";
+            $sendtxt2 = "$urlstr";
+        } else {
+            $filetype = "plainfile";
+            $fileimg  = "$imgdir/$img{$filetype}";
+            $sendtxt1 = "xcat $dir/$file";
+            $sendtxt2 = "xcat $file";
+        }
+
+    } else {                            # plain file
+        $filetype = "plainfile";
+        $fileimg  = "$imgdir/$img{$filetype}";
+        $sendtxt1 = "xcat $dir/$file";
+        $sendtxt2 = "xcat $file";
+    }
+
+    my @comps = split(m./.,$file);
+    my $tail = $comps[$#comps];            # file name
+
+    my $clickcmd =
+     qq%onclick="return clickXMLTerm('$sendcmd',-\#,'$sendtxt1','$sendtxt2')"%;
+
+    $rowimg .= "<TD><IMG HEIGHT=48 WIDTH=48 SRC='$fileimg' $clickcmd>";
+    $rowtxt .= "<TD><SPAN CLASS='$filetype' $clickcmd>";
+    $rowtxt .= "$tail</SPAN>";
+    $nfile++;
+
+    if (($nfile % $ncols) == 0) {       # print complete table row
+        print "<TR>$rowimg" if ($opt_iconic) ;
+        print "<TR>$rowtxt";
+        $rowimg = "";
+        $rowtxt = "";
+    }
+
+}
+
+if ($rowtxt) {
+    print "<TR>$rowimg" if ($opt_iconic) ;
+    print "<TR>$rowtxt";
+}
+
+print "</TABLE>";
+print "\000";                           # Terminate HTML stream
+
