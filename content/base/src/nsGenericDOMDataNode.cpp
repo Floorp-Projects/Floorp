@@ -413,7 +413,7 @@ nsGenericDOMDataNode::ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
 
   // sanitize arguments
   PRUint32 textLength = mText.GetLength();
-  if ((aOffset > textLength) || (aOffset < 0) || (aCount < 0)) {
+  if (aOffset > textLength) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
