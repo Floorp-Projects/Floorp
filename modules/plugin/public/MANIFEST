@@ -21,9 +21,11 @@
 
 nsIFileUtilities.h
 nsIJRILiveConnectPlugin.h
-nsIJRILiveConnectPluginInstancePeer.h
+#//nsIJRILiveConnectPluginInstancePeer.h
+nsIJRILiveConnectPlugInstPeer.h
 nsILiveConnectPlugin.h
-nsILiveConnectPluginInstancePeer.h
+#//nsILiveConnectPluginInstancePeer.h
+nsILiveConnectPlugInstPeer.h
 nsIPlugin.h
 nsIPluginInstance.h
 nsIPluginInstancePeer.h
@@ -36,6 +38,7 @@ nsIPluginStreamPeer2.h
 nsIPluginTagInfo.h
 nsIPluginTagInfo2.h
 nsISeekablePluginStreamPeer.h
-nsIWindowlessPluginInstancePeer.h
+#//nsIWindowlessPluginInstancePeer.h
+nsIWindowlessPlugInstPeer.h
 nsplugin.h
 nsplugindefs.h
