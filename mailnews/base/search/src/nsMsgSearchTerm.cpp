@@ -1202,7 +1202,7 @@ nsresult nsMsgSearchScopeTerm::TimeSlice (PRBool *aDone)
 
 nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsMsgSearchTermArray &termList)
 {
-	NS_ASSERTION (m_adapter == NULL, "already initialized");
+	NS_ASSERTION (m_adapter == nsnull, "already initialized");
 	nsresult err = NS_OK;
 
 	// mscott: i have added m_searchServer into this switch to take into account the user's preference

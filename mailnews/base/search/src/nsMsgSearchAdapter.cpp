@@ -116,7 +116,7 @@ NS_IMETHODIMP nsMsgSearchAdapter::GetEncoding (char **encoding)
 
 
 char *
-nsMsgSearchAdapter::TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, XP_Bool useMime2)
+nsMsgSearchAdapter::TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, PRBool useMime2)
 {
 	char *result = NULL;
 
