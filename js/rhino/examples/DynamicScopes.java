@@ -52,9 +52,9 @@ public class DynamicScopes {
      * sharedScope
      * sharedScope
      * sharedScope
-     * a
-     * b
-     * c
+     * thread0
+     * thread1
+     * thread2
      * </pre>
      * The final three lines may be permuted in any order depending on
      * thread scheduling.
@@ -109,12 +109,23 @@ public class DynamicScopes {
         // the 'x' from the per-thread scope will be used. Otherwise, the 'x'
         // from the shared scope will be used. The 'x' defined in 'g' (which
         // calls 'f') should not be seen by 'f'.
-        String[] s = { "a", "b", "c" };
-        for (int i=0; i < 3; i++) {
+        final int threadCount = 3;
+        Thread[] t = new Thread[threadCount];
+        for (int i=0; i < threadCount; i++) {
             String script = "function g() { var x = 'local'; return f(); }" +
                             "java.lang.System.out.println(g());";
-            Thread thread = new Thread(new PerThread(scope, script, s[i]));
-            thread.start();
+            t[i] = new Thread(new PerThread(scope, script, 
+                                            "thread" + i));
+        }
+        for (int i=0; i < threadCount; i++)
+            t[i].start();
+        // Don't return in this thread until all the spawned threads have 
+        // completed.
+        for (int i=0; i < threadCount; i++) {
+            try {
+                t[i].join();
+            } catch (InterruptedException e) {
+            }
         }
     }
     
