@@ -462,8 +462,10 @@ function MsgGetMessagesForAccount(aEvent)
 // if offline, prompt for getNextNMessages
 function MsgGetNextNMessages()
 {
+  var folder;
+  
   if(CheckOnline()) {
-    var folder = GetFirstSelectedMsgFolder();
+    folder = GetFirstSelectedMsgFolder();
     if(folder) 
       GetNextNMessages(folder);
   }
@@ -475,7 +477,7 @@ function MsgGetNextNMessages()
       gOfflineManager.goOnline(false /* sendUnsentMessages */, 
                                false /* playbackOfflineImapOperations */, 
                                msgWindow);
-      var folder = GetFirstSelectedMsgFolder();
+      folder = GetFirstSelectedMsgFolder();
       if(folder) {
         GetNextNMessages(folder);
       }
