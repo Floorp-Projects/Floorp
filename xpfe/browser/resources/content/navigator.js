@@ -783,52 +783,21 @@ function BrowserFind()
   if (!focusedWindow || focusedWindow == window)
     focusedWindow = window._content;
 
-  var findInst = getBrowser().webBrowserFind;
-  // set up the find to search the focussedWindow, bounded by the content window.
-  var findInFrames = findInst.QueryInterface(Components.interfaces.nsIWebBrowserFindInFrames);
-  findInFrames.rootSearchFrame = window._content;
-  findInFrames.currentSearchFrame = focusedWindow;
-
-  // always search in frames for now. We could add a checkbox to the dialog for this.
-  findInst.searchFrames = true;
-  
-  // is the dialog up already?
-  if (window.findDialog)
-    window.findDialog.focus();
-  else
-    window.findDialog = window.openDialog("chrome://global/content/finddialog.xul", "Find on Page", "chrome,resizable=no,dependent=yes", findInst);
+  findInPage(getBrowser(), window._content, focusedWindow)
 }
 
 function BrowserFindAgain()
 {
-  if (window.findDialog)
-    window.findDialog.focus();
-  else
-  {
-    // since the page may have been reloaded, reset stuff
     var focusedWindow = document.commandDispatcher.focusedWindow;
     if (!focusedWindow || focusedWindow == window)
       focusedWindow = window._content;
 
-    var findInst = getBrowser().webBrowserFind;
-    // set up the find to search the focussedWindow, bounded by the content window.
-    var findInFrames = findInst.QueryInterface(Components.interfaces.nsIWebBrowserFindInFrames);
-    findInFrames.rootSearchFrame = window._content;
-    findInFrames.currentSearchFrame = focusedWindow;
-
-    // always search in frames for now. We could add a checkbox to the dialog for this.
-    findInst.searchFrames = true;
-
-    var found = findInst.findNext();
-  }
+  findAgainInPage(getBrowser(), window._content, focusedWindow)
 }
 
 function BrowserCanFindAgain()
 {
-    var findInst = getBrowser().webBrowserFind;
-    var findString = findInst.searchString;
-    
-    return (findString.length > 0);
+  return canFindAgainInPage();
 }
 
 function loadURI(uri)
