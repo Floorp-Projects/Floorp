@@ -170,6 +170,7 @@ viewer:chrome:platformHTMLBindings.xml
 viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
 viewer:chrome:autocomplete.xml
+viewer:chrome:radioBindings.xml
 viewer:chrome:menulistBindings.xml
 
 viewer:defaults:pref:all.js 

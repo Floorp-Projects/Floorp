@@ -185,6 +185,7 @@ bin\chrome\skins\*
 bin\chrome\autocomplete.xml
 bin\chrome\htmlBindings.xml
 bin\chrome\menulistBindings.xml
+bin\chrome\radioBindings.xml
 bin\chrome\platformHTMLBindings.xml
 bin\chrome\xul.css
 bin\chrome\xulBindings.xml
