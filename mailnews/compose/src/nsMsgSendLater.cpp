@@ -113,6 +113,8 @@ nsMsgSendLater::nsMsgSendLater()
   m_flagsPosition = 0;
   m_headersSize = 0;
 
+  mIdentityKey = nsnull;
+
   mRequestReturnReceipt = PR_FALSE;
   NS_INIT_REFCNT();
 }
@@ -128,6 +130,7 @@ nsMsgSendLater::~nsMsgSendLater()
   PR_FREEIF(m_newshost);
   PR_FREEIF(m_headers);
   PR_FREEIF(mLeftoverBuffer);
+  PR_FREEIF(mIdentityKey);
 
   NS_IF_RELEASE(mSendListener);
   NS_IF_RELEASE(mIdentity);
@@ -153,6 +156,9 @@ nsMsgSendLater::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult s
   //
   if (NS_SUCCEEDED(status))
   {
+    // Now, so some analysis on the identity for this particular message!
+    DealWithTheIdentityMojo(nsnull, PR_TRUE);
+
     // Message is done...send it!
     rv = CompleteMailFileSend();
 
@@ -620,7 +626,7 @@ nsMsgSendLater::StartNextMailFileSend()
   Release();
 
 	if (NS_FAILED(rv))
-    return rv;    
+    return rv;
 
   return NS_OK;
 }
@@ -628,10 +634,20 @@ nsMsgSendLater::StartNextMailFileSend()
 nsresult 
 nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
 {
-  char            *uri = nsnull;
-  nsresult rv;
+  char        *uri = nsnull;
+  nsresult    rv;
 
-  uri = GetFolderURIFromUserPrefs(nsMsgQueueForLater, userIdentity);
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_FAILED(rv) || !prefs) 
+    return nsnull;
+
+  rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
+  if (NS_FAILED(rv) || !uri) 
+    uri = PR_smprintf("%s", ANY_SERVER);
+
+  if (!uri)
+    return NS_ERROR_FAILURE;
+
   rv = LocateMessageFolder(userIdentity, nsMsgQueueForLater, uri, folder);
   PR_FREEIF(uri);
   return rv;
@@ -666,11 +682,7 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
 {
   nsresult rv;
 
-  if (!identity)
-    return NS_ERROR_INVALID_ARG;
-
-  mIdentity = identity;
-  NS_ADDREF(mIdentity);
+  DealWithTheIdentityMojo(identity, PR_FALSE);
 
   // Set the listener array 
   if (listenerArray)
@@ -679,7 +691,7 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
   rv = GetUnsentMessagesFolder(mIdentity, getter_AddRefs(mMessageFolder));
   if (NS_FAILED(rv) || !mMessageFolder)
   {
-    NS_RELEASE(mIdentity);
+    NS_IF_RELEASE(mIdentity);
     mIdentity = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -688,7 +700,7 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
   nsresult ret = mMessageFolder->GetMessages(nsnull, &mEnumerator);
 	if (NS_FAILED(ret) || (!mEnumerator))
   {
-    NS_RELEASE(mIdentity);
+    NS_IF_RELEASE(mIdentity);
     mIdentity = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -815,6 +827,11 @@ nsMsgSendLater::BuildHeaders()
         {
           prune_p = PR_TRUE;
           header = &m_newshost;
+        }
+        else if (!PL_strncasecmp(HEADER_X_MOZILLA_IDENTITY_KEY, buf, end - buf))
+        {
+          prune_p = PR_TRUE;
+          header = &mIdentityKey;
         }
         break;
       }
@@ -1204,3 +1221,96 @@ nsMsgSendLater::NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *
   return NS_OK;
 }
 
+nsresult
+nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity, 
+                                        PRBool          aSearchHeadersOnly)
+{
+  //
+  // Ok, here's the deal. This is the part where we need to determine the identity
+  // to use for this particular email message since we should observer that setting.
+  // If this comes up snake-eyes, then we should fall back to a default identity, BUT
+  // if aSearchHeadersOnly is TRUE, then we should ONLY look for the header identity
+  //
+  nsIMsgIdentity  *tIdentity = nsnull;
+  nsresult        rv;
+
+  if (mIdentityKey)
+  {
+    // get the account manager
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    nsCOMPtr<nsIMsgAccount>     defAcc = nsnull;
+    if (NS_SUCCEEDED(accountManager->GetDefaultAccount( getter_AddRefs(defAcc) )) && defAcc)
+    {
+      nsCOMPtr<nsISupportsArray> identities;
+      if (NS_SUCCEEDED(defAcc->GetIdentities(getter_AddRefs(identities))))
+      {
+        nsIMsgIdentity    *lookupIdentity = nsnull;
+        PRUint32          count = 0;
+        char              *tName = nsnull;
+
+        identities->Count(&count);
+        for (PRUint32 i=0; i < count; i++)
+        {
+          rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                    (void **)&lookupIdentity);
+          if (NS_FAILED(rv))
+            continue;
+
+          lookupIdentity->GetKey(&tName);
+          if (!nsCRT::strcasecmp(mIdentityKey, tName))
+          {
+            PR_FREEIF(tName);
+            NS_IF_RELEASE(mIdentity);
+            mIdentity = lookupIdentity;
+            NS_IF_ADDREF(mIdentity);
+            return NS_OK;
+          }
+          else
+          {
+            PR_FREEIF(tName);
+          }
+        }
+      }
+    }
+  }
+
+  // At this point, if we are only looking for something in the email headers, 
+  // we should just bail
+  //
+  if (aSearchHeadersOnly)
+    return NS_OK;
+
+  // Ok, the sucker is still null, assign the identity arg
+  // to the temp variable.
+  if ( (!tIdentity) && (!identity) )
+  {
+    // get the account manager
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+      return rv;
+
+    nsCOMPtr<nsIMsgAccount>     defAcc = nsnull;
+    if (NS_SUCCEEDED(accountManager->GetDefaultAccount( getter_AddRefs(defAcc) )) && defAcc)
+    {
+      if (NS_FAILED(defAcc->GetDefaultIdentity(&tIdentity)))
+        return NS_ERROR_INVALID_ARG;
+    }
+  }
+  else
+  {
+    tIdentity = identity;
+  }
+
+  if (!tIdentity)
+    return NS_ERROR_INVALID_ARG;
+
+  // Now setup and addref the identity
+  NS_IF_RELEASE(mIdentity);
+  mIdentity = tIdentity;
+  NS_IF_ADDREF(mIdentity);
+
+  return NS_OK;
+}

@@ -286,7 +286,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 
   if (!msgFolder) return NS_ERROR_NULL_POINTER;
 
-  if (!userIdentity || !aFolderURI || (PL_strlen(aFolderURI) == 0)) {
+  if (!aFolderURI || (PL_strlen(aFolderURI) == 0)) {
     return NS_ERROR_INVALID_ARG;
   }
   
@@ -325,7 +325,10 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   else {
     PRUint32                  cnt = 0;
     PRUint32                  i;
-    
+
+    if (!userIdentity)
+      return NS_ERROR_INVALID_ARG;
+
     // get the account manager
     NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
                     NS_MSGACCOUNTMANAGER_PROGID, &rv);

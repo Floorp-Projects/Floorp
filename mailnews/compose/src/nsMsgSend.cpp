@@ -67,6 +67,7 @@
 #include "nsIWebShell.h"
 #include "nsINetPrompt.h"
 #include "nsIAppShellService.h"
+#include "nsMailHeaders.h"
 
 // This will go away once select is passed a prompter interface
 #include "nsAppShellCIDs.h" // TODO remove later
@@ -3881,6 +3882,30 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
       goto FAIL;
     }
 	}
+
+  //
+  // Ok, now I want to get the identity key and write it out if this is for a
+  // nsMsgQueueForLater operation!
+  //
+  if ( (mode == nsMsgQueueForLater) && (mUserIdentity) )
+  {
+    char    *key = nsnull;
+
+    if (NS_SUCCEEDED(mUserIdentity->GetKey(&key)) && (key))
+    {
+      char *tmpLine = PR_smprintf(HEADER_X_MOZILLA_IDENTITY_KEY ": %s" CRLF, key);
+      if (tmpLine)
+      {
+        PRInt32 len = nsCRT::strlen(tmpLine);
+        n = tempOutfile.write(tmpLine, len);
+        if (n != len)
+        {
+          status = NS_ERROR_FAILURE;
+          goto FAIL;
+        }
+      }
+    }
+  }
 
   if (bcc_header && *bcc_header
 #ifndef SAVE_BCC_IN_FCC_FILE

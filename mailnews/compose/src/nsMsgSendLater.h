@@ -120,6 +120,9 @@ public:
  
   // Private Information
 private:
+  NS_IMETHOD                DealWithTheIdentityMojo(nsIMsgIdentity *identity,
+                                                    PRBool         aSearchHeadersOnly);
+
   nsIMsgSendLaterListener   **mListenerArray;
   PRInt32                   mListenerArrayCount;
 
@@ -154,6 +157,7 @@ private:
   PRInt32                   m_headersSize;
   char                      *mLeftoverBuffer;
   PRBool                    mRequestReturnReceipt;
+  char                      *mIdentityKey;
 };
 
 
