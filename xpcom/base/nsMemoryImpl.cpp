@@ -77,11 +77,13 @@ protected:
     PRCondVar*     mCVar;
     
     MemoryFlusher(nsMemoryImpl* aMemoryImpl);
-    virtual ~MemoryFlusher();
 
     enum {
         kInitialTimeout = 60 /*seconds*/
     };
+
+private:
+    ~MemoryFlusher();
 
 public:
     /**

@@ -52,7 +52,7 @@
             mLock = PR_NewLock();
         }
 
-        virtual ~Foo(void) {
+        ~Foo(void) {
             PR_DestroyLock(mLock);
         }
 

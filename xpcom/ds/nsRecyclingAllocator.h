@@ -202,6 +202,7 @@ public:
     {
     }
 
-    virtual ~nsRecyclingAllocatorImpl() {}
+private:
+    ~nsRecyclingAllocatorImpl() {}
 };
 #endif // nsRecyclingAllocator_h__

@@ -61,8 +61,8 @@ public:
    NS_DECL_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
-protected:
-   virtual              ~nsGREDirServiceProvider() { }
+private:
+   ~nsGREDirServiceProvider() { }
 };
 
 #endif // nsGREDirServiceProvider.h

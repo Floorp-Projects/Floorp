@@ -54,7 +54,7 @@ EmptyEnumeratorImpl::EmptyEnumeratorImpl(void)
     MOZ_COUNT_CTOR(EmptyEnumeratorImpl);
 }
 
-/* virtual */ EmptyEnumeratorImpl::~EmptyEnumeratorImpl(void)
+EmptyEnumeratorImpl::~EmptyEnumeratorImpl(void)
 {
     MOZ_COUNT_DTOR(EmptyEnumeratorImpl);
 }

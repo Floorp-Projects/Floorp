@@ -59,7 +59,9 @@ public:
     nsSimpleArrayEnumerator(nsIArray* aValueArray) :
         mValueArray(aValueArray), mIndex(0) {
     }
-    virtual ~nsSimpleArrayEnumerator(void) {}
+
+private:
+    ~nsSimpleArrayEnumerator() {}
 
 protected:
     nsCOMPtr<nsIArray> mValueArray;

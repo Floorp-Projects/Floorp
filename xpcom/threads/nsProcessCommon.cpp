@@ -59,10 +59,6 @@ nsProcess::nsProcess():mExitValue(-1),
 {
 }
 
-nsProcess::~nsProcess()
-{
-}
-
 NS_IMETHODIMP
 nsProcess::Init(nsIFile* executable)
 {

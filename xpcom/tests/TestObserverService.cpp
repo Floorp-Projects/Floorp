@@ -71,10 +71,13 @@ public:
     TestObserver( const nsAString &name )
         : mName( name ) {
     }
-    virtual ~TestObserver() {}
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
+
     nsString mName;
+
+private:
+    ~TestObserver() {}
 };
 
 NS_IMPL_ISUPPORTS2( TestObserver, nsIObserver, nsISupportsWeakReference )

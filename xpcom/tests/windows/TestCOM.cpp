@@ -67,13 +67,15 @@ class nsTestCom: public nsITestCom {
 public:
   nsTestCom() {
   }
-  virtual ~nsTestCom() {
-    cout << "nsTestCom instance successfully deleted\n";
-  }
 
   NS_IMETHOD Test() {
     cout << "Accessed nsITestCom::Test() from COM\n";
     return NS_OK;
+  }
+
+private:
+  ~nsTestCom() {
+    cout << "nsTestCom instance successfully deleted\n";
   }
 };
 

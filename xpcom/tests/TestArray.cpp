@@ -60,7 +60,6 @@ class Foo : public IFoo {
 public:
 
   Foo(PRInt32 aID);
-  virtual ~Foo();
 
   // nsISupports implementation
   NS_DECL_ISUPPORTS
@@ -69,8 +68,12 @@ public:
   NS_IMETHOD_(nsrefcnt) RefCnt() { return mRefCnt; }
   NS_IMETHOD_(PRInt32) ID() { return mID; }
 
-  PRInt32 mID;
   static PRInt32 gCount;
+
+  PRInt32 mID;
+
+private:
+  ~Foo();
 };
 
 PRInt32 Foo::gCount;

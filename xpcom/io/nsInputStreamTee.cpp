@@ -49,9 +49,10 @@ public:
     NS_DECL_NSIINPUTSTREAMTEE
 
     nsInputStreamTee();
-    virtual ~nsInputStreamTee();
 
 private:
+    ~nsInputStreamTee() {}
+
     nsresult TeeSegment(const char *buf, PRUint32 count);
 
     static NS_METHOD WriteSegmentFun(nsIInputStream *, void *, const char *,
@@ -65,10 +66,6 @@ private:
 };
 
 nsInputStreamTee::nsInputStreamTee()
-{
-}
-
-nsInputStreamTee::~nsInputStreamTee()
 {
 }
 

@@ -1958,12 +1958,13 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     xptiAdditionalManagersEnumerator();
-    virtual ~xptiAdditionalManagersEnumerator() {}
 
     PRBool SizeTo(PRUint32 likelyCount) {return mArray.SizeTo(likelyCount);}
     PRBool AppendElement(nsIInterfaceInfoManager* element);
 
 private:
+    ~xptiAdditionalManagersEnumerator() {}
+
     nsSupportsArray mArray;
     PRUint32        mIndex;
     PRUint32        mCount;

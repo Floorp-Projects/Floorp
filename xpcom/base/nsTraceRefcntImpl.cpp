@@ -1110,11 +1110,6 @@ nsTraceRefcntImpl::nsTraceRefcntImpl()
   /* member initializers and constructor code */
 }
 
-nsTraceRefcntImpl::~nsTraceRefcntImpl()
-{
-  /* destructor code */
-}
-
 NS_IMETHODIMP 
 nsTraceRefcntImpl::LogAddRef(void* aPtr,
                              nsrefcnt aRefcnt,

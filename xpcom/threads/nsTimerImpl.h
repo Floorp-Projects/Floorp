@@ -85,7 +85,6 @@ class nsTimerImpl : public nsITimer, public nsITimerInternal
 public:
 
   nsTimerImpl();
-  virtual ~nsTimerImpl();
 
   static void Shutdown();
 
@@ -102,6 +101,8 @@ public:
   PRInt32 GetGeneration() { return mGeneration; }
 
 private:
+  ~nsTimerImpl();
+
   nsresult InitCommon(PRUint32 aType, PRUint32 aDelay);
 
   void ReleaseCallback()
@@ -172,13 +173,14 @@ class nsTimerManager : nsITimerManager
 {
 public:
   nsTimerManager();
-  virtual ~nsTimerManager();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERMANAGER
 
   nsresult AddIdleTimer(nsITimer* timer);
 private:
+  ~nsTimerManager();
+
   PRLock *mLock;
   nsVoidArray mIdleTimers;
 };

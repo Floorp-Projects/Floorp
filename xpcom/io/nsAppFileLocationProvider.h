@@ -40,9 +40,10 @@ public:
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
-protected:
-   virtual              ~nsAppFileLocationProvider();
+private:
+                        ~nsAppFileLocationProvider() {}
 
+protected:
    NS_METHOD            CloneMozBinDirectory(nsILocalFile **aLocalFile);   
    NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
    NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);

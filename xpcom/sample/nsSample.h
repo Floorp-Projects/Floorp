@@ -64,7 +64,6 @@ class nsSampleImpl : public nsISample
 {
 public:
     nsSampleImpl();
-    virtual ~nsSampleImpl();
 
     /**
      * This macro expands into a declaration of the nsISupports interface.
@@ -124,5 +123,7 @@ public:
     /* NS_IMETHOD Poke(const char* aValue); */
 
 private:
+    ~nsSampleImpl();
+
     char* mValue;
 };

@@ -149,11 +149,12 @@ public:
         PR_AtomicIncrement(&gNum);
     }
 
-    virtual ~nsStressRunner() {
+    static PRInt32 GetGlobalCount() {return gNum;}
+
+private:
+    ~nsStressRunner() {
         NS_ASSERTION(mWasRun, "never run!");
     }
-
-    static PRInt32 GetGlobalCount() {return gNum;}
 
 protected:
     static PRInt32 gNum;

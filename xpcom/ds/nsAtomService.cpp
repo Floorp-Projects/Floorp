@@ -44,10 +44,6 @@ nsAtomService::nsAtomService()
 {
 }
 
-nsAtomService::~nsAtomService()
-{}
-
-
 nsresult
 nsAtomService::GetAtom(const PRUnichar *aString, nsIAtom ** aResult)
 {

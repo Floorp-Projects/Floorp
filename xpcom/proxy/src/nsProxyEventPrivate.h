@@ -89,9 +89,10 @@ public:
 protected:
     nsProxyEventClass();
     nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo);
-    virtual ~nsProxyEventClass();
     
 private:
+    ~nsProxyEventClass();
+
     nsIID                      mIID;
     nsCOMPtr<nsIInterfaceInfo> mInfo;
     uint32*                    mDescriptors;
@@ -135,13 +136,14 @@ public:
                        nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
     
-    virtual ~nsProxyEventObject();
-    
     nsProxyEventObject*   LockedFind(REFNSIID aIID);
 
 #ifdef DEBUG_xpcom_proxy
     void DebugDump(const char * message, PRUint32 hashKey);
 #endif
+
+private:
+    ~nsProxyEventObject();
 
 protected:
     void LockedRemoveProxy();
@@ -175,7 +177,6 @@ public:
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
     nsProxyObjectManager();
-    virtual ~nsProxyObjectManager();
     
     static nsProxyObjectManager *GetInstance();
     static PRBool IsManagerShutdown();
@@ -188,6 +189,8 @@ public:
     PRMonitor*   GetMonitor() const { return mProxyCreationMonitor; }
     
 private:
+    ~nsProxyObjectManager();
+
     static nsProxyObjectManager* mInstance;
     nsHashtable  mProxyObjectMap;
     nsHashtable  mProxyClassMap;

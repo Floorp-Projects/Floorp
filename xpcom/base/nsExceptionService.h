@@ -58,7 +58,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsExceptionService();
-  virtual ~nsExceptionService();
 
   /* additional members */
   nsresult DoGetExceptionFromProvider(nsresult errCode,
@@ -86,6 +85,9 @@ public:
 #ifdef NS_DEBUG
   static PRInt32 totalInstances;
 #endif
+
+private:
+  ~nsExceptionService();
 };
 
 

@@ -56,8 +56,9 @@ public:
   NS_DECL_NSITIMELINESERVICE
 
   nsTimelineService();
-  virtual ~nsTimelineService();
-  /* additional members */
+
+private:
+  ~nsTimelineService() {}
 };
 
 #endif

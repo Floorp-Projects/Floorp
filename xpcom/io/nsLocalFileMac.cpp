@@ -888,9 +888,8 @@ class nsDirEnumerator : public nsISimpleEnumerator
             return NS_OK;
         }
 
-        virtual ~nsDirEnumerator() 
-        {
-        }
+    private:
+        ~nsDirEnumerator() {}
 
     protected:
         nsCOMPtr<nsILocalFileMac>   mNext;
@@ -964,10 +963,6 @@ nsLocalFile& nsLocalFile::operator=(const nsLocalFile& rhs)
         mCachedCatInfo = rhs.mCachedCatInfo;
 
     return *this;
-}
-
-nsLocalFile::~nsLocalFile()
-{
 }
 
 #pragma mark -

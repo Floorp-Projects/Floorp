@@ -50,7 +50,6 @@ class nsPersistentProperties : public nsIPersistentProperties
 {
 public:
   nsPersistentProperties();
-  virtual ~nsPersistentProperties();
   nsresult Init();
 
   NS_DECL_ISUPPORTS
@@ -65,6 +64,9 @@ public:
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+private:
+  ~nsPersistentProperties();
 
 protected:
   nsIUnicharInputStream* mIn;
@@ -87,13 +89,14 @@ public:
   {
   }
 
-  virtual ~nsPropertyElement() {}
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTYELEMENT
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+private:
+  ~nsPropertyElement() {}
 
 protected:
   nsCString mKey;

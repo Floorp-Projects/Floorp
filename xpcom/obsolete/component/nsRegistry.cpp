@@ -101,7 +101,9 @@ struct nsRegistry : public nsIRegistry {
 
     // ctor/dtor
     nsRegistry();
-    virtual ~nsRegistry();
+
+private:
+    ~nsRegistry();
 
 protected:
     HREG   mReg; // Registry handle.
@@ -195,8 +197,10 @@ struct nsRegistryNode : public nsIRegistryNode {
 
     // ctor
     nsRegistryNode( HREG hReg, char *name, RKEY childKey );
-    virtual ~nsRegistryNode();
     
+private:
+    ~nsRegistryNode();
+
 protected:
     HREG    mReg;  // Handle to registry this node is part of.
     char    mName[MAXREGPATHLEN]; // Buffer to hold name.
@@ -220,7 +224,9 @@ struct nsRegistryValue : public nsIRegistryValue {
 
     // ctor
     nsRegistryValue( HREG hReg, RKEY key, REGENUM slot );
-    virtual ~nsRegistryValue();
+
+private:
+    ~nsRegistryValue();
 
 protected:
     nsresult getInfo(); // Get registry info.

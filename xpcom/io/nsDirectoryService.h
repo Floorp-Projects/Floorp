@@ -68,12 +68,13 @@ class nsDirectoryService : public nsIDirectoryService,
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
   nsDirectoryService();
-  virtual ~nsDirectoryService();
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
+   ~nsDirectoryService();
+
     nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
     
     static nsDirectoryService* mService;

@@ -122,7 +122,7 @@ void XXXNeverCalled()
     nsTraceRefcnt::LogAddCOMPtr(nsnull, nsnull);
     nsTraceRefcntImpl::DumpStatistics();
     NS_NewEmptyEnumerator(nsnull);
-    nsArrayEnumerator(nsnull);
+    new nsArrayEnumerator(nsnull);
     NS_QuickSort(nsnull, 0, 0, nsnull, nsnull);
     nsString();
     nsProxyObject(nsnull, 0, nsnull);
@@ -148,7 +148,7 @@ void XXXNeverCalled()
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
     NS_NewLocalFile(nsString(), PR_FALSE, nsnull);
     NS_NewNativeLocalFile(nsCString(), PR_FALSE, nsnull);
-    nsProcess();
+    new nsProcess();
     nsStaticCaseInsensitiveNameTable();
     nsAutoString str1;
     nsCAutoString str2;
@@ -163,7 +163,7 @@ void XXXNeverCalled()
     nsCOMArray<nsISupports> dummyArray;
     NS_NewArray(nsnull, dummyArray);
     NS_NewArrayEnumerator(nsnull, dummyArray);
-    nsVariant();
+    new nsVariant();
     nsUnescape(nsnull);
     nsEscape(nsnull, url_XAlphas);
     nsStringArray array;

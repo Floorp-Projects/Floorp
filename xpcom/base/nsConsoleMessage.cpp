@@ -53,8 +53,6 @@ nsConsoleMessage::nsConsoleMessage(const PRUnichar *message)
 	mMessage.Assign(message);
 }
 
-nsConsoleMessage::~nsConsoleMessage() {}
-
 NS_IMETHODIMP
 nsConsoleMessage::GetMessage(PRUnichar **result) {
     *result = ToNewUnicode(mMessage);

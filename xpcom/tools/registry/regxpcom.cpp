@@ -65,10 +65,12 @@ class DirectoryServiceProvider : public nsIDirectoryServiceProvider
 {
   public:
   DirectoryServiceProvider() {}
-  virtual ~DirectoryServiceProvider() {};
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+
+  private:
+  ~DirectoryServiceProvider() {}
 };
 
 NS_IMPL_ISUPPORTS1(DirectoryServiceProvider, nsIDirectoryServiceProvider)

@@ -67,11 +67,6 @@ nsNativeComponentLoader::nsNativeComponentLoader() :
 {
 }
 
-nsNativeComponentLoader::~nsNativeComponentLoader()
-{
-    mCompMgr = nsnull;
-}
-    
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNativeComponentLoader, 
                               nsIComponentLoader,
                               nsINativeComponentLoader)

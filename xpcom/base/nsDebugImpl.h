@@ -43,8 +43,10 @@ public:
     NS_DECL_NSIDEBUG
     
     nsDebugImpl();
-    virtual ~nsDebugImpl();
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+private:
+    ~nsDebugImpl() {}
 };
 
 

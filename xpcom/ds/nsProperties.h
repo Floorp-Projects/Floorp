@@ -59,13 +59,14 @@ public:
   NS_DECL_NSIPROPERTIES
 
   nsProperties(nsISupports* outer);
-  virtual ~nsProperties();
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
 
+private:
+  ~nsProperties();
 };
 
 #endif /* nsProperties_h___ */

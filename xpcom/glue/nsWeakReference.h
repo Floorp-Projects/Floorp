@@ -82,7 +82,7 @@ class NS_COM nsWeakReference : public nsIWeakReference
           // nothing else to do here
         }
 
-    virtual ~nsWeakReference()
+      ~nsWeakReference()
            // ...I will only be destroyed by calling |delete| myself.
         {
           if ( mReferent )

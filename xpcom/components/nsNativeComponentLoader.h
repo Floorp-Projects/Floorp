@@ -38,7 +38,6 @@ class nsNativeComponentLoader : public nsIComponentLoader, public nsINativeCompo
     NS_DECL_NSINATIVECOMPONENTLOADER
 
     nsNativeComponentLoader();
-    virtual ~nsNativeComponentLoader();
  
     nsIComponentManager* mCompMgr;      // weak reference -- backpointer
     nsHashtable          mLoadedDependentLibs;
@@ -46,6 +45,8 @@ class nsNativeComponentLoader : public nsIComponentLoader, public nsINativeCompo
  private:
     nsObjectHashtable   mDllStore;
     nsVoidArray mDeferredComponents;
+
+    ~nsNativeComponentLoader() {}
 
     NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
 

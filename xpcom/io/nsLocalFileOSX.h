@@ -62,7 +62,6 @@ public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
     
                         nsLocalFile();
-    virtual             ~nsLocalFile();
 
     static NS_METHOD    nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
@@ -76,6 +75,9 @@ public:
     static void         GlobalInit();
     static void         GlobalShutdown();
     
+private:
+                        ~nsLocalFile();
+
 protected:
                         nsLocalFile(const nsLocalFile& src);
     

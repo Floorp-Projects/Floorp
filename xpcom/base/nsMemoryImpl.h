@@ -55,7 +55,6 @@ public:
     NS_DECL_NSIMEMORY
 
     nsMemoryImpl();
-    virtual ~nsMemoryImpl();
 
     nsresult FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
 
@@ -65,6 +64,9 @@ public:
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+
+private:
+    ~nsMemoryImpl();
 
 protected:
     MemoryFlusher* mFlusher;
