@@ -259,8 +259,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   nsCOMPtr<nsIXBLBinding> binding;
   bindableContent->GetBinding(getter_AddRefs(binding));
   if (binding)
-    return NS_OK; // The bindings are already loaded. 
-                  // XXX Think about how to flush them when styles cause a dynamic change
+    bindableContent->SetBinding(nsnull); // Flush old bindings
 
   nsCAutoString url = aURL;
   if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
