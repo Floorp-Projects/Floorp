@@ -155,9 +155,6 @@ PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext*          aPresContex
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eInit, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
 #endif
-#ifdef DEBUG_TABLE_REFLOW
-  printf("Initialized min=%d des=%d pref=%d\n", minWidth, desWidth, prefWidth);
-#endif
   return result;
 }
 

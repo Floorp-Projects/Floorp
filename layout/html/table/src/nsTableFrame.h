@@ -952,14 +952,13 @@ protected:
 
 
   // DEBUG REFLOW 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
 public:
   static void DebugReflow(nsIFrame*            aFrame, 
                           nsHTMLReflowState&   aReflowState, 
                           nsHTMLReflowMetrics* aMetrics = nsnull,
                           nsReflowStatus       aStatus  = NS_FRAME_COMPLETE);
 
-#ifdef DEBUG_TABLE_REFLOW_TIMING
   static void DebugReflowDone(nsIFrame* aFrame);
 
   enum nsMethod {eInit=0, eBalanceCols, eNonPctCols, eNonPctColspans, ePctCols};
@@ -968,7 +967,6 @@ public:
                               nsHTMLReflowState& aReflowState,
                               PRBool             aStart);
   nsReflowTimer* mTimer;
-#endif
 #endif
 };
 

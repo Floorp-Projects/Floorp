@@ -159,7 +159,7 @@ struct nsTableReflowState {
 /********************************************************************************
  ** nsTableFrame                                                               **
  ********************************************************************************/
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
 static PRInt32 gRflCount = 0;
 #endif
 
@@ -3458,14 +3458,6 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext*          aPresContext,
   nscoord desWidth = CalcDesiredWidth(*aPresContext, aReflowState);
   SetDesiredWidth(desWidth);          
   SetPreferredWidth(prefWidth); 
-
-#ifdef DEBUG_TABLE_REFLOW
-  printf("Balanced min=%d des=%d pref=%d cols=", minWidth, desWidth, prefWidth);
-  for (PRInt32 colX = 0; colX < GetColCount(); colX++) {
-    printf("%d ", GetColumnWidth(colX));
-  }
-  printf("\n");
-#endif
 
 }
 
@@ -7062,7 +7054,7 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
 }
 
 /********************************************************************************
- ** DEBUG_TABLE_REFLOW  and  DEBUG_TABLE_REFLOW_TIMING                         **
+ ** DEBUG_TABLE_REFLOW_TIMING                                                  **
  ********************************************************************************/
 
 #ifdef DEBUG
@@ -7093,7 +7085,7 @@ GetFrameTypeName(nsIAtom* aFrameType,
 }
 #endif
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
 
 #define INDENT_PER_LEVEL 1
 
@@ -7107,105 +7099,6 @@ void PrettyUC(nscoord aSize,
     sprintf(aBuf, "%d", aSize);
   }
 }
-
-
-#ifdef DEBUG_TABLE_REFLOW
-
-void DebugGetIndent(const nsIFrame* aFrame, 
-                    char*           aBuf)
-{
-  PRInt32 numLevels = 0;
-  nsIFrame* parent = nsnull;
-  aFrame->GetParent(&parent);
-  while (parent) {
-    nsCOMPtr<nsIAtom> frameType;
-    parent->GetFrameType(getter_AddRefs(frameType));
-    if ((nsLayoutAtoms::tableOuterFrame    == frameType.get()) ||
-        (nsLayoutAtoms::tableFrame         == frameType.get()) ||
-        (nsLayoutAtoms::tableRowGroupFrame == frameType.get()) ||
-        (nsLayoutAtoms::tableRowFrame      == frameType.get()) ||
-        IS_TABLE_CELL(frameType.get())) {
-      numLevels++;
-    }
-    if (nsLayoutAtoms::blockFrame == frameType.get()) {
-      // only count blocks that are children of cells
-      nsIFrame* grandParent;
-      parent->GetParent(&grandParent);
-      nsCOMPtr<nsIAtom> gFrameType;
-      grandParent->GetFrameType(getter_AddRefs(gFrameType));
-      if (IS_TABLE_CELL(gFrameType.get())) {
-        numLevels++;
-      }
-    }
-    parent->GetParent(&parent);
-  }
-  PRInt32 indent = INDENT_PER_LEVEL * numLevels;
-  memset (aBuf, ' ', indent);
-  aBuf[indent] = 0;
-}
-
-void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
-                               nsHTMLReflowState&   aState,
-                               nsHTMLReflowMetrics* aMetrics,
-                               nsReflowStatus       aStatus)
-{
-  // get the frame type
-  nsCOMPtr<nsIAtom> fType;
-  aFrame->GetFrameType(getter_AddRefs(fType));
-  char fName[128];
-  GetFrameTypeName(fType.get(), fName);
-
-  char indent[256];
-  DebugGetIndent(aFrame, indent);
-  printf("%s%s %p ", indent, fName, aFrame);
-  char width[16];
-  char height[16];
-  if (!aMetrics) { // start
-    PrettyUC(aState.availableWidth, width);
-    PrettyUC(aState.availableHeight, height);
-    printf("r=%d ", aState.reason);
-    if (aState.mFlags.mSpecialHeightReflow) {
-      printf("special ");
-    }   
-    printf("a=%s,%s ", width, height); 
-    PrettyUC(aState.mComputedWidth, width);
-    PrettyUC(aState.mComputedHeight, height);
-    printf("c=%s,%s ", width, height);
-    nsIFrame* inFlow;
-    aFrame->GetPrevInFlow(&inFlow);
-    if (inFlow) {
-      printf("pif=%p ", inFlow);
-    }
-    aFrame->GetNextInFlow(&inFlow);
-    if (inFlow) {
-      printf("nif=%p ", inFlow);
-    }
-    printf("cnt=%d \n", gRflCount);
-    gRflCount++;
-    //if (32 == gRflCount) {
-    //  NS_ASSERTION(PR_FALSE, "stop");
-    //}
-  }
-  if (aMetrics) { // stop
-    PrettyUC(aMetrics->width, width);
-    PrettyUC(aMetrics->height, height);
-    printf("d=%s,%s ", width, height);
-    if (aMetrics->maxElementSize) {
-      PrettyUC(aMetrics->maxElementSize->width, width);
-      printf("me=%s ", width);
-    }
-    if (aMetrics->mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-      PrettyUC(aMetrics->mMaximumWidth, width);
-      printf("m=%s ", width);
-    }
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-      printf("status=%d", aStatus);
-    }
-    printf("\n");
-  }
-}
-
-#else
 
 nsReflowTimer* GetFrameTimer(nsIFrame* aFrame,
                              nsIAtom*  aFrameType)
@@ -7483,9 +7376,7 @@ void nsTableFrame::DebugReflowDone(nsIFrame* aFrame)
   }
 }
 
-#endif
-
-#endif
+#endif //DEBUG_TABLE_REFLOW_TIMING
 
 
 PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
