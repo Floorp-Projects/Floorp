@@ -153,11 +153,11 @@ var messageHeaderSink = {
  
     },
 
-    handleAttachment: function(url, displayName, uri, notDownloaded) 
+    handleAttachment: function(contentType, url, displayName, uri, notDownloaded) 
     {
         // be sure to escape the display name before we insert it into the
         // method
-      var commandString = "OpenAttachURL('" + url + "', '" + escape(displayName) + "', '" + uri + "')";
+      var commandString = "OpenAttachURL('" + contentType + "', '" + url + "', '" + escape(displayName) + "', '" + uri + "')";
       if (notDownloaded)
       {
         displayName += " " + Bundle.GetStringFromName("notDownloaded");
@@ -209,14 +209,14 @@ function AddSenderToAddressBook()
   }
 }
 
-function OpenAttachURL(url, displayName, messageUri)
+function OpenAttachURL(contentType, url, displayName, messageUri)
 {
     var args = {dspname: displayName, opval: 0};
 
   window.openDialog("chrome://messenger/content/openSaveAttachment.xul",
                     "openSaveAttachment", "chrome,modal", args);
   if (args.opval == 1)
-      messenger.openAttachment(url, displayName, messageUri);
+      messenger.openAttachment(contentType, url, displayName, messageUri);
   else if (args.opval == 2)
       messenger.saveAttachment(url, displayName, messageUri);
 }

@@ -37,7 +37,12 @@
 #include "nsMsgBaseCID.h"
 #include "nsIDocShell.h"
 #include "nsIPop3Service.h"
+#include "nsMsgUtils.h"
+#include "nsIStreamConverterService.h"
+#include "nsNetUtil.h"
 
+static NS_DEFINE_CID(kIStreamConverterServiceCID,
+                     NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -153,7 +158,9 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 										                      nsIUrlListener * aUrlListener,
                                           nsIURI ** aURL)
 {
-  return FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, nsIMailboxUrl::ActionDisplayMessage, aURL);
+    return FetchMessage(aMessageURI, aDisplayConsumer,
+                        aMsgWindow,aUrlListener,
+                        nsIMailboxUrl::ActionDisplayMessage, aURL);
 }
 
 /* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
@@ -265,6 +272,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		nsCAutoString folderURI;
 		nsFileSpec folderPath;
 		nsMsgKey msgKey;
+        const char *part = PL_strstr(aSrcMsgMailboxURI, "part=");
 		
 		rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
 		rv = nsLocalURI2Path(kMailboxMessageRootURI, folderURI, folderPath);
@@ -274,11 +282,14 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 			// set up the url spec and initialize the url with it.
 			nsFilePath filePath(folderPath); // convert to file url representation...
 
-      if (mPrintingOperation)
-        urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
-      else
-  			urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
-
+            if (mPrintingOperation)
+                urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
+            else if (part)
+                urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
+                                      filePath, msgKey, part);
+            else
+                urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
+            
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);

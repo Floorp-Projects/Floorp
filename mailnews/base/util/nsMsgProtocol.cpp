@@ -199,7 +199,12 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
 	if (m_channelListener)
+    {
+        if (!m_channelContext)
+            m_channelContext = do_QueryInterface(ctxt);
+
 		rv = m_channelListener->OnStartRequest(this, m_channelContext);
+    }
 
 	return rv;
 }

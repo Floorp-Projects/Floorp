@@ -254,7 +254,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
         nsXPIDLString::Copy(attachmentName.GetUnicode());
     }
 
-    headerSink->HandleAttachment(url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
+    headerSink->HandleAttachment(contentType, url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
 
     nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;
