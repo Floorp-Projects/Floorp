@@ -19,9 +19,15 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 EXPORTS =							\
+		nsINNTPNewsgroupList.h		\
+		nsINNTPNewsHost.h			\
+		nsIMsgNewsgroup.h 			\
+		nsIMsgOfflineNewsState.h 	\
+		nsINNTPArticleList.h 		\
         $(NULL)
 
 MODULE=mailnews
+
 
 include <$(DEPTH)\config\rules.mak>
 
