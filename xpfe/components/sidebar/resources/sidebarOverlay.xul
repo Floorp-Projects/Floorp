@@ -27,8 +27,21 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+
   <command id="toggleSidebar" oncommand="SidebarShowHide();"/>
   <key id="showHideSidebar" keycode="VK_F9" command="toggleSidebar"/>
+  <popup id="sidebarPopup" oncreate="if (sidebarObj.panels.get_panel_from_header_node(document.popupNode).is_selected())
+                                       this.firstChild.setAttribute('collapsed', 'true');
+                                     else
+                                       this.firstChild.removeAttribute('collapsed');">
+    <menuitem label="&sidebar.switch.label;" accesskey="&sidebar.switch.accesskey;"
+              default="true" oncommand="SidebarSelectPanel(document.popupNode, false, false);"/>
+    <menuitem label="&sidebar.hide.label;" accesskey="&sidebar.hide.accesskey;"
+              oncommand="SidebarTogglePanel(document.popupNode);"/>
+    <menuseparator/>
+    <menuitem label="&sidebar.customize.label;" accesskey="&sidebar.customize.accesskey;"
+              oncommand="SidebarCustomize();"/>
+  </popup>
 
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" orient="vertical" persist="hidden width collapsed">
@@ -75,10 +88,10 @@
                 </action>
               </rule>
             </template>
-            <menuitem label="&sidebar.customize.label;"
-              oncommand="SidebarCustomize();" />
-      <menuitem label="&sidebar.sbDirectory.label;"
-              oncommand="BrowseMorePanels();" />
+            <menuitem label="&sidebar.customize.label;" accesskey="&sidebar.customize.accesskey;"
+                      oncommand="SidebarCustomize();" />
+            <menuitem label="&sidebar.sbDirectory.label;"
+                      oncommand="BrowseMorePanels();" />
             <menuseparator />
           </menupopup>
         </menubutton>
@@ -108,8 +121,8 @@
             </bindings>
             <action>
               <box uri="?panel" class="box-texttab texttab-sidebar"
-                onclick="SidebarSelectPanel(this,false,false)" align="left" 
-                hidden="true" label="?title" exclude="?exclude" />
+                oncommand="SidebarSelectPanel(this,false,false)" align="left"
+                hidden="true" label="?title" exclude="?exclude" context="sidebarPopup" />
               <box uri="?panel" flex='1*' hidden="true" orient="vertical"
                 loadstate="never loaded">
                 <box flex='1' orient="vertical" class="iframe-panel loadarea">
@@ -125,7 +138,7 @@
                 <iframe class="iframe-panel" flex='1*' src="about:blank"
                   hidden="true" collapsed="true" content="?content" context="contentAreaContextMenu"/>
                 <iframe class="iframe-panel" flex='1*' src="about:blank"
-                  hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
+                  hidden="true" collapsed="true" content="?content" type="content"/>
               </box>
             </action>
           </rule>

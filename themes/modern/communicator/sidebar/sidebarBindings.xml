@@ -4,7 +4,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="sidebar-tab">
+  <binding id="sidebar-tab" extends="xul:button">
     <content>
       <xul:image class="box-texttab-left"/>
       <xul:box class="box-texttab-text-container" autostretch="never" flex="1">
@@ -13,5 +13,5 @@
       <xul:image class="box-texttab-right"/>
     </content>
   </binding>
-          
-</bindings> 
+
+</bindings>

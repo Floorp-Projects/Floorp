@@ -102,7 +102,7 @@ Rights Reserved.
   <keyset id="tasksKeys"/>
 </keyset>
 
-<popupset>
+<popupset id="aTooltipSet">
 
   <popup id="threadPaneContext"/>
   <popup id="folderPaneContext"/>
@@ -125,10 +125,8 @@ Rights Reserved.
   </popup>
 
   <popup id="messagePaneContext"/>
-</popupset>
-
-<popupset id="aTooltipSet">
   <popup id="folderTooltip"/>
+  <popup id="sidebarPopup"/>
 </popupset>
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
