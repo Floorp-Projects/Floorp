@@ -38,6 +38,14 @@
 
 #include "xpcprivate.h"
 
+//#define STRICT_CHECK_OF_UNICODE
+#ifdef STRICT_CHECK_OF_UNICODE
+#define ILLEGAL_RANGE(c) (0!=((c) & 0xFF80))
+#else // STRICT_CHECK_OF_UNICODE
+#define ILLEGAL_RANGE(c) (0!=((c) & 0xFF00))
+#endif // STRICT_CHECK_OF_UNICODE
+
+#define ILLEGAL_CHAR_RANGE(c) (0!=((c) & 0x80))
 /*
 * This is a table driven scheme to determine if the types of the params of the
 * given method exclude that method from being reflected via XPConnect.
@@ -273,6 +281,11 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             char* p = (char*)s;
             if(!p)
                 return JS_FALSE;
+
+#ifdef STRICT_CHECK_OF_UNICODE
+            NS_ASSERTION(! ILLEGAL_CHAR_RANGE(p) , "passing non ASCII data");
+#endif // STRICT_CHECK_OF_UNICODE
+
             JSString* str;
             if(!(str = JS_NewStringCopyN(cx, p, 1)))
                 return JS_FALSE;
@@ -329,6 +342,16 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 char* p = *((char**)s);
                 if(!p)
                     break;
+
+#ifdef STRICT_CHECK_OF_UNICODE
+                PRBool isAscii = PR_TRUE;
+                char* t;
+                for(t=p; *t && isAscii ; t++) {
+                  if(ILLEGAL_CHAR_RANGE(*t))
+                      isAscii = PR_FALSE;    
+                }
+                NS_ASSERTION(isAscii, "passing non ASCII data");
+#endif // STRICT_CHECK_OF_UNICODE
                 JSString* str;
                 if(!(str = JS_NewStringCopyZ(cx, p)))
                     return JS_FALSE;
@@ -482,6 +505,13 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
+#ifdef DEBUG
+            jschar* chars=nsnull;
+            if(nsnull!=(chars = JS_GetStringChars(str)))
+            {
+                NS_ASSERTION((! ILLEGAL_RANGE(chars[0])),"U+0080/U+0100 - U+FFFF data lost");
+            }
+#endif // DEBUG
             *((char*)d) = bytes[0];
             break;
         }
@@ -569,6 +599,21 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
+#ifdef DEBUG
+            jschar* chars=nsnull;
+            if(nsnull != (chars = JS_GetStringChars(str)))
+            {
+                PRBool legalRange = PR_TRUE;
+                int len = JS_GetStringLength(str);
+                jschar* t;
+                PRInt32 i=0;
+                for(t=chars; (i< len) && legalRange ; i++,t++) {
+                  if(ILLEGAL_RANGE(*t))
+                      legalRange = PR_FALSE;    
+                }
+                NS_ASSERTION(legalRange,"U+0080/U+0100 - U+FFFF data lost");
+            }
+#endif // DEBUG
             if(useAllocator)
             {
                 int len = (JS_GetStringLength(str) + 1) * sizeof(char);
