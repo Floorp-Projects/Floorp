@@ -25,6 +25,6 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS		= src
+DIRS		= resources src
 
 include $(topsrcdir)/config/rules.mk

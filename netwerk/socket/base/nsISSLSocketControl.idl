@@ -19,20 +19,13 @@
  *
  * Contributor(s):
  *   Doug Turner <dougt@netscape.com>
+ *   Brian Ryner <bryner@netscape.com>
 */
 
 #include "nsISupports.idl"
 
 [noscript, uuid(46235840-1dd2-11b2-846e-f26209b20804)]
-interface nsISecureSocketInfo : nsISupports {
-    
-    readonly attribute string           hostName;
-    readonly attribute PRInt32          hostPort;
-    
-    readonly attribute string           proxyName;
-    readonly attribute PRInt32          proxyPort;
-
-    attribute boolean                   forceHandshake;
+interface nsISSLSocketControl : nsISupports {
     
     void proxyStepUp();
     void TLSStepUp();

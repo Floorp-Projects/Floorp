@@ -39,7 +39,8 @@
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
-#include "nsISecureSocketInfo.h"
+#include "nsISSLSocketControl.h"
+#include "nsIChannelSecurityInfo.h"
 #include "nsMemory.h"
 
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
@@ -878,7 +879,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
               }
               else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {
                   mSecurityInfo = socketInfo;
-                  nsCOMPtr<nsISecureSocketInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
+                  nsCOMPtr<nsIChannelSecurityInfo> securityInfo(do_QueryInterface(mSecurityInfo, &rv));
                   if (NS_SUCCEEDED(rv) && securityInfo)
                       securityInfo->SetForceHandshake(PR_TRUE);
               }
@@ -996,9 +997,9 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       // has been pushed, and we were proxying (transparently; ie. nothing
       // has to happen in the protocol layer above us), it's time
       // for the ssl to "step up" and start doing it's thing.
-      nsCOMPtr<nsISecureSocketInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
-      if (NS_SUCCEEDED(rv) && securityInfo) {
-          securityInfo->ProxyStepUp();
+      nsCOMPtr<nsISSLSocketControl> sslControl(do_QueryInterface(mSecurityInfo, &rv));
+      if (NS_SUCCEEDED(rv) && sslControl) {
+          sslControl->ProxyStepUp();
       }
   }
 

@@ -30,6 +30,7 @@
 #include "nsPSMShimLayer.h"
 #include "nsSSLIOLayer.h"
 #include "nsIWebProgressListener.h"
+#include "nsISSLSocketControl.h"
 
 static PRDescIdentity  nsSSLIOLayerIdentity;
 static PRIOMethods     nsSSLIOLayerMethods;
@@ -38,16 +39,18 @@ static PRBool  firstTime = PR_TRUE;
 
 
 
-class nsPSMSocketInfo : public nsIPSMSocketInfo
+class nsPSMSocketInfo : public nsIPSMSocketInfo,
+                        public nsISSLSocketControl
 {
 public:
     nsPSMSocketInfo();
     virtual ~nsPSMSocketInfo();
     
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISECURESOCKETINFO
+    NS_DECL_NSICHANNELSECURITYINFO
     NS_DECL_NSIPSMSOCKETINFO
-    
+    NS_DECL_NSISSLSOCKETCONTROL
+
     // internal functions to psm-glue.
     nsresult SetSocketPtr(CMSocket *socketPtr);
     nsresult SetControlPtr(CMT_CONTROL *aControlPtr);
@@ -350,8 +353,8 @@ nsPSMSocketInfo::~nsPSMSocketInfo()
     PR_FREEIF(mPickledStatus);    
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsPSMSocketInfo, nsISecureSocketInfo,
-                              nsIPSMSocketInfo);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsPSMSocketInfo, nsIChannelSecurityInfo,
+                              nsIPSMSocketInfo, nsISSLSocketControl);
 
 // if the connection was via a proxy, we need to have the
 // ssl layer "step up" to take an active role in the connection
@@ -506,6 +509,11 @@ nsPSMSocketInfo::SetUseTLS(PRBool useTLS)
     return NS_OK;
 }
 
+nsresult
+nsPSMSocketInfo::GetShortSecurityDescription(PRUnichar** aText)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 nsresult
 nsPSMSocketInfo::SetPickledStatus()
@@ -648,8 +656,7 @@ nsSSLIOLayerNewSocket( const char *host,
     }
     
     *fd   = sock;
-    *info = infoObject;
-    NS_ADDREF(*info);
+    infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) info);
     return NS_OK;
 }
 
@@ -726,10 +733,7 @@ nsSSLIOLayerAddToSocket( const char *host,
         return rv;
     }
     
-    *info = infoObject;
-    NS_ADDREF(*info);
+    infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) info);
     return NS_OK;
 }
-
-
 

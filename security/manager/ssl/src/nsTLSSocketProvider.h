@@ -45,12 +45,6 @@ public:
   // nsTLSSocketProvider methods:
   nsTLSSocketProvider();
   virtual ~nsTLSSocketProvider();
-  
-  static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-  
-  nsresult Init();
-  
-protected:
 };
 
 #endif /* _NSTLSSOCKETPROVIDER_H_ */

@@ -41,7 +41,7 @@
 #include "nsAuthEngine.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransport.h"
-#include "nsISecureSocketInfo.h"
+#include "nsISSLSocketControl.h"
 #include "plstr.h"
 
 #if defined(PR_LOGGING)
@@ -942,10 +942,10 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
         rval = mTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
         if (NS_FAILED(rval)) return rval;
 
-        nsCOMPtr<nsISecureSocketInfo> psmSocketInfo = do_QueryInterface(securityInfo, &rval);
+        nsCOMPtr<nsISSLSocketControl> sslControl(do_QueryInterface(securityInfo, &rval));
         if (NS_FAILED(rval)) return rval;
 
-        rval = psmSocketInfo->ProxyStepUp();
+        rval = sslControl->ProxyStepUp();
         if (NS_FAILED(rval)) return rval;
 
         return WriteRequest(mInputStream);

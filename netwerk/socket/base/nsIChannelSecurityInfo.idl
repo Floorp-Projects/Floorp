@@ -19,26 +19,21 @@
  *
  * Contributor(s):
  *   Doug Turner <dougt@netscape.com>
+ *   Brian Ryner <bryner@netscape.com>
 */
 
-#include "nsIChannelSecurityInfo.idl"
+#include "nsISupports.idl"
 
-%{C++
-#include "cmtcmn.h"
-#include "nsPSMShimLayer.h"
-%}
-
-[ptr] native psmtControlStar(CMT_CONTROL);
-[ptr] native cmSocketStar(CMSocket);
-[ptr] native nsFileDescStar(PRFileDesc);
-
-[noscript, uuid(deeb8dfc-fb7a-11d3-ac84-00c04fa0d26b)]
-interface nsIPSMSocketInfo : nsIChannelSecurityInfo {
+[noscript, uuid(98d9cc72-1dd1-11b2-9156-eaf4d18b60d1)]
+interface nsIChannelSecurityInfo : nsISupports {
+    readonly attribute string           hostName;
+    readonly attribute PRInt32          hostPort;
     
-    readonly attribute psmtControlStar  controlPtr;
-    readonly attribute cmSocketStar     socketPtr;
-    readonly attribute nsFileDescStar   fileDescPtr;
+    readonly attribute string           proxyName;
+    readonly attribute PRInt32          proxyPort;
 
-    void getPickledStatus(out charPtr pickledStatus);
+    attribute boolean                   forceHandshake;
+    readonly attribute long             securityState;
+    readonly attribute wstring           shortSecurityDescription;
 };
 

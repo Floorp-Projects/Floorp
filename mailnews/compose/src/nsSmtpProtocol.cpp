@@ -48,7 +48,7 @@
 #include "plbase64.h"
 #include "nsEscape.h"
 
-#include "nsISecureSocketInfo.h"
+#include "nsISSLSocketControl.h"
 /* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
    which defines PostMessage to be either PostMessageA or PostMessageW... of course it does this
    without using parameters, so any use of PostMessage now becomes PostMessageA...
@@ -763,10 +763,10 @@ PRInt32 nsSmtpProtocol::SendTLSResponse()
       rv = m_channel->GetSecurityInfo(getter_AddRefs(secInfo));
 
       if (NS_SUCCEEDED(rv) && secInfo) {
-          nsCOMPtr<nsISecureSocketInfo> securityInfo = do_QueryInterface(secInfo, &rv);
+          nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
 
-          if (NS_SUCCEEDED(rv) && securityInfo) {
-              rv = securityInfo->TLSStepUp();
+          if (NS_SUCCEEDED(rv) && sslControl) {
+              rv = sslControl->TLSStepUp();
           }
       }
 
