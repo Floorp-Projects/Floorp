@@ -107,7 +107,6 @@ smime_main()
   cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.env
   html_msg $? 0 "Create Enveloped Data Alice" "."
 
-
   echo "cmsutil -D -i alice.env -d ${P_R_BOBDIR} -p nss -o alice.data1"
   cmsutil -D -i alice.env -d ${P_R_BOBDIR} -p nss -o alice.data1
   html_msg $? 0 "Decode Enveloped Data Alice" "."
@@ -139,19 +138,34 @@ smime_main()
         done
   fi
 
+  echo "$SCRIPTNAME: Testing multiple email addrs ------------------------------"
+  echo "cmsutil -E -i alicecc.txt -d ${P_R_ALICEDIR} -o aliceve.env \\"
+  echo "        -r eve@bogus.net"
+  cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o aliceve.env \
+          -r eve@bogus.net
+  ret=$?
+  html_msg $ret 0 "Encrypt to a Multiple Email cert" "."
+
   echo "cmsutil -D -i alicecc.env -d ${P_R_BOBDIR} -p nss -o alice.data2"
   cmsutil -D -i alicecc.env -d ${P_R_BOBDIR} -p nss -o alice.data2
   html_msg $? 0 "Decode Multiple Recipients Enveloped Data Alice by Bob" "."
 
-  echo "cmsutil -D -i alicecc.env -d ${P_R_DAVEDIR} -p nss -o alice.data2"
+  echo "cmsutil -D -i alicecc.env -d ${P_R_DAVEDIR} -p nss -o alice.data3"
   cmsutil -D -i alicecc.env -d ${P_R_DAVEDIR} -p nss -o alice.data3
   html_msg $? 0 "Decode Multiple Recipients Enveloped Data Alice by Dave" "."
+
+  echo "cmsutil -D -i aliceve.env -d ${P_R_EVEDIR} -p nss -o alice.data4"
+  cmsutil -D -i aliceve.env -d ${P_R_EVEDIR} -p nss -o alice.data4
+  html_msg $? 0 "Decrypt with a Multiple Email cert" "."
 
   diff alice.txt alice.data2
   html_msg $? 0 "Compare Decoded Mult. Recipients Enveloped Data Alice/Bob" "."
 
   diff alice.txt alice.data3
   html_msg $? 0 "Compare Decoded Mult. Recipients Enveloped Data Alice/Dave" "."
+
+  diff alice.txt alice.data4
+  html_msg $? 0 "Compare Decoded with Multiple Email cert" "."
   
   echo "$SCRIPTNAME: Sending CERTS-ONLY Message ------------------------------"
   echo "cmsutil -O -r \"Alice,bob@bogus.com,dave@bogus.com\" \\"
