@@ -272,9 +272,10 @@ const gPopupBlockerObserver = {
       item.parentNode.removeChild(item);
       item = next;
     }
+    var blockedPopupsSeparator;
     var pageReport = gBrowser.selectedBrowser.pageReport;
     if (pageReport && pageReport.length > 0) {
-      var blockedPopupsSeparator = document.getElementById("blockedPopupsSeparator");
+      blockedPopupsSeparator = document.getElementById("blockedPopupsSeparator");
       blockedPopupsSeparator.removeAttribute("hidden");
       for (var i = 0; i < pageReport.length; ++i) {
         var popupURIspec = pageReport[i].popupWindowURI.spec;
@@ -294,7 +295,7 @@ const gPopupBlockerObserver = {
       }
     }
     else {
-      var blockedPopupsSeparator = document.getElementById("blockedPopupsSeparator");
+      blockedPopupsSeparator = document.getElementById("blockedPopupsSeparator");
       blockedPopupsSeparator.setAttribute("hidden", "true");
     }
         
@@ -429,10 +430,11 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     var browserBundle = document.getElementById("bundle_browser");
+    var browser, webNav, wm, tabbrowser;
     switch (aTopic) {
     case "xpinstall-install-blocked":
       var shell = aSubject.QueryInterface(Components.interfaces.nsIDocShell);
-      var browser = this._getBrowser(shell);
+      browser = this._getBrowser(shell);
       if (browser) {
         var host = browser.docShell.QueryInterface(Components.interfaces.nsIWebNavigation).currentURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
@@ -450,19 +452,19 @@ const gXPInstallObserver = {
           messageKey = "xpinstallWarning";
           buttonKey = "xpinstallWarningButton";
         }
-        
+        var messageString, buttonString; 
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
-          var messageString = browserBundle.getFormattedString("xpinstallDisabledWarning", 
-                                                                [brandShortName, host]);
-          var buttonString = browserBundle.getString("xpinstallDisabledWarningButton");
+          messageString = browserBundle.getFormattedString("xpinstallDisabledWarning", 
+                                                           [brandShortName, host]);
+          buttonString = browserBundle.getString("xpinstallDisabledWarningButton");
           getBrowser().showMessage(browser, iconURL, messageString, buttonString, 
                                    null, "xpinstall-install-edit-prefs",
                                    null, "top", false);
         }
         else {            
-          var messageString = browserBundle.getFormattedString(messageKey, [brandShortName, host]);
-          var buttonString = browserBundle.getString(buttonKey);
-          var webNav = shell.QueryInterface(Components.interfaces.nsIWebNavigation);
+          messageString = browserBundle.getFormattedString(messageKey, [brandShortName, host]);
+          buttonString = browserBundle.getString(buttonKey);
+          webNav = shell.QueryInterface(Components.interfaces.nsIWebNavigation);
           getBrowser().showMessage(browser, iconURL, messageString, buttonString, 
                                    shell, "xpinstall-install-edit-permissions",
                                    null, "top", false);
@@ -470,8 +472,8 @@ const gXPInstallObserver = {
       }
       break;
     case "xpinstall-install-edit-prefs":
-      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                         .getService(Components.interfaces.nsIWindowMediator);
+      wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
       var optionsWindow = wm.getMostRecentWindow("Browser:Options");
       if (optionsWindow) {
         optionsWindow.focus();
@@ -480,14 +482,14 @@ const gXPInstallObserver = {
       else
         openDialog("chrome://browser/content/pref/pref.xul", "PrefWindow",
                    "chrome,titlebar,resizable,modal", "catFeaturesbutton");
-      var tabbrowser = getBrowser();
+      tabbrowser = getBrowser();
       tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
       break;
     case "xpinstall-install-edit-permissions":
-      var browser = this._getBrowser(aSubject.QueryInterface(Components.interfaces.nsIDocShell));
+      browser = this._getBrowser(aSubject.QueryInterface(Components.interfaces.nsIDocShell));
       if (browser) {
         var bundlePreferences = document.getElementById("bundle_preferences");
-        var webNav = aSubject.QueryInterface(Components.interfaces.nsIWebNavigation);
+        webNav = aSubject.QueryInterface(Components.interfaces.nsIWebNavigation);
         var params = { blockVisible   : false, 
                        sessionVisible : false, 
                        allowVisible   : true, 
@@ -495,8 +497,8 @@ const gXPInstallObserver = {
                        permissionType : "install",
                        windowTitle    : bundlePreferences.getString("installpermissionstitle"),
                        introText      : bundlePreferences.getString("installpermissionstext") };
-        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                          .getService(Components.interfaces.nsIWindowMediator);
+        wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
         var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
         if (existingWindow) {
           existingWindow.initWithParams(params);
@@ -506,7 +508,7 @@ const gXPInstallObserver = {
           window.openDialog("chrome://browser/content/preferences/permissions.xul",
                             "_blank", "resizable,dialog=no,centerscreen", params);
               
-        var tabbrowser = getBrowser();
+        tabbrowser = getBrowser();
         tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
       }
       break;
@@ -1184,7 +1186,7 @@ SanitizeListener.prototype =
     }
     else
       (new Sanitizer()).sanitize();
-  },
+  }
 }
 
 function ctrlNumberTabSelection(event)
@@ -2840,7 +2842,7 @@ var FullScreen =
     var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var els = document.getElementsByTagNameNS(XULNS, aTag);
     
-    var i;
+    var i, savedMode, savedIconSize;
     for (i = 0; i < els.length; ++i) {
       // XXX don't interfere with previously collapsed toolbars
       if (els[i].getAttribute("fullscreentoolbar") == "true") {
@@ -2864,13 +2866,13 @@ var FullScreen =
         }
         else {
           if (els[i].hasAttribute("saved-mode")) {
-            var savedMode = els[i].getAttribute("saved-mode");
+            savedMode = els[i].getAttribute("saved-mode");
             els[i].setAttribute("mode", savedMode);
             els[i].removeAttribute("saved-mode");
           }
 
           if (els[i].hasAttribute("saved-iconsize")) {
-            var savedIconSize = els[i].getAttribute("saved-iconsize");
+            savedIconSize = els[i].getAttribute("saved-iconsize");
             els[i].setAttribute("iconsize", savedIconSize);
             els[i].removeAttribute("saved-iconsize");
           }
@@ -2911,13 +2913,13 @@ var FullScreen =
       }
       else {
         if (toolbox.hasAttribute("saved-mode")) {
-          var savedMode = toolbox.getAttribute("saved-mode");
+          savedMode = toolbox.getAttribute("saved-mode");
           toolbox.setAttribute("mode", savedMode);
           toolbox.removeAttribute("saved-mode");
         }
 
         if (toolbox.hasAttribute("saved-iconsize")) {
-          var savedIconSize = toolbox.getAttribute("saved-iconsize");
+          savedIconSize = toolbox.getAttribute("saved-iconsize");
           toolbox.setAttribute("iconsize", savedIconSize);
           toolbox.removeAttribute("saved-iconsize");
         }
@@ -3380,6 +3382,7 @@ nsBrowserAccess.prototype =
   {
     var newWindow = null;
     var referrer = null;
+    var location;
     if (aWhere == nsCI.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
       switch (aContext) {
         case nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL :
@@ -3403,9 +3406,9 @@ nsBrowserAccess.prototype =
                             .getInterface(nsCI.nsIDOMWindow);
         try {
           if (aOpener) {
-            var location = Components.lookupMethod(aOpener,"location")
-                                     .call(aOpener);
-            var referrer = 
+            location = Components.lookupMethod(aOpener,"location")
+                                 .call(aOpener);
+            referrer = 
                     Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService)
                               .newURI(location, null, null);
@@ -3422,9 +3425,9 @@ nsBrowserAccess.prototype =
           if (aOpener) {
             newWindow = Components.lookupMethod(aOpener,"top")
                                   .call(aOpener);
-            var location = Components.lookupMethod(aOpener,"location")
-                                     .call(aOpener);
-            var referrer = 
+            location = Components.lookupMethod(aOpener,"location")
+                                 .call(aOpener);
+            referrer = 
                     Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService)
                               .newURI(location, null, null);
@@ -4634,8 +4637,9 @@ function asyncOpenWebPanel(event)
          linkNode = null;
        break;
    }
+   var wrapper = null;
    if (linkNode) {
-     var wrapper = new XPCNativeWrapper(linkNode, "href", "getAttribute()", "ownerDocument");
+     wrapper = new XPCNativeWrapper(linkNode, "href", "getAttribute()", "ownerDocument");
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4703,7 +4707,7 @@ function asyncOpenWebPanel(event)
      linkNode = target;
      while (linkNode) {
        if (linkNode.nodeType == Node.ELEMENT_NODE) {
-         var wrapper = new XPCNativeWrapper(linkNode, "getAttributeNS()");
+         wrapper = new XPCNativeWrapper(linkNode, "getAttributeNS()");
 
          href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink", "href");
          break;
@@ -5460,11 +5464,12 @@ function AddKeywordForSearchField()
   var keywordURL = ioService.newURI(node.form.action, node.ownerDocument.characterSet, uri);
   var spec = keywordURL.spec;
   var postData = "";
+  var i, e;
   
   if (node.form.method.toUpperCase() == "POST" && 
       (node.form.enctype == "application/x-www-form-urlencoded" || node.form.enctype == "")) {
-    for (var i = 0; i < node.form.elements.length; ++i) {
-      var e = node.form.elements[i];
+    for (i=0; i < node.form.elements.length; ++i) {
+      e = node.form.elements[i];
       if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden" || 
           e.localName.toLowerCase() == "textarea") 
         postData += escape(e.name + "=" + (e == node ? "%s" : e.value)) + "&";
@@ -5477,8 +5482,8 @@ function AddKeywordForSearchField()
   }
   else {
     spec += "?" + escape(node.name) + "=%s";
-    for (var i = 0; i < node.form.elements.length; ++i) {
-      var e = node.form.elements[i];
+    for (i=0; i < node.form.elements.length; ++i) {
+      e = node.form.elements[i];
       if (e == node) // avoid duplication of the target field value, which was populated above.
         continue;
         
