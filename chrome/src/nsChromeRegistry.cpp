@@ -187,7 +187,15 @@ nsChromeRegistry::nsProviderArray::GetProvider(const nsACString& aPreferred, Mat
     if (aPreferred.Equals(entry->provider))
       return entry;
 
-    if (aType == LOCALE && !found && LanguagesMatch(aPreferred, entry->provider))
+    if (aType != LOCALE)
+      continue;
+
+    if (LanguagesMatch(aPreferred, entry->provider)) {
+      found = entry;
+      continue;
+    }
+
+    if (!found && entry->provider.EqualsLiteral("en-US"))
       found = entry;
   }
 
@@ -609,7 +617,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
     baseURI = entry->locales.GetBase(mSelectedLocale, nsProviderArray::LOCALE);
   }
   else if (provider.EqualsLiteral("skin")) {
-    baseURI = entry->skins.GetBase(mSelectedSkin, nsProviderArray::SKIN);
+    baseURI = entry->skins.GetBase(mSelectedSkin, nsProviderArray::ANY);
   }
   else {
     baseURI = entry->baseURI;
