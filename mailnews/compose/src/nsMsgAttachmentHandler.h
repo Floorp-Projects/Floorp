@@ -94,6 +94,10 @@ public:
 							                             libmsg can issue appropriate warnings about
 							                             doing a cleartext forward of a message that was
 							                             originally encrypted. */
+
+  PRBool                mDeleteFile;      // If this is true, Delete the file...its 
+                                          // NOT the original file!
+
   //
   // Vars for analyzing file data...
   //

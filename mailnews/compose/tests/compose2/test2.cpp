@@ -89,7 +89,11 @@ GetTheTempDirectoryOnTheSystem(void)
   // RICHIE - should do something better here!
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-  PL_strncpy(retPath, "/tmp/", 1024);
+  char *tPath = getenv("TEMP");
+  if (!tPath)
+    PL_strncpy(retPath, "/tmp/", TPATH_LEN);
+  else
+    PL_strncpy(retPath, tPath, TPATH_LEN);
 #endif
 
 #ifdef XP_MAC

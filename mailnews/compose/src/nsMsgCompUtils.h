@@ -111,6 +111,8 @@ char        *nsMsgPlatformFileToURL (const char *name);
 
 char        *nsMsgParseURL(const char *url, int part);
 
+char        *GenerateFileNameFromURI(nsIURI *aURL);
+
 NS_END_EXTERN_C
 
 

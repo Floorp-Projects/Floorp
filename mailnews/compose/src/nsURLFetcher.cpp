@@ -84,7 +84,7 @@ nsURLFetcher::~nsURLFetcher()
   }
 
   PR_FREEIF(mContentType);
-  NS_RELEASE(mURL);
+  NS_IF_RELEASE(mURL);
 }
 
 nsresult

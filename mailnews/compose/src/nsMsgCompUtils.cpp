@@ -66,7 +66,11 @@ GetTheTempDirectoryOnTheSystem(void)
   // RICHIE - should do something better here!
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-  PL_strncpy(retPath, "/tmp/", TPATH_LEN);
+  char *tPath = getenv("TMPDIR");
+  if (!tPath)
+    PL_strncpy(retPath, "/tmp/", TPATH_LEN);
+  else
+    PL_strncpy(retPath, tPath, TPATH_LEN);
 #endif
 
 #ifdef XP_MAC
@@ -1839,7 +1843,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
   char *s3;
   const char *url;
 
-  if (attachment->m_real_name)
+  if ( (attachment->m_real_name) && (*attachment->m_real_name))
   	return;
 
   attachment->mURL->GetSpec(&url);
@@ -2074,4 +2078,85 @@ nsMsgParseURL(const char *url, int part)
     return nsnull;
   else
     return retVal;
+}
+
+char *
+GenerateFileNameFromURI(nsIURI *aURL)
+{
+  nsresult    rv; 
+  const char  *file;
+  const char  *spec;
+  char        *returnString;
+  char        *cp = nsnull;
+  char        *cp1 = nsnull;
+
+  rv = aURL->GetFile(&file);
+  if ( NS_SUCCEEDED(rv) && file && (*file))
+  {
+    char *newFile = PL_strdup(file);
+    if (!newFile)
+      return nsnull;
+
+    // strip '/'
+    cp = PL_strrchr(newFile, '/');
+    if (cp)
+      ++cp;
+    else
+      cp = newFile;
+
+    if (*cp)
+    {
+      if ((cp1 = PL_strchr(cp, '/'))) *cp1 = 0;  
+      if (*cp != '\0')
+      {
+        returnString = PL_strdup(cp);
+        PR_FREEIF(newFile);
+        return returnString;
+      }
+    }
+  }
+
+  cp = nsnull;
+  cp1 = nsnull;
+
+
+  rv = aURL->GetSpec(&spec);
+  if ( NS_SUCCEEDED(rv) && spec && (*spec) )
+  {
+    char *newSpec = PL_strdup(spec);
+    if (!newSpec)
+      return nsnull;
+
+    char *cp = NULL, *cp1=NULL ;
+
+    // strip '"' 
+    cp = newSpec;
+    while (*cp == '"') 
+      cp++;
+    if ((cp1 = PL_strchr(cp, '"')))
+      *cp1 = 0;
+
+    char *hostStr = nsMsgParseURL(cp, GET_HOST_PART);
+    if (!hostStr)
+      hostStr = cp;
+
+    const char *protocol = nsnull;
+    if (NS_SUCCEEDED(aURL->GetProtocol(&protocol)) && (protocol) && (*protocol) )
+    {
+      if (PL_strcasecmp(protocol, "http") == 0)
+      {
+        returnString = PR_smprintf("%s.html", hostStr);
+        PR_FREEIF(hostStr);
+      }
+      else
+        returnString = hostStr;
+    }
+    else
+      returnString = hostStr;
+
+    PR_FREEIF(newSpec);
+    return returnString;
+  }
+
+  return nsnull;
 }

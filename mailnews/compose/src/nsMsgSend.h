@@ -367,6 +367,9 @@ public:
   nsMsgAttachmentHandler  *m_attachments;
   PRInt32                 m_status; // in case some attachments fail but not all 
 
+  PRInt32                 mPreloadedAttachmentCount;
+  PRInt32                 mRemoteAttachmentCount;
+
   //
   // attachment states and other info...
   //

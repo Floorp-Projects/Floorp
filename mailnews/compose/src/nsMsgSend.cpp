@@ -856,47 +856,60 @@ mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure)
   return mime_write_message_body (state, (char *) buf, size);
 }
 
-int nsMsgComposeAndSend::HackAttachments(
-						  const nsMsgAttachmentData *attachments,
-						  const nsMsgAttachedFile *preloaded_attachments)
-{
+int 
+nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
+						                         const nsMsgAttachedFile *preloaded_attachments)
+{  // RICHIE - CLEANUP!!!!
   MWContext *x = NULL;
   INTL_CharSetInfo c;
   c = LO_GetDocumentCharacterSetInfo(x);
-  if (preloaded_attachments)
-		NS_ASSERTION(!attachments, "not-null attachments");
-	if (attachments)
-		NS_ASSERTION(!preloaded_attachments, "not-null preloaded attachments");
 
+  //
+  // First, count the total number of attachments we are going to process
+  // for this operation!
+  //
+
+  // Count the preloaded attachments!
+  mPreloadedAttachmentCount = 0;
   if (preloaded_attachments && preloaded_attachments[0].orig_url) 
   {
-		/* These are attachments which have already been downloaded to tmp files.
-		We merely need to point the internal attachment data at those tmp
-		files.
-		*/
-		PRInt32 i;
+		while (preloaded_attachments[mPreloadedAttachmentCount].orig_url)
+			mPreloadedAttachmentCount++;
+  }
 
+  mRemoteAttachmentCount = 0;
+  // Count the attachments we have to go retrieve!
+  if (attachments && attachments[0].url) 
+  {
+		while (attachments[mRemoteAttachmentCount].url)
+			mRemoteAttachmentCount++;
+  }
+
+  m_attachment_count = mPreloadedAttachmentCount + mRemoteAttachmentCount;
+
+  // Now create the array of attachment handlers...
+  m_attachments = (nsMsgAttachmentHandler *) new nsMsgAttachmentHandler[m_attachment_count];
+  if (! m_attachments)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PRInt32     i;    // counter for location in attachment array...
+
+  // Now handle the preloaded attachments...
+  if (preloaded_attachments && preloaded_attachments[0].orig_url) 
+  {
+		// These are attachments which have already been downloaded to tmp files.
+		// We merely need to point the internal attachment data at those tmp
+		// files.
 		m_pre_snarfed_attachments_p = PR_TRUE;
 
-		m_attachment_count = 0;
-		while (preloaded_attachments[m_attachment_count].orig_url)
-			m_attachment_count++;
-
-    //
-    // Create the class to deal with attachments...
-    //
-		m_attachments = (nsMsgAttachmentHandler *) new nsMsgAttachmentHandler[m_attachment_count];
-		if (! m_attachments)
-			return NS_ERROR_OUT_OF_MEMORY;
-
-		for (i = 0; i < m_attachment_count; i++) 
+		for (i = 0; i < mPreloadedAttachmentCount; i++) 
     {
+      m_attachments[i].mDeleteFile = PR_FALSE;
 			m_attachments[i].m_mime_delivery_state = this;
 
 			/* These attachments are already "snarfed". */
 			m_attachments[i].m_done = PR_TRUE;
 			NS_ASSERTION (preloaded_attachments[i].orig_url, "null url");
-
 
       if (m_attachments[i].mURL)
         NS_RELEASE(m_attachments[i].mURL);
@@ -943,57 +956,51 @@ int nsMsgComposeAndSend::HackAttachments(
 			msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
 		}
 	}
-	else 
-		if (attachments && attachments[0].url) {
-		/* These are attachments which have already been downloaded to tmp files.
-		We merely need to point the internal attachment data at those tmp
-		files.  We will delete the tmp files as we attach them.
-		*/
-		PRInt32 i;
-		int mailbox_count = 0, news_count = 0;
 
-		m_attachment_count = 0;
-		while (attachments[m_attachment_count].url)
-			m_attachment_count++;
+  //
+  // Now deal remote attachments (url's and such..)
+  //
+  if (attachments && attachments[0].url) 
+  {
+		int         mailbox_count = 0, news_count = 0;
+    PRInt32     locCount = -1;
 
-		m_attachments = (nsMsgAttachmentHandler *)
-		new nsMsgAttachmentHandler[m_attachment_count];
-
-		if (! m_attachments)
-			return NS_ERROR_OUT_OF_MEMORY;
-
-		for (i = 0; i < m_attachment_count; i++) {
+		for (i = mPreloadedAttachmentCount; i < m_attachment_count; i++) 
+    {
+      locCount++;
+      m_attachments[i].mDeleteFile = PR_TRUE;
+      m_attachments[i].m_done = PR_FALSE;
 			m_attachments[i].m_mime_delivery_state = this;
-			NS_ASSERTION (attachments[i].url, "null url");
+			NS_ASSERTION (attachments[locCount].url, "null url");
 
       if (m_attachments[i].mURL)
         NS_RELEASE(m_attachments[i].mURL);
-      m_attachments[i].mURL = attachments[i].url;
+      m_attachments[i].mURL = attachments[locCount].url;
 
 			PR_FREEIF(m_attachments[i].m_override_type);
-			m_attachments[i].m_override_type = PL_strdup (attachments[i].real_type);
+			m_attachments[i].m_override_type = PL_strdup (attachments[locCount].real_type);
 			PR_FREEIF(m_attachments[i].m_charset);
 			m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
 			PR_FREEIF(m_attachments[i].m_override_encoding);
-			m_attachments[i].m_override_encoding = PL_strdup (attachments[i].real_encoding);
+			m_attachments[i].m_override_encoding = PL_strdup (attachments[locCount].real_encoding);
 			PR_FREEIF(m_attachments[i].m_desired_type);
-			m_attachments[i].m_desired_type = PL_strdup (attachments[i].desired_type);
+			m_attachments[i].m_desired_type = PL_strdup (attachments[locCount].desired_type);
 			PR_FREEIF(m_attachments[i].m_description);
-			m_attachments[i].m_description = PL_strdup (attachments[i].description);
+			m_attachments[i].m_description = PL_strdup (attachments[locCount].description);
 			PR_FREEIF(m_attachments[i].m_real_name);
-			m_attachments[i].m_real_name = PL_strdup (attachments[i].real_name);
+			m_attachments[i].m_real_name = PL_strdup (attachments[locCount].real_name);
 			PR_FREEIF(m_attachments[i].m_x_mac_type);
-			m_attachments[i].m_x_mac_type = PL_strdup (attachments[i].x_mac_type);
+			m_attachments[i].m_x_mac_type = PL_strdup (attachments[locCount].x_mac_type);
 			PR_FREEIF(m_attachments[i].m_x_mac_creator);
-			m_attachments[i].m_x_mac_creator = PL_strdup (attachments[i].x_mac_creator);
+			m_attachments[i].m_x_mac_creator = PL_strdup (attachments[locCount].x_mac_creator);
 			PR_FREEIF(m_attachments[i].m_encoding);
 			m_attachments[i].m_encoding = PL_strdup ("7bit");
 
 			// real name is set in the case of vcard so don't change it.
 			// m_attachments[i].m_real_name = 0;
 
-			/* Count up attachments which are going to come from mail folders
-			and from NNTP servers. */
+			// Count up attachments which are going to come from mail folders
+			// and from NNTP servers.
       const char *turl;
       m_attachments[i].mURL->GetSpec(&turl);
 			if (PL_strncasecmp(turl, "mailbox:",8) ||
@@ -1007,38 +1014,38 @@ int nsMsgComposeAndSend::HackAttachments(
 			msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
 		}
 
-		/* If there is more than one mailbox URL, or more than one NNTP url,
-		do the load in serial rather than parallel, for efficiency.
-		*/
+		// If there is more than one mailbox URL, or more than one NNTP url,
+		// do the load in serial rather than parallel, for efficiency.
 		if (mailbox_count > 1 || news_count > 1)
 			m_be_synchronous_p = PR_TRUE;
 
 		m_attachment_pending_count = m_attachment_count;
 
-		/* Start the URL attachments loading (eventually, an exit routine will
-		call the done_callback). */
+		// Start the URL attachments loading (eventually, an exit routine will
+		// call the done_callback).
+  
+		for (i = 0; i < m_attachment_count; i++) 
+    {
+      if (m_attachments[i].m_done)
+      {
+        m_attachment_pending_count--;
+        continue;
+      }
 
-#ifdef UNREADY_CODE
-		if (m_attachment_count == 1)
-			FE_Progress(GetContext(), XP_GetString(NS_MSG_LOAD_ATTACHMNT));
-		else
-			FE_Progress(GetContext(), XP_GetString(NS_MSG_LOAD_ATTACHMNTS));
-#endif
-
-		for (i = 0; i < m_attachment_count; i++) {
-			/* This only returns a failure code if NET_GetURL was not called
-			(and thus no exit routine was or will be called.) */
-			int status = m_attachments [i].SnarfAttachment(mCompFields);
-			if (status < 0)
-				return status;
-
-			if (m_be_synchronous_p)
-				break;
+      //
+      // This only returns a failure code if NET_GetURL was not called
+      // (and thus no exit routine was or will be called.) 
+      //
+      int status = m_attachments [i].SnarfAttachment(mCompFields);
+      if (status < 0)
+        return status;
+      if (m_be_synchronous_p)
+        break;
 		}
 	}
 
+  // If no attachments - finish now (this will call the done_callback).
 	if (m_attachment_pending_count <= 0)
-		/* No attachments - finish now (this will call the done_callback). */
 		GatherMimeAttachments();
 
 	return 0;
@@ -1712,7 +1719,10 @@ nsMsgComposeAndSend::Clear()
           m_attachments[i].mOutFile->close();
 			if (m_attachments[i].mFileSpec) 
       {
-				m_attachments[i].mFileSpec->Delete(PR_FALSE);
+        // Only Delete the file if this variable is set!
+        if (m_attachments[i].mDeleteFile)
+  				m_attachments[i].mFileSpec->Delete(PR_FALSE);
+
 				delete m_attachments[i].mFileSpec;
         m_attachments[i].mFileSpec = nsnull;
 			}
@@ -1776,6 +1786,9 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
 	mHTMLFileSpec = nsnull;
   mCopyFileSpec = nsnull;
   mCopyObj = nsnull;
+
+  mPreloadedAttachmentCount = 0;
+  mRemoteAttachmentCount = 0;
 
 	NS_INIT_REFCNT();
 }
