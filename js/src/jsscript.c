@@ -563,6 +563,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     return JS_FALSE;
 }
 
+#ifndef MOZILLA_CLIENT
+/*
+ * These cannot be exposed to web content, and chrome does not need them, so
+ * we take them out of the Mozilla client altogether.  Script.thaw is a hole
+ * wide enough that you could hack your own native function and call it!
+ */
+
 static JSBool
 script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
@@ -709,9 +716,10 @@ out:
     return ok;
 }
 
-#endif /* JS_HAS_XDR */
-
 static const char js_thaw_str[] = "thaw";
+
+#endif /* !defined MOZILLA_CLIENT */
+#endif /* JS_HAS_XDR */
 
 static JSFunctionSpec script_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -720,10 +728,10 @@ static JSFunctionSpec script_methods[] = {
     {js_toString_str,   script_toString,        0,0,0},
     {"compile",         script_compile,         2,0,0},
     {"exec",            script_exec,            1,0,0},
-#if JS_HAS_XDR
+#if JS_HAS_XDR && !defined MOZILLA_CLIENT
     {"freeze",          script_freeze,          0,0,0},
     {js_thaw_str,       script_thaw,            1,0,0},
-#endif /* JS_HAS_XDR */
+#endif /* JS_HAS_XDR && !defined MOZILLA_CLIENT */
     {0,0,0,0,0}
 };
 
@@ -783,7 +791,7 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return script_compile(cx, obj, argc, argv, rval);
 }
 
-#if JS_HAS_XDR
+#if JS_HAS_XDR && !defined MOZILLA_CLIENT
 
 static JSBool
 script_static_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -803,11 +811,11 @@ static JSFunctionSpec script_static_methods[] = {
     {0,0,0,0,0}
 };
 
-#else  /* !JS_HAS_XDR */
+#else  /* !JS_HAS_XDR || defined MOZILLA_CLIENT */
 
 #define script_static_methods   NULL
 
-#endif /* !JS_HAS_XDR */
+#endif /* !JS_HAS_XDR || defined MOZILLA_CLIENT */
 
 JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj)
