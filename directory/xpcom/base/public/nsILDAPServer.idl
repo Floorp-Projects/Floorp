@@ -33,6 +33,8 @@
  */
 
 #include "nsISupports.idl"
+#include "nsILDAPConnection.idl"
+
 interface nsILDAPURL;
 
 /**
@@ -100,4 +102,13 @@ interface nsILDAPServer : nsISupports {
      * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
      */
     attribute nsILDAPURL url;
+
+    /**
+     * protocol version to be used (see nsILDAPConnection.idl for constants)
+     * Defaults to 3.
+     *
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer passed to getter
+     * @exception NS_ERROR_INVALID_ARG      Invalid version passed to setter
+     */
+    attribute unsigned long protocolVersion;
 };

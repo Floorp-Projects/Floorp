@@ -60,7 +60,7 @@ class nsLDAPServer : public nsILDAPServer
     nsCString mPassword;    // Password to bind with
     nsCString mBindDN;      // DN associated with the UID above
     PRUint32 mSizeLimit;    // Limit the LDAP search to this # of entries
-
+    PRUint32 mProtocolVersion;  // What version of LDAP to use?
     // This "links" to a LDAP URL object, which holds further information
     // related to the LDAP server. Like Host, port, base-DN and scope.
     nsCOMPtr<nsILDAPURL> mURL;

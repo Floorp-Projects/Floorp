@@ -1279,7 +1279,8 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     ["@mozilla.org/network/ldap-connection;1"].
                     createInstance(Components.interfaces.nsILDAPConnection);
             connection.init(queryURL.host, queryURL.port, null,
-                            generateGetTargetsBoundCallback(), null)
+                            generateGetTargetsBoundCallback(), null,
+                            Components.interfaces.nsILDAPConnection.VERSION3);
 
             // XXXdmose - in this case, we almost certainly shouldn't be
             // falling through to an error case, but instead returning 

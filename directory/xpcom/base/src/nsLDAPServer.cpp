@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Leif Hedstrom <leif@netscape.com>
+ *                 Dan Mosedale <dmose@mozilla.org>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -38,9 +39,9 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPServer, nsILDAPServer)
 
 nsLDAPServer::nsLDAPServer()
+    : mSizeLimit(0),
+      mProtocolVersion(nsILDAPConnection::VERSION3)
 {
-
-    mSizeLimit = 0;
 }
 
 nsLDAPServer::~nsLDAPServer()
@@ -135,5 +136,28 @@ NS_IMETHODIMP nsLDAPServer::GetUrl(nsILDAPURL **_retval)
 NS_IMETHODIMP nsLDAPServer::SetUrl(nsILDAPURL *aURL)
 {
     mURL = aURL;
+    return NS_OK;
+}
+
+// attribute long protocolVersion
+NS_IMETHODIMP nsLDAPServer::GetProtocolVersion(PRUint32 *_retval)
+{
+    if (!_retval) {
+        NS_ERROR("nsLDAPServer::GetProtocolVersion: null pointer ");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    *_retval = mProtocolVersion;
+    return NS_OK;
+}
+NS_IMETHODIMP nsLDAPServer::SetProtocolVersion(PRUint32 aVersion)
+{
+    if (aVersion != nsILDAPConnection::VERSION2 &&
+        aVersion != nsILDAPConnection::VERSION3) {
+        NS_ERROR("nsLDAPServer::SetProtocolVersion: invalid version");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    mProtocolVersion = aVersion;
     return NS_OK;
 }

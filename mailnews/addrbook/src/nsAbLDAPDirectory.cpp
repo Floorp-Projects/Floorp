@@ -135,12 +135,14 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
          * change. 
          *
          * But the uri value was also the means by which third-party
-         * products could integrate with Mozilla's LDAP Address Books without 
-         * necessarily having an entry in the preferences file or more importantly
-         * needing to be able to change the preferences entries. Thus to set the 
-         * URI Spec now, it is only necessary to read the uri pref entry, while in the case
-         * where it is not a preference, we need to replace the "moz-abldapdirectory".
-        */
+         * products could integrate with Mozilla's LDAP Address Books
+         * without necessarily having an entry in the preferences file
+         * or more importantly needing to be able to change the
+         * preferences entries. Thus to set the URI Spec now, it is
+         * only necessary to read the uri pref entry, while in the
+         * case where it is not a preference, we need to replace the
+         * "moz-abldapdirectory".
+         */
         nsCAutoString tempLDAPURL(mURINoQuery);
         tempLDAPURL.ReplaceSubstring("moz-abldapdirectory:", "ldap:");
         rv = mURL->SetSpec(tempLDAPURL);
@@ -162,6 +164,24 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     if (NS_FAILED(rv)) {
         mLogin.Truncate();  // zero out mLogin
     }
+
+    // get the protocol version, if there is any.  using a string pref
+    // here instead of an int, as protocol versions sometimes have names like
+    // "4bis".
+    //
+    nsXPIDLCString protocolVersion;
+    rv = prefs->GetCharPref(
+        PromiseFlatCString(
+            Substring(mURINoQuery, kLDAPDirectoryRootLen,
+                      mURINoQuery.Length() - kLDAPDirectoryRootLen)
+            + NS_LITERAL_CSTRING(".protocolVersion")).get(),
+        getter_Copies(protocolVersion));
+
+    if (NS_SUCCEEDED(rv) && protocolVersion.Equals("2")) {
+        mProtocolVersion = nsILDAPConnection::VERSION2;
+    }
+    // otherwise we leave mProtocolVersion as the default (see the initializers
+    // for the nsAbLDAPDirectoryQuery class).
 
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);

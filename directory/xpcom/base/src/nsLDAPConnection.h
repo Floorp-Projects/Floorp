@@ -121,6 +121,7 @@ class nsLDAPConnection : public nsILDAPConnection,
 
     PRInt32 mPort;                      // The LDAP port we're binding to
     PRBool mSSL;                        // the options
+    PRUint32 mVersion;                  // LDAP protocol version
 
     nsCString mResolvedIP;              // Preresolved list of host IPs
     nsCOMPtr<nsILDAPMessageListener> mInitListener; // Init callback

@@ -793,6 +793,19 @@ function setupLdapAutocompleteSession()
                 // if we don't have this pref, no big deal
             }
 
+            // set the LDAP protocol version correctly
+            var protocolVersion;
+            try { 
+                protocolVersion = sPrefs.getCharPref(autocompleteDirectory + 
+                                                      ".protocolVersion");
+            } catch (ex) {
+                // if we don't have this pref, no big deal
+            }
+            if (protocolVersion == "2") {
+                LDAPSession.login = 
+                    Components.interfaces.nsILDAPConnection.VERSION2;
+            }
+
             // find out if we need to authenticate, and if so, tell the LDAP
             // autocomplete session how to prompt for a password.  This window
             // (the compose window) is being used to parent the authprompter.

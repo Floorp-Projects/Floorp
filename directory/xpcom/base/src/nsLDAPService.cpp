@@ -708,6 +708,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     nsCAutoString password;
     PRInt32 port;
     PRUint32 options;
+    PRUint32 protocolVersion;
     nsresult rv;
 
     server = aEntry->GetServer();
@@ -715,7 +716,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
         return NS_ERROR_FAILURE;
     }
 
-    // Get username and password from the server entry.
+    // Get username, password, and protocol version from the server entry.
     //
     rv = server->GetBinddn(binddn);
     if (NS_FAILED(rv)) {
@@ -725,7 +726,11 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
-            
+    rv = server->GetProtocolVersion(&protocolVersion);
+    if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+    }
+
     // Get the host and port out of the URL, which is in the server entry.
     //
     rv = server->GetUrl(getter_AddRefs(url));
@@ -758,7 +763,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     //
     rv = conn->Init(host.get(), port, 
                     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE, 
-                    binddn, this, nsnull);
+                    binddn, this, nsnull, protocolVersion);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of

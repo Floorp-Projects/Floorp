@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Seth Spitzer <sspitzer@netscape.com>
+ *  Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -1457,6 +1458,8 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 				break;
 			}
 			break;
+                case  'r': /* protocolVersion */
+                    rc = idProtocolVersion;
 		}
 		break;
 
@@ -2974,6 +2977,11 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
   if (server->savePassword)
     server->password = DIR_GetStringPref (prefstring, "auth.password", tempstring, "");
   
+  char *versionString = DIR_GetStringPref(prefstring, "protocolVersion", 
+                                          tempstring, "3");
+  DIR_ForceFlag(server, DIR_LDAP_VERSION3, !strcmp(versionString, "3"));
+  nsCRT::free(versionString);
+
   prefBool = DIR_GetBoolPref (prefstring, "autoComplete.enabled", tempstring, kDefaultAutoCompleteEnabled);
   DIR_ForceFlag (server, DIR_AUTO_COMPLETE_ENABLED, prefBool);
   prefBool = DIR_GetBoolPref (prefstring, "autoComplete.never", tempstring, kDefaultAutoCompleteNever);
@@ -3839,6 +3847,10 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	}
 
 	DIR_SetBoolPref (prefstring, "vlvDisabled", tempstring, DIR_TestFlag(server, DIR_LDAP_VLV_DISABLED), kDefaultVLVDisabled);
+
+        DIR_SetStringPref(prefstring, "protocolVersion", tempstring,
+                          DIR_TestFlag(server, DIR_LDAP_VERSION3) ? "3" : "2",
+                          "3");
 
 	DIR_SaveCustomAttributes (prefstring, tempstring, server);
 	DIR_SaveCustomFilters (prefstring, tempstring, server);

@@ -68,8 +68,10 @@ interface nsILDAPConnection : nsISupports
      * @param aBindName         DN to bind as
      * @param aMessageListener  Callback for DNS resolution completion
      * @param aClosure          private parameter (anything caller desires)
+     * @param aVersion          LDAP version to use (currently VERSION2 or 
+     *                          VERSION3)
      *
-     * @exception NS_ERROR_ILLEGAL_VALUE        null pointer passed in
+     * @exception NS_ERROR_ILLEGAL_VALUE        null pointer or invalid version
      * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
      * @exception NS_ERROR_OFFLINE              we are in off-line mode
      * @exception NS_ERROR_FAILURE              
@@ -78,7 +80,10 @@ interface nsILDAPConnection : nsISupports
     void init(in string aHost, in long aPort, in boolean aSSL,
               in AUTF8String aBindName, 
               in nsILDAPMessageListener aMessageListener,
-              in nsISupports aClosure);
+              in nsISupports aClosure, in unsigned long aVersion);
+
+    const unsigned long VERSION2 = 2;
+    const unsigned long VERSION3 = 3;
 
     /**
      * Get information about the last error that occured on this connection.

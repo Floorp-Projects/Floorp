@@ -164,10 +164,17 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
             return rv;
     }
 
+    PRUint32 protocolVersion;
+    if (DIR_TestFlag(mDirServer, DIR_LDAP_VERSION3)) {
+        protocolVersion = nsILDAPConnection::VERSION3;
+    } else {
+        protocolVersion = nsILDAPConnection::VERSION2;
+    }
+
     // initialize the LDAP connection
     return mConnection->Init(host.get(), port, 
                              (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE,
-                             aAuthDN, listener, nsnull);
+                             aAuthDN, listener, nsnull, protocolVersion);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener)

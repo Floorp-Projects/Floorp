@@ -180,7 +180,8 @@ typedef enum
 	idReplExcludedAttributes,
 	idReplExcludedAttributesCount,
 	idPalmCategory,
-	idPalmSyncTimeStamp
+        idPalmSyncTimeStamp,
+        idProtocolVersion
 } DIR_PrefId;
 
 
@@ -403,7 +404,7 @@ PRBool     DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *
 #define DIR_IS_SECURE                      0x00000008
 #define DIR_SAVE_RESULTS                   0x00000010  /* not used by the FEs */
 #define DIR_EFFICIENT_WILDCARDS            0x00000020  /* not used by the FEs */
-#define DIR_LDAP_VERSION3                  0x00000040  /* not used by the FEs */
+#define DIR_LDAP_VERSION3                  0x00000040
 #define DIR_LDAP_VLV_DISABLED              0x00000080  /* not used by the FEs */
 #define DIR_LDAP_VLV_SUPPORTED             0x00000100  /* not used by the FEs */
 #define DIR_LDAP_ROOTDSE_PARSED            0x00000200  /* not used by the FEs */

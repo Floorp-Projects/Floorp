@@ -63,6 +63,7 @@ nsLDAPConnection::nsLDAPConnection()
       mPendingOperations(0),
       mRunnable(0),
       mSSL(PR_FALSE),
+      mVersion(nsILDAPConnection::VERSION3),
       mDNSRequest(0)
 {
 }
@@ -167,7 +168,7 @@ NS_IMETHODIMP
 nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
                        const nsACString& aBindName, 
                        nsILDAPMessageListener *aMessageListener,
-                       nsISupports *aClosure)
+                       nsISupports *aClosure, PRUint32 aVersion)
 {
     nsCOMPtr<nsIDNSListener> selfProxy;
     nsresult rv;
@@ -186,13 +187,17 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
 
     mClosure = aClosure;
 
-    // Save the port number for later use, once the DNS server(s) has
-    // resolved the host part.
+    // Save the port number, SSL flag, and protocol version for later
+    // use, once the DNS server(s) has resolved the host part.
     //
     mPort = aPort;
-
-    // Save the SSL flag for later use
     mSSL = aSSL;
+    if (aVersion != nsILDAPConnection::VERSION2 && 
+        aVersion != nsILDAPConnection::VERSION3) {
+        NS_ERROR("nsLDAPConnection::Init(): illegal version");
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+    mVersion = aVersion;
 
     // Save the Init listener reference, we need it when the async
     // DNS resolver has finished.
@@ -901,30 +906,49 @@ nsLDAPConnection::OnLookupComplete(nsIDNSRequest *aRequest,
             const int lDebug = 0;
             ldap_set_option(mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
 #endif
-        }
+
+            // the C SDK currently defaults to v2.  if we're to use v3, 
+            // tell it so.
+            //
+            int version;
+            switch (mVersion) {
+            case 2:
+                break;
+            case 3:
+                version = LDAP_VERSION3;
+                ldap_set_option(mConnectionHandle, LDAP_OPT_PROTOCOL_VERSION, 
+                                &version);
+		break;
+            default:
+                NS_ERROR("nsLDAPConnection::OnLookupComplete(): mVersion"
+                         " invalid");
+            }
 
 #ifdef MOZ_PSM
-        // This code sets up the current connection to use PSM for SSL
-        // functionality.  Making this use libssldap instead for
-        // non-browser user shouldn't be hard.
+            // This code sets up the current connection to use PSM for SSL
+            // functionality.  Making this use libssldap instead for
+            // non-browser user shouldn't be hard.
 
-        extern nsresult nsLDAPInstallSSL(LDAP *ld, const char *aHostName);
+            extern nsresult nsLDAPInstallSSL(LDAP *ld, const char *aHostName);
 
-        if (mSSL) {
-            if (ldap_set_option(mConnectionHandle, LDAP_OPT_SSL, LDAP_OPT_ON)
-                != LDAP_SUCCESS ) {
-                NS_ERROR("nsLDAPConnection::OnStopLookup(): Error configuring"
-                         " connection to use SSL");
-                rv = NS_ERROR_UNEXPECTED;
+            if (mSSL) {
+                if (ldap_set_option(mConnectionHandle, LDAP_OPT_SSL,
+                                    LDAP_OPT_ON) != LDAP_SUCCESS ) {
+                    NS_ERROR("nsLDAPConnection::OnStopLookup(): Error"
+                             " configuring connection to use SSL");
+                    rv = NS_ERROR_UNEXPECTED;
+                }
+
+                rv = nsLDAPInstallSSL(mConnectionHandle, mDNSHost.get());
+                if (NS_FAILED(rv)) {
+                    NS_ERROR("nsLDAPConnection::OnStopLookup(): Error"
+                             " installing secure LDAP routines for"
+                             " connection");
+                }
             }
-
-            rv = nsLDAPInstallSSL(mConnectionHandle, mDNSHost.get());
-            if (NS_FAILED(rv)) {
-                NS_ERROR("nsLDAPConnection::OnStopLookup(): Error installing"
-                         " secure LDAP routines for connection");
-            }
-        }
 #endif
+        }
+
         // Create a new runnable object, and increment the refcnt. The
         // thread will also hold a strong ref to the runnable, but we need
         // to make sure it doesn't get destructed until we are done with

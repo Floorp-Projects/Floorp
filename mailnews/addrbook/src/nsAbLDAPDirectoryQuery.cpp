@@ -631,6 +631,7 @@ nsresult nsAbQueryLDAPMessageListener::QueryResultStatus (nsISupportsArray* prop
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbLDAPDirectoryQuery, nsIAbDirectoryQuery)
 
 nsAbLDAPDirectoryQuery::nsAbLDAPDirectoryQuery() :
+    mProtocolVersion (nsILDAPConnection::VERSION3),
     mInitialized(PR_FALSE),
     mCounter (1),
     mLock (nsnull)
@@ -825,7 +826,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     // Now lets initialize the LDAP connection properly. We'll kick
     // off the bind operation in the callback function, |OnLDAPInit()|.
     rv = ldapConnection->Init(host.get(), port, options, mLogin,
-                              messageListener, nsnull);
+                              messageListener, nsnull, mProtocolVersion);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;

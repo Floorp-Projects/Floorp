@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
+ * Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -74,6 +75,7 @@ protected:
     nsresult Initiate ();
     nsXPIDLCString mLogin; // authenticate to the LDAP server as...
     nsCOMPtr<nsILDAPURL> mDirectoryUrl; // the URL for the server
+    PRUint32 mProtocolVersion; // version of LDAP (see nsILDAPConnection.idl)
 
 private:
     nsHashtable mListeners;

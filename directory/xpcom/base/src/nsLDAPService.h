@@ -89,7 +89,7 @@ class nsLDAPServiceEntry
     inline PRBool DeleteEntry();
 
   protected:
-    PRUint32 mLeases;		  // The number of leases currently granted
+    PRUint32 mLeases;         // The number of leases currently granted
     PRTime mTimestamp;        // Last time this server was "used"
     PRBool mDelete;           // This entry is due for deletion
     PRBool mRebinding;        // Keep state if we are rebinding or not
