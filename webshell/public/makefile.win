@@ -22,6 +22,7 @@ IGNORE_MANIFEST=1
 MODULE=raptor 
 
 EXPORTS =			\
+        nsIDocumentLoader.h     \
 	nsIDocumentWidget.h		\
 	nsILinkHandler.h	\
 	nsIWebWidget.h		\
