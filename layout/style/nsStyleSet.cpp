@@ -973,7 +973,7 @@ StyleSetImpl::AddImportantRules(nsRuleNode* aCurrLevelNode,
   aCurrLevelNode->GetRule(getter_AddRefs(rule));
   nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
   if (cssRule) {
-    nsCOMPtr<nsIStyleRule> impRule = getter_AddRefs(cssRule->GetImportantRule());
+    nsCOMPtr<nsIStyleRule> impRule = cssRule->GetImportantRule();
     if (impRule)
       mRuleWalker->Forward(impRule);
   }

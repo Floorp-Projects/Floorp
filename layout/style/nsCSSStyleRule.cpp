@@ -1194,9 +1194,9 @@ DOMCSSDeclarationImpl::DropReference(void)
 
 nsresult
 DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
-                                             PRBool aAllocate)
+                                         PRBool aAllocate)
 {
-  if (nsnull != mRule) {
+  if (mRule) {
     *aDecl = mRule->GetDeclaration();
   }
   else {
@@ -1209,7 +1209,7 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 nsresult
 DOMCSSDeclarationImpl::SetCSSDeclaration(nsCSSDeclaration *aDecl)
 {
-  if (nsnull != mRule) {
+  if (mRule) {
     mRule->SetDeclaration(aDecl);
   }
 
@@ -1414,7 +1414,7 @@ public:
   virtual PRInt32 GetWeight(void) const;
   virtual void SetWeight(PRInt32 aWeight);
 
-  virtual nsIStyleRule* GetImportantRule(void);
+  virtual already_AddRefed<nsIStyleRule> GetImportantRule(void);
 
   // hook for inspector
   virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
@@ -1645,11 +1645,11 @@ void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
   mWeight = aWeight;
 }
 
-nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
+already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
 {
-  if ((nsnull == mImportantRule) && (nsnull != mDeclaration)) {
+  if (!mImportantRule && mDeclaration) {
     nsCSSDeclaration*  important = mDeclaration->GetImportantValues();
-    if (nsnull != important) {
+    if (important) {
       mImportantRule = new CSSImportantRule(mSheet, important);
       NS_ADDREF(mImportantRule);
     }

@@ -42,6 +42,7 @@
 #include "nsColor.h"
 #include "nsString.h"
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
 
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -200,7 +201,7 @@ public:
   PRInt32      GetPixelValue(void) const;
   float        GetPercentValue(void) const;
   nsAString&   GetStringValue(nsAString& aBuffer) const;
-  nsISupports* GetISupportsValue(void) const;
+  already_AddRefed<nsISupports> GetISupportsValue(void) const;
   nscolor      GetColorValue(void) const;
 
   /**
@@ -332,7 +333,7 @@ inline nsAString& nsHTMLValue::GetStringValue(nsAString& aBuffer) const
   return aBuffer;
 }
 
-inline nsISupports* nsHTMLValue::GetISupportsValue(void) const
+inline already_AddRefed<nsISupports> nsHTMLValue::GetISupportsValue(void) const
 {
   NS_ASSERTION(mUnit == eHTMLUnit_ISupports, "not an ISupports value");
   if (mUnit == eHTMLUnit_ISupports) {
