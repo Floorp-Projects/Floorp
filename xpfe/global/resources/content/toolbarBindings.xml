@@ -70,6 +70,13 @@ Contributor(s):
         </body>
       </method>
     </implementation>  
+    <handlers>
+      <handler event="click">
+      <![CDATA[
+        this.grippyClicked();
+      ]]>
+      </handler>
+    </handlers>
   </binding>  
 
   <binding id="toolbox" extends="xul:box">
@@ -157,7 +164,6 @@ Contributor(s):
                 collapsedTrayHolder.removeAttribute("collapsed");
               this.findNodeByAttribute("tbattr", "collapsed-tray").appendChild(collapsedGrippy);
               collapsedGrippy = document.getElementById("moz_tb_collapsed_" + aToolbar.id);
-              collapsedGrippy.setAttribute("onclick", "this.grippyClicked()");
             }
           }
           catch (e) {
@@ -197,7 +203,7 @@ Contributor(s):
   <binding id="toolbar" extends="xul:box">
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
-                         onclick="this.grippyClicked();" tbattr="toolbar-grippy"
+                         tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
       <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
         <children/>
@@ -228,8 +234,7 @@ Contributor(s):
   <binding id="menubar" extends="xul:menubar">
     <content>
       <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
-                         onclick="this.grippyClicked();" tbattr="toolbar-grippy"
-                         class="toolbar-grippy"/>
+                         tbattr="toolbar-grippy" class="toolbar-grippy"/>
       <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
         <children/>
       </xul:box>
