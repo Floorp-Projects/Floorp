@@ -1117,6 +1117,114 @@ EditorAppCoreInsertImage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 
 //
+// Native method InsertList
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->InsertList(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertList requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Indent
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreIndent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->Indent(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function indent requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Align
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreAlign(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->Align(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function align requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method GetSelectedElement
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1804,7 +1912,7 @@ EditorAppCoreCloseSpellChecking(JSContext *cx, JSObject *obj, uintN argc, jsval 
 //
 JSClass EditorAppCoreClass = {
   "EditorAppCore", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetEditorAppCoreProperty,
@@ -1861,6 +1969,9 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"insertText",          EditorAppCoreInsertText,     1},
   {"insertLink",          EditorAppCoreInsertLink,     0},
   {"insertImage",          EditorAppCoreInsertImage,     0},
+  {"insertList",          EditorAppCoreInsertList,     1},
+  {"indent",          EditorAppCoreIndent,     1},
+  {"align",          EditorAppCoreAlign,     1},
   {"getSelectedElement",          EditorAppCoreGetSelectedElement,     1},
   {"createElementWithDefaults",          EditorAppCoreCreateElementWithDefaults,     1},
   {"insertElement",          EditorAppCoreInsertElement,     2},

@@ -101,6 +101,12 @@ public:
 
   NS_IMETHOD    InsertImage()=0;
 
+  NS_IMETHOD    InsertList(const nsString& aListType)=0;
+
+  NS_IMETHOD    Indent(const nsString& aIndent)=0;
+
+  NS_IMETHOD    Align(const nsString& aAlign)=0;
+
   NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
@@ -172,6 +178,9 @@ public:
   NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
   NS_IMETHOD    InsertLink();  \
   NS_IMETHOD    InsertImage();  \
+  NS_IMETHOD    InsertList(const nsString& aListType);  \
+  NS_IMETHOD    Indent(const nsString& aIndent);  \
+  NS_IMETHOD    Align(const nsString& aAlign);  \
   NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);  \
   NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);  \
@@ -226,6 +235,9 @@ public:
   NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to InsertText(aTextToInsert); }  \
   NS_IMETHOD    InsertLink() { return _to InsertLink(); }  \
   NS_IMETHOD    InsertImage() { return _to InsertImage(); }  \
+  NS_IMETHOD    InsertList(const nsString& aListType) { return _to InsertList(aListType); }  \
+  NS_IMETHOD    Indent(const nsString& aIndent) { return _to Indent(aIndent); }  \
+  NS_IMETHOD    Align(const nsString& aAlign) { return _to Align(aAlign); }  \
   NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn) { return _to GetSelectedElement(aTagName, aReturn); }  \
   NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn) { return _to CreateElementWithDefaults(aTagName, aReturn); }  \
   NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn) { return _to InsertElement(aElement, aDeleteSelection, aReturn); }  \
