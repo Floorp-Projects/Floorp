@@ -852,6 +852,13 @@ nsFastLoadFileReader::ReadSharpObjectInfo(nsFastLoadSharpObjectInfo *aInfo)
     if (NS_FAILED(rv))
         return rv;
 
+    //XXXjrgm bug #189832 [temp. hack]; if an offset is zero, we've hit
+    // the bug and most abort fastload now.
+    NS_ASSERTION(aInfo->mCIDOffset != 0, 
+                 "fastload reader: Offset into file cannot be zero!");
+    if (aInfo->mCIDOffset == 0) 
+        return NS_ERROR_UNEXPECTED;
+
     rv = Read16(&aInfo->mStrongRefCnt);
     if (NS_FAILED(rv))
         return rv;
@@ -1624,6 +1631,11 @@ nsFastLoadFileWriter::WriteSharpObjectInfo(const nsFastLoadSharpObjectInfo& aInf
 {
     nsresult rv;
 
+    //XXXjrgm bug #189832 [temp. hack]; if an offset is zero, we've hit
+    // the bug. However, I'm not sure if we can safely abort at this point.
+    NS_ASSERTION(aInfo.mCIDOffset != 0, 
+                 "fastload writer: Offset into file cannot be zero!");
+
     rv = Write32(aInfo.mCIDOffset);
     if (NS_FAILED(rv))
         return rv;
@@ -1783,6 +1795,10 @@ nsFastLoadFileWriter::WriteFooter()
         new nsFastLoadSharpObjectInfo[footerPrefix.mNumSharpObjects];
     if (!objvec)
         return NS_ERROR_OUT_OF_MEMORY;
+    //XXXjrgm bug #189832 [temp. hack]; memset zero so I can catch bogus
+    // entries later
+    memset(objvec, 0, footerPrefix.mNumSharpObjects *
+                      sizeof(nsFastLoadSharpObjectInfo));
 
     count = PL_DHashTableEnumerate(&mObjectMap, ObjectMapEnumerate, objvec);
     NS_ASSERTION(count == footerPrefix.mNumSharpObjects,
@@ -2315,6 +2331,13 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
         aReader->mFooter.mObjectMap;
     for (i = 0, n = aReader->mFooter.mNumSharpObjects; i < n; i++) {
         nsFastLoadFileReader::nsObjectMapEntry* readEntry = &readObjectMap[i];
+
+        //XXXjrgm bug #189832 [temp. hack]; if an offset is zero, we've hit
+        // the bug and most abort fastload now.
+        NS_ASSERTION(readEntry->mCIDOffset != 0,
+                     "fastload updater: Offset into file cannot be zero!");
+        if (readEntry->mCIDOffset == 0) 
+            return NS_ERROR_UNEXPECTED;
 
         nsISupports* obj = readEntry->mReadObject;
         NSFastLoadOID oid = MFL_SHARP_INDEX_TO_OID(i);
