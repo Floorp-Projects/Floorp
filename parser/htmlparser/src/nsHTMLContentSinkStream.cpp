@@ -30,7 +30,7 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLTokens.h"
 #include <iostream.h>
-#include "nsstring.h"
+#include "nsString.h"
 #include "nsParserTypes.h"
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);                 
