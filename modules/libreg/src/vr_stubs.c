@@ -22,15 +22,16 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #ifndef STANDALONE_REGISTRY
 #include "prtypes.h"
 #endif
+
 #include "vr_stubs.h"
 
 #ifdef XP_MAC
 #include <Folders.h>
 #include <Script.h>
-#include <size_t.h>
 #include <stdlib.h>
 #endif
 
@@ -164,6 +165,10 @@ extern XP_File VR_StubOpen (const char *mode)
     return fh;
 }
 
+#if 0
+/* Uncomment the following for older Mac build environments
+ * that don't support these functions
+ */
 char *strdup(const char *source)
 {
         char    *newAllocation;
@@ -237,6 +242,8 @@ int strncasecmp(const char *str1, const char *str2, int length)
 
 	return currentChar1 - currentChar2;
 }
+#endif
+
 #endif /* XP_MAC */
 
 
@@ -258,10 +265,13 @@ int strncasecmp(const char *str1, const char *str2, int length)
 #include "NSReg.h"
 #include "VerReg.h"
 
-char *TheRegistry = "registry"; 
+#define DEF_REG "/.netscape/registry"
+
+char *TheRegistry; 
 char *Flist;
-/* WARNING: build hackery */
+
 #ifdef STANDALONE_REGISTRY
+/* WARNING: build hackery */
 long BUILDNUM =
 #include "../../../build/build_number"
 ;
@@ -270,9 +280,6 @@ long BUILDNUM =
 REGERR vr_ParseVersion(char *verstr, VERSION *result);
 
 #ifdef XP_UNIX
-
-#define DEF_REG "/.netscape/registry"
-
 XP_File VR_StubOpen (const char *name, const char * mode)
 {
 	XP_File fh;
@@ -280,20 +287,23 @@ XP_File VR_StubOpen (const char *name, const char * mode)
 
 #ifndef STANDALONE_REGISTRY
     char *def = NULL;
+    char *home = NULL;
     if (name == NULL || *name == '\0') {
-      char *home = getenv("HOME");
-      if (home != NULL) {
-        def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG));
-        if (def != NULL) {
-          XP_STRCPY(def, home);
-          XP_STRCAT(def, DEF_REG);
+        home = getenv("HOME");
+        if (home != NULL) {
+            def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG) + 1);
+            if (def != NULL) {
+                XP_STRCPY(def, home);
+                XP_STRCAT(def, DEF_REG);
+            }
         }
-      }
-      if (def != NULL) {
-        name = def;
-      } else {
-        name = TheRegistry;
-      }
+        if (def != NULL) {
+            name = def;
+        } 
+        else {
+            /* couldn't find the filename to open */
+            return (XP_File)NULL;
+        }
     }
 #else
     name = TheRegistry;
@@ -312,6 +322,7 @@ XP_File VR_StubOpen (const char *name, const char * mode)
 }
 
 #endif
+
 
 #ifdef STANDALONE_REGISTRY
 

@@ -88,11 +88,10 @@ LINCS= $(LINCS) -I$(PUBLIC)/libreg   \
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-export:: $(DLL)
+export:: $(DLL)	
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
 clobber::
     $(RM) $(DIST)\bin\$(DLL)
     $(RM) $(DIST)\lib\$(LIBRARY)
-

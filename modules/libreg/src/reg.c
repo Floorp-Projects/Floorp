@@ -642,7 +642,7 @@ static REGERR nr_ReadDesc(REGFILE *reg, REGOFF offset, REGDESC *desc)
 
         if ( TYPE_IS_ENTRY(desc->type) ) {
             desc->down = 0;
-            desc->valuebuf  = nr_ReadShort( descBuf + DESC_VALUEBUF );
+            desc->valuebuf  = nr_ReadLong( descBuf + DESC_VALUEBUF );
         }
         else {  /* TYPE is KEY */
             desc->down      = nr_ReadLong( descBuf + DESC_DOWN );
@@ -1594,7 +1594,6 @@ static void   nr_InitStdRkeys( REGFILE *reg )
 {
     REGERR      err;
     RKEY        key;
-    char        *profName;
 
     XP_ASSERT( reg != NULL );
 
@@ -1624,20 +1623,7 @@ static void   nr_InitStdRkeys( REGFILE *reg )
     }
 
     /* ROOTKEY_CURRENT_USER */
-#if 0 /* delay until first use */ /*#ifndef STANDALONE_REGISTRY */
-    err = PREF_CopyDefaultCharPref( "profile.name", &profName );
-
-    if (err == PREF_NOERROR ) {
-        err = nr_RegAddKey( reg, reg->rkeys.users, profName, &key );
-        XP_FREE(profName);
-    }
-    else {
-        err = nr_RegAddKey( reg, reg->rkeys.users, "default", &key );
-    }
-    if ( err == REGERR_OK ) {
-        reg->rkeys.current_user = key;
-    }
-#endif
+    /* delay until first use -- see nr_TranslateKey */
 
     /* ROOTKEY_PRIVATE */
     err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_PRIVATE_STR, &key );
@@ -1787,6 +1773,7 @@ static void nr_Upgrade_1_1(REGFILE *reg)
 
 }
 
+
 static char *nr_GetUsername()
 {
   if (NULL == user_name) {
@@ -1796,9 +1783,38 @@ static char *nr_GetUsername()
   }
 }
 
+
+
 /* ---------------------------------------------------------------------
  * Public API
  * --------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetUsername - Gets a copy of the current username
+ *
+ * Parameters:
+ *   A variable which, on exit will contain an alloc'ed string which is a
+ *   copy of the current username.
+ *
+ * Output: 
+ * ---------------------------------------------------------------------
+ */
+
+VR_INTERFACE(REGERR) NR_RegGetUsername(char **name)
+{
+  char *tmp = XP_STRDUP(nr_GetUsername());
+
+  XP_ASSERT(name);
+
+  if (NULL == tmp) {
+    *name = NULL;
+    return REGERR_MEMORY;
+  }
+  
+  *name = tmp;
+  
+  return REGERR_OK;
+}
 
 /* ---------------------------------------------------------------------
  * NR_RegSetUsername - Set the current username
@@ -1818,6 +1834,10 @@ VR_INTERFACE(REGERR) NR_RegSetUsername(const char *name)
   }
   
   XP_FREEIF(user_name);
+
+/* changing the username should go through and clear out the current.user
+   for each open registry. */
+   
   user_name = tmp;
   
   return REGERR_OK;
@@ -2718,63 +2738,150 @@ VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
     if ( err != REGERR_OK )
         return err;
 
-    /* if in initial state */
-    if ( *state == 0 ) {
+    /* if in initial state and no children return now */
+    if ( *state == 0 && desc.down == 0 )
+        return REGERR_NOMORE;
 
-        /* get first subkey */
-        if ( desc.down != 0 ) {
+
+    switch ( style )
+    {
+        case REGENUM_CHILDREN:
             *buffer = '\0';
-            err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
-        }
-        else  {
-            /* there *are* no child keys */
-            err = REGERR_NOMORE;
-        }
-    }
-    /* else already enumerating so get current 'state' node */
-    else if ( REGERR_OK == (err = nr_ReadDesc( reg, *state, &desc )) ) {
+            if ( *state == 0 ) 
+            {
+                /* initial state: get first child (.down) */
+                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
+            }
+            else 
+            {
+                /* get sibling (.left) of current key */
+                err = nr_ReadDesc( reg, *state, &desc );
+                if ( err == REGERR_OK || REGERR_DELETED == err )
+                {
+                    /* it's OK for the current (state) node to be deleted */
+                    if ( desc.left != 0 ) 
+                    {
+                        err = nr_ReplaceName( reg, desc.left, 
+                                    buffer, bufsize, &desc );
+                    }
+                    else
+                        err = REGERR_NOMORE;
+                }
+            }
+            break;
 
-        /* if traversing the tree */
-        if ( style & REGENUM_DESCEND ) {
-            if ( desc.down != 0 ) {
-                /* append name of first child key */
-                err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
+
+        case REGENUM_DESCEND:
+            if ( *state == 0 ) 
+            {
+                /* initial state */
+                *buffer = '\0';
+                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
             }
-            else if ( desc.left != 0 ) {
-                /* replace last segment with next sibling */
-                err = nr_ReplaceName( reg, desc.left, buffer, bufsize, &desc );
-            }
-            else {
-                /* done with level, pop up as many times as necessary */
-                while ( err == REGERR_OK ) {
-                    if ( desc.parent != key && desc.parent != 0 ) {
-                        err = nr_RemoveName( buffer );
-                        if ( err == REGERR_OK ) {
-                            err = nr_ReadDesc( reg, desc.parent, &desc );
-                            if ( err == REGERR_OK && desc.left != 0 ) {
-                                err = nr_ReplaceName( reg, desc.left, buffer,
-                                                      bufsize, &desc );
-                                break;  /* found a node */
+            else 
+            {
+                /* get last position */
+                err = nr_ReadDesc( reg, *state, &desc );
+                if ( REGERR_OK != err && REGERR_DELETED != err ) 
+                {
+                    /* it is OK for the state node to be deleted
+                     * (the *next* node MUST be "live", though).
+                     * bail out on any other error */
+                    break;
+                }
+
+                if ( desc.down != 0 ) {
+                    /* append name of first child key */
+                    err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
+                }
+                else if ( desc.left != 0 ) {
+                    /* replace last segment with next sibling */
+                    err = nr_ReplaceName( reg, desc.left, 
+                                buffer, bufsize, &desc );
+                }
+                else {
+                    /* done with level, pop up as many times as necessary */
+                    while ( err == REGERR_OK ) 
+                    {
+                        if ( desc.parent != key && desc.parent != 0 ) 
+                        {
+                            err = nr_RemoveName( buffer );
+                            if ( err == REGERR_OK ) 
+                            {
+                                err = nr_ReadDesc( reg, desc.parent, &desc );
+                                if ( err == REGERR_OK && desc.left != 0 ) 
+                                {
+                                    err = nr_ReplaceName( reg, desc.left, 
+                                                buffer, bufsize, &desc );
+                                    break;  /* found a node */
+                                }
                             }
                         }
-                    }
-                    else {
-                        err = REGERR_NOMORE;
+                        else
+                            err = REGERR_NOMORE;
                     }
                 }
             }
-        }
-        /* else immediate child keys only */
-        else {
-            /* get next key in chain */
-            if ( desc.left != 0 ) {
+            break;
+
+
+        case REGENUM_DEPTH_FIRST:
+            if ( *state == 0 ) 
+            {
+                /* initial state */
+
                 *buffer = '\0';
-                err =  nr_ReplaceName( reg, desc.left, buffer, bufsize, &desc );
+                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
+                while ( REGERR_OK == err && desc.down != 0 )
+                {
+                    /* start as far down the tree as possible */
+                    err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
+                }
             }
-            else {
-                err = REGERR_NOMORE;
+            else 
+            {
+                /* get last position */
+                err = nr_ReadDesc( reg, *state, &desc );
+                if ( REGERR_OK != err && REGERR_DELETED != err ) 
+                {
+                    /* it is OK for the state node to be deleted
+                     * (the *next* node MUST be "live", though).
+                     * bail out on any other error */
+                    break;
+                }
+
+                if ( desc.left != 0 )
+                {
+                    /* get sibling, then descend as far as possible */
+                    err = nr_ReplaceName(reg, desc.left, buffer,bufsize,&desc);
+
+                    while ( REGERR_OK == err && desc.down != 0 ) 
+                    {
+                        err = nr_CatName(reg, desc.down, buffer,bufsize,&desc);
+                    }
+                }
+                else 
+                {
+                    /* pop up to parent */
+                    if ( desc.parent != key && desc.parent != 0 )
+                    {
+                        err = nr_RemoveName( buffer );
+                        if ( REGERR_OK == err )
+                        {
+                            /* validate parent key */
+                            err = nr_ReadDesc( reg, desc.parent, &desc );
+                        }
+                    }
+                    else 
+                        err = REGERR_NOMORE;
+                }
             }
-        }
+            break;
+
+
+        default:
+            err = REGERR_PARAM;
+            break;
     }
 
     /* set enum state to current key */
@@ -2835,8 +2942,8 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
     else {
         /* 'state' stores previous entry */
         err = nr_ReadDesc( reg, *state, &desc );
-        if ( err == REGERR_OK ) {
-
+        if ( err == REGERR_OK  || err == REGERR_DELETED ) 
+        {
             /* get next entry in chain */
             if ( desc.left != 0 ) {
                 *buffer = '\0';
@@ -2891,6 +2998,10 @@ extern XP_Bool bGlobalRegistry;
 VR_INTERFACE(void) NR_StartupRegistry(void)
 {
     HREG reg;
+    RKEY key;
+    REGERR  err;
+    REGENUM state;
+    XP_Bool removeFromList;
 
     if (bRegStarted)
         return;
