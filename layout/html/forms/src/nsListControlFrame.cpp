@@ -3348,14 +3348,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
             return NS_OK;
           }
         } else {
-          nsIFrame * parentFrame;
-          frame->GetParent(&parentFrame);
-          stateManager->GetEventTarget(&frame);
-          listFrame = do_QueryInterface(frame);
-          if (listFrame) {
-            if (!IsClickingInCombobox(aMouseEvent)) {
-              return NS_OK;
-            }
+          if (!IsClickingInCombobox(aMouseEvent)) {
+            return NS_OK;
           }
         }
         // This will consume the focus event we get from the clicking on the dropdown
