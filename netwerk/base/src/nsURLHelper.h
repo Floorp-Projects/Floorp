@@ -23,13 +23,17 @@
 #include "prtypes.h"
 #include "nscore.h"
 #include "nsCRT.h"
+#include "nsString.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* encode characters into % escaped hexcodes */
-NS_NET nsresult nsURLEscape (const char* str, PRInt16 mask, char ** result);
+NS_NET nsresult nsURLEscape (const char* str, PRInt16 mask, nsCString &result);
+
+/* helper call function */
+NS_NET nsresult nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask);
 
 /* decode % escaped hex codes into character values */
 NS_NET nsresult nsURLUnescape(char* str, char ** result);

@@ -29,8 +29,8 @@ const int EscapeChars[256] =
 {
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,       /* 0x */
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	    /* 1x */
-        0,1023,   0, 512,   0,   0,1023,   0,1023,1023,1023,1023,1023,1023, 959,1016,       /* 2x   !"#$%&'()*+,-./	 */
-     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008, 896,   0, 896,   0, 768,       /* 3x  0123456789:;<=>?	 */
+        0,1023,   0, 512, 761,   0,1023,   0,1023,1023,1023,1023,1023,1023, 959,1016,       /* 2x   !"#$%&'()*+,-./	 */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008, 896,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
       992,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 4x  @ABCDEFGHIJKLMNO  */
      1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896, 896, 896, 896,1023,       /* 5x  PQRSTUVWXYZ[\]^_	 */
         0,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 6x  `abcdefghijklmno	 */
@@ -53,52 +53,68 @@ const int EscapeChars[256] =
 
 /* returns an escaped string */
 NS_NET nsresult 
-nsURLEscape(const char* str, PRInt16 mask, char **result)
+nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
 {
     if (!str) {
         *result = nsnull;
         return NS_OK;
     }
-    int i, extra = 0;
+
+    int i = 0;
     char* hexChars = "0123456789ABCDEF";
     static const char CheckHexChars[] = "0123456789ABCDEFabcdef";
     int len = PL_strlen(str);
 
     register const unsigned char* src = (const unsigned char *) str;
-    for (i = 0; i < len; i++)
-	{
-        if (!IS_OK(*src++)) {
-            extra += 2; /* the escape, plus an extra byte for each nibble */
-        }
-	}
 
-    *result = (char *)nsAllocator::Alloc(len + extra + 1);
-    if (!*result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    register unsigned char* dst = (unsigned char *) *result;
     src = (const unsigned char *) str;
+
+ 	char tempBuffer[100];
+ 	int tempBufferPos = 0;
+
+    char c1[] = " ";
+    char c2[] = " ";
+    char* const pc1 = c1;
+    char* const pc2 = c2;
 
     for (i = 0; i < len; i++)
     {
-        const char* checker = (char*) src;
+
+        c1[0] = *(src+1);
+        c2[0] = *(src+2);
         unsigned char c = *src++;
+
         /* if the char has not to be escaped or whatever follows % is 
            a valid escaped string, just copy the char */
-        if (IS_OK(c) || (c == HEX_ESCAPE && (checker+1) && (checker+2) &&
-           PL_strpbrk(((checker+1)), CheckHexChars) != 0 &&  
-           PL_strpbrk(((checker+2)), CheckHexChars) != 0))
-            *dst++ = c;
+        if (IS_OK(c) || (c == HEX_ESCAPE && (pc1) && (pc2) &&
+           PL_strpbrk(pc1, CheckHexChars) != 0 &&  
+           PL_strpbrk(pc2, CheckHexChars) != 0)) {
+		    tempBuffer[tempBufferPos++]=c;
+        }
         else 
             /* do the escape magic */
         {
-            *dst++ = HEX_ESCAPE;
-            *dst++ = hexChars[c >> 4];	/* high nibble */
-            *dst++ = hexChars[c & 0x0f];	/* low nibble */
+		    tempBuffer[tempBufferPos++] = HEX_ESCAPE;
+            tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
+            tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
         }
+ 		if(tempBufferPos == 96)
+ 		{
+ 			tempBuffer[tempBufferPos] = '\0';
+ 	        result += tempBuffer;
+ 			tempBufferPos = 0;
+ 		}
 	}
-    *dst = '\0';
+ 	tempBuffer[tempBufferPos] = '\0';
+ 	result += tempBuffer;
     return NS_OK;
+}
+
+/* helper call function */
+NS_NET nsresult
+nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask)
+{
+	return(nsURLEscape(str, mask, originalStr));
 }
 
 /* returns an unescaped string */
@@ -117,13 +133,21 @@ nsURLUnescape(char* str, char **result)
     if (!*result)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    src = str;
     register unsigned char* dst = (unsigned char *) *result;
 
-    while (*src)
+    char c1[] = " ";
+    char c2[] = " ";
+    char* const pc1 = c1;
+    char* const pc2 = c2;
+
+    while (*src) {
+
+        c1[0] = *(src+1);
+        c2[0] = *(src+2);
+
         /* check for valid escaped sequence */
-        if (*src != HEX_ESCAPE || PL_strpbrk(((src+1)), hexChars) == 0 || 
-            PL_strpbrk(((src+2)), hexChars) == 0 )
+        if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexChars) == 0 || 
+                                  PL_strpbrk(pc2, hexChars) == 0 )
             *dst++ = *src++;
         else 	
 		{
@@ -140,7 +164,7 @@ nsURLUnescape(char* str, char **result)
             }
             dst++;
         }
-
+    }
     *dst = '\0';
     return NS_OK;
 }
