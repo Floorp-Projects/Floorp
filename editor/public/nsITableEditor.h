@@ -100,6 +100,16 @@ public:
   NS_IMETHOD SelectTable()=0;
   NS_IMETHOD SelectAllTableCells()=0;
 
+  /** Create a new TD or TH element, the opposite type of the supplied aSourceCell
+    *   1. Copy all attributes from aSourceCell to the new cell
+    *   2. Move all contents of aSourceCell to the new cell
+    *   3. Replace aSourceCell in the table with the new cell
+    *
+    *  @param aSourceCell   The cell to be replaced
+    *  @param aNewCell      The new cell that replaces aSourceCell
+    */
+  NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell)=0;
+
   /** Merges contents of all selected cells
     * for selected cells that are adjacent,
     * this will result in a larger cell with appropriate 
