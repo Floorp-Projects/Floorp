@@ -86,8 +86,7 @@ if (defined $::FORM{'rememberedquery'}) {
     print "Set-Cookie: SPLITHEADER=$::FORM{'splitheader'} ; path=$cookiepath ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
     print "Content-type: text/html\n\n";
-    $vars->{'message'} = "Resubmitting your query with new columns...";
-    $vars->{'title'} = "Change columns";
+    $vars->{'message'} = "change_columns";
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;

@@ -32,6 +32,36 @@
     of the message. It can contain arbitrary <b>HTML</b>, and also references
     to any [% parameters %] which you may have set.
 
+  [% ELSIF message_tag == "buglist_adding_field" %]
+    [% title = "Adding field to query page..." %]
+    [% link  = "Click here if the page does not redisplay automatically." %]
+    [% # --- %] 
+  [% ELSIF message_tag == "buglist_load_named_query" %]
+    [% title = BLOCK %]Loading your query named [% namedcmd %][% END %]
+    [% link  = "Click here if the page does not redisplay automatically." %]
+    [% # --- %] 
+  [% ELSIF message_tag == "buglist_new_default_query" %]
+    OK, you now have a new default query.  You may
+    also bookmark the result of any individual query.
+
+  [% ELSIF message_tag == "buglist_new_named_query" %]
+    OK, you have a new query named <code>[% queryname FILTER html %]</code>."
+
+  [% ELSIF message_tag == "buglist_parameters_required" %]
+    [% title = "Parameters Required" %]
+    [% url   = "query.cgi" %]
+    [% link  = "Please use the search form to specify some search criteria." %]
+    This script is not meant to be invoked without any search terms.
+   
+  [% ELSIF message_tag == "buglist_query_gone" %]
+    [% title = "Query is gone" %]
+    [% link  = "Go back to the query page." %]
+    OK, the <b>[% namedcmd FILTER html %]</b> query is gone.
+
+  [% ELSIF message_tag == "change_columns" %]
+    [% title = "Change columns" %]
+    Resubmitting your query with new columns...
+
   [% ELSIF message_tag == "logged_out" %]
     [% title = "Logged Out" %]
     [% url = "query.cgi?GoAheadAndLogIn=1" %]
@@ -43,6 +73,10 @@
   [% ELSIF message_tag == "login_changed" %]
     [% title = "Bugzilla Login Changed" %]
     Your Bugzilla login has been changed.
+
+  [% ELSIF message_tag == "page_not_found" %]
+    [% title = "Page not found" %]
+    The page you requested cannot be found.
 
   [% ELSIF message_tag == "password_changed" %]
     [% title = "Password Changed" %]

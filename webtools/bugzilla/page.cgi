@@ -52,8 +52,7 @@ if (defined $::FORM{'id'}) {
     }
 }
 
-$vars->{'title'} = "Page not found";
-$vars->{'message'} = "The page you requested cannot be found.";
+$vars->{'message'} = "page_not_found";
 
 $template->process("global/message.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

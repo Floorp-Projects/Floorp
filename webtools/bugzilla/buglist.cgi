@@ -58,12 +58,7 @@ use vars qw($db_name
             @versions);
 
 if (length($::buffer) == 0) {
-    $vars->{'title'} = "Parameters Required";
-    $vars->{'message'} = "This script is not meant to be invoked without any 
-                          search terms.";
-    $vars->{'url'} = "query.cgi";
-    $vars->{'link'} = "Please use the search form to specify some search
-                       criteria.";
+    $vars->{'message'} = "buglist_parameters_required";
     print "Refresh: 10; URL=query.cgi\n";
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
@@ -138,9 +133,8 @@ if ($::buffer =~ /&cmd-/) {
     print "Refresh: 0; URL=$url\n";
     print "Content-Type: text/html\n\n";
     # Generate and return the UI (HTML page) from the appropriate template.
-    $vars->{'title'} = "Adding field to query page...";
+    $vars->{'message'} = "buglist_adding_field";
     $vars->{'url'} = $url;
-    $vars->{'link'} = "Click here if the page does not redisplay automatically.";
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -259,9 +253,9 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         print "Refresh: 0; URL=$url\n";
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
-        $vars->{'title'} = "Loading your query named $::FORM{'namedcmd'}";
+        $vars->{'message'} = "buglist_load_named_query";
+        $vars->{'namedcmd'} = $::FORM{'namedcmd'};
         $vars->{'url'} = $url;
-        $vars->{'link'} = "Click here if the page does not redisplay automatically.";
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
@@ -283,10 +277,9 @@ if ($::FORM{'cmdtype'} eq "dorem") {
 
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
-        $vars->{'title'} = "Query is gone";
-        $vars->{'message'} = "OK, the <b>$::FORM{'namedcmd'}</b> query is gone.";
+        $vars->{'message'} = "buglist_query_gone";
+        $vars->{'namedcmd'} = $::FORM{'namedcmd'};
         $vars->{'url'} = "query.cgi";
-        $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
@@ -301,8 +294,7 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
         SendSQL("REPLACE INTO namedqueries (userid, name, query)
                  VALUES ($userid, $qname, $qbuffer)");
         # Generate and return the UI (HTML page) from the appropriate template.
-        $vars->{'message'} = "OK, you now have a new default query.  You may
-                              also bookmark the result of any individual query.";
+        $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($::FORM{'remember'} == 1 && $::FORM{'remtype'} eq "asnamed") {
         confirm_login();
@@ -350,7 +342,8 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
             push(@{$vars->{'user'}{'queries'}}, \%query);
         }
         
-        $vars->{'message'} = "OK, you have a new query named <code>$name</code>.";
+        $vars->{'message'}   = "buglist_new_named_query";
+        $vars->{'queryname'} = $name;
     }
 }
 
