@@ -493,8 +493,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
             element->AddListenerFor(aPrototype->mAttributes[i].mName, PR_TRUE);
     }
 
-    *aResult = NS_REINTERPRET_CAST(nsIStyledContent*, element.get());
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = element.get());
     return NS_OK;
 }
 
