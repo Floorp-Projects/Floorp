@@ -18,8 +18,16 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+
+# Make this a true dynamic component even in static builds because
+# this component is shared by installer
+!undef MOZ_STATIC_COMPONENT_LIBS
+
 DEPTH=..\..\..
 MODULE=unicharutil
+IS_COMPONENT	= 1
+LIBRARY_NAME=ucharuti
+MODULE_NAME=UcharUtil
 REQUIRES	= xpcom \
 		  string \
 		  uconv \
@@ -31,7 +39,6 @@ include <$(DEPTH)\config\config.mak>
 LCFLAGS= $(LCFLAGS) -D__STDC__
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
-LIBRARY_NAME= ucharuti
 
 OBJS= \
 	$(NULL)
@@ -51,9 +58,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsBidiImp.obj \
 !endif
 	$(NULL)
-
-LIBRARY_NAME=ucharuti
-MODULE_NAME=UcharUtil
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib		\

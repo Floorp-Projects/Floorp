@@ -330,7 +330,7 @@ nsInstall::InternalAbort(PRInt32 errcode)
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
     {
-        for (PRInt32 i = mInstalledFiles->Count(); i >= 0; i--) 
+        for (PRInt32 i = mInstalledFiles->Count()-1; i >= 0; i--) 
         {
             ie = (nsInstallObject *)mInstalledFiles->ElementAt(i);
             if (ie) 
