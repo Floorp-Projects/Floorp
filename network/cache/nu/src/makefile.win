@@ -51,7 +51,7 @@ OBJS =						\
 	.\$(OBJDIR)\nsBkgThread.obj	 	\
 	.\$(OBJDIR)\nsCacheBkgThd.obj	 	\
 	.\$(OBJDIR)\CacheStubs.obj	 	\
-	.\$(OBJDIR)\nsFileStream.obj	 	\
+	.\$(OBJDIR)\nsFileStream.obj	\
 	.\$(OBJDIR)\nsMemStream.obj	 	\
 	$(NULL)
 
