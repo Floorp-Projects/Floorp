@@ -165,7 +165,6 @@ InitDebugFlags()
 
 // add in a sanity check for absurdly deep frame trees.  See bug 42138
 // can't just use IsFrameTreeTooDeep() because that method has side effects we don't want
-static PRInt32 gRenumberListDepthCounter;
 #define MAX_DEPTH_FOR_LIST_RENUMBERING 200  // 200 open displayable tags is pretty unrealistic
 
 //----------------------------------------------------------------------
@@ -6906,7 +6905,6 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 void
 nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
 {
-  gRenumberListDepthCounter = 0;  // reset the sanity check counter
   if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
     // to renumber child list items.
@@ -6933,13 +6931,14 @@ nsBlockFrame::RenumberLists(nsIPresContext* aPresContext)
 
   // Get to first-in-flow
   nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
-  RenumberListsInBlock(aPresContext, block, &ordinal);
+  RenumberListsInBlock(aPresContext, block, &ordinal, 0);
 }
 
 PRBool
 nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
                                    nsBlockFrame* aBlockFrame,
-                                   PRInt32* aOrdinal)
+                                   PRInt32* aOrdinal,
+                                   PRInt32 aDepth)
 {
   PRBool renumberedABullet = PR_FALSE;
 
@@ -6950,7 +6949,7 @@ nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
       nsIFrame* kid = line->mFirstChild;
       PRInt32 n = line->GetChildCount();
       while (--n >= 0) {
-        PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal);
+        PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal, aDepth);
         if (kidRenumberedABullet) {
           line->MarkDirty();
           renumberedABullet = PR_TRUE;
@@ -6972,7 +6971,8 @@ nsBlockFrame::RenumberListsInBlock(nsIPresContext* aPresContext,
 PRBool
 nsBlockFrame::RenumberListsIn(nsIPresContext* aPresContext,
                               nsIFrame* aContainerFrame,
-                              PRInt32* aOrdinal)
+                              PRInt32* aOrdinal,
+                              PRInt32 aDepth)
 {
   PRBool renumberedABullet = PR_FALSE;
 
@@ -6982,7 +6982,7 @@ nsBlockFrame::RenumberListsIn(nsIPresContext* aPresContext,
     nsIFrame* kid;
     aContainerFrame->FirstChild(aPresContext, nsnull, &kid);
     while (nsnull != kid) {
-      PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal);
+      PRBool kidRenumberedABullet = RenumberListsFor(aPresContext, kid, aOrdinal, aDepth);
       if (kidRenumberedABullet) {
         renumberedABullet = PR_TRUE;
       }
@@ -6996,11 +6996,11 @@ nsBlockFrame::RenumberListsIn(nsIPresContext* aPresContext,
 PRBool
 nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
                                nsIFrame* aKid,
-                               PRInt32* aOrdinal)
+                               PRInt32* aOrdinal,
+                               PRInt32 aDepth)
 {
   // add in a sanity check for absurdly deep frame trees.  See bug 42138
-  gRenumberListDepthCounter++;
-  if (MAX_DEPTH_FOR_LIST_RENUMBERING < gRenumberListDepthCounter)
+  if (MAX_DEPTH_FOR_LIST_RENUMBERING < aDepth)
     return PR_FALSE;
 
   PRBool kidRenumberedABullet = PR_FALSE;
@@ -7029,7 +7029,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
       // XXX temporary? if the list-item has child list-items they
       // should be numbered too; especially since the list-item is
       // itself (ASSUMED!) not to be a counter-reseter.
-      PRBool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal);
+      PRBool meToo = RenumberListsInBlock(aPresContext, listItem, aOrdinal, aDepth + 1);
       if (meToo) {
         kidRenumberedABullet = PR_TRUE;
       }
@@ -7048,7 +7048,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
       nsBlockFrame* kidBlock;
       nsresult rv = aKid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
       if (NS_SUCCEEDED(rv)) {
-        kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock, aOrdinal);
+        kidRenumberedABullet = RenumberListsInBlock(aPresContext, kidBlock, aOrdinal, aDepth + 1);
       }
     }
   } else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
@@ -7062,7 +7062,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
     nsresult rv = aKid->QueryInterface(nsInlineFrame::kInlineFrameCID,
                                        (void**) &kidInline);
     if (NS_SUCCEEDED(rv)) {
-      kidRenumberedABullet = RenumberListsIn(aPresContext, aKid, aOrdinal);
+      kidRenumberedABullet = RenumberListsIn(aPresContext, aKid, aOrdinal, aDepth + 1);
     }
   }
   return kidRenumberedABullet;

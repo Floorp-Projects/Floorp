@@ -399,13 +399,15 @@ protected:
 
   PRBool RenumberListsIn(nsIPresContext* aPresContext,
                          nsIFrame* aContainerFrame,
-                         PRInt32* aOrdinal);
+                         PRInt32* aOrdinal,
+                         PRInt32 aDepth);
 
   PRBool RenumberListsInBlock(nsIPresContext* aPresContext,
                               nsBlockFrame* aContainerFrame,
-                              PRInt32* aOrdinal);
+                              PRInt32* aOrdinal,
+                              PRInt32 aDepth);
 
-  PRBool RenumberListsFor(nsIPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal);
+  PRBool RenumberListsFor(nsIPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
 
   PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
