@@ -291,7 +291,7 @@ void nsCSSScanner::Close()
 #endif
 
 // Returns -1 on error or eof
-PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
+PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
 {
   PRInt32 rv;
   if (0 < mPushbackCount) {
@@ -329,7 +329,7 @@ PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
   return rv;
 }
 
-PRInt32 nsCSSScanner::Peek(PRInt32& aErrorCode)
+PRInt32 nsCSSScanner::Peek(nsresult& aErrorCode)
 {
   if (0 == mPushbackCount) {
     PRInt32 ch = Read(aErrorCode);
@@ -367,7 +367,7 @@ void nsCSSScanner::Pushback(PRUnichar aChar)
   mPushback[mPushbackCount++] = aChar;
 }
 
-PRBool nsCSSScanner::LookAhead(PRInt32& aErrorCode, PRUnichar aChar)
+PRBool nsCSSScanner::LookAhead(nsresult& aErrorCode, PRUnichar aChar)
 {
   PRInt32 ch = Read(aErrorCode);
   if (ch < 0) {
@@ -380,7 +380,7 @@ PRBool nsCSSScanner::LookAhead(PRInt32& aErrorCode, PRUnichar aChar)
   return PR_FALSE;
 }
 
-PRBool nsCSSScanner::EatWhiteSpace(PRInt32& aErrorCode)
+PRBool nsCSSScanner::EatWhiteSpace(nsresult& aErrorCode)
 {
   PRBool eaten = PR_FALSE;
   for (;;) {
@@ -398,7 +398,7 @@ PRBool nsCSSScanner::EatWhiteSpace(PRInt32& aErrorCode)
   return eaten;
 }
 
-PRBool nsCSSScanner::EatNewline(PRInt32& aErrorCode)
+PRBool nsCSSScanner::EatNewline(nsresult& aErrorCode)
 {
   PRInt32 ch = Read(aErrorCode);
   if (ch < 0) {
@@ -419,7 +419,7 @@ PRBool nsCSSScanner::EatNewline(PRInt32& aErrorCode)
   return eaten;
 }
 
-PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
+PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
 {
   PRInt32 ch = Read(aErrorCode);
   if (ch < 0) {
@@ -564,7 +564,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
   return PR_TRUE;
 }
 
-PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
+PRBool nsCSSScanner::NextURL(nsresult& aErrorCode, nsCSSToken& aToken)
 {
   PRInt32 ch = Read(aErrorCode);
   if (ch < 0) {
@@ -667,7 +667,7 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
 }
 
 
-PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
+PRInt32 nsCSSScanner::ParseEscape(nsresult& aErrorCode)
 {
   PRUint8* lexTable = gLexTable;
   PRInt32 ch = Peek(aErrorCode);
@@ -743,7 +743,7 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
  * until the first non-identifier character is seen. The termination
  * character is unread for the future re-reading.
  */
-PRBool nsCSSScanner::GatherIdent(PRInt32& aErrorCode, PRInt32 aChar,
+PRBool nsCSSScanner::GatherIdent(nsresult& aErrorCode, PRInt32 aChar,
                                  nsString& aIdent)
 {
   if (aChar == CSS_ESCAPE) {
@@ -770,7 +770,7 @@ PRBool nsCSSScanner::GatherIdent(PRInt32& aErrorCode, PRInt32 aChar,
   return PR_TRUE;
 }
 
-PRBool nsCSSScanner::ParseID(PRInt32& aErrorCode,
+PRBool nsCSSScanner::ParseID(nsresult& aErrorCode,
                              PRInt32 aChar,
                              nsCSSToken& aToken)
 {
@@ -779,7 +779,7 @@ PRBool nsCSSScanner::ParseID(PRInt32& aErrorCode,
   return GatherIdent(aErrorCode, 0, aToken.mIdent);
 }
 
-PRBool nsCSSScanner::ParseIdent(PRInt32& aErrorCode,
+PRBool nsCSSScanner::ParseIdent(nsresult& aErrorCode,
                                 PRInt32 aChar,
                                 nsCSSToken& aToken)
 {
@@ -799,7 +799,7 @@ PRBool nsCSSScanner::ParseIdent(PRInt32& aErrorCode,
   return PR_TRUE;
 }
 
-PRBool nsCSSScanner::ParseAtKeyword(PRInt32& aErrorCode, PRInt32 aChar,
+PRBool nsCSSScanner::ParseAtKeyword(nsresult& aErrorCode, PRInt32 aChar,
                                     nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
@@ -807,7 +807,7 @@ PRBool nsCSSScanner::ParseAtKeyword(PRInt32& aErrorCode, PRInt32 aChar,
   return GatherIdent(aErrorCode, 0, aToken.mIdent);
 }
 
-PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
+PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
                                  nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
@@ -870,7 +870,7 @@ PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
   return PR_TRUE;
 }
 
-PRBool nsCSSScanner::SkipCComment(PRInt32& aErrorCode)
+PRBool nsCSSScanner::SkipCComment(nsresult& aErrorCode)
 {
   for (;;) {
     PRInt32 ch = Read(aErrorCode);
@@ -887,7 +887,7 @@ PRBool nsCSSScanner::SkipCComment(PRInt32& aErrorCode)
 }
 
 #if 0
-PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
+PRBool nsCSSScanner::ParseCComment(nsresult& aErrorCode, nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
   for (;;) {
@@ -910,7 +910,7 @@ PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
 #endif
 
 #if 0
-PRBool nsCSSScanner::ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aToken)
+PRBool nsCSSScanner::ParseEOLComment(nsresult& aErrorCode, nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
@@ -931,7 +931,7 @@ PRBool nsCSSScanner::ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aToken)
 }
 #endif // 0
 
-PRBool nsCSSScanner::GatherString(PRInt32& aErrorCode, PRInt32 aStop,
+PRBool nsCSSScanner::GatherString(nsresult& aErrorCode, PRInt32 aStop,
                                   nsString& aBuffer)
 {
   for (;;) {
@@ -958,7 +958,7 @@ PRBool nsCSSScanner::GatherString(PRInt32& aErrorCode, PRInt32 aStop,
   return PR_TRUE;
 }
 
-PRBool nsCSSScanner::ParseString(PRInt32& aErrorCode, PRInt32 aStop,
+PRBool nsCSSScanner::ParseString(nsresult& aErrorCode, PRInt32 aStop,
                                  nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
