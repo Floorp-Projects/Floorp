@@ -162,10 +162,13 @@ public:
      *   URLs, even if the user currently has JavaScript disabled (usually 
      *   specify PR_FALSE) 
      * @param postHeadersLength - the length of postHeaders (if non-NULL)
-     * @param postHeaders - the headers to POST. NULL specifies that there 
-     *   are no post headers
-     * @result - NS_OK if this operation was successful
-     */
+
+     * @param postHeaders - the headers to POST. Must be in the form of
+     * "HeaderName: HeaderValue\r\n".  Each header, including the last,
+     * must be followed by "\r\n".  NULL specifies that there are no
+     * post headers
+
+     * @result - NS_OK if this operation was successful */
 
     NS_IMETHOD
     PostURL(nsISupports* pluginInst,
@@ -221,6 +224,35 @@ public:
 
     NS_IMETHOD
     UnregisterPlugin(REFNSIID aCID) = 0;
+
+    /**
+     * Fetches a URL, with Headers
+
+     * @see GetURL.  Identical except for additional params headers and
+     * headersLen
+
+     * @param getHeadersLength - the length of getHeaders (if non-NULL)
+
+     * @param getHeaders - the headers to GET. Must be in the form of
+     * "HeaderName: HeaderValue\r\n".  Each header, including the last,
+     * must be followed by "\r\n".  NULL specifies that there are no
+     * get headers
+
+     * @result - NS_OK if this operation was successful 
+
+     */
+
+    NS_IMETHOD
+    GetURLWithHeaders(nsISupports* pluginInst, 
+                      const char* url, 
+                      const char* target = NULL,
+                      nsIPluginStreamListener* streamListener = NULL,
+                      const char* altHost = NULL,
+                      const char* referrer = NULL,
+                      PRBool forceJSEnabled = PR_FALSE,
+                      PRUint32 getHeadersLength = 0, 
+                      const char* getHeaders = NULL) = 0;
+
                    
 };
 

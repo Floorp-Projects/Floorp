@@ -1534,6 +1534,20 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
 									   const char* referrer,
 									   PRBool forceJSEnabled)
 {
+  return GetURLWithHeaders(pluginInst, url, target, streamListener, 
+                           altHost, referrer, forceJSEnabled, nsnull, nsnull);
+}
+
+NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst, 
+									   const char* url, 
+									   const char* target,
+									   nsIPluginStreamListener* streamListener,
+									   const char* altHost,
+									   const char* referrer,
+									   PRBool forceJSEnabled,
+                     PRUint32 getHeadersLength, 
+                     const char* getHeaders)
+{
   nsAutoString      string; string.AssignWithConversion(url);
   nsIPluginInstance *instance;
   nsresult          rv;
@@ -1567,7 +1581,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
           else if (0 == PL_strcmp(target, "_current"))
             target = "_self";
 
-          rv = owner->GetURL(url, target, nsnull, 0, nsnull, nsnull);
+          rv = owner->GetURL(url, target, nsnull, 0, (void *) getHeaders, 
+                             getHeadersLength);
         }
 
         NS_RELEASE(peer);
@@ -1575,7 +1590,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
     }
 
     if (nsnull != streamListener)
-      rv = NewPluginURLStream(string, instance, streamListener);
+      rv = NewPluginURLStream(string, instance, streamListener,
+                              nsnull, nsnull, getHeaders, getHeadersLength);
 
     NS_RELEASE(instance);
   }
