@@ -338,11 +338,14 @@ protected:
 protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
 
+    nsLoadFlags             mLoadFlags;
+
     nsJSThunk *             mIOThunk;
     PRBool                  mIsActive;
 };
 
 nsJSChannel::nsJSChannel() :
+    mLoadFlags(LOAD_NORMAL),
     mIsActive(PR_FALSE),
     mIOThunk(nsnull)
 {
@@ -485,6 +488,14 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsresult rv;
 
+    nsCOMPtr<nsILoadGroup> loadGroup;
+
+    // Add the javascript channel to its loadgroup...
+    mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup) {
+        (void) loadGroup->AddRequest(this, aContext);
+    }
+
     // Synchronously execute the script...
     // mIsActive is used to indicate the the request is 'busy' during the
     // the script evaluation phase.  This means that IsPending() will 
@@ -495,6 +506,11 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     if (NS_SUCCEEDED(rv)) {
         rv = mStreamChannel->AsyncOpen(aListener, aContext);
     }
+
+    // Remove the javascript channel from its loadgroup...
+    if (loadGroup) {
+        (void) loadGroup->RemoveRequest(this, aContext, rv);
+    }
     mIsActive = PR_FALSE;
     return rv;
 }
@@ -502,13 +518,20 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 NS_IMETHODIMP
 nsJSChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    return mStreamChannel->GetLoadFlags(aLoadFlags);
+    *aLoadFlags = mLoadFlags;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    return mStreamChannel->SetLoadFlags(aLoadFlags);
+    mLoadFlags = aLoadFlags;
+    //
+    // Since the javascript channel is considered the 'document channel'
+    // clear this bit before passing it down...  Otherwise, there will be
+    // two document channels!!
+    //
+    return mStreamChannel->SetLoadFlags(aLoadFlags & ~(LOAD_DOCUMENT_URI));
 }
 
 NS_IMETHODIMP
