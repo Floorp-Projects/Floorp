@@ -48,6 +48,8 @@
 #include "rdf.h"
 #include "nsIMsgFolder.h"
 #include "nsIMessage.h"
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestor.h"
 
 
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
@@ -98,8 +100,15 @@ NS_IMETHODIMP nsImapUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
   if (aMsgWindow)
   {
     m_msgWindow = do_QueryInterface(aMsgWindow);
-    if (m_mockChannel)
+    if (m_mockChannel) {
       m_mockChannel->SetURI(this);
+      nsCOMPtr<nsIDocShell> msgDocShell;
+      m_msgWindow->GetRootDocShell(getter_AddRefs(msgDocShell));
+      if (msgDocShell) {
+        nsCOMPtr<nsIInterfaceRequestor> docIR(do_QueryInterface(msgDocShell));
+        m_mockChannel->SetNotificationCallbacks(docIR);
+      }
+    }
   }
   return NS_OK;
 }

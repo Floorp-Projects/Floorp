@@ -613,6 +613,11 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       m_channel->GetSecurityInfo(getter_AddRefs(securityInfo));
       m_mockChannel->SetSecurityInfo(securityInfo);
 
+      // Copy over the notification callbacks object from the mock channel
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      m_mockChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+      m_channel->SetNotificationCallbacks(callbacks);
+
       // and if we have a cache entry that we are saving the message to, set the security info on it too.
       // since imap only uses the memory cache, passing this on is the right thing to do.
       nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
