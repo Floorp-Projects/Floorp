@@ -840,39 +840,31 @@ public class TokenStream {
                     // restart the string, losing leading 0x
                     in.startString();
                 } else if (isDigit(c)) {
-                    if (c < '8') {
-                        base = 8;
-                        // Restart the string, losing the leading 0
-                        in.startString();
-                    } else {
-                        /* Checking against c < '8' is non-ECMA, but
-                         * is required to support legacy code; we've
-                         * supported it in the past, and it's likely
-                         * that "08" and "09" are in use in code
-                         * having to do with dates.  So we need to
-                         * support it, which makes our behavior a
-                         * superset of ECMA in this area.  We raise a
-                         * warning if a non-octal digit is
-                         * encountered, then proceed as if it were
-                         * decimal.
-                         */
-                        Object[] errArgs = { String.valueOf((char)c) };
-                        Context.reportWarning
-                            (Context.getMessage("msg.bad.octal.literal",
-                                                errArgs),
-                             getSourceName(), in.getLineno(),
-                             getLine(), getOffset());
-                        // implicitly retain the leading 0
-                    }
-                } else {
-                    // implicitly retain the leading 0
+                    base = 8;
                 }
             }
 
             while (isXDigit(c)) {
-                if (base < 16 && (isAlpha(c)
-                                  || (base == 8 && c >= '8'))) {
-                    break;
+                if (base < 16) {
+                    if (isAlpha(c))
+                        break;
+                    /*
+                     * We permit 08 and 09 as decimal numbers, which
+                     * makes our behavior a superset of the ECMA
+                     * numeric grammar.  We might not always be so
+                     * permissive, so we warn about it.
+                     */
+                    if (base == 8 && c >= '8') {
+                        System.err.println("foo");
+
+                        Object[] errArgs = { c == '8' ? "8" : "9" };
+                        Context.reportWarning(
+                            Context.getMessage("msg.bad.octal.literal",
+                                               errArgs),
+                            getSourceName(),
+                            in.getLineno(), getLine(), getOffset());
+                        base = 10;
+                    }
                 }
                 c = in.read();
             }
