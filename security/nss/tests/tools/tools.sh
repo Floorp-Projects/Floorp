@@ -176,15 +176,7 @@ tools_cleanup()
 
 tools_init
 
-#FIXME - tmp workaround for tests that do not work in 3.2 RTM
-#echo $BC_ACTION | grep "forward compatibility"  && RUN_TOOLS_P12="FALSE"
-echo $BC_ACTION | grep "compatibility"  && RUN_TOOLS_P12="FALSE"
-if [ -n "${RUN_TOOLS_P12}" -a "${RUN_TOOLS_P12}" = "FALSE" ] ; then
-  html_msg 0 0 "Can't run pk12util tests  for NSS 3.2 (pk12util -i)"
-  html_msg 0 0 "Can't run pk12util tests  for NSS 3.2 (pk12util -o)"
-else
-    tools_p12
-fi
+tools_p12
 
 tools_sign
 tools_cleanup
