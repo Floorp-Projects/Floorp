@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.12 $ $Date: 2002/04/25 00:45:42 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.13 $ $Date: 2002/04/25 19:33:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -663,99 +663,101 @@ nssTokenObjectCache_HaveObjectClass
 }
 
 static nssCryptokiObjectAndAttributes **
-get_object_and_attributes
+create_object_array
 (
   nssCryptokiObject **objects,
-  CK_ATTRIBUTE_TYPE *types,
-  PRUint32 numTypes,
   PRBool *doObjects,
+  PRUint32 *numObjects,
   PRStatus *status
 )
 {
-    PRUint32 i, j, numObjects = 0;
     nssCryptokiObject **op = objects;
     nssCryptokiObjectAndAttributes **rvOandA = NULL;
-    NSSSlot *slot = NULL;
-    nssSession *session = NULL;
+    *numObjects = 0;
+    /* There are no objects for this type */
     if (!objects) {
 	return (nssCryptokiObjectAndAttributes **)NULL;
     }
-    while (*op++) numObjects++;
-    if (numObjects == MAX_LOCAL_CACHE_OBJECTS) {
+    while (*op++) (*numObjects)++;
+    if (*numObjects == MAX_LOCAL_CACHE_OBJECTS) {
 	/* Hit the maximum allowed, so don't use a cache (there are
 	 * too many objects to make caching worthwhile, presumably, if
 	 * the token can handle that many objects, it can handle searching.
 	 */
 	*doObjects = PR_FALSE;
 	*status = PR_FAILURE;
-	return (nssCryptokiObjectAndAttributes **)NULL;
-    } else {
-	if (numObjects == 0) {
-	    /* The fact that there are no objects is cached, done */
-	    return (nssCryptokiObjectAndAttributes **)NULL;
-	}
+	*numObjects = 0;
+    } else if (numObjects > 0) {
 	rvOandA = nss_ZNEWARRAY(NULL, 
 	                        nssCryptokiObjectAndAttributes *, 
-	                        numObjects + 1);
-	if (!rvOandA) {
-	    goto loser;
-	}
-	slot = nssToken_GetSlot(objects[0]->token);
-	session = nssToken_GetDefaultSession(objects[0]->token);
-	for (i=0; i<numObjects; i++) {
-	    NSSArena *arena;
-	    arena = nssArena_Create();
-	    if (!arena) {
-		goto loser;
-	    }
-	    rvOandA[i] = nss_ZNEW(arena, nssCryptokiObjectAndAttributes);
-	    if (!rvOandA[i]) {
-		goto loser;
-	    }
-	    rvOandA[i]->arena = arena;
-	    /* The cache is tied to the token, and therefore the objects
-	     * in it should not hold references to the token.
-	     */
-	    nssToken_Destroy(objects[i]->token);
-	    rvOandA[i]->object = objects[i];
-	    rvOandA[i]->attributes = nss_ZNEWARRAY(arena, 
-	                                           CK_ATTRIBUTE, numTypes);
-	    if (!rvOandA[i]->attributes) {
-		goto loser;
-	    }
-	    for (j=0; j<numTypes; j++) {
-		rvOandA[i]->attributes[j].type = types[j];
-	    }
-	    *status = nssCKObject_GetAttributes(objects[i]->handle,
-	                                        rvOandA[i]->attributes,
-	                                        numTypes,
-	                                        arena,
-	                                        session,
-	                                        slot);
-	    if (*status != PR_SUCCESS) {
-		goto loser;
-	    }
-	    rvOandA[i]->numAttributes = numTypes;
-	}
+	                        *numObjects + 1);
+	status = rvOandA ? PR_SUCCESS : PR_FALSE;
     }
+    return rvOandA;
+}
+
+static nssCryptokiObjectAndAttributes *
+create_object
+(
+  nssCryptokiObject *object,
+  CK_ATTRIBUTE_TYPE *types,
+  PRUint32 numTypes,
+  PRStatus *status
+)
+{
+    PRUint32 j;
+    NSSArena *arena;
+    NSSSlot *slot = NULL;
+    nssSession *session = NULL;
+    nssCryptokiObjectAndAttributes *rvCachedObject = NULL;
+
+    slot = nssToken_GetSlot(object->token);
+    session = nssToken_GetDefaultSession(object->token);
+
+    arena = nssArena_Create();
+    if (!arena) {
+	nssSlot_Destroy(slot);
+	return (nssCryptokiObjectAndAttributes *)NULL;
+    }
+    rvCachedObject = nss_ZNEW(arena, nssCryptokiObjectAndAttributes);
+    if (!rvCachedObject) {
+	goto loser;
+    }
+    rvCachedObject->arena = arena;
+    /* The cache is tied to the token, and therefore the objects
+     * in it should not hold references to the token.
+     */
+    nssToken_Destroy(object->token);
+    rvCachedObject->object = object;
+    rvCachedObject->attributes = nss_ZNEWARRAY(arena, CK_ATTRIBUTE, numTypes);
+    if (!rvCachedObject->attributes) {
+	goto loser;
+    }
+    for (j=0; j<numTypes; j++) {
+	rvCachedObject->attributes[j].type = types[j];
+    }
+    *status = nssCKObject_GetAttributes(object->handle,
+                                        rvCachedObject->attributes,
+                                        numTypes,
+                                        arena,
+                                        session,
+                                        slot);
+    if (*status != PR_SUCCESS) {
+	goto loser;
+    }
+    rvCachedObject->numAttributes = numTypes;
     *status = PR_SUCCESS;
     if (slot) {
 	nssSlot_Destroy(slot);
     }
-    return rvOandA;
+    return rvCachedObject;
 loser:
     *status = PR_FAILURE;
     if (slot) {
 	nssSlot_Destroy(slot);
     }
-    if (rvOandA) {
-	for (i=0; i<numObjects; i++) {
-	    if (rvOandA[i]) {
-		nssArena_Destroy(rvOandA[i]->arena);
-	    }
-	}
-    }
-    return (nssCryptokiObjectAndAttributes **)NULL;
+    nssArena_Destroy(arena);
+    return (nssCryptokiObjectAndAttributes *)NULL;
 }
 
 /*
@@ -813,14 +815,13 @@ search_for_objects
     return doSearch;
 }
 
-static PRStatus
-get_token_certs_for_cache
+static nssCryptokiObjectAndAttributes *
+create_cert
 (
-  nssTokenObjectCache *cache
+  nssCryptokiObject *object,
+  PRStatus *status
 )
 {
-    PRStatus status;
-    nssCryptokiObject **objects;
     CK_ATTRIBUTE_TYPE certAttr[] = {
 	CKA_CLASS,
 	CKA_TOKEN,
@@ -834,6 +835,20 @@ get_token_certs_for_cache
 	CKA_NETSCAPE_EMAIL
     };
     PRUint32 numCertAttr = sizeof(certAttr) / sizeof(certAttr[0]);
+    return create_object(object, certAttr, numCertAttr, status);
+}
+
+static PRStatus
+get_token_certs_for_cache
+(
+  nssTokenObjectCache *cache
+)
+{
+    PRStatus status;
+    nssCryptokiObject **objects;
+    PRBool *doIt = &cache->doObjectType[cachedCerts];
+    PRUint32 i, numObjects;
+
     if (!search_for_objects(cache) || 
          cache->searchedObjectType[cachedCerts] || 
         !cache->doObjectType[cachedCerts]) 
@@ -847,33 +862,44 @@ get_token_certs_for_cache
     objects = nssToken_FindCertificates(cache->token, NULL,
                                         nssTokenSearchType_TokenForced,
 				        MAX_LOCAL_CACHE_OBJECTS, &status);
-    if (status == PR_SUCCESS) {
-	PRBool *doIt = &cache->doObjectType[cachedCerts];
-        cache->objects[cachedCerts] = get_object_and_attributes(objects,
-	                                                        certAttr,
-                                                                numCertAttr,
-	                                                        doIt,
-	                                                        &status);
-	if (status == PR_SUCCESS) {
-	    nss_ZFreeIf(objects);
-	} else {
-	    nssCryptokiObjectArray_Destroy(objects);
-	}
-    } else {
+    if (status != PR_SUCCESS) {
 	return status;
+    }
+    cache->objects[cachedCerts] = create_object_array(objects,
+                                                      doIt,
+                                                      &numObjects,
+                                                      &status);
+    if (status != PR_SUCCESS) {
+	return status;
+    }
+    for (i=0; i<numObjects; i++) {
+	cache->objects[cachedCerts][i] = create_cert(objects[i], &status);
+	if (status != PR_SUCCESS) {
+	    break;
+	}
+    }
+    if (status == PR_SUCCESS) {
+	nss_ZFreeIf(objects);
+    } else {
+	PRUint32 j;
+	for (j=0; j<i; j++) {
+	    /* sigh */
+	    nssToken_AddRef(cache->objects[cachedCerts][i]->object->token);
+	    nssArena_Destroy(cache->objects[cachedCerts][i]->arena);
+	}
+	nssCryptokiObjectArray_Destroy(objects);
     }
     cache->searchedObjectType[cachedCerts] = PR_TRUE;
     return status;
 }
 
-static PRStatus
-get_token_trust_for_cache
+static nssCryptokiObjectAndAttributes *
+create_trust
 (
-  nssTokenObjectCache *cache
+  nssCryptokiObject *object,
+  PRStatus *status
 )
 {
-    PRStatus status;
-    nssCryptokiObject **objects;
     CK_ATTRIBUTE_TYPE trustAttr[] = {
 	CKA_CLASS,
 	CKA_TOKEN,
@@ -888,6 +914,20 @@ get_token_trust_for_cache
 	CKA_TRUST_CODE_SIGNING
     };
     PRUint32 numTrustAttr = sizeof(trustAttr) / sizeof(trustAttr[0]);
+    return create_object(object, trustAttr, numTrustAttr, status);
+}
+
+static PRStatus
+get_token_trust_for_cache
+(
+  nssTokenObjectCache *cache
+)
+{
+    PRStatus status;
+    nssCryptokiObject **objects;
+    PRBool *doIt = &cache->doObjectType[cachedTrust];
+    PRUint32 i, numObjects;
+
     if (!search_for_objects(cache) || 
          cache->searchedObjectType[cachedTrust] || 
         !cache->doObjectType[cachedTrust]) 
@@ -901,33 +941,44 @@ get_token_trust_for_cache
     objects = nssToken_FindTrustObjects(cache->token, NULL,
                                         nssTokenSearchType_TokenForced,
 				        MAX_LOCAL_CACHE_OBJECTS, &status);
-    if (status == PR_SUCCESS) {
-	PRBool *doIt = &cache->doObjectType[cachedTrust];
-        cache->objects[cachedTrust] = get_object_and_attributes(objects,
-	                                                        trustAttr,
-						                numTrustAttr,
-	                                                        doIt,
-	                                                        &status);
-	if (status == PR_SUCCESS) {
-	    nss_ZFreeIf(objects);
-	} else {
-	    nssCryptokiObjectArray_Destroy(objects);
-	}
-    } else {
+    if (status != PR_SUCCESS) {
 	return status;
+    }
+    cache->objects[cachedTrust] = create_object_array(objects,
+                                                      doIt,
+                                                      &numObjects,
+                                                      &status);
+    if (status != PR_SUCCESS) {
+	return status;
+    }
+    for (i=0; i<numObjects; i++) {
+	cache->objects[cachedTrust][i] = create_trust(objects[i], &status);
+	if (status != PR_SUCCESS) {
+	    break;
+	}
+    }
+    if (status == PR_SUCCESS) {
+	nss_ZFreeIf(objects);
+    } else {
+	PRUint32 j;
+	for (j=0; j<i; j++) {
+	    /* sigh */
+	    nssToken_AddRef(cache->objects[cachedTrust][i]->object->token);
+	    nssArena_Destroy(cache->objects[cachedTrust][i]->arena);
+	}
+	nssCryptokiObjectArray_Destroy(objects);
     }
     cache->searchedObjectType[cachedTrust] = PR_TRUE;
     return status;
 }
 
-static PRStatus
-get_token_crls_for_cache
+static nssCryptokiObjectAndAttributes *
+create_crl
 (
-  nssTokenObjectCache *cache
+  nssCryptokiObject *object,
+  PRStatus *status
 )
 {
-    PRStatus status;
-    nssCryptokiObject **objects;
     CK_ATTRIBUTE_TYPE crlAttr[] = {
 	CKA_CLASS,
 	CKA_TOKEN,
@@ -938,6 +989,20 @@ get_token_crls_for_cache
 	CKA_NETSCAPE_URL
     };
     PRUint32 numCRLAttr = sizeof(crlAttr) / sizeof(crlAttr[0]);
+    return create_object(object, crlAttr, numCRLAttr, status);
+}
+
+static PRStatus
+get_token_crls_for_cache
+(
+  nssTokenObjectCache *cache
+)
+{
+    PRStatus status;
+    nssCryptokiObject **objects;
+    PRBool *doIt = &cache->doObjectType[cachedCRLs];
+    PRUint32 i, numObjects;
+
     if (!search_for_objects(cache) || 
          cache->searchedObjectType[cachedCRLs] || 
         !cache->doObjectType[cachedCRLs]) 
@@ -951,20 +1016,32 @@ get_token_crls_for_cache
     objects = nssToken_FindCRLs(cache->token, NULL,
                                 nssTokenSearchType_TokenForced,
 				MAX_LOCAL_CACHE_OBJECTS, &status);
-    if (status == PR_SUCCESS) {
-	PRBool *doIt = &cache->doObjectType[cachedCRLs];
-        cache->objects[cachedCRLs] = get_object_and_attributes(objects,
-	                                                       crlAttr,
-						               numCRLAttr,
-	                                                       doIt,
-	                                                       &status);
-	if (status == PR_SUCCESS) {
-	    nss_ZFreeIf(objects);
-	} else {
-	    nssCryptokiObjectArray_Destroy(objects);
-	}
-    } else {
+    if (status != PR_SUCCESS) {
 	return status;
+    }
+    cache->objects[cachedCRLs] = create_object_array(objects,
+                                                     doIt,
+                                                     &numObjects,
+                                                     &status);
+    if (status != PR_SUCCESS) {
+	return status;
+    }
+    for (i=0; i<numObjects; i++) {
+	cache->objects[cachedCRLs][i] = create_crl(objects[i], &status);
+	if (status != PR_SUCCESS) {
+	    break;
+	}
+    }
+    if (status == PR_SUCCESS) {
+	nss_ZFreeIf(objects);
+    } else {
+	PRUint32 j;
+	for (j=0; j<i; j++) {
+	    /* sigh */
+	    nssToken_AddRef(cache->objects[cachedCRLs][i]->object->token);
+	    nssArena_Destroy(cache->objects[cachedCRLs][i]->arena);
+	}
+	nssCryptokiObjectArray_Destroy(objects);
     }
     cache->searchedObjectType[cachedCRLs] = PR_TRUE;
     return status;
@@ -1222,49 +1299,6 @@ loser:
     return PR_FAILURE;
 }
 
-static nssCryptokiObjectAndAttributes *
-make_object_and_attr
-(
-  nssCryptokiObject *object,
-  CK_ATTRIBUTE_PTR ot,
-  CK_ULONG otlen
-)
-{
-    PRUint32 i;
-    NSSArena *arena;
-    nssCryptokiObjectAndAttributes *oa;
-    arena = nssArena_Create();
-    if (!arena) {
-	return (nssCryptokiObjectAndAttributes *)NULL;
-    }
-    oa = nss_ZNEW(arena, nssCryptokiObjectAndAttributes);
-    if (!oa) {
-	goto loser;
-    }
-    oa->object = object;
-    oa->arena = arena;
-    nssToken_Destroy(object->token);
-    oa->attributes = nss_ZNEWARRAY(arena, CK_ATTRIBUTE, otlen);
-    if (!oa->attributes) {
-	goto loser;
-    }
-    for (i=0; i<otlen; i++) {
-	oa->attributes[i].type = ot[i].type;
-	oa->attributes[i].pValue = nss_ZAlloc(arena, ot[i].ulValueLen);
-	if (!oa->attributes[i].pValue) {
-	    goto loser;
-	}
-	nsslibc_memcpy(oa->attributes[i].pValue, ot[i].pValue,
-	               ot[i].ulValueLen);
-	oa->attributes[i].ulValueLen = ot[i].ulValueLen;
-    }
-    oa->numAttributes = otlen;
-    return oa;
-loser:
-    nssArena_Destroy(arena);
-    return (nssCryptokiObjectAndAttributes *)NULL;
-}
-
 NSS_IMPLEMENT PRStatus
 nssTokenObjectCache_ImportObject
 (
@@ -1280,6 +1314,7 @@ nssTokenObjectCache_ImportObject
     nssCryptokiObjectAndAttributes **oa, ***otype;
     PRUint32 objectType;
     PRBool haveIt = PR_FALSE;
+
     PZ_Lock(cache->lock);
     switch (objclass) {
     case CKO_CERTIFICATE:    objectType = cachedCerts; break;
@@ -1321,8 +1356,13 @@ nssTokenObjectCache_ImportObject
     }
     if (*otype) {
 	nssCryptokiObject *copyObject = nssCryptokiObject_Clone(object);
-	(*otype)[count] = make_object_and_attr(copyObject, ot, otlen);
-	status = ((*otype)[count] != NULL) ? PR_SUCCESS : PR_FAILURE;
+	if (objectType == cachedCerts) {
+	    (*otype)[count] = create_cert(copyObject, &status);
+	} else if (objectType == cachedTrust) {
+	    (*otype)[count] = create_trust(copyObject, &status);
+	} else if (objectType == cachedCRLs) {
+	    (*otype)[count] = create_crl(copyObject, &status);
+	}
     } else {
 	status = PR_FAILURE;
     }
