@@ -55,7 +55,6 @@
 #define NS_APP_CHROME_DIR                       "AChrom"
 #define NS_APP_PLUGINS_DIR                      "APlugns"
 #define NS_APP_SEARCH_DIR                       "SrchPlugns"
-#define NS_APP_MESSENGER_DIR                    "AMessenger"
 
 // --------------------------------------------------------------------------------------
 // Files and directories which exist on a per-profile basis
