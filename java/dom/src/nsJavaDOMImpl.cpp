@@ -209,52 +209,37 @@ PRBool nsJavaDOMImpl::Cleanup(JNIEnv* env)
   return PR_FALSE;
 }
 
-nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
+nsresult nsJavaDOMImpl::GetDocument(nsIWebProgress* aWebProgress,
+				    nsIDOMDocument **aResult)
 {
-  nsIDocShell* docshell = nsnull;
-  nsISupports* container = nsnull;
-  nsIContentViewer* contentv = nsnull;
-  nsIDocumentViewer* docv = nsnull;
-  nsIDocument* document = nsnull;
-  nsIDOMDocument* domDoc = nsnull;
+  nsCOMPtr<nsIDOMWindow> domWin;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsresult rv;
 
-  nsresult rv = loader->GetContainer(&container);
-  if (NS_SUCCEEDED(rv) && container) {
-    rv = container->QueryInterface(kIDocShellIID, (void**) &docshell);
-    container->Release();
-    if (NS_SUCCEEDED(rv) && docshell) {
-      rv = docshell->GetContentViewer(&contentv);
-      docshell->Release();
-      if (NS_SUCCEEDED(rv) && contentv) {
-	rv = contentv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-	contentv->Release();	
-	if (NS_SUCCEEDED(rv) && docv) {
-	  rv = docv->GetDocument(document);
-	  docv->Release();
-	  if (NS_SUCCEEDED(rv) && document) {
-	    rv = document->QueryInterface(kIDOMDocumentIID, (void**) &domDoc);
-	    if (NS_SUCCEEDED(rv) && docv) {
-	      return domDoc;
-	    }
-	  }
-	}
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  
+  if (nsnull != aWebProgress) {
+    if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
+	&& domWin) {
+      if (NS_SUCCEEDED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
+	*aResult = domDoc.get();
+	return rv;
       }
     }
   }
 
   fprintf(stderr, 
 	  "nsJavaDOMImpl::GetDocument: failed: "
-	  "container=%x, webshell=%x, contentViewer=%x, "
-	  "documentViewer=%x, document=%x, "
-	  "domDocument=%x, error=%x\n", 
-	  (unsigned) (void*) container, 
-	  (unsigned) (void*) docshell, 
-	  (unsigned) (void*) contentv, 
-	  (unsigned) (void*) docv, 
-	  (unsigned) (void*) document, 
-	  (unsigned) (void*) domDoc, 
+	  "webProgress=%x, domWin=%x, domDoc=%x, "
+	  "error=%x\n",
+	  aWebProgress,
+	  domWin.get(),
+	  domDoc.get(),
 	  rv);
-  return NULL;
+  return rv;
 }
 
 //
@@ -268,16 +253,22 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStateChange(nsIWebProgress *aWebProgress,
 {
   nsXPIDLString name;
   nsresult rv;
-  
+
+  if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+    return rv;
+  }
   
   if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_DOCUMENT)) {
-    if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
-      return rv;
-    }
     doStartDocumentLoad(name.get());
   }
   if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
     doEndDocumentLoad(aWebProgress, aRequest, aStatus);
+  }
+  if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_REQUEST)) {
+    doStartURLLoad(aWebProgress, aRequest);
+  }
+  if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_REQUEST)) {
+    doEndURLLoad(aWebProgress, aRequest, aStatus);
   }
   
   return NS_OK;
@@ -298,17 +289,11 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressChange(nsIWebProgress *aWebProgress,
 					      PRInt32 curTotalProgress, 
 					      PRInt32 maxTotalProgress)
 {
-    nsCOMPtr<nsIDOMWindow> domWin;
     nsCOMPtr<nsIDOMDocument> domDoc;
     nsresult rv;
     
-    if (nsnull != aWebProgress) {
-	if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
-	    && domWin) {
-	    if (NS_FAILED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
-		return rv;
-	    }
-	}
+    if (NS_FAILED(rv = GetDocument(aWebProgress, getter_AddRefs(domDoc)))) {
+      return rv;
     }
 
     JNIEnv* env = NULL;
@@ -339,17 +324,11 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusChange(nsIWebProgress *aWebProgress,
                                                 nsresult aStatus, 
                                                 const PRUnichar *cMsg)
 {
-    nsCOMPtr<nsIDOMWindow> domWin;
     nsCOMPtr<nsIDOMDocument> domDoc;
     nsresult rv;
     
-    if (nsnull != aWebProgress) {
-	if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
-	    && domWin) {
-	    if (NS_FAILED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
-		return rv;
-	    }
-	}
+    if (NS_FAILED(rv = GetDocument(aWebProgress, getter_AddRefs(domDoc)))) {
+      return rv;
     }
     
     JNIEnv* env = NULL;
@@ -407,26 +386,15 @@ NS_IMETHODIMP nsJavaDOMImpl::doStartDocumentLoad(const PRUnichar *documentName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsJavaDOMImpl::doStartUrlLoad(const PRUnichar *documentName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsJavaDOMImpl::doEndDocumentLoad(nsIWebProgress *aWebProgress,
 					       nsIRequest *request, 
 					       PRUint32 aStatus)
 {
-  nsCOMPtr<nsIDOMWindow> domWin;
   nsCOMPtr<nsIDOMDocument> domDoc;
   nsresult rv;
   
-  if (nsnull != aWebProgress) {
-    if (NS_SUCCEEDED(aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))
-	&& domWin) {
-      if (NS_FAILED(rv = domWin->GetDocument(getter_AddRefs(domDoc)))) {
-	return rv;
-      }
-    }
+  if (NS_FAILED(rv = GetDocument(aWebProgress, getter_AddRefs(domDoc)))) {
+    return rv;
   }
 
   JNIEnv* env = NULL;
@@ -449,10 +417,16 @@ NS_IMETHODIMP nsJavaDOMImpl::doEndDocumentLoad(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
-					    nsIRequest* request)
+NS_IMETHODIMP nsJavaDOMImpl::doStartURLLoad(nsIWebProgress *aWebProgress, 
+					    nsIRequest *request)
 {
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsresult rv;
+  
+  if (NS_FAILED(rv = GetDocument(aWebProgress, getter_AddRefs(domDoc)))) {
+    return rv;
+  }
+
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
 
@@ -472,20 +446,26 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
   jstring jContentType = env->NewStringUTF(contentType);
   if (!jContentType) return NS_ERROR_FAILURE;
 
-  nsIDOMDocument* domDoc = GetDocument(loader);
   env->CallStaticVoidMethod(domAccessorClass,
 			    startURLLoadMID,
 			    jURL,
 			    jContentType,
-			    (jlong)domDoc);
+			    (jlong)domDoc.get());
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader, 
-					  nsIRequest* request, 
-					  nsresult aStatus)
+NS_IMETHODIMP nsJavaDOMImpl::doEndURLLoad(nsIWebProgress *aWebProgress, 
+					  nsIRequest *request, 
+					  PRUint32 aStatus)
 {
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsresult rv;
+  
+  if (NS_FAILED(rv = GetDocument(aWebProgress, getter_AddRefs(domDoc)))) {
+    return rv;
+  }
+
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
 
@@ -497,7 +477,6 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
-  nsIDOMDocument* domDoc = GetDocument(loader);
 #if defined(DEBUG)
   dump_document(domDoc, urlSpec);
 #endif
@@ -505,11 +484,10 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
 			    endURLLoadMID,
 			    jURL,
 			    (jint) aStatus,
-			    (jlong)domDoc);
+			    (jlong)domDoc.get());
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
   return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP nsJavaDOMImpl::HandleUnknownContentType(nsIDocumentLoader* loader,
 						      nsIChannel* channel, 

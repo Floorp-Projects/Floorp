@@ -35,9 +35,12 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   */ 
   
   NS_IMETHOD doStartDocumentLoad(const PRUnichar *documentName);
-  NS_IMETHOD doStartUrlLoad(const PRUnichar *documentName);
   NS_IMETHOD doEndDocumentLoad(nsIWebProgress *aWebProgress, 
 			       nsIRequest *aRequest, PRUint32 aStatus);
+  NS_IMETHOD doStartURLLoad(nsIWebProgress *aWebProgress, 
+			    nsIRequest *aRequest);
+  NS_IMETHOD doEndURLLoad(nsIWebProgress *aWebProgress, 
+			  nsIRequest *aRequest, PRUint32 aStatus);
 
  private:
 #ifdef JAVA_DOM_OJI_ENABLE
@@ -61,7 +64,8 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   static PRBool Init(JNIEnv**);
   // cleanup after a JNI method invocation
   static PRBool Cleanup(JNIEnv* env);
-  nsIDOMDocument* GetDocument(nsIDocumentLoader* loader);  
+  nsresult GetDocument(nsIWebProgress* aWebProgress, 
+		       nsIDOMDocument **aResult);  
 };
 
 #endif /* __nsJavaDOMImpl_h__ */
