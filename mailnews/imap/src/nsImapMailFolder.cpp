@@ -1511,13 +1511,19 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
 		// If this is the inbox, try to apply filters.
 		if (mFlags & MSG_FOLDER_FLAG_INBOX)
 		{
-			rv = m_msgParser->GetAllHeaders(&headers, &headersSize);
+			PRUint32 msgFlags;
 
-			if (NS_SUCCEEDED(rv) && headers)
+			newMsgHdr->GetFlags(&msgFlags);
+			if (!(msgFlags & MSG_FLAG_READ)) // only fire on unread msgs
 			{
-				if (m_filterList)
-					m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
-						headers, headersSize, this);
+				rv = m_msgParser->GetAllHeaders(&headers, &headersSize);
+
+				if (NS_SUCCEEDED(rv) && headers)
+				{
+					if (m_filterList)
+						m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
+							headers, headersSize, this);
+				}
 			}
 		}
 		// here we need to tweak flags from uid state..
