@@ -89,6 +89,21 @@ static char g_detector_progid[128];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
 
+static int
+MyPrefChangedCallback(const char*aPrefName, void* instance_data)
+{
+	char* pName = (char*) instance_data;
+	if(nsCRT::strlen(pName) > 0)
+	{
+	    PL_strcpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE);
+        PL_strcat(g_detector_progid, pName);
+        gPlugDetector = PR_TRUE;
+	} else {
+		gPlugDetector = PR_FALSE;
+	}
+	return 0;
+}
+
 #ifdef PCB_USE_PROTOCOL_CONNECTION
 // beard: how else would we get the referrer to a URL?
 #include "nsIProtocolConnection.h"
@@ -546,7 +561,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                 gPlugDetector = PR_TRUE;
                 PR_FREEIF(detector_name);
              }
-             // XXX we should also register callback here
+             pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, (void*) g_detector_progid);
            }
            NS_IF_RELEASE(pref);
            gInitDetector = PR_TRUE;
