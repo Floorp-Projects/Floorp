@@ -256,7 +256,7 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
     nsCOMPtr<nsIMsgFolder> destFolder(do_QueryInterface(res, &rv));
     if (NS_SUCCEEDED(rv) && destFolder)
     {
-      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(destFolder);
+      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
       if (imapFolder)
         rv = imapFolder->ReplayOfflineMoveCopy(uids.get(), PR_TRUE, destFolder,
                        this, m_window);
@@ -510,6 +510,8 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
 	if (m_currentDB)
 	{	
 		PRBool currentFolderFinished = PR_FALSE;
+    if (!folderInfo)
+      m_currentDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 														// user canceled the lite select! if GetCurrentUIDValidity() == 0
 		if ((m_KeyIndex < m_CurrentKeys.GetSize()) && (m_pseudoOffline || (GetCurrentUIDValidity() != 0) || !(folderFlags & MSG_FOLDER_FLAG_IMAPBOX)) )
 		{
@@ -526,21 +528,17 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
 			{
         nsOfflineImapOperationType opType; 
 
-				// loop until we find the next db record that matches the current playback operation
-				while (currentOp)
-        {
+        if (currentOp)
           currentOp->GetOperation(&opType);
+				// loop until we find the next db record that matches the current playback operation
+				while (currentOp && !(opType & mCurrentPlaybackOpType))
+        {
+          currentOp = nsnull;
           ++m_KeyIndex;
-          if (! (opType & mCurrentPlaybackOpType))
-				  {
-					  if (m_KeyIndex < m_CurrentKeys.GetSize())
-						  m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
-            else
-              break;
-				  }
-          else
-            break;
-
+					if (m_KeyIndex < m_CurrentKeys.GetSize())
+						m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
+          if (currentOp)
+            currentOp->GetOperation(&opType);
         }
 				
 				// if we did not find a db record that matches the current playback operation,

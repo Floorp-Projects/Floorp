@@ -71,7 +71,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetOperation(nsOfflineImapOperationType
 
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetOperation(nsOfflineImapOperationType aOperation)
 {
-  m_operation = aOperation;
+  m_operation |= aOperation;
   return m_mdb->SetUint32Property(m_mdbRow, PROP_OPERATION, aOperation);
 }
 
@@ -168,6 +168,8 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetSourceFolderURI(char * *aSourceFolde
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetSourceFolderURI(const char * aSourceFolderURI)
 {
   m_sourceFolder = aSourceFolderURI;
+  SetOperation(kMoveResult);
+
   return m_mdb->SetProperty(m_mdbRow, PROP_SRC_FOLDER_URI, aSourceFolderURI);
 }
 

@@ -1992,14 +1992,12 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
         if (pHeader && NS_SUCCEEDED(rv))
         {
-          PRUint32 flags;
-          pHeader->GetFlags(&flags);
-          if (! (flags & MSG_FLAG_OFFLINE))
-          {
-            nsMsgKey key;
-            pHeader->GetMessageKey(&key);
-            keysOfMessagesToDownload->Add(key);
-          }
+          PRBool shouldStoreMsgOffline = PR_FALSE;
+          nsMsgKey msgKey;
+          pHeader->GetMessageKey(&msgKey);
+          ShouldStoreMsgOffline(msgKey, &shouldStoreMsgOffline);
+          if (shouldStoreMsgOffline)
+            keysOfMessagesToDownload->Add(msgKey);
         }
       }
     }

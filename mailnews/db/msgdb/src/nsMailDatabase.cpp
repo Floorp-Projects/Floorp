@@ -586,6 +586,44 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDelete
 
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
+	nsIMdbTableRowCursor *rowCursor;
+	if (m_mdbAllOfflineOpsTable)
+	{
+		nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+		while (err == NS_OK && rowCursor)
+		{
+			mdbOid outOid;
+			mdb_pos	outPos;
+      nsIMdbRow* offlineOpRow;
+
+			err = rowCursor->NextRow(GetEnv(), &offlineOpRow, &outPos);
+			// is this right? Mork is returning a 0 id, but that should valid.
+			if (outPos < 0 || offlineOpRow == nsnull)	
+				break;
+			if (err == NS_OK)
+      {
+        offlineOpRow->GetOid(GetEnv(), &outOid);
+        nsIMsgOfflineImapOperation *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
+        if (offlineOp)
+        {
+          NS_ADDREF(offlineOp);
+          imapMessageFlagsType newFlags;
+          nsOfflineImapOperationType opType;
+
+          offlineOp->GetOperation(&opType);
+          offlineOp->GetNewFlags(&newFlags);
+          if (opType & nsIMsgOfflineImapOperation::kMsgMoved || 
+              ((opType & nsIMsgOfflineImapOperation::kFlagsChanged) 
+              && (newFlags & nsIMsgOfflineImapOperation::kMsgMarkedDeleted)))
+    				offlineDeletes->Add(outOid.mOid_Id);
+          NS_RELEASE(offlineOp);
+        }
+        offlineOpRow->Release();
+      }
+		}
+    rv = (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
+		rowCursor->Release();
+	}
 	return rv;
 }
 
