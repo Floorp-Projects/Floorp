@@ -25,13 +25,13 @@
 #
 sub has_error {
   local $_ = $_[0];
-  /fatal error/ # . . . . . . . . . Link error
-    or /^C /  # . . . . . . . . . . cvs merge conflict
-    or / Error: / # . . . . . . . . C error
-    or / error\([0-9]*\)\:/ # . . . C error
-    or (/gmake/ and / Error /)  # . 
-    or /\[checkout aborted\]/   # . cvs error
-    or /\: cannot find module/  # . cvs error
+  /fatal error/ # . . . . . . . . . . . . Link
+    or /^C /  # . . . . . . . . . . . . . cvs merge conflict
+    or / Error: / # . . . . . . . . . . . C
+    or / error\([0-9]*\)\:/ # . . . . . . C
+    or /^gmake(?:\[\d\d?\])?: \*\*\*/ # . gmake
+    or /\[checkout aborted\]/   # . . . . cvs
+    or /\: cannot find module/  # . . . . cvs
     ;
 }
 
