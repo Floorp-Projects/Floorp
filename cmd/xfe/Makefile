@@ -686,6 +686,12 @@ OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lS
 endif
 
 ########################################
+# NetBSD
+ifeq ($(OS_ARCH),NetBSD)
+OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
 # BSDI
 ifeq ($(OS_ARCH),BSD_OS)
 OTHER_LIBS	= $(MOTIF)/libXm.a $(LOC_LIB_DIR)/libXt.a $(X11R6LIBS) $(LOC_LIB_DIR)/libXmu.a \
