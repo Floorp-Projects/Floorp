@@ -108,7 +108,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   text->mQuotedSizeSetting = 0;   // mail.quoted_size
   text->mQuotedStyleSetting = 0;  // mail.quoted_style
   text->mCitationColor = nsnull;  // mail.citation_color
-  
+
   nsIPref *prefs = GetPrefServiceManager(obj->options);
   if (prefs)
   {
@@ -153,17 +153,26 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
       fontstyle = "font-family: -moz-fixed";
   }
 
-  // Opening <div>. We currently have to add formatting here. :-(
-  nsCAutoString openingDiv("<div class=text-flowed");
-  if (!plainHTML && !fontstyle.IsEmpty())
+  // Opening <div>.
+  if (!quoting)
+       /* HACK: 4.x' editor can't break <div>s (e.g. to interleave comments).
+          So, I just don't put it out until we have a better solution.
+          Downside: This removes the information about the original format,
+          which might be useful for styling/processing on the recipient
+          side :(. */
   {
-    openingDiv += " style=\"";
-    openingDiv += fontstyle;
-    openingDiv += '\"';
+    nsCAutoString openingDiv("<div class=text-flowed");
+    // We currently have to add formatting here. :-(
+    if (!plainHTML && !fontstyle.IsEmpty())
+    {
+      openingDiv += " style=\"";
+      openingDiv += fontstyle;
+      openingDiv += '\"';
+    }
+    openingDiv += ">";
+    status = MimeObject_write(obj, openingDiv, openingDiv.Length(), PR_FALSE);
+    if (status < 0) return status;
   }
-  openingDiv += "><tt>";
-  status = MimeObject_write(obj, openingDiv,openingDiv.Length(), PR_FALSE);
-  if (status < 0) return status;
 
   return 0;
 }
@@ -186,7 +195,6 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
 
   if (!obj->output_p) return 0;
 
-
   struct MimeInlineTextPlainFlowedExData *exdata;
   struct MimeInlineTextPlainFlowedExData *prevexdata;
   exdata = MimeInlineTextPlainFlowedExDataList;
@@ -204,16 +212,19 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     prevexdata->next = exdata->next;
   }
 
-  for(; exdata->quotelevel>0; exdata->quotelevel--) {
+  for(; exdata->quotelevel > 0; exdata->quotelevel--) {
     status = MimeObject_write(obj, "</blockquote>", 13, PR_FALSE);
     if(status<0) goto EarlyOut;
   }
   if (exdata->isSig && !quoting) {
-    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
+    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);      // txt-sig
     if (status<0) goto EarlyOut;
   }
-  status = MimeObject_write(obj, "</tt></div>", 12, PR_FALSE);  // text-flowed
-  if (status<0) goto EarlyOut;
+  if (!quoting) // HACK (see above)
+  {
+    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // text-flowed
+    if (status<0) goto EarlyOut;
+  }
 
   status = 0;
   text = (MimeInlineTextPlainFlowed *) obj;
@@ -250,21 +261,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
-  // Look if the last character (after stripping ending end
-  // of lines) is a SPACE. If it is, we are looking at a
-  // flowed line. Normally we assume that the last two chars
-  // are CR and LF as said in RFC822, but that doesn't seem to
-  // be the case always.
-  PRBool flowed = PR_FALSE;
-  PRInt32 index = length-1;
-  while(index >= 0 &&
-        (('\r' == line[index]) || ('\n' == line[index]))) {
-    index--;
-  }
-  if((index >= 0) && (' ' == line[index])) {
-    flowed = PR_TRUE;
-  }
-  
   // Grows the buffer if needed for this line
   // calculate needed buffersize. Use the linelength
   // and then double it to compensate for text converted
@@ -307,10 +303,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   if(!templine) 
     return MIME_OUT_OF_MEMORY;
 
-  // Copy `line' to `templine', quoting HTML along the way.
-	// Note: this function does no charset conversion; that has already
-	// been done.
-  //
   uint32 linequotelevel = 0;
   char *linep = line;
   // Space stuffed?
@@ -327,6 +319,21 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       linep++;
     }
   }
+
+  // Look if the last character (after stripping ending end
+  // of lines and quoting stuff) is a SPACE. If it is, we are looking at a
+  // flowed line. Normally we assume that the last two chars
+  // are CR and LF as said in RFC822, but that doesn't seem to
+  // be the case always.
+  PRBool flowed = PR_FALSE;
+  PRInt32 index = length-1;
+  while(index >= 0 && ('\r' == line[index] || '\n' == line[index])) {
+    index--;
+  }
+  if (index > linep - line && ' ' == line[index])
+       /* Ignore space stuffing, i.e. lines with just
+          (quote marks and) a space count as empty */
+    flowed = PR_TRUE;
 
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
 
@@ -351,9 +358,14 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
                       might not be able to display the glyphs. */
     }
 
+    /* This is the main TXT to HTML conversion:
+       escaping (very important), eventually recognizing etc. */
     rv = conv->ScanTXT(strline.GetUnicode(), whattodo, &wresult);
     if (NS_FAILED(rv))
+    {
+      PR_Free(templine);
       return -1;
+    }
 
     /* avoid an extra string copy by using nsSubsumeStr, this transfers
        ownership of wresult to strresult so don't try to free wresult later. */
@@ -397,11 +409,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     quoteleveldiff--;
     /* Output <blockquote> */
     *outlinep='<'; outlinep++;
-    *outlinep='/'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='>'; outlinep++;
-    *outlinep='<'; outlinep++;
     *outlinep='b'; outlinep++;
     *outlinep='l'; outlinep++;
     *outlinep='o'; outlinep++;
@@ -443,19 +450,10 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       PR_FREEIF(style);
     }
     *outlinep='>'; outlinep++;
-    *outlinep='<'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='>'; outlinep++;
   }
   while(quoteleveldiff<0) {
     quoteleveldiff++;
     /* Output </blockquote> */
-    *outlinep='<'; outlinep++;
-    *outlinep='/'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='>'; outlinep++;
     *outlinep='<'; outlinep++;
     *outlinep='/'; outlinep++;
     *outlinep='b'; outlinep++;
@@ -469,100 +467,108 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     *outlinep='t'; outlinep++;
     *outlinep='e'; outlinep++;
     *outlinep='>'; outlinep++;
-    *outlinep='<'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='t'; outlinep++;
-    *outlinep='>'; outlinep++;
   }
   exdata->quotelevel = linequotelevel;
 
   if(flowed) {
-
-    int32 dashdashspace; // Check for RFC 2646 4.3
-    if((0==linequotelevel) && !exdata->inflow){
-      // possible
-      dashdashspace = 0;
-    } else {
-      dashdashspace = -1;
-    }
-    PRBool firstSpaceNbsp = PR_FALSE;   /* Convert all spaces but
-         the first in a row into nbsp (i.e. always wrap) */
-    PRBool nextSpaceIsNbsp = firstSpaceNbsp;
-    while(*templinep && (*templinep != '\r') && (*templinep != '\n')) {
-      // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
-      // not a flowed line
-      if(dashdashspace>=0) {
-        switch(dashdashspace) {
-        case 0: // First and second '-'
-        case 1:
-          if('-' == *templinep)
-            dashdashspace++;
-          else
-            dashdashspace=-1;
-          break;
-        case 2:
-          if(' ' == *templinep)
-            dashdashspace++;
-          else
-            dashdashspace=-1;
-          break;
-        default:
-          dashdashspace = -1;
-        }
-      } // end if(dashdashspace...)
-
-      // Output the same character
-      // Here, the most of the flowing text is written
-      // DELETEME: What is this intag in the fixed code and do we need it here?
-      if((' ' == *templinep) && !exdata->inflow) {
-        if (nextSpaceIsNbsp)
-        {
-          *outlinep='&'; outlinep++;
-          *outlinep='n'; outlinep++;
-          *outlinep='b'; outlinep++;
-          *outlinep='s'; outlinep++;
-          *outlinep='p'; outlinep++;
-          *outlinep=';'; outlinep++;
-        }
-        else
-        {
-          *outlinep=' '; outlinep++;
-        }
-        nextSpaceIsNbsp = PR_TRUE;
-        templinep++;
-      } else if(('\t' == *templinep) && !exdata->inflow) {
-        // Output 4 "spaces"
-        for(int spaces=0; spaces<4; spaces++) {
-          if (nextSpaceIsNbsp)
-          {
-            *outlinep='&'; outlinep++;
-            *outlinep='n'; outlinep++;
-            *outlinep='b'; outlinep++;
-            *outlinep='s'; outlinep++;
-            *outlinep='p'; outlinep++;
-            *outlinep=';'; outlinep++;
-          }
-          else
-          {
-            *outlinep=' '; outlinep++;
-          }
-          nextSpaceIsNbsp = PR_TRUE;
-        }
-        templinep++;
+    // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
+    // not a flowed line
+    if
+      (  // is "-- "LINEBREAK
+        templinep[0] == '-'
+        && PL_strlen(templinep) >= 4
+        &&
+        (
+          !PL_strncmp(templinep, "-- \r", 4) ||
+          !PL_strncmp(templinep, "-- \n", 4)
+        )
+      )
+    {
+      if (linequotelevel > 0 || exdata->isSig)
+      {
+        *outlinep='-'; outlinep++;
+        *outlinep='-'; outlinep++;
+        *outlinep='&'; outlinep++;
+        *outlinep='n'; outlinep++;
+        *outlinep='b'; outlinep++;
+        *outlinep='s'; outlinep++;
+        *outlinep='p'; outlinep++;
+        *outlinep=';'; outlinep++;
+        *outlinep='<'; outlinep++;
+        *outlinep='b'; outlinep++;
+        *outlinep='r'; outlinep++;
+        *outlinep='>'; outlinep++;
       } else {
-        nextSpaceIsNbsp = firstSpaceNbsp;
-        *outlinep = *templinep;
-        outlinep++;
-        templinep++;
-      } 
-      
-    }
-    if(3 == dashdashspace) {
-      // "-- " is a fixed line. 
-      *outlinep='<'; outlinep++;
-      *outlinep='b'; outlinep++;
-      *outlinep='r'; outlinep++;
-      *outlinep='>'; outlinep++;
+        exdata->isSig = PR_TRUE;
+
+        const char *const sig_mark_start =
+         "<div class=\"txt-sig\"><span class=\"txt-tag\">--&nbsp;<br></span>";
+        PRUint32 sig_mark_start_length = PL_strlen(sig_mark_start);
+        memcpy(outlinep, sig_mark_start, sig_mark_start_length);
+        outlinep += sig_mark_start_length;
+      }
+      templinep += 3;  // Above, we already outputted the equvivalent to "-- "
+    } else {
+      // Output templinep
+      while(*templinep && (*templinep != '\r') && (*templinep != '\n'))
+      {
+        uint32 intag = 0;
+        const PRBool firstSpaceNbsp = PR_FALSE;   /* Convert all spaces but
+             the first in a row into nbsp (i.e. always wrap) */
+        PRBool nextSpaceIsNbsp = firstSpaceNbsp;
+
+        if ('<' == *templinep)
+          intag = 1;
+        if (!intag) {
+          if ((' ' == *templinep) && !exdata->inflow) {
+            if (nextSpaceIsNbsp)
+            {
+              *outlinep='&'; outlinep++;
+              *outlinep='n'; outlinep++;
+              *outlinep='b'; outlinep++;
+              *outlinep='s'; outlinep++;
+              *outlinep='p'; outlinep++;
+              *outlinep=';'; outlinep++;
+            }
+            else
+            {
+              *outlinep=' '; outlinep++;
+            }
+            nextSpaceIsNbsp = PR_TRUE;
+            templinep++;
+          } else if(('\t' == *templinep) && !exdata->inflow) {
+            // Output 4 "spaces"
+            for(int spaces=0; spaces<4; spaces++) {
+              if (nextSpaceIsNbsp)
+              {
+                *outlinep='&'; outlinep++;
+                *outlinep='n'; outlinep++;
+                *outlinep='b'; outlinep++;
+                *outlinep='s'; outlinep++;
+                *outlinep='p'; outlinep++;
+                *outlinep=';'; outlinep++;
+              }
+              else
+              {
+                *outlinep=' '; outlinep++;
+              }
+              nextSpaceIsNbsp = PR_TRUE;
+            }
+            templinep++;
+          } else {
+            nextSpaceIsNbsp = firstSpaceNbsp;
+            *outlinep = *templinep;
+            outlinep++;
+            templinep++;
+          } 
+        } else {
+          // In tag. Don't change anything
+          nextSpaceIsNbsp = firstSpaceNbsp;
+          *outlinep = *templinep;
+          outlinep++;
+          templinep++;
+        }
+      }
     }
 
     exdata->inflow=PR_TRUE;
@@ -581,7 +587,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     */
     
     uint32 intag = 0; 
-    PRBool firstSpaceNbsp = !plainHTML && !obj->options->wrap_long_lines_p;
+    const PRBool firstSpaceNbsp = !plainHTML &&
+                                  !obj->options->wrap_long_lines_p;
          /* If wrap, convert all spaces but the first in a row into nbsp,
             otherwise all. */
     PRBool nextSpaceIsNbsp = firstSpaceNbsp;
@@ -637,7 +644,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
         templinep++;
       }
     }
-    
+
     *outlinep='<'; outlinep++;
     *outlinep='b'; outlinep++;
     *outlinep='r'; outlinep++;
@@ -653,5 +660,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   // Calculate linelength as
   // <pointer to the next free char>-<pointer to the beginning>-1
   // '-1' for the terminating '\0'
-  return MimeObject_write(obj, obj->obuffer, outlinep-obj->obuffer-1, PR_TRUE);
+  if (!(exdata->isSig && quoting))
+    return MimeObject_write(obj, obj->obuffer, outlinep-obj->obuffer-1, PR_TRUE);
+  else
+    return NS_OK;
 }
