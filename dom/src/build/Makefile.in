@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LCFLAGS=-D_IMPL_NS_DOM
+CFLAGS	+= -D_IMPL_NS_DOM
 
 LIBRARY_NAME = jsdom
 

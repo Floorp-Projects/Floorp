@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES = -D_IMPL_NS_DOM
+DEFINES += -D_IMPL_NS_DOM
  
 EXPORTS =			 \
 	nsIDOMWindow.h 		 \
