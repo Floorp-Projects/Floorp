@@ -48,9 +48,16 @@ namespace JavaScript {
         SAVE_NAME,      // StringAtom &                 Source Register
 
         NEW_OBJECT,     // Destination Register
+        NEW_ARRAY,      // Destination Array
 
-        GET_PROP,       // Destination Register         StringAtom &                Base Register               
-        SET_PROP,       // StringAtom &                 Base Register               Source Register
+//        GET_PROP,       // Destination Register         StringAtom &                Base Register               
+//        SET_PROP,       // StringAtom &                 Base Register               Source Register
+
+        GET_PROP,       // Destination Register         Object Register             StringAtom* (name)
+        SET_PROP,       // Object Register              StringAtom* (name)          Source Register
+
+        GET_ELEMENT,    // Destination Register         Array Register              Index Register
+        SET_ELEMENT,    // Base Register                Index Register              Source Register
 
         ADD,            // Destination Register         Source Register 1           Source Register 2           
         SUBTRACT,
@@ -78,7 +85,7 @@ namespace JavaScript {
         
         RETURN,         // Source Register
 
-        CALL,           // Destination Register         Target Register             Arguments
+        CALL            // Destination Register         Target Register             Arguments
     };
 
     class Instruction {
@@ -153,8 +160,10 @@ namespace JavaScript {
             Operand3& o3() { return itsOperand3; }
         };
 
-    typedef Instruction_3<StringAtom*, Register, Register> SetProp;
+    typedef Instruction_3<Register, StringAtom*, Register> SetProp;
     typedef Instruction_3<Register, Register, StringAtom*> GetProp;
+    typedef Instruction_3<Register, Register, Register> SetElement;
+    typedef Instruction_3<Register, Register, Register> GetElement;
     typedef Instruction_3<Register, Register, Register> Arithmetic;
     typedef Instruction_3<Register, Register, Register> Compare;
 
@@ -176,6 +185,11 @@ namespace JavaScript {
     class NewObject : public Instruction_1<Register> {
     public:
         NewObject(Register result) : Instruction_1<Register>(NEW_OBJECT, result) { }
+    };
+    
+    class NewArray : public Instruction_1<Register> {
+    public:
+        NewArray(Register result) : Instruction_1<Register>(NEW_ARRAY, result) { }
     };
 
     class ResolvedBranch : public Instruction_1<uint32> {
@@ -282,12 +296,16 @@ namespace JavaScript {
         void saveVariable(uint32 frameIndex, Register value);
 
         Register newObject();
+        Register newArray();
 
         Register loadName(StringAtom &name);
         void saveName(StringAtom &name, Register value);
         
-        Register getProperty(StringAtom &name, Register base);
-        void setProperty(StringAtom &name, Register base, Register value);
+        Register getProperty(Register base, StringAtom &name);
+        void setProperty(Register base, StringAtom &name, Register value);
+
+        Register getElement(Register base, Register index);
+        void setElement(Register base, Register index, Register value);
 
         Register getRegisterBase()                          { return topRegister; }
         InstructionStream *get_iCode()                      { return iCode; }

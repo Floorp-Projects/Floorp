@@ -101,6 +101,14 @@ namespace JavaScript {
         return dest;
     }
 
+    Register ICodeGenerator::newArray()
+    {
+        Register dest = getRegister();
+        NewArray *instr = new NewArray(dest);
+        iCode->push_back(instr);
+        return dest;
+    }
+
     Register ICodeGenerator::loadName(StringAtom &name)
     {
         Register dest = getRegister();
@@ -115,7 +123,7 @@ namespace JavaScript {
         iCode->push_back(instr);
     }
 
-    Register ICodeGenerator::getProperty(StringAtom &name, Register base)
+    Register ICodeGenerator::getProperty(Register base, StringAtom &name)
     {
         Register dest = getRegister();
         GetProp *instr = new GetProp(GET_PROP, dest, base, &name);
@@ -123,9 +131,23 @@ namespace JavaScript {
         return dest;
     }
 
-    void ICodeGenerator::setProperty(StringAtom &name, Register base, Register value)
+    void ICodeGenerator::setProperty(Register base, StringAtom &name, Register value)
     {
-        SetProp *instr = new SetProp(SET_PROP, &name, base, value);
+        SetProp *instr = new SetProp(SET_PROP, base, &name, value);
+        iCode->push_back(instr);
+    }
+
+    Register ICodeGenerator::getElement(Register base, Register index)
+    {
+        Register dest = getRegister();
+        GetElement *instr = new GetElement(GET_ELEMENT, dest, base, index);
+        iCode->push_back(instr);
+        return dest;
+    }
+
+    void ICodeGenerator::setElement(Register base, Register index, Register value)
+    {
+        SetElement *instr = new SetElement(SET_ELEMENT, base, index, value);
         iCode->push_back(instr);
     }
 
@@ -552,8 +574,11 @@ namespace JavaScript {
             "load_name",
             "save_name",
             "new_object",
+            "new_array",
             "get_prop",
-            "set_prop", 
+            "set_prop",
+            "get_element",
+            "set_element",
             "add",
             "subtract",
             "multiply",
@@ -618,13 +643,25 @@ namespace JavaScript {
                 case GET_PROP :
                     {
                         GetProp *t = static_cast<GetProp * >(instr);
-                        s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << ", \"" << *t->itsOperand3;
+                        s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << "[\"" << *t->itsOperand3 << "\"]";
                     }
                     break;
                 case SET_PROP :
                     {
                         SetProp *t = static_cast<SetProp * >(instr);
-                        s << "\"" << *t->itsOperand1 <<  "\", R" << t->itsOperand2 << ", R" << t->itsOperand3;
+                        s << "R" << t->itsOperand1 << "[\"" << *t->itsOperand2 <<  "\"], R" << t->itsOperand3;
+                    }
+                    break;
+                case GET_ELEMENT :
+                    {
+                        GetElement *t = static_cast<GetElement * >(instr);
+                        s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << "[" << t->itsOperand3 << "]";
+                    }
+                    break;
+                case SET_ELEMENT :
+                    {
+                        SetElement *t = static_cast<SetElement * >(instr);
+                        s << "R" << t->itsOperand1 << "[" << t->itsOperand2 <<  "], R" << t->itsOperand3;
                     }
                     break;
                 case LOAD_IMMEDIATE :
