@@ -287,8 +287,8 @@ use constant ABSTRACT_SCHEMA => {
 
     duplicates => {
         FIELDS => [
-            dup_of => {TYPE => 'INT3', NOTNULL => 1},
-            dup    => {TYPE => 'INT3', NOTNULL => 1,
+            dupe_of => {TYPE => 'INT3', NOTNULL => 1},
+            dupe    => {TYPE => 'INT3', NOTNULL => 1,
                        PRIMARYKEY => 1},
         ],
     },
