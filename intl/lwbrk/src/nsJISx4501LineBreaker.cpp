@@ -235,7 +235,7 @@ IS_CJK_CHAR(PRUnichar u)
   return ((0x1100 <= (u) && (u) <= 0x11ff) ||
           (0x2e80 <= (u) && (u) <= 0xd7ff) ||
           (0xf900 <= (u) && (u) <= 0xfaff) ||
-          (0xff00 <= (u) && (u) <= 0xffff) );
+          (0xff00 <= (u) && (u) <= 0xffef) );
 }
 
 static inline int
