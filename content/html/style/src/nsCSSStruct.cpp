@@ -1213,7 +1213,7 @@ nsCSSSVG::nsCSSSVG(const nsCSSSVG& aCopy)
       mStopColor(aCopy.mStopColor),
       mStopOpacity(aCopy.mStopOpacity),
       mStroke(aCopy.mStroke),
-      mStrokeDasharray(aCopy.mStrokeDasharray),
+      mStrokeDasharray(nsnull),
       mStrokeDashoffset(aCopy.mStrokeDashoffset),
       mStrokeLinecap(aCopy.mStrokeLinecap),
       mStrokeLinejoin(aCopy.mStrokeLinejoin),
