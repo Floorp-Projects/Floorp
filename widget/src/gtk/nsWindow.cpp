@@ -437,7 +437,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
       if (gw)
       {
         GdkRectangle   ar;
-        GdkRectangle * area = NULL;
+        GdkRectangle * area = (GdkRectangle*) NULL;
         
         if (event.rect)
         {
