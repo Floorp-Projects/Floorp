@@ -39,6 +39,7 @@
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
 class nsIEventListenerManager;
+class nsIDOMBarProp;
 class nsIDOMDocument;
 class nsIDocument;
 class nsIPresContext;
@@ -49,6 +50,7 @@ class nsIBrowserWindow;
 
 typedef struct nsTimeoutImpl nsTimeoutImpl;
 
+class BarPropImpl;
 class LocationImpl;
 class NavigatorImpl;
 class ScreenImpl;
@@ -84,6 +86,13 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);
   NS_IMETHOD    GetClosed(PRBool* aClosed);
+  NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar);
+  NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar);
+  NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar);
+  NS_IMETHOD    GetPersonalbar(nsIDOMBarProp** aPersonalbar);
+  NS_IMETHOD    GetStatusbar(nsIDOMBarProp** aStatusbar);
+  NS_IMETHOD    GetScrollbars(nsIDOMBarProp** aScrollbars);
+  NS_IMETHOD    GetDirectories(nsIDOMBarProp** aDirectories);
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);
 
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);
@@ -225,6 +234,12 @@ protected:
   HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
+  BarPropImpl *mMenubar;
+  BarPropImpl *mToolbar;
+  BarPropImpl *mLocationbar;
+  BarPropImpl *mPersonalbar;
+  BarPropImpl *mStatusbar;
+  BarPropImpl *mScrollbars;
   
   nsIDocument* mChromeDocument;
 

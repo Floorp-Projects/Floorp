@@ -9,6 +9,13 @@
         readonly attribute  History history;
         readonly attribute  Window parent;
         readonly attribute  Window top;
+        readonly attribute  BarProp menubar;
+        readonly attribute  BarProp toolbar;
+        readonly attribute  BarProp locationbar;
+        readonly attribute  BarProp personalbar;
+        readonly attribute  BarProp statusbar;
+        readonly attribute  BarProp scrollbars;
+        readonly attribute  BarProp directories;
         readonly attribute  boolean closed;
         readonly attribute  WindowCollection frames;
                  attribute  Window opener;

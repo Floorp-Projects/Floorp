@@ -30,6 +30,7 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMBarProp.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMHistory.h"
 #include "nsIDOMEventListener.h"
@@ -45,6 +46,7 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
 static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -56,6 +58,7 @@ static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMDocument);
+NS_DEF_PTR(nsIDOMBarProp);
 NS_DEF_PTR(nsIDOMScreen);
 NS_DEF_PTR(nsIDOMHistory);
 NS_DEF_PTR(nsIDOMEventListener);
@@ -76,20 +79,27 @@ enum Window_slots {
   WINDOW_HISTORY = -6,
   WINDOW_PARENT = -7,
   WINDOW_TOP = -8,
-  WINDOW_CLOSED = -9,
-  WINDOW_FRAMES = -10,
-  WINDOW_OPENER = -11,
-  WINDOW_STATUS = -12,
-  WINDOW_DEFAULTSTATUS = -13,
-  WINDOW_NAME = -14,
-  WINDOW_INNERWIDTH = -15,
-  WINDOW_INNERHEIGHT = -16,
-  WINDOW_OUTERWIDTH = -17,
-  WINDOW_OUTERHEIGHT = -18,
-  WINDOW_SCREENX = -19,
-  WINDOW_SCREENY = -20,
-  WINDOW_PAGEXOFFSET = -21,
-  WINDOW_PAGEYOFFSET = -22
+  WINDOW_MENUBAR = -9,
+  WINDOW_TOOLBAR = -10,
+  WINDOW_LOCATIONBAR = -11,
+  WINDOW_PERSONALBAR = -12,
+  WINDOW_STATUSBAR = -13,
+  WINDOW_SCROLLBARS = -14,
+  WINDOW_DIRECTORIES = -15,
+  WINDOW_CLOSED = -16,
+  WINDOW_FRAMES = -17,
+  WINDOW_OPENER = -18,
+  WINDOW_STATUS = -19,
+  WINDOW_DEFAULTSTATUS = -20,
+  WINDOW_NAME = -21,
+  WINDOW_INNERWIDTH = -22,
+  WINDOW_INNERHEIGHT = -23,
+  WINDOW_OUTERWIDTH = -24,
+  WINDOW_OUTERHEIGHT = -25,
+  WINDOW_SCREENX = -26,
+  WINDOW_SCREENY = -27,
+  WINDOW_PAGEXOFFSET = -28,
+  WINDOW_PAGEYOFFSET = -29
 };
 
 /***********************************************************************/
@@ -242,6 +252,125 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetTop(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_MENUBAR:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.menubar", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetMenubar(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_TOOLBAR:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.toolbar", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetToolbar(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_LOCATIONBAR:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.locationbar", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetLocationbar(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_PERSONALBAR:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.personalbar", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetPersonalbar(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_STATUSBAR:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.statusbar", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetStatusbar(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_SCROLLBARS:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.scrollbars", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetScrollbars(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_DIRECTORIES:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.directories", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMBarProp* prop;
+        if (NS_OK == a->GetDirectories(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -2370,6 +2499,13 @@ static JSPropertySpec WindowProperties[] =
   {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"personalbar",    WINDOW_PERSONALBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"statusbar",    WINDOW_STATUSBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"scrollbars",    WINDOW_SCROLLBARS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"directories",    WINDOW_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE},
