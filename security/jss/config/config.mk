@@ -60,27 +60,6 @@ ifeq ($(OS_ARCH), SunOS)
     OS_CFLAGS += -v
 endif
 
-# Add symbolic binding values to MKSHLIB and LINK_DLL to
-# encompass special link options for dynamic libraries
-
-ifeq ($(OS_ARCH), AIX)
-MKSHLIB += -bsymbolic
-endif
-ifeq ($(OS_ARCH), HP-UX)
-MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), IRIX)
-MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), Linux)
-MKSHLIB += -Wl,-Bsymbolic
-endif
-ifeq ($(OS_ARCH), OSF1)
-#MKSHLIB += -B symbolic
-endif
-ifeq ($(OS_ARCH), SunOS)
-MKSHLIB += -B symbolic
-endif
 ifeq ($(OS_ARCH), WINNT)
 LINK_DLL += -LIBPATH:$(SOURCE_LIB_DIR)
 LINK_DLL += -LIBPATH:$(JAVA_HOME)/$(JAVA_LIBDIR)
