@@ -41,8 +41,15 @@
 #include "nsIProfileInternal.h"
 #include "nsILineInputStream.h"
 #include "nsReadableUtils.h"
-#include "nsIPrefMigration.h"
 #include "nsNetCID.h"
+
+#if defined(XP_MACOSX)
+#define PREF_FILE_NAME_IN_4x "Netscape Preferences"
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
+#define PREF_FILE_NAME_IN_4x "preferences.js"
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define PREF_FILE_NAME_IN_4x "prefs.js"
+#endif
 
 
 nsComm4xProfile::nsComm4xProfile()

@@ -90,8 +90,6 @@
 #include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 
-#include "nsIPrefMigration.h"	// for NEW_LOCAL_MAIL_DIR_NAME
-
 #define BUF_STR_LEN 1024
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -461,7 +459,7 @@ nsMessengerMigrator::initializeStrings()
   // convert to unicode and ASCII
 
   mLocalFoldersName.Assign(localFolders);
-  mLocalFoldersHostname = NEW_LOCAL_MAIL_DIR_NAME;
+  mLocalFoldersHostname = "Local Folders";
 
   return NS_OK;
 }

@@ -51,7 +51,7 @@ const kAskForOnlineState = 1;
 
 var nsOfflineStartup =
 {
-  onProfileStartup: function(aProfileName)
+  onProfileStartup: function()
   {
     debug("onProfileStartup");
 
@@ -127,9 +127,20 @@ var nsOfflineStartup =
       }
 
     }
+    else if (aTopic == "app-startup")
+    {
+      var observerService = Components.
+        classes["@mozilla.org/observer-service;1"].
+        getService(Components.interfaces.nsIObserverService);
+      observerService.addObserver(this, "profile-after-change", false);
+    }
     else if (aTopic == "xpcom-shutdown" || aTopic == "quit-application")
     {
       gShuttingDown = true;
+    }
+    else if (aTopic == "profile-after-change")
+    {
+      this.onProfileStartup();
     }
   },
 
@@ -137,7 +148,6 @@ var nsOfflineStartup =
   QueryInterface: function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsIObserver) ||
-        aIID.equals(Components.interfaces.nsIProfileStartupListener) ||
         aIID.equals(Components.interfaces.nsISupports))
       return this;
 
@@ -173,10 +183,10 @@ var nsOfflineStartupModule =
     aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName,
       this.mContractID, aFileSpec, aLocation, aType);
 
-    // receive startup notification from the profile manager
-    // (we get |createInstance()|d at startup-notification time)
-    this.getCategoryManager().addCategoryEntry("profile-startup-category",
-      this.mContractID, "", true, true);
+    // Receive startup notification.
+    // We are |getService()|d at app-startup (before profile selection)
+    this.getCategoryManager().addCategoryEntry("app-startup",
+      "Offline-startup", "service," + this.mContractID, true, true);
   },
 
   unregisterSelf: function(aCompMgr, aFileSpec, aLocation)
@@ -185,8 +195,8 @@ var nsOfflineStartupModule =
                  Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(this.mClassID, aFileSpec);
 
-    this.getCategoryManager().deleteCategoryEntry("profile-startup-category",
-      this.mContractID, true);
+    this.getCategoryManager().deleteCategoryEntry("app-startup",
+      "Offline-startup", true);
   },
 
   canUnload: function(aCompMgr)
@@ -211,12 +221,8 @@ var nsOfflineStartupModule =
     {
       if (aOuter != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
-      if (!aIID.equals(Components.interfaces.nsIObserver) &&
-          !aIID.equals(Components.interfaces.nsIProfileStartupListener) &&
-          !aIID.equals(Components.interfaces.nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
 
-      // return the singleton
+      // return the singleton 
       return nsOfflineStartup.QueryInterface(aIID);
     },
 

@@ -757,8 +757,10 @@ function setFromBuddyIcon(email)
          gIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
          gFileHandler = gIOService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
          
-         var profile = Components.classes["@mozilla.org/profile/manager;1"].getService(Components.interfaces.nsIProfileInternal);
-         gProfileDirURL = gIOService.newFileURI(profile.getProfileDir(profile.currentProfile));
+         var dirService = Components.classes["@mozilla.org/directory_service;1"]
+             .getService(Components.interfaces.nsIProperties);
+         var profileDir = dirService.get("ProfD", Components.interfaces.nsIFile);
+         gProfileDirURL = gIOService.newFileURI(profileDir);
        }
 
        // if we did have a buddy icon on disk for this screenname, this would be the file url spec for it
