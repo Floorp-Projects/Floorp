@@ -599,6 +599,18 @@ function serv_topic (e)
 CIRCServer.prototype.on001 =
 function serv_001 (e)
 {
+
+    /* servers wont send a nick change notification if user was forced
+     * to change nick while logging in (eg. nick already in use.)  We need
+     * to verify here that what the server thinks our name is, matches what
+     * we think it is.  If not, the server wins.
+     */
+    if (e.params[1] != e.server.me.properNick)
+    {
+        renameProperty (e.server.users, e.server.me.nick, e.params[1]);
+        e.server.me.changeNick(e.params[1]);
+    }
+    
     if (this.parent.INITIAL_CHANNEL)
     {
         this.parent.primChan = this.addChannel (this.parent.INITIAL_CHANNEL);
@@ -938,12 +950,13 @@ function serv_nick (e)
 {
     /* Some irc networks send the new nick in the meat, some send it in param[1]
      * Handle both cases. */
-    var newKey = (e.meat) ? e.meat.toLowerCase() : e.params[1].toLowerCase();
+    var newNick = (e.meat) ? e.meat : e.params[1]; 
+    var newKey = newNick.toLowerCase();
     var oldKey = e.user.nick;
     
     renameProperty (e.server.users, oldKey, newKey);
     e.oldNick = e.user.properNick;
-    e.user.changeNick(newKey);
+    e.user.changeNick(newNick);
     
     for (var c in e.server.channels)
     {
