@@ -2581,23 +2581,16 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode)
 void
 nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 {
-#ifdef DEBUG_DOCSHELL_FOCUS
-  {
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocument->GetShellAt(0, getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIPresContext> presContext;
-      presShell->GetPresContext(getter_AddRefs(presContext));
-      if (presContext) {
-        nsCOMPtr<nsISupports> pcContainer;
-        presContext->GetContainer(getter_AddRefs(pcContainer));
-        if (pcContainer) {
-          nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
-          printf("ShiftFocus DocShell %p   Doc: %p\n", docshell.get(), mDocument);
-        }
-      }
-    }
+  nsCOMPtr<nsIDocShell> docShell;
+  if (mPresContext) {
+    nsCOMPtr<nsISupports> pcContainer;
+    mPresContext->GetContainer(getter_AddRefs(pcContainer));
+    if (pcContainer)
+      docShell = do_QueryInterface(pcContainer);
   }
+
+#ifdef DEBUG_DOCSHELL_FOCUS
+  printf("ShiftFocus DocShell %p   Doc: %p\n", docshell.get(), mDocument);
 #endif
 
   // Indicates whether the document itself (i.e. no content) has focus
@@ -2655,9 +2648,6 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
           // so if we are going backwards then find the last piece of content
           // and and look backwards for the last focusable content
           if (!forward) {
-            nsCOMPtr<nsISupports> container;
-            mPresContext->GetContainer(getter_AddRefs(container));
-            nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
             nsCOMPtr<nsIContent> lastContent = getter_AddRefs(GetLastContent(docShell));
             nsCOMPtr<nsIDOMHTMLIFrameElement> iframe(do_QueryInterface(lastContent));
             if (iframe) {
@@ -2704,8 +2694,12 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
   }
 
 
+  PRBool docFocusFirst = PR_FALSE;
+  if (docShell)
+    docShell->GetFocusDocBeforeContent(&docFocusFirst);
+
   //Get the next tab item.  This takes tabIndex into account
-  if (!docHasFocus && !next)
+  if ((docFocusFirst || !docHasFocus) && !next)
     GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
   
   //Either no tabbable items or the end of the document
@@ -2713,7 +2707,10 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 
     // If we've reached the end of the content in this document, we
     // focus the document itself before leaving.
-    if (!docHasFocus && !doFocusAvailDocShells) {
+
+    // Only do this if we're not in document-before-content focus mode
+
+    if (!docHasFocus && !doFocusAvailDocShells && !docFocusFirst) {
       PRBool focusDoc = PR_TRUE;
 
       nsCOMPtr<nsIDocShell> docShell;
@@ -2793,19 +2790,11 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
   mCurrentFocus = next;
   NS_IF_ADDREF(mCurrentFocus);
 
-  nsCOMPtr<nsISupports> container;
-  mPresContext->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-  if (docShell) {
+  if (docShell)
     docShell->SetCanvasHasFocus(PR_FALSE);
-  }
 
-  if (hadDocFocus) {
-    nsCOMPtr<nsISupports> container;
-    mPresContext->GetContainer(getter_AddRefs(container));
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  if (hadDocFocus)
     ForceUpdate(docShell);
-  }
 }
 
 NS_IMETHODIMP

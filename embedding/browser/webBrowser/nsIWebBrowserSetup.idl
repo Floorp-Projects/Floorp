@@ -47,6 +47,14 @@ interface nsIWebBrowserSetup : nsISupports
     * re-setting the src attributes.
     */
    const unsigned long SETUP_ALLOW_IMAGES          = 5;
+
+   /* SETUP_FOCUS_DOC_BEFORE_CONTENT lets an embeddor control whether the document
+    * as a whole gets focus before traversing the document's content, or after
+    * traversing its content.
+    */
+
+   const unsigned long SETUP_FOCUS_DOC_BEFORE_CONTENT = 6;
+
    const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
 
 	void setProperty(in unsigned long aId, in unsigned long aValue);

@@ -673,6 +673,13 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            rv = EnableGlobalHistory(aValue);
         }
         break;
+    case nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           mDocShell->SetFocusDocBeforeContent(aValue);
+        }
+        break;
     default:
         rv = NS_ERROR_INVALID_ARG;
   
