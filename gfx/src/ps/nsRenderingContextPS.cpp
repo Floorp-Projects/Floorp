@@ -1257,6 +1257,69 @@ nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRenderingContextPS::DrawTile(imgIContainer *aImage,
+                               nscoord aXImageStart,
+                               nscoord aYImageStart,
+                               const nsRect *aTargetRect)
+{
+  // Get image size 
+  nscoord width, height;
+  aImage->GetWidth(&width);
+  aImage->GetHeight(&height);
+  
+  // Second para for nsPostscriptObj::draw_image
+  nsRect imgRect;
+  imgRect.x = 0;
+  imgRect.y = 0;
+  imgRect.width = width;
+  imgRect.height = height;
+  
+  // Transform image's width-height into twips
+  width = NSToCoordRound(width*mP2T);
+  height = NSToCoordRound(height*mP2T);
+
+  // Get current frame
+  nsCOMPtr<gfxIImageFrame> iframe;
+  aImage->GetCurrentFrame(getter_AddRefs(iframe));
+  if (!iframe) return NS_ERROR_FAILURE;
+
+  // Third para for nsPoscriptObj::draw_image 
+  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
+  if (!img) return NS_ERROR_FAILURE;
+  nsRect ir;
+  iframe->GetRect(ir);
+   
+  // Save states
+  mPSObj->graphics_save();
+
+  // Set clip region for tile 
+  nsRect targetRect = (*aTargetRect);
+  mTranMatrix->TransformCoord(&targetRect.x, &targetRect.y, 
+                              &targetRect.width, &targetRect.height);
+  mPSObj->box(targetRect.x,targetRect.y,targetRect.width,targetRect.height);
+  mPSObj->clip();
+
+  // Begin drawing tiles
+  nsRect dstRect;
+  for(PRInt32 y = aYImageStart; y < aTargetRect->y + aTargetRect->height; y += height)
+    for(PRInt32 x = aXImageStart; x < aTargetRect->x + aTargetRect->width; x += width)
+    {
+      dstRect.x = x;
+      dstRect.y = y;
+      dstRect.width = width;
+      dstRect.height = height;
+      mTranMatrix->TransformCoord(&dstRect.x, &dstRect.y, &dstRect.width, &dstRect.height);
+      mPSObj->draw_image(img, imgRect, ir, dstRect);
+    }
+
+  // Restore states
+  mPSObj->graphics_restore();
+
+  return NS_OK;
+}
+
+
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
