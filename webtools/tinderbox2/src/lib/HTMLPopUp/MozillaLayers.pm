@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/05/01 02:01:49 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/05/02 02:57:51 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -254,38 +254,15 @@ sub Link {
     
 
 
-    $out .= "onMouseOver=\" ";
+    $out .= "onClick=\" ";
     ($args{'windowtxt'}) &&
       ($out .= "log(".(
                        "event,".
                        "\'$#POPUPTXT\'".
                       "").
        "); ");
+
     $out .= "return true\" ";
-
-    # It is safer to define some null action for the events to ensure
-    # the window is shut down on mouse out and click, but this leaves
-    # a strange box on the screen.
-
-
-    $out .= "onClick=\" ";
-    ($args{'windowtxt'}) &&
-      ($out .= "log(".(
-                       "event,".
-                       "\'0\'".
-                      "").
-       "); ");
-    $out .= "return true\" ";
-
-    $out .= "onMouseOut=\" ";
-    ($args{'windowtxt'}) &&
-      ($out .= "log(".(
-                       "event,".
-                       "\'0\'".
-                      "").
-       "); ");
-    $out .= "return true\" ";
-
   }
 
   $out .= ">$args{'linktxt'}</a>";
