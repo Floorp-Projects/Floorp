@@ -303,7 +303,7 @@ char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
 
     nsresult rv = NS_OK;
     PRUnichar *password;
-    PRInt32  value;
+    PRBool  value;
 
     NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &rv);
     
@@ -312,7 +312,7 @@ char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
                                   NS_ConvertASCIItoUCS2(" ").GetUnicode(),      // hostname
                                   PR_TRUE, &password, &value);
 
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv) && value) {
             nsString a(password);
             char* str = a.ToNewCString();
             Recycle(password);
