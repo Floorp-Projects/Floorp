@@ -70,16 +70,24 @@ nsMemAllocator::nsMemAllocator(size_t minBlockSize, size_t maxBlockSize)
 ,	mMaxHeapSpaceUsed(0)
 ,	mCurSubheapCount(0)
 ,	mMaxSubheapCount(0)
+, mCountHistogram(NULL)
 #endif
 //--------------------------------------------------------------------
 {
+#if STATS_MAC_MEMORY
+  mCountHistogram = (UInt32 *)NewPtrClear(sizeof(UInt32) * (maxBlockSize - minBlockSize + 1));
+  // failure is ok
+#endif
 }
 
 //--------------------------------------------------------------------
 nsMemAllocator::~nsMemAllocator()
 //--------------------------------------------------------------------
 {
-	// free up the subheaps
+#if STATS_MAC_MEMORY
+  if (mCountHistogram)
+    DisposePtr((Ptr)mCountHistogram);
+#endif
 }
 
 
@@ -196,6 +204,10 @@ void nsMemAllocator::AccountForNewBlock(size_t logicalSize)
 	if (mCurBlockSpaceUsed > mMaxBlockSpaceUsed)
 		mMaxBlockSpaceUsed = mCurBlockSpaceUsed;
 
+  if (mCountHistogram)
+  {
+    mCountHistogram[logicalSize - mMinBlockSize]++;
+  }
 }
 
 //--------------------------------------------------------------------
@@ -269,6 +281,21 @@ void nsMemAllocator::DumpMemoryStats(PRFileDesc *outFile)
 	sprintf( outString,    "%s of allocated space used:    %10.2f\n", "%", 100.0 * mMaxBlockSpaceUsed / mMaxHeapSpaceUsed );
 	WriteString ( outFile, outString );
 
+ 
+  if (mCountHistogram)
+  {
+  	WriteString ( outFile, "\n\n");
+    WriteString ( outFile, "Block size   Total allocations\n------------------------------\n" );
+
+    for (UInt32 i = mMinBlockSize; i <= mMaxBlockSize; i ++)
+    {
+    	sprintf(outString,"%5d  %10d\n", i, mCountHistogram[i - mMinBlockSize]);
+  	  WriteString ( outFile, outString );
+    }
+    
+    WriteString(outFile, "------------------------------\n");
+  }
+  
 	WriteString ( outFile, "\n\n");
 }
 

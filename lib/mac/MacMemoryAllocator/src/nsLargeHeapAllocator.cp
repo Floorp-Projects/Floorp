@@ -53,13 +53,17 @@ void * nsLargeHeapAllocator::AllocatorMakeBlock(size_t blockSize)
 	nsLargeHeapChunk*	chunk = (nsLargeHeapChunk *)mFirstChunk;
 	LargeBlockHeader	*theBlock = nil;
 
+	UInt32				allocSize = GetPaddedBlockSize(blockSize);
+
 	// walk through all of our chunks, trying to allocate memory from somewhere
 	while (chunk)
 	{
-		theBlock = chunk->GetSpaceForBlock(blockSize);
-		
-		if (theBlock)
-			break;
+		if (chunk->GetLargestFreeBlock() >= allocSize)
+		{
+		  theBlock = chunk->GetSpaceForBlock(blockSize);
+  		if (theBlock)
+  			break;
+		}
 		
 		chunk = (nsLargeHeapChunk *)chunk->GetNextChunk();
 	}
@@ -221,6 +225,14 @@ nsLargeHeapChunk::nsLargeHeapChunk(
 	LargeBlockHeader	*freeBlock = mHead->SkipDummyBlock();
 	
 	mHead->SetNextBlock(freeBlock);
+  mHead->SetLogicalSize(0);
+
+#if DEBUG_HEAP_INTEGRITY
+  mHead->SetPaddingBytes(0);
+
+	mHead->SetHeaderTag(kDummyBlockHeaderTag);
+  mHead->header.blockID = -1;
+#endif
 	
 	freeBlock->SetPrevBlock(nil);
 	freeBlock->SetNextBlock( (LargeBlockHeader *) ( (UInt32)freeBlock + heapSize - 2 * LargeBlockHeader::kLargeBlockOverhead) );
@@ -497,16 +509,18 @@ void nsLargeHeapChunk::ReturnBlock(LargeBlockHeader *deadBlock)
 void nsLargeHeapChunk::UpdateLargestFreeBlock()
 //--------------------------------------------------------------------
 {
-	LargeBlockHeader	*thisBlock = mHead;
+	LargeBlockHeader	*thisBlock = mHead->GetNextBlock();   // head block is a dummy block
 	UInt32				curMaxSize = 0;
 	
 	while (thisBlock != mTail)
 	{
-		UInt32		blockSize = thisBlock->GetBlockHeapUsageSize();
-		
-		if (blockSize > curMaxSize)
-			curMaxSize = blockSize;
-		
+	  if (thisBlock->IsFreeBlock())
+	  {
+  		UInt32		blockSize = thisBlock->GetBlockHeapUsageSize();
+  		
+  		if (blockSize > curMaxSize)
+  			curMaxSize = blockSize;
+		}
 		thisBlock = thisBlock->GetNextBlock();
 	}
 

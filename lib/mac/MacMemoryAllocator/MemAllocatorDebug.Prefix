@@ -28,3 +28,4 @@
 
 #include "MemAllocatorConfig.h"
 
+#pragma profile on

@@ -36,6 +36,7 @@ enum {
 	kFreeBlockTrailerTag	= 'free',
 	kUsedBlockHeaderTag		= 'USED',
 	kUsedBlockTrailerTag	= 'used',
+	kDummyBlockHeaderTag  = 'D\'oh',
 	kRefdBlockHeaderTag		= 'REFD',
 	kRefdBlockTrailerTag	= 'refd',
 	kUsedMemoryFillPattern	= 0xDB,
@@ -212,6 +213,7 @@ class nsMemAllocator
 		UInt32					mCurSubheapCount;		// current number of subheaps allocated by this allocator
 		UInt32					mMaxSubheapCount;		// max number of subheaps allocated by this allocator
 		
+		UInt32*         mCountHistogram;    // cumulative hist of frequencies
 		
 		// the difference between mCurBlockSpaceUsed and mCurHeapSpaceUsed is
 		// the allocator overhead, which consists of:

@@ -194,8 +194,8 @@ nsAllocatorManager::nsAllocatorManager()
 ,	mLastHeapZone(nil)
 //--------------------------------------------------------------------
 {
-	mMinSmallBlockSize = 129;		//128;		//44;			// some magic numbers for now
-	mMinLargeBlockSize = 256;		//512;		//256;
+	mMinSmallBlockSize = 165;		//128;		//44;			// some magic numbers for now
+	mMinLargeBlockSize = 261;		//512;		//256;
 	
 	mNumFixedSizeAllocators = mMinSmallBlockSize / 4;
 	mNumSmallBlockAllocators = 1 + (mMinLargeBlockSize - mMinSmallBlockSize) / kSmallHeapByteRange;
@@ -484,7 +484,7 @@ void nsAllocatorManager::DumpMemoryStats()
 	
 	// Enter a valid, UNIX-style full path on your system to get this
 	// to work.
-	outFile = PR_Open("/System/MemoryStats.txt", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0644);
+	outFile = PR_Open("MemoryStats.txt", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0644);
 	if ( outFile == NULL )
 	{
 		return;

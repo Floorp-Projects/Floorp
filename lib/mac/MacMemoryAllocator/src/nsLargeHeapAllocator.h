@@ -128,6 +128,7 @@ class nsLargeHeapAllocator : public nsMemAllocator
 		virtual nsHeapChunk*	AllocateChunk(size_t requestedBlockSize);
 		virtual void			FreeChunk(nsHeapChunk *chunkToFree);
 
+    UInt32            GetPaddedBlockSize(UInt32 blockSize)  { return ((blockSize + 3) & ~3) + LargeBlockHeader::kLargeBlockOverhead; }
 	protected:
 
 		UInt32					mBaseChunkPercentage;
@@ -156,6 +157,8 @@ class nsLargeHeapChunk : public nsHeapChunk
 		void *				ResizeBlockInPlace(LargeBlockHeader *theBlock, size_t newSize);
 		
 		void				ReturnBlock(LargeBlockHeader *deadBlock);
+		
+		UInt32      GetLargestFreeBlock()   { return mLargestFreeBlock; }
 		
 	protected:
 	
