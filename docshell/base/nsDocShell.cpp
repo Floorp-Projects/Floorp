@@ -978,7 +978,36 @@ NS_IMETHODIMP nsDocShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::Repaint(PRBool fForce)
+NS_IMETHODIMP nsDocShell::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
+   PRInt32* cy)
+{
+   NS_ENSURE_ARG_POINTER(x && y && cx && cy);
+
+   if(mContentViewer)
+      {
+      nsRect bounds;
+
+      NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
+
+      *x = bounds.x;
+      *y = bounds.y;
+      *cx = bounds.width;
+      *cy = bounds.height;
+      }
+   else if(InitInfo())
+      {
+      *x = mInitInfo->x;
+      *y = mInitInfo->y;
+      *cx = mInitInfo->cx;
+      *cy = mInitInfo->cy;
+      }
+   else
+      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::Repaint(PRBool aForce)
 {
    
    //XXX First Check
@@ -1608,11 +1637,11 @@ nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
         nsMouseEvent event;
         event.eventStructType = NS_EVENT;
         event.message = NS_PAGE_UNLOAD;
-        NS_ENSURE_SUCCESS(mScriptGlobal->HandleDOMEvent(*presContext, 
+        NS_ENSURE_SUCCESS(mScriptGlobal->HandleDOMEvent(presContext, 
                                                         &event, 
                                                         nsnull, 
                                                         NS_EVENT_FLAG_INIT, 
-                                                        status),
+                                                        &status),
                           NS_ERROR_FAILURE);
       }
     }
@@ -1692,11 +1721,11 @@ nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
           nsMouseEvent event;
           event.eventStructType = NS_EVENT;
           event.message = NS_PAGE_LOAD;
-          NS_ENSURE_SUCCESS(mScriptGlobal->HandleDOMEvent(*presContext, 
+          NS_ENSURE_SUCCESS(mScriptGlobal->HandleDOMEvent(presContext, 
                                                           &event, 
                                                           nsnull, 
                                                           NS_EVENT_FLAG_INIT, 
-                                                          status),
+                                                          &status),
                             NS_ERROR_FAILURE);
         }
       }
