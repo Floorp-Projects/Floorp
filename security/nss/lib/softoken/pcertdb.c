@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.38 2002/11/26 18:27:25 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.39 2002/11/26 22:14:55 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2655,14 +2655,14 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	if (emailAddr == NULL) {
 	    return SECFailure;
 	}
+    } else {
+	return SECSuccess;
     }
 
     entry = ReadDBSubjectEntry(dbhandle,derSubject);    
     if (entry == NULL) {
 	goto loser;
-    } else {
-	return SECSuccess;
-    }
+    } 
 
     if ( entry->emailAddrs ) {
 	for (i=0; i < entry->nemailAddrs; i++) {

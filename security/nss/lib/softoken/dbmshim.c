@@ -34,7 +34,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.7 2002/11/26 18:27:25 relyea%netscape.com Exp $
+ * $Id: dbmshim.c,v 1.8 2002/11/26 22:14:55 relyea%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -53,16 +53,31 @@
 
 #include "pkcs11i.h"
 
+/*
+ *   Blob block:
+ *   Byte 0   CERTDB Version           -+                       -+
+ *   Byte 1   certDBEntryTypeBlob       |  BLOB_HEAD_LEN         |
+ *   Byte 2   flags (always '0');       |                        |
+ *   Byte 3   reserved (always '0');   -+                        |
+ *   Byte 4   LSB length                | <--BLOB_LENGTH_START   | BLOB_BUF_LEN
+ *   Byte 5       .                     |                        |
+ *   Byte 6       .                     | BLOB_LENGTH_LEN        |
+ *   Byte 7   MSB length                |                        |
+ *   Byte 8   blob_filename   -+       -+  <-- BLOB_NAME_START   |
+ *   Byte 9       .            | BLOB_NAME_LEN                   |
+ *     .          .            |                                 |
+ *   Byte 37      .           -+                                -+
+ */
 #define DBS_BLOCK_SIZE (16*1024) /* 16 k */
 #define DBS_MAX_ENTRY_SIZE (DBS_BLOCK_SIZE - (2048)) /* 14 k */
 #define DBS_CACHE_SIZE	DBS_BLOCK_SIZE*8
 #define ROUNDDIV(x,y) (x+(y-1))/y
 #define BLOB_HEAD_LEN 4
-#define BLOB_NAMELENGTH_START BLOB_HEAD_LEN
-#define BLOB_NAMELENGTH_LEN 4
-#define BLOB_NAME_START BLOB_NAMELENGTH_START+BLOB_NAMELENGTH_LEN
-#define BLOB_NAME_LEN 1+ROUNDDIV(SHA1_LENGTH*4,3)+2
-#define BLOB_BUF_LEN BLOB_HEAD_LEN+BLOB_NAMELENGTH_LEN+BLOB_NAME_LEN
+#define BLOB_LENGTH_START BLOB_HEAD_LEN
+#define BLOB_LENGTH_LEN 4
+#define BLOB_NAME_START BLOB_LENGTH_START+BLOB_LENGTH_LEN
+#define BLOB_NAME_LEN 1+ROUNDDIV(SHA1_LENGTH,3)*4+1
+#define BLOB_BUF_LEN BLOB_HEAD_LEN+BLOB_LENGTH_LEN+BLOB_NAME_LEN
 
 /* a Shim data structure. This data structure has a db built into it. */
 typedef struct DBSStr DBS;
@@ -113,10 +128,10 @@ dbs_getBlobSize(DBT *blobData)
 {
     unsigned char *addr = (unsigned char *)blobData->data;
 
-    return (PRUint32)(addr[BLOB_NAMELENGTH_START+3] << 24) | 
-			(addr[BLOB_NAMELENGTH_START+2] << 16) | 
-			(addr[BLOB_NAMELENGTH_START+1] << 8) | 
-			addr[BLOB_NAMELENGTH_START];
+    return (PRUint32)(addr[BLOB_LENGTH_START+3] << 24) | 
+			(addr[BLOB_LENGTH_START+2] << 16) | 
+			(addr[BLOB_LENGTH_START+1] << 8) | 
+			addr[BLOB_LENGTH_START];
 }
 
 
@@ -151,16 +166,16 @@ dbs_mkBlob(DBS *dbsp,const DBT *key, const DBT *data, DBT *blobData)
    b[1] = (char) certDBEntryTypeBlob; /* type */
    b[2] = 0; /* flags */
    b[3] = 0; /* reserved */
-   b[BLOB_NAMELENGTH_START] = length & 0xff;
-   b[BLOB_NAMELENGTH_START+1] = (length >> 8) & 0xff;
-   b[BLOB_NAMELENGTH_START+2] = (length >> 16) & 0xff;
-   b[BLOB_NAMELENGTH_START+3] = (length >> 24) & 0xff;
+   b[BLOB_LENGTH_START] = length & 0xff;
+   b[BLOB_LENGTH_START+1] = (length >> 8) & 0xff;
+   b[BLOB_LENGTH_START+2] = (length >> 16) & 0xff;
+   b[BLOB_LENGTH_START+3] = (length >> 24) & 0xff;
    sha1Item.data = sha1_data;
    sha1Item.len = SHA1_LENGTH;
    SHA1_HashBuf(sha1_data,key->data,key->size);
    b[BLOB_NAME_START]='b'; /* Make sure we start with a alpha */
-   PORT_Memset(&b[BLOB_NAME_START+1],0, BLOB_NAME_LEN-1);
    NSSBase64_EncodeItem(NULL,&b[BLOB_NAME_START+1],BLOB_NAME_LEN-1,&sha1Item);
+   b[BLOB_BUF_LEN-1] = 0;
    dbs_replaceSlash(&b[BLOB_NAME_START+1],BLOB_NAME_LEN-1);
    blobData->data = b;
    blobData->size = BLOB_BUF_LEN;
