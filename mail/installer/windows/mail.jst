@@ -469,7 +469,70 @@ function updateWinReg()
 
 function upgradeCleanup()
 { 
-  // For now, since we're new, we have no such files. 
+  // Thunderbird used to not be a static build, so we need to clean up all of the stale dlls
+  // from the non static build..
+
+  deleteThisFile("Components",  "xpti.dat");
+  deleteThisFile("Components",  "compreg.dat");
+  deleteThisFile("Components",  "accessibility.dll");
+  deleteThisFile("Components",  "appcomps.dll");
+  deleteThisFile("Components",  "caps.dll");
+  deleteThisFile("Components",  "chrome.dll");
+  deleteThisFile("Components",  "composer.dll");
+  deleteThisFile("Components",  "docshell.dll");
+  deleteThisFile("Components",  "editor.dll");
+  deleteThisFile("Components",  "embedcomponents.dll");
+  deleteThisFile("Components",  "gkgfxwin.dll");
+  deleteThisFile("Components",  "gklayout.dll");
+  deleteThisFile("Components",  "gkparser.dll");
+  deleteThisFile("Components",  "gkwidget.dll");
+  deleteThisFile("Components",  "i18n.dll");
+  deleteThisFile("Components",  "imgicon.dll");
+  deleteThisFile("Components",  "imglib2.dll");
+  deleteThisFile("Components",  "import.dll");
+  deleteThisFile("Components",  "jar50.dll");
+  deleteThisFile("Components",  "jsd3250.dll");
+  deleteThisFile("Components",  "mail.dll");
+  deleteThisFile("Components",  "mork.dll");
+  deleteThisFile("Components",  "mozfind");
+  deleteThisFile("Components",  "mozldap.dll");
+  deleteThisFile("Components",  "msgMapi.dll");
+  deleteThisFile("Components",  "msgsmime.dll");
+  deleteThisFile("Components",  "myspell.dll");
+  deleteThisFile("Components",  "necko.dll");
+  deleteThisFile("Components",  "necko2.dll");
+  deleteThisFile("Components",  "nsprefm.dll");
+  deleteThisFile("Components",  "pipboot.dll");
+  deleteThisFile("Components",  "pipnss.dll");
+  deleteThisFile("Components",  "pippki.dll");
+  deleteThisFile("Components",  "profile.dll");
+  deleteThisFile("Components",  "rdf.dll");
+  deleteThisFile("Components",  "spellchk.dll");
+  deleteThisFile("Components",  "txmgr.dll");
+  deleteThisFile("Components",  "uconv.dll");
+  deleteThisFile("Components",  "wallet.dll");
+  deleteThisFile("Components",  "webbrwsr.dll");
+  deleteThisFile("Components",  "wlltvwrs.dll");
+  deleteThisFile("Components",  "xmlextras.dll");
+  deleteThisFile("Components",  "xpc3250.dll");
+  deleteThisFile("Components",  "xpcom_compat_c.dll");
+  deleteThisFile("Components",  "xpinstal.dll");
+  deleteThisFile("Components",  "xppref32.dll");
+
+  deleteThisFile("Program",     "xpcom.dll");
+  deleteThisFile("Program",     "xpcom_compat.dll");
+
+  deleteThisFile("Chrome",      "en-US-mail.jar");
+  deleteThisFile("Chrome",      "en-win.jar");
+  deleteThisFile("Chrome",      "mail.jar");
+  deleteThisFile("Chrome",      "qute.jar");
+  deleteThisFile("Chrome",      "offline.jar");
+  
+  deleteThisFile("Program",     "defaults/pref/all.js");
+  deleteThisFile("Program",     "defaults/pref/security-prefs.js");
+  deleteThisFile("Program",     "defaults/pref/winpref.js");
+  deleteThisFile("Program",     "defaults/pref/xpinstall.js");
+  deleteThisFolder("Program",   "defaults/profile/US");
 }
 
 // main
