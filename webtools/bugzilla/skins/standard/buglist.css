@@ -44,7 +44,7 @@ tr.bz_even {
 /* we use a first-child class and not the pseudo-class because IE
  * doesn't support it :-( */
 tr.bz_secure td.first-child { 
-  background-image: url("../images/padlock.png");
+  background-image: url("../../images/padlock.png");
   background-position: center left;
   background-repeat: no-repeat;
   background-color: inherit;
