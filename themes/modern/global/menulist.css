@@ -301,12 +301,12 @@
     	color			  : #FFFFFF;
     }
 
-  menulist > menupopup > menuitem[selected="true"] > .menu-iconic-left
+  menulist > menupopup > menuitem[selected="true"]
     {
       list-style-image    : url(chrome://global/skin/menu-check.gif);
     }
   
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-iconic-left
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"]
     {
       list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
     }

@@ -227,20 +227,24 @@ tree.list {
   min-height: 10px;
 }
 
-.img-align-top {
-	list-style-image:url("chrome://editor/skin/images/img-align-top.gif");
+.align-menu[data="top"] {
+	list-style-image: url("chrome://editor/skin/images/img-align-top.gif") !important;
 }
-.img-align-middle {
-	list-style-image:url("chrome://editor/skin/images/img-align-middle.gif");
+
+.align-menu[data="center"] {
+	list-style-image: url("chrome://editor/skin/images/img-align-middle.gif") !important;
 }
-.img-align-bottom {
-	list-style-image:url("chrome://editor/skin/images/img-align-bottom.gif");
+
+.align-menu[data="bottom"] {
+	list-style-image: url("chrome://editor/skin/images/img-align-bottom.gif") !important;
 }
-.img-align-right {
-	list-style-image:url("chrome://editor/skin/images/img-align-right.gif");
+
+.align-menu[data="right"] {
+	list-style-image: url("chrome://editor/skin/images/img-align-right.gif") !important;
 }
-.img-align-left {
-	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
+
+.align-menu[data="left"] {
+	list-style-image: url("chrome://editor/skin/images/img-align-left.gif") !important;
 }
 
 /* Don't change width/height of these without changing values in 
