@@ -30,13 +30,24 @@ static void gtk_mozarea_destroy    (GtkObject       *object);
 static void
 attach_toplevel_listener(GtkMozArea *mozarea);
 
+static void
+remove_toplevel_listener(GtkMozArea *mozarea);
+
 static Window
 get_real_toplevel(Window aWindow);
+
+static GdkWindow *
+get_real_gdk_toplevel(GtkMozArea *mozarea);
 
 static GdkFilterReturn
 toplevel_window_filter(GdkXEvent   *aGdkXEvent,
                        GdkEvent    *aEvent,
                        gpointer     data);
+
+static GdkFilterReturn
+widget_window_filter(GdkXEvent     *aGdkXEvent,
+                     GdkEvent      *aEvent,
+                     gpointer       data);
 
 GtkWidgetClass *parent_class = NULL;
 
@@ -124,6 +135,7 @@ gtk_mozarea_init (GtkMozArea *mozarea)
   mozarea->superwin = NULL;
   mozarea->toplevel_focus = FALSE;
   mozarea->toplevel_window = NULL;
+  gtk_widget_set_name(GTK_WIDGET(mozarea), "gtkmozarea");
 }
 
 static void 
@@ -152,6 +164,11 @@ gtk_mozarea_realize (GtkWidget *widget)
 
   /* attach the toplevel X listener */
   attach_toplevel_listener(mozarea);
+
+  /* Attach a filter so that we can get reparent notifications so we
+     can reset our toplevel window.  This will automatically be
+     removed when our window is destroyed. */
+  gdk_window_add_filter(widget->window, widget_window_filter, mozarea);
 }
 
 static void
@@ -200,9 +217,8 @@ gtk_mozarea_destroy(GtkObject *object)
   
   mozarea = GTK_MOZAREA(object);
 
-  /* remove the filter on the toplevel window */
-  gdk_window_remove_filter(mozarea->toplevel_window, toplevel_window_filter,
-                           mozarea);
+  /* remove the listener from the toplevel */
+  remove_toplevel_listener(mozarea);
 
   GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
@@ -226,32 +242,23 @@ gtk_mozarea_get_toplevel_focus(GtkMozArea *area)
 static void
 attach_toplevel_listener(GtkMozArea *mozarea)
 {
-  /* get the native window for this widget */
-  GtkWidget *widget = GTK_WIDGET(mozarea);
-  Window window = GDK_WINDOW_XWINDOW(widget->window);
+  /* get the real gdk toplevel window */
+  GdkWindow *gdk_window = get_real_gdk_toplevel(mozarea);
 
-  Window toplevel = get_real_toplevel(window);
-
-  /* check to see if this is an already registered window with the
-     type system. */
-  GdkWindow *gdk_window = gdk_window_lookup(toplevel);
-
-  /* This isn't our window?  It is now, fool! */
-  if (!gdk_window) {
-    /* import it into the type system */
-    gdk_window = gdk_window_foreign_new(toplevel);
-    /* make sure that we are listening for the right events on it. */
-    gdk_window_set_events(gdk_window, GDK_FOCUS_CHANGE_MASK);
-  }
-
-  /* attach our passive filter.  when the window is destroyed it will
-     automatically be removed. */
-
+  /* attach our passive filter.  when this widget is destroyed it will
+     be removed in our destroy method. */
   gdk_window_add_filter(gdk_window, toplevel_window_filter, mozarea);
 
   /* save it so that we can remove the filter later */
-
   mozarea->toplevel_window = gdk_window;
+}
+
+/* this function will remove a toplevel listener for a widget */
+static void
+remove_toplevel_listener(GtkMozArea *mozarea)
+{
+  gdk_window_remove_filter(mozarea->toplevel_window, toplevel_window_filter,
+                           mozarea);
 }
 
 /* this function will try to find the real toplevel for a gdk window. */
@@ -313,6 +320,30 @@ get_real_toplevel(Window aWindow)
   return current;
 }
 
+static GdkWindow *
+get_real_gdk_toplevel(GtkMozArea *mozarea)
+{
+  /* get the native window for this widget */
+  GtkWidget *widget = GTK_WIDGET(mozarea);
+  Window window = GDK_WINDOW_XWINDOW(widget->window);
+  
+  Window toplevel = get_real_toplevel(window);
+  
+  /* check to see if this is an already registered window with the
+     type system. */
+  GdkWindow *gdk_window = gdk_window_lookup(toplevel);
+  
+  /* This isn't our window?  It is now, fool! */
+  if (!gdk_window) {
+    /* import it into the type system */
+    gdk_window = gdk_window_foreign_new(toplevel);
+    /* make sure that we are listening for the right events on it. */
+    gdk_window_set_events(gdk_window, GDK_FOCUS_CHANGE_MASK);
+  }
+
+  return gdk_window;
+}
+
 static GdkFilterReturn
 toplevel_window_filter(GdkXEvent   *aGdkXEvent,
                        GdkEvent    *aEvent,
@@ -337,5 +368,25 @@ toplevel_window_filter(GdkXEvent   *aGdkXEvent,
     break;
   }
 
+  return GDK_FILTER_CONTINUE;
+}
+
+static GdkFilterReturn
+widget_window_filter(GdkXEvent     *aGdkXEvent,
+                     GdkEvent      *aEvent,
+                     gpointer       data)
+{
+  XEvent       *xevent = (XEvent *)aGdkXEvent;
+  GtkMozArea   *mozarea = (GtkMozArea *)data;
+
+  switch(xevent->xany.type) {
+  case ReparentNotify:
+    /* remove the old filter on the toplevel and attach to the new one */
+    remove_toplevel_listener(mozarea);
+    attach_toplevel_listener(mozarea);
+    break;
+  default:
+    break;
+  }
   return GDK_FILTER_CONTINUE;
 }

@@ -423,6 +423,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
 {
   EmbedPrivate *priv = new EmbedPrivate();
   embed->data = priv;
+  gtk_widget_set_name(GTK_WIDGET(embed), "gtkmozembed");
 }
 
 GtkWidget *
@@ -446,6 +447,7 @@ gtk_moz_embed_destroy(GtkObject *object)
   embedPrivate = (EmbedPrivate *)embed->data;
 
   if (embedPrivate) {
+    embedPrivate->Destroy();
     delete embedPrivate;
     embed->data = NULL;
   }
@@ -488,16 +490,21 @@ gtk_moz_embed_realize(GtkWidget *widget)
   widget->style = gtk_style_attach (widget->style, widget->window);
   gtk_style_set_background (widget->style, widget->window, GTK_STATE_NORMAL);
 
-  // initialize the widget now that we have a window
+  // initialize the window
   nsresult rv;
   rv = embedPrivate->Init(embed);
   g_return_if_fail(NS_SUCCEEDED(rv));
-  rv = embedPrivate->Realize();
+  
+  PRBool alreadyRealized = PR_FALSE;
+  rv = embedPrivate->Realize(&alreadyRealized);
   g_return_if_fail(NS_SUCCEEDED(rv));
+
+  // if we're already realized we don't need to hook up to anything below
+  if (alreadyRealized)
+    return;
 
   if (embedPrivate->mURI.Length())
     embedPrivate->LoadCurrentURI();
-
 
   // connect to the focus out event for the child
   GtkWidget *child_widget = GTK_BIN(widget)->child;
@@ -542,6 +549,9 @@ gtk_moz_embed_unrealize(GtkWidget *widget)
   if (embedPrivate) {
     embedPrivate->Unrealize();
   }
+
+  if (GTK_WIDGET_CLASS(embed_parent_class)->unrealize)
+    (* GTK_WIDGET_CLASS(embed_parent_class)->unrealize)(widget);
 }
 
 static void

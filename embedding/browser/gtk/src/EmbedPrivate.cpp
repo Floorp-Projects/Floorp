@@ -69,6 +69,8 @@ nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
 char        *EmbedPrivate::sProfileDir  = nsnull;
 char        *EmbedPrivate::sProfileName = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
+GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
+GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -82,6 +84,7 @@ EmbedPrivate::EmbedPrivate(void)
   mIsChrome         = PR_FALSE;
   mChromeLoaded     = PR_FALSE;
   mListenersAttached = PR_FALSE;
+  mMozWindowWidget  = 0;
 
   PushStartup();
   if (!sWindowList) {
@@ -99,6 +102,10 @@ EmbedPrivate::~EmbedPrivate()
 nsresult
 EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
 {
+  // are we being re-initialized?
+  if (mOwningWidget)
+    return NS_OK;
+
   // hang on with a reference to the owning widget
   mOwningWidget = aOwningWidget;
 
@@ -154,8 +161,23 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
 }
 
 nsresult
-EmbedPrivate::Realize(void)
+EmbedPrivate::Realize(PRBool *aAlreadyRealized)
 {
+
+  *aAlreadyRealized = PR_FALSE;
+
+  // create the offscreen window if we have to
+  if (!sOffscreenWindow)
+    CreateOffscreenWindow();
+
+  // Have we ever been initialized before?  If so then just reparetn
+  // from the offscreen window.
+  if (mMozWindowWidget) {
+    gtk_widget_reparent(mMozWindowWidget, GTK_WIDGET(mOwningWidget));
+    *aAlreadyRealized = PR_TRUE;
+    return NS_OK;
+  }
+
   // Get the nsIWebBrowser object for our embedded window.
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -185,6 +207,17 @@ EmbedPrivate::Realize(void)
   uriListener = do_QueryInterface(mContentListenerGuard);
   webBrowser->SetParentURIContentListener(uriListener);
 
+  // save the window id of the newly created window
+  nsCOMPtr<nsIWidget> mozWidget;
+  mWindow->mBaseWindow->GetMainWidget(getter_AddRefs(mozWidget));
+  // get the native drawing area
+  GdkWindow *tmp_window =
+    NS_STATIC_CAST(GdkWindow *,
+		   mozWidget->GetNativeData(NS_NATIVE_WINDOW));
+  // and, thanks to superwin we actually need the parent of that.
+  tmp_window = gdk_window_get_parent(tmp_window);
+  // save the widget ID - it should be the mozarea of the window.
+  gdk_window_get_user_data(tmp_window, &(gpointer)mMozWindowWidget);
 
   return NS_OK;
 }
@@ -192,44 +225,8 @@ EmbedPrivate::Realize(void)
 void
 EmbedPrivate::Unrealize(void)
 {
-  // Get the nsIWebBrowser object for our embedded window.
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-
-  // destroy our child window
-  mWindow->ReleaseChildren();
-
-  // Release our progress listener
-  nsCOMPtr<nsISupportsWeakReference> supportsWeak;
-  supportsWeak = do_QueryInterface(mProgressGuard);
-  nsCOMPtr<nsIWeakReference> weakRef;
-  supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
-  webBrowser->RemoveWebBrowserListener(weakRef,
-				       nsIWebProgressListener::GetIID());
-  weakRef = nsnull;
-  supportsWeak = nsnull;
-  // Now that we have removed the listener, release our progress
-  // object
-  mProgressGuard = nsnull;
-  mProgress = nsnull;
-
-  // release navigation
-  mNavigation = nsnull;
-
-  // release session history
-  mSessionHistory = nsnull;
-
-  // Release our content listener
-  webBrowser->SetParentURIContentListener(nsnull);
-  mContentListenerGuard = nsnull;
-  mContentListener = nsnull;
-
-  // detach our event listeners and release the event receiver
-  DetachListeners();
-  if (mEventReceiver)
-    mEventReceiver = nsnull;
-  
-  mOwningWidget = nsnull;
+  // reparent to our offscreen window
+  gtk_widget_reparent(mMozWindowWidget, sOffscreenFixed);
 }
 
 void
@@ -262,6 +259,52 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
   mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
 			 nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
 			 0, 0, aWidth, aHeight);
+}
+
+void
+EmbedPrivate::Destroy(void)
+{
+  // Get the nsIWebBrowser object for our embedded window.
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  // Release our progress listener
+  nsCOMPtr<nsISupportsWeakReference> supportsWeak;
+  supportsWeak = do_QueryInterface(mProgressGuard);
+  nsCOMPtr<nsIWeakReference> weakRef;
+  supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
+  webBrowser->RemoveWebBrowserListener(weakRef,
+				       nsIWebProgressListener::GetIID());
+  weakRef = nsnull;
+  supportsWeak = nsnull;
+
+  // Release our content listener
+  webBrowser->SetParentURIContentListener(nsnull);
+  mContentListenerGuard = nsnull;
+  mContentListener = nsnull;
+
+  // Now that we have removed the listener, release our progress
+  // object
+  mProgressGuard = nsnull;
+  mProgress = nsnull;
+
+  // detach our event listeners and release the event receiver
+  DetachListeners();
+  if (mEventReceiver)
+    mEventReceiver = nsnull;
+  
+  // destroy our child window
+  mWindow->ReleaseChildren();
+
+  // release navigation
+  mNavigation = nsnull;
+
+  // release session history
+  mSessionHistory = nsnull;
+
+  mOwningWidget = nsnull;
+
+  mMozWindowWidget = 0;
 }
 
 void
@@ -327,6 +370,9 @@ EmbedPrivate::PopStartup(void)
 {
   sWidgetCount--;
   if (sWidgetCount == 0) {
+
+    // destroy the offscreen window
+    DestroyOffscreenWindow();
     
     // shut down the profiles
     ShutdownProfile();
@@ -733,4 +779,23 @@ EmbedPrivate::ShutdownProfile(void)
     NS_RELEASE(sPrefs);
     sPrefs = 0;
   }
+}
+
+/* static */
+void
+EmbedPrivate::CreateOffscreenWindow(void)
+{
+  sOffscreenWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_widget_realize(sOffscreenWindow);
+  sOffscreenFixed = gtk_fixed_new();
+  gtk_container_add(GTK_CONTAINER(sOffscreenWindow), sOffscreenFixed);
+  gtk_widget_realize(sOffscreenFixed);
+}
+
+/* static */
+void
+EmbedPrivate::DestroyOffscreenWindow(void)
+{
+  gtk_widget_destroy(sOffscreenWindow);
+  sOffscreenWindow = 0;
 }

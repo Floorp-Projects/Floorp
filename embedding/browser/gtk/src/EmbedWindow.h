@@ -69,11 +69,12 @@ class EmbedWindow : public nsIWebBrowserChrome,
   nsString                 mJSStatus;
   nsString                 mLinkMessage;
 
+  nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
+
 private:
 
   EmbedPrivate            *mOwner;
   nsCOMPtr<nsIWebBrowser>  mWebBrowser; // [OWNER]
-  nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
   static GtkWidget        *sTipWindow;
   PRBool                   mVisibility;
   PRBool                   mIsModal;
