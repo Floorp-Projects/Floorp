@@ -35,31 +35,31 @@
   <vbox id="myCerts">
     <html>&certmgr.mine;</html>
     <separator class="thin"/>
-    <outliner id="user-outliner" multiple="true" 
+    <outliner id="user-outliner" multiple="true" enableColumnDrag="true"
               onselect="mine_enableButtons()" flex="1">
       <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="tokencol" label="&certmgr.tokenname;"
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="verifiedcol" 
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="purposecol" label="&certmgr.purpose;"
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="issuedcol" label="&certmgr.issued;"
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="expiredcol" label="&certmgr.expires;"
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
 <!--      <outlinercol id="certdbkeycol" collapsed="true" flex="1"/> -->
       <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>

@@ -35,15 +35,15 @@
   <vbox id="webCerts">
     <html>&certmgr.websites;</html>
     <separator class="thin"/>
-    <outliner id="server-outliner" multiple="true"
+    <outliner id="server-outliner" multiple="true" enableColumnDrag="true"
               onselect="websites_enableButtons()" flex="1">
       <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="tokencol" label="&certmgr.tokenname;"
                    class="outlinercol-header outlinercell-inset-header" 
-                   flex="1"/>
+                   persist="hidden width ordinal" flex="1"/>
 <!--      <outlinercol id="certdbkeycol" collapsed="true" flex="1"/> -->
       <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>
