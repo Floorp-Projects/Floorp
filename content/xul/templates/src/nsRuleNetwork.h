@@ -799,7 +799,7 @@ public:
     virtual ~ReteNode() {}
 
     /**
-     * Propogate a set of instantiations "down" through the
+     * Propagate a set of instantiations "down" through the
      * network. Each instantiation is a partial set of
      * variable-to-value assignments, along with the memory elements
      * that support it.
@@ -811,16 +811,16 @@ public:
      *
      * The node must then pass the resulting instantiation set along
      * to any of its children in the network. (In other words, the
-     * node must recursively call Propogate() on its children. We
+     * node must recursively call Propagate() on its children. We
      * should fix this to make the algorithm interruptable.)
      *
-     * @param aInstantiations the set of instantiations to propogate
+     * @param aInstantiations the set of instantiations to propagate
      *   down through the network.
      * @param aClosure any application-specific information that
      *   needs to be passed through the network.
      * @return NS_OK if no errors occurred.
      */
-    virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure) = 0;
+    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure) = 0;
 };
 
 //----------------------------------------------------------------------
@@ -992,7 +992,7 @@ class RootNode : public InnerNode
 {
 public:
     // "downward" propogations
-    virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
+    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
     // "upward" propogations
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
@@ -1021,7 +1021,7 @@ public:
              Operator aOperator);
 
     // "downward" propogations
-    virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
+    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
     // "upward" propogations
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
@@ -1048,7 +1048,7 @@ protected:
 /**
  * A node that applies a test condition to a set of instantiations.
  *
- * This class provides implementations of Propogate() and Constrain()
+ * This class provides implementations of Propagate() and Constrain()
  * in terms of one simple operation, FilterInstantiations(). A node
  * that is a "simple test node" in a rule network should derive from
  * this class, and need only implement FilterInstantiations() and
@@ -1067,14 +1067,14 @@ public:
 
     /**
      * Calls FilterInstantiations() on the instantiation set, and if
-     * the resulting set isn't empty, propogates the new set down to
+     * the resulting set isn't empty, propagates the new set down to
      * each of the test node's children.
      */
-    virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
+    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
     /**
      * Calls FilterInstantiations() on the instantiation set, and if
-     * the resulting set isn't empty, propogates the new set up to the
+     * the resulting set isn't empty, propagates the new set up to the
      * test node's parent.
      */
     virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);

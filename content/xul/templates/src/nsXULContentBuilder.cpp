@@ -426,7 +426,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
     // If |aNotify| is "false", then |aContainer| and
     // |aNewIndexInContainer| are used to determine where in the
     // content model new content is constructed. This allows a single
-    // notification to be propogated to document observers.
+    // notification to be propagated to document observers.
     //
 
     nsresult rv;
@@ -1254,16 +1254,16 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     // container variables
     //
     // XXXwaterson could this code be shared with
-    // nsXULTemplateBuilder::Propogate()?
+    // nsXULTemplateBuilder::Propagate()?
     Instantiation seed;
     seed.AddAssignment(mContentVar, Value(aElement));
 
     InstantiationSet instantiations;
     instantiations.Append(seed);
 
-    // Propogate the assignments through the network
+    // Propagate the assignments through the network
     nsClusterKeySet newkeys;
-    mRules.GetRoot()->Propogate(instantiations, &newkeys);
+    mRules.GetRoot()->Propagate(instantiations, &newkeys);
 
     // Iterate through newly added keys to determine which rules fired
     nsClusterKeySet::ConstIterator last = newkeys.Last();

@@ -332,7 +332,7 @@ public:
                    nsIRDFNode* aNewTarget);
 
     nsresult
-    Propogate(nsIRDFResource* aSource,
+    Propagate(nsIRDFResource* aSource,
               nsIRDFResource* aProperty,
               nsIRDFNode* aTarget,
               nsClusterKeySet& aNewKeys);

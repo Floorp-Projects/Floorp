@@ -351,7 +351,7 @@ nsRDFPropertyTestNode::GetAncestorVariables(VariableSet& aVariables) const
 }
 
 PRBool
-nsRDFPropertyTestNode::CanPropogate(nsIRDFResource* aSource,
+nsRDFPropertyTestNode::CanPropagate(nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget,
                                     Instantiation& aInitialBindings) const
@@ -385,7 +385,7 @@ nsRDFPropertyTestNode::CanPropogate(nsIRDFResource* aSource,
         nsXULContentUtils::GetTextForNode(aTarget, target);
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-               ("nsRDFPropertyTestNode[%p]: CanPropogate([%s]==[%s]=>[%s]) => %s",
+               ("nsRDFPropertyTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
                 this, source, property, NS_ConvertUCS2toUTF8(target).get(),
                 result ? "true" : "false"));
     }

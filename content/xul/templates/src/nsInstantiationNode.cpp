@@ -66,7 +66,7 @@ nsInstantiationNode::~nsInstantiationNode()
 }
 
 nsresult
-nsInstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
+nsInstantiationNode::Propagate(const InstantiationSet& aInstantiations, void* aClosure)
 {
     // If we get here, we've matched the rule associated with this
     // node. Extend it with any <bindings> that we might have, add it

@@ -47,7 +47,7 @@ class nsTemplateRule;
 
 /**
  * A leaf-level node in the rule network. If any instantiations
- * propogate to this node, then we know we've matched a rule.
+ * propagate to this node, then we know we've matched a rule.
  */
 class nsInstantiationNode : public ReteNode
 {
@@ -59,7 +59,7 @@ public:
     ~nsInstantiationNode();
 
     // "downward" propogations
-    virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
+    virtual nsresult Propagate(const InstantiationSet& aInstantiations, void* aClosure);
 
 protected:
     nsConflictSet& mConflictSet;

@@ -1511,9 +1511,9 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
     InstantiationSet instantiations;
     instantiations.Append(seed);
 
-    // Propogate the assignments through the network
+    // Propagate the assignments through the network
     nsClusterKeySet newkeys;
-    mRules.GetRoot()->Propogate(instantiations, &newkeys);
+    mRules.GetRoot()->Propagate(instantiations, &newkeys);
 
     nsAutoVoidArray open;
     PRInt32 count = 0;
