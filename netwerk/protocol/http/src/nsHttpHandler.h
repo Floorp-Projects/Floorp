@@ -42,6 +42,7 @@
 #include "nsWeakReference.h"
 #include "nsVoidArray.h"
 #include "nsIIDNService.h"
+#include "nsITimer.h"
 
 class nsHttpConnection;
 class nsHttpConnectionInfo;
@@ -123,6 +124,8 @@ public:
     // longer than mMaxRequestDelay.
     nsresult ProcessTransactionQ();
 
+    nsresult PurgeDeadConnections();
+
     //
     // The HTTP handler caches pointers to specific XPCOM services, and
     // provides the following helper routines for accessing those services:
@@ -189,7 +192,8 @@ private:
     nsresult SetAcceptEncodings(const char *);
     nsresult SetAcceptCharsets(const char *);
 
-    static PRInt32 PR_CALLBACK PrefsCallback(const char *, void *);
+    // timer callback for cleansing the idle connection list
+    static void DeadConnectionCleanupCB(nsITimer *, void *);
 
 private:
     static nsHttpHandler *mGlobalInstance;
@@ -202,6 +206,7 @@ private:
     nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
     nsCOMPtr<nsIMIMEService>            mMimeService;
     nsCOMPtr<nsIIDNService>             mIDNConverter;
+    nsCOMPtr<nsITimer>                  mTimer;
 
     // the authentication credentials cache
     nsHttpAuthCache *mAuthCache;
@@ -234,7 +239,7 @@ private:
     nsCOMPtr<nsICacheSession> mCacheSession_MEM;
     PRUint32                  mLastUniqueID;
     PRUint32                  mSessionStartTime;
-
+ 
     // connection management
     nsVoidArray mActiveConnections; // list of nsHttpConnection objects
     nsVoidArray mIdleConnections;   // list of nsHttpConnection objects
