@@ -18,11 +18,10 @@
 #ifndef nsPlaceholderFrame_h___
 #define nsPlaceholderFrame_h___
 
-#include "nsFrame.h"
+#include "nsContainerFrame.h"
 
 // Implementation of a frame that's used as a placeholder for an anchored item
-class nsPlaceholderFrame : public nsFrame
-{
+class nsPlaceholderFrame : public nsContainerFrame {
 public:
   /**
    * Create a new placeholder frame
@@ -32,21 +31,14 @@ public:
                            nsIFrame*   aParent);
 
   // Returns the associated anchored item
-  nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
+  nsIFrame*   GetAnchoredItem() const { return mFirstChild; }
 
   // nsIFrame overrides
-  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
-  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
-  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
-  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
-  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
-  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
-  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
@@ -54,8 +46,6 @@ protected:
   // and the Frame for the content parent
   nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
   virtual ~nsPlaceholderFrame();
-
-  nsIFrame*   mAnchoredItem;
 };
 
 #endif /* nsPlaceholderFrame_h___ */
