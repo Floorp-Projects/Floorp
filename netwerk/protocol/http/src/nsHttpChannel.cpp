@@ -505,15 +505,10 @@ nsHttpChannel::ProcessResponse()
     case 302:
     case 307:
         // these redirects can be cached (don't store the response body)
-        if (mCacheEntry) {
-            rv = InitCacheEntry();
-            if (NS_FAILED(rv))
-                CloseCacheEntry(rv);
-        }
-
         rv = ProcessRedirection(httpStatus);
-        CloseCacheEntry(rv);
-        if (NS_FAILED(rv)) {
+        if (NS_SUCCEEDED(rv))
+            CloseCacheEntry(InitCacheEntry());
+        else {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
             rv = ProcessNormal();
         }
