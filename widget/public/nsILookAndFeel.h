@@ -73,6 +73,8 @@ public:
     eColor_TextForeground,
     eColor_TextSelectBackground,
     eColor_TextSelectForeground,
+    eColor_TextSelectBackgroundDisabled,
+    eColor_TextSelectBackgroundAttention,
 
     // New CSS 2 color definitions
     eColor_activeborder,

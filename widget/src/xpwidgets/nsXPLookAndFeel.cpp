@@ -128,6 +128,8 @@ char* nsXPLookAndFeel::sColorPrefs[] =
   "ui.textForeground",
   "ui.textSelectBackground",
   "ui.textSelectForeground",
+  "ui.textSelectBackgroundDisabled"
+  "ui.textSelectBackgroundAttention"
   "ui.activeborder",
   "ui.activecaption",
   "ui.appworkspace",
@@ -346,6 +348,20 @@ NS_IMETHODIMP nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   if (!sInitialized)
     Init();
+
+  // There is no system color setting for these, so set them manually
+  switch (aID) {
+    case eColor_TextSelectBackgroundDisabled:
+      // This is used to gray out the selection when it's not focused
+      // Used with nsISelectionController::SELECTION_DISABLED
+      aColor = NS_RGB(0xb0, 0xb0, 0xb0);
+      return NS_OK;
+    case eColor_TextSelectBackgroundAttention:
+      // This makes the selection stand out when typeaheadfind is on
+      // Used with nsISelectionController::SELECTION_ATTENTION
+      aColor = NS_RGB(0x38, 0xd8, 0x78);
+      return NS_OK;
+  }
 
   // define DEBUG_SYSTEM_COLOR_USE if you want to debug system color
   // use in a skin that uses them.  When set, it will make all system

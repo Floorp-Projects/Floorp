@@ -971,12 +971,11 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 //helper class for drawing multiply selected text
 class DrawSelectionIterator
 {
-  enum {DISABLED_COLOR = NS_RGB(176,176,176)};
   enum {SELECTION_TYPES_WE_CARE_ABOUT=nsISelectionController::SELECTION_NONE+nsISelectionController::SELECTION_NORMAL};
 public:
   DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
                         PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
-                        PRInt16 aSelectionStatus);
+                        PRInt16 aSelectionStatus, nsIPresContext *aPresContext);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -1004,12 +1003,13 @@ private:
   PRBool    mInit;
   PRInt16    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
   nscolor   mDisabledColor;
+  nscolor   mAttentionColor;
   //private methods
   void FillCurrentData();
 };
 
 DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText, 
-							PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle, PRInt16 aSelectionStatus)
+                                             PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle, PRInt16 aSelectionStatus, nsIPresContext *aPresContext)
               :mOldStyle(aTextStyle)
 {
     mDetails = aSelDetails;
@@ -1019,7 +1019,17 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
     mTypes = nsnull;
     mInit = PR_FALSE;
     mSelectionStatus = aSelectionStatus;
-    mDisabledColor = EnsureDifferentColors(DISABLED_COLOR, mOldStyle.mSelectionBGColor);
+
+    // Get background colors for disabled selection at attention-getting selection (used with type ahead find)
+    nsCOMPtr<nsILookAndFeel> look;
+    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(look))) && look) {
+           look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention, mAttentionColor);
+           look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled, mDisabledColor);
+      mDisabledColor  = EnsureDifferentColors(mDisabledColor, mOldStyle.mSelectionBGColor);
+      mAttentionColor = EnsureDifferentColors(mAttentionColor, mOldStyle.mSelectionBGColor);
+    }
+    else 
+      mDisabledColor = mAttentionColor = mOldStyle.mSelectionBGColor;
 
     if (!aSelDetails)
     {
@@ -1210,17 +1220,12 @@ PRBool
 DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
 { 
   //Find color based on mTypes[mCurrentIdx];
-  if (!mTypes)
-  {
-      if (mCurrentIdx == (PRUint32)mDetails->mStart)
-      {
-        aColor = (mSelectionStatus==nsISelectionController::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
-        return PR_TRUE;
-      }
-  }
-  else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)
-  {
-    aColor = (mSelectionStatus==nsISelectionController::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
+  if (mTypes? (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL): (mCurrentIdx == (PRUint32)mDetails->mStart)) {
+    aColor = mOldStyle.mSelectionBGColor;
+    if (mSelectionStatus==nsISelectionController::SELECTION_ATTENTION)
+      aColor = mAttentionColor;
+    else if (mSelectionStatus != nsISelectionController::SELECTION_ON)
+      aColor = mDisabledColor;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -2146,7 +2151,7 @@ nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
     }
     //while we have substrings...
     //PRBool drawn = PR_FALSE;
-    DrawSelectionIterator iter(details,text,(PRUint32)textLength, ts, nsISelectionController::SELECTION_NORMAL);
+    DrawSelectionIterator iter(details,text,(PRUint32)textLength, ts, nsISelectionController::SELECTION_NORMAL, aPresContext);
     if (!iter.IsDone() && iter.First()) {
       return PR_TRUE;
     }
@@ -2369,7 +2374,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
       //while we have substrings...
       //PRBool drawn = PR_FALSE;
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue);
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -3037,7 +3042,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue);
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext);
       if (!iter.IsDone() && iter.First())
       {
 	      nscoord currentX = dx;
@@ -3249,7 +3254,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, selectionValue);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext); //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;

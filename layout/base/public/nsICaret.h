@@ -110,6 +110,7 @@ public:
    */
   NS_IMETHOD SetCaretWidth(nscoord aPixels) = 0;
 
+  NS_IMETHOD SetVisibilityDuringSelection(PRBool aVisibilityDuringSelection) = 0;
 };
 
 extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);

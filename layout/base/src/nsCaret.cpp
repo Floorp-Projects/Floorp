@@ -1151,6 +1151,8 @@ NS_IMETHODIMP nsCaret::SetCaretWidth(nscoord aPixels)
   return NS_OK;
 }
 
-void nsCaret::SetVisibilityDuringSelection(PRBool aVisibility) {
+NS_IMETHODIMP nsCaret::SetVisibilityDuringSelection(PRBool aVisibility) 
+{
   mShowDuringSelection = aVisibility;
+  return NS_OK;
 }
