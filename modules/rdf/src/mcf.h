@@ -69,6 +69,8 @@ RDF_BT			resourceTypeFromID (char* id);
 RDF_Cursor		getSlotValues (RDF rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep, PRBool tv);
 void 			disposeResourceInt (RDF rdf, RDF_Resource u);
 void			possiblyGCResource (RDF_Resource u);
+RDF_Resource		NewRDFResource (char* id);
+RDF_Resource		QuickGetResource (char* id);
 void			assertNotify (RDF rdf, RDF_Notification not, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv, char* ds);
 void			insertNotify (RDF rdf, RDF_Notification not, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv, char* ds);
 void			unassertNotify (RDF_Notification not, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, char* ds);

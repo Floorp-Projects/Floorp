@@ -418,7 +418,7 @@ nlocalStoreNextValue (RDFT rdf, RDF_Cursor c)
     if ((c->tv == tvOfAs(nas)) && (c->type == valueTypeOfAs(nas))) {
       if (c->type == RDF_RESOURCE_TYPE) {
         RDF_Resource nu = RDF_GetResource(NULL, dataOfDBMAs(nas), 1);
-        if (nu  && strstr(resourceID(nu), ".rdf")) {
+        if (nu  && startsWith("http", resourceID(nu)) && strstr(resourceID(nu), ".rdf")) {
           RDFL rl = rdf->rdf;
           char* dburl = getBaseURL(resourceID(nu));
           while (rl) {
