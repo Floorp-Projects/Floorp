@@ -787,6 +787,7 @@ js_DoubleToInteger(jsdouble d)
 JSBool
 js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 {
+    char cbuf[32];
     size_t i;
     char *cstr, *istr, *estr;
     JSBool negative;
@@ -794,9 +795,15 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     const jschar *s1 = js_SkipWhiteSpace(s);
     size_t length = js_strlen(s1);
 
-    cstr = (char *) malloc(length + 1);
-    if (!cstr)
-	return JS_FALSE;
+    // Use cbuf to avoid malloc
+    if (length >= sizeof cbuf) {
+        cstr = (char *) malloc(length + 1);
+        if (!cstr)
+           return JS_FALSE;
+    } else {
+        cstr = cbuf;
+    }
+   
     for (i = 0; i <= length; i++) {
 	if (s1[i] >> 8) {
 	    cstr[i] = 0;
@@ -833,7 +840,8 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     }
 
     i = estr - cstr;
-    free(cstr);
+    if (cstr != cbuf)
+        free(cstr);
     *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;
