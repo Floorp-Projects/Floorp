@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.22 $ $Date: 2002/04/25 18:33:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.23 $ $Date: 2002/05/07 14:58:09 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -533,13 +533,16 @@ get_nss_trust
 {
     nssTrustLevel t;
     switch (ckt) {
-    case CKT_NETSCAPE_TRUST_UNKNOWN: t = nssTrustLevel_Unknown; break;
     case CKT_NETSCAPE_UNTRUSTED: t = nssTrustLevel_NotTrusted; break;
     case CKT_NETSCAPE_TRUSTED_DELEGATOR: t = nssTrustLevel_TrustedDelegator; 
 	break;
     case CKT_NETSCAPE_VALID_DELEGATOR: t = nssTrustLevel_ValidDelegator; break;
     case CKT_NETSCAPE_TRUSTED: t = nssTrustLevel_Trusted; break;
     case CKT_NETSCAPE_VALID: t = nssTrustLevel_Valid; break;
+    case CKT_NETSCAPE_MUST_VERIFY:
+    case CKT_NETSCAPE_TRUST_UNKNOWN:
+    default:
+	t = nssTrustLevel_Unknown; break;
     }
     return t;
 }

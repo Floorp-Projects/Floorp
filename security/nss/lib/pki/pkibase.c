@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.5 $ $Date: 2002/04/26 14:34:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.6 $ $Date: 2002/05/07 14:58:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -943,11 +943,22 @@ static PRStatus
 cert_getUIDFromObject(nssPKIObject *o, NSSItem *uid)
 {
     NSSCertificate *c = (NSSCertificate *)o;
+#ifdef NSS_3_4_CODE
+    /* The builtins are still returning decoded serial numbers.  Until
+     * this compatibility issue is resolved, use the full DER of the
+     * cert to uniquely identify it.
+     */
+    NSSDER *derCert;
+    derCert = nssCertificate_GetEncoding(c);
+    uid[0] = *derCert;
+    uid[1].data = NULL; uid[1].size = 0;
+#else
     NSSDER *issuer, *serial;
     issuer = nssCertificate_GetIssuer(c);
     serial = nssCertificate_GetSerialNumber(c);
     uid[0] = *issuer;
     uid[1] = *serial;
+#endif /* NSS_3_4_CODE */
     return PR_SUCCESS;
 }
 
@@ -955,6 +966,23 @@ static PRStatus
 cert_getUIDFromInstance(nssCryptokiObject *instance, NSSItem *uid, 
                         NSSArena *arena)
 {
+#ifdef NSS_3_4_CODE
+    /* The builtins are still returning decoded serial numbers.  Until
+     * this compatibility issue is resolved, use the full DER of the
+     * cert to uniquely identify it.
+     */
+    uid[1].data = NULL; uid[1].size = 0;
+    return nssCryptokiCertificate_GetAttributes(instance,
+                                                NULL,  /* XXX sessionOpt */
+                                                arena, /* arena    */
+                                                NULL,  /* type     */
+                                                NULL,  /* id       */
+                                                &uid[0], /* encoding */
+                                                NULL,  /* issuer   */
+                                                NULL,  /* serial   */
+                                                NULL,  /* subject  */
+                                                NULL); /* email    */
+#else
     return nssCryptokiCertificate_GetAttributes(instance,
                                                 NULL,  /* XXX sessionOpt */
                                                 arena, /* arena    */
@@ -965,6 +993,7 @@ cert_getUIDFromInstance(nssCryptokiObject *instance, NSSItem *uid,
                                                 &uid[1], /* serial */
                                                 NULL,  /* subject  */
                                                 NULL); /* email    */
+#endif /* NSS_3_4_CODE */
 }
 
 static nssPKIObject *
