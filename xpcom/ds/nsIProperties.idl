@@ -55,10 +55,9 @@ interface nsIProperties : nsISupports
     void set(in string prop, in nsISupports value);
 
     /**
-     * Returns true if the property with the given name exists with
-     * the given value.
+     * Returns true if the property with the given name exists.
      */
-    boolean has(in string prop, in nsIIDRef uuid, in nsISupports value);
+    boolean has(in string prop);
 };
 
 %{C++
