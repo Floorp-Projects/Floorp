@@ -21,27 +21,25 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 
-use vars qw(
-  %legal_product
-);
-
 use strict;
-
 use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
-
 require "CGI.pl";
+
+use vars qw($vars @legal_product);
 
 Bugzilla->login();
 
 GetVersionTable();
 
 my $cgi = Bugzilla->cgi;
-my $product = $cgi->param('product');
+my $template = Bugzilla->template;
+my $product = trim($cgi->param('product') || '');
+my $product_id = get_product_id($product);
 
-if (!defined $product) {
+if (!$product_id || !CanEnterProduct($product)) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
     my %products;
 
@@ -55,7 +53,7 @@ if (!defined $product) {
         }
     }
     else {
-          %products = %::proddesc;
+        %products = %::proddesc;
     }
 
     my $prodsize = scalar(keys %products);
@@ -63,34 +61,24 @@ if (!defined $product) {
         ThrowUserError("no_products");
     }
     elsif ($prodsize > 1) {
-        $::vars->{'proddesc'} = \%products;
-        $::vars->{'target'} = "describecomponents.cgi";
+        $vars->{'proddesc'} = \%products;
+        $vars->{'target'} = "describecomponents.cgi";
+        # If an invalid product name is given, or the user is not
+        # allowed to access that product, a message is displayed
+        # with a list of the products the user can choose from.
+        if ($product) {
+            $vars->{'message'} = "product_invalid";
+            $vars->{'product'} = $product;
+        }
 
         print $cgi->header();
-        $::template->process("global/choose-product.html.tmpl", $::vars)
-          || ThrowTemplateError($::template->error());
+        $template->process("global/choose-product.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;
     }
 
     $product = (keys %products)[0];
 }
-
-# Make sure the user specified a valid product name.  Note that
-# if the user specifies a valid product name but is not authorized
-# to access that product, they will receive a different error message
-# which could enable people guessing product names to determine
-# whether or not certain products exist in Bugzilla, even if they
-# cannot get any other information about that product.
-my $product_id = get_product_id($product);
-
-if (!$product_id) {
-    ThrowUserError("invalid_product_name",
-                   { product => $product });
-}
-
-# Make sure the user is authorized to access this product.
-CanEnterProduct($product)
-      || ThrowUserError("product_access_denied");
 
 ######################################################################
 # End Data/Security Validation
@@ -98,8 +86,7 @@ CanEnterProduct($product)
 
 my @components;
 SendSQL("SELECT name, initialowner, initialqacontact, description FROM " .
-        "components WHERE product_id = $product_id ORDER BY " .
-        "name");
+        "components WHERE product_id = $product_id ORDER BY name");
 while (MoreSQLData()) {
     my ($name, $initialowner, $initialqacontact, $description) =
       FetchSQLData();
@@ -116,10 +103,9 @@ while (MoreSQLData()) {
     push @components, \%component;
 }
 
-$::vars->{'product'} = $product;
-$::vars->{'components'} = \@components;
+$vars->{'product'} = $product;
+$vars->{'components'} = \@components;
 
 print $cgi->header();
-$::template->process("reports/components.html.tmpl", $::vars)
-  || ThrowTemplateError($::template->error());
-
+$template->process("reports/components.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

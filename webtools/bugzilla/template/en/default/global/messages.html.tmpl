@@ -135,6 +135,12 @@
       <a href="editflagtypes.cgi">Back to flag types.</a>
     </p>
     
+  [% ELSIF message_tag == "product_invalid" %]
+    [% title = "$terms.Bugzilla Component Descriptions" %]
+    The product <em>[% product FILTER html %]</em> does not exist
+    or you don't have access to it. The following is a list of the
+    products you can choose from.
+
   [% ELSIF message_tag == "series_created" %]
     [% title = "Series Created" %]
       The series <em>[% series.category FILTER html %] /

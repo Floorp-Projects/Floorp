@@ -798,10 +798,6 @@
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.
 
-  [% ELSIF error == "product_access_denied" %]
-    [% title = "Access Denied" %]
-    You do not have the permissions necessary to access that product.
-
   [% ELSIF error == "product_edit_denied" %]
     [% title = "Product Edit Access Denied" %]
     You are not permitted to edit [% terms.bugs %] in product 
