@@ -167,8 +167,11 @@ CONFIG_OBJ_INC=1
         $(LINCS)
         $(LINCS_1)
         $(INCS)
+        $(LLIBS)
+        $(OS_LIBS)
         -Fd$(PDBFILE)
         -Fe.\$(OBJDIR)\
+        -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<KEEP
 
@@ -182,6 +185,7 @@ CONFIG_OBJ_INC=1
         $(LLIBS)
         $(WIN_LIBS)
         $(OS_LIBS)
+        /link $(LFLAGS)
         -Fd$(PDBFILE)
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
