@@ -80,6 +80,9 @@ protected:
 
     nsXPIDLCString                      mRequest;
 
+    nsCOMPtr<nsISupports>               mResponseContext;
+    nsCOMPtr<nsIChannel>                mTransport;
+
 protected:
     nsresult SendRequest(nsIChannel* aChannel);
 };
