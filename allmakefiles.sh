@@ -410,6 +410,10 @@ xpfe/components/sample/Makefile
 xpfe/components/sample/public/Makefile
 xpfe/components/sample/src/Makefile
 xpfe/components/sample/resources/Makefile
+xpfe/components/bookmarks/Makefile
+xpfe/components/bookmarks/public/Makefile
+xpfe/components/bookmarks/src/Makefile
+xpfe/components/bookmarks/resources/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
