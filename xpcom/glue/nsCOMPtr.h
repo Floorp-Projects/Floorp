@@ -113,7 +113,7 @@
   #undef NSCAP_FEATURE_USE_BASE
 #endif
 
-#if !defined(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+#if defined(NSCAP_DISABLE_DEBUG_PTR_TYPES)
   #define NSCAP_FEATURE_USE_BASE
 #endif
 
