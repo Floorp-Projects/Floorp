@@ -603,14 +603,14 @@ CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 CompositeDataSourceImpl::Init(const char* uri)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("CompositeDataSourceImpl::Init");
     return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
 }
 
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetURI(const char* *uri) const
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("CompositeDataSourceImpl::GetURI");
     return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
 }
 
