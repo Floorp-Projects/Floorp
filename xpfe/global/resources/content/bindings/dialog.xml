@@ -156,10 +156,9 @@
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
-          var button = this.getButton("accept");
+          var button = this.getButton(aDlgType);
           if (!button.disabled) {
             var noCancel = this._fireButtonEvent(aDlgType);
-  
             if (noCancel) {
               if (aDlgType == "accept" || aDlgType == "cancel") {
                 // calling window.close() while an oncommand event
