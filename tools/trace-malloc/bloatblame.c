@@ -514,7 +514,7 @@ static void dump_graphedge_list(graphedge *list, FILE *fp)
     for (edge = list; edge; edge = edge->next)
         total += edge->total;
     for (edge = list; edge; edge = edge->next) {
-        fprintf(fp, "<a href='#%s'>%s&nbsp;(%%%1.2f)</a>\n",
+        fprintf(fp, "<a href='#%s'>%s&nbsp;(%1.2f%%)</a>\n",
                 graphnode_name(edge->node),
                 prettybig(edge->total, buf, sizeof buf),
                 percent(edge->total, total));
@@ -556,7 +556,7 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
         fprintf(fp,
                 "<tr>"
                   "<td valign=top><a name='%s'>%s</td>"
-                  "<td valign=top>%s/%s (%%%1.2f/%%%1.2f)</td>",
+                  "<td valign=top>%s/%s (%1.2f%%/%1.2f%%)</td>",
                 graphnode_name(node),
                 graphnode_name(node),
                 prettybig(node->total, buf1, sizeof buf1),
