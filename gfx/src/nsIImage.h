@@ -139,20 +139,29 @@ public:
 
   /**
    * BitBlit the pixelmap to a device, the source and dest can be scaled
-   @param aSurface  the surface to blit to
-   @param aSX The source width of the pixelmap
-   @param aSY The source vertical location
-   @param aSWidth The source width of the pixelmap
-   @param aSHeight The source height of the pixelmap
-   @param aDX The destination horizontal location
-   @param aDY The destination vertical location
-   @param aDWidth The destination width of the pixelmap
-   @param aDHeight The destination height of the pixelmap
-   @return if TRUE, no errors
+   * @param aSurface  the surface to blit to
+   * @param aSX The source width of the pixelmap
+   * @param aSY The source vertical location
+   * @param aSWidth The source width of the pixelmap
+   * @param aSHeight The source height of the pixelmap
+   * @param aDX The destination horizontal location
+   * @param aDY The destination vertical location
+   * @param aDWidth The destination width of the pixelmap
+   * @param aDHeight The destination height of the pixelmap
+   * @return if TRUE, no errors
    */
   virtual PRBool Draw(nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
   
+
+  /**
+   * Composite this image with the passed in image using the alpha mask
+   * @param aTheImage The image to blend into this image
+   * @param aULLocation The upper left coordinate to place the passed in image
+   */
+  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation) = 0;
+
+
   //get the color space metrics for this image
   //virtual NI_ColorSpec * GetColorSpec() = 0;                       fix
 

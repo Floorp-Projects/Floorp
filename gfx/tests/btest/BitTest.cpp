@@ -54,12 +54,122 @@ static nsIImageRequest *gImageReq = nsnull;
 static HWND gHwnd;
 static nsIWidget *gWindow = nsnull;
 static nsIImage *gImage = nsnull;
+static nsIImage *gBlendImage = nsnull;
 static PRBool gInstalledColorMap = PR_FALSE;
 
+extern void    Compositetest(nsIImage *aTheImage,nsIImage *aBlendImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY);
 extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 extern PRInt32 drawtest(nsIRenderingContext *aSurface);
 extern PRInt32 filltest(nsIRenderingContext *aSurface);
 extern PRInt32 arctest(nsIRenderingContext *aSurface);
+extern PRBool  IsImageLoaded();
+
+
+
+
+//------------------------------------------------------------
+
+
+class MyBlendObserver : public nsIImageRequestObserver 
+{
+private:
+  nsIImage      **mImage;     // address of pointer to put info into
+
+public:
+  MyBlendObserver(nsIImage **aImage);
+  //MyBlendObserver();
+  ~MyBlendObserver();
+ 
+  NS_DECL_ISUPPORTS
+
+  virtual void Notify(nsIImageRequest *aImageRequest,nsIImage *aImage,
+                      nsImageNotification aNotificationType,
+                      PRInt32 aParam1, PRInt32 aParam2,void *aParam3);
+
+  virtual void NotifyError(nsIImageRequest *aImageRequest,nsImageError aErrorType);
+
+};
+
+//------------------------------------------------------------
+
+MyBlendObserver::MyBlendObserver(nsIImage **aImage)
+{
+  mImage = aImage;
+}
+
+//------------------------------------------------------------
+
+MyBlendObserver::~MyBlendObserver()
+{
+}
+
+//------------------------------------------------------------
+
+NS_IMPL_ISUPPORTS(MyBlendObserver, kIImageObserverIID)
+
+void  
+MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
+                   nsIImage *aImage,
+                   nsImageNotification aNotificationType,
+                   PRInt32 aParam1, PRInt32 aParam2,
+                   void *aParam3)
+{
+    switch (aNotificationType) 
+      {
+       case nsImageNotification_kDimensions:
+       break;
+       case nsImageNotification_kPixmapUpdate:
+       case nsImageNotification_kImageComplete:
+       case nsImageNotification_kFrameComplete:
+        {
+        if (*mImage == nsnull && aImage) 
+          {
+          *mImage = aImage;
+          NS_ADDREF(aImage);
+          }
+
+          
+        //if (gBlendImage == nsnull && aImage) 
+          //{
+          //gBlendImage = aImage;
+          //NS_ADDREF(aImage);
+          //}
+
+
+          if (!gInstalledColorMap && gBlendImage) 
+          {
+          nsColorMap *cmap = (*mImage)->GetColorMap();
+
+          if(aNotificationType == nsImageNotification_kImageComplete)
+            {
+            nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+            Compositetest(gImage,gBlendImage,drawCtx,0,0);
+            }
+
+          //if (cmap != nsnull && cmap->NumColors > 0) 
+            //{
+            //gWindow->SetColorMap(cmap);
+            //}
+          //gInstalledColorMap = PR_TRUE;
+          }
+        //nsRect *rect = (nsRect *)aParam3;
+        //nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+
+       }
+       break;
+    }
+}
+
+//------------------------------------------------------------
+
+void 
+MyBlendObserver::NotifyError(nsIImageRequest *aImageRequest,
+                        nsImageError aErrorType)
+{
+  ::MessageBox(NULL, "Blend Image loading error!",class1Name, MB_OK);
+}
+
+//------------------------------------------------------------
 
 class MyObserver : public nsIImageRequestObserver 
 {
@@ -76,6 +186,8 @@ public:
   virtual void NotifyError(nsIImageRequest *aImageRequest,nsImageError aErrorType);
 
 };
+
+
 
 //------------------------------------------------------------
 
@@ -134,13 +246,38 @@ MyObserver::Notify(nsIImageRequest *aImageRequest,
         nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
         if (gImage) 
-        {
-        drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
-        }
+          {
+          drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight());
+          }
        }
        break;
     }
 }
+
+//------------------------------------------------------------
+
+void 
+MyObserver::NotifyError(nsIImageRequest *aImageRequest,
+                        nsImageError aErrorType)
+{
+  ::MessageBox(NULL, "Image loading error!",class1Name, MB_OK);
+}
+
+//------------------------------------------------------------
+
+// This tests the compositing for the image
+void
+Compositetest(nsIImage *aTheImage,nsIImage *aBlendImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY)
+{
+PRInt32 swidth, sheight,bwidth,bheight;
+ 
+  swidth = aTheImage->GetWidth();
+  sheight = aTheImage->GetHeight();
+
+  bwidth = aBlendImage->GetWidth();
+  bheight = aBlendImage->GetHeight();
+}
+
 
 //------------------------------------------------------------
 
@@ -181,6 +318,7 @@ SYSTEMTIME  thetime;
 
   return(milli);
 }
+
 //------------------------------------------------------------
 
 PRInt32
@@ -328,13 +466,6 @@ nscolor white,black;
 
 //------------------------------------------------------------
 
-void 
-MyObserver::NotifyError(nsIImageRequest *aImageRequest,
-                        nsImageError aErrorType)
-{
-  ::MessageBox(NULL, "Image loading error!",class1Name, MB_OK);
-}
-
 nsEventStatus PR_CALLBACK
 MyHandleEvent(nsGUIEvent *aEvent)
 {
@@ -394,13 +525,14 @@ MyInterrupt()
 #define FILE_URL_PREFIX "file://"
 
 void
-MyLoadImage(char *aFileName)
+MyLoadImage(char *aFileName,PRBool  aGenLoad,nsIImage **aTheImage)
 {
-    char fileURL[256];
-    char *str;
+char fileURL[256];
+char *str;
 
     MyInterrupt();
-    MyReleaseImages();
+    if(aGenLoad!=PR_TRUE)
+      MyReleaseImages();
 
     if (gImageGroup == NULL) 
       {
@@ -422,10 +554,21 @@ MyLoadImage(char *aFileName)
         *str = '/';
 
     nscolor white;
-    MyObserver *observer = new MyObserver();
+
+    // set up which image gets loaded
+    if(aGenLoad == PR_TRUE)
+      {
+      MyBlendObserver *observer = new MyBlendObserver(aTheImage);
+      NS_ColorNameToRGB("white", &white);
+      gImageReq = gImageGroup->GetImage(fileURL,observer,white, 0, 0, 0);
+      }
+    else
+      {
+      MyObserver *observer = new MyObserver();
+      NS_ColorNameToRGB("white", &white);
+      gImageReq = gImageGroup->GetImage(fileURL,observer,white, 0, 0, 0);
+      }
             
-    NS_ColorNameToRGB("white", &white);
-    gImageReq = gImageGroup->GetImage(fileURL,observer,white, 0, 0, 0);
     if (gImageReq == NULL) 
       {
       ::MessageBox(NULL, "Couldn't create image request",class1Name, MB_OK);
@@ -473,6 +616,25 @@ OpenFileDialog(char *aBuffer, int32 aBufLen)
 
 //------------------------------------------------------------
 
+PRBool 
+IsImageLoaded()
+{
+
+  if(gImageGroup == NULL)  // go get an image for the window
+    {
+    char szFile[256];
+
+    ::MessageBox(NULL, "Need To Open an Image",NULL, MB_OK);
+
+    if (!OpenFileDialog(szFile, 256))
+        return PR_FALSE;
+    MyLoadImage(szFile,PR_FALSE,NULL);
+    }
+  return PR_TRUE;
+}
+
+//------------------------------------------------------------
+
 long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
@@ -491,27 +653,33 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 
           if (!OpenFileDialog(szFile, 256))
               return 0L;
-          MyLoadImage(szFile);
+          MyLoadImage(szFile,PR_FALSE,NULL);
           break;
           }
         case TIMER_EXIT:
           ::DestroyWindow(hWnd);
           exit(0);
           break;
-        case BSTNOOPT:
-        case BSTOPT:
-
-          if(gImageGroup == NULL)  // go get an image
+        case COMPTST:
+          IsImageLoaded();
+          if(gImage)
             {
             char szFile[256];
+            
+            if (gBlendImage!=nsnull) 
+              {
+              NS_RELEASE(gBlendImage);
+              gBlendImage = nsnull;
+              }
 
-            ::MessageBox(NULL, "Need To Open an Image",NULL, MB_OK);
-
-            if (!OpenFileDialog(szFile, 256))
-                return 0L;
-            MyLoadImage(szFile);
+            if (OpenFileDialog(szFile, 256))
+              MyLoadImage(szFile,PR_TRUE,&gBlendImage);
             }
-          if(gImageGroup != NULL && gImage)
+          break;
+        case BSTNOOPT:
+        case BSTOPT:
+          IsImageLoaded();
+          if(gImage)
             {
             PRBool opt;
             nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
@@ -569,6 +737,12 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         {
         NS_RELEASE(gImageManager);
         }
+      if (gBlendImage) 
+        {
+        NS_RELEASE(gBlendImage);
+        gBlendImage = NULL;
+        }
+
       PostQuitMessage(0);
       break;
 
