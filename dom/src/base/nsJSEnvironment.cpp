@@ -187,7 +187,7 @@ NS_ScriptErrorReporter(JSContext *cx,
   if (errorStr) {
     fprintf(stderr, "%s\n", errorStr);
 #ifdef DEBUG
-    fflush(stderr)
+    fflush(stderr);
 #endif
     nsMemory::Free(errorStr);
   }
