@@ -11,6 +11,8 @@
 <!ENTITY nativeWidgets.label "native">
 <!ENTITY partialGfxWidgets.label "partial-gfx">
 <!ENTITY gfxWidgets.label "gfx">
+<!ENTITY gfxScrollbars.label "gfx scrollbars">
+
 
 <!-- Event Debugging -->
 <!ENTITY debugEventDebugging.label "Event Debugging">
