@@ -82,6 +82,7 @@ STRIP_FLAGS	= -f
 endif
 ifeq ($(OS_ARCH),BeOS)
 STRIP_FLAGS	= -g
+PLATFORM_EXCLUDE_LIST = ! -name "*.stub" ! -name "mozilla-bin"
 endif
 
 all export libs install:: $(TARGETS)
@@ -96,12 +97,7 @@ endif
 # NOTE: this must be a cp now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
-# Only zip/unzip preserve BeOS' special file attributes
-ifeq ($(OS_ARCH),BeOS)
-	@copyattr -v -d -r $(DIST)/bin $(DIST)/package
-else
 	@cp -rp ${DIST}/bin $(DIST)/package
-endif
 	@echo "Stripping package directory..."
 	@cd $(DIST)/package; find . ! -type d \
 			! -name "*.js" \
@@ -124,7 +120,7 @@ endif
 			! -name "*.tbl" \
 			! -name "*.src" \
 			! -name "*.reg" \
-			! -name "*.stub" \
+			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
