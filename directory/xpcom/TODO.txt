@@ -1,5 +1,5 @@
-housecleaning
-------------- 
+housecleaning for first 0.x release
+-----------------------------------
 * searches that return lots of entries to the nsLDAPChannel
   (eg (sn=Smith) at netcenter) mostly stall out the UI.  moving most of the 
   callback work off the UI thread to the LDAP connection thread didn't 
@@ -9,46 +9,24 @@ housecleaning
   that's not enough, then append all pieces of the directory into a single
   string and then do a single Write and OnDataAvailable.
 
-* need to properly abort channel when errors are encountered 
-  mid-flight (ie in the OnLDAP* callbacks)..
-
-* audit for and implement any appropriate NOT_IMPLEMENTED functions
-
-* audit for and fix leaks
-
-* use bloat tools to ensure code is not doing anything dumb
-
-* re-read the IDL for interfaces implemented by nsLDAPChannel.cpp make sure 
-  all interfaces are implemented correctly
-
-* the LDAP SDK returns UTF8, but I think nsILDAPChannel is handing it
-  off to callers as ASCII.  How does this all relate to the stated
-  UCS2 policy in Mozilla?
-
-* investigate use of DNS in LDAP sdk.  are sync functions used in the 
-  wrong places (eg they end up getting called from Mozilla on the UI thread)?
-
-* investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
-  want the reference to "xp_sort.h"?
-
-* verify that ldap_parse_result() and ldap_get_ldaperrno() aren't
-  required to be called from the same thread as ldap_result() and
-  before the thread-specific ldaperrno has a chance to change.
-
-* revamp nsILDAPService to manage LDAP connections and allow for
-  sharing connections between browser clients.
+* audit for and fix leaks / bloat
 
 * grep for XXXs and fix the issues 
 
-* error handling: sort out what should be NS_ASSERTIONs vs. normal
-  error conditions (eg network & data errors).  should audit interface
-  boundaries to make sure they do appropriate checking.  also,
-  shouldn't be casting results of nsILDAPConnection::GetErrorString to
-  void in ldapSearch.  (ideally this would use xpidl nsresult decls
-  (bug 13423), but that's not done yet).
-
 items blocked waiting for other work
 ------------------------------------ 
+* destroy connection & thread when done with it; deal with timeouts 
+  (blocked on LDAP C SDK 4.1, in the hopes that the NSPR 
+  binding of the IO functions will provide us with some way to pop out
+  of the select() that's called under ldap_result().  It may not be worth 
+  implementing this until nsLDAPService is ressurected.
+
+* go through the various options that can be used with the SDK function 
+  ldap_set_options() and decide if and where the various functions should 
+  be used.  This will include memory allocator settings, and possibly 
+  threadsafety callbacks (if necessary).  (blocked waiting on LDAP C
+  SDK 4.1 to land, since it contains NSPR bindings for some of this).
+
 * deal with race condition that happens if data comes back after
   nsLDAPChannel::Cancel is called.  AsyncStreamListener expects
   GetStatus to return OK, and asserts when it doesn't.  (blocked waiting
@@ -62,16 +40,6 @@ items blocked waiting for other work
   might have it's own thread and it would be reasonable to call
   ldap_unbind() from that thread).
 
-* go through the various options that can be used with the SDK function 
-  ldap_set_options() and decide if and where the various functions should 
-  be used.  This will include memory allocator settings, and possibly 
-  threadsafety callbacks (if necessary).  (blocked waiting on LDAP C
-  SDK 4.1 to land, since it contains NSPR bindings for some of this).
-
-* deal with timeouts (blocked on LDAP C SDK 4.1, in the hopes that the NSPR 
-  binding of the IO functions will provide us with some way to pop out
-  of the select() that's called under ldap_result() ).
-
 * currently nsILDAPOperation::SimpleBind is called as though it were
   asynchronous (ie from the UI thread), which it mostly is -- the call
   to connect() can stall.  We could use the ASYNC_CONNECT flag, but it
@@ -81,27 +49,60 @@ items blocked waiting for other work
   pushed from nsILDAPOperation into nsILDAPConnection and then called
   after the thread for the connection is spun up (waiting on help from
   the LDAP SDK folks: bug 50074).
-  
+
 misc
 ----
-* i18n / l10n (any text strings)
+* error handling: sort out what should be NS_ASSERTIONs vs. normal
+  error conditions (eg network & data errors).  should audit interface
+  boundaries to make sure they do appropriate checking.  also,
+  shouldn't be casting results of nsILDAPConnection::GetErrorString to
+  void in ldapSearch.  (ideally this would use xpidl nsresult decls
+  (bug 13423), but that's not done yet).
+
+* verify that ldap_parse_result() and ldap_get_ldaperrno() aren't
+  required to be called from the same thread as ldap_result() and
+  before the thread-specific ldaperrno has a chance to change.
+
+* investigate use of DNS in LDAP sdk.  are sync functions used in the 
+  wrong places (eg they end up getting called from Mozilla on the UI thread)?
+
+* audit for and implement any appropriate NOT_IMPLEMENTED functions
+
+* re-read the IDL for interfaces implemented by nsLDAPChannel.cpp make sure 
+  all interfaces are implemented correctly
 
 * implement progress info interfaces, if possible (% done)
+
+* investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
+  want the reference to "xp_sort.h"?
+
+* i18n / l10n (any text strings)
 
 * cachability of nsILDAPChannel content: browser cache? ldap_memcache? both?
 
 * use a rebind_proc?
 
 * HTMLize nsLDAPChannel output for linkification
+* the LDAP SDK returns UTF8, but I think nsILDAPChannel is handing it
+  off to callers as ASCII.  How does this all relate to the stated
+  UCS2 policy in Mozilla?
 
+* all attributes are assumed to be strings right now.  This probably
+  needs to change: assume all attributes are binary, use some
+  heuristic to figure out if they're a string.  I wonder how
+  ldapsearch does this.
 
-rdf datasource (in progress: dmose)
+rdf datasource 
 --------------
-  * non-anonymous binding
 
-  * expose directory entries & attrs via interfaces (cachable?) 
+* revamp nsILDAPService (currently unused code) to manage LDAP
+  connections and allow for sharing connections between browser
+  clients.  I think this should obviate the need to hold onto the
+  connection with a delegate factory.
 
-  * nsILDAPURL (see nsIIOService.idl: extractScheme())
+* non-anonymous binding (ie nsLDAPURL supports x-bind-name -- I
+  suspect this may come with the LDAP C SDK version after 4.1,
+  though.)
 
 testing
 -------
