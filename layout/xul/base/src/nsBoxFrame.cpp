@@ -711,6 +711,7 @@ printf("\n");
             
         } 
 
+        nsSize* oldMaxElementSize = desiredSize.maxElementSize;
         nsSize maxElementSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
         desiredSize.maxElementSize = &maxElementSize;
         
@@ -732,7 +733,7 @@ printf("\n");
 
         // Stub out desiredSize.maxElementSize so that when go out of
         // scope, nothing bad happens!
-        desiredSize.maxElementSize = nsnull;
+        desiredSize.maxElementSize = oldMaxElementSize;
 
         // clear out the incremental child, so that we don't flow it incrementally again
         if (reason == eReflowReason_Incremental && incrementalChild == childFrame)
