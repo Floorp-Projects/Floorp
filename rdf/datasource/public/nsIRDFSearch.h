@@ -23,6 +23,17 @@
 #include "nsISupports.h"
 #include "nsVoidArray.h"
 #include "nsIRDFNode.h"
+#include "nsIStreamListener.h"
+
+
+
+#define NS_IRDFSEARCHDATASOURCECALLBACK_IID \
+{ 0x88774583, 0x1edd, 0x11d3, { 0x98, 0x20, 0xbf, 0x1b, 0xe7, 0x7e, 0x61, 0xc4 } }
+
+class nsIRDFSearchDataSourceCallback : public nsIStreamListener
+{
+public:
+};
 
 
 
