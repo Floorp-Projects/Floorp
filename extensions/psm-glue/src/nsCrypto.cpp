@@ -31,6 +31,7 @@
 #include "jsapi.h"
 #include "cmtcmn.h"
 #include "cmtjs.h"
+#include <ctype.h>
 
 /*
  * These are the most common error strings that are returned
