@@ -26,9 +26,6 @@ pref("news.wrap_long_lines",                false);
 pref("mail.inline_attachments",             true);
 
 // Mail server preferences, pop by default
-pref("mail.server_type",                    0); // 0 pop, 1 imap,
-                                                // (Unix only:)
-                                                // 2 movemail, 3 inbox
 
 pref("mail.auth_login", true);
 
