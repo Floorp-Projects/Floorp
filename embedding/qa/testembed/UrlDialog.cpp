@@ -124,6 +124,10 @@ void CUrlDialog::OnSelchangeCombo1()
 		QAOutput("Selected CHARSET_CHANGE flag.", 1);
 		m_flagvalue = nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE;	
    }
+   else if (m_flagIndex == 8) {
+		QAOutput("Selected REFRESH flag.", 1);
+		m_flagvalue = nsIWebNavigation::LOAD_FLAGS_IS_REFRESH;	
+   }
    else
 		QAOutput("NO FLAG!!!.", 1);
 }

@@ -22,6 +22,7 @@
 #define IDD_DIALOG1                     145
 #define IDD_RUNTESTSDLG                 145
 #define IDD_QAFINDDLG                   147
+#define IDD_WEBPROGDLG                  148
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -48,6 +49,8 @@
 #define IDC_CHECK1                      1027
 #define IDC_CHKURLFLAG                  1027
 #define IDC_TEXTFIELD                   1028
+#define IDC_WPCOMBO                     1031
+#define IDC_COMBO2                      1032
 #define IDC_MATCH_WHOLE_WORD            1040
 #define IDC_MATCH_CASE                  1041
 #define IDC_WRAP_AROUND                 1042
@@ -245,9 +248,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        148
+#define _APS_NEXT_RESOURCE_VALUE        153
 #define _APS_NEXT_COMMAND_VALUE         32965
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
