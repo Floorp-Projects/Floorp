@@ -161,7 +161,7 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
                                             "sss%ip%ip",
                                             "chrome://communicator/content/xpinstall/xpistatus.xul",
                                             "_blank",
-                                            "chrome",
+                                            "chrome,titlebar",
                                             (const nsIID*)&NS_GET_IID(nsIDialogParamBlock),
                                             (nsISupports*)ioParamBlock,
                                             (const nsIID*)&NS_GET_IID(nsPIXPIManagerCallbacks),
