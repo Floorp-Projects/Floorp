@@ -99,22 +99,11 @@ use strict;
 # This are the --LOCAL-- variables defined in 'localconfig'
 # 
 
-# Shut up misguided -w warnings about "used only once".  "use vars" just
-# doesn't work for global vars.
-sub sillyness {
-    my $zz;
-    $zz = $::webservergroup;
-    $zz = $::db_host;
-    $zz = $::db_port;
-    $zz = $::db_user;
-    $zz = $::db_name;
-    $zz = $::db_pass;
-    $zz = $::db_check;
-    $zz = @::severities;
-    $zz = @::priorities;
-    $zz = @::opsys;
-    $zz = @::platforms;
-}
+# 12/17/00 dave@intrec.com - removed declarations of the localconfig variables
+# from this location.  We don't want these declared here.  They'll
+# automatically get declared in the process of reading in localconfig, and
+# this way we can look in the symbol table to see if they've been declared
+# yet or not.
 
 # Trim whitespace from front and back.
 
@@ -275,14 +264,7 @@ my $newstuff = "";
 sub LocalVar ($$)
 {
     my ($name, $definition) = @_;
-
-    # Is there a cleaner way to test if the variable defined in scalar $name
-    # is defined or not?
-    my $defined = 0;
-    $_ = "\$defined = 1 if defined $name;";
-    eval $_;
-    return if $defined;
-
+    return if ($main::{$name}); # if localconfig declared it, we're done.
     $newstuff .= " " . $name;
     open FILE, '>>localconfig';
     print FILE $definition, "\n\n";
@@ -296,7 +278,7 @@ sub LocalVar ($$)
 #
 
     
-LocalVar('$::webservergroup', '
+LocalVar('webservergroup', '
 #
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
@@ -309,7 +291,7 @@ $webservergroup = "nobody";
 
 
 
-LocalVar('$::db_host', '
+LocalVar('db_host', '
 #
 # How to access the SQL database:
 #
@@ -318,7 +300,7 @@ $db_port = 3306;                # which port to use
 $db_name = "bugs";              # name of the MySQL database
 $db_user = "bugs";              # user to attach to the MySQL database
 ');
-LocalVar('$::db_pass', '
+LocalVar('db_pass', '
 #
 # Some people actually use passwords with their MySQL database ...
 #
@@ -327,7 +309,7 @@ $db_pass = "";
 
 
 
-LocalVar('$::db_check', '
+LocalVar('db_check', '
 #
 # Should checksetup.pl try to check if your MySQL setup is correct?
 # (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn\'t work)
@@ -336,7 +318,7 @@ $db_check = 1;
 ');
 
 
-LocalVar('@::severities', '
+LocalVar('severities', '
 #
 # Which bug and feature-request severities do you want?
 #
@@ -353,7 +335,7 @@ LocalVar('@::severities', '
 
 
 
-LocalVar('@::priorities', '
+LocalVar('priorities', '
 #
 # Which priorities do you want to assign to bugs and feature-request?
 #
@@ -368,7 +350,7 @@ LocalVar('@::priorities', '
 
 
 
-LocalVar('@::opsys', '
+LocalVar('opsys', '
 #
 # What operatings systems may your products run on?
 #
@@ -408,7 +390,7 @@ LocalVar('@::opsys', '
 
 
 
-LocalVar('@::platforms', '
+LocalVar('platforms', '
 #
 # What hardware platforms may your products run on?
 #
@@ -428,7 +410,7 @@ LocalVar('@::platforms', '
 
 
 if ($newstuff ne "") {
-    print "\nThis version of Bugzilla contains some variables that you may \n",
+    print "\nThis version of Bugzilla contains some variables that you may want\n",
           "to change and adapt to your local settings. Please edit the file\n",
           "'localconfig' and rerun checksetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
@@ -436,8 +418,23 @@ if ($newstuff ne "") {
     exit;
 }
 
-
-
+# 2000-Dec-18 - dave@intrec.com - see Bug 52921
+# This is a hack to read in the values defined in localconfig without getting
+# them predeclared at compile time if they're missing from localconfig.
+# Ideas swiped from pp. 281-282, O'Reilly's "Programming Perl 2nd Edition"
+# Note that we won't need to do this in globals.pl because globals.pl couldn't
+# care less whether they were defined ahead of time or not. 
+my $my_db_check = ${*{$main::{'db_check'}}{SCALAR}};
+my $my_db_host = ${*{$main::{'db_host'}}{SCALAR}};
+my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
+my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
+my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
+my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
+my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
+my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
+my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
+my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
+my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 
 ###########################################################################
@@ -451,7 +448,7 @@ if ($newstuff ne "") {
 unless (-d 'data') {
     print "Creating data directory ...\n";
     mkdir 'data', 0770;
-    if ($::webservergroup eq "") {
+    if ($my_webservergroup eq "") {
         chmod 0777, 'data';
     }
     open FILE, '>>data/comments'; close FILE;
@@ -520,10 +517,10 @@ sub isExecutableFile {
   return undef;
 }
 
-if ($::webservergroup) {
+if ($my_webservergroup) {
     mkdir 'shadow', 0770 unless -d 'shadow';
     # Funny! getgrname returns the GID if fed with NAME ...
-    my $webservergid = getgrnam($::webservergroup);
+    my $webservergid = getgrnam($my_webservergroup);
     # chmod needs to be called with a valid uid, not 0.  $< returns the
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
@@ -568,17 +565,17 @@ use DBI;
 my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
-if ($::db_check) {
+if ($my_db_check) {
     # Do we have the database itself?
 
     my $sql_want = "3.22.5";  # minimum version of MySQL
 
 # original DSN line was:
-#    my $dsn = "DBI:$db_base:$::db_name;$::db_host;$::db_port";
+#    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
 # removed the $db_name because we don't know it exists yet, and this will
 # fail if we request it here and it doesn't. - dave@intrec.com 2000/09/16
-    my $dsn = "DBI:$db_base:;$::db_host;$::db_port";
-    my $dbh = DBI->connect($dsn, $::db_user, $::db_pass);
+    my $dsn = "DBI:$db_base:;$my_db_host;$my_db_port";
+    my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass);
     printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)");
     my $qh = $dbh->prepare("SELECT VERSION()");
     $qh->execute;
@@ -596,12 +593,12 @@ if ($::db_check) {
     }
 
     my @databases = $dbh->func('_ListDBs');
-    unless (grep /^$::db_name$/, @databases) {
-       print "Creating database $::db_name ...\n";
-       $drh->func('createdb', $::db_name, "$::db_host:$::db_port", $::db_user, $::db_pass, 'admin')
+    unless (grep /^$my_db_name$/, @databases) {
+       print "Creating database $my_db_name ...\n";
+       $drh->func('createdb', $my_db_name, "$my_db_host:$my_db_port", $my_db_user, $my_db_pass, 'admin')
             or die <<"EOF"
 
-The '$::db_name' database is not accessible. This might have several reasons:
+The '$my_db_name' database is not accessible. This might have several reasons:
 
 * MySQL is not running.
 * MySQL is running, but the rights are not set correct. Go and read the
@@ -615,10 +612,10 @@ EOF
 }
 
 # now get a handle to the database:
-my $connectstring = "dbi:$db_base:$::db_name:host=$::db_host:port=$::db_port";
-my $dbh = DBI->connect($connectstring, $::db_user, $::db_pass)
+my $connectstring = "dbi:$db_base:$my_db_name:host=$my_db_host:port=$my_db_port";
+my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
     or die "Can't connect to the table '$connectstring'.\n",
-           "Have you read Bugzilla's README?  Have you read the doc of '$::db_name'?\n";
+           "Have you read Bugzilla's README?  Have you read the doc of '$db_base'?\n";
 
 END { $dbh->disconnect if $dbh }
 
@@ -688,15 +685,15 @@ $table{bugs} =
     groupset bigint not null,
     assigned_to mediumint not null, # This is a comment.
     bug_file_loc text,
-    bug_severity enum($severities) not null,
+    bug_severity enum($my_severities) not null,
     bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
     creation_ts datetime not null,
     delta_ts timestamp,
     short_desc mediumtext,
-    op_sys enum($opsys) not null,
-    priority enum($priorities) not null,
+    op_sys enum($my_opsys) not null,
+    priority enum($my_priorities) not null,
     product varchar(64) not null,
-    rep_platform enum($platforms),
+    rep_platform enum($my_platforms),
     reporter mediumint not null,
     version varchar(16) not null,
     component varchar(50) not null,
@@ -933,10 +930,10 @@ my @tables = $dbh->func('_ListTables');
 
 # add lines here if you add more --LOCAL-- config vars that end up in the enums:
 
-my $severities = '"' . join('", "', @::severities) . '"';
-my $priorities = '"' . join('", "', @::priorities) . '"';
-my $opsys      = '"' . join('", "', @::opsys)      . '"';
-my $platforms  = '"' . join('", "', @::platforms)  . '"';
+my $my_severities = '"' . join('", "', @my_severities) . '"';
+my $my_priorities = '"' . join('", "', @my_priorities) . '"';
+my $my_opsys      = '"' . join('", "', @my_opsys)      . '"';
+my $my_platforms  = '"' . join('", "', @my_platforms)  . '"';
 
 # go throught our %table hash and create missing tables
 while (my ($tabname, $fielddef) = each %table) {
@@ -946,10 +943,10 @@ while (my ($tabname, $fielddef) = each %table) {
     # add lines here if you add more --LOCAL-- config vars that end up in
     # the enums:
 
-    $fielddef =~ s/\$severities/$severities/;
-    $fielddef =~ s/\$priorities/$priorities/;
-    $fielddef =~ s/\$opsys/$opsys/;
-    $fielddef =~ s/\$platforms/$platforms/;
+    $fielddef =~ s/\$my_severities/$my_severities/;
+    $fielddef =~ s/\$my_priorities/$my_priorities/;
+    $fielddef =~ s/\$my_opsys/$my_opsys/;
+    $fielddef =~ s/\$my_platforms/$my_platforms/;
 
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
         or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
@@ -1230,10 +1227,10 @@ sub CheckEnumField ($$@)
 # are ignored.
 #
 
-CheckEnumField('bugs', 'bug_severity', @::severities);
-CheckEnumField('bugs', 'priority',     @::priorities);
-CheckEnumField('bugs', 'op_sys',       @::opsys);
-CheckEnumField('bugs', 'rep_platform', @::platforms);
+CheckEnumField('bugs', 'bug_severity', @my_severities);
+CheckEnumField('bugs', 'priority',     @my_priorities);
+CheckEnumField('bugs', 'op_sys',       @my_opsys);
+CheckEnumField('bugs', 'rep_platform', @my_platforms);
 
 
 
@@ -1868,7 +1865,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 unless (-d 'graphs') {
     print "Creating graphs directory...\n";
     mkdir 'graphs', 0770; 
-    if ($::webservergroup eq "") {
+    if ($my_webservergroup eq "") {
         chmod 0777, 'graphs';
     } 
     
