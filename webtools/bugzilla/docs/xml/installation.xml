@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.62 2004/02/05 01:30:47 justdave%syndicomm.com Exp $ -->
+<!-- $Id: installation.xml,v 1.63 2004/03/06 08:21:08 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1354,7 +1354,7 @@
         </para>
 
         <programlisting>
-C:\perl&gt; <command>ppm &lt;module name&gt;</command>
+C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
         </programlisting>
 
         <note>
@@ -1364,6 +1364,18 @@ C:\perl&gt; <command>ppm &lt;module name&gt;</command>
           suggests using the instructions on <ulink
           url="http://openinteract.sourceforge.net/">OpenInteract's website</ulink>.
           </para>
+  
+          <para>The following commands will install the required packages
+          missing from the ActivePerl default installation:
+          </para>
+
+          <programlisting>
+<command>ppm repository add oi http://openinteract.sourceforge.net/ppmpackages</command>
+<command>ppm install DBD-mysql</command>
+<command>ppm install Template-Toolkit</command>
+<command>ppm install TimeDate</command>
+          </programlisting>
+
         </note>
       </section>
 
