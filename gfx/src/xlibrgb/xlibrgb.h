@@ -85,6 +85,8 @@ struct _XlibRgbCmap {
 
 void
 xlib_rgb_init (Display *display, Screen *screen);
+void
+xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth);
 
 unsigned long
 xlib_rgb_xpixel_from_rgb (uint32 rgb);
