@@ -182,6 +182,19 @@ sub DoEmail {
           . " WHERE watcher = ? AND watch.watched = profiles.userid",
             undef, $userid);
         $vars->{'watchedusers'} = join(',', @$watched_ref);
+
+        my $watcher_ids = $dbh->selectcol_arrayref(
+            "SELECT watcher FROM watch WHERE watched = ?",
+            undef, $userid);
+
+        my @watchers;
+        foreach my $watcher_id (@$watcher_ids) {
+            my $watcher = new Bugzilla::User($watcher_id);
+            push (@watchers, Bugzilla::User::identity($watcher));
+        }
+
+        @watchers = sort { lc($a) cmp lc($b) } @watchers;
+        $vars->{'watchers'} = \@watchers;
     }
 
     SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");

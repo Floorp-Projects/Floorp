@@ -24,6 +24,8 @@
 [%# INTERFACE:
   # watchedusers: string.
   #               Comma-separated list of email addresses this user watches.
+  # watchers:     array.
+  #               Array of users watching this user's account.
   # excludeself:  boolean.
   #               True if user is not receiving self-generated mail.
   # <rolename>:   Multiple hashes, one for each rolename (e.g. owner; see
@@ -61,6 +63,19 @@
       <td>
         <input size="35" name="watchedusers" 
                value="[% watchedusers FILTER html %]">
+      </td>
+    </tr>
+
+    <tr>
+      <th align="right" valign="baseline">Users watching you:</th>
+      <td>
+        [% IF watchers.size %]
+          [% FOREACH watcher = watchers %]
+            [% watcher FILTER html %] <br>
+          [% END %]
+        [% ELSE %]
+          Nobody is currently watching your account.
+        [% END %]
       </td>
     </tr>
   [% END %]
