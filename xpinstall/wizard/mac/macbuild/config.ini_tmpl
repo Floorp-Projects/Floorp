@@ -72,4 +72,4 @@ Target Document=:Mozilla Folder:Mozilla Installer
 [LegacyCheck0]
 Filename=:Mozilla Folder:Mozilla
 Version=5.0.0a.13
-Message=An older installation of Mozilla has been detected in the folder selected. You may select another folder or continue.
+Message=An older installation of Mozilla was detected.  Please choose to delete the directory contents of your current Mozilla installation by hitting the 'Delete' button.  Alternatively, please hit the 'Cancel' button and choose a different destination directory.  
