@@ -1277,3 +1277,17 @@ NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
+{
+  if (!mCharsetOverride.IsEmpty())
+    *aCharacterSet = mCharsetOverride.ToNewUnicode(); 
+  else
+    *aCharacterSet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
+{
+  mCharsetOverride = aCharacterSet;
+  return NS_OK;
+}

@@ -452,3 +452,18 @@ NS_IMETHODIMP nsMailboxUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMailboxUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
+{
+  if (!mCharsetOverride.IsEmpty())
+    *aCharacterSet = mCharsetOverride.ToNewUnicode(); 
+  else
+    *aCharacterSet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
+{
+  mCharsetOverride = aCharacterSet;
+  return NS_OK;
+}

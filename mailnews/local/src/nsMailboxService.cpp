@@ -156,11 +156,12 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
                                           nsISupports * aDisplayConsumer,
                                           nsIMsgWindow * aMsgWindow,
 										                      nsIUrlListener * aUrlListener,
+                                          const PRUnichar * aCharsetOveride,
                                           nsIURI ** aURL)
 {
-    return FetchMessage(aMessageURI, aDisplayConsumer,
-                        aMsgWindow,aUrlListener,
-                        nsIMailboxUrl::ActionDisplayMessage, aURL);
+  return FetchMessage(aMessageURI, aDisplayConsumer,
+                      aMsgWindow,aUrlListener,
+                      nsIMailboxUrl::ActionDisplayMessage, aURL);
 }
 
 /* void OpenAttachment (in nsIURI aURI, in nsISupports aDisplayConsumer, in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, out nsIURI aURL); */
@@ -177,7 +178,7 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
                                     nsIUrlListener *aUrlListener,
                                     nsIURI **aURL,
                                     PRBool canonicalLineEnding,
-									nsIMsgWindow *aMsgWindow)
+									                  nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;

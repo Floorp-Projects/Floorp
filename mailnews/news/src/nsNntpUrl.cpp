@@ -458,4 +458,19 @@ NS_IMETHODIMP nsNntpUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsNntpUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)
+{
+  if (!mCharsetOverride.IsEmpty())
+    *aCharacterSet = mCharsetOverride.ToNewUnicode(); 
+  else
+    *aCharacterSet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNntpUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
+{
+  mCharsetOverride = aCharacterSet;
+  return NS_OK;
+}
+
 

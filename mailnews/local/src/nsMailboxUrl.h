@@ -80,9 +80,9 @@ protected:
 	nsresult ParseSearchPart();
 
   // truncated message support
-  nsXPIDLCString m_originalSpec;
-
+  nsXPIDLCString m_originalSpec;  
   nsCString mURI; // the RDF URI associated with this url.
+  nsString mCharsetOverride; // used by nsIMsgI18NUrl...
 };
 
 #endif // nsMailboxUrl_h__

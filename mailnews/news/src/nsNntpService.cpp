@@ -152,7 +152,7 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
 }
 
 nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-                                       nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, nsIURI ** aURL)
+                                       nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, const PRUnichar * aCharsetOverride, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
   
@@ -350,7 +350,7 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
     if (!aSrcMailboxURI || !aMailboxCopyHandler) return rv;
     streamSupport = do_QueryInterface(aMailboxCopyHandler, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = DisplayMessage(aSrcMailboxURI, streamSupport, nsnull, aUrlListener, aURL);
+        rv = DisplayMessage(aSrcMailboxURI, streamSupport, nsnull, aUrlListener, nsnull, aURL);
 	return rv;
 }
 
@@ -1253,7 +1253,7 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
                                                   nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
   mPrintingOperation = PR_TRUE;
-  nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, aURL);
+  nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, nsnull, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;
 }

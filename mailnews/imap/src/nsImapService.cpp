@@ -336,6 +336,7 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
                                             nsISupports * aDisplayConsumer,  
                                             nsIMsgWindow * aMsgWindow,
                                             nsIUrlListener * aUrlListener,
+                                            const PRUnichar * aCharsetOverride,
                                             nsIURI ** aURL) 
 {
 	nsresult rv = NS_OK;
@@ -524,7 +525,7 @@ NS_IMETHODIMP nsImapService::DisplayMessageForPrinting(const char* aMessageURI,
                                                         nsIURI ** aURL) 
 {
   mPrintingOperation = PR_TRUE;
-  nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, aURL);
+  nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, nsnull, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;
 }

@@ -65,6 +65,7 @@ protected:
   nsMsgKey	              m_messageKey;
   char *                  m_newsgroupName;	
   nsCString mURI; // the RDF URI associated with this url.
+  nsString mCharsetOverride; // used by nsIMsgI18NUrl...
 };
 
 #endif // nsNntpUrl_h__
