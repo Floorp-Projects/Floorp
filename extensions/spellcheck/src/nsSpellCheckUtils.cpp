@@ -37,6 +37,14 @@
 #include "nsLWBrkCIID.h"
 
 
+/* XXX The platform-specific #defines of IS_NSBSP_CHAR are unnecessary and
+ *     inaccurate. We should be doing the whitespace conversion on the UTF-16
+ *     buffer before the call to aUnicodeEncoder->Convert().
+ *
+ * XXX Should we be converting any other whitespace characters to spaces?
+ *
+ *     See comments in bug 211343.
+ */
 #ifdef XP_MAC
 #define IS_NBSP_CHAR(c) (((unsigned char)0xca)==(c))
 #else
