@@ -117,7 +117,7 @@ interface nsIMsgFolder : nsIFolder {
 
 	void GetExpansionArray(in nsISupportsArray expansionArray);
 
-	void DeleteMessages(in nsISupportsArray message, in nsITransactionManager txnMgr);
+	void DeleteMessages(in nsISupportsArray message, in nsITransactionManager txnMgr,in boolean deleteStorage);
 
     void AcquireSemaphore (in nsISupports semHolder);
     void ReleaseSemaphore (in nsISupports semHolder);
@@ -131,6 +131,7 @@ interface nsIMsgFolder : nsIFolder {
 	attribute long NumNewMessages;
 
 	readonly attribute wstring NewMessagesNotificationDescription;
+	readonly attribute nsIMsgFolder RootFolder;
 };
 
 

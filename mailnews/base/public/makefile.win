@@ -20,6 +20,7 @@ MODULE=msgbase
 
 XPIDLSRCS =								\
 		.\nsIMessenger.idl				\
+		.\nsICopyMessageStreamListener.idl \
 		.\nsICopyMessageListener.idl	\
 		.\nsIFolder.idl					\
 		.\nsIFolderListener.idl			\

@@ -4,6 +4,7 @@
 
 nsIMessenger.idl
 nsICopyMessageListener.idl
+nsICopyMessageStreamListener.idl
 nsIFolder.idl
 nsIFolderListener.idl
 nsIMessage.idl
