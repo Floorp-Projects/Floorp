@@ -161,7 +161,7 @@ nsresult nsAppShell::Run()
    do {
       // Give priority to system messages (in particular keyboard, mouse,
       // timer, and paint messages).
-      if (WinPeekMsg((HAB)0, &mQmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
+      if (WinPeekMsg((HAB)0, &mQmsg, NULL, WM_CHAR, WM_VIOCHAR, PM_REMOVE) ||
           WinPeekMsg((HAB)0, &mQmsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) ||
           WinPeekMsg((HAB)0, &mQmsg, NULL, 0, WM_USER-1, PM_REMOVE) ||
           WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_REMOVE)) {
@@ -250,7 +250,7 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
    do {
       // Give priority to system messages (in particular keyboard, mouse,
       // timer, and paint messages).
-      if (WinPeekMsg((HAB)0, &mQmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
+      if (WinPeekMsg((HAB)0, &mQmsg, NULL, WM_CHAR, WM_VIOCHAR, PM_REMOVE) ||
           WinPeekMsg((HAB)0, &mQmsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
           WinPeekMsg((HAB)0, &mQmsg, NULL, 0, WM_USER-1, PM_REMOVE) || 
           WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_REMOVE)) {
