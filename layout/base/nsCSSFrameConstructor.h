@@ -461,19 +461,6 @@ protected:
                                          nsIPresContext*      aPresContext,
                                          nsIFrame*&           aNewFrame);
 
-  nsresult ConstructButtonLabelFrame(nsIPresShell*        aPresShell, 
-                                     nsIPresContext *aPresContext,
-                                  nsIContent     *aContent,
-												          nsIFrame       *&aFrame, 
-												          nsFrameConstructorState& aState,
-												          nsFrameItems&  aFrameItems);
-  nsresult ConstructButtonFrames(nsIPresShell*        aPresShell, 
-                                 nsIPresContext  *aPresContext,
-                                 nsIContent     *aContent,
-												         nsIFrame       *&aFrame, 
-												         nsFrameConstructorState& aState,
-												         nsFrameItems&  aFrameItems);
-
   nsresult ConstructButtonControlFrame(nsIPresShell*          aPresShell,
                                        nsIPresContext*      	aPresContext,
                                        nsIFrame*&               aNewFrame);
@@ -607,8 +594,7 @@ protected:
                             nsIPresContext  *aPresContext,
                             nsIContent      *aContent, 
                             nsIFrame        *&aFrame,
-                            nsIStyleContext *aStyleContext,
-                            PRBool           &aIsButton);
+                            nsIStyleContext *aStyleContext);
 
   nsresult RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
                                       nsIPresShell *  aPresShell,
