@@ -58,7 +58,6 @@ struct nsStyleDisplay;
 class nsIPresShell;
 class nsVoidArray;
 class nsFrameManager;
-class nsFrameConstructorState;
 class nsIDOMHTMLSelectElement;
 class nsPresContext;
 class nsStyleChangeList;
@@ -514,7 +513,8 @@ private:
                                          nsIContent*      aContent,
                                          nsStyleContext*  aStyleContext);
 
-  // ConstructSelectFrame puts the new frame in aFrameItems
+  // ConstructSelectFrame puts the new frame in aFrameItems and
+  // handles the kids of the select.
   nsresult ConstructSelectFrame(nsIPresShell*            aPresShell, 
                                 nsPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
@@ -523,12 +523,12 @@ private:
                                 nsIAtom*                 aTag,
                                 nsStyleContext*          aStyleContext,
                                 nsIFrame*&               aNewFrame,
-                                PRBool&                  aProcessChildren,
                                 const nsStyleDisplay*    aStyleDisplay,
                                 PRBool&                  aFrameHasBeenInitialized,
                                 nsFrameItems&            aFrameItems);
 
-  // ConstructFieldSetFrame puts the new frame in aFrameItems
+  // ConstructFieldSetFrame puts the new frame in aFrameItems and
+  // handles the kids of the fieldset
   nsresult ConstructFieldSetFrame(nsIPresShell*            aPresShell, 
                                   nsPresContext*          aPresContext,
                                   nsFrameConstructorState& aState,
@@ -538,7 +538,6 @@ private:
                                   nsStyleContext*          aStyleContext,
                                   nsIFrame*&               aNewFrame,
                                   nsFrameItems&            aFrameItems,
-                                  PRBool&                  aProcessChildren,
                                   const nsStyleDisplay*    aStyleDisplay,
                                   PRBool&                  aFrameHasBeenInitialized);
 

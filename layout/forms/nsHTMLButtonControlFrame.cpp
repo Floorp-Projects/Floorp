@@ -308,7 +308,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsPresContext* aPresContext,
   // NOTE: the whole reparenting should not need to happen: see bugzilla bug 51767
   ReParentFrameList(aPresContext->FrameManager(), aChildList);
   
-  return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, aChildList);
+  return mFrames.FirstChild()->SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
 NS_IMETHODIMP
