@@ -34,6 +34,9 @@ var cert;
 
 function onLoad()
 {
+
+  doSetOKCancel(doOK, doCancel, doHelpButton);
+
   pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);
   dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
 
@@ -68,16 +71,19 @@ function doHelpButton()
 
 function doOK()
 {
+  // the user pressed OK
   dialogParams.SetInt(1,1);
   var checkbox = document.getElementById("alwaysAccept");
-  var alwaysAccept = checkbox.getAttribute("checked");
 
-  dialogParams.SetInt(2, (alwaysAccept ? 0 : 1));
+  // 0 = accept perm, 1 = accept for this session - just the opposite
+  // of the checkbox value.
+  dialogParams.SetInt(2, !checkbox.checked);
   window.close();
 }
 
 function doCancel()
 {
+  // the user pressed cancel
   dialogParams.SetInt(1,0);
   window.close();
 }
