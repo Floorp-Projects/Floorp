@@ -91,6 +91,28 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 
 #include "nsITimerManager.h"
 
+BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
+{
+  MSG msg1, msg2, *lpMsg;
+  BOOL b1, b2;
+  b1 = ::PeekMessage(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
+  b2 = ::PeekMessage(&msg2, NULL, WM_IME_SETCONTEXT, WM_IME_KEYUP, PM_NOREMOVE);
+  if (b1 || b2) {
+    if (b1 && b2) {
+      if (msg1.time < msg2.time)
+        lpMsg = &msg1;
+      else
+        lpMsg = &msg2;
+    } else if (b1)
+      lpMsg = &msg1;
+    else
+      lpMsg = &msg2;
+    return ::PeekMessage(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
+  }
+
+  return false;
+}
+
 
 NS_METHOD nsAppShell::Run(void)
 {
@@ -109,7 +131,7 @@ NS_METHOD nsAppShell::Run(void)
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
-     if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
+     if (PeekKeyAndIMEMessage(&msg, NULL) ||
          ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
          ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
