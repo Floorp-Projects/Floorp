@@ -33,173 +33,14 @@
 #include <Gestalt.h>
 
 
-typedef enum {
-  kFontChanged = 1,
-  kColorChanged = 2
-} styleChanges;
-
-typedef struct  {
-	short f;
-	short s;
-	nscolor c;
-	short bi;
-} atsuiLayoutCacheKey;
-
-class ATSUILayoutCache {
-public:
-	ATSUILayoutCache();
-	~ATSUILayoutCache();
-	PRBool Get(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout *txlayout);
-	void Set(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout txlayout);
-	PRBool Get(atsuiLayoutCacheKey *key, ATSUTextLayout *txlayout);
-	void Set(atsuiLayoutCacheKey *key, ATSUTextLayout txlayout);
-	
-private:			
-	struct PLHashTable* mTable;
-	PRUint32 mCount;
-};
-static PR_CALLBACK PLHashNumber hashKey( const void *key)
-{
-	atsuiLayoutCacheKey* real = (atsuiLayoutCacheKey*)key;	
-	return 	real->f + (real-> s << 7) + (real->bi << 12) + real->c;
-}
-static PR_CALLBACK PRIntn compareKeys(const void *v1, const void *v2)
-{
-	atsuiLayoutCacheKey *k1 = (atsuiLayoutCacheKey *)v1;
-	atsuiLayoutCacheKey *k2 = (atsuiLayoutCacheKey *)v2;
-	return (k1->f == k2->f) && (k1->c == k2->c ) && (k1->s == k2->s) && (k1->bi == k2->bi);
-}
-static PR_CALLBACK PRIntn compareValues(const void *v1, const void *v2)
-{
-	ATSUTextLayout t1 = (ATSUTextLayout)v1;
-	ATSUTextLayout t2 = (ATSUTextLayout)v2;
-	return t1 == t2;
-}
-static PR_CALLBACK PRIntn freeHashEntries(PLHashEntry *he, PRIntn i, void *arg)
-{
-	delete (atsuiLayoutCacheKey*) he->key;
-	ATSUDisposeTextLayout( (ATSUTextLayout) he->value);
-	return HT_ENUMERATE_REMOVE;
-}
-ATSUILayoutCache::ATSUILayoutCache()
-{
-	mTable = PL_NewHashTable(8 , (PLHashFunction) hashKey, 
-								(PLHashComparator) compareKeys, 
-								(PLHashComparator) compareValues,
-							nsnull, nsnull);
-	mCount = 0;
-}
-ATSUILayoutCache::~ATSUILayoutCache()
-{
-	if(mTable)
-	{
-		PL_HashTableEnumerateEntries(mTable, freeHashEntries, 0);
-		PL_HashTableDestroy(mTable);
-		mTable = nsnull;
-	}
-}
-PRBool ATSUILayoutCache::Get(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout *txlayout)
-{
-	atsuiLayoutCacheKey k = {font, size,color,  ( b ? 1 : 0 ) + ( i ? 2 : 0 )};
-	return Get(&k, txlayout);
-}
-
-void ATSUILayoutCache::Set(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout txlayout)
-{
-	atsuiLayoutCacheKey k = {font, size,color, ( b ? 1 : 0 ) + ( i ? 2 : 0 )};
-	return Set(&k, txlayout);
-}
-
-PRBool ATSUILayoutCache::Get(atsuiLayoutCacheKey *key, ATSUTextLayout *txlayout)
-{
-	PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashKey(key), key);
-	PLHashEntry *he = *hep;
-	if( he )
-	{
-		*txlayout = (ATSUTextLayout)he-> value;
-		return PR_TRUE;
-	}
-	return PR_FALSE;
-}
-
-void ATSUILayoutCache::Set(atsuiLayoutCacheKey *key, ATSUTextLayout txlayout)
-{
-	atsuiLayoutCacheKey *newKey = new atsuiLayoutCacheKey;
-	newKey->f = key->f; newKey->s = key->s; newKey->bi = key->bi; newKey->c = key->c;
-	
-	PL_HashTableAdd(mTable, newKey, txlayout);
-	mCount ++;
-}
-
-static ATSUILayoutCache* gTxLayoutCache= nsnull;
 #pragma mark -
 
-#ifdef OLDDRAWINGSURFACE
 //------------------------------------------------------------------------
-//	GraphicState and DrawingSurface
+//	GraphicState
 //
-//		Internal classes
 //------------------------------------------------------------------------
-
-class GraphicState
-{
-public:
-  GraphicState();
-  GraphicState(GraphicState* aGS);
-  ~GraphicState();
-
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-	void				Clear();
-	void				Init(nsDrawingSurface aSurface);
-	void				Init(GrafPtr aPort);
-	void				Init(nsIWidget* aWindow);
-	void				Duplicate(GraphicState* aGS);	// would you prefer an '=' operator?
-
-protected:
-	RgnHandle		DuplicateRgn(RgnHandle aRgn);
-
-public:
-  nsTransform2D * 			mTMatrix; 					// transform that all the graphics drawn here will obey
-
-	PRInt32               mOffx;
-  PRInt32               mOffy;
-
-  RgnHandle							mMainRegion;
-  RgnHandle			    		mClipRegion;
-
-  nscolor               mColor;
-  PRInt32               mFont;
-  nsIFontMetrics * 			mFontMetrics;
-	PRInt32               mCurrFontHandle;
-};
-
-
-
-class DrawingSurface
-{
-public:
-	DrawingSurface();
-	~DrawingSurface();
-
-	void						Init(nsDrawingSurface aSurface);
-	void						Init(GrafPtr aPort);
-	void						Init(nsIWidget* aWindow);
-	void						Clear();
-
-	GrafPtr					GetPort()   		{return mPort;}
-	GraphicState*		GetGS()     		{return mGS;}
-
-protected:
-	GrafPtr					mPort;
-	GraphicState*		mGS;
-};
-#else
 
 #define DrawingSurface	nsDrawingSurfaceMac
-
-
-#endif
 
 
 //------------------------------------------------------------------------
@@ -262,12 +103,8 @@ void GraphicState::Init(nsDrawingSurface aSurface)
 {
 	// retrieve the grafPort
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
-#ifdef OLDDRAWINGSURFACE
-	GrafPtr port = surface->GetPort();
-#else
 	GrafPtr port;
 	surface->GetGrafPtr(&port);
-#endif
 
 	// init from grafPort
 	Init(port);
@@ -352,57 +189,7 @@ RgnHandle GraphicState::DuplicateRgn(RgnHandle aRgn)
 
 #pragma mark -
 
-
-#ifdef OLDDRAWINGSURFACE
-DrawingSurface::DrawingSurface()
-{
-	mPort = nsnull;
-	mGS = new GraphicState();
-}
-
-DrawingSurface::~DrawingSurface()
-{
-	Clear();
-}
-
-void DrawingSurface::Clear()
-{
-	if (mGS)
-	{
-		delete mGS;
-		mGS = nsnull;
-	}
-}
-
-void DrawingSurface::Init(nsDrawingSurface aSurface)
-{
-	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
-	mPort = surface->GetPort();
-	mGS->Init(surface);
-}
-
-void DrawingSurface::Init(GrafPtr aPort)
-{
-  mPort = aPort;
-  mGS->Init(aPort);
-}
-
-void DrawingSurface::Init(nsIWidget* aWindow)
-{
-  mPort = static_cast<GrafPtr>(aWindow->GetNativeData(NS_NATIVE_DISPLAY));
-  mGS->Init(aWindow);
-}
-#endif
-
-
-//------------------------------------------------------------------------
-
-#pragma mark -
-
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-PRBool nsRenderingContextMac::gATSUI = PR_FALSE;
-PRBool nsRenderingContextMac::gATSUI_Init = PR_FALSE;
 
 
 
@@ -413,29 +200,16 @@ nsRenderingContextMac::nsRenderingContextMac()
   mP2T							= 1.0f;
   mContext					= nsnull ;
 
-#ifdef OLDDRAWINGSURFACE
-  mOriginalSurface	= new DrawingSurface();
-  mFrontSurface			= new DrawingSurface();
-#else
   mOriginalSurface	= new nsDrawingSurfaceMac();
   mFrontSurface			= new nsDrawingSurfaceMac();
-#endif
 
 	mCurrentSurface		= nsnull;
   mPort							= nsnull;
 	mGS								= nsnull;
 
   mGSStack					= new nsVoidArray();
-  long				version;
-  if(! gATSUI_Init)
-  {
-  	gATSUI =  (::Gestalt(gestaltATSUVersion, &version) == noErr); // turn on ATSUI if it is available
-  	gTxLayoutCache = new ATSUILayoutCache();
-  	gATSUI_Init = PR_TRUE;
-	// gATSUI = PR_FALSE; // force not using ATSUI
-  }
+
   mChanges = kFontChanged | kColorChanged;
-  mLastTextLayout = nsnull;
 }
 
 
@@ -447,13 +221,10 @@ nsRenderingContextMac::~nsRenderingContextMac()
   NS_IF_RELEASE(mContext);
   if (mOriginalSurface)
   {
-#ifdef OLDDRAWINGSURFACE
-		::SetPort(mOriginalSurface->GetPort());
-#else
 		GrafPtr port;
 		mOriginalSurface->GetGrafPtr(&port);
 		::SetPort(port);
-#endif
+
 		::SetOrigin(0,0); 		//¥TODO? Setting to 0,0 may not really reset the state properly.
 													// Maybe we should also restore the GS from mOriginalSurface.
 	}
@@ -506,15 +277,10 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
   mContext = aContext;
   NS_IF_ADDREF(mContext);
  
-#ifdef OLDDRAWINGSURFACE
-	if (mOriginalSurface->GetPort() == nsnull)
+	GrafPtr port;
+	mOriginalSurface->GetGrafPtr(&port);
+	if(port == nsnull)
 		mOriginalSurface->Init(aWindow);
-#else
-		GrafPtr port;
-		mOriginalSurface->GetGrafPtr(&port);
-		if(port == nsnull)
-			mOriginalSurface->Init(aWindow);
-#endif
 
  	// select the surface
 	mFrontSurface->Init(aWindow);
@@ -567,15 +333,10 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
   mContext = aContext;
   NS_IF_ADDREF(mContext);
    
-#ifdef OLDDRAWINGSURFACE
-	if (mOriginalSurface->GetPort() == nsnull)
+	GrafPtr port;
+	mOriginalSurface->GetGrafPtr(&port);
+	if(port==nsnull)
 		mOriginalSurface->Init(aSurface);
-#else
-		GrafPtr port;
-		mOriginalSurface->GetGrafPtr(&port);
-		if(port==nsnull)
-			mOriginalSurface->Init(aSurface);
-#endif
 
 	// select the surface
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
@@ -592,15 +353,10 @@ nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
   mContext = aContext;
   NS_IF_ADDREF(mContext);
  
-#ifdef OLDDRAWINGSURFACE
-	if (mOriginalSurface->GetPort() == nsnull)
+	GrafPtr port;
+	mOriginalSurface->GetGrafPtr(&port);
+	if(port==nsnull)
 		mOriginalSurface->Init(aPort);
-#else
-		GrafPtr port;
-		mOriginalSurface->GetGrafPtr(&port);
-		if(port==nsnull)
-			mOriginalSurface->Init(aPort);
-#endif
 
  	// select the surface
 	mFrontSurface->Init(aPort);
@@ -617,14 +373,8 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface)
 		return;
 
 	mCurrentSurface = aSurface;
-#ifdef OLDDRAWINGSURFACE
-	mPort	= aSurface->GetPort();
+	aSurface->GetGrafPtr(&mPort);
 	mGS		= aSurface->GetGS();
-#else
-		GrafPtr port;
-		aSurface->GetGrafPtr(&mPort);
-		mGS		= aSurface->GetGS();
-#endif
 
 	// quickdraw initialization
   ::SetPort(mPort);
@@ -699,6 +449,8 @@ NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
 {
 	// create a GS
   GraphicState * gs = new GraphicState();
+	if (!gs)
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	// copy the current GS into it
 	gs->Duplicate(mGS);
@@ -790,12 +542,8 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 	// retrieve the surface
 	DrawingSurface* srcSurface = static_cast<DrawingSurface*>(aSrcSurf);
-#ifdef OLDDRAWINGSURFACE
-	GrafPtr srcPort = srcSurface->GetPort();
-#else
-		GrafPtr srcPort;
-		srcSurface->GetGrafPtr(&srcPort);
-#endif
+	GrafPtr srcPort;
+	srcSurface->GetGrafPtr(&srcPort);
 
 	// apply the selected transformations
   PRInt32	x = aSrcX;
@@ -840,11 +588,7 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   else
   {
     destSurface	= mFrontSurface;
-#ifdef OLDDRAWINGSURFACE
-    destPort		= mFrontSurface->GetPort();
-#else
 		mFrontSurface->GetGrafPtr(&destPort);
-#endif
 	}
 
 	// select the destination surface to set the colors
@@ -901,46 +645,6 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
 NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
-#ifdef OLDDRAWINGSURFACE
-	// get depth
-  PRUint32 depth = 8;
-  if (mContext)
-  	mContext->GetDepth(depth);
-
-	// get rect
-  Rect macRect;
-  if (aBounds != nsnull)
-  {
-  	// fyi, aBounds->x and aBounds->y are always 0 here
-  	::SetRect(&macRect, aBounds->x, aBounds->y, aBounds->XMost(), aBounds->YMost());
-  }
-  else
-  	::SetRect(&macRect, 0, 0, 2, 2);
-
-	// create offscreen
-  GWorldPtr offscreenGWorld;
-  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, 0);
-  if (osErr != noErr)
-  	return NS_ERROR_FAILURE;
-
-	// keep the pixels locked... that's how it works on Windows and  we are forced to do
-	// the same because the API doesn't give us any hook to do it at drawing time.
-  ::LockPixels(::GetGWorldPixMap(offscreenGWorld));
-
-	// erase the offscreen area
-	GrafPtr savePort;
-	::GetPort(&savePort);
-	::SetPort((GrafPtr)offscreenGWorld);
-	::EraseRect(&macRect);
-	::SetPort(savePort);
-
-	// return the offscreen surface
-	DrawingSurface* surface = new DrawingSurface();
-	surface->Init((GrafPtr)offscreenGWorld);
- 
-	aSurface = surface;
-#else
-
   PRUint32 depth = 8;
   if (mContext)
   	mContext->GetDepth(depth);
@@ -956,10 +660,11 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
   	::SetRect(&macRect, 0, 0, 2, 2);
 
 	nsDrawingSurfaceMac* surface = new nsDrawingSurfaceMac();
+	if (!surface)
+		return NS_ERROR_OUT_OF_MEMORY;
+
 	surface->Init(depth,macRect.right,macRect.bottom,aSurfFlags);
 	aSurface = surface;	
-
-#endif
 
   return NS_OK;
 }
@@ -978,12 +683,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 
 	// delete the offscreen
 	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
-#ifdef OLDDRAWINGSURFACE
-  GWorldPtr offscreenGWorld = (GWorldPtr)surface->GetPort();
-#else
-		GWorldPtr offscreenGWorld;
-		mOriginalSurface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
-#endif
+	GWorldPtr offscreenGWorld;
+	mOriginalSurface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
 	::DisposeGWorld(offscreenGWorld);
 
@@ -1620,255 +1321,52 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: qdGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
-{
-  // XXX Unicode Broken!!!
-  // we should use TEC here to convert Unicode to different script run
-  nsString nsStr;
-  nsStr.SetString(aString, aLength);
-  char* cStr = nsStr.ToNewCString();
-  GetWidth(cStr, aLength, aWidth);
-  delete[] cStr;
-  if (nsnull != aFontID)
-    *aFontID = 0;
-  return NS_OK;
-}
-
-#define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
-
-ATSUTextLayout nsRenderingContextMac::atsuiGetTextLayout()
-{ 
-	if( 0 != mChanges )
-	{		
-		ATSUTextLayout txLayout;
-		OSStatus err;
-		
-		nsFont *font;
-		nsFontHandle fontNum;
-		mGS->mFontMetrics->GetFont(font);
-		mGS->mFontMetrics->GetFontHandle(fontNum);
-		PRBool aBold = font->weight > NS_FONT_WEIGHT_NORMAL;
-		PRBool aItalic = (NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style);		
-		
-		if(! gTxLayoutCache->Get((short)fontNum, font->size, aBold, aItalic, mGS->mColor,  &txLayout) )
-		{
-			UniChar dmy[1];
-			err = ATSUCreateTextLayoutWithTextPtr (dmy, 0,0,0,0,NULL, NULL, &txLayout);
-
-	 		NS_ASSERTION(noErr == err, "ATSUCreateTextLayoutWithTextPtr failed");
-	 	
-			ATSUStyle				theStyle;
-			err = ATSUCreateStyle(&theStyle);
-	 		NS_ASSERTION(noErr == err, "ATSUCreateStyle failed");
-
-			ATSUAttributeTag 		theTag[3];
-			ByteCount				theValueSize[3];
-			ATSUAttributeValuePtr 	theValue[3];
-
-	 		//--- Font ID & Face -----		
-			ATSUFontID atsuFontID;
-			
-			err = ATSUFONDtoFontID((short)fontNum, (StyleField)((aBold ? bold : normal) | (aItalic ? italic : normal)), &atsuFontID);
-	 		NS_ASSERTION(noErr == err, "ATSUFONDtoFontID failed");
-
-			theTag[0] = kATSUFontTag;
-			theValueSize[0] = (ByteCount) sizeof(ATSUFontID);
-			theValue[0] = (ATSUAttributeValuePtr) &atsuFontID;
-	 		//--- Font ID & Face  -----		
-	 		
-	 		//--- Size -----		
-	 		float  dev2app;
-	 		short fontsize = font->size;
-
-			mContext->GetDevUnitsToAppUnits(dev2app);
-	 		Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
-	 		if( FixRound ( size ) < 9 )
-	 			size = X2Fix(9);
-
-			theTag[1] = kATSUSizeTag;
-			theValueSize[1] = (ByteCount) sizeof(Fixed);
-			theValue[1] = (ATSUAttributeValuePtr) &size;
-	 		//--- Size -----		
-	 		
-	 		//--- Color -----		
-	 		RGBColor color;
-	 		
-			color.red = COLOR8TOCOLOR16(NS_GET_R(mGS->mColor));
-			color.green = COLOR8TOCOLOR16(NS_GET_G(mGS->mColor));
-			color.blue = COLOR8TOCOLOR16(NS_GET_B(mGS->mColor));				
-			theTag[2] = kATSUColorTag;
-			theValueSize[2] = (ByteCount) sizeof(RGBColor);
-			theValue[2] = (ATSUAttributeValuePtr) &color;
-	 		//--- Color -----		
-
-			err =  ATSUSetAttributes(theStyle, 3, theTag, theValueSize, theValue);
-	 		NS_ASSERTION(noErr == err, "ATSUSetAttributes failed");
-			 	
-	 		err = ATSUSetRunStyle(txLayout, theStyle, kATSUFromTextBeginning, kATSUToTextEnd);
-	 		NS_ASSERTION(noErr == err, "ATSUSetRunStyle failed");
-		
-		
-			err = ATSUSetTransientFontMatching(txLayout, true);
-	 		NS_ASSERTION(noErr == err, "ATSUSetTransientFontMatching failed");
-	 		
-	 		gTxLayoutCache->Set((short)fontNum, font->size, aBold, aItalic, mGS->mColor,  txLayout);	
-		} 		
-		mLastTextLayout = txLayout;
-		mChanges = 0;
-	}
-	return mLastTextLayout;
-}
-
-NS_IMETHODIMP nsRenderingContextMac :: atsuiGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
-{
-  OSStatus err = noErr;
-  StartDraw();
-
-	// set native font and attributes
-  SetPortTextState();
-  
-  ATSUTextLayout aTxtLayout = atsuiGetTextLayout();
-  ATSUTextMeasurement iAfter; 
-  err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString, 0, aLength, aLength);
-  NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
-  err = ATSUMeasureText( aTxtLayout, 0, aLength, NULL, &iAfter, NULL, NULL );
-  NS_ASSERTION(noErr == err, "ATSUMeasureText failed");
-  
-  aWidth = NSToCoordRound(Fix2Long(FixMul(iAfter , X2Fix(mP2T))));      
-  EndDraw();
-
-  return NS_OK;
-}
-PRBool convertToMacRoman(const PRUnichar *aString, PRUint32 aLength, char* macroman, PRBool onlyAllowASCII);
-
-PRBool convertToMacRoman(const PRUnichar *aString, PRUint32 aLength, char* macroman, PRBool onlyAllowASCII)
-{
-
-	static char map[0x80] = {
-0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,
-0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,
-0xCA, 0xC1,  0xA2, 0xA3,  0x00, 0xB4,  0x00, 0xA4,  0xAC, 0xA9,  0xBB, 0xC7,  0xC2, 0xD0,  0xA8, 0xF8,
-0xA1, 0xB1,  0x00, 0x00,  0xAB, 0xB5,  0xA6, 0xE1,  0xFC, 0x00,  0xBC, 0xC8,  0x00, 0x00,  0x00, 0xC0,
-0xCB, 0xE7,  0xE5, 0xCC,  0x80, 0x81,  0xAE, 0x82,  0xE9, 0x83,  0xE6, 0xE8,  0xED, 0xEA,  0xEB, 0xEC,
-0x00, 0x84,  0xF1, 0xEE,  0xEF, 0xCD,  0x85, 0x78,  0xAF, 0xF4,  0xF2, 0xF3,  0x86, 0x00,  0x00, 0xA7,
-0x88, 0x87,  0x89, 0x8B,  0x8A, 0x8C,  0xBE, 0x8D,  0x8F, 0x8E,  0x90, 0x91,  0x93, 0x92,  0x94, 0x95,
-0x00, 0x96,  0x98, 0x97,  0x99, 0x9B,  0x9A, 0xD6,  0xBF, 0x9D,  0x9C, 0x9E,  0x9F, 0x00,  0x00, 0xD8
-	
-	};
-	static char g2010map[0x40] = {
-0x00,0x00,0x00,0xd0,0xd1,0x00,0x00,0x00,0xd4,0xd5,0xe2,0x00,0xd2,0xd3,0xe3,0x00,  
-0xa0,0xe0,0xa5,0x00,0x00,0x00,0xc9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  
-0xe4,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xdc,0xdd,0x00,0x00,0x00,0x00,0x00,  
-0x00,0x00,0x05,0x00,0xda,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  
-    };
-	const PRUnichar *u = aString;
-	char *c = macroman;
-	if(onlyAllowASCII)
-	{
-		for(PRUint32 i = 0 ; i < aLength ; i++) {
-			if( (*u) & 0xFF80 )
-				return PR_FALSE;
-			*c++ = *u++;
-		}
-	} else {
-	    // XXX we should clean up these by calling the Unicode Converter after cata add x-mac-roman converters there.
-		for(PRUint32 i = 0 ; i < aLength ; i++) {
-			if( (*u) & 0xFF80 ) {
-				char ch;
-				switch( (*u) & 0xFF00 ) 
-				{
-				  case 0x0000:
-				  	ch = map[(*u) & 0x007F];
-					break;
-				  case 0x2000:
-				    if( 0x2202 == *u) {
-				       ch = 0xDB;
-					} else {
-					  if( (*u < 0x2013)  || ( *u > 0x2044))
-				        return PR_FALSE;
-				      ch = g2010map[*u - 0x2010];
-				      if( 0 == ch)
-				        return PR_FALSE;
-				    }
-				    break;
-				  case 0x2100:
-				    if( 0x2122 == *u) ch = 0xAA;
-				    else if( 0x2126 == *u) ch = 0xBD;
-				    else return PR_FALSE;
-				    break;
-				  case 0x2200:
-				  	switch(*u) {
-					    case 0x2202: ch = 0xB6; break;
-					    case 0x2206: ch = 0xBD; break;
-					    case 0x220F: ch = 0xC6; break;
-					    case 0x2211: ch = 0xB8; break;
-					    case 0x221A: ch = 0xB7; break;
-					    case 0x221E: ch = 0xC3; break;
-					    case 0x222B: ch = 0xBA; break;
-					    case 0x2248: ch = 0xC5; break;
-					    case 0x2260: ch = 0xAD; break;
-					    case 0x2264: ch = 0xB2; break;
-					    case 0x2265: ch = 0xB3; break;
-				  		default: return PR_FALSE;
-				  	};
-
-				    break;
-				  case 0x2500:
-				    if( 0x25CA == *u) ch = 0xD7;
-				    else return PR_FALSE;
-				    break;
-				  case 0xF800:
-				    if( 0xF8FF == *u) ch = 0xF0;
-				    else return PR_FALSE;
-				    break;
-				  case 0xFB00:
-				    if( 0xFB01 == *u) ch = 0xDE;
-				    else if( 0xFB02 == *u) ch = 0xDF;
-				    else return PR_FALSE;
-				    break;
-				  default:
-				    return PR_FALSE;
-				}
-				u++;
-				if(ch == 0)
-					return PR_FALSE;				
-				*c++ = ch;
-			} else {
-				*c++ = *u++;
-			}
-		}
-	}
-	return PR_TRUE;
-}
-
 NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
 {
-	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
-	nsresult res = NS_OK;
-	if(aLength< 500)
-	{
-		char buf[500];
-		if(convertToMacRoman(aString, aLength, buf, ! isMacRomanFont))
-		{
-			res = GetWidth(buf, aLength, aWidth);
-			return res;
-		}
-	} else {
-        char* buf = new char[aLength];
-		PRBool useQD = convertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
-		if(useQD)
-			res = GetWidth(buf, aLength, aWidth);
-		delete [] buf;
-		if(useQD)
-			return res;
-	}
+	// First, let's try to convert the Unicode string to MacRoman
+	// and measure it as a C-string by using QuickDraw
 
-	if(gATSUI) {
-		return atsuiGetWidth(aString, aLength, aWidth, aFontID);	
+	nsresult res = NS_OK;
+	char buffer[500];
+	char* buf = (aLength <= 500 ? buffer : new char[aLength]);
+	if (!buf)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
+	PRBool useQD = nsATSUIUtils::ConvertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
+
+	if (useQD)
+		res = GetWidth(buf, aLength, aWidth);
+
+	if (buf != buffer)
+		delete[] buf;
+
+	if (useQD)
+		return res;
+
+
+	// If the string cannot be converted to MacRoman, let's draw it by using ATSUI.
+	// If ATSUI is not available, measure the C-string without conversion.
+
+	if (nsATSUIUtils::IsAvailable())
+	{
+		mATSUIToolkit.PrepareToDraw((mChanges & (kFontChanged | kColorChanged) != 0), mGS, mPort, mContext);
+		res = mATSUIToolkit.GetWidth(aString, aLength, aWidth, aFontID);	
 	}
-	else {
-		return qdGetWidth(aString, aLength, aWidth, aFontID);
+	else
+	{
+		// XXX Unicode Broken!!! We should use TEC here to convert Unicode to different script run
+		nsString nsStr;
+		nsStr.SetString(aString, aLength);
+		char* cStr = nsStr.ToNewCString();
+
+		res = GetWidth(cStr, aLength, aWidth);
+
+		delete[] cStr;
+		if (nsnull != aFontID)
+			*aFontID = 0;
 	}
+  return res;
 }
 
 
@@ -1879,6 +1377,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
                                          nscoord aX, nscoord aY,
                                          const nscoord* aSpacing)
 {
+	nsresult res = NS_OK;
 	StartDraw();
 
 	PRInt32 x = aX;
@@ -1903,149 +1402,78 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
   else
   {
 		int buffer[500];
-		int* spacing = NULL;
-
-		if (aLength > 500)
-		  spacing = new int[aLength];
-		else
-		  spacing = buffer;
-		
-		mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
-		PRInt32 currentX = x;
-		for ( PRInt32 i = 0; i< aLength; i++ )
+		int* spacing = (aLength <= 500 ? buffer : new int[aLength]);
+		if (spacing)
 		{
-			::DrawChar( aString[i] );
-			currentX += spacing[ i ];
-			::MoveTo( currentX, y );
+			mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
+			PRInt32 currentX = x;
+			for (PRInt32 i = 0; i < aLength; i++)
+			{
+				::DrawChar(aString[i]);
+				currentX += spacing[i];
+				::MoveTo(currentX, y);
+			}
+			if (spacing != buffer)
+				delete[] spacing;
 		}
-		// clean up and restore settings
-		if ( (spacing != buffer))
-			delete [] spacing; 
+		else
+			res =  NS_ERROR_OUT_OF_MEMORY;
   }
 
   EndDraw();
-  return NS_OK;
+  return res;
 }
 
 
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: qdDrawString(const PRUnichar *aString, PRUint32 aLength,
-                                         nscoord aX, nscoord aY, PRInt32 aFontID,
-                                         const nscoord* aSpacing)
-{
-	// XXX Unicode Broken!!!
-    // we should use TEC here to convert Unicode to different script run
-  	nsString nsStr;
-	nsStr.SetString(aString, aLength);
-	char* cStr = nsStr.ToNewCString();
-
-	nsresult rv = DrawString(cStr, aLength, aX, aY, aSpacing);
-
-	delete[] cStr;
-	return rv;
-}
-
-NS_IMETHODIMP nsRenderingContextMac :: atsuiDrawString(const PRUnichar *aString, PRUint32 aLength,
-                                         nscoord aX, nscoord aY, PRInt32 aFontID,
-                                         const nscoord* aSpacing)
-{
-  OSStatus err = noErr;
-  
-  PRInt32 x = aX;
-  PRInt32 y = aY;
-  if (mGS->mFontMetrics)
-  {
-		// set native font and attributes
-		SetPortTextState();
-
-		// substract ascent since drawing specifies baseline
-		nscoord ascent = 0;
-		mGS->mFontMetrics->GetMaxAscent(ascent);
-		y += ascent;
-	}
-  mGS->mTMatrix->TransformCoord(&x,&y);
-
-  ATSUTextLayout aTxtLayout = atsuiGetTextLayout();
-  if(NULL == aSpacing) 
-  {
-    err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString, 0, aLength, aLength);
-    NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
-  	err = ATSUDrawText( aTxtLayout, 0, aLength, Long2Fix(x), Long2Fix(y));
-    NS_ASSERTION(noErr == err, "ATSUMeasureText failed");
-  }
-  else
-  {
-    if(aLength < 500)
-    {
-     	int spacing[500];
-	  	mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);  	
-	    for(PRInt32 i = 0; i < aLength; i++)
-	    {
-          err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString+i, 0, 1, 1);
-          NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
-	      err = ATSUDrawText( aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
-	      NS_ASSERTION(noErr == err, "ATSUMeasureText failed");  	
-	      x += spacing[i];
-	    }
-	}
-    else
-    {
-      	int *spacing = new int[aLength];
-	    NS_ASSERTION(NULL != spacing, "memalloc failed");  	
-	  	mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);  	
-	    for(PRInt32 i = 0; i < aLength; i++)
-	    {
-          err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString+i, 0, 1, 1);
-          NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
-	      err = ATSUDrawText( aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
-	      NS_ASSERTION(noErr == err, "ATSUMeasureText failed");  	
-	      x += spacing[i];
-	    }
-      	delete spacing;
-    }
-
-  }
-  return NS_OK;
-
-}
 NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
-
-	// First, let's try to convert to MacRoman and draw by Quick Draw
+	// First, let's try to convert the Unicode string to MacRoman
+	// and draw it as a C-string by using QuickDraw
 		
-	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
 	nsresult res = NS_OK;
-	if(aLength < 500)
-	{
-		char buf[500];
-		if(convertToMacRoman(aString, aLength, buf, ! isMacRomanFont))
-		{
-			res = DrawString(buf, aLength, aX, aY, aSpacing);
-			return res;
-		}
-	} else {
-        char* buf = new char[aLength ];
-		PRBool useQD = convertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
-		if(useQD)
-			res = DrawString(buf, aLength, aX, aY, aSpacing);
-		delete [] buf;
-		if(useQD)
-			return res;
-	}
+	char buffer[500];
+	char* buf = (aLength <= 500 ? buffer : new char[aLength]);
+	if (!buf)
+		return NS_ERROR_OUT_OF_MEMORY;
 
-	// The data cannot be convert to MacRoman, let's draw by using ATSUI if available
-	
-	if(gATSUI) {
-		return atsuiDrawString(aString, aLength, aX, aY, aFontID, aSpacing);	
+	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
+	PRBool useQD = nsATSUIUtils::ConvertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
+
+	if (useQD)
+		res = DrawString(buf, aLength, aX, aY, aSpacing);
+
+	if (buf != buffer)
+		delete[] buf;
+
+	if (useQD)
+		return res;
+
+
+	// If the string cannot be converted to MacRoman, let's draw it by using ATSUI.
+	// If ATSUI is not available, draw the C-string without conversion.
+
+	if (nsATSUIUtils::IsAvailable())
+	{
+		mATSUIToolkit.PrepareToDraw((mChanges & (kFontChanged | kColorChanged) != 0), mGS, mPort, mContext);
+		res = mATSUIToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);	
 	}
-	else {
-		return qdDrawString(aString, aLength, aX, aY, aFontID, aSpacing);
+	else
+	{
+		// XXX Unicode Broken!!! We should use TEC here to convert Unicode to different script run
+		nsString nsStr;
+		nsStr.SetString(aString, aLength);
+		char* cStr = nsStr.ToNewCString();
+
+		res = DrawString(cStr, aLength, aX, aY, aSpacing);
+
+		delete[] cStr;
 	}
-	
+	return res;	
 }
 
 //------------------------------------------------------------------------
