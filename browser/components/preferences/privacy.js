@@ -190,7 +190,7 @@ var gPrivacyPane = {
   
   changeMasterPassword: function ()
   {
-    document.documentElement.openSubDialog("chrome://browser/content/pref/pref-masterpass.xul",
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/changemp.xul",
                                            "", null);
     this.updateMasterPasswordButton();
   },
@@ -210,6 +210,27 @@ var gPrivacyPane = {
       var bundle = document.getElementById("bundlePreferences");
       var button = document.getElementById("setMasterPassword");
       button.label = bundle.getString(noMP ? "setMasterPassword" : "changeMasterPassword");
+      
+      var removeButton = document.getElementById("removeMasterPassword");
+      removeButton.disabled = noMP;
+    }
+  },
+  
+  removeMasterPassword: function ()
+  {
+    var secmodDB = Components.classes["@mozilla.org/security/pkcs11moduledb;1"]
+                              .getService(Components.interfaces.nsIPKCS11ModuleDB); 
+    if (secmodDB.isFIPSEnabled) {
+      var bundle = document.getElementById("bundlePreferences");
+      promptService.alert(window,
+                          bundle.getString("pw_change_failed_title"),
+                          bundle.getString("pw_change2empty_in_fips_mode"));
+    }
+    else {
+      document.documentElement.openSubDialog("chrome://browser/content/preferences/removemp.xul",
+                                             "", null);
+      this.updateMasterPasswordButton();
+      document.getElementById("setMasterPassword").focus();
     }
   },
 };

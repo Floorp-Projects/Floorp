@@ -83,6 +83,9 @@
       <preference id="pref.privacy.disable_button.set_master_password"
                   name="pref.privacy.disable_button.set_master_password"
                   type="bool"/>
+      <preference id="pref.privacy.disable_button.remove_master_password"
+                  name="pref.privacy.disable_button.remove_master_password"
+                  type="bool"/>
     </preferences>
     
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
@@ -137,13 +140,19 @@
                       preference="signon.rememberSignons"/>
           </hbox>
           <separator/>
-          <hbox align="center">
+          <hbox align="start">
             <description flex="1">&masterPassword.intro;</description>
             <!-- XXXben - check for keychain access use -->
-            <button id="setMasterPassword" 
-                    label="&setMasterPassword.label;" accesskey="&setMasterPassword.accesskey;"
-                    oncommand="gPrivacyPane.changeMasterPassword();"
-                    preference="pref.privacy.disable_button.set_master_password"/>
+            <vbox>
+              <button id="setMasterPassword" 
+                      label="&setMasterPassword.label;" accesskey="&setMasterPassword.accesskey;"
+                      oncommand="gPrivacyPane.changeMasterPassword();"
+                      preference="pref.privacy.disable_button.set_master_password"/>
+              <button id="removeMasterPassword"
+                      label="&removeMasterPassword.label;" accesskey="&removeMasterPassword.accesskey;"
+                      oncommand="gPrivacyPane.removeMasterPassword();"
+                      preference="pref.privacy.disable_button.remove_master_password"/>
+            </vbox>
           </hbox>
           <separator flex="1"/>
           <hbox>
