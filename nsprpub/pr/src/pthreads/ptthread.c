@@ -356,12 +356,18 @@ static PRThread* _PR_CreateThread(
     PR_ASSERT(0 == rv);
 #endif /* !defined(_PR_DCETHREADS) */
 
-    if (0 == stackSize) stackSize = (64 * 1024);  /* default == 64K */
+    /*
+     * If stackSize is 0, we use the default pthread stack size.
+     */
+    if (stackSize)
+    {
 #ifdef _MD_MINIMUM_STACK_SIZE
-    if (stackSize < _MD_MINIMUM_STACK_SIZE) stackSize = _MD_MINIMUM_STACK_SIZE;
+        if (stackSize < _MD_MINIMUM_STACK_SIZE)
+            stackSize = _MD_MINIMUM_STACK_SIZE;
 #endif
-    rv = pthread_attr_setstacksize(&tattr, stackSize);
-    PR_ASSERT(0 == rv);
+        rv = pthread_attr_setstacksize(&tattr, stackSize);
+        PR_ASSERT(0 == rv);
+    }
 
     thred = PR_NEWZAP(PRThread);
     if (NULL == thred)
