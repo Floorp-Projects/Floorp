@@ -1,6 +1,63 @@
+--- libpixman-0.1.4/src/pixman.h	2005-03-04 09:25:30.000000000 -0600
++++ libpixman/src/pixman.h	2005-03-29 14:31:51.554583663 -0600
+@@ -49,17 +49,17 @@ DIGITAL DISCLAIMS ALL WARRANTIES WITH RE
+ ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+ DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ SOFTWARE.
+ 
+ ******************************************************************/
+-/* $Id: stdint.diff,v 1.3 2005/03/29 20:53:06 tor%cs.brown.edu Exp $ */
++/* $Id: stdint.diff,v 1.3 2005/03/29 20:53:06 tor%cs.brown.edu Exp $ */
+ 
+ /* libic.h */
+ 
+ /*
+  * Copyright © 1998 Keith Packard
+  *
+  * Permission to use, copy, modify, distribute, and sell this software and its
+  * documentation for any purpose is hereby granted without fee, provided that
+@@ -79,17 +79,17 @@ SOFTWARE.
+  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+  * PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+ 
+ #if defined (__SVR4) && defined (__sun)
+ # include <sys/int_types.h>
+ #else
+-# if defined (__OpenBSD__)
++# if defined (__OpenBSD__) || defined (_AIX)
+ #  include <inttypes.h>
+ # else 
+ #  include <stdint.h>
+ # endif
+ #endif
+ 
+ 
+ #if defined(__cplusplus) || defined(c_plusplus)
 --- cairo-0.4.0/src/cairo-wideint.h	2005-02-22 13:24:50.000000000 -0600
-+++ cairo/src/cairo-wideint.h	2005-03-23 13:00:28.436158473 -0600
-@@ -38,7 +38,15 @@
++++ cairo/src/cairo-wideint.h	2005-03-29 14:32:26.658702759 -0600
+@@ -1,10 +1,10 @@
+ /*
+- * $Id: stdint.diff,v 1.3 2005/03/29 20:53:06 tor%cs.brown.edu Exp $
++ * $Id: stdint.diff,v 1.3 2005/03/29 20:53:06 tor%cs.brown.edu Exp $
+  *
+  * Copyright © 2004 Keith Packard
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it either under the terms of the GNU Lesser General Public
+  * License version 2.1 as published by the Free Software Foundation
+  * (the "LGPL") or, at your option, under the terms of the Mozilla
+  * Public License Version 1.1 (the "MPL"). If you do not alter this
+@@ -33,17 +33,25 @@
+  * Contributor(s):
+  *	Keith R. Packard <keithp@keithp.com>
+  *
+  */
+ 
  #ifndef CAIRO_WIDEINT_H
  #define CAIRO_WIDEINT_H
  
@@ -8,7 +65,7 @@
 +#if defined (__SVR4) && defined (__sun)
 +# include <sys/int_types.h>
 +#else
-+# if defined (__OpenBSD__)
++# if defined (__OpenBSD__) || defined (_AIX)
 +#  include <inttypes.h>
 +# else 
 +#  include <stdint.h>
@@ -17,9 +74,19 @@
  
  /*
   * 64-bit datatypes.  Two separate implementations, one using
+  * built-in 64-bit signed/unsigned types another implemented
+  * as a pair of 32-bit ints
+  */
+ 
+ #define I cairo_private
 --- cairo-0.4.0/src/cairoint.h	2005-03-04 11:57:54.000000000 -0600
-+++ cairo/src/cairoint.h	2005-03-23 13:00:45.667289010 -0600
-@@ -54,7 +54,16 @@
++++ cairo/src/cairoint.h	2005-03-29 14:32:09.936456915 -0600
+@@ -49,17 +49,26 @@
+ #include "config.h"
+ #endif
+ 
+ #include <assert.h>
+ #include <stdlib.h>
  #include <string.h>
  #include <math.h>
  #include <limits.h>
@@ -28,7 +95,7 @@
 +#if defined (__SVR4) && defined (__sun)
 +# include <sys/int_types.h>
 +#else
-+# if defined (__OpenBSD__)
++# if defined (__OpenBSD__) || defined (_AIX)
 +#  include <inttypes.h>
 +# else 
 +#  include <stdint.h>
@@ -37,3 +104,8 @@
  
  #include "cairo.h"
  
+ #if __GNUC__ >= 3 && defined(__ELF__)
+ # define slim_hidden_proto(name)	slim_hidden_proto1(name, INT_##name)
+ # define slim_hidden_def(name)		slim_hidden_def1(name, INT_##name)
+ # define slim_hidden_proto1(name, internal)				\
+   extern __typeof (name) name						\
