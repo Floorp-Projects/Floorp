@@ -1070,7 +1070,7 @@ Boolean MRJContext::loadApplet()
     }
     
     cfref<CFURLRef> documentBase;
-    if (::strncmp(mDocumentBase, "file:", 5) == 0) {
+    if (!TARGET_RT_MAC_MACHO && ::strncmp(mDocumentBase, "file:", 5) == 0) {
         // file: URLs. Need to create the URL from HFS+ style using CFURLCreateWithFileSystemPath.
         // this is to workaround the same problem in bug #108519, Mozilla uses HFS+ paths that are
         // simply converted to '/' delimited URLs. The mach-o build won't have this problem, so
