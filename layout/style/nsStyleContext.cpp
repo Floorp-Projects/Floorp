@@ -68,7 +68,7 @@ public:
                  nsRuleNode* aRuleNode, nsIPresContext* aPresContext);
   virtual ~nsStyleContext();
 
-  void* operator new(size_t sz, nsIPresContext* aPresContext);
+  void* operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW;
   void Destroy();
 
   NS_DECL_ISUPPORTS

@@ -211,8 +211,8 @@ CSSFirstLetterRule::CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet)
 class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet,
                               public nsIStyleRuleProcessor {
 public:
-  void* operator new(size_t size);
-  void* operator new(size_t size, nsIArena* aArena);
+  void* operator new(size_t size) CPP_THROW_NEW;
+  void* operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW;
   void operator delete(void* ptr);
 
   HTMLCSSStyleSheetImpl();

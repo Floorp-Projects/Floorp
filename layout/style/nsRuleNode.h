@@ -437,7 +437,7 @@ friend struct nsRuleList;
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresContext* aContext);
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy();
   static nsILanguageAtomService *gLangService;
 

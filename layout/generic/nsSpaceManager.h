@@ -162,7 +162,7 @@ public:
   nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame);
   ~nsSpaceManager();
 
-  void* operator new(size_t aSize);
+  void* operator new(size_t aSize) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t aSize);
 
   static void Shutdown();

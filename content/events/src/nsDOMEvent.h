@@ -202,7 +202,7 @@ public:
    *  Relies on a recycler to perform the allocation, 
    *  optionally from a pool.
    */
-  void* operator new(size_t sz);
+  void* operator new(size_t sz) CPP_THROW_NEW;
 
   /** Overloaded delete operator. Relies on a recycler to either
     * recycle the object or call the global delete operator, as needed.
