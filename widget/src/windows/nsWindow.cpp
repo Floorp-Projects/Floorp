@@ -497,10 +497,20 @@ void nsWindow::Create(nsIWidget *aParent,
       PreCreateWidget(aInitData);
     }
 
+    // See if the caller wants to explictly set clip children
+    DWORD style = WindowStyle();
+    if (nsnull != aInitData) {
+      if (aInitData->clipChildren) {
+        style |= WS_CLIPCHILDREN;
+      } else {
+        style &= ~WS_CLIPCHILDREN;
+      }
+    }
+
     mWnd = ::CreateWindowEx(WindowExStyle(),
                             WindowClass(),
                             "",
-                            WindowStyle(),
+                            style,
                             aRect.x,
                             aRect.y,
                             aRect.width,
@@ -598,10 +608,20 @@ void nsWindow::Create(nsNativeWidget aParent,
       PreCreateWidget(aInitData);
     }
 
+    // See if the caller wants to explictly set clip children
+    DWORD style = WindowStyle();
+    if (nsnull != aInitData) {
+      if (aInitData->clipChildren) {
+        style |= WS_CLIPCHILDREN;
+      } else {
+        style &= ~WS_CLIPCHILDREN;
+      }
+    }
+
     mWnd = ::CreateWindowEx(WindowExStyle(),
                             WindowClass(),
                             "",
-                            WindowStyle(),
+                            style,
                             aRect.x,
                             aRect.y,
                             aRect.width,

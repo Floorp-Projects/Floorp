@@ -112,7 +112,9 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
  * @see Create member function of nsIWidget
  */
 
-struct nsWidgetInitData { };
+struct nsWidgetInitData {
+  PRPackedBool  clipChildren;  // when painting exclude area occupied by child windows
+};
 
 /**
  * The base class for all the widgets. It provides the interface for
