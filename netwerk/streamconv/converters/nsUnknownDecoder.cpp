@@ -494,7 +494,7 @@ PRBool nsUnknownDecoder::SniffURI(nsIRequest* aRequest)
 // This macro is based on RFC 2046 Section 4.1.2.  Treat any char 0-31
 // except the 9-13 range (\t, \n, \v, \f, \r) as non-text
 #define IS_TEXT_CHAR(ch)                                     \
-  (((unsigned char)(ch)) & 31 != ((unsigned char)(ch)) ||    \
+  ((((unsigned char)(ch)) & 31) != ((unsigned char)(ch)) ||    \
    (9 <= ch && ch <= 13))
 
 PRBool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
