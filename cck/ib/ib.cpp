@@ -349,6 +349,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 					 cdPath + "\\" + Components[i].archive, TRUE);
 	}
 	// Didn't work...
+	CreateRshell ();
 
 	ReplaceINIFile();
 
