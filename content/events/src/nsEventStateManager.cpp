@@ -3147,7 +3147,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   nsIContent *startContent = nsnull;
 
   if (aStart) {
-    presShell->GetPrimaryFrameFor(startContent, &curFocusFrame);
+    presShell->GetPrimaryFrameFor(aStart, &curFocusFrame);
 
     // If there is no frame, we can't navigate from this content node, and we
     // fall back to navigating from the document root.
