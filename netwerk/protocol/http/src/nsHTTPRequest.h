@@ -17,13 +17,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
  */
 
-#ifndef _nsHTTPRequest_h_
-#define _nsHTTPRequest_h_
+#ifndef nsHTTPRequest_h__
+#define nsHTTPRequest_h__
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -96,30 +95,32 @@ public:
         Clone the current request for later use. Release it
         after you are done.
     */
-    nsresult            Clone(const nsHTTPRequest* *o_Copy) const;
+    nsresult    Clone(const nsHTTPRequest* *o_Copy) const;
                         
-    nsresult            SetHTTPVersion (PRUint32   i_Version);
-    nsresult            GetHTTPVersion (PRUint32 * o_Version);
+    nsresult    SetHTTPVersion (PRUint32   i_Version);
+    nsresult    GetHTTPVersion (PRUint32 * o_Version);
 
-    nsresult            SetMethod(nsIAtom *aMethod);
-    nsIAtom            *Method() const { return mMethod; }
+    nsresult    SetMethod(nsIAtom *aMethod);
+    nsIAtom    *Method() { return mMethod; }
                         
-    nsresult            SetPriority(); // TODO 
-    nsresult            GetPriority(); //TODO
+    nsresult    SetPriority(); // TODO 
+    nsresult    GetPriority(); //TODO
 
-    nsresult            GetHeaderEnumerator(nsISimpleEnumerator** aResult);
+    nsresult    GetHeaderEnumerator(nsISimpleEnumerator** aResult);
         
-    nsresult            GetConnection(nsHTTPChannel** o_Connection);
-    nsresult            SetConnection(nsHTTPChannel*  i_Connection);
+    nsresult    GetConnection(nsHTTPChannel** o_Connection);
+    nsresult    SetConnection(nsHTTPChannel*  i_Connection);
 
-    nsresult            SetTransport (nsITransport * aTransport);
-    nsresult            GetTransport (nsITransport **aTransport);
+    nsresult    SetTransport (nsITransport * aTransport);
+    nsresult    GetTransport (nsITransport **aTransport);
 
-    nsresult            GetUploadStream(nsIInputStream** o_UploadStream);
-    nsresult            SetUploadStream(nsIInputStream* i_UploadStream);
+    nsresult    GetUploadStream(nsIInputStream** o_UploadStream);
+    nsresult    SetUploadStream(nsIInputStream* i_UploadStream);
 
-    nsresult            SetOverrideRequestSpec(const char* i_Spec);
-    nsresult            GetOverrideRequestSpec(char** o_Spec);
+    nsresult    SetOverrideRequestSpec(const char* i_Spec);
+    nsresult    GetOverrideRequestSpec(char** o_Spec);
+
+    const char *Spec() { return (const char *) mSpec; }
 
     // for POST or PUT data...
     nsCOMPtr<nsIInputStream>    mInputStream;
@@ -234,13 +235,13 @@ private:
     nsHTTPHandler*          mHandler;
     nsCString               mRequestBuffer;
 
-    nsCOMPtr<nsIInputStream>    mInputStream; 
+    nsCOMPtr<nsIInputStream> mInputStream; 
 
     nsXPIDLCString  mHost;
     PRInt32         mPort;
     
-    nsHTTPResponseListener* mListener;
-    PRBool                      mOnStopDone;
+    nsHTTPResponseListener *mListener;
+    PRBool                  mOnStopDone;
 };
 
-#endif /* _nsHTTPRequest_h_ */
+#endif /* !defined(nsHTTPRequest_h__) */
