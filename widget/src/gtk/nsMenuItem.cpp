@@ -41,7 +41,6 @@ static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-//NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -98,8 +97,6 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
-  NS_IF_RELEASE(mMenuParent);
-  NS_IF_RELEASE(mPopUpParent);
   NS_IF_RELEASE(mTarget);
 }
 
@@ -110,7 +107,6 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
                         PRBool         aIsSeparator)
 {
   mTarget  = aMBParent;
-  //mCommand = aCommand;
   mLabel   = aLabel;
 
   if (NULL == aParent || nsnull == aMBParent) {
@@ -218,7 +214,6 @@ NS_METHOD nsMenuItem::Create(nsIMenu        * aParent,
   }
 
   mMenuParent = aParent;
-  NS_ADDREF(mMenuParent);
 
   nsIWidget   * widget  = nsnull; // MenuBar's Parent
   nsISupports * sups;
@@ -239,7 +234,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
                              PRUint32        aCommand)
 {
   mPopUpParent = aParent;
-  NS_ADDREF(mPopUpParent);
+  //NS_ADDREF(mPopUpParent);
 
   nsIWidget * widget = nsnull;
   if (NS_OK != aParent->GetParent(widget)) {
