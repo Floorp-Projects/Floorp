@@ -50,4 +50,12 @@ extern nsresult NS_NewMathMLmsqrtFrame( nsIPresShell* aPresShell, nsIFrame** aNe
 extern nsresult NS_NewMathMLmrootFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmactionFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
+extern nsresult NS_NewMathMLmathBlockFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmathInlineFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+inline nsresult NS_NewMathMLmathFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsBlock)
+{
+ return (aIsBlock)
+   ? NS_NewMathMLmathBlockFrame(aPresShell, aNewFrame)
+   : NS_NewMathMLmathInlineFrame(aPresShell, aNewFrame);
+}
 #endif /* nsMathMLParts_h___ */

@@ -69,11 +69,9 @@ public:
     // "false", within superscript, but leaves both attributes unchanged within base.
     // 2. The TeXbook (Ch 17. p.141) says the superscript *inherits* the compression,
     // so we don't set the compression flag. Our parent will propagate its own.
-    UpdatePresentationDataFromChildAt(1, -1, 1,
+    UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
       ~NS_MATHML_DISPLAYSTYLE,
        NS_MATHML_DISPLAYSTYLE);
-    // switch the style of the superscript
-    InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator
     EmbellishOperator();
     return rv;
@@ -84,11 +82,6 @@ protected:
   virtual ~nsMathMLmsupFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
-
-private:
-  nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
-                         // = 0.5pt in plain TeX
-  nscoord mSupScriptShift;
 };
 
 #endif /* nsMathMLmsupFrame_h___ */

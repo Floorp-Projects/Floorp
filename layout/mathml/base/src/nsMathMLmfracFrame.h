@@ -104,14 +104,12 @@ public:
     //    while the denominator is compressed
     PRInt32 increment =
        NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) ? 0 : 1;
-    UpdatePresentationDataFromChildAt(0, -1, increment,
+    UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
       ~NS_MATHML_DISPLAYSTYLE,
        NS_MATHML_DISPLAYSTYLE);
-    UpdatePresentationDataFromChildAt(1,  1, 0,
+    UpdatePresentationDataFromChildAt(aPresContext, 1,  1, 0,
        NS_MATHML_COMPRESSED,
        NS_MATHML_COMPRESSED);
-    // switch the style of the numerator and denominator if necessary
-    InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator
     EmbellishOperator();
     return rv;

@@ -42,7 +42,7 @@ class nsMathMLmactionFrame : public nsMathMLContainerFrame,
 public:
   friend nsresult NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,

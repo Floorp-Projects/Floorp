@@ -186,38 +186,31 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   nsHTMLReflowMetrics baseSize(nsnull);
   nsHTMLReflowMetrics indexSize(nsnull);
   nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) 
-  {
-    if (!IsOnlyWhitespace(childFrame)) {
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         childFrame, availSize);
-      rv = ReflowChild(childFrame, aPresContext,
-                       childDesiredSize, childReflowState, childStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      if (0 == count) {
-        // base 
-        baseFrame = childFrame;
-        baseSize = childDesiredSize;
-        bmBase = childDesiredSize.mBoundingMetrics;
-      }
-      else if (1 == count) {
-        // index
-        indexFrame = childFrame;
-        indexSize = childDesiredSize;
-        bmIndex = childDesiredSize.mBoundingMetrics;
-      }
-      count++;
+  while (childFrame) {
+    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+                                       childFrame, availSize);
+    rv = ReflowChild(childFrame, aPresContext,
+                     childDesiredSize, childReflowState, childStatus);
+    //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
+    if (NS_FAILED(rv)) return rv;
+    if (0 == count) {
+      // base 
+      baseFrame = childFrame;
+      baseSize = childDesiredSize;
+      bmBase = childDesiredSize.mBoundingMetrics;
     }
+    else if (1 == count) {
+      // index
+      indexFrame = childFrame;
+      indexSize = childDesiredSize;
+      bmIndex = childDesiredSize.mBoundingMetrics;
+    }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
-  if ((2 != count) || !baseFrame || !indexFrame) {
-#ifdef NS_DEBUG
-    printf("mroot: invalid markup\n");
-#endif
+  if (2 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return ReflowError(aPresContext, renderingContext, aDesiredSize);
   }
 
@@ -232,6 +225,7 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
 
   nscoord ruleThickness, leading;
   GetRuleThickness(renderingContext, fm, ruleThickness);
+  fm->GetLeading(leading);
 
   // Rule 11, App. G, TeXbook
   // psi = clearance between rule and content
@@ -267,9 +261,6 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   if (ruleThickness < onePixel) {
     ruleThickness = onePixel;
   }
-  // get the leading to be left at the top of the resulting frame 
-  float em = float(font.mFont.size);
-  leading = nscoord(0.2f * em);
 
   // adjust clearance psi to absorb any excess difference if any
   // in height between radical and content

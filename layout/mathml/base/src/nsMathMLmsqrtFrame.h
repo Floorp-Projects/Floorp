@@ -96,7 +96,7 @@ public:
     //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
     //    unchanged within all its arguments.
     // 2. The TeXBook (Ch 17. p.141) says that \sqrt is cramped 
-    UpdatePresentationDataFromChildAt(0, -1, 0,
+    UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
        NS_MATHML_COMPRESSED,
        NS_MATHML_COMPRESSED);
     return rv;

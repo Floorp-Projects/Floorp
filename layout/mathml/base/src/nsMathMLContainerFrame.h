@@ -32,7 +32,7 @@
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
-#include "nsIMathMLFrame.h"
+#include "nsMathMLFrame.h"
 #include "nsMathMLParts.h"
 
 #include "nsCSSValue.h"
@@ -44,44 +44,26 @@
  * The Reflow() method relies upon Place() to position children.
  * By overloading Place() in derived classes, it is therefore possible
  * to position children in various customized ways.
- * 
- * This frame is a *math-aware frame* in the sense that given the markup
- * <tag>base arguments</tag>, the method InsertScriptLevelStyleContext()
- * can be used to render the 'base' in normal-font, and the 'arguments'
- * in small-font. This is a common functionality to tags like msub, msup, 
- * msubsup, mover, munder, munderover, mmultiscripts. All are  derived 
- * from this base class. They use SetInitialChildList() to trigger
- * InsertScriptLevelStyleContext() for the very first time as soon as all
- * their children are known. However, each of these tags has its own 
- * Reflow() and/or Place() methods to lay its children as appropriate,
- * thus overriding the default behavior in this base class.
- * 
- * Other tags like mi that do not have 'arguments' can be derived from
- * this base class as well. The class caters for empty arguments.
- * Notice that mi implements its own SetInitialChildList() method 
- * to switch to a normal-font (rather than italics) if its text content 
- * is not a single character (as per the MathML REC).
- * 
  */
 
-class nsMathMLContainerFrame : public nsHTMLContainerFrame, public nsIMathMLFrame {
+// Parameters to handle the change of font-size induced by changing the
+// scriptlevel. These are hard-coded values that match with the rules in
+// mathml.css. Note that mScriptLevel can exceed these bounds, but the
+// scaling effect on the font-size will be bounded. The following bounds can
+// be expanded provided the new corresponding rules are added in mathml.css.
+#define NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT  +5
+#define NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT  -5
+#define NS_MATHML_SCRIPTSIZEMULTIPLIER             0.71f
+#define NS_MATHML_SCRIPTMINSIZE                    8
+
+class nsMathMLContainerFrame : public nsHTMLContainerFrame,
+                               public nsMathMLFrame {
 public:
 
-  // nsIMathMLFrame methods  -- see documentation in nsIMathMLFrame.h
+  NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD
-  GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics);
-
-  NS_IMETHOD
-  SetBoundingMetrics(const nsBoundingMetrics& aBoundingMetrics);
-
-  NS_IMETHOD
-  GetReference(nsPoint& aReference);
-
-  NS_IMETHOD
-  SetReference(const nsPoint& aReference);
+  // --------------------------------------------------------------------------
+  // Overloaded nsMathMLFrame methods -- see documentation in nsIMathMLFrame.h
 
   NS_IMETHOD
   Stretch(nsIPresContext*      aPresContext,
@@ -89,12 +71,7 @@ public:
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize);
-#if 0
-  NS_IMETHOD
-  GetDesiredStretchSize(nsIPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        nsBoundingMetrics&   aDesiredStretchSize);
-#endif
+
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
@@ -105,30 +82,20 @@ public:
   EmbellishOperator();
 
   NS_IMETHOD
-  GetEmbellishData(nsEmbellishData& aEmbellishData);
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
-  SetEmbellishData(const nsEmbellishData& aEmbellishData);
+  ReResolveScriptStyle(nsIPresContext*  aPresContext,
+                       nsIStyleContext* aParentContext,
+                       PRInt32          aParentScriptLevel);
 
-  NS_IMETHOD
-  GetPresentationData(nsPresentationData& aPresentationData);
-
-  NS_IMETHOD
-  SetPresentationData(const nsPresentationData& aPresentationData);
-
-  NS_IMETHOD
-  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                         PRUint32 aFlagsValues,
-                         PRUint32 aFlagsToUpdate);
-
-  NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
-                                    PRInt32  aLastIndex,
-                                    PRInt32  aScriptLevelIncrement,
-                                    PRUint32 aFlagsValues,
-                                    PRUint32 aFlagsToUpdate);
-
-  // nsHTMLContainerFrame methods
+  // --------------------------------------------------------------------------
+  // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
  
   NS_IMETHOD
   GetFrameType(nsIAtom** aType) const;
@@ -164,13 +131,21 @@ public:
     return nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
   }
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aChild,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aHint);
+
   NS_IMETHOD 
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
-#endif
+
+  // --------------------------------------------------------------------------
+  // Additional methods 
 
   // error handlers to report than an error (typically invalid markup)
   // was encountered during reflow. By default the user will see the
@@ -216,18 +191,23 @@ public:
                                              0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   }
 
+  // helper to add the inter-spacing when <math> is the immediate parent.
+  // Since we don't (yet) handle the root <math> element ourselves, we need to
+  // take special care of the inter-frame spacing on elements for which <math>
+  // is the direct xml parent. This function will be repeatedly called from
+  // left to right on the childframes of <math>, and by so doing it will
+  // emulate the spacing that would have been done by a <mrow> container.
+  // e.g., it fixes <math> <mi>f</mi> <mo>q</mo> <mi>f</mi> <mo>I</mo> </math>
+  virtual nsresult
+  FixInterFrameSpacing(nsIPresContext*      aPresContext,
+                       nsHTMLReflowMetrics& aDesiredSize);
+
   // helper method to complete the post-reflow hook and ensure that embellished
   // operators don't terminate their Reflow without receiving a Stretch command.
   virtual nsresult
   FinalizeReflow(nsIPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  nsHTMLReflowMetrics& aDesiredSize);
-
-  // helper method to alter the style contexts of subscript/superscript elements
-  // XXX this is pretty much a hack until the content model caters for MathML and
-  // the style system has some provisions for MathML
-  virtual nsresult
-  InsertScriptLevelStyleContext(nsIPresContext* aPresContext);
 
   // helper to give a style context suitable for doing the stretching to the
   // MathMLChar. Frame classes that use this should make the extra style contexts
@@ -239,23 +219,9 @@ public:
                          nsIStyleContext* aParenStyleContext,
                          nsMathMLChar*    aMathMLChar);
 
-  // helper to find the smallest font-size on a tree so that we don't insert
-  // scriptlevel fonts that lead to unreadable results on deeper nodes below us.
-  // XXX expensive recursive function, need something better, with cache
-  static PRInt32
-  FindSmallestFontSizeFor(nsIPresContext* aPresContext,
-                          nsIFrame*       aFrame);
-
   // helper to check if a frame is an embellished container
   static PRBool
   IsEmbellishOperator(nsIFrame* aFrame);
-
-  // helper methods for processing empty MathML frames (with whitespace only)
-  static void
-  ReflowEmptyChild(nsIPresContext* aPresContext,
-                   nsIFrame*       aFrame);
-  static PRBool
-  IsOnlyWhitespace(nsIFrame* aFrame);
 
   // helper method to facilitate getting the reflow and bounding metrics
   // IMPORTANT: This function is only meant to be called in Place() methods 
@@ -301,6 +267,21 @@ public:
     aItalicCorrection = aBoundingMetrics.rightBearing - aBoundingMetrics.width;
     if (0 > aItalicCorrection) {
       aItalicCorrection = 0;
+    }
+  }
+
+  static void
+  GetItalicCorrection(nsBoundingMetrics& aBoundingMetrics,
+                      nscoord&           aLeftItalicCorrection,
+                      nscoord&           aRightItalicCorrection)
+  {
+    aRightItalicCorrection = aBoundingMetrics.rightBearing - aBoundingMetrics.width;
+    if (0 > aRightItalicCorrection) {
+      aRightItalicCorrection = 0;
+    }
+    aLeftItalicCorrection = -aBoundingMetrics.leftBearing;
+    if (0 > aLeftItalicCorrection) {
+      aLeftItalicCorrection = 0;
     }
   }
 
@@ -480,53 +461,78 @@ public:
                 nscoord&             aAxisHeight);
 
 protected:
-
-  // information about the presentation policy of the frame
-  nsPresentationData mPresentationData;
-
-  // information about a container that is an embellished operator
-  nsEmbellishData mEmbellishData;
-  
-  // Metrics that _exactly_ enclose the text of the frame
-  nsBoundingMetrics mBoundingMetrics;
-  
-  // Reference point of the frame: mReference.y is the baseline
-  nsPoint mReference; 
-  
   virtual PRIntn GetSkipSides() const { return 0; }
 };
 
-// XXX hack until the content model caters for MathML and the style system 
-// has some provisions for MathML
-class nsMathMLWrapperFrame : public nsMathMLContainerFrame {
+
+// --------------------------------------------------------------------------
+// Currently, to benefit from line-breaking inside the <math> element, <math> is
+// simply mapping to nsBlockFrame or nsInlineFrame.
+// A separate implemention needs to provide:
+// 1) line-breaking
+// 2) proper inter-frame spacing
+// 3) firing of Stretch() (in which case FinalizeReflow() would have to be cleaned)
+// Issues: If/when mathml becomes a pluggable component, the separation will be needed.
+class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
-  friend nsresult NS_NewMathMLWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList)
+  {
+    nsresult rv;
 
-  NS_IMETHOD
-  Place(nsIPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize);
+    rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  NS_IMETHOD 
-  Paint(nsIPresContext*      aPresContext,
-        nsIRenderingContext& aRenderingContext,
-        const nsRect&        aDirtyRect,
-        nsFramePaintLayer    aWhichLayer);
-#endif
+    // re-resolve our subtree to set any mathml-expected scriptsizes
+    nsIFrame* childFrame = aChildList; // mFrames is not used by nsBlockFrame
+    while (childFrame) {
+      nsIMathMLFrame* mathMLFrame;
+      nsresult res = childFrame->QueryInterface(
+        NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(res) && mathMLFrame) {
+        mathMLFrame->ReResolveScriptStyle(aPresContext, mStyleContext, 0);
+      }
+      childFrame->GetNextSibling(&childFrame);
+    }
+    return rv;
+  }
 
 protected:
-  nsMathMLWrapperFrame();
-  virtual ~nsMathMLWrapperFrame();
-  
-  virtual PRIntn GetSkipSides() const { return 0; }
+  nsMathMLmathBlockFrame() {}
+  virtual ~nsMathMLmathBlockFrame() {}
 };
 
+class nsMathMLmathInlineFrame : public nsInlineFrame {
+public:
+  friend nsresult NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+  NS_IMETHOD
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList)
+  {
+    nsresult rv;
+    rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+    // re-resolve our subtree to set any mathml-expected scriptsizes
+    nsIFrame* childFrame = mFrames.FirstChild();
+    while (childFrame) {
+      nsIMathMLFrame* mathMLFrame;
+      nsresult res = childFrame->QueryInterface(
+        NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(res) && mathMLFrame) {
+        mathMLFrame->ReResolveScriptStyle(aPresContext, mStyleContext, 0);
+      }
+      childFrame->GetNextSibling(&childFrame);
+    }
+    return rv;
+  }
+
+protected:
+  nsMathMLmathInlineFrame() {}
+  virtual ~nsMathMLmathInlineFrame() {}
+};
 #endif /* nsMathMLContainerFrame_h___ */

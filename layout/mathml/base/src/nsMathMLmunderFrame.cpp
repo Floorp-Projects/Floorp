@@ -119,16 +119,14 @@ XXX The winner is the outermost setting in conflicting settings like these:
   nsIFrame* underscriptFrame = nsnull;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      count++;
-      if (1 == count) baseFrame = childFrame;
-      if (2 == count) { underscriptFrame = childFrame; break; }
-    }
+    if (0 == count) baseFrame = childFrame;
+    if (1 == count) { underscriptFrame = childFrame; break; }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
 
   nsIMathMLFrame* underscriptMathMLFrame = nsnull;
-  nsIMathMLFrame* aMathMLFrame = nsnull;
+  nsIMathMLFrame* mathMLFrame = nsnull;
   nsEmbellishData embellishData;
   nsAutoString value;
 
@@ -147,9 +145,9 @@ XXX The winner is the outermost setting in conflicting settings like these:
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-      if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-        aMathMLFrame->GetEmbellishData(embellishData);
+      rv = mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        mathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
           mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
         }
@@ -164,9 +162,9 @@ XXX The winner is the outermost setting in conflicting settings like these:
       underscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the underscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
-        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-        if (NS_SUCCEEDED(rv) && aMathMLFrame) {
-          aMathMLFrame->GetEmbellishData(embellishData);
+        rv = embellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (NS_SUCCEEDED(rv) && mathMLFrame) {
+          mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
           if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
@@ -174,7 +172,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
           {
             if (value.EqualsWithConversion("true")) embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
             else if (value.EqualsWithConversion("false")) embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
-            aMathMLFrame->SetEmbellishData(embellishData);
+            mathMLFrame->SetEmbellishData(embellishData);
           }
 
           // sync the presentation data: record whether we have an accentunder
@@ -199,13 +197,10 @@ XXX The winner is the outermost setting in conflicting settings like these:
     underscriptMathMLFrame->UpdatePresentationData(increment,
       ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
-    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
       ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
   }
-
-  // switch the style of the underscript
-  InsertScriptLevelStyleContext(aPresContext);
 
   return rv;
 }
@@ -238,7 +233,7 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   nsresult rv = NS_OK;
 
   if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
-       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     // place like subscript
     return nsMathMLmsubFrame::PlaceSubScript(aPresContext,
                                              aRenderingContext,
@@ -259,27 +254,22 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
 
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      if (0 == count) {
-        // base 
-        baseFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
-      }
-      else if (1 == count) {
-        // under
-        underFrame = childFrame;
-        GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
-      }
-      count++;
+    if (0 == count) {
+      // base 
+      baseFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
     }
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+    else if (1 == count) {
+      // under
+      underFrame = childFrame;
+      GetReflowAndBoundingMetricsFor(underFrame, underSize, bmUnder);
+    }
+    count++;
+    childFrame->GetNextSibling(&childFrame);
   }
-  if ((2 != count) || !baseFrame || !underFrame) {
-#ifdef NS_DEBUG
-    printf("munder: invalid markup");
-#endif
+  if (2 != count) {
     // report an error, encourage people to get their markups in order
+    NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
 
@@ -324,7 +314,7 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
     delta2 = ruleThickness;
   }
   // empty under?
-  if (0 == (bmUnder.ascent + bmUnder.descent)) delta1 = 0;
+  if (!(bmUnder.ascent + bmUnder.descent)) delta1 = 0;
 
   mBoundingMetrics.ascent = bmBase.ascent;
   mBoundingMetrics.descent = 
@@ -357,7 +347,6 @@ nsMathMLmunderFrame::Place(nsIPresContext*      aPresContext,
   if (aPlaceOrigin) {
     nscoord dy = 0;
     // place base
-    dy = 0;
     FinishReflowChild(baseFrame, aPresContext, baseSize, dxBase, dy, 0);
     // place underscript
     dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent - underSize.ascent;

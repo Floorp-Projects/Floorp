@@ -60,10 +60,8 @@ public:
     // displaystyle to "false", within each of its arguments except base, but
     // leaves both attributes unchanged within base. 
     // XXX Need to update the compression flags in the sub/sup pairs as per TeX
-    UpdatePresentationDataFromChildAt(1, -1, 1,
+    UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
       ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
-    // switch the style of the postscripts and prescripts
-    InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator
     EmbellishOperator();
     return rv;

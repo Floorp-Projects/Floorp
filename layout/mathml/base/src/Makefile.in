@@ -39,6 +39,7 @@ LOCAL_INCLUDES = \
 	$(NULL)
 
 CPPSRCS =         nsMathMLChar.cpp		        \
+                  nsMathMLFrame.cpp		\
                   nsMathMLContainerFrame.cpp		\
                   nsMathMLmrowFrame.cpp		        \
                   nsMathMLmphantomFrame.cpp		\
