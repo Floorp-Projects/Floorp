@@ -67,6 +67,8 @@ private:
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
+// this is the nsWindow with the focus
+nsWidget *nsWidget::focusWindow = NULL;
 
 nsIRollupListener *nsWidget::gRollupListener = nsnull;
 nsIWidget         *nsWidget::gRollupWidget = nsnull;
@@ -126,9 +128,7 @@ nsWidget::nsWidget()
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
-  mIsDestroying = PR_FALSE;
   mIsDragDest = PR_FALSE;
-  mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
 
   if (NS_OK == nsComponentManager::CreateInstance(kRegionCID,
@@ -149,7 +149,7 @@ nsWidget::nsWidget()
   mIMECompositionUniString = nsnull;
   mIMECompositionUniStringSize = 0;
   mListenForResizes = PR_FALSE;
-
+  mHasFocus = PR_FALSE;
 }
 
 nsWidget::~nsWidget()
@@ -161,10 +161,10 @@ nsWidget::~nsWidget()
 
   NS_IF_RELEASE(mUpdateArea);
 
-  mIsDestroying = PR_TRUE;
-  if (nsnull != mWidget) {
-    Destroy();
-  }
+  // it's safe to always call Destroy() because it will only allow itself
+  // to be called once
+  Destroy();
+
   if (!sWidgetCount--) {
     NS_IF_RELEASE(sLookAndFeel);
   }
@@ -276,35 +276,45 @@ nsWidget::IndentByDepth(FILE* out)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-#ifdef NOISY_DESTROY
-  IndentByDepth(stdout);
-  printf("nsWidget::Destroy:%p: isDestroying=%s widget=%p parent=%p\n",
-         this, mIsDestroying ? "yes" : "no", mWidget, mParent);
-#endif
-  GtkAllocation *old_size = NULL;
-  if (!mIsDestroying) {
-    nsBaseWidget::Destroy();
-    NS_IF_RELEASE(mParent);
-  }
-  if (mWidget) {
-    // see if we need to destroy the old size information
-    old_size = (GtkAllocation *) gtk_object_get_data(GTK_OBJECT(mWidget), "mozilla.old_size");
-    if (old_size) {
-      g_free(old_size);
-    }
-    // prevent the widget from causing additional events
-    mEventCallback = nsnull;
-#ifdef USE_SUPERWIN
-    // destroying the mozbox will destroy the widget contained in it.
-    ::gtk_widget_destroy(mMozBox);
-#else
-    ::gtk_widget_destroy(mWidget);
-#endif
-    mWidget = nsnull;
-    if (PR_FALSE == mOnDestroyCalled)
-      OnDestroy();
-  }
+
+  // make sure we don't call this more than once.
+  if (mIsDestroying)
+    return NS_OK;
+
+  // ok, set our state
+  mIsDestroying = PR_TRUE;
+
+  // call in and clean up any of our base widget resources
+  // are released
+  nsBaseWidget::Destroy();
+
+  // release our parent
+  NS_IF_RELEASE(mParent);
+
+  // make sure no callbacks happen
+  mEventCallback = nsnull;
+
+  // destroy our native windows
+  DestroyNative();
+
+  // make sure to call the OnDestroy if it hasn't been called yet
+  if (mOnDestroyCalled == PR_FALSE)
+    OnDestroy();
+  
   return NS_OK;
+}
+
+// this is the function that will destroy the native windows for this widget.
+
+/* virtual */
+void nsWidget::DestroyNative(void)
+{
+  if (mWidget) {
+    // destroying the mMozBox will also destroy the mWidget in question.
+    ::gtk_widget_destroy(mMozBox);
+    mWidget = NULL;
+    mMozBox = NULL;
+  }
 }
 
 // make sure that we clean up here
@@ -315,15 +325,9 @@ void nsWidget::OnDestroy()
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
 
-  // dispatch the event
-  if (!mIsDestroying) {
-    // dispatching of the event may cause the reference count to drop
-    // to 0 and result in this object being destroyed. To avoid that,
-    // add a reference and then release it after dispatching the event
-    mRefCnt += 100;
-    DispatchStandardEvent(NS_DESTROY);
-    mRefCnt -= 100;
-  }
+  NS_ADDREF_THIS();
+  DispatchStandardEvent(NS_DESTROY);
+  NS_ADDREF_THIS();
 }
 
 gint
@@ -656,6 +660,9 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWidget::SetFocus(void)
 {
+  // call this so that any cleanup will happen that needs to...
+  LooseFocus();
+
   if (mWidget)
   {
     if (!GTK_WIDGET_HAS_FOCUS(mWidget))
@@ -663,6 +670,23 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
   }
 
   return NS_OK;
+}
+
+/* virtual */ void
+nsWidget::LooseFocus(void)
+{
+  // doesn't do anything.  needed for nsWindow housekeeping, really.
+  if (mHasFocus == PR_FALSE) {
+    return;
+  }
+  
+  focusWindow = NULL;
+  mHasFocus = PR_FALSE;
+
+  // we don't need to send out a focus out event from here because
+  // when the gtk widget goes out of focus, it will get a focus_out
+  // event
+
 }
 
 //-------------------------------------------------------------------------

@@ -95,6 +95,7 @@ public:
 
   NS_IMETHOD Destroy(void);
   nsIWidget* GetParent(void);
+  virtual void OnDestroy();
 
   NS_IMETHOD SetModal(PRBool aModal);
   NS_IMETHOD Show(PRBool state);
@@ -108,6 +109,8 @@ public:
 
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(void);
+
+  virtual void LooseFocus(void);
 
   PRBool OnResize(nsSizeEvent event);
   virtual PRBool OnResize(nsRect &aRect);
@@ -184,7 +187,6 @@ public:
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
-  virtual void OnDestroy();
 
   NS_IMETHOD CreateNative(GtkObject *parentWindow) { return NS_OK; }
 
@@ -203,12 +205,21 @@ protected:
   // Return the Gdk window whose background should change
   virtual GdkWindow *GetWindowForSetBackground();
 
+  // this is the "native" destroy code that will destroy any
+  // native windows / widgets for this logical widget
+  virtual void DestroyNative(void);
+
   // Sets font for widgets
   virtual void SetFontNative(GdkFont *aFont);
   // Sets backround for widgets
   virtual void SetBackgroundColorNative(GdkColor *aColorNor,
                                         GdkColor *aColorBri,
                                         GdkColor *aColorDark);
+
+  // this is set when a given widget has the focus.
+  PRBool       mHasFocus;
+  // this is the current GdkSuperWin with the focus
+  static nsWidget *focusWindow;
 
   //////////////////////////////////////////////////////////////////
   //
