@@ -81,6 +81,7 @@
 #define VIEWER_TOP100           40300
 
 #define VIEWER_TREEVIEW			40900
+#define VIEWER_TOOLBARDEMO		40901
 
 /* Debug Robot dialog setup */
 
