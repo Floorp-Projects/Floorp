@@ -1084,29 +1084,25 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
     // new library can be traced.
     nsTraceRefcnt::LoadLibrarySymbols(aEntry->dll->GetNativePath(), aEntry->dll->GetInstance());
 #endif
-    nsIServiceManager* serviceMgr = NULL;
-    nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
-    if (NS_FAILED(rv)) return rv;
-
     // Create the module object and get the factory
     nsCOMPtr<nsIModule> mobj;
-    rv = aEntry->dll->GetModule(gComponentManager, getter_AddRefs(mobj));
+    nsresult rv = aEntry->dll->GetModule(gComponentManager, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(rv))
     {
-        nsCOMPtr<nsISupports> classObject;
-        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
+        PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("nsComponentManager: %s using nsIModule to get factory.",
                 aEntry->dll->GetNativePath()));
-        rv = mobj->GetClassObject(gComponentManager, aEntry->cid, getter_AddRefs(classObject));
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = classObject->QueryInterface(nsIFactory::GetIID(), (void **)aFactory);
-        }
+        rv = mobj->GetClassObject(gComponentManager, aEntry->cid,
+                                  NS_GET_IID(nsIFactory), (void **)aFactory);
         return rv;
     }
 
 #ifndef OBSOLETE_MODULE_LOADING
     // Try the older OBSOLETE method
+    nsIServiceManager* serviceMgr = NULL;
+    rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    if (NS_FAILED(rv)) return rv;
+
     nsFactoryProc proc = (nsFactoryProc) aEntry->dll->FindSymbol("NSGetFactory");
     if (proc != NULL)
     {
@@ -1203,6 +1199,14 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
             // XXX Cache factory that we created for performance.
             // XXX Need a way to release this factory else dlls will never
             // XXX get unloaded
+            // XXX
+            // XXX With the new module notion, we dont need to cache the
+            // XXX factory anylonger. The module would do that and manage
+            // XXX it. This is simpler for making decisions of unloading.
+            // XXX
+            // XXX The other option we got is to make UnloadLibraries()
+            // XXX release any cached factory before asking if a dll can
+            // XXX be unloaded. This we can do to improve performance.
             if (NS_SUCCEEDED(res))
             {
                 entry->factory = *aFactory;
@@ -1221,6 +1225,40 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
            ("\t\tFindFactory() %s", NS_SUCCEEDED(res) ? "succeeded" : "FAILED"));
     	
     return res;
+}
+
+/**
+ * GetClassObject()
+ *
+ * Given a classID, this finds the singleton ClassObject that implements the CID.
+ * Returns an interface of type aIID off the singleton classobject.
+ */
+nsresult
+nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
+                                       void **aResult) 
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIFactory> factory;
+
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    {
+        char *buf = aClass.ToString();
+        PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
+        delete [] buf;
+    }
+
+    PR_ASSERT(aResult != NULL);
+    
+    rv = FindFactory(aClass, getter_AddRefs(factory));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = factory->QueryInterface(aIID, aResult);
+
+    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+           ("\t\tGetClassObject() %s", NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
+    	
+    return rv;
 }
 
 /**
@@ -1406,11 +1444,6 @@ nsComponentManagerImpl::CreateInstance(const char *aProgID,
  * Once registration is complete, we add the class to the factories cache
  * that we maintain. The factories cache is the ONLY place where these
  * registrations are ever kept.
- *
- * XXX This uses FindFactory() to test if a factory already exists. This
- * XXX has the bad side effect of loading the factory if the previous
- * XXX registration was a dll for this class. We might be able to do away
- * XXX with such a load.
  */
 nsresult
 nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,

@@ -46,6 +46,10 @@ public:
     NS_IMETHOD FindFactory(const nsCID &aClass,
                            nsIFactory **aFactory);
 
+    // nsIComponentManager methods:
+    NS_IMETHOD GetClassObject(const nsCID &aClass, const nsIID &aIID,
+                              void **aResult);
+
     // Finds a class ID for a specific Program ID
     NS_IMETHOD ProgIDToCLSID(const char *aProgID,
                              nsCID *aClass);

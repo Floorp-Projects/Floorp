@@ -27,15 +27,16 @@
 // Once we idl component manager, this can be removed
 [ptr] native nsIComponentManager(nsIComponentManager);
 
-[uuid(00000000-0000-0000-0000-000000000005)]
+[uuid(7392D032-5371-11d3-994E-00805FD26FEE)]
 interface nsIModule : nsISupports
 {
     // Object Instance Creation.
     // Factory can be queried off the Class Object. Factory will be used to
     //		create new objects.
-    // Services can be queried off the Class Object.
+    // SingletonFactory can be queried off the Class Object. Services can be created
+    //		using the singletonfactory.
     void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
-                        out nsISupports return_ClassObject);
+                        in nsIIDRef aIID, out voidStar return_ClassObject);
 
     // Component registration
     void RegisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location);

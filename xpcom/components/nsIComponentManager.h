@@ -25,6 +25,9 @@
 #include "nsError.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+
+// XXX Need to substitute these includes with 
+// XXX equivalent forward declarations.
 #include "nsIFileSpec.h"
 #include "nsIEnumerator.h"
 
@@ -80,8 +83,13 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPONENTMANAGER_IID)
 
+  // Get the factory for creation of the CID
   NS_IMETHOD FindFactory(const nsCID &aClass,
                          nsIFactory **aFactory) = 0;
+
+  // Get the singleton class object that implements the CID aClass
+  NS_IMETHOD GetClassObject(const nsCID &aClass, const nsIID &aIID,
+                            void **aResult) = 0;
 
   // Finds a class ID for a specific Program ID
   NS_IMETHOD ProgIDToCLSID(const char *aProgID,
@@ -92,7 +100,7 @@ public:
   NS_IMETHOD CLSIDToProgID(nsCID *aClass,
                            char* *aClassName,
                            char* *aProgID) = 0;
-  
+
   // Creates a class instance for a specific class ID
   NS_IMETHOD CreateInstance(const nsCID &aClass, 
                             nsISupports *aDelegate,
@@ -217,6 +225,10 @@ public:
   // Finds a factory for a specific class ID
   static nsresult FindFactory(const nsCID &aClass,
                               nsIFactory **aFactory);
+
+  // Get the singleton class object that implements the CID aClass
+  static nsresult GetClassObject(const nsCID &aClass, const nsIID &aIID,
+                                 void **aResult);
 
   // Finds a class ID for a specific Program ID
   static nsresult ProgIDToCLSID(const char *aProgID,
