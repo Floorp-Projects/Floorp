@@ -2440,16 +2440,21 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     break;
                 }
 
-                if (tt == TOK_COMMA)
+                if (tt == TOK_COMMA) {
+                    /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
+                    js_MatchToken(cx, ts, TOK_COMMA);
                     pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
-                else
+                } else
                     pn2 = AssignExpr(cx, ts, tc);
                 if (!pn2)
                     return NULL;
                 PN_APPEND(pn, pn2);
 
-                if (!js_MatchToken(cx, ts, TOK_COMMA))
-                    break;
+                if (tt != TOK_COMMA) {
+                    /* If we didn't already match TOK_COMMA in above case. */
+                    if (!js_MatchToken(cx, ts, TOK_COMMA))
+                        break;
+                }
             }
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
