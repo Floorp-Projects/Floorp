@@ -90,6 +90,7 @@
 #include "nsIDOMHTMLObjectElement.h"	   
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLOptionElement.h"	   
+#include "nsIDOMNSHTMLOptionCollection.h"
 #include "nsIDOMHTMLParagraphElement.h"
 #include "nsIDOMHTMLParamElement.h"	   
 #include "nsIDOMHTMLPreElement.h"
@@ -713,6 +714,7 @@ void XXXDomNeverCalled()
     NS_NewScriptSelectionListener(0, 0, 0, 0);
     NS_NewScriptHTMLFormControlList(0, 0, 0, 0);
     NS_InitDocumentClass(nsnull, nsnull);
+	NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);
   }
 }
 
