@@ -27,8 +27,8 @@ class nsIImage;
 class nsIImageRequest;
 class nsIImageGroup;
 
+/// Image request notifications
 typedef enum {
-  // Image request notifications
   nsImageNotification_kStartURL,      // Start of decode/display for URL.
   nsImageNotification_kDescription,   // Availability of image description.
   nsImageNotification_kDimensions,    // Availability of image dimensions. 
@@ -51,6 +51,7 @@ typedef enum {
   nsImageNotification_kInternalImage, // Internal image icon.
 } nsImageNotification;
 
+/// Image group notifications
 typedef enum {
 
   // Start of image loading. Sent when  a loading image is 
@@ -75,6 +76,7 @@ typedef enum {
 
 } nsImageGroupNotification;
 
+/// Image loading errors
 typedef enum {
   nsImageError_kNotInCache,           // Image URL not available in cache when 
                                       // kOnlyFromCache flag was set.
@@ -98,40 +100,66 @@ typedef enum {
 { 0xb3cad300, 0xb8f4, 0x11d1,         \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
+/**
+ * Image request observer interface. The implementor will be notified
+ * of significant loading events or loading errors.
+ */
 class nsIImageRequestObserver : public nsISupports {
 public:
-  // Notify the observer of some significant image event. The parameter
-  // values depend on the notification type as specified below:
-  //
-  // kDescription - aParam3 is a string containing the human readable
-  //                description of an image, e.g. "GIF89a 320 x 240 pixels".  
-  //                The string storage is static, so it must be copied if
-  //                it is to be preserved after the call to the observer. 
-  // kDimensions - aParam1 and aParam2 are the width and height respectively
-  //               of the image.
-  // kPixmapUpdate - aParame3 is a pointer to a nsRect struct containing the
-  //                 rectangular area of pixels which has been modified by 
-  //                 the image library.  This notification enables the 
-  //                 client to drive the progressive display of the image.
-  // kProgress - aParam1 represents the estimated percentage decoded.  This
-  //             notification occurs at unspecified intervals.  Provided 
-  //             that decoding proceeds without error, it is guaranteed that
-  //             notification will take place on completion with a 
-  //             percent_progress value of 100.
-  //
+  /** 
+   * Notify the observer of some significant image event. The parameter
+   * values depend on the notification type as specified below.
+   *
+   * kDescription - aParam3 is a string containing the human readable
+   *                description of an image, e.g. "GIF89a 320 x 240 pixels".  
+   *                The string storage is static, so it must be copied if
+   *                it is to be preserved after the call to the observer. 
+   * kDimensions - aParam1 and aParam2 are the width and height respectively
+   *               of the image.
+   * kPixmapUpdate - aParame3 is a pointer to a nsRect struct containing the
+   *                 rectangular area of pixels which has been modified by 
+   *                 the image library.  This notification enables the 
+   *                 client to drive the progressive display of the image.
+   * kProgress - aParam1 represents the estimated percentage decoded.  This
+   *             notification occurs at unspecified intervals.  Provided 
+   *             that decoding proceeds without error, it is guaranteed that
+   *             notification will take place on completion with a 
+   *             percent_progress value of 100.
+   *
+   * @param aImageRequest - the image request in question
+   * @param aImage - the corresponding image object
+   * @param aNotificationType - the type of notification
+   * @param aParam1, aParam2, aParam3 - additional information as described
+   *       above.
+   */
   virtual void Notify(nsIImageRequest *aImageRequest,
                       nsIImage *aImage,
                       nsImageNotification aNotificationType,
                       PRInt32 aParam1, PRInt32 aParam2,
                       void *aParam3)=0;
 
-  // Notify the observer of an error during image loading.
+  /**
+   *  Notify the observer of an error during image loading.
+   *
+   *  @param aImageRequest - the image request in question
+   *  @param aErrorType - the error code
+   */
   virtual void NotifyError(nsIImageRequest *aImageRequest,
                            nsImageError aErrorType)=0;
 };
 
+/**
+ * Image group observer interface. The implementor will be notified
+ * of significant image group events.
+ */
 class nsIImageGroupObserver : public nsISupports {
 public:
+  /**
+   *  Notify the observer of some significant image group event.
+   *
+   *  @param aImageGroup - the image group in question
+   *  @param aNotificationType - the notification code
+   */
   virtual void Notify(nsIImageGroup *aImageGroup,
                       nsImageGroupNotification aNotificationType)=0;
 };

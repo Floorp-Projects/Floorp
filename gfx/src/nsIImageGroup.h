@@ -29,13 +29,13 @@ class nsIImageRequestObserver;
 class nsIImageRequest;
 class nsIRenderingContext;
 
-/* For important images, like backdrops. */
+/** For important images, like backdrops. */
 #define nsImageLoadFlags_kHighPriority  0x01   
-/* Don't throw this image out of cache.  */
+/** Don't throw this image out of cache.  */
 #define nsImageLoadFlags_kSticky        0x02   
-/* Don't get image out of image cache.   */
+/** Don't get image out of image cache.   */
 #define nsImageLoadFlags_kBypassCache   0x04   
-/* Don't load if image cache misses.     */
+/** Don't load if image cache misses.     */
 #define nsImageLoadFlags_kOnlyFromCache 0x08   
 
 // IID for the nsIImageGroup interface
@@ -43,50 +43,75 @@ class nsIRenderingContext;
 { 0xbe927e40, 0xaeaa, 0x11d1,  \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
-//----------------------------------------------------------------------
-// 
-// Image group. A convenient way to group a set of image load requests
-// and control them as a group.
+/**
+ *
+ * Image group. A convenient way to group a set of image load requests
+ * and control them as a group.
+ */
 class nsIImageGroup : public nsISupports
 {
 public:
+  /**
+   * Initialize an image group with a rendering context. All images
+   * in this group will be decoded for the specified rendering context.
+   */
   virtual nsresult Init(nsIRenderingContext *aRenderingContext) = 0;
 
-  // Add and remove observers to listen in on image group notifications
+  /** 
+   * Add an observers to be informed of image group notifications.
+   *
+   * @param aObserver - An observer to add to the observer list.
+   * @param boolean indicating whether addition was successful.
+   */
   virtual PRBool AddObserver(nsIImageGroupObserver *aObserver) = 0;
+
+  /**
+   * Remove a previously added observer from the observer list.
+   *
+   * @param aObserver - An observer to remove from the observer list.
+   * @param boolean indicating whether the removal was successful.
+   */ 
   virtual PRBool RemoveObserver(nsIImageGroupObserver *aObserver) = 0;
 
-  // Fetch the image corresponding to the specified URL. 
-  // 
-  // The observer is notified at significant points in image loading.
-  // 
-  // The width and height parameters specify the target dimensions of
-  // the image.  The image will be stretched horizontally, vertically or
-  // both to meet these parameters.  If both width and height are zero,
-  // the image is decoded using its "natural" size.  If only one of
-  // width and height is zero, the image is scaled to the provided
-  // dimension, with the unspecified dimension scaled to maintain the
-  // image's original aspect ratio.
-  //  
-  // If the background color is NULL, a mask will be generated for any
-  // transparent images.  If background color is non-NULL, it indicates 
-  // the RGB value to be painted into the image for "transparent" areas 
-  // of the image, in which case no mask is created.  This is intended 
-  // for backdrops and printing.
-  //
-  // Image load flags are specified above
+  /**
+   *  Fetch the image corresponding to the specified URL. 
+   * 
+   *  @param aUrl - the URL of the image to be loaded.
+   *  @param aObserver - the observer is notified at significant 
+   *       points in image loading.
+   *  @param aWidth, aHeight - These parameters specify the target 
+   *       dimensions of the image.  The image will be stretched 
+   *       horizontally, vertically or both to meet these parameters.  
+   *       If both width and height are zero, the image is decoded 
+   *       using its "natural" size.  If only one of width and height 
+   *       is zero, the image is scaled to the provided dimension, with
+   *       the unspecified dimension scaled to maintain the image's 
+   *       original aspect ratio.
+   *  @param aBackgroundColor - If the background color is NULL, a mask 
+   *       will be generated for any transparent images.  If background 
+   *       color is non-NULL, it indicates the RGB value to be painted 
+   *       into the image for "transparent" areas of the image, in which 
+   *       case no mask is created.  This is intended for backdrops and 
+   *       printing.
+   *  @param aFlags - image loading flags are specified above
+   *
+   *  @return the resulting image request object.
+   */
   virtual nsIImageRequest* GetImage(const char* aUrl, 
                                     nsIImageRequestObserver *aObserver,
                                     nscolor aBackgroundColor,
                                     PRUint32 aWidth, PRUint32 aHeight,
                                     PRUint32 aFlags) = 0;
 
-  // Halt decoding of images or animation without destroying associated
-  // pixmap data. All ImageRequests created with this ImageGroup
-  // are interrupted.
+  /**
+   *  Halt decoding of images or animation without destroying associated
+   *  pixmap data. All ImageRequests created with this ImageGroup
+   *  are interrupted.
+   */
   virtual void Interrupt(void) = 0;
 };
 
+/// Factory method for creating an image group
 extern NS_GFX nsresult
   NS_NewImageGroup(nsIImageGroup **aInstancePtrResult);                   
 
