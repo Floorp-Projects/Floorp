@@ -252,6 +252,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
     {
       if (mCiteReference != "")
         aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(), mCiteReference.GetUnicode(),
+                                             PR_TRUE,
                                              nsString("UTF-8").GetUnicode(), getter_AddRefs(nodeInserted));
       else
         aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), getter_AddRefs(nodeInserted));

@@ -80,6 +80,7 @@ public:
    */
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
                                     const nsString& aCitation,
+                                    PRBool aInsertHTML,
                                     const nsString& aCharset,
                                     nsIDOMNode** aNodeInserted)=0;
 

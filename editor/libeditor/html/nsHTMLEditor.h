@@ -168,6 +168,7 @@ public:
   NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation);
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
                                     const nsString& aCitation,
+                                    PRBool aInsertHTML,
                                     const nsString& aCharset,
                                     nsIDOMNode **aNodeInserted);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);

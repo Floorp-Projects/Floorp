@@ -4094,7 +4094,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText,
 
   nsAutoString citation ("");
   nsAutoString charset ("");
-  return InsertAsCitedQuotation(aQuotedText, citation, charset, aNodeInserted);
+  return InsertAsCitedQuotation(aQuotedText, citation, PR_FALSE,
+                                charset, aNodeInserted);
 }
 
 // text insert.
@@ -4189,6 +4190,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
 NS_IMETHODIMP
 nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
                                      const nsString& aCitation,
+                                     PRBool aInsertHTML,
                                      const nsString& aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
@@ -4230,7 +4232,12 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
       selection->Collapse(newNode, 0);
     }
 
-    res = InsertHTMLWithCharset(aQuotedText, aCharset);
+    if (aInsertHTML)
+      res = InsertHTMLWithCharset(aQuotedText, aCharset);
+
+    else
+      res = InsertText(aQuotedText);  // XXX ignore charset
+
     if (aNodeInserted)
     {
       if (NS_SUCCEEDED(res))
