@@ -37,7 +37,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.4 2001/12/07 01:36:06 relyea%netscape.com Exp $
+ * $Id: p7local.c,v 1.5 2002/09/07 01:48:46 jpierre%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -1005,7 +1005,8 @@ SECStatus
 sec_PKCS7ReorderAttributes (SEC_PKCS7Attribute **attrs)
 {
     PRArenaPool *poolp;
-    int num_attrs, i, j, pass, besti;
+    int num_attrs, i, pass, besti;
+    unsigned int j;
     SECItem **enc_attrs;
     SEC_PKCS7Attribute **new_attrs;
 
