@@ -1261,6 +1261,7 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
   mStopOpacity.AppendToString(buffer, eCSSProperty_stop_opacity);
   mStroke.AppendToString(buffer, eCSSProperty_stroke);
 
+  // XXX This prints the property name many times, but nobody cares.
   nsCSSValueList *value = mStrokeDasharray;
   while (value) {
     value->mValue.AppendToString(buffer, eCSSProperty_stroke_dasharray);

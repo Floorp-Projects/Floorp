@@ -4303,7 +4303,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_marker_start:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_pointer_events:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
                         nsCSSProps::kPointerEventsKTable);
   case eCSSProperty_shape_rendering:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
@@ -4328,7 +4328,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
                         nsCSSProps::kStrokeLinejoinKTable);
   case eCSSProperty_stroke_miterlimit:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HN,
-                                nsnull); // XXX value > 1
+                                nsnull);
   case eCSSProperty_stroke_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN,
                         nsnull);
@@ -5796,7 +5796,7 @@ PRBool CSSParserImpl::ParseDasharray(nsresult& aErrorCode)
 
     list->mValue = value;
 
-    while (list) {
+    for (;;) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
         mTempData.SetPropertyBit(eCSSProperty_stroke_dasharray);
         mTempData.mSVG.mStrokeDasharray = listHead;
@@ -5805,23 +5805,24 @@ PRBool CSSParserImpl::ParseDasharray(nsresult& aErrorCode)
       }
 
       if (eCSSUnit_Inherit == value.GetUnit() ||
-          eCSSUnit_Initial == value.GetUnit()) {
-        return PR_FALSE;
-      }
+          eCSSUnit_Initial == value.GetUnit() ||
+          eCSSUnit_None    == value.GetUnit())
+        break;
 
       if (!ExpectSymbol(aErrorCode, ',', PR_TRUE))
         break;
 
-      if (ParseVariant(aErrorCode, value,
-                       VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,
-                       nsnull)) {
-        list->mNext = new nsCSSValueList;
-        list = list->mNext;
-        if (list)
-          list->mValue = value;
-        else
-          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-      } else {
+      if (!ParseVariant(aErrorCode, value,
+                        VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,
+                        nsnull))
+        break;
+
+      list->mNext = new nsCSSValueList;
+      list = list->mNext;
+      if (list)
+        list->mValue = value;
+      else {
+        aErrorCode = NS_ERROR_OUT_OF_MEMORY;
         break;
       }
     }

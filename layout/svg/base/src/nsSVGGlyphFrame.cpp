@@ -64,6 +64,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsSVGUtils.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -645,7 +646,9 @@ nsSVGGlyphFrame::GetStrokeOpacity(float *aStrokeOpacity)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeWidth(float *aStrokeWidth)
 {
-  *aStrokeWidth = GetStyleSVG()->mStrokeWidth;
+  *aStrokeWidth = 
+    nsSVGUtils::CoordToFloat(nsSVGGlyphFrameBase::GetPresContext(),
+                             mContent, GetStyleSVG()->mStrokeWidth);
   return NS_OK;
 }
 
@@ -653,15 +656,17 @@ nsSVGGlyphFrame::GetStrokeWidth(float *aStrokeWidth)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 {
-  const nsStyleSVG *svg = GetStyleSVG();
+  const nsStyleCoord *dasharray = GetStyleSVG()->mStrokeDasharray;
+  nsPresContext *presContext = nsSVGGlyphFrameBase::GetPresContext();
 
-  *count = svg->mStrokeDasharrayLength;
+  *count = GetStyleSVG()->mStrokeDasharrayLength;
 
   if (*count) {
     *arr = (float *) nsMemory::Alloc(*count * sizeof(float));
-    if (*arr)
-      memcpy(*arr, svg->mStrokeDasharray, *count * sizeof(float));
-    else {
+    if (*arr) {
+      for (PRUint32 i = 0; i < *count; i++)
+        (*arr)[i] = nsSVGUtils::CoordToFloat(presContext, mContent, dasharray[i]);
+    } else {
       *count = 0;
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -674,7 +679,9 @@ nsSVGGlyphFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeDashoffset(float *aStrokeDashoffset)
 {
-  *aStrokeDashoffset = GetStyleSVG()->mStrokeDashoffset;
+  *aStrokeDashoffset = 
+    nsSVGUtils::CoordToFloat(nsSVGGlyphFrameBase::GetPresContext(),
+                             mContent, GetStyleSVG()->mStrokeDashoffset);
   return NS_OK;
 }
 

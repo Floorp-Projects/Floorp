@@ -89,6 +89,7 @@ CPPSRCS		= \
 		nsSVGTSpanFrame.cpp \
 		nsSVGTextFrame.cpp \
 		nsSVGUseFrame.cpp \
+		nsSVGUtils.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

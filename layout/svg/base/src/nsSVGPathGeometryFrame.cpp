@@ -60,6 +60,7 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsSVGAtoms.h"
 #include "nsIViewManager.h"
+#include "nsSVGUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
@@ -523,7 +524,9 @@ nsSVGPathGeometryFrame::GetStrokeOpacity(float *aStrokeOpacity)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeWidth(float *aStrokeWidth)
 {
-  *aStrokeWidth = GetStyleSVG()->mStrokeWidth;
+  *aStrokeWidth =
+    nsSVGUtils::CoordToFloat(nsSVGPathGeometryFrameBase::GetPresContext(),
+                             mContent, GetStyleSVG()->mStrokeWidth);
   return NS_OK;
 }
 
@@ -531,15 +534,17 @@ nsSVGPathGeometryFrame::GetStrokeWidth(float *aStrokeWidth)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 {
-  const nsStyleSVG *svg = GetStyleSVG();
+  const nsStyleCoord *dasharray = GetStyleSVG()->mStrokeDasharray;
+  nsPresContext *presContext = nsSVGPathGeometryFrameBase::GetPresContext();
 
-  *count = svg->mStrokeDasharrayLength;
+  *count = GetStyleSVG()->mStrokeDasharrayLength;
 
   if (*count) {
     *arr = (float *) nsMemory::Alloc(*count * sizeof(float));
-    if (*arr)
-      memcpy(*arr, svg->mStrokeDasharray, *count * sizeof(float));
-    else {
+    if (*arr) {
+      for (PRUint32 i = 0; i < *count; i++)
+        (*arr)[i] = nsSVGUtils::CoordToFloat(presContext, mContent, dasharray[i]);
+    } else {
       *count = 0;
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -552,7 +557,9 @@ nsSVGPathGeometryFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeDashoffset(float *aStrokeDashoffset)
 {
-  *aStrokeDashoffset = GetStyleSVG()->mStrokeDashoffset;
+  *aStrokeDashoffset = 
+    nsSVGUtils::CoordToFloat(nsSVGPathGeometryFrameBase::GetPresContext(),
+                             mContent, GetStyleSVG()->mStrokeDashoffset);
   return NS_OK;
 }
 

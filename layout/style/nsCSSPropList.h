@@ -127,10 +127,8 @@
 #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_)
 #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_)
 #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_)
-#ifdef MOZ_SVG
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_)
 #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_)
-#endif
 
 // For properties that are stored in the CSS backend but are not
 // computed.  An includer may define this in addition to CSS_PROP, but
@@ -230,7 +228,6 @@
 #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, kwtable_) /* nothing */
 #define DEFINED_CSS_PROP_COLUMN
 #endif
-#ifdef MOZ_SVG
 #ifndef CSS_PROP_SVG
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, kwtable_) /* nothing */
 #define DEFINED_CSS_PROP_SVG
@@ -239,7 +236,6 @@
 #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) /* nothing */
 #define DEFINED_CSS_PROP_SVGRESET
 #endif
-#endif /* defined(MOZ_SVG) */
 
 #ifndef CSS_PROP_BACKENDONLY
 #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, kwtable_) /* nothing */
@@ -480,10 +476,10 @@ CSS_PROP_SVG(marker-mid, marker_mid, MarkerMid, SVG, mMarkerMid, eCSSType_Value,
 CSS_PROP_SVG(marker-start, marker_start, MarkerStart, SVG, mMarkerStart, eCSSType_Value, nsnull)
 CSS_PROP_SVG(pointer-events, pointer_events, PointerEvents, SVG, mPointerEvents, eCSSType_Value, kPointerEventsKTable)
 CSS_PROP_SVG(shape-rendering, shape_rendering, ShapeRendering, SVG, mShapeRendering, eCSSType_Value, kShapeRenderingKTable)
-CSS_PROP_SVG(stop-color, stop_color, StopColor, SVG, mStopColor, eCSSType_Value, nsnull)
-CSS_PROP_SVG(stop-opacity, stop_opacity, StopOpacity, SVG, mStopOpacity, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(stop-color, stop_color, StopColor, SVG, mStopColor, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(stop-opacity, stop_opacity, StopOpacity, SVG, mStopOpacity, eCSSType_Value, nsnull)
 CSS_PROP_SVG(stroke, stroke, Stroke, SVG, mStroke, eCSSType_Value, nsnull)
-CSS_PROP_SVG(stroke-dasharray, stroke_dasharray, StrokeDasharray, SVG, mStrokeDasharray, eCSSType_Value, nsnull)
+CSS_PROP_SVG(stroke-dasharray, stroke_dasharray, StrokeDasharray, SVG, mStrokeDasharray, eCSSType_ValueList, nsnull)
 CSS_PROP_SVG(stroke-dashoffset, stroke_dashoffset, StrokeDashoffset, SVG, mStrokeDashoffset, eCSSType_Value, nsnull)
 CSS_PROP_SVG(stroke-linecap, stroke_linecap, StrokeLinecap, SVG, mStrokeLinecap, eCSSType_Value, kStrokeLinecapKTable)
 CSS_PROP_SVG(stroke-linejoin, stroke_linejoin, StrokeLinejoin, SVG, mStrokeLinejoin, eCSSType_Value, kStrokeLinejoinKTable)
@@ -533,10 +529,8 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, nsnull)
 #undef CSS_PROP_OUTLINE
 #undef CSS_PROP_XUL
 #undef CSS_PROP_COLUMN
-#ifdef MOZ_SVG
 #undef CSS_PROP_SVG
 #undef CSS_PROP_SVGRESET
-#endif
 #ifdef DEFINED_CSS_PROP_BACKENDONLY
 #undef CSS_PROP_BACKENDONLY
 #undef DEFINED_CSS_PROP_BACKENDONLY
@@ -628,7 +622,6 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, nsnull)
 #undef CSS_PROP_COLUMN
 #undef DEFINED_CSS_PROP_COLUMN
 #endif
-#ifdef MOZ_SVG
 #ifdef DEFINED_CSS_PROP_SVG
 #undef CSS_PROP_SVG
 #undef DEFINED_CSS_PROP_SVG
@@ -637,7 +630,6 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, nsnull)
 #undef CSS_PROP_SVGRESET
 #undef DEFINED_CSS_PROP_SVGRESET
 #endif
-#endif /* defined(MOZ_SVG) */
 #ifdef DEFINED_CSS_PROP_BACKENDONLY
 #undef CSS_PROP_BACKENDONLY
 #undef DEFINED_CSS_PROP_BACKENDONLY
