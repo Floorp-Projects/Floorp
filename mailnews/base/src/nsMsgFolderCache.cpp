@@ -43,6 +43,8 @@ static nsIMdbFactory *gMDBFactory = nsnull;
 
 nsMsgFolderCache::~nsMsgFolderCache()
 {
+	if (m_mdbStore)
+		m_mdbStore->Release();
 	if (gMDBFactory)
 		gMDBFactory->CutStrongRef(GetEnv());
 	gMDBFactory = nsnull;
@@ -135,6 +137,7 @@ nsresult nsMsgFolderCache::InitExistingDB()
 					if (NS_FAILED(rv))
 						return rv;
 				}
+				rowCursor->Release();
 			}
 		}
 	}
