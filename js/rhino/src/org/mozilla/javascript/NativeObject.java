@@ -126,10 +126,10 @@ public class NativeObject extends IdScriptable {
 
     private static String jsFunction_toString(Context cx, Scriptable thisObj)
     {
-        if (cx.getLanguageVersion() != cx.VERSION_1_2)
-            return "[object " + thisObj.getClassName() + "]";
-
-        return toSource(cx, thisObj);
+        if (cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE)) {
+            return toSource(cx, thisObj);
+        }
+        return "[object " + thisObj.getClassName() + "]";
     }
 
     private static String jsFunction_toLocaleString(Context cx,

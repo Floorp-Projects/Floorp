@@ -438,8 +438,8 @@ public class NativeArray extends IdScriptable {
         throws JavaScriptException
     {
         return toStringHelper(cx, thisObj,
-                              cx.getLanguageVersion() == cx.VERSION_1_2,
-                              false);
+            cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE),
+            false);
     }
 
     private static String jsFunction_toLocaleString(Context cx,

@@ -1767,6 +1767,16 @@ public class Context {
     public static final int FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER = 3;
 
     /**
+     * if hasFeature(FEATURE_TO_STRING_AS_SOURCE) returns true,
+     * calling toString on JS objects gives JS source with code to create an
+     * object with all enumeratable fields of the original object instead of
+     * printing "[object <object-type>]".
+     * By default {@link #hasFeature(int)} returns true only if
+     * the current JS version is set to {@link #VERSION_1_2}.
+     */
+    public static final int FEATURE_TO_STRING_AS_SOURCE = 4;
+
+    /**
      * Controls certain aspects of script semantics.
      * Should be overwritten to alter default behavior.
      * @param featureIndex feature index to check
@@ -1774,6 +1784,7 @@ public class Context {
      * @see #FEATURE_NON_ECMA_GET_YEAR
      * @see #FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME
      * @see #FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER
+     * @see #FEATURE_TO_STRING_AS_SOURCE
      */
     public boolean hasFeature(int featureIndex) {
         switch (featureIndex) {
@@ -1798,6 +1809,9 @@ public class Context {
 
             case FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
                 return false;
+
+            case FEATURE_TO_STRING_AS_SOURCE:
+                return version == VERSION_1_2;
         }
         // It is a bug to call the method with unknown featureIndex
         throw new IllegalArgumentException();
