@@ -75,8 +75,6 @@ public:
 
 protected:
 
-  //nsresult GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
-  //                               PRInt32& aPart, PRInt32& aState);
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
 
@@ -91,10 +89,14 @@ protected:
   void DrawRadio ( const Rect& inBoxRect, PRBool inChecked, PRBool inDisabled, PRInt32 inState ) ;
   void DrawToolbar ( const Rect& inBoxRect ) ;
   void DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
+  void DrawListBox ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
   void DrawProgress ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsIndeterminate, 
                         PRBool inIsHorizontal, PRInt32 inValue ) ;
   void DrawFullScrollbar  ( const Rect& inScrollbarRect, PRInt32 inWidgetHit, PRInt32 inLineHeight, PRBool inIsDisabled,
                              PRInt32 inMax, PRInt32 inValue, PRInt32 inState ) ;
+  void DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
+                  PRBool inIsHorizontal, PRInt32 inState ) ;
+  void DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
 //  void DrawScrollArrows ( const Rect& inScrollbarRect, PRBool inIsDisabled, PRInt32 inWidget, PRInt32 inState ) ;
   
   void DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inIsDefault, 
