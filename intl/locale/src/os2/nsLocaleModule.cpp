@@ -41,7 +41,6 @@
 #include "nsIServiceManager.h"
 #include "nsLanguageAtomService.h"
 #include "nsLocaleCID.h"
-#include "nsLocaleSO.h"
 #include "nsOS2Locale.h"
 
 #define MAKE_CTOR(ctor_, iface_, func_)                   \
