@@ -72,9 +72,10 @@
 
 // See nsStyleColor
 #define NS_STYLE_CURSOR_INHERIT                 0
-#define NS_STYLE_CURSOR_DEFAULT                 1
-#define NS_STYLE_CURSOR_HAND                    2
-#define NS_STYLE_CURSOR_IBEAM                   3
+#define NS_STYLE_CURSOR_AUTO                    1
+#define NS_STYLE_CURSOR_DEFAULT                 2
+#define NS_STYLE_CURSOR_HAND                    3
+#define NS_STYLE_CURSOR_IBEAM                   4
 
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
@@ -122,13 +123,6 @@
 #define NS_STYLE_POSITION_STATIC                0
 #define NS_STYLE_POSITION_RELATIVE              1
 #define NS_STYLE_POSITION_ABSOLUTE              2
-
-// See nsStylePosition flags; used for width, height, left, top
-#define NS_STYLE_POSITION_VALUE_LENGTH          0
-#define NS_STYLE_POSITION_VALUE_PERCENT         1
-#define NS_STYLE_POSITION_VALUE_AUTO            2
-#define NS_STYLE_POSITION_VALUE_INHERIT         3
-#define NS_STYLE_POSITION_VALUE_PROPORTIONAL    4
 
 // See nsStylePosition.mClip
 #define NS_STYLE_CLIP_AUTO                      0
