@@ -396,7 +396,7 @@ FeedItem.prototype =
       'X-Mozilla-Status: 0000\n' +
       'X-Mozilla-Status2: 00000000\n' +
       'Date: ' + this.mDate + '\n' +
-      'Message-Id: <' + this.mMessageID + '>\n' +
+      'Message-Id: <' + this.messageID + '>\n' +
       'From: ' + this.author + '\n' +
       'MIME-Version: 1.0\n' +
       'Subject: ' + this.title + '\n' +
