@@ -29,11 +29,29 @@
 #include "nsIFactory.h"
 #include "jni.h"
 
+#define NS_ILIVECONNECT_IID                          \
+{ /* 68190910-3318-11d2-97f0-00805f8a28d0 */         \
+    0x68190910,                                      \
+    0x3318,                                          \
+    0x11d2,                                          \
+    {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
+}
+
+#define NS_CLIVECONNECT_CID                          \
+{ /* b8f0cef0-3931-11d2-97f0-00805f8a28d0 */         \
+    0xb8f0cef0,                                      \
+    0x3931,                                          \
+    0x11d2,                                          \
+    {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
+}
 
 typedef jint jsobject;
 
 class nsILiveconnect : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILIVECONNECT_IID)
+	NS_DEFINE_STATIC_CID_ACCESSOR(NS_CLIVECONNECT_CID)
+	
     /**
      * get member of a Native JSObject for a given name.
      *
@@ -153,21 +171,5 @@ public:
     NS_IMETHOD
     ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring) = 0;
 };
-
-#define NS_ILIVECONNECT_IID                          \
-{ /* 68190910-3318-11d2-97f0-00805f8a28d0 */         \
-    0x68190910,                                      \
-    0x3318,                                          \
-    0x11d2,                                          \
-    {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
-}
-
-#define NS_CLIVECONNECT_CID                          \
-{ /* b8f0cef0-3931-11d2-97f0-00805f8a28d0 */         \
-    0xb8f0cef0,                                      \
-    0x3931,                                          \
-    0x11d2,                                          \
-    {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
-}
 
 #endif // nsILiveconnect_h___
