@@ -760,10 +760,12 @@ HandleTreeWindowEvent(nsGUIEvent *aEvent)
 	  NS_IF_RELEASE(pEnumerator);
 	  NS_IF_RELEASE(pTree);
   }
+#ifdef XP_MAC
   else if ( aEvent->message == NS_DESTROY ) {
 	NS_IF_RELEASE(aEvent->widget);
 	result = nsEventStatus_eConsumeDoDefault;
   }
+#endif
   
   return result;
 }
