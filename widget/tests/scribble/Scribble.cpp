@@ -23,7 +23,6 @@
 #include "nsIButton.h"
 #include "nsICheckButton.h"
 #include "nsIRadioButton.h"
-#include "nsIRadioGroup.h"
 #include "nsITextWidget.h"
 #include "nsIScrollbar.h"
 #include "nsGUIEvent.h"
@@ -50,7 +49,6 @@ static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
-static NS_DEFINE_IID(kIRadioGroupIID, NS_IRADIOGROUP_IID);
 
 
 //
@@ -98,7 +96,6 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
             NS_RELEASE(scribbleData.blue);
             NS_RELEASE(scribbleData.scribble);
             NS_RELEASE(scribbleData.lines);
-            NS_RELEASE(scribbleData.group);
            // NS_RELEASE(scribbleData.drawPane);
            // NS_RELEASE(scribbleData.mainWindow); 
 
@@ -228,6 +225,31 @@ nsEventStatus PR_CALLBACK HandleEventButton(nsGUIEvent *aEvent)
     switch(aEvent->message) {
         case NS_MOUSE_LEFT_BUTTON_UP:
             scribbleData.drawPane->Invalidate(PR_TRUE);
+    }
+
+    return nsEventStatus_eIgnore;
+}
+
+//
+// Buttons events
+//
+nsEventStatus PR_CALLBACK HandleEventRadioButton(nsGUIEvent *aEvent)
+{
+    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+
+    switch(aEvent->message) {
+        case NS_MOUSE_LEFT_BUTTON_UP: {
+            nsIWidget * win;
+            if (NS_OK == scribbleData.lines->QueryInterface(kIWidgetIID, (void**)&win)) {
+              if (win == aEvent->widget) {
+                scribbleData.lines->SetState(PR_TRUE);
+                scribbleData.scribble->SetState(PR_FALSE);
+              } else {
+                scribbleData.lines->SetState(PR_FALSE);
+                scribbleData.scribble->SetState(PR_TRUE);
+              }
+            }
+        }
     }
 
     return nsEventStatus_eIgnore;
@@ -380,7 +402,6 @@ nsresult CreateApplication()
     static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
     static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
     static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
-    static NS_DEFINE_IID(kCRadioGroupCID, NS_RADIOGROUP_CID);
     static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
     static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
     static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
@@ -395,7 +416,6 @@ nsresult CreateApplication()
     NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCRadioGroupCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -444,7 +464,7 @@ nsresult CreateApplication()
     rect.SetRect(50, 50, 100, 25);  
 
     NSRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (LPVOID*)&(scribbleData.scribble));
-    scribbleData.scribble->Create(controlPane, rect, NULL, NULL);
+    scribbleData.scribble->Create(controlPane, rect, HandleEventRadioButton, NULL);
     nsString cbLabel("Scribble");
     scribbleData.scribble->SetLabel(cbLabel);
     scribbleData.scribble->SetState(PR_FALSE);
@@ -455,7 +475,7 @@ nsresult CreateApplication()
     rect.SetRect(50, 75, 100, 25);  
 
     NSRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (LPVOID*)&(scribbleData.lines));
-    scribbleData.lines->Create(controlPane, rect, NULL, NULL);
+    scribbleData.lines->Create(controlPane, rect, HandleEventRadioButton, NULL);
     nsString cbLabel1("Lines");
     scribbleData.lines->SetLabel(cbLabel1);
     scribbleData.lines->SetState(PR_TRUE);
