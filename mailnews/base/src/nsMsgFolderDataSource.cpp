@@ -865,7 +865,8 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(arguments->ElementAt(0), &rv));
+	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0));
+	nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;
