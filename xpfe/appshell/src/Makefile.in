@@ -40,6 +40,7 @@ CPPSRCS= \
 	nsDefaultHelper.cpp \
 	nsNetSupportDialog.cpp \
 	nsWindowMediator.cpp \
+  nsSessionHistory.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
