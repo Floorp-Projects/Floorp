@@ -411,8 +411,6 @@ public:
     NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
     NS_IMETHOD GetParent(nsIContent*& aResult) const;
     NS_IMETHOD SetParent(nsIContent* aParent);
-    NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
-    NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
     NS_IMETHOD CanContainChildren(PRBool& aResult) const;
     NS_IMETHOD ChildCount(PRInt32& aResult) const;
     NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;

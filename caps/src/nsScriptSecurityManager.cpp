@@ -79,7 +79,6 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIObserverService.h"
-#include "nsIContent.h"
 
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -100,48 +99,21 @@ JSValIDToString(JSContext *cx, const jsval idval) {
     return NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
 }
 
-// Helper class to get stuff from the ClassInfo and not waste extra time with
-// virtual method calls for things it has already gotten
-class ClassInfoData
+static inline PRBool
+IsDOMClass(nsIClassInfo* aClassInfo)
 {
-public:
-    ClassInfoData(nsIClassInfo *aClassInfo)
-        : mClassInfo(aClassInfo), mDidGetFlags(PR_FALSE)
-    {
-    }
+    if (!aClassInfo)
+        return PR_FALSE;
 
-    PRUint32 GetFlags()
-    {
-        if (!mDidGetFlags) {
-            if (mClassInfo) {
-                mDidGetFlags = PR_TRUE;
-                nsresult rv = mClassInfo->GetFlags(&mFlags);
-                if (NS_FAILED(rv)) {
-                    mFlags = 0;
-                }
-            } else {
-                mFlags = 0;
-            }
-        }
+    PRUint32 classFlags;
+    nsresult rv = aClassInfo->GetFlags(&classFlags);
 
-        return mFlags;
-    }
+    return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
+}
 
-    PRBool IsDOMClass()
-    {
-        return GetFlags() & nsIClassInfo::DOM_OBJECT;
-    }
-    PRBool IsContentNode()
-    {
-        return GetFlags() & nsIClassInfo::CONTENT_NODE;
-    }
-
-private:
-    nsIClassInfo *mClassInfo; // WEAK
-    PRBool mDidGetFlags;
-    PRUint32 mFlags;
-};
- 
+// Convenience method to get the current js context stack.
+// Uses cached JSContextStack service instead of calling through
+// to the service manager.
 JSContext *
 nsScriptSecurityManager::GetCurrentJSContext()
 {
@@ -662,17 +634,13 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             securityLevel = GetPropertyPolicy(aProperty, cpolicy, aAction);
     }
 
-    // Hold the class info data here so we don't have to go back to virtual
-    // methods all the time
-    ClassInfoData classInfoData(aClassInfo);
-
     if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
     {   
         // No policy found for this property so use the default of last resort.
         // If we were called from somewhere other than XPConnect
         // (no XPC call context), assume this is a DOM class. Otherwise,
         // ask the ClassInfo.
-        if (!aCallContext || classInfoData.IsDOMClass())
+        if (!aCallContext || IsDOMClass(aClassInfo))
             securityLevel.level = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
         else
             securityLevel.level = SCRIPT_SECURITY_NO_ACCESS;
@@ -747,18 +715,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             rv = NS_OK;
     }
 
-    if (NS_SUCCEEDED(rv) && classInfoData.IsContentNode())
-    {
-        // No access to anonymous content from the web!  (bug 164086)
-        nsCOMPtr<nsIContent> content(do_QueryInterface(aObj));
-        NS_ASSERTION(content, "classinfo had CONTENT_NODE set but node did not"
-                              "implement nsIContent!  Fasten your seat belt.");
-        if (content->IsNativeAnonymous()) {
-            rv = NS_ERROR_DOM_SECURITY_ERR;
-        }
-    }
-
-    if (NS_SUCCEEDED(rv))
+    if NS_SUCCEEDED(rv)
     {
 #ifdef DEBUG_mstoltz
     printf(" GRANTED.\n");
@@ -2307,7 +2264,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     PR_FREEIF(iidStr);
 #endif
 // XXX Special case for nsIXPCException ?
-    if (ClassInfoData(aClassInfo).IsDOMClass())
+    if (IsDOMClass(aClassInfo))
     {
 #if 0
         printf("DOM class - GRANTED.\n");

@@ -678,19 +678,6 @@ nsGenericDOMDataNode::SetParent(nsIContent* aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsGenericDOMDataNode::IsNativeAnonymous() const
-{
-  nsIContent* parent = GetParentWeak();
-  return parent && parent->IsNativeAnonymous();
-}
-
-NS_IMETHODIMP_(void)
-nsGenericDOMDataNode::SetNativeAnonymous(PRBool aAnonymous)
-{
-  // XXX Need to fix this to do something - bug 165110
-}
-
 NS_IMETHODIMP
 nsGenericDOMDataNode::GetNameSpaceID(PRInt32& aID) const
 {

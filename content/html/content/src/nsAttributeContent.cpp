@@ -97,8 +97,6 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
   NS_IMETHOD GetParent(nsIContent*& aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const { return PR_TRUE; }
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) { }
 
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {
     aID = kNameSpaceID_None;

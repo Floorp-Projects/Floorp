@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  docshell \
 		  windowwatcher \
-		  content \
 		  $(NULL)
 
 CPPSRCS		= \
