@@ -41,7 +41,7 @@ function setWindowName()
   cert = certdb.getCertByDBKey(dbkey, null);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var windowReference = document.getElementById('editCert');
+  var windowReference = document.getElementById('editCaCert');
 
   var message1 = bundle.formatStringFromName("editTrustCA",
                                              [ cert.commonName ],
@@ -70,7 +70,7 @@ function setWindowName()
     objsign.setAttribute("checked", "false");
   }
 
-  var xulWindow = document.getElementById("editCert");
+  var xulWindow = document.getElementById("editCaCert");
   var wdth = window.innerWidth; // THIS IS NEEDED,
   window.sizeToContent();
   xulWindow.setAttribute("width",window.innerWidth + 30);
@@ -106,7 +106,7 @@ function doLoadForSSLCert()
   cert = certdb.getCertByDBKey(dbkey, null);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var windowReference = document.getElementById('editSSLCert');
+  var windowReference = document.getElementById('editWebsiteCert');
 
   var message1 = bundle.formatStringFromName("editTrustSSL",
                                              [ cert.commonName ],
@@ -145,7 +145,7 @@ function doLoadForSSLCert()
     notrustssl.setAttribute("checked", "true");
   }
 
-  var xulWindow = document.getElementById("editSSLCert");
+  var xulWindow = document.getElementById("editWebsiteCert");
   var wdth = window.innerWidth; // THIS IS NEEDED,
   window.sizeToContent();
   xulWindow.setAttribute("width",window.innerWidth + 30);

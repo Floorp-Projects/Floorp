@@ -78,7 +78,7 @@ function setWindowName()
   {
      return;
   }
-  var windowReference = document.getElementById('deleteCert');
+  var windowReference = document.getElementById('deleteCertificate');
   var confirReference = document.getElementById('confirm');
   var impactReference = document.getElementById('impact');
   windowReference.setAttribute("title", title);
