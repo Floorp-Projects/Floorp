@@ -104,14 +104,23 @@ static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 nsFileSpec * 
 nsMsgCreateTempFileSpec(char *tFileName)
 {
+  //Calling nsEscape so that when Replies are forwarded - the ':' in the subject line doesnt cause problems
+  // while creating files on windows. Using url_XPAlphas in order to escape even spaces.
+  char *escapedName=nsnull;
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmime.tmp";
 
   nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
   if (!tmpSpec)
     return nsnull;
-  
-  *tmpSpec += tFileName;
+
+  escapedName = nsEscape(tFileName, url_Path);
+  if (!escapedName)
+    escapedName = nsCRT::strdup(tFileName);  //if we dont get back an escaped value - then copy the filename
+
+  *tmpSpec += escapedName;
+  nsCRT::free(escapedName);
+
   tmpSpec->MakeUnique();
 
   return tmpSpec;
