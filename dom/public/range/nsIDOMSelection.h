@@ -87,7 +87,7 @@ public:
 
   NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn)=0;
 
-  NS_IMETHOD    ToString(nsString& aReturn)=0;
+  NS_IMETHOD    ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn)=0;
 };
 
 
@@ -115,7 +115,7 @@ public:
   NS_IMETHOD    SetHint(PRBool aRight);  \
   NS_IMETHOD    GetHint(PRBool* aReturn);  \
   NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn);  \
-  NS_IMETHOD    ToString(nsString& aReturn);  \
+  NS_IMETHOD    ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn);  \
 
 
 
@@ -143,7 +143,7 @@ public:
   NS_IMETHOD    SetHint(PRBool aRight) { return _to SetHint(aRight); }  \
   NS_IMETHOD    GetHint(PRBool* aReturn) { return _to GetHint(aReturn); }  \
   NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn) { return _to GetEnumerator(aReturn); }  \
-  NS_IMETHOD    ToString(nsString& aReturn) { return _to ToString(aReturn); }  \
+  NS_IMETHOD    ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn) { return _to ToString(aFormatType, aFlags, aWrapCount, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionClass(nsIScriptContext *aContext, void **aPrototype);

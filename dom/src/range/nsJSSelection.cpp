@@ -22,6 +22,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "jsnum.h"
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"
@@ -918,6 +919,9 @@ SelectionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsIDOMSelection *nativeThis = (nsIDOMSelection*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
   nsAutoString nativeRet;
+  nsAutoString b0;
+  PRUint32 b1;
+  PRInt32 b2;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -932,8 +936,19 @@ SelectionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
+    if (argc < 3) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
 
-    result = nativeThis->ToString(nativeRet);
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->ToString(b0, b1, b2, nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -1001,7 +1016,7 @@ static JSFunctionSpec SelectionMethods[] =
   {"removeSelectionListener",          SelectionRemoveSelectionListener,     1},
   {"setHint",          SelectionSetHint,     1},
   {"getHint",          SelectionGetHint,     0},
-  {"toString",          SelectionToString,     0},
+  {"toString",          SelectionToString,     3},
   {0}
 };
 
