@@ -55,7 +55,7 @@ install:: $(PROGRAMS)
         $(INCS)
         $(LLIBS)
         $(OS_LIBS)
-        -Fd$(PBDFILE)
+        -Fd$(PDBFILE)
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
