@@ -47,7 +47,6 @@
 #include "nsStyleUtil.h"
 #include "nsFormFrame.h"
 #include "nsIContent.h"
-#include "nsGlobalVariables.h"
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
