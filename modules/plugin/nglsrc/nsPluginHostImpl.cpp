@@ -1585,7 +1585,9 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-    
+    if(!url)
+      return NS_ERROR_FAILURE;
+
     nsXPIDLCString filename;
     url->GetFileName(getter_Copies(filename));
     if (NS_FAILED(rv)) return rv;
