@@ -610,14 +610,12 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
                ("nsNativeComponentLoader: %s using nsIModule to unregister self.", dll->GetDisplayPath()));
         nsCOMPtr<nsIFile> fs;
         res = dll->GetDllSpec(getter_AddRefs(fs));
-        if (NS_SUCCEEDED(res))
-            res = mobj->UnregisterSelf(mCompMgr, fs, /* XXX location */ "");
-        else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-                   ("nsNativeComponentLoader: dll->GetDllSpec() on %s FAILED.", dll->GetDisplayPath()));
-        }
-        mobj = NULL;    // Force a release of the Module object before unload()
+        if (NS_FAILED(res)) return res;
+        // Get registry location for spec
+        nsXPIDLCString registryName;
+        res = mCompMgr->RegistryLocationForSpec(fs, getter_Copies(registryName));
+        if (NS_FAILED(res)) return res;
+        mobj->UnregisterSelf(mCompMgr, fs, registryName);
     }
 #ifndef OBSOLETE_MODULE_LOADING
     else
