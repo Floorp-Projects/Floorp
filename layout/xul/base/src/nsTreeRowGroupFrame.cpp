@@ -650,14 +650,14 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
       mScrollbar = nsnull;
     }
   }
-  
+
+  ComputeVisibleRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
+
   if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
       mIsFull) {
     // Ensure the scrollbar has been created.
     if (!mScrollbar)
       CreateScrollbar(aPresContext);
-
-    ComputeVisibleRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
 
     // Set the maxpos of the scrollbar.
     nsCOMPtr<nsIContent> scrollbarContent;

@@ -52,6 +52,10 @@ public:
 
   void SetAllowEvents(PRBool allowEvents) { mAllowEvents = allowEvents; };
 
+  void ToggleOpenClose();
+  void Open();
+  void Close();
+
 protected:
   nsTreeCellFrame();
   virtual ~nsTreeCellFrame();

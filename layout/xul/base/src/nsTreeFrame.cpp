@@ -142,7 +142,10 @@ nsTreeFrame::HandleEvent(nsIPresContext& aPresContext,
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
     if (keyCode == NS_VK_UP ||
-        keyCode == NS_VK_DOWN) {
+        keyCode == NS_VK_DOWN ||
+        keyCode == NS_VK_LEFT ||
+        keyCode == NS_VK_RIGHT ||
+        keyCode == NS_VK_ENTER) {
 
       // Get our treechildren child frame.
       nsTreeRowGroupFrame* treeRowGroup = nsnull;
@@ -204,8 +207,15 @@ nsTreeFrame::HandleEvent(nsIPresContext& aPresContext,
       if (!cellFrame)
         return NS_OK; // No cell. Whatever. Bail.
 
-      // We got it! Perform the selection.
-      SetSelection(aPresContext, cellFrame);
+      // We got it! Perform the selection on an up/down.
+      if (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN)
+        SetSelection(aPresContext, cellFrame);
+      else if (keyCode == NS_VK_ENTER || keyCode == NS_VK_RETURN)
+        cellFrame->ToggleOpenClose();
+      else if (keyCode == NS_VK_LEFT)
+        cellFrame->Close();
+      else if (keyCode == NS_VK_RIGHT)
+        cellFrame->Open();
     }
   }
   return NS_OK;

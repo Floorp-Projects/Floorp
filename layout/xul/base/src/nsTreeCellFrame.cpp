@@ -255,10 +255,8 @@ nsTreeCellFrame::HandleMouseExitEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-nsresult
-nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext, 
-									    nsGUIEvent*     aEvent,
-									    nsEventStatus&  aEventStatus)
+void
+nsTreeCellFrame::ToggleOpenClose()
 {
   if (!mIsHeader)
   {
@@ -272,7 +270,7 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
     nsCOMPtr<nsIDOMElement> treeItem( do_QueryInterface(treeItemContent) );
     NS_ASSERTION(treeItem, "not a DOM element");
     if (! treeItem)
-      return NS_ERROR_UNEXPECTED;
+      return;
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
@@ -290,6 +288,72 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 		  treeItem->SetAttribute("open", "true");
 	  }
   }
+}
+
+void
+nsTreeCellFrame::Open()
+{
+  if (!mIsHeader)
+  {
+    // Perform an expand/collapse
+	  // Iterate up the chain to the row and then to the item.
+	  nsCOMPtr<nsIContent> treeItemContent;
+    nsCOMPtr<nsIContent> treeRowContent;
+	  mContent->GetParent(*getter_AddRefs(treeRowContent));
+    treeRowContent->GetParent(*getter_AddRefs(treeItemContent));
+
+    nsCOMPtr<nsIDOMElement> treeItem( do_QueryInterface(treeItemContent) );
+    NS_ASSERTION(treeItem, "not a DOM element");
+    if (! treeItem)
+      return;
+	  
+	  // Take the tree item content and toggle the value of its open attribute.
+	  nsAutoString attrValue;
+    nsresult result = treeItem->GetAttribute("open", attrValue);
+    attrValue.ToLowerCase();
+    PRBool isExpanded = (attrValue=="true");
+    if (!isExpanded) {
+		  // We're expanding and need to add frames to the flow.
+		  treeItem->SetAttribute("open", "true");
+	  }
+  }
+}
+
+void
+nsTreeCellFrame::Close()
+{
+  if (!mIsHeader)
+  {
+    // Perform an expand/collapse
+	  // Iterate up the chain to the row and then to the item.
+	  nsCOMPtr<nsIContent> treeItemContent;
+    nsCOMPtr<nsIContent> treeRowContent;
+	  mContent->GetParent(*getter_AddRefs(treeRowContent));
+    treeRowContent->GetParent(*getter_AddRefs(treeItemContent));
+
+    nsCOMPtr<nsIDOMElement> treeItem( do_QueryInterface(treeItemContent) );
+    NS_ASSERTION(treeItem, "not a DOM element");
+    if (! treeItem)
+      return;
+	  
+	  // Take the tree item content and toggle the value of its open attribute.
+	  nsAutoString attrValue;
+    nsresult result = treeItem->GetAttribute("open", attrValue);
+    attrValue.ToLowerCase();
+    PRBool isExpanded = (attrValue=="true");
+    if (isExpanded) {
+		  // We're expanding and need to add frames to the flow.
+		  treeItem->RemoveAttribute("open");
+	  }
+  }
+}
+
+nsresult
+nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext, 
+									    nsGUIEvent*     aEvent,
+									    nsEventStatus&  aEventStatus)
+{
+  ToggleOpenClose();
   return NS_OK;
 }
 
