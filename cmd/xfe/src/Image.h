@@ -44,12 +44,13 @@ public:
 
   static void          getURLExit_cb          (URL_Struct *pUrl, int iStatus,
                                                MWContext *pContext);
-
+  /*
   static void  DisplayImage       (MWContext * context, 
                                    IL_Pixmap * image,    IL_Pixmap * mask,
                                    PRInt32     x,        PRInt32     y,
                                    PRInt32     x_offset, PRInt32     y_offset, 
                                    PRInt32     width,    PRInt32     height);
+  */
   static void  NewPixmap          (MWContext * context,
                                    IL_Pixmap * image,    Boolean mask);
   static void  ImageComplete      (MWContext * context,  IL_Pixmap * image);
@@ -74,10 +75,7 @@ protected:
 
 /* This is still used by xfe.c */
 extern "C" void fe_DisplayPixmap  (MWContext * context,
-                                   IL_Pixmap * image,    IL_Pixmap * mask,
-                                   PRInt32     x,        PRInt32     y,
-                                   PRInt32     x_offset, PRInt32     y_offset, 
-                                   PRInt32     width,    PRInt32     height);
+                                   IL_Pixmap * image,  IL_Pixmap * mask, PRInt32 , PRInt32);
 
 #endif  /* _xfe_image_h */
 

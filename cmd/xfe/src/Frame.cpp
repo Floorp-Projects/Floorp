@@ -1752,7 +1752,7 @@ XFE_Frame::initializeMWContext(EFrameType frame_type,
 
     // set image library Callback functions 
     CONTEXT_DATA (m_context)->DisplayPixmap 
-        = (DisplayPixmapPtr)fe_DisplayPixmap;
+        = (DisplayPixmapPtr)NULL/* fe_DisplayPixmap */;
     CONTEXT_DATA (m_context)->NewPixmap = (NewPixmapPtr)NULL;
     CONTEXT_DATA (m_context)->ImageComplete = (ImageCompletePtr)NULL;
 

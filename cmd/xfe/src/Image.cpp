@@ -263,11 +263,7 @@ XFE_Image::getURLExit_cb(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 
 // The XFE handle to the image library callback -IMGCB_DisplayPixmap
 extern "C" void 
-fe_DisplayPixmap(MWContext * context,
-                         IL_Pixmap * image, IL_Pixmap * mask,
-                         PRInt32  x,        PRInt32  y,
-                         PRInt32  x_offset, PRInt32  y_offset,
-                         PRInt32  width,    PRInt32  height) 
+fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32 width, PRInt32 height)
 {
 
    XFE_Frame *    frameHandle=(XFE_Frame *)NULL;
@@ -282,26 +278,19 @@ fe_DisplayPixmap(MWContext * context,
     * pixmap display
     */
 
-        if (context->type != MWContextIcon)
-        {
-            /* Call the frame's displayImage method */
-            XFE_Image::DisplayImage(context, image, mask,
-                                    x, y, x_offset, y_offset,
-                                    width, height);
-        }
-        else
-        {
-            /* If the context type is MWContextIcon, get a handle to
-             * NavCenterView and let it handle pixmap
-             */
-            XFE_View * navCenterView = XFE_View::getNavCenterView(frameHandle->getView());
-            if (navCenterView)
-            {
-               Widget buttonWidget = CONTEXT_WIDGET(context);
-               navCenterView->handleDisplayPixmap(buttonWidget, image, mask, width, height);
-            }
+   if (context->type == MWContextIcon)
+   {
+       /* If the context type is MWContextIcon, get a handle to
+        * NavCenterView and let it handle pixmap
+        */
+       XFE_View * navCenterView = XFE_View::getNavCenterView(frameHandle->getView());
+       if (navCenterView)
+       {
+           Widget buttonWidget = CONTEXT_WIDGET(context);
+           navCenterView->handleDisplayPixmap(buttonWidget, image, mask, width, height);
+       }
             
-        }
+   }
 
 }  /* DisplayPixmap */
 
@@ -378,6 +367,7 @@ XFE_Image::ImageComplete(MWContext * context, IL_Pixmap * image)
 
 }  /* ImageComplete  */
 
+#ifdef UNDEF
 
 // The actual XFE function that renders image on a HTML area
 /*static*/ void
@@ -535,3 +525,5 @@ XFE_Image::DisplayImage(MWContext * context,
 
 }  /* displayImage */
 
+
+#endif  /* UNDEF  */

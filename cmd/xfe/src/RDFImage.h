@@ -65,8 +65,9 @@ public:
 
   void        setCompleteCallback   (completeCallbackPtr callback,
                                      void * callbackData);
-  void        RDFDisplayPixmap      (IL_Pixmap * image, IL_Pixmap * mask,
-                                     PRInt32  width, PRInt32  height);
+  void        RDFDisplayPixmap      (IL_Pixmap * image, IL_Pixmap *  mask,
+                                     PRInt32 width, PRInt32 height);
+
   void        RDFNewPixmap          (IL_Pixmap * image, PRBool isMask);
   void        RDFImageComplete      (IL_Pixmap * image);
   void        addListener           (void * requestedObj, Widget w,
