@@ -29,12 +29,14 @@
 #include "il_util.h"
 #include "il_icons.h"
 #include "CBrowserContext.h"
+#include "CIconContext.h"
 #include "CHTMLView.h"
 #include "RandomFrontEndCrap.h"
 #include <UDrawingState.h>
 #include "UTextBox.h"
 #include "uerrmgr.h"
 #include "resgui.h"
+#include "CIconCache.h"
 #ifndef NSPR20
 #include "prglobal.h"
 #endif
@@ -72,28 +74,6 @@ enum DefaultColors {
 	kDefaultBGColorGreen = 192,
 	kDefaultBGColorBlue = 192
 };
-
-/*
- * Our internal Pixmap structure. What's the policy for internal priv. structs as to
- * header files, etc?
- */
-
-typedef struct NS_PixMap
-{
-	PixMap		pixmap;
-	Handle		buffer_handle;
-	void *		image_buffer;
-	int32		lock_count;
-	Boolean		tiled;
-} NS_PixMap;
-
-
-typedef struct DrawingState
-{
-	short		copyMode;
-	NS_PixMap *	pixmap;
-	NS_PixMap *	mask;
-} DrawingState;
 
 
 typedef struct PictureGWorldState {
@@ -133,17 +113,9 @@ static Boolean FindColorInCTable ( CTabHandle ctab, Uint32 skipIndex, RGBColor *
 static void LockPixmapBuffer ( IL_Pixmap * pixmap );
 static void UnlockPixmapBuffer ( IL_Pixmap * pixmap );
 
-static void DrawScaledImage ( DrawingState * state, Point topLeft, jint x_offset,
-	jint y_offset, jint width, jint height );
-static void DrawTiledImage ( DrawingState * state, Point topLeft, jint x_offset,
-	jint y_offset, jint width, jint height );
-
 static CIconHandle GetIconHandle ( jint iconID );
 static IL_GroupContext * CreateImageGroupContext ( MWContext * context );
 
-static OSErr PreparePixmapForDrawing ( IL_Pixmap * image, IL_Pixmap * mask, Boolean canCopyMask,
-	DrawingState * state );
-static void DoneDrawingPixmap ( IL_Pixmap * image, IL_Pixmap * mask, DrawingState * state );
 
 /*
  * Globals
@@ -353,6 +325,14 @@ _IMGCB_ControlPixmapBits(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap
 			case IL_UNLOCK_BITS:
 				UnlockPixmapBuffer ( pixmap );
 				break;
+				
+			case IL_RELEASE_BITS:
+				// the image is totally done loading, so tell the cache that the context associated 
+				// with this image will go away and we know we can just give out the bits to anyone
+				// that asks in the future.
+				if ( context->type == MWContextIcon )
+					gIconCache.ContextFinished ( context );
+				break;
 		}
 	}
 }
@@ -371,30 +351,31 @@ _IMGCB_DestroyPixmap(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap* pi
 #if TRACK_IMAGE_CACHE_SIZE
 		gCacheSize -= pixmap->header.widthBytes * pixmap->header.height;
 #endif
-		
-		if ( fe_pixmap->buffer_handle != NULL )
-			{
-			DisposeHandle ( fe_pixmap->buffer_handle );
-			}
-		
-		if ( fe_pixmap->image_buffer != NULL )
-			{
-			free ( fe_pixmap->image_buffer );
-			}
-		
-		XP_DELETE ( fe_pixmap );
+		DestroyFEPixmap ( fe_pixmap );
 		}
 }
 
+
+//
+// _IMGCB_DisplayPixmap
+//
+// Called from imagelib when the image is ready to draw any portion (one frame of an animation, parital 
+// progressive decoding, etc). Also called from the compositor to re-blit an already loaded image when
+// scrolling or refreshing the view.
+//
+// We hook into this as well for drawing gifs/jpegs in the FE for icons because when we get this
+// call, we know that the image has been loaded and is ready to display.
+//
 JMC_PUBLIC_API(void)
-_IMGCB_DisplayPixmap(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap* image, IL_Pixmap* mask,
-	jint x, jint y, jint x_offset, jint y_offset, jint width, jint height, jint req_w, jint req_h)
+_IMGCB_DisplayPixmap(struct IMGCB* /*self*/, jint /*op*/, void* inContext, IL_Pixmap* image, IL_Pixmap* mask,
+						jint x, jint y, jint x_offset, jint y_offset, jint width, jint height, jint req_w,
+						jint req_h)
 {
-	MWContext *		context = (MWContext *) a;
+	MWContext *		context = static_cast<MWContext *>(inContext);
 	NS_PixMap *		fe_pixmap;
 	NS_PixMap *		fe_mask;
 	SPoint32		topLeftImage;
-	StColorState	saveColorState();
+	StColorState	saveColorState;
 	Point			topLeft;
 	int32			x_origin;
 	int32			y_origin;
@@ -402,6 +383,20 @@ _IMGCB_DisplayPixmap(struct IMGCB* /*self*/, jint /*op*/, void* a, IL_Pixmap* im
 	OSErr			err;
 	DrawingState	state;
 	
+	// This routine was written assuming that we are drawing into a CHTMLView (why else would you be
+	// drawing gifs?) However, we also want to hook in here so we know when images we want to draw in the
+	// chrome have loaded and are ready to display. If the context type is right (an image context),
+	// let it handle the work and return.
+	if ( context->type == MWContextIcon ) {
+		CIconContext* iconContext = dynamic_cast<CIconContext*>(ExtractNSContext(context));
+		if ( iconContext )
+			iconContext->DrawImage(image, mask);
+		return;
+	}
+	
+	//
+	// We're not given an image context so we draw like normal into an HTML view.
+	//
 	CHTMLView* theHTMLView = ExtractHyperView(context);
 	if ( image != NULL && theHTMLView && theHTMLView->FocusDraw())
 		{
@@ -962,7 +957,320 @@ Boolean VerifyDisplayContextColorSpace (
 	return mustReload;
 }
 
+
+void DrawScaledImage ( DrawingState * state, Point topLeft, jint x_offset,
+	jint y_offset, jint width, jint height )
+{
+	Rect			srcRect;
+	Rect *			maskRectPtr;
+	Rect			dstRect;
+	PixMap *		maskPtr;
+	NS_PixMap *		fe_pixmap;
+	NS_PixMap *		fe_mask;
+	
+	fe_pixmap = state->pixmap;
+	fe_mask = state->mask;
+	
+	if ( fe_mask != NULL )
+	{
+		maskPtr = &fe_mask->pixmap;
+		maskRectPtr = &maskPtr->bounds;
+	}
+	else
+	{
+		maskPtr = NULL;
+		maskRectPtr = NULL;
+	}
+
+	srcRect.left = x_offset;
+	srcRect.top = y_offset;
+	srcRect.right = x_offset + width;
+	srcRect.bottom = y_offset + height;
+	
+	/*
+	 * Clip src Rect to the image.
+	 */
+	if ( fe_pixmap->pixmap.bounds.right < srcRect.right )
+	{
+		srcRect.right = fe_pixmap->pixmap.bounds.right;
+	}
+	if ( fe_pixmap->pixmap.bounds.bottom < srcRect.bottom )
+	{
+		srcRect.bottom = fe_pixmap->pixmap.bounds.bottom;
+	}
+	
+	SetRect ( &dstRect, topLeft.h, topLeft.v, topLeft.h + width, topLeft.v + height );
+				
+	if ( maskPtr == NULL )
+	{
+		CopyBits ( (BitMap *) &fe_pixmap->pixmap, &qd.thePort->portBits, &srcRect,
+			&dstRect, state->copyMode, NULL );
+	}
+	else
+	{
+		CopyMask ( (BitMap *) &fe_pixmap->pixmap, (BitMap *) maskPtr, &qd.thePort->portBits,
+			&srcRect, maskRectPtr, &dstRect );
+	}
+}
+
+void DrawTiledImage ( DrawingState * state, Point topLeft, jint x_offset,
+	jint y_offset, jint width, jint height )
+{
+
+	Rect			srcRect;
+	Rect *			maskRectPtr;
+	Rect			dstRect;
+	PixMap *		maskPtr;
+	int32			right_clip;
+	int32			bottom_clip;
+	int32			left;
+	int32			top;
+	int32			img_width;
+	int32			img_height;
+	int32			tile_width;
+	int32			tile_height;
+	int32			src_x_offset;
+	int32			src_y_offset;
+	NS_PixMap *		fe_pixmap;
+	NS_PixMap *		fe_mask;
+			
+	fe_pixmap = state->pixmap;
+	fe_mask = state->mask;
+
+	if ( fe_mask != NULL )
+	{
+		maskPtr = &fe_mask->pixmap;
+		maskRectPtr = &srcRect;
+	}
+	else
+	{
+		maskPtr = NULL;
+		maskRectPtr = NULL;
+	}
+	
+	img_width = fe_pixmap->pixmap.bounds.right - fe_pixmap->pixmap.bounds.left;
+	img_height = fe_pixmap->pixmap.bounds.bottom - fe_pixmap->pixmap.bounds.top;
+
+	right_clip = topLeft.h + width;
+	bottom_clip = topLeft.v + height;
+	
+	/* the first row may be shorter */
+	tile_height = img_height - ( y_offset % img_height );
+	
+	/*
+	 * Walk through all the tiles in dst space
+	 */
+	
+	top = topLeft.v;
+	src_y_offset = y_offset % img_height;
+	
+	while ( top < bottom_clip )
+	{
+		left = topLeft.h;
+		tile_width = img_width - ( x_offset % img_width );
+		src_x_offset = x_offset % img_width;
+		
+		while ( left < right_clip )
+		{
+			dstRect.left = left;
+			dstRect.top = top;
+			dstRect.right = left + tile_width;
+			dstRect.bottom = top + tile_height;
+			
+			srcRect.left = src_x_offset;
+			srcRect.top = src_y_offset;
+			srcRect.right = src_x_offset + tile_width;
+			srcRect.bottom = src_y_offset + tile_height;
+				
+			if ( maskPtr == NULL )
+			{
+				CopyBits ( (BitMap *) &fe_pixmap->pixmap, &qd.thePort->portBits, &srcRect,
+					&dstRect, state->copyMode, NULL );
+			}
+			else
+			{
+				CopyMask ( (BitMap *) &fe_pixmap->pixmap, (BitMap *) maskPtr, &qd.thePort->portBits,
+					&srcRect, maskRectPtr, &dstRect );
+			}
+			
+			/*
+			 * Bump to the next column and be sure to clip if it's the last one
+			 */
+			left += tile_width;
+			tile_width = img_width;
+			if ( left + tile_width > right_clip )
+			{
+				tile_width = right_clip - left;
+			}
+			src_x_offset = 0;
+		}
+		
+		/*
+		 * Bump to the next row and be sure to clip if it's the last one
+		 */
+		top += tile_height;
+		tile_height = img_height;
+		if ( top + tile_height > bottom_clip )
+		{
+			tile_height = bottom_clip - top;
+		}
+		src_y_offset = 0;
+	}
+}
+
+OSErr PreparePixmapForDrawing ( IL_Pixmap * image, IL_Pixmap * mask, Boolean canCopyMask,
+	DrawingState * state )
+{
+	RGBColor		rgb;
+	long			index;
+	NI_IRGB *		transparent_pixel;
+	IL_ColorSpace *	color_space;
+	CTabHandle		ctab;
+	
+	state->copyMode = srcCopy;
+	state->pixmap = (NS_PixMap *) image->client_data;
+	state->mask = NULL;
+	
+	if ( state->pixmap == NULL )
+		{
+		return -1;
+		}
+		
+	color_space = image->header.color_space;
+	XP_ASSERT(color_space);
+	
+	if ( mask != NULL )
+		{
+		state->mask = (NS_PixMap *) mask->client_data;
+		}
+	
+	/*
+	 * If we can't copymask and we have a transparent colour, then we need to use QuickDraw's
+	 * transparent mode and set the OpColor
+	 */
+	transparent_pixel = image->header.transparent_pixel;
+	
+	if ( transparent_pixel != NULL )
+		{
+		/* Extract the transparent color for this pixmap */
+		rgb.red = (uint16) transparent_pixel->red | ( (uint16) transparent_pixel->red << 8 );
+		rgb.green = (uint16) transparent_pixel->green | ( (uint16) transparent_pixel->green << 8 );
+		rgb.blue = (uint16) transparent_pixel->blue | ( (uint16) transparent_pixel->blue << 8 );
+		
+		/* if we have an indexed color space, then update the bg color. Grayscale color */
+		/* spaces assume the color's been mapped to the closest default gray */
+		if (color_space->type == NI_PseudoColor)
+			{
+			index = color_space->cmap.num_colors - 1;
+			
+			ctab = state->pixmap->pixmap.pmTable;
+			(*ctab)->ctTable[ index ].rgb = rgb;
+			}
+		
+		/*
+		 * now, if we have a mask, but we can't copymask, then set our transfer mode
+		 * to be transparent. We may have problems if the background color matches a
+		 * color in the image, but that's life for now...
+		 */
+		if ( mask != NULL && !canCopyMask )
+			{
+			/* don't use the mask anymore */
+			state->mask = NULL;
+			
+			state->copyMode = transparent;
+			RGBBackColor ( &rgb );
+			}
+		}
+		
+	LockPixmapBuffer ( image );
+	if ( state->mask != NULL )
+		{
+		LockPixmapBuffer ( mask );
+		}
+
+	return noErr;
+}
+
+void DoneDrawingPixmap ( IL_Pixmap * image, IL_Pixmap * mask, DrawingState * state )
+{
+	UnlockPixmapBuffer ( image );
+	if ( state->mask != NULL )
+		{
+		UnlockPixmapBuffer ( mask );
+		}
+}
+
+
+/*
+ * LockFEPixmapBuffer
+ *
+ * Locks the FE bits of the image
+ */
+void LockFEPixmapBuffer ( NS_PixMap* fe_pixmap )
+{
+	if ( fe_pixmap != NULL )
+		{
+		if ( fe_pixmap->lock_count == 0 )
+			{
+			if ( fe_pixmap->buffer_handle != NULL )
+				{
+				HLock ( fe_pixmap->buffer_handle );
+				fe_pixmap->pixmap.baseAddr = *fe_pixmap->buffer_handle;
+				}
+			else
+				{
+				fe_pixmap->pixmap.baseAddr = (char *) fe_pixmap->image_buffer;
+				}
+				
+			}
+		
+		fe_pixmap->lock_count++;
+		}
+}
+
+
+/*
+ * UnlockFEPixmapBuffer
+ *
+ * Unlocks the FE bits of the image
+ */
+void UnlockFEPixmapBuffer ( NS_PixMap* fe_pixmap )
+{
+	if ( fe_pixmap != NULL )
+		{
+		if ( --fe_pixmap->lock_count == 0 )
+			{
+			if ( fe_pixmap->buffer_handle != NULL )
+				{
+				HUnlock ( fe_pixmap->buffer_handle );
+				}
+
+			fe_pixmap->pixmap.baseAddr = (Ptr) 0xFF5E0001;
+			}
+		}
+}
+
+
+/*
+ * DestroyFEPixmap
+ *
+ * Tear down the NS_PixMap
+ */
+void DestroyFEPixmap ( NS_PixMap* fe_pixmap )
+{
+	if ( !fe_pixmap )
+		return;
+		
+	if ( fe_pixmap->buffer_handle != NULL )
+		DisposeHandle ( fe_pixmap->buffer_handle );	
+	if ( fe_pixmap->image_buffer != NULL )
+		free ( fe_pixmap->image_buffer );	
+	XP_DELETE ( fe_pixmap );
+}
+
+
 #pragma mark --- PRIVATE FUNCTIONS ---
+
 
 /*
  * Private Utilities
@@ -1807,295 +2115,27 @@ static void CopyPicture ( PictureGWorldState * state )
 	HSetState ( (Handle) pm, hState );
 }
 
+
 static void LockPixmapBuffer ( IL_Pixmap * pixmap )
 {
 	NS_PixMap * fe_pixmap;
 	
 	fe_pixmap = (NS_PixMap *) pixmap->client_data;
-	if ( fe_pixmap != NULL )
-		{
-		if ( fe_pixmap->lock_count == 0 )
-			{
-			if ( fe_pixmap->buffer_handle != NULL )
-				{
-				HLock ( fe_pixmap->buffer_handle );
-				fe_pixmap->pixmap.baseAddr = *fe_pixmap->buffer_handle;
-				}
-			else
-				{
-				fe_pixmap->pixmap.baseAddr = (char *) fe_pixmap->image_buffer;
-				}
-				
-			pixmap->bits = fe_pixmap->pixmap.baseAddr;
-			}
-		
-		fe_pixmap->lock_count++;
-		}
+	LockFEPixmapBuffer ( fe_pixmap );
+	pixmap->bits = fe_pixmap->pixmap.baseAddr;		// bits now point to something normal
 }
+
 
 static void UnlockPixmapBuffer ( IL_Pixmap * pixmap )
 {
 	NS_PixMap * fe_pixmap;
 
 	fe_pixmap = (NS_PixMap *) pixmap->client_data;
-
-	if ( fe_pixmap != NULL )
-		{
-		if ( --fe_pixmap->lock_count == 0 )
-			{
-			if ( fe_pixmap->buffer_handle != NULL )
-				{
-				HUnlock ( fe_pixmap->buffer_handle );
-				}
-
-			fe_pixmap->pixmap.baseAddr = (Ptr) 0xFF5E0001;
-			pixmap->bits = fe_pixmap->pixmap.baseAddr;
-			}
-		}
+	UnlockFEPixmapBuffer ( fe_pixmap );
+	pixmap->bits = fe_pixmap->pixmap.baseAddr;		// bits set to garbage
 }
 
 
-static void DrawScaledImage ( DrawingState * state, Point topLeft, jint x_offset,
-	jint y_offset, jint width, jint height )
-{
-	Rect			srcRect;
-	Rect *			maskRectPtr;
-	Rect			dstRect;
-	PixMap *		maskPtr;
-	NS_PixMap *		fe_pixmap;
-	NS_PixMap *		fe_mask;
-	
-	fe_pixmap = state->pixmap;
-	fe_mask = state->mask;
-	
-	if ( fe_mask != NULL )
-	{
-		maskPtr = &fe_mask->pixmap;
-		maskRectPtr = &maskPtr->bounds;
-	}
-	else
-	{
-		maskPtr = NULL;
-		maskRectPtr = NULL;
-	}
-
-	srcRect.left = x_offset;
-	srcRect.top = y_offset;
-	srcRect.right = x_offset + width;
-	srcRect.bottom = y_offset + height;
-	
-	/*
-	 * Clip src Rect to the image.
-	 */
-	if ( fe_pixmap->pixmap.bounds.right < srcRect.right )
-	{
-		srcRect.right = fe_pixmap->pixmap.bounds.right;
-	}
-	if ( fe_pixmap->pixmap.bounds.bottom < srcRect.bottom )
-	{
-		srcRect.bottom = fe_pixmap->pixmap.bounds.bottom;
-	}
-	
-	SetRect ( &dstRect, topLeft.h, topLeft.v, topLeft.h + width, topLeft.v + height );
-				
-	if ( maskPtr == NULL )
-	{
-		CopyBits ( (BitMap *) &fe_pixmap->pixmap, &qd.thePort->portBits, &srcRect,
-			&dstRect, state->copyMode, NULL );
-	}
-	else
-	{
-		CopyMask ( (BitMap *) &fe_pixmap->pixmap, (BitMap *) maskPtr, &qd.thePort->portBits,
-			&srcRect, maskRectPtr, &dstRect );
-	}
-}
-
-static void DrawTiledImage ( DrawingState * state, Point topLeft, jint x_offset,
-	jint y_offset, jint width, jint height )
-{
-
-	Rect			srcRect;
-	Rect *			maskRectPtr;
-	Rect			dstRect;
-	PixMap *		maskPtr;
-	int32			right_clip;
-	int32			bottom_clip;
-	int32			left;
-	int32			top;
-	int32			img_width;
-	int32			img_height;
-	int32			tile_width;
-	int32			tile_height;
-	int32			src_x_offset;
-	int32			src_y_offset;
-	NS_PixMap *		fe_pixmap;
-	NS_PixMap *		fe_mask;
-			
-	fe_pixmap = state->pixmap;
-	fe_mask = state->mask;
-
-	if ( fe_mask != NULL )
-	{
-		maskPtr = &fe_mask->pixmap;
-		maskRectPtr = &srcRect;
-	}
-	else
-	{
-		maskPtr = NULL;
-		maskRectPtr = NULL;
-	}
-	
-	img_width = fe_pixmap->pixmap.bounds.right - fe_pixmap->pixmap.bounds.left;
-	img_height = fe_pixmap->pixmap.bounds.bottom - fe_pixmap->pixmap.bounds.top;
-
-	right_clip = topLeft.h + width;
-	bottom_clip = topLeft.v + height;
-	
-	/* the first row may be shorter */
-	tile_height = img_height - ( y_offset % img_height );
-	
-	/*
-	 * Walk through all the tiles in dst space
-	 */
-	
-	top = topLeft.v;
-	src_y_offset = y_offset % img_height;
-	
-	while ( top < bottom_clip )
-	{
-		left = topLeft.h;
-		tile_width = img_width - ( x_offset % img_width );
-		src_x_offset = x_offset % img_width;
-		
-		while ( left < right_clip )
-		{
-			dstRect.left = left;
-			dstRect.top = top;
-			dstRect.right = left + tile_width;
-			dstRect.bottom = top + tile_height;
-			
-			srcRect.left = src_x_offset;
-			srcRect.top = src_y_offset;
-			srcRect.right = src_x_offset + tile_width;
-			srcRect.bottom = src_y_offset + tile_height;
-				
-			if ( maskPtr == NULL )
-			{
-				CopyBits ( (BitMap *) &fe_pixmap->pixmap, &qd.thePort->portBits, &srcRect,
-					&dstRect, state->copyMode, NULL );
-			}
-			else
-			{
-				CopyMask ( (BitMap *) &fe_pixmap->pixmap, (BitMap *) maskPtr, &qd.thePort->portBits,
-					&srcRect, maskRectPtr, &dstRect );
-			}
-			
-			/*
-			 * Bump to the next column and be sure to clip if it's the last one
-			 */
-			left += tile_width;
-			tile_width = img_width;
-			if ( left + tile_width > right_clip )
-			{
-				tile_width = right_clip - left;
-			}
-			src_x_offset = 0;
-		}
-		
-		/*
-		 * Bump to the next row and be sure to clip if it's the last one
-		 */
-		top += tile_height;
-		tile_height = img_height;
-		if ( top + tile_height > bottom_clip )
-		{
-			tile_height = bottom_clip - top;
-		}
-		src_y_offset = 0;
-	}
-}
-
-static OSErr PreparePixmapForDrawing ( IL_Pixmap * image, IL_Pixmap * mask, Boolean canCopyMask,
-	DrawingState * state )
-{
-	RGBColor		rgb;
-	long			index;
-	NI_IRGB *		transparent_pixel;
-	IL_ColorSpace *	color_space;
-	CTabHandle		ctab;
-	
-	state->copyMode = srcCopy;
-	state->pixmap = (NS_PixMap *) image->client_data;
-	state->mask = NULL;
-	
-	if ( state->pixmap == NULL )
-		{
-		return -1;
-		}
-		
-	color_space = image->header.color_space;
-	XP_ASSERT(color_space);
-	
-	if ( mask != NULL )
-		{
-		state->mask = (NS_PixMap *) mask->client_data;
-		}
-	
-	/*
-	 * If we can't copymask and we have a transparent colour, then we need to use QuickDraw's
-	 * transparent mode and set the OpColor
-	 */
-	transparent_pixel = image->header.transparent_pixel;
-	
-	if ( transparent_pixel != NULL )
-		{
-		/* Extract the transparent color for this pixmap */
-		rgb.red = (uint16) transparent_pixel->red | ( (uint16) transparent_pixel->red << 8 );
-		rgb.green = (uint16) transparent_pixel->green | ( (uint16) transparent_pixel->green << 8 );
-		rgb.blue = (uint16) transparent_pixel->blue | ( (uint16) transparent_pixel->blue << 8 );
-		
-		/* if we have an indexed color space, then update the bg color. Grayscale color */
-		/* spaces assume the color's been mapped to the closest default gray */
-		if (color_space->type == NI_PseudoColor)
-			{
-			index = color_space->cmap.num_colors - 1;
-			
-			ctab = state->pixmap->pixmap.pmTable;
-			(*ctab)->ctTable[ index ].rgb = rgb;
-			}
-		
-		/*
-		 * now, if we have a mask, but we can't copymask, then set our transfer mode
-		 * to be transparent. We may have problems if the background color matches a
-		 * color in the image, but that's life for now...
-		 */
-		if ( mask != NULL && !canCopyMask )
-			{
-			/* don't use the mask anymore */
-			state->mask = NULL;
-			
-			state->copyMode = transparent;
-			RGBBackColor ( &rgb );
-			}
-		}
-		
-	LockPixmapBuffer ( image );
-	if ( state->mask != NULL )
-		{
-		LockPixmapBuffer ( mask );
-		}
-
-	return noErr;
-}
-
-static void DoneDrawingPixmap ( IL_Pixmap * image, IL_Pixmap * mask, DrawingState * state )
-{
-	UnlockPixmapBuffer ( image );
-	if ( state->mask != NULL )
-		{
-		UnlockPixmapBuffer ( mask );
-		}
-}
 
 static CIconHandle GetIconHandle ( jint iconID )
 {
