@@ -638,11 +638,14 @@ function playSound( ThisURL )
    sample.play( url );
 }
 
+var gSelectAll = false;
+
 function selectAllEvents()
 {
+   gSelectAll = true;
+
    gCalendarWindow.EventSelection.setArrayToSelection( gCalendarWindow.eventSource.getCurrentEvents() );
 }
-
 
 function closeCalendar()
 {

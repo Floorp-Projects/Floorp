@@ -70,7 +70,14 @@ function calendarUnifinderInit( )
          
          if( EventSelectionArray.length > 1 )
          {
-            //SearchTree.treeBoxObject.selection.selectAll( );
+            /* selecting all events is taken care of in the selectAllEvents in calendar.js 
+            ** Other than that, there's no other way to get in here. */
+            if( gSelectAll === true )
+            {
+               SearchTree.treeBoxObject.selection.selectAll( );
+               
+               gSelectAll = false;
+            }
          }
          else if( EventSelectionArray.length == 1 )
          {
@@ -85,16 +92,18 @@ function calendarUnifinderInit( )
                SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
             }
          }
+         else
+            SearchTree.treeBoxObject.selection.clearSelection( );
          
          /* This needs to be in a setTimeout */
-         setTimeout( "resetSelection()", 1 );
+         setTimeout( "resetAllowSelection()", 1 );
       }
    }
       
    gCalendarWindow.EventSelection.addObserver( unifinderEventSelectionObserver );
 }
 
-function resetSelection()
+function resetAllowSelection()
 {
    /* 
    Do not change anything in the following lines, they are needed as described in the 
