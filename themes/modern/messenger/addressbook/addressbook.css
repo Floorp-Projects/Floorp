@@ -284,11 +284,9 @@ treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
 /*** Styles for abSelectAddressesDialog.xul ***/
 
 box[orient="horizontal"] > splitter {
-	border-right	: 1px solid #000000;
 }
 
 box[orient="vertical"] > splitter {
-	border-top	: 1px solid #000000;
 }
 
 #3PaneBox {
