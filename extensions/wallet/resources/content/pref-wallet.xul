@@ -48,7 +48,7 @@
     function viewWalletSites()
     {
       window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                        "","modal=yes,chrome,resizable=no", "W");
+                        "_blank","modal=yes,chrome,resizable=no", "W");
     }
 
   ]]>

@@ -116,7 +116,7 @@
     function formShow() {
       window.openDialog(
           "chrome://communicator/content/wallet/WalletViewer.xul",
-          "WalletViewer",
+          "_blank",
           "chrome,titlebar,modal=yes,resizable=yes");
 /* form toolbar is out
        initToolbarItems(); // need to redetermine which buttons in form toolbar to enable
