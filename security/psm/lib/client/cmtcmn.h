@@ -330,7 +330,7 @@ typedef char * (*filePathPromptCallback_fn)(void   *arg,
  * reference a window that was previously created.
  */
 typedef void* (*uiHandlerCallback_fn)(CMUint32 resourceID, void* context, 
-                                      CMUint32 width, CMUint32 height, 
+                                      CMUint32 width, CMUint32 height, CMBool isModal,
                                       char* url, void* data);
 
 /*

@@ -414,7 +414,7 @@ void CMT_DispatchEvent(PCMT_CONTROL cm_control, CMTItem * eventData)
             }
             (*(uiHandlerCallback_fn)(p->handler))(event.resourceID, 
                                                   clientContext, event.width,
-                                                  event.height, event.url, 
+                                                  event.height, event.isModal, event.url, 
                                                   p->data);
             break;
         }

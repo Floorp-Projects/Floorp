@@ -110,7 +110,8 @@ CMTStatus CMT_PKCS7DecoderStart(PCMT_CONTROL control, void* clientContext, CMUin
             goto loser;
         }
  
-       if (control->sockFuncs.connect(sock, reply.port, NULL) != CMTSuccess) {
+       if (control->sockFuncs.connect(sock, (short)reply.port, 
+                                      NULL) != CMTSuccess) {
             goto loser;
         }
  
@@ -220,21 +221,29 @@ CMTStatus CMT_PKCS7DecoderFinish(PCMT_CONTROL control, CMUint32 connectionID,
     control->sockFuncs.shutdown(sock);
     sockArr[0] = sock;
     sockArr[1] = ctrlsock;
-    while (1) {
-        selSock = control->sockFuncs.select(sockArr,2,0);
-        if (selSock == ctrlsock) {
-            CMT_ProcessEvent(control);
-        } else if (selSock == sock) {
-            nbytes = control->sockFuncs.recv(sock, buf, sizeof(buf));
-            if (nbytes < 0) {
-                goto loser;
-            } else if (nbytes == 0) {
-                break;
+    /* Let's see if doing a poll first gets rid of a weird bug where we
+     * lock up the client.
+     */
+#ifndef XP_MAC
+    if (control->sockFuncs.select(sockArr,2,1) != NULL)
+#endif
+	{
+        while (1) {
+            selSock = control->sockFuncs.select(sockArr,2,0);
+            if (selSock == ctrlsock) {
+                CMT_ProcessEvent(control);
+            } else if (selSock == sock) {
+                nbytes = control->sockFuncs.recv(sock, buf, sizeof(buf));
+                if (nbytes < 0) {
+                    goto loser;
+                } else if (nbytes == 0) {
+                    break;
+                }
+                priv->cb(priv->cb_arg, buf, nbytes);
             }
-            priv->cb(priv->cb_arg, buf, nbytes);
         }
     }
-
+    
     if (CMT_CloseDataConnection(control, connectionID) == CMTFailure) {
         goto loser;
     }
@@ -496,7 +505,8 @@ CMTStatus CMT_PKCS7EncoderStart(PCMT_CONTROL control, CMUint32 ciRID,
         if (sock == NULL) {
             goto loser;
         }
-        if (control->sockFuncs.connect(sock, reply.port, NULL) != CMTSuccess) {
+        if (control->sockFuncs.connect(sock, (short)reply.port, 
+                                       NULL) != CMTSuccess) {
             goto loser;
         }
         if (control->sockFuncs.send(sock, control->nonce.data, 
