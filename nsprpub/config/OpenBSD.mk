@@ -36,6 +36,7 @@ OS_CFLAGS              = $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DOPEN
 
 ifeq ($(USE_PTHREADS),1)
 OS_LIBS                        = -lc_r
+THREAD_FLAG		+= -pthread
 # XXX probably should define _THREAD_SAFE too.
 else
 OS_LIBS                        = -lc
