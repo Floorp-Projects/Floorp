@@ -31,33 +31,34 @@ Rights Reserved.
 	
 	<box id="CardViewInnerBox" align="vertical" flex="1">
 		
-		<html:div hide="true" id="CardTitle">*</html:div>
+		<html:div hide="true" id="CardTitle"/>
 
 		<box align="horizontal" style="width:100%" flex="1">
 			
 			<box align="vertical" flex="1" style="width:200px">
 				<box id="cvbName" class="cardViewGroup" align="vertical">
-					<html:div class="CardViewHeading" hide="true" id="cvhName">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvNickname">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvEmail1">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvEmail2">*</html:div>
+					<html:div class="CardViewHeading" hide="true" id="cvhName"/>
+					<html:div class="CardViewText" hide="true" id="cvDisplayName"/>
+					<html:div class="CardViewText" hide="true" id="cvNickname"/>
+					<html:div class="CardViewText" hide="true" id="cvEmail1"/>
+					<html:div class="CardViewText" hide="true" id="cvEmail2"/>
 				</box>
 				
 				<box id="cvbHome" class="cardViewGroup" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvHomeAddress">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvHomeAddress2">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvHomeCityStZip">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvHomeCountry">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvHomeAddress"/>
+					<html:div class="CardViewText" hide="true" id="cvHomeAddress2"/>
+					<html:div class="CardViewText" hide="true" id="cvHomeCityStZip"/>
+					<html:div class="CardViewText" hide="true" id="cvHomeCountry"/>
 				</box>
 
 				<box id="cvbOther" class="cardViewGroup" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvCustom1">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvCustom2">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvCustom3">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvCustom4">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvNotes">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvCustom1"/>
+					<html:div class="CardViewText" hide="true" id="cvCustom2"/>
+					<html:div class="CardViewText" hide="true" id="cvCustom3"/>
+					<html:div class="CardViewText" hide="true" id="cvCustom4"/>
+					<html:div class="CardViewText" hide="true" id="cvNotes"/>
 				</box>
 			</box>
 			
@@ -66,22 +67,22 @@ Rights Reserved.
 			<box align="vertical" flex="1" style="width:200px">
 				<box id="cvbPhone" class="cardViewGroup" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvPhWork">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvPhHome">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvPhFax">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvPhCellular">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvPhPager">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvPhWork"/>
+					<html:div class="CardViewText" hide="true" id="cvPhHome"/>
+					<html:div class="CardViewText" hide="true" id="cvPhFax"/>
+					<html:div class="CardViewText" hide="true" id="cvPhCellular"/>
+					<html:div class="CardViewText" hide="true" id="cvPhPager"/>
 				</box>
 				
 				<box id="cvbWork" class="cardViewGroup" align="vertical">
 					<html:div class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html:div>
-					<html:div class="CardViewText" hide="true" id="cvJobTitle">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvDepartment">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvCompany">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvWorkAddress">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvWorkAddress2">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvWorkCityStZip">*</html:div>
-					<html:div class="CardViewText" hide="true" id="cvWorkCountry">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvJobTitle"/>
+					<html:div class="CardViewText" hide="true" id="cvDepartment"/>
+					<html:div class="CardViewText" hide="true" id="cvCompany"/>
+					<html:div class="CardViewText" hide="true" id="cvWorkAddress"/>
+					<html:div class="CardViewText" hide="true" id="cvWorkAddress2"/>
+					<html:div class="CardViewText" hide="true" id="cvWorkCityStZip"/>
+					<html:div class="CardViewText" hide="true" id="cvWorkCountry"/>
 				</box>
 			</box>
 

@@ -163,6 +163,26 @@ Rights Reserved.
 					</menupopup>
 				</menu>
 				<menuitem value="&showCardPane.label;" disabled="true" oncommand="AbShowCardPane()"/>
+				<menuseparator/>
+				<menu value="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
+					<menupopup>
+						<menuitem type="radio" name="shownameas"
+								  id="firstLastCmd"
+								  value="&firstLastCmd.label;"
+								  accesskey="&firstLastCmd.accesskey;"
+								  oncommand="SetNameColumn('firstLastCmd')"/>
+						<menuitem type="radio" name="shownameas"
+								  id="lastFirstCmd"
+								  value="&lastFirstCmd.label;"
+								  accesskey="&lastFirstCmd.accesskey;"
+								  oncommand="SetNameColumn('lastFirstCmd')"/>
+						<menuitem type="radio" name="shownameas"
+								  id="displayNameCmd"
+								  value="&displayNameCmd.label;"
+								  accesskey="&displayNameCmd.accesskey;"
+								  oncommand="SetNameColumn('displayNameCmd')"/>
+					</menupopup>
+				</menu>
 				<menu value="&sortMenu.label;">
 				    <menupopup>
 						<menuitem value="&sortByNameCmd.label;"

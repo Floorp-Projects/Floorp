@@ -60,6 +60,14 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (showAbToolbarCmd.accesskey) : DONT_TRANSLATE -->  
 <!ENTITY showAbToolbarCmd.accesskey			"o">  
 <!ENTITY showCardPane.label					".Card Pane">  
+<!ENTITY menu_ShowNameAs.label				"Show Name As"> 
+<!ENTITY menu_ShowNameAs.accesskey			"n"> 
+<!ENTITY firstLastCmd.label					"First Last">  
+<!ENTITY firstLastCmd.accesskey				"f"> 
+<!ENTITY lastFirstCmd.label					"Last, First">  
+<!ENTITY lastFirstCmd.accesskey				"l"> 
+<!ENTITY displayNameCmd.label				"Display Name">  
+<!ENTITY displayNameCmd.accesskey			"d"> 
 <!ENTITY sortMenu.label						"Sort"> 
 <!ENTITY sortByNameCmd.label					"by Name">  
 <!ENTITY sortByEmailCmd.label					"by Email">  

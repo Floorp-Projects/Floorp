@@ -22,11 +22,6 @@
 
 var editCard;
 
-var newCardTitlePrefix = "New Card for ";
-var editCardTitlePrefix = "Card for ";
-var editCardFirstLastSeparator = " ";
-var editCardLastFirstSeparator = ", ";
-
 function OnLoadNewCard()
 {
 	InitEditCard();
@@ -35,7 +30,7 @@ function OnLoadNewCard()
 	
 	editCard.card = 0;
 	editCard.okCallback = 0;
-	editCard.titlePrefix = newCardTitlePrefix;
+	editCard.titlePrefix = editCard.newCardTitlePrefix;
 
 	if (window.arguments && window.arguments[0])
 	{
@@ -69,7 +64,7 @@ function OnLoadEditCard()
 	
 	doSetOKCancel(EditCardOKButton, 0);
 
-	editCard.titlePrefix = editCardTitlePrefix;
+	editCard.titlePrefix = editCard.editCardTitlePrefix;
 
 	if (window.arguments && window.arguments[0])
 	{
@@ -116,17 +111,15 @@ function InitEditCard()
 	if ( prefs )
 	{
 		try {
-			editCard.displayLastNameFirst = prefs.GetIntPref("mail.addr_book.displayName.lastnamefirst");
-		}
-		catch (ex) {
-			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");
-		}
-
-		try {
+			editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.displayName.lastnamefirst");
 			editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
+			editCard.lastFirstSeparator = ", ";
+			editCard.firstLastSeparator = " ";
+			editCard.newCardTitlePrefix = "New Card for ";
+			editCard.editCardTitlePrefix = "Card for ";
 		}
 		catch (ex) {
-			dump("failed to get the mail.addr_book.displayName.autoGeneration pref\n");
+			dump("failed to get pref\n");
 		}
 	}
 }
@@ -301,22 +294,13 @@ function GenerateDisplayName()
 		/* todo: i18N work todo here */
 		/* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */
 		
-		/* todo:  mscott says there was a pref in 4.5 that would */
-		/* cause GenerateDisplayName() to do nothing.  */
-		/* the i18N people need it. */
-		/* find the pref and heed it. */
-
-		/* trying to be smart about no using the first last sep */
-		/* if first or last is missing */
-		/* todo:  is this i18N safe? */
-		
 		var separator = "";
 		if ( lastNameField.value && firstNameField.value )
 		{
 			if ( editCard.displayLastNameFirst )
-			 	separator = editCardLastFirstSeparator;
+			 	separator = editCard.lastFirstSeparator;
 			else
-			 	separator = editCardFirstLastSeparator;
+			 	separator = editCard.firstLastSeparator;
 		}
 		
 		if ( editCard.displayLastNameFirst )

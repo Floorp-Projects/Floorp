@@ -1,3 +1,6 @@
+var zName = "Name";
+var zNickname = "Nickname: ";
+var zDisplayName = "Display Name: ";
 var zWork = "Work: ";
 var zHome = "Home: ";
 var zFax = "Fax: ";
@@ -10,12 +13,16 @@ var zCustom4 = "Custom 4: ";
 
 var rdf;
 var cvData;
+var cvPrefs = 0;
 
 function OnLoadCardView()
 {
-	// This should be in an onload for the card view window, but that is not currently working
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+
+	// prefs
+	cvPrefs = new Object;
+	GetCurrentPrefs();
 
 	var doc = document;
 	
@@ -32,6 +39,7 @@ function OnLoadCardView()
 	cvData.cvbName			= doc.getElementById("cvbName");
 	cvData.cvhName			= doc.getElementById("cvhName");
 	cvData.cvNickname		= doc.getElementById("cvNickname");
+	cvData.cvDisplayName	= doc.getElementById("cvDisplayName");
 	cvData.cvEmail1			= doc.getElementById("cvEmail1");
 	cvData.cvEmail2			= doc.getElementById("cvEmail2");
 	// Home section
@@ -69,31 +77,105 @@ function OnLoadCardView()
 	cvData.cvWorkCountry	= doc.getElementById("cvWorkCountry");
 }
 	
+function SetNameColumn(cmd)
+{
+	var prefValue;
+	
+	switch ( cmd )
+	{
+		case 'firstLastCmd':
+			prefValue = 2;
+			break;
+		case 'lastFirstCmd':
+			prefValue = 1;
+			break;
+		case 'displayNameCmd':
+			prefValue = 0;
+			break;
+	}
+	
+	// set pref in file and locally
+	cvPrefs.prefs.SetIntPref("mail.addr_book.lastnamefirst", prefValue);
+	cvPrefs.nameColumn = prefValue;
+	
+	// FIX ME - this should redraw the card view pane when we can reselect the node
+	ClearResultsTreeSelection();
+	ClearCardViewPane();
+
+	// redraw results tree
+	var resultsTree = top.document.getElementById('resultsTree');
+	if ( resultsTree )
+	{
+		var ref = resultsTree.getAttribute('ref');
+		resultsTree.setAttribute('ref', ref);
+	}
+}
+
+function GetCurrentPrefs()
+{
+	var prefs = Components.classes["component://netscape/preferences"];
+	if ( prefs )
+	{
+		prefs = prefs.getService();
+		if ( prefs )
+			prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+	}
+			
+	if ( prefs )
+	{
+		try {
+			cvPrefs.prefs = prefs;
+			cvPrefs.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.displayName.lastnamefirst");
+			cvPrefs.nameColumn = prefs.GetIntPref("mail.addr_book.lastnamefirst");
+			cvPrefs.lastFirstSeparator = ", ";
+			cvPrefs.firstLastSeparator = " ";
+			cvPrefs.titlePrefix = "Card for ";
+		}
+		catch (ex) {
+			dump("failed to get the mail.addr_book.displayName.lastnamefirst pref\n");
+		}
+	}
+}
+
+
 function DisplayCardViewPane(abNode)
 {
 	var uri = abNode.getAttribute('id');
 	var cardResource = top.rdf.GetResource(uri);
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
-	// FIX ME - this should use a i18n name routine in JS
-	var name = card.displayName;
-	if ( card.firstName.length + card.lastName.length > 0 )
-		name = card.firstName + " " + card.lastName;
+	// name
+	var name;
+	var separator = "";
+	if ( card.lastName && card.firstName )
+	{
+		if ( cvPrefs.displayLastNameFirst )
+		 	separator = cvPrefs.lastFirstSeparator;
+		else
+		 	separator = cvPrefs.firstLastSeparator;
+	}
+	if ( cvPrefs.displayLastNameFirst )
+		name = card.lastName + separator + card.firstName;
+	else
+		name = card.firstName + separator + card.lastName;
+
+	var cardTitle = card.name;
+	var nameHeader = name;
 	
-	var nickname;
-	if ( card.nickName )
-		nickname = "\"" + card.nickName + "\"";
+	if ( !nameHeader )
+		nameHeader = zName;
 		
 	var data = top.cvData;
 	var visible;
-	
+
 	// set fields in card view pane
 
-	cvSetNode(data.CardTitle, "Card for " + card.displayName);
+	cvSetNode(data.CardTitle, cvPrefs.titlePrefix + cardTitle);
 	
 	// Name section
-	cvSetNode(data.cvhName, name);
-	cvSetNode(data.cvNickname, nickname);
+	cvSetNode(data.cvhName, nameHeader);
+	cvSetNodeWithLabel(data.cvNickname, zNickname, card.nickName);
+	cvSetNodeWithLabel(data.cvDisplayName, zDisplayName, card.displayName);
 	cvSetNode(data.cvEmail1, card.primaryEmail);
 	cvSetNode(data.cvEmail2, card.secondEmail);
 	// Home section
@@ -136,48 +218,7 @@ function DisplayCardViewPane(abNode)
 
 function ClearCardViewPane()
 {
-	dump("ClearCardViewPane\n");
 	cvSetVisible(top.cvData.CardViewBox, false);
-
-	// HACK - we need to be able to set the entire box or div to display:none when bug fixed
-	var data = top.cvData;
-
-	// title
-	cvSetVisible(data.CardTitle, false);
-	// Name section
-	cvSetVisible(data.cvhName, false);
-	cvSetVisible(data.cvNickname, false);
-	cvSetVisible(data.cvEmail1, false);
-	cvSetVisible(data.cvEmail2, false);
-	// Home section
-	cvSetVisible(data.cvhHome, false);
-	cvSetVisible(data.cvHomeAddress, false);
-	cvSetVisible(data.cvHomeAddress2, false);
-	cvSetVisible(data.cvHomeCityStZip, false);
-	cvSetVisible(data.cvHomeCountry, false);
-	// Other section
-	cvSetVisible(data.cvhOther, false);
-	cvSetVisible(data.cvCustom1, false);
-	cvSetVisible(data.cvCustom2, false);
-	cvSetVisible(data.cvCustom3, false);
-	cvSetVisible(data.cvCustom4, false);
-	cvSetVisible(data.cvNotes, false);
-	// Phone section
-	cvSetVisible(data.cvhPhone, false);
-	cvSetVisible(data.cvPhWork, false);
-	cvSetVisible(data.cvPhHome, false);
-	cvSetVisible(data.cvPhFax, false);
-	cvSetVisible(data.cvPhCellular, false);
-	cvSetVisible(data.cvPhPager, false);
-	// Work section
-	cvSetVisible(data.cvhWork, false);
-	cvSetVisible(data.cvJobTitle, false);
-	cvSetVisible(data.cvDepartment, false);
-	cvSetVisible(data.cvCompany, false);
-	cvSetVisible(data.cvWorkAddress, false);
-	cvSetVisible(data.cvWorkAddress2, false);
-	cvSetVisible(data.cvWorkCityStZip, false);
-	cvSetVisible(data.cvWorkCountry, false);
 }
 
 function cvSetNodeWithLabel(node, label, text)
@@ -185,10 +226,7 @@ function cvSetNodeWithLabel(node, label, text)
 	if ( text )
 		return cvSetNode(node, label + text);
 	else
-	{
-		cvSetVisible(node, false);
-		return false;
-	}
+		return cvSetNode(node, "");
 }
 
 function cvSetCityStateZip(node, city, state, zip)
@@ -211,15 +249,26 @@ function cvSetCityStateZip(node, city, state, zip)
 
 function cvSetNode(node, text)
 {
-	node.childNodes[0].nodeValue = text;
-	var visible;
-	
-	if ( text )
-		visible = true;
-	else
-		visible = false;
-	
-	cvSetVisible(node, visible);
+	if ( node )
+	{
+		if ( node.childNodes.length == 0 )
+		{
+			var textNode = document.createTextNode(text);
+			node.appendChild(textNode);                   			
+		}
+		else if ( node.childNodes.length == 1 )
+			node.childNodes[0].nodeValue = text;
+
+		var visible;
+		
+		if ( text )
+			visible = true;
+		else
+			visible = false;
+		
+		cvSetVisible(node, visible);
+	}
+
 	return visible;
 }
 
