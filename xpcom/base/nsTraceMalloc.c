@@ -1712,7 +1712,8 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
         }
     }
 
-    NS_TraceMallocStartup(logfd);
+    if (logfd >= 0)
+        NS_TraceMallocStartup(logfd);
     return argc;
 }
 
