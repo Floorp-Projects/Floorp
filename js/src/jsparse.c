@@ -1348,6 +1348,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 pn4->pn_pos.end = pn5->pn_pos.end;
                 PN_APPEND(pn4, pn5);
             }
+
+            /* Fix the PN_LIST so it doesn't begin at the TOK_COLON. */
+            if (pn4->pn_head)
+                pn4->pn_pos.begin = pn4->pn_head->pn_pos.begin;
             pn3->pn_pos.end = pn4->pn_pos.end;
             pn3->pn_right = pn4;
         }
