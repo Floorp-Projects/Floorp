@@ -40,8 +40,6 @@ AC_CANONICAL_SYSTEM
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
-MOZILLA_VERSION='1.2b'
-AC_SUBST(MOZILLA_VERSION)
 
 dnl ========================================================
 dnl =
@@ -4948,6 +4946,11 @@ msvc*|mksnt*|cygwin*|mingw*)
     my_perl=$PERL
     ;;
 esac
+
+dnl Get mozilla version from central milestone file
+MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
+AC_SUBST(MOZILLA_VERSION)
+
 echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh

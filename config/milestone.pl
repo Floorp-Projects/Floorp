@@ -83,7 +83,7 @@ $MILESTONE_FILE  = "$TOPSRCDIR/config/milestone.txt";
 #
 # Grab milestone (top line of $MILESTONE_FILE that starts with a digit)
 #
-Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
+my $milestone = Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
 
 if (defined(@TEMPLATE_FILE)) {
   my $TFILE;
@@ -100,6 +100,8 @@ if (defined(@TEMPLATE_FILE)) {
       warn("$0:  No such file $TFILE!\n");
     }
   }
+} else {
+  print "$milestone\n";
 }
 
 sub usage() {
