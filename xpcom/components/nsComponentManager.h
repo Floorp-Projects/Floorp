@@ -48,6 +48,10 @@ class nsIServiceManager;
 // here rather than in nsIRegistry.h
 extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
 
+// Predefined loader types. Do not change the numbers.
+// NATIVE should be 0 as it is being used as the first array index.
+#define NS_COMPONENT_TYPE_NATIVE 0
+
 extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +86,7 @@ protected:
                                     const char *aContractID,
                                     const char *aRegistryName,
                                     const char *aType);
-    nsresult GetLoaderForType(const char *aType, 
+    nsresult GetLoaderForType(int aType, 
                               nsIComponentLoader **aLoader);
     nsresult FindFactory(const char *contractID, nsIFactory **aFactory) ;
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
@@ -109,13 +113,22 @@ protected:
     nsresult PlatformContractIDToCLSID(const char *aContractID, nsCID *aClass);
     nsresult PlatformCLSIDToContractID(const nsCID *aClass, char* *aClassName, char* *aContractID);
 
+    // Convert a loader type string into an index into the loader data
+    // array. Empty loader types are converted to NATIVE. Returns -1 if
+    // loader type cannot be determined.
+    int GetLoaderType(const char *typeStr);
+
+    // Add a loader type if not already known. Return the typeIndex
+    // if the loader type is either added or already there; -1 if
+    // there was an error
+    int AddLoaderType(const char *typeStr);
+
 private:
     nsresult AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec);
 
 protected:
     nsObjectHashtable*  mFactories;
     nsObjectHashtable*  mContractIDs;
-    nsSupportsHashtable*  mLoaders;
     PRMonitor*          mMon;
     nsRegistry*         mRegistry;
     nsRegistryKey       mXPCOMKey;
@@ -133,6 +146,16 @@ protected:
     #define NS_SHUTDOWN_INPROGRESS 1
     #define NS_SHUTDOWN_COMPLETE 2
     PRUint32 mShuttingDown;
+
+    // Array of Loaders and their type strings
+    struct nsLoaderdata {
+        nsIComponentLoader *loader;
+        const char *type;
+    };
+
+    nsLoaderdata *mLoaderData;
+    int mNLoaderData;
+    int mMaxNLoaderData;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
@@ -200,14 +223,11 @@ protected:
 
 class nsFactoryEntry {
 public:
-    nsFactoryEntry(const nsCID &aClass, const char *location,
-                   const char *aType, nsIComponentLoader *aLoader);
+    nsFactoryEntry(const nsCID &aClass, const char *location, int aType);
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
-    nsresult ReInit(const nsCID &aClass, const char *location,
-                    const char *aType, nsIComponentLoader *aLoader);
-
+    nsresult ReInit(const nsCID &aClass, const char *location, int aType);
     nsresult ReInit(const nsCID &aClass, nsIFactory *aFactory);
 
     nsresult GetFactory(nsIFactory **aFactory, 
@@ -218,17 +238,16 @@ public:
             return NS_OK;
         }
 
-        if (!type)
+        if (typeIndex < 0)
             return NS_ERROR_FAILURE;
 
         nsresult rv;
-        if (!loader.get()) {
-            rv = mgr->GetLoaderForType(type, getter_AddRefs(loader));
-            if(NS_FAILED(rv))
-                return rv;
-        }
+        nsCOMPtr<nsIComponentLoader> loader;
+        rv = mgr->GetLoaderForType(typeIndex, getter_AddRefs(loader));
+        if(NS_FAILED(rv))
+            return rv;
 
-        rv = loader->GetFactory(cid, location, type, aFactory);
+        rv = loader->GetFactory(cid, location, mgr->mLoaderData[typeIndex].type, aFactory);
         if (NS_SUCCEEDED(rv))
             factory = do_QueryInterface(*aFactory);
         return rv;
@@ -237,8 +256,8 @@ public:
     nsCID cid;
     nsCString location;
     nsCOMPtr<nsIFactory> factory;
-    nsCString type;
-    nsCOMPtr<nsIComponentLoader> loader;
+    // This is an index into the mLoaderData array that holds the type string and the loader
+    int typeIndex;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
