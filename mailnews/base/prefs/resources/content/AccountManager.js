@@ -548,7 +548,7 @@ function onRemoveAccount(event) {
   try {
     // clear cached data out of the account array
     if (accountArray[result.serverId])
-      accountArray[result.serverId] = null;
+      delete accountArray[result.serverId];
     currentServerId = currentPageId = null;
 
     accountManager.removeAccount(account);
