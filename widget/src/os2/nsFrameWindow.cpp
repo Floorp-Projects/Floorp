@@ -121,6 +121,15 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                 0,                     // ID
                                 &fcd, 0);
 
+   /* Set some HWNDs and style into properties for fullscreen mode */
+   HWND hwndTitleBar = WinWindowFromID(mFrameWnd, FID_TITLEBAR);
+   WinSetProperty(mFrameWnd, "hwndTitleBar", (PVOID)hwndTitleBar, 0);
+   HWND hwndSysMenu = WinWindowFromID(mFrameWnd, FID_SYSMENU);
+   WinSetProperty(mFrameWnd, "hwndSysMenu", (PVOID)hwndSysMenu, 0);
+   HWND hwndMinMax = WinWindowFromID(mFrameWnd, FID_MINMAX);
+   WinSetProperty(mFrameWnd, "hwndMinMax", (PVOID)hwndMinMax, 0);
+
+
    SetWindowListVisibility( PR_FALSE);  // Hide from Window List until shown
 
    // This is a bit weird; without an icon, we get WM_PAINT messages
@@ -145,9 +154,6 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    }
    if ( fcd.flCreateFlags & FCF_TITLEBAR) {
       minheight += WinQuerySysValue( HWND_DESKTOP, SV_CYTITLEBAR);
-   }
-   if ( fcd.flCreateFlags & FCF_MENU) {
-      minheight += WinQuerySysValue( HWND_DESKTOP, SV_CYMENU);
    }
    if ( frameRect.height < minheight) {
       frameRect.height = minheight;
@@ -367,12 +373,10 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       case WM_DESTROY:
          WinSubclassWindow( mFrameWnd, fnwpDefFrame);
          WinSetWindowPtr( mFrameWnd, QWL_USER, 0);
-         break;
-
-      // adjust client size when menu appears or disappears.
-      case WM_UPDATEFRAME:
-         if( LONGFROMMP(mp1) & FCF_MENU)
-            UpdateClientSize();
+         WinRemoveProperty(mFrameWnd, "hwndTitleBar");
+         WinRemoveProperty(mFrameWnd, "hwndSysMenu");
+         WinRemoveProperty(mFrameWnd, "hwndMinMax");
+         WinRemoveProperty(mFrameWnd, "ulStyle");
          break;
 
       case WM_ACTIVATE:

@@ -141,6 +141,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetFont( const nsFont &aFont);
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
+   NS_IMETHOD             HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsString& aTitle); 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsRect & aRect, PRBool aIsSynchronous);
