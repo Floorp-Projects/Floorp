@@ -23,13 +23,21 @@ include $(MOD_DEPTH)/config/UNIX.mk
 
 DLL_SUFFIX	= sl
 
+ifdef NS_USE_GCC
+CC			= gcc
+CCC			= g++
+OS_CFLAGS		=
+else
 CC			= cc -Ae
 CCC			= CC
+OS_CFLAGS		= +ESlit
+endif
+
 RANLIB			= echo
 
 CPU_ARCH		= hppa
 
-OS_CFLAGS		= +ESlit $(DSO_CFLAGS) -DHPUX -D$(CPU_ARCH) -D_HPUX_SOURCE
+OS_CFLAGS		+= $(DSO_CFLAGS) -DHPUX -D$(CPU_ARCH) -D_HPUX_SOURCE
 
 #
 # The header netdb.h on HP-UX 9 does not declare h_errno.
@@ -87,15 +95,21 @@ endif
 #
 
 ifeq ($(OS_RELEASE),B.10.30)
+ifndef NS_USE_GCC
 CCC			= /opt/aCC/bin/aCC
-OS_CFLAGS		+= +DAportable +DS1.1 -DHPUX10 -DHPUX10_30
+OS_CFLAGS		+= +DAportable +DS1.1
+endif
+OS_CFLAGS		+= -DHPUX10 -DHPUX10_30
 DEFAULT_IMPL_STRATEGY = _PTH
 endif
 
 # 11.00 is similar to 10.30.
 ifeq ($(OS_RELEASE),B.11.00)
+ifndef NS_USE_GCC
 CCC			= /opt/aCC/bin/aCC
-OS_CFLAGS		+= +DAportable +DS1.1 -DHPUX10 -DHPUX11
+OS_CFLAGS		+= +DAportable +DS1.1
+endif
+OS_CFLAGS		+= -DHPUX10 -DHPUX11
 DEFAULT_IMPL_STRATEGY = _PTH
 endif
 
@@ -149,7 +163,13 @@ MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
 DSO_LDOPTS		= -b
 DSO_LDFLAGS		=
-# +Z generates position independent code for use in shared libraries.
+
+# -fPIC or +Z generates position independent code for use in shared
+# libraries.
+ifdef NS_USE_GCC
+DSO_CFLAGS		= -fPIC
+else
 DSO_CFLAGS		= +Z
+endif
 
 HAVE_PURIFY		= 1
