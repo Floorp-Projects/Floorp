@@ -113,6 +113,8 @@ class nsMsgCompose : public nsIMsgCompose
 
 	nsCOMPtr<nsIMsgSend>          mMsgSend;   // for composition back end
 
+  PRBool                        mEntityConversionDone;
+
   // Deal with quoting issues...
 	nsCOMPtr<nsIMsgQuote>         mQuote;
 	PRBool						            mQuotingToFollow; // Quoting indicator

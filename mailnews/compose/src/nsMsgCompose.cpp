@@ -90,6 +90,7 @@ nsMsgCompose::nsMsgCompose()
 {
 	NS_INIT_REFCNT();
 
+  mEntityConversionDone = PR_FALSE;
 	mQuotingToFollow = PR_FALSE;
 	mWhatHolder = 1;                // RICHIE - hack for old quoting
 	mQuoteURI = "";
@@ -515,20 +516,24 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
       PRInt32     bodyLength;
       char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
       
-      // Convert body to mail charset
-      char      *outCString;
-      nsString  aCharset = m_compFields->GetCharacterSet();
-      
-      if (aCharset != "")
+      if (!mEntityConversionDone)
       {
-        // Apply entity conversion then convert to a mail charset. 
-        char charset[65];
-        rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), 
-                                    nsString(bodyString).GetUnicode(), &outCString);
-        if (NS_SUCCEEDED(rv)) 
+        // Convert body to mail charset
+        char      *outCString;
+        nsString  aCharset = m_compFields->GetCharacterSet();
+      
+        if (  aCharset != "")
         {
-          bodyString = outCString;
-          newBody = PR_TRUE;
+          // Apply entity conversion then convert to a mail charset. 
+          char charset[65];
+          rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), 
+                                      nsString(bodyString).GetUnicode(), &outCString);
+          if (NS_SUCCEEDED(rv)) 
+          {
+            bodyString = outCString;
+            newBody = PR_TRUE;
+            mEntityConversionDone = PR_TRUE;
+          }
         }
       }
       
@@ -640,24 +645,28 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
         flags |= nsIDocumentEncoder::OutputFormatFlowed;
     }
     
-    rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
-		
-    if (NS_SUCCEEDED(rv) && NULL != bodyText)
+    if (!mEntityConversionDone)
     {
-		  msgBody = bodyText;
-      nsAllocator::Free(bodyText);
+      rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+		  
+      if (NS_SUCCEEDED(rv) && NULL != bodyText)
+      {
+		    msgBody = bodyText;
+        nsAllocator::Free(bodyText);
 
-		  // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-		  char *outCString = NULL;
-      rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
-                                  msgBody.GetUnicode(), &outCString);
-		  if (NS_SUCCEEDED(rv) && NULL != outCString) 
-		  {
-			  m_compFields->SetBody(outCString);
-			  PR_Free(outCString);
-		  }
-		  else
-			  m_compFields->SetBody(nsAutoCString(msgBody));
+		    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
+		    char *outCString = NULL;
+        rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
+                                    msgBody.GetUnicode(), &outCString);
+		    if (NS_SUCCEEDED(rv) && NULL != outCString) 
+		    {
+          mEntityConversionDone = PR_TRUE;
+			    m_compFields->SetBody(outCString);
+			    PR_Free(outCString);
+		    }
+		    else
+			    m_compFields->SetBody(nsAutoCString(msgBody));
+      }
     }
 	}
 
@@ -1250,11 +1259,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
     u = nsTextFormatter::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
     if (u)
     {
-      mMsgBody.Append(u);
+      PRInt32   newLen = nsCRT::strlen(u);
+      mMsgBody.Append(u, newLen);
       PR_FREEIF(u);
     }
     else
-      mMsgBody += newBuf;
+      mMsgBody.Append(newBuf, numWritten);
 	}
 
 	PR_FREEIF(newBuf);
