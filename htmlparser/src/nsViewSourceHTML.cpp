@@ -468,7 +468,7 @@ nsresult  CViewSourceHTML::Terminate(void) {
 nsresult CViewSourceHTML::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,eParseMode_quirks,PR_TRUE);
+    result=NS_NewHTMLTokenizer(&mTokenizer,eParseMode_quirks,mIsText);
   }
   aTokenizer=mTokenizer;
   return result;
