@@ -118,7 +118,7 @@ namespace MetaData {
                     // XXX define a static binding for each parameter
                     Variable *v = new Variable(objectClass, JS2VAL_UNDEFINED, false);
                     compileFrame->positional[pCount++] = v;
-                    pb->mn = defineLocalMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
+                    pb->mn = defineLocalMember(env, pb->name, publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos, true);
                     pb = pb->next;
                 }
             }
@@ -786,7 +786,7 @@ namespace MetaData {
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *vb = vs->bindings;
-                    v = new LexicalReference(vb->name, cxt.strict);
+                    v = new (*referenceArena) LexicalReference(vb->name, cxt.strict);
                 }
                 else {
                     if (f->initializer->getKind() == StmtNode::expression) {
@@ -1071,7 +1071,7 @@ namespace MetaData {
                         }
                         // write the exception object (on stack top) into the named
                         // local variable
-                        Reference *r = new LexicalReference(&c->name, false);
+                        Reference *r = new (*referenceArena) LexicalReference(&c->name, false);
                         r->emitWriteBytecode(bCon, p->pos);
                         bCon->emitOp(ePop, p->pos);
                         SetupStmt(env, phase, c->stmt);
@@ -1142,7 +1142,7 @@ namespace MetaData {
                                             throw x;
                                         Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
-                                        LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
+                                        LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
                                         lVal->emitWriteBytecode(bCon, p->pos);      
                                         bCon->emitOp(ePop, p->pos);
                                     }
@@ -1160,12 +1160,12 @@ namespace MetaData {
                                     if (r) r->emitReadBytecode(bCon, p->pos);
                                     bCon->emitOp(eCoerce, p->pos);
                                     bCon->addType(v->type);
-                                    LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
+                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
-                                    LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
+                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
                             }
@@ -1196,7 +1196,7 @@ namespace MetaData {
                         if (vb->initializer) {
                             Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
-                            LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
+                            LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->name, cxt.strict);
                             lVal->variableMultiname.addNamespace(publicNamespace);
                             lVal->emitInitBytecode(bCon, p->pos);                                                        
                         }
@@ -1458,7 +1458,7 @@ namespace MetaData {
                 throw("Illegal combination of member modifier attributes");
             if ((ca->overrideMod != NoOverride) && (cb->overrideMod != NoOverride) && (ca->overrideMod != cb->overrideMod))
                 throw("Illegal combination of override attributes");
-            for (NamespaceListIterator i = cb->namespaces->begin(), end = cb->namespaces->end(); (i != end); i++)
+            for (NamespaceListIterator i = cb->namespaces.begin(), end = cb->namespaces.end(); (i != end); i++)
                 ca->addNamespace(*i);
             ca->xplicit |= cb->xplicit;
             ca->dynamic |= cb->dynamic;
@@ -1477,13 +1477,13 @@ namespace MetaData {
     void CompoundAttribute::addNamespace(Namespace *n)
     {
         if (namespaces) {
-            for (NamespaceListIterator i = namespaces->begin(), end = namespaces->end(); (i != end); i++)
+            for (NamespaceListIterator i = namespaces.begin(), end = namespaces.end(); (i != end); i++)
                 if (*i == n)
                     return;
         }
         else
             namespaces = new NamespaceList();
-        namespaces->push_back(n);
+        namespaces.push_back(n);
     }
 
     CompoundAttribute::CompoundAttribute() : Attribute(CompoundAttr),
@@ -1520,7 +1520,7 @@ namespace MetaData {
     void CompoundAttribute::markChildren()
     {
         if (namespaces) {
-            for (NamespaceListIterator i = namespaces->begin(), end = namespaces->end(); (i != end); i++) {
+            for (NamespaceListIterator i = namespaces.begin(), end = namespaces.end(); (i != end); i++) {
                 GCMARKOBJECT(*i)
             }
         }
@@ -2048,13 +2048,13 @@ doUnary:
                     reportError(Exception::badValueError, "Namespace expected in qualifier", p->pos);
                 Namespace *ns = checked_cast<Namespace *>(obj);
                 
-                returnRef = new LexicalReference(&name, ns, cxt.strict);
+                returnRef = new (*referenceArena) LexicalReference(&name, ns, cxt.strict);
             }
             break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                returnRef = new LexicalReference(&i->name, cxt.strict);
+                returnRef = new (*referenceArena) LexicalReference(&i->name, cxt.strict);
                 ((LexicalReference *)returnRef)->variableMultiname.addNamespace(cxt);
 #if 0                
                 // Try to find this identifier at compile time, we have to stop if we reach
@@ -2167,7 +2167,7 @@ doUnary:
                     if (argVal) argVal->emitReadBytecode(bCon, p->pos);
                     ep = ep->next;
                 }
-                returnRef = new BracketReference();
+                returnRef = new (*referenceArena) BracketReference();
             }
             break;
         case ExprNode::dot:
@@ -2193,7 +2193,7 @@ doUnary:
                     }
 #endif
                     if (returnRef == NULL) {
-                        returnRef = new DotReference(&i->name);
+                        returnRef = new (*referenceArena) DotReference(&i->name);
                         checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
                     }
                 } 
@@ -2201,7 +2201,7 @@ doUnary:
                     if (b->op2->getKind() == ExprNode::qualify) {
                         Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
-                        returnRef = new DotReference(&((LexicalReference *)rVal)->variableMultiname);
+                        returnRef = new (*referenceArena) DotReference(&((LexicalReference *)rVal)->variableMultiname);
                         checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
                     }
                     // XXX else bracketRef...
@@ -2663,9 +2663,9 @@ doUnary:
     // return true if the given namespace is on the namespace list
     bool Multiname::listContains(Namespace *nameSpace)
     { 
-        if (nsList->empty())
+        if (nsList.empty())
             return true;
-        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
             if (*n == nameSpace)
                 return true;
         }
@@ -2684,13 +2684,13 @@ doUnary:
     {
         for (NamespaceListIterator nli = ns->begin(), end = ns->end();
                 (nli != end); nli++)
-            nsList->push_back(*nli);
+            nsList.push_back(*nli);
     }
 
     QualifiedName Multiname::selectPrimaryName(JS2Metadata *meta)
     {
-        if (nsList->size() == 1)
-            return QualifiedName(nsList->back(), name);
+        if (nsList.size() == 1)
+            return QualifiedName(nsList.back(), name);
         else {
             if (listContains(meta->publicNamespace))
                 return QualifiedName(meta->publicNamespace, name);
@@ -2704,7 +2704,7 @@ doUnary:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Multiname::markChildren()
     {
-        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
             GCMARKOBJECT(*n)
         }
         if (name) JS2Object::mark(name);
@@ -2714,7 +2714,7 @@ doUnary:
     {
         if (*name != *mn.name)
             return false;
-        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
             if (!mn.listContains(*n))
                 return false;
         }
@@ -2732,7 +2732,7 @@ doUnary:
     // - If the binding exists (not forbidden) in lower frames in the regional environment, it's an error.
     // - Define a forbidden binding in all the lower frames.
     // 
-    Multiname *JS2Metadata::defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, 
+    Multiname *JS2Metadata::defineLocalMember(Environment *env, const String *id, NamespaceList &namespaces, 
                                                 Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
                                                 LocalMember *m, size_t pos, bool enumerable)
     {
@@ -2741,7 +2741,7 @@ doUnary:
             reportError(Exception::definitionError, "Illegal definition", pos);
         
         Multiname *multiname = new Multiname(id);
-        if (namespaces->empty()) 
+        if (namespaces.empty()) 
             multiname->addNamespace(publicNamespace);
         else
             multiname->addNamespace(namespaces);
@@ -2793,7 +2793,7 @@ doUnary:
         }
         else
             lbe = *lbeP;
-        for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
+        for (NamespaceListIterator nli = multiname->nsList.begin(), nlend = multiname->nsList.end(); (nli != nlend); nli++) {
             LocalBinding *new_b = new LocalBinding(access, m, enumerable);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
         }
@@ -2805,7 +2805,7 @@ doUnary:
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
-                    for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
+                    for (NamespaceListIterator nli = multiname->nsList.begin(), nlend = multiname->nsList.end(); (nli != nlend); nli++) {
                         bool foundEntry = false;
                         LocalBindingEntry **rbeP = nwfr->localBindings[*id];
                         if (rbeP) {
@@ -2861,7 +2861,7 @@ doUnary:
         InstanceMember *mBase = NULL;
         JS2Class *s = c->super;
         if (s) {
-            for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
+            for (NamespaceListIterator nli = multiname->nsList.begin(), nlend = multiname->nsList.end(); (nli != nlend); nli++) {
                 Multiname *mn = new Multiname(multiname->name, *nli);
                 DEFINE_ROOTKEEPER(rk, mn);
                 InstanceMember *m = findBaseInstanceMember(s, mn, access);
@@ -2875,7 +2875,7 @@ doUnary:
         return mBase;
     }
 
-    InstanceMember *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, 
+    InstanceMember *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,
                                                                     InstanceMember *m, size_t pos)
     {
@@ -2886,7 +2886,7 @@ doUnary:
         Multiname openMultiname(id, cxt);
         Multiname definedMultiname;
         Multiname searchedMultiname;
-        if (requestedMultiname.nsList->empty()) {
+        if (requestedMultiname.nsList.empty()) {
             definedMultiname = Multiname(id, publicNamespace);
             searchedMultiname = openMultiname;
         }
@@ -2946,7 +2946,7 @@ doUnary:
         m->multiname = new Multiname(definedMultiname);
         InstanceBinding *ib = new InstanceBinding(access, m);
         if (ibeP) {
-            for (NamespaceListIterator nli = definedMultiname.nsList->begin(), nlend = definedMultiname.nsList->end(); (nli != nlend); nli++) {
+            for (NamespaceListIterator nli = definedMultiname.nsList.begin(), nlend = definedMultiname.nsList.end(); (nli != nlend); nli++) {
                 (*ibeP)->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
             }
         }
@@ -3270,7 +3270,8 @@ static const uint8 urlCharType[256] =
         glob(new Package(new Namespace(&world.identifiers["internal"]))),
         env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
-        showTrees(false)
+        showTrees(false),
+        referenceArena(NULL)
     {
         engine->meta = this;
 
@@ -3311,7 +3312,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         CompoundAttribute *attr = new CompoundAttribute();
         attr->dynamic = true;
         v = new Variable(attributeClass, OBJECT_TO_JS2VAL(attr), true);
-        defineLocalMember(env, &world.identifiers["dynamic"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        defineLocalMember(env, &world.identifiers["dynamic"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
 */
 
 /*** ECMA 3  Global Object ***/
@@ -3333,20 +3334,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /*** ECMA 3  Object Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
-        defineLocalMember(env, &world.identifiers["Object"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Object"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         // Function properties of the Object prototype object
         objectClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(this, NULL, objectClass));
         objectClass->construct = Object_Constructor;
         // Adding "prototype" as a static member of the class - not a dynamic property
         env->addFrame(objectClass);
             v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
-            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            defineLocalMember(env, engine->prototype_StringAtom, publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
         env->removeTopFrame();
 
 /*** ECMA 3  Function Class ***/
 // Need this initialized early, as subsequent FunctionInstances need the Function.prototype value
         v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
-        defineLocalMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Function"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initFunctionObject(this);
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
@@ -3364,34 +3365,34 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
-        defineLocalMember(env, &world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Date"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initDateObject(this);
 
 /*** ECMA 3  RegExp Class ***/
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["RegExp"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
-        defineLocalMember(env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["RegExp"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initRegExpObject(this);
 
 /*** ECMA 3  String Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
-        defineLocalMember(env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["String"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initStringObject(this);
 
 /*** ECMA 3  Number Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(numberClass), true);
-        defineLocalMember(env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Number"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initNumberObject(this);
 
 /*** ECMA 3  Boolean Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(booleanClass), true);
-        defineLocalMember(env, &world.identifiers["Boolean"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Boolean"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initBooleanObject(this);
 
 /*** ECMA 3  Math Class ***/
         MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Math"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
-        defineLocalMember(env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Math"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initMathObject(this);
 
 /*** ECMA 3  Array Class ***/
@@ -3399,31 +3400,31 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         arrayClass->write = arrayWriteProperty;
         arrayClass->writePublic = arrayWritePublic;
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
-        defineLocalMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Array"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
 
 /*** ECMA 3  Error Classes ***/
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
-        defineLocalMember(env, &world.identifiers["Error"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["Error"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["EvalError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
-        defineLocalMember(env, &world.identifiers["EvalError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["EvalError"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["RangeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
-        defineLocalMember(env, &world.identifiers["RangeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["RangeError"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["ReferenceError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
-        defineLocalMember(env, &world.identifiers["ReferenceError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["ReferenceError"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["SyntaxError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
-        defineLocalMember(env, &world.identifiers["SyntaxError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["SyntaxError"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["TypeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
-        defineLocalMember(env, &world.identifiers["TypeError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["TypeError"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["UriError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
-        defineLocalMember(env, &world.identifiers["UriError"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
+        defineLocalMember(env, &world.identifiers["UriError"], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initErrorObject(this);
 
     }
@@ -3865,9 +3866,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         env->addFrame(builtinClass);
         {
             Variable *v = new Variable(builtinClass, OBJECT_TO_JS2VAL(builtinClass->prototype), true);
-            defineLocalMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            defineLocalMember(env, engine->prototype_StringAtom, publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
             v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
-            defineLocalMember(env, engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            defineLocalMember(env, engine->length_StringAtom, publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
             pf = staticFunctions;
             if (pf) {
@@ -3875,7 +3876,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
-                    defineLocalMember(env, &world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+                    defineLocalMember(env, &world.identifiers[pf->name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
                     createDynamicProperty(callInst, engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
                     pf++;
                 }
@@ -3895,7 +3896,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             while (pf->name) {
                 SimpleInstance *callInst = new SimpleInstance(this, functionClass->prototype, functionClass);
                 callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
-                Multiname *mn = new Multiname(&world.identifiers[pf->name], &publicNamespaceList);
+                Multiname *mn = new Multiname(&world.identifiers[pf->name], publicNamespaceList);
                 InstanceMember *m = new InstanceMethod(mn, callInst, true, false);
                 defineInstanceMember(builtinClass, &cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
 
@@ -4563,7 +4564,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
 #ifdef DEBUG
-        memset(p, 0xB7, sizeof(PondScum));
+        memset(p, 0xB7, sz);
 #endif
         p->owner = this;
         p->setSize(sz);
@@ -4573,9 +4574,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             p->clearIsJS2Object();
         pondTop += sz;
         pondSize -= sz;
-#ifdef DEBUG
-        memset((p + 1), 0xB7, sz - sizeof(PondScum));
-#endif
         return (p + 1);
     }
 

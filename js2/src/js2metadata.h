@@ -318,17 +318,17 @@ typedef NamespaceList::iterator NamespaceListIterator;
 
 class Multiname : public JS2Object {
 public:    
-    Multiname() : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList) { }
-    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList) { nsList->push_back(ns); }
-    Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { }
-    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
-    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(new NamespaceList)    { nsList->push_back(q.nameSpace); }
-    Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(ns); }
-    Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList) { addNamespace(*cxt); }
+    Multiname() : JS2Object(MultinameKind), name(NULL) { }
+    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL) { nsList.push_back(ns); }
+    Multiname(const String *name) : JS2Object(MultinameKind), name(name) { }
+    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
+    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name)    { nsList.push_back(q.nameSpace); }
+    Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
+    Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name) { addNamespace(*cxt); }
 
     Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
 
-    void addNamespace(Namespace *ns)                { nsList->push_back(ns); }
+    void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
@@ -339,7 +339,7 @@ public:
     bool subsetOf(Multiname &mn);
 
     const String *name;
-    NamespaceList *nsList;
+    NamespaceList nsList;
 
     virtual void markChildren();
     virtual ~Multiname()            { }
@@ -904,10 +904,12 @@ public:
     virtual void markChildren();
 };
 
+class ReferencePool {
+};
 
 // Base class for all references (lvalues)
 // References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
-class Reference {
+class Reference : public ArenaObject {
 public:
     virtual void emitReadBytecode(BytecodeContainer *, size_t)              { ASSERT(false); }
     virtual void emitWriteBytecode(BytecodeContainer *, size_t)             { ASSERT(false); }
@@ -924,6 +926,7 @@ public:
     
     // indicate whether building the reference generate any stack deposits
     virtual int hasStackEffect()                                            { ASSERT(false); return 0; }
+
 };
 
 class LexicalReference : public Reference {
@@ -1138,7 +1141,7 @@ public:
 
     virtual CompoundAttribute *toCompoundAttribute()    { return this; }
 
-    NamespaceList *namespaces;      // The set of namespaces contained in this attribute
+    NamespaceList &namespaces;      // The set of namespaces contained in this attribute
     bool xplicit;                   // true if the explicit attribute has been given
     bool dynamic;                   // true if the dynamic attribute has been given
     MemberModifier memberMod;       // if one of these attributes has been given; none if not.
@@ -1208,8 +1211,8 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
     DynamicVariable *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar);
-    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
-    InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, 
+    Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList &namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
+    InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,
                                                                     InstanceMember *m, size_t pos);
     InstanceMember *searchForOverrides(JS2Class *c, Multiname *multiname, Access access, size_t pos);
@@ -1232,23 +1235,13 @@ public:
 
 
 
-//    bool readProperty(js2val *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-//    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-//    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval);
-//    JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
 
-//    bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
-//    bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase, bool initFlag);
-//    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
     bool writeLocalMember(LocalMember *m, js2val newValue, bool initFlag);
     bool writeInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, js2val newValue);
 
-//    bool deleteProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
-//    bool deleteProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result);
-//    bool deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, bool *result);
     bool deleteLocalMember(LocalMember *m, bool *result);
     bool deleteInstanceMember(JS2Class *c, QualifiedName *qname, bool *result);
 
@@ -1340,6 +1333,8 @@ public:
     virtual void markChildren();
 
     bool showTrees;                 // debug only, causes parse tree dump 
+
+    Arena *referenceArena;
 
 };
 

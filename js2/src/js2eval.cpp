@@ -140,12 +140,25 @@ namespace MetaData {
      */
     js2val JS2Metadata::ExecuteStmtList(Phase phase, StmtNode *p)
     {
-        size_t lastPos = p->pos;
-        while (p) {
-            SetupStmt(env, phase, p);
+        Arena *oldArena = referenceArena;
+        referenceArena = new Arena;
+        size_t lastPos;
+        try {
             lastPos = p->pos;
-            p = p->next;
+            while (p) {
+                SetupStmt(env, phase, p);
+                lastPos = p->pos;
+                p = p->next;
+            }
         }
+        catch (Exception &x) {
+            referenceArena->clear();
+            referenceArena = oldArena;
+            throw x;
+        }
+        referenceArena->clear();
+        referenceArena = oldArena;
+
         bCon->emitOp(eReturnVoid, lastPos);
         uint8 *savePC = engine->pc;
         engine->pc = NULL;
@@ -632,7 +645,7 @@ namespace MetaData {
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
 
         bool result = defaultWriteProperty(meta, base, limit, multiname, lookupKind, createIfMissing, newValue);
-        if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+        if (result && (multiname->nsList.size() == 1) && (multiname->nsList.back() == meta->publicNamespace)) {
 
             const char16 *numEnd;        
             float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
