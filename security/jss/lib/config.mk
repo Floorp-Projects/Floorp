@@ -68,7 +68,7 @@ LD_LIBS += -Wl,--whole-archive
 # dbm libraries                                                       #
 #######################################################################
 
-LD_LIBS += $(LIBJSSMANAGE) $(LIBJSSPKCS11) $(LIBJSSCRYPTO) $(LIBJSSUTIL) $(LIBJSSHCLHACKS) -Wl,--no-whole-archive $(LIBNSS) $(LIBCRYPTOHI) $(LIBCERTHI) $(LIBFORT) $(LIBNSSCKBI) $(LIBNSSB) $(LIBPK11WRAP) $(LIBJAR) $(LIBPKCS12) $(LIBPKCS7) $(LIBSECTOOL) $(LIBSMIME) $(LIBSOFTOKEN) $(LIBCERTDB) $(LIBFREEBL) $(LIBSECUTIL) $(LIBDBM)
+LD_LIBS += $(LIBJSSMANAGE) $(LIBJSSPKCS11) $(LIBJSSCRYPTO) $(LIBJSSUTIL) $(LIBJSSHCLHACKS) $(LIBJSSSSL) -Wl,--no-whole-archive $(LIBNSS) $(LIBSSL) $(LIBCRYPTOHI) $(LIBCERTHI) $(LIBNSSCKBI) $(LIBNSSB) $(LIBPK11WRAP) $(LIBJAR) $(LIBPKCS12) $(LIBPKCS7) $(LIBSECTOOL) $(LIBSMIME) $(LIBSOFTOKEN) $(LIBCERTDB) $(LIBFREEBL) $(LIBSECUTIL) $(LIBDBM)
 
 #######################################################################
 # Append additional LD_LIBS value to encompass all dynamic NSPR 2.0,  #
