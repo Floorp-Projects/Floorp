@@ -538,6 +538,14 @@ pref("network.http.proxy.ssl.connect",true);
 // are handled.  IDN requires a nsIIDNService implementation.
 pref("network.enableIDN", true);
 
+// This preference specifies a list of domains for which DNS lookups will be
+// IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
+// and/or allows the user to disable IPv6 on a per-domain basis. See bug 68796.
+pref("network.dns.ipv4OnlyDomains", ".doubleclick.net");
+
+// This preference can be used to turn off IPv6 name lookups. See bug 68796.
+pref("network.dns.disableIPv6, false);
+
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
 pref("network.standard-url.escape-utf8", true);

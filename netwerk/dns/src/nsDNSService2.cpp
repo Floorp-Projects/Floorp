@@ -50,10 +50,13 @@
 #include "prnetdb.h"
 #include "prmon.h"
 #include "prio.h"
+#include "plstr.h"
 
 static const char kPrefDnsCacheEntries[]    = "network.dnsCacheEntries";
 static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
 static const char kPrefEnableIDN[]          = "network.enableIDN";
+static const char kPrefIPv4OnlyDomains[]    = "network.dns.ipv4OnlyDomains";
+static const char kPrefDisableIPv6[]        = "network.dns.disableIPv6";
 
 //-----------------------------------------------------------------------------
 
@@ -281,40 +284,57 @@ nsDNSService::Init()
     PRUint32 maxCacheEntries  = 20;
     PRUint32 maxCacheLifetime = 1; // minutes
     PRBool   enableIDN        = PR_TRUE;
+    PRBool   disableIPv6      = PR_FALSE;
+    nsAdoptingCString ipv4OnlyDomains;
 
     // read prefs
     nsCOMPtr<nsIPrefBranchInternal> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
         PRInt32 val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheEntries, &val)))
-            maxCacheEntries = val;
+            maxCacheEntries = (PRUint32) val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheExpiration, &val)))
-            maxCacheLifetime = (val / 60); // convert from seconds to minutes
-        if (NS_SUCCEEDED(prefs->GetBoolPref(kPrefEnableIDN, (PRBool*)&val)))
-            enableIDN = (PRBool) val;
-    }
+            maxCacheLifetime = val / 60; // convert from seconds to minutes
 
-    // we have to null out mIDN since we might be getting re-initialized
-    // as a result of a pref change.
-    if (enableIDN)
-        mIDN = do_GetService(NS_IDNSERVICE_CONTRACTID);
-    else
-        mIDN = nsnull;
+        // ASSUMPTION: pref branch does not modify out params on failure
+        prefs->GetBoolPref(kPrefEnableIDN, &enableIDN);
+        prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
+        prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
+    }
 
     if (firstTime) {
         mLock = PR_NewLock();
         if (!mLock)
             return NS_ERROR_OUT_OF_MEMORY;
-        
+
         // register as prefs observer
         prefs->AddObserver(kPrefDnsCacheEntries, this, PR_FALSE);
         prefs->AddObserver(kPrefDnsCacheExpiration, this, PR_FALSE);
         prefs->AddObserver(kPrefEnableIDN, this, PR_FALSE);
+        prefs->AddObserver(kPrefIPv4OnlyDomains, this, PR_FALSE);
+        prefs->AddObserver(kPrefDisableIPv6, this, PR_FALSE);
     }
 
-    return nsHostResolver::Create(maxCacheEntries,
-                                  maxCacheLifetime,
-                                  getter_AddRefs(mResolver));
+    // we have to null out mIDN since we might be getting re-initialized
+    // as a result of a pref change.
+    nsCOMPtr<nsIIDNService> idn;
+    if (enableIDN)
+        idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
+
+    nsRefPtr<nsHostResolver> res;
+    nsresult rv = nsHostResolver::Create(maxCacheEntries,
+                                         maxCacheLifetime,
+                                         getter_AddRefs(res));
+    if (NS_SUCCEEDED(rv)) {
+        // now, set all of our member variables while holding the lock
+        nsAutoLock lock(mLock);
+        mResolver = res;
+        mIDN = idn;
+        mIPv4OnlyDomains = ipv4OnlyDomains; // exchanges buffer ownership
+        mDisableIPv6 = disableIPv6;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -374,9 +394,15 @@ nsDNSService::AsyncResolve(const nsACString &hostname,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = req);
 
+    PRUint16 af = GetAFForLookup(req->mHost);
+
+#ifdef DEBUG_darinf
+    printf(">>> using af=%hu for %s\n", af, req->mHost.get());
+#endif
+
     // addref for resolver; will be released when OnLookupComplete is called.
     NS_ADDREF(req);
-    rv = res->ResolveHost(req->mHost.get(), bypassCache, req); 
+    rv = res->ResolveHost(req->mHost.get(), bypassCache, req, af); 
     if (NS_FAILED(rv)) {
         NS_RELEASE(req);
         NS_RELEASE(*result);
@@ -424,7 +450,9 @@ nsDNSService::Resolve(const nsACString &hostname,
     PR_EnterMonitor(mon);
     nsDNSSyncRequest syncReq(mon);
 
-    rv = res->ResolveHost(PromiseFlatCString(*hostPtr).get(), bypassCache, &syncReq);
+    PRUint16 af = GetAFForLookup(*hostPtr);
+
+    rv = res->ResolveHost(PromiseFlatCString(*hostPtr).get(), bypassCache, &syncReq, af);
     if (NS_SUCCEEDED(rv)) {
         // wait for result
         while (!syncReq.mDone)
@@ -479,4 +507,59 @@ nsDNSService::Observe(nsISupports *subject, const char *topic, const PRUnichar *
         Init();
     }
     return NS_OK;
+}
+
+PRUint16
+nsDNSService::GetAFForLookup(const nsACString &host)
+{
+    if (mDisableIPv6)
+        return PR_AF_INET;
+
+    nsAutoLock lock(mLock);
+
+    PRUint16 af = PR_AF_UNSPEC;
+
+    if (!mIPv4OnlyDomains.IsEmpty()) {
+        const char *domain, *domainEnd, *end;
+        PRUint32 hostLen, domainLen;
+
+        // see if host is in one of the IPv4-only domains
+        domain = mIPv4OnlyDomains.BeginReading();
+        domainEnd = mIPv4OnlyDomains.EndReading(); 
+
+        nsACString::const_iterator hostStart;
+        host.BeginReading(hostStart);
+        hostLen = host.Length();
+
+        do {
+            // skip any whitespace
+            while (*domain == ' ' || *domain == '\t')
+                ++domain;
+
+            // find end of this domain in the string
+            end = strchr(domain, ',');
+            if (!end)
+                end = domainEnd;
+
+            // to see if the hostname is in the domain, check if the domain
+            // matches the end of the hostname.
+            domainLen = end - domain;
+            if (domainLen && hostLen >= domainLen) {
+                const char *hostTail = hostStart.get() + hostLen - domainLen;
+                if (PL_strncasecmp(domain, hostTail, domainLen) == 0) {
+                    // now, make sure either that the hostname is a direct match or
+                    // that the hostname begins with a dot.
+                    if (hostLen == domainLen ||
+                            *hostTail == '.' || *(hostTail - 1) == '.') {
+                        af = PR_AF_INET;
+                        break;
+                    }
+                }
+            }
+
+            domain = end + 1;
+        } while (*end);
+    }
+
+    return af;
 }

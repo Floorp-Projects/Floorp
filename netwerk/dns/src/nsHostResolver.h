@@ -81,10 +81,12 @@ public:
      * otherwise, if |addrinfo| is non-null, then it contains one or many
      * IP addresses corresponding to the given host name.  if both |addrinfo|
      * and |addr| are null, then the given host has not yet been fully resolved.
+     * |af| is the address family of the record we are querying for.
      */
     char       *host;
     PRAddrInfo *addrinfo;
     PRNetAddr  *addr;
+    PRUint16    af;
     PRUint32    expiration; /* measured in minutes since epoch */
 
     PRBool HasResult() const { return (addrinfo || addr) != nsnull; }
@@ -163,7 +165,8 @@ public:
      */
     nsresult ResolveHost(const char            *hostname,
                          PRBool                 bypassCache,
-                         nsResolveHostCallback *callback);
+                         nsResolveHostCallback *callback,
+                         PRUint16               af);
 
     /**
      * removes the specified callback from the nsHostRecord for the given

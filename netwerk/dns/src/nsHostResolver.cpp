@@ -351,7 +351,8 @@ nsHostResolver::Shutdown()
 nsresult
 nsHostResolver::ResolveHost(const char            *host,
                             PRBool                 bypassCache,
-                            nsResolveHostCallback *callback)
+                            nsResolveHostCallback *callback,
+                            PRUint16               af = PR_AF_UNSPEC)
 {
     NS_ENSURE_TRUE(host && *host, NS_ERROR_UNEXPECTED);
 
@@ -414,6 +415,7 @@ nsHostResolver::ResolveHost(const char            *host,
                 PR_APPEND_LINK(callback, &he->rec->callbacks);
 
                 if (!he->rec->resolving) {
+                    he->rec->af = af;
                     rv = IssueLookup(he->rec);
                     if (NS_FAILED(rv))
                         PR_REMOVE_AND_INIT_LINK(callback);
@@ -603,10 +605,10 @@ nsHostResolver::ThreadFunc(void *arg)
     PRAddrInfo *ai;
     while (resolver->GetHostToLookup(&rec)) {
         LOG(("resolving %s ...\n", rec->host));
-        ai = PR_GetAddrInfoByName(rec->host, PR_AF_UNSPEC, PR_AI_ADDRCONFIG);
+        ai = PR_GetAddrInfoByName(rec->host, rec->af, PR_AI_ADDRCONFIG);
 #if defined(RES_RETRY_ON_FAILURE)
         if (!ai && rs.Reset())
-            ai = PR_GetAddrInfoByName(rec->host, PR_AF_UNSPEC, PR_AI_ADDRCONFIG);
+            ai = PR_GetAddrInfoByName(rec->host, rec->af, PR_AI_ADDRCONFIG);
 #endif
         // convert error code to nsresult.
         nsresult status = ai ? NS_OK : NS_ERROR_UNKNOWN_HOST;
