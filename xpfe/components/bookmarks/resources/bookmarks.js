@@ -814,7 +814,7 @@ var BookmarksController = {
     case "cmd_bm_redo":
       return BMSVC.transactionManager.numberOfRedoItems > 0;
     case "cmd_bm_paste":
-      if (!BookmarksUtils.isValidTargetContainer(aTarget.parent))
+      if (!(aTarget && BookmarksUtils.isValidTargetContainer(aTarget.parent)))
         return false;
       const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
       const kClipboardIID = Components.interfaces.nsIClipboard;
@@ -853,7 +853,8 @@ var BookmarksController = {
     case "cmd_bm_newbookmark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return BookmarksUtils.isValidTargetContainer(aTarget.parent);
+      return (aTarget &&
+              BookmarksUtils.isValidTargetContainer(aTarget.parent));
     case "cmd_bm_properties":
     case "cmd_bm_rename":
     case "cmd_bm_sortfolderbyname":
@@ -973,10 +974,9 @@ var BookmarksController = {
                     "cmd_bm_sortfolder", "cmd_bm_sortfolderbyname",
                     "cmd_undo", "cmd_redo", "cmd_bm_undo", "cmd_bm_redo"];
     for (var i = 0; i < commands.length; ++i) {
-      var enabled = this.isCommandEnabled(commands[i], aSelection, aTarget);
       var commandNode = document.getElementById(commands[i]);
-     if (commandNode) { 
-        if (enabled) 
+      if (commandNode) {
+        if (this.isCommandEnabled(commands[i], aSelection, aTarget))
           commandNode.removeAttribute("disabled");
         else 
           commandNode.setAttribute("disabled", "true");
