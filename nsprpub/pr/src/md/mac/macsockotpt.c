@@ -242,8 +242,11 @@ pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResult resul
 // UDP Send error; clear the error
 		case T_UDERR:
 			(void) OTRcvUDErr((EndpointRef) cookie, NULL);
+			break;
+			
 		default:
 			PR_ASSERT(0);
+			break;
 	}
 }
 
@@ -1023,6 +1026,11 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
 		err = kEFAULTErr;
 		goto ErrorExit;
 	}
+	
+	if (opCode != kSTREAM_SEND && opCode != kSTREAM_RECEIVE) {
+		err = kEINVALErr;
+		goto ErrorExit;
+	}
 		
 	while (bytesLeft > 0) {
 	
@@ -1030,12 +1038,8 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
 
 		if (opCode == kSTREAM_SEND)
 			result = OTSnd(endpoint, buf, bytesLeft, NULL);
-		else if (opCode == kSTREAM_RECEIVE)
+		else
 			result = OTRcv(endpoint, buf, bytesLeft, NULL);
-		else {
-			err = kEINVALErr;
-			goto ErrorExit;
-		}
 
 		if (result > 0) {
 			buf = (void *) ( (UInt32) buf + (UInt32)result );
@@ -1045,6 +1049,7 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
     			return result;
 		} else {
 			if (result == kOTOutStateErr) { /* it has been closed */
+				me->io_pending = PR_FALSE;
 				return 0;
 			}
 			if (result == kOTLookErr) {
@@ -1055,6 +1060,7 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
 			}
 			if (result != kOTNoDataErr && result != kOTFlowErr && 
 			    result != kEAGAINErr && result != kEWOULDBLOCKErr) {
+			    me->io_pending = PR_FALSE;
 				err = result;
 				goto ErrorExit;
 			} else if (fd->secret->nonblocking) {
@@ -1063,6 +1069,7 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
 				goto ErrorExit;
 			}
 			WaitOnThisThread(me, timeout);
+			me->io_pending = PR_FALSE;
 			err = me->md.osErrCode;
 			if (err != kOTNoError)
 				goto ErrorExit;
@@ -1116,6 +1123,11 @@ static PRInt32 SendReceiveDgram(PRFileDesc *fd, void *buf, PRInt32 amount,
 		err = kEFAULTErr;
 		goto ErrorExit;
 	}
+	
+	if (opCode != kDGRAM_SEND && opCode != kDGRAM_RECEIVE) {
+		err = kEINVALErr;
+		goto ErrorExit;
+	}
 		
 	memset(&dgram, 0 , sizeof(dgram));
 	dgram.addr.maxlen = *addrlen;
@@ -1131,12 +1143,8 @@ static PRInt32 SendReceiveDgram(PRFileDesc *fd, void *buf, PRInt32 amount,
 
 		if (opCode == kDGRAM_SEND)
 			err = OTSndUData(endpoint, &dgram);
-		else if (opCode == kDGRAM_RECEIVE)
+		else
 			err = OTRcvUData(endpoint, &dgram, NULL);
-		else {
-			err = kEINVALErr;
-			goto ErrorExit;
-		}
 
 		if (err == kOTNoError) {
 			buf = (void *) ( (UInt32) buf + (UInt32)dgram.udata.len );
@@ -1147,6 +1155,7 @@ static PRInt32 SendReceiveDgram(PRFileDesc *fd, void *buf, PRInt32 amount,
 		else {
 			PR_ASSERT(err == kOTNoDataErr || err == kOTOutStateErr);
 			WaitOnThisThread(me, timeout);
+			me->io_pending = PR_FALSE;
 			err = me->md.osErrCode;
 			if (err != kOTNoError)
 				goto ErrorExit;
@@ -1407,13 +1416,15 @@ PR_IMPLEMENT(struct hostent *) gethostbyname(const char * name)
 	PrepareThreadForAsyncIO(me, sSvcRef, NULL);    
 
     err = OTInetStringToAddress(sSvcRef, (char *)name, &sHostInfo);
-	if (err != kOTNoError)
+	if (err != kOTNoError) {
+		me->io_pending = PR_FALSE;
+		me->md.osErrCode = err;
 		goto ErrorExit;
+	}
 
 	WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
 
-	err = me->md.osErrCode;
-	if (err != kOTNoError)
+	if (me->md.osErrCode != kOTNoError)
 		goto ErrorExit;
 
 	sHostEnt.h_name = sHostInfo.name;
@@ -1425,7 +1436,6 @@ PR_IMPLEMENT(struct hostent *) gethostbyname(const char * name)
 	return (&sHostEnt);
 
 ErrorExit:
-	macsock_map_error(err);
     return NULL;
 }
 
