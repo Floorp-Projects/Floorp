@@ -41,8 +41,7 @@ static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kForwardClassStr = "class nsIDOM%s;\n";
 static const char *kUuidStr = 
 "#define %s \\\n"
-" { 0x6f7652e0,  0xee43, 0x11d1,\\\n"
-" { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }\n\n";
+"--- IID GOES HERE ---\n\n";
 static const char *kClassDeclStr = "class nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
 static const char *kNoBaseClassStr = "public nsISupports";
@@ -51,7 +50,8 @@ static const char *kConstDeclStr = "  const %s %s = %l;\n";
 static const char *kGetterMethodDeclStr = "\n  NS_IMETHOD    Get%s(%s%s a%s)=0;\n";
 static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s a%s)=0;\n";
 static const char *kMethodDeclStr = "\n  NS_IMETHOD    %s(%s)=0;\n";
-static const char *kParamStr = "%s a%s, ";
+static const char *kParamStr = "%s a%s";
+static const char *kDelimiterStr = ", ";
 static const char *kReturnStr = "%s%s aReturn";
 static const char *kClassEpilogStr = "};\n\n";
 static const char *kInitClassStr = "extern nsresult NS_Init%sClass(JSContext *aContext, JSObject **aPrototype);\n\n";
@@ -181,7 +181,7 @@ XPCOMGen::GenerateClassDecl(IdlInterface &aInterface)
     int b, bcount = aInterface.BaseClassCount();
     for (b = 0; b < bcount; b++) {
       if (b > 0) {
-        *file << ", ";
+        *file << kDelimiterStr;
       }
       sprintf(buf, kBaseClassStr, aInterface.GetBaseClassAt(b));
       *file << buf;
@@ -229,6 +229,11 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
     for (p = 0; p < pcount; p++) {
       IdlParameter *param = func->GetParameterAt(p);
 
+      if (p > 0) {
+        strcpy(cur_param, kDelimiterStr);
+        cur_param += strlen(kDelimiterStr);
+      }
+
       GetParameterType(type_buf, *param);
       GetCapitalizedName(name_buf, *param);
       sprintf(cur_param, kParamStr, type_buf, name_buf);
@@ -236,10 +241,16 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
     }
 
     IdlVariable *rval = func->GetReturnValue();
-    GetVariableTypeForParameter(type_buf, *rval);
-    sprintf(cur_param, kReturnStr, type_buf,
-            rval->GetType() == TYPE_STRING ? "" : "*");
-    
+    if (rval->GetType() != TYPE_VOID) {
+      if (p > 0) {
+        strcpy(cur_param, kDelimiterStr);
+        cur_param += strlen(kDelimiterStr);
+      }
+      GetVariableTypeForParameter(type_buf, *rval);
+      sprintf(cur_param, kReturnStr, type_buf,
+              rval->GetType() == TYPE_STRING ? "" : "*");
+    }
+ 
     GetCapitalizedName(name_buf, *func);
     sprintf(buf, kMethodDeclStr, name_buf, param_buf);
     *file << buf;

@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
       // initialize and run the parser
       IdlParser *parser = new IdlParser();
-      try {
+       try {
         parser->Parse(argv[i], *specification);
       } catch(AbortParser &exc) {
         cout << exc;
@@ -101,7 +101,8 @@ int main(int argc, char *argv[])
       if (gen_xpcom) {
         XPCOMGen *xpcomgen = new XPCOMGen();
         
-        try {
+        cout << "Generating XPCOM headers for " << argv[i] << ".\n";
+       try {
           xpcomgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
                              *specification);
         }
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
       if (gen_js) {
         JSStubGen *jsgen = new JSStubGen();
         
+        cout << "Generating JavaScript stubs for " << argv[i] << ".\n";
         try {
           jsgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
                              *specification);
