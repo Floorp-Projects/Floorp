@@ -855,7 +855,7 @@ PRIntervalTime timeout)
 	}
 	}
 #else
-	rv = _PR_EmulateAcceptRead(sd, nd, raddr, buf, amount, timeout);
+	rv = PR_EmulateAcceptRead(sd, nd, raddr, buf, amount, timeout);
 #endif
 	return rv;
 }
@@ -1002,11 +1002,7 @@ static PRInt32 PR_CALLBACK SocketSendFile(
 		PR_FreeFileDesc(sd);
 	}
 #else
-#if defined(XP_UNIX)
-	rv = _PR_UnixSendFile(sd, sfd, flags, timeout);
-#else	/* XP_UNIX */
-	rv = _PR_EmulateSendFile(sd, sfd, flags, timeout);
-#endif	/* XP_UNIX */
+	rv = PR_EmulateSendFile(sd, sfd, flags, timeout);
 #endif	/* WINNT */
 
 	return rv;
@@ -1528,207 +1524,6 @@ PR_ChangeFileDescNativeHandle(PRFileDesc *fd, PRInt32 handle)
 {
 	if (fd)
 		fd->secret->md.osfd = handle;
-}
-
-/*
- * _PR_EmulateSendFile
- *
- *	Send file sfd->fd across socket sd. The header and trailer buffers
- *	specified in the 'sfd' argument are sent before and after the file,
- *	respectively.
- *
- *	PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
- *	
- *	return number of bytes sent or -1 on error
- *
- */
-
-PRInt32 _PR_EmulateSendFile(PRFileDesc *sd, PRSendFileData *sfd, 
-PRTransmitFileFlags flags, PRIntervalTime timeout)
-{
-	PRInt32 rv, count = 0;
-	PRInt32 rlen;
-	const void *buffer;
-	PRInt32 buflen;
-	PRInt32 sendbytes, readbytes;
-	PRThread *me = _PR_MD_CURRENT_THREAD();
-	char *buf = NULL;
-
-#define _SENDFILE_BUFSIZE	(16 * 1024)
-
-	if (_PR_PENDING_INTERRUPT(me)) {
-		me->flags &= ~_PR_INTERRUPT;
-		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
-		return -1;
-	}
-
-	buf = (char*)PR_MALLOC(_SENDFILE_BUFSIZE);
-	if (buf == NULL) {
-		PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-		return -1;
-	}
-
-	/*
-	 * send header, first
-	 */
-	buflen = sfd->hlen;
-	buffer = sfd->header;
-	while (buflen) {
-		rv =  PR_Send(sd, buffer, buflen, 0, timeout);
-		if (rv < 0) {
-			/* PR_Send() has invoked PR_SetError(). */
-			rv = -1;
-			goto done;
-		} else {
-			count += rv;
-			buffer = (const void*) ((const char*)buffer + rv);
-			buflen -= rv;
-		}
-	}
-	/*
-	 * send file, next
-	 */
-
-	if (PR_Seek(sfd->fd, sfd->file_offset, PR_SEEK_SET) < 0) {
-		rv = -1;
-		goto done;
-	}
-	sendbytes = sfd->file_nbytes;
-	if (sendbytes == 0) {
-		/* send entire file */
-		while ((rlen = PR_Read(sfd->fd, buf, _SENDFILE_BUFSIZE)) > 0) {
-			while (rlen) {
-				char *bufptr = buf;
-
-				rv =  PR_Send(sd, bufptr, rlen, 0, timeout);
-				if (rv < 0) {
-					/* PR_Send() has invoked PR_SetError(). */
-					rv = -1;
-					goto done;
-				} else {
-					count += rv;
-					bufptr = ((char*)bufptr + rv);
-					rlen -= rv;
-				}
-			}
-		}
-		if (rlen < 0) {
-			/* PR_Read() has invoked PR_SetError(). */
-			rv = -1;
-			goto done;
-		}
-	} else {
-		readbytes = sendbytes > _SENDFILE_BUFSIZE ? _SENDFILE_BUFSIZE :
-											sendbytes;
-		while (readbytes && ((rlen = PR_Read(sfd->fd, buf, readbytes)) > 0)) {
-			while (rlen) {
-				char *bufptr = buf;
-
-				rv =  PR_Send(sd, bufptr, rlen, 0, timeout);
-				if (rv < 0) {
-					/* PR_Send() has invoked PR_SetError(). */
-					rv = -1;
-					goto done;
-				} else {
-					count += rv;
-					sendbytes -= rv;
-					bufptr = ((char*)bufptr + rv);
-					rlen -= rv;
-				}
-			}
-			readbytes = sendbytes > _SENDFILE_BUFSIZE ?
-						_SENDFILE_BUFSIZE : sendbytes;
-		}
-		if (rlen < 0) {
-			/* PR_Read() has invoked PR_SetError(). */
-			rv = -1;
-			goto done;
-		} else if (sendbytes != 0) {
-			/*
-			 * there are fewer bytes in file to send than specified
-			 */
-        	PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-			rv = -1;
-			goto done;
-		}
-	}
-	/*
-	 * send trailer, last
-	 */
-	buflen = sfd->tlen;
-	buffer = sfd->trailer;
-	while (buflen) {
-		rv =  PR_Send(sd, buffer, buflen, 0, timeout);
-		if (rv < 0) {
-			/* PR_Send() has invoked PR_SetError(). */
-			rv = -1;
-			goto done;
-		} else {
-			count += rv;
-			buffer = (const void*) ((const char*)buffer + rv);
-			buflen -= rv;
-		}
-	}
-	rv = count;
-
-done:
-	if (buf)
-		PR_DELETE(buf);
-    if ((rv >= 0) && (flags & PR_TRANSMITFILE_CLOSE_SOCKET))
-        PR_Close(sd);
-	return rv;
-}
-
-/*
- * _PR_EmulateAcceptRead
- *
- *	Accept an incoming connection on sd, set *nd to point to the
- *	newly accepted socket, read 'amount' bytes from the accepted
- *	socket.
- *
- *	buf is a buffer of length = (amount + 2 * sizeof(PRNetAddr))
- *	*raddr points to the PRNetAddr of the accepted connection upon
- *	return
- *
- *	return number of bytes read or -1 on error
- *
- */
-PRInt32 _PR_EmulateAcceptRead(
-    PRFileDesc *sd, PRFileDesc **nd, PRNetAddr **raddr,
-    void *buf, PRInt32 amount, PRIntervalTime timeout)
-{
-    PRInt32 rv = -1;
-    PRNetAddr remote;
-    PRFileDesc *accepted = NULL;
-
-    /* The socket must be in blocking mode. */
-    if (sd->secret->nonblocking)
-    {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return rv;
-    }
-
-    /*
-    ** The timeout does not apply to the accept portion of the
-    ** operation - it waits indefinitely.
-    */
-    accepted = PR_Accept(sd, &remote, PR_INTERVAL_NO_TIMEOUT);
-    if (NULL == accepted) return rv;
-
-    rv = PR_Recv(accepted, buf, amount, 0, timeout);
-    if (rv >= 0)
-    {
-        /* copy the new info out where caller can see it */
-        enum { AMASK = 7 };  /* mask for alignment of PRNetAddr */
-        PRPtrdiff aligned = (PRPtrdiff)buf + amount + AMASK;
-        *raddr = (PRNetAddr*)(aligned & ~AMASK);
-        memcpy(*raddr, &remote, PR_NETADDR_SIZE(&remote));
-        *nd = accepted;
-        return rv;
-    }
-
-    PR_Close(accepted);
-    return rv;
 }
 
 /*

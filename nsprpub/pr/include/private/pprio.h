@@ -147,6 +147,20 @@ NSPR_API(PRStatus) PR_TLockFile(PRFileDesc *fd);
 */
 NSPR_API(PRStatus) PR_UnlockFile(PRFileDesc *fd);
 
+/*
+** Emulate acceptread by accept and recv.
+*/
+NSPR_API(PRInt32) PR_EmulateAcceptRead(PRFileDesc *sd, PRFileDesc **nd,
+    PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout);
+
+/*
+** Emulate sendfile by reading from the file and writing to the socket.
+** The file is memory-mapped if memory-mapped files are supported.
+*/
+NSPR_API(PRInt32) PR_EmulateSendFile(
+    PRFileDesc *networkSocket, PRSendFileData *sendData,
+    PRTransmitFileFlags flags, PRIntervalTime timeout);
+
 #ifdef WIN32
 /* FUNCTION: PR_NTFast_AcceptRead
 ** DESCRIPTION:
