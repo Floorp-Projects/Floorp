@@ -61,6 +61,21 @@ class nsInterfaceInfo : public nsIInterfaceInfo
     NS_IMETHOD GetIIDForParam(uint16 methodIndex, const nsXPTParamInfo* param, 
                               nsIID** iid);
 
+    // These do *not* make copies ***explicit bending of XPCOM rules***
+    NS_IMETHOD GetTypeForParam(uint16 methodIndex, 
+                               const nsXPTParamInfo* param,
+                               uint16 dimension,
+                               nsXPTType* type);
+
+    NS_IMETHOD GetSizeIsArgNumberForParam(uint16 methodIndex, 
+                                          const nsXPTParamInfo* param,
+                                          uint16 dimension,
+                                          uint8* argnum);
+
+    NS_IMETHOD GetLengthIsArgNumberForParam(uint16 methodIndex, 
+                                            const nsXPTParamInfo* param,
+                                            uint16 dimension,
+                                            uint8* argnum);
 public:
     virtual ~nsInterfaceInfo();
 

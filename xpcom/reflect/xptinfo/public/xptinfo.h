@@ -102,31 +102,37 @@ public:
         {return (PRBool) (TagPart() == T_INTERFACE ||
                           TagPart() == T_INTERFACE_IS);}
 
+    PRBool IsArray() const
+        {return (PRBool) (TagPart() == T_ARRAY ||
+                          TagPart() == T_ARRAY_WITH_LENGTH);}
+
     uint8 TagPart() const
         {return (uint8) (flags & XPT_TDP_TAGMASK);}
 
     enum
     {
-        T_I8           = TD_INT8             ,
-        T_I16          = TD_INT16            ,
-        T_I32          = TD_INT32            ,
-        T_I64          = TD_INT64            ,
-        T_U8           = TD_UINT8            ,
-        T_U16          = TD_UINT16           ,
-        T_U32          = TD_UINT32           ,
-        T_U64          = TD_UINT64           ,
-        T_FLOAT        = TD_FLOAT            ,
-        T_DOUBLE       = TD_DOUBLE           ,
-        T_BOOL         = TD_BOOL             ,
-        T_CHAR         = TD_CHAR             ,
-        T_WCHAR        = TD_WCHAR            ,
-        T_VOID         = TD_VOID             ,
-        T_IID          = TD_PNSIID           ,
-        T_BSTR         = TD_PBSTR            ,
-        T_CHAR_STR     = TD_PSTRING          ,
-        T_WCHAR_STR    = TD_PWSTRING         ,
-        T_INTERFACE    = TD_INTERFACE_TYPE   ,
-        T_INTERFACE_IS = TD_INTERFACE_IS_TYPE
+        T_I8                = TD_INT8             ,
+        T_I16               = TD_INT16            ,
+        T_I32               = TD_INT32            ,
+        T_I64               = TD_INT64            ,
+        T_U8                = TD_UINT8            ,
+        T_U16               = TD_UINT16           ,
+        T_U32               = TD_UINT32           ,
+        T_U64               = TD_UINT64           ,
+        T_FLOAT             = TD_FLOAT            ,
+        T_DOUBLE            = TD_DOUBLE           ,
+        T_BOOL              = TD_BOOL             ,
+        T_CHAR              = TD_CHAR             ,
+        T_WCHAR             = TD_WCHAR            ,
+        T_VOID              = TD_VOID             ,
+        T_IID               = TD_PNSIID           ,
+        T_BSTR              = TD_PBSTR            ,
+        T_CHAR_STR          = TD_PSTRING          ,
+        T_WCHAR_STR         = TD_PWSTRING         ,
+        T_INTERFACE         = TD_INTERFACE_TYPE   ,
+        T_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
+        T_ARRAY             = TD_ARRAY            ,
+        T_ARRAY_WITH_LENGTH = TD_ARRAY_WITH_LENGTH
     };
 // NO DATA - this a flyweight wrapper
 };
@@ -148,7 +154,7 @@ public:
     uint8 GetInterfaceIsArgNumber() const
     {
         NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE_IS,"not an interface_is");
-        return type.type.argnum;
+        return type.argnum;
     }
     // NOTE: gettting the interface or interface iid is done via methods on
     // nsIInterfaceInfo

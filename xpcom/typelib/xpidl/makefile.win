@@ -47,7 +47,7 @@ LLIBS=                         \
  $(MOZ_TOOLS)\lib\libidl-0.6.lib	\
  $(NULL)
 
-LLFLAGS= $(LLFLAGS) -SUBSYSTEM:CONSOLE 
+LLFLAGS= $(LLFLAGS) -SUBSYSTEM:CONSOLE -NODEFAULTLIB:MSVCRTD
 
 include <$(DEPTH)\config\rules.mak>
 

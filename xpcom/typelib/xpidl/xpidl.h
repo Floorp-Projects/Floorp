@@ -62,6 +62,7 @@
 extern gboolean enable_debug;
 extern gboolean enable_warnings;
 extern gboolean verbose_mode;
+extern gboolean emit_typelib_annotations;
 
 typedef struct TreeState TreeState;
 
