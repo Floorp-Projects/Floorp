@@ -806,7 +806,7 @@ XULContentSinkImpl::ProcessOverlay(const nsString& aHref)
       return result;
   }
   
-  if (NS_FAILED(result = docInfo->Init(mDocument, nsnull))) {
+  if (NS_FAILED(result = docInfo->Init(mDocument, this))) {
       NS_ERROR("unable to initialize doc info object.");
       return result;
   }
@@ -1109,6 +1109,8 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
             return NS_ERROR_INVALID_ARG; 
         } 
 
+		aDocument = rootDocument;
+		
         nsCOMPtr<nsIRDFDataSource> docDataSource; 
         if (NS_FAILED(rv = rdfRootDoc->GetDocumentDataSource(getter_AddRefs(docDataSource)))) { 
             NS_ERROR("Unable to retrieve an RDF document's data source."); 
@@ -1119,6 +1121,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
         NS_IF_RELEASE(mDataSource);
         mDataSource = docDataSource.get();
         NS_ADDREF(mDataSource);
+
     }
     else {
 
@@ -1486,7 +1489,8 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
             // should become the root of this subtree.
             rdfResource = dont_QueryInterface(mFragmentRoot);
         }
-        else*/ {
+        else*/
+		if (!mParentContentSink) {
             nsCOMPtr<nsIRDFDocument> rdfDoc;
             if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::GetIID(),
                                                        (void**) getter_AddRefs(rdfDoc)))) {

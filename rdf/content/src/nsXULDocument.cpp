@@ -819,7 +819,8 @@ XULDocumentImpl::XULDocumentImpl(void)
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
       mContentViewerContainer(nsnull),
-      mIsPopup(PR_FALSE)
+      mIsPopup(PR_FALSE),
+	  mParentContentSink(nsnull)
 {
     NS_INIT_REFCNT();
 
