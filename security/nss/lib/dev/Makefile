@@ -30,11 +30,24 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.3 $ $Date: 2001/10/11 17:41:41 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.4 $ $Date: 2002/04/15 21:04:00 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
+
+# On AIX 4.3, IBM xlC_r compiler (version 3.6.6) cannot compile
+# ckhelper.c in 64-bit mode for unknown reasons.  A workaround is
+# to compile it with optimizations turned on.  (Bugzilla bug #63815)
+ifeq ($(OS_TARGET)$(OS_RELEASE),AIX4.3)
+ifeq ($(USE_64),1)
+ifndef BUILD_OPT
+$(OBJDIR)/ckhelper.o: ckhelper.c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c -O2 $(CFLAGS) $<
+endif
+endif
+endif
 
 export:: private_export
