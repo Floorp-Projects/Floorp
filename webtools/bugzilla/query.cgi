@@ -197,7 +197,7 @@ my $emailinput2 = GenerateEmailInput(2);
 # javascript
     
 my $jscript = << 'ENDSCRIPT';
-<script language="Javascript1.2">
+<script language="Javascript1.2" type="text/javascript">
 <!--
 var cpts = new Array();
 var vers = new Array();
@@ -359,7 +359,7 @@ print $jscript;
 my @logfields = ("[Bug creation]", @::log_columns);
 
 print "
-<FORM NAME=queryForm METHOD=GET ACTION=\"buglist.cgi\">
+<FORM METHOD=GET ACTION=\"buglist.cgi\">
 
 <table>
 <tr>

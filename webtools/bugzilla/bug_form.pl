@@ -421,7 +421,7 @@ if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
         Resolve bug, mark it as duplicate of bug # 
         <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"><br>\n";
     $knum++;
-    my $assign_element = "<INPUT NAME=assigned_to SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=$bug{'assigned_to'}>";
+    my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to'}\">";
 
     print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
           <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to

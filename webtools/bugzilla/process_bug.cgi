@@ -68,7 +68,7 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "<input type=submit value=Commit>\n";
         print "</form>\n";
         print "</hr>\n";
-        print "<a href=query.cgi>Cancel all this and go back to the query page.</a>\n";
+        print "<a href=query.cgi>Cancel all this and go to the query page.</a>\n";
         exit;
     }
 }

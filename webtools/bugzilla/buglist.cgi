@@ -613,8 +613,7 @@ if ($toolong) {
     print "Next/Prev/First/Last buttons won't appear.</h2>\n";
 }
 
-print "<HR><I><A HREF=newquip.html>$quip\n";
-print "</I></A></CENTER>\n";
+print "<HR><A HREF=newquip.html><I>$quip</I></A></CENTER>\n";
 print "<HR SIZE=10>$tablestart\n";
 print $::bugl;
 print "</TABLE>\n";
