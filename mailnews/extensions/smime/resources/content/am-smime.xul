@@ -37,7 +37,7 @@ Contributors:
   <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-smime.js"/>
     
-  <dialogheader title="&securityTitle.label;" />
+  <dialogheader title="&securityTitle.label;"/>
 
   <label hidden="true" wsm_persist="true" id="identity.encryptionpolicy" genericattr="true"
                 pref="true" preftype="int" prefattribute="value"
@@ -45,7 +45,7 @@ Contributors:
 
   <description>&securityHeading.label;</description>
 
-  <groupbox orient="vertical" id="signing.titlebox">
+  <groupbox id="signing.titlebox">
     <caption label="&signingGroupTitle.label;"/>
     
     <checkbox id="identity.sign_mail" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true"
@@ -56,7 +56,7 @@ Contributors:
     <separator class="thin"/>
     <label value="&signingCert.message;"/>
 
-    <hbox>
+    <hbox align="center">
       <textbox id="identity.signing_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
              pref="true" preftype="wstring" prefattribute="value" 
              prefstring="mail.identity.%identitykey%.signing_cert_name" readonly="true" disabled="true"/>
@@ -67,25 +67,23 @@ Contributors:
     </hbox>
   </groupbox>
 
-  <separator class="thin"/>
-
-  <groupbox orient="vertical" id="encryption.titlebox">
+  <groupbox id="encryption.titlebox">
     <caption label="&encryptionGroupTitle.label;"/>
 
     <label value="&encryptionChoiceLabel.label;"/>
 
     <radiogroup id="encryptionChoices">
       <radio id="encrypt_mail_never" wsm_persist="true" value="0"
-             label="&neverEncrypt.label;" />
+             label="&neverEncrypt.label;"/>
 
       <radio id="encrypt_mail_always" wsm_persist="true" value="2"
-              label="&alwaysEncryptMessage.label;" />
+              label="&alwaysEncryptMessage.label;"/>
     </radiogroup>
 
     <separator class="thin"/>
     <label value="&encryptionCert.message;"/>
     
-    <hbox>
+    <hbox align="center">
       <textbox id="identity.encryption_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
                pref="true" preftype="wstring" prefattribute="value" 
                prefstring="mail.identity.%identitykey%.encryption_cert_name" readonly="true" disabled="true"/>
