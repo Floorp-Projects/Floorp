@@ -29,8 +29,16 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
 
+#ifndef ENDER_LITE
+#include "nsGfxTextControlFrame.h"
+typedef   nsGfxTextControlFrame nsNewFrame;
+#else
+#include "nsGfxTextControlFrame2.h"
+#include "nsFormControlHelper.h"
+typedef   nsGfxTextControlFrame2 nsNewFrame;
+#endif
+
 class nsIPresState;
-class nsGfxTextControlFrame;
 class nsFormFrame;
 class nsISupportsArray;
 class nsIHTMLContent;
@@ -39,7 +47,7 @@ class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
                            public nsIDOMMouseListener,
                            public nsIAnonymousContentCreator,
-			   public nsIStatefulFrame
+                           public nsIStatefulFrame
 
 {
 public:
@@ -178,7 +186,7 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  nsGfxTextControlFrame* mTextFrame;
+  nsNewFrame* mTextFrame;
   nsFormFrame*        mFormFrame;
   nsIHTMLContent*     mTextContent;
   nsString*           mCachedState;
@@ -186,7 +194,7 @@ protected:
   nsIPresContext*     mPresContext;  // weak reference
 
 private:
-  nsGfxTextControlFrame* GetTextControlFrame(nsIPresContext* aPresContext,
+  nsNewFrame* GetTextControlFrame(nsIPresContext* aPresContext,
                                           nsIFrame* aStart);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

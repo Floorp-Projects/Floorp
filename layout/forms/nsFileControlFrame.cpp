@@ -23,17 +23,7 @@
 #include "nsFileControlFrame.h"
 #include "nsFormFrame.h"
 
-#ifdef DEBUG_mjudge
-#define DEBUG_NEWFRAME 1 
-#endif
 
-
-#ifndef DEBUG_NEWFRAME
-#include "nsGfxTextControlFrame.h"
-#else
-#include "nsGfxTextControlFrame2.h"
-#include "nsFormControlHelper.h"
-#endif
 
 #include "nsIContent.h"
 #include "prtypes.h"
@@ -63,6 +53,7 @@
 #include "nsIStatefulFrame.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -196,11 +187,9 @@ nsFileControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 void 
 nsFileControlFrame::Reset(nsIPresContext* aPresContext)
 {
-#ifndef DEBUG_NEWFRAME
   if (mTextFrame) {
     mTextFrame->Reset(aPresContext);
   }
-#endif
 }
 
 NS_IMETHODIMP 
@@ -232,11 +221,9 @@ nsFileControlFrame::GetWindowTemp(nsIView *aView)
 void 
 nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-#ifndef DEBUG_NEWFRAME
   if (mTextFrame) {
     mTextFrame->SetFocus(aOn, aRepaint);
   }
-#endif
 }
 
 void
@@ -257,7 +244,6 @@ nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 nsresult 
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-#ifndef DEBUG_NEWFRAME
   nsIView* textView;
   mTextFrame->GetView(mPresContext, &textView);
   if (nsnull == textView) {
@@ -292,7 +278,6 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     NS_RELEASE(fileWidget);
   }
   NS_RELEASE(parentWidget);
-#endif
   return NS_OK;
 }
 
@@ -302,7 +287,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
-#ifndef DEBUG_NEWFRAME
   DO_GLOBAL_REFLOW_COUNT("nsFileControlFrame", aReflowState.reason);
 
   if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
@@ -360,9 +344,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
   return rv;
-#else
-  return NS_OK;
-#endif
 }
 
 /*
@@ -384,10 +365,11 @@ nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
  * frame constuctor create the frame and its implementation. So we are given the text
  * node from the constructor and we find it in our tree.
  */
-nsGfxTextControlFrame*
+
+nsNewFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
-  nsGfxTextControlFrame* result = nsnull;
+  nsNewFrame* result = nsnull;
 #ifndef DEBUG_NEWFRAME
   // find the text control frame.
   nsIFrame* childFrame = nsnull;
@@ -407,7 +389,7 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
           nsAutoString value;
           if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
             if (value.EqualsIgnoreCase("text")) {
-              result = (nsGfxTextControlFrame*)childFrame;      
+              result = (nsNewFrame*)childFrame;      
             }
           }
         }
@@ -415,7 +397,7 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
     }
 
     // if not continue looking
-    nsGfxTextControlFrame* frame = GetTextControlFrame(aPresContext, childFrame);
+    nsNewFrame* frame = GetTextControlFrame(aPresContext, childFrame);
     if (frame)
        result = frame;
      
@@ -478,13 +460,11 @@ nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   // use our name and the text widgets value 
   aNames[0] = name;
   nsresult status = PR_FALSE;
-#ifndef DEBUG_NEWFRAME
 
   if (NS_SUCCEEDED(mTextFrame->GetProperty(nsHTMLAtoms::value, aValues[0]))) {
     aNumValues = 1;
     status = PR_TRUE;
   }
-#endif
   return status;
 }
 
@@ -590,7 +570,6 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
                                               const nsString& aValue)
 {
   nsresult rv = NS_OK;
-#ifndef DEBUG_NEWFRAME
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame) {
       mTextFrame->SetTextControlFrameState(aValue);                                         
@@ -600,7 +579,6 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
       if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
-#endif
   return rv;
 }      
 
@@ -609,12 +587,10 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
 
-#ifndef DEBUG_NEWFRAME
   if (nsHTMLAtoms::value == aName) {
     if (mTextFrame)
       mTextFrame->GetTextControlFrameState(aValue);
   }
-#endif
   return NS_OK;
 }
 
