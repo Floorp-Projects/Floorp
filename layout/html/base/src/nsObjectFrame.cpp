@@ -3728,6 +3728,11 @@ static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRec
 }
 #endif // DO_DIRTY_INTERSECT
 
+inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
+{
+	return (color8 << 8) | color8;	/* (color8 * 257) == (color8 * 0x0101) */
+}
+
 void nsPluginInstanceOwner::FixUpPluginWindow()
 {
   if (mWidget) {
@@ -3745,6 +3750,21 @@ void nsPluginInstanceOwner::FixUpPluginWindow()
     mPluginWindow.clipRect.left = widgetClip.x;
     mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
     mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width; 
+
+    // the Mac widget doesn't set the background color right away!!
+    // the background color needs to be set here on the plugin port
+    GrafPtr savePort;
+    ::GetPort(&savePort);  // save our current port
+    nsPluginPort* pluginPort = GetPluginPort();
+    ::SetPort((GrafPtr)pluginPort->port);
+
+    nscolor color = mWidget->GetBackgroundColor();
+    RGBColor macColor;
+    macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));  // convert to Mac color
+    macColor.green = COLOR8TOCOLOR16(NS_GET_G(color));
+    macColor.blue  = COLOR8TOCOLOR16(NS_GET_B(color));
+    ::RGBBackColor(&macColor);
+    ::SetPort(savePort);  // restore port
   }
 }
 
