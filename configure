@@ -5163,7 +5163,7 @@ EOF
 #define NSCAP_DISABLE_DEBUG_PTR_TYPES 1
 EOF
 
-       LDFLAGS="-xildoff $LDFLAGS"
+       LDFLAGS="-xildoff -zlazyload -zcombreloc $LDFLAGS"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-Qoption ld -z,allextract'
