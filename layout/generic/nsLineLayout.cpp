@@ -558,19 +558,30 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
     width = psd->mX - psd->mLeftEdge;
     PerFrameData* pfd = psd->mFirstFrame;
     while (nsnull != pfd) {
-      if (pfd->mBounds.height > maxHeight) maxHeight = pfd->mBounds.height;
+      /* there's one oddball case we need to guard against
+       * if we're reflowed with NS_UNCONSTRAINEDSIZE
+       * then the last frame will not contribute to the max element size height
+       * if it is a text frame that only contains whitespace
+       */
+      if (NS_UNCONSTRAINEDSIZE != psd->mRightEdge ||  // it's not an unconstrained reflow
+          pfd->mNext ||                               // or it's not the last frame in the span
+          !pfd->GetFlag(PFD_ISTEXTFRAME) ||           // or it's not a text frame
+          pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)  // or it contains something other than whitespace
+         ) {
+        if (pfd->mBounds.height > maxHeight) maxHeight = pfd->mBounds.height;
 
-      // Compute max-element-size if necessary
-      if (aMaxElementSize) {
-        nscoord mw = pfd->mMaxElementSize.width +
-          pfd->mMargin.left + pfd->mMargin.right;
-        if (maxElementWidth < mw) {
-          maxElementWidth = mw;
-        }
-        nscoord mh = pfd->mMaxElementSize.height +
-          pfd->mMargin.top + pfd->mMargin.bottom;
-        if (maxElementHeight < mh) {
-          maxElementHeight = mh;
+        // Compute max-element-size if necessary
+        if (aMaxElementSize) {
+          nscoord mw = pfd->mMaxElementSize.width +
+            pfd->mMargin.left + pfd->mMargin.right;
+          if (maxElementWidth < mw) {
+            maxElementWidth = mw;
+          }
+          nscoord mh = pfd->mMaxElementSize.height +
+            pfd->mMargin.top + pfd->mMargin.bottom;
+          if (maxElementHeight < mh) {
+            maxElementHeight = mh;
+          }
         }
       }
       pfd = pfd->mNext;
@@ -1627,8 +1638,13 @@ nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
     if (mComputeMaxElementSize) {
       nscoord mw = pfd->mMaxElementSize.width +
         pfd->mMargin.left + pfd->mMargin.right;
-      if (maxElementWidth < mw) {
-        maxElementWidth = mw;
+      if (psd->mNoWrap) {
+        maxElementWidth += mw;
+      }
+      else {
+        if (maxElementWidth < mw) {
+          maxElementWidth = mw;
+        }
       }
       nscoord mh = pfd->mMaxElementSize.height +
         pfd->mMargin.top + pfd->mMargin.bottom;

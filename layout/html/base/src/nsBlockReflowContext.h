@@ -114,6 +114,12 @@ public:
 
   static PRBool IsHTMLParagraph(nsIFrame* aFrame);
 
+  /** return PR_TRUE if aChildFrame is the first geometrically significant child of aParentFrame
+    * to be considered significant, a frame must have both width and height != 0
+    * if aChildFrame is not in the default child list of aParentFrame, we return PR_FALSE
+    */
+  PRBool nsBlockReflowContext::IsFirstSignificantChild(const nsIFrame* aParentFrame, const nsIFrame* aChildFrame) const;
+
   static nscoord ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                            nsHTMLReflowState& aRS);
 

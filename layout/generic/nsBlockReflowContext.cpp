@@ -31,6 +31,9 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsIDOMHTMLParagraphElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
+#include "nsIDOMHTMLBodyElement.h"
+#include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 
 #ifdef NS_DEBUG
@@ -73,6 +76,43 @@ nsBlockReflowContext::IsHTMLParagraph(nsIFrame* aFrame)
     }
   }
   return result;
+}
+
+
+PRBool
+nsBlockReflowContext::IsFirstSignificantChild(const nsIFrame* aParentFrame, const nsIFrame* aChildFrame) const
+{
+  NS_ASSERTION(aParentFrame && aChildFrame, "bad args");
+  if (!aParentFrame || !aChildFrame) return PR_FALSE;
+  nsIFrame *child;
+  aParentFrame->FirstChild((nsIPresContext *)(&mPresContext), nsnull, &child);
+  while (child)
+  {
+    if (aChildFrame == child) {
+      return PR_TRUE; // we found aChildFrame, and we haven't yet encountered a geometrically significant frame
+    }
+    nsSize size;
+    child->GetSize(size);
+    if (size.width || size.height) {
+      return PR_FALSE; // we found a geometrically significant frame and it wasn't aChildFrame
+    }
+    child->GetNextSibling(&child);
+  }
+  return PR_FALSE;  //aChildFrame is not in the default child list of aParentFrame  
+}
+
+PRBool IsCollapsingBlockParentFrame(const nsIFrame* aFrame)
+{
+  if (!aFrame) return PR_FALSE;
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType==nsLayoutAtoms::blockFrame ||
+      frameType==nsLayoutAtoms::areaFrame  ||
+      frameType==nsLayoutAtoms::tableCellFrame ||
+      frameType==nsLayoutAtoms::tableCaptionFrame) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 nscoord
@@ -310,7 +350,8 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // XXX subtract out vertical margin?
   nsSize availSpace(aSpace.width, aSpace.height);
   nsHTMLReflowState reflowState(mPresContext, mOuterReflowState, aFrame,
-                                availSpace, reason);
+                                availSpace, aSpace.width, aSpace.height);
+  reflowState.reason = reason;
   aComputedOffsets = reflowState.mComputedOffsets;
   reflowState.mLineLayout = nsnull;
   if (!aIsAdjacentWithTop) {
@@ -645,22 +686,38 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   nscoord y = mY;
   // When deciding whether it's an empty paragraph we also need to take into
   // account the overflow area
-  if ((0 == mMetrics.height) && (0 == mMetrics.mOverflowArea.height)) {
+  if ((0 == mMetrics.height) && (0 == mMetrics.mOverflowArea.height)) 
+  {
+    PRBool handled = PR_FALSE;
     if (IsHTMLParagraph(mFrame)) {
       // Special "feature" for HTML compatability - empty paragraphs
       // collapse into nothingness, including their margins. Signal
       // the special nature here by returning -1.
-      *aBottomMarginResult = -1;
+      // In general, we turn off this behavior due to re-interpretation of the vague HTML 4 spec.
+      // See bug 35772.  However, we do need this behavior for <P> inside of table cells, 
+      // floaters, and positioned elements
+      nsIFrame *parent;
+      mFrame->GetParent(&parent);
+      if (parent)
+      {
+        if (IsCollapsingBlockParentFrame(mFrame) && 
+            IsFirstSignificantChild(parent, mFrame))
+        {
+          handled = PR_TRUE;
+          *aBottomMarginResult = -1;
 #ifdef NOISY_VERTICAL_MARGINS
-      printf("  ");
-      nsFrame::ListTag(stdout, mOuterReflowState.frame);
-      printf(": ");
-      nsFrame::ListTag(stdout, mFrame);
-      printf(" -- zapping top & bottom margin; y=%d spaceY=%d\n",
-             y, mSpace.y);
+          printf("  ");
+          nsFrame::ListTag(stdout, mOuterReflowState.frame);
+          printf(": ");
+          nsFrame::ListTag(stdout, mFrame);
+          printf(" -- zapping top & bottom margin; y=%d spaceY=%d\n",
+                 y, mSpace.y);
 #endif
+        }
+      }
     }
-    else {
+    if (!handled) 
+    {
       // Collapse the bottom margin with the top margin that was already
       // applied.
       nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
@@ -675,19 +732,6 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
 #endif
     }
 
-#if XXX
-    // For empty blocks we revert the y coordinate back so that the
-    // top margin is no longer applied.
-    nsBlockFrame* bf;
-    nsresult rv = mFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
-    if (NS_SUCCEEDED(rv)) {
-      // XXX This isn't good enough. What if the floater was placed
-      // downward, just below another floater?
-      nscoord dy = mSpace.y - mY;
-      bf->MoveInSpaceManager(mPresContext, mOuterReflowState.mSpaceManager,
-                             dy);
-    }
-#endif
     y = mSpace.y;
 
     // Empty blocks do not have anything special done to them and they
@@ -707,7 +751,24 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   else {
     // See if the frame fit. If its the first frame then it always
     // fits.
-    if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) {
+    if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) 
+    {
+      // if it's a <P> and it's parent is special, then collapse the <P>'s top margin
+      if (IsHTMLParagraph(mFrame)) {
+        // Special "feature" for HTML compatability - a paragraph's
+        // top margin collapses into nothingness, inside of certain containers.
+        nsIFrame *parent;
+        mFrame->GetParent(&parent);
+        if (parent)
+        {
+          if (IsCollapsingBlockParentFrame(mFrame) && 
+              IsFirstSignificantChild(parent, mFrame))
+          {
+            y=0;
+          }
+        }
+      }
+
       // Calculate the actual x-offset and left and right margin
       nsBlockHorizontalAlign  align;
       
@@ -742,28 +803,6 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
 
       // Now place the frame and complete the reflow process
       nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);
-
-// XXX obsolete, i believe...
-#if 0
-      // If the block frame ended up moving then we need to slide
-      // anything inside of it that impacts the space manager
-      // (otherwise the impacted space in the space manager will be
-      // out of sync with where the frames really are).
-      nscoord dx = x - mX;
-      nscoord dy = y - mY;
-      if ((0 != dx) || (0 != dy)) {
-        nsIHTMLReflow* htmlReflow;
-        nsresult rv;
-        rv = mFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-        if (NS_SUCCEEDED(rv)) {
-          // If the child has any floaters that impact the space manager,
-          // slide them now
-          htmlReflow->MoveInSpaceManager(mPresContext,
-                                         mOuterReflowState.mSpaceManager,
-                                         dx, dy);
-        }
-      }
-#endif
 
       // Adjust the max-element-size in the metrics to take into
       // account the margins around the block element. Note that we
