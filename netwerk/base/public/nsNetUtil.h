@@ -318,6 +318,7 @@ NS_NewDownloader(nsIDownloader* *result,
                    nsIURI* uri,
                    nsIDownloadObserver* observer,
                    nsISupports* context = nsnull,
+                   PRBool synchronous = PR_FALSE,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
                    nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
@@ -332,8 +333,8 @@ NS_NewDownloader(nsIDownloader* *result,
                                             NS_GET_IID(nsIDownloader),
                                             getter_AddRefs(downloader));
     if (NS_FAILED(rv)) return rv;
-    rv = downloader->Init(uri, observer, context, loadGroup, notificationCallbacks, loadAttributes,
-                          bufferSegmentSize, bufferMaxSize);
+    rv = downloader->Init(uri, observer, context, synchronous, loadGroup, notificationCallbacks,
+                          loadAttributes, bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) return rv;
     *result = downloader;
     NS_ADDREF(*result);

@@ -45,6 +45,7 @@ interface nsIDownloader : nsISupports
     void init(in nsIURI uri,
               in nsIDownloadObserver completionObserver,
               in nsISupports ctxt,
+			  in boolean synchronous,
               in nsILoadGroup loadGroup,
               in nsIInterfaceRequestor notificationCallbacks,
               in nsLoadFlags loadAttributes,

@@ -40,6 +40,7 @@ NS_IMETHODIMP
 nsDownloader::Init(nsIURI* aURL,
                    nsIDownloadObserver* aObserver,
                    nsISupports* aContext,
+                   PRBool aIsSynchronous,
                    nsILoadGroup* aGroup,
                    nsIInterfaceRequestor* aNotificationCallbacks,
                    nsLoadFlags aLoadAttributes,
@@ -58,23 +59,27 @@ nsDownloader::Init(nsIURI* aURL,
   if (NS_SUCCEEDED(rv) && channel)
     rv = channel->GetLocalFile(getter_AddRefs(localFile));
 
-  if (mObserver && (NS_FAILED(rv) || localFile)) {
-    // If the open failed or the file is local, call the observer.
-    // don't callback synchronously as it puts the caller
-    // in a recursive situation and breaks the asynchronous
-    // semantics of nsIDownloader
-    nsresult rv2 = NS_OK;
-    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-                    kProxyObjectManagerCID, &rv);
-    if (NS_FAILED(rv2)) return rv2;
-
-    nsCOMPtr<nsIDownloadObserver> pObserver;
-    rv2 = pIProxyObjectManager->GetProxyForObject(NS_CURRENT_EVENTQ, 
-              NS_GET_IID(nsIDownloadObserver), mObserver, 
-              PROXY_ASYNC | PROXY_ALWAYS, getter_AddRefs(pObserver));
-    if (NS_FAILED(rv2)) return rv2;
-
-    return pObserver->OnDownloadComplete(this, mContext, rv, localFile);
+  if (mObserver && (NS_FAILED(rv) || localFile)) 
+  {
+     if (aIsSynchronous)
+       return mObserver->OnDownloadComplete(this, mContext, rv, localFile);
+     else
+     {
+       // If the open failed or the file is local, call the observer.
+       // don't callback synchronously as it puts the caller
+       // in a recursive situation and breaks the asynchronous
+       // semantics of nsIDownloader
+       nsresult rv2 = NS_OK;
+       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                       kProxyObjectManagerCID, &rv);
+       if (NS_FAILED(rv2)) return rv2;
+           nsCOMPtr<nsIDownloadObserver> pObserver;
+           rv2 = pIProxyObjectManager->GetProxyForObject(NS_CURRENT_EVENTQ, 
+                     NS_GET_IID(nsIDownloadObserver), mObserver, 
+                     PROXY_ASYNC | PROXY_ALWAYS, getter_AddRefs(pObserver));
+           if (NS_FAILED(rv2)) return rv2;
+           return pObserver->OnDownloadComplete(this, mContext, rv, localFile);
+     }
   }
 
   return channel->AsyncRead(this, aContext);
@@ -107,33 +112,36 @@ NS_IMETHODIMP
 nsDownloader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                               nsresult aStatus, const PRUnichar* aStatusArg)
 {
-  nsresult rv;
-  
-  nsCOMPtr<nsIURI> uri;
-  rv = channel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
-  nsXPIDLCString spec;
-  rv = uri->GetSpec(getter_Copies(spec));
-  if (NS_FAILED(rv)) return rv;
-  
-  NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, kNetworkCacheManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsICachedNetData> cachedData;
-  rv = cacheMgr->GetCachedNetData(spec, nsnull, 0, nsINetDataCacheManager::CACHE_AS_FILE,
-                                  getter_AddRefs(cachedData));
-
   nsCOMPtr<nsIFile> file;
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIStreamAsFile> streamAsFile;
-    streamAsFile = do_QueryInterface(cachedData, &rv);
+  if (NS_SUCCEEDED(aStatus))
+  {
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    rv = channel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
-
-    rv = streamAsFile->GetFile(getter_AddRefs(file));
+    nsXPIDLCString spec;
+    rv = uri->GetSpec(getter_Copies(spec));
     if (NS_FAILED(rv)) return rv;
-    rv = aStatus;
-  }
   
-  return mObserver->OnDownloadComplete(this, mContext, rv, file);
+    NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, kNetworkCacheManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsICachedNetData> cachedData;
+    rv = cacheMgr->GetCachedNetData(spec, nsnull, 0, nsINetDataCacheManager::CACHE_AS_FILE,
+                                      getter_AddRefs(cachedData));
+    
+
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIStreamAsFile> streamAsFile;
+      streamAsFile = do_QueryInterface(cachedData, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = streamAsFile->GetFile(getter_AddRefs(file));
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+
+  return mObserver->OnDownloadComplete(this, mContext, aStatus, file);
 }
 
 #define BUF_SIZE 1024
