@@ -686,7 +686,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             JSArrayInstance *args = (JSArrayInstance *)Array_Type->newInstance(this);
                             for (uint32 i = 0; i < argCount; i++) 
                                 args->setProperty(this, *numberToString(i), NULL, argBase[i]);
-                            mScopeChain->defineVariable(this, Arguments_StringAtom, NULL, Array_Type, JSValue(args));
+                            target->getActivation()->setProperty(this, Arguments_StringAtom, NULL, JSValue(args));
                         }
 
                         mCurModule = target->getByteCode();
@@ -1440,7 +1440,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             JSArrayInstance *args = (JSArrayInstance *)Array_Type->newInstance(this);
                             for (uint32 i = 0; i < argCount; i++) 
                                 args->setProperty(this, *numberToString(i), NULL, argBase[i]);
-                            target->getScopeChain()->defineVariable(this, Arguments_StringAtom, NULL, Array_Type, JSValue(args));
+                            target->getActivation()->setProperty(this, Arguments_StringAtom, NULL, JSValue(args));
                         }
                         try {
                             result = interpret(target->getByteCode(), 0, target->getScopeChain(), newThis, argBase, argCount);

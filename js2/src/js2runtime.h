@@ -994,6 +994,7 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("ParameterBarrel", t); STD::free(t); }
 #endif
 
+        Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type);
         Reference *genReference(Context *cx, bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         JSValue getSlotValue(Context *cx, uint32 slotIndex);

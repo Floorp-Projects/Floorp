@@ -114,7 +114,7 @@ Attribute *Context::executeAttributes(ExprNode *attr)
 //
 PropertyIterator JSObject::findNamespacedProperty(const String &name, NamespaceList *names)
 {
-    for (PropertyIterator i = mProperties.lower_bound(name), 
+    for (PropertyIterator i = mProperties.lower_bound(name),
                     end = mProperties.upper_bound(name); (i != end); i++) {
         NamespaceList *propNames = PROPERTY_NAMESPACELIST(i);
         if (names) {
@@ -700,11 +700,22 @@ void JSType::setStaticInitializer(Context *cx, JSFunction *f)
         cx->interpret(f->getByteCode(), 0, f->getScopeChain(), JSValue(this), NULL, 0);
 }
 
-Property *JSType::defineVariable(Context * /*cx*/, const String& name, AttributeStmtNode *attr, JSType *type)
+Property *JSType::defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type)
 {
+    NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
     PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
+    PropertyIterator it;
+    if (hasOwnProperty(cx, name, names, Read, &it)) {
+/*
+XXX error for classes, right? but not for local variables under what circumstances (hoisting impact?)
+        if (attr)
+            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", attr->pos, name);
+        else
+            cx->reportError(Exception::typeError, "Duplicate definition '{0}'", name);
+*/
+    }
     Property *prop = new Property(mVariableCount++, type, Slot, attrFlags);
-    const PropertyMap::value_type e(name, new NamespacedProperty(prop, (attr) ? attr->attributeValue->mNamespaceList : NULL));
+    const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
     mProperties.insert(e);
     return prop;
 }
@@ -789,6 +800,8 @@ JSObject *ScopeChain::getNameValue(Context *cx, const String& name, NamespaceLis
     return NULL;
 }
 
+// it'd be much better if the property iterator returned by hasProperty could be
+// used by the genReference call
 Reference *ScopeChain::getName(Context *cx, const String& name, NamespaceList *names, Access acc)
 {
     uint32 depth = 0;
@@ -832,17 +845,51 @@ JSValue ScopeChain::getCompileTimeValue(Context *cx, const String& name, Namespa
 }
 
 
-
+// in the case of duplicate parameter names, pick the last one
+// XXX does the namespace handling make any sense here? Can parameters be in a namespace?
 Reference *ParameterBarrel::genReference(Context *cx, bool /* hasBase */, const String& name, NamespaceList *names, Access acc, uint32 /*depth*/)
 {
-    PropertyIterator i;
-    if (hasProperty(cx, name, names, acc, &i)) {
-        Property *prop = PROPERTY(i);
-        ASSERT(prop->mFlag == Slot);
-        return new ParameterReference(prop->mData.index, acc, prop->mType, prop->mAttributes);
+    Property *selectedProp = NULL;
+    for (PropertyIterator i = mProperties.lower_bound(name),
+                    end = mProperties.upper_bound(name); (i != end); i++) {
+        NamespaceList *propNames = PROPERTY_NAMESPACELIST(i);
+        if (names) {
+            if (propNames == NULL)
+                continue;       // a namespace list was specified, no match
+            while (names) {
+                NamespaceList *propNameEntry = propNames;
+                while (propNameEntry) {
+                    if (names->mName == propNameEntry->mName) {
+                        Property *prop = PROPERTY(i);
+                        ASSERT(prop->mFlag == Slot);
+                        if (selectedProp == NULL)
+                            selectedProp = prop;
+                        else {
+                            if (PROPERTY_INDEX(i) > selectedProp->mData.index)
+                                selectedProp = prop;
+                        }
+                        break;
+                    }
+                    propNameEntry = propNameEntry->mNext;
+                }
+                names = names->mNext;
+            }
+        }
+        else {
+            if (propNames)  // entry is in a namespace, but none called for, no match
+                continue;
+            Property *prop = PROPERTY(i);
+            ASSERT(prop->mFlag == Slot);
+            if (selectedProp == NULL)
+                selectedProp = prop;
+            else {
+                if (PROPERTY_INDEX(i) > selectedProp->mData.index)
+                    selectedProp = prop;
+            }
+        }
     }
-    NOT_REACHED("bad genRef call");
-    return NULL;
+    ASSERT(selectedProp);
+    return new ParameterReference(selectedProp->mData.index, acc, selectedProp->mType, selectedProp->mAttributes);
 }
 
 JSValue ParameterBarrel::getSlotValue(Context *cx, uint32 slotIndex)
@@ -864,6 +911,20 @@ void ParameterBarrel::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
     }
     else
         cx->mArgumentBase[slotIndex] = v;
+}
+
+Property *ParameterBarrel::defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type)
+{
+    NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
+    PropertyAttribute attrFlags = (attr) ? attr->attributeValue->mTrueFlags : 0;
+    PropertyIterator it;
+    if (hasOwnProperty(cx, name, names, Read, &it)) {
+        // XXX duplicate parameter name, ok for all functions, or just unchecked ones?
+    }
+    Property *prop = new Property(mVariableCount++, type, Slot, attrFlags);
+    const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
+    mProperties.insert(e);
+    return prop;
 }
 
 

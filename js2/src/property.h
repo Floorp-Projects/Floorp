@@ -143,6 +143,7 @@ namespace JS2Runtime {
 
     typedef std::multimap<String, NamespacedProperty *, std::less<const String> > PropertyMap;
     typedef PropertyMap::iterator PropertyIterator;
+    typedef PropertyMap::reverse_iterator ReversePropertyIterator;
 
 
 
