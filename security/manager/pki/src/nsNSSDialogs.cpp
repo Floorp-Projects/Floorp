@@ -621,16 +621,13 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-  if (!block) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kPKIParamBlockCID);
+  if (!block)
+    return NS_ERROR_FAILURE;
 
-  nsXPIDLString commonName;
-  rv = cert->GetCommonName(getter_Copies(commonName));
+  rv = block->SetISupportAtIndex(1, cert);
   if (NS_FAILED(rv))
     return rv;
-
-  rv = block->SetString(1, commonName);
-  if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(parent, 
                                    "chrome://pippki/content/downloadcert.xul",
@@ -640,13 +637,15 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   PRInt32 status;
   PRInt32 ssl, email, objsign;
 
-  rv = block->GetInt(1, &status);
+  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock = do_QueryInterface(block);
+  
+  rv = dlgParamBlock->GetInt(1, &status);
   if (NS_FAILED(rv)) return rv;
-  rv = block->GetInt(2, &ssl);
+  rv = dlgParamBlock->GetInt(2, &ssl);
   if (NS_FAILED(rv)) return rv;
-  rv = block->GetInt(3, &email);
+  rv = dlgParamBlock->GetInt(3, &email);
   if (NS_FAILED(rv)) return rv;
-  rv = block->GetInt(4, &objsign);
+  rv = dlgParamBlock->GetInt(4, &objsign);
   if (NS_FAILED(rv)) return rv;
  
   *_trust = nsIX509CertDB::UNTRUSTED;

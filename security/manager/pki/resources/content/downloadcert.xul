@@ -83,13 +83,7 @@
           <button id="viewC-button" class="dialog" 
                   label="&downloadCert.viewCert.label;"
                   oncommand="viewCert();"/> 
-          <html>&downloadCert.viewCert.text;</html>
-        </row>
-        <row>
-          <button id="viewP-button" class="dialog" 
-                  label="&downloadCert.viewPolicy.label;"
-                  oncommand="viewPolicy();"/> 
-          <html>&downloadCert.viewPolicy.text;</html>
+          <html style="margin: 4px;">&downloadCert.viewCert.text;</html>
         </row>
       </rows>
     </grid>

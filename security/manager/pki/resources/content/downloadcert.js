@@ -22,14 +22,22 @@
  */
 
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
+const nsIX509Cert = Components.interfaces.nsIX509Cert;
 
+var pkiParams;
 var params;
 var caName;
+var cert;
 
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-  caName = params.GetString(1); 
+  pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
+  params = pkiParams.QueryInterface(nsIDialogParamBlock);
+  var isupport = pkiParams.getISupportAtIndex(1);
+  cert = isupport.QueryInterface(nsIX509Cert);
+
+  caName = cert.commonName; 
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
@@ -53,10 +61,7 @@ function onLoad()
 
 function viewCert()
 {
-}
-
-function viewPolicy()
-{
+  cert.view();
 }
 
 function doOK()
