@@ -775,14 +775,10 @@ WH_TempFileName(int type, const char * request_prefix, const char * extension)
 {
 	static char file_buf[_MAX_PATH];		/* protected by _pr_TempName_lock */
 	char* result;
-#ifdef NSPR
 	XP_ASSERT(_pr_TempName_lock);
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif
 	result = XP_STRDUP(xp_TempFileName(type, request_prefix, extension, file_buf));
-#ifdef NSPR
 	PR_ExitMonitor(_pr_TempName_lock);
-#endif
 	return result;
 }
 
@@ -3744,14 +3740,10 @@ WH_TempName(XP_FileType type, const char * prefix)
 {
 	static char buf[_MAX_PATH];	/* protected by _pr_TempName_lock */
 	char* result;
-#ifdef NSPR
 	XP_ASSERT(_pr_TempName_lock);
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif
 	result = XP_STRDUP(xp_TempFileName(type, prefix, NULL, buf));
-#ifdef NSPR
 	PR_ExitMonitor(_pr_TempName_lock);
-#endif
 	return result;
 }
 
@@ -3765,14 +3757,10 @@ WH_FileName (const char *name, XP_FileType type)
 	** I'm not sure this lock is really needed by windows, but just
 	** to be safe:
 	*/
-#ifdef NSPR
 	//	XP_ASSERT(_pr_TempName_lock);
 	//	PR_EnterMonitor(_pr_TempName_lock);
-#endif
 	result = xp_FileName(name, type, &myName);
-#ifdef NSPR
 	//	PR_ExitMonitor(_pr_TempName_lock);
-#endif
 	return myName;
 }
 

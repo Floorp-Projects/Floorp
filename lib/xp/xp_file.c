@@ -1623,9 +1623,7 @@ XP_Bool XP_FileIsFullPath(const char * name)
 
 #if !defined(XP_WIN) && !defined(XP_OS2)
 
-#ifdef NSPR
 PRMonitor* _pr_TempName_lock = NULL;
-#endif
 
 PUBLIC char *
 WH_FileName (const char *name, XP_FileType type)
@@ -1633,21 +1631,17 @@ WH_FileName (const char *name, XP_FileType type)
 	static char buf [1024];				/* protected by _pr_TempName_lock */
 	static char configBuf [1024];		/* protected by _pr_TempName_lock */
 	char* result;
-#ifdef NSPR
 	if (_pr_TempName_lock == NULL) {
 		_pr_TempName_lock = PR_NewNamedMonitor("TempName-lock");
 	}
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif
 	/* reset
 	 */
 	buf[0] = '\0';
 	result = xp_FileName(name, type, buf, configBuf);
 	if (result)
 		result = XP_STRDUP(result);
-#ifdef NSPR
 	PR_ExitMonitor(_pr_TempName_lock);
-#endif
 	return result;
 }
 
@@ -1656,16 +1650,12 @@ WH_FilePlatformName(const char * name)
 {
 	char* result;
 	static char path[300];	/* Names longer than 300 are not dealt with in our stdio */
-#ifdef NSPR
 	if (_pr_TempName_lock == NULL) {
 		_pr_TempName_lock = PR_NewNamedMonitor("TempName-lock");
 	}
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif
 	result = xp_FilePlatformName(name, path);
-#ifdef NSPR
 	PR_ExitMonitor(_pr_TempName_lock);
-#endif
 	if (result)
 		result = XP_STRDUP(result);
 		
@@ -1680,18 +1670,14 @@ WH_TempName(XP_FileType type, const char * prefix)
 	static char buf2 [100];
 	static unsigned int count = 0;
 	char* result;
-#ifdef NSPR
 	if (_pr_TempName_lock == NULL) {
 		_pr_TempName_lock = PR_NewNamedMonitor("TempName-lock");
 	}
 	PR_EnterMonitor(_pr_TempName_lock);
-#endif
 	result = xp_TempName(type, prefix, buf, buf2, &count);
 	if (result)
 		result = XP_STRDUP(result);
-#ifdef NSPR
 	PR_ExitMonitor(_pr_TempName_lock);
-#endif
 	return result;
 }
 

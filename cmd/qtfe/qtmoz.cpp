@@ -1,4 +1,4 @@
-/* $Id: qtmoz.cpp,v 1.4 1998/10/03 20:13:57 cls%seawood.org Exp $
+/* $Id: qtmoz.cpp,v 1.5 1998/10/08 21:24:44 cyeh%netscape.com Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -55,9 +55,7 @@
 #include "np.h"
 #include "secnav.h"
 #include "secrng.h"
-#ifdef NSPR20
 #include "private/prpriv.h"	/* for PR_NewNamedMonitor */
-#endif /* NSPR20 */
 
 #include "libimg.h"             /* Image Library public API. */
 
@@ -67,11 +65,7 @@
 #include "libmocha.h"
 
 #include "prnetdb.h"
-#ifndef NSPR20
-#include "prevent.h"
-#else
 #include "plevent.h"
-#endif
 
 #if 0
 #include "bkmks.h"		/* for drag and drop in mail compose */
@@ -1079,12 +1073,7 @@ mozilla_main(int argc, char** argv)
     fe_progname_long = fe_locate_program_path (argv [0]);
 #endif
 
-#if defined(NSPR20)
     PR_UnblockClockInterrupts();
-#else
-    /* Now we can turn the nspr clock on */
-    PR_StartEvents(0);
-#endif	/* NSPR20 */
 
     int fd;
 
@@ -1156,10 +1145,7 @@ mozilla_main(int argc, char** argv)
 	        const char *host;
 
                 inaddr.s_addr = addr;
-#ifndef NSPR20
-	        hp = PR_gethostbyaddr((char *)&inaddr, sizeof inaddr, AF_INET,
-				      &hpbuf, dbbuf, sizeof(dbbuf), 0);
-#else
+
 	        PRStatus sts;
 	        PRNetAddr pr_addr;
 
@@ -1170,7 +1156,6 @@ mozilla_main(int argc, char** argv)
 		    hp = NULL;
 	        else
 		    hp = &hpbuf;
-#endif
 	        host = (hp == NULL) ? inet_ntoa(inaddr) : hp->h_name;
 	        fmt = PR_sprintf_append(fmt,
 		        XP_GetString(QTFE_APPEARS_TO_BE_RUNNING_ON_HOST_UNDER_PID),
@@ -1511,13 +1496,6 @@ fe_create_pidlock (const char *name, unsigned long *paddr, pid_t *ppid)
     char *colon, *after;
     pid_t pid;
 
-#ifndef NSPR20
-    if (gethostname (hostname, sizeof hostname) < 0 ||
-      (hp = PR_gethostbyname (hostname, &hpbuf, dbbuf, sizeof(dbbuf), 0)) == NULL)
-        inaddr.s_addr = INADDR_LOOPBACK;
-    else
-        memcpy (&inaddr, hp->h_addr, sizeof inaddr);
-#else
     {
       PRStatus sts;
 
@@ -1534,7 +1512,6 @@ fe_create_pidlock (const char *name, unsigned long *paddr, pid_t *ppid)
           }
       }
     }
-#endif
 
     myaddr = inaddr.s_addr;
     signature = PR_smprintf ("%s:%u", inet_ntoa (inaddr), (unsigned)getpid ());

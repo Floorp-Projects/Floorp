@@ -19,7 +19,6 @@
 #ifndef mozjava_h___
 #define mozjava_h___
 
-#if defined(NSPR) || defined(JAVA)
 #include "prthread.h"
 #include "prmon.h"
 #include "prio.h"
@@ -28,7 +27,6 @@
 #include "prlog.h"
 #ifdef JAVA
 #include "java.h"
-#endif
 #endif
 
 #ifdef JAVA
