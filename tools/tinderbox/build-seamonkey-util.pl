@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.38 $ ';
+$::UtilsVersion = '$Revision: 1.39 $ ';
 
 package TinderUtils;
 
@@ -767,14 +767,16 @@ sub run_all_tests {
                         0);  # Timeout means failure.
     }
 
-	# Layout performance test.
+	# Layout performance test.  URL is currently inside netscape.com,
+	# bug to push this out to mozilla.org is:
+    #   http://bugzilla.mozilla.org/show_bug.cgi?id=75073
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
 	  $test_result = AliveTest("LayoutPerformanceTest", $build_dir,
 							   $binary, 
 							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
 							   $Settings::LayoutPerformanceTestTimeout);
     }
-	# "http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0", 
+
     return $test_result;
 }
 
