@@ -280,6 +280,10 @@ calItemBase.prototype = {
         "DTALARM": true,
         "DTSTAMP": true,
         "X-MOZILLA-GENERATION": true,
+        "RRULE": true,
+        "EXDATE": true,
+        "RDATE": true,
+        "ATTENDEE": true,
     },
 
     mapPropsFromICS: function(icalcomp, propmap) {
