@@ -1,0 +1,47 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *     Mike Shaver <shaver@mozilla.org>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * System information service.
+ * 
+ * At present, a thin wrapper around PR_GetSystemInfo.
+ */
+
+[scriptable,uuid(4189b420-1dd2-11b2-bff7-daaf5c1f7b10)]
+interface nsISystemInfo : nsISupports
+{
+  /** The system hostname. */
+  readonly attribute string hostname;
+
+  /** The operating system name. */
+  readonly attribute string OSName;
+
+  /** The operating system version. */
+  readonly attribute string OSVersion;
+
+  /** The processor architecture of the machine. */
+  readonly attribute string architecture;
+};
+
