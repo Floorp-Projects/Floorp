@@ -205,7 +205,13 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   if (NS_SUCCEEDED(rv)) {
     PRUint32 responseCode = 0;
 
-    httpChannel->GetResponseStatus(&responseCode);
+    rv = httpChannel->GetResponseStatus(&responseCode);
+
+    if (NS_FAILED(rv)) {
+      // behave as in the canceled case
+      return NS_OK;
+    }
+
     if (204 == responseCode) {
       return NS_OK;
     }
