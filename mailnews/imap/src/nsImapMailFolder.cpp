@@ -224,7 +224,7 @@ nsImapMailFolder::nsImapMailFolder() :
     getter_AddRefs(m_eventQueue));
   m_moveCoalescer = nsnull;
   m_boxFlags = 0;
-  m_uidValidity = 0;
+  m_uidValidity = kUidUnknown;
   m_numStatusRecentMessages = 0;
   m_numStatusUnseenMessages = 0;
   m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
@@ -1869,16 +1869,16 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
 {
   nsresult openErr=NS_ERROR_UNEXPECTED;
   if(!db || !folderInfo)
-  return NS_ERROR_NULL_POINTER; //ducarroz: should we use NS_ERROR_INVALID_ARG?
+    return NS_ERROR_NULL_POINTER; //ducarroz: should we use NS_ERROR_INVALID_ARG?
   nsresult rv;
 
   openErr = GetDatabase(nsnull);
 
   *db = mDatabase;
   NS_IF_ADDREF(*db);
-    if (NS_SUCCEEDED(openErr)&& *db)
+  if (NS_SUCCEEDED(openErr)&& *db)
   {
-        openErr = (*db)->GetDBFolderInfo(folderInfo);
+    openErr = (*db)->GetDBFolderInfo(folderInfo);
     if (NS_SUCCEEDED(openErr) && folderInfo)
     {
       nsXPIDLCString onlineName;
@@ -4984,6 +4984,17 @@ NS_IMETHODIMP
 nsImapMailFolder::GetUidValidity(PRInt32 *uidValidity)
 {
   NS_ENSURE_ARG(uidValidity);
+  if (m_uidValidity == kUidUnknown)
+  {
+    nsCOMPtr<nsIMsgDatabase> db; 
+    nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+    (void) GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+    if (db)
+      db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    
+    if (dbFolderInfo)
+      dbFolderInfo->GetImapUidValidity((PRInt32 *) &m_uidValidity);
+  }
   *uidValidity = m_uidValidity;
   return NS_OK;
 }
