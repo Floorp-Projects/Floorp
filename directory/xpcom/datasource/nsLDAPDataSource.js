@@ -507,7 +507,7 @@ nsLDAPDataSource.prototype = {
 
         var iter = new ArrayEnumerator(this.mObserverList);
         var nextObserver;
-        while (nextObserver = iter.getNext()) {
+        while ((nextObserver = iter.getNext())) {
             if (nextObserver == aObserver) {
                 splice(iter.index, 1);
             }
@@ -735,7 +735,7 @@ const NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID =
 const NS_LDAPMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID = 
     '@mozilla.org/rdf/delegate-factory;1?key=messagelist.ldap&scheme=ldap'
 const NS_LDAPMESSAGERDFDELEGATEFACTORY_CID = 
-    Components.ID('{4b6fb566-1dd2-11b2-a1a9-889a3f852b0b`}');
+    Components.ID('{4b6fb566-1dd2-11b2-a1a9-889a3f852b0b}');
 
 function nsLDAPMessageRDFDelegateFactory() {}
 
@@ -1087,6 +1087,10 @@ var MessageDelegateFactory = null;
 var nsLDAPDataSourceModule = {
 
     registerSelf: function (compMgr, fileSpec, location, type) {
+        if (DEBUG) {
+            dump("*** Registering LDAP datasource components" +
+                 " (all right -- a JavaScript module!)\n");
+        }
         compMgr.registerComponentWithType(
                 NS_LDAPDATASOURCE_CID, 
                 'LDAP RDF DataSource', 
