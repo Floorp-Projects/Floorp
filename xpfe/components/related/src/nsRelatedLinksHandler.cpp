@@ -106,6 +106,7 @@ public:
 	 virtual	~RelatedLinksStreamListener();
 
 	 NS_METHOD	Init();
+     nsresult   Unescape(nsString &text);
 
 	// nsIStreamObserver
 	NS_DECL_NSISTREAMOBSERVER
@@ -437,6 +438,8 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 					mDataSource->Assert(newTopic, kRDF_type, kNC_RelatedLinksTopic, PR_TRUE);
 					if (title.Length() > 0)
 					{
+                        Unescape(title);
+
 						const PRUnichar		*titleName = title.GetUnicode();
 						if (nsnull != titleName)
 						{
@@ -488,6 +491,8 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 					title.Trim(" ");
 					if (title.Length() > 0)
 					{
+                        Unescape(title);
+
 						const PRUnichar	*name = title.GetUnicode();
 						if (nsnull != name)
 						{
@@ -526,6 +531,48 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 
 
 
+nsresult
+RelatedLinksStreamListener::Unescape(nsString &text)
+{
+	// convert some HTML-escaped (such as "&lt;") values back
+
+	PRInt32		offset=0;
+
+	while((offset = text.FindChar((PRUnichar('&')), PR_FALSE, offset)) >= 0)
+	{
+		// XXX get max of 6 chars; change the value below if
+		// we ever start looking for longer HTML-escaped values
+		nsAutoString	temp;
+		text.Mid(temp, offset, 6);
+
+		if (temp.CompareWithConversion("&lt;", PR_TRUE, 4) == 0)
+		{
+			text.Cut(offset, 4);
+			text.Insert(PRUnichar('<'), offset);
+		}
+		else if (temp.CompareWithConversion("&gt;", PR_TRUE, 4) == 0)
+		{
+			text.Cut(offset, 4);
+			text.Insert(PRUnichar('>'), offset);
+		}
+		else if (temp.CompareWithConversion("&amp;", PR_TRUE, 5) == 0)
+		{
+			text.Cut(offset, 5);
+			text.Insert(PRUnichar('&'), offset);
+		}
+		else if (temp.CompareWithConversion("&quot;", PR_TRUE, 6) == 0)
+		{
+			text.Cut(offset, 6);
+			text.Insert(PRUnichar('\"'), offset);
+		}
+
+		++offset;
+	}
+	return(NS_OK);
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////
 // RelatedLinksHanlderImpl
 
@@ -543,7 +590,6 @@ private:
 	static nsIRDFService    *gRDFService;
 	static nsIRDFResource	*kNC_RelatedLinksRoot;
 	static nsIRDFResource	*kNC_Child;
-	static nsIRDFResource	*kNC_Name;
 	static nsIRDFResource	*kRDF_type;
 	static nsIRDFResource	*kNC_RelatedLinksTopic;
 
