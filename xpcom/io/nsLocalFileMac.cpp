@@ -1739,7 +1739,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 			char* appendedPath;
 			GetAppendedPath(&appendedPath);
 						
-			if (appendedPath == nsnull || (appendedPath[0] == ':' && appendedPath[1] == '\0' ))
+			if (appendedPath == nsnull || appendedPath[0] == '\0'|| (appendedPath[0] == ':' && appendedPath[1] == '\0' ))
 			{	
 				rv = ResolveAndStat(PR_TRUE);
 
