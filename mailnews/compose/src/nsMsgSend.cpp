@@ -1708,8 +1708,11 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           PR_FREEIF(fileExt);
         }
 
+        // If we still don't have a content type, we should really try sniff one out!
         if ((!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
-          m_attachments[newLoc].m_type = PL_strdup(APPLICATION_OCTET_STREAM);
+        {
+          m_attachments[newLoc].PickEncoding(mCompFields->GetCharacterSet());
+        }
 
         // For local files, if they are HTML docs and we don't have a charset, we should
         // sniff the file and see if we can figure it out.
@@ -1913,6 +1916,12 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       // Set it to the compose fields for a default...
 			PR_FREEIF(m_attachments[i].m_charset);
       m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
+
+      // If we still don't have a content type, we should really try sniff one out!
+      if ((!m_attachments[i].m_type) || (!*m_attachments[i].m_type))
+      {
+        m_attachments[i].PickEncoding(mCompFields->GetCharacterSet());
+      }
 
       // For local files, if they are HTML docs and we don't have a charset, we should
       // sniff the file and see if we can figure it out.
