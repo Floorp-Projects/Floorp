@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.2 1998/06/15 05:08:14 jwz Exp $
+# $Id: Common.pm,v 1.3 1998/06/15 17:15:35 jwz Exp $
 
 package LXR::Common;
 
@@ -313,6 +313,7 @@ sub init {
 	print("\n");
     } else {
         print("Content-Type: text/html; charset=iso-8859-1\n");
+	print("\n");
     }
     
     
