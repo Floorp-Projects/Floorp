@@ -58,6 +58,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include <ctype.h>
 
+// do a case insensitive string compare
+#define WIDGET_IS_TYPE(macro_widget_string,macro_in_string) ((macro_widget_string).Compare((macro_in_string), PR_TRUE))
+
 // Globals - how many K are we wasting by putting these in every file?
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
@@ -319,13 +322,13 @@ nsresult nsPrefWindow::InitializeOneInputWidget(
             if (NS_SUCCEEDED(mPrefs->GetBoolPref(tempPrefName, &boolVal))
             || NS_SUCCEEDED(mPrefs->GetBoolPref(inPrefName, &boolVal)))
             {
-                if (inWidgetType == "checkbox")
+                if (WIDGET_IS_TYPE(inWidgetType,"checkbox"))
                 {
                     boolVal = (PRBool)(boolVal ^ inPrefOrdinal);
                     inElement->SetDefaultChecked(boolVal);
                     inElement->SetChecked(boolVal);
                 }
-                else if (inWidgetType == "radio" && inPrefOrdinal == boolVal)
+                else if (WIDGET_IS_TYPE(inWidgetType,"radio") && inPrefOrdinal == boolVal)
                 {
                     // Radio pairs representing a boolean pref must have their
                     // ordinals "0" and "1". They work just like radio buttons
@@ -347,7 +350,7 @@ nsresult nsPrefWindow::InitializeOneInputWidget(
             if (NS_SUCCEEDED(mPrefs->GetIntPref(tempPrefName, &intVal))
             || NS_SUCCEEDED(mPrefs->GetIntPref(inPrefName, &intVal)))
             {
-                if (inWidgetType == "radio")
+                if (WIDGET_IS_TYPE(inWidgetType,"radio"))
                 {
                     // Turn on the radio whose ordinal matches the value.
                     // The others will turn off automatically.
@@ -357,7 +360,7 @@ nsresult nsPrefWindow::InitializeOneInputWidget(
                         inElement->SetChecked(PR_TRUE);
                     }
                 }
-                else if (inWidgetType == "text")
+                else if (WIDGET_IS_TYPE(inWidgetType,"text"))
                 {
                     char charVal[CHAR_VAL_BUF_LEN];
                     PR_snprintf(charVal, CHAR_VAL_BUF_LEN, "%d", (int)intVal);
@@ -581,12 +584,12 @@ nsresult nsPrefWindow::FinalizeOneInputWidget(
             nsresult rv = inElement->GetChecked(&boolVal);
             if (NS_FAILED(rv))
               return rv;
-            if (inWidgetType == "checkbox")
+            if (WIDGET_IS_TYPE(inWidgetType,"checkbox"))
             {
               boolVal = (PRBool)(boolVal ^ inPrefOrdinal);            
               mPrefs->SetBoolPref(tempPrefName, boolVal);
             }
-            else if (inWidgetType == "radio" && boolVal)
+            else if (WIDGET_IS_TYPE(inWidgetType,"radio") && boolVal)
                 {
                     // The radio that is ON writes out its ordinal. Others do nothing.
                     mPrefs->SetBoolPref(tempPrefName, inPrefOrdinal);
@@ -595,7 +598,7 @@ nsresult nsPrefWindow::FinalizeOneInputWidget(
         }
         case eInt:
         {
-            if (inWidgetType == "radio")
+            if (WIDGET_IS_TYPE(inWidgetType,"radio"))
             {
                 // The radio that is ON writes out its ordinal. Others do nothing.
                 PRBool boolVal;
@@ -604,7 +607,7 @@ nsresult nsPrefWindow::FinalizeOneInputWidget(
                     return rv;
                 mPrefs->SetIntPref(tempPrefName, inPrefOrdinal);
             }
-            else if (inWidgetType == "text")
+            else if (WIDGET_IS_TYPE(inWidgetType,"text"))
             {
                 nsString fieldValue;
                 nsresult rv = inElement->GetValue(fieldValue);
