@@ -663,12 +663,11 @@ RRT_HEADER:
       PUSH_STRING (pReference);
     PUSH_NEWLINE ();
     {
-      char *trimAt = PL_strchr(pReference, '>');
+      const char *lastRef = PL_strrchr(pReference, '<');
 
-      if (trimAt) {
-        trimAt++;
+      if (lastRef) {
         PUSH_STRING ("In-Reply-To: ");
-        PUSH_STRINGN (pReference, trimAt-pReference);
+        PUSH_STRING (lastRef);
         PUSH_NEWLINE ();
       }
     }
