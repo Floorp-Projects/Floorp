@@ -462,9 +462,27 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
 
 
 nsresult
-nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString)
+nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
+
+  if (!aTextNode) return NS_ERROR_NULL_POINTER;
+  PRInt32 len=aString.Length(), i, count = mArray.Count();
+  if (!count) return NS_OK;
+  nsRangeStore *item;
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
+  if (!node) NS_ERROR_NULL_POINTER;
+  
+  for (i=0; i<count; i++)
+  {
+    item = (nsRangeStore*)mArray.ElementAt(i);
+    if (!item) return NS_ERROR_NULL_POINTER;
+    
+    if ((item->startNode.get() == node) && (item->startOffset > aOffset))
+      item->startOffset += len;
+    if ((item->endNode.get() == node) && (item->endOffset > aOffset))
+      item->endOffset += len;
+  }
   return NS_OK;
 }
 
@@ -473,6 +491,30 @@ nsresult
 nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength)
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
+
+  if (!aTextNode) return NS_ERROR_NULL_POINTER;
+  PRInt32 len=0, i, count = mArray.Count();
+  if (!count) return NS_OK;
+  nsRangeStore *item;
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
+  if (!node) NS_ERROR_NULL_POINTER;
+  
+  for (i=0; i<count; i++)
+  {
+    item = (nsRangeStore*)mArray.ElementAt(i);
+    if (!item) return NS_ERROR_NULL_POINTER;
+    
+    if ((item->startNode.get() == node) && (item->startOffset > aOffset))
+    {
+      item->startOffset -= aLength;
+      if (item->startOffset < 0) item->startOffset = 0;
+    }
+    if ((item->endNode.get() == node) && (item->endOffset > aOffset))
+    {
+      item->endOffset -= aLength;
+      if (item->endOffset < 0) item->endOffset = 0;
+    }
+  }
   return NS_OK;
 }
 

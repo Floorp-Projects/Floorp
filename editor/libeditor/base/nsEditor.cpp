@@ -2337,11 +2337,14 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
         listener->WillInsertText(aTextNode, aOffset, aStringToInsert);
     }
   }
-    
+  
+  // XXX we may not need these view batches anymore.  This is handled at a higher level now I believe
   BeginUpdateViewBatch();
   result = Do(txn);
   EndUpdateViewBatch();
 
+  mRangeUpdater.SelAdjInsertText(aTextNode, aOffset, aStringToInsert);
+  
   // let listeners know what happened
   if (mActionListeners)
   {
@@ -2559,6 +2562,8 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
     
     result = Do(txn); 
     
+    mRangeUpdater.SelAdjDeleteText(aElement, aOffset, aLength);
+
     // let listeners know what happened
     if (mActionListeners)
     {

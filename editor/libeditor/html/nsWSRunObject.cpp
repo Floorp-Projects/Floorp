@@ -221,63 +221,69 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
   res = FindRun(*aInOutParent, *aInOutOffset, &beforeRun, PR_FALSE);
   res = FindRun(*aInOutParent, *aInOutOffset, &afterRun, PR_TRUE);
   
-  // handle any changes needed to ws run after inserted br
-  if (!afterRun)
   {
-    // dont need to do anything.  just insert break.  ws wont change.
-  }
-  else if (afterRun->mType & eTrailingWS)
-  {
-    // dont need to do anything.  just insert break.  ws wont change.
-  }
-  else if (afterRun->mType == eLeadingWS)
-  {
-    // delete the leading ws that is after insertion point.  We don't
-    // have to (it would still not be significant after br), but it's 
-    // just more aesthetically pleasing to.
-    res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  else if (afterRun->mType == eNormalWS)
-  {
-    // need to determine if break at front of non-nbsp run.  if so
-    // convert run to nbsp.
-    WSPoint thePoint;
-    res = GetCharAfter(*aInOutParent, *aInOutOffset, &thePoint);
-    if ( (NS_SUCCEEDED(res)) && thePoint.mTextNode && (nsCRT::IsAsciiSpace(thePoint.mChar)) )
+    // some scoping for nsAutoTrackDOMPoint.  This will track our insertion point
+    // while we tweak any surrounding whitespace
+    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent, aInOutOffset);
+
+    // handle any changes needed to ws run after inserted br
+    if (!afterRun)
     {
-      WSPoint prevPoint;
-      res = GetCharBefore(thePoint, &prevPoint);
-      if ( (NS_FAILED(res)) || (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar)) )
+      // dont need to do anything.  just insert break.  ws wont change.
+    }
+    else if (afterRun->mType & eTrailingWS)
+    {
+      // dont need to do anything.  just insert break.  ws wont change.
+    }
+    else if (afterRun->mType == eLeadingWS)
+    {
+      // delete the leading ws that is after insertion point.  We don't
+      // have to (it would still not be significant after br), but it's 
+      // just more aesthetically pleasing to.
+      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    else if (afterRun->mType == eNormalWS)
+    {
+      // need to determine if break at front of non-nbsp run.  if so
+      // convert run to nbsp.
+      WSPoint thePoint;
+      res = GetCharAfter(*aInOutParent, *aInOutOffset, &thePoint);
+      if ( (NS_SUCCEEDED(res)) && thePoint.mTextNode && (nsCRT::IsAsciiSpace(thePoint.mChar)) )
       {
-        // we are at start of non-nbsps.  convert to a single nbsp.
-        res = ConvertToNBSP(thePoint);
-        NS_ENSURE_SUCCESS(res, res);
+        WSPoint prevPoint;
+        res = GetCharBefore(thePoint, &prevPoint);
+        if ( (NS_FAILED(res)) || (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar)) )
+        {
+          // we are at start of non-nbsps.  convert to a single nbsp.
+          res = ConvertToNBSP(thePoint);
+          NS_ENSURE_SUCCESS(res, res);
+        }
       }
     }
-  }
-  
-  // handle any changes needed to ws run before inserted br
-  if (!beforeRun)
-  {
-    // dont need to do anything.  just insert break.  ws wont change.
-  }
-  else if (beforeRun->mType & eLeadingWS)
-  {
-    // dont need to do anything.  just insert break.  ws wont change.
-  }
-  else if (beforeRun->mType == eTrailingWS)
-  {
-    // need to delete the trailing ws that is before insertion point, because it 
-    // would become significant after break inserted.
-    res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  else if (beforeRun->mType == eNormalWS)
-  {
-    // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
-    res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    
+    // handle any changes needed to ws run before inserted br
+    if (!beforeRun)
+    {
+      // dont need to do anything.  just insert break.  ws wont change.
+    }
+    else if (beforeRun->mType & eLeadingWS)
+    {
+      // dont need to do anything.  just insert break.  ws wont change.
+    }
+    else if (beforeRun->mType == eTrailingWS)
+    {
+      // need to delete the trailing ws that is before insertion point, because it 
+      // would become significant after break inserted.
+      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    else if (beforeRun->mType == eNormalWS)
+    {
+      // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
+      res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
   }
   
   // ready, aim, fire!
@@ -310,50 +316,56 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   res = FindRun(*aInOutParent, *aInOutOffset, &beforeRun, PR_FALSE);
   res = FindRun(*aInOutParent, *aInOutOffset, &afterRun, PR_TRUE);
   
-  // handle any changes needed to ws run after inserted text
-  if (!afterRun)
   {
-    // dont need to do anything.  just insert text.  ws wont change.
-  }
-  else if (afterRun->mType & eTrailingWS)
-  {
-    // dont need to do anything.  just insert text.  ws wont change.
-  }
-  else if (afterRun->mType == eLeadingWS)
-  {
-    // delete the leading ws that is after insertion point, because it 
-    // would become significant after text inserted.
-    res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  else if (afterRun->mType == eNormalWS)
-  {
-    // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
-    res = CheckLeadingNBSP(afterRun, *aInOutParent, *aInOutOffset);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  
-  // handle any changes needed to ws run before inserted text
-  if (!beforeRun)
-  {
-    // dont need to do anything.  just insert text.  ws wont change.
-  }
-  else if (beforeRun->mType & eLeadingWS)
-  {
-    // dont need to do anything.  just insert text.  ws wont change.
-  }
-  else if (beforeRun->mType == eTrailingWS)
-  {
-    // need to delete the trailing ws that is before insertion point, because it 
-    // would become significant after text inserted.
-    res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset);
-    NS_ENSURE_SUCCESS(res, res);
-  }
-  else if (beforeRun->mType == eNormalWS)
-  {
-    // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
-    res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    // some scoping for nsAutoTrackDOMPoint.  This will track our insertion point
+    // while we tweak any surrounding whitespace
+    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent, aInOutOffset);
+
+    // handle any changes needed to ws run after inserted text
+    if (!afterRun)
+    {
+      // dont need to do anything.  just insert text.  ws wont change.
+    }
+    else if (afterRun->mType & eTrailingWS)
+    {
+      // dont need to do anything.  just insert text.  ws wont change.
+    }
+    else if (afterRun->mType == eLeadingWS)
+    {
+      // delete the leading ws that is after insertion point, because it 
+      // would become significant after text inserted.
+      res = DeleteChars(*aInOutParent, *aInOutOffset, afterRun->mEndNode, afterRun->mEndOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    else if (afterRun->mType == eNormalWS)
+    {
+      // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
+      res = CheckLeadingNBSP(afterRun, *aInOutParent, *aInOutOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    
+    // handle any changes needed to ws run before inserted text
+    if (!beforeRun)
+    {
+      // dont need to do anything.  just insert text.  ws wont change.
+    }
+    else if (beforeRun->mType & eLeadingWS)
+    {
+      // dont need to do anything.  just insert text.  ws wont change.
+    }
+    else if (beforeRun->mType == eTrailingWS)
+    {
+      // need to delete the trailing ws that is before insertion point, because it 
+      // would become significant after text inserted.
+      res = DeleteChars(beforeRun->mStartNode, beforeRun->mStartOffset, *aInOutParent, *aInOutOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    else if (beforeRun->mType == eNormalWS)
+    {
+      // try to change an nbsp to a space, if possible, just to prevent nbsp proliferation
+      res = CheckTrailingNBSP(beforeRun, *aInOutParent, *aInOutOffset);
+      NS_ENSURE_SUCCESS(res, res);
+    }
   }
   
   // next up, tweak head and tail of string as needed.
