@@ -175,6 +175,7 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     if (capacity < JS_DHASH_MIN_SIZE)
         capacity = JS_DHASH_MIN_SIZE;
     log2 = JS_CeilingLog2(capacity);
+    capacity = JS_BIT(log2);
     table->hashShift = JS_DHASH_BITS - log2;
     table->sizeLog2 = log2;
     table->sizeMask = JS_BITMASK(table->sizeLog2);
