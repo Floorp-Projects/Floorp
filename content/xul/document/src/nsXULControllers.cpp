@@ -260,9 +260,9 @@ nsXULControllers::GetControllerId(nsIController *controller, PRUint32 *_retval)
   return NS_ERROR_FAILURE;  // none found
 }
 
-/* nsIController getControlleryById (in unsigned long controllerID); */
+/* nsIController getControllerById (in unsigned long controllerID); */
 NS_IMETHODIMP
-nsXULControllers::GetControlleryById(PRUint32 controllerID, nsIController **_retval)
+nsXULControllers::GetControllerById(PRUint32 controllerID, nsIController **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
     
