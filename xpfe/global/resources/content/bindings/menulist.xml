@@ -60,6 +60,36 @@
           ]]>
         </body>
       </method>
+
+      <method name="setSelectionInternal">
+        <parameter name="val"/>
+        <body>
+          <![CDATA[
+            if (this.selectedInternal == val)
+              return val;
+            
+            if (this.selectedInternal)
+              this.selectedInternal.removeAttribute('selected');
+
+            this.selectedInternal = val;
+            if (!this.selectedInternal) {
+              this.removeAttribute('value');
+              this.removeAttribute('src');
+              this.removeAttribute('label');
+              return val;
+            }
+             
+            val.setAttribute('selected', 'true');
+
+            this.setAttribute('value', val.getAttribute('value'));
+            this.setAttribute('src', val.getAttribute('src'));
+            this.setAttribute('label', val.getAttribute('label'));
+
+            return val;
+
+          ]]>
+        </body>
+      </method>
       
       <property name="value" onget="return this.getAttribute('value');">
         <setter>
@@ -134,28 +164,7 @@
         </getter>
         <setter>
           <![CDATA[
-            if (this.selectedInternal == val)
-              return val;
-            
-            if (this.selectedInternal)
-              this.selectedInternal.removeAttribute('selected');
-
-            this.selectedInternal = val;
-            if (!this.selectedInternal) {
-              this.removeAttribute('value');
-              this.removeAttribute('src');
-              this.removeAttribute('label');
-              return val;
-            }
-             
-            val.setAttribute('selected', 'true');
-
-            this.setAttribute('value', val.getAttribute('value'));
-            this.setAttribute('src', val.getAttribute('src'));
-            this.setAttribute('label', val.getAttribute('label'));
-
-            return val;
-
+            return this.setSelectionInternal(val);
           ]]>
         </setter>
       </property>
@@ -175,6 +184,38 @@
     </content>
     
     <implementation>
+      <constructor><![CDATA[
+        this.setInitialSelection();
+        // Put an oncreate handler on the <menupopup>
+        //  so we select matching menuitem when it is opened
+        var arr = getElementsByTagName("menupopup");
+        if (arr && arr.length)
+          arr[0].setAttribute('oncreate', 'selectInputFieldValueInList()');
+      ]]></constructor>
+
+      <method name="selectInputFieldValueInList">
+        <body>
+        <![CDATA[
+          // Find and select the menuitem that matches inputField's "value"
+          var inputVal = this.inputField.value;
+          var arr;
+
+          if (this.childNodes.length)
+           arr = this.firstChild.getElementsByAttribute('label', inputVal);
+
+          if (arr && arr.length) {
+           this.selectedItem = arr[0];
+          } else {
+            this.selectedItem = null;
+            // Reset these because setting selected item "null" will clear it
+            this.inputField.value = inputVal;
+            this.setAttribute('value', inputVal);
+          }
+          return inputVal;
+        ]]>
+        </body>
+      </method>
+
       <property name="inputField" readonly="true">
        <![CDATA[
         var v = document.getAnonymousNodes(this);
@@ -193,6 +234,32 @@
       </property>
       <property name="label"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
+
+      <property name="value"      onget="return this.inputField.value;">
+        <setter>
+        <![CDATA[
+          // Override menulist's value setter to refer to the inputField's value
+          // (Allows using "menulist.value" instead of "menulist.inputField.value")
+          this.inputField.value = val;
+          this.setAttribute('value', val);
+          this.selectInputFieldValueInList();
+        ]]>
+        </setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter>
+          <![CDATA[
+            this.selectInputFieldValueInList();
+            return this.selectedInternal;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            return this.setSelectionInternal(val);
+          ]]>
+        </setter>
+      </property>
     </implementation>
 
     <handlers>
