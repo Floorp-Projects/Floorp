@@ -45,17 +45,17 @@ echo "</center></H1>"
 echo "<H2>Performance Analysis</H2>"
 
 # Number of dlls loaded
-n=`grep -i ': loading' xpcom.log | wc -l`
+n=`grep -i ': loading' ${logfile} | wc -l`
 echo "<H3>Dlls Loaded : $n</H3>"
 echo "<blockquote><pre>"
 grep ': loading' $logfile
 echo "</pre></blockquote>"
 
 # Objects created with a histogram
-n=`grep -i 'createinstance.*succeeded' xpcom.log | wc -l`
+n=`grep -i 'createinstance.*succeeded' ${logfile} | wc -l`
 echo "<H3>Objects created : $n</H3>"
 echo "<blockquote><pre>"
-grep -i 'createinstance.*succeeded' xpcom.log | sort | uniq -c | sort -nr
+grep -i 'createinstance.*succeeded' ${logfile} | sort | uniq -c | sort -nr
 echo "</pre></blockquote>"
 
 # Number of RegisterFactory
