@@ -799,6 +799,15 @@ sub PutFooter {
 }
 
 
+sub PuntTryAgain ($) {
+    my ($str) = (@_);
+    print PerformSubsts(Param("errorhtml"),
+                        {errormsg => $str});
+    PutFooter();
+    exit;
+}
+
+
 sub CheckIfVotedConfirmed {
     my ($id, $who) = (@_);
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
@@ -875,18 +884,6 @@ sub DumpBugActivity {
         print "</tr>\n";
     }
     print "</table>\n";
-}
-
-
-#
-# Prints a warnbanner incl. image with given message
-# 
-sub warnBanner( $ )
-{
-  my ($msg) = (@_);
-  print Param("warnbannerhtml");
-  print $msg;
-  print Param("warnfooterhtml");
 }
 
 

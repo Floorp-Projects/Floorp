@@ -33,7 +33,16 @@ sub sillyness {
     my $zz;
     $zz = $::buffer;
     $zz = %::COOKIE;
+    $zz = %::components;
+    $zz = %::versions;
+    $zz = @::legal_bug_status;
+    $zz = @::legal_opsys;
+    $zz = @::legal_platform;
+    $zz = @::legal_priority;
+    $zz = @::legal_product;
+    $zz = @::legal_severity;
 }
+
 confirm_login();
 
 print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
@@ -59,18 +68,12 @@ umask 0;
 ConnectToDatabase();
 
 if (!defined $::FORM{'component'} || $::FORM{'component'} eq "") {
-    print "You must choose a component that corresponds to this bug.  If\n";
-    print "necessary, just guess.  But please hit the <B>Back</B> button\n";
-    print "and choose a component.\n";
-    PutFooter();
-    exit 0
+    PuntTryAgain("You must choose a component that corresponds to this bug. " .
+                 "If necessary, just guess.");
 }
 
 if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
-    print "You must enter a summary for this bug.  Please hit the\n";
-    print "<B>Back</B> button and try again.\n";
-    PutFooter();
-    exit;
+    PuntTryAgain("You must enter a summary for this bug.");
 }
 
 my $forceAssignedOK = 0;

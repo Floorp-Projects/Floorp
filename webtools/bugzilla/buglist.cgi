@@ -82,10 +82,7 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined $date) {
-        print "\n\n<P>The string '<tt>$str</tt>' is not a legal date.\n";
-        print "<P>Please click the <B>Back</B> button and try again.\n";
-        PutFooter();
-        exit;
+        PuntTryAgain("The string '<tt>$str</tt>' is not a legal date.");
     }
     return time2str("%Y/%m/%d %H:%M:%S", $date);
 }
@@ -117,10 +114,7 @@ sub Error {
     if (!$serverpush) {
         print "Content-type: text/html\n\n";
     }
-    print $str;
-    print "\n<P>Please press <B>Back</B> and try again.\n";
-    PutFooter();
-    exit();
+    PuntTryAgain($str);
 }
     
         

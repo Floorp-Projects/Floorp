@@ -207,6 +207,13 @@ DefParam("footerhtml",
 %commandmenu%
 </TD></TR></TABLE></TD></TR></TABLE>');
 
+DefParam("errorhtml",
+         "This is what is printed out when a form is improperly filled out.  %errormsg% is replaced by the actual error itself; %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).",
+         "l",
+         qq{<TABLE CELLPADDING=20><TR><TD BGCOLOR="#ff0000">
+<FONT SIZE="+2">%errormsg%</FONT></TD></TR></TABLE>
+<P>Please press <B>Back</B> and try again.<P>});
+
 
 
 DefParam("bannerhtml",
@@ -241,17 +248,6 @@ DefParam("shutdownhtml",
          "If this field is non-empty, then Bugzilla will be completely disabled and this text will be displayed instead of all the Bugzilla pages.",
          "l",
          "");
-
-
-DefParam("warnbannerhtml",
-         "HTML to prepend to warning messages.",
-         "l",
-         "<font size=+1>");
-
-DefParam("warnfooterhtml",
-         "HTML to append to warning messages.",
-         "l",
-         "</font>");
 
 
 DefParam("passwordmail",

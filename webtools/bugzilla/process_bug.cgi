@@ -179,17 +179,14 @@ sub CheckCanChangeField {
     SendSQL("UNLOCK TABLES");
     $oldvalue = value_quote($oldvalue);
     $newvalue = value_quote($newvalue);
-    print qq{
-<H1>Sorry, not allowed.</H1>
+    print PuntTryAgain(qq{
 Only the owner or submitter of the bug, or a sufficiently
 empowered user, may make that change to the $f field.
 <TABLE>
 <TR><TH ALIGN="right">Old value:</TH><TD>$oldvalue</TD></TR>
 <TR><TH ALIGN="right">New value:</TH><TD>$newvalue</TD></TR>
 </TABLE>
-
-<P>Click <B>Back</B> and try again.
-};
+});
     PutFooter();
     exit();
 }
@@ -310,12 +307,9 @@ sub CheckonComment( $ ) {
     if( $ret ) {
         if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
             # No comment - sorry, action not allowed !
-            warnBanner("You have to specify a <b>comment</b> on this change." .
-                       "<p>" .
-                       "Please press <b>Back</b> and give some words " .
-                       "on the reason of the your change.\n" );
-            PutFooter();
-            exit( 0 );
+            PuntTryAgain("You have to specify a <b>comment</b> on this " .
+                         "change.  Please give some words " .
+                         "on the reason for your change.");
         } else {
             $ret = 0;
         }
@@ -420,10 +414,10 @@ SWITCH: for ($::FORM{'knob'}) {
         if ( Param("strictvaluechecks") ) {
           if ( !defined$::FORM{'assigned_to'} ||
                trim($::FORM{'assigned_to'}) eq "") {
-            print "You cannot reassign to a bug to noone.  Unless you intentionally cleared out the \"Reassign bug to\" field, ";
-            print Param("browserbugmessage");
-            PutFooter();
-            exit 0;
+            PuntTryAgain("You cannot reassign to a bug to nobody.  Unless " .
+                         "you intentionally cleared out the " .
+                         "\"Reassign bug to\" field, " .
+                         Param("browserbugmessage"));
           }
         }
         my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
@@ -432,16 +426,12 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
         if ($::FORM{'product'} eq $::dontchange) {
-            print "You must specify a product to help determine the new\n";
-            print "owner of these bugs.\n";
-            PutFooter();
-            exit 0
+            PuntTryAgain("You must specify a product to help determine the " .
+                         "new owner of these bugs.");
         }
         if ($::FORM{'component'} eq $::dontchange) {
-            print "You must specify a component whose owner should get\n";
-            print "assigned these bugs.\n";
-            PutFooter();
-            exit 0
+            PuntTryAgain("You must specify a component whose owner should " .
+                         "get assigned these bugs.");
         }
         ChangeStatus('NEW');
         SendSQL("select initialowner from components where program=" .
@@ -487,16 +477,13 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("SELECT bug_id FROM bugs WHERE bug_id = " . SqlQuote($num));
         $num = FetchOneColumn();
         if (!$num) {
-            print "You must specify a bug number of which this bug is a\n";
-            print "duplicate.  The bug has not been changed.\n";
-            PutFooter();
-            exit;
+            PuntTryAgain("You must specify a bug number of which this bug " .
+                         "is a duplicate.  The bug has not been changed.")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
-            print "Nice try, $::FORM{'who'}.  But it doesn't really make sense to mark a\n";
-            print "bug as a duplicate of itself, does it?\n";
-            PutFooter();
-            exit;
+            PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".
+                         "make sense to mark a bug as a duplicate of " .
+                         "itself, does it?");
         }
         AppendComment($num, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         if ( Param('strictvaluechecks') ) {
@@ -518,10 +505,7 @@ SWITCH: for ($::FORM{'knob'}) {
 
 
 if ($#idlist < 0) {
-    print "You apparently didn't choose any bugs to modify.\n";
-    print "<p>Click <b>Back</b> and try again.\n";
-    PutFooter();
-    exit;
+    PuntTryAgain("You apparently didn't choose any bugs to modify.");
 }
 
 
@@ -535,12 +519,10 @@ if ($::FORM{'keywords'}) {
         }
         my $i = $::keywordsbyname{$keyword};
         if (!$i) {
-            print "Unknown keyword named <code>$keyword</code>.\n";
-            print "<P>The legal keyword names are <A HREF=describekeywords.cgi>";
-            print "listed here</A>.\n";
-            print "<P>Please click the <B>Back</B> button and try again.\n";
-            PutFooter();
-            exit;
+            PuntTryAgain("Unknown keyword named <code>$keyword</code>. " .
+                         "<P>The legal keyword names are " .
+                         "<A HREF=describekeywords.cgi>" .
+                         "listed here</A>.");
         }
         if (!$keywordseen{$i}) {
             push(@keywordlist, $i);
@@ -553,10 +535,8 @@ my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
 
 if ($::comma eq "" && 0 == @keywordlist && $keywordaction ne "makeexact") {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-        print "Um, you apparently did not change anything on the selected\n";
-        print "bugs. <p>Click <b>Back</b> and try again.\n";
-        PutFooter();
-        exit;
+        PuntTryAgain("Um, you apparently did not change anything on the " .
+                     "selected bugs.");
     }
 }
 
@@ -679,10 +659,7 @@ The changes made were:
                         SqlQuote($i));
                 my $comp = FetchOneColumn();
                 if ($comp ne $i) {
-                    print "<H1>$i is not a legal bug number</H1>\n";
-                    print "<p>Click <b>Back</b> and try again.\n";
-                    PutFooter();
-                    exit;
+                    PuntTryAgain("$i is not a legal bug number");
                 }
                 if (!exists $seen{$i}) {
                     push(@{$deps{$target}}, $i);
@@ -696,12 +673,10 @@ The changes made were:
                 while (MoreSQLData()) {
                     my $t = FetchOneColumn();
                     if ($t == $id) {
-                        print "<H1>Dependency loop detected!</H1>\n";
-                        print "The change you are making to dependencies\n";
-                        print "has caused a circular dependency chain.\n";
-                        print "<p>Click <b>Back</b> and try again.\n";
-                        PutFooter();
-                        exit;
+                        PuntTryAgain("Dependency loop detected!<P>" .
+                                     "The change you are making to " .
+                                     "dependencies has caused a circular " .
+                                     "dependency chain.");
                     }
                     if (!exists $seen{$t}) {
                         push @stack, $t;
