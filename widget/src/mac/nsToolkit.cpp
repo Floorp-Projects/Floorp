@@ -97,14 +97,13 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
 void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 {
 	nsresult		rv;
-	nsIEventQueue	*eventQ;
 
 	NS_WITH_SERVICE(nsIEventQueueService, qServ, kEventQueueServiceCID, &rv);
-
 	if (NS_SUCCEEDED(rv) && qServ) {
-		qServ->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
-		if (eventQ)
-			eventQ->ProcessPendingEvents();
+		nsCOMPtr<nsIEventQueue> queue;
+		qServ->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+		if (queue)
+			queue->ProcessPendingEvents();
 	}
 }
 
