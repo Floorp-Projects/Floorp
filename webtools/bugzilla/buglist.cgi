@@ -92,6 +92,7 @@ my $serverpush =
             || $::FORM{'serverpush'};
 
 my $order = $::FORM{'order'} || "";
+my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
 
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
@@ -1270,9 +1271,12 @@ my $query = GenerateSQL(\@selectnames, $::buffer);
 # Add to the query some instructions for sorting the bug list.
 if ($::COOKIE{'LASTORDER'} && !$order || $order =~ /^reuse/i) {
     $order = url_decode($::COOKIE{'LASTORDER'});
+    $order_from_cookie = 1;
 }
 
 if ($order) {
+    my $db_order;  # Modified version of $order for use with SQL query
+
     # Convert the value of the "order" form field into a list of columns
     # by which to sort the results.
     ORDER: for ($order) {
@@ -1283,9 +1287,16 @@ if ($order) {
                 my @columnnames = map($columns->{lc($_)}->{'name'}, keys(%$columns));
                 if (!grep($_ eq $fragment, @columnnames)) {
                     my $qfragment = html_quote($fragment);
-                    DisplayError("The custom sort order you specified in your
-                                  form submission or cookie contains an invalid
-                                  column name <em>$qfragment</em>.");
+                    my $error = "The custom sort order you specified in your "
+                              . "form submission contains an invalid column "
+                              . "name <em>$qfragment</em>.";
+                    if ($order_from_cookie) {
+                        my $cookiepath = Param("cookiepath");
+                        print "Set-Cookie: LASTORDER= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
+                        $error =~ s/form submission/cookie/;
+                        $error .= "  The cookie has been cleared.";
+                    }
+                    DisplayError($error);
                     exit;
                 }
             }
@@ -1314,19 +1325,21 @@ if ($order) {
         $order = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
     }
 
+    $db_order = $order;  # Copy $order into $db_order for use with SQL query
+
     # Extra special disgusting hack: if we are ordering by target_milestone,
     # change it to order by the sortkey of the target_milestone first.
-    if ($order =~ /bugs.target_milestone/) {
-        $order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
+    if ($db_order =~ /bugs.target_milestone/) {
+        $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
         $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
     }
 
     # If we are sorting by votes, sort in descending order.
-    if ($order =~ /bugs.votes\s+(asc|desc){0}/i) {
-        $order =~ s/bugs.votes/bugs.votes desc/i;
+    if ($db_order =~ /bugs.votes\s+(asc|desc){0}/i) {
+        $db_order =~ s/bugs.votes/bugs.votes desc/i;
     }
 
-    $query .= " ORDER BY $order ";
+    $query .= " ORDER BY $db_order ";
 }
 
 
@@ -1519,18 +1532,20 @@ print "\n--thisrandomstring\n" if $serverpush;
 print "Content-Disposition: inline; filename=$filename\n" unless $serverpush;
 
 if ($format->{'extension'} eq "html") {
+    my $cookiepath = Param("cookiepath");
     print "Content-Type: text/html\n";
 
     if ($order) {
         my $qorder = url_quote($order);
-        print "Set-Cookie: LASTORDER=$qorder ; path=/; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+        print "Set-Cookie: LASTORDER=$qorder ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
     my $bugids = join(":", map( $_->{'id'}, @bugs));
+    # See also Bug 111999
     if (length($bugids) < 4000) {
-        print "Set-Cookie: BUGLIST=$bugids\n";
+        print "Set-Cookie: BUGLIST=$bugids ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
     else {
-        print "Set-Cookie: BUGLIST=\n";
+        print "Set-Cookie: BUGLIST= ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
         $vars->{'toolong'} = 1;
     }
 }
