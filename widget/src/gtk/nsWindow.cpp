@@ -1070,20 +1070,28 @@ nsWindow::SetFocus(void)
   printf("top moz area is %p\n", NS_STATIC_CAST(void *, top_mozarea));
 #endif
 
-  if (top_mozarea)
-  {
-    if (!GTK_WIDGET_HAS_FOCUS(top_mozarea))
-    {
-      nsWindow *mozAreaWindow = (nsWindow *)gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-#ifdef DEBUG_FOCUS
-      printf("mozarea grabbing focus!\n");
-#endif
+  // If there is a top_mozarea and it doesn't have focus then we're
+  // going to ignore this request if we're part of the browser.  If
+  // we're embedded then we do grab focus on our toplevel window since
+  // it doesn't hurt anything and the widget has to have focus inside
+  // of the GtkWindow.  If it doesn't then we will not get the right
+  // events when we do actually get focus.
+  if (top_mozarea && !GTK_WIDGET_HAS_FOCUS(top_mozarea)) {
+    // If the toplevel window doesn't have an nsWindow data pointer
+    // then we are embedded.
+    GtkWidget *toplevel = gtk_widget_get_toplevel(top_mozarea);
+    gpointer data = gtk_object_get_data(GTK_OBJECT(toplevel), "nsWindow");
+    // We're embedded so always set focus unconditionally.
+    if (!data) {
+      data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+      nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
       mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
       gtk_widget_grab_focus(top_mozarea);
       mozAreaWindow->mBlockMozAreaFocusIn = PR_FALSE;
-      // this will show the window if it's minimized and bring it to
-      // the front of the stacking order.
-      GetAttention();
+    }
+    // We're not embedded.  Just return.
+    else {
+      return NS_OK;
     }
   }
 
@@ -1768,6 +1776,16 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   }
 
   if (mMozArea) {
+    // make sure that the mozarea widget can take the focus
+    GTK_WIDGET_SET_FLAGS(mMozArea, GTK_CAN_FOCUS);
+    // If there's a shell too make sure that this widget is the
+    // default for that window.  We do this here because it has to
+    // happen after the GTK_CAN_FOCUS flag is set on the widget but
+    // before we hook up to the signals otherwise we will get spurious
+    // events.
+    if (mShell)
+      gtk_window_set_focus(GTK_WINDOW(mShell), mMozArea);
+
     // track focus events for the moz area
     gtk_signal_connect(GTK_OBJECT(mMozArea),
                        "focus_in_event",
@@ -1806,8 +1824,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gtk_object_set_data(GTK_OBJECT(mShell), "nsWindow", this);
   if (mMozArea) {
     gtk_object_set_data(GTK_OBJECT(mMozArea), "nsWindow", this);
-    // make sure that the mozarea widget can take the focus
-    GTK_WIDGET_SET_FLAGS(mMozArea, GTK_CAN_FOCUS);
   }
   // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
