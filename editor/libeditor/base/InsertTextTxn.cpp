@@ -99,7 +99,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
   {
     // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
-    nsCOMPtr<InsertTextTxn> otherTxn(aTransaction);
+    nsCOMPtr<InsertTextTxn> otherTxn( do_QueryInterface(aTransaction) );
     if (otherTxn)
     {
       if (PR_TRUE==IsSequentialInsert(otherTxn))
@@ -112,7 +112,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
     }
     else
     { // the next InsertTextTxn might be inside an aggregate that we have special knowledge of
-      nsCOMPtr<EditAggregateTxn> otherTxn(aTransaction);
+      nsCOMPtr<EditAggregateTxn> otherTxn( do_QueryInterface(aTransaction) );
       if (otherTxn)
       {
         nsCOMPtr<nsIAtom> txnName;
