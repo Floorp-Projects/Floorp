@@ -1566,7 +1566,7 @@ static JSFunctionSpec function_methods[] = {
 #endif
     {js_toString_str,   fun_toString,   1,0,0},
 #if JS_HAS_APPLY_FUNCTION
-    {"apply",           fun_apply,      1,0,0},
+    {"apply",           fun_apply,      2,0,0},
 #endif
 #if JS_HAS_CALL_FUNCTION
     {js_call_str,       fun_call,       1,0,0},
