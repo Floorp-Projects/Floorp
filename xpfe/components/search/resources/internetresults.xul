@@ -151,6 +151,6 @@
 	</tree>
 
 	<splitter id="gray_horizontal_splitter" persist="state" collapse="after" />
-	<iframe id="content" style="height: 100; width: 100%;" flex="100%" src="chrome://communicator/content/search/default.htm"/>
+	<iframe id="content" style="height: 100; width: 100%;" flex="100%" src="chrome://communicator/locale/search/default.htm"/>
 
 </window>
