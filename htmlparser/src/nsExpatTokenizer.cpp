@@ -94,6 +94,10 @@ nsresult nsExpatTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return NS_OK;                                                        
 }
 
+void 
+nsExpatTokenizer::FreeTokenRecycler(void) {
+  nsHTMLTokenizer::FreeTokenRecycler();
+}
 
 /**
  *  This method is defined in nsIParser. It is used to 

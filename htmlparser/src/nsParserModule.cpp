@@ -28,6 +28,9 @@
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsHTMLEntities.h"
+#include "nsHTMLTokenizer.h"
+#include "nsXMLTokenizer.h"
+#include "nsExpatTokenizer.h"
 #include "nsIParserService.h"
 
 static NS_DEFINE_IID(kIParserServiceIID, NS_IPARSERSERVICE_IID);
@@ -181,6 +184,9 @@ nsParserModule::Shutdown()
   if (mInitialized) {
     nsHTMLTags::ReleaseTable();
     nsHTMLEntities::ReleaseTable();
+    nsHTMLTokenizer::FreeTokenRecycler();
+    nsXMLTokenizer::FreeTokenRecycler();
+    nsExpatTokenizer::FreeTokenRecycler();
     mInitialized = PR_FALSE;
   }
 }

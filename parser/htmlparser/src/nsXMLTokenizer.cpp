@@ -74,6 +74,10 @@ nsresult nsXMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
+void 
+nsXMLTokenizer::FreeTokenRecycler(void) {
+  nsHTMLTokenizer::FreeTokenRecycler();
+}
 
 /**
  *  This method is defined in nsIParser. It is used to 
@@ -199,7 +203,7 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanne
     nsAutoString  theEmpty;
     aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     if(aToken) {
-      result=aToken->Consume(aChar,aScanner);
+      result=aToken->Consume(aChar,aScanner,eParseMode_noquirks);
       AddToken(aToken,result,mTokenDeque,theRecycler);
     }
   }
@@ -242,7 +246,7 @@ nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,ns
     if(isComment) aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
  
     if(aToken) {
-      result=aToken->Consume(aChar,aScanner);
+      result=aToken->Consume(aChar,aScanner,eParseMode_noquirks);
       AddToken(aToken,result,mTokenDeque,theRecycler);
     }
   }

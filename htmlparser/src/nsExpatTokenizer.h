@@ -58,6 +58,7 @@ public:
   virtual nsresult DidTokenize(PRBool aIsFinalChunk);
 
   virtual void    FrontloadMisplacedContent(nsDeque& aDeque);
+  static  void    FreeTokenRecycler(void);
 
 
 protected:

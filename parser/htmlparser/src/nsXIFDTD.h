@@ -550,6 +550,7 @@ protected:
     PRBool			CanContainFormElement(eXIFTags aParent,eXIFTags aChild) const;
 		nsresult		CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		nsresult		CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+    nsresult    CollectContentComment(CToken* aToken,nsCParserNode& aNode);
     
     nsParser*             mParser;
     nsIHTMLContentSink*   mSink;

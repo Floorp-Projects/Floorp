@@ -57,6 +57,8 @@ public:
 
   virtual nsresult          ConsumeToken(nsScanner& aScanner);
   virtual nsITokenRecycler* GetTokenRecycler(void);
+  
+  static  void FreeTokenRecycler(void);
 
 protected:
 

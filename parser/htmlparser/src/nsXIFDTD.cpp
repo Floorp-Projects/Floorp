@@ -648,11 +648,12 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
     {
       case eXIFTag_container:
       case eXIFTag_leaf: 
-      case eXIFTag_comment:
         StartTopOfStack();
         result = OpenContainer(node);        
       break;
-
+      case eXIFTag_comment:
+        result=CollectContentComment(aToken,node);
+        break;
       case eXIFTag_entity: 
         StartTopOfStack();
         ProcessEntityTag(node);
@@ -740,10 +741,6 @@ nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
 
     case eXIFTag_content:
       mInContent = PR_FALSE;
-    break;
-    
-    case eXIFTag_comment:
-      CloseContainer(node);
     break;
 
     case eXIFTag_css_stylesheet:
@@ -1462,9 +1459,6 @@ nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode)
     case eXIFTag_leaf:
       BeginStartTag(aNode);
       break;
-    case eXIFTag_comment:
-      mSink->AddComment(aNode);
-      break;
     default:
       break;
   }
@@ -1612,6 +1606,56 @@ nsresult nsXIFDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   return result;
 }
 
+/**
+ * Consumes contents of a comment in one gulp. 
+ *
+ * @update	harishd 10/05/99
+ * @param   aNode  - node to consume comment
+ * @param   aToken - a comment token
+ * @return  Error condition.
+ */
+nsresult nsXIFDTD::CollectContentComment(CToken* aToken, nsCParserNode& aNode) {
+  NS_PRECONDITION(aToken!=nsnull,"empty token");
+
+  nsresult          result=NS_OK;
+  CToken*           token=nsnull;
+  eHTMLTokenTypes   type=(eHTMLTokenTypes)aToken->GetTokenType();
+
+  if(type==eToken_start) {
+    nsITokenRecycler* recycler=(mTokenizer)? mTokenizer->GetTokenRecycler():nsnull;
+    if(recycler) {
+      nsAutoString fragment;
+      PRBool       done=PR_FALSE;
+      PRBool       inContent=PR_FALSE;
+      nsString&    comment=aToken->GetStringValueXXX(); 
+      comment="<!--"; // overwrite comment with "<!--"
+      while (!done && NS_SUCCEEDED(result))
+      {
+        token=mTokenizer->PopToken();
+      
+        if(!token) return result;
+
+        type=(eHTMLTokenTypes)token->GetTokenType();
+        fragment=token->GetStringValueXXX();
+        if(fragment=="content") {
+          if(type==eToken_start) 
+            inContent=PR_TRUE;
+          else inContent=PR_FALSE;
+        }
+        else if(fragment=="comment") {
+          comment.Append("-->");
+          result=(mSink)? mSink->AddComment(aNode):NS_OK;
+          done=PR_TRUE;
+        }
+        else {
+          if(inContent) comment.Append(fragment);
+        }
+        recycler->RecycleToken(token);
+      }
+    }
+  }
+  return result;
+}
 
 /**
  * 

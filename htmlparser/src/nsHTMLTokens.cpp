@@ -201,7 +201,7 @@ PRBool CStartToken::IsEmpty(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
 
   //if you're here, we've already Consumed the < char, and are
    //ready to Consume the rest of the open tag identifier.
@@ -291,7 +291,7 @@ CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   //if you're here, we've already Consumed the <! chars, and are
    //ready to Consume the rest of the open tag identifier.
    //Stop consuming as soon as you see a space or a '>'.
@@ -436,7 +436,7 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   static    const char* theTerminals="\n\r&<";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
@@ -478,7 +478,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString){
+nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString,PRInt32 aMode){
   PRBool        done=PR_FALSE; 
   nsresult      result=NS_OK; 
   PRUnichar     theChar;
@@ -503,7 +503,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       if((NS_OK==result) && (kExclamation==theChar) && (PR_FALSE==aIgnoreComments)) { 
         //read a comment... 
         static CCommentToken theComment; 
-        result=theComment.Consume(aChar,aScanner); 
+        result=theComment.Consume(aChar,aScanner,aMode); 
         if(NS_OK==result) { 
           //result=aScanner.SkipWhitespace();
           mTextValue.Append(theComment.GetStringValueXXX()); 
@@ -517,7 +517,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     } 
     else if(('\b'==theChar) || ('\t'==theChar) || (' '==theChar)) {
       static CWhitespaceToken theWS; 
-      result=theWS.Consume(aChar,aScanner); 
+      result=theWS.Consume(aChar,aScanner,aMode); 
       if(NS_OK==result) { 
         mTextValue.Append(theWS.GetStringValueXXX()); 
       } 
@@ -528,8 +528,16 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     } 
     mTextValue.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
     rpos=theRight.RFindChar('<');   //now scan for the '<'
-    if(-1<rpos)
+    if(-1<rpos) {
       rpos=theRight.RFind(aTerminalString,PR_TRUE);
+      if(-1<rpos && aMode!=eParseMode_noquirks) {
+        nsAutoString temp(theRight);
+        temp.Cut(0,rpos);
+        temp.StripWhitespace();
+        PRUnichar ch=temp.CharAt(aTerminalString.Length());
+        rpos=(ch==kGreaterThan)? rpos:kNotFound;
+      }
+    }
     done=PRBool(-1<rpos); 
   }  //while
   if(NS_SUCCEEDED(result)) {
@@ -596,7 +604,7 @@ PRInt32 CCDATASectionToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   static    const char* theTerminals="\r]";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
@@ -843,9 +851,9 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  PRBool theStrictForm=PR_FALSE;
-  nsresult result=(theStrictForm) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
+nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
+  nsresult result=(aMode==eParseMode_noquirks) ? ConsumeStrictComment(aChar,aScanner,mTextValue) 
+                                               : ConsumeComment(aChar,aScanner,mTextValue);
 
 #if 0
   if(NS_OK==result) {
@@ -949,7 +957,7 @@ nsString& CNewlineToken::GetStringValueXXX(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   mTextValue=aChar;
 
     //we already read the \r or \n, let's see what's next!
@@ -1169,7 +1177,7 @@ nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScann
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
 
   nsresult result=aScanner.SkipWhitespace();             //skip leading whitespace 
   if(NS_OK==result) {
@@ -1340,7 +1348,7 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   mTextValue=aChar;
   nsresult result=aScanner.ReadWhitespace(mTextValue);
   if(NS_OK==result) {
@@ -1384,7 +1392,7 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CEntityToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CEntityToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
   if(aChar)
     mTextValue=aChar;
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
@@ -1696,7 +1704,7 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source 
  *  @return  error result 
  */ 
-nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) { 
+nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) { 
   PRBool      done=PR_FALSE; 
   nsresult    result=NS_OK; 
   nsString    temp; 
@@ -1715,7 +1723,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
       if((NS_OK==result) && (kExclamation==theChar)) { 
         //read a comment... 
         static CCommentToken theComment; 
-        result=theComment.Consume(aChar,aScanner); 
+        result=theComment.Consume(aChar,aScanner,aMode); 
         if(NS_OK==result) { 
           //result=aScanner.SkipWhitespace();
           temp.Append(theComment.GetStringValueXXX()); 
@@ -1729,7 +1737,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
     } 
     else if(('\b'==theChar) || ('\t'==theChar) || (' '==theChar)) {
       static CWhitespaceToken theWS; 
-      result=theWS.Consume(aChar,aScanner); 
+      result=theWS.Consume(aChar,aScanner,aMode); 
       if(NS_OK==result) { 
         temp.Append(theWS.GetStringValueXXX()); 
       } 
@@ -1818,7 +1826,7 @@ CInstructionToken::CInstructionToken(const nsString& aString) : CHTMLToken(aStri
  *  @param   
  *  @return  
  */
-nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner){
+nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode){
   mTextValue="<?";
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
   return result;
@@ -1879,7 +1887,7 @@ const nsParserError * CErrorToken::GetError(void)
 CDoctypeDeclToken::CDoctypeDeclToken() : CHTMLToken(eHTMLTag_unknown) {
 }
 
-nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
+nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
  return ConsumeComment(aChar,aScanner,mTextValue);
 }
 
