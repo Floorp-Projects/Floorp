@@ -93,6 +93,7 @@ nsHelperAppLauncherDialog.prototype= {
         var object = this;
         doSetOKCancel( function () { return object.onOK(); },
                        function () { return object.onCancel(); } );
+        moveToAlertPosition();
     },
 
     // If the user presses OK, we do as requested...
