@@ -133,7 +133,7 @@ $JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml
 To create HTML documentation as a single big HTML file:
 bash$ cd html
 bash$ jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-$JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml
+$JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml >Bugzilla-Guide.html
 
 To create TXT documentation as a single big TXT file:
 bash$ cd txt
