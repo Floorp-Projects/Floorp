@@ -20,22 +20,28 @@
 #include "nsIMenu.h"
 
 #include "nsToolkit.h"
-#include "nsColor.h"
+//#include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
 #include <windows.h>
 
-#include "nsIAppShell.h"
+//#include "nsIAppShell.h"
 #include "nsGUIEvent.h"
-#include "nsIDeviceContext.h"
-#include "nsRect.h"
-#include "nsGfxCIID.h"
+//#include "nsIDeviceContext.h"
+//#include "nsRect.h"
+//#include "nsGfxCIID.h"
 #include "nsIMenu.h"
+#include "nsIMenuBar.h"
 #include "nsIPopUpMenu.h"
+#include "nsIWidget.h"
 
-static NS_DEFINE_IID(kMenuItemIID, NS_IMENUITEM_IID);
-NS_IMPL_ISUPPORTS(nsMenuItem, kMenuItemIID)
+static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
+static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
 
 //-------------------------------------------------------------------------
@@ -46,7 +52,8 @@ NS_IMPL_ISUPPORTS(nsMenuItem, kMenuItemIID)
 nsMenuItem::nsMenuItem() : nsIMenuItem()
 {
   NS_INIT_REFCNT();
-  mMenu = nsnull;
+  mMenu   = nsnull;
+  mTarget = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -57,6 +64,48 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 nsMenuItem::~nsMenuItem()
 {
   NS_IF_RELEASE(mMenu);
+  NS_IF_RELEASE(mTarget);
+}
+
+//-------------------------------------------------------------------------
+nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
+{
+  nsIWidget    * widget  = nsnull; // MenuBar's Parent
+  nsIMenu      * menu    = nsnull;
+  nsIMenuBar   * menuBar = nsnull;
+  nsIPopUpMenu * popup   = nsnull;
+  nsISupports  * parent  = aParent;
+
+  while (1) {
+    if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
+      NS_RELEASE(parent);
+      if (NS_OK != menu->GetParent(parent)) {
+        NS_RELEASE(menu);
+        return nsnull;
+      }
+      NS_RELEASE(menu);
+
+    } else if (NS_OK == parent->QueryInterface(kIPopUpMenuIID,(void**)&popup)) {
+      if (NS_OK != popup->GetParent(widget)) {
+        widget =  nsnull;
+      }
+      NS_RELEASE(parent);
+      NS_RELEASE(popup);
+      return widget;
+
+    } else if (NS_OK == parent->QueryInterface(kIMenuBarIID,(void**)&menuBar)) {
+      if (NS_OK != menuBar->GetParent(widget)) {
+        widget =  nsnull;
+      }
+      NS_RELEASE(parent);
+      NS_RELEASE(menuBar);
+      return widget;
+    } else {
+      NS_RELEASE(parent);
+      return nsnull;
+    }
+  }
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -65,6 +114,15 @@ NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32
   mCommand = aCommand;
   mLabel   = aLabel;
   aParent->AddItem(this);
+
+  nsISupports * sups;
+  if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
+    mTarget = GetMenuBarParent(sups);
+    NS_RELEASE(sups);
+  } else {
+    mTarget = nsnull;
+  }
+
   return NS_OK;
 }
 
@@ -74,6 +132,11 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu * aParent, const nsString &aLabel, PRU
   mCommand = aCommand;
   mLabel   = aLabel;
   aParent->AddItem(this);
+
+  if (NS_OK != aParent->GetParent(mTarget)) {
+    mTarget = nsnull;
+  }  
+  
   return NS_OK;
 }
 
@@ -88,6 +151,13 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
   aCommand = mCommand;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
+{
+  aTarget = mTarget;
   return NS_OK;
 }
 

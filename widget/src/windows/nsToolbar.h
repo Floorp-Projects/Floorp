@@ -47,6 +47,7 @@ public:
 
 
     NS_IMETHOD DoLayout();
+    NS_IMETHOD SetHorizontalLayout(PRBool aDoHorizontalLayout);
     NS_IMETHOD SetHGap(PRInt32 aGap);
     NS_IMETHOD SetVGap(PRInt32 aGap);
     NS_IMETHOD SetMargin(PRInt32 aMargin);
@@ -115,6 +116,7 @@ protected:
   PRBool mNextLastItemIsStretchy;
 
   PRInt32 mMargin;
+  PRInt32 mWrapMargin;
   PRInt32 mHGap;
   PRInt32 mVGap;
 

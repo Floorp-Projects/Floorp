@@ -287,21 +287,27 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 //
 //-------------------------------------------------------------------------
 
-PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
+NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
-  PRBool result = PR_FALSE;
- 
+  aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
-    result = ConvertStatus((*mEventCallback)(event));
+    aStatus = (*mEventCallback)(event);
   }
 
     // Dispatch to event listener if event was not consumed
-  if ((result != PR_TRUE) && (nsnull != mEventListener)) {
-    return ConvertStatus(mEventListener->ProcessEvent(*event));
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*event);
   }
-  else {
-    return(result); 
-  }
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
 }
 
 //-------------------------------------------------------------------------
@@ -315,7 +321,8 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   nsGUIEvent event;
   event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
-  return(DispatchEvent(&event));
+
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -383,7 +390,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mPreferredHeight    = 0;
     mFont               = nsnull;
     mIsVisible          = PR_FALSE;
-   
+  
 }
 
 
@@ -1161,14 +1168,15 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
 {
-    nsKeyEvent event;
-    InitEvent(event, aEventType);
-    event.keyCode   = aKeyCode;
-    event.isShift   = mIsShiftDown;
-    event.isControl = mIsControlDown;
-    event.isAlt     = mIsAltDown;
-    event.eventStructType = NS_KEY_EVENT;
-    return(DispatchEvent(&event));
+  nsKeyEvent event;
+  InitEvent(event, aEventType);
+  event.keyCode   = aKeyCode;
+  event.isShift   = mIsShiftDown;
+  event.isControl = mIsControlDown;
+  event.isAlt     = mIsAltDown;
+  event.eventStructType = NS_KEY_EVENT;
+
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -1197,10 +1205,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           WORD wNotifyCode = HIWORD(wParam); // notification code 
           if (wNotifyCode == 0) { // Menu selection
             nsMenuEvent event;
-            event.menuItem = LOWORD(wParam);
+            event.mCommand = LOWORD(wParam);
             event.eventStructType = NS_MENU_EVENT;
             InitEvent(event, NS_MENU_SELECTED);
-            result = DispatchEvent(&event);
+            result =  DispatchWindowEvent(&event);
           }
         }
         break;
@@ -1223,7 +1231,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   InitEvent(event, NS_SHOW_TOOLTIP);
                   event.tipIndex = (PRUint32)wParam;
                   event.eventStructType = NS_TOOLTIP_EVENT;
-                  result = DispatchEvent(&event);
+                  result = DispatchWindowEvent(&event);
               }
               break;
 
@@ -1598,7 +1606,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   event.point.x = aX;
   event.point.y = aY;
   event.eventStructType = NS_GUI_EVENT;
-  return DispatchEvent(&event);
+  return DispatchWindowEvent(&event);
 }
 
 //-------------------------------------------------------------------------
@@ -1637,7 +1645,7 @@ PRBool nsWindow::OnPaint()
             if (NS_OK == nsRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
             {
               event.renderingContext->Init(mContext, this);
-              result = DispatchEvent(&event);
+              result = DispatchWindowEvent(&event);
               NS_RELEASE(event.renderingContext);
             }
             else
@@ -1662,16 +1670,16 @@ PRBool nsWindow::OnPaint()
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnResize(nsRect &aWindowRect)
 {
-    // call the event callback 
-    if (mEventCallback) {
-        nsSizeEvent event;
-        InitEvent(event, NS_SIZE);
-        event.windowSize = &aWindowRect;
-        event.eventStructType = NS_SIZE_EVENT;
-        return(DispatchEvent(&event));
-    }
+  // call the event callback 
+  if (mEventCallback) {
+    nsSizeEvent event;
+    InitEvent(event, NS_SIZE);
+    event.windowSize = &aWindowRect;
+    event.eventStructType = NS_SIZE_EVENT;
+    return DispatchWindowEvent(&event);
+  }
 
-    return PR_FALSE;
+  return PR_FALSE;
 }
 
 
@@ -1702,7 +1710,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   // call the event callback 
   if (nsnull != mEventCallback) {
 
-    result = DispatchEvent(&event);
+    result = DispatchWindowEvent(&event);
 
     //printf("**result=%d%\n",result);
     if (aEventType == NS_MOUSE_MOVE) {

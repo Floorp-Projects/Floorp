@@ -533,7 +533,7 @@ class nsIWidget : public nsISupports {
      * Dispatches and event to the widget
      *
      */
-    NS_IMETHOD DispatchEvent(nsGUIEvent* event) = 0;
+    NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) = 0;
 
 
    

@@ -91,15 +91,16 @@ nsToolbar::nsToolbar() : ChildWindow(), nsIToolbar()
 {
   NS_INIT_REFCNT();
 
-  mMargin = 0;
-  mHGap   = 0;
-  mVGap   = 0;
+  mMargin     = 0;
+  mWrapMargin = 15;
+  mHGap       = 0;
+  mVGap       = 0;
 
   mLastItemIsRightJustified = PR_FALSE;
   mNextLastItemIsStretchy   = PR_FALSE;
   mDoDrawFullBorder         = PR_FALSE;
   mWrapItems                = PR_FALSE;
-  mDoHorizontalLayout       = PR_FALSE;
+  mDoHorizontalLayout       = PR_TRUE;
 
   mToolbarMgr = nsnull;
 
@@ -261,11 +262,18 @@ NS_METHOD nsToolbar::DoLayout()
   nsRect tbRect;
   nsWindow::GetBounds(tbRect);
 
-  if (tbRect.width > tbRect.height) {
+  if (mDoHorizontalLayout) {
     DoHorizontalLayout(tbRect);
   } else {
     DoVerticalLayout(tbRect);
   }
+  return NS_OK;
+}
+
+//--------------------------------------------------------------------
+NS_METHOD nsToolbar::SetHorizontalLayout(PRBool aDoHorizontalLayout)
+{
+  mDoHorizontalLayout = aDoHorizontalLayout;
   return NS_OK;
 }
 
@@ -296,7 +304,7 @@ void nsToolbar::DoVerticalLayout(const nsRect& aTBRect)
       }
        
       if (((y + height + mItems[i]->mGap) > aTBRect.height) && mWrapItems) {
-        y = 10; // 10 is the "mWrapMargin"
+        y = mWrapMargin; 
         x += maxWidth;
         maxWidth = 0;
       }
@@ -408,14 +416,14 @@ void nsToolbar::DoHorizontalLayout(const nsRect& aTBRect)
         width  = rect.width;
         height = rect.height;
       }
-      if (!mItems[i]->mStretchable) {
-        maxHeight = maxHeight > height? maxHeight:height;
-      }
        
       if (((x + width + mItems[i]->mGap) > aTBRect.width) && mWrapItems) {
-        x = 10; // 10 is the "mWrapMargin"
+        x = mMargin + mWrapMargin; 
         y += maxHeight;
         maxHeight = 0;
+      }
+      if (!mItems[i]->mStretchable) {
+        maxHeight = maxHeight > height? maxHeight:height;
       }
 
       PRInt32 yLoc;
@@ -426,6 +434,7 @@ void nsToolbar::DoHorizontalLayout(const nsRect& aTBRect)
         yLoc = yLoc > -1 ? yLoc : mMargin;
       }
       // Gap is added before hand because it is the left hand gap
+      // Don't set the bounds on the last item if it is right justified
       x += mItems[i]->mGap;
       if (((i == (mNumItems-1) && !mLastItemIsRightJustified)) || (i != (mNumItems-1))) {
         mItems[i]->mItem->SetBounds(x, yLoc, width, height, PR_FALSE);
@@ -522,7 +531,7 @@ NS_METHOD nsToolbar::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
   nsRect rect;
   nsWindow::GetBounds(rect);
 
-  if (rect.width > rect.height) {
+  if (mDoHorizontalLayout) {
     aWidth  = mMargin*2;
     aHeight = 0;
     PRInt32 i;
@@ -776,18 +785,14 @@ NS_METHOD nsToolbar::GetWrapping(PRBool & aDoWrap)
 NS_METHOD nsToolbar::GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt32& aSuggestedHeight, 
                                                  PRInt32& aWidth,          PRInt32& aHeight)
 {
-
   nsRect rect;
   nsWindow::GetBounds(rect);
-
-  // Check to see if it is a horizontal or vertical toolbar
-  PRBool isHorizontal = rect.width > rect.height;
 
   PRInt32 rows        = 1;
   PRInt32 calcSize    = mMargin;
   PRInt32 maxSize     = 0;
   PRInt32 maxRowSize  = 0;
-  PRInt32 currentSize = mMargin;
+  PRInt32 currentSize = mMargin; // the current height of the "growing" toolbar
 
   PRInt32 i;
   // Loop throgh each item in the toolbar
@@ -808,11 +813,11 @@ NS_METHOD nsToolbar::GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt
 
       // If it is greater than the suggested width than add 1 to the number of rows
       // and start the x over
-      if (isHorizontal) {
+      if (mDoHorizontalLayout) {
         if ((calcSize + width + mItems[i]->mGap) > aSuggestedWidth) {
           currentSize += maxRowSize;
           maxRowSize = 0;
-          calcSize   = mMargin;
+          calcSize   = mMargin + mWrapMargin + width + mItems[i]->mGap;
         } else {
           calcSize += width + mItems[i]->mGap;
         }
@@ -835,13 +840,15 @@ NS_METHOD nsToolbar::GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt
   }
 
   // Now set the width and height accordingly
-  if (isHorizontal) {
+  if (mDoHorizontalLayout) {
     aWidth  = aSuggestedWidth;
     aHeight = currentSize + mMargin + maxRowSize;
   } else {
     aHeight  = aSuggestedHeight;
     aWidth = currentSize + mMargin + maxRowSize;
   }
+
+  printf("aHeight: %d\n", aHeight);
 
   return NS_OK;
 }
