@@ -22,6 +22,7 @@
 
 #include "msgCore.h"
 #include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsMsgStatusFeedback.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentViewer.h"
@@ -31,11 +32,10 @@
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
 
+
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
-  mWebShell(nsnull),
-  mWebShellWindow(nsnull),
   m_meteorsSpinning(PR_FALSE),
   m_lastPercent(0),
   mQueuedMeteorStarts(0),
@@ -47,19 +47,14 @@ nsMsgStatusFeedback::nsMsgStatusFeedback() :
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
 {
-  EndObserving();
 }
 
 //
 // nsISupports
 //
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgStatusFeedback,
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsMsgStatusFeedback,
                               nsIMsgStatusFeedback,
-                              nsIDocumentLoaderObserver,
-                              nsIObserver)
-
-// nsIDocumentLoaderObserver
-
+                              nsIDocumentLoaderObserver)
 
 // nsIDocumentLoaderObserver methods
 
@@ -80,22 +75,24 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 	{
 		nsIDOMWindow *aWindow = mWindow;
 		nsCOMPtr<nsIScriptGlobalObject>
-			globalScript(do_QueryInterface(aWindow));
-      nsCOMPtr<nsIDocShell> docShell;
-		if (globalScript)
+	  globalScript(do_QueryInterface(aWindow));
+    nsCOMPtr<nsIDocShell> docShell;
+		
+    if (globalScript)
 			globalScript->GetDocShell(getter_AddRefs(docShell));
-		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-      nsCOMPtr<nsIWebShell> rootWebshell;
+		
+    nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+    nsCOMPtr<nsIWebShell> rootWebshell;
 		if (webshell)
 			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
-		if (rootWebshell) 
+		
+    if (rootWebshell) 
 		{
 		  // Kick start the throbber
-          StartMeteors();
-		  setAttribute( rootWebshell, "Messenger:Status", "value", "Loading Document..." );
-
+      StartMeteors();
+      ShowStatusString(nsAutoString("Loading Document...").GetUnicode());
 		  // Enable the Stop buton
-		  setAttribute( rootWebshell, "canStop", "disabled", "" );
+		  // setAttribute( rootWebshell, "canStop", "disabled", "" );
 		}
 	}
 	return rv;
@@ -119,78 +116,24 @@ nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* c
 	{
 		nsIDOMWindow *aWindow = mWindow;
 		nsCOMPtr<nsIScriptGlobalObject>
-			globalScript(do_QueryInterface(aWindow));
-      nsCOMPtr<nsIDocShell> docShell;
+		globalScript(do_QueryInterface(aWindow));
+    nsCOMPtr<nsIDocShell> docShell;
 		if (globalScript)
 			globalScript->GetDocShell(getter_AddRefs(docShell));
-		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-      nsCOMPtr<nsIWebShell> rootWebshell;
+		
+    nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+    nsCOMPtr<nsIWebShell> rootWebshell;
 		if (webshell)
 			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
 		if (rootWebshell) 
 		{
 		  // stop the throbber
-          StopMeteors();
-			setAttribute( rootWebshell, "Messenger:Status", "value", "Document: Done" );
+      StopMeteors();
+      ShowStatusString(nsAutoString("Document: Done").GetUnicode());
 		  // Disable the Stop buton
-		  setAttribute( rootWebshell, "canStop", "disabled", "true" );
+		  //setAttribute( rootWebshell, "canStop", "disabled", "true" );
 		}
 	}
-  return rv;
-}
-
-static const char *prefix = "component://netscape/appshell/component/browser/window";
-
-void nsMsgStatusFeedback::BeginObserving() 
-{
-  // Get observer service.
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_PROGID, &rv);
-  if ( NS_SUCCEEDED( rv ) && svc ) 
-  {
-    // Add/Remove object as observer of web shell window topics.
-    nsAutoString topic1(prefix);
-    topic1 += ";status";
-    rv = svc->AddObserver( this, topic1.GetUnicode() );
-  }
-
-  return;
-}
-
-void nsMsgStatusFeedback::EndObserving() 
-{
-  // Get observer service.
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_PROGID, &rv);
-  if ( NS_SUCCEEDED( rv ) && svc ) 
-  {
-    // Add/Remove object as observer of web shell window topics.
-    nsAutoString topic1(prefix);
-    topic1 += ";status";
-    rv = svc->RemoveObserver( this, topic1.GetUnicode() );
-   }
-
-  return;
-}
-
-NS_IMETHODIMP nsMsgStatusFeedback::Observe( nsISupports *aSubject,
-                                            const PRUnichar *aTopic,
-                                            const PRUnichar *someData ) 
-{
-  nsresult rv = NS_OK;
-  // We only are interested if aSubject is our web shell window.
-  if ( aSubject && mWebShellWindow ) 
-  {
-    nsCOMPtr<nsIWebShellWindow> window = do_QueryInterface(aSubject, &rv);
-    if ( NS_SUCCEEDED(rv) && window && (window.get() == mWebShellWindow) ) 
-    {
-      nsAutoString topic1 = prefix;
-      topic1 += ";status";
-      if ( topic1 == aTopic ) 
-        rv = ShowStatusString(someData);
-    } // if window matches our window
-  } // if we have a window to worry about
-    
   return rv;
 }
 
@@ -218,7 +161,8 @@ NS_IMETHODIMP
 nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 {
 	nsAutoString statusMsg = status;
-	setAttribute( mWebShell, "Messenger:Status", "value", statusMsg );
+  if (mStatusFeedback)
+    mStatusFeedback->ShowStatusString(status);
 	return NS_OK;
 }
 
@@ -247,12 +191,9 @@ nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 	}
 
 	m_lastProgressTime = nowMS;
-
-	if (percentage >= 0)
-		setAttribute(mWebShell, "Messenger:LoadingProgress", "mode","normal");
-
-	strPercentage.Append(percentage, 10);
-	setAttribute( mWebShell, "Messenger:LoadingProgress", "value", strPercentage);
+  
+  if (mStatusFeedback)
+    mStatusFeedback->ShowProgress(percentage);
 	return NS_OK;
 }
 
@@ -334,109 +275,30 @@ nsMsgStatusFeedback::StopMeteors()
 
 NS_IMETHODIMP nsMsgStatusFeedback::CloseWindow()
 {
-  EndObserving();
   mWindow = nsnull;
-  mWebShell = nsnull;
-  mWebShellWindow = nsnull;
+  mStatusFeedback = nsnull;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
 {
-	if (aWindow)
-	{
-		nsCOMPtr<nsIScriptGlobalObject>
-	  globalScript(do_QueryInterface(aWindow));
-    nsCOMPtr<nsIDocShell> docShell;
-		if (globalScript)
-			globalScript->GetDocShell(getter_AddRefs(docShell));
-		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-    nsCOMPtr<nsIWebShell> rootWebshell;
-		if (webshell)
-		{
-			webshell->GetRootWebShell(mWebShell);
-			nsIWebShell *root = mWebShell;
-			NS_RELEASE(root); // don't hold reference
 
-      // get the webshell window too....
-      nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-      webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-      if (topLevelWindow)
-      {
-        nsCOMPtr<nsIWebShellWindow> webWindow = do_QueryInterface(topLevelWindow);
-        // do NOT!!! keep an owning reference on the webshell window..it owns us...
-        mWebShellWindow = webWindow;
-      }
-		}
-	}
+  if (aWindow)
+  {
+     nsCOMPtr<nsISupports> xpConnectObj;
+     nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
+     if (piDOMWindow)
+     {
+        nsAutoString msgStatusFeedbackWinId("MsgStatusFeedback");
+        piDOMWindow->GetObjectProperty(msgStatusFeedbackWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+        mStatusFeedback = do_QueryInterface(xpConnectObj);
+     }
+  }
+
 	mWindow = aWindow;
-
-  BeginObserving();
-
 	return NS_OK;
 }
-
-static int debugSetAttr = 0;
-nsresult nsMsgStatusFeedback::setAttribute( nsIWebShell *shell,
-                              const char *id,
-                              const char *name,
-                              const nsString &value ) 
-{
-    if (!mWebShell)
-      return NS_OK;
-
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(shell));
-
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = docShell ? docShell->GetContentViewer(getter_AddRefs(cv))
-               : NS_ERROR_NULL_POINTER;
-    if ( cv ) {
-        // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                // Up-cast.
-                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
-                if ( xulDoc ) 
-				        {
-                    // Find specified element.
-                    nsCOMPtr<nsIDOMElement> elem;
-                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
-                    if ( elem ) {
-                        // Set the text attribute.
-                        rv = elem->SetAttribute( name, value );
-                        if ( debugSetAttr ) {
-                            char *p = value.ToNewCString();
-							              printf("setting busy to %s\n", p);
-                            delete [] p;
-                        }
-                        if ( rv != NS_OK ) {
-                             if (debugSetAttr) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
-                        }
-                    } else {
-                        if (debugSetAttr) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
-                    }
-                } else {
-                  if (debugSetAttr)   printf("Upcast to nsIDOMHTMLDocument failed\n");
-                }
-            } else {
-                if (debugSetAttr) printf("GetDocument failed, rv=0x%X\n",(int)rv);
-            }
-        } else {
-             if (debugSetAttr) printf("Upcast to nsIDocumentViewer failed\n");
-        }
-    } else {
-        if (debugSetAttr) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
-    }
-    return rv;
-}
-
 
 //
 // timer callbacks that resolve closure
@@ -472,7 +334,8 @@ nsMsgStatusFeedback::NotifyStartMeteors(nsITimer *aTimer)
   if (mQueuedMeteorStops > 0) return;
   
   // actually start the meteors
-  setAttribute(mWebShell, "Messenger:Throbber", "busy", "true");
+  if (mStatusFeedback)
+    mStatusFeedback->StartMeteors();
   m_meteorsSpinning = PR_TRUE;
 }
 
@@ -488,7 +351,7 @@ nsMsgStatusFeedback::NotifyStopMeteors(nsITimer* aTimer)
   if (mQueuedMeteorStarts > 0) return;
 
   // actually stop the meteors
-  setAttribute( mWebShell, "Messenger:Throbber", "busy", "false" );
+  if (mStatusFeedback)
+    mStatusFeedback->StopMeteors();
   m_meteorsSpinning = PR_FALSE;
 }
-

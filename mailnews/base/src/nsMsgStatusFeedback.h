@@ -33,7 +33,6 @@
 #include "nsIMsgStatusFeedback.h"
 
 class nsMsgStatusFeedback : public nsIMsgStatusFeedback,
-                            public nsIObserver,
                             public nsIDocumentLoaderObserver
 {
 public:
@@ -42,19 +41,12 @@ public:
 
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGSTATUSFEEDBACK
-  NS_DECL_NSIOBSERVER
     
 	// nsIDocumntLoaderObserver
   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
-	nsresult setAttribute( nsIWebShell *shell,
-                         const char *id,
-                         const char *name,
-                         const nsString &value );
 protected:
-	nsIWebShell				*mWebShell;
 	nsIDOMWindow			*mWindow;
-  nsIWebShellWindow *mWebShellWindow;
 	PRBool					m_meteorsSpinning;
 	PRInt32					m_lastPercent;
 	PRInt64					m_lastProgressTime;
@@ -74,6 +66,10 @@ protected:
   // timer callbacks w/resolved closure
   void NotifyStartMeteors(nsITimer *aTimer);
   void NotifyStopMeteors(nsITimer *aTimer);
+
+  // the JS status feedback implementation object...eventually this object
+  // will replace this very C++ class you are looking at.
+  nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
 };
 
 #endif // _nsMsgStatusFeedback_h
