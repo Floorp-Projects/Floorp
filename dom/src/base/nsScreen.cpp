@@ -53,7 +53,8 @@
 //
 //  Screen class implementation
 //
-ScreenImpl::ScreenImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell)
+ScreenImpl::ScreenImpl(nsIDocShell* aDocShell)
+  : mDocShell(aDocShell)
 {
 }
 
@@ -83,91 +84,47 @@ NS_IMETHODIMP ScreenImpl::SetDocShell(nsIDocShell* aDocShell)
 NS_IMETHODIMP
 ScreenImpl::GetTop(PRInt32* aTop)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetRect(rect);
 
-  if (context) {
-    nsRect rect;
-    context->GetRect(rect);
+  *aTop = rect.y;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aTop = NSToIntRound(float(rect.y) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aTop = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 
 NS_IMETHODIMP
 ScreenImpl::GetLeft(PRInt32* aLeft)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetRect(rect);
 
-  if (context) {
-    nsRect rect;
-    context->GetRect(rect);
+  *aLeft = rect.x;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aLeft = NSToIntRound(float(rect.x) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aLeft = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 
 NS_IMETHODIMP
 ScreenImpl::GetWidth(PRInt32* aWidth)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetRect(rect);
 
-  if (context) {
-    PRInt32 height;
-    context->GetDeviceSurfaceDimensions(*aWidth, height);
+  *aWidth = rect.width;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aWidth = NSToIntRound(float(*aWidth) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aWidth = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetHeight(PRInt32* aHeight)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetRect(rect);
 
-  if (context) {
-    PRInt32 width;
-    context->GetDeviceSurfaceDimensions(width, *aHeight);
+  *aHeight = rect.height;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aHeight = NSToIntRound(float(*aHeight) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aHeight = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -175,128 +132,72 @@ ScreenImpl::GetPixelDepth(PRInt32* aPixelDepth)
 {
   nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
 
-  if (context) {
-    PRUint32 depth;
-    context->GetDepth(depth);
+  if (!context) {
+    *aPixelDepth = -1;
 
-    *aPixelDepth = depth;
-
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
-  *aPixelDepth = -1;
+  PRUint32 depth;
+  context->GetDepth(depth);
 
-  return NS_ERROR_FAILURE;
+  *aPixelDepth = depth;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetColorDepth(PRInt32* aColorDepth)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
-
-  if (context) {
-    PRUint32 depth;
-    context->GetDepth(depth);
-
-    *aColorDepth = depth;
-
-    return NS_OK;
-  }
-
-  *aColorDepth = -1;
-
-  return NS_ERROR_FAILURE;
+  return GetPixelDepth(aColorDepth);
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailWidth(PRInt32* aAvailWidth)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetAvailRect(rect);
 
-  if (context) {
-    nsRect rect;
-    context->GetClientRect(rect);
+  *aAvailWidth = rect.width;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aAvailWidth = NSToIntRound(float(rect.width) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aAvailWidth = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailHeight(PRInt32* aAvailHeight)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetAvailRect(rect);
 
-  if (context) {
-    nsRect rect;
-    context->GetClientRect(rect);
+  *aAvailHeight = rect.height;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aAvailHeight = NSToIntRound(float(rect.height) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aAvailHeight = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailLeft(PRInt32* aAvailLeft)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetAvailRect(rect);
 
-  if (context) {
-    nsRect rect;
-    context->GetClientRect(rect);
+  *aAvailLeft = rect.x;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aAvailLeft = NSToIntRound(float(rect.x) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aAvailLeft = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
 {
-  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+  nsRect rect;
+  nsresult rv = GetAvailRect(rect);
 
-  if (context) {
-    nsRect rect;
-    context->GetClientRect(rect);
+  *aAvailTop = rect.y;
 
-    float devUnits;
-    context->GetDevUnitsToAppUnits(devUnits);
-
-    *aAvailTop = NSToIntRound(float(rect.y) / devUnits);
-
-    return NS_OK;
-  }
-
-  *aAvailTop = -1;
-
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
-already_AddRefed<nsIDeviceContext> ScreenImpl::GetDeviceContext()
+already_AddRefed<nsIDeviceContext>
+ScreenImpl::GetDeviceContext()
 {
   if(!mDocShell)
     return nsnull;
@@ -318,4 +219,50 @@ already_AddRefed<nsIDeviceContext> ScreenImpl::GetDeviceContext()
   return context;
 }
 
+nsresult
+ScreenImpl::GetRect(nsRect& aRect)
+{
+  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
 
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
+
+  context->GetRect(aRect);
+
+  float devUnits;
+  context->GetDevUnitsToAppUnits(devUnits);
+
+  aRect.x = NSToIntRound(float(aRect.x) / devUnits);
+  aRect.y = NSToIntRound(float(aRect.y) / devUnits);
+
+  context->GetDeviceSurfaceDimensions(aRect.width, aRect.height);
+
+  aRect.height = NSToIntRound(float(aRect.height) / devUnits);
+  aRect.width = NSToIntRound(float(aRect.width) / devUnits);
+
+  return NS_OK;
+}
+
+nsresult
+ScreenImpl::GetAvailRect(nsRect& aRect)
+{
+  nsCOMPtr<nsIDeviceContext> context(GetDeviceContext());
+
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRect rect;
+  context->GetClientRect(rect);
+
+  float devUnits;
+  context->GetDevUnitsToAppUnits(devUnits);
+
+  aRect.x =      NSToIntRound(float(aRect.x)      / devUnits);
+  aRect.y =      NSToIntRound(float(aRect.y)      / devUnits);
+  aRect.height = NSToIntRound(float(aRect.height) / devUnits);
+  aRect.width =  NSToIntRound(float(aRect.width)  / devUnits);
+
+  return NS_OK;
+}

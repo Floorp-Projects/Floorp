@@ -45,6 +45,7 @@
 
 class nsIDocShell;
 class nsIDeviceContext;
+struct nsRect;
 
 // Script "screen" object
 class ScreenImpl : public nsIDOMScreen
@@ -70,8 +71,10 @@ public:
 
 
 protected:
-	already_AddRefed<nsIDeviceContext> GetDeviceContext();
-	
+  already_AddRefed<nsIDeviceContext> GetDeviceContext();
+  nsresult GetRect(nsRect& aRect);
+  nsresult GetAvailRect(nsRect& aRect);
+
   nsIDocShell* mDocShell; // Weak Reference
 };
 
