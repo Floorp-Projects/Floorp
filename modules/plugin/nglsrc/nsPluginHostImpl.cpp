@@ -1090,11 +1090,7 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeReq
     return;
 
   PRInt32 requestCnt = 0;
-  // XXX needs to be smarter than that
-  char * string = new char[1024];
-
-  string[0] = '\0';
-  PL_strcat(string, "bytes=");
+  nsCAutoString string("bytes=");
 
   for(nsByteRange * range = aRangeList; range != nsnull; range = range->next)
   {
@@ -1103,24 +1099,19 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeReq
       continue;
 
     // XXX needs to be fixed for negative offsets
-    nsCString firstbyte; firstbyte.AppendInt(range->offset);
-    nsCString lastbyte; lastbyte.AppendInt(range->offset + range->length - 1);
-
-    PL_strcat(string, firstbyte.get());
-    PL_strcat(string, "-");
-    PL_strcat(string, lastbyte.get());
+    string.AppendInt(range->offset);
+    string.Append("-");
+    string.AppendInt(range->offset + range->length - 1);
     if(range->next)
-      PL_strcat(string, ",");
+      string += ",";
     
     requestCnt++;
   }
 
-  // get rid of possible tailing comma
-  PRInt32 len = PL_strlen(string);
-  if(string[len - 1] == ',')
-    string[len - 1] = '\0';
+  // get rid of possible trailing comma
+  string.Trim(",", PR_FALSE);
 
-  *rangeRequest = string;
+  *rangeRequest = string.ToNewCString();
   *numRequests  = requestCnt;
   return;
 }
@@ -1154,7 +1145,7 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
 
   httpChannel->SetRequestHeader("Range", rangeString);
 
-  delete [] rangeString;
+  nsMemory::Free(rangeString);
 
   // instruct old stream listener to cancel the request on the next
   // attempt to write. 
