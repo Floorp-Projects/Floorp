@@ -37,6 +37,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
+#include "nsIInputStream.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
@@ -551,6 +552,31 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       else if ((aCommand == kNC_EmptyTrash))
       {
           rv = folder->EmptyTrash();
+      }
+      else if ((aCommand == kNC_Rename))
+      {
+        nsCOMPtr<nsISupports> streamSupport = getter_AddRefs(aArguments->ElementAt(0));
+        if (streamSupport)
+        {
+          nsCOMPtr<nsIInputStream> charInputStream = do_QueryInterface(streamSupport);
+          if (charInputStream)
+          {
+            PRUint32 length = 0;
+            rv = charInputStream->GetLength(&length);
+            if (NS_SUCCEEDED(rv) && length > 0)
+            {
+              char *newName = (char*) PR_MALLOC(length+1);
+              PRUint32 readCount = 0;
+              rv = charInputStream->Read(newName, length, &readCount);
+              if(NS_SUCCEEDED(rv))
+              {
+                newName[readCount] = 0;
+                rv = folder->Rename(newName);
+              }
+              PR_FREEIF(newName);
+            }
+          }
+        }
       }
     }
   }

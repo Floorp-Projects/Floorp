@@ -83,6 +83,7 @@
 #include "nsIPref.h"
 #include "nsLayoutCID.h"
 #include "nsIPresContext.h"
+#include "nsIStringStream.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -992,7 +993,28 @@ nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
                           nsIDOMXULElement* folder,
                           const char* name)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  if (!db || !folder || !name || !*name) return rv;
+  nsCOMPtr<nsISupports> streamSupport;
+  rv = NS_NewCharInputStream(getter_AddRefs(streamSupport), name);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISupportsArray> folderArray;
+    nsCOMPtr<nsISupportsArray> argsArray;
+    nsCOMPtr<nsIRDFResource> folderResource;
+    rv = folder->GetResource(getter_AddRefs(folderResource));
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+      if (NS_FAILED(rv)) return rv;
+      folderArray->AppendElement(folderResource);
+      rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+      if (NS_FAILED(rv)) return rv;
+      argsArray->AppendElement(streamSupport);
+      rv = DoCommand(db, NC_RDF_RENAME, folderArray, argsArray);
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
