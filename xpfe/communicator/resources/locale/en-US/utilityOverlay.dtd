@@ -51,7 +51,7 @@
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 
-<!ENTITY viewToolbarsMenu.label				"Show"> 
+<!ENTITY viewToolbarsMenu.label				"Show/Hide"> 
 <!ENTITY viewToolbarsMenu.accesskey			"w"> 
 <!ENTITY showTaskbarCmd.label					"Status Bar">  
 <!ENTITY showTaskbarCmd.accesskey				"s"> 
