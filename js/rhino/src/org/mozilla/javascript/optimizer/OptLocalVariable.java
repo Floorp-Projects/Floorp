@@ -46,10 +46,6 @@ final class OptLocalVariable implements JavaVariable
     {
         itsName = name;
         itsIsParameter = isParameter;
-        // If the variable is a parameter, it could have any type.
-        // If it is from a "var" statement, its typeEvent will be set
-        // when we see the setVar node.
-        itsTypeUnion = isParameter ? Optimizer.AnyType : Optimizer.NoType;
     }
 
     static OptLocalVariable get(Node n)
@@ -112,15 +108,6 @@ final class OptLocalVariable implements JavaVariable
 
     boolean isParameter()   { return itsIsParameter; }
 
-    boolean assignType(int aType) {
-        itsTypeUnion |= aType;
-        return itsTypeUnion != aType;
-    }
-
-    int getTypeUnion() {
-        return itsTypeUnion;
-    }
-
     private String itsName;
     private boolean itsIsParameter;
     private int itsIndex = -1;
@@ -128,8 +115,6 @@ final class OptLocalVariable implements JavaVariable
     private short itsJRegister = -1;   // unassigned
 
     private boolean itsIsNumber;
-
-    private int itsTypeUnion;        // the union of all assigned types
 
     private int initPC;
 }
