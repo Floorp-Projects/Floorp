@@ -666,7 +666,15 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    var sTextiCalendar = "";
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
-      var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
+      try
+      {
+         var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
+      }
+      catch( e )
+      {
+         alert( "Caught an exception in eventArrayToICalString, while trying to clone the event, it was: \n"+e );
+      }
+      
       // convert time to represent local to produce correct DTSTART and DTEND
       if(calendarEvent.allDay != true)
          convertLocalToZulu( calendarEvent );
