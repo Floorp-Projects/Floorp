@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base components extensions app 
+DIRS		= base locales components extensions app 
 
 # this will get cleaned up once OSX comes on board. We won't need platform specific ifdefs for
 # entering mail\config

@@ -49,26 +49,3 @@ toolkit.jar:
 *+  content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
 +   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)
 +   content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
-
-en-US.jar:
-+   locale/en-US/messenger/start.html               (locale/start.html)
-*   locale/en-US/messenger/credits.html             (locale/credits.html)
-    locale/en-US/messenger/thunderbird-watermark.png (locale/thunderbird-watermark.png)
-    locale/en-US/messenger/h1.png                   (locale/h1.png)
-    locale/en-US/messenger/h2.png                   (locale/h2.png)
-    locale/en-US/messenger/back.png                 (locale/back.png)
-    locale/en-US/messenger/aboutDialog.dtd          (locale/aboutDialog.dtd)
-+   locale/en-US/messenger/junkMail.dtd             (locale/junkMail.dtd)
-+   locale/en-US/messenger/mailOverlay.dtd          (locale/mailOverlay.dtd)
-+   locale/en-US/messenger/messenger.dtd            (locale/messenger.dtd)
-+   locale/en-US/messenger/mailTasksOverlay.dtd     (locale/mailTasksOverlay.dtd)
-+   locale/en-US/messenger/msgAccountCentral.dtd    (locale/msgAccountCentral.dtd)
-+   locale/en-US/messenger/SearchDialog.dtd         (locale/SearchDialog.dtd)
-+   locale/en-US/global/brand.properties            (locale/brand.properties) 
-*+  locale/en-US/global/brand.dtd                   (locale/brand.dtd) 
-+   locale/en-US/communicator/utilityOverlay.dtd    (locale/utilityOverlay.dtd)
-+   locale/en-US/messenger-mapi/mapi.properties      (locale/mapi.properties)
-
-US.jar:
-+   locale/US/messenger-region/region.properties     (locale/region.properties)
-*+  locale/US/global-region/region.dtd               (locale/region.dtd)

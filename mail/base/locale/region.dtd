@@ -1,6 +1,0 @@
-<!-- brand.dtd -->
-<!ENTITY  vendorURL             "http://www.mozilla.org/">
-<!ENTITY  releaseURL            "http://www.mozilla.org/releases/">
-<!ENTITY  getNewThemesURL       "http://texturizer.net/thunderbird/themes.html">
-<!ENTITY  getNewExtensionsURL   "http://texturizer.net/thunderbird/extensions/">
-#expand <!ENTITY  content.version "__MOZILLA_REGION_VERSION__">

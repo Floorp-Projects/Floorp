@@ -961,6 +961,7 @@ mail/app/profile/Makefile
 mail/base/Makefile
 mail/base/skin/mac/Makefile
 mail/base/skin/Makefile
+mail/locales/Makefile
 mail/components/Makefile
 mail/components/compose/Makefile
 mail/components/compose/skin/mac/Makefile
