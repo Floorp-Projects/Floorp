@@ -524,6 +524,10 @@ GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
     *aInnerWidth = r.width;
     NS_RELEASE(mBrowser);
   }
+  else {
+    *aInnerWidth = 0;
+  }
+
   return NS_OK;
 }
 
@@ -553,6 +557,10 @@ GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
     *aInnerHeight = r.height;
     NS_RELEASE(mBrowser);
   }
+  else {
+    *aInnerHeight = 0;
+  }
+
   return NS_OK;
 }
 
@@ -582,6 +590,10 @@ GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
     *aOuterWidth = r.width;
     NS_RELEASE(mBrowser);
   }
+  else {
+    *aOuterWidth = 0;
+  }
+
   return NS_OK;
 }
 
@@ -611,6 +623,10 @@ GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
     *aOuterHeight = r.height;
     NS_RELEASE(mBrowser);
   }
+  else {
+    *aOuterHeight = 0;
+  }
+
   return NS_OK;
 }
 
