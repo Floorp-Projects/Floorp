@@ -425,6 +425,22 @@ nsGenericHTMLElement::GetElementsByTagName(const nsAString& aTagname,
   return nsGenericElement::GetElementsByTagName(tagName, aReturn);
 }
 
+nsresult
+nsGenericHTMLElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                             const nsAString& aLocalName,
+                                             nsIDOMNodeList** aReturn)
+{
+  nsAutoString localName(aLocalName);
+
+  // Only lowercase the name if this element has no namespace (i.e.
+  // it's a HTML element, not an XHTML element).
+  if (mNodeInfo && mNodeInfo->NamespaceEquals(kNameSpaceID_None))
+    ToLowerCase(localName);
+
+  return nsGenericElement::GetElementsByTagNameNS(aNamespaceURI, localName,
+                                                  aReturn);
+}
+
 // Implementation for nsIDOMHTMLElement
 nsresult
 nsGenericHTMLElement::GetId(nsAString& aId)
