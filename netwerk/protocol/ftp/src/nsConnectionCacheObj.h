@@ -27,6 +27,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsString.h"
 
 // This class represents a cached connection for FTP connections.
 // State pertinent to re-establishing an FTP "connection" is stored
@@ -54,6 +55,7 @@ public:
     PRUint32         mServerType;           // what kind of server is it.
     nsCAutoString    mCwd;                  // what dir are we in
     PRBool           mList;                 // are we sending LIST or NLST
+    nsAutoString     mPassword;
 };
 
 #endif // __nsconnectioncacheobj__h____

@@ -37,7 +37,9 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
+#include "nsIWalletService.h"
 
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -120,6 +122,8 @@ nsFtpConnectionThread::Process() {
                     mServerType = mConn->mServerType;
                     mCwd        = mConn->mCwd;
                     mList       = mConn->mList;
+
+                    mPassword   = mConn->mPassword;
                 } else {
                     mCachedConn = PR_FALSE;
                     nsXPIDLCString host;
@@ -921,9 +925,37 @@ nsFtpConnectionThread::R_pass() {
         return FTP_S_ACCT;
     } else if (mResponseCode/100 == 2) {
         // logged in
+        mConn->mPassword = mPassword;
         return FTP_S_SYST;
+    } else if (mResponseCode == 503) {
+        // start over w/ the user command.
+        // note: the password was successful, and it's stored in mPassword
+        mRetryPass = PR_FALSE;
+        return FTP_S_USER;
     } else {
         // kick back out to S_pass() and ask the user again.
+        nsresult rv = NS_OK;
+
+        NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                        kProxyObjectManagerCID, &rv);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        nsCOMPtr<nsIWalletService> pWalletService;
+        rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
+                        NS_GET_IID(nsIWalletService), walletService, 
+                        PROXY_SYNC, getter_AddRefs(pWalletService));
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        nsXPIDLCString uri;
+        rv = mURL->GetSpec(getter_Copies(uri));
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
+        rv = pWalletService->SI_RemoveUser(uri, nsnull);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
         mRetryPass = PR_TRUE;
         return FTP_S_PASS;
     }
