@@ -994,51 +994,186 @@ nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
   return rv;
 }
 
+#ifdef DEBUG
+#include "nsIAppShellService.h"
+
+class PageCycler : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+
+  PageCycler(nsBrowserAppCore* appCore)
+    : mAppCore(appCore), mBuffer(nsnull), mCursor(nsnull) { 
+    NS_INIT_REFCNT();
+    NS_ADDREF(mAppCore);
+  }
+
+  virtual ~PageCycler() { 
+    if (mBuffer) delete[] mBuffer;
+    NS_RELEASE(mAppCore);
+  }
+
+  nsresult Init(const char* nativePath) {
+    nsresult rv;
+    mFile = nativePath;
+    if (!mFile.IsFile())
+      return mFile.Error();
+
+    nsCOMPtr<nsISupports> in;
+    rv = NS_NewTypicalInputFileStream(getter_AddRefs(in), mFile);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIInputStream> inStr = do_QueryInterface(in, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRUint32 avail;
+    rv = inStr->Available(&avail);
+    if (NS_FAILED(rv)) return rv;
+
+    mBuffer = new char[avail + 1];
+    if (mBuffer == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    PRUint32 amt;
+    rv = inStr->Read(mBuffer, avail, &amt);
+    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(amt == avail, "Didn't get the whole file.");
+    mBuffer[avail] = '\0';
+    mCursor = mBuffer;
+
+    NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsString topic("EndDocumentLoad");
+    rv = obsServ->AddObserver(this, topic.GetUnicode());
+    return rv; 
+  }
+
+  nsresult GetNextURL(nsString& result) {
+    result = mCursor;
+    PRInt32 pos = result.Find(NS_LINEBREAK);
+    if (pos > 0) {
+      result.Truncate(pos);
+      mLastRequest = result;
+      mCursor += pos + NS_LINEBREAK_LEN;
+      return NS_OK;
+    }
+    else if ( !result.IsEmpty() ) {
+      // no more URLs after this one
+      mCursor += result.Length(); // Advance cursor to terminating '\0'
+      mLastRequest = result;
+      return NS_OK;
+    }
+    else {
+      // no more URLs, so quit the browser
+      nsresult rv;
+      static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
+      NS_WITH_SERVICE(nsIAppShellService, appShellServ,
+                      kAppShellServiceCID, &rv);
+      if (NS_SUCCEEDED(rv)) 
+        (void)appShellServ->Quit();
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  NS_IMETHOD Observe(nsISupports* aSubject, 
+                     const PRUnichar* aTopic,
+                     const PRUnichar* someData) {
+    nsresult rv = NS_OK;
+    nsString data(someData);
+    if (data.Find(mLastRequest) == 0) {
+      char* dataStr = data.ToNewCString();
+      printf("########## PageCycler loaded: %s\n", dataStr);
+      nsCRT::free(dataStr);
+
+      nsAutoString url;
+      rv = GetNextURL(url);
+      if (NS_SUCCEEDED(rv)) {
+        rv = mAppCore->LoadUrl(url.GetUnicode());
+      }
+    }
+    return rv;
+  }
+  
+protected:
+  nsBrowserAppCore*     mAppCore;
+  nsFileSpec            mFile;
+  char*                 mBuffer;
+  char*                 mCursor;
+  nsAutoString          mLastRequest;
+};
+
+NS_IMPL_ISUPPORTS1(PageCycler, nsIObserver);
+
+#endif
+
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadInitialPage(void)
 {
   static PRBool cmdLineURLUsed = PR_FALSE;
   char * urlstr = nsnull;
   nsresult rv;
-  nsICmdLineService * cmdLineArgs;
 
+  if (!cmdLineURLUsed) {
+    NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+    if (NS_FAILED(rv)) {
+      if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
+      return NS_ERROR_FAILURE;
+    }
+
+#ifdef DEBUG
+    // First, check if there's a URL file to load (for testing), and if there 
+    // is, process it instead of anything else.
+    char* file;
+    rv = cmdLineArgs->GetCmdLineValue("-f", &file);
+    if (NS_SUCCEEDED(rv)) {
+      PageCycler* bb = new PageCycler(this);
+      if (bb == nsnull) {
+        nsCRT::free(file);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_ADDREF(bb);
+      rv = bb->Init(file);
+      nsCRT::free(file);
+      if (NS_FAILED(rv)) return rv;
+
+      nsAutoString str;
+      rv = bb->GetNextURL(str);
+      if (NS_SUCCEEDED(rv)) {
+        urlstr = str.ToNewCString();
+      }
+      NS_RELEASE(bb);
+    }
+    else {
+#endif
   
-  // Examine content URL.
-  if ( mContentAreaWebShell ) {
+    // Examine content URL.
+    if ( mContentAreaWebShell ) {
       const PRUnichar *url = 0;
       rv = mContentAreaWebShell->GetURL(&url );
-	  /* Check whether url is valid. Otherwise we compare 0x00 with 
-	   * "about:blank" and there by return from here with out 
-	   * loading the command line url or default home page.
-	   */
+      /* Check whether url is valid. Otherwise we compare 0x00 with 
+         * "about:blank" and there by return from here with out 
+         * loading the command line url or default home page.
+         */
       if ( NS_SUCCEEDED( rv ) && url ) {
-          if ( nsString(url) != "about:blank" ) {
-              // Something has already been loaded (probably via window.open),
-              // leave it be.
-              return NS_OK;
-          }
+        if ( nsString(url) != "about:blank" ) {
+          // Something has already been loaded (probably via window.open),
+          // leave it be.
+          return NS_OK;
+        }
       }
-  }
+    }
 
-  rv = nsServiceManager::GetService(kCmdLineServiceCID,
-                                    NS_GET_IID(nsICmdLineService),
-                                    (nsISupports **)&cmdLineArgs);
-  if (NS_FAILED(rv)) {
-    if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
-    return NS_ERROR_FAILURE;
-  }
+    // Get the URL to load
+    rv = cmdLineArgs->GetURLToLoad(&urlstr);
 
-  // Get the URL to load
-  rv = cmdLineArgs->GetURLToLoad(&urlstr);
-  nsServiceManager::ReleaseService(kCmdLineServiceCID, cmdLineArgs);
+#ifdef DEBUG
+    }
+#endif
 
-  if ( !cmdLineURLUsed && urlstr != nsnull) {
-  // A url was provided. Load it
-     if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
-     nsString url( urlstr ); // Convert to unicode.
-     rv = LoadUrl( url.GetUnicode() );
-     cmdLineURLUsed = PR_TRUE;
-     return rv;
+    if (urlstr != nsnull) {
+      // A url was provided. Load it
+      if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
+      nsString url( urlstr ); // Convert to unicode.
+      rv = LoadUrl( url.GetUnicode() );
+      cmdLineURLUsed = PR_TRUE;
+      return rv;
+    }
   }
 
   // No URL was provided in the command line. Load the default provided
@@ -1056,23 +1191,23 @@ nsBrowserAppCore::LoadInitialPage(void)
 
   rv = FindNamedXULElement(mWebShell, "args", &argsElement);
   if (!argsElement) {
-  // Couldn't get the "args" element from the xul file. Load a blank page
-     if (APP_DEBUG) printf("Couldn't find args element\n");
-     nsString url("about:blank"); 
-     rv = LoadUrl( url.GetUnicode() );
-     return rv;
+    // Couldn't get the "args" element from the xul file. Load a blank page
+    if (APP_DEBUG) printf("Couldn't find args element\n");
+    nsString url("about:blank"); 
+    rv = LoadUrl( url.GetUnicode() );
+    return rv;
   }
 
   // Load the default page mentioned in the xul file.
-    nsString value;
-    argsElement->GetAttribute(nsString("value"), value);
-    if (value.Length()) {
-        rv = LoadUrl(value.GetUnicode());
-        return rv;
-    }
+  nsString value;
+  argsElement->GetAttribute(nsString("value"), value);
+  if (value.Length()) {
+    rv = LoadUrl(value.GetUnicode());
+    return rv;
+  }
 
-    if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
-    return NS_OK;
+  if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
+  return NS_OK;
 }
 
 static
