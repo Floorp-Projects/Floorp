@@ -231,7 +231,7 @@ nsWindow::DestroyNative(void)
     mSuperWin = nsnull;
   }
   else if(mSuperWin) {
-    gdk_superwin_destroy(mSuperWin);
+    gtk_object_unref(GTK_OBJECT(mSuperWin));
     mSuperWin = NULL;
   }
 }
