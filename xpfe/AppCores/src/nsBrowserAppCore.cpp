@@ -685,7 +685,7 @@ nsBrowserAppCore::NewWindow()
 
   // Default URL if one was not provided in the cmdline
   if (nsnull == urlstr)
-      urlstr = "resource:/res/samples/navigator.xul";
+      urlstr = "chrome://navigator/content/";
   else
       fprintf(stderr, "URL to load is %s\n", urlstr);
 
