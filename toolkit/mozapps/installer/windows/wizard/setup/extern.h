@@ -42,6 +42,7 @@ extern HANDLE           hAccelTable;
 extern HWND             hDlgCurrent;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
+extern HWND             hWizardWnd;
 
 extern LPSTR            szEGlobalAlloc;
 extern LPSTR            szEStringLoad;
