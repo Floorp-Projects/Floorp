@@ -136,9 +136,6 @@ nsUnknownContentTypeDialog.prototype = {
         // we need to discover the default save location. 
         var autodownload = prefs.getBoolPref("browser.download.useDownloadDir");
         if (autodownload) {
-          // XXXben we should really have a way of using XULPP on JS component files. 
-          // This code is very similar to that in pref-downloads.js, except the platform
-          // checks are done at runtime. ugh. 
           function getSpecialFolderKey(aFolderType) 
           {
 #ifdef XP_WIN
