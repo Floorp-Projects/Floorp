@@ -6,12 +6,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 
-<!DOCTYPE window
-[
-
-<!ENTITY windowTitle.label "Please Specify a Location to Attach">
-
-]>
+<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/MsgAttachPage.dtd">
 
 <window title="&windowTitle.label;"
     xmlns:html="http://www.w3.org/TR/REC-html40"
