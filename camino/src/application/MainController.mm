@@ -1065,6 +1065,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
 
   // disable items that aren't relevant if there's no main browser window open
+  // or the bookmark/history manager is open
   SEL action = [aMenuItem action];
 
   // NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
@@ -1079,7 +1080,9 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
         action == @selector(doReload:) ||
         action == @selector(savePage:))
   {
-    return (browserController != nil);
+    if (browserController != nil)
+      return (![browserController bookmarkManagerIsVisible]);
+    return NO;
   }
   
   if (action == @selector(newTab:))
