@@ -27,15 +27,18 @@
 {
     [super ensureDataSourceLoaded];
     
-    // Get the Global History DataSource
-    mRDFService->GetDataSource("rdf:history", &mDataSource);
-    // Get the Date Folder Root
-    mRDFService->GetResource("NC:HistoryByDate", &mRootResource);
-
-    [mOutlineView setTarget: self];
-    [mOutlineView setDoubleAction: @selector(openHistoryItem:)];
-
-    [mOutlineView reloadData];
+    if (!mDataSource)
+    {
+      // Get the Global History DataSource
+      mRDFService->GetDataSource("rdf:history", &mDataSource);
+      // Get the Date Folder Root
+      mRDFService->GetResource("NC:HistoryByDate", &mRootResource);
+  
+      [mOutlineView setTarget: self];
+      [mOutlineView setDoubleAction: @selector(openHistoryItem:)];
+  
+      [mOutlineView reloadData];
+    }
 }
 
 - (id) outlineView: (NSOutlineView*) aOutlineView objectValueForTableColumn: (NSTableColumn*) aTableColumn

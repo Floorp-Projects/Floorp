@@ -337,12 +337,15 @@ static NSArray* sToolbarDefaults = nil;
 	return proposedFrameSize;
 }
 
+
+#define RESIZE_WINDOW_FOR_DRAWER
+
 - (void)drawerWillOpen: (NSNotification*)aNotification
 {
   [mSidebarBookmarksDataSource ensureBookmarks];
-  
   [mHistoryDataSource ensureDataSourceLoaded];
 
+#ifdef RESIZE_WINDOW_FOR_DRAWER
   // Force the window to shrink and move if necessary in order to accommodate the sidebar.
   NSRect screenFrame = [[[self window] screen] visibleFrame];
   NSRect windowFrame = [[self window] frame];
@@ -361,9 +364,11 @@ static NSArray* sToolbarDefaults = nil;
     windowFrame.origin.x = newPosition;
     windowFrame.size.width = newWidth;
     mCachedFrameAfterDrawerOpen = windowFrame;
-    [[self window] setFrame: windowFrame display: YES];
+    [[self window] setFrame: windowFrame display: YES animate:NO];		// animation  would be nice, but is too slow
     mDrawerCachedFrame = YES;
   }
+#endif
+
 }
 
 - (void)drawerDidOpen:(NSNotification *)aNotification
@@ -385,6 +390,7 @@ static NSArray* sToolbarDefaults = nil;
   // XXXdwh ignore for now.
   //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" referrer:nil flags:NSLoadFlagsNone];
 
+#ifdef RESIZE_WINDOW_FOR_DRAWER
   if (mDrawerCachedFrame) {
     mDrawerCachedFrame = NO;
     NSRect frame = [[self window] frame];
@@ -398,9 +404,11 @@ static NSArray* sToolbarDefaults = nil;
       printf("Widths are %f %f\n", frame.size.width, mCachedFrameAfterDrawerOpen.size.width);
 #endif
       // Restore the original frame.
-      [[self window] setFrame: mCachedFrameBeforeDrawerOpen display: YES];
+      [[self window] setFrame: mCachedFrameBeforeDrawerOpen display: YES animate:NO];	// animation would be nice
     }
   }
+#endif
+
 }
 
 - (void)setupToolbar
