@@ -340,6 +340,9 @@ viewer:Essential Files:LDAPClient.shlb
 viewer:Components:msgsmime.shlb
 viewer:Components:msgsmime.xpt
 viewer:Components:smime-service.js
+viewer:Components:msgmdn.shlb
+viewer:Components:msgmdn.xpt
+viewer:Components:mdn-service.js
 
 [chatzilla]
 viewer:Components:chatzilla-service.js

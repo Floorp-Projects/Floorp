@@ -43,10 +43,21 @@
 #include "nsFileSpec.h"
 #include "nsMsgCompFields.h"
 #include "nsIMsgSend.h"
+#include "nsIMsgCompUtils.h"
 
 class nsIPrompt; 
 
 #define ANY_SERVER "anyfolder://"
+
+class nsMsgCompUtils : public nsIMsgCompUtils
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGCOMPUTILS
+
+  nsMsgCompUtils();
+  virtual ~nsMsgCompUtils();
+};
 
 NS_BEGIN_EXTERN_C
 

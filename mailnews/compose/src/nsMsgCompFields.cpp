@@ -66,13 +66,10 @@ nsMsgCompFields::nsMsgCompFields()
   m_useMultipartAlternative = PR_FALSE;
   m_uuEncodeAttachments = PR_FALSE;
   m_returnReceipt = PR_FALSE;
-  m_receiptType = 0;
 
   nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
   if (prefs) 
   {
-    prefs->GetBoolPref("mail.request.return_receipt_on", &m_returnReceipt);
-    prefs->GetIntPref("mail.request.return_receipt", &m_receiptType);
     // Get the default charset from pref, use this as a mail charset.
     nsXPIDLString charset;
     prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", getter_Copies(charset));
@@ -396,6 +393,18 @@ NS_IMETHODIMP nsMsgCompFields::GetReturnReceipt(PRBool *_retval)
 {
   *_retval = m_returnReceipt;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::SetReceiptHeaderType(PRInt32 value)
+{
+    m_receiptHeaderType = value;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::GetReceiptHeaderType(PRInt32 *_retval)
+{
+    *_retval = m_receiptHeaderType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgCompFields::SetAttachVCard(PRBool value)

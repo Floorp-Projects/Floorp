@@ -70,6 +70,7 @@
 #include "nsIContentHandler.h"
 #include "nsMsgRecipientArray.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsMsgCompUtils.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
@@ -93,6 +94,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposeStringService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDataSource);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDelegateFactory);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsURLFetcher);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompUtils);
 
 ////////////////////////////////////////////////////////////
 //
@@ -202,6 +204,10 @@ static const nsModuleComponentInfo components[] =
     NS_URLFETCHER_CID,
     NS_URLFETCHER_CONTRACTID,
     nsURLFetcherConstructor },
+  { "Msg Compose Utils",
+    NS_MSGCOMPUTILS_CID,
+    NS_MSGCOMPUTILS_CONTRACTID,
+    nsMsgCompUtilsConstructor },
 };
 
   

@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgcompo \
 		  msglocal \
+			mime \
 		  $(NULL)
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail

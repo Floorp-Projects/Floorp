@@ -69,6 +69,10 @@
 #include "nsMsgUtils.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsIMimeHeaders.h"
+
+#include "nsIMsgMdnGenerator.h"
+#include "nsMsgSearchCore.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -80,8 +84,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsMsgMailboxParser, nsParseMailMessageState, nsIStr
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, 
-												  PRUint32 aLength)
+NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
     // right now, this really just means turn around and process the url
     nsresult rv = NS_OK;
@@ -1442,56 +1445,10 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
     if (NS_SUCCEEDED(rv))
       rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
     m_logFile = nsnull;
-#ifdef DOING_MDN
+   
 	if (m_filterList)
-	{
-		const char *folderName = nsnull;
-		PRInt32 int_pref = 0;
-		PREF_GetIntPref("mail.incorporate.return_receipt", &int_pref);
-		if (int_pref == 1)
-		{
-			nsIMsgFolder *folderInfo = nsnull;
-			int status = 0;
-			char *defaultFolderName =
-				msg_MagicFolderName(master->GetPrefs(),
-									MSG_FOLDER_FLAG_SENTMAIL, &status); 
-			if (defaultFolderName)
-			{
-				folderInfo = master->FindMailFolder(defaultFolderName, PR_FALSE);
-				if (folderInfo && folderInfo->GetMailFolderInfo())
-					folderName = folderInfo->GetMailFolderInfo()->GetPathname();
-				XP_FREE(defaultFolderName);
-			}
-		}
-		if (folderName)
-		{
-			MSG_Filter *newFilter = new MSG_Filter(filterInboxRule, "receipt");
-			if (newFilter)
-			{
-				MSG_Rule *rule = nsnull;
-				MSG_SearchValue value;
-				newFilter->SetDescription("incorporate mdn report");
-				newFilter->SetEnabled(PR_TRUE);
-				newFilter->GetRule(&rule);
-				newFilter->SetFilterList(m_filterList);
-				value.attribute = attribOtherHeader;
-				value.u.string = "multipart/report";
-				rule->AddTerm(attribOtherHeader, opContains,
-							  &value, PR_TRUE, "Content-Type");
-				value.u.string = "disposition-notification";
-				rule->AddTerm(attribOtherHeader, opContains,
-							  &value, PR_TRUE, "Content-Type");
-#if 0
-				value.u.string = "delivery-status";
-				rule->AddTerm(attribOtherHeader, opContains,
-							  &value, PR_FALSE, "Content-Type");
-#endif
-				rule->SetAction(nsMsgFilterActionMoveToFolder, (void*)folderName);
-				m_filterList->InsertFilterAt(0, newFilter);
-			}
-		}
-	}
-#endif // DOING_MDN
+      rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+
 	m_usingTempDB = PR_FALSE;
 	m_tmpdbName = nsnull;
 	m_disableFilters = PR_FALSE;
@@ -1713,49 +1670,67 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 				if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED &&
 					!isRead)
 				{
-					struct message_header to;
-					struct message_header cc;
-					GetAggregateHeader (m_toList, &to);
-					GetAggregateHeader (m_ccList, &cc);
-					msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-					msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+          nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
+          nsCOMPtr<nsIMimeHeaders> mimeHeaders;
 
-#if DOING_MDN	// leave it to the user action
-					if (actionType == nsMsgFilterActionDelete)
-					{
-						MSG_ProcessMdnNeededState processMdnNeeded
-							(MSG_ProcessMdnNeededState::eDeleted,
-							 m_pane, m_folder, msgHdr->GetMessageKey(),
-							 &state->m_return_path, &state->m_mdn_dnt, 
-							 &to, &cc, &state->m_subject, 
-							 &state->m_date, &state->m_mdn_original_recipient,
-							 &state->m_message_id, state->m_headers, 
-							 (PRInt32) state->m_headers_fp, PR_TRUE);
-					}
-					else
-					{
-						MSG_ProcessMdnNeededState processMdnNeeded
-							(MSG_ProcessMdnNeededState::eProcessed,
-							 m_pane, m_folder, msgHdr->GetMessageKey(),
-							 &state->m_return_path, &state->m_mdn_dnt, 
-							 &to, &cc, &state->m_subject, 
-							 &state->m_date, &state->m_mdn_original_recipient,
-							 &state->m_message_id, state->m_headers, 
-							 (PRInt32) state->m_headers_fp, PR_TRUE);
-					}
-#endif
-					char *tmp = (char*) to.value;
-					PR_FREEIF(tmp);
-					tmp = (char*) cc.value;
-					PR_FREEIF(tmp);
-				}
-				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
-				if (NS_SUCCEEDED(err))
-					m_msgMovedByFilter = PR_TRUE;
+          mdnGenerator =
+            do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &rv);
+          
+          // To ensure code works w/o MDN enabled
+          if (NS_SUCCEEDED(rv) && mdnGenerator) {
+            mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID, &rv);
 
-			}
+            if (NS_SUCCEEDED(rv) && mimeHeaders) {
+                nsXPIDLCString allHeaders;
+                PRInt32 allHeadersSize = 0;
+                
+                rv = GetAllHeaders(getter_Copies(allHeaders),
+                                   &allHeadersSize);
+                if (NS_SUCCEEDED(rv)) {
+                    rv = mimeHeaders->Initialize(allHeaders, allHeadersSize);
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        nsCOMPtr <nsIMsgFolder> rootMsgFolder = 
+                            do_QueryInterface(m_rootFolder, &rv);
+                        if (NS_SUCCEEDED(rv) && rootMsgFolder)
+                        {
+                            nsMsgKey msgKey;
+                            msgHdr->GetMessageKey(&msgKey);
+            
+                            if (actionType == nsMsgFilterAction::Delete)
+                            {
+                                mdnGenerator->Process(nsIMsgMdnGenerator::eDeleted,
+                                                      msgWindow, rootMsgFolder,
+                                                      msgKey,
+                                                      mimeHeaders, PR_TRUE);
+                            }
+                            else
+                            {
+                                mdnGenerator->Process(nsIMsgMdnGenerator::eProcessed,
+                                                      msgWindow, rootMsgFolder,
+                                                      msgKey,
+                                                      mimeHeaders, PR_TRUE);
+                            }
+                        }
+                    }
+                }
+            }
+          }
+          // unsetting MDN_REPORT_NEEDED flag and mark the message as
+          // MDN_REPORT_SENT
+          // There are cases that: a) user wishes not to send MDN, b)
+          // mdn module is not installed, c) the message can be marked
+          // as unread and force it back to the original mdn
+          // needed state. 
+          msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+          msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+        }
+        nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
+        if (NS_SUCCEEDED(err))
+          m_msgMovedByFilter = PR_TRUE;
+      }
       *applyMore = PR_FALSE; 
-			break;
+      break;
 		case nsMsgFilterAction::MarkRead:
 			MarkFilteredMessageRead(msgHdr);
 			break;

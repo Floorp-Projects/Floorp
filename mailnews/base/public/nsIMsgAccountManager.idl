@@ -140,6 +140,11 @@ interface nsIMsgAccountManager : nsISupports {
    */
   nsISupportsArray GetIdentitiesForServer(in nsIMsgIncomingServer server);
 
+  /**
+   * given a server, return the first identity in accounts that have this server
+   */
+  nsIMsgIdentity getFirstIdentityForServer(in nsIMsgIncomingServer server);
+
   /* given an identity, return all servers in accounts that have
    * this identity
    * returns an array of nsIMsgIncomingServer

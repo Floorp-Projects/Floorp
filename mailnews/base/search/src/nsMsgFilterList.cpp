@@ -726,8 +726,15 @@ nsresult nsMsgFilterList::SaveTextFilters(nsIOFileStream *aStream)
 		if (GetMsgFilterAt(i, &filter) == NS_OK && filter != nsnull)
 		{
 			filter->SetFilterList(this);
-			if ((err = filter->SaveToTextFile(aStream)) != NS_OK)
-				break;
+      
+      // if the filter is temporary, don't write it to disk
+      PRBool isTemporary;
+      err = filter->GetTemporary(&isTemporary);
+      if (NS_SUCCEEDED(err) && !isTemporary) {
+        if ((err = filter->SaveToTextFile(aStream)) != NS_OK)
+				  break;
+      }
+
 			NS_RELEASE(filter);
 		}
 		else

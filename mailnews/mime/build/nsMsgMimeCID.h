@@ -51,6 +51,9 @@
 { /* FAF4F9A6-60AD-11d3-989A-001083010E9B */         \
  0xfaf4f9a6, 0x60ad, 0x11d3, { 0x98, 0x9a, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
+#define NS_MIME_CONVERTER_CONTRACTID \
+  "@mozilla.org/messenger/mimeconverter;1"
+
 // {866A1E11-D0B9-11d2-B373-525400E2D63A}
 #define NS_MIME_CONVERTER_CID   \
         { 0x866a1e11, 0xd0b9, 0x11d2,         \

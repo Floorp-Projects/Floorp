@@ -97,6 +97,8 @@
 #include "nsIMAPNamespace.h"
 #include "nsHashtable.h"
 #include "nsMsgMessageFlags.h"
+#include "nsIMimeHeaders.h"
+#include "nsIMsgMdnGenerator.h"
 #include <time.h>
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
@@ -112,7 +114,6 @@ static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 
 #define FOUR_K 4096
 #define MAILNEWS_CUSTOM_HEADERS "mailnews.customHeaders"
@@ -620,8 +621,26 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   PRBool selectFolder = PR_FALSE;
 
   if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
-  {
     rv = GetFilterList(msgWindow, getter_AddRefs(m_filterList));
+
+  if (m_filterList) {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get server");
+
+    PRBool canFileMessagesOnServer = PR_TRUE;
+    if (server) {
+      rv = server->GetCanFileMessagesOnServer(&canFileMessagesOnServer);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to determine if we could file messages on this server");
+    }
+
+    // the mdn filter is for filing return receipts into the sent folder
+    // some servers (like AOL mail servers)
+    // can't file to the sent folder, so we don't add the filter for those servers
+    if (canFileMessagesOnServer) {
+      rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add MDN filter");
+    }
   }
 
   nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv)); 
@@ -2827,40 +2846,45 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
             !isRead)
           {
 
-#if DOING_MDN // leave it to the user action
-            struct message_header to;
-            struct message_header cc;
-            GetAggregateHeader (m_toList, &to);
-            GetAggregateHeader (m_ccList, &cc);
             msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
             msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-            if (actionType == nsMsgFilterActionDelete)
+
+            nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
+            nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+
+            mdnGenerator =
+                do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &rv);
+            if (mdnGenerator)
             {
-              MSG_ProcessMdnNeededState processMdnNeeded
-                (MSG_ProcessMdnNeededState::eDeleted,
-                 m_pane, m_folder, msgHdr->GetMessageKey(),
-                 &state->m_return_path, &state->m_mdn_dnt, 
-                 &to, &cc, &state->m_subject, 
-                 &state->m_date, &state->m_mdn_original_recipient,
-                 &state->m_message_id, state->m_headers, 
-                 (PRInt32) state->m_headers_fp, PR_TRUE);
+                mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID,
+                                                &rv);
+                if (NS_SUCCEEDED(rv))
+            {
+                    nsXPIDLCString headers;
+                    PRInt32 headersSize;
+                    rv = m_msgParser->GetAllHeaders(getter_Copies(headers),
+                                                    &headersSize);
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        mimeHeaders->Initialize(headers, headersSize);
+                        nsMsgKey msgKey;
+                        msgHdr->GetMessageKey(&msgKey);
+                        
+                        if (actionType == nsMsgFilterAction::Delete)
+                        {
+                            mdnGenerator->Process(nsIMsgMdnGenerator::eDeleted,
+                                                  msgWindow, this, msgKey,
+                                                  mimeHeaders, PR_TRUE);
             }
             else
             {
-              MSG_ProcessMdnNeededState processMdnNeeded
-                (MSG_ProcessMdnNeededState::eProcessed,
-                 m_pane, m_folder, msgHdr->GetMessageKey(),
-                 &state->m_return_path, &state->m_mdn_dnt, 
-                 &to, &cc, &state->m_subject, 
-                 &state->m_date, &state->m_mdn_original_recipient,
-                 &state->m_message_id, state->m_headers, 
-                 (PRInt32) state->m_headers_fp, PR_TRUE);
+                            mdnGenerator->Process(nsIMsgMdnGenerator::eProcessed,
+                                                  msgWindow, this, msgKey,
+                                                  mimeHeaders, PR_TRUE);
+                        }
+                    }
+                }
             }
-            char *tmp = (char*) to.value;
-            PR_FREEIF(tmp);
-            tmp = (char*) cc.value;
-            PR_FREEIF(tmp);
-#endif
           }
           nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter, msgWindow);
           if (NS_SUCCEEDED(err))
@@ -3633,7 +3657,9 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
 }
     
 NS_IMETHODIMP
-nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead)
+nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, 
+                                          PRBool markRead,
+                                          nsIImapUrl *imapUrl)
 {
   nsresult res = NS_OK;
   PRBool commit = PR_FALSE;
@@ -3660,6 +3686,39 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead
       msgHdr->GetIsRead(&isRead);
       if (!isRead)
       {
+        PRUint32 msgFlags, newFlags;
+        msgHdr->GetFlags(&msgFlags);
+        if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED)
+        {
+            msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+            msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+            nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
+            nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+            nsCOMPtr<nsIMsgMailNewsUrl> 
+                msgUrl(do_QueryInterface(imapUrl, &res));
+            if (NS_SUCCEEDED(res))
+            {
+                nsCOMPtr<nsIMsgWindow> msgWindow;
+
+                mdnGenerator =
+                    do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
+                if (mdnGenerator)
+                {
+                    res = msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+                    if(NS_SUCCEEDED(res))
+                    {
+                        res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
+                        if(NS_SUCCEEDED(res))
+                        {
+                            mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
+                                                  msgWindow, this, uidOfMessage, 
+                                                  mimeHeaders, PR_FALSE);
+                            msgUrl->SetMimeHeaders(nsnull);
+                        }
+                    }
+                }
+            }
+        }
         msgHdr->MarkRead(PR_TRUE);
         commit = PR_TRUE;
       }

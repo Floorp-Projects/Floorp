@@ -1734,6 +1734,26 @@ mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char
 }
 
 extern "C" nsresult     
+mimeEmitterAddAllHeaders(MimeDisplayOptions *opt, const char *allheaders, const PRInt32 allheadersize)
+{
+  // Check for draft processing...
+  if (NoEmitterProcessing(opt->format_out))
+    return NS_OK;
+
+  mime_stream_data  *msd = GetMSD(opt);
+  if (!msd) 
+    return NS_ERROR_FAILURE;
+
+  if (msd->output_emitter)
+  {
+    nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
+    return emitter->AddAllHeaders(allheaders, allheadersize);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+extern "C" nsresult     
 mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
                            PRBool aNotDownloaded)
 {

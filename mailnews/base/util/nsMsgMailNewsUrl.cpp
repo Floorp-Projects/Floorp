@@ -788,3 +788,16 @@ NS_IMETHODIMP nsMsgMailNewsUrl:: RemoveCacheEntry(nsICacheEntryDescriptor *cache
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetMimeHeaders(nsIMimeHeaders * *mimeHeaders)
+{
+    NS_ENSURE_ARG_POINTER(mimeHeaders);
+    NS_IF_ADDREF(*mimeHeaders = mMimeHeaders);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetMimeHeaders(nsIMimeHeaders *mimeHeaders)
+{
+    mMimeHeaders = mimeHeaders;
+    return NS_OK;
+}

@@ -86,7 +86,6 @@ public:
 	nsresult		SaveRule(nsIOFileStream *aStream);
 
 	PRInt16			GetVersion();
-    void            SetDontFileMe(PRBool bDontFileMe) {m_dontFileMe = bDontFileMe;}
 #ifdef DEBUG
 	void	Dump();
 #endif
@@ -98,13 +97,14 @@ static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);
 	nsMsgRuleAction      m_action;
 protected:
 	nsMsgFilterTypeType m_type;
-	PRBool			m_enabled;
 	nsString		m_filterName;
 	nsCString		m_scriptFileName;	// iff this filter is a script.
 	nsCString		m_description;
-    PRBool         m_dontFileMe;
 
-	nsIMsgFilterList *m_filterList;	/* owning filter list */
+    PRPackedBool m_enabled;
+    PRPackedBool m_temporary;
+
+    nsIMsgFilterList *m_filterList;	/* owning filter list */
     nsCOMPtr<nsISupportsArray> m_termList;       /* linked list of criteria terms */
     nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
 have a newsgroup - LDAP would be invalid */

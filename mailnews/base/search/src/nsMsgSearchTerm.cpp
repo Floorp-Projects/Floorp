@@ -291,25 +291,6 @@ nsMsgSearchTerm::nsMsgSearchTerm()
     m_value.u.priority=0;
 }
 
-#if 0
-nsMsgSearchTerm::nsMsgSearchTerm (
-	nsMsgSearchAttribute attrib, 
-	nsMsgSearchOperator op, 
-	nsMsgSearchValue *val,
-	PRBool booleanAND,
-	char * arbitraryHeader) 
-{
-    NS_INIT_REFCNT();
-	m_operator = op;
-	m_booleanOp = (booleanAND) ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
-	if (attrib > nsMsgSearchAttrib::OtherHeader  && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes && arbitraryHeader)
-		m_arbitraryHeader = arbitraryHeader;
-	m_attribute = attrib;
-
-	nsMsgResultElement::AssignValues (val, &m_value);
-}
-#endif
-
 nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchAttribValue attrib, 
 	nsMsgSearchOpValue op, 
@@ -1321,8 +1302,7 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchScopeTerm, nsIMsgSearchScopeTerm)
 NS_IMETHODIMP
 nsMsgSearchScopeTerm::GetFolder(nsIMsgFolder **aResult)
 {
-    *aResult = m_folder;
-    NS_IF_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult = m_folder);
     return NS_OK;
 }
 
@@ -1331,8 +1311,7 @@ nsMsgSearchScopeTerm::GetSearchSession(nsIMsgSearchSession** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     nsCOMPtr<nsIMsgSearchSession> searchSession = do_QueryReferent (m_searchSession);
-    *aResult = searchSession;
-    NS_IF_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult = searchSession);
     return NS_OK;
 }
 

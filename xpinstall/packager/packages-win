@@ -377,6 +377,9 @@ bin\MapiProxy.dll
 bin\mozMapi32.dll
 bin\components\msgMapi.dll
 bin\components\mapihook.xpt
+bin\components\msgmdn.dll
+bin\components\msgmdn.xpt
+bin\components\mdn-service.js
 
 [chatzilla]
 bin\components\chatzilla-service.js

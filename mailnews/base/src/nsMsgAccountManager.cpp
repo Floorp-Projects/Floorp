@@ -1877,6 +1877,24 @@ nsMsgAccountManager::findServer(nsISupports *aElement, void *data)
 }
 
 NS_IMETHODIMP
+nsMsgAccountManager::GetFirstIdentityForServer(nsIMsgIncomingServer *aServer, nsIMsgIdentity **aIdentity)
+{
+  NS_ENSURE_ARG_POINTER(aServer);
+  NS_ENSURE_ARG_POINTER(aIdentity);
+
+  nsCOMPtr<nsISupportsArray> identities;
+  nsresult rv = GetIdentitiesForServer(aServer, getter_AddRefs(identities));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMsgIdentity> identity;
+  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                  (void **)getter_AddRefs(identity));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_IF_ADDREF(*aIdentity = identity);
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMsgAccountManager::GetIdentitiesForServer(nsIMsgIncomingServer *server,
                                             nsISupportsArray **_retval)
 {

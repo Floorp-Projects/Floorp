@@ -75,6 +75,7 @@
 
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIMsgMdnGenerator.h"
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
 #include "prlog.h"
@@ -438,6 +439,29 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
       else
         pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
         
+      PRBool requestForReturnReceipt = PR_FALSE;
+      PRBool useCustomPrefs = PR_FALSE;
+      PRInt32 receiptType = nsIMsgMdnGenerator::eDntType;
+      identity->GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+      if (useCustomPrefs)
+      {
+          identity->GetBoolAttribute("request_return_receipt_on",
+                                     &requestForReturnReceipt);
+          identity->GetIntAttribute("request_receipt_header_type",
+                                      &receiptType);
+      }
+      else
+      {
+          nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+          NS_ENSURE_SUCCESS(rv, rv);
+          rv = prefs->GetBoolPref("mail.receipt.request_return_receipt_on",
+                                  &requestForReturnReceipt); 
+          rv = prefs->GetIntPref("mail.receipt.request_header_type",
+                                 &receiptType);
+      }
+      pMsgCompFields->SetReturnReceipt(requestForReturnReceipt);
+      pMsgCompFields->SetReceiptHeaderType(receiptType);
+
       pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
       if(mLogComposePerformance)

@@ -78,6 +78,7 @@ interface nsIMsgCompFields : nsISupports {
   attribute string  draftId;
 
   attribute boolean returnReceipt;
+  attribute long receiptHeaderType;
   attribute boolean attachVCard;
   attribute boolean forcePlainText;
   attribute boolean useMultipartAlternative;

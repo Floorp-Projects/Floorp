@@ -124,6 +124,8 @@
 <!ENTITY highestPriorityCmd.label "Highest">
 <!ENTITY highestPriorityCmd.accesskey "H">
 
+<!ENTITY returnReceiptMenu.label "Return Receipt">
+<!ENTITY returnReceiptMenu.accesskey "t">
 <!ENTITY outputFormatMenu.label "Format">
 <!ENTITY outputFormatMenu.accesskey  "f">
 <!ENTITY autoFormatCmd.label "Auto-Detect">

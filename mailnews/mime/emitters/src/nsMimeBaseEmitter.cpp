@@ -62,6 +62,9 @@
 #include "nsMsgMimeCID.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "nsIMimeHeaders.h"
+#include "nsIMsgWindow.h"
+#include "nsIMsgMailNewsUrl.h"
 
 static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 
@@ -618,6 +621,22 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMimeBaseEmitter::AddAllHeaders(const char *allheaders, 
+                                 const PRInt32 allheadersize)
+{
+    nsresult rv;
+    nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(mURL));
+    if (msgurl)
+    {
+        nsCOMPtr<nsIMimeHeaders> mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        mimeHeaders->Initialize(allheaders, allheadersize);
+        msgurl->SetMimeHeaders(mimeHeaders);
+    }
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

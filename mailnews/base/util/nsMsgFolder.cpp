@@ -57,7 +57,6 @@
 #include "nsMsgDatabase.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIMsgIdentity.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
 #include "nsMsgI18N.h"
@@ -78,6 +77,7 @@
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsCollationCID.h"
+#include "nsIMsgMdnGenerator.h"
 
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
@@ -259,6 +259,7 @@ nsMsgFolder::createCollationKeyGenerator()
   return NS_OK;
 
 }  
+
 NS_IMETHODIMP
 nsMsgFolder::Init(const char* aURI)
 {
@@ -1527,30 +1528,19 @@ NS_IMETHODIMP nsMsgFolder::SetPrefFlag()
   // folders later on on the imap server, the subsequent GetResouce() of the
   // same uri will get us the cached rdf resouce which should have the folder
   // flag set appropriately.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  nsresult rv;
+	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-  
-	if(NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgAccountManager> accountMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = GetServer(getter_AddRefs(server));
-  
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsISupportsArray> identities;
-  rv = accountManager->GetIdentitiesForServer(server,
-                                              getter_AddRefs(identities));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMsgIdentity> identity;
-
-  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                  (void **)getter_AddRefs(identity));
-
+  rv = accountMgr->GetFirstIdentityForServer(server, getter_AddRefs(identity));
   if (NS_SUCCEEDED(rv) && identity)
   {
     nsXPIDLCString folderUri;

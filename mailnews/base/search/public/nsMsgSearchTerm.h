@@ -41,9 +41,6 @@
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
-
-// perhaps this should go in its own header file, if this class gets
-// its own cpp file, nsMsgSearchTerm.cpp
 #include "nsIMsgSearchSession.h"
 #include "nsIMsgSearchScopeTerm.h"
 #include "nsIMsgSearchTerm.h"
@@ -54,9 +51,6 @@ class nsMsgSearchTerm : public nsIMsgSearchTerm
 {
 public:
 	nsMsgSearchTerm();
-#if 0
-	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsIMsgSearchValue *, PRBool, char * arbitraryHeader); // the bool is true if AND, PR_FALSE if OR
-#endif
 	nsMsgSearchTerm (nsMsgSearchAttribValue, nsMsgSearchOpValue, nsIMsgSearchValue *, nsMsgSearchBooleanOperator, const char * arbitraryHeader);
 
 	virtual ~nsMsgSearchTerm ();

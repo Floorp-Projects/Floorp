@@ -21,12 +21,14 @@
 
 DEPTH=..\..
 
+DIRS=mdn
+
 !if defined(BUILD_PSM2)
 BUILD_SMIME=1
 !endif
 
 !if defined(BUILD_SMIME)
-DIRS=smime
+DIRS=$(DIRS) smime
 !endif
 
 !if defined(BUILD_MAIL_SMOKETEST)

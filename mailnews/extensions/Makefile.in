@@ -26,12 +26,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS	= mdn
+
 ifdef MOZ_PSM
 BUILD_SMIME=1
 endif
 
 ifdef BUILD_SMIME
-DIRS		= smime
+DIRS		+= smime
 endif
 
 ifdef BUILD_MAIL_SMOKETEST

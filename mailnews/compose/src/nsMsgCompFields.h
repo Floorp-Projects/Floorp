@@ -166,9 +166,6 @@ public:
 
   nsresult SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray); 
 
-  PRInt32 GetReturnReceiptType() { return m_receiptType; };
-  void SetReturnReceiptType(PRInt32 type) {m_receiptType = type;};
-
 protected:
   char*       m_headers[MSG_MAX_HEADERS];
   char*       m_body;
@@ -178,7 +175,7 @@ protected:
   PRBool      m_useMultipartAlternative;
   PRBool      m_uuEncodeAttachments;
   PRBool      m_returnReceipt;
-  PRInt32     m_receiptType;        /* 0:None 1:DSN 2:MDN 3:BOTH */
+  PRInt32     m_receiptHeaderType;        /* receipt header type */
   nsCString   m_internalCharSet;
   nsCString   m_DefaultCharacterSet;
 

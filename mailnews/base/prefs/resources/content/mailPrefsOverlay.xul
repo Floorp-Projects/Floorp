@@ -72,7 +72,11 @@
             <outlinercell url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
           </outlinerrow>
         </outlineritem>
-      </outlinerchildren>
+        <outlineritem>
+          <outlinerrow>
+            <outlinercell url="chrome://messenger/content/pref-receipts.xul" label="&return.label;"/>
+          </outlinerrow>
+        </outlineritem>      </outlinerchildren>
     </outlineritem>
   </outlinerchildren>
            

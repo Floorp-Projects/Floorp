@@ -39,3 +39,4 @@ nsIMsgPrintEngine.idl
 nsIMsgProgress.idl
 nsIMsgDBView.idl
 nsIMessengerOSIntegration.idl
+nsIMsgMdnGenerator.idl

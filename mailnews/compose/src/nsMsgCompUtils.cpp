@@ -60,9 +60,48 @@
 #include "nsMsgUtils.h"
 #include "nsMsgSimulateError.h"
 
+#include "nsIMsgCompUtils.h"
+#include "nsIMsgMdnGenerator.h"
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
+
+NS_IMPL_ISUPPORTS1(nsMsgCompUtils, nsIMsgCompUtils)
+
+nsMsgCompUtils::nsMsgCompUtils()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsMsgCompUtils::~nsMsgCompUtils()
+{
+}
+
+NS_IMETHODIMP nsMsgCompUtils::MimeMakeSeparator(const char *prefix,
+                                                char **_retval)
+{
+  NS_ENSURE_ARG_POINTER(prefix);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = mime_make_separator(prefix);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompUtils::MsgGenerateMessageId(nsIMsgIdentity *identity,
+                                                    char **_retval)
+{
+  NS_ENSURE_ARG_POINTER(identity);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = msg_generate_message_id(identity);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompUtils::GetMsgMimeConformToStandard(PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsMsgMIMEGetConformToStandard();
+  return NS_OK;
+}
 
 //
 // Hopefully, someone will write and XP call like this eventually!
@@ -336,29 +375,28 @@ mime_generate_headers (nsMsgCompFields *fields,
     * coorelate the MDN reports to the original message. Here will be
     * the right place
     */
+
     if (fields->GetReturnReceipt() && 
-      (fields->GetReturnReceiptType() == 2 ||
-      fields->GetReturnReceiptType() == 3) && 
       (deliver_mode != nsIMsgSend::nsMsgSaveAsDraft &&
       deliver_mode != nsIMsgSend::nsMsgSaveAsTemplate))
     {
-      PRInt32 receipt_header_type = 0;
+        PRInt32 receipt_header_type = nsIMsgMdnGenerator::eDntType;
+        fields->GetReceiptHeaderType(&receipt_header_type);
 
-      if (prefs) 
-        prefs->GetIntPref("mail.receipt.request_header_type", &receipt_header_type);
-
-      // 0 = MDN Disposition-Notification-To: ; 1 = Return-Receipt-To: ; 2 =
-      // both MDN DNT & RRT headers
-      if (receipt_header_type == 1) {
+        // nsIMsgMdnGenerator::eDntType = MDN Disposition-Notification-To: ;
+        // nsIMsgMdnGenerator::eRrtType  = Return-Receipt-To: ; 
+        // nsIMsgMdnGenerator::eDntRrtType = both MDN DNT & RRT headers
+      if (receipt_header_type == nsIMsgMdnGenerator::eRrtType) {
 RRT_HEADER:
         ENCODE_AND_PUSH("Return-Receipt-To: ", PR_TRUE, pFrom, charset, usemime);
       }
       else  {
         ENCODE_AND_PUSH("Disposition-Notification-To: ", PR_TRUE, pFrom, charset, usemime);
-        if (receipt_header_type == 2)
+        if (receipt_header_type == nsIMsgMdnGenerator::eDntRrtType)
           goto RRT_HEADER;
       }
     }
+
 #ifdef SUPPORT_X_TEMPLATE_NAME
     if (deliver_mode == MSG_SaveAsTemplate) {
       const char *pStr = fields->GetTemplateName();
@@ -415,7 +453,13 @@ RRT_HEADER:
       PUSH_STRING("vcard=0");
     PUSH_STRING("; ");
     if (fields->GetReturnReceipt()) {
-      char *type = PR_smprintf("%d", (int) fields->GetReturnReceiptType());
+      // slight change compared to 4.x; we used to use receipt= to tell
+      // whether the draft/template has request for either MDN or DNS or both
+      // return receipt; since the DNS is out of the picture we now use the
+      // header type + 1 to tell whether user has requested the return receipt
+      PRInt32 headerType = 0;
+      fields->GetReceiptHeaderType(&headerType);
+      char *type = PR_smprintf("%d", (int)headerType + 1);
       if (type)
       {
         PUSH_STRING("receipt=");

@@ -201,19 +201,11 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
 
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsISupportsArray> identities;
-  rv = accountManager->GetIdentitiesForServer(this,
-                                              getter_AddRefs(identities));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIMsgIdentity> identity;
-
-  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                  (void **)getter_AddRefs(identity));
+  rv = accountManager->GetFirstIdentityForServer(this, getter_AddRefs(identity));
+  NS_ENSURE_SUCCESS(rv,rv);
 
   nsAutoString emailAddress;
 
@@ -1445,7 +1437,7 @@ NS_IMETHODIMP nsImapIncomingServer::GetTrashFolderByRedirectorType(char **specia
   nsresult rv;
 
   // see if it has a predefined trash folder name. The pref setting is like:
-  //    pref("imap.aol.treashFolder", "RECYCLE");  where the redirector type = 'aol'
+  //    pref("imap.aol.trashFolder", "RECYCLE");  where the redirector type = 'aol'
   nsCAutoString prefName;
   rv = CreatePrefNameWithRedirectorType(".trashFolder", prefName);
   if (NS_FAILED(rv)) 
@@ -1459,7 +1451,7 @@ NS_IMETHODIMP nsImapIncomingServer::GetTrashFolderByRedirectorType(char **specia
     return NS_ERROR_FAILURE;
   else
     return rv;
-      }
+}
 
 NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversion)
 {
@@ -1483,7 +1475,7 @@ NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversio
   // In case this pref is not set we need to return NS_OK.
   rv = prefs->GetBoolPref(prefName.get(), allowConversion);
   return NS_OK;
-    }
+}
 
 NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, PRUnichar **convertedName)
 {
@@ -3635,4 +3627,6 @@ nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *n
   ResetFoldersToUnverified(nsnull);
   return NS_OK;
 }
+
+
 

@@ -47,6 +47,7 @@ interface nsILoadGroup;
 interface nsIMsgSearchSession;
 interface nsICacheEntryDescriptor;
 interface nsICacheSession;
+interface nsIMimeHeaders;
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
 	///////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,9 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	attribute nsIMsgStatusFeedback statusFeedback;
 
 	attribute nsIMsgWindow msgWindow;
+
+    // current mime headers if reading message
+    attribute nsIMimeHeaders mimeHeaders;
 
 	// the load group is computed from the msgWindow
 	readonly attribute nsILoadGroup loadGroup;

@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  msglocal \
 		  mimetype \
 		  unicharutil \
+			mime \
 		  pref \
 		  $(NULL)
 LIBRARY_NAME    = $(MODULE)

@@ -992,13 +992,8 @@ nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresul
 
       if (workHeaders)
       {
-        static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
         nsresult rv;
-        nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-        
-        rv = nsComponentManager::CreateInstance(kCIMimeHeadersCID, 
-          nsnull, NS_GET_IID(nsIMimeHeaders), 
-          (void **) getter_AddRefs(mimeHeaders)); 
+        nsCOMPtr<nsIMimeHeaders> mimeHeaders = do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID, &rv);
         
         if (NS_SUCCEEDED(rv))
         {

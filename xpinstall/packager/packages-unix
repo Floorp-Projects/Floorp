@@ -353,7 +353,9 @@ bin/chrome/messenger.jar
 bin/components/libmsgsmime.so
 bin/components/msgsmime.xpt
 bin/components/smime-service.js
-
+bin/components/libmsgmdn.so
+bin/components/msgmdn.xpt
+bin/components/mdn-service.js
 
 [chatzilla]
 bin/components/chatzilla-service.js

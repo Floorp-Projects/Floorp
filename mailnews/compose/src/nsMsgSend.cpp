@@ -100,6 +100,7 @@
 #include "nsNetCID.h"
 #include "nsMsgUtils.h"
 #include "nsIRDFService.h"
+#include "nsIMsgMdnGenerator.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -2803,7 +2804,12 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   mCompFields->SetAttachVCard(fields->GetAttachVCard());
   mCompFields->SetForcePlainText(fields->GetForcePlainText());
   mCompFields->SetUseMultipartAlternative(fields->GetUseMultipartAlternative());
+  PRInt32 receiptType = nsIMsgMdnGenerator::eDntType; 
+  fields->GetReceiptHeaderType(&receiptType);
+
   mCompFields->SetReturnReceipt(fields->GetReturnReceipt());
+  mCompFields->SetReceiptHeaderType(receiptType);
+
   mCompFields->SetUuEncodeAttachments(fields->GetUuEncodeAttachments());
 
   nsCOMPtr<nsISupports> secInfo;

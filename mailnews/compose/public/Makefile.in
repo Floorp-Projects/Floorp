@@ -54,6 +54,7 @@ XPIDLSRCS	= \
 		nsISmtpService.idl \
 		nsIURLFetcher.idl \
 		nsIMsgComposeSecure.idl \
+		nsIMsgCompUtils.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

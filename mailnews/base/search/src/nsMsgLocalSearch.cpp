@@ -649,7 +649,16 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
           }
           break;
         default:
-          if ( attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+          // XXX todo
+          // for the temporary return receipts filters, we use a custom header for Content-Type
+          // but unlike the other custom headers, this one doesn't show up in the search / filter
+          // UI.  we set the attrib to be nsMsgSearchAttrib::OtherHeader, where as for user
+          // defined custom headers start at nsMsgSearchAttrib::OtherHeader + 1
+          // Not sure if there is a better way to do this yet.  Maybe reserve the last
+          // custom header for ::Content-Type?  But if we do, make sure that change
+          // doesn't cause nsMsgFilter::GetTerm() to change, and start making us
+          // ask IMAP servers for the Content-Type header on all messages.
+          if ( attrib >= nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
           {
             PRUint32 lineCount;
             msgToMatch->GetLineCount(&lineCount);

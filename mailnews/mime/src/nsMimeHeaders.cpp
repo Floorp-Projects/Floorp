@@ -38,6 +38,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nsMimeHeaders.h"
+#include "prmem.h"
 
 nsMimeHeaders::nsMimeHeaders() :
 	mHeaders(nsnull)
@@ -76,3 +77,22 @@ nsresult nsMimeHeaders::ExtractHeader(const char *headerName, PRBool getAllOfThe
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMimeHeaders::GetAllHeaders(char **_retval)
+{
+    if (!mHeaders) 
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (!mHeaders->all_headers) 
+        return NS_ERROR_NULL_POINTER;
+
+    char *allHeaders = (char *) PR_MALLOC(mHeaders->all_headers_fp + 1);
+    NS_ASSERTION (allHeaders, "nsMimeHeaders - out of memory");
+    if (!allHeaders) 
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    memcpy(allHeaders, mHeaders->all_headers, mHeaders->all_headers_fp);
+    *(allHeaders + mHeaders->all_headers_fp) = 0;
+    *_retval = allHeaders;
+
+    return NS_OK;
+}

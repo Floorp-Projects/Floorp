@@ -321,6 +321,12 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
         rv = aFilterList->GetFilterAt(i, getter_AddRefs(filter));
         if (NS_FAILED(rv)) continue;
 
+        PRBool isTemporary;
+        rv = filter->GetTemporary(&isTemporary);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "GetTemporary() failed");
+        if (isTemporary)
+          continue;
+
         nsXPIDLString filterName;
         rv = filter->GetFilterName(getter_Copies(filterName));
         if (NS_FAILED(rv)) return rv;

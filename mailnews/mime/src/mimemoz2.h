@@ -176,6 +176,7 @@ extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeSetNewURL(nsMIMESession *stream, char *url);
 extern "C" nsresult     mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, const char *field, const char *value); 
 extern "C" nsresult     mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char *value);
+extern "C" nsresult     mimeEmitterAddAllHeaders(MimeDisplayOptions *opt, const char *allheaders, const PRInt32 allheadersize);
 extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
                                                    PRBool aNotDownloaded);
 extern "C" nsresult     mimeEmitterEndAttachment(MimeDisplayOptions *opt);

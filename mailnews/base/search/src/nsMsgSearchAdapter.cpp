@@ -1110,7 +1110,7 @@ nsMsgSearchValidityManager::NewTable(nsIMsgSearchValidityTable **aTable)
 nsresult 
 nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *aTable, const char *customHeaders)
 {
-  PRUint32 customHeadersLength = PL_strlen(customHeaders);
+  PRUint32 customHeadersLength = strlen(customHeaders);
   PRUint32 numHeaders=0;
   PRUint32 i=0;
   if (customHeadersLength)

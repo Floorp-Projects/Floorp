@@ -802,6 +802,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     if (!wrote_any_p) 
       wrote_any_p = (status > 0);
   }
+  mimeEmitterAddAllHeaders(opt, hdrs->all_headers, hdrs->all_headers_fp);
   PR_FREEIF(charset);
 
   return 1;

@@ -42,6 +42,7 @@ XPIDLSRCS =										            \
 				.\nsISmtpService.idl        \
 				.\nsIURLFetcher.idl          \
 				.\nsIMsgComposeSecure.idl      \
+				.\nsIMsgCompUtils.idl	\
 				$(NULL)
 
 ################################################################################

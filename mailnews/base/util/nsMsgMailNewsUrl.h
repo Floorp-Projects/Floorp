@@ -46,6 +46,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsCOMPtr.h"
+#include "nsIMimeHeaders.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
@@ -81,6 +82,7 @@ protected:
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 	nsCOMPtr<nsIMsgWindow> m_msgWindow;
 	nsCOMPtr<nsILoadGroup> m_loadGroup;
+  nsCOMPtr<nsIMimeHeaders> mMimeHeaders;
   nsCOMPtr<nsIMsgSearchSession> m_searchSession;
   nsCOMPtr<nsICacheEntryDescriptor> m_memCacheEntry;
   nsCOMPtr<nsICacheSession> m_imageCacheSession;

@@ -68,7 +68,7 @@ static const nsModuleComponentInfo gComponents[] = {
       nsnull, nsMimeObjectClassAccessConstructor },
 
     { "Mime Converter", NS_MIME_CONVERTER_CID,
-      nsnull, nsMimeConverterConstructor },
+      NS_MIME_CONVERTER_CONTRACTID, nsMimeConverterConstructor },
 
     { "Msg Header Parser", NS_MSGHEADERPARSER_CID,
       NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, nsMsgHeaderParserConstructor },
@@ -86,7 +86,7 @@ static const nsModuleComponentInfo gComponents[] = {
       nsStreamConverterConstructor, 0, 0, streamConverterDestructor },
 
     { "Mime Headers", NS_IMIMEHEADERS_CID,
-      nsnull, nsMimeHeadersConstructor }
+      NS_IMIMEHEADERS_CONTRACTID, nsMimeHeadersConstructor }
 };
 
 NS_IMPL_NSGETMODULE(mime_services, gComponents)

@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  msgdb \
 		  unicharutil \
+			mime \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)

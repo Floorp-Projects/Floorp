@@ -3056,7 +3056,7 @@ void nsImapProtocol::NormalMessageEndDownload()
       m_runningUrl->GetImapAction(&imapAction);
 
     if (m_imapMessageSink)
-      m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID(), imapAction == nsIImapUrl::nsImapMsgFetch);
+      m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID(), imapAction == nsIImapUrl::nsImapMsgFetch, m_runningUrl);
   
     if (m_runningUrl && m_imapMailFolderSink)
     {

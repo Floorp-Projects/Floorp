@@ -66,13 +66,13 @@ nsMsgRuleAction::~nsMsgRuleAction()
 {
 }
 
-
-nsMsgFilter::nsMsgFilter() :
+nsMsgFilter::nsMsgFilter():
     m_type(1),
+    m_temporary(PR_FALSE),
     m_filterList(nsnull)
 {
 	NS_INIT_REFCNT();
-    NS_NewISupportsArray(getter_AddRefs(m_termList));
+  NS_NewISupportsArray(getter_AddRefs(m_termList));
 }
 
 nsMsgFilter::~nsMsgFilter()
@@ -83,53 +83,60 @@ NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
 
 NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterTypeType *aResult)
 {
-	if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
+  NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = m_type;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetEnabled(PRBool *aResult)
 {
-	if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
+  NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = m_enabled;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetEnabled(PRBool enabled)
 {
-    m_enabled=enabled;
-    return NS_OK;
+  m_enabled = enabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilter::GetTemporary(PRBool *aTemporary)
+{
+  NS_ENSURE_ARG_POINTER(aTemporary);
+  *aTemporary = m_temporary;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFilter::SetTemporary(PRBool aTemporary)
+{
+  m_temporary = aTemporary;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
 {
-    NS_ENSURE_ARG_POINTER(name);
-    
-    *name = ToNewUnicode(m_filterName);
+  NS_ENSURE_ARG_POINTER(name);  
+  *name = ToNewUnicode(m_filterName);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetFilterName(const PRUnichar *name)
 {
-    m_filterName.Assign(name);
+  m_filterName.Assign(name);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetFilterDesc(char **description)
 {
-    NS_ENSURE_ARG_POINTER(description);
-
-    *description = ToNewCString(m_description);
+  NS_ENSURE_ARG_POINTER(description);
+  *description = ToNewCString(m_description);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetFilterDesc(const char *description)
 {
-    m_description.Assign(description);
+  m_description.Assign(description);
 	return NS_OK;
 }
 
@@ -157,7 +164,7 @@ nsMsgFilter::CreateTerm(nsIMsgSearchTerm **aResult)
 {
     nsMsgSearchTerm *term = new nsMsgSearchTerm;
     NS_ENSURE_TRUE(term, NS_ERROR_OUT_OF_MEMORY);
-    
+
     *aResult = NS_STATIC_CAST(nsIMsgSearchTerm*,term);
     NS_ADDREF(*aResult);
     return NS_OK;
@@ -184,19 +191,18 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
       term->GetValue(value);
     if(booleanAnd)
       term->GetBooleanAnd(booleanAnd);
-    if (attrib && arbitraryHeader)
+    if (attrib && arbitraryHeader) {
 		  if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
         term->GetArbitraryHeader(arbitraryHeader);
-	}
-	return NS_OK;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetSearchTerms(nsISupportsArray **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-
-    *aResult = m_termList;
-    NS_IF_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult = m_termList);
     return NS_OK;
 }
 
@@ -209,9 +215,7 @@ NS_IMETHODIMP nsMsgFilter::SetScope(nsIMsgSearchScopeTerm *aResult)
 NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-
-    *aResult = m_scope;
-    NS_IF_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult = m_scope);
     return NS_OK;
 }
 
@@ -392,8 +396,7 @@ nsresult
 nsMsgFilter::GetFilterList(nsIMsgFilterList **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = m_filterList;
-    NS_IF_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult = m_filterList);
     return NS_OK;
 }
 

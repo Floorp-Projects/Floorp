@@ -128,10 +128,33 @@ nsMsgMdnGenerator::~nsMsgMdnGenerator()
 {
 }
 
+nsresult nsMsgMdnGenerator::FormatStringFromName(const PRUnichar *aName, 
+                                                 const PRUnichar *aString, 
+                                                 PRUnichar **aResultString)
+{
+    DEBUG_MDN("nsMsgMdnGenerator::FormatStringFromName");
+    nsresult rv;
+
+    nsCOMPtr<nsIStringBundleService>
+        bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle(MDN_STRINGBUNDLE_URL, 
+                                     getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    const PRUnichar *formatStrings[1] = { aString };
+    rv = bundle->FormatStringFromName(aName,
+                    formatStrings, 1, aResultString);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
+}
+
 nsresult nsMsgMdnGenerator::GetStringFromName(const PRUnichar *aName,
                                                PRUnichar **aResultString)
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::GetStringFromName");
+    DEBUG_MDN("nsMsgMdnGenerator::GetStringFromName");
     nsresult rv;
 
     nsCOMPtr<nsIStringBundleService>
@@ -148,25 +171,26 @@ nsresult nsMsgMdnGenerator::GetStringFromName(const PRUnichar *aName,
     return rv;
 }
 
-void nsMsgMdnGenerator::StoreImapMDNSentFlag(nsIMsgFolder *folder,
+nsresult nsMsgMdnGenerator::StoreMDNSentFlag(nsIMsgFolder *folder,
                                              nsMsgKey key)
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::StoreImapMDNSentFlag");
-    nsresult rv;
-    nsCOMPtr<nsIMsgImapMailFolder> imapFolder(do_QueryInterface(folder,
-                                                                &rv));
-    if (NS_FAILED(rv)) 
-      return;
+    DEBUG_MDN("nsMsgMdnGenerator::StoreMDNSentFlag");
     
+    // Store the $MDNSent flag if the folder is an Imap Mail Folder
+    // otherwise, do nothing.
+    nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
+    if (!imapFolder)
+      return NS_OK;
+
     nsMsgKeyArray keyArray;
     keyArray.Add(key);
-    imapFolder->StoreImapFlags(kImapMsgMDNSentFlag, PR_TRUE,
+    return imapFolder->StoreImapFlags(kImapMsgMDNSentFlag, PR_TRUE,
                                keyArray.GetArray(), keyArray.GetSize());
 }
 
 PRBool nsMsgMdnGenerator::ProcessSendMode()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::ProcessSendMode");
+    DEBUG_MDN("nsMsgMdnGenerator::ProcessSendMode");
     PRInt32 miscState = 0;
     
     if (m_identity)
@@ -277,7 +301,7 @@ PRBool nsMsgMdnGenerator::MailAddrMatch(const char *addr1, const char *addr2)
     // Comparing two email addresses returns true if matched; local/account
     // part comparison is case sensitive; domain part comparison is case
     // insensitive 
-    DEBUG_MDN( "nsMsgMdnGenerator::MailAddrMatch");
+    DEBUG_MDN("nsMsgMdnGenerator::MailAddrMatch");
     PRBool isMatched = PR_TRUE;
     const char *atSign1 = nsnull, *atSign2 = nsnull;
     const char *lt = nsnull, *local1 = nsnull, *local2 = nsnull;
@@ -313,7 +337,7 @@ PRBool nsMsgMdnGenerator::MailAddrMatch(const char *addr1, const char *addr2)
 
 PRBool nsMsgMdnGenerator::NotInToOrCc()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::NotInToOrCc");
+    DEBUG_MDN("nsMsgMdnGenerator::NotInToOrCc");
     nsXPIDLCString reply_to;
     nsXPIDLCString to;
     nsXPIDLCString cc;
@@ -337,7 +361,7 @@ PRBool nsMsgMdnGenerator::NotInToOrCc()
 
 PRBool nsMsgMdnGenerator::ValidateReturnPath()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::ValidateReturnPath");
+    DEBUG_MDN("nsMsgMdnGenerator::ValidateReturnPath");
     // ValidateReturnPath applies to Automatic Send Mode only. If we were not
     // in auto send mode we simply by passing the check
     if (!m_autoSend)
@@ -355,9 +379,9 @@ PRBool nsMsgMdnGenerator::ValidateReturnPath()
     return m_reallySendMdn;
 }
 
-void nsMsgMdnGenerator::CreateMdnMsg()
+nsresult nsMsgMdnGenerator::CreateMdnMsg()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::CreateMdnMsg");
+    DEBUG_MDN("nsMsgMdnGenerator::CreateMdnMsg");
     nsresult rv;
     if (!m_autoSend)
     {
@@ -379,7 +403,8 @@ void nsMsgMdnGenerator::CreateMdnMsg()
         }
     }
     if (!m_reallySendMdn)
-        return;
+        return NS_OK;
+
     nsSpecialSystemDirectory
         tmpFile(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
     tmpFile += "mdnmsg";
@@ -389,11 +414,12 @@ void nsMsgMdnGenerator::CreateMdnMsg()
 
     NS_ASSERTION(NS_SUCCEEDED(rv),"creating mdn: failed to create");
     if (NS_FAILED(rv)) 
-        return;
+        return NS_OK;
+
     rv = m_fileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
     NS_ASSERTION(NS_SUCCEEDED(rv),"creating mdn: failed to output stream");
     if (NS_FAILED(rv)) 
-        return;
+        return NS_OK;
 
     rv = CreateFirstPart();
     if (NS_SUCCEEDED(rv))
@@ -413,15 +439,17 @@ void nsMsgMdnGenerator::CreateMdnMsg()
     if (NS_FAILED(rv))
         m_fileSpec->Delete(PR_FALSE);
     else
-        DoSendMdn();
+        rv = SendMdnMsg();
+
+    return NS_OK;
 }
 
 nsresult nsMsgMdnGenerator::CreateFirstPart()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::CreateFirstPart");
+    DEBUG_MDN("nsMsgMdnGenerator::CreateFirstPart");
     char *convbuf = nsnull, *tmpBuffer = nsnull;
     char *parm = nsnull;
-    char *firstPart1 = nsnull;
+    nsXPIDLString firstPart1;
     nsXPIDLString firstPart2;
     nsresult rv = NS_OK;
     nsXPIDLString receipt_string;
@@ -476,14 +504,10 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
         conformToStandard);
     parm = PR_smprintf("From: %s" CRLF, convbuf ? convbuf : m_email.get());
 
-    nsXPIDLString mdnMsgSentTo;
-    rv = GetStringFromName(NS_LITERAL_STRING("MsgMdnMsgSentTo").get(),
-                            getter_Copies(mdnMsgSentTo));
+    rv = FormatStringFromName(NS_LITERAL_STRING("MsgMdnMsgSentTo").get(), NS_ConvertASCIItoUCS2(m_email).get(),
+                            getter_Copies(firstPart1));
     if (NS_FAILED(rv)) 
         return rv;
-    firstPart1 = 
-        PR_smprintf (NS_LossyConvertUCS2toASCII(mdnMsgSentTo).get(), 
-                     convbuf ? convbuf : m_email.get());
 
     PUSH_N_FREE_STRING (parm);
     
@@ -600,12 +624,11 @@ report-type=disposition-notification;\r\n\tboundary=\"%s\"" CRLF CRLF,
                             ENCODING_7BIT);
     PUSH_N_FREE_STRING(tmpBuffer);
   
-    if (firstPart1)
+    if (!firstPart1.IsEmpty())
     {
-        tmpBuffer = PR_smprintf("%s" CRLF CRLF, firstPart1);
+        tmpBuffer = PR_smprintf("%s" CRLF CRLF, NS_LossyConvertUCS2toASCII(firstPart1).get());
         PUSH_N_FREE_STRING(tmpBuffer);
-        PR_Free(firstPart1);
-  }
+    }
 
     switch (m_disposeType)
     {
@@ -647,7 +670,7 @@ report-type=disposition-notification;\r\n\tboundary=\"%s\"" CRLF CRLF,
     if (NS_FAILED(rv)) 
         return rv;
     
-    if (firstPart2)
+    if (!firstPart2.IsEmpty())
     {
         tmpBuffer = 
             PR_smprintf("%s" CRLF CRLF, 
@@ -660,7 +683,7 @@ report-type=disposition-notification;\r\n\tboundary=\"%s\"" CRLF CRLF,
 
 nsresult nsMsgMdnGenerator::CreateSecondPart()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::CreateSecondPart");
+    DEBUG_MDN("nsMsgMdnGenerator::CreateSecondPart");
     char *tmpBuffer = nsnull;
     char *convbuf = nsnull;
     nsresult rv = NS_OK;
@@ -738,7 +761,7 @@ nsresult nsMsgMdnGenerator::CreateSecondPart()
 
 nsresult nsMsgMdnGenerator::CreateThirdPart()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::CreateThirdPart");
+    DEBUG_MDN("nsMsgMdnGenerator::CreateThirdPart");
     char *tmpBuffer = nsnull;
     nsresult rv = NS_OK;
 
@@ -772,7 +795,7 @@ nsresult nsMsgMdnGenerator::CreateThirdPart()
 
 nsresult nsMsgMdnGenerator::OutputAllHeaders()
 { 
-    DEBUG_MDN( "nsMsgMdnGenerator::OutputAllHeaders");
+    DEBUG_MDN("nsMsgMdnGenerator::OutputAllHeaders");
     nsXPIDLCString all_headers;
     PRInt32 all_headers_size = 0;
     nsresult rv = NS_OK;
@@ -854,19 +877,19 @@ nsresult nsMsgMdnGenerator::OutputAllHeaders()
     return count;
 }
 
-void nsMsgMdnGenerator::DoSendMdn()
+nsresult nsMsgMdnGenerator::SendMdnMsg()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::DoSendMdn");
+    DEBUG_MDN("nsMsgMdnGenerator::SendMdnMsg");
     nsresult rv;
-    nsCOMPtr<nsISmtpService> 
-        smtpService(do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && smtpService)
-    {
-        nsCOMPtr<nsIRequest> aRequest;
-        smtpService->SendMailMessage(m_fileSpec, m_dntRrt, m_identity,
+    nsCOMPtr<nsISmtpService> smtpService = do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIRequest> aRequest;
+    smtpService->SendMailMessage(m_fileSpec, m_dntRrt, m_identity,
                                      nsnull, this, nsnull, nsnull, nsnull,
                                      getter_AddRefs(aRequest));
-    } 
+    
+    return NS_OK;
 }
 
 nsresult nsMsgMdnGenerator::WriteString( const char *str )
@@ -878,20 +901,17 @@ nsresult nsMsgMdnGenerator::WriteString( const char *str )
   return m_outputStream->Write(str, len, &wLen);
 }
 
-void nsMsgMdnGenerator::InitAndProcess()
+nsresult nsMsgMdnGenerator::InitAndProcess()
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::InitAndProcess");
+    DEBUG_MDN("nsMsgMdnGenerator::InitAndProcess");
     nsresult rv = m_folder->GetServer(getter_AddRefs(m_server));
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
         do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    nsCOMPtr<nsISupportsArray> identities;
     if (accountManager && m_server)
     {
-        rv = accountManager->GetIdentitiesForServer(m_server,
-                                         getter_AddRefs(identities));
-        if (identities)
-            rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                    (void **)getter_AddRefs(m_identity));
+        rv = accountManager->GetFirstIdentityForServer(m_server, getter_AddRefs(m_identity));
+        NS_ENSURE_SUCCESS(rv,rv);
+
         if (m_identity)
         {
             PRBool useCustomPrefs = PR_FALSE;
@@ -911,13 +931,13 @@ void nsMsgMdnGenerator::InitAndProcess()
                 nsCOMPtr<nsIPref> prefs = 
                     do_GetService(NS_PREF_CONTRACTID, &rv);
                 if (NS_FAILED(rv)) 
-                    return;
+                    return rv;
 
                 nsCOMPtr<nsIPrefBranch> prefBranch;
 
                 rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
                 if (NS_FAILED(rv))
-                    return;
+                    return rv;
 
                 PRBool bVal = PR_FALSE;
                 prefBranch->GetBoolPref("mail.mdn.report.enabled",
@@ -943,8 +963,9 @@ void nsMsgMdnGenerator::InitAndProcess()
             m_headers->ExtractHeader(HEADER_RETURN_RECEIPT_TO, PR_FALSE,
                                      getter_Copies(m_dntRrt));
         if (m_dntRrt && ProcessSendMode() && ValidateReturnPath())
-            CreateMdnMsg();
+            rv = CreateMdnMsg();
     }
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMdnGenerator::Process(EDisposeType type, 
@@ -954,32 +975,35 @@ NS_IMETHODIMP nsMsgMdnGenerator::Process(EDisposeType type,
                                          nsIMimeHeaders *headers,
                                          PRBool autoAction)
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::Process");
-    NS_ENSURE_ARG(folder);
-    NS_ENSURE_ARG(headers);
-    NS_ENSURE_ARG(aWindow);
+    DEBUG_MDN("nsMsgMdnGenerator::Process");
+    NS_ENSURE_ARG_POINTER(folder);
+    NS_ENSURE_ARG_POINTER(headers);
+    NS_ENSURE_ARG_POINTER(aWindow);
     NS_ENSURE_TRUE(key != nsMsgKey_None, NS_ERROR_INVALID_ARG);
     m_disposeType = type;
     m_autoAction = autoAction;
     m_window = aWindow;
     m_folder = folder;
     m_headers = headers;
-    // Store the $MDNSent flag if the folder is an Imap Mail Folder
-    StoreImapMDNSentFlag(folder, key);
-    InitAndProcess();
+
+    nsresult rv = StoreMDNSentFlag(folder, key);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "StoreMDNSentFlag failed");
+
+    rv = InitAndProcess();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "InitAndProcess failed");
     return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMdnGenerator::OnStartRunningUrl(nsIURI *url)
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::OnStartRunningUrl");
+    DEBUG_MDN("nsMsgMdnGenerator::OnStartRunningUrl");
     return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMdnGenerator::OnStopRunningUrl(nsIURI *url, 
                                                   nsresult aExitCode)
 {
-    DEBUG_MDN( "nsMsgMdnGenerator::OnStopRunningUrl");
+    DEBUG_MDN("nsMsgMdnGenerator::OnStopRunningUrl");
     m_fileSpec->Delete(PR_FALSE);
     return NS_OK;
 }

@@ -75,10 +75,8 @@
 
 #include "nsIMsgAccountManager.h"
 #include "nsCPasswordManager.h"
-
-#ifdef DEBUG_sspitzer
-#define DEBUG_MSGINCOMING_SERVER
-#endif /* DEBUG_sspitzer */
+#include "nsIMsgMdnGenerator.h"
+#include "nsMsgFolderFlags.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -236,14 +234,6 @@ nsMsgIncomingServer::GetCanHaveFilters(PRBool *canHaveFilters)
 {
     // derived class should override if they need to do this.
     *canHaveFilters = m_canHaveFilters;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgIncomingServer::SetCanHaveFilters(PRBool canHaveFilters)
-{
-    // derived class should override if they need to do this.
-    m_canHaveFilters = canHaveFilters;
     return NS_OK;
 }
 
@@ -1077,8 +1067,7 @@ nsMsgIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **
       NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  *aResult = mFilterList;
-  NS_IF_ADDREF(*aResult);
+  NS_IF_ADDREF(*aResult = mFilterList);
   return NS_OK;
     
 }
@@ -1658,5 +1647,123 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
     }
   }
   *isAuthenticated = !m_password.IsEmpty();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *filterList)
+{
+  NS_ENSURE_ARG_POINTER(filterList);
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgAccountManager> accountMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMsgIdentity> identity;
+  rv = accountMgr->GetFirstIdentityForServer(this, getter_AddRefs(identity));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  PRBool useCustomPrefs = PR_FALSE;
+  PRInt32 incorp = nsIMsgMdnGenerator::eIncorporateInbox;
+
+  identity->GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
+  if (useCustomPrefs)
+    rv = GetIntValue("incorporate_return_receipt", &incorp);
+  else
+  {
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = prefBranch->GetIntPref("mail.incorporate.return_receipt", &incorp);
+  }
+
+  PRBool enable = (incorp == nsIMsgMdnGenerator::eIncorporateSent);
+
+  // this is a temporary, internal mozilla filter
+  // it will not show up in the UI, it will not be written to disk
+  NS_NAMED_LITERAL_STRING(internalReturnReceiptFilterName, "mozilla-temporary-internal-MDN-receipt-filter");
+
+  nsCOMPtr<nsIMsgFilter> newFilter;
+  rv = filterList->GetFilterNamed(internalReturnReceiptFilterName.get(),
+                                  getter_AddRefs(newFilter));
+  if (newFilter)
+      newFilter->SetEnabled(enable);
+  else if (enable)
+  {
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    rv = GetRootMsgFolder(getter_AddRefs(rootFolder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 numFolders;
+    nsCOMPtr<nsIMsgFolder> sentFolder;
+
+    rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, 1,
+                                   &numFolders,
+                                   getter_AddRefs(sentFolder));
+    if (sentFolder)
+    {
+      filterList->CreateFilter(internalReturnReceiptFilterName.get(),
+                               getter_AddRefs(newFilter));
+      if (newFilter)
+      {
+        newFilter->SetEnabled(PR_TRUE);
+        // this internal filter is temporary
+        // and should not show up in the UI or be written to disk
+        newFilter->SetTemporary(PR_TRUE);  
+       
+        nsCOMPtr<nsIMsgSearchTerm> term;
+        nsCOMPtr<nsIMsgSearchValue> value;
+        
+        rv = newFilter->CreateTerm(getter_AddRefs(term));
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = term->GetValue(getter_AddRefs(value));
+          if (NS_SUCCEEDED(rv))
+          {
+            // XXX todo
+            // determine if ::OtherHeader is the best way to do this.
+            // see nsMsgSearchOfflineMail::MatchTerms()
+            value->SetAttrib(nsMsgSearchAttrib::OtherHeader);
+            value->SetStr(NS_LITERAL_STRING("multipart/report").get());
+            term->SetAttrib(nsMsgSearchAttrib::OtherHeader);  
+            term->SetOp(nsMsgSearchOp::Contains);
+            term->SetBooleanAnd(PR_TRUE);
+            term->SetArbitraryHeader("Content-Type");
+            term->SetValue(value);
+            newFilter->AppendTerm(term);
+          }
+        }
+        rv = newFilter->CreateTerm(getter_AddRefs(term));
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = term->GetValue(getter_AddRefs(value));
+          if (NS_SUCCEEDED(rv))
+          {
+            // XXX todo
+            // determine if ::OtherHeader is the best way to do this.
+            // see nsMsgSearchOfflineMail::MatchTerms()
+            value->SetAttrib(nsMsgSearchAttrib::OtherHeader);
+            value->SetStr(NS_LITERAL_STRING("disposition-notification").get());
+            term->SetAttrib(nsMsgSearchAttrib::OtherHeader);
+            term->SetOp(nsMsgSearchOp::Contains);
+            term->SetBooleanAnd(PR_TRUE);
+            term->SetArbitraryHeader("Content-Type");
+            term->SetValue(value);
+            newFilter->AppendTerm(term);
+          }
+        }
+        newFilter->SetAction(nsMsgFilterAction::MoveToFolder);
+        nsXPIDLCString actionTargetFolderUri;
+        rv = sentFolder->GetURI(getter_Copies(actionTargetFolderUri));
+        if (NS_SUCCEEDED(rv))
+        {
+          newFilter->SetActionTargetFolderUri(actionTargetFolderUri);
+          filterList->InsertFilterAt(0, newFilter);
+        }
+      }
+    }
+  }
   return rv;
 }

@@ -1350,7 +1350,11 @@ mime_parse_stream_complete (nsMIMESession *stream)
         int receiptType = 0;
         fields->SetReturnReceipt(PR_TRUE); 
         sscanf(parm, "%d", &receiptType);
-        fields->SetReturnReceipt((PRInt32) receiptType);
+        // slight change compared to 4.x; we used to use receipt= to tell
+        // whether the draft/template has request for either MDN or DNS or both
+        // return receipt; since the DNS is out of the picture we now use the
+        // header type - 1 to tell whether user has requested the return receipt
+        fields->SetReceiptHeaderType(((PRInt32)receiptType) - 1);
       }
       PR_FREEIF(parm);
       parm = MimeHeaders_get_parameter(draftInfo, "uuencode", NULL, NULL);

@@ -70,7 +70,7 @@ public:
 	NS_DECL_NSIIMAPINCOMINGSERVER
 	NS_DECL_NSIIMAPSERVERSINK
 	NS_DECL_NSIMSGLOGONREDIRECTIONREQUESTER
-    NS_DECL_NSISUBSCRIBABLESERVER
+  NS_DECL_NSISUBSCRIBABLESERVER
 	NS_DECL_NSIURLLISTENER
 
 	NS_IMETHOD PerformBiff();
@@ -95,7 +95,7 @@ NS_IMETHOD GetCanUndoDeleteOnServer(PRBool *canUndoDeleteOnServer);
   NS_IMETHOD GetNumIdleConnections(PRInt32 *aNumIdleConnections);
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
-    nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);
+  nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);
 	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
 	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
 

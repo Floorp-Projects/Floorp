@@ -606,7 +606,6 @@ var defaultController =
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
 //      case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
       case "cmd_rewrap"             : editorShell.Rewrap(false);                                                break;
-
       default:
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
         return;
@@ -1307,6 +1306,9 @@ function ComposeStartup(recycled, aParams)
         return;
       }
 
+      document.getElementById("returnReceiptMenu").setAttribute('checked', 
+                                         gMsgCompose.compFields.returnReceipt);
+
       if (!recycled) //The editor is already initialized and does not support to be re-initialized.
       {
         // save the editorShell in the window. The editor JS expects to find it there.
@@ -1807,25 +1809,6 @@ function PriorityMenuSelect(target)
   }
 }
 
-function ReturnReceiptMenuSelect()
-{
-  if (gMsgCompose)
-  {
-    var msgCompFields = gMsgCompose.compFields;
-    if (msgCompFields)
-    {
-      if (msgCompFields.returnReceipt)
-      {
-        msgCompFields.returnReceipt = false;
-      }
-      else
-      {
-        msgCompFields.returnReceipt = true;
-      }
-    }
-  }
-}
-
 function OutputFormatMenuSelect(target)
 {
   if (gMsgCompose)
@@ -1864,6 +1847,16 @@ function SelectAddress()
   // We have to set focus to the addressingwidget because we seem to loose focus often 
   // after opening the SelectAddresses Dialog- bug # 89950
   AdjustFocus();
+}
+
+function ToggleReturnReceipt(target)
+{
+    var msgCompFields = gMsgCompose.compFields;
+    if (msgCompFields)
+    {
+        msgCompFields.returnReceipt = ! msgCompFields.returnReceipt;
+        target.setAttribute('checked', msgCompFields.returnReceipt);
+    }
 }
 
 function queryISupportsArray(supportsArray, iid) {

@@ -68,23 +68,28 @@ public:
     virtual ~nsMsgMdnGenerator();
     
 private:
-    nsresult GetStringFromName(const PRUnichar *aName, PRUnichar **aResultString);
-  // Sanity Check methods
+    // Sanity Check methods
     PRBool ProcessSendMode(); // must called prior ValidateReturnPath
     PRBool ValidateReturnPath();
     PRBool NotInToOrCc();
     PRBool MailAddrMatch(const char *addr1, const char *addr2);
     
-    void StoreImapMDNSentFlag(nsIMsgFolder *folder, nsMsgKey key);
+    nsresult StoreMDNSentFlag(nsIMsgFolder *folder, nsMsgKey key);
     
-    void CreateMdnMsg();
+    nsresult CreateMdnMsg();
     nsresult CreateFirstPart(); 
     nsresult CreateSecondPart();
     nsresult CreateThirdPart();
-    void DoSendMdn();
+    nsresult SendMdnMsg();
+
+    // string bundle helper methods
+    nsresult GetStringFromName(const PRUnichar *aName, PRUnichar **aResultString);
+    nsresult FormatStringFromName(const PRUnichar *aName, 
+                                                 const PRUnichar *aString, 
+                                                 PRUnichar **aResultString);
     
-  // helper functions
-    void InitAndProcess();
+    // other helper methods
+    nsresult InitAndProcess();
     nsresult OutputAllHeaders();
     nsresult WriteString(const char *str);
   
