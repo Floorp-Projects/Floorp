@@ -7574,7 +7574,10 @@ editor/core/Makefile
 editor/txmgr/Makefile
 editor/txmgr/public/Makefile
 editor/txmgr/src/Makefile
-editor/txmgr/tests/Makefile"
+editor/txmgr/tests/Makefile
+editor/guimgr/Makefile
+editor/guimgr/src/Makefile
+editor/guimgr/public/Makefile"
 
 MAILNEWS_MAKEFILES="
 network/protocol/certld/Makefile
