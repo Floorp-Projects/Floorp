@@ -1,0 +1,41 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "nsIStreamListener.h"
+#include "nsIURL.h"
+%}
+
+interface nsIStreamListener;
+interface nsIURL;
+
+[scriptable, uuid(1940d682-1865-11d3-9deb-004005263078)]
+interface nsINNTPProtocol : nsIStreamListener {
+{
+	// initialization function given a new url and transport layer
+    void Initialize(in nsIURL aURL, in nsITransport transportLayer);
+          
+	// aConsumer is typically a display stream you may want the results to be displayed into...
+    long LoadURL(in nsIURL aURL, in nsISupports aConsumer);
+    
+    // returns true if we are currently running a url and false otherwise...
+    boolean IsRunningUrl();
+};
+
