@@ -4915,10 +4915,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       lateness = PR_IntervalToMilliseconds(lateness);
       timeout->mArgv[timeout->mArgc] = INT_TO_JSVAL((jsint) lateness);
 
-      PRBool bool_result;
+      PRBool dummy;
       rv = mContext->CallEventHandler(mJSObject, timeout->mFunObj,
                                       timeout->mArgc + 1, timeout->mArgv,
-                                      &bool_result, PR_FALSE);
+                                      &dummy);
     }
 
     --mTimeoutFiringDepth;

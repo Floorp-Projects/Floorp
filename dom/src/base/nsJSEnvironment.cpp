@@ -1213,11 +1213,11 @@ nsJSContext::CompileFunction(void* aTarget,
 
 NS_IMETHODIMP
 nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
-                              void *argv, PRBool *aBoolResult,
-                              PRBool aReverseReturnResult)
+                              void *argv, PRBool *aBoolResult)
 {
+  *aBoolResult = PR_TRUE;
+
   if (!mScriptsEnabled) {
-    *aBoolResult = !aReverseReturnResult;
     return NS_OK;
   }
 
@@ -1230,7 +1230,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIJSContextStack> stack =
-           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
 
@@ -1246,21 +1246,17 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   // check if the event handler can be run on the object in question
   rv = securityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
 
-  if (NS_FAILED(rv)) {
-    *aBoolResult = !aReverseReturnResult;
-  } else {
+  if (NS_SUCCEEDED(rv)) {
     jsval val;
     jsval funval = OBJECT_TO_JSVAL(aHandler);
     PRBool ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
                                        argc, (jsval *)argv, &val);
 
-    *aBoolResult = ok
-                   ? !JSVAL_IS_BOOLEAN(val) || (aReverseReturnResult ? !JSVAL_TO_BOOLEAN(val) : JSVAL_TO_BOOLEAN(val))
-                   : JS_TRUE;
-
     ScriptEvaluated(PR_TRUE);
 
-    if (!ok) {
+    if (ok) {
+      *aBoolResult = !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val);
+    } else {
       // Tell XPConnect about any pending exceptions. This is needed
       // to avoid dropping JS exceptions in case we got here through
       // nested calls through XPConnect.

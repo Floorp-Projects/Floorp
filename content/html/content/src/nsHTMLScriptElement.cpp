@@ -302,15 +302,9 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   }
 
   // Invoke the event handler script...
-  PRBool bReturnValue = PR_FALSE;
-
-  rv = scriptContext->CallEventHandler(scriptObject,
-                                       funcObject,
-                                       aArgCount,
-                                       aArgs,
-                                       &bReturnValue,
-                                       PR_FALSE);
-  return rv;
+  PRBool dummy;
+  return scriptContext->CallEventHandler(scriptObject, funcObject, aArgCount,
+                                         aArgs, &dummy);
 }
 
 

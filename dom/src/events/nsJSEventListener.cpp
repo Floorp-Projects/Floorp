@@ -118,7 +118,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
 
   // root
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
@@ -174,21 +174,21 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   PRBool jsBoolResult;
-  PRBool returnResult = (mReturnResult == nsReturnResult_eReverseReturnResult);
-
   rv = mContext->CallEventHandler(obj, JSVAL_TO_OBJECT(funval), argc, argv,
-                                  &jsBoolResult, returnResult);
+                                  &jsBoolResult);
 
   if (argv != &arg) {
     ::JS_PopArguments(cx, stackPtr);
   }
 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_SUCCEEDED(rv)) {
+    // if the handler returned false and its sense is not reversed, or
+    // the handler returned true and its sense is reversed from the
+    // usual (false means cancel), then prevent default.
 
-  if (!jsBoolResult) 
-    aEvent->PreventDefault();
+    if (!(jsBoolResult ^ (mReturnResult == nsReturnResult_eReverseReturnResult)))
+      aEvent->PreventDefault();
+  }
 
   return rv;
 }
