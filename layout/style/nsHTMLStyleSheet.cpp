@@ -1203,7 +1203,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   }
   else if (nsHTMLAtoms::object == aTag) {
     rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
+//    processChildren = PR_TRUE;
   }
   else if (nsHTMLAtoms::body == aTag) {
     rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame);
