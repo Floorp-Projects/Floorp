@@ -1391,6 +1391,7 @@ nsCSSBlockFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
       if (nsnull != firstContent) {
         PRBool is;
         firstContent->IsSynthetic(is);
+        NS_RELEASE(firstContent);
         if (is) {
           return NS_OK;
         }
