@@ -45,6 +45,8 @@
 /* callbacks from widgets */
 static void value_changed_cb (GtkAdjustment *adjustment, gpointer data);
 
+static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event);
+
 nsScrollbar::nsScrollbar(PRBool aIsVertical)
 {
     if (aIsVertical)
@@ -54,6 +56,8 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical)
 
     mWidget     = nsnull;
     mAdjustment = nsnull;
+    mMaxRange   = 0;
+    mThumbSize  = 0;
 }
 
 nsScrollbar::~nsScrollbar()
@@ -265,10 +269,9 @@ nsScrollbar::CaptureRollupEvents(nsIRollupListener * aListener,
 NS_IMETHODIMP
 nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
-    if (mAdjustment) {
-        mAdjustment->upper = aEndRange;
-        gtk_adjustment_changed(mAdjustment);
-    }
+    mMaxRange = aEndRange;
+
+    UpdateAdjustment();
 
     return NS_OK;
 }
@@ -276,11 +279,7 @@ nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 NS_IMETHODIMP
 nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
 {
-    if (mAdjustment)
-        aMaxRange = (PRUint32)mAdjustment->upper;
-    else
-        aMaxRange = 0;
-
+    aMaxRange = mMaxRange;
     return NS_OK;
 }
 
@@ -290,7 +289,7 @@ nsScrollbar::SetPosition(PRUint32 aPos)
 {
     if (mAdjustment && (PRUint32)mAdjustment->value != aPos) {
         mAdjustment->value = (gdouble)aPos;
-        gtk_adjustment_changed(mAdjustment);
+        UpdateAdjustment();
     }
 
     return NS_OK;
@@ -312,10 +311,11 @@ nsScrollbar::GetPosition(PRUint32& aPos)
 NS_IMETHODIMP
 nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
+    mThumbSize = aSize;
+
     if (mAdjustment) {
         mAdjustment->page_increment = aSize;
-        mAdjustment->page_size = aSize;
-        gtk_adjustment_changed(mAdjustment);
+        UpdateAdjustment();
     }
 
     return NS_OK;
@@ -325,11 +325,7 @@ nsScrollbar::SetThumbSize(PRUint32 aSize)
 NS_IMETHODIMP
 nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
-    if (mAdjustment)
-        aSize = (PRUint32)mAdjustment->page_size;
-    else
-        aSize = 0;
-
+    aSize = mThumbSize;
     return NS_OK;
 }
 
@@ -339,7 +335,7 @@ nsScrollbar::SetLineIncrement(PRUint32 aSize)
 {
     if (mAdjustment) {
         mAdjustment->step_increment = aSize;
-        gtk_adjustment_changed(mAdjustment);
+        UpdateAdjustment();
     }
 
     return NS_OK;
@@ -362,13 +358,15 @@ NS_IMETHODIMP
 nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                PRUint32 aPosition, PRUint32 aLineIncrement)
 {
+    mMaxRange = aMaxRange;
+    mThumbSize = aThumbSize;
+
     if (mAdjustment) {
         mAdjustment->lower = 0;
-        mAdjustment->upper = aMaxRange;
-        mAdjustment->page_size = aThumbSize;
         mAdjustment->page_increment = aThumbSize;
         mAdjustment->step_increment = aLineIncrement;
-        gtk_adjustment_changed(mAdjustment);
+
+        UpdateAdjustment();
     }
 
     return NS_OK;
@@ -479,6 +477,9 @@ nsScrollbar::NativeCreate(nsIWidget        *aParent,
     g_signal_connect(G_OBJECT(mAdjustment), "value_changed",
                      G_CALLBACK(value_changed_cb), this);
 
+    g_signal_connect(G_OBJECT(mWidget), "expose_event",
+                     G_CALLBACK(expose_event_cb), NULL);
+
     LOG(("nsScrollbar [%p] %s %p %lx\n", (void *)this,
          (mOrientation == GTK_ORIENTATION_VERTICAL)
          ? "vertical" : "horizontal", 
@@ -542,6 +543,31 @@ nsScrollbar::OnValueChanged(void)
     DispatchEvent(&event, status);
 }
 
+void
+nsScrollbar::UpdateAdjustment(void)
+{
+    if (!mAdjustment)
+        return;
+
+    // Infinity in Mozilla is measured by setting the max range and
+    // the thumb size to zero.  In the adjustment, this doesn't work.
+    // Just set the upper bounds and the page size to one to get an
+    // infinite scrollbar.
+    if (mMaxRange == 0 && mThumbSize == 0) {
+        mAdjustment->upper = 1;
+        mAdjustment->page_size = 1;
+    }
+    else {
+        mAdjustment->upper = mMaxRange;
+        mAdjustment->page_size = mThumbSize;
+    }
+
+    LOG(("nsScrollbar::UpdateAdjustment [%p] upper: %d page_size %d\n",
+         (void *)this, mAdjustment->upper, mAdjustment->page_size));
+
+    gtk_adjustment_changed(mAdjustment);
+}
+
 /* static */
 void
 value_changed_cb (GtkAdjustment *adjustment, gpointer data)
@@ -549,4 +575,16 @@ value_changed_cb (GtkAdjustment *adjustment, gpointer data)
     nsScrollbar *scrollbar = NS_STATIC_CAST(nsScrollbar *, data);
 
     scrollbar->OnValueChanged();
+}
+
+/* static */
+gboolean
+expose_event_cb (GtkWidget *widget, GdkEventExpose *event)
+{
+    printf("scrollbar expose event %p %d %d %d %d\n", (void *)event->window,
+           event->area.x,
+           event->area.y,
+           event->area.width,
+           event->area.height);
+    return FALSE;
 }
