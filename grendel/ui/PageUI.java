@@ -52,6 +52,8 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.JToggleButton;
 import javax.swing.JScrollPane;
+import javax.swing.JComboBox;
+import javax.swing.ComboBoxModel;
 import javax.swing.text.JTextComponent;
 
 import org.w3c.dom.Element;
@@ -102,6 +104,7 @@ public class PageUI extends JPanel {
   }
 
   public void addCtrl(String name, JComponent component) {
+    System.out.println("addCtrl2: "+name);
     if (name != null) table.put(name, component);
     if (component instanceof JList) {
       component = new JScrollPane(component);
@@ -111,6 +114,7 @@ public class PageUI extends JPanel {
 
   public void addCtrl(String name, JComponent component, 
                       Object constraints) {
+    System.out.println("addCtrl: "+name);
     if (name != null) table.put(name, component);
     if (component instanceof JList) {
       component = new JScrollPane(component);
@@ -172,6 +176,7 @@ public class PageUI extends JPanel {
 
     while (e.hasMoreElements()) {
       String s = (String)e.nextElement();
+      System.out.println(s);
       Object obj = table.get(s);
       Object val = model.getAttribute(s);
 
@@ -182,6 +187,11 @@ public class PageUI extends JPanel {
         JToggleButton button = (JToggleButton)obj;
         Boolean b = (Boolean)model.getAttribute(s);
         button.setSelected(((Boolean)val).booleanValue());
+      } else if (obj instanceof JComboBox) {
+        System.out.println("combo!");
+        JComboBox combo = (JComboBox)obj;
+        ComboBoxModel cbmodel = (ComboBoxModel)model.getAttribute(s);
+        combo.setModel(cbmodel);
       }
     }
   }

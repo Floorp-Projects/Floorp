@@ -51,6 +51,8 @@ import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -80,6 +82,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   static final String panel_tag = "panel";
   static final String input_tag = "input";
   static final String label_tag = "label";
+  static final String image_tag = "image";
   static final String layout_attr = "layout";
   
   PageUI component;
@@ -172,7 +175,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
    */
   public JComponent buildFrom(Element element) {
     Node node;
-    PageUI my_component = buildPanel(element);
+    PageUI my_component = buildPanel((Element)element.getFirstChild().getNextSibling());
     title = getReferencedLabel(element, "title");
 
     return my_component;
@@ -184,7 +187,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
    * @return the panel object as a PageUI type
    */
   public PageUI buildPanel(Element element) {
-    Node node = element.getFirstChild().getNextSibling().getFirstChild().getNextSibling();
+    Node node = element.getFirstChild().getNextSibling();
     
     PageUI my_component = new PageUI();
 
@@ -268,6 +271,9 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     constraints.weightx = 
       parseWeightConstant(current.getAttribute("weightx"));
     
+    constraints.weighty = 
+      parseWeightConstant(current.getAttribute("weighty"));
+    
     // fill
     constraints.fill = parseFillConstant(current.getAttribute("fill"));
     
@@ -292,6 +298,8 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       item = buildLabel(current);
     } else if (tag.equals(panel_tag)) {
       item = buildPanel(current);
+    } else if (tag.equals(image_tag)) {
+      item = buildImage(current);
     }
     
     return item;
@@ -363,6 +371,8 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       item = buildCheckBox(current);
     } else if (type.equals("jlist")) {
       item = buildList(current);
+    } else if (type.equals("combobox")) {
+      item = buildComboBox(current);
     }
     
     return item;
@@ -381,12 +391,22 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   
   protected JList buildList(Element current) {
     JList list = new JList();
-    
     return list;
+  }
+  
+  protected JComboBox buildComboBox(Element current) {
+    JComboBox combobox = new JComboBox();
+    return combobox;
   }
   
   protected JLabel buildLabel(Element current) {
     JLabel label = new JLabel(getReferencedLabel(current, "title"));
+    return label;
+  }
+  
+  protected JLabel buildImage(Element current) {
+    URL iconURL = ref.getResource(getReferencedLabel(current, "href"));
+    JLabel label = new JLabel(new ImageIcon(iconURL));
     return label;
   }
   
