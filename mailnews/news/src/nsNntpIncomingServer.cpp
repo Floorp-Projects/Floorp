@@ -221,7 +221,7 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
     if (!localFile) {
         rv = NS_GetSpecialDirectory(NS_APP_NEWS_50_DIR, getter_AddRefs(localFile));
         if (NS_FAILED(rv)) return rv;
-        havePref = FALSE;
+        havePref = PR_FALSE;
     }
         
     PRBool exists;
