@@ -2860,8 +2860,8 @@ HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
   // XXX Currently we only know how to do this for XML documents
   if (nsnull != document) {
     nsIPresShell* shell = aPresContext->GetShell();
-    nsIXMLDocument* xmlDocument;
-    rv = document->QueryInterface(kIXMLDocumentIID, (void **)&xmlDocument);
+//    nsIXMLDocument* xmlDocument;
+//    rv = document->QueryInterface(kIXMLDocumentIID, (void **)&xmlDocument);
 
     if (NS_SUCCEEDED(rv)) {
       rv = aParentFrame->RemoveFrame(*aPresContext, *shell,
@@ -2883,7 +2883,7 @@ HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
         }
         NS_IF_RELEASE(rootPseudoStyle);
       }
-      NS_RELEASE(xmlDocument);
+//      NS_RELEASE(xmlDocument);
     }  
     NS_RELEASE(document);
     NS_RELEASE(shell);
