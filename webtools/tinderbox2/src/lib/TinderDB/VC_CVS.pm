@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.20 $ )[1];
+$VERSION = ( qw $Revision: 1.21 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -478,7 +478,7 @@ sub status_table_legend {
            "$VC_NAME Cell Colors".
            "</td></tr></thead>\n");
 
-  foreach $state (TreeData::get_all_tree_states()) {
+  foreach $state (TreeData::get_all_sorted_tree_states()) {
     my ($cell_color) = TreeData::TreeState2color($state);
     my ($char) = TreeData::TreeState2char($state);
     my $description = "Tree State: $state";
