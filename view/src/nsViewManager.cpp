@@ -1110,6 +1110,52 @@ static void PopState(nsIRenderingContext **aRCs, PRInt32 aRCCount) {
   }
 }
 
+static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
+                                             nsIView* aRootView) {
+    // We accumulate the bounds of widgets obscuring aRootView's widget into mOpaqueRgn.
+    // In OptimizeDisplayList, display list elements which lie behind obscuring native
+    // widgets are dropped.
+    // This shouldn't really be necessary, since the GFX/Widget toolkit should remove these
+    // covering widgets from the clip region passed into the paint command. But right now
+    // they only give us a paint rect and not a region, so we can't access that information.
+    // It's important to identifying areas that are covered by native widgets to avoid
+    // painting their views many times as we process invalidates from the root widget all the
+    // way down to the nested widgets.
+    if (nsnull != aRgn) {
+      aRgn->SetTo(0, 0, 0, 0);
+      nsCOMPtr<nsIWidget> widget;
+      aRootView->GetWidget(*getter_AddRefs(widget));
+      if (widget != nsnull) {
+        nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
+        if (children != nsnull) {
+          children->First();
+          do {
+            nsCOMPtr<nsISupports> child;
+            if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+              nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
+              if (childWidget != nsnull) {
+                PRBool visible = PR_FALSE;
+       
+                childWidget->IsVisible(visible);
+                if (visible) {
+                  nsRect bounds;
+                  float p2t;
+
+                  childWidget->GetBounds(bounds);
+                  aContext->GetDevUnitsToAppUnits(p2t);
+                  bounds.ScaleRoundIn(p2t);
+                  if (bounds.width > 0 && bounds.height > 0) {
+                    aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                  }
+                }
+              }
+            }
+          } while (NS_SUCCEEDED(children->Next()));
+        }
+      }
+    }
+}
+
 void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
     // compute this view's origin
@@ -1143,11 +1189,9 @@ void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, co
     
     DisplayZTreeNode *zTree;
 
-    // We accumulate the bounds of widgets obscuring aRootView's widget into mOpaqueRgn.
-    // In OptimizeDisplayList, display list elements which lie behind obscuring native
-    // widgets are dropped.
     if (nsnull != mOpaqueRgn) {
       mOpaqueRgn->SetTo(0, 0, 0, 0);
+      AddCoveringWidgetsToOpaqueRegion(mOpaqueRgn, mContext, aRootView);
     }
 
     nsPoint displayRootOrigin(0, 0);
@@ -3002,14 +3046,6 @@ PRBool nsViewManager::CreateDisplayList(nsIView *aView, PRBool aReparentedViewsP
 
       if (!overlap && !aReparentedViewsPresent) {
         return PR_FALSE;
-      }
-    }
-
-    if (aInsideRealView && nsnull != mOpaqueRgn) {
-      PRBool hasWidget = PR_FALSE;
-      aView->HasWidget(&hasWidget);
-      if (hasWidget) {
-        mOpaqueRgn->Union(bounds.x - aOriginX, bounds.y - aOriginY, bounds.width, bounds.height);
       }
     }
 
