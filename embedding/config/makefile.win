@@ -21,6 +21,8 @@
 DEPTH=..\..
 MODULE=embed_base
 
+APP=mfcembed
+
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
@@ -63,11 +65,7 @@ install:: embed_chrome
 !IF  "$(APP)" == "mfcembed"
  $(MAKE_INSTALL) $(DIST)\bin\mfcembed.exe $(DIST)\Embed
  $(MAKE_INSTALL) $(DIST)\bin\mfcEmbedComponents.dll $(DIST)\Embed
-!ELSEIF  "$(APP)" == "winembed" 
- $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
-!ELSE
- $(MAKE_INSTALL) $(DIST)\bin\mfcembed.exe $(DIST)\Embed
- $(MAKE_INSTALL) $(DIST)\bin\mfcEmbedComponents.dll $(DIST)\Embed
+!ELSEIF "$(APP)" == "winembed"
  $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
 !ENDIF
 !if defined(MOZ_DEBUG)
