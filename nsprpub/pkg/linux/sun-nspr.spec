@@ -57,6 +57,9 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr
 %dir /usr/include
 %dir /usr/include/mps
+%dir /usr/include/mps/nspr
+%dir /usr/include/mps/nspr/obsolete
+%dir /usr/include/mps/nspr/private
 /usr/include/mps/nspr/private/pprio.h
 /usr/include/mps/nspr/private/pprthred.h
 /usr/include/mps/nspr/private/prpriv.h
