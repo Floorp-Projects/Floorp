@@ -283,10 +283,18 @@
         null
       </field>
 
-      <field name="userTypedValue">
+      <field name="userTypedClear">
+        true
+      </field>
+
+      <field name="_userTypedValue">
         null
       </field>
 
+      <property name="userTypedValue"
+                onget="return this._userTypedValue;"
+                onset="this.userTypedClear = false; return this._userTypedValue = val;"/>
+     
       <constructor>
         <![CDATA[
           try {
