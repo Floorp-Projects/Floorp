@@ -25,11 +25,6 @@ include <$(DEPTH)/config/config.mak>
 
 DIRS= 	\
 	public                  \
-!ifdef MOZ_OLD_CACHE
-	mgr			\
-	memcache		\
-	filecache		\
-!endif
 !ifdef MOZ_NEW_CACHE
 	src                     \
 !endif
