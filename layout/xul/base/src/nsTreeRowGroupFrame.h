@@ -151,7 +151,22 @@ protected:
   void ComputeTotalRowCount(PRInt32& rowCount, nsIContent* aParent);
 
   static void ClearFrameRefs(nsIPresContext* aPresContext, nsIPresShell* aPresShell, nsIFrame *aParent);
-  
+
+    // handle drawing the drop feedback
+  void PaintDropFeedback ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext ) ;
+  void PaintSortedDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext, float & inP2T ) ;
+  void PaintOnContainerDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext, 
+                                        nsIPresContext* inPresContext, float & inP2T ) ;
+  void PaintInBetweenDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext, 
+                                        nsIPresContext* inPresContext, float & inP2T ) ;
+
+    // helpers for drop feedback
+  PRInt32 FindIndentation ( nsIPresContext* inPresContext, nsIFrame* inStartFrame ) const ;
+  void FindFirstChildTreeItemFrame ( nsIPresContext* inPresContext, nsIFrame** outChild ) const ;
+  PRBool IsOpenContainer ( ) const ;
+  nscolor GetColorFromStyleContext ( nsIPresContext* inPresContext, nsIAtom* inAtom, 
+                                       nscolor inDefaultColor ) ;
+
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
   // info.
@@ -199,6 +214,8 @@ public:
   static PRBool IsTableRowGroupFrame(nsIFrame*);
   static PRBool IsTableRowFrame(nsIFrame*);
   
+  PRBool IsOutermostTreeItem ( ) const { return this == mOuterFrame; }
+  
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
   nsIFrame* mBottomFrame; // The current bottom frame in the view.
@@ -230,6 +247,6 @@ protected: // Data Members
     // guaranteed to be meaningful when no drop is underway.
   PRInt32 mYDropLoc;
   PRBool mDropOnContainer;
-  nsCOMPtr<nsIStyleContext> mMarkerStyle;
+  PRBool mTreeIsSorted;         // only needs to be on the topLevel rowGroup, I _think_
 
 }; // class nsTreeRowGroupFrame

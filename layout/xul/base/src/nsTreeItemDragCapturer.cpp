@@ -49,7 +49,7 @@ NS_IMPL_QUERY_INTERFACE2(nsTreeItemDragCapturer, nsIDOMEventListener, nsIDOMDrag
 // any subframes might not be totally intialized yet, or in the hash table
 //
 nsTreeItemDragCapturer :: nsTreeItemDragCapturer ( nsTreeRowGroupFrame* inGroup, nsIPresContext* inPresContext )
-  : mTreeItem(inGroup), mPresContext(inPresContext), mCurrentDropLoc(-1)
+  : mTreeItem(inGroup), mPresContext(inPresContext), mCurrentDropLoc(kNoDropLoc)
 {
   NS_INIT_REFCNT();
   
@@ -184,7 +184,7 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
     else {
       // we're on the container
       *outDropOnMe = PR_TRUE;
-      *outYLoc = -1;
+      *outYLoc = kContainerDropLoc;
     }
   } // if row is a container
   else {
@@ -230,7 +230,7 @@ nsTreeItemDragCapturer::DragOver(nsIDOMEvent* aDragEvent)
       char buffer[10];
 
       	// need the cast, because on some platforms, PR[U]int32 != long, but we're using "%ld"
-      sprintf(buffer, "%ld", NS_STATIC_CAST(long, yLoc));
+      sprintf(buffer, "%d", yLoc);
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, beforeMe ? "true" : "false", PR_FALSE );
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, onMe ? "true" : "false", PR_TRUE );
@@ -251,45 +251,27 @@ nsresult
 nsTreeItemDragCapturer::DragExit(nsIDOMEvent* aDragEvent)
 {
   // if we are not the target of the event, bail.
-  if ( ! IsEventTargetMyTreeItem(aDragEvent) )
-    return NS_OK; 
-
-// there are some bugs that cause us to not be able to correctly track dragExit events
-// so until then we just get on our knees and pray we don't get fooled again.
-nsCOMPtr<nsIContent> c;
-mTreeItem->GetContent ( getter_AddRefs(c) );
-nsCOMPtr<nsIDOMNode> d ( do_QueryInterface(c) );
-nsCOMPtr<nsIDOMNode> t;
-aDragEvent->GetTarget ( getter_AddRefs(t) );
-//printf ( "DRAGEXIT:: toolbar DOMNode %ld, target is %ld\n", d, t );
+  if ( !IsEventTargetMyTreeItem(aDragEvent) )
+    return NS_OK;
 
   nsCOMPtr<nsIContent> content;
   mTreeItem->GetContent ( getter_AddRefs(content) );
-
-#if 0
-  // we will get a drag exit event on sub items because we catch the event on the way down. If
-  // the target is not our toolbar, then ignore it.
-  nsCOMPtr<nsIDOMNode> toolbarDOMNode ( do_QueryInterface(content) );
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  aDragEvent->GetTarget ( getter_AddRefs(eventTarget) );
-  if ( eventTarget != toolbarDOMNode )
-    return NS_OK;
-
-printf("***REAL EXIT EVENT\n");
-#endif
-
-  // tell the treeItem to not do any more drop feedback. Note that the tree code doesn't
-  // care at all about "dd-droplocation", only the coordinate so there is no need to send the
-  // AttributeChanged() about that attribute.
-  char buffer[10];
-  sprintf(buffer, "%d", -1);
-  content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
-  content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, "false", PR_TRUE );
-  content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, "false", PR_TRUE );
-  content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, "1", PR_TRUE );
-    
+  NS_ASSERTION ( content, "can't get content node, we're in trouble" );
+  
+  if ( content ) {
+    // tell the treeItem to not do any more drop feedback. Note that the tree code doesn't
+    // care at all about "dd-droplocation", only the coordinate so there is no need to send the
+    // AttributeChanged() about that attribute.
+    char buffer[10];
+    sprintf(buffer, "%d", kNoDropLoc);
+    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
+    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, "false", PR_TRUE );
+    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, "false", PR_TRUE );
+    content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaintRestore, "1", PR_TRUE );  
+  }
+  
   // cache the current drop location
-  mCurrentDropLoc = -1;
+  mCurrentDropLoc = kNoDropLoc;
 
   return NS_OK; // don't consume event
 }
