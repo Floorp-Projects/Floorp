@@ -82,8 +82,6 @@ CPPSRCS	+= nsUserInfoUnix.cpp
 endif
 endif
 
-DEFINES		+= -D_IMPL_NS_APPSHELL
-
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 EXTRA_DSO_LIBS	= gkgfx

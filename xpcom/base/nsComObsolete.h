@@ -51,12 +51,6 @@
 #define NS_GFX_(type) NS_IMPORT_(type)
 #endif
 
-#ifdef _IMPL_NS_APPSHELL
-#define NS_APPSHELL NS_EXPORT
-#else
-#define NS_APPSHELL NS_IMPORT
-#endif
-
 
 /*
  * People who create their own Win32 MSDev projects to compile against mozilla

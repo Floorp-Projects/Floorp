@@ -102,9 +102,3 @@ interface nsICmdLineService : nsISupports
     nsICmdLineHandler getHandlerForParam(in string param);
 
 };
-
-%{C++
-extern "C" NS_APPSHELL nsresult
-NS_NewCmdLineServiceFactory(nsIFactory** aFactory);
-%}
-

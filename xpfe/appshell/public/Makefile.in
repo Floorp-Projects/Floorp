@@ -32,7 +32,6 @@ XPIDL_MODULE	= appshell
 EXPORTS		= \
 		nsIWebShellWindow.h \
 		nsAppShellCIDs.h \
-		nsIDOMXPConnectFactory.h \
 		nsISplashScreen.h \
 		$(NULL)
 
