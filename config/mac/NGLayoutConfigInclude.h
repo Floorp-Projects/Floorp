@@ -39,5 +39,4 @@
 /* ...then undefine the Mozilla specific stuff */
 
 /* ...and define the Raptor specific things */
-#define STANDALONE_IMAGE_LIB 	/* libimg */
 #define MOZ_NGLAYOUT
