@@ -456,6 +456,24 @@ sub find_languages {
   },
 
   {
+   name => 'rememberlogin',
+   desc => 'Controls management of session cookies
+           <ul>
+           <li>on - Session cookies never expire (the user has to login only
+           once per browser).</li>
+           <li>off - Session cookies last until the users session ends (the user
+             will have to login in each new browser session).</li>
+           <li>defaulton/defaultoff - Default behavior as described
+           above, but user can choose whether bugzilla will remember his
+           login or not.</li>
+           </ul>',
+   type => 's',
+   choices => ['on', 'defaulton', 'defaultoff', 'off'],
+   default => 'on',
+   checker => \&check_multi
+  },
+
+  {
    name => 'mostfreqthreshold',
    desc => 'The minimum number of duplicates a bug needs to show up on the ' .
            '<a href="duplicates.cgi">most frequently reported bugs page</a>. ' .

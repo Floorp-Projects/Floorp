@@ -72,17 +72,32 @@ sub login {
                  $userid, $ipaddr);
         my $logincookie = $dbh->selectrow_array("SELECT LAST_INSERT_ID()");
 
-        $cgi->send_cookie(-name => 'Bugzilla_login',
-                          -value => $userid,
-                          -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
-        $cgi->send_cookie(-name => 'Bugzilla_logincookie',
-                          -value => $logincookie,
-                          -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+        # Remember cookie only if admin has told so
+        # or admin didn't forbid it and user told to remember.
+        if ((Param('rememberlogin') eq 'on') ||
+            ((Param('rememberlogin') ne 'off') &&
+             ($cgi->param('Bugzilla_remember') eq 'on'))) {
+            $cgi->send_cookie(-name => 'Bugzilla_login',
+                              -value => $userid,
+                              -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+            $cgi->send_cookie(-name => 'Bugzilla_logincookie',
+                              -value => $logincookie,
+                              -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
+
+        }
+        else {
+            $cgi->send_cookie(-name => 'Bugzilla_login',
+                              -value => $userid);
+            $cgi->send_cookie(-name => 'Bugzilla_logincookie',
+                              -value => $logincookie);
+
+        }
 
         # compat code. The cookie value is used for logouts, and that
         # isn't generic yet.
         $::COOKIE{'Bugzilla_logincookie'} = $logincookie;
-    } elsif ($authres == AUTH_NODATA) {
+    }
+    elsif ($authres == AUTH_NODATA) {
         # No data from the form, so try to login via cookies
         $username = $cgi->cookie("Bugzilla_login");
         $passwd = $cgi->cookie("Bugzilla_logincookie");

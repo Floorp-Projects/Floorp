@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Toms Baugis <toms@myrealbox.com>
   #%]
 
 [%# INTERFACE:
@@ -53,6 +54,20 @@
       <td>
         <input type="password" size="35" name="Bugzilla_password">
       </td>
+    </tr>
+
+    [% IF Param('rememberlogin') == 'defaulton' || 
+          Param('rememberlogin') == 'defaultoff' %]
+      <tr>
+        <td>&nbsp;</td>
+        <td>
+          <input type="checkbox" name="Bugzilla_remember" value="on"
+                 [% "checked" IF Param('rememberlogin') == "defaulton" %]>
+          Remember my Login
+        </td>
+      </tr>
+    [% END %]
+
     [% IF Param('loginnetmask') < 32 %]
       <tr>
         <td align="right">
