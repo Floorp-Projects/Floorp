@@ -13,10 +13,10 @@
 <!ENTITY body.label "body">
 <!ENTITY contains.label "contains">
 <!ENTITY nocontains.label "doesn't contain">
-<!ENTITY description.label "Description:">
-<!ENTITY matchAny.label "Match any of the following">
-<!ENTITY matchAll.label "Match all of the following">
-<!ENTITY filterAction.label "Filter Action:">
+<!ENTITY conditionDesc.label "When new messages arrive in my Inbox, watch for messages that:">
+<!ENTITY matchAll.label "Match ALL of the following conditions">
+<!ENTITY matchAny.label "Match at least ONE of the following conditions">
+<!ENTITY filterAction.label "Action">
 <!ENTITY moveToFolder.label "Move To Folder">
 <!ENTITY changePriority.label "Change Priority">
 <!ENTITY delete.label "Delete">
@@ -25,3 +25,5 @@
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY more.label "More">
 <!ENTITY less.label "Less">
+<!ENTITY filterName.label "Filter Name:">
+<!ENTITY conditions.label "Conditions">
