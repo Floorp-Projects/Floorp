@@ -145,7 +145,8 @@ public:
   NS_IMETHOD SetNumNewMessages(PRInt32 aNumNewMessages);
   NS_IMETHOD GetNewMessagesNotificationDescription(PRUnichar * *aNewMessagesNotificationDescription);
   NS_IMETHOD GetRootFolder(nsIMsgFolder * *aRootFolder);
-  NS_IMETHOD GetMsgDatabase(nsIMsgDatabase * *aMsgDatabase);
+  NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
+                            nsIMsgDatabase * *aMsgDatabase);
   NS_IMETHOD GetPath(nsIFileSpec * *aPath);
   NS_IMETHOD SetPath(nsIFileSpec * aPath);
   NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);

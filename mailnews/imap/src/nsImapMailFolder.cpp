@@ -374,13 +374,6 @@ NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
     return rv;
 }
 
-NS_IMETHODIMP
-nsImapMailFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
-{
-    GetDatabase(nsnull);
-    return nsMsgDBFolder::GetMsgDatabase(aMsgDatabase);
-}
-
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
@@ -761,7 +754,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
         nsCOMPtr<nsIMsgDatabase> trashDB;
 
         rv = trashFolder->Delete(); // delete summary spec
-        rv = trashFolder->GetMsgDatabase(getter_AddRefs(trashDB));
+        rv = trashFolder->GetMsgDatabase(nsnull, getter_AddRefs(trashDB));
 
         nsCOMPtr<nsIUrlListener> urlListener =
             do_QueryInterface(trashFolder);
@@ -2920,7 +2913,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                                                   &rv);
                             nsCOMPtr<nsIMsgDatabase> srcDB;
                             if (NS_SUCCEEDED(rv))
-                                rv = srcFolder->GetMsgDatabase(
+                                rv = srcFolder->GetMsgDatabase(aWindow,
                                     getter_AddRefs(srcDB));
                             if (NS_SUCCEEDED(rv) && srcDB)
                             {

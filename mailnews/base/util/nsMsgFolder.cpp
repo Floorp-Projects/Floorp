@@ -1813,7 +1813,8 @@ NS_IMETHODIMP nsMsgFolder::GetRootFolder(nsIMsgFolder * *aRootFolder)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
+nsMsgFolder::GetMsgDatabase(nsIMsgWindow *aMsgWindow,
+                            nsIMsgDatabase** aMsgDatabase)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

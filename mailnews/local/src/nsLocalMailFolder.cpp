@@ -440,12 +440,6 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsMsgLocalMailFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
-{
-  GetDatabase(nsnull);
-  return nsMsgDBFolder::GetMsgDatabase(aMsgDatabase);
-}
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
@@ -1278,7 +1272,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     {
       nsCOMPtr<nsIMsgDatabase> msgDb;
       mCopyState->m_parseMsgState = do_QueryInterface(parseMsgState, &rv);
-      rv = GetMsgDatabase(getter_AddRefs(msgDb));
+      rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
       if (msgDb)
         parseMsgState->SetMailDB(msgDb);
     }
@@ -1362,7 +1356,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
   {
     nsCOMPtr<nsIMsgDatabase> msgDb;
     mCopyState->m_parseMsgState = do_QueryInterface(parseMsgState, &rv);
-    rv = GetMsgDatabase(getter_AddRefs(msgDb));
+    rv = GetMsgDatabase(msgWindow, getter_AddRefs(msgDb));
     if (msgDb)
       parseMsgState->SetMailDB(msgDb);
   }
@@ -1701,7 +1695,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
     mCopyState->m_parseMsgState->FinishHeader();
 
-    result = GetMsgDatabase(getter_AddRefs(msgDb));
+    result = GetMsgDatabase(nsnull, getter_AddRefs(msgDb));
     if (NS_SUCCEEDED(result) && msgDb)
 	{
 	  if (!mCopyState->m_copyingMultipleMessages)
@@ -1800,7 +1794,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
       mCopyState->m_parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
     if (NS_SUCCEEDED(result) && newHdr)
     {
-      result = GetMsgDatabase(getter_AddRefs(msgDb));
+      result = GetMsgDatabase(nsnull, getter_AddRefs(msgDb));
       if (NS_SUCCEEDED(result) && msgDb)
       {
         msgDb->AddNewHdrToDB(newHdr, PR_TRUE);

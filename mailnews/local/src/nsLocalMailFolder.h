@@ -135,8 +135,6 @@ public:
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
-    // overriding nsMsgDBFolder::GetMsgDatabase() method
-  NS_IMETHOD GetMsgDatabase(nsIMsgDatabase **aMsgDatabase);
 
 protected:
 	nsresult ParseFolder(nsIMsgWindow *aMsgWindow, nsFileSpec& path);

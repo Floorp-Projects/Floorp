@@ -98,7 +98,7 @@ nsImapMoveCopyMsgTxn::Init(
         m_srcIsPop3 = PR_TRUE;
         PRUint32 i, count = m_srcKeyArray.GetSize();
         nsCOMPtr<nsIMsgDatabase> srcDB;
-        rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+        rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIMsgDBHdr> srcHdr;
         
@@ -315,9 +315,9 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
     {
         nsCOMPtr<nsIMsgDatabase> srcDB;
         nsCOMPtr<nsIMsgDatabase> dstDB;
-        rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+        rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_FAILED(rv)) return rv;
-        rv = m_dstFolder->GetMsgDatabase(getter_AddRefs(dstDB));
+        rv = m_dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
         if (NS_FAILED(rv)) return rv;
         
         PRUint32 count = m_srcKeyArray.GetSize();
@@ -363,7 +363,7 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
     if (m_srcIsPop3)
     {
         nsCOMPtr<nsIMsgDatabase> srcDB;
-        rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+        rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_SUCCEEDED(rv))
         {
             srcDB->DeleteMessages(&m_srcKeyArray, nsnull);

@@ -496,8 +496,10 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 }
 
 NS_IMETHODIMP
-nsMsgDBFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
+nsMsgDBFolder::GetMsgDatabase(nsIMsgWindow *aMsgWindow,
+                              nsIMsgDatabase** aMsgDatabase)
 {
+    GetDatabase(aMsgWindow);
     if (!aMsgDatabase || !mDatabase)
         return NS_ERROR_NULL_POINTER;
     *aMsgDatabase = mDatabase;

@@ -236,9 +236,9 @@ nsLocalMoveCopyMsgTxn::Undo()
     nsCOMPtr<nsIMsgDatabase> srcDB;
     nsCOMPtr<nsIMsgDatabase> dstDB;
     
-    rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+    rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
     if(NS_FAILED(rv)) return rv;
-    rv = m_dstFolder->GetMsgDatabase(getter_AddRefs(dstDB));
+    rv = m_dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 count = m_srcKeyArray.GetSize();
@@ -289,9 +289,9 @@ nsLocalMoveCopyMsgTxn::Redo()
     nsCOMPtr<nsIMsgDatabase> srcDB;
     nsCOMPtr<nsIMsgDatabase> dstDB;
     
-    rv = m_srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
+    rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
     if(NS_FAILED(rv)) return rv;
-    rv = m_dstFolder->GetMsgDatabase(getter_AddRefs(dstDB));
+    rv = m_dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 count = m_srcKeyArray.GetSize();

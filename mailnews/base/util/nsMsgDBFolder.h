@@ -58,7 +58,8 @@ public:
 	NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
 	NS_IMETHOD ClearNewMessages();
 
-  NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
+  NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
+                            nsIMsgDatabase** aMsgDatabase);
 
 	NS_DECL_ISUPPORTS_INHERITED
 

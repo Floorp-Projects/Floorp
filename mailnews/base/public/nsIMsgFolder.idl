@@ -289,7 +289,6 @@ interface nsIMsgFolder : nsIFolder {
    * verbose description of the new messages in this folder
    */
 	readonly attribute wstring newMessagesNotificationDescription;
-  readonly attribute nsIMsgDatabase msgDatabase;
 
   /**
    * local path of this folder
@@ -299,6 +298,7 @@ interface nsIMsgFolder : nsIFolder {
 	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
 	void markAllMessagesRead();
 	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
+  nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
 
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 };
