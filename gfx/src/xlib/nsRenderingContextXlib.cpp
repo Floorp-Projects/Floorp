@@ -734,8 +734,6 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(const nsRect& aRect)
 {
   printf("nsRenderingContextXlib::FillRect()\n");
-  printf("About to fill rect %d %d %d %d\n",
-         aRect.x, aRect.y, aRect.width, aRect.height);
   return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
@@ -753,6 +751,8 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+  printf("About to fill window %ld with rect %d %d %d %d\n",
+         mRenderingSurface->GetDrawable(), x, y, w, h);
   ::XFillRectangle(gDisplay,
                    mRenderingSurface->GetDrawable(),
                    mRenderingSurface->GetGC(),
