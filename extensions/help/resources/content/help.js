@@ -91,7 +91,13 @@ var key = {
  "?im_prefs_privacy": "chrome://help/locale/im_help.html#im_privacy", 
  "?im_prefs_notification": "chrome://help/locale/im_help.html#im_notif", 
  "?im_prefs_away": "chrome://help/locale/im_help.html#im_awaypref", 
- "?im_prefs_connection": "chrome://help/locale/im_help.html#im_connect" 
+ "?im_prefs_connection": "chrome://help/locale/im_help.html#im_connect", 
+ 
+ "?image_properties": "chrome://help/locale/composer_help.html#PROPERTIES_IMAGE",
+ "?imagemap_properties": "chrome://help/locale/composer_help.html#IMAGE_MAPS",
+ "?link_properties": "chrome://help/locale/composer_help.html#page_link",
+ "?table_properties": "chrome://help/locale/composer_help.html#Setting_table_properties",
+ "?advanced_property_editor": "chrome://help/locale/composer_help.html#PROPERTY_EDITOR"
 }
 
 // This function is called by dialogs that want to display context-sensitive help

@@ -454,6 +454,10 @@ function ValidateData()
   return true;
 }
 
+function doHelpButton()
+{
+  openHelp("chrome://help/content/help.xul?link_properties");
+}
 
 function onOK()
 {
