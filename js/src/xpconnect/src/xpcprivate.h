@@ -2042,6 +2042,10 @@ public:
                                               nsIVariant** aResult);
 
     virtual ~nsXPCWrappedJSClass();
+
+    static nsresult CheckForException(XPCCallContext & ccx,
+                                      const char * aPropertyName,
+                                      const char * anInterfaceName);
 private:
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
