@@ -55,7 +55,7 @@ static PRLock *_pr_logLock;
 
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2_VACPP)
+#if defined(XP_PC)
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
 #endif

@@ -67,8 +67,8 @@ LIB_SUFFIX 		= lib
 DLL_SUFFIX 		= dll
 OBJ_SUFFIX		= obj
 
-OS_CFLAGS     		= -W3 -Wcnd- -gm -gd+ -sd- -su4 -ge-
-OS_EXE_CFLAGS 		= -W3 -Wcnd- -gm -gd+ -sd- -su4 
+OS_CFLAGS     		= -W3 -Wcnd- -gm -gd+ -sd- -su4 -ge- -Mp
+OS_EXE_CFLAGS 		= -W3 -Wcnd- -gm -gd+ -sd- -su4 -Mp
 AR_EXTRA_ARGS 		= 
 
 ifdef BUILD_OPT
