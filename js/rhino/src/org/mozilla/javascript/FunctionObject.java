@@ -56,7 +56,7 @@ public class FunctionObject extends BaseFunction
      *
      * The first form is a member with zero or more parameters
      * of the following types: Object, String, boolean, Scriptable,
-     * byte, short, int, float, or double. The Long type is not supported
+     * int, or double. The Long type is not supported
      * because the double representation of a long (which is the
      * EMCA-mandated storage type for Numbers) may lose precision.
      * If the member is a Method, the return value must be void or one
@@ -116,6 +116,7 @@ public class FunctionObject extends BaseFunction
                           Scriptable scope)
     {
         String methodName;
+        Class[] types;
         if (methodOrConstructor instanceof Constructor) {
             ctor = (Constructor) methodOrConstructor;
             isStatic = true; // well, doesn't take a 'this'
@@ -128,7 +129,8 @@ public class FunctionObject extends BaseFunction
             methodName = method.getName();
         }
         this.functionName = name;
-        if (types.length == 4 && (types[1].isArray() || types[2].isArray())) {
+        int arity = types.length;
+        if (arity == 4 && (types[1].isArray() || types[2].isArray())) {
             // Either variable args or an error.
             if (types[1].isArray()) {
                 if (!isStatic ||
@@ -153,31 +155,40 @@ public class FunctionObject extends BaseFunction
                 }
                 parmsLength = VARARGS_METHOD;
             }
-            // XXX check return type
         } else {
-            parmsLength = types.length;
-            for (int i=0; i < parmsLength; i++) {
-                Class type = types[i];
-                if (type != ScriptRuntime.ObjectClass &&
-                    type != ScriptRuntime.StringClass &&
-                    type != ScriptRuntime.BooleanClass &&
-                    !ScriptRuntime.NumberClass.isAssignableFrom(type) &&
-                    !ScriptRuntime.ScriptableClass.isAssignableFrom(type) &&
-                    type != Boolean.TYPE &&
-                    type != Byte.TYPE &&
-                    type != Short.TYPE &&
-                    type != Integer.TYPE &&
-                    type != Float.TYPE &&
-                    type != Double.TYPE)
-                {
-                    // Note that long is not supported.
-                    throw Context.reportRuntimeError1("msg.bad.parms",
-                                                      methodName);
+            parmsLength = arity;
+            if (arity > 0) {
+                typeTags = new byte[arity];
+                for (int i = 0; i != arity; ++i) {
+                    int tag = getTypeTag(types[i]);
+                    if (tag == JAVA_UNSUPPORTED_TYPE) {
+                        throw Context.reportRuntimeError2(
+                            "msg.bad.parms", types[i].getName(), methodName);
+                    }
+                    typeTags[i] = (byte)tag;
                 }
             }
         }
 
-        hasVoidReturn = method != null && method.getReturnType() == Void.TYPE;
+        if (method != null) {
+            Class returnType = method.getReturnType();
+            if (returnType == Void.TYPE) {
+                hasVoidReturn = true;
+            } else {
+                int returnTypeTag = getTypeTag(returnType);
+                if (returnTypeTag == JAVA_UNSUPPORTED_TYPE) {
+                    throw Context.reportRuntimeError2(
+                        "msg.bad.method.return",
+                        returnType.getName(), methodName);
+                }
+            }
+        } else {
+            Class ctorType = ctor.getDeclaringClass();
+            if (!ScriptRuntime.ScriptableClass.isAssignableFrom(ctorType)) {
+                throw Context.reportRuntimeError1(
+                    "msg.bad.ctor.return", ctorType.getName());
+            }
+        }
 
         ScriptRuntime.setFunctionProtoAndParent(scope, this);
 
@@ -186,11 +197,12 @@ public class FunctionObject extends BaseFunction
             if (global.invokerOptimization) {
                 Invoker master = (Invoker)global.invokerMaster;
                 if (master == null) {
-                    master = newInvokerMaster();
+                    master = Invoker.makeMaster();
                     if (master == null) {
                         global.invokerOptimization = false;
+                    } else {
+                        global.invokerMaster = master;
                     }
-                    global.invokerMaster = master;
                 }
                 if (master != null) {
                     Context cx = Context.getContext();
@@ -203,6 +215,66 @@ public class FunctionObject extends BaseFunction
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * @return One of <tt>JAVA_*_TYPE</tt> constants to indicate desired type
+     *         or {@link #JAVA_UNSUPPORTED_TYPE} if the convertion is not
+     *         possible
+     */
+    public static int getTypeTag(Class type)
+    {
+        if (type == ScriptRuntime.StringClass)
+            return JAVA_STRING_TYPE;
+        if (type == ScriptRuntime.IntegerClass || type == Integer.TYPE)
+            return JAVA_INT_TYPE;
+        if (type == ScriptRuntime.BooleanClass || type == Boolean.TYPE)
+            return JAVA_BOOLEAN_TYPE;
+        if (type == ScriptRuntime.DoubleClass || type == Double.TYPE)
+            return JAVA_DOUBLE_TYPE;
+        if (ScriptRuntime.ScriptableClass.isAssignableFrom(type))
+            return JAVA_SCRIPTABLE_TYPE;
+        if (type == ScriptRuntime.ObjectClass)
+            return JAVA_OBJECT_TYPE;
+
+        // Note that the long type is not supported; see the javadoc for
+        // the constructor for this class
+
+        return JAVA_UNSUPPORTED_TYPE;
+    }
+
+    public static Object convertArg(Context cx, Scriptable scope,
+                                    Object arg, int typeTag)
+    {
+        switch (typeTag) {
+          case JAVA_STRING_TYPE:
+              if (arg instanceof String)
+                return arg;
+            return ScriptRuntime.toString(arg);
+          case JAVA_INT_TYPE:
+              if (arg instanceof Integer)
+                return arg;
+            return new Integer(ScriptRuntime.toInt32(arg));
+          case JAVA_BOOLEAN_TYPE:
+              if (arg instanceof Boolean)
+                return arg;
+            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE
+                                                : Boolean.FALSE;
+          case JAVA_DOUBLE_TYPE:
+            if (arg instanceof Double)
+                return arg;
+            if (arg instanceof Number)
+                return new Double(((Number)arg).doubleValue());
+            return new Double(ScriptRuntime.toNumber(arg));
+          case JAVA_SCRIPTABLE_TYPE:
+            if (arg instanceof Scriptable)
+                return arg;
+            return ScriptRuntime.toObject(cx, scope, arg);
+          case JAVA_OBJECT_TYPE:
+            return arg;
+          default:
+            throw new IllegalArgumentException();
         }
     }
 
@@ -318,51 +390,20 @@ public class FunctionObject extends BaseFunction
         setParentScope(scope);
     }
 
+    /**
+     * @deprecated Use {@link #getTypeTag(Class)}
+     * and {@link #convertArg(Context, Scriptable, Object, int)}
+     * for type convertion.
+     */
     public static Object convertArg(Context cx, Scriptable scope,
                                     Object arg, Class desired)
     {
-        if (desired == ScriptRuntime.StringClass) {
-            if (arg instanceof String) {
-                return arg;
-            }
-            return ScriptRuntime.toString(arg);
+        int tag = getTypeTag(desired);
+        if (tag == JAVA_UNSUPPORTED_TYPE) {
+            throw Context.reportRuntimeError1
+                ("msg.cant.convert", desired.getName());
         }
-        if (desired == ScriptRuntime.IntegerClass ||
-            desired == Integer.TYPE)
-        {
-            if (arg instanceof Integer) {
-                return arg;
-            }
-            return new Integer(ScriptRuntime.toInt32(arg));
-        }
-        if (desired == ScriptRuntime.BooleanClass ||
-            desired == Boolean.TYPE)
-        {
-            if (arg instanceof Boolean) {
-                return arg;
-            }
-            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE
-                                                : Boolean.FALSE;
-        }
-        if (desired == ScriptRuntime.DoubleClass ||
-            desired == Double.TYPE)
-        {
-            if (arg instanceof Double) {
-                return arg;
-            }
-            return new Double(ScriptRuntime.toNumber(arg));
-        }
-        if (desired == ScriptRuntime.ScriptableClass) {
-            return ScriptRuntime.toObject(cx, scope, arg);
-        }
-        if (desired == ScriptRuntime.ObjectClass) {
-            return arg;
-        }
-
-        // Note that the long type is not supported; see the javadoc for
-        // the constructor for this class
-        throw Context.reportRuntimeError1
-            ("msg.cant.convert", desired.getName());
+        return convertArg(cx, scope, arg, tag);
     }
 
     /**
@@ -413,7 +454,7 @@ public class FunctionObject extends BaseFunction
             invokeArgs = args;
             for (int i = 0; i != parmsLength; ++i) {
                 Object arg = args[i];
-                Object converted = convertArg(cx, scope, arg, types[i]);
+                Object converted = convertArg(cx, scope, arg, typeTags[i]);
                 if (arg != converted) {
                     if (invokeArgs == args) {
                         invokeArgs = (Object[])args.clone();
@@ -429,7 +470,7 @@ public class FunctionObject extends BaseFunction
                 Object arg = (i < args.length)
                              ? args[i]
                              : Undefined.instance;
-                invokeArgs[i] = convertArg(cx, scope, arg, types[i]);
+                invokeArgs[i] = convertArg(cx, scope, arg, typeTags[i]);
             }
         }
 
@@ -518,10 +559,20 @@ public class FunctionObject extends BaseFunction
         Member member = readMember(in);
         if (member instanceof Method) {
             method = (Method) member;
-            types = method.getParameterTypes();
         } else {
             ctor = (Constructor) member;
-            types = ctor.getParameterTypes();
+        }
+        if (parmsLength > 0) {
+            Class[] types;
+            if (method != null) {
+                types = method.getParameterTypes();
+            } else {
+                types = ctor.getParameterTypes();
+            }
+            typeTags = new byte[parmsLength];
+            for (int i = 0; i != parmsLength; ++i) {
+                typeTags[i] = (byte)getTypeTag(types[i]);
+            }
         }
     }
 
@@ -633,27 +684,23 @@ public class FunctionObject extends BaseFunction
         return result;
     }
 
-    /** Get default master implementation or null if not available */
-    private static Invoker newInvokerMaster() {
-        Class cl = ScriptRuntime.classOrNull(INVOKER_MASTER_CLASS);
-        if (cl != null) {
-            return (Invoker)ScriptRuntime.newInstanceOrNull(cl);
-        }
-        return null;
-    }
-
-    private static final String
-        INVOKER_MASTER_CLASS = "org.mozilla.javascript.optimizer.InvokerImpl";
-
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
 
     private static boolean sawSecurityException;
 
+    public static final int JAVA_UNSUPPORTED_TYPE = 0;
+    public static final int JAVA_STRING_TYPE      = 1;
+    public static final int JAVA_INT_TYPE         = 2;
+    public static final int JAVA_BOOLEAN_TYPE     = 3;
+    public static final int JAVA_DOUBLE_TYPE      = 4;
+    public static final int JAVA_SCRIPTABLE_TYPE  = 5;
+    public static final int JAVA_OBJECT_TYPE      = 6;
+
     transient Method method;
     transient Constructor ctor;
     transient Invoker invoker;
-    transient private Class[] types;
+    transient private byte[] typeTags;
     private int parmsLength;
     private boolean hasVoidReturn;
     private boolean isStatic;

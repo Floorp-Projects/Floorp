@@ -287,8 +287,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Context cx = Context.getContext();
         Class pTypes[] = slot.setter.getParameterTypes();
         Class desired = pTypes[pTypes.length - 1];
-        Object actualArg
-                = FunctionObject.convertArg(cx, start, value, desired);
+        // ALERT: cache tag since it is already calculated in defineProperty ?
+        int tag = FunctionObject.getTypeTag(desired);
+        Object actualArg = FunctionObject.convertArg(cx, start, value, tag);
         if (slot.delegateTo == null) {
             setterThis = start;
             args = new Object[] { actualArg };
@@ -1147,6 +1148,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 }
             } else {
                 throw PropertyException.withMessage0("msg.setter.parms");
+            }
+            Class setterType = parmTypes[parmTypes.length - 1];
+            int setterTypeTag = FunctionObject.getTypeTag(setterType);
+            if (setterTypeTag  == FunctionObject.JAVA_UNSUPPORTED_TYPE) {
+                throw PropertyException.withMessage2(
+                    "msg.setter2.expected", setterType.getName(),
+                    setter.toString());
             }
         }
 
