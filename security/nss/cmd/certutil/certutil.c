@@ -217,7 +217,7 @@ GetCertRequest(PRFileDesc *inFile, PRBool ascii)
     do {
 	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
 	if (arena == NULL) {
-	    GEN_BREAK (SEC_ERROR_NO_MEMORY);
+	    GEN_BREAK (SECFailure);
 	}
 	
  	rv = SECU_ReadDERFromFile(&reqDER, inFile, ascii);
@@ -1953,7 +1953,7 @@ CreateCert(
     do {
 	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
 	if (!arena) {
-	    GEN_BREAK (SEC_ERROR_NO_MEMORY);
+	    GEN_BREAK (SECFailure);
 	}
 	
 	/* Create a certrequest object from the input cert request der */
