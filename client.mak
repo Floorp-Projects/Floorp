@@ -79,6 +79,11 @@ pull_and_build_all: pull_all build_all
 
 pull_all: pull_seamonkey
 
+# pull either layout only or seamonkey the browser
+pull_layout:
+	cd $(MOZ_SRC)\.
+	$(CVSCO) RaptorWin
+
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
 	$(CVSCO) SeaMonkeyAll
@@ -98,5 +103,10 @@ depend:
 	nmake -f makefile.win depend 
 
 build_all:
+	@cd $(MOZ_SRC)\mozilla\.
+	set BUILD_CLIENT=1
+	nmake -f makefile.win all
+
+build_layout:
 	@cd $(MOZ_SRC)\mozilla\.
 	nmake -f makefile.win all
