@@ -2171,8 +2171,11 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
 
   // From this point onward, if the above features weren't specified at all,
   // we will assume that all chrome is present.
-  if (!presenceFlag) 
-    chromeFlags |= NS_CHROME_ALL_CHROME;
+
+  //XXX This is incorrect.  Except for the last three, if the
+  //    feature wasn't mentioned its not there -joki
+  //if (!presenceFlag) 
+  //  chromeFlags |= NS_CHROME_ALL_CHROME;
 
   chromeFlags |= WinHasOption(aFeatures, "chrome", presenceFlag) ? NS_CHROME_OPEN_AS_CHROME : 0;
   chromeFlags |= WinHasOption(aFeatures, "modal", presenceFlag) ? NS_CHROME_MODAL : 0;
