@@ -92,11 +92,11 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL   "libnetlib.so"
-#define XPCOM_DLL    "libxpcom.so"
-#define LOCAL_DLL	 "libmsglocal.so"
-#define RDF_DLL      "librdf.so"
-#define PREF_DLL	 "libpref.so"  
+#define NETLIB_DLL   "libnetlib"MOZ_DLL_SUFFIX
+#define XPCOM_DLL    "libxpcom"MOZ_DLL_SUFFIX
+#define LOCAL_DLL	 "libmsglocal"MOZ_DLL_SUFFIX
+#define RDF_DLL      "librdf"MOZ_DLL_SUFFIX
+#define PREF_DLL	 "libpref"MOZ_DLL_SUFFIX
 #endif
 #endif
 
@@ -283,7 +283,7 @@ nsresult nsMailboxTestDriver::RunDriver()
 		}  // if running url
 #ifdef XP_UNIX
 
-        PL_ProcessPendingEvents(m_eventQueue);
+        m_eventQueue->ProcessPendingEvents();
 
 #endif
 #ifdef XP_PC	
@@ -310,20 +310,19 @@ void nsMailboxTestDriver::InitializeTestDriver()
 	// propogating bienvenu's preferences hack.....
 	#define ROOT_PATH_LENGTH 128 
 	char* rootPath;
-	nsIPref* prefs;
 	nsresult rv;
-	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
-    if (prefs && NS_SUCCEEDED(rv))
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (prefs && NS_SUCCEEDED(rv))
 	{
-		prefs->Startup("prefs50.js");
-		rv = prefs->GetCharPref(kMsgRootFolderPref, &rootPath);
+		rv = prefs->CopyCharPref(kMsgRootFolderPref, &rootPath);
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 
-	if (NS_SUCCEEDED(rv)))
+	if (NS_SUCCEEDED(rv))
 	{
 		m_folderSpec = rootPath;
 	}
+	PR_FREEIF(rootPath);
 }
 
 // prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
@@ -546,7 +545,16 @@ int main()
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kCMailboxServiceCID, nsnull, nsnull, LOCAL_DLL, PR_TRUE, PR_TRUE);
 
-	// Create the Event Queue for this thread...
+    // make sure prefs get initialized and loaded..
+    // mscott - this is just a bad bad bad hack right now until prefs
+    // has the ability to take nsnull as a parameter. Once that happens,
+    // prefs will do the work of figuring out which prefs file to load...
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result);
+    if (NS_FAILED(result) || !prefs) {
+        exit(result);
+    }  
+
+    // Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
                                           nsIEventQueueService::GetIID(),
