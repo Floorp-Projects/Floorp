@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="a.css" type="text/css"?>
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+var profileCore = "";
+var profileList = "";
+var lastNum     = -1;
+var lastName    = "";
+
+function CreateProfile()
+{
+	// Need to call CreateNewProfile xuls
+	this.location.replace("resource:/res/profile/cpwManager.xul");
+}
+
+function RenameProfile()
+{
+	if (lastName != "")
+	{
+		dump("Rename '" + lastName + "'\n");
+		dump("Need to do a rename dialog here...\n");
+		this.location.replace(this.location);
+	}
+	else
+		dump("Select a profile before clicking the rename button.\n");
+}
+
+function DeleteProfile()
+{
+	if (lastName != "")
+	{
+		dump("Delete '" + lastName + "'\n");
+		profileCore.DeleteProfile(lastName);
+		this.location.replace(this.location);
+	}
+	else
+		dump("Select a profile before clicking the delete button.\n");
+}
+
+function ExitManager()
+{
+	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
+	if (!toolkitCore) {
+		toolkitCore = new ToolkitCore();
+		
+		if (toolkitCore) {
+			toolkitCore.Init("toolkitCore");
+		}
+	}
+	if (toolkitCore) {
+		toolkitCore.CloseWindow(parent);
+	}
+}
+
+function addTreeElement(num, name)
+{
+  dump("Adding element " + num + " : " + name + "\n");
+  var body = document.getElementById("theTreeBody");
+
+  var newitem = document.createElement('treeitem');
+  newitem.setAttribute("rowID", num);
+  newitem.setAttribute("rowName", name);
+
+  var elem = document.createElement('treecell');
+
+  // Hack in a differentation for migration
+  if (num % 2 == 0)
+	  var text = document.createTextNode('Migrate');
+  else
+	  var text = document.createTextNode('');
+
+  elem.appendChild(text);
+  newitem.appendChild(elem);
+
+  var elem = document.createElement('treecell');
+  var text = document.createTextNode(name);
+  elem.appendChild(text);
+  newitem.appendChild(elem);
+
+  body.appendChild(newitem);
+}
+
+function showSelection(node)
+{
+	// (see tree's onclick definition)
+	// Tree events originate in the smallest clickable object which is the cell.  The object 
+	// originating the event is available as event.target.  We want the cell's row, so we go 
+	// one further and get event.target.parentNode.
+	lastNum  = node.getAttribute("rowID");
+	lastName = node.getAttribute("rowName");
+	dump("Selected " + lastNum + " : " + lastName + "\n");
+}
+
+function loadElements()
+{
+	dump("hacked onload handler adds elements to tree widget\n");
+
+	profileCore = XPAppCoresManager.Find("ProfileCore");
+	if (!profileCore)
+	{
+		dump("!profileCore\n");
+		profileCore = new ProfileCore();
+
+		if (profileCore) {
+			dump("after ! yes profileCore in if loop\n");
+			profileCore.Init("ProfileCore");
+		}
+		else {
+			dump("profile not created\n");
+		}
+	}
+	if (profileCore)
+		profileList = profileCore.GetProfileList();	
+
+	profileList = profileList.split(",");
+
+	for (var i=0; i &lt; profileList.length; i++)
+		addTreeElement(i, profileList[i]);
+}
+
+// -------------------------------------------- begin Hack for OnLoad handling
+setTimeout("loadElements()", 0);
+// -------------------------------------------- end   Hack for OnLoad handling
+
+</html:script>
+
+<popup id="renamePopup">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="200" height="50">
+<input type="text" id="NewName" size="20" />
+<titledbutton value="Ok" id="Ok" onclick="opener.RenameProfile(NewName.value);window.close();" />
+<titledbutton value="Cancel" id="Cancel" onclick="window.close();" />
+</window>
+</popup>
+
+
+<html:center>
+<html:table>
+<html:tr><html:td>
+Communicator stores information about your settings, preferences,
+bookmarks, and stored messages in your personal profile. 
+</html:td></html:tr>
+
+<html:tr><html:td>
+<html:ul>
+<html:li>Click New to create a new profile. 
+</html:li>
+<html:li>Select a profile, click delete to remove that profile. 
+</html:li>
+<html:li>Select a profile, click Rename to rename the profile.
+</html:li>
+</html:ul>
+</html:td></html:tr>
+<html:tr><html:td>
+ 
+</html:td></html:tr>
+</html:table>
+
+<tree id="tree" onclick="return showSelection(event.target.parentNode);">
+  <treecol style="width: 100"/>
+  <treecol style="width: 300"/>
+  <treehead>
+    <treeitem>
+      <treecell>Migration</treecell>
+      <treecell>User Name</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody id="theTreeBody">
+  </treebody>
+</tree>
+
+<titledbutton value="New" onclick="CreateProfile();" />
+<titledbutton value="Rename" popup="renamePopup" />
+<html:button onclick="DeleteProfile();">Delete</html:button>
+<html:button onclick="ExitManager();">Exit</html:button>
+
+</html:center>
+
+</window>
