@@ -43,7 +43,11 @@ int main(int argc, char *argv[])
 		pszBinDirPath = argv[1];
 	}
 	printf("apitest running...\n");
-	nsresult rv = NS_InitEmbedding(pszBinDirPath);
+	
+	nsCOMPtr<nsILocalFile> binDir;
+	NS_NewLocalFile(pszBinDirPath, PR_TRUE, getter_AddRefs(binDir));
+	
+	nsresult rv = NS_InitEmbedding(binDir, nsnull);
 	if (NS_FAILED(rv))
 	{
 		printf("NS_InitEmbedding FAILED (rv = 0x%08x)\n", rv);

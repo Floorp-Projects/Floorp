@@ -932,7 +932,15 @@ gtk_moz_embed_startup_xpcom(void)
 {
   nsresult rv;
   // init our embedding
-  rv = NS_InitEmbedding(component_path);
+  nsCOMPtr<nsILocalFile> binDir;
+  
+  if (component_path) {
+    rv = NS_NewLocalFile(component_path, 1, getter_AddRefs(binDir));
+    if (NS_FAILED(rv))
+      return FALSE;
+  }
+    
+  rv = NS_InitEmbedding(binDir, nsnull);
   if (NS_FAILED(rv))
     return FALSE;
   // set up the thread event queue
