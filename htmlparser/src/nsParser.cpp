@@ -1183,11 +1183,6 @@ nsParser::CancelParsingEvents()
     } 
 
     mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
-    /* Since we are taking this off of the queue, we need to do the NS_RELEASE
-     * that nsParserContinueEvent::HandleEvent would have done.
-     */
-    nsParser* me = this; 
-    NS_RELEASE(me);
   }
   return NS_OK;
 }
