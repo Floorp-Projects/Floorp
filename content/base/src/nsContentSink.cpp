@@ -44,8 +44,6 @@
 #include "nsINodeInfo.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIWebNavigation.h"
-#include "nsIRefreshURI.h"
 #include "nsCPrefetchService.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -185,8 +183,6 @@ nsContentSink::Init(nsIDocument* aDoc,
 
   mCSSLoader = aDoc->GetCSSLoader();
 
-  // XXX this presumes HTTP header info is already set in document
-  // XXX if it isn't we need to set it here...
   ProcessHTTPHeaders(aChannel);
 
   mNodeInfoManager = aDoc->NodeInfoManager();
@@ -292,28 +288,16 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
     return NS_OK;
   }
 
-  static const char *const headers[] = {
-    "link",
-    "default-style",
-    "content-style-type",
-    "content-language",
-    "content-disposition",
-    // add more http headers if you need
-    // XXXbz don't add content-location support without reading bug
-    // 238654 and its dependencies/dups first.
-    0
-  };
+  // Note that the only header we care about is the "link" header, since we
+  // have all the infrastructure for kicking off stylesheet loads.
   
-  const char *const *name = headers;
-  nsCAutoString tmp;
+  nsCAutoString linkHeader;
   
-  while (*name) {
-    nsresult rv = httpchannel->GetResponseHeader(nsDependentCString(*name), tmp);
-    if (NS_SUCCEEDED(rv) && !tmp.IsEmpty()) {
-      nsCOMPtr<nsIAtom> key = do_GetAtom(*name);
-      ProcessHeaderData(key, NS_ConvertASCIItoUCS2(tmp));
-    }
-    ++name;
+  nsresult rv = httpchannel->GetResponseHeader(NS_LITERAL_CSTRING("link"),
+                                               linkHeader);
+  if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
+    ProcessHeaderData(nsHTMLAtoms::link,
+                      NS_ConvertASCIItoUTF16(linkHeader));
   }
   
   return NS_OK;
@@ -328,29 +312,11 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
 
   mDocument->SetHeaderData(aHeader, aValue);
 
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  // see if we have a refresh "header".
-  if (aHeader == nsHTMLAtoms::refresh) {
-    // first get our baseURI
-
-    nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
-    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mDocShell);
-    if (reefer) {
-      rv = reefer->SetupRefreshURIFromHeader(baseURI,
-                                             NS_ConvertUCS2toUTF8(aValue));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-  else if (aHeader == nsHTMLAtoms::setcookie) {
+  if (aHeader == nsHTMLAtoms::setcookie) {
+    // Note: Necko already handles cookies set via the channel.  We can't just
+    // call SetCookie on the channel because we want to do some security checks
+    // here and want to use the prompt associated to our current window, not
+    // the window where the channel was dispatched.
     nsCOMPtr<nsICookieService> cookieServ =
       do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
@@ -405,6 +371,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
   }
   else if (aHeader == nsHTMLAtoms::msthemecompatible) {
     // Disable theming for the presshell if the value is no.
+    // XXXbz don't we want to support this as an HTTP header too?
     nsAutoString value(aValue);
     if (value.LowerCaseEqualsLiteral("no")) {
       nsIPresShell* shell = mDocument->GetShellAt(0);
@@ -413,7 +380,9 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       }
     }
   }
-  else if (mParser) {
+  // Don't report "refresh" headers back to necko, since our document handles
+  // them
+  else if (aHeader != nsHTMLAtoms::refresh && mParser) {
     // we also need to report back HTTP-EQUIV headers to the channel
     // so that it can process things like pragma: no-cache or other
     // cache-control headers. Ideally this should also be the way for

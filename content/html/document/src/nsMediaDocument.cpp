@@ -167,8 +167,6 @@ nsMediaDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  RetrieveRelevantHeaders(aChannel);
-
   // We try to set the charset of the current document to that of the 
   // 'genuine' (as opposed to an intervening 'chrome') parent document 
   // that may be in a different window/tab. Even if we fail here,
