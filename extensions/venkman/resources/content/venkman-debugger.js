@@ -433,7 +433,7 @@ function debugTrap (frame, type, rv)
 
     console.trapType = type;
     window.focus();
-    window.GetAttention();
+    window.getAttention();
 
     console.jsds.enterNestedEventLoop({onNest: console.onDebugTrap}); 
 

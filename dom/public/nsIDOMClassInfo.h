@@ -253,6 +253,9 @@ enum nsDOMClassInfoID {
   // more putting things in those categories up there.  New entries
   // are to be added right before eDOMClassInfoIDCount
   eDOMClassInfo_CSSRect_id,
+
+  // DOM Chrome Window class, almost identical to Window
+  eDOMClassInfo_ChromeWindow_id,
   
   // This one better be the last one in this list
   eDOMClassInfoIDCount

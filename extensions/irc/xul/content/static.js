@@ -1793,7 +1793,7 @@ function notifyAttention (source)
     }
 
     if (client.FLASH_WINDOW)
-        window.GetAttention();
+        window.getAttention();
     
 }
 
@@ -2381,7 +2381,7 @@ function __display(message, msgtype, sourceObj, destObj)
     {
         setTabState(this, "attention");
         if (client.FLASH_WINDOW)
-            window.GetAttention();
+            window.getAttention();
     }
     else
     {

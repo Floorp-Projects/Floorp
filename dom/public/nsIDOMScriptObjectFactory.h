@@ -62,7 +62,8 @@ public:
                                 nsISupports* aObject,
                                 nsIDOMEventListener ** aInstancePtrResult) = 0;
 
-  NS_IMETHOD NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal) = 0;
+  NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
+                                   nsIScriptGlobalObject **aGlobal) = 0;
 
   NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
 };

@@ -90,6 +90,7 @@
 #include "nsIDOMHistory.h"
 #include "nsIDOMNSHistory.h"
 #include "nsIDOMMediaList.h"
+#include "nsIDOMChromeWindow.h"
 
 // DOM core includes
 #include "nsDOMError.h"
@@ -801,6 +802,19 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // are to be added to the end of the list
   NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  // DOM Chrome Window class
+  NS_DEFINE_CLASSINFO_DATA(ChromeWindow, nsWindowSH,
+                           DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_GETPROPERTY |
+                           nsIXPCScriptable::WANT_SETPROPERTY |
+                           nsIXPCScriptable::WANT_NEWRESOLVE |
+                           nsIXPCScriptable::WANT_PRECREATE |
+                           nsIXPCScriptable::WANT_FINALIZE |
+                           nsIXPCScriptable::WANT_ADDPROPERTY |
+                           nsIXPCScriptable::WANT_DELPROPERTY |
+                           nsIXPCScriptable::WANT_ENUMERATE |
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2010,6 +2024,16 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventReceiver)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
   {

@@ -5894,7 +5894,8 @@ nsDocShell::EnsureScriptEnvironment()
         do_GetService(kDOMScriptObjectFactoryCID);
     NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
 
-    factory->NewScriptGlobalObject(getter_AddRefs(mScriptGlobal));
+    factory->NewScriptGlobalObject(mItemType == typeChrome,
+                                   getter_AddRefs(mScriptGlobal));
     NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
 
     mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell *, this));
