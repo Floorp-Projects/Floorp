@@ -298,7 +298,6 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         mPresContext->SetLinkHandler(linkHandler);
         NS_IF_RELEASE(linkHandler);
 
-#if 0
         // Set script-context-owner in the document
         nsIScriptContextOwner* owner = nsnull;
         mContainer->QueryCapability(kIScriptContextOwnerIID, (void**)&owner);
@@ -323,7 +322,6 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
             }
             NS_RELEASE(owner);
         }
-#endif
     }
 
     // Create the ViewManager and Root View...
