@@ -1103,6 +1103,11 @@ function ComposeFieldsReady(msgType)
   }
   CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
   SetComposeWindowTitle();
+
+  // need timeout for reply to work
+  if (gMsgCompose.composeHTML)
+    setTimeout("loadHTMLMsgPrefs();", 0);
+
   enableEditableFields();
   AdjustFocus();
 }
@@ -1230,8 +1235,14 @@ function ComposeStartup(recycled, aParams)
           document.getElementById("insertMenu").setAttribute("hidden", true);
           document.getElementById("menu_showFormatToolbar").setAttribute("hidden", true);
         }
+        
+        if (gMsgCompose.composeHTML) {
+          var fontsList = document.getElementById("FontFacePopup");
+          initLocalFontFaceMenu(fontsList);
+        }
+
         // Do setup common to Message Composer and Web Composer
-        EditorSharedStartup();   
+        EditorSharedStartup();
       }
 
       var msgCompFields = gMsgCompose.compFields;
@@ -1274,6 +1285,7 @@ function ComposeStartup(recycled, aParams)
           // Force color picker on toolbar to show document colors
           onFontColorChange();
           onBackgroundColorChange();
+          // XXX todo: reset paragraph select to "Body Text"
         }
       } 
       else 
@@ -2828,3 +2840,44 @@ function SwitchElementFocus(event)
       SetMsgAddressingWidgetTreeElementFocus();
   }
 }
+
+function loadHTMLMsgPrefs() {
+  var pref = GetPrefs();
+
+  var fontFace;
+  var fontSize;
+  var textColor;
+  var bgColor;
+  
+  try { 
+    fontFace = pref.getCharPref("msgcompose.font_face");
+    doStatefulCommand('cmd_fontFace', fontFace);
+    EditorRemoveTextProperty("font","face");
+    EditorSetTextProperty("font", "face", fontFace);
+  } catch (e) {}
+
+  try { 
+    fontSize = pref.getCharPref("msgcompose.font_size");
+    EditorSetFontSize(fontSize);
+  } catch (e) {}  
+
+  var bodyElement = GetBodyElement();
+
+  try { 
+    textColor = pref.getCharPref("msgcompose.text_color");
+    bodyElement.setAttribute("text", textColor);
+    gDefaultTextColor = textColor;
+    document.getElementById("cmd_fontColor").setAttribute("state", textColor);    
+    onFontColorChange();
+  } catch (e) {}
+
+  try { 
+    bgColor = pref.getCharPref("msgcompose.background_color");
+    bodyElement.setAttribute("bgcolor", bgColor);
+    gDefaultBackgroundColor = bgColor;
+    document.getElementById("cmd_backgroundColor").setAttribute("state", bgColor);
+    onBackgroundColorChange();
+  } catch (e) {}
+
+}
+

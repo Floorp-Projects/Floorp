@@ -752,6 +752,7 @@
       <menuitem label="&fontHelveticaFont.label;" value="Helvetica, Arial, sans-serif"/>
       <menuitem label="&fontTimes.label;"         value="Times New Roman, Times, serif"/>
       <menuitem label="&fontCourier.label;"       value="Courier New, Courier, monospace"/>
+      <menuseparator/>
     </menupopup>
   </menulist>  
   

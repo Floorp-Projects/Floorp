@@ -66,4 +66,10 @@ Rights Reserved.
 <!ENTITY languagesTitle.label				  "Languages">
 <!ENTITY languagesText.label				  "Use the following character coding as the default for composing messages:">
 
+<!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">
+<!ENTITY font.label                           "Font:">
+<!ENTITY size.label                           "Size:">
+<!ENTITY fontColor.label                      "Text:">
+<!ENTITY bgColor.label                        "Background:">
+
 <!-- Tooltips -->  
