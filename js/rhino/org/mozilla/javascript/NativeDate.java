@@ -42,7 +42,6 @@ import java.util.Locale;
 import java.text.NumberFormat;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.lang.reflect.Method;
 
 /**
  * This class implements the Date native object.
@@ -55,7 +54,12 @@ public class NativeDate extends ScriptableObject {
                                   Scriptable proto)
         throws PropertyException
     {
-        // initialization of cached values moved to static initializers.
+        if (thisTimeZone == null) {
+            // j.u.TimeZone is synchronized, so setting class statics from it
+            // should be OK.
+            thisTimeZone = java.util.TimeZone.getDefault();
+            LocalTZA = thisTimeZone.getRawOffset();
+        }
 
         // alias toUTCString to toGMTString
         ((ScriptableObject) proto).defineProperty("toGMTString",
@@ -102,15 +106,6 @@ public class NativeDate extends ScriptableObject {
     }
 
     /* ECMA helper functions */
-
-    private static boolean isFinite(double d) {
-        if (d != d ||
-            d == Double.POSITIVE_INFINITY ||
-            d == Double.NEGATIVE_INFINITY)
-            return false;
-        else
-            return true;
-    }
 
     private static final double HalfTimeDomain = 8.64e15;
     private static final double HoursPerDay    = 24.0;
@@ -740,7 +735,14 @@ public class NativeDate extends ScriptableObject {
         return date_parseString(s);
     }
 
-    private static String date_format(double t) {
+    private static final int FORMATSPEC_FULL = 0;
+    private static final int FORMATSPEC_DATE = 1;
+    private static final int FORMATSPEC_TIME = 2;
+
+    private static String date_format(double t, int format) {
+        if (t != t)
+            return js_NaN_date_str;
+
         StringBuffer result = new StringBuffer(60);
         double local = LocalTime(t);
 
@@ -759,54 +761,65 @@ public class NativeDate extends ScriptableObject {
         int year = YearFromTime(local);
         String yearStr = Integer.toString(year > 0 ? year : -year);
 
-        result.append(days[WeekDay(local)]);
-        result.append(" ");
-        result.append(months[MonthFromTime(local)]);
-        if (dateStr.length() == 1)
-            result.append(" 0");
-        else
-            result.append(" ");
-        result.append(dateStr);
-        if (hourStr.length() == 1)
-            result.append(" 0");
-        else
-            result.append(" ");
-        result.append(hourStr);
-        if (minStr.length() == 1)
-            result.append(":0");
-        else
-            result.append(":");
-        result.append(minStr);
-        if (secStr.length() == 1)
-            result.append(":0");
-        else
-            result.append(":");
-        result.append(secStr);
-        if (offset > 0)
-            result.append(" GMT+");
-        else
-            result.append(" GMT-");
-        int i;
-        for (i = offsetStr.length(); i < 4; i++)
-            result.append("0");
-        result.append(offsetStr);
+        /* Tue Oct 31 09:41:40 GMT-0800 (PST) 2000 */
+        /* Tue Oct 31 2000 */
+        /* 09:41:40 GMT-0800 (PST) */
 
-        // ask Java for a time zone string, if we've been able to find
-        // a formatter for it.
-        if (timeZoneFormatter != null) {
-            result.append(" (");
-            java.util.Date date = new Date((long) t);
-            result.append(timeZoneFormatter.format(date));
-            result.append(") ");
-        } else {
+        if (format != FORMATSPEC_TIME) {
+            result.append(days[WeekDay(local)]);
+            result.append(" ");
+            result.append(months[MonthFromTime(local)]);
+            if (dateStr.length() == 1)
+                result.append(" 0");
+            else
+                result.append(" ");
+            result.append(dateStr);
             result.append(" ");
         }
 
-        if (year < 0)
-            result.append("-");
-        for (i = yearStr.length(); i < 4; i++)
-            result.append("0");
-        result.append(yearStr);
+        if (format != FORMATSPEC_DATE) {
+            if (hourStr.length() == 1)
+                result.append("0");
+            result.append(hourStr);
+            if (minStr.length() == 1)
+                result.append(":0");
+            else
+                result.append(":");
+            result.append(minStr);
+            if (secStr.length() == 1)
+                result.append(":0");
+            else
+                result.append(":");
+            result.append(secStr);
+            if (offset > 0)
+                result.append(" GMT+");
+            else
+                result.append(" GMT-");
+            for (int i = offsetStr.length(); i < 4; i++)
+                result.append("0");
+            result.append(offsetStr);
+            
+            if (timeZoneFormatter == null)
+                timeZoneFormatter = new java.text.SimpleDateFormat("zzz");
+
+            if (timeZoneFormatter != null) {
+                result.append(" (");
+                java.util.Date date = new Date((long) t);
+                result.append(timeZoneFormatter.format(date));
+                result.append(")");
+            }
+            if (format != FORMATSPEC_TIME)
+                result.append(" ");
+        }
+
+        if (format != FORMATSPEC_TIME) {
+            if (year < 0)
+                result.append("-");
+            for (int i = yearStr.length(); i < 4; i++)
+                result.append("0");
+            result.append(yearStr);
+        }
+
         return result.toString();
     }
 
@@ -817,7 +830,7 @@ public class NativeDate extends ScriptableObject {
         // if called as a function, just return a string
         // representing the current time.
         if (!inNewExpr)
-            return date_format(Now());
+            return date_format(Now(), FORMATSPEC_FULL);
 
         NativeDate obj = new NativeDate();
 
@@ -893,26 +906,47 @@ public class NativeDate extends ScriptableObject {
     };
 
     public String jsFunction_toString() {
-        /* all for want of printf.  All of this garbage seems necessary
-         * because Java carefully avoids providing non-localized
-         * string formatting.  We need to avoid localization to ensure
-         * that we generate parseable output.
-         */
-        if (this.date != this.date)
-            return js_NaN_date_str;
+        return date_format(this.date, FORMATSPEC_FULL);
+    }
 
-        return date_format(this.date);
+    public String jsFunction_toTimeString() {
+        return date_format(this.date, FORMATSPEC_TIME);
+    }
+
+    public String jsFunction_toDateString() {
+        return date_format(this.date, FORMATSPEC_DATE);
+    }
+
+    private static String toLocale_helper(double t,
+                                          java.text.DateFormat formatter)
+    {
+        if (t != t)
+            return js_NaN_date_str;
+        
+        java.util.Date tempdate = new Date((long) t);
+        return formatter.format(tempdate);
     }
 
     public String jsFunction_toLocaleString() {
-        if (this.date != this.date)
-            return js_NaN_date_str;
+        if (localeDateTimeFormatter == null)
+            localeDateTimeFormatter =
+                DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
 
-        // the string this returns doesn't have much resemblance
-        // to what jsdate.c returns... does this matter?
+        return toLocale_helper(this.date, localeDateTimeFormatter);
+    }
 
-        java.util.Date tempdate = new Date((long) this.date);
-        return localeDateFormatter.format(tempdate);
+    public String jsFunction_toLocaleTimeString() {
+        if (localeTimeFormatter == null)
+            localeTimeFormatter = DateFormat.getTimeInstance(DateFormat.LONG);
+        
+        return toLocale_helper(this.date, localeTimeFormatter);
+    }
+
+    public String jsFunction_toLocaleDateString() {
+        if (localeDateFormatter == null)
+            localeDateFormatter = DateFormat.getDateInstance(DateFormat.LONG);
+
+        return toLocale_helper(this.date, localeDateFormatter);
     }
 
     public String jsFunction_toUTCString() {
@@ -1408,32 +1442,12 @@ public class NativeDate extends ScriptableObject {
     }
 
     /* cached values */
-    private static final java.util.TimeZone thisTimeZone
-        = java.util.TimeZone.getDefault();
-    private static final double LocalTZA
-        = thisTimeZone.getRawOffset();
+    private static java.util.TimeZone thisTimeZone;
+    private static double LocalTZA;
     private static java.text.DateFormat timeZoneFormatter;
-    static {
-        // Support Personal Java, which lacks java.text.SimpleDateFormat.
-        try {
-            Class paramz[] = { String.class };
-            Object argz[] = { "zzz" };
-            Class clazz = Class.forName("java.text.SimpleDateFormat");
-            java.lang.reflect.Constructor conztruct =
-                clazz.getConstructor(paramz);
-            timeZoneFormatter =
-                (java.text.DateFormat) conztruct.newInstance(argz);
-        } catch (Exception e) {
-            // Do it this (slightly unsafe) way for brevity rather
-            // than catching against 7 (!) different (and disjoint)
-            // exception types.
-            timeZoneFormatter = null;
-        }
-    }
-
-    private static final java.text.DateFormat localeDateFormatter
-        = DateFormat.getDateTimeInstance(DateFormat.LONG,
-                                         DateFormat.LONG);
+    private static java.text.DateFormat localeDateTimeFormatter;
+    private static java.text.DateFormat localeDateFormatter;
+    private static java.text.DateFormat localeTimeFormatter;
 
     private double date;
 }
