@@ -32,6 +32,7 @@
 CIEHtmlDocument::CIEHtmlDocument()
 {
 	m_pParent = NULL;
+    m_pNative = nsnull;
 }
 
 
@@ -43,6 +44,12 @@ CIEHtmlDocument::~CIEHtmlDocument()
 void CIEHtmlDocument::SetParent(CMozillaBrowser *parent)
 {
 	m_pParent = parent;
+}
+
+
+void CIEHtmlDocument::SetNative(nsIDOMHTMLDocument *native)
+{
+    m_pNative = native;
 }
 
 
@@ -169,8 +176,13 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_title(BSTR v)
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_title(BSTR __RPC_FAR *p)
 {
-	*p = NULL;
-	return E_NOTIMPL;
+    nsAutoString value;
+    if (m_pNative == NULL || m_pNative->GetTitle(value))
+    {
+        return E_FAIL;
+    }
+    *p = SysAllocString(value.GetUnicode()); 
+    return p ? S_OK : E_OUTOFMEMORY;
 }
 
 
@@ -444,27 +456,86 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_nameProp(BSTR __RPC_FAR *p)
 }
 
 
+HRESULT CIEHtmlDocument::WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn)
+{
+    HRESULT hr;
+
+    hr = SafeArrayLock(psarray);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
+    DWORD i = psarray->rgsabound[0].cElements;
+    VARIANT *v = (VARIANT *)psarray->pvData;
+    VARIANT vStr;
+
+    while (i--)
+    {
+        if ((hr = VariantChangeType(&vStr, v++, 0, VT_BSTR)))
+        {
+            SafeArrayUnlock(psarray);
+            return hr;
+        }
+
+        nsString str(vStr.bstrVal, SysStringLen(vStr.bstrVal));
+        if (bLn && !i)
+        {
+            if (m_pNative->Writeln(str))
+            {
+                SafeArrayUnlock(psarray);
+               return E_FAIL;
+            }
+        }
+        else
+        {
+            if (m_pNative->Write(str))
+            {
+                SafeArrayUnlock(psarray);
+                return E_FAIL;
+            }
+        }
+    }
+    
+    hr = SafeArrayUnlock(psarray);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
+    return S_OK;
+}
+
+
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::write(SAFEARRAY __RPC_FAR * psarray)
 {
-	return E_NOTIMPL;
+       return WriteCommon(psarray, 0);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::writeln(SAFEARRAY __RPC_FAR * psarray)
 {
-	return E_NOTIMPL;
+      return WriteCommon(psarray, 1);
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::open(BSTR url, VARIANT name, VARIANT features, VARIANT replace, IDispatch __RPC_FAR *__RPC_FAR *pomWindowResult)
 {
-	return E_NOTIMPL;
+    if (m_pNative == NULL || m_pNative->Open())
+    {
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::close(void)
 {
-	return E_NOTIMPL;
+    if (m_pNative == NULL || m_pNative->Close())
+    {
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 

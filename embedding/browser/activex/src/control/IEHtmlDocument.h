@@ -25,12 +25,13 @@
 #ifndef IEHTMLDOCUMENT_H
 #define IEHTMLDOCUMENT_H
 
+#include "nsIDOMHTMLDocument.h"
 #include "IEHtmlNode.h"
 
 class CMozillaBrowser;
 
 class CIEHtmlDocument :	public CIEHtmlNode,
-						public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>,
+						public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML, 4, 0>,
 						public IOleCommandTarget
 {
 public:
@@ -40,8 +41,13 @@ protected:
 
 	// Pointer to browser that owns the document
 	CMozillaBrowser *m_pParent;
+    nsIDOMHTMLDocument *m_pNative;
+
+    HRESULT WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn);
+
 public:
 	virtual void SetParent(CMozillaBrowser *parent);
+    virtual void SetNative(nsIDOMHTMLDocument *native);
 
 BEGIN_COM_MAP(CIEHtmlDocument)
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLDocument2)
