@@ -31,7 +31,6 @@
 
 // { %%%%% begin platform defs peculiar to Mork %%%%%
 #ifdef XP_MAC
-#define MORK_OBSOLETE 1
 #define MORK_MAC 1
 #endif
 
@@ -74,7 +73,6 @@
 #ifdef MORK_OBSOLETE
 #include "xp_file.h" 
 #include "ctype.h" 
-
 #define MORK_ISPRINT(c) isprint(c) 
 
 #define MORK_FILETELL(file) XP_FileTell(file) 

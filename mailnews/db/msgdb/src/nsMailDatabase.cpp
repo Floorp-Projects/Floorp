@@ -74,7 +74,7 @@ nsMailDatabase::~nsMailDatabase()
 
 	char	*nativeFolderName = nsCRT::strdup((const char *) folderName);
 
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 	UnixToNative(nativeFolderName);
 #endif
 	stat (nativeFolderName, &st);
@@ -221,6 +221,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 	nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
 //#ifdef GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
+/* ducarroz: Do we still need this ??
 	// This is a horrible hack and we should make sure we don't need it anymore.
 	// It has to do with multiple people having the same file open, I believe, but the
 	// mac file system only has one handle, and they compete for the file position.
@@ -231,6 +232,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 		fid = gIncorporateFID;
 		savedPosition = ftell(gIncorporateFID); // so we can restore it.
 	}
+*/
 #endif // XP_MAC
     PRUint32 offset;
     (void)mailHdr->GetStatusOffset(&offset);
@@ -313,9 +315,11 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 				SetReparse(TRUE);
 			}
 #ifdef XP_MAC
+/* ducarroz: Do we still need this ??
 			// Restore the file position
 			if (savedPosition >= 0)
 				XP_FileSeek(fid, savedPosition, SEEK_SET);
+*/
 #endif
 		}
 		else
@@ -327,7 +331,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 	}
 //#endif // GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
-	if (!m_folderStream && fid != gIncorporateFID)
+	if (!m_folderStream /*&& fid != gIncorporateFID*/)	/* ducarroz: Do we still need this ?? */
 #else
 	if (!m_folderStream)
 #endif
@@ -339,7 +343,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 	nsresult ret = NS_OK;
 	struct stat st;
 	char	*nativeFileName = nsCRT::strdup(m_folderName);
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 	UnixToNative(nativeFileName);
 #endif
 
@@ -435,7 +439,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec &folderName, int num, int
 	nsresult		err;
 
 	char	*nativeFileName = nsCRT::strdup(folderName);
-#ifdef XP_PC
+#if defined(XP_PC) || defined(XP_MAC)
 	UnixToNative(nativeFileName);
 #endif
 

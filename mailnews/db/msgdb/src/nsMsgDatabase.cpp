@@ -36,7 +36,12 @@
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleFactory.h"
+
+#if defined(XP_MAC) && defined(CompareString)
+	#undef CompareString
+#endif
 #include "nsICollation.h"
+
 #include "nsCollationCID.h"
 #include "nsIPref.h"
 
@@ -436,8 +441,71 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
       *cp = *(cp + 1);
   }
 }
-
 #endif /* XP_PC */
+
+#ifdef XP_MAC
+// this code is stolen from nsFileSpecMac. Since MDB requires a native path, for 
+// the time being, we'll just take the Unix/Canonical form and munge it
+void nsMsgDatabase::UnixToNative(char*& ioPath)
+// This just does string manipulation.  It doesn't check reality, or canonify, or
+// anything
+//----------------------------------------------------------------------------------------
+{
+	// Relying on the fact that the unix path is always longer than the mac path:
+	size_t len = strlen(ioPath);
+	char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
+	if (result)
+	{
+		char* dst = result;
+		const char* src = ioPath;
+		if (*src == '/')		 	// * full path
+			src++;
+		else if (strchr(src, '/'))	// * partial path, and not just a leaf name
+			*dst++ = ':';
+		strcpy(dst, src);
+
+		while ( *dst != 0)
+		{
+			if (*dst == '/')
+				*dst++ = ':';
+			else
+				*dst++;
+		}
+		PR_Free(ioPath);
+		ioPath = result;
+	}
+}
+
+void nsMsgDatabase::NativeToUnix(char*& ioPath)
+// This just does string manipulation.  It doesn't check reality, or canonify, or
+// anything
+//----------------------------------------------------------------------------------------
+{
+	size_t len = strlen(ioPath);
+	char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
+	if (result)
+	{
+		char* dst = result;
+		const char* src = ioPath;
+		if (*src == ':')		 	// * partial path, and not just a leaf name
+			src++;
+		else if (strchr(src, ':'))	// * full path
+			*dst++ = '/';
+		strcpy(dst, src);
+
+		while ( *dst != 0)
+		{
+			if (*dst == ':')
+				*dst++ = '/';
+			else
+				*dst++;
+		}
+		PR_Free(ioPath);
+		ioPath = result;
+	}
+}
+#endif /* XP_MAC */
+
 // Open the MDB database synchronously. If successful, this routine
 // will set up the m_mdbStore and m_mdbEnv of the database object 
 // so other database calls can work.
@@ -454,8 +522,15 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
+#if defined(XP_MAC)
+			char * unixPath = nsCRT::strdup(dbName);
+			NativeToUnix(unixPath);
+			m_dbName = nsCRT::strdup(unixPath);
+			delete [] unixPath;
+#else
 			m_dbName = nsCRT::strdup(dbName);
-#ifdef XP_PC
+#endif
+#if defined(XP_PC) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
 			if (stat(nativeFileName, &st)) 
