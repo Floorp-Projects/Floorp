@@ -432,6 +432,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 			if (equal)
 			{
 				*child = folder;
+				NS_ADDREF(*child);
 				return NS_OK;
 			}
 			else if(deep)
