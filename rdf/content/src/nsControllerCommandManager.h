@@ -26,7 +26,7 @@
 
 #include "nsIControllerCommand.h"
 #include "nsWeakReference.h"
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 class  nsControllerCommandManager : public nsIControllerCommandManager,
                                     public nsSupportsWeakReference
