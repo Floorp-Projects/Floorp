@@ -191,7 +191,7 @@ URL0=$URLPath$
 [Component9]
 Description Short=Debugger
 ; *** LOCALIZE ME BABY ***
-Description Long=JavaScrpt Debugger
+Description Long=JavaScript Debugger
 Archive=venkman.xpi
 $InstallSize$:venkman
 $InstallSizeArchive$:venkman.xpi
