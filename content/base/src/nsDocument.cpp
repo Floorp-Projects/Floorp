@@ -2517,7 +2517,8 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString mPropName, mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    mPrefix.SetString(mPropName.GetUnicode(), 2);
+    if (mPropName.Length() > 2)
+      mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
       nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(mPropName));
       nsIEventListenerManager *mManager = nsnull;

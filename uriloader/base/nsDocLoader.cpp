@@ -45,6 +45,7 @@
 
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
+#include "nsIIOService.h"
 
 // XXX ick ick ick
 #include "nsIContentViewerContainer.h"
@@ -346,9 +347,19 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIChannel> pChannel;
       nsCOMPtr<nsIInterfaceRequestor> requestor (do_QueryInterface(aContainer));
+
+      // Create a referrer URI
+      nsCOMPtr<nsIURI> referrer;
+      if (aReferrer) {
+        nsAutoString tempReferrer(aReferrer);
+        char* referrerStr = tempReferrer.ToNewCString();
+        pNetService->NewURI(referrerStr, nsnull, getter_AddRefs(referrer));
+        Recycle(referrerStr);
+      }
+
       rv = pNetService->NewChannelFromURI(aCommand, aUri, mLoadGroup, requestor,
-                                        aType, nsnull /* referring uri */, 0, 0,
-                                        getter_AddRefs(pChannel));
+                                          aType, referrer /* referring uri */, 0, 0,
+                                          getter_AddRefs(pChannel));
       if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
       
       // figure out if we need to set the post data stream on the channel...right now, 

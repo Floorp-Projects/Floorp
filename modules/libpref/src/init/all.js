@@ -301,10 +301,6 @@ pref("mime.table.allow_remove", true);
 pref("browser.registration.enable", false);
 pref("browser.registration.url", "");
 
-pref("security.checkuri", true);
-pref("security.checkdomprops", true);
-pref("security.checkxpconnect", true);
-
 pref("signed.applets.codebase_principal_support", false);
 
 pref("security.policy.default.barprop.visible.write", "UniversalBrowserWrite");
