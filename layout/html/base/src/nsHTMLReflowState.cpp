@@ -50,6 +50,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
   availableWidth = aAvailableSpace.width;
   availableHeight = aAvailableSpace.height;
   rendContext = aRenderingContext;
+  spaceManager = nsnull;
+  lineLayout = nsnull;
   isTopOfPage = PR_FALSE;
   Init(aPresContext);
 }
@@ -71,6 +73,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
   availableWidth = aAvailableSpace.width;
   availableHeight = aAvailableSpace.height;
   rendContext = aRenderingContext;
+  spaceManager = nsnull;
+  lineLayout = nsnull;
   isTopOfPage = PR_FALSE;
   Init(aPresContext);
 }
