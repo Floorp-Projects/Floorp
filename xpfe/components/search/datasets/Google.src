@@ -1,6 +1,6 @@
 # Copyright © 1999 by cricket
 # cricket@apple.com
-# Version 1.1 -- 13 October 1999
+# Version 1.2 -- 15 December 1999
 
 <search 
 	name = "Google!"
@@ -14,14 +14,11 @@
 <INPUT NAME="num" VALUE="25">
 
 <interpret
-	resultListStart = "<br></form"
-	resultListEnd = "</font><p><center>"
+	resultListStart = "<br></font></form>"
+	resultListEnd = "<div class=nav>"
 
 	resultItemStart = "<p>"
 	resultItemEnd = "</font></font>"
-	
-	bannerStart = "<hr size=1><br>"
-	bannerEnd = "<p><center><font color=darkgray>"
 	
 	>
 </search>
