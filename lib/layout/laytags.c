@@ -6204,6 +6204,10 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 * Form cannot be nested!
 		 */
 		case P_FORM:
+#if defined(SingleSignon)
+                        /* Notify the signon module of the new form */
+                        SI_StartOfForm();
+#endif
 			/*
 			 * No forms in the scrolling document
 			 * hack
