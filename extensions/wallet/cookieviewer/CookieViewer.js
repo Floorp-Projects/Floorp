@@ -171,8 +171,15 @@ function loadCookies() {
     observerService.notifyObservers(null, "cookieIcon", "off");
 
     // unhide the status column and sort by reverse order on that column
+    //    Note that the sort routine normally does an ascending sort.  The only
+    //    exception is if you sort on the same column more than once in a row.
+    //    In that case, the subsequent sorts will be the reverse of the previous ones.
+    //    So we are now going to force an initial reverse sort by fooling the sort routine
+    //    into thinking that it previously sorted on the status column and in ascending
+    //    order.
     document.getElementById("statusCol").removeAttribute("hidden");
     lastCookieSortAscending = true; // force order to have blanks last instead of vice versa
+    lastCookieSortColumn = 'status';
     CookieColumnSort('status');
 
   } else {
