@@ -1574,9 +1574,10 @@
       <method name="addBookmark">
         <body><![CDATA[
           const currentIndex = this.currentIndex;
+
           var parentIndex;
           if (this.outlinerBoxObject.view.rowCount) {
-            if (this.outlinerBoxObject.view.isContainer(currentIndex))
+            if (this.outlinerBoxObject.view.isContainerOpen(currentIndex))
               parentIndex = currentIndex;
             else
               parentIndex = this.outlinerBoxObject.view.getParentIndex(currentIndex);
@@ -1847,15 +1848,6 @@
         <body><![CDATA[
           // XXXben
           return true;
-        ]]></body>
-      </method>
-      
-      <method name="newBookmark">
-        <body><![CDATA[
-          var insertAt = this.getNextRowIndex();
-          openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                     "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, folder, null, "newBookmark");
-          
         ]]></body>
       </method>
     </implementation>
