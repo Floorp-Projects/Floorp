@@ -92,7 +92,7 @@ interface nsIEditorShell : nsISupports
    *          false if there is some problem with saving or user
    *          executed "Cancel" when prompted for a filename to save
    */  
-  PRBool SaveDocument(in boolean saveAs, in boolean saveCopy);
+  boolean SaveDocument(in boolean saveAs, in boolean saveCopy);
   
   /** These are for simpler access and we ignore if user Cancels*/
   /** This is SaveDocument(false, false) */
@@ -104,7 +104,7 @@ interface nsIEditorShell : nsISupports
    *         false ONLY if user executed "Cancel" in the SaveAs dialog
    *         true if no changes in doc, or file was saved successfully
    */
-  PRBool  CheckAndSaveDocument();
+  boolean  CheckAndSaveDocument();
 
   void CloseWindow();
   void Print();
@@ -158,9 +158,9 @@ interface nsIEditorShell : nsISupports
   /** Table insert and delete methods.  Done relative to selected cell or
    * cell containing the selection anchor.
    */
-  void InsertTableCell(in PRInt32 number, in PRBool after);
-  void InsertTableRow(in PRInt32 number, in PRBool after);
-  void InsertTableColumn(in PRInt32 number, in PRBool after);
+  void InsertTableCell(in PRInt32 number, in boolean after);
+  void InsertTableRow(in PRInt32 number, in boolean after);
+  void InsertTableColumn(in PRInt32 number, in boolean after);
   void DeleteTable();
   void DeleteTableCell(in PRInt32 number);
   void DeleteTableRow(in PRInt32 number);
