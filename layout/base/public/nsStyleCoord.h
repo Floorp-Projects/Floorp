@@ -25,10 +25,11 @@ class nsString;
 enum nsStyleUnit {
   eStyleUnit_Twips        = 0,      // (nscoord) value is twips
   eStyleUnit_Percent      = 1,      // (float) 1.0 == 100%
-  eStyleUnit_Auto         = 2,      // (no value)
-  eStyleUnit_Inherit      = 3,      // (no value) value should be inherited
-  eStyleUnit_Proportional = 4,      // (int) value has proportional meaning
-  eStyleUnit_Enumerated   = 5,      // (int) value has enumerated meaning
+  eStyleUnit_Normal       = 2,      // (no value)
+  eStyleUnit_Auto         = 3,      // (no value)
+  eStyleUnit_Inherit      = 4,      // (no value) value should be inherited
+  eStyleUnit_Proportional = 5,      // (int) value has proportional meaning
+  eStyleUnit_Enumerated   = 6,      // (int) value has enumerated meaning
 };
 
 class nsStyleCoord {
@@ -38,7 +39,6 @@ public:
   nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit);
   nsStyleCoord(float aValue);
   nsStyleCoord(const nsStyleCoord& aCopy);
-  ~nsStyleCoord(void);
 
   nsStyleCoord&  operator=(const nsStyleCoord& aCopy);
   PRBool         operator==(const nsStyleCoord& aOther) const;
@@ -51,6 +51,7 @@ public:
   void  Set(nscoord aValue);
   void  Set(PRInt32 aValue, nsStyleUnit aUnit);
   void  Set(float aValue);
+  void  SetNormal(void);
   void  SetAuto(void);
   void  SetInherit(void);
 
