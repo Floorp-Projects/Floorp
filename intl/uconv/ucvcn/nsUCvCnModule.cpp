@@ -349,7 +349,6 @@ NS_IMETHODIMP nsConverterModule::RegisterSelf(nsIComponentManager *aCompMgr,
 {
   nsresult res;
   PRUint32 i;
-  nsIComponentManager * compMgr = NULL;
   nsIRegistry * registry = NULL;
   nsRegistryKey key;
   char buff[1024];
