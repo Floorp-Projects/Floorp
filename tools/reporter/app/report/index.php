@@ -54,7 +54,7 @@ $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
 $query =& $db->Execute("SELECT *
                       FROM report, host
-                      WHERE report.report_id = ".$db->qstr($_GET['report_id'],get_magic_quotes_gpc())."
+                      WHERE report.report_id = ".$db->quote($_GET['report_id'])."
                       AND host.host_id = report_host_id");
 
 // disconnect database
@@ -142,6 +142,4 @@ if (!$query->fields){
 		<td><?php print str_replace("\n", "<br />", $query->fields['report_description']); ?></td>
 	</tr>
 </table>
-
-<!--report_ip-->
 <?php include($config['app_path'].'/includes/footer.inc.php'); ?>

@@ -94,3 +94,7 @@ header('Content-Type: text/html; charset=utf-8');
 </div>
 <!-- closes #header-->
 <h1>Mozilla Reporter</h1>
+<!--
+reporter.mozilla.org by:
+  Robert "DIGITALgimpus" Accettura <http://robert.accettura.com>
+-->

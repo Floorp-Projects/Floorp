@@ -151,13 +151,13 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     if (!$db) die("Connection failed");
     $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-    $sysIDQuery = $db->Execute("SELECT `sysid_id` FROM `sysid` WHERE `sysid_id` = '".mysql_real_escape_string($sysid)."'");
+    $sysIDQuery = $db->Execute("SELECT `sysid_id` FROM `sysid` WHERE `sysid_id` = ".$db->quote($sysid));
     $sysidCount = $sysIDQuery->RecordCount();
     if ($sysidCount != 1){
       return new soap_fault('Client', '', 'Invalid SysID', $sysid);
     }
 
-    $queryURL = $db->Execute("SELECT `host_id` FROM `host` WHERE `host_hostname` = '".mysql_real_escape_string($parsedURL['host'])."'");
+    $queryURL = $db->Execute("SELECT `host_id` FROM `host` WHERE `host_hostname` = ".$db->quote($parsedURL['host']));
     $resultURL = $queryURL->RecordCount();
     if ($resultURL <= 0) {
         // generate hash
@@ -165,8 +165,8 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
         // We add the URL
         $addURL = $db->Execute("INSERT INTO `host` (`host_id`, `host_hostname`, `host_date_added`)
                                 VALUES (
-                                    '".mysql_real_escape_string($host_id)."',
-                                    '".mysql_real_escape_string($parsedURL['host'])."',
+                                    ".$db->quote($host_id).",
+                                    ".$db->quote($parsedURL['host']).",
                                     now()
                                 )
                     ");
@@ -176,11 +176,10 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     }
     else if ($resultURL == 1) {
         // pull the hash from DB
-        $host_id = $queryURLResult->fields['host_id'];
+        $host_id = $queryURL->fields['host_id'];
     } else{
             return new soap_fault('SERVER', '', 'Host Exception Error');
     }
-
     $addReport = $db->Execute("INSERT INTO `report` (
                                                     `report_id`,
                                                     `report_url`,
@@ -198,31 +197,28 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
                                                     `report_email`,
                                                     `report_ip`,
                                                     `report_file_date`,
-													`report_sysid`
+                                                    `report_sysid`
                                 )
                                 VALUES (
-                                        '".mysql_real_escape_string($report_id)."',
-                                        '".mysql_real_escape_string($url)."',
-                                        '".mysql_real_escape_string($host_id)."',
-                                        '".mysql_real_escape_string($problem_type)."',
-                                        '".mysql_real_escape_string($description)."',
-                                        '".mysql_real_escape_string($behind_login)."',
-                                        '".mysql_real_escape_string($useragent)."',
-                                        '".mysql_real_escape_string($platform)."',
-                                        '".mysql_real_escape_string($oscpu)."',
-                                        '".mysql_real_escape_string($language)."',
-                                        '".mysql_real_escape_string($gecko)."',
-                                        '".mysql_real_escape_string($buildconfig)."',
-                                        '".mysql_real_escape_string($product)."',
-                                        '".mysql_real_escape_string($email)."',
-                                        '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."',
+                                        ".$db->quote($report_id).",
+                                        ".$db->quote($url).",
+                                        ".$db->quote($host_id).",
+                                        ".$db->quote($problem_type).",
+                                        ".$db->quote($description).",
+                                        ".$db->quote($behind_login).",
+                                        ".$db->quote($useragent).",
+                                        ".$db->quote($platform).",
+                                        ".$db->quote($oscpu).",
+                                        ".$db->quote($language).",
+                                        ".$db->quote($gecko).",
+                                        ".$db->quote($buildconfig).",
+                                        ".$db->quote($product).",
+                                        ".$db->quote($email).",
+                                        ".$db->quote($_SERVER['REMOTE_ADDR']).",
                                         now(),
-                                        '".mysql_real_escape_string($sysid)."'
+                                        ".$db->quote($sysid)."
                                 )
         ");
-
-    // Disconnect Database
-    $db->Close();
 
     if (!$addReport) {
         return new soap_fault('SERVER', '', 'Database Error');
@@ -248,7 +244,7 @@ function register($language){
         $id = date("ymd").rand(1000,9999);
 
         $query =& $db->Execute("SELECT sysid.sysid_id
-		                      FROM sysid
+........                      FROM sysid
                               WHERE sysid.sysid_id = '$newid'
                             ");
         $numRows = $query->RecordCount();
@@ -268,7 +264,7 @@ function register($language){
                                   '".$id."',
                                   now(),
                                   '".$_SERVER['REMOTE_ADDR']."',
-                                  '".mysql_real_escape_string($language)."'
+                                  ".$db->quote($language)."
                             )
                      ");
     // Disconnect Database
