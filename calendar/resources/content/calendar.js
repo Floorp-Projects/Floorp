@@ -77,7 +77,8 @@
 *  G L O B A L     V A R I A B L E S
 */
 
-var gDateMade = "April 3rd, 2002";
+//the next line needs XX-DATE-XY but last X instead of Y
+var gDateMade = XX-DATE-XX;
 
 // turn on debuging
 
