@@ -234,7 +234,7 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999060414">
+<!ENTITY  buildId.label "Build ID: 1999060717">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -622,7 +622,7 @@
 			<spring flex="100%"/>
 	      </box>
 
-		<titledbutton id="translate-button" popup="translationlist" value="&translateButton.label;" align="bottom">
+		<titledbutton id="translate-button" popup="translationlist" popupanchor="bottomleft" value="&translateButton.label;" align="bottom">
 		</titledbutton>
 
 	      <titledbutton id="print-button" align="bottom" value="&printButton.label;"  
