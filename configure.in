@@ -3772,13 +3772,20 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
   MOZ_UPDATE_XTERM=1)
 
 dnl
-dnl --enable-ldap
+dnl By default, we will now build with LDAP support, which you can
+dnl turn off with the --disable-ldap option. We also added the
+dnl ldap-experimental flag, which is for experimental LDAP code,
+dnl not currently turned on in the default build.
 dnl
-MOZ_ARG_ENABLE_BOOL(ldap,
-[  --enable-ldap           Enable LDAP (default=no)],
-  MOZ_LDAP_XPCOM=1
-    )
+MOZ_LDAP_XPCOM=1
 
+dnl
+dnl --disable-ldap
+dnl
+MOZ_ARG_DISABLE_BOOL(ldap,
+[  --disable-ldap           Disable LDAP support],
+  MOZ_LDAP_XPCOM=
+    )
 
 dnl --enable-ldap-experimental
 dnl
