@@ -107,7 +107,6 @@
 #include "nsICaret.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
-#include "nsIFormControl.h"
 
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
@@ -1113,7 +1112,8 @@ nsEventStateManager :: FireContextClick ( )
       nsCOMPtr<nsIAtom> tag;
       lastContent->GetTag ( *getter_AddRefs(tag) );
       nsCOMPtr<nsIDOMHTMLInputElement> inputElm ( do_QueryInterface(lastContent) );
-      nsCOMPtr<nsIFormControl> formControl ( do_QueryInterface(lastContent) );
+      PRBool isFormControl =
+        lastContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
       if ( inputElm ) {
         // of all input elements, only ones dealing with text are allowed to have context menus
         if ( tag == nsHTMLAtoms::input ) {
@@ -1124,11 +1124,12 @@ nsEventStateManager :: FireContextClick ( )
             allowedToDispatch = PR_FALSE;
         }
       }
-      else if ( formControl )           // catches combo-boxes
+      else if ( isFormControl && tag != nsHTMLAtoms::textarea )
+        // catches combo-boxes, <object>
         allowedToDispatch = PR_FALSE;
       else if ( tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollbarbutton || tag == nsXULAtoms::button )
         allowedToDispatch = PR_FALSE;
-      else if ( tag == nsHTMLAtoms::applet || tag == nsHTMLAtoms::object || tag == nsHTMLAtoms::embed )
+      else if ( tag == nsHTMLAtoms::applet || tag == nsHTMLAtoms::embed )
         allowedToDispatch = PR_FALSE;
       else if ( tag == nsXULAtoms::toolbarbutton ) {
         // a <toolbarbutton> that has the container attribute set will already have its
@@ -4373,9 +4374,11 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
         nsAutoString nodeValue;
         domNode->GetNodeValue(nodeValue);
 
-        nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(startContent));
+        PRBool isFormControl =
+          startContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
 
-        if (nodeValue.Length() == *aStartOffset && !formControl && startContent != rootContent) {
+        if (nodeValue.Length() == *aStartOffset && !isFormControl &&
+            startContent != rootContent) {
           // Yes, indeed we were at the end of the last node
           nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 

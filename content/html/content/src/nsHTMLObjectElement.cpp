@@ -45,8 +45,9 @@
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIWebNavigation.h"
+#include "nsIFormControl.h"
 
-class nsHTMLObjectElement : public nsGenericHTMLContainerElement,
+class nsHTMLObjectElement : public nsGenericHTMLContainerFormElement,
                             public nsIDOMHTMLObjectElement
 {
 public:
@@ -67,6 +68,16 @@ public:
 
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
+
+  // Overriden nsIFormControl methods
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
+                     PRBool aRemoveFromForm = PR_TRUE);
+  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Reset();
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement);
+  NS_IMETHOD SaveState();
+  NS_IMETHOD RestoreState(nsIPresState* aState);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -115,6 +126,8 @@ nsHTMLObjectElement::nsHTMLObjectElement()
 
 nsHTMLObjectElement::~nsHTMLObjectElement()
 {
+  // Null out form's pointer to us - no ref counting here!
+  SetForm(nsnull);
 }
 
 
@@ -123,7 +136,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLObjectElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsGenericHTMLContainerFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLObjectElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLObjectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -159,10 +172,48 @@ nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  *aForm = nsnull;/* XXX */
+  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::SetForm(nsIDOMHTMLFormElement* aForm,
+                            PRBool aRemoveFromForm)
+{
+  return nsGenericHTMLContainerFormElement::SetForm(aForm, aRemoveFromForm);
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::GetType(PRInt32* aType)
+{
+  NS_PRECONDITION(aType, "aType must not be null!");
+  *aType = NS_FORM_OBJECT;
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLObjectElement::Reset()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                                       nsIContent* aSubmitElement)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::SaveState()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::RestoreState(nsIPresState* aState)
+{
+  return NS_OK;
+}
 
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Code, code)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Align, align)

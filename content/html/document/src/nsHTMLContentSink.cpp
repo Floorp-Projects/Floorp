@@ -1114,6 +1114,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_object:
     rv = NS_NewHTMLObjectElement(aResult, aNodeInfo);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
     break;
   case eHTMLTag_ol:
     rv = NS_NewHTMLOListElement(aResult, aNodeInfo);
