@@ -52,6 +52,7 @@
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsTextTransformer.h"
+#include "nsTextControlFrame.h"
 
 #include "nsXBLAtoms.h"                 // to addref/release table
 #include "nsHTMLAtoms.h"                // to addref/release table
@@ -175,6 +176,7 @@ Shutdown(nsIModule* self)
   nsTextTransformer::Shutdown();
 
   nsSpaceManager::Shutdown();
+  nsTextControlFrame::ReleaseGlobals();
 }
 
 #ifdef NS_DEBUG
