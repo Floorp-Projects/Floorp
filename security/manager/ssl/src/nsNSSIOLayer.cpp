@@ -803,6 +803,7 @@ nsCertErrorNeedsDialog(int error)
           (error == SSL_ERROR_POST_WARNING) ||
           (error == SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE) ||
           (error == SEC_ERROR_CA_CERT_INVALID) ||
+          (error == SEC_ERROR_CRL_EXPIRED) ||
           (error == SEC_ERROR_EXPIRED_CERTIFICATE));
 }
 
