@@ -58,13 +58,15 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
     return NS_OK;
 #else
     nsresult rv;
-    const char* libFile;
+    PRLibSpec libSpec;
+
+    libSpec.type = PR_LibSpec_Pathname;
     if (!xpcomFile)
-        libFile = XPCOM_DLL;
+        libSpec.value.pathname = XPCOM_DLL;
     else
-        libFile = xpcomFile;
+        libSpec.value.pathname = xpcomFile;
            
-    xpcomLib = PR_LoadLibrary(libFile);
+    xpcomLib = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY|PR_LD_GLOBAL);
     if (!xpcomLib)
         return NS_ERROR_FAILURE;
     
@@ -87,7 +89,7 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
     xpcomFunctions->version = XPCOM_GLUE_VERSION;
     xpcomFunctions->size    = sizeof(XPCOMFunctions);
 
-    rv = (*function)(xpcomFunctions, libFile);
+    rv = (*function)(xpcomFunctions, libSpec.value.pathname);
     if (NS_FAILED(rv)) {
         free(xpcomFunctions);
         xpcomFunctions = nsnull;  
