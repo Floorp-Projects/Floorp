@@ -489,8 +489,10 @@ nsContentList::PopulateSelf()
   else if (nsnull != mDocument) {
     nsIContent *root;
     root = mDocument->GetRootContent();
-    PopulateWith(root, PR_TRUE);
-    NS_RELEASE(root);
+    if (root) {
+      PopulateWith(root, PR_TRUE);
+      NS_RELEASE(root);
+    }
   }
 }
 
