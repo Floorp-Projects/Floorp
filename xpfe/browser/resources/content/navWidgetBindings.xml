@@ -15,9 +15,9 @@
         <xul:menulist editable="true" class="location-field" flex="1"
                       autocomplete="true" timeout="300" searchSessionType="urlbar"
                       inherits="label=content"
-                      tooltip="aTooltip" tooltiptext="" ubattr="field"/>
+                      tooltiptext="" ubattr="field"/>
         <xul:button class="button-toolbar-3 go-button" label="Go" 
-                    ubattr="go-button" tooltip="aTooltip" tooltiptext="Go"/> 
+                    ubattr="go-button" tooltiptext="Go"/> 
         <xul:box class="urlbar-post-buttons">
           <children includes="button"/>
         </xul:box>
@@ -48,7 +48,7 @@
       <xul:box align="center" flex="1" class="menulist-container">
         <xul:image class="menulist-icon" inherits="src" emattr="icon"/>
         <xul:textbox class="menulist-editable-textbox plain" flex="1" emattr="field"
-                       inherits="autocomplete,searchSessionType,timeout,tooltip=fieldtooltip,tooltiptext=fieldtooltiptext,value"/>
+                       inherits="autocomplete,searchSessionType,timeout,tooltiptext=fieldtooltiptext,value"/>
         <xul:menubutton class="menulist-editable-menubutton menubutton-icon" emattr="menubutton">
           <xul:menupopup class="menulist-editable-menupopup" emattr="menupopup"
                          popupalign="topright" popupanchor="bottomright">
@@ -116,7 +116,7 @@
     <content>
       <xul:menubutton id="back-button" label="Back" buttontooltiptext="Go Back"
                       oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
-                      class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
+                      class="menubutton-dual toolbar top" crop="right" observes="canGoBack">  
         <xul:menupopup onpopupshowing="BrowserBackMenu(event);"/>
       </xul:menubutton>
     </content>

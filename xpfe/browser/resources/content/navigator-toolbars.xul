@@ -36,7 +36,6 @@
     <rule NC:Element="toolbar">
       <toolbar uri="..."
                class="http://home.netscape.com/NC-rdf#Class"
-               grippytooltip="aTooltip"
                grippytooltiptext="http://home.netscape.com/NC-rdf#Name"/>
     </rule>
     -->
@@ -62,7 +61,7 @@
       </bindings>
       <action>
         <toolbar uri="?item" class="?item-class" 
-                 grippytooltip="aTooltip" grippytooltiptext="?item-name"/>
+                 grippytooltiptext="?item-name"/>
       </action>
     </rule>
     
