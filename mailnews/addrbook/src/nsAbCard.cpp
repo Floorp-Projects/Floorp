@@ -43,8 +43,6 @@ nsAbCard::~nsAbCard(void)
 {
 	if (mCardDatabase)
 	{
-		nsresult rv = NS_OK;
-
 		nsIAddrDBListener* listener = this;
 		mCardDatabase->RemoveListener(listener);
 
