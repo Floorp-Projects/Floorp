@@ -427,7 +427,7 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                 if (!JS_CallFunctionName(cx, dobj, "getTimezoneOffset", 0, nsnull, &tzoffsetval)) {
                     mValid = PR_FALSE;
                 } else {
-                    JS_ValueToECMAInt32(cx, tzoffsetval, &mTimezoneOffset);
+                    JS_ValueToECMAInt32(cx, tzoffsetval, (int32*)&mTimezoneOffset);
                     mTimezone.AssignLiteral("");
                     nsresult rv = SetNativeTime(utcTime);
 
