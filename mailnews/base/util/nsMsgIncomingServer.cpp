@@ -702,6 +702,7 @@ NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, Port, "port");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, IsSecure, "isSecure");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
 // in 4.x, this was "mail.pop3_gets_new_mail" for pop and 

@@ -138,6 +138,8 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute boolean valid;
   
   wstring toString();
+
+  attribute boolean isSecure;
 };
 
 %{C++

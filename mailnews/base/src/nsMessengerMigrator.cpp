@@ -1633,6 +1633,7 @@ nsMessengerMigrator::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_BOOL_PREF("mail.imap.server.%s.offline_download",hostAndPort,imapServer,SetOfflineDownload)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.override_namespaces",hostAndPort,imapServer,SetOverrideNamespaces)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.using_subscription",hostAndPort,imapServer,SetUsingSubscription)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.isSecure",hostAndPort,server,SetIsSecure)
 
   return NS_OK;
 }
