@@ -69,6 +69,16 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsLayoutCID.h"
 
+#if defined(XP_PC)
+#define LAYOUT_DLL "gkhtml.dll"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+#define LAYOUT_DLL "libgklayout"MOZ_DLL_SUFFIX
+#elif defined(XP_MAC)
+#define LAYOUT_DLL "LAYOUT_DLL"
+#endif
+
+#define REL_LAYOUT_DLL "rel:"LAYOUT_DLL
+
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
 //can't today since netlib returns 4.05, but this
@@ -2475,7 +2485,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     // retrieve a path for layout module. Needed for plugin mime types registration
     nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
     nsCOMPtr<nsIFile> path;
-    nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation("rel:gkhtml.dll", getter_AddRefs(path));
+    nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_LAYOUT_DLL, getter_AddRefs(path));
 
     for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
 			const nsFileSpec& file = iter;
@@ -2598,7 +2608,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   // retrieve a path for layout module. Needed for plugin mime types registration
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
   nsCOMPtr<nsIFile> path;
-  nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation("rel:gkhtml.dll", getter_AddRefs(path));
+  nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_LAYOUT_DLL, getter_AddRefs(path));
 
   // first, make a list from MOZ_LOCAL installation
   for (nsDirectoryIterator iter(pluginsDirMoz, PR_TRUE); iter.Exists(); iter++) 
