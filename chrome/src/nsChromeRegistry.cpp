@@ -70,7 +70,6 @@
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
-#include "nsIPref.h"
 
 static char kChromePrefix[] = "chrome://";
 
@@ -79,7 +78,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 class nsChromeRegistry;
 
@@ -412,14 +410,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
   nsCAutoString finalURL;
   GetBaseURL(package, provider, finalURL);
   if (finalURL.IsEmpty()) {
-    nsCOMPtr <nsIPref> prefService = do_GetService(kPrefServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool enableSwitching = PR_FALSE;
-    rv = prefService->GetBoolPref("skins.enable.switching",&enableSwitching);
-    if (NS_FAILED(rv)) return rv;
-
-    if (provider.Equals("skin") && enableSwitching) {
+    /* hard coded, for now. */
+    if (provider.Equals("skin")) {
       finalURL = "resource:/chrome/skins/modern/";
     }
     else {
