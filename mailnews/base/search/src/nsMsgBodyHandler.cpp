@@ -159,7 +159,7 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(nsCString &buf)
     if (m_headersSize > 0)
     {
       numBytesCopied = strlen(m_headers) + 1 ;
-      buf.Append(m_headers);
+      buf.Assign(m_headers);
       m_headers += numBytesCopied;  
       // be careful...m_headersSize is unsigned. Don't let it go negative or we overflow to 2^32....*yikes*	
       if (m_headersSize < numBytesCopied)
