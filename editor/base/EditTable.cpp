@@ -159,14 +159,9 @@ nsHTMLEditor::DeleteTable()
     if(NS_FAILED(GetChildOffset(table, tableParent, tableOffset)))
       return NS_ERROR_FAILURE;
 
-    // Place selection just before the table
-    nsCOMPtr<nsIDOMSelection>selection;
-    res = nsEditor::GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(res) || !selection)
-      return res;
-
     res = DeleteNode(table);
 
+    // Place selection just before the table
     selection->Collapse(tableParent, tableOffset);
   }
   return res;

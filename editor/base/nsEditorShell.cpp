@@ -1150,7 +1150,7 @@ SkipFilters:
         // TODO: Get the file type (from the extension?) the user set for the file
         // How do we do this in an XP way??? 
         // For now, just save as HTML type
-        res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIEditor::eSaveFileHTML);
+        res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML);
         if (NS_FAILED(res))
         {
           Alert(GetString("SaveFileFailed"), GetString("SaveDocument"));
@@ -1305,7 +1305,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 }
 
 NS_IMETHODIMP
-nsEditorShell::IsNodeBlock(nsIDOMNode *node, PRBool *_retval)
+nsEditorShell::NodeIsBlock(nsIDOMNode *node, PRBool *_retval)
 {
   if (!node || !_retval) { return NS_ERROR_NULL_POINTER; }
   nsresult  rv = NS_NOINTERFACE;
@@ -1317,7 +1317,7 @@ nsEditorShell::IsNodeBlock(nsIDOMNode *node, PRBool *_retval)
       {
         nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
         if (editor)
-          rv = editor->IsNodeBlock(node, _retval);
+          rv = editor->NodeIsBlock(node, *_retval);
       }
       break;
 

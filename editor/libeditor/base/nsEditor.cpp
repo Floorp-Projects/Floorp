@@ -671,7 +671,7 @@ nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
 }
 
 NS_IMETHODIMP 
-nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, ESaveFileType aSaveFileType)
+nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType)
 {
   if (!aFileSpec)
     return NS_ERROR_NULL_POINTER;
@@ -688,11 +688,8 @@ nsEditor::SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveC
 
   nsAutoString useDocCharset("");
 
-	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
-
   res = diskDoc->SaveFile(aFileSpec, aReplaceExisting, aSaveCopy, 
-                          aSaveFileType == eSaveFileText ? nsIDiskDocument::eSaveFileText : nsIDiskDocument::eSaveFileHTML,
-                          useDocCharset);
+                          aSaveFileType, useDocCharset);
   if (NS_SUCCEEDED(res))
     DoAfterDocumentSave();
 
@@ -2095,10 +2092,10 @@ nsEditor::GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount)
 
 // Non-static version for the nsIEditor interface and JavaScript
 NS_IMETHODIMP 
-nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool *aIsBlock)
+nsEditor::NodeIsBlock(nsIDOMNode *aNode, PRBool &aIsBlock)
 {
-  if (!aNode || !aIsBlock) { return NS_ERROR_NULL_POINTER; }
-  return IsNodeBlock(aNode, *aIsBlock);
+  if (!aNode) { return NS_ERROR_NULL_POINTER; }
+  return IsNodeBlock(aNode, aIsBlock);
 }
 
 // The list of block nodes is shorter, so do the real work here...
