@@ -54,9 +54,13 @@ try {
 	iParentOne = Components.interfaces.nsIXPCTestParentOne;
 	iParentTwo = Components.interfaces.nsIXPCTestParentTwo;
 
-	cChild = Components.classes.xpcTestChild2.createInstance();
-	cParentOne = Components.classes.xpcTestParentOne.createInstance();
-	cParentTwo = Components.classes.xpcTestParentTwo.createInstance();
+
+	CONTRACTID = "@mozilla.org/js/xpc/test/Child2;1";
+	cChild = Components.classes[CONTRACTID].createInstance();
+	CONTRACTID = "@mozilla.org/js/xpc/test/ParentOne;1";
+	cParentOne = Components.classes[CONTRACTID].createInstance();
+	CONTRACTID = "@mozilla.org/js/xpc/test/ParentTwo;1";
+	cParentTwo = Components.classes[CONTRACTID].createInstance();
 
 	c_c2 = cChild.QueryInterface(iChild);
 	c_p1 = cChild.QueryInterface(iParentOne);

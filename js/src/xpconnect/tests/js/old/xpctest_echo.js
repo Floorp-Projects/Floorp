@@ -36,9 +36,9 @@
 
 function nsNativeEcho()
 {
-    var obj = Components.classes.nsEcho.createInstance();
-    obj = obj.QueryInterface(Components.interfaces.nsIEcho);
-    return obj;
+    var clazz = Components.classes["@mozilla.org/js/xpc/test/Echo;1"];
+    var iface = Components.interfaces.nsIEcho;
+    return new clazz(iface);
 }    
 
 var nsID = Components.ID;
@@ -334,6 +334,7 @@ echo.SetReceiver(receiver3);
 var all_ok = true;
 
 try {
+    print("\nThe 'FailInJSTest' test is expected to throw an exception...\n");
     echo.FailInJSTest(false);
 }
 catch(e) {
@@ -366,25 +367,6 @@ var bar = clazz.getService(iface);
 all_ok = foo === bar;
 print("service identity test - "+(all_ok ? "passed" : "failed"));
 foo = bar = iface = clazz = null;
-
-/***************************************************************************/
-// Components object test...
-// print(".......................................");
-
-// print("Components = "+Components);
-// print("Components.interfaces = "+Components.interfaces);
-// print("Components.interfaces.nsISupports = "+Components.interfaces.nsISupports);
-// print("Components.interfaces.nsISupports.name = "+Components.interfaces.nsISupports.name);
-// print("Components.interfaces.nsISupports.number = "+Components.interfaces.nsISupports.number);
-//
-// print("Components.interfaces.nsIEcho.number = "+Components.interfaces.nsIEcho.number);
-// print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'] = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}']);
-// print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name);
-//
-// print("Components.classes = "+Components.classes);
-// print("Components.classes.nsIID = "+Components.classes.nsIID);
-// print("Components.classes.nsCID = "+Components.classes.nsCID);
-// print("Components.classes.nsCID.name = "+Components.classes.nsCID.name);
 
 /***************************************************************************/
 

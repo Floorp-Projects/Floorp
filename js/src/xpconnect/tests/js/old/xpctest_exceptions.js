@@ -20,7 +20,7 @@ function printExceptionDoubleData(e) {
     }
 }    
 
-var clazz = Components.classes.nsEcho;
+var clazz = Components.classes["@mozilla.org/js/xpc/test/Echo;1"];
 var iface = Components.interfaces.nsIEcho;
 var nativeEcho = clazz.createInstance(iface);
 
