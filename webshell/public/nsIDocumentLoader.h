@@ -81,6 +81,8 @@ public:
 
     NS_IMETHOD Stop(void) = 0;
 
+    NS_IMETHOD IsBusy(PRBool& aResult) = 0;
+
     NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance) = 0;
 
     NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory) = 0;
