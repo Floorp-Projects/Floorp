@@ -42,6 +42,13 @@ static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 NS_DEF_PTR(nsIDOMEditorAppCore);
 NS_DEF_PTR(nsIDOMWindow);
 
+//
+// EditorAppCore property ids
+//
+enum EditorAppCore_slots {
+  EDITORAPPCORE_CONTENTSASTEXT = -1,
+  EDITORAPPCORE_CONTENTSASHTML = -2
+};
 
 /***********************************************************************/
 //
@@ -59,7 +66,28 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case EDITORAPPCORE_CONTENTSASTEXT:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetContentsAsText(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EDITORAPPCORE_CONTENTSASHTML:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetContentsAsHTML(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -137,6 +165,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -175,6 +204,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreUndo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -199,6 +229,7 @@ EditorAppCoreUndo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   return JS_TRUE;
 }
 
+
 //
 // Native method Redo
 //
@@ -206,6 +237,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreRedo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -238,6 +270,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -270,6 +303,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreSetToolbarWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
@@ -311,6 +345,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreSetContentWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
@@ -352,6 +387,7 @@ PR_STATIC_CALLBACK(JSBool)
 EditorAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
@@ -409,6 +445,8 @@ JSClass EditorAppCoreClass = {
 //
 static JSPropertySpec EditorAppCoreProperties[] =
 {
+  {"contentsAsText",    EDITORAPPCORE_CONTENTSASTEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"contentsAsHTML",    EDITORAPPCORE_CONTENTSASHTML,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

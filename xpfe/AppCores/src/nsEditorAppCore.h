@@ -61,6 +61,8 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
     NS_IMETHOD    Back();
+		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
+		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
     NS_IMETHOD    Forward();
     NS_IMETHOD    LoadUrl(const nsString& aUrl);
     NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);
@@ -68,6 +70,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetDisableCallback(const nsString& aScript);
     NS_IMETHOD    SetEnableCallback(const nsString& aScript);
+   // NS_IMETHOD		OutputText(nsString);
     NS_IMETHOD    NewWindow();
     NS_IMETHOD    PrintPreview();
     NS_IMETHOD    Close();
