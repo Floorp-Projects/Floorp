@@ -18,7 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 // Local Includes
@@ -528,7 +528,7 @@ NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUni
     LWindow			 *theDialog = theHandler.GetDialog();
     Str255            aStr;
 
-    UMacUnicode::StringToStr255(text, aStr);
+    UMacUnicode::StringToStr255(nsString(text), aStr);
    			
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     msgText->SetDescriptor(aStr);
@@ -563,7 +563,7 @@ NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRU
     LWindow			 *theDialog = theHandler.GetDialog();
     Str255            aStr;
 
-    UMacUnicode::StringToStr255(text, aStr);
+    UMacUnicode::StringToStr255(nsString(text), aStr);
    			
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     msgText->SetDescriptor(aStr);
@@ -599,10 +599,10 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, cons
     LWindow			 *theDialog = theHandler.GetDialog();
     Str255          msgStr, checkBoxStr;
 
-    UMacUnicode::StringToStr255(text, msgStr);	
+    UMacUnicode::StringToStr255(nsString(text), msgStr);	
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     msgText->SetDescriptor(msgStr);
-    UMacUnicode::StringToStr255(checkMsg, checkBoxStr);
+    UMacUnicode::StringToStr255(nsString(checkMsg), checkBoxStr);
     LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
     checkBox->SetDescriptor(checkBoxStr);
     checkBox->SetValue(*checkValue ? 1 : 0);
@@ -641,7 +641,7 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUn
     LWindow			 *theDialog = theHandler.GetDialog();
     Str255          aStr;
 
-    UMacUnicode::StringToStr255(text, aStr);	
+    UMacUnicode::StringToStr255(nsString(text), aStr);	
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     msgText->SetDescriptor(aStr);
     LEditText *responseText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Rslt'));
@@ -688,7 +688,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dial
     LWindow			 *theDialog = theHandler.GetDialog();
     Str255          aStr;
 
-    UMacUnicode::StringToStr255(text, aStr);	
+    UMacUnicode::StringToStr255(nsString(text), aStr);	
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     msgText->SetDescriptor(aStr);	
     LEditText *userText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Name'));
@@ -742,7 +742,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, co
     LWindow			 *theDialog = theHandler.GetDialog();
     Str255          aStr;
 
-    UMacUnicode::StringToStr255(text, aStr);	
+    UMacUnicode::StringToStr255(nsString(text), aStr);	
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     msgText->SetDescriptor(aStr);	
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
