@@ -260,17 +260,14 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       else {
         // size: int, enum , 
         aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-        if ((value.GetUnit() == eHTMLUnit_Integer) ||
-            (value.GetUnit() == eHTMLUnit_Enumerated)) { 
+        nsHTMLUnit unit = value.GetUnit();
+        if (unit == eHTMLUnit_Integer || unit == eHTMLUnit_Enumerated) { 
           PRInt32 size = value.GetIntValue();
-          nsHTMLUnit unit = value.GetUnit();
-          if (size || unit == eHTMLUnit_Integer) { // unit is integer if attr was "+0" or "-0"
-            if (unit == eHTMLUnit_Integer) // int (+/-)
-	            size = 3 + size;  // XXX should be BASEFONT, not three
+          if (unit == eHTMLUnit_Integer) // int (+/-)
+            size += 3;  // XXX should be BASEFONT, not three
 	            
-            size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-            font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
-          }
+          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+          font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
         }
       }
     }
