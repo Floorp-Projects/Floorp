@@ -2,9 +2,6 @@
 # This is a list of local files which get copied to the mozilla:dist:libimg directory
 #
 
-MIMGCB.h
-MIMGCBIF.h
-MPSIMGCB.h
 dummy_nc.h
 ilIImageRenderer.h
 ilINetContext.h
