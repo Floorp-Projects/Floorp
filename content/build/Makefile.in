@@ -92,6 +92,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
