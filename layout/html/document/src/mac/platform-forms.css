@@ -94,7 +94,6 @@ input[type="radio"] {
   height: 14px;
 }
 
-button,
 input[type="reset"],
 input[type="button"],
 input[type="submit"] {
@@ -104,6 +103,14 @@ input[type="submit"] {
   padding: 0;
   border-width: 2px 8px 2px 8px;
   color: -moz-FieldText !important;
+}
+
+button,
+button[disabled],
+button[disabled]:active {
+  -moz-appearance: button-bevel;
+  padding: 0;
+  border-width: 4px;
 }
 
 button:active:hover,
@@ -117,12 +124,11 @@ button:-moz-focus-inner,
 input[type="reset"]:-moz-focus-inner,
 input[type="button"]:-moz-focus-inner,
 input[type="submit"]:-moz-focus-inner,
-input[type="file"] > input[type="button"]:focus:-moz-focus-inner {
+input[type="file"] > input[type="button"]:-moz-focus-inner {
   padding: 0;
   border: 0;
 }
 
-button[disabled]:active, button[disabled],
 input[type="reset"][disabled]:active,
 input[type="reset"][disabled],
 input[type="button"][disabled]:active,

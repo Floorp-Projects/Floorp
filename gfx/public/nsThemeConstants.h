@@ -19,6 +19,10 @@
 // A small button, for HTML forms
 #define NS_THEME_BUTTON_SMALL                              6
 
+// A rectangular button that contains complex content
+// like images (e.g. HTML <button> elements)
+#define NS_THEME_BUTTON_BEVEL                              7
+
 // The toolbox that contains the toolbars.
 #define NS_THEME_TOOLBOX                                   11
 
