@@ -67,6 +67,7 @@ struct MimeLeafClass {
   MimeObjectClass object;
   /* This is the callback that is handed to the decoder. */
   int (*parse_decoded_buffer) (const char *buf, PRInt32 size, MimeObject *obj);
+  int (*close_decoder) (MimeObject *obj);
 };
 
 extern MimeLeafClass mimeLeafClass;

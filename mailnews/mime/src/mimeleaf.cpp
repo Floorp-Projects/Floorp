@@ -52,6 +52,7 @@ static void MimeLeaf_finalize (MimeObject *);
 static int MimeLeaf_parse_begin (MimeObject *);
 static int MimeLeaf_parse_buffer (const char *, PRInt32, MimeObject *);
 static int MimeLeaf_parse_line (char *, PRInt32, MimeObject *);
+static int MimeLeaf_close_decoder (MimeObject *);
 static int MimeLeaf_parse_eof (MimeObject *, PRBool);
 static PRBool MimeLeaf_displayable_inline_p (MimeObjectClass *clazz,
 											  MimeHeaders *hdrs);
@@ -68,6 +69,7 @@ MimeLeafClassInitialize(MimeLeafClass *clazz)
   oclass->parse_line   = MimeLeaf_parse_line;
   oclass->parse_eof    = MimeLeaf_parse_eof;
   oclass->displayable_inline_p = MimeLeaf_displayable_inline_p;
+  clazz->close_decoder = MimeLeaf_close_decoder;
 
   /* Default `parse_buffer' method is one which line-buffers the now-decoded
 	 data and passes it on to `parse_line'.  (We snarf the implementation of
@@ -182,6 +184,22 @@ MimeLeaf_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
 
 static int
+MimeLeaf_close_decoder (MimeObject *obj)
+{
+  MimeLeaf *leaf = (MimeLeaf *) obj;
+
+  if (leaf->decoder_data)
+  {
+      int status = MimeDecoderDestroy(leaf->decoder_data, PR_FALSE);
+      leaf->decoder_data = 0;
+      return status;
+  }
+
+  return 0;
+}
+
+
+static int
 MimeLeaf_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   MimeLeaf *leaf = (MimeLeaf *) obj;
@@ -191,11 +209,10 @@ MimeLeaf_parse_eof (MimeObject *obj, PRBool abort_p)
 	 it is still holding.
    */
   if (leaf->decoder_data)
-	{
-	  int status = MimeDecoderDestroy(leaf->decoder_data, PR_FALSE);
-	  leaf->decoder_data = 0;
-	  if (status < 0) return status;
-	}
+  {
+      int status = MimeLeaf_close_decoder(obj);
+      if (status < 0) return status;
+  }
 
   /* Now run the superclass's parse_eof, which will force out the line
 	 buffer (which we may have just repopulated, above.)

@@ -231,14 +231,17 @@ MimeInlineText_parse_eof (MimeObject *obj, PRBool abort_p)
 
   MimeInlineText *text = (MimeInlineText *) obj;
 
-  /* If there is still data in the ibuffer, that means that the last line of
-   this part didn't end in a newline; so push it out anyway (this means that
-   the parse_line method will be called with a string with no trailing
-   newline, which isn't the usual case.)  We do this here, rather than in 
-   MimeObject_parse_eof, because MimeObject likes to shove things through
-   parse_line, and we have to shove it through the magic rotating-and-converting
-   code.  So, we do that and digest the buffer before MimeObject has a chance
-   to do the wrong thing.  See bug #26276 for more painful details.
+  /* Flush any buffered data from the MimeLeaf's decoder */
+  status = ((MimeLeafClass*)&MIME_SUPERCLASS)->close_decoder(obj);
+  if (status < 0) return status;
+
+  /* If there is still data in the ibuffer, that means that the last
+   line of this part didn't end in a newline; so push it out anyway
+   (this means that the parse_line method will be called with a string
+   with no trailing newline, which isn't the usual case).  We do this
+   here, rather than in MimeObject_parse_eof, because MimeObject isn't
+   aware of the rotating-and-converting / charset detection we need to
+   do first.
   */
   if (!abort_p && obj->ibuffer_fp > 0)
   {
