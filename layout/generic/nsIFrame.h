@@ -38,6 +38,7 @@ class nsIWidget;
 class nsIReflowCommand;
 class nsAutoString;
 class nsString;
+class nsIFocusTracker; 
 
 struct nsPoint;
 struct nsRect;
@@ -535,7 +536,22 @@ public:
 
   NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw) = 0;
 
-  NS_IMETHOD  SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected) = 0;
+  /** 
+   * Called to start a selection with this frame content.  
+   * @param aSelected Selected or not?
+   * @param aBeginContentOffset where to begin the selection in content offsets
+   * @param aEndContentOffset where to end the selection in content offsets
+   * @param aAnchorOffset  if this is set(not -1) it will tell the implementation of nsIFrame where
+   *        to put the anchor in content offsets.
+   * @param aFocusOffset if this is set(not -1) it will tell the implementation of nsIFrame where
+   *        to put the focus in content offsets.
+   * @param aFocusTracker will allow the frame to set the focus to what it needs.
+   * @param return value of which frame (maybe not this one, maybe one of its siblings)
+   */
+  NS_IMETHOD  SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
+                                        PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw,
+                                        nsIFocusTracker *aTracker,
+                                        nsIFrame **aActualSelected)=0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset) = 0;
 
