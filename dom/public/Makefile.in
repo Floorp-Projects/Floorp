@@ -49,6 +49,7 @@ EXPORTS		= \
 		nsIScriptExternalNameSet.h \
 		nsIScriptNameSpaceManager.h \
 		nsDOMError.h \
+		nsIJSEventListener.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
