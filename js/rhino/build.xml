@@ -102,7 +102,7 @@ Requires Ant version 1.2 or later
              windowtitle="${Name}" />
   </target>
 
-  <target name="dist" depends="jar,copy-all,javadoc">
+  <target name="dist" depends="deepclean,jar,copy-all,javadoc">
     <delete file="${dist.file}" />
     <zip zipfile="${dist.file}"
          basedir="${build.dir}"
