@@ -906,6 +906,8 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsStr
                                              qualifiedRegName,
                                              aVersion,
                                              aJarSource,
+                                             aFolder,
+                                             aTargetName,
                                              &result);
     
 
@@ -1041,11 +1043,11 @@ nsInstall::AddPatch(nsHashKey *aKey, nsFileSpec* fileName)
 }
 
 void       
-nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec* fileName)
+nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec** fileName)
 {
     if (mPatchList != nsnull)
     {
-        fileName = (nsFileSpec*) mPatchList->Get(aKey);
+        *fileName = (nsFileSpec*) mPatchList->Get(aKey);
     }
 }
 

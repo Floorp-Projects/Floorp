@@ -226,9 +226,9 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
 
     doomedFile.Delete(false);
 
-    if (! doomedFile.Exists() )
+    if ( !doomedFile.Exists() )
     {
-        // Now that we have move the existing file, we can move the mExtracedFile into place.
+        // Now that we have removed the existing file, we can move the mExtracedFile or mPatchedFile into place.
         nsFileSpec parentofFinalFile;
 
         doomedFile.GetParent(parentofFinalFile);
