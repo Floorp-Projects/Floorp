@@ -446,7 +446,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- start nsTextEditor::SetTextProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
 
   nsresult result=NS_ERROR_NOT_INITIALIZED;
@@ -563,7 +563,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- end nsTextEditor::SetTextProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
   return result;
 }
@@ -582,7 +582,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("nsTextEditor::GetTextProperty %s\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
 */
   nsresult result;
@@ -700,7 +700,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- start nsTextEditor::RemoveInlineProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
 
   nsresult result;
@@ -806,7 +806,7 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
     if (gNoisy) { printf("---------- end nsTextEditor::RemoveInlineProperty %s ----------\n", propCString); }
-    delete [] propCString;
+    nsCRT::free(propCString);
   }
   return result;
 }
@@ -1390,7 +1390,7 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
   { 
     char *tag = aParentTag.ToNewCString();
     printf("---------- nsHTMLEditor::AddBlockParent %s ----------\n", tag); 
-    delete [] tag;
+    nsCRT::free(tag);
   }
   
   nsresult res=NS_ERROR_NOT_INITIALIZED;
@@ -1435,7 +1435,7 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
   { 
     char *tag = aParentTag.ToNewCString();
     printf("---------- nsHTMLEditor::ReplaceBlockParent %s ----------\n", tag); 
-    delete [] tag;
+    nsCRT::free(tag);
   }
   
   nsresult res=NS_ERROR_NOT_INITIALIZED;
@@ -2608,7 +2608,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 #ifdef DEBUG_akkana
   char* curstyle = styleValue.ToNewCString();
   printf("Setting style: [%s]\n", curstyle);
-  delete[] curstyle;
+  nsCRT::free(curstyle);
 #endif /* DEBUG_akkana */
 
   return bodyElement->SetAttribute(styleName, styleValue);
@@ -2932,7 +2932,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
 #ifdef DEBUG_akkana
           char* flav = flavor.ToNewCString();
           printf("Got flavor [%s]\n", flav);
-          delete[] flav;
+          nsCRT::free(flav);
 #endif
           if (flavor.Equals(kHTMLMime))
           {
@@ -2965,7 +2965,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
           }
         }
-        delete [] bestFlavor;
+        nsCRT::free(bestFlavor);
       }
     }
   }
@@ -2990,19 +2990,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
   else
   { // default processing
     nsCOMPtr<nsIDocumentEncoder> encoder;
-    char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+    char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
     if (! progid)
       return NS_ERROR_OUT_OF_MEMORY;
     strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
     char* type = aFormatType.ToNewCString();
     strcat(progid, type);
-    delete[] type;
+    nsCRT::free(type);
     rv = nsComponentManager::CreateInstance(progid,
                                             nsnull,
                                             nsIDocumentEncoder::GetIID(),
                                             getter_AddRefs(encoder));
 
-    delete[] progid;
+    nsCRT::free(progid);
     if (NS_FAILED(rv))
     {
       printf("Couldn't get progid %s\n", progid);
@@ -3058,20 +3058,20 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
 {
   nsresult rv;
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  char* progid = new char[strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1];
+  char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
   if (! progid)
       return NS_ERROR_OUT_OF_MEMORY;
 
   strcpy(progid, NS_DOC_ENCODER_PROGID_BASE);
   char* type = aFormatType.ToNewCString();
   strcat(progid, type);
-  delete[] type;
+  nsCRT::free(type);
   rv = nsComponentManager::CreateInstance(progid,
                                           nsnull,
                                           nsIDocumentEncoder::GetIID(),
                                           getter_AddRefs(encoder));
 
-  delete[] progid;
+  nsCRT::free(progid);
   if (NS_FAILED(rv))
   {
     printf("Couldn't get progid %s\n", progid);
@@ -3594,7 +3594,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode,
   { 
     char *tag = aParentTag.ToNewCString();
     printf("---------- ReParentContentOfNode(%p,%s,%d) -----------\n", aNode, tag, aTransformation); 
-    delete [] tag;
+    nsCRT::free(tag);
   }
   // find the current block parent, or just use aNode if it is a block node
   nsCOMPtr<nsIDOMElement>blockParentElement;

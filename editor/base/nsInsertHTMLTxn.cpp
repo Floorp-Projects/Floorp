@@ -63,7 +63,7 @@ NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
 #ifdef DEBUG_akkana
         char* str = mSrc.ToNewCString();
         printf("Calling nsInsertHTMLTxn::Do(%s)\n", str);
-        delete[] str;
+        nsCRT::free(str);
 #endif /* DEBUG_akkana */
         nsCOMPtr<nsIDOMDocumentFragment> docfrag;
         res = nsrange->CreateContextualFragment(mSrc, getter_AddRefs(docfrag));

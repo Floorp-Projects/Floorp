@@ -76,8 +76,8 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
   {
     if (gNoisy)
       printf("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
-    delete [] c;
-    delete [] p;
+    nsCRT::free(c);
+    nsCRT::free(p);
   }
   // end debug output
 #endif
@@ -115,8 +115,8 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
   {
     if (gNoisy)
       printf("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
-    delete [] c;
-    delete [] p;
+    nsCRT::free(c);
+    nsCRT::free(p);
   }
   // end debug output
 #endif
