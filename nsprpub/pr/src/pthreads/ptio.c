@@ -3832,6 +3832,7 @@ static PRInt32 _pr_poll_with_poll(
             {
                 /* make poll() ignore this entry */
                 syspoll[index].fd = -1;
+                syspoll[index].events = 0;
                 pds[index].out_flags = 0;
             }
         }
