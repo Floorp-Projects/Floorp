@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#ifdef ClientWallet
 
 /*
    wallet.cpp
@@ -1974,3 +1975,5 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
     }
   }
 }
+
+#endif
