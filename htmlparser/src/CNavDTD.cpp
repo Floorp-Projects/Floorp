@@ -2463,12 +2463,7 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
   }
   
   aLineNo = mLineNumber;
-  // XXX rickg This linefeed conversion stuff should be moved out of
-  // the parser and into the form element code
-  PRBool mustConvertLinebreaks = PR_FALSE;
-
   mScratch.Truncate();
-  
   PRInt32 i = 0;
   PRInt32 tagCount = mSkippedContent.GetSize();
   for (i = 0; i< tagCount; ++i){
@@ -2485,11 +2480,7 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
            ((eHTMLTag_textarea == aTag) || (eHTMLTag_title == aTag))) {
             mScratch.Truncate();
             ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
-            // since this is an entity, we know that it's only one character.
-            // check to see if it's a CR, in which case we'll need to do line
-            // termination conversion at the end.
             if (!mScratch.IsEmpty()){
-              mustConvertLinebreaks |= (mScratch[0] == kCR);
               aContent.Append(mScratch);
             }
             else {
@@ -2504,12 +2495,7 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
     IF_FREE(theNextToken, mTokenAllocator);
   }
   
-  // if the string contained CRs (hence is either CR, or CRLF terminated)
-  // we need to convert line breaks
-  if (mustConvertLinebreaks)
-  {
-    InPlaceConvertLineEndings(aContent);
-  }
+  InPlaceConvertLineEndings(aContent);
 
   // Note: TEXTAREA content is PCDATA and hence the newlines are already accounted for.
   mLineNumber += (aTag != eHTMLTag_textarea) ? aContent.CountChar(kNewLine) : 0;
