@@ -3688,7 +3688,7 @@ XP_GetNonGridContext
 XP_GetSecurityStatus
 XP_GetString
 # XP_GetStringForHTML
-# XP_GetURLForView
+XP_GetURLForView
 # XP_Gethash
 # XP_HandleHTMLDialog
 # XP_HandleHTMLPanel
