@@ -24,14 +24,9 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+# Build xlibrgb only for X toolkits
 ifneq (,$(filter gtk xlib motif qt,$(MOZ_WIDGET_TOOLKIT)))
 XLIB_RGB_DIRS = xlibrgb
-else
-
-ifndef MOZ_MONOLITHIC_TOOLKIT
-XLIB_RGB_DIRS = xlibrgb
-endif
-
 endif
 
 DIRS = ps $(XLIB_RGB_DIRS) $(MOZ_GFX_TOOLKIT)
@@ -67,15 +62,23 @@ REQUIRES=util img xpcom raptor netlib dom js
 
 DEFINES += -D_IMPL_NS_GFX 
 
-CPPSRCS=nsColor.cpp nsColorNames.cpp nsFont.cpp \
-    nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
-    nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
-    nsImageURL.cpp nsRect.cpp nsTransform2D.cpp \
-    nsDeviceContext.cpp nsBlender.cpp \
+CPPSRCS =\
+	nsColor.cpp \
+	nsColorNames.cpp \
+	nsFont.cpp \
+    nsImageGroup.cpp \
+	nsImageManager.cpp \
+	nsImageNetContextAsync.cpp \
+    nsImageRenderer.cpp \
+	nsImageRequest.cpp \
+	nsImageSystemServices.cpp \
+    nsImageURL.cpp \
+	nsRect.cpp \
+	nsTransform2D.cpp \
+    nsDeviceContext.cpp \
+	nsBlender.cpp \
     nsImageNetContextSync.cpp \
-    nsJSRenderingContext.cpp
+    nsJSRenderingContext.cpp \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-caca:
-	@echo $(DIRS)
