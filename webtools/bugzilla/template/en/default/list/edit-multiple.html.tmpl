@@ -24,7 +24,7 @@
 [% dontchange = "--do_not_change--" %]
 <input type="hidden" name="dontchange" value="[% dontchange FILTER html %]">
 
-<script type="text/javascript" language="JavaScript">
+<script type="text/javascript">
   var numelements = document.forms.changeform.elements.length;
   function SetCheckboxes(value) {
       var item;
@@ -39,16 +39,15 @@
 
 <hr>
 
-<p><font size="-1">
-  To change multiple [% terms.bugs %]:
-  <ol>
-    <li>Check the [% terms.bugs %] you want to change above.</li>
-    <li>Make your changes in the form fields below.  If the change
-        you are making requires an explanation, include it in
-        the comments box.</li>
-    <li>Click the <em>Commit</em> button.</li>
-  </ol>
-</font></p>
+<p style="font-size:smaller">
+ To change multiple [% terms.bugs %]:</p>
+<ol style="font-size:smaller">
+  <li>Check the [% terms.bugs %] you want to change above.</li>
+  <li>Make your changes in the form fields below.  If the change
+   you are making requires an explanation, include it in
+   the comments box.</li>
+  <li>Click the <em>Commit</em> button.</li>
+</ol>
 
 <table id="form">
   <tr>
@@ -185,7 +184,7 @@
 
 </table>
 
-<label for="comment"><b>Additional Comments:</b></label><br>
+<b><label for="comment">Additional Comments:</label></b><br>
 <textarea id="comment" name="comment" rows="5" cols="80"></textarea><br>
 
 [% IF groups.size > 0 %]
@@ -193,10 +192,10 @@
   <b>Groupset:</b><br>
   <table border="1">
     <tr>
-      <th>Don't<br>change<br>this group<br>restriction</td>
-      <th>Remove<br>[% terms.bugs %]<br>from this<br>group</td>
-      <th>Add<br>[% terms.bugs %]<br>to this<br>group</td>
-      <th>Group Name:</td>
+      <th>Don't<br>change<br>this group<br>restriction</th>
+      <th>Remove<br>[% terms.bugs %]<br>from this<br>group</th>
+      <th>Add<br>[% terms.bugs %]<br>to this<br>group</th>
+      <th>Group Name:</th>
     </tr>
 
     [% FOREACH group = groups %]
@@ -230,8 +229,8 @@
   </table>
 
   [% IF foundinactive %]
-    <font size="-1">(Note: [% terms.Bugs %] may not be added to [% FILTER inactive %]inactive
-    groups[% END %], only removed.)</font><br>
+    <p style="font-size:smaller">(Note: [% terms.Bugs %] may not be added to [% FILTER inactive %]inactive
+    groups[% END %], only removed.)</p>
   [% END %]
 
 [% END %]
@@ -326,7 +325,6 @@
 [% IF ismover %]
   <input type="submit" name="action" value="[% Param('move-button-text') %]">
 [% END %]
-
 
 [%############################################################################%]
 [%# Select Menu Block                                                        #%]

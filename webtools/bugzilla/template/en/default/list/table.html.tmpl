@@ -176,8 +176,7 @@
     </td>
 
     [% FOREACH column = displaycolumns %]
-    <td>
-      [% '<nobr>' IF NOT abbrev.$column.wrap %]
+    <td [% 'style="white-space: nowrap"' IF NOT abbrev.$column.wrap %]>
       [% IF abbrev.$column.format_value %] 
         [%- bug.$column FILTER format(abbrev.$column.format_value) FILTER html -%] 
       [% ELSIF column == 'actual_time' ||
@@ -187,7 +186,6 @@
       [% ELSE %]
         [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
       [% END %]
-      [%- '</nobr>' IF NOT abbrev.$column.wrap %]
     </td>
     [% END %]
 
