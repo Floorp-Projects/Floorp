@@ -276,9 +276,11 @@ pr_ZoneRealloc(void *oldptr, PRUint32 bytes)
     PR_ASSERT(mb->s.magic == ZONE_MAGIC);
     if (mb->s.magic != ZONE_MAGIC) {
         /* Maybe this just came from ordinary malloc */
+#ifdef DEBUG
         fprintf(stderr,
             "Warning: reallocing memory block %p from ordinary malloc\n",
             oldptr);
+#endif
         /* We don't know how big it is.  But we can fix that. */
         oldptr = realloc(oldptr, bytes);
         if (!oldptr) {
@@ -333,8 +335,10 @@ pr_ZoneFree(void *ptr)
 
     if (mb->s.magic != ZONE_MAGIC) {
         /* maybe this came from ordinary malloc */
+#ifdef DEBUG
         fprintf(stderr,
             "Warning: freeing memory block %p from ordinary malloc\n", ptr);
+#endif
         free(ptr);
         return;
     }
