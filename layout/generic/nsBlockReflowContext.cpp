@@ -700,9 +700,14 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
     aCombinedRect.y += y;
   }
   else {
-    // See if the frame fit. If its the first frame then it always
-    // fits.
-    if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) 
+    // See if the frame fit. If it's the first frame then it always
+    // fits. If the height is unconstrained then it always fits, even
+    // if there's some sort of integer overflow that makes
+    // y + mMetrics.height appear to go beyond the available height.
+    // XXX This is a bit of a hack. We really need to use floats in layout!
+    if (aForceFit ||
+        mSpace.height == NS_UNCONSTRAINEDSIZE ||
+        y + mMetrics.height <= mSpace.YMost())
     {
       // Calculate the actual x-offset and left and right margin
       nsBlockHorizontalAlign  align;
