@@ -3384,7 +3384,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      if (!hideStandardSelection) {
+      if (!hideStandardSelection || displaySelection) {
         //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
         DrawSelectionIterator iter(content, details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle,
                                    selectionValue, aPresContext, mStyleContext);
