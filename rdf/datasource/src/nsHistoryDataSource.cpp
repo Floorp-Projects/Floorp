@@ -760,12 +760,18 @@ nsHistoryDataSource::AddPageToGraph(const char* url, const PRUnichar* title,
 				gRDFService->GetResource(referer, getter_AddRefs(refererResource));
 			gRDFService->GetDateLiteral(date, getter_AddRefs(dateLiteral));
 			gRDFService->GetIntLiteral(visitCount, getter_AddRefs(visitCountLiteral));
-			nsAutoString ptitle(title);
-			gRDFService->GetLiteral(ptitle.GetUnicode(), getter_AddRefs(titleLiteral));
+			if (title)
+			{
+				nsAutoString ptitle(title);
+				if (ptitle.Length() > 0)
+				{
+					gRDFService->GetLiteral(ptitle.GetUnicode(), getter_AddRefs(titleLiteral));
+					mInner->Assert(pageResource,  mResourceTitle, titleLiteral, 1);
+				}
+			}
 			mInner->Assert(histResource,  mResourcePage, pageResource, 1);
 			mInner->Assert(histResource,  mResourceDate, dateLiteral, 1);
 			mInner->Assert(histResource,  mResourceVisitCount, visitCountLiteral, 1);
-			mInner->Assert(pageResource,  mResourceTitle, titleLiteral, 1);
 			if (referer)
 				mInner->Assert(histResource,  mResourceReferer, refererResource, 1);
 			mInner->Assert(siteResource,  mResourceChild, pageResource, 1);
