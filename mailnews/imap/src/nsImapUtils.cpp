@@ -144,7 +144,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 }
 
 nsresult
-nsImapURI2Name(const char* rootURI, char* uriStr, nsString& name)
+nsImapURI2Name(const char* rootURI, const char* uriStr, nsString& name)
 {
   nsAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
@@ -171,6 +171,54 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
     uri.Right(fullName, uri.Length() - hostEnd - 1);
     if (fullName == "") return NS_ERROR_FAILURE;
     name = fullName;
+    return NS_OK;
+}
+
+nsresult
+nsImapURI2UserName(const char* rootURI, const char* uriStr,
+                   nsString& username)
+{
+    nsAutoString uri = uriStr;
+    if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
+    PRInt32 userStart = PL_strlen(rootURI);
+    while (uri[userStart] == '/') userStart++;
+    uri.Cut(0, userStart);
+    PRInt32 userEnd = uri.Find('@');
+    if (userEnd < 1)
+        return NS_ERROR_FAILURE;
+    uri.SetLength(userEnd);
+    username = uri;
+    return NS_OK;
+}
+
+nsresult
+nsImapURI2HostName(const char* rootURI, const char* uriStr, 
+                   nsString& hostname)
+{
+    nsAutoString uri = uriStr;
+    if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
+    PRInt32 hostStart = PL_strlen(rootURI);
+    while (uri[hostStart] == '/') hostStart++;
+    uri.Cut(0, hostStart);
+    hostStart = uri.Find('@'); // skip username
+    if (hostStart > 0)
+        uri.Cut(0, hostStart+1);
+    PRInt32 hostEnd = uri.Find('/');
+    if (hostEnd > 0)
+        uri.SetLength(hostEnd);
+    hostname = uri;
+    return NS_OK;
+}
+
+nsresult
+nsURI2ProtocolType(const char* uriStr, nsString& type)
+{
+    nsAutoString uri = uriStr;
+    PRInt32 typeEnd = uri.Find(':');
+    if (typeEnd < 1)
+        return NS_ERROR_FAILURE;
+    uri.SetLength(typeEnd);
+    type = uri;
     return NS_OK;
 }
 
