@@ -32,9 +32,7 @@ LIBRARY_NAME	= raptorhtmlforms_s
 REQUIRES	= xpcom raptor dom netlib js
 
 CPPSRCS		= \
-		nsButtonControlFrame.cpp \
 		nsButtonFrameRenderer.cpp \
-		nsCheckboxControlFrame.cpp \
 		nsComboboxControlFrame.cpp \
 		nsFieldSetFrame.cpp \
 		nsFileControlFrame.cpp \
@@ -51,15 +49,7 @@ CPPSRCS		= \
 		nsLabelFrame.cpp \
 		nsLegendFrame.cpp \
 		nsListControlFrame.cpp \
-		nsNativeButtonControlFrame.cpp \
-		nsNativeCheckboxControlFram.cpp \
-		nsNativeFormControlFrame.cpp \
-		nsNativeRadioControlFrame.cpp \
-		nsNativeSelectControlFrame.cpp \
-		nsNativeTextControlFrame.cpp \
-		nsRadioControlFrame.cpp \
 		nsRadioControlGroup.cpp \
-		nsTextControlFrame.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
