@@ -20,6 +20,8 @@
 
 #include "nsWebShellWindow.h"
 
+#include "nsLayoutCID.h"
+
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
@@ -1017,6 +1019,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // the webshell.  This is particularly nasty, since webshells don't normally even know
   // about their documents
   // (4) Create a document viewer 
+  nsCOMPtr<nsIContentViewer> documentViewer;
   
   // (5) Set a UA stylesheet on the doc viewer
   
@@ -1024,6 +1027,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   
   // (7) QI the WebShell from (1) to an nsIContentViewerContainer and feed it to the document 
   // viewer
+  nsCOMPtr<nsIContentViewerContainer> cvContainer = do_QueryInterface(newShell);
   
   // (8) Tell the content viewer container to embed the content viewer.
   //     (This step causes everything to be set up for an initial flow.)
