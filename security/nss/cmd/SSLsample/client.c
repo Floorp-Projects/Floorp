@@ -64,7 +64,6 @@
 
 #define RD_BUF_SIZE (60 * 1024)
 
-extern int cipherSuites[];
 extern int ssl2CipherSuites[];
 extern int ssl3CipherSuites[];
 
