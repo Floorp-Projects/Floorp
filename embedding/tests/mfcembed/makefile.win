@@ -50,7 +50,7 @@ LLIBS=					\
     $(LIBNSPR)				\
     $(NULL)
 
-LCFLAGS = /D "_AFXDLL"
+LCFLAGS = /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON"
 LLFLAGS = -SUBSYSTEM:windows
 
 include <$(DEPTH)\config\rules.mak>

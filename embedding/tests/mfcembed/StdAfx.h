@@ -80,6 +80,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIWebBrowserSiteWindow.h"
+#include "nsIWebBrowserFind.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
