@@ -53,9 +53,7 @@ function applySkin()
     var brandbundle = document.getElementById("bundle_brand");
     var dialogTitle = navbundle.getString("switchskinstitle");
     var brandName = brandbundle.getString("brandShortName");
-    var msg = navbundle.formatStringFromName("switchskins",
-                                             [brandName],
-                                             1);
+    var msg = navbundle.getFormattedString("switchskins", [brandName], 1);
     promptService.alert(window, dialogTitle, msg);
   }
 }
