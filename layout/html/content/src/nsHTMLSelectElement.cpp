@@ -522,62 +522,68 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
       nsCOMPtr<nsISupports> supp;
       presState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
 
-      nsresult res = NS_ERROR_NULL_POINTER;
-      if (!supp)
-        return NS_ERROR_FAILURE;
+      res = NS_ERROR_NULL_POINTER;
+      if (supp) {
 
-      nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
-      if (!value)
-        return NS_ERROR_FAILURE;
+        nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
+        if (value) {
 
-      PRUint32 count = 0;
-      value->Count(&count);
+          PRUint32 count = 0;
+          value->Count(&count);
 
-      nsCOMPtr<nsISupportsPRInt32> thisVal;
-      for (PRUint32 i=0; i<count; i++) {
-        nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
-        thisVal = do_QueryInterface(suppval);
-        if (thisVal) {
-          res = thisVal->GetData(aValue);
-          if (NS_SUCCEEDED(res)) {
-            return NS_OK;
+          nsCOMPtr<nsISupportsPRInt32> thisVal;
+          for (PRUint32 i=0; i<count; i++) {
+            nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
+            thisVal = do_QueryInterface(suppval);
+            if (thisVal) {
+              res = thisVal->GetData(aValue);
+              if (NS_SUCCEEDED(res)) {
+                // if we find the value the return NS_OK
+                return NS_OK;
+              }
+            } else {
+              res = NS_ERROR_UNEXPECTED;
+            }
+            if (!NS_SUCCEEDED(res)) break;
           }
-        } else {
-          res = NS_ERROR_UNEXPECTED;
-        }
-        if (!NS_SUCCEEDED(res)) break;
-      }
-    } else {
-      // If we are a combo box, our default selectedIndex is 0, not -1;
-      // XXX The logic here is duplicated in
-      // nsCSSFrameConstructor::ConstructSelectFrame and
-      // nsSelectControlFrame::GetDesiredSize
-      PRBool isMultiple;
-      rv = GetMultiple(&isMultiple);         // Must not be multiple
-      if (NS_SUCCEEDED(rv) && !isMultiple) {
-        PRInt32 size = 1;
-        rv = GetSize(&size);                 // Size 1 or not set
-        if (NS_SUCCEEDED(rv) && ((1 >= size) || (NS_CONTENT_ATTR_NOT_THERE == size))) {
-          *aValue = 0;
         }
       }
-      nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
-      rv = GetOptions(getter_AddRefs(options));
-      if (NS_SUCCEEDED(rv) && options) {
-        PRUint32 numOptions;
-        rv = options->GetLength(&numOptions);
-        if (NS_SUCCEEDED(rv)) {
-          for (PRUint32 i = 0; i < numOptions; i++) {
-            nsCOMPtr<nsIDOMNode> node;
-            rv = options->Item(i, getter_AddRefs(node));
-            if (NS_SUCCEEDED(rv) && node) {
-              nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node, &rv);
-              if (NS_SUCCEEDED(rv) && option) {
-                PRBool selected;
-	              rv = option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
-                if (NS_SUCCEEDED(rv) && selected) {
-                  *aValue = i;
-                  break;
+
+      // At this point we have no frame
+      // and the PresState didn't have the value we were looking for
+      // so now go get the default value.
+      if (NS_FAILED(res)) {
+        // If we are a combo box, our default selectedIndex is 0, not -1;
+        // XXX The logic here is duplicated in
+        // nsCSSFrameConstructor::ConstructSelectFrame and
+        // nsSelectControlFrame::GetDesiredSize
+        PRBool isMultiple;
+        rv = GetMultiple(&isMultiple);         // Must not be multiple
+        if (NS_SUCCEEDED(rv) && !isMultiple) {
+          PRInt32 size = 1;
+          rv = GetSize(&size);                 // Size 1 or not set
+          if (NS_SUCCEEDED(rv) && ((1 >= size) || (NS_CONTENT_ATTR_NOT_THERE == size))) {
+            *aValue = 0;
+          }
+        }
+        nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
+        rv = GetOptions(getter_AddRefs(options));
+        if (NS_SUCCEEDED(rv) && options) {
+          PRUint32 numOptions;
+          rv = options->GetLength(&numOptions);
+          if (NS_SUCCEEDED(rv)) {
+            for (PRUint32 i = 0; i < numOptions; i++) {
+              nsCOMPtr<nsIDOMNode> node;
+              rv = options->Item(i, getter_AddRefs(node));
+              if (NS_SUCCEEDED(rv) && node) {
+                nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node, &rv);
+                if (NS_SUCCEEDED(rv) && option) {
+                  PRBool selected;
+	                rv = option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
+                  if (NS_SUCCEEDED(rv) && selected) {
+                    *aValue = i;
+                    break;
+                  }
                 }
               }
             }
@@ -586,7 +592,8 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
       }
     }
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
