@@ -615,7 +615,7 @@ protected:
   nsString mDocumentTitle;
   nsIURI* mDocumentURL;
   nsCOMPtr<nsIURI> mDocumentBaseURL;
-  nsIPrincipal* mPrincipal;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   nsWeakPtr mDocumentLoadGroup;
   nsWeakPtr mDocumentContainer;
 
