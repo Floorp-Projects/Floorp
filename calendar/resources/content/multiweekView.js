@@ -310,7 +310,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
          eventBox = document.createElement( "box" );
          eventBox.setAttribute( "id", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
-         eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
+         //eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
          //eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
 	 //eventBox.setAttribute( "class", "month-day-event-box-class" );
           

@@ -277,7 +277,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          eventBox = document.createElement( "box" );
          eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
-         eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
+         //eventBox.setAttribute( "event"+toString(calendarEventDisplay.event.id), true );
 	   
 		// start calendar color change by CofC
         var containerName = gCalendarWindow.calendarManager.getCalendarByName(
