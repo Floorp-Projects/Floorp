@@ -152,6 +152,7 @@ bin/defaults/pref/config.js
 bin/defaults/pref/unix.js
 bin/defaults/pref/xpinstall.js
 bin/defaults/*
+bin/res/entityTables/*
 bin/res/profile/*
 bin/res/toolbar/*
 bin/res/*

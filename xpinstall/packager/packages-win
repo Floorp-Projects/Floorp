@@ -187,6 +187,7 @@ bin\res\html.css
 bin\res\ua.css
 bin\res\wincharset.properties
 bin\res\charsetalias.properties
+bin\res\entityTables\*
 bin\res\rdf\article.gif
 bin\res\rdf\document.gif
 bin\res\rdf\folder-closed.gif
