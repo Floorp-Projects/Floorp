@@ -1132,17 +1132,14 @@ endif
 ################################################################################
 # CHROME PACKAGING
 
-JAR_MANIFEST := jar.mn
+JAR_MANIFEST := $(srcdir)/jar.mn
 
 chrome::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(MOZILLA_DIR)/config/make-jars.pl -c -d $(DIST)/bin/chrome < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -c -d $(DIST)/bin/chrome < $(JAR_MANIFEST); fi
 
 install:: chrome
 
-REGCHROME = echo $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt; \
-	    pwd; \
-	    ls $(MOZILLA_DIR)/config; \
-	    $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt
+REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt
 
 ##############################################################################
 
