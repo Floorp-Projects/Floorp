@@ -99,10 +99,10 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
-  g_print("nsMenu::~nsMenu called\n");
+  g_print("nsMenu::~nsMenu() called\n");
   NS_IF_RELEASE(mListener);
   // Free our menu items
-  //RemoveAll();
+  RemoveAll();
 }
 
 //-------------------------------------------------------------------------
@@ -213,9 +213,13 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 
   // XXX add aMenuItem to internal data structor list
-  NS_IF_ADDREF(aMenuItem);
-  mMenuItemVoidArray.AppendElement(aMenuItem);
-  mNumMenuItems++;
+  // Need to be adding an nsISupports *, not nsIMenuItem *
+  nsISupports * supports = nsnull;
+  aMenuItem->QueryInterface(kISupportsIID, (void**)&supports);
+  {
+    mMenuItemVoidArray.AppendElement(supports);
+    mNumMenuItems++;
+  }
   
   return NS_OK;
 }
