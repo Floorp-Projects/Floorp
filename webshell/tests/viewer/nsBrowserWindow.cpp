@@ -69,15 +69,16 @@
 #if defined(WIN32)
 #include <strstrea.h>
 #else
-#if defined(XP_MAC)
-#include "ostrstream.h"
-#else
 #include <strstream.h>
-#endif
 #endif
 
 #if defined(WIN32)
 #include <windows.h>
+#endif
+
+#if defined (XP_MAC)
+#include <Scrap.h>
+#include <TextEdit.h>
 #endif
 
 
@@ -1659,7 +1660,7 @@ nsBrowserWindow::DoCopy()
           }
           NS_IF_RELEASE(dtd);
           NS_IF_RELEASE(sink);
-          char* str = data.str();
+          char* str = (char*)data.str();
 
 #if defined(WIN32)
           PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
@@ -1680,6 +1681,22 @@ nsBrowserWindow::DoCopy()
           // in ostrstreams if you cal the str() function
           // then you are responsible for deleting the string
 #endif
+
+#if defined(XP_MAC)
+          PRInt32     len = data.pcount();
+          if (len)
+          {
+          	char * ptr = str;
+          	for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
+          		if (*ptr == '\n')
+          			*ptr = '\r';
+
+			OSErr err = ::ZeroScrap();
+			err = ::PutScrap(len, 'TEXT', str);
+			::TEFromScrap();
+          }
+#endif
+
           if (str) delete str;
 
         }
