@@ -32,6 +32,14 @@ class nsImapProtocol : public nsIImapProtocol
 {
 public:
 	
+    enum ImapState { 
+        NOT_CONNECTED,
+        NON_AUTHENTICATED_STATE, 
+        AUTHENTICATED_STATE, 
+        SELECTED_STATE,
+        LOGOUT_STATE 
+    };
+
 	NS_DECL_ISUPPORTS
 
 	nsImapProtocol();
@@ -98,12 +106,17 @@ private:
     PLEventQueue *m_sinkEventQueue;
     PLEventQueue *m_eventQueue;
     PRThread     *m_thread;
-    PRMonitor    *m_monitor;
+    PRMonitor    *m_dataMonitor;
     PRBool       m_imapThreadIsRunning;
     static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
     nsISupports* m_consumer;
+    
+    // **** current protocol instance state ****
+    ImapState m_imapState;
+
+    virtual void ProcessCurrentURL();
 
 	// initialization function given a new url and transport layer
 	void SetupWithUrl(nsIURL * aURL);

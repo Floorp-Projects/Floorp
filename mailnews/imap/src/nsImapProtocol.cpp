@@ -32,6 +32,8 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
+#define ONE_SECOND ((PRUint32)1000)    // one second
+
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
@@ -91,9 +93,11 @@ nsImapProtocol::nsImapProtocol()
     m_sinkEventQueue = nsnull;
     m_eventQueue = nsnull;
     m_thread = nsnull;
-    m_monitor = nsnull;
+    m_dataMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
     m_consumer = nsnull;
+
+    m_imapState = nsImapProtocol::NOT_CONNECTED;
 }
 
 nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
@@ -121,10 +125,11 @@ nsImapProtocol::~nsImapProtocol()
         PL_DestroyEventQueue(m_eventQueue);
         m_eventQueue = nsnull;
     }
-    if (m_monitor)
+
+    if (m_dataMonitor)
     {
-        PR_DestroyMonitor(m_monitor);
-        m_monitor = nsnull;
+        PR_DestroyMonitor(m_dataMonitor);
+        m_dataMonitor = nsnull;
     }
 }
 
@@ -187,7 +192,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
     // ******* Thread support *******
     if (m_thread == nsnull)
     {
-        m_monitor = PR_NewMonitor();
+        m_dataMonitor = PR_NewMonitor();
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
                                    PR_UNJOINABLE_THREAD, 0);
@@ -206,7 +211,6 @@ nsImapProtocol::ImapThreadMain(void *aParm)
                  "Oh. oh. thread is already running. What's wrong here?");
     if (me->m_imapThreadIsRunning)
     {
-        PR_CNotify(me);
         PR_CExitMonitor(me);
         return;
     }
@@ -216,19 +220,14 @@ nsImapProtocol::ImapThreadMain(void *aParm)
                  "Unable to create imap thread event queue.\n");
     if (!me->m_eventQueue)
     {
-        PR_CNotify(me);
         PR_CExitMonitor(me);
         return;
     }
     me->m_imapThreadIsRunning = PR_TRUE;
-    PR_CNotify(me);
     PR_CExitMonitor(me);
 
     // call the platform specific main loop ....
     me->ImapThreadMainLoop();
-
-    PR_CNotify(me);
-    PR_CExitMonitor(me);
 
     PR_DestroyEventQueue(me->m_eventQueue);
     me->m_eventQueue = nsnull;
@@ -244,7 +243,6 @@ nsImapProtocol::ImapThreadIsRunning()
     PRBool retValue = PR_FALSE;
     PR_CEnterMonitor(this);
     retValue = m_imapThreadIsRunning;
-    PR_CNotify(this);
     PR_CExitMonitor(this);
     return retValue;
 }
@@ -266,13 +264,46 @@ nsImapProtocol::ImapThreadMainLoop()
     // ****** please implement PR_LOG 'ing ******
     while (ImapThreadIsRunning())
     {
-        PLEvent* event = PL_WaitForEvent(m_eventQueue);
-        if(event == nsnull)
+        PR_EnterMonitor(m_dataMonitor);
+
+        PR_Wait(m_dataMonitor, PR_INTERVAL_NO_TIMEOUT);
+
+        ProcessCurrentURL();
+
+        PR_ExitMonitor(m_dataMonitor);
+    }
+}
+
+void
+nsImapProtocol::ProcessCurrentURL()
+{
+    nsresult res;
+
+    if (!m_urlInProgress)
+    {
+        // **** we must be just successfully connected to the sever; we
+        // haven't got a chance to run the url yet; let's call load the url
+        // again
+        res = LoadUrl((nsIURL*)m_runningUrl, m_consumer);
+        return;
+    }
+    else 
+    {
+        // **** temporary for now
+        nsIImapLog* aImapLog = nsnull;
+        res = m_runningUrl->GetImapLog(&aImapLog);
+        if (NS_SUCCEEDED(res) && aImapLog)
         {
-            // This can only happen if the current thread is interrupted
-            return;
+            nsImapLogProxy *aProxy = 
+                new nsImapLogProxy(aImapLog, m_sinkEventQueue, m_thread);
+            NS_ADDREF(aProxy);
+            aProxy->HandleImapLogData(m_dataBuf);
+            NS_RELEASE(aImapLog);
+            NS_RELEASE(aProxy);
+            // we are done running the imap log url so mark the url as done...
+            // set change in url state...
+            m_runningUrl->SetUrlState(PR_FALSE, NS_OK); 
         }
-        PL_HandleEvent(event);
     }
 }
 
@@ -283,6 +314,7 @@ nsImapProtocol::ImapThreadMainLoop()
 
 NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 {
+    PR_CEnterMonitor(this);
 
 	// we would read a line from the stream and then parse it.....I think this function can
 	// effectively replace ReadLineFromSocket...
@@ -293,23 +325,26 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 
     if(NS_SUCCEEDED(res))
     {
+        NS_PRECONDITION( m_runningUrl->Equals(aImapUrl), 
+                         "Oops... running a different imap url. Hmmm...");
+            
+        if (m_imapState == NOT_CONNECTED)
+        {
+            m_imapState = NON_AUTHENTICATED_STATE;
+        }
+        
         res = aIStream->Read(m_dataBuf, len, &len);
         if (NS_SUCCEEDED(res))
         {
             m_dataBuf[len] = 0;
-            nsIImapLog* aImapLog = nsnull;
-            res = aImapUrl->GetImapLog(&aImapLog);
-            if (NS_SUCCEEDED(res) && aImapLog)
-            {
-                nsImapLogProxy aProxy(aImapLog, m_sinkEventQueue, m_thread);
-                aProxy.HandleImapLogData(m_dataBuf);
-                NS_RELEASE(aImapLog);
-				// we are done running the imap log url so mark the url as done...
-				m_runningUrl->SetUrlState(PR_FALSE, NS_OK); // set change in url state...
-            }
+			PR_EnterMonitor(m_dataMonitor);
+            PR_Notify(m_dataMonitor);
+			PR_ExitMonitor(m_dataMonitor);
         }
         NS_RELEASE(aImapUrl);
     }
+
+    PR_CExitMonitor(this);
 
 	return res;
 }
@@ -441,9 +476,9 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 		{
 			PRBool transportOpen = PR_FALSE;
 			m_transport->IsTransportOpen(&transportOpen);
-			m_urlInProgress = PR_TRUE;
 			if (transportOpen == PR_FALSE)
 			{
+                // m_urlInProgress = PR_TRUE;
 				rv = m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
 			}
 			else  // the connection is already open so we should begin processing our new url...
@@ -454,7 +489,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
                 // urls");
                 // ********** jefft ********* okay let's use ? search string
                 // for passing the raw command now.
-				rv = m_transport->Open(m_runningUrl);
+                m_urlInProgress = PR_TRUE;
                 const char *search = nsnull;
                 aURL->GetSearch(&search);
                 char *tmpBuffer = nsnull;
