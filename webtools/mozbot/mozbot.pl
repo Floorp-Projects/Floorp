@@ -128,7 +128,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.7 $;
+my $VERSION = q$Revision: 2.8 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -2092,7 +2092,7 @@ sub RegisterConfig {
         ['allowInviting', 1, 1, 1], # by default, anyone can invite a bot into their channel
         ['allowChannelAdmin', 1, 1, 0], # by default, one cannot admin from a channel
         ['sourceCodeCheckDelay', 1, 1, 20], # by default, wait 20 seconds between source code checks
-        ['files', 1, 1, [$0]], # files to check for source code changes
+        ['files', 1, 1, [$0, 'lib/Mails.pm', 'lib/Configuration.pm', 'lib/IO/SecurePipe.pm']], # files to check for source code changes
         ['channels', 0, 0, undef], # remove the 'channels' internal variable...
         ['autojoin', 0, 0, 0], # remove the 'autojoin' internal variable...
         ['errorMessagesMaxLines', 1, 1, 5], # by default, only have 5 lines in error messages, trim middle if more
