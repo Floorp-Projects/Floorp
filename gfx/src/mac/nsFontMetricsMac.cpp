@@ -21,11 +21,14 @@
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
+#define BAD_FONT_NUM	-1
+
 
 nsFontMetricsMac :: nsFontMetricsMac()
 {
   NS_INIT_REFCNT();
   mFont = nsnull;
+  mFontNum = BAD_FONT_NUM;
 }
   
 nsFontMetricsMac :: ~nsFontMetricsMac()
@@ -47,7 +50,6 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
 
   mFont = new nsFont(aFont);
   mContext = aCX;
-
   if (mFont != nsnull)
     nsFontMetricsMac::SetFont(*mFont, mContext);
 
@@ -168,10 +170,10 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 {
 	// We have no 'font handles' on Mac like they have on Windows
 	// so let's use it for the fontNum.
-	short fontNum;
-	nsDeviceContextMac::GetMacFontNumber(mFont->name, fontNum);
+	if (mFontNum == BAD_FONT_NUM)
+		nsDeviceContextMac::GetMacFontNumber(mFont->name, mFontNum);
 
-	aHandle = (nsFontHandle)fontNum;
+	aHandle = (nsFontHandle)mFontNum;
 	return NS_OK;
 }
 
@@ -180,6 +182,7 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 void nsFontMetricsMac :: SetFont(const nsFont& aFont, nsIDeviceContext* aContext)
 {
 	short fontNum;
+			//¥TODO?: This is not very efficient. Look in nsDeviceContextMac::GetMacFontNumber()
 	nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
 	::TextFont(fontNum);
 
