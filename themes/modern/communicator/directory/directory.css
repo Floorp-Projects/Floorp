@@ -63,6 +63,11 @@ treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-cell-twi
     font-style            : italic;
   }
 
+treerow
+  {
+    min-height            : 19px;
+  }
+
 /**
  * This fixes a bug. As you scroll down in a tree the computed column width
  * can change. That would make the columns shift durning scrolling.

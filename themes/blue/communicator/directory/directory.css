@@ -76,3 +76,8 @@ treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-cell-twi
     font-style            : italic;
   }
 
+treerow
+  {
+    min-height            : 19px;
+  }
+
