@@ -600,7 +600,7 @@ nsresult nsParser::Terminate(void){
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
-PRBool nsParser::EnableParser(PRBool aState){
+nsresult nsParser::EnableParser(PRBool aState){
   nsIParser* me = nsnull;
 
   // If the stream has already finished, there's a good chance
@@ -624,7 +624,7 @@ PRBool nsParser::EnableParser(PRBool aState){
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
 
-  return aState;
+  return result;
 }
 
 /**
@@ -899,8 +899,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
         // in) until the parser is enabled.
           //PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
           if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-            EnableParser(PR_FALSE);
-            result=NS_OK;
+            result=EnableParser(PR_FALSE);
           }
         }//if
       }//if

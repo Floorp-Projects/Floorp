@@ -205,7 +205,7 @@ friend class CTokenHandler;
      *  @param   aState determines whether we parse/tokenize or just cache.
      *  @return  current state
      */
-    virtual PRBool    EnableParser(PRBool aState);
+    virtual nsresult  EnableParser(PRBool aState);
     virtual nsresult  Terminate(void);
 
     /**
