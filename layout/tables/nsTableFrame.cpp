@@ -1507,7 +1507,6 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     cellFrame->SetBorderEdge(NS_SIDE_RIGHT, aRowIndex, aColIndex, &border, widthToAdd);
   }
-  border.mWidth += widthToAdd;  // right edge of this cell get's odd pixel
   if (nsnull==rightNeighborFrame)
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
@@ -1724,7 +1723,6 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     cellFrame->SetBorderEdge(NS_SIDE_BOTTOM, aRowIndex, aColIndex, &border, widthToAdd);
   }
-  border.mWidth += widthToAdd;  // bottom edge of this cell get's odd pixel
   if (nsnull==bottomNeighborFrame)
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
@@ -2231,7 +2229,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
       }
       else
       {
-        printf("paint table frame\n");
+        //printf("paint table frame\n");
         nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                          aDirtyRect, rect, &mBorderEdges, skipSides);
       }
@@ -4484,8 +4482,6 @@ void nsTableFrame::GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt3
     aBorder.top = border->mWidth;
     border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
     aBorder.bottom = border->mWidth;
-    printf("GetTableBorder returning left=%d right=%d top=%d bottom=%d\n",
-            aBorder.left, aBorder.right, aBorder.top, aBorder.bottom);
   }
   else
   {
