@@ -43,7 +43,7 @@ else
 		CC	= cc
 	endif
 	CCC		= CC
-	ODD_CFLAGS	= -fullwarn -xansi
+	ODD_CFLAGS	= -fullwarn -xansi 
 	ifdef BUILD_OPT
 		ifeq ($(USE_N32),1)
 			OPTIMIZER	= -O -OPT:Olimit=4000
