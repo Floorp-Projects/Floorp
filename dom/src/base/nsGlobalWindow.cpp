@@ -2696,8 +2696,8 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
       }
     }
   }
-  else if (aPropName == "onload" || aPropName == "onunload" || aPropName == "onabort" ||
-           aPropName == "onerror") {
+  else if (aPropName == "onload" || aPropName == "onunload" || aPropName == "onclose" ||
+           aPropName == "onabort" || aPropName == "onerror") {
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
       if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {

@@ -388,6 +388,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_CREATE;
   }
+  else if (aType == nsLayoutAtoms::onclose) {
+    aIID = kIDOMMenuListenerIID; 
+    *aFlags = NS_EVENT_BITS_XUL_CLOSE;
+  }
   else if (aType == nsLayoutAtoms::ondestroy) {
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_DESTROY;
@@ -1268,6 +1272,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       break;
 
     case NS_MENU_CREATE:
+    case NS_XUL_CLOSE:
     case NS_MENU_DESTROY:
     case NS_MENU_ACTION:
     case NS_XUL_BROADCAST:
@@ -1288,6 +1293,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 switch(aEvent->message) {
                   case NS_MENU_CREATE:
                     ret = mMenuListener->Create(*aDOMEvent);
+                    break;
+                  case NS_XUL_CLOSE:
+                    ret = mMenuListener->Close(*aDOMEvent);
                     break;
                   case NS_MENU_DESTROY:
                     ret = mMenuListener->Destroy(*aDOMEvent);
@@ -1313,6 +1321,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_MENU_CREATE:
                     subType = NS_EVENT_BITS_MENU_CREATE;
                     if (ls->mSubType & NS_EVENT_BITS_MENU_CREATE) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_XUL_CLOSE:
+                    subType = NS_EVENT_BITS_XUL_CLOSE;
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_CLOSE) {
                       correctSubType = PR_TRUE;
                     }
                     break;
