@@ -342,7 +342,7 @@ private:
 
 	// Canceling
 	PRInt32 StartCancel();
-	PRInt32 Cancel();
+	PRInt32 DoCancel();
 
 	// XPAT 
 	PRInt32 XPATSend();

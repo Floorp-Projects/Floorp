@@ -3741,7 +3741,7 @@ PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
     }          
 }
 
-PRInt32 nsNNTPProtocol::Cancel()
+PRInt32 nsNNTPProtocol::DoCancel()
 {
     int status = 0;
     nsresult rv = NS_OK;
@@ -4725,7 +4725,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 		        break;
 
             case NEWS_DO_CANCEL:
-		        status = Cancel();
+		        status = DoCancel();
 		        break;
 
 			// XPAT
