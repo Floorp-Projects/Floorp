@@ -170,8 +170,6 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 {
-    printf(">>>> binding entry to MEMORY cache device\n");
-
     NS_ASSERTION(PR_CLIST_IS_EMPTY(entry),"entry is already on a list!");
 
     // append entry to the eviction list
