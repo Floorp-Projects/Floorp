@@ -477,7 +477,7 @@ function CommandUpdate_MsgCompose()
 
 function UpdateOfflineState()
 {
-  dump("UpdateOfflineState\n");
+  //dump("UpdateOfflineState\n");
   try {
     var sendButton = document.getElementById("button-send");
 
