@@ -1748,7 +1748,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
   if (document) {
     nsCOMPtr<nsIXBLBinding> binding;
-    document->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding) {
       binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
     }

@@ -58,7 +58,6 @@
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIBindingManager.h"
 #include "nsICSSLoader.h"
 #include "nsICSSParser.h"
 #include "nsCSSScanner.h"
@@ -463,7 +462,6 @@ nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
-nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
@@ -565,7 +563,6 @@ MAKE_CTOR(CreateXMLFragmentSink,          nsIFragmentContentSink,      NS_NewXML
 MAKE_CTOR(CreateXMLFragmentSink2,         nsIFragmentContentSink,      NS_NewXMLFragmentContentSink2)
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
-MAKE_CTOR(CreateBindingManager,           nsIBindingManager,           NS_NewBindingManager)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
 MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
 #ifdef MOZ_XUL
@@ -1126,11 +1123,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XBLSERVICE_CID,
     "@mozilla.org/xbl;1",
     CreateXBLService },
-
-  { "XBL Binding Manager",
-    NS_BINDINGMANAGER_CID,
-    "@mozilla.org/xbl/binding-manager;1",
-    CreateBindingManager },
 
   { "Content policy service",
     NS_CONTENTPOLICY_CID,

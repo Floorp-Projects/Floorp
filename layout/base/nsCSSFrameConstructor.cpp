@@ -1686,10 +1686,7 @@ private:
 nsAutoEnqueueBinding::~nsAutoEnqueueBinding()
 {
   if (mBinding) {
-    nsIBindingManager *bm = mDocument->GetBindingManager();
-    if (bm) {
-      bm->AddToAttachedQueue(mBinding);
-    }
+    mDocument->BindingManager()->AddToAttachedQueue(mBinding);
   }
 }
 
@@ -4022,9 +4019,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
       return NS_OK; // Binding will load asynchronously.
 
     if (binding) {
-      nsIBindingManager *bm = mDocument->GetBindingManager();
-      if (bm)
-        bm->AddToAttachedQueue(binding);
+      mDocument->BindingManager()->AddToAttachedQueue(binding);
     }
 
     if (resolveStyle) {
@@ -4213,12 +4208,12 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
 */    
 
   // Set up our style rule observer.
-  nsIBindingManager *bindingManager = mDocument->GetBindingManager();
-  if (bindingManager) {
-    nsCOMPtr<nsIStyleRuleSupplier> ruleSupplier(do_QueryInterface(bindingManager));
+  {
+    nsCOMPtr<nsIStyleRuleSupplier> ruleSupplier =
+      do_QueryInterface(mDocument->BindingManager());
     mPresShell->StyleSet()->SetStyleRuleSupplier(ruleSupplier);
   }
-  
+
   // --------- BUILD VIEWPORT -----------
   nsIFrame*                 viewportFrame = nsnull;
   nsRefPtr<nsStyleContext> viewportPseudoStyle;
@@ -6066,8 +6061,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     if (processChildren || processAnonymousChildren) {
       nsFrameItems childItems;
       if (processChildren) {
-        mDocument->GetBindingManager()->ShouldBuildChildFrames(aContent,
-                                                               &processChildren);
+        mDocument->BindingManager()->ShouldBuildChildFrames(aContent,
+                                                            &processChildren);
         if (processChildren)
           rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE,
                                childItems, PR_FALSE);
@@ -8295,11 +8290,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
 #ifdef MOZ_XUL
   if (aContainer) {
-    nsIBindingManager *bindingManager = mDocument->GetBindingManager();
-
     nsCOMPtr<nsIAtom> tag;
     PRInt32 namespaceID;
-    bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
+    mDocument->BindingManager()->ResolveTag(aContainer, &namespaceID,
+                                            getter_AddRefs(tag));
 
     // Just ignore tree tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::treechildren ||
@@ -8337,7 +8331,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       document = firstAppendedChild->GetDocument();
     }
     if (document)
-      bindingManager = document->GetBindingManager();
+      bindingManager = document->BindingManager();
     if (bindingManager) {
       nsCOMPtr<nsIContent> insParent;
       bindingManager->GetInsertionParent(firstAppendedChild, getter_AddRefs(insParent));
@@ -8556,7 +8550,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 
   // We built some new frames.  Initialize any newly-constructed bindings.
-  mDocument->GetBindingManager()->ProcessAttachedQueue();
+  mDocument->BindingManager()->ProcessAttachedQueue();
 
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty()) {
@@ -8883,8 +8877,8 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
 
   nsCOMPtr<nsIAtom> tag;
   PRInt32 namespaceID;
-  aDocument->GetBindingManager()->ResolveTag(aContainer, &namespaceID,
-                                             getter_AddRefs(tag));
+  aDocument->BindingManager()->ResolveTag(aContainer, &namespaceID,
+                                          getter_AddRefs(tag));
 
   // Just ignore tree tags, anyway we don't create any frames for them.
   if (tag == nsXULAtoms::treechildren ||
@@ -8979,7 +8973,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 #endif
     }
 
-    mDocument->GetBindingManager()->ProcessAttachedQueue();
+    mDocument->BindingManager()->ProcessAttachedQueue();
 
     // otherwise this is not a child of the root element, and we
     // won't let it have a frame.
@@ -9176,7 +9170,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   // Now that we've created frames, run the attach queue.
   //XXXwaterson should we do this after we've processed pseudos, too?
-  mDocument->GetBindingManager()->ProcessAttachedQueue();
+  mDocument->BindingManager()->ProcessAttachedQueue();
 
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty())
@@ -10248,8 +10242,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   if (!primaryFrame && !reframe) {
     PRInt32 namespaceID;
     nsCOMPtr<nsIAtom> tag;
-    mDocument->GetBindingManager()->ResolveTag(aContent, &namespaceID,
-                                               getter_AddRefs(tag));
+    mDocument->BindingManager()->ResolveTag(aContent, &namespaceID,
+                                            getter_AddRefs(tag));
 
     if (namespaceID == kNameSpaceID_XUL &&
         (tag == nsXULAtoms::listitem ||
@@ -10311,8 +10305,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
       aAttribute == nsXULAtoms::menugenerated) {
     PRInt32 namespaceID;
     nsCOMPtr<nsIAtom> tag;
-    mDocument->GetBindingManager()->ResolveTag(aContent, &namespaceID,
-                                               getter_AddRefs(tag));
+    mDocument->BindingManager()->ResolveTag(aContent, &namespaceID,
+                                            getter_AddRefs(tag));
 
     if (namespaceID == kNameSpaceID_XUL &&
         (tag == nsXULAtoms::menupopup || tag == nsXULAtoms::popup ||
@@ -11368,9 +11362,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   if (!container)
     return NS_OK;
 
-  nsIBindingManager *bindingManager = mDocument->GetBindingManager();
-  if (!bindingManager)
-    return NS_OK;
+  nsIBindingManager *bindingManager = mDocument->BindingManager();
 
   nsCOMPtr<nsIContent> insertionElement;
   if (aChildContent) {
@@ -12608,7 +12600,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
     *aNewFrame = newFrame;
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-      mDocument->GetBindingManager()->ProcessAttachedQueue();
+      mDocument->BindingManager()->ProcessAttachedQueue();
 
       // Notify the parent frame
       if (aIsAppend)

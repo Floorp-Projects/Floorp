@@ -411,7 +411,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
         return PR_TRUE;
       }
 
-      mDocument->GetBindingManager()->PutXBLDocumentInfo(mDocInfo);
+      mDocument->BindingManager()->PutXBLDocumentInfo(mDocInfo);
 
       nsIURI *uri = mDocument->GetDocumentURI();
       

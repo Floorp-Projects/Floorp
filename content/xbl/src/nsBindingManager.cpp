@@ -41,10 +41,8 @@
 #include "nsIXBLService.h"
 #include "nsIInputStream.h"
 #include "nsDoubleHashtable.h"
-#include "nsInterfaceHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
-#include "nsURIHashKey.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
@@ -63,8 +61,6 @@
 #include "nsSupportsArray.h"
 #include "nsITextContent.h"
 #include "nsIStreamListener.h"
-#include "nsIStyleRuleSupplier.h"
-#include "nsStubDocumentObserver.h"
 
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
@@ -88,6 +84,7 @@
 #include "nsIScriptError.h"
 
 #include "nsIScriptContext.h"
+#include "nsBindingManager.h"
 
 // ==================================================================
 // = nsAnonymousContentList 
@@ -291,155 +288,6 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-
-class nsBindingManager : public nsIBindingManager,
-                         public nsIStyleRuleSupplier,
-                         public nsStubDocumentObserver
-{
-  NS_DECL_ISUPPORTS
-
-public:
-  nsBindingManager();
-  virtual ~nsBindingManager();
-
-  NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult);
-  NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding);
-
-  NS_IMETHOD GetInsertionParent(nsIContent* aContent, nsIContent** aResult);
-  NS_IMETHOD SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
-
-  NS_IMETHOD GetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS** aResult);
-  NS_IMETHOD SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aResult);
-
-  NS_IMETHOD ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
-                               nsIDocument* aNewDocument);
-
-  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
-
-  NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsVoidArray* aList);
-  NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult);
-
-  NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsVoidArray* aList);
-
-  NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-
-  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
-                                     PRBool* aMultipleInsertionPoints);
-
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
-                                 nsIDocument** aResult);
-
-  NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
-  NS_IMETHOD ClearAttachedQueue();
-  NS_IMETHOD ProcessAttachedQueue();
-
-  NS_IMETHOD ExecuteDetachedHandlers();
-
-  NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-  NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURI, nsIXBLDocumentInfo** aResult);
-  NS_IMETHOD RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-
-  NS_IMETHOD PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener);
-  NS_IMETHOD GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult);
-  NS_IMETHOD RemoveLoadingDocListener(nsIURI* aURL);
-
-  NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
-  NS_IMETHOD FlushSkinBindings();
-
-  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
-
-  NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
-
-  // nsIStyleRuleSupplier
-  NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
-                       nsIStyleRuleProcessor::EnumFunc aFunc,
-                       RuleProcessorData* aData,
-                       PRBool* aCutOffInheritance);
-
-  // nsIDocumentObserver
-  virtual void ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
-
-protected:
-  nsresult GetXBLChildNodesInternal(nsIContent* aContent,
-                                    nsIDOMNodeList** aResult,
-                                    PRBool* aIsAnonymousContentList);
-  nsresult GetAnonymousNodesInternal(nsIContent* aContent,
-                                     nsIDOMNodeList** aResult,
-                                     PRBool* aIsAnonymousContentList);
-
-  nsIContent* GetEnclosingScope(nsIContent* aContent) {
-    return aContent->GetBindingParent();
-  }
-
-  nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
-
-// MEMBER VARIABLES
-protected: 
-  // A mapping from nsIContent* to the nsIXBLBinding* that is
-  // installed on that element.
-  PLDHashTable mBindingTable;
-
-  // A mapping from nsIContent* to an nsIDOMNodeList*
-  // (nsAnonymousContentList*).  This list contains an accurate
-  // reflection of our *explicit* children (once intermingled with
-  // insertion points) in the altered DOM.
-  PLDHashTable mContentListTable;
-
-  // A mapping from nsIContent* to an nsIDOMNodeList*
-  // (nsAnonymousContentList*).  This list contains an accurate
-  // reflection of our *anonymous* children (if and only if they are
-  // intermingled with insertion points) in the altered DOM.  This
-  // table is not used if no insertion points were defined directly
-  // underneath a <content> tag in a binding.  The NodeList from the
-  // <content> is used instead as a performance optimization.
-  PLDHashTable mAnonymousNodesTable;
-
-  // A mapping from nsIContent* to nsIContent*.  The insertion parent
-  // is our one true parent in the transformed DOM.  This gives us a
-  // more-or-less O(1) way of obtaining our transformed parent.
-  PLDHashTable mInsertionParentTable;
-
-  // A mapping from nsIContent* to nsIXPWrappedJS* (an XPConnect
-  // wrapper for JS objects).  For XBL bindings that implement XPIDL
-  // interfaces, and that get referred to from C++, this table caches
-  // the XPConnect wrapper for the binding.  By caching it, I control
-  // its lifetime, and I prevent a re-wrap of the same script object
-  // (in the case where multiple bindings in an XBL inheritance chain
-  // both implement an XPIDL interface).
-  PLDHashTable mWrapperTable;
-
-  // A mapping from a URL (a string) to nsIXBLDocumentInfo*.  This table
-  // is the cache of all binding documents that have been loaded by a
-  // given bound document.
-  nsInterfaceHashtable<nsURIHashKey,nsIXBLDocumentInfo> mDocumentTable;
-
-  // A mapping from a URL (a string) to a nsIStreamListener. This
-  // table is the currently loading binding docs.  If they're in this
-  // table, they have not yet finished loading.
-  nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> mLoadingDocTable;
-
-  // A queue of binding attached event handlers that are awaiting
-  // execution.
-  nsCOMPtr<nsISupportsArray> mAttachedStack;
-  PRBool mProcessingAttachedStack;
-};
-
 // Implementation /////////////////////////////////////////////////////////////////
 
 // Static member variable initialization
@@ -558,7 +406,7 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
     binding->ChangeDocument(aOldDocument, aNewDocument);
     SetBinding(aContent, nsnull);
     if (aNewDocument)
-      aNewDocument->GetBindingManager()->SetBinding(aContent, binding);
+      aNewDocument->BindingManager()->SetBinding(aContent, binding);
   }
 
   // Clear out insertion parents and content lists.
@@ -1439,17 +1287,3 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
     }
   }
 }
-
-
-// Creation Routine ///////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewBindingManager(nsIBindingManager** aResult)
-{
-  *aResult = new nsBindingManager;
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-

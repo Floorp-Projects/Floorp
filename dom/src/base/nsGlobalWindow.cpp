@@ -866,9 +866,7 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     // down.
     if (aEvent->message == NS_PAGE_UNLOAD && mDocument && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-      nsIBindingManager *bindingManager = doc->GetBindingManager();
-      if (bindingManager)
-        bindingManager->ExecuteDetachedHandlers();
+      doc->BindingManager()->ExecuteDetachedHandlers();
     }
   }
 

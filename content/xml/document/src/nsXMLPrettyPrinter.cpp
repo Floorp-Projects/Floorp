@@ -173,7 +173,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     nsCOMPtr<nsIObserver> binding;
     nsCOMPtr<nsIContent> rootCont = do_QueryInterface(rootElem);
     NS_ASSERTION(rootCont, "Element doesn't implement nsIContent");
-    aDocument->GetBindingManager()->GetBindingImplementation(rootCont,
+    aDocument->BindingManager()->GetBindingImplementation(rootCont,
                                               NS_GET_IID(nsIObserver),
                                               (void**)getter_AddRefs(binding));
     NS_ASSERTION(binding, "Prettyprint binding doesn't implement nsIObserver");

@@ -142,6 +142,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../xul/content/src \
 		-I$(srcdir)/../../html/content/src \
 		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../xbl/src \
 		-I$(srcdir)/../../../layout/generic \
 		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../dom/src/base \
