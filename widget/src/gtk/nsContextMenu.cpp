@@ -237,7 +237,7 @@ NS_METHOD nsContextMenu::AddMenu(nsIMenu * aMenu)
     NS_RELEASE(pnsMenuItem);
   } 
 
-  delete[] labelStr;
+  nsCRT::free(labelStr);
 
   return NS_OK;
 }
@@ -306,7 +306,7 @@ NS_METHOD nsContextMenu::RemoveItem(const PRUint32 aCount)
   /*
   gtk_menu_shell_remove (GTK_MENU_SHELL (mMenu), item);
 
-  delete[] labelStr;
+  nsCRT::free(labelStr);
 
   voidData = NULL;
 

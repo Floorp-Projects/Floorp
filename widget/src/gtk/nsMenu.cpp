@@ -181,7 +181,7 @@ NS_METHOD nsMenu::GetAccessKey(nsString &aText)
   g_print("GetAccessKey returns \"%s\"\n", foo);
 #endif
 
-  delete [] foo;
+  nsCRT::free(foo);
   return NS_OK;
 }
 
@@ -195,7 +195,7 @@ NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
   g_print("SetAccessKey setting to \"%s\"\n", foo);
 #endif
 
-  delete [] foo;
+  nsCRT::free(foo);
   return NS_OK;
 }
 
@@ -383,7 +383,7 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
   /*
   gtk_menu_shell_remove (GTK_MENU_SHELL (mMenu), item);
 
-  delete[] labelStr;
+  nsCRT::free(labelStr);
 
   voidData = NULL;
 
