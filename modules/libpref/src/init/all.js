@@ -101,6 +101,7 @@ pref("browser.download_window_rect",        "-1,-1,-1,-1");
 pref("browser.wfe.ignore_def_check",false);
 pref("browser.wfe.use_windows_colors",true);
 pref("browser.startup_mode",1);
+pref("browser.show_about_as_stupid_modal_window", false);
 
 
 // various default search settings
