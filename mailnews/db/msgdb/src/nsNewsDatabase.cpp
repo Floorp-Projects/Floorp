@@ -168,9 +168,7 @@ NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
     NS_ASSERTION(m_readSet, "set is null!");
     if (!m_readSet) return NS_ERROR_FAILURE;
     
-	PRBool isRead = m_readSet->IsMember(key);
-	*pRead = isRead;
-    
+	*pRead = m_readSet->IsMember(key);
 	return NS_OK;
 }
 
