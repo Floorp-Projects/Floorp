@@ -24,76 +24,108 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
+TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
+TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
+
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+TOOLKIT_CFLAGS = \
+	-DWIDGET_DLL=\"libwidgetgtk.so\" \
+	-DGFXWIN_DLL=\"libgfxgtk.so\" \
+	$(TK_GTK_CFLAGS)
+
+TOOLKIT_CPPSRCS = \
+	nsGTKMain.cpp \
+	nsGTKMenu.cpp
+
+TOOLKIT_LIBS = $(TK_GTK_LIBS)
+else
+ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
+TOOLKIT_CFLAGS = \
+	-DWIDGET_DLL=\"libwidgetmotif.so\" \
+	-DGFXWIN_DLL=\"libgfxmotif.so\" \
+	$(TK_MOTIF_CFLAGS)
+
+TOOLKIT_CPPSRCS = \
+	nsMotifMenu.cpp \
+	nsUnixMain.cpp
+
+TOOLKIT_LIBS = $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS)
+
+endif
+endif
+
 CPPSRCS = \
+	Scribble.cpp    \
 	main.cpp	\
 	$(NULL)
+
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/shell
 
 DIRS	=
 
+ifdef MOZ_OJI
+	JSJ_LIB = -ljsj
+endif
+
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-	$(DIST)/bin/libraptorbase.so	\
-	$(DIST)/bin/libpng.so \
-	$(DIST)/bin/libpref.so \
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libwidgetunix.so \
-	$(DIST)/bin/libraptorgfx.so \
-	$(DIST)/bin/libgfxunix.so \
-	$(DIST)/bin/libraptorhtml.so \
-	$(DIST)/bin/libgmbaseunix.so \
-	$(DIST)/bin/libraptorhtmlbase_s.so \
-	$(DIST)/bin/libraptorhtmldoc_s.so \
-	$(DIST)/bin/libraptorhtmlforms_s.so \
-	$(DIST)/bin/libraptorhtmlpars.so \
-	$(DIST)/bin/libraptorhtmlstyle_s.so \
-	$(DIST)/bin/libraptorhtmltable_s.so \
-	$(DIST)/bin/libraptorlayout_s.so \
-	$(DIST)/bin/libraptorevents_s.so \
-	$(DIST)/bin/libraptorview.so \
-	$(DIST)/bin/libreg.so \
-	$(DIST)/bin/libabouturl.so \
-	$(DIST)/bin/libfileurl.so \
-	$(DIST)/bin/libftpurl.so \
-	$(DIST)/bin/libgophurl.so \
-	$(DIST)/bin/libhttpurl.so \
-	$(DIST)/bin/libimg.so \
-	$(DIST)/bin/libjpeg.so \
-	$(DIST)/bin/libjs.so \
-	$(DIST)/bin/libjsdom.so \
-	$(DIST)/bin/libjsj.so \
-	$(DIST)/bin/libmimetype.so \
-	$(DIST)/bin/libmsgc21.so \
-	$(DIST)/bin/libnetcache.so \
-	$(DIST)/bin/libnetcnvts.so \
-	$(DIST)/bin/libnetlib.so \
-	$(DIST)/bin/libnetutil.so \
-	$(DIST)/bin/libnetwork.so \
-	$(DIST)/bin/libraptorwebwidget.so \
-	$(DIST)/bin/libreg.so \
-	$(DIST)/bin/libremoturl.so \
-	$(DIST)/bin/libsecfree.so \
-	$(DIST)/bin/libstubnj.so \
-	$(DIST)/bin/libstubsj.so \
-	$(DIST)/bin/libtestdynamic.so \
-	$(DIST)/bin/libutil.so \
-	$(DIST)/bin/libxp.so \
-	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libzlib.so \
-	$(DIST)/bin/libutil.so \
-	$(DIST)/bin/libxp.so \
-	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libzlib.so \
-	$(DIST)/bin/libnglcsslay_s.so \
-	$(DIST)/bin/libnglhtmlcon_s.so \
+	-L$(DIST)/bin \
+	-lraptorbase    \
+	-lpng \
+	-lpref \
+	-lraptorbase \
+	$(TOOLKIT_WIDGET_LIB) \
+	-lraptorgfx \
+	$(TOOLKIT_GFX_LIB) \
+	-lraptorhtml \
+	$(DIST)/lib/libraptorhtmlforms_s.a \
+	$(TOOLKIT_BASE_LIB) \
+	-lraptorhtmlpars \
+	-lraptorview \
+	-lreg \
+	-labouturl \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lhttpurl \
+	-limg \
+	-ljpeg \
+	-ljs \
+	-ljsdom \
+	$(DIST)/lib/libjsdomcore_s.a \
+	$(JSJ_LIB) \
+	-lmimetype \
+	-lnetcache \
+	-lnetcnvts \
+	-lnetlib \
+	-lnetutil \
+	-lnetwork \
+	-lraptorwebwidget \
+	-lreg \
+	-lremoturl \
+	-lsecfree \
+	-lstubnj \
+	-lstubsj \
+	-ltestdynamic \
+	-lutil \
+	-lxp \
+	-lxpcom \
+	-lzlib \
+	-lutil \
+	-lxp \
+	-lxpcom \
+	-lzlib \
+	-lraptorplugin \
 	$(NULL)
 
-ifeq ($(OS_ARCH),Linux)
+ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 EX_LIBS += \
-	$(DIST)/bin/libpwcac.so \
-	$(DIST)/bin/libdbm.so \
+	-lpwcac \
+	-ldbm \
 	$(NULL)
 endif
 
@@ -103,21 +135,29 @@ TARGETS = $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
 
-$(OBJDIR)/Scribble.o::	Scribble.cpp
-	$(CCC) -o $@ -c $(CFLAGS) Scribble.cpp $(LDFLAGS) 
-
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
-
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/Scribble.o $(EX_LIBS)
+$(PROGS): $(OBJS) # $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/Scribble.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
 else
-	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/Scribble.o $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
+	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
 endif
+
+#$(OBJDIR)/Scribble.o::	Scribble.cpp
+#	$(CCC) -o $@ -c $(CFLAGS) Scribble.cpp $(LDFLAGS) 
+
+
+#$(OBJDIR)/%.o: %.cpp
+#	@$(MAKE_OBJDIR)
+#	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
+
+#$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/Scribble.o $(EX_LIBS)
+#	@$(MAKE_OBJDIR)
+#ifeq ($(OS_ARCH),Linux)
+#	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/Scribble.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
+#else
+#	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/Scribble.o $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
+#endif
 
 export::
 
