@@ -346,7 +346,7 @@ Contributor(s): ______________________________________. -->
 	  </menupopup>
     </menu>
     <menu accesskey="b" value="&bookmarksMenu.label;"
-                           datasources="rdf:bookmarks rdf:files rdf:find rdf:internetsearch" id="NC:BookmarksRoot">
+                           datasources="rdf:bookmarks rdf:files rdf:find rdf:internetsearch" id="BookmarksMenu" ref="NC:BookmarksRoot">
 		<template>
 			<rule iscontainer="true">
 			  <menupopup>
@@ -360,7 +360,7 @@ Contributor(s): ______________________________________. -->
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target)" />
+				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
 			  </menupopup>
 			</rule>
 		</template>
@@ -514,14 +514,14 @@ Contributor(s): ______________________________________. -->
           </titledbutton>
     </toolbar>
 
-    <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
+    <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" id="PersonalToolbar" ref="NC:PersonalToolbarFolder">
     <template>
         <rule iscontainer="true">
             <titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" popup="bookmark-popup" />
         </rule>
         
         <rule>
-            <titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" onclick="OpenBookmarkURL(event.target)" />
+            <titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')" />
         </rule>
     </template>
 
