@@ -33,6 +33,7 @@
 #include "nsHTMLParts.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsSliderFrame.h"
+#include "nsIDOMElement.h"
 
 //
 // NS_NewTreeFrame
@@ -91,7 +92,16 @@ nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
+  if (aOldIndex == aNewIndex)
+    return NS_OK;
+
   printf("The position changed!\n");
+  
+  if (aNewIndex > aOldIndex) {
+    // Figure out how many rows we have to lose off the top.
+    PRInt32 rowsToLose = aNewIndex - aOldIndex;
+  }
+
   return NS_OK;
 }
 
@@ -111,6 +121,12 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
   nsIFrame* sliderFrame;
   nsScrollbarButtonFrame::GetChildWithTag(scrollbarAtom, aFrame, sliderFrame);
   ((nsSliderFrame*)sliderFrame)->SetScrollbarListener(this);
+
+  nsCOMPtr<nsIContent> scrollbarContent;
+  sliderFrame->GetContent(getter_AddRefs(scrollbarContent));
+  nsCOMPtr<nsIDOMElement> scrollbarNode = do_QueryInterface(scrollbarContent);
+  scrollbarNode->SetAttribute("increment", "1");
+  scrollbarNode->SetAttribute("decrement", "1");
 }
 
 PRBool nsTreeRowGroupFrame::RowGroupDesiresExcessSpace() 
@@ -284,7 +300,7 @@ nsIFrame*
 nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext) 
 { 
   // Clear ourselves out.
-  mTopFrame = mBottomFrame = nsnull;
+  mBottomFrame = mTopFrame = nsnull;
   mIsFull = PR_FALSE;
 
   // We may just be a normal row group.
