@@ -156,7 +156,8 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   // hardwired temporary hack.  See nsAppRunner.cpp at main()
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
 
-  nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
+  nsCOMPtr<nsIWebShellWindow> parent;
+  DOMWindowToWebShellWindow(aParent, &parent);
   appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
                                nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
@@ -190,7 +191,8 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   // hardwired temporary hack.  See nsAppRunner.cpp at main()
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
 
-  nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
+  nsCOMPtr<nsIWebShellWindow> parent;
+  DOMWindowToWebShellWindow(aParent, &parent);
   appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
                                nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
@@ -304,7 +306,8 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   // hardwired temporary hack.  See nsAppRunner.cpp at main()
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
 
-  nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
+  nsCOMPtr<nsIWebShellWindow> parent;
+  DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsArgCallbacks> cb;
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
   appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
@@ -340,13 +343,24 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   // hardwired temporary hack.  See nsAppRunner.cpp at main()
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
 
-  nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
+  nsCOMPtr<nsIWebShellWindow> parent;
+  DOMWindowToWebShellWindow(aParent, &parent);
   appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
                                nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull) {
+    nsCOMPtr<nsIWidget> parentWindowWidgetThing;
+    nsresult gotParent;
+    gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+                         NS_ERROR_FAILURE;
+    // Windows OS is the only one that needs the parent disabled, or cares
+    // arguably this should be done by the new window, within ShowModal...
+    if (NS_SUCCEEDED(gotParent))
+      parentWindowWidgetThing->Enable(PR_FALSE);
     window->ShowModal();
+    if (NS_SUCCEEDED(gotParent))
+      parentWindowWidgetThing->Enable(PR_TRUE);
   }
 
   return rv;
@@ -355,7 +369,8 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 NS_IMETHODIMP
 nsToolkitCore::CloseWindow(nsIDOMWindow* aWindow) {
 
-  nsCOMPtr<nsIWebShellWindow> window = DOMWindowToWebShellWindow(aWindow);
+  nsCOMPtr<nsIWebShellWindow> window;
+  DOMWindowToWebShellWindow(aWindow, &window);
   if (window)
     window->Close();
 
@@ -363,19 +378,22 @@ nsToolkitCore::CloseWindow(nsIDOMWindow* aWindow) {
 }
 
 // horribly complicated routine to simply convert from one to the other
-nsCOMPtr<nsIWebShellWindow>
-nsToolkitCore::DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow) const {
+void nsToolkitCore::DOMWindowToWebShellWindow(
+                      nsIDOMWindow *DOMWindow,
+                      nsCOMPtr<nsIWebShellWindow> *webWindow) const {
 
-  nsCOMPtr<nsIWebShellWindow> webWindow;
+  if (!DOMWindow)
+    return; // with webWindow unchanged -- its constructor gives it a null ptr
 
   nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIWebShell> webshell;
+  nsCOMPtr<nsIWebShell> webshell, rootWebshell;
   if (globalScript)
     globalScript->GetWebShell(getter_AddRefs(webshell));
-  if (webshell) {
+  if (webshell)
+    webshell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebshell));
+  if (rootWebshell) {
     nsCOMPtr<nsIWebShellContainer> webshellContainer;
-    webshell->GetContainer(*getter_AddRefs(webshellContainer));
-    webWindow = do_QueryInterface(webshellContainer);
+    rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
+    *webWindow = do_QueryInterface(webshellContainer);
   }
-  return webWindow;
 }
