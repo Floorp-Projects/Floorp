@@ -4,21 +4,31 @@
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 <!DOCTYPE window> 
 
-<script LANGUAGE="JavaScript">
+<html:script LANGUAGE="JavaScript">
 
-function SendMailMessage()
+function StartUp()
 {
-  var appCore = AppCoresManager.Find("MailCore");
+  appCore = AppCoresManager.Find("MailAppCore");  
   if (appCore==null) {
     appCore = new MailCore();
     if (appCore != null) {
-      appCore.Init("MailCore");
-	    appCore.MailCompleteCallback("MailSent()");
-	    appCore.SetWindow(window);
-	    appCore.SendMail(document.forms[0].elements[1].value, document.forms[0].elements[2].value, document.forms[0].elements[4].value);
-    } 
-  } else {
-	  appCore.SendMail(document.forms[0].elements[1].value, document.forms[0].elements[2].value, document.forms[0].elements[4].value);
+	  dump("MailAppCore was created!\n");
+      appCore.Init("MailAppCore");
+	  appCore.MailCompleteCallback("MailSent();");
+	  appCore.SetWindow(window);
+    }
+  }
+}
+
+function SendMailMessage()
+{
+  dump("SendMailMessage!\n");
+  var appCore = AppCoresManager.Find("MailAppCore");
+  if (appCore != null) {
+	dump("Mail was sent!\n");
+	appCore.SendMail(window.parent.frames[1].document.forms[0].elements[1].value, 
+	                 window.parent.frames[1].document.forms[0].elements[2].value, 
+					 window.parent.frames[1].document.forms[0].elements[4].value);
   }
   
 }
@@ -26,42 +36,20 @@ function SendMailMessage()
 function MailSent()
 {
 
-	// Clear Them
-	  document.forms[0].elements[1].value = "";
-	  document.forms[0].elements[2].value = "";
-	  document.forms[0].elements[4].value = "";
+  // Clear Them
+  window.parent.frames[1].document.forms[0].elements[1].value = "";
+  window.parent.frames[1].document.forms[0].elements[2].value = "";
+  window.parent.frames[1].document.forms[0].elements[4].value = "";
 
-    /*dump("top name: "+top.name+"\n");
-	  if (window.parent.frames[2] != null) {
-		  dump("frame[2] name: "+window.parent.frames[2].name+"\n");
-		  var parent = window.parent.frames[0].parent;
-		  dump("parent name: "+parent.name+"\n");
-		  var doc = window.parent.frames[2].document;
-		  var win = window.parent.frames[2];
-		  if (doc != null) {
-		    //dump("Doc name: "+doc.name);
-		    doc.elements[8].value = "xxxxxx";
-		  } else {
-		    dump("doc was null\n");
-		  }
-      } else {
-	    dump("parent is null\n");
-	  }*/
 }
 
-</script>
+</html:script>
 
 
 <window>
   <xul:commands>
-    <xul:command name="nsCmd:MailSendMsg" onCommand="SendMailMessage()"/>
-    <xul:command name="nsCmd:BrowserForward" onCommand="window.forward();"/>
-    <xul:command name="nsCmd:BrowserReload" onCommand="window.reload();"/>
-    <xul:command name="nsCmd:BrowserStop" onCommand="window.stop();"/>
-    <xul:command name="nsCmd:BrowserHome" onCommand="window.home();"/>
-    <xul:command name="nsCmd:BrowserPrint" onCommand="window.print();"/>
-    <!-- other parameters of command are assumed to have
-      some useful initial value -->
+    <xul:command name="nsCmd:StartUp" onCommand="StartUp();"/>
+    <xul:command name="nsCmd:MailSendMsg" onCommand="SendMailMessage();"/>
   </xul:commands>
   
   <xul:toolbox> 
