@@ -121,7 +121,7 @@ protected:
 
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);
-  void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
+  static void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
                              nsIContent** aResult);
   void MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame);
 
@@ -159,6 +159,10 @@ public:
 
   PRInt32 GetVisibleRowCount() { return mRowCount; };
 
+  
+  static PRBool IsTableRowGroupFrame(nsIFrame*);
+  static PRBool IsTableRowFrame(nsIFrame*);
+  
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
   nsIFrame* mBottomFrame; // The current bottom frame in the view.
