@@ -70,10 +70,10 @@ print "    };\n";
 
 # try to figure out "strongly connected components" by looking for cycles
 # keep a list of all visited modules in %clustered
-foreach $module (keys %deps) {
-  next if ($clustered{$module});
-  
-}
+#foreach $module (keys %deps) {
+#  next if ($clustered{$module});
+#  
+#}
 
 foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
   foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
