@@ -709,10 +709,13 @@ NS_IMETHODIMP nsPrefsCore::SavePrefs()
 //----------------------------------------------------------------------------------------
 {
     FinalizePrefWidgets();
-	// Do the prefs stuff...
-	mPrefs->CopyPrefsTree("temp_tree", "");
-	mPrefs->DeleteBranch("temp_tree");
-	mPrefs->SavePrefFile();
+    if (mPrefs)
+    {
+		// Do the prefs stuff...
+		mPrefs->CopyPrefsTree("temp_tree", "");
+		mPrefs->DeleteBranch("temp_tree");
+		mPrefs->SavePrefFile();
+    }
 	// Then close    
 	return Close(mPanelWindow);
 }
@@ -722,7 +725,8 @@ NS_IMETHODIMP nsPrefsCore::CancelPrefs()
 //----------------------------------------------------------------------------------------
 {
 	// Do the prefs stuff...
-	mPrefs->DeleteBranch("temp_tree");
+	if (mPrefs)
+		mPrefs->DeleteBranch("temp_tree");
 	
 	// Then close    
 	return Close(mPanelWindow);
