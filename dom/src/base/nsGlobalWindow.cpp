@@ -1627,13 +1627,9 @@ GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn)
 
   // Unescape the string
   char* src = nsUnescape(inBuf);
-//  nsAllocator::Free(inBuf);
-  if (nsnull == src) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   PRInt32 maxLength, srcLen;
-  srcLen = aStr.Length();
+  srcLen = nsCRT::strlen(src);
 
   // Get the expected length of the result string
   result = decoder->GetMaxLength(src, srcLen, &maxLength);
