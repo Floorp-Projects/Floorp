@@ -64,7 +64,7 @@ public class JSConsole extends JFrame implements ActionListener {
         int returnVal = dlg.showOpenDialog(this);
         if(returnVal == JFileChooser.APPROVE_OPTION) {
             String result = dlg.getSelectedFile().getPath();
-            CWD = dlg.getSelectedFile().getParentFile();
+            CWD = new File(dlg.getSelectedFile().getParent());
             return result;
         }
         return null;
