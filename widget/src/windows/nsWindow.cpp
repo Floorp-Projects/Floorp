@@ -2840,6 +2840,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
          InitEvent(scrollEvent, NS_MOUSE_SCROLL);
          if (nsnull != mEventCallback)
            result = DispatchWindowEvent(&scrollEvent);
+         NS_RELEASE(scrollEvent.widget);
         }
         break;
 
